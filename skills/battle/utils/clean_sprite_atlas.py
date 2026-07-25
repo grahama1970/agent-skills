@@ -274,6 +274,183 @@ def clean_dark_grid(
 
 
 
+def _content_mask(rgb: np.ndarray, kind: str) -> np.ndarray:
+    """Boolean mask of sprite content vs background, keyed on background kind."""
+
+    lum = rgb.mean(axis=2)
+    spread = rgb.max(axis=2).astype(np.int16) - rgb.min(axis=2).astype(np.int16)
+    if kind == "dark":
+        return lum > 60
+    # checker / light grid: content is saturated OR clearly darker than the grid.
+    return (spread > 28) | (lum < 150)
+
+
+def _detect_background_kind(image: Image.Image) -> str:
+    """Classify the sheet background from its corners: transparent / dark / checker."""
+
+    rgba = np.array(image.convert("RGBA"))
+    height, width, _ = rgba.shape
+    corners = np.array(
+        [rgba[0, 0], rgba[0, width - 1], rgba[height - 1, 0], rgba[height - 1, width - 1]],
+        dtype=int,
+    )
+    if (corners[:, 3] < 16).all():
+        return "transparent"
+    if (corners[:, :3].mean(axis=1) < 60).all():
+        return "dark"
+    return "checker"
+
+
+def _detect_row_bands(mask: np.ndarray) -> list[tuple[int, int]]:
+    """Detect content bands via row projection so drifting (non-uniform) rows still slice cleanly."""
+
+    height, width = mask.shape
+    rowsum = mask.sum(axis=1)
+    threshold = width * 0.01
+    bands: list[tuple[int, int]] = []
+    index = 0
+    while index < height:
+        if rowsum[index] > threshold:
+            end = index
+            while end < height and rowsum[end] > threshold:
+                end += 1
+            bands.append((index, end - 1))
+            index = end
+        else:
+            index += 1
+    return bands
+
+
+def _uniform_bands(height: int, row_count: int) -> list[tuple[int, int]]:
+    step = height / row_count
+    return [(round(r * step), round((r + 1) * step) - 1) for r in range(row_count)]
+
+
+def _isolate_main_subject(
+    cell: Image.Image,
+    *,
+    edge_sliver_area_frac: float = 0.12,
+    edge_sliver_width_frac: float = 0.18,
+) -> Image.Image:
+    """Drop thin fragments hugging a side edge — the neighbour-frame bleed sliver.
+
+    Keeps the largest component and every substantial component (so attached
+    VFX like dust, orbs, or projectiles survive); removes only small, narrow
+    fragments touching the left/right edge, which is exactly the column-bleed
+    artifact from slicing a slightly-misaligned generator grid.
+    """
+
+    rgba = np.array(cell.convert("RGBA"))
+    alpha = (rgba[:, :, 3] > 16).astype(np.uint8)
+    num, labels, stats, _ = cv2.connectedComponentsWithStats(alpha, connectivity=8)
+    if num <= 2:
+        return cell
+    areas = stats[1:, cv2.CC_STAT_AREA]
+    largest = int(np.argmax(areas)) + 1
+    largest_area = int(stats[largest, cv2.CC_STAT_AREA])
+    _, width = alpha.shape
+    drop_labels: list[int] = []
+    for label in range(1, num):
+        if label == largest:
+            continue
+        left = stats[label, cv2.CC_STAT_LEFT]
+        cell_width = stats[label, cv2.CC_STAT_WIDTH]
+        area = stats[label, cv2.CC_STAT_AREA]
+        touches_edge = left == 0 or (left + cell_width) >= width
+        very_narrow = cell_width <= 4  # a few-px-wide edge strip is bleed regardless of height
+        smallish = area < largest_area * edge_sliver_area_frac and cell_width < width * edge_sliver_width_frac
+        if touches_edge and (very_narrow or smallish):
+            drop_labels.append(label)
+    if not drop_labels:
+        return cell
+    rgba[np.isin(labels, drop_labels), 3] = 0
+    return Image.fromarray(rgba, "RGBA")
+
+
+@app.command("convert-autogrid")
+def convert_autogrid(
+    source: Annotated[Path, typer.Option(help="Input contact sheet (checker / dark / transparent bg).")],
+    sprite_id: Annotated[str, typer.Option(help="Stable Pixi variant id.")],
+    out_png: Annotated[Path, typer.Option(help="Output 512x896 transparent runtime atlas.")],
+    out_json: Annotated[Path | None, typer.Option(help="Optional PixiJS spritesheet JSON.")] = None,
+    frame_width: Annotated[int, typer.Option()] = 64,
+    frame_height: Annotated[int, typer.Option()] = 64,
+    columns: Annotated[int, typer.Option()] = 8,
+    background: Annotated[str, typer.Option(help="Background kind: auto | checker | dark | transparent.")] = "auto",
+    background_lower: Annotated[int, typer.Option()] = 200,
+    background_upper: Annotated[int, typer.Option()] = 255,
+    neutral_spread: Annotated[int, typer.Option()] = 42,
+    row_pad: Annotated[int, typer.Option(help="Vertical padding around each detected band so tall sprites are not clipped.")] = 6,
+    gutter: Annotated[int, typer.Option()] = 2,
+    hold_last_frame: Annotated[bool, typer.Option(help="Fill a trailing empty canonical cell by holding the last drawn frame (generators often under-draw a row).")] = True,
+) -> None:
+    """One-shot: auto-detect row bands + background, de-sliver, emit the runtime atlas.
+
+    Handles AI-generated contact sheets whose rows drift off a uniform grid (the
+    common failure mode that makes `clean-checkerboard`/`convert-contact-sheet`
+    clip tall sprites). Row bands are detected by content projection, columns are
+    sliced by the canonical per-row frame counts, each cell is de-slivered, and
+    every canonical frame is placed. Input image -> 512x896 canonical atlas.
+    """
+
+    image = Image.open(source)
+    kind = _detect_background_kind(image) if background == "auto" else background
+    if kind == "transparent":
+        mask = np.array(image.convert("RGBA"))[:, :, 3] > 16
+    else:
+        mask = _content_mask(np.array(image.convert("RGB")), kind)
+
+    bands = _detect_row_bands(mask)
+    detected = len(bands) == len(ROWS)
+    source_to_target = [(index, index) for index in range(len(bands))]
+    if len(bands) == len(ROWS) - 1:
+        # Some early contact sheets have 13 source rows and omit the canonical
+        # hit row. Preserve detected bands and map rows after blocked forward,
+        # matching clean_dark_grid; a forced 14-row uniform grid mis-slices VFX.
+        source_to_target = [(index, index if index < 9 else index + 1) for index in range(len(bands))]
+        detected = True
+    if not detected:
+        typer.echo(
+            f"WARN: detected {len(bands)} row bands, expected {len(ROWS)}; using uniform grid",
+            err=True,
+        )
+        bands = _uniform_bands(image.height, len(ROWS))
+        source_to_target = [(index, index) for index in range(len(bands))]
+
+    src = image.convert("RGBA")
+    target = Image.new("RGBA", (columns * frame_width, len(ROWS) * frame_height), (0, 0, 0, 0))
+    col_w = image.width / columns
+    placed = 0
+    for source_row_index, target_row_index in source_to_target:
+        _name, count = ROWS[target_row_index]
+        y0, y1 = bands[source_row_index]
+        top = max(0, y0 - row_pad)
+        bottom = min(image.height, y1 + row_pad)
+        last_frame: Image.Image | None = None
+        for column in range(count):
+            cell = src.crop((round(column * col_w), top, round((column + 1) * col_w), bottom))
+            if kind == "dark":
+                cell = _remove_dark_edge_background(cell)
+            elif kind != "transparent":
+                cell = _remove_checkerboard_from_cell(
+                    cell, lower=background_lower, upper=background_upper, neutral_spread=neutral_spread
+                )
+            cell = _isolate_main_subject(cell)
+            frame = _fit_frame(cell, frame_width=frame_width, frame_height=frame_height, gutter=gutter)
+            if _cell_has_sprite(frame):
+                last_frame = frame
+            elif hold_last_frame and last_frame is not None:
+                frame = last_frame  # generator under-drew this row: hold the last frame, no gap
+            target.alpha_composite(frame, (column * frame_width, target_row_index * frame_height))
+            placed += 1
+
+    out_png.parent.mkdir(parents=True, exist_ok=True)
+    target.save(out_png)
+    if out_json:
+        _write_json(out_json, sprite_id=sprite_id, image_name=out_png.name, frame_width=frame_width, frame_height=frame_height, columns=columns)
+    typer.echo(f"{out_png} rows={'detected' if detected else 'uniform'} source_rows={len(bands)} frames={placed} bg={kind}")
+
+
 def _strip_row_label(cell: Image.Image, *, label_strip_ratio: float) -> Image.Image:
     """Remove the left presentation label band common in BATTLE contact sheets."""
 

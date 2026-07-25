@@ -1,0 +1,115 @@
+{
+  "pass": true,
+  "mocked": "no",
+  "live": "yes",
+  "exercised": "Chromium loaded the served Battle spectator Pixi route at frozen playhead samples after atlas regeneration and captured full-page/canvas screenshots plus DOM-exported Pixi stage state.",
+  "threshold": {
+    "minCanvasDataUrlLength": 5000
+  },
+  "errors": [],
+  "notFound": [],
+  "samples": [
+    {
+      "seconds": 3,
+      "url": "http://127.0.0.1:3003/#battle/receipt?engine=pixi&pixiTest=1&pixiSeconds=3",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pixi-late-playhead-proof-20260725T1731/pixi-3s.png",
+      "canvasShot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pixi-late-playhead-proof-20260725T1731/pixi-3s-canvas.png",
+      "viewportSeconds": 3,
+      "lanes": [
+        "red-g1",
+        "blue-g1"
+      ],
+      "markers": 14,
+      "lineagePhases": {},
+      "playheadLabel": "PLAYHEAD 00:03",
+      "canvasCount": 1,
+      "canvasRect": {
+        "width": 1030,
+        "height": 260,
+        "x": 315,
+        "y": 269
+      },
+      "dataUrlLength": 8514,
+      "bodyForbidden": []
+    },
+    {
+      "seconds": 55,
+      "url": "http://127.0.0.1:3003/#battle/receipt?engine=pixi&pixiTest=1&pixiSeconds=55",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pixi-late-playhead-proof-20260725T1731/pixi-55s.png",
+      "canvasShot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pixi-late-playhead-proof-20260725T1731/pixi-55s-canvas.png",
+      "viewportSeconds": 55,
+      "lanes": [
+        "red-g1",
+        "blue-g1"
+      ],
+      "markers": 14,
+      "lineagePhases": {},
+      "playheadLabel": "PLAYHEAD 00:55",
+      "canvasCount": 1,
+      "canvasRect": {
+        "width": 1030,
+        "height": 260,
+        "x": 315,
+        "y": 269
+      },
+      "dataUrlLength": 8514,
+      "bodyForbidden": []
+    },
+    {
+      "seconds": 95,
+      "url": "http://127.0.0.1:3003/#battle/receipt?engine=pixi&pixiTest=1&pixiSeconds=95",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pixi-late-playhead-proof-20260725T1731/pixi-95s.png",
+      "canvasShot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pixi-late-playhead-proof-20260725T1731/pixi-95s-canvas.png",
+      "viewportSeconds": 95,
+      "lanes": [
+        "red-g1",
+        "red-g2",
+        "blue-g1",
+        "blue-g2"
+      ],
+      "markers": 32,
+      "lineagePhases": {
+        "red-g2": "active",
+        "blue-g2": "active"
+      },
+      "playheadLabel": "PLAYHEAD 01:35",
+      "canvasCount": 1,
+      "canvasRect": {
+        "width": 1030,
+        "height": 282,
+        "x": 315,
+        "y": 269
+      },
+      "dataUrlLength": 9222,
+      "bodyForbidden": []
+    },
+    {
+      "seconds": 132,
+      "url": "http://127.0.0.1:3003/#battle/receipt?engine=pixi&pixiTest=1&pixiSeconds=132",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pixi-late-playhead-proof-20260725T1731/pixi-132s.png",
+      "canvasShot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pixi-late-playhead-proof-20260725T1731/pixi-132s-canvas.png",
+      "viewportSeconds": 132,
+      "lanes": [
+        "red-g1",
+        "red-g2",
+        "blue-g1",
+        "blue-g2"
+      ],
+      "markers": 32,
+      "lineagePhases": {
+        "red-g2": "active",
+        "blue-g2": "active"
+      },
+      "playheadLabel": "PLAYHEAD 02:12",
+      "canvasCount": 1,
+      "canvasRect": {
+        "width": 1030,
+        "height": 282,
+        "x": 315,
+        "y": 269
+      },
+      "dataUrlLength": 9222,
+      "bodyForbidden": []
+    }
+  ]
+}

@@ -93,6 +93,8 @@ export function BattleSpectatorArena() {
   useRegisterAction("battle:control:sound-arm", { action: "BATTLE_SOUND_ARM", label: "Arm Battle Sound", description: "Enable local sound cues for receipt-backed Battle events when a cue exists", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:control:speed", { action: "BATTLE_SPEED_SET", label: "Set Battle Replay Speed", description: "Change the receipt-backed Battle replay speed control", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:control:focus", { action: "BATTLE_FILTER_SET", label: "Set Battle Focus", description: "Filter receipt-backed Battle lanes.", tags: ["battle", "receipt-backed"] });
+  useRegisterAction("battle:pane:left-toggle", { action: "BATTLE_LEFT_PANE_TOGGLE", label: "Toggle Battle Left Pane", description: "Collapse or expand the Battle agents and evidence rail.", tags: ["battle", "layout"] });
+  useRegisterAction("battle:pane:right-toggle", { action: "BATTLE_RIGHT_PANE_TOGGLE", label: "Toggle Battle Right Pane", description: "Collapse or expand the Battle agent detail pane.", tags: ["battle", "layout"] });
   useRegisterAction("battle:stream:jsonl-open", { action: "BATTLE_JSONL_STREAM_OPEN", label: "Open Receipt Event Stream", description: "Open the receipt-backed Battle event stream sheet", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:sheet:close", { action: "BATTLE_SHEET_CLOSE", label: "Close Battle Sheet", description: "Close the receipt-backed Battle event stream sheet", tags: ["battle", "receipt-backed"] });
 
@@ -455,7 +457,7 @@ export function BattleSpectatorArena() {
           }
         >
           <div className={cn("battle-spectator-rail-slot left-pane relative h-full min-h-0 min-w-0", leftPaneCollapsed && "collapsed")} style={{ overflow: "visible" }}>
-            <button type="button" onClick={toggleLeftPane} title="Toggle Left Pane (Cmd/Ctrl + [)" data-qid="battle:pane:left-toggle" className="pane-toggle-btn left-toggle">{leftPaneCollapsed ? "»" : "«"}</button>
+            <button type="button" onClick={toggleLeftPane} title="Toggle Left Pane (Cmd/Ctrl + [)" data-qid="battle:pane:left-toggle" data-qs-action="BATTLE_LEFT_PANE_TOGGLE" className="pane-toggle-btn left-toggle">{leftPaneCollapsed ? "»" : "«"}</button>
             <div className="h-full min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
               {leftPaneCollapsed ? null : <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} playheadSeconds={playheadSeconds} onSelect={selectActor} />}
             </div>
@@ -465,9 +467,9 @@ export function BattleSpectatorArena() {
           </div>
           {selectedLane ? (
             <div className={cn("battle-agent-pane-slot right-pane relative h-full min-h-0 min-w-0", rightPaneCollapsed && "collapsed")} style={{ overflow: "visible" }}>
-              <button type="button" onClick={toggleRightPane} title="Toggle Right Pane (Cmd/Ctrl + ])" data-qid="battle:pane:right-toggle" className="pane-toggle-btn right-toggle">{rightPaneCollapsed ? "«" : "»"}</button>
+              <button type="button" onClick={toggleRightPane} title="Toggle Right Pane (Cmd/Ctrl + ])" data-qid="battle:pane:right-toggle" data-qs-action="BATTLE_RIGHT_PANE_TOGGLE" className="pane-toggle-btn right-toggle">{rightPaneCollapsed ? "«" : "»"}</button>
               <div className="h-full min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
-                {rightPaneCollapsed ? null : <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} />}
+                {rightPaneCollapsed ? null : <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} playheadSeconds={playheadSeconds} onSound={playCue} />}
               </div>
             </div>
           ) : null}

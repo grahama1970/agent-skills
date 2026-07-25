@@ -2,7 +2,6 @@ import {
 	Application,
 	Container,
 	CullerPlugin,
-	Rectangle,
 	Ticker,
 	UPDATE_PRIORITY,
 	extensions,
@@ -62,10 +61,13 @@ export function configureBattleViewportAccessibility(container: Container): void
 }
 
 export function updateWorldCullArea(world: Container, viewportScreenWidth: number, viewportScreenHeight: number, scrollX: number): void {
-	const pad = 96;
-	const cullArea = new Rectangle(scrollX - pad, -pad, viewportScreenWidth + pad * 2, viewportScreenHeight + pad * 2);
-	world.cullable = true;
-	world.cullArea = cullArea;
+	void viewportScreenWidth;
+	void viewportScreenHeight;
+	void scrollX;
+	// The Battle world contains full-width cached Graphics and moving child layers.
+	// Pixi's bounds-based culling can drop those layers while the viewport is panned.
+	world.cullable = false;
+	world.cullArea = undefined;
 }
 
 export type BattlePixiTickerBinding = {

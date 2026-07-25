@@ -12,8 +12,7 @@ import {
   mockupScoreboard,
 } from "./lib/mockup-design-fixture";
 import { Icons } from "./battle-icons";
-// Retro angular scorecard (accepted design) embedded verbatim in an isolated iframe.
-import scorecardHtml from "./battle-scorecard.html?raw";
+import { BATTLE_SCORECARD_SVG } from "./battle-scorecard-svg";
 import { useRegisterAction } from "./hooks/useRegisterAction";
 import { BattleHungerGamesDeathAnnouncement } from "./BattleHungerGamesDeathAnnouncement";
 import type { HungerGamesDeathCard } from "./lib/battle-hunger-games-notifications";
@@ -59,13 +58,6 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
       ? formatReceiptScore(scoreboard.blue_score)
       : null;
 
-  // Embed the accepted adaptive-lineage scorecard verbatim, binding its score data
-  // attributes to real receipt data (em dash when the fixture carries no numeric
-  // score — never faked; the embedded script syncs the SVG text from these).
-  const scorecardDoc = scorecardHtml
-    .replace('data-red-score="8.4"', `data-red-score="${redScore ?? "—"}"`)
-    .replace('data-blue-score="7.2"', `data-blue-score="${blueScore ?? "—"}"`);
-
   function selectEvent(event: BattleEvent) {
     const candidate =
       event.actor_id.startsWith("payload")
@@ -93,23 +85,8 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
           </div>
         </div>
 
-        <div className="score battle-score-block">
-          <div className="scoreSide red" data-testid="score-red">
-            <div className="scoreLabel">RED TEAM</div>
-            <div className="scoreValueRow">
-              <div className="scoreIcon"><Icons.Bug aria-hidden="true" /></div>
-              <div className="scoreNum">{mockupScoreboard().red}</div>
-            </div>
-          </div>
-          <div className="vs">VS</div>
-          <div className="scoreSide blue">
-            <div className="scoreLabel">BLUE TEAM</div>
-            <div className="scoreValueRow">
-              <div className="scoreNum">{mockupScoreboard().blue}</div>
-              <div className="scoreIcon"><Icons.Shield aria-hidden="true" /></div>
-            </div>
-          </div>
-        </div>
+        <Scorecard red={String(mockupScoreboard().red)} blue={String(mockupScoreboard().blue)} />
+
 
         <div className="liveEvents battle-live-events">
           <div className="liveEventsHead"><span className="dot red" aria-hidden="true" /> LIVE EVENTS</div>
@@ -162,19 +139,13 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
         </div>
       </div>
 
-      <iframe
-        className="battle-scorecard-frame pointer-events-none"
-        data-qid="battle:header:score"
-        title="Red Team versus Blue Team scorecard"
-        scrolling="no"
-        srcDoc={scorecardDoc}
-      />
+      <Scorecard red={redScore} blue={blueScore} />
 
       {/* RIGHT — left-aligned terminal event ticker (container hugs right, text reads L→R) */}
       <div className="battle-column-right">
         <div className="live-events-head">
           <span className="live-dot" aria-hidden="true" /> LIVE EVENTS
-          <Button data-qid="battle:events:view-all" data-qs-action="BATTLE_EVENTS_VIEW_ALL" variant="ghost" size="icon" className="ml-auto h-6 w-6 shrink-0" title="View all receipt-backed events" onClick={onOpenJsonl}>
+          <Button data-qid="battle:events:view-all" data-qs-action="BATTLE_EVENTS_VIEW_ALL" variant="ghost" size="icon" className="ml-auto h-11 w-11 shrink-0" title="View all receipt-backed events" onClick={onOpenJsonl}>
             <Icons.FileJson className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -198,6 +169,23 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
         </div>
       </div>
     </header>
+  );
+}
+
+/** Scorecard — user-supplied SVG (faithful to battle-004 core mockup), bound to
+ * real scores. A null score renders a muted em dash — never faked. */
+function Scorecard({ red, blue }: { red: string | null; blue: string | null }) {
+  const html = BATTLE_SCORECARD_SVG
+    .replace("__RED_SCORE__", red ?? "—")
+    .replace("__BLUE_SCORE__", blue ?? "—");
+  return (
+    <div
+      className="scorecard-header"
+      data-qid="battle:header:score"
+      role="img"
+      aria-label={`Red Team ${red ?? "no score"} versus Blue Team ${blue ?? "no score"}`}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }
 

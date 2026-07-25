@@ -16,7 +16,7 @@ import { useRegisterAction } from "./hooks/useRegisterAction";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
 import { MockupAgentDetailPane } from "./MockupAgentDetailPane";
 
-type Props = { lane: Lane; lanes: Lane[]; events: BattleEvent[]; activeFinisher: BlueFinisherState | null; onSound?: (cue: string) => void };
+type Props = { lane: Lane; lanes: Lane[]; events: BattleEvent[]; activeFinisher: BlueFinisherState | null; playheadSeconds?: number; onSound?: (cue: string) => void };
 type TraceField = "observation" | "hypothesis" | "action" | "result" | "learned" | "next_move";
 const TRACE_FIELDS: Array<[TraceField, string]> = [["observation", "Observation"], ["hypothesis", "Hypothesis"], ["action", "Action"], ["result", "Result"], ["learned", "Learned"], ["next_move", "Next move"]];
 
@@ -28,7 +28,7 @@ function receiptText(value: string | null | undefined, fallback: string): string
   return hasReceiptText(value) ? value.trim() : fallback;
 }
 
-export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }: Props) {
+export function AgentDetailPane({ lane, lanes, events, activeFinisher, playheadSeconds = 0, onSound }: Props) {
   void lanes;
   if (isBattleDesignView()) return <MockupAgentDetailPane lane={lane} />;
   void activeFinisher;
@@ -40,6 +40,7 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
   useRegisterAction("battle:agent-pane:tab:receipts", { action: "BATTLE_AGENT_PANE_TAB_RECEIPTS", label: "Show Battle Agent Receipts", description: "Show proof artifacts for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
   useRegisterAction("battle:agent-pane:proof:docker-replay", { action: "BATTLE_AGENT_PANE_DOCKER_REPLAY", label: "Show Docker Replay Proof", description: "Show the receipt-backed Docker/Judge replay proof for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
   useRegisterAction("battle:agent-pane:tab:live", { action: "BATTLE_AGENT_PANE_TAB_LIVE", label: "Show Battle Agent Live Stream", description: "Show the live streaming stdout/stderr console and packet/network panel for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
+  useRegisterAction("battle:agent-pane:lifecycle-toggle", { action: "BATTLE_AGENT_PANE_LIFECYCLE_TOGGLE", label: "Toggle Battle Lifecycle Evidence", description: "Expand or collapse adaptive lifecycle evidence for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
 
   const lifecycle = useMemo(() => laneLifecycleEvidenceView(lane), [lane]);
   const model = useMemo(() => buildModel(lane, events), [lane, events]);
@@ -47,14 +48,24 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
 
   // Live SSE frames fan in from the shared bus (useBattleLiveTransport owns the single EventSource).
   const liveBus = useBattleLiveBus();
-  const liveConsole = useMemo(() => liveConsoleLinesForLane(liveBus.events, lane), [liveBus.events, lane]);
+  const sseConsole = useMemo(() => liveConsoleLinesForLane(liveBus.events, lane), [liveBus.events, lane]);
   const livePackets = useMemo(() => livePacketEventsForLane(liveBus.events, lane), [liveBus.events, lane]);
+  // Receipt-replay fallback: when no live SSE console is streaming, surface the
+  // selected lane's receipt-backed stdout/stderr up to the current playhead so the
+  // right pane looks live during replay. Real receipt text only — never faked.
+  const receiptConsole = useMemo(() => receiptConsoleLinesForLane(lane, playheadSeconds, model.proofMode), [lane, playheadSeconds, model.proofMode]);
+  const isSse = sseConsole.length > 0;
+  const liveConsole = isSse ? sseConsole : receiptConsole;
   const liveStdout = useMemo(() => latestNonEmpty(liveConsole.filter((line) => line.stream === "stdout").map((line) => line.text)), [liveConsole]);
   const liveStderr = useMemo(() => latestNonEmpty(liveConsole.filter((line) => line.stream === "stderr").map((line) => line.text)), [liveConsole]);
+  const [activeTab, setActiveTab] = useState("summary");
 
   return (
-    <aside className="flex h-full min-h-0 w-full flex-col" data-qid={`battle:agent-pane:${lane.id}`} title={`Agent detail for ${lane.name}`}>
-      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl p-0">
+    <aside className="flex w-full flex-col" data-qid={`battle:agent-pane:${lane.id}`} title={`Agent detail for ${lane.name}`}>
+      {/* Natural height so the enclosing overflow-y-auto column scrolls (WebGPT design
+          review 2026-07-23: lower cockpit content was clipped/inaccessible under the
+          old flex-1 + overflow-hidden which pinned the card to the container height). */}
+      <Card className="flex flex-col rounded-2xl p-0">
         <header className="border-b border-white/10 bg-gradient-to-r from-white/[.035] to-transparent p-3">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="min-w-0"><div className="battle-label">Agent Detail</div><div className="mt-0.5 text-xs font-semibold leading-snug text-slate-400">Selected agent cockpit</div></div>
@@ -74,20 +85,20 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
 
         <LifecycleEvidencePanel lifecycle={lifecycle} />
 
-        <Tabs defaultValue="summary" className="flex min-h-0 flex-1 flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
           <TabsList className="h-auto w-full rounded-none border-b border-white/10 bg-black/20" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
-            <TabsTrigger data-qid="battle:agent-pane:tab:summary" data-qs-action="BATTLE_AGENT_PANE_TAB_SUMMARY" value="summary" title="Show Summary tab" className="min-h-9 px-1 text-[10px] leading-none">Summary</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:live" data-qs-action="BATTLE_AGENT_PANE_TAB_LIVE" value="live" title="Show live streaming stdout/stderr console and packet panel" className="min-h-9 px-1 text-[10px] leading-none">
+            <TabsTrigger data-qid="battle:agent-pane:tab:summary" data-qs-action="BATTLE_AGENT_PANE_TAB_SUMMARY" value="summary" title="Show Summary tab" className="min-h-11 px-1 text-[10px] leading-none" onClick={() => setActiveTab("summary")}>Summary</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:live" data-qs-action="BATTLE_AGENT_PANE_TAB_LIVE" value="live" title="Show live streaming stdout/stderr console and packet panel" className="min-h-11 px-1 text-[10px] leading-none" onClick={() => setActiveTab("live")}>
               <span className="flex items-center gap-1"><Radio className={`h-3.5 w-3.5 ${liveBus.meta.status === "open" || liveBus.meta.status === "following" ? "text-battle-green" : ""}`} />Live{liveConsole.length || livePackets.length ? <span className="rounded bg-white/10 px-1 text-[9px]">{liveConsole.length + livePackets.length}</span> : null}</span>
             </TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:turns" data-qs-action="BATTLE_AGENT_PANE_TAB_TURNS" value="turns" title="Show Turns tab" className="min-h-9 px-1 text-[10px] leading-none">Turns</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:logs" data-qs-action="BATTLE_AGENT_PANE_TAB_LOGS" value="logs" title="Show Logs tab" className="min-h-9 px-1 text-[10px] leading-none">Logs</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:skills" data-qs-action="BATTLE_AGENT_PANE_TAB_SKILLS" value="skills" title="Show Skills tab" className="min-h-9 px-1 text-[10px] leading-none">Skills</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:receipts" data-qs-action="BATTLE_AGENT_PANE_TAB_RECEIPTS" value="receipts" title="Show Receipts tab" className="min-h-9 px-1 text-[10px] leading-none">Receipts</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:turns" data-qs-action="BATTLE_AGENT_PANE_TAB_TURNS" value="turns" title="Show Turns tab" className="min-h-11 px-1 text-[10px] leading-none" onClick={() => setActiveTab("turns")}>Turns</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:logs" data-qs-action="BATTLE_AGENT_PANE_TAB_LOGS" value="logs" title="Show Logs tab" className="min-h-11 px-1 text-[10px] leading-none" onClick={() => setActiveTab("logs")}>Logs</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:skills" data-qs-action="BATTLE_AGENT_PANE_TAB_SKILLS" value="skills" title="Show Skills tab" className="min-h-11 px-1 text-[10px] leading-none" onClick={() => setActiveTab("skills")}>Skills</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:receipts" data-qs-action="BATTLE_AGENT_PANE_TAB_RECEIPTS" value="receipts" title="Show Receipts tab" className="min-h-11 px-1 text-[10px] leading-none" onClick={() => setActiveTab("receipts")}>Receipts</TabsTrigger>
           </TabsList>
           <div className="min-h-0 flex-1 overflow-auto p-2.5">
-            <TabsContent value="summary" className="mt-0 space-y-2"><CurrentTurn model={model} /><TraceCard trace={model.trace} /><OutputCard stdout={liveStdout || model.stdout} stderr={liveStderr || model.stderr} live={Boolean(liveStdout || liveStderr)} />{model.skills.length ? <SkillsCard skills={model.skills} /> : null}</TabsContent>
-            <TabsContent value="live" className="mt-0 space-y-2"><LiveStreamPanel meta={liveBus.meta} console={liveConsole} packets={livePackets} isLiveRoute={liveBus.meta.status !== "idle"} /></TabsContent>
+            <TabsContent value="summary" className="mt-0 space-y-2"><CurrentTurn model={model} /><TraceCard trace={model.trace} /><OutputCard stdout={liveStdout || model.stdout} stderr={liveStderr || model.stderr} live={isSse} />{model.skills.length ? <SkillsCard skills={model.skills} /> : null}</TabsContent>
+            <TabsContent value="live" className="mt-0 space-y-2"><LiveStreamPanel meta={liveBus.meta} console={liveConsole} packets={livePackets} isLiveRoute={liveBus.meta.status !== "idle"} replayMode={!isSse && liveConsole.length > 0} /></TabsContent>
             <TabsContent value="turns" className="mt-0 space-y-2">{model.turnEvents.length ? model.turnEvents.map((event) => <TurnEvent key={event.id} event={event} />) : <EmptyState label="No Battle turns emitted." />}</TabsContent>
             <TabsContent value="logs" className="mt-0 space-y-3">{model.relatedEvents.map((event) => <EventRow key={event.id} event={event} />)}<RawJson events={model.relatedEvents} /></TabsContent>
             <TabsContent value="skills" className="mt-0 space-y-2">{model.skills.length ? model.skills.map((skill) => <SkillRow key={`${skill.name}-${skill.receipt_id ?? "no-receipt"}`} skill={skill} />) : <EmptyState label="No skills/tools emitted for this lane." />}</TabsContent>
@@ -152,8 +163,10 @@ function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof la
         <div className="battle-label">Lifecycle evidence</div>
         <button
           type="button"
-          className="rounded border border-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 hover:border-white/20 hover:text-slate-200"
+          className="min-h-11 rounded border border-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 hover:border-white/20 hover:text-slate-200"
           data-qid="battle:agent-pane:lifecycle-toggle"
+          data-qs-action="BATTLE_AGENT_PANE_LIFECYCLE_TOGGLE"
+          title={expanded ? "Hide adaptive lifecycle evidence" : "Show adaptive lifecycle evidence"}
           onClick={() => setExpanded((value) => !value)}
         >
           {expanded ? "Hide" : "Show"}
@@ -412,6 +425,26 @@ function useBattleLiveBus(): BattleLiveBusSnapshot {
 type LiveConsoleLine = { key: string; seq: number; at: number; stream: "stdout" | "stderr"; text: string; proof: ProofMode; eventType: string };
 type LivePacketEvent = { key: string; seq: number; at: number; eventType: string; summary: string; network?: BattleNetworkSummary; proof: ProofMode };
 
+/**
+ * Receipt-replay console for the selected lane: its receipt-backed stdout/stderr,
+ * revealed once the playhead reaches the lane's active window. Real receipt text
+ * only — this is the replay analogue of the live SSE console so the right pane
+ * streams dynamically during replay.
+ */
+function receiptConsoleLinesForLane(lane: Lane, playheadSeconds: number, proof: ProofMode): LiveConsoleLine[] {
+  const laneAt = lane.first_active_segment_elapsed_seconds ?? lane.visible_from_elapsed_seconds ?? lane.start_elapsed_seconds ?? 0;
+  if (laneAt > playheadSeconds + 0.05) return [];
+  const clean = (text: unknown): text is string => typeof text === "string" && text.trim().length > 0 && text !== "not emitted";
+  const lines: LiveConsoleLine[] = [];
+  (lane.stdout ?? []).forEach((text, index) => {
+    if (clean(text)) lines.push({ key: `${lane.id}-r-stdout-${index}`, seq: index, at: laneAt, stream: "stdout", text, proof, eventType: "receipt.stdout" });
+  });
+  (lane.stderr ?? []).forEach((text, index) => {
+    if (clean(text)) lines.push({ key: `${lane.id}-r-stderr-${index}`, seq: 1000 + index, at: laneAt, stream: "stderr", text, proof, eventType: "receipt.stderr" });
+  });
+  return lines;
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 }
@@ -488,20 +521,20 @@ function liveStatusLabel(status: string): string {
   return "IDLE";
 }
 
-function LiveStreamPanel({ meta, console, packets, isLiveRoute }: { meta: BattleLiveBusSnapshot["meta"]; console: LiveConsoleLine[]; packets: LivePacketEvent[]; isLiveRoute: boolean }) {
+function LiveStreamPanel({ meta, console, packets, isLiveRoute, replayMode = false }: { meta: BattleLiveBusSnapshot["meta"]; console: LiveConsoleLine[]; packets: LivePacketEvent[]; isLiveRoute: boolean; replayMode?: boolean }) {
   const streaming = meta.status === "open" || meta.status === "following";
   const stdoutLines = console.filter((line) => line.stream === "stdout");
   const stderrLines = console.filter((line) => line.stream === "stderr");
   return (
-    <section className="space-y-2" data-qid="battle:agent-pane:live-stream" data-live-status={meta.status}>
+    <section className="space-y-2" data-qid="battle:agent-pane:live-stream" data-live-status={replayMode ? "replay" : meta.status}>
       <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[.025] px-3 py-2">
         <div className="flex items-center gap-2">
-          <Radio className={`h-4 w-4 ${streaming ? "text-battle-green" : meta.status === "error" ? "text-battle-red" : "text-slate-500"}`} />
-          <span className="battle-label">{liveStatusLabel(meta.status)}</span>
+          <Radio className={`h-4 w-4 ${streaming ? "text-battle-green" : replayMode ? "text-battle-cyan" : meta.status === "error" ? "text-battle-red" : "text-slate-500"}`} />
+          <span className="battle-label">{replayMode ? "receipt replay · synced to playhead" : liveStatusLabel(meta.status)}</span>
         </div>
         <span className="font-mono text-[10px] text-slate-500">seq {meta.appliedSeq}/{meta.lastSeq}</span>
       </div>
-      {!isLiveRoute ? (
+      {!isLiveRoute && !replayMode ? (
         <EmptyState label="Live SSE transport is not connected. Start ./run.sh serve-live-transport and open the receipt-backed #battle view to stream evidence." />
       ) : null}
       <LiveConsole label="stdout" icon="stdout" lines={stdoutLines} tone="text-slate-200" />

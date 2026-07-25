@@ -1,0 +1,19 @@
+{
+  "mocked": "no",
+  "live": "yes",
+  "exercised": "Regenerated served Pixi runner atlases with clean_sprite_atlas.py convert-autogrid, validated PNG and Pixi JSON contracts, and loaded the updated atlases through the served Battle spectator route in the Pixi late-playhead proof.",
+  "updated_assets": [
+    "skills/battle/assets/sprites/pixijs/crimson_chainsaw_demon.png",
+    "skills/battle/assets/sprites/pixijs/crimson_hornbreaker.png",
+    "skills/battle/assets/sprites/pixijs/plague_nurgling.png"
+  ],
+  "validator_results": {
+    "crimson_chainsaw_demon": "validate-png PASS; validate PASS",
+    "crimson_hornbreaker": "validate-png PASS; validate PASS",
+    "plague_nurgling": "validate-png PASS; validate PASS"
+  },
+  "not_updated": {
+    "crimson_chainsword_berserker": "convert-autogrid detected 15 row bands and fell back to uniform slicing; candidate was not shipped"
+  },
+  "source_mount": "skills/battle/spectator/public/battle-sprites/pixijs -> ../../../assets/sprites/pixijs"
+}

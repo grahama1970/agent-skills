@@ -31,6 +31,8 @@ import {
 	type KillShotVisual,
 } from "./battle-pixi-kill-shot";
 import { childLineageMotion, createPixiLineageLayer, syncPixiLineage, teardownPixiLineageLayer, type PixiLineageLayer } from "./battle-pixi-lineage";
+import { hasLucideMarker, lucideMarkerGraphic } from "./battle-lucide-markers";
+import { createBattleEventLabelLayer, syncBattleEventLabels, teardownBattleEventLabelLayer, type BattleEventLabelLayer } from "./battle-pixi-event-labels";
 import {
 	createBeatVfxLayer,
 	syncBeatEmphasisVfx,
@@ -53,8 +55,23 @@ export type BattlePixiSceneLayers = {
 	killShots: KillShotLayer;
 	beatVfx: BeatVfxLayer;
 	runners: Container;
+	eventLabels: BattleEventLabelLayer;
 	markerPool: Sprite[];
+	lucideMarkerPool: Graphics[];
+	// Current event-selection callback; markers dispatch to it on pointertap.
+	onSelectEvent: { current: (eventId: string) => void };
 };
+
+type SelectableMarker = { __eventId?: string; eventMode: string; cursor: string; on: (event: string, fn: () => void) => void };
+
+/** Make a pooled marker clickable once; it reports its current __eventId on tap. */
+function bindMarkerSelection(marker: SelectableMarker, layers: BattlePixiSceneLayers): void {
+	marker.eventMode = "static";
+	marker.cursor = "pointer";
+	marker.on("pointertap", () => {
+		if (marker.__eventId) layers.onSelectEvent.current(marker.__eventId);
+	});
+}
 
 export type BattlePixiSceneRuntime = BattlePixiSceneLayers & {
 	tracksSignature: string;
@@ -78,24 +95,30 @@ function runnerXAtPlayhead(
 }
 
 export function createBattlePixiSceneLayers(): BattlePixiSceneRuntime {
-	const world = configureBattleSceneLayer(new Container(), { label: "battle-world", cullable: true });
+	const world = configureBattleSceneLayer(new Container(), { label: "battle-world", cullable: false });
 	const tracksStatic = new Graphics();
 	const tracksPlayhead = new Graphics();
-	configureBattleSceneLayer(tracksStatic, { label: "battle-tracks-static", cullable: true });
-	configureBattleSceneLayer(tracksPlayhead, { label: "battle-tracks-playhead", cullable: true });
-	const markers = configureBattleSceneLayer(new Container(), { label: "battle-markers", cullable: true });
+	configureBattleSceneLayer(tracksStatic, { label: "battle-tracks-static", cullable: false });
+	configureBattleSceneLayer(tracksPlayhead, { label: "battle-tracks-playhead", cullable: false });
+	const markers = configureBattleSceneLayer(new Container(), { label: "battle-markers", cullable: false });
+	markers.interactiveChildren = true; // event markers are clickable (select the lane)
 	const lineage = createPixiLineageLayer();
 	const killShots = createKillShotLayer();
 	const beatVfx = createBeatVfxLayer();
-	const runners = configureBattleSceneLayer(new Container(), { label: "battle-runners", cullable: true });
+	const runners = configureBattleSceneLayer(new Container(), { label: "battle-runners", cullable: false });
+	const eventLabels = createBattleEventLabelLayer();
 	world.addChild(tracksStatic);
-	world.addChild(tracksPlayhead);
 	world.addChild(markers);
+	// Exploit-progress line draws ABOVE the event markers so it reads as one
+	// continuous line with dots on it (mockup), instead of the marker sprites'
+	// opaque centers breaking the line.
+	world.addChild(tracksPlayhead);
+	world.addChild(eventLabels.container);
 	world.addChild(lineage.container);
 	world.addChild(killShots.container);
 	world.addChild(beatVfx.container);
 	world.addChild(runners);
-	return { world, tracksStatic, tracksPlayhead, markers, lineage, killShots, beatVfx, runners, markerPool: [], tracksSignature: "" };
+	return { world, tracksStatic, tracksPlayhead, markers, lineage, killShots, beatVfx, runners, eventLabels, markerPool: [], lucideMarkerPool: [], onSelectEvent: { current: () => {} }, tracksSignature: "" };
 }
 
 function drawDashedSegment(graphics: Graphics, x0: number, x1: number, y: number, dash = 8, gap = 6) {
@@ -216,9 +239,10 @@ function placePooledMarker(
 	y: number,
 	alpha: number,
 	scale = 1,
+	selection?: { eventId: string; layers: BattlePixiSceneLayers },
 ): number {
 	if (!texture) return writeIndex;
-	let sprite = pool[writeIndex];
+	let sprite = pool[writeIndex] as (Sprite & { __eventId?: string }) | undefined;
 	if (!sprite) {
 		sprite = new Sprite({ anchor: 0.5, eventMode: "none" });
 		sprite.cullable = true;
@@ -231,6 +255,13 @@ function placePooledMarker(
 	sprite.alpha = alpha;
 	sprite.scale.set(scale);
 	sprite.visible = true;
+	// Event markers are clickable (select the lane); transient effect sprites are not.
+	sprite.__eventId = selection?.eventId;
+	if (selection) {
+		if (sprite.eventMode === "none") bindMarkerSelection(sprite as unknown as SelectableMarker, selection.layers);
+	} else if (sprite.eventMode !== "none") {
+		sprite.eventMode = "none";
+	}
 	return writeIndex + 1;
 }
 
@@ -240,12 +271,56 @@ function hideUnusedMarkers(pool: Sprite[], usedCount: number) {
 	}
 }
 
+type PooledLucide = Graphics & { __markerKind?: LaneEvent["kind"] };
+
+/** Place a pooled lucide-vector marker (shared GraphicsContext) at (x,y). */
+function placePooledLucideMarker(
+	pool: Graphics[],
+	container: Container,
+	writeIndex: number,
+	kind: LaneEvent["kind"],
+	x: number,
+	y: number,
+	alpha: number,
+	scale: number,
+	selection?: { eventId: string; layers: BattlePixiSceneLayers },
+): number {
+	let graphic = pool[writeIndex] as (PooledLucide & { __eventId?: string }) | undefined;
+	if (!graphic || graphic.__markerKind !== kind) {
+		if (graphic) graphic.destroy({ context: false });
+		const created = lucideMarkerGraphic(kind) as (PooledLucide & { __eventId?: string }) | null;
+		if (!created) return writeIndex;
+		created.__markerKind = kind;
+		container.addChild(created);
+		pool[writeIndex] = created;
+		graphic = created;
+		if (selection) bindMarkerSelection(graphic as unknown as SelectableMarker, selection.layers);
+	}
+	graphic.x = Math.round(x);
+	graphic.y = Math.round(y);
+	graphic.alpha = alpha;
+	graphic.scale.set(scale);
+	graphic.visible = true;
+	graphic.__eventId = selection?.eventId;
+	return writeIndex + 1;
+}
+
+function hideUnusedGraphics(pool: Graphics[], usedCount: number) {
+	for (let index = usedCount; index < pool.length; index += 1) {
+		pool[index].visible = false;
+	}
+}
+
 
 /** Readable in-lane runners — match design row band without 95% pile-up. */
 export function runnerDisplayScale(rowHeightPx: number): number {
-	const framePx = 64;
-	const raw = (Math.max(24, rowHeightPx) * 0.78) / framePx;
-	return Math.max(0.65, Math.min(1.15, raw));
+	// Pixel-art crispness (WebGPT design review 2026-07-23): use an INTEGER display
+	// scale so the 64px atlas frame maps 1:1 to device pixels — fractional resampling
+	// is what made the runners look rough/soft. The 64px frame already pads the
+	// character to ~50px visible, which sits cleanly baseline-inset in a 68-84px row.
+	if (rowHeightPx >= 120) return 2;
+	if (rowHeightPx >= 56) return 1;
+	return 0.5;
 }
 
 /**
@@ -471,12 +546,14 @@ function syncEntities(
 	collapsedParentIds: Set<string> = new Set(),
 ): { burstFrameIndex: number | null; beatVfx: import("./battle-pixi-beat-vfx").BeatVfxKind } {
 	const currentSeconds = input.testMode?.freezeTime ? input.testMode.currentSeconds : input.viewport.currentSeconds;
+	layers.onSelectEvent.current = input.onSelectEvent;
 	const disableParticles = input.testMode?.disableParticles ?? false;
 	const validationGate = pixiReceiptValidationGate(input.fixture, input.mode);
 	const useElapsed = fixtureUsesElapsedAxis(input.fixture);
 	const spriteTheme = input.fixture.sprite_theme;
 	const activeLaneIds = new Set(lanes.map((lane) => lane.id));
 	let markerWriteIndex = 0;
+	let lucideWriteIndex = 0;
 
 	for (const laneId of [...runnerMap.keys()]) {
 		if (!activeLaneIds.has(laneId)) {
@@ -503,16 +580,33 @@ function syncEntities(
 			const mx = secondsToWorldX(eventSeconds, allottedSeconds, contentWidth);
 			const marker = battleSpriteTheme.markerForEvent(event);
 			if (Math.abs(mx - runnerX) < 16) continue;
-			markerWriteIndex = placePooledMarker(
-				layers.markerPool,
-				layers.markers,
-				markerWriteIndex,
-				textureFromAtlas(marker.texture, markerAtlas),
-				mx,
-				y,
-				marker.opacity ?? 1,
-				markerDisplayScale(row.heightPx),
-			);
+			const eventSelection = { eventId: event.id ?? `${lane.id}-${event.kind}-${event.x}`, layers };
+			if (hasLucideMarker(event.kind)) {
+				// Crisp lucide vector glyph (skull/shield/rocket/…) rendered in-canvas.
+				lucideWriteIndex = placePooledLucideMarker(
+					layers.lucideMarkerPool,
+					layers.markers,
+					lucideWriteIndex,
+					event.kind,
+					mx,
+					y,
+					marker.opacity ?? 1,
+					markerDisplayScale(row.heightPx),
+					eventSelection,
+				);
+			} else {
+				markerWriteIndex = placePooledMarker(
+					layers.markerPool,
+					layers.markers,
+					markerWriteIndex,
+					textureFromAtlas(marker.texture, markerAtlas),
+					mx,
+					y,
+					marker.opacity ?? 1,
+					markerDisplayScale(row.heightPx),
+					eventSelection,
+				);
+			}
 
 			if (event.kind === "blue_blast") continue;
 
@@ -568,6 +662,9 @@ function syncEntities(
 	}
 
 	hideUnusedMarkers(layers.markerPool, markerWriteIndex);
+	hideUnusedGraphics(layers.lucideMarkerPool, lucideWriteIndex);
+
+	syncBattleEventLabels(layers.eventLabels, lanes, rowLayout, currentSeconds, allottedSeconds, contentWidth, useElapsed);
 
 	syncPixiLineage({
 		layer: layers.lineage,
@@ -656,6 +753,10 @@ export function destroyRunnerActors(runners: Map<string, RunnerActor>) {
 export function teardownBattlePixiSceneLayers(layers: BattlePixiSceneRuntime): void {
 	layers.tracksStatic.cacheAsTexture(false);
 	destroyMarkerPool(layers.markerPool);
+	// Destroy the Graphics wrappers but NOT the shared GraphicsContexts (reused across mounts).
+	for (const graphic of layers.lucideMarkerPool) graphic.destroy({ context: false });
+	layers.lucideMarkerPool.length = 0;
+	teardownBattleEventLabelLayer(layers.eventLabels);
 	teardownPixiLineageLayer(layers.lineage);
 	teardownKillShotLayer(layers.killShots);
 	teardownBeatVfxLayer(layers.beatVfx);

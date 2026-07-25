@@ -1,0 +1,21 @@
+{
+  "app": "Battle Spectator",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "warned": 0,
+  "skipped": 0,
+  "interactions": [
+    {
+      "surface": "main",
+      "element": "full-page",
+      "action": "screenshot",
+      "description": "Full page of http://127.0.0.1:3003/#battle",
+      "status": "PASS",
+      "evidence": "captured /home/graham/workspace/experiments/agent-skills/skills/battle/local/test-interactions-final-assets-20260725T1731/captures/main/0001_full-page_screenshot.png",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/test-interactions-final-assets-20260725T1731/captures/main/0001_full-page_screenshot.png",
+      "duration_ms": 1048,
+      "assertions": []
+    }
+  ]
+}

@@ -102,6 +102,8 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, playhea
             aria-label="Filter agents"
             className="roster-search-input"
             data-qid="battle:roster:search"
+            data-qs-action="BATTLE_ROSTER_SEARCH"
+            title="Filter Battle agents"
           />
           <div className="agent-roster-list">
             {rosterAgents.length === 0 ? (
@@ -130,21 +132,8 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, playhea
         </Panel>
       )}
 
-      {designView || hasReceiptScores ? (
-        <Panel title="Team Standings" designView={designView}>
-          {designView ? (
-          <>
-            <StandRow tone="red" icon={<Icons.Bug className="h-4 w-4" />} label="Red Team" sub="Exploit Agents" score={mockupScoreboard().red} />
-            <StandRow tone="blue" icon={<Icons.Shield className="h-4 w-4" />} label="Blue Team" sub="Patch Agents" score={mockupScoreboard().blue} />
-          </>
-          ) : (
-            <div className="space-y-2">
-              <ReceiptStanding icon={<Icons.Bug className="h-5 w-5" />} label="Red Team" sub="Exploit agents" value={formatReceiptScore(scoreboard?.red_score)} tone="text-battle-red" />
-              <ReceiptStanding icon={<Icons.Shield className="h-5 w-5" />} label="Blue Team" sub="Patch agents" value={formatReceiptScore(scoreboard?.blue_score)} tone="text-battle-blue" />
-            </div>
-          )}
-        </Panel>
-      ) : null}
+      {/* Team Standings panel removed: the red/blue standing is already shown in the
+          top scorecard, so a left-rail duplicate is redundant. */}
 
       {!designView ? (
         <Panel title="Live Evidence" designView={false} count={evidenceFrames.revealed.length}>
@@ -165,6 +154,7 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, playhea
                     type="button"
                     className="receipt-evidence-row"
                     data-qid={`battle:left-pane:live-evidence:${frame.kind}:${frame.laneId}`}
+                    data-qs-action="BATTLE_EVIDENCE_SELECT"
                     title={`${frame.laneName}: ${frame.text}`}
                     onClick={() => onSelect(frame.laneId)}
                   >

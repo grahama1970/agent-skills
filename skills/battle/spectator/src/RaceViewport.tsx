@@ -339,6 +339,9 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
 
   useEffect(() => {
     if (!playing || highlightReel) return;
+    // Replay-from-end: pressing Play while parked at the receipt end restarts from
+    // the beginning instead of immediately re-stopping (the "can only play once" bug).
+    setPlayheadSeconds((value) => (receiptReplay && value >= allotted - 0.05 ? replayStartSeconds : value));
     const multiplier = Number.parseFloat(speed) || 1;
     let frame = 0;
     let last = performance.now();
@@ -397,8 +400,17 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   useEffect(() => {
     const container = lanesContainerRef.current;
     if (!container) return;
-    const id = window.requestAnimationFrame(() => warnMarkerOverlaps(container));
-    return () => window.cancelAnimationFrame(id);
+    // Check overlaps only after the layout has settled: a single rAF still catches
+    // marker positions mid-transition (before nudges commit), producing false
+    // "marker overlaps" warnings. Double-rAF waits for the committed frame.
+    let inner = 0;
+    const outer = window.requestAnimationFrame(() => {
+      inner = window.requestAnimationFrame(() => warnMarkerOverlaps(container));
+    });
+    return () => {
+      window.cancelAnimationFrame(outer);
+      window.cancelAnimationFrame(inner);
+    };
   }, [visibleLanes, zoom, collapsed]);
 
   const mockupBlue = mockupBlueStripStats();
@@ -440,11 +452,14 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   const timelineBody = (
     <>
       <BattleTimelineAxis ticks={ticks} allottedSeconds={allotted} />
-      <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative", receiptReplay ? (pixiEngine ? "battle-receipt-pixi-rows" : "min-h-0") : "min-h-[calc(100%-2.25rem)]")} style={receiptReplay && pixiEngine ? { ["--battle-label-w" as string]: `${BATTLE_LANE_LABEL_PX}px` } : undefined}>
+      <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative", receiptReplay ? (pixiEngine ? "battle-receipt-pixi-rows" : "min-h-0") : "min-h-[calc(100%-2.25rem)]")} style={receiptReplay && pixiEngine ? { ["--battle-label-w" as string]: `${BATTLE_LANE_LABEL_PX}px`, height: pixiStageHeightPx } : undefined}>
         {/* Under engine=pixi the content-aligned Pixi playhead (drawPlayheadTracks) is the
             single source of truth; the DOM cursor would be a redundant second head. */}
         {(!designView && !pixiEngine) ? <BattlePlayheadCursor playheadSeconds={playheadSeconds} /> : null}
-        {visibleLanes.map((lane, index) => (
+        {/* Under the receipt pixi engine the lane labels, chevrons, and selection are
+            rendered entirely in Pixi (battle-pixi-labels.ts); the DOM LaneRow scaffold
+            is omitted so the timeline well contains zero DOM. */}
+        {(receiptReplay && pixiEngine ? [] : visibleLanes).map((lane, index) => (
           <LaneRow
             ref={getRowRef(lane.id)}
             key={lane.id}
@@ -497,10 +512,24 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             heightPx={pixiStageHeightPx}
             playing={playing}
             collapsedParentIds={collapsed}
+            canScrub={!(receiptReplay && fixture.battle_timeline_control?.controls?.can_scrub === false)}
+            onScrubSeconds={(seconds) => {
+              const next = Math.min(allotted, Math.max(0, seconds));
+              setPlayheadSeconds(next);
+              onUserScrubSeconds?.(next);
+            }}
+            onToggleCollapse={(laneId) =>
+              setCollapsed((previous) => {
+                const next = new Set(previous);
+                if (next.has(laneId)) next.delete(laneId);
+                else next.add(laneId);
+                return next;
+              })
+            }
           />
         ) : null}
       </div>
-      {(designView || receiptReplay) ? (
+      {((designView || receiptReplay) && !pixiEngine) ? (
         <div className="playheadOverlay" aria-hidden="true">
           <div />
           <div
@@ -574,9 +603,9 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
               <span className="h-3.5 w-0.5 bg-battle-cyan shadow-blueGlow" aria-hidden="true" />
               {playing ? "PLAYHEAD" : "NOW"} {formatSeconds(playheadSeconds)}
             </div>
-            <Button data-qid="battle:timeline:zoom:out" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline out (Ctrl + scroll also works)" variant="outline" size="sm" className="min-h-9 min-w-9" onClick={() => setZoom((value) => stepTimelineZoom(value, -1))}>−</Button>
-            <Button data-qid="battle:timeline:zoom:in" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline in (Ctrl + scroll also works)" variant="outline" size="sm" className="min-h-9 min-w-9" onClick={() => setZoom((value) => stepTimelineZoom(value, 1))}>+</Button>
-            <Button data-qid="battle:timeline:zoom:fit" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Reset timeline zoom to 100% and center on playhead" variant="outline" size="sm" className="min-h-9 px-2 text-[10px]" onClick={() => setZoom(TIMELINE_ZOOM_DEFAULT)}>Fit</Button>
+            <Button data-qid="battle:timeline:zoom:out" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline out (Ctrl + scroll also works)" variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setZoom((value) => stepTimelineZoom(value, -1))}>−</Button>
+            <Button data-qid="battle:timeline:zoom:in" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline in (Ctrl + scroll also works)" variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setZoom((value) => stepTimelineZoom(value, 1))}>+</Button>
+            <Button data-qid="battle:timeline:zoom:fit" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Reset timeline zoom to 100% and center on playhead" variant="outline" size="sm" className="min-h-11 min-w-11 px-2 text-[10px]" onClick={() => setZoom(TIMELINE_ZOOM_DEFAULT)}>Fit</Button>
           </div>
         </div>
       )}
@@ -617,7 +646,9 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
           >
             <BattleTimelineCanvas contentWidth={contentWidth}>{timelineBody}</BattleTimelineCanvas>
           </div>
-          <div className={`battle-scroll-edge-hint pointer-events-none absolute bottom-3 right-4 z-20 ${showScrollHint ? "" : "hidden"}`}>
+          {/* Hidden while playing: the viewport auto-follows the playhead, so the
+              hint is redundant and would occlude the right-edge runner sprites. */}
+          <div className={`battle-scroll-edge-hint pointer-events-none absolute bottom-3 right-4 z-20 ${showScrollHint && !playing ? "" : "hidden"}`}>
             More outcomes →
           </div>
         </div>
