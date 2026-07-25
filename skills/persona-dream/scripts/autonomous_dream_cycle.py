@@ -78,6 +78,30 @@ def fetch_persona_docs(persona_id: str) -> list[dict]:
     return docs
 
 
+def charged_interaction_pulls(persona: str) -> list[dict]:
+    """The persona's charged interaction residue (it was rejected/lost/contradicted
+    by a counterpart in a /tau DAG or /ask competition/roundtable), ranked by
+    dream_weight -- how hard each pulls a future dream toward that counterpart
+    (losing/being contradicted pulls hardest). Uses /list (collection-scoped
+    /recall is currently broken, graph-memory-operator#50). Empty => the persona
+    has not interacted with anyone => it can only dream self_only (the gate)."""
+    try:
+        page = post("/list", {"collection": "persona_interactions",
+                              "filters": {"persona_id": persona}, "limit": 100})
+    except Exception:  # noqa: BLE001 - collection may not exist yet
+        return []
+    out = []
+    for d in page.get("documents", []):
+        for c in (d.get("counterpart_personas") or []):
+            out.append({"counterpart": c,
+                        "dream_weight": d.get("dream_weight", 0.5),
+                        "outcome": d.get("outcome"),
+                        "observed": (d.get("observed_of_counterpart") or "")[:200],
+                        "interaction_id": d.get("interaction_id")})
+    out.sort(key=lambda x: x["dream_weight"], reverse=True)
+    return out
+
+
 def counterpart_violations(claims: list, counterpart_id: str, id_field: str) -> list:
     """GOAL_V3 counterpart gate (probe-able): a claim's target must be the
     selected counterpart or the bounded unknown_person."""
@@ -167,8 +191,35 @@ def select_cluster(profile, out: Path, persist_ledger: bool = True) -> dict:
                          "tag": tag, "members": members,
                          "order_hash": sha256_text(seed + cluster_id),
                          "used_overlap": len(members & used)})
-    # never-dreamed clusters first, then least-dreamed (variation mode)
+    # ARC-CONDITIONING (roundtable-converged 2026-07-24, self_only mode): bias
+    # seeding toward the persona's CURRENT arc_state tensions from the Continuity
+    # Ledger, so tonight's dream is driven by yesterday's unresolved
+    # self-understanding. This finishes the causal loop dream -> journal ->
+    # arc_delta -> NEXT dream; without it the loop is self-referential (the
+    # persona re-dreams confirmation of the story it already told itself).
+    cl_mod = _load("continuity_ledger")
+    arc = (cl_mod.read_ledger(profile.persona_id, docs).get("arc_state") or {})
+    arc_text = " ".join((arc.get("active_tensions") or [])
+                        + [str(d.get("open_tension") or "")
+                           for d in (arc.get("recent_arc_deltas") or [])[-5:]]
+                        + (arc.get("unresolved_questions") or []))
+    arc_terms = {w for w in re.findall(r"[a-z]{4,}", arc_text.lower())
+                 if w not in STOPWORDS}
+
+    def arc_resonance(members) -> int:
+        txt = " ".join(
+            str(roots[m].get("retrieval_text") or "") + " "
+            + str(roots[m].get("tom_content") or roots[m].get("event_summary") or "")
+            for m in members).lower()
+        return len(arc_terms & {w for w in re.findall(r"[a-z]{4,}", txt)
+                                if w not in STOPWORDS})
+
+    for c in clusters:
+        c["arc_resonance"] = arc_resonance(c["members"])
+    # never-dreamed first (coverage), then MOST arc-resonant (the current
+    # tension drives the dream), then recency, then deterministic hash.
     clusters.sort(key=lambda c: (c["used_overlap"] > 0,
+                                 -c["arc_resonance"],
                                  profile.recency_index(c["band"]),
                                  c["used_overlap"], c["order_hash"]))
     if not clusters:
@@ -195,6 +246,7 @@ def select_cluster(profile, out: Path, persist_ledger: bool = True) -> dict:
                       "variation_index": variation_index,
                       "variation_key": vkey,
                       "used_overlap": cl["used_overlap"],
+                      "arc_resonance": cl.get("arc_resonance", 0),
                       "order_hash": cl["order_hash"]}
             break
         if chosen:
@@ -217,6 +269,12 @@ def select_cluster(profile, out: Path, persist_ledger: bool = True) -> dict:
         "loop_guard_excluded_tainted_residue": len(tainted),
         "seed_source": "GOAL_V3.md sha256", "seed": seed,
         "selection_mode": "conflict_seeded_intra_counterpart_traversal",
+        "dream_seed_mode": "self_only",
+        "cross_persona_pulls": charged_interaction_pulls(profile.persona_id)[:5],
+        "cross_persona_seed_available": bool(charged_interaction_pulls(profile.persona_id)),
+        "arc_conditioned": bool(arc_terms),
+        "arc_terms": sorted(arc_terms)[:24],
+        "chosen_arc_resonance": chosen.get("arc_resonance", 0),
         "clusters_considered": len(clusters),
         "cluster_was_previously_dreamed": chosen["used_overlap"] > 0,
         "chosen": {k: chosen[k] for k in ("cluster_id", "selected", "seed_memory",
@@ -645,10 +703,12 @@ def main() -> int:
                                "collections": ["persona_memory"], "tags": []}).get("items") or []
     n1_pass = dream_doc["_key"] not in [it.get("_key") for it in n_items[:10]]
 
-    # 8. voice weights on the NEW dream
+    # 8. voice weights on the NEW dream. --arc-voice conditions the spoken line on
+    #    the persona's accumulated arc_state (Continuity Ledger) so the voice
+    #    carries the accumulated self, not just today's dream; fallback-guarded.
     vw = subprocess.run(
         [sys.executable, str(ROOT / "scripts/dream_voice_weights.py"),
-         "--dream-key", dream_doc["_key"], "--render",
+         "--dream-key", dream_doc["_key"], "--render", "--arc-voice",
          "--out-dir", str(out / "voice_weights")],
         capture_output=True, text=True, timeout=300)
     voice_ok = vw.returncode == 0

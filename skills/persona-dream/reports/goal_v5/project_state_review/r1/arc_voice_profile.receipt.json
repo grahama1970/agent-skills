@@ -1,0 +1,99 @@
+{
+  "arc_voice": {
+    "brief": {
+      "active_tensions": [
+        "I want someone to notice what I refuse to show.",
+        "I do not yet know how to distinguish witness from intrusion."
+      ],
+      "cycles_lived": 1,
+      "earned_permissions": [],
+      "latest_shift": "My professionalism may protect a boundary or disguise a plea to be understood without speaking.",
+      "recurring_avoidances": [
+        "direct relational confrontation"
+      ],
+      "self_claims": [
+        "Distance is a reliable way to retain myself.",
+        "My professionalism may protect a boundary or disguise a plea to be understood without speaking."
+      ]
+    },
+    "line": "If you're available, Kai, I'd prefer your assessment before I proceed.",
+    "provenance": {
+      "fallback_reason": null,
+      "fallback_used": false,
+      "mode": "arc_conditioned",
+      "persona_id": "embry"
+    },
+    "why": "professional distance carrying a guarded request to be witnessed"
+  },
+  "dream_node_key": "dream_dream_successor_943b01ecd9a3",
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "persona_id": "embry",
+  "schema": "persona_dream.dream_voice_weight_profile.v1",
+  "synthesis_params": {
+    "temperature": 0.756
+  },
+  "tom_state_types": [
+    "desire",
+    "stance",
+    "trust",
+    "uncertainty"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "yearning",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.52,
+          "statement": "Embry may want Kai nearby because his warning and shared competence make a risky act of autonomy feel more legitimate and emotionally safer.",
+          "tom_key": "tom-002",
+          "tom_state_type": "desire"
+        }
+      ],
+      "tone": "yearning_warm",
+      "weight": 0.52
+    },
+    {
+      "emotional_tag": "warmth",
+      "pace": "relaxed",
+      "sources": [
+        {
+          "emotional_intensity": 0.46,
+          "statement": "Embry may trust Kai as a practical guide whose cautions can help her exercise independence with restraint rather than impulsive defiance.",
+          "tom_key": "tom-001",
+          "tom_state_type": "trust"
+        }
+      ],
+      "tone": "warm_open",
+      "weight": 0.46
+    },
+    {
+      "emotional_tag": "boundary",
+      "pace": "steady",
+      "sources": [
+        {
+          "emotional_intensity": 0.44,
+          "statement": "Embry may hold a stance that accepting Kai's correction can coexist with her agency, treating his warning as a boundary she can choose to honor.",
+          "tom_key": "tom-004",
+          "tom_state_type": "stance"
+        }
+      ],
+      "tone": "firm_boundary",
+      "weight": 0.44
+    },
+    {
+      "emotional_tag": "hesitance",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.38,
+          "statement": "Embry may be uncertain whether Kai is fully available as a stable relational anchor, given the limited confirmation of his identity continuity and speaking role.",
+          "tom_key": "tom-003",
+          "tom_state_type": "uncertainty"
+        }
+      ],
+      "tone": "hesitant_reflective",
+      "weight": 0.38
+    }
+  ]
+}

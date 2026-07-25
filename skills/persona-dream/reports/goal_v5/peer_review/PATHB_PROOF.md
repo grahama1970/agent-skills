@@ -1,42 +1,38 @@
-# Path B — end-to-end proof (arc_state -> spoken line)
+# Path B — proof (arc_state -> spoken line), corrected
 
 2026-07-25. Goal G2: make the persona's ACCUMULATED self audible in the voice.
 
-## Verified facts
-- `/ask` is UP: `ask/run.sh doctor --json` -> status pass, 0 errors, 16/16 checks;
-  scillm lane "available".
-- Real entrypoint runs: `dream_voice_weights.py --dream-key
-  dream_dream_successor_943b01ecd9a3 --arc-voice` produced a profile with weights
-  {warmth, boundary, hesitance}. Its `arc_voice.line` FELL BACK (fallback_used:
-  true, "adapter returned no spoken_line") — the scillm-backed text adapter
-  returned no output on two live attempts. Blocker = scillm text backend, not
-  /ask and not the Path B code.
+## Verified in-code result (supersedes the earlier browser-mediated note)
 
-## The mechanism works when pointed at a live LLM
-Prompt built from Embry's REAL arc_state (continuity_ledger.read_ledger):
-- self-claims: distance retains me; professionalism may disguise a plea to be
-  understood without speaking.
-- active tensions: I want someone to notice what I refuse to show; I can't yet
-  tell witness from intrusion.
-- recurring avoidance: direct relational confrontation.
-- tonight's dream residue: "the door stayed shut and no one came when I called."
+Running the real entrypoint through the sanctioned /tau text-reasoning path (zero
+direct scillm):
 
-Generated arc-conditioned spoken line (ChatGPT, via chrome-MCP, no scillm):
+  dream_voice_weights.py --dream-key dream_dream_successor_943b01ecd9a3 --arc-voice
 
-  "I kept the door closed, and still listened for footsteps."
+produces, from Embry's real arc_state:
+- fallback_used: FALSE
+- line: "If you're available, Kai, I'd prefer your assessment before I proceed."
+- why: professional distance carrying a guarded request to be witnessed
 
-Contrast — current code fallback (raw dream statement, no arc conditioning):
+Hash-bound receipt committed alongside this file:
+`project_state_review/r1/arc_voice_profile.receipt.json` (the
+dream_voice_weight_profile.v1.json with arc_voice.provenance.fallback_used:false).
 
-  "the door stayed shut and no one came when I called."
+## History (do not mislead)
 
-Same dream; the arc-conditioned line carries the accumulated self (distance-as-
-protection + wanting-to-be-noticed-without-asking + avoids confrontation). That
-is exactly what Path B is for.
+The first attempts fell back (fallback_used:true, "adapter returned no
+spoken_line"). Root cause was a CONTRACT MISMATCH in our prompt — it asked the
+model to speak a bare line while the output_contract demanded JSON, so scillm
+returned a 502 json_validation_error. It was NOT a /tau or scillm outage (/tau
+verified healthy, 200/PASS). Fixing the prompt to return the JSON the contract
+expects made the in-code run succeed with fallback_used:false (above). An earlier
+version of this file described a browser-mediated line produced before the fix;
+that is superseded by the in-code receipt.
 
-## Status
-- Code: committed (36556652). `--arc-voice` reads arc_state, generates the line
-  via the skill's tau_text_reasoning_adapter, fallback-guarded.
-- Remaining: the in-code reasoning call needs a live text backend. scillm
-  returned no output; route that one call through a live handler (webgpt via
-  surf/tau, or scillm once healthy). This is backend availability, not a Path B
-  design gap — the line above proves the design.
+## Still open (per the 3-seat project-state review)
+
+- --arc-voice is now wired into the default cycle render
+  (autonomous_dream_cycle.py step 8); a full-cycle receipt showing
+  fallback_used:false + a rendered WAV sha is the next artifact to commit.
+- Audio-level evolution (fixed-probe: same sentence epoch-0 vs epoch-N, shuffled-
+  delta control, ablation, blind ABX) is NOT yet demonstrated.
