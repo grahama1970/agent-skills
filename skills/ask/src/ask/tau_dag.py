@@ -121,6 +121,7 @@ class TauDagCompileInput:
     request: str
     repo: str
     target: str
+    immutable_goal: str
     solver_models: tuple[str, ...]
     reviewer_model: str
     criteria: tuple[str, ...]
@@ -130,6 +131,7 @@ class TauDagCompileInput:
     join_handler: str = "join"
     handler_projects: tuple[str, ...] = ()
     handler_workspaces: tuple[str, ...] = ()
+    handler_provider_hints: tuple[str, ...] = ()
     ask_id: str | None = None
     output_root: Path = DEFAULT_OUTPUT_ROOT
     local_fixture: bool = False
@@ -146,6 +148,7 @@ def infer_compile_input(
     solver_models: list[str] | None = None,
     reviewer_model: str = "",
     criteria: list[str] | None = None,
+    immutable_goal: str = "",
     handlers: list[str] | None = None,
     topology: str = "",
     workflow_mode: str = "roundtable",
@@ -162,11 +165,21 @@ def infer_compile_input(
     """Merge explicit CLI fields with conservative request-text inference."""
 
     inferred_solvers = list(solver_models or [])
-    inferred_handlers = [_normalize_handler(item) for item in (handlers or []) if item.strip()]
+    inferred_handlers, inferred_provider_hints = _canonicalize_handlers(handlers or [])
     normalized_request = request.strip()
     lower = normalized_request.lower()
+    inferred_immutable_goal = immutable_goal.strip() or _infer_immutable_goal(normalized_request)
     if not inferred_handlers:
-        inferred_handlers = _infer_roundtable_handlers(lower)
+        natural_handlers = _infer_mixed_concurrent_handlers(normalized_request) or _infer_single_chutes_handler(normalized_request)
+        if natural_handlers:
+            inferred_handlers = list(natural_handlers["handlers"])
+            inferred_provider_hints = list(natural_handlers["provider_hints"])
+            normalized_request = str(natural_handlers["request"])
+            lower = normalized_request.lower()
+            inferred_immutable_goal = inferred_immutable_goal or _infer_immutable_goal(normalized_request)
+        else:
+            inferred_handlers = _infer_roundtable_handlers(lower)
+            inferred_provider_hints = [""] * len(inferred_handlers)
     if not inferred_solvers:
         gpt_match = re.search(r"\b(\d+)\s+gpt[\s-]*([0-9.]+)\s*xhigh\b", lower)
         if gpt_match:
@@ -182,6 +195,7 @@ def infer_compile_input(
         request=normalized_request,
         repo=repo.strip(),
         target=target.strip(),
+        immutable_goal=inferred_immutable_goal,
         solver_models=tuple(_normalize_model(item) for item in inferred_solvers if item.strip()),
         reviewer_model=_normalize_model(inferred_reviewer) if inferred_reviewer else "",
         criteria=tuple(item.strip() for item in (criteria or []) if item.strip()),
@@ -191,6 +205,7 @@ def infer_compile_input(
         join_handler=_normalize_handler(join_handler) if join_handler else "join",
         handler_projects=tuple(item.strip() for item in (handler_projects or []) if item.strip()),
         handler_workspaces=tuple(item.strip() for item in (handler_workspaces or []) if item.strip()),
+        handler_provider_hints=tuple(inferred_provider_hints[: len(inferred_handlers)]),
         ask_id=ask_id,
         output_root=output_root,
         local_fixture=local_fixture,
@@ -209,6 +224,17 @@ def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
     if not input.target:
         missing.append(_question("target", "Which issue, task, file, or work target should the DAG bind to?"))
     if input.handlers:
+        if not input.immutable_goal:
+            missing.append(
+                _question(
+                    "immutable_goal",
+                    (
+                        "Roundtable and compete DAGs require an explicit immutable goal or acceptance bar "
+                        "that is shared with every participant before any browser/API calls."
+                    ),
+                    expects="str",
+                )
+            )
         if input.topology not in ROUNDTABLE_TOPOLOGIES:
             missing.append(
                 _question(
@@ -347,10 +373,12 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
             "request": input.request,
             "repo": input.repo,
             "target": input.target,
+            "immutable_goal": input.immutable_goal,
             "solver_models": list(input.solver_models),
             "reviewer_model": input.reviewer_model,
             "criteria": list(input.criteria),
             "handlers": list(input.handlers),
+            "handler_provider_hints": list(input.handler_provider_hints),
             "topology": input.topology,
             "workflow_mode": input.workflow_mode,
             "join_handler": input.join_handler,
@@ -746,11 +774,280 @@ def probe_scillm_provider_gate(
     }
 
 
+def probe_browser_compete_handler_gate(
+    input: TauDagCompileInput,
+    *,
+    surf_run: Path | None = None,
+    browser_oracle_run: Path | None = None,
+    timeout_seconds: float = 30.0,
+) -> dict[str, Any]:
+    """Preflight all-browser compete runs before Tau launches candidate nodes."""
+
+    browser_handlers = [handler for handler in input.handlers if _is_browser_handler(handler)]
+    all_browser_compete = (
+        input.workflow_mode == "compete"
+        and bool(input.handlers)
+        and len(browser_handlers) == len(input.handlers)
+    )
+    if not all_browser_compete:
+        return {
+            "schema": "ask.tau_dag_browser_compete_handler_gate.v1",
+            "status": "READY",
+            "ok": True,
+            "mocked": False,
+            "live": False,
+            "provider_live": False,
+            "skipped": True,
+            "skip_reason": "not_all_browser_compete",
+            "handlers": list(input.handlers),
+        }
+
+    surf_run = surf_run or (ASK_SKILL_ROOT.parent / "surf" / "run.sh")
+    browser_oracle_run = browser_oracle_run or (ASK_SKILL_ROOT.parent / "browser-oracle" / "run.sh")
+    checks: list[dict[str, Any]] = []
+    tab_list = _run_gate_command(
+        [str(surf_run), "tab.list", "--json"],
+        cwd=Path(surf_run).parent,
+        timeout_seconds=timeout_seconds,
+    )
+    live = True
+    tab_payload = _parse_tab_list_payload(tab_list.get("stdout", ""))
+    surf_ok = tab_list["returncode"] == 0 and isinstance(tab_payload, list)
+    if not surf_ok:
+        for handler in input.handlers:
+            checks.append(
+                _browser_gate_check(
+                    input,
+                    handler=handler,
+                    status="BLOCKED",
+                    failure_code="surf_transport_unavailable",
+                    detail=tab_list.get("stderr") or tab_list.get("stdout") or "surf tab.list failed",
+                    command=tab_list,
+                )
+            )
+        return _browser_compete_gate_result(input, checks, live=live)
+
+    for handler in input.handlers:
+        project = _handler_project(input, handler)
+        resolve = _run_gate_command(
+            [
+                str(browser_oracle_run),
+                "resolve",
+                "--backend",
+                HANDLER_BACKENDS_FOR_GATE[handler],
+                "--project",
+                project,
+                "--json",
+            ],
+            cwd=Path(browser_oracle_run).parent,
+            timeout_seconds=timeout_seconds,
+        )
+        resolve_payload = _json_or_none(str(resolve.get("stdout") or ""))
+        if resolve["returncode"] != 0 or not isinstance(resolve_payload, dict):
+            checks.append(
+                _browser_gate_check(
+                    input,
+                    handler=handler,
+                    status="BLOCKED",
+                    failure_code="browser_oracle_resolve_failed",
+                    detail=resolve.get("stderr") or resolve.get("stdout") or "browser-oracle resolve failed",
+                    command=resolve,
+                )
+            )
+            continue
+        tab_id = str(resolve_payload.get("tab_id") or "")
+        live_tab = next((tab for tab in tab_payload if str(tab.get("id") or "") == tab_id), None)
+        if not tab_id or live_tab is None:
+            checks.append(
+                _browser_gate_check(
+                    input,
+                    handler=handler,
+                    status="BLOCKED",
+                    failure_code="browser_oracle_tab_missing",
+                    detail=f"browser-oracle project {project!r} resolved to missing tab_id {tab_id!r}",
+                    command=resolve,
+                    browser_oracle=resolve_payload,
+                )
+            )
+            continue
+        live_url = str(live_tab.get("url") or "")
+        checks.append(
+            _browser_gate_check(
+                input,
+                handler=handler,
+                status="READY",
+                failure_code=None,
+                detail=f"resolved tab {tab_id} at {live_url}",
+                command=resolve,
+                browser_oracle=resolve_payload,
+                live_tab=live_tab,
+            )
+        )
+    return _browser_compete_gate_result(input, checks, live=live)
+
+
+HANDLER_BACKENDS_FOR_GATE = {
+    "webgpt": "webgpt",
+    "webclaude": "webclaude",
+    "webkimi": "webkimi",
+    "webgemini": "webgemini",
+    "webgrok": "webgrok",
+}
+
+
+def _is_browser_handler(handler: str) -> bool:
+    policy = ROUNDTABLE_HANDLERS.get(handler)
+    return isinstance(policy, dict) and policy.get("runtime") == "browser"
+
+
+def _run_gate_command(command: list[str], *, cwd: Path, timeout_seconds: float) -> dict[str, Any]:
+    started = time.time()
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=str(cwd),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout_seconds,
+            check=False,
+        )
+        return {
+            "command": command,
+            "returncode": completed.returncode,
+            "stdout": completed.stdout[:4000],
+            "stderr": completed.stderr[:4000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": False,
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "command": command,
+            "returncode": 124,
+            "stdout": str(exc.stdout or "")[:4000],
+            "stderr": str(exc.stderr or "command timed out")[:4000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": True,
+        }
+    except OSError as exc:
+        return {
+            "command": command,
+            "returncode": 127,
+            "stdout": "",
+            "stderr": str(exc)[:4000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": False,
+        }
+
+
+def _parse_tab_list_payload(text: str) -> list[dict[str, Any]] | None:
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    if isinstance(payload, dict):
+        payload = payload.get("tabs", [])
+    if not isinstance(payload, list):
+        return None
+    return [tab for tab in payload if isinstance(tab, dict)]
+
+
+def _browser_gate_check(
+    input: TauDagCompileInput,
+    *,
+    handler: str,
+    status: str,
+    failure_code: str | None,
+    detail: str,
+    command: dict[str, Any],
+    browser_oracle: dict[str, Any] | None = None,
+    live_tab: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "handler": handler,
+        "node_id": _handler_node_id(handler),
+        "project": _handler_project(input, handler),
+        "status": status,
+        "ok": status == "READY",
+        "failure_code": failure_code,
+        "detail": detail[:1000],
+        "browser_oracle": browser_oracle,
+        "live_tab": live_tab,
+        "command": command,
+    }
+
+
+def _browser_compete_gate_result(
+    input: TauDagCompileInput,
+    checks: list[dict[str, Any]],
+    *,
+    live: bool,
+) -> dict[str, Any]:
+    ok = all(check.get("ok") is True for check in checks)
+    return {
+        "schema": "ask.tau_dag_browser_compete_handler_gate.v1",
+        "status": "READY" if ok else "BLOCKED",
+        "ok": ok,
+        "mocked": False,
+        "live": live,
+        "provider_live": False,
+        "handlers": list(input.handlers),
+        "topology": input.topology,
+        "workflow_mode": input.workflow_mode,
+        "handler_checks": checks,
+        "blocked_handler_count": sum(1 for check in checks if check.get("ok") is not True),
+        "fail_closed_reason": None if ok else "browser_handler_preflight_failed",
+    }
+
+
+def browser_compete_blocked_execution(gate: dict[str, Any]) -> dict[str, Any]:
+    """Build a terminal execution receipt when preflight blocks Tau launch."""
+
+    node_statuses = []
+    for check in gate.get("handler_checks", []):
+        if not isinstance(check, dict):
+            continue
+        node_statuses.append(
+            {
+                "node_id": check.get("node_id"),
+                "handler": check.get("handler"),
+                "status": "BLOCKED",
+                "ok": False,
+                "failure_code": check.get("failure_code"),
+                "blocked_reason": check.get("detail"),
+            }
+        )
+    node_statuses.append(
+        {
+            "node_id": "join",
+            "handler": "join",
+            "status": "BLOCKED",
+            "ok": False,
+            "failure_code": "candidate_preflight_failed",
+            "blocked_reason": "Ask did not launch Tau because one or more browser candidate handlers failed preflight.",
+        }
+    )
+    return {
+        "schema": "ask.tau_dag_execution.v1",
+        "status": "BLOCKED",
+        "ok": False,
+        "mocked": False,
+        "live": bool(gate.get("live")),
+        "provider_live": False,
+        "blocked_reason": "browser_compete_handler_gate_failed",
+        "message": "All-browser compete DAG was blocked before Tau dispatch.",
+        "no_tau_execution": True,
+        "node_statuses": node_statuses,
+        "handler_gate": gate,
+    }
+
+
 def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any]:
     dag_id = _dag_id(input)
     goal = {
         "goal_id": f"ask-{dag_id}",
         "goal_version": 1,
+        "immutable_goal": input.immutable_goal,
         "goal_hash": _goal_hash(input),
     }
     solver_nodes: list[dict[str, Any]] = []
@@ -849,11 +1146,13 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
     goal = {
         "goal_id": f"ask-{dag_id}",
         "goal_version": 1,
+        "immutable_goal": input.immutable_goal,
         "goal_hash": _goal_hash(input),
     }
     handler_nodes: list[dict[str, Any]] = []
     is_compete = input.workflow_mode == "compete"
-    for handler, node_id in zip(input.handlers, _handler_node_ids(input.handlers)):
+    for index, (handler, node_id) in enumerate(zip(input.handlers, _handler_node_ids(input.handlers))):
+        provider_hint = _handler_provider_hint(input, index)
         prior_nodes = _roundtable_prior_nodes(input, node_id)
         required_evidence = [
             "handler_response_receipt",
@@ -875,7 +1174,12 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                     "role": "roundtable_handler",
                     "workflow_mode": input.workflow_mode,
                     "handler": handler,
-                    "handler_policy": _handler_policy(handler, workflow_mode=input.workflow_mode),
+                    "provider_hint": provider_hint,
+                    "handler_policy": _handler_policy(
+                        handler,
+                        provider_hint=provider_hint,
+                        workflow_mode=input.workflow_mode,
+                    ),
                     "prompt_contract": _roundtable_handler_prompt_contract(
                         input,
                         handler=handler,
@@ -883,6 +1187,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                     ),
                     "browser_oracle_project": _handler_project(input, handler),
                     "request": input.request,
+                    "immutable_goal": input.immutable_goal,
                     "topology": input.topology,
                     "prior_nodes": prior_nodes,
                     "requires_prior_receipts": bool(prior_nodes),
@@ -912,6 +1217,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "workflow_mode": input.workflow_mode,
             "prompt_contract": _roundtable_join_prompt_contract(input),
             "request": input.request,
+            "immutable_goal": input.immutable_goal,
             "handlers": list(input.handlers),
             "topology": input.topology,
         },
@@ -959,6 +1265,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "delegated_runtime": "$tau",
             "transport_owner": "$surf_or_api_adapter",
             "request": input.request,
+            "immutable_goal": input.immutable_goal,
             "run_dir": str(run_dir),
             "execution_owner": "$tau",
             "transport_adapter": "handler_neutral_adapter",
@@ -1089,6 +1396,12 @@ def _write_roundtable_command_spec(
         command.extend(["--prior-node", prior_node])
     if handler in ROUNDTABLE_HANDLERS and handler != "codex":
         command.extend(["--browser-oracle-project", _handler_project(input, handler)])
+    provider_hint = str(handler_policy.get("provider_hint") or "")
+    if provider_hint:
+        command.extend(["--provider-hint", provider_hint])
+    model_preference = str(handler_policy.get("model_preference") or "")
+    if model_preference:
+        command.extend(["--browser-model-preference", model_preference])
     if handler == "codex":
         workspace = _handler_workspace(input, handler)
         if not workspace:
@@ -1096,9 +1409,6 @@ def _write_roundtable_command_spec(
                 "codex handler requires --handler-workspace codex=/path/to/worktree"
             )
         command.extend(["--codex-workspace", workspace])
-    model_preference = str(handler_policy.get("model_preference") or "")
-    if model_preference:
-        command.extend(["--browser-model-preference", model_preference])
     for evidence in node.get("required_evidence", []):
         command.extend(["--evidence", str(evidence)])
     payload = {
@@ -1175,7 +1485,7 @@ def _model_policy(model: str, *, base_url: str = DEFAULT_SCILLM_BASE_URL) -> dic
     return payload
 
 
-def _handler_policy(handler: str, *, workflow_mode: str = "roundtable") -> dict[str, Any]:
+def _handler_policy(handler: str, *, provider_hint: str = "", workflow_mode: str = "roundtable") -> dict[str, Any]:
     if handler in ROUNDTABLE_HANDLERS:
         policy = dict(ROUNDTABLE_HANDLERS[handler])
         policy["id"] = handler
@@ -1194,6 +1504,8 @@ def _handler_policy(handler: str, *, workflow_mode: str = "roundtable") -> dict[
         "transport": "scillm.chat",
         "runtime": "api",
         "model": handler,
+        "provider_hint": provider_hint or _infer_provider_hint_from_model(handler),
+        "model_policy": _model_policy(handler),
         "proof_required": "scillm_provider_receipt",
         "execution_owner": "$tau",
         "receipt_schema": "ask.tau_dag_handler_receipt.v1",
@@ -1270,25 +1582,19 @@ def _roundtable_handler_prompt_contract(
     prior_nodes = prior_nodes or []
     requires_verdict = bool(prior_nodes) and _roundtable_requires_verdict(input.request)
     if input.workflow_mode == "compete":
-        policy = _handler_policy(handler, workflow_mode=input.workflow_mode)
-        model_preference = str(policy.get("model_preference") or "")
-        user_template = (
-            f"Competition request: {input.request}\n"
-            f"Competitor: {handler}\n"
-        )
-        if model_preference:
-            user_template += f"Browser model preference: {model_preference}\n"
-        user_template += (
-            "Work independently from the same input bundle. Return: implementation or patch plan, "
-            "evidence, risks, reusable features, and any blocker. Do not claim final success; "
-            "the project agent must verify against the codebase and skill contracts."
-        )
         return {
             "schema": "ask.tau_dag_prompt_contract.v1",
             "system": "You are an isolated Tau-managed competitor. Do not rely on other candidates.",
-            "user_template": user_template,
+            "user_template": (
+                f"Competition request: {input.request}\n"
+                f"Immutable goal / acceptance bar: {input.immutable_goal}\n"
+                f"Competitor: {handler}\n"
+                "Work independently from the same input bundle. Return: implementation or patch plan, "
+                "evidence, risks, reusable features, and any blocker. Do not claim final success; "
+                "the project agent must verify against the codebase and skill contracts."
+            ),
             "handler": handler,
-            "model_preference": model_preference or None,
+            "immutable_goal": input.immutable_goal,
             "prior_nodes": [],
             "requires_prior_receipts": False,
             "requires_verdict": False,
@@ -1300,11 +1606,13 @@ def _roundtable_handler_prompt_contract(
         "system": "You are a Tau-managed roundtable handler. Return receipt-backed findings only.",
         "user_template": (
             f"Roundtable request: {input.request}\n"
+            f"Immutable goal / acceptance bar: {input.immutable_goal}\n"
             f"Handler: {handler}\n"
             "Use prior handler receipts when present. Return a concise position, evidence, "
             "uncertainties, and blockers."
         ),
         "handler": handler,
+        "immutable_goal": input.immutable_goal,
         "prior_nodes": prior_nodes,
         "requires_prior_receipts": bool(prior_nodes),
         "requires_verdict": requires_verdict,
@@ -1319,11 +1627,13 @@ def _roundtable_join_prompt_contract(input: TauDagCompileInput) -> dict[str, Any
             "system": "You are a Tau compete evaluator. Prefer deterministic local proof over model claims.",
             "user_template": (
                 f"Competition request: {input.request}\n"
+                f"Immutable goal / acceptance bar: {input.immutable_goal}\n"
                 f"Competitors: {', '.join(input.handlers)}\n"
                 "Produce a scorecard, reject unverified features, name a winner only when receipts and "
                 "project-agent checks justify it, and emit a bounded winner revision request."
             ),
             "topology": input.topology,
+            "immutable_goal": input.immutable_goal,
             "requires_scorecard": True,
             "requires_winner_revision_request": True,
             "fail_closed_status": "NEEDS_ATTENTION",
@@ -1333,16 +1643,25 @@ def _roundtable_join_prompt_contract(input: TauDagCompileInput) -> dict[str, Any
         "system": "You are a Tau join node. Reconcile handler receipts without hiding gaps.",
         "user_template": (
             f"Roundtable request: {input.request}\n"
+            f"Immutable goal / acceptance bar: {input.immutable_goal}\n"
             f"Handlers: {', '.join(input.handlers)}\n"
             "Produce a synthesized answer, dissent list, and unresolved proof gaps."
         ),
         "topology": input.topology,
+        "immutable_goal": input.immutable_goal,
     }
 
 
 def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
     requested = model.strip()
     lower = requested.lower()
+    if lower.startswith(("deepseek-ai/", "qwen/", "moonshotai/", "zai-org/")):
+        return ScillmModelRoute(
+            requested_model=requested,
+            model=requested,
+            provider="chutes",
+            auth="scillm_proxy_bearer",
+        )
     if lower.startswith(("gpt-5.6", "gpt-5-6")):
         requested_effort = "xhigh" if "xhigh" in lower else None
         return ScillmModelRoute(
@@ -1522,6 +1841,7 @@ def _dag_id(input: TauDagCompileInput) -> str:
             input.reviewer_model,
             ",".join(input.criteria),
             ",".join(input.handlers),
+            ",".join(input.handler_provider_hints),
             input.topology,
             input.join_handler,
             ",".join(input.handler_projects),
@@ -1536,10 +1856,12 @@ def _goal_hash(input: TauDagCompileInput) -> str:
         "request": input.request,
         "repo": input.repo,
         "target": input.target,
+        "immutable_goal": input.immutable_goal,
         "solver_models": list(input.solver_models),
         "reviewer_model": input.reviewer_model,
         "criteria": list(input.criteria),
         "handlers": list(input.handlers),
+        "handler_provider_hints": list(input.handler_provider_hints),
         "topology": input.topology,
         "workflow_mode": input.workflow_mode,
         "join_handler": input.join_handler,
@@ -1558,6 +1880,122 @@ def _normalize_handler(value: str) -> str:
     if compact in _HANDLER_ALIASES:
         return _HANDLER_ALIASES[compact]
     return re.sub(r"\s+", "-", raw)
+
+
+def _canonicalize_handlers(values: list[str] | tuple[str, ...]) -> tuple[list[str], list[str]]:
+    handlers: list[str] = []
+    provider_hints: list[str] = []
+    for value in values:
+        raw = value.strip()
+        if not raw:
+            continue
+        chutes = _strip_chutes_handler_prefix(raw)
+        if chutes:
+            handlers.append(_normalize_handler(chutes))
+            provider_hints.append("chutes")
+            continue
+        handlers.append(_normalize_handler(raw))
+        provider_hints.append("")
+    return handlers, provider_hints
+
+
+def _strip_chutes_handler_prefix(value: str) -> str:
+    raw = value.strip().removeprefix("$")
+    slash_match = re.match(r"(?i)^chutes/([^:\s].*)$", raw)
+    if slash_match:
+        return slash_match.group(1).strip()
+    spaced_match = re.match(r"(?i)^chutes\s+([^\s:]+/[^\s:]+)\s*$", raw)
+    if spaced_match:
+        return spaced_match.group(1).strip()
+    return ""
+
+
+def _infer_single_chutes_handler(request: str) -> dict[str, Any] | None:
+    match = re.match(
+        r"(?is)^\s*(?:\$?ask\s+|/ask\s+)?chutes\s+([a-z0-9_.-]+/[a-z0-9_.-]+)\s*:\s*(.+?)\s*$",
+        request,
+    )
+    if not match:
+        return None
+    prompt = match.group(2).strip()
+    if not prompt:
+        return None
+    return {
+        "handlers": [_normalize_handler(match.group(1))],
+        "provider_hints": ["chutes"],
+        "request": prompt,
+    }
+
+
+def _infer_mixed_concurrent_handlers(request: str) -> dict[str, Any] | None:
+    match = re.match(
+        r"(?is)^\s*(?:\$?ask\s+|/ask\s+)?concurrently\s+(?P<browser>.*?)\bchutes\s+"
+        r"(?P<model>[a-z0-9_.-]+/[a-z0-9_.-]+)\s*:?,?\s*(?P<prompt>.+?)\s*$",
+        request,
+    )
+    if not match:
+        return None
+    prompt = match.group("prompt").strip()
+    if not prompt:
+        return None
+    handlers = _infer_handlers_in_text(match.group("browser"))
+    handlers.append(_normalize_handler(match.group("model")))
+    if len(handlers) < 2:
+        return None
+    return {
+        "handlers": handlers,
+        "provider_hints": [""] * (len(handlers) - 1) + ["chutes"],
+        "request": prompt,
+    }
+
+
+def _infer_handlers_in_text(text: str) -> list[str]:
+    matches: list[tuple[int, str]] = []
+    for name in [*ROUNDTABLE_HANDLERS, *_HANDLER_ALIASES]:
+        pattern = rf"(?<![a-z0-9])\$?{re.escape(name)}(?![a-z0-9])"
+        for match in re.finditer(pattern, text.lower()):
+            matches.append((match.start(), _normalize_handler(name)))
+    found: list[str] = []
+    for _position, canonical in sorted(matches, key=lambda item: item[0]):
+        if canonical not in found:
+            found.append(canonical)
+    return found
+
+
+def _infer_immutable_goal(text: str) -> str:
+    """Infer only explicitly labeled goal/acceptance-bar text.
+
+    This keeps preflight strict: vague task prose is not silently upgraded into
+    an immutable goal, but natural requests with a clear label remain usable.
+    """
+    for pattern in (
+        r"(?im)^\s*immutable\s+goal\s*:\s*(?P<goal>.+?)\s*$",
+        r"(?im)^\s*acceptance\s+bar\s*:\s*(?P<goal>.+?)\s*$",
+        r"(?im)^\s*stop\s+condition\s*:\s*(?P<goal>.+?)\s*$",
+    ):
+        match = re.search(pattern, text)
+        if match:
+            return match.group("goal").strip()
+    inline = re.search(
+        r"(?is)\b(?:immutable\s+goal|acceptance\s+bar|stop\s+condition)\s*:\s*(?P<goal>.+?)(?:\n\s*\n|$)",
+        text,
+    )
+    if inline:
+        return " ".join(inline.group("goal").strip().split())
+    return ""
+
+
+def _handler_provider_hint(input: TauDagCompileInput, index: int) -> str:
+    if index < len(input.handler_provider_hints):
+        return input.handler_provider_hints[index]
+    return ""
+
+
+def _infer_provider_hint_from_model(model: str) -> str:
+    lower = model.strip().lower()
+    if lower.startswith(("deepseek-ai/", "qwen/", "moonshotai/", "zai-org/")):
+        return "chutes"
+    return ""
 
 
 def _handler_node_id(handler: str) -> str:

@@ -117,6 +117,13 @@ ask artifacts.
   roundtable, creator-reviewer pipeline, compete/bakeoff, or explicit
   multi-step DAG. It must not matter to the user whether a handler is
   browser-backed or API-backed except for the handler/model name they request.
+- Roundtable, creator-reviewer, and compete/bakeoff handler DAGs require an
+  explicit immutable goal or acceptance bar. Pass it with `--immutable-goal` or
+  label it in the request as `Immutable goal:`, `Acceptance bar:`, or
+  `Stop condition:`. If it is missing, `$ask` must fail preflight with
+  `NEEDS_INTERVIEW` before any browser or API handler is contacted. The same
+  immutable goal is shared with every participant and included in the Tau goal
+  hash.
 - For substantial roundtables, apply `$best-practices-roundtable` as the
   leadership contract: equal shared context, concurrent seats, attributed
   dissent, research between rounds, and executable slices before local proof.
@@ -182,11 +189,18 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   wants multiple steps. Use `--topology sequential` for a linear handler chain;
   use `--topology concurrent` when handlers can work independently before join.
 - **Supported browser handlers**: `webgpt`, `webclaude`, `webkimi`,
-  `webgemini`. Aliases normalize as `gpt -> webgpt`, `claude -> webclaude`,
-  `kimi -> webkimi`, and `gemini -> webgemini`.
+  `webgemini`, and `webgrok`. Aliases normalize as `gpt -> webgpt`,
+  `claude -> webclaude`, `kimi -> webkimi`, `gemini -> webgemini`, and
+  `grok -> webgrok`.
 - **Supported API handlers**: any explicit non-browser handler label is treated
   as a `$scillm` model name and emitted as a Tau-owned `scillm.chat` adapter
-  node. `$ask` does not decide provider internals.
+  node. `$ask` does not decide provider internals. For Chutes exact models,
+  project agents may write `chutes <provider/model>: <prompt>`; `$ask`
+  canonicalizes that to one API handler with `provider_hint=chutes` before Tau
+  writes the DAG. Do not pass the transport prefix as the model id: use
+  `deepseek-ai/DeepSeek-V3.2-TEE`, not `chutes/deepseek-ai/DeepSeek-V3.2-TEE`.
+  Mixed web/API panels may use natural concurrent syntax:
+  `concurrently webgpt, webclaude, webkimi and chutes deepseek-ai/DeepSeek-V3.2-TEE <prompt>`.
 - **Browser transport**: browser handlers execute through `$surf` and
   `$browser-oracle` from Tau command specs. Use `--handler-project
   handler=project` when the browser-oracle project differs from the handler
@@ -218,6 +232,7 @@ Canonical compile command:
 ./run.sh compete "Implement the focused patch. Return concrete reusable features as VERIFIED_FEATURE: lines only when locally checkable." \
   --repo local/agent-skills \
   --target ask-compete \
+  --immutable-goal "Select a winner only from locally verified features and continue with that winner until deterministic proof satisfies the task." \
   --handler webgpt \
   --handler webclaude \
   --handler gpt-5.5-high \
@@ -229,14 +244,11 @@ Canonical compile command:
 
 Live execution adds `--execute` and uses the same Tau dispatch path as
 roundtable. Browser handlers run through `$surf` and `$browser-oracle`; API
-handler names route through `$tau` to `$scillm`.
-
-When a compete run includes `webclaude`, `$ask` defaults that browser seat to
-`Opus 5 High`. The DAG records this as `handler_policy.model_preference`, the
-Tau command spec passes `--browser-model-preference "Opus 5 High"`, and
-`claude.submit` records `requested_model`. This is an auditable preference, not
-proof that the Claude UI selector changed; model selection is only proven if
-Surf records the live UI model state.
+handler names route through `$tau` to `$scillm`. All-browser compete runs run a
+bounded browser transport gate before Tau launch; if Surf/native-host or
+browser-oracle bindings are unavailable, Ask returns `BLOCKED`/`NEEDS_ATTENTION`
+style receipts with terminal candidate and join statuses instead of starting a
+long Tau run that leaves handlers `RUNNING` and join `PENDING`.
 
 Project-agent responsibilities after a compete run:
 
@@ -266,8 +278,9 @@ Compete is fail-closed by design:
 | --- | --- |
 | Fewer than two handlers | Emits an `$interview` packet instead of a DAG |
 | Non-concurrent topology | Emits an `$interview` packet; isolation requires concurrent candidates |
+| Missing immutable goal or acceptance bar | Emits an `$interview` packet before browser/API calls |
+| All-browser execute preflight fails | Blocks before Tau launch and records terminal candidate/join statuses |
 | Missing candidate receipt | Join reports `NEEDS_ATTENTION` |
-| Browser transport blocker such as `surf_browser_lock_timeout` | Join reports `NEEDS_ATTENTION` with `failure_kind:"transport"` and `transport_blockers`; do not score the lane semantically |
 | Candidate claims a feature without local proof | Project agent must not promote it |
 | Tie or no clear winner | Report `NEEDS_ATTENTION`; do not fabricate a winner |
 | Winner-continuation packet exists | It is a next request, not proof that revision was submitted |
@@ -282,13 +295,6 @@ Required compete artifacts:
 - `node-artifacts/join/compete-scorecard.json`
 - `node-artifacts/join/winner-continuation-request.md` or legacy
   `node-artifacts/join/winner-revision-request.md`
-
-If Surf reports `SURF_BROWSER_LOCK_BLOCKED` or
-`failure_code:"surf_browser_lock_timeout"`, the competition is transport
-blocked, not candidate-failed. Inspect `transport_blockers` in the scorecard
-and the lane `browser-recovery-packet.json`. The recovery command must not add
-`--no-lock`; wait for the named lock owner or move that lane to a separate Surf
-socket/profile before rerunning.
 
 Do not claim compete success from model prose. Closure still requires local
 deterministic evidence: tests, schema checks, endpoint responses, screenshots,
@@ -326,7 +332,7 @@ Rules for the calling agent:
 1. **Bind each seat's tab** (once per panel; verify tab URLs first with
    `skills/surf/run.sh tab.list --json` — the URL, not the listing order, is
    the identity truth):
-   `skills/browser-oracle/run.sh bind <project-name> --backend webgpt|webclaude|webkimi --tab-id <id> --url "<conversation-url>"`
+   `skills/browser-oracle/run.sh bind <project-name> --backend webgpt|webclaude|webkimi|webgrok --tab-id <id> --url "<conversation-url>"`
    Verify with `... resolve --backend <b> --project <name> --json` (expect the
    tab_id back).
 2. **Round 1** (concurrent; the request text carries the FULL context —
@@ -360,8 +366,8 @@ tabs fork to a new conversation URL after a submit, so re-verify tab URLs
 between rounds; zsh does not word-split unquoted argument variables — spell
 out surf/ask args or use bash -c.
 
-For exact single-call, roundtable, mixed web/API, and provider-call command
-examples, read `docs/ASK_COMMAND_AND_SANITY_REFERENCE.md`.
+For exact single-call, roundtable, Chutes, mixed web/API, and provider-call
+command examples, read `docs/ASK_COMMAND_AND_SANITY_REFERENCE.md`.
 
 ## Mode Router
 
@@ -393,7 +399,7 @@ Direct WebGPT/ChatGPT browser oracle workflows have moved out of `$ask ask`.
 `webgpt-project` must fail closed.
 
 Do not confuse that direct-oracle restriction with Tau roundtable handlers:
-`webgpt`, `webclaude`, `webkimi`, and `webgemini` are supported as peer Tau
+`webgpt`, `webclaude`, `webkimi`, `webgemini`, and `webgrok` are supported as peer Tau
 browser handlers through `$surf`/`$browser-oracle` command specs.
 
 - A browser tab cannot inspect bare local paths unless the runtime attaches file
@@ -405,13 +411,14 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
 - **Browser tab lifecycle for browser handlers**:
   1. Create or reuse a provider tab with `$surf`: `skills/surf/run.sh tab.new
      "https://chatgpt.com/"`, `... tab.new "https://claude.ai/"`, `... tab.new
-     "https://www.kimi.com/"`, or `... tab.new "https://gemini.google.com/app"`.
+     "https://www.kimi.com/"`, `... tab.new "https://gemini.google.com/app"`,
+     or `... tab.new "https://grok.com/"`.
   2. List and verify the live URL with `skills/surf/run.sh tab.list --json`.
      Treat the URL and tab id together as the tab identity; never rely on tab
      order.
   3. Bind that identity with `$browser-oracle`:
      `skills/browser-oracle/run.sh bind <project> --backend
-     webgpt|webclaude|webkimi|webgemini --tab-id <id> --url "<live-url>"
+     webgpt|webclaude|webkimi|webgemini|webgrok --tab-id <id> --url "<live-url>"
      --manual --json`.
   4. Resolve before each live Ask run:
      `skills/browser-oracle/run.sh resolve --backend <backend> --project

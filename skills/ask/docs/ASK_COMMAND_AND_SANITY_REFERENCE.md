@@ -9,16 +9,19 @@ shape or sanity command is needed.
 # Compile a single browser-handler call without executing it.
 ./run.sh tau-dag "Ask webclaude to answer: <prompt>" \
   --repo local/ask --target single-webclaude \
+  --immutable-goal "WebClaude answers the prompt and returns a receipt-backed response." \
   --handler webclaude --json
 
 # Execute a single browser-handler call through Tau and Surf/browser-oracle.
 ./run.sh tau-dag "Ask webkimi to answer: <prompt>" \
   --repo local/ask --target single-webkimi \
+  --immutable-goal "WebKimi answers the prompt and returns a receipt-backed response." \
   --handler webkimi --execute --json
 
 # Compile a concurrent browser roundtable, then join.
 ./run.sh tau-dag "Roundtable these handlers concurrently, then join." \
   --repo local/ask --target roundtable-web \
+  --immutable-goal "Every handler answers from identical context and the join preserves dissent." \
   --handler webclaude --handler webkimi --handler webgemini --handler webgpt \
   --handler-project webgpt=tau \
   --topology concurrent --json
@@ -26,6 +29,7 @@ shape or sanity command is needed.
 # Execute a sequential handler PIPELINE. A sequential chain is not a roundtable.
 ./run.sh tau-dag "Ask webclaude, pass its answer to webkimi, then have webgpt review." \
   --repo local/ask --target sequential-pipeline \
+  --immutable-goal "The handler chain returns receipts and a final synthesized answer or NEEDS_ATTENTION state." \
   --handler webclaude --handler webkimi --handler webgpt \
   --handler-project webgpt=tau \
   --topology sequential --execute --json
@@ -33,6 +37,7 @@ shape or sanity command is needed.
 # Creator-reviewer loop with a browser creator and pass/fail browser reviewer.
 ./run.sh tau-dag "Ask webgpt to do the work, then ask webclaude to review the work for pass/fail." \
   --repo local/ask --target webgpt-webclaude-passfail \
+  --immutable-goal "WebGPT produces the requested work and WebClaude reviews it for pass/fail against the acceptance bar." \
   --handler webgpt --handler webclaude \
   --handler-project webgpt=tau \
   --topology sequential --execute --json
@@ -40,8 +45,29 @@ shape or sanity command is needed.
 # Mixed API/browser loop. The API handler is routed by Tau through SciLLM.
 ./run.sh tau-dag "Ask gpt-5.5 to draft an answer, then ask webclaude to review it for pass/fail." \
   --repo local/ask --target api-webclaude-passfail \
+  --immutable-goal "The API drafter and browser reviewer produce a receipt-backed pass/fail review." \
   --handler gpt-5.5 --handler webclaude \
   --topology sequential --execute --json
+
+# Natural Chutes exact-model single call.
+./run.sh tau-dag "chutes deepseek-ai/DeepSeek-V3.2-TEE: what is 2+2?" \
+  --repo local/ask --target chutes-deepseek-ping \
+  --immutable-goal "The Chutes handler answers the arithmetic ping." --json
+
+# Mixed browser/API concurrent panel.
+./run.sh tau-dag "concurrently webgpt, webclaude, webkimi and chutes deepseek-ai/DeepSeek-V3.2-TEE What is 2+2?" \
+  --repo local/ask --target mixed-web-chutes-ping \
+  --immutable-goal "All browser and API handlers answer the same arithmetic ping from identical context." \
+  --topology concurrent --json
+
+# Execute an all-browser competition only after Ask's browser gate can resolve
+# Surf tab.list and browser-oracle bindings. If the gate fails, Ask exits before
+# Tau launches candidate nodes and writes provider-gate.json plus a blocked
+# execution packet.
+./run.sh compete "Compare two implementation approaches." \
+  --repo local/ask --target browser-compete-preflight \
+  --immutable-goal "Choose a winner only from locally verified features." \
+  --handler webgpt --handler webclaude --execute --json
 
 # API/model DAG with real provider calls requires explicit provider consent.
 ./run.sh tau-dag "Solve X with two solvers, then review." \
@@ -59,6 +85,29 @@ shape or sanity command is needed.
 ./run.sh ask "What do we know about this project?" --scope ask --json
 ./run.sh ask "Review this target" --deep-review --deep-review-target path/to/file --json
 ./run.sh status --run <ask_id> --json
+```
+
+## Artifact Inspection Pitfalls
+
+`skills/surf/run.sh tab.list --json` may return a top-level tab array. Some
+older helpers returned `{"tabs": [...]}`. Inspection snippets must accept both:
+
+```bash
+skills/surf/run.sh tab.list --json > /tmp/tabs.json
+python3 -c 'import json,sys
+data=json.load(open(sys.argv[1]))
+tabs=data.get("tabs", data) if isinstance(data, dict) else data
+print(len(tabs) if isinstance(tabs, list) else "invalid-tab-list-json")' /tmp/tabs.json
+```
+
+Do not combine a data pipe with `python3 - <<'PY'`; `python -` uses stdin for
+the Python program. Persist JSON first, then pass the path:
+
+```bash
+curl -sS --max-time 10 "$URL" > /tmp/endpoint.json
+python3 -c 'import json,sys
+data=json.load(open(sys.argv[1]))
+print(data.get("status"))' /tmp/endpoint.json
 ```
 
 ## Opt-In Sanity Checks

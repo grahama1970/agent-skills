@@ -15,9 +15,11 @@ from .tau_dag import (
     DEFAULT_SCILLM_API_KEY,
     DEFAULT_SCILLM_BASE_URL,
     DEFAULT_TAU_PROJECT_ROOT,
+    browser_compete_blocked_execution,
     compile_tau_dag_bundle,
     default_scillm_api_key,
     infer_compile_input,
+    probe_browser_compete_handler_gate,
     probe_scillm_provider_gate,
     run_tau_dag_bundle,
 )
@@ -35,6 +37,13 @@ def run(
     ] = "",
     repo: Annotated[str, typer.Option("--repo", help="Repository/project binding.")] = "",
     target: Annotated[str, typer.Option("--target", help="Issue, task, path, or work target.")] = "",
+    immutable_goal: Annotated[
+        str,
+        typer.Option(
+            "--immutable-goal",
+            help="Immutable goal or acceptance bar shared with every roundtable/compete participant.",
+        ),
+    ] = "",
     solver_model: Annotated[
         list[str] | None,
         typer.Option("--solver-model", help="Solver model to run. Repeat for parallel solvers."),
@@ -126,6 +135,7 @@ def run(
         request.strip(),
         repo=repo,
         target=target,
+        immutable_goal=immutable_goal,
         solver_models=solver_model,
         reviewer_model=reviewer_model,
         criteria=criterion,
@@ -177,7 +187,18 @@ def run(
         if require_provider_calls and provider_gate.get("ok") is not True:
             exit_code = 3
         elif execute:
-            if not input_payload.handlers and not local_fixture and not allow_provider_calls:
+            if input_payload.handlers and input_payload.workflow_mode == "compete":
+                browser_gate = probe_browser_compete_handler_gate(input_payload)
+                if not browser_gate.get("skipped"):
+                    provider_gate = browser_gate
+                    gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                    provider_gate["path"] = str(gate_path)
+                if browser_gate.get("ok") is not True and not browser_gate.get("skipped"):
+                    execution = browser_compete_blocked_execution(browser_gate)
+                    exit_code = 4
+            if execution is not None:
+                pass
+            elif not input_payload.handlers and not local_fixture and not allow_provider_calls:
                 execution = {
                     "schema": "ask.tau_dag_execution.v1",
                     "status": "BLOCKED",
@@ -234,6 +255,13 @@ def compete(
     ],
     repo: Annotated[str, typer.Option("--repo", help="Repository/project binding.")] = "",
     target: Annotated[str, typer.Option("--target", help="Issue, task, path, or work target.")] = "",
+    immutable_goal: Annotated[
+        str,
+        typer.Option(
+            "--immutable-goal",
+            help="Immutable goal or acceptance bar shared with every isolated competitor.",
+        ),
+    ] = "",
     handler: Annotated[
         list[str] | None,
         typer.Option("--handler", help="Competitor handler/model. Repeat for multiple competitors."),
@@ -287,6 +315,7 @@ def compete(
         request.strip(),
         repo=repo,
         target=target,
+        immutable_goal=immutable_goal,
         criteria=criterion,
         handlers=handler,
         topology="concurrent",
@@ -325,16 +354,25 @@ def compete(
         gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         provider_gate["path"] = str(gate_path)
         if execute:
-            execution = run_tau_dag_bundle(
-                bundle,
-                tau_project_root=tau_project_root,
-                poll=poll,
-                poll_interval_seconds=poll_interval_seconds,
-                poll_timeout_seconds=poll_timeout_seconds,
-                viewer_link=viewer_link,
-            )
-            if execution.get("ok") is not True:
+            browser_gate = probe_browser_compete_handler_gate(input_payload)
+            if not browser_gate.get("skipped"):
+                provider_gate = browser_gate
+                gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                provider_gate["path"] = str(gate_path)
+            if browser_gate.get("ok") is not True and not browser_gate.get("skipped"):
+                execution = browser_compete_blocked_execution(browser_gate)
                 exit_code = 4
+            else:
+                execution = run_tau_dag_bundle(
+                    bundle,
+                    tau_project_root=tau_project_root,
+                    poll=poll,
+                    poll_interval_seconds=poll_interval_seconds,
+                    poll_timeout_seconds=poll_timeout_seconds,
+                    viewer_link=viewer_link,
+                )
+                if execution.get("ok") is not True:
+                    exit_code = 4
     output = {
         "schema": "ask.tau_dag_cli_result.v1",
         "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),

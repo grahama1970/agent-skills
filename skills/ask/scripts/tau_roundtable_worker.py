@@ -63,6 +63,7 @@ def main() -> int:
     parser.add_argument("--workflow-mode", default="roundtable", choices=["roundtable", "compete"])
     parser.add_argument("--request-file", required=True)
     parser.add_argument("--browser-oracle-project", default="")
+    parser.add_argument("--provider-hint", default="")
     parser.add_argument("--next-agent", default="human")
     parser.add_argument("--artifact-dir", required=True)
     parser.add_argument("--surf-run", required=True)
@@ -178,43 +179,50 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             if binding_refresh.get("status") == "updated" and binding_refresh.get("current_url"):
                 url = str(binding_refresh["current_url"])
 
-            submit_cmd = [
-                str(args.surf_run),
-                HANDLER_SUBMIT_COMMANDS[handler],
-                "--input",
-                str(prompt_path),
-                "--output",
-                str(response_path),
-                "--raw-output",
-                str(raw_path),
-                "--meta-output",
-                str(meta_path),
-                "--tab-id",
-                tab_id,
-                "--timeout",
-                str(args.timeout),
-                "--stable-polls",
-                str(args.stable_polls),
-            ]
-            if url:
-                if handler == "webgpt":
-                    submit_cmd.extend(["--expect-url", url])
-                else:
-                    submit_cmd.extend(["--url", url])
-            model_preference = str(getattr(args, "browser_model_preference", "") or "")
-            if handler == "webclaude" and model_preference:
-                submit_cmd.extend(["--model", model_preference])
+            attachment_paths: list[str] = []
             for prior in prior_receipts:
                 prior_response = str(prior.get("response_path") or "")
                 if prior_response and Path(prior_response).is_file():
-                    submit_cmd.extend(["--attach-file", prior_response])
-            if args.no_activate:
-                submit_cmd.append("--no-activate")
+                    attachment_paths.append(prior_response)
+            submit_cmd = _browser_submit_command(
+                args,
+                handler=handler,
+                prompt_path=prompt_path,
+                response_path=response_path,
+                raw_path=raw_path,
+                meta_path=meta_path,
+                tab_id=tab_id,
+                url=url,
+                attachment_paths=attachment_paths,
+            )
             submit = _run_cmd(submit_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
             commands.append(submit.summary())
             if meta_path.is_file():
                 submit_meta = _read_json(meta_path)
             transport_summary_path, transport_summary = _load_webgpt_transport_summary(artifact_dir)
+            if submit.returncode != 0 and _should_retry_webgpt_stale_binding(
+                handler=handler,
+                url=url,
+                submit_meta=submit_meta,
+                submit=submit,
+            ):
+                retry = _retry_webgpt_stale_binding(
+                    args,
+                    project=project,
+                    url=url,
+                    prompt_path=prompt_path,
+                    response_path=response_path,
+                    raw_path=raw_path,
+                    meta_path=meta_path,
+                    attachment_paths=attachment_paths,
+                    commands=commands,
+                )
+                if retry:
+                    submit = retry["submit"]
+                    submit_meta = retry["submit_meta"]
+                    tab_id = retry["tab_id"]
+                    binding_refresh = retry["binding_refresh"]
+                    transport_summary_path, transport_summary = _load_webgpt_transport_summary(artifact_dir)
             if submit.returncode != 0:
                 raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
             response_text = response_path.read_text(encoding="utf-8")
@@ -241,7 +249,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             )
             commands.append(
                 {
-                    "command": ["scillm.chat", handler],
+                    "command": ["scillm.chat", submit_meta.get("model") or handler],
                     "returncode": 0,
                     "duration_seconds": submit_meta.get("duration_seconds"),
                     "stdout_excerpt": response_text[:1000],
@@ -308,11 +316,11 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
         "webgpt_transport_summary": transport_summary or None,
         "prompt_path": str(prompt_path),
-        "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
         "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
         "response_chars": len(response_text),
         "browser_oracle": resolve_payload,
         "browser_oracle_binding_refresh": binding_refresh,
+        "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
         "submit_meta": submit_meta,
         "commands": commands,
         "prior_nodes": list(args.prior_node),
@@ -331,9 +339,12 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "provider_live": provider_live,
             "route": "tau_roundtable_handler_adapter",
             "execution_owner": "$tau",
-            "provider_transport": "$surf",
+            "provider_transport": "$surf" if handler in HANDLER_SUBMIT_COMMANDS else "$scillm",
             "handler": handler,
-            "transport": HANDLER_SUBMIT_COMMANDS.get(handler, f"{handler}.local"),
+            "provider_hint": str(getattr(args, "provider_hint", "") or "") or None,
+            "transport": HANDLER_SUBMIT_COMMANDS.get(handler, "scillm.chat"),
+            "model": submit_meta.get("model") if handler not in HANDLER_SUBMIT_COMMANDS else None,
+            "requested_model": submit_meta.get("requested_handler") if handler not in HANDLER_SUBMIT_COMMANDS else None,
             "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
             "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
         },
@@ -425,6 +436,148 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         evidence=evidence,
     )
     return {"exit_code": 0 if ok else 1, "handoff": handoff}
+
+
+def _browser_submit_command(
+    args: argparse.Namespace,
+    *,
+    handler: str,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    tab_id: str,
+    url: str,
+    attachment_paths: list[str],
+) -> list[str]:
+    command = [
+        str(args.surf_run),
+        HANDLER_SUBMIT_COMMANDS[handler],
+        "--input",
+        str(prompt_path),
+        "--output",
+        str(response_path),
+        "--raw-output",
+        str(raw_path),
+        "--meta-output",
+        str(meta_path),
+        "--timeout",
+        str(args.timeout),
+        "--stable-polls",
+        str(args.stable_polls),
+    ]
+    if tab_id:
+        command.extend(["--tab-id", tab_id])
+    if url:
+        if handler == "webgpt":
+            command.extend(["--expect-url", url] if tab_id else ["--url", url])
+        else:
+            command.extend(["--url", url])
+    browser_model_preference = str(getattr(args, "browser_model_preference", "") or "").strip()
+    if handler == "webclaude" and browser_model_preference:
+        command.extend(["--model", browser_model_preference])
+    for attachment_path in attachment_paths:
+        command.extend(["--attach-file", attachment_path])
+    if args.no_activate:
+        command.append("--no-activate")
+    return command
+
+
+def _should_retry_webgpt_stale_binding(
+    *,
+    handler: str,
+    url: str,
+    submit_meta: dict[str, Any],
+    submit: CommandResult,
+) -> bool:
+    if handler != "webgpt" or not url:
+        return False
+    haystack = "\n".join(
+        [
+            str(submit_meta.get("failure") or ""),
+            str(submit_meta.get("agent_diagnosis") or ""),
+            submit.stderr,
+            submit.stdout,
+        ]
+    )
+    return "tab_identity_preflight_failed" in haystack or "tab_not_open_chatgpt" in haystack
+
+
+def _retry_webgpt_stale_binding(
+    args: argparse.Namespace,
+    *,
+    project: str,
+    url: str,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    attachment_paths: list[str],
+    commands: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    open_tab = _run_cmd([str(args.surf_run), "tab.new", url], cwd=Path(args.surf_run).parent, timeout=90)
+    open_summary = open_tab.summary()
+    open_summary["recovery_attempt"] = "webgpt_stale_binding_open_url"
+    commands.append(open_summary)
+    if open_tab.returncode != 0 and "browser lock" in (open_tab.stderr + open_tab.stdout).lower():
+        open_tab = _run_cmd(
+            [str(args.surf_run), "tab.new", url, "--no-lock"],
+            cwd=Path(args.surf_run).parent,
+            timeout=90,
+        )
+        open_summary = open_tab.summary()
+        open_summary["recovery_attempt"] = "webgpt_stale_binding_open_url_no_lock"
+        commands.append(open_summary)
+    if open_tab.returncode != 0:
+        return None
+    tab_id = _extract_tab_id(open_tab.stdout)
+    if not tab_id:
+        return None
+    binding_refresh = _bind_browser_oracle_url(
+        args,
+        project=project,
+        tab_id=tab_id,
+        backend=HANDLER_BACKENDS["webgpt"],
+        previous_url="",
+        current_url=url,
+        commands=commands,
+    )
+    retry_cmd = _browser_submit_command(
+        args,
+        handler="webgpt",
+        prompt_path=prompt_path,
+        response_path=response_path,
+        raw_path=raw_path,
+        meta_path=meta_path,
+        tab_id=tab_id,
+        url=url,
+        attachment_paths=attachment_paths,
+    )
+    retry = _run_cmd(retry_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
+    retry_summary = retry.summary()
+    retry_summary["recovery_attempt"] = "webgpt_stale_binding_submit_after_rebind"
+    commands.append(retry_summary)
+    submit_meta = _read_json(meta_path) if meta_path.is_file() else {}
+    return {
+        "submit": retry,
+        "submit_meta": submit_meta,
+        "tab_id": tab_id,
+        "binding_refresh": binding_refresh,
+    }
+
+
+def _extract_tab_id(text: str) -> str:
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        payload = None
+    if isinstance(payload, dict):
+        for key in ("tabId", "tab_id", "id"):
+            value = payload.get(key)
+            if value:
+                return str(value)
+    match = re.search(r"\btab(?:Id|[_ -]?id)?[\"':=\s]+(\d{3,})\b", text, flags=re.IGNORECASE)
+    return match.group(1) if match else ""
 
 
 def _refresh_browser_binding_after_proven_submit(
@@ -685,7 +838,6 @@ def _browser_failure_recovery_packet(
             BROWSER_ACCESS_BLOCKED,
             BROWSER_PROVIDER_RATE_LIMITED,
             BROWSER_TOOL_UNSUPPORTED,
-            SURF_BROWSER_LOCK_TIMEOUT,
         }
         and bool(bundle_paths)
         and can_attach
@@ -1681,6 +1833,8 @@ def _handler_prompt(
         request_text,
         "",
     ]
+    if model_preference:
+        lines.extend(["Browser model preference:", model_preference, ""])
     if workflow_mode == "compete":
         lines.extend(
             [
@@ -1689,17 +1843,6 @@ def _handler_prompt(
                 "",
             ]
         )
-        if model_preference:
-            lines.extend(
-                [
-                    f"Browser model preference: {model_preference}",
-                    (
-                        "Use that browser model if the provider UI exposes a selector. "
-                        "If it is unavailable, state the limitation in Blockers."
-                    ),
-                    "",
-                ]
-            )
     if prior_receipts:
         lines.extend(["Prior handler receipts to use as input:", ""])
         for receipt in prior_receipts:
@@ -1979,13 +2122,17 @@ def _run_scillm_handler(
 ) -> tuple[str, dict[str, Any]]:
     prompt = prompt_path.read_text(encoding="utf-8")
     base_url = str(args.scillm_base_url).rstrip("/")
+    canonical_handler, canonicalization = _canonicalize_scillm_handler(
+        handler,
+        str(getattr(args, "provider_hint", "") or ""),
+    )
     # Effort-suffix selectors (gpt-5.5-high, ...): the router serves base
     # model names; the suffix becomes reasoning_effort (xhigh -> high).
-    model = handler
+    model = canonical_handler
     reasoning_effort = None
     for effort in ("xhigh", "high", "medium", "low"):
-        if handler.lower().endswith(f"-{effort}"):
-            model = handler[: -(len(effort) + 1)]
+        if canonical_handler.lower().endswith(f"-{effort}"):
+            model = canonical_handler[: -(len(effort) + 1)]
             reasoning_effort = "high" if effort == "xhigh" else effort
             break
     payload = {
@@ -2033,12 +2180,32 @@ def _run_scillm_handler(
     meta = {
         "schema": "ask.tau_dag_scillm_submit_meta.v1",
         "status_code": status_code,
-        "model": handler,
+        "model": model,
+        "requested_handler": handler,
+        "canonical_handler": canonical_handler,
+        "provider_hint": str(getattr(args, "provider_hint", "") or "") or None,
+        "canonicalization": canonicalization,
         "duration_seconds": round(time.time() - started, 3),
         "usage": payload.get("usage"),
     }
     meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return text, meta
+
+
+def _canonicalize_scillm_handler(handler: str, provider_hint: str) -> tuple[str, dict[str, Any] | None]:
+    raw = handler.strip()
+    hint = provider_hint.strip().lower()
+    if raw.lower().startswith("chutes/"):
+        canonical = raw.split("/", 1)[1].strip()
+        return canonical, {
+            "schema": "ask.scillm_handler_canonicalization.v1",
+            "status": "AUTO_CONVERTED",
+            "from": raw,
+            "to": canonical,
+            "provider_hint": hint or "chutes",
+            "reason": "SciLLM model ids do not include the chutes/ transport prefix.",
+        }
+    return raw, None
 
 
 def _excerpt_before_diff(text: str) -> str:
