@@ -20,4 +20,6 @@ assert payload["schema"] == "agent_skills.monitor_herdr.probe.v1"
 assert "CAN_SELF_UNBLOCK_BRAVE_SEARCH" in payload["text"]
 assert "CAN_SELF_UNBLOCK_WEBGPT" in payload["text"]
 assert "Immutable Goal:" in payload["text"]
+assert "Ticket Check:" in payload["text"]
+assert "$ticket" in payload["text"]
 PY

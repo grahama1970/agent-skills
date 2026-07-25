@@ -760,6 +760,9 @@ def test_probe_text_names_human_brave_and_webgpt_routes() -> None:
     assert "$brave-search" in text
     assert "$ask webgpt" in text
     assert "$ask webkimi" in text
+    assert "$ticket" in text
+    assert "Ticket Check:" in text
+    assert "lease/diagnose/fix/prove" in text
     assert "browser-oracle=" in text
     assert "Strict stop rule:" in text
     assert "partial checkpoint" in text

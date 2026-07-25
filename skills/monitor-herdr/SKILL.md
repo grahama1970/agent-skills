@@ -17,6 +17,7 @@ provides:
   - agent-unblock-probe
 composes:
   - brave-search
+  - ticket
   - webgpt
   - task-monitor
   - tau
@@ -37,7 +38,7 @@ Use this skill to monitor Herdr agent panes and restart agents that stopped
 before the immutable goal was met.
 
 This skill is a thin fail-closed monitor. It does not replace Tau, Herdr,
-`$brave-search`, `$webgpt`, or `$ask`. It uses the Herdr socket API, writes
+`$brave-search`, `$webgpt`, `$ask`, or `$ticket`. It uses the Herdr socket API, writes
 receipts, and, only with `--apply`, sends a bounded restart or human-blocker
 prompt to selected stopped panes.
 
@@ -161,7 +162,7 @@ early-stop/hook-failure markers such as `Stop hook (stopped)`, `status response
 blocked`, `remaining work`, or `what remains`, the monitor may select the pane.
 The prompt forces the agent to answer with `Immutable Goal: UNKNOWN` if needed
 and either resume the obvious remaining work, use `$brave-search`/browser-oracle
-to unblock, or state a real human blocker.
+to unblock, check and resolve any referenced `$ticket`, or state a real human blocker.
 
 Codex's own `/goal` footer is also treated as an immutable-goal signal. A
 footer such as `Goal blocked (/goal resume)` means there is an active goal that
@@ -185,10 +186,22 @@ requires the agent to state:
 - the immutable goal or `UNKNOWN`;
 - whether the goal is achieved with a receipt;
 - why it stopped if the goal is not achieved;
+- `Ticket Check:` showing `$ticket` lookup/lease/fix/proof/close activity when
+  the transcript, project state, or human prompt names a GitHub issue or
+  `$ticket`, or `NOT_APPLICABLE` with a concrete reason;
 - `Unblock Attempts:` showing `$brave-search` and the project-bound
   `$browser-oracle` reviewer receipt, or why each is not applicable;
-- whether it will resume, use `$brave-search`, use `$webgpt`/`$ask`, or ask the
-  human for a legitimate blocker.
+- whether it will resume, use `$ticket`, use `$brave-search`, use
+  `$webgpt`/`$ask`, or ask the human for a legitimate blocker.
+
+If the transcript or project state references an issue number, issue URL,
+`$ticket`, "filed ticket", "assigned ticket", "close the ticket", or equivalent
+ticket language, the restarted agent must use the real `$ticket` runtime before
+asking the human. If the ticket is open and in scope, the agent must lease it,
+diagnose it from repository evidence, apply the focused fix, run deterministic
+proof, attach proof, close it, and read back the closed state. If the ticket is
+not applicable, already closed, outside scope, or blocked by missing authority,
+the agent must say so in `Ticket Check:` with the lookup evidence.
 
 Completion claims are fail-closed. `ACHIEVED_WITH_RECEIPT` and
 `DONE_WITH_RECEIPT` are allowed only when the current answer names a concrete
@@ -222,10 +235,10 @@ CAN_SELF_UNBLOCK_WEBGPT
 DONE_WITH_RECEIPT
 ```
 
-The prompt tells the agent to use the real `$brave-search`, `$webgpt`, or `$ask`
-runtime if that is the next unblock step, and to stop and ask the human only
-when the blocker is a real missing decision, credential, authority, or external
-state.
+The prompt tells the agent to use the real `$ticket`, `$brave-search`,
+`$webgpt`, or `$ask` runtime if that is the next unblock step, and to stop and
+ask the human only when the blocker is a real missing decision, credential,
+authority, or external state.
 
 ## Cron
 
