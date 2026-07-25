@@ -1461,6 +1461,13 @@ stop_background_watcher "$poll_pid"
 stop_background_watcher "$receipt_pid"
 wait "$poll_pid" 2>/dev/null || true
 wait "$receipt_pid" 2>/dev/null || true
+if [[ ! -s "$receipt_marker" ]] \
+  && [[ -f "$host_log_file" ]] \
+  && grep -F "Prompt accepted: sentinel=$sentinel" "$host_log_file" >/dev/null 2>&1; then
+  write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+  write_inflight_marker "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+  printf 'submitted_to_chatgpt\n' > "$receipt_marker"
+fi
 trap - EXIT INT TERM HUP
 trap cleanup_surf_tab_lock EXIT
 set -e

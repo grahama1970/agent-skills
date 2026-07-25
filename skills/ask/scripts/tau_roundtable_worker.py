@@ -36,6 +36,7 @@ RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
 WEBGPT_CONVERSATION_FULL_BLOCKER = "BLOCKED_WEBGPT_CONVERSATION_FULL"
 WEBGPT_BINDING_STALE_BLOCKER = "BLOCKED_WEBGPT_BINDING_STALE"
 BROWSER_TAB_IDENTITY_MISMATCH = "browser_tab_identity_mismatch"
+BROWSER_TAB_READ_TIMEOUT = "browser_tab_read_timeout"
 BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
@@ -670,6 +671,7 @@ def _browser_failure_recovery_packet(
             WEBGPT_CONVERSATION_FULL_BLOCKER,
             WEBGPT_BINDING_STALE_BLOCKER,
             BROWSER_TAB_IDENTITY_MISMATCH,
+            BROWSER_TAB_READ_TIMEOUT,
             BROWSER_ACCESS_BLOCKED,
             BROWSER_PROVIDER_RATE_LIMITED,
             BROWSER_TOOL_UNSUPPORTED,
@@ -710,7 +712,7 @@ def _browser_failure_recovery_packet(
             "stale_binding": stale_binding,
         },
         "local_readable_bundle_paths": bundle_paths,
-        "requires_local_readable_bundle": True,
+        "requires_local_readable_bundle": _requires_local_readable_bundle(failure_code),
         "attach_file_supported": can_attach,
         "auto_retry_allowed": auto_retry_allowed,
         "auto_retry_blocked_reason": None
@@ -769,6 +771,8 @@ def _classify_browser_failure(
         return BROWSER_TAB_IDENTITY_MISMATCH
     if _looks_stale_raw_capture(haystack, submit_meta):
         return "stale_raw_capture"
+    if _looks_browser_tab_read_timeout(haystack):
+        return BROWSER_TAB_READ_TIMEOUT
     if _looks_prompt_too_large_or_stalled(haystack):
         return "prompt_too_large_or_stalled"
     if _looks_missing_sentinel(haystack, submit_meta):
@@ -908,6 +912,22 @@ def _looks_stale_raw_capture(text: str, meta: dict[str, Any]) -> bool:
     return any(marker in text for marker in markers)
 
 
+def _looks_browser_tab_read_timeout(text: str) -> bool:
+    if "timed out" not in text and "timeout" not in text:
+        return False
+    tab_read_markers = (
+        "'read', '--tab-id'",
+        '"read", "--tab-id"',
+        " read --tab-id",
+        "run.sh', 'read'",
+        "run.sh read",
+        "surf read --tab-id",
+        "page.text",
+        "page text",
+    )
+    return any(marker in text for marker in tab_read_markers)
+
+
 def _looks_prompt_too_large_or_stalled(text: str) -> bool:
     markers = (
         "timed out",
@@ -1045,6 +1065,25 @@ def _recovery_next_command(
         if args.no_activate:
             command.append("--no-activate")
         return command
+    if failure_code == BROWSER_TAB_READ_TIMEOUT:
+        project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
+        url = str(
+            browser_oracle.get("conversation_url")
+            or submit_meta.get("current_url")
+            or submit_meta.get("requested_url")
+            or ""
+        ).strip()
+        command = [
+            str(args.browser_oracle_run),
+            "open-bind",
+            project,
+            "--backend",
+            HANDLER_BACKENDS[str(args.handler)],
+        ]
+        if url:
+            command.extend(["--url", url])
+        command.extend(["--manual", "--json"])
+        return command
     if bundle_path and can_attach:
         retry_prompt = prompt_path.with_name("retry-with-local-bundle.md")
         retry_prompt.write_text(
@@ -1122,6 +1161,7 @@ def _recovery_reason(failure_code: str) -> str:
         WEBGPT_CONVERSATION_FULL_BLOCKER: "The controlled ChatGPT conversation is at its maximum length and cannot accept the WebGPT round.",
         WEBGPT_BINDING_STALE_BLOCKER: "The browser-oracle binding points at a stale ChatGPT URL; the controlled tab is open at a different live URL.",
         BROWSER_TAB_IDENTITY_MISMATCH: "The browser-oracle binding or requested tab does not match the live browser tab URL.",
+        BROWSER_TAB_READ_TIMEOUT: "The bound browser tab was reachable by identity but did not respond to Surf page reads.",
         BROWSER_ACCESS_BLOCKED: "The browser provider presented an access challenge before the request could be submitted.",
         BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
@@ -1141,6 +1181,8 @@ def _auto_retry_blocked_reason(
         return "browser_oracle_binding_stale_rebind_required"
     if failure_code == BROWSER_TAB_IDENTITY_MISMATCH:
         return "browser_tab_identity_rebind_required"
+    if failure_code == BROWSER_TAB_READ_TIMEOUT:
+        return "browser_tab_read_timeout_rebind_required"
     if failure_code == BROWSER_ACCESS_BLOCKED:
         return "browser_access_challenge_requires_human_browser_recovery"
     if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
@@ -1164,6 +1206,8 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return "Run the next_command to rebind browser-oracle to the live ChatGPT tab URL, then rerun the Tau DAG node."
     if failure_code == BROWSER_TAB_IDENTITY_MISMATCH:
         return "Rebind the browser-oracle project to the live tab URL or choose the correct tab, then rerun the Tau DAG node."
+    if failure_code == BROWSER_TAB_READ_TIMEOUT:
+        return "Run the next_command to open and bind a fresh provider tab, then rerun the Tau DAG node. Do not convert this to a prompt-size bundle retry."
     if failure_code == BROWSER_ACCESS_BLOCKED:
         return "Complete the provider access challenge in the controlled browser tab, rerun Surf preflight, then rerun the Tau DAG node."
     if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
@@ -1187,6 +1231,19 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
     if failure_code == "stale_raw_capture":
         return "Refresh or rebind the browser-oracle tab, then rerun the next_command; do not reuse the stale raw capture."
     return "Rerun only after the browser tab is responsive or a local readable bundle is available."
+
+
+def _requires_local_readable_bundle(failure_code: str) -> bool:
+    return failure_code not in {
+        WEBGPT_CONVERSATION_FULL_BLOCKER,
+        WEBGPT_BINDING_STALE_BLOCKER,
+        BROWSER_TAB_IDENTITY_MISMATCH,
+        BROWSER_TAB_READ_TIMEOUT,
+        BROWSER_ACCESS_BLOCKED,
+        BROWSER_PROVIDER_RATE_LIMITED,
+        BROWSER_TOOL_UNSUPPORTED,
+        "stale_raw_capture",
+    }
 
 
 def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
