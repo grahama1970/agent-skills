@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 
 import httpx
+from dotenv import load_dotenv
 
 from code_symbol_record import CodeSymbolRecord
 
 
+load_dotenv(override=False)
+
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
+DEFAULT_CODE_SYMBOLS_BATCH_SIZE = 100
+CODE_SYMBOLS_BATCH_SIZE_ENV = "CODE_SYMBOLS_QDRANT_BATCH_SIZE"
 
 
 @dataclass(frozen=True)
@@ -17,6 +23,11 @@ class MemoryWriteResult:
     stored: int
     attempted: int
     errors: list[str]
+
+
+@dataclass(frozen=True)
+class CodeSymbolWriteResult(MemoryWriteResult):
+    stored_records: tuple[CodeSymbolRecord, ...]
 
 
 class CodeMemoryClient:
@@ -34,37 +45,88 @@ class CodeMemoryClient:
         self,
         records: list[CodeSymbolRecord],
         collection: str = "code_symbols",
-        batch_size: int = 100,
-    ) -> MemoryWriteResult:
-        """Upsert structured code symbols, falling back to legacy lessons per record."""
+        batch_size: int | None = None,
+    ) -> CodeSymbolWriteResult:
+        """Upsert structured code symbols, splitting failed batches first."""
         if not records:
-            return MemoryWriteResult(stored=0, attempted=0, errors=[])
+            return CodeSymbolWriteResult(stored=0, attempted=0, errors=[], stored_records=())
 
-        stored = 0
+        effective_batch_size = self._resolve_batch_size(batch_size)
+        stored_records: list[CodeSymbolRecord] = []
         errors: list[str] = []
+
+        def store_batch(batch: list[CodeSymbolRecord], client: httpx.Client) -> None:
+            upsert_error = self._upsert_batch(batch, collection=collection, client=client)
+            if upsert_error is None:
+                stored_records.extend(batch)
+                return
+
+            if len(batch) > 1:
+                midpoint = len(batch) // 2
+                store_batch(batch[:midpoint], client)
+                store_batch(batch[midpoint:], client)
+                return
+
+            record = batch[0]
+            if self.store_legacy_code_symbol(record, client=client):
+                stored_records.append(record)
+                return
+
+            errors.append(
+                f"upsert and legacy fallback failed for {record.qualified_name}: "
+                f"upsert={upsert_error}; legacy=fallback failed"
+            )
+
         with self._client() as client:
-            for i in range(0, len(records), batch_size):
-                batch = records[i : i + batch_size]
-                documents = [record.to_document() for record in batch]
-                try:
-                    response = client.post(
-                        "/upsert",
-                        json={"collection": collection, "documents": documents},
-                    )
-                    if 200 <= response.status_code < 300:
-                        stored += len(batch)
-                        continue
-                    errors.append(f"/upsert batch {i // batch_size}: HTTP {response.status_code}")
-                except Exception as exc:
-                    errors.append(f"/upsert batch {i // batch_size}: {exc}")
+            for i in range(0, len(records), effective_batch_size):
+                store_batch(records[i : i + effective_batch_size], client)
 
-                for record in batch:
-                    if self.store_legacy_code_symbol(record, client=client):
-                        stored += 1
-                    else:
-                        errors.append(f"legacy fallback failed: {record.qualified_name}")
+        return CodeSymbolWriteResult(
+            stored=len(stored_records),
+            attempted=len(records),
+            errors=errors,
+            stored_records=tuple(stored_records),
+        )
 
-        return MemoryWriteResult(stored=stored, attempted=len(records), errors=errors)
+    def _resolve_batch_size(self, requested: int | None) -> int:
+        """Resolve the per-call structured upsert batch size."""
+        if requested is not None:
+            return requested if requested > 0 else DEFAULT_CODE_SYMBOLS_BATCH_SIZE
+
+        raw = os.environ.get(CODE_SYMBOLS_BATCH_SIZE_ENV)
+        if not raw:
+            return DEFAULT_CODE_SYMBOLS_BATCH_SIZE
+
+        try:
+            parsed = int(raw)
+        except (TypeError, ValueError):
+            return DEFAULT_CODE_SYMBOLS_BATCH_SIZE
+
+        return parsed if parsed > 0 else DEFAULT_CODE_SYMBOLS_BATCH_SIZE
+
+    def _upsert_batch(
+        self,
+        records: list[CodeSymbolRecord],
+        collection: str,
+        client: httpx.Client,
+    ) -> str | None:
+        """Try one structured upsert batch; return an error string on failure."""
+        documents = [record.to_document() for record in records]
+        try:
+            response = client.post(
+                "/upsert",
+                json={"collection": collection, "documents": documents},
+            )
+        except Exception as exc:
+            return str(exc)
+
+        if 200 <= response.status_code < 300:
+            return None
+
+        detail = getattr(response, "text", "") or ""
+        if detail:
+            return f"HTTP {response.status_code}: {detail}"
+        return f"HTTP {response.status_code}"
 
     def store_legacy_code_symbol(
         self,

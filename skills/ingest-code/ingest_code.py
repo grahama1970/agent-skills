@@ -29,10 +29,13 @@ from pathlib import Path
 from typing import Any, Optional
 
 import httpx
+from dotenv import load_dotenv
 
 from code_memory_client import CodeMemoryClient
 from code_symbol_record import CodeSymbolRecord
 from ingest_code_cwe import scan_file_cwe
+
+load_dotenv(override=False)
 
 try:
     import typer
@@ -124,6 +127,131 @@ def _learn_http(problem: str, solution: str, scope: str, tags: list[str]) -> boo
 def _learn(memory_script: Path, problem: str, solution: str, scope: str, tags: list[str]) -> bool:
     """Store a lesson in /memory via Unix socket httpx."""
     return _learn_http(problem, solution, scope, tags)
+
+
+def _store_lessons_threaded(
+    memory_script: Path,
+    items: list[dict],
+    scope: str,
+    *,
+    label: str,
+) -> int:
+    """Store lesson-like records with bounded concurrency and visible progress."""
+    if not items:
+        print(f"{label}: 0 stored of 0 attempted", flush=True)
+        return 0
+
+    try:
+        workers = max(1, int(os.environ.get("INGEST_WORKERS", "8")))
+    except ValueError:
+        workers = 8
+
+    stored = 0
+    failed = 0
+    lock = threading.Lock()
+
+    def _learn_item(item: dict) -> bool:
+        return _learn(
+            memory_script,
+            item["problem"],
+            item["solution"],
+            scope,
+            item["tags"],
+        )
+
+    print(f"{label}: storing {len(items)} records with {workers} threads", flush=True)
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(_learn_item, item) for item in items]
+        for done_count, future in enumerate(as_completed(futures), start=1):
+            if future.result():
+                with lock:
+                    stored += 1
+            else:
+                with lock:
+                    failed += 1
+            if done_count % 100 == 0 or done_count == len(items):
+                print(
+                    f"{label}: progress {stored} stored, {failed} blocked, "
+                    f"{done_count}/{len(items)} done",
+                    flush=True,
+                )
+    return stored
+
+
+def _write_ingest_marker(
+    path: Path,
+    *,
+    files_scanned: int,
+    knowledge_stored: int,
+    cwe_stored: int,
+    edges_stored: int,
+    code_symbols_stored: int,
+    treesitter: bool,
+    scope: str,
+    run_status: str = "complete",
+    started_at: str | None = None,
+    scan_roots: list[str | Path] | None = None,
+    completed_scan_roots: list[str | Path] | None = None,
+) -> Path:
+    """Write the local ingest-code marker consumed by monitor-codebase."""
+    now = datetime.now().isoformat()
+    marker = {
+        "ingested_at": now,
+        "started_at": started_at or now,
+        "completed_at": now if run_status == "complete" else None,
+        "path": str(path.resolve()),
+        "stem": path.resolve().name,
+        "files_scanned": files_scanned,
+        "knowledge_stored": knowledge_stored,
+        "cwe_stored": cwe_stored,
+        "edges_stored": edges_stored,
+        "code_index": {
+            "enabled": code_symbols_stored > 0,
+            "backend": "memory",
+            "collection": "code_symbols",
+            "treesitter": bool(treesitter),
+            "symbols_stored": code_symbols_stored,
+            "lexical_terms": code_symbols_stored > 0,
+            "line_ranges": code_symbols_stored > 0,
+            "content_hashes": code_symbols_stored > 0,
+            "hybrid_retrieval_capable": code_symbols_stored > 0,
+        },
+        "scope": scope,
+        "run_status": run_status,
+        "completed": run_status == "complete",
+        "scan_roots": [str(Path(root).resolve()) for root in (scan_roots or [])],
+        "completed_scan_roots": [
+            str(Path(root).resolve()) for root in (completed_scan_roots or [])
+        ],
+    }
+    marker_path = path / ".ingest-code.json"
+    marker_path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n")
+    return marker_path
+
+
+def build_marker_status(path: Path) -> dict[str, Any]:
+    """Return normalized status for a repository's local ingest marker."""
+    marker_path = path / ".ingest-code.json"
+    if not marker_path.exists():
+        return {
+            "status": "missing",
+            "path": str(path.resolve()),
+            "stem": path.resolve().name,
+            "code_index": {"enabled": False},
+        }
+    try:
+        marker = json.loads(marker_path.read_text())
+    except json.JSONDecodeError as exc:
+        return {
+            "status": "invalid",
+            "path": str(path.resolve()),
+            "stem": path.resolve().name,
+            "error": str(exc),
+            "code_index": {"enabled": False},
+        }
+    status = "fresh" if marker.get("run_status") == "complete" and marker.get("completed") is True else "running"
+    marker["status"] = status
+    return marker
 
 
 def _recall_http(query: str, k: int = 1) -> dict[str, Any]:
@@ -734,17 +862,28 @@ def _build_code_symbol_record(
 
 
 def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
-    """Resolve scan roots from .monitor-codebase.json include_dirs."""
+    """Resolve scan roots from env override or .monitor-codebase.json include_dirs."""
+    env_roots = os.environ.get("CODE_SYMBOLS_SCAN_INCLUDE_DIRS")
+    if env_roots and env_roots.strip():
+        roots: list[Path] = []
+        for include_dir in env_roots.split(","):
+            include_dir = include_dir.strip()
+            if not include_dir:
+                continue
+            full = (codebase_path / include_dir).resolve()
+            if full.is_dir():
+                roots.append(full)
+        return roots
+
     config = _load_monitor_config(codebase_path)
     if config and config.get("include_dirs"):
         roots: list[Path] = []
         for include_dir in config["include_dirs"]:
-            full = codebase_path / include_dir
+            full = (codebase_path / include_dir).resolve()
             if full.is_dir():
                 roots.append(full)
-        if roots:
-            return roots
-    return [codebase_path]
+        return roots
+    return [codebase_path.resolve()]
 
 
 def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]]:
@@ -774,6 +913,8 @@ def _store_treesitter_symbols_for_directory(
     verification_samples: Optional[list[dict[str, str]]] = None,
 ) -> int:
     """Scan one configured directory and upsert structured code symbols to memory."""
+    directory = directory.resolve()
+    codebase_root = codebase_root.resolve()
     treesitter_script = find_treesitter_skill()
     if not treesitter_script:
         print(f"Treesitter skill not found for {directory}", file=sys.stderr, flush=True)
@@ -824,6 +965,8 @@ def _store_treesitter_symbols_for_directory(
             continue
 
         filepath = Path(file_path_raw)
+        if not filepath.is_absolute():
+            filepath = codebase_root / filepath
         symbol_context = _extract_symbol_context(filepath)
 
         for symbol in file_entry.get("symbols", []):
@@ -1361,30 +1504,20 @@ def scan(
 
     # --- Write marker file + store ingestion record in /memory ---
     if not dry_run and (knowledge_stored > 0 or code_symbols_stored > 0):
-        marker = {
-            "ingested_at": datetime.now().isoformat(),
-            "path": str(path.resolve()),
-            "stem": path.resolve().name,
-            "files_scanned": len(files),
-            "knowledge_stored": knowledge_stored,
-            "cwe_stored": cwe_stored,
-            "edges_stored": edges_stored,
-            "code_index": {
-                "enabled": code_symbols_stored > 0,
-                "backend": "memory",
-                "collection": "code_symbols",
-                "treesitter": bool(treesitter),
-                "symbols_stored": code_symbols_stored,
-                "lexical_terms": code_symbols_stored > 0,
-                "line_ranges": code_symbols_stored > 0,
-                "content_hashes": code_symbols_stored > 0,
-                "hybrid_retrieval_capable": code_symbols_stored > 0,
-            },
-            "scope": scope,
-        }
-        marker_path = path / ".ingest-code.json"
         try:
-            marker_path.write_text(json.dumps(marker, indent=2))
+            scan_roots = _extract_configured_scan_roots(path) if treesitter and code_index else []
+            marker_path = _write_ingest_marker(
+                path,
+                files_scanned=len(files),
+                knowledge_stored=knowledge_stored,
+                cwe_stored=cwe_stored,
+                edges_stored=edges_stored,
+                code_symbols_stored=code_symbols_stored,
+                treesitter=bool(treesitter and code_index and code_symbols_stored > 0),
+                scope=scope,
+                scan_roots=scan_roots,
+                completed_scan_roots=scan_roots if code_symbols_stored > 0 else [],
+            )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:
             print(f"Warning: Could not write marker file: {e}", file=sys.stderr)
@@ -1392,7 +1525,7 @@ def scan(
         # Store ingestion record in /memory for discoverability
         _learn_http(
             problem=f"Has codebase {path.resolve().name} been indexed for semantic search?",
-            solution=f"Yes, indexed on {marker['ingested_at']}. {knowledge_stored} lessons, {code_symbols_stored} code symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
+            solution=f"Yes, indexed on {datetime.now().isoformat()}. {knowledge_stored} lessons, {code_symbols_stored} code symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
             scope="system",
             tags=["ingest-code", "indexed-codebase", path.resolve().name, str(path.resolve())],
         )
@@ -1428,9 +1561,9 @@ def rescan(
         print('{"error": "No codebases specified"}', file=sys.stderr)
         raise SystemExit(1)
 
-    print(f"Rescanning {len(codebases)} codebase(s)")
+    print(f"Rescanning {len(codebases)} codebase(s)", flush=True)
     if mtime_threshold:
-        print(f"Only files modified since: {mtime_threshold.isoformat()}")
+        print(f"Only files modified since: {mtime_threshold.isoformat()}", flush=True)
 
     memory_script = find_memory_skill()
     if not memory_script:
@@ -1442,48 +1575,87 @@ def rescan(
     total_cwes = 0
     total_ts_symbols = 0
     verifiable_samples: list[dict[str, str]] = []
+    pending_markers: list[dict[str, Any]] = []
 
     for codebase_path in codebases:
-        path = Path(codebase_path)
+        started_at = datetime.now().isoformat()
+        path = Path(codebase_path).resolve()
         files = collect_files(path, DEFAULT_GLOB_PATTERNS, mtime_after=mtime_threshold)
-        print(f"Found {len(files)} files in {codebase_path}")
+        print(f"Found {len(files)} files in {path}", flush=True)
 
+        all_items: list[dict] = []
         for filepath in files:
-            # Knowledge extraction
-            for item in extract_knowledge(filepath):
-                if _learn(memory_script, item["problem"], item["solution"], scope, item["tags"]):
-                    total_knowledge += 1
-                    verify_name = _extract_verification_name(item["tags"])
-                    if verify_name:
-                        verifiable_samples.append({
-                            "name": verify_name,
-                            "problem": item["problem"],
-                        })
+            all_items.extend(extract_knowledge(filepath))
+        if taxonomy:
+            all_items = enrich_with_taxonomy(all_items, taxonomy)
+        codebase_knowledge = _store_lessons_threaded(
+            memory_script,
+            all_items,
+            scope,
+            label=f"Knowledge[{path.name}]",
+        )
+        total_knowledge += codebase_knowledge
+        for item in all_items:
+            verify_name = _extract_verification_name(item["tags"])
+            if verify_name:
+                verifiable_samples.append({
+                    "name": verify_name,
+                    "problem": item["problem"],
+                })
 
-            # CWE scanning
+        cwe_items: list[dict] = []
+        for filepath in files:
             if taxonomy and filepath.suffix not in (".md", ".mdx"):
                 result = scan_file_cwe(filepath, taxonomy, validate)
                 for cwe in result.get("cwe_mappings", []):
                     cwe_id = cwe.get("cwe_id", "unknown")
                     tags = ["ingest-code", "cwe", cwe_id, filepath.suffix.lstrip(".")]
-                    if _learn(memory_script, f"What CWEs are relevant to {filepath.name}?",
-                              f"{cwe_id} ({cwe.get('name', '')}) - File: {filepath}", scope, tags):
-                        total_cwes += 1
+                    cwe_items.append({
+                        "problem": f"What CWEs are relevant to {filepath.name}?",
+                        "solution": f"{cwe_id} ({cwe.get('name', '')}) - File: {filepath}",
+                        "tags": tags,
+                    })
+        codebase_cwes = _store_lessons_threaded(
+            memory_script,
+            cwe_items,
+            scope,
+            label=f"CWE[{path.name}]",
+        )
+        total_cwes += codebase_cwes
 
         # Treesitter symbol extraction (per codebase, not per file)
+        code_symbol_scan_roots: list[Path] = []
+        completed_code_symbol_scan_roots: list[Path] = []
+        codebase_ts_symbols = 0
         if treesitter and code_index:
-            scan_roots = _extract_configured_scan_roots(path)
-            ts_stored = 0
-            for scan_root in scan_roots:
+            code_symbol_scan_roots = _extract_configured_scan_roots(path)
+            for scan_root in code_symbol_scan_roots:
                 root_stored = _store_treesitter_symbols_for_directory(
                     scan_root,
                     path,
                     scope,
                     verification_samples=verifiable_samples,
                 )
-                ts_stored += root_stored
+                codebase_ts_symbols += root_stored
+                completed_code_symbol_scan_roots.append(scan_root)
                 print(f"Treesitter: {root_stored} symbols stored from {scan_root}", flush=True)
-            total_ts_symbols += ts_stored
+            total_ts_symbols += codebase_ts_symbols
+
+        marker_path = _write_ingest_marker(
+            path,
+            files_scanned=len(files),
+            knowledge_stored=codebase_knowledge,
+            cwe_stored=codebase_cwes,
+            edges_stored=0,
+            code_symbols_stored=codebase_ts_symbols,
+            treesitter=bool(completed_code_symbol_scan_roots),
+            scope=scope,
+            started_at=started_at,
+            scan_roots=code_symbol_scan_roots,
+            completed_scan_roots=completed_code_symbol_scan_roots,
+        )
+        print(f"Marker written: {marker_path}", flush=True)
+        pending_markers.append({"path": str(marker_path), "codebase": str(path)})
 
     verification_result = None
     if verify_embeddings:
@@ -1501,7 +1673,8 @@ def rescan(
         "treesitter_symbols": total_ts_symbols,
         "since": since,
         "embedding_verification": verification_result,
-    }, indent=2))
+        "markers": pending_markers,
+    }, indent=2), flush=True)
 
 
 if __name__ == "__main__":

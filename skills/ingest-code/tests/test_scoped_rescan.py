@@ -162,3 +162,41 @@ def test_treesitter_store_resolves_relative_scan_roots(monkeypatch, tmp_path: Pa
 
     assert stored == 1
     assert samples[0]["name"] == "app"
+
+
+def test_rescan_writes_fresh_marker_with_treesitter(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    source = repo / "app.py"
+    source.write_text("def app():\n    return 1\n")
+
+    monkeypatch.setattr(ingest_code, "find_memory_skill", lambda: tmp_path / "memory.sock")
+    monkeypatch.setattr(ingest_code, "_learn", lambda *args, **kwargs: True)
+    monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: None)
+    monkeypatch.setattr(ingest_code, "_extract_configured_scan_roots", lambda path: [repo])
+    monkeypatch.setattr(
+        ingest_code,
+        "_store_treesitter_symbols_for_directory",
+        lambda scan_root, codebase_root, scope, verification_samples: 2,
+    )
+
+    ingest_code.rescan(
+        since=None,
+        validate=False,
+        treesitter=True,
+        code_index=True,
+        verify_embeddings=False,
+        scope="memory",
+        codebase=[str(repo)],
+    )
+
+    status = ingest_code.build_marker_status(repo)
+
+    assert status["status"] == "fresh"
+    assert status["run_status"] == "complete"
+    assert status["completed"] is True
+    assert status["scope"] == "memory"
+    assert status["code_index"]["collection"] == "code_symbols"
+    assert status["code_index"]["treesitter"] is True
+    assert status["code_index"]["symbols_stored"] == 2
+    assert status["completed_scan_roots"] == [str(repo.resolve())]
