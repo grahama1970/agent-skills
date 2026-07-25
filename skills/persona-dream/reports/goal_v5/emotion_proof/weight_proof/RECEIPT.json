@@ -1,0 +1,24 @@
+{
+  "schema": "persona-dream.emotion_weight_proof.v1",
+  "date": "2026-07-25",
+  "claim": "The persona-dream weighting model (verdict -> emotion; intensity is a WEIGHT on the emotion) produces a measurably different spoken tone through base ChatterboxTTS with the production Embry reference clip.",
+  "chain": "verdict -> (emotion label, valence) -> intensity weight -> (exaggeration, cfg_weight) -> ChatterboxTTS.generate(audio_prompt_path=embry_ref)",
+  "mapping": {"exaggeration": "0.3 + 0.9*intensity", "cfg_weight": "0.5 - 0.2*max(0,-valence)"},
+  "ref_clip": "/work/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav (the clip voiceAudition.ts stages for production)",
+  "controls": "fixed text + torch.manual_seed(1234); intensity weight is the only variable within each verdict",
+  "text": "I already told you where I stand. Do not ask me again.",
+  "rows": [
+    {"name": "success_w02", "verdict": "success", "emotion": "relieved_warm", "valence": 0.6,  "intensity_weight": 0.2, "exaggeration": 0.48, "cfg_weight": 0.5,  "dur_s": 3.24, "rms_dbfs": -33.58, "f0_mean_hz": 175.5, "wav_sha256_12": "0d867ca429e2"},
+    {"name": "success_w09", "verdict": "success", "emotion": "relieved_warm", "valence": 0.6,  "intensity_weight": 0.9, "exaggeration": 1.11, "cfg_weight": 0.5,  "dur_s": 3.20, "rms_dbfs": -27.00, "f0_mean_hz": 224.9, "wav_sha256_12": "66e7cf272cad"},
+    {"name": "failure_w02", "verdict": "failure", "emotion": "firm_guarded",  "valence": -0.8, "intensity_weight": 0.2, "exaggeration": 0.48, "cfg_weight": 0.34, "dur_s": 3.56, "rms_dbfs": -35.50, "f0_mean_hz": 181.3, "wav_sha256_12": "a0cb5bcb4f1b"},
+    {"name": "failure_w09", "verdict": "failure", "emotion": "firm_guarded",  "valence": -0.8, "intensity_weight": 0.9, "exaggeration": 1.11, "cfg_weight": 0.34, "dur_s": 3.16, "rms_dbfs": -27.58, "f0_mean_hz": 231.1, "wav_sha256_12": "7a9d7a224058"}
+  ],
+  "signal": {
+    "weight_scales_tone_success": "-33.58 -> -27.00 dBFS (+6.58 dB), F0 175.5 -> 224.9 Hz as intensity weight 0.2 -> 0.9",
+    "weight_scales_tone_failure": "-35.50 -> -27.58 dBFS (+7.92 dB), F0 181.3 -> 231.1 Hz as intensity weight 0.2 -> 0.9",
+    "distinct_audio": "all 4 wav sha256 differ",
+    "verified_independently": "stdlib wave+audioop host read-back agrees with torch to 0.01 dB"
+  },
+  "conclusion": "The two proven halves are now connected by construction: a weighted emotion measurably changes the persona's spoken tone on the base engine with the real ref clip. Remaining is NOT a research question: production render path (voiceAudition.ts / /tau/voice-render) points at Turbo (:8018), which ignores these knobs; the fix is to route to a base-model render endpoint and apply this mapping. Upstream, $memory /intent must return the weighted emotion (PROJECT_KNOWLEDGE.md:75 shows it currently returns flat memory_confident).",
+  "not_proven": "Live production wiring (server still renders on Turbo); memory.intent returning correctly-weighted emotion; subjective human tone acceptance."
+}
