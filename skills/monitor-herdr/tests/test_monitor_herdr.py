@@ -959,7 +959,7 @@ def test_achieved_receipt_suppresses_soft_remaining_work_marker(tmp_path: Path) 
     assert candidate["classification"] == "goal_stop_allowed"
 
 
-def test_existing_receipt_without_evidence_line_does_not_allow_stop(tmp_path: Path) -> None:
+def test_existing_receipt_without_duplicate_evidence_line_allows_stop(tmp_path: Path) -> None:
     receipt = tmp_path / ".codex" / "ui-verification" / "latest.json"
     receipt.parent.mkdir(parents=True)
     receipt.write_text('{"ok":true}', encoding="utf-8")
@@ -970,7 +970,7 @@ def test_existing_receipt_without_evidence_line_does_not_allow_stop(tmp_path: Pa
     Disposition: DONE_WITH_RECEIPT
     """
 
-    assert monitor.transcript_goal_claim(text, project_root=tmp_path)["state"] == "unmet"
+    assert monitor.transcript_goal_claim(text, project_root=tmp_path)["state"] == "achieved"
 
 
 def test_out_of_project_receipt_does_not_allow_stop(tmp_path: Path) -> None:

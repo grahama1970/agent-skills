@@ -1,0 +1,64 @@
+{
+  "run_id": "legitimate-stop-suppression-20260725T214621Z",
+  "timestamp_utc": "2026-07-25T21:46:21Z",
+  "objective": "Prevent monitor-herdr from repeatedly prompting agents that have legitimately stopped with ACHIEVED_WITH_RECEIPT.",
+  "changed_files": [
+    "skills/monitor-herdr/scripts/transcript_classifier.py",
+    "skills/monitor-herdr/tests/test_monitor_herdr.py"
+  ],
+  "invariant": "An Immutable Goal line of ACHIEVED_WITH_RECEIPT:<path> is itself a valid stop receipt when the path resolves to an existing local artifact within the project boundary; bare DONE_WITH_RECEIPT and missing or out-of-project receipt paths remain unmet.",
+  "memory_first": {
+    "command": "timeout 30s .agents/skills/memory/run.sh recall --q \"monitor-herdr repeated spam legitimate stopped ACHIEVED_WITH_RECEIPT DONE_WITH_RECEIPT Chat Console UX package\" --brief",
+    "working_directory": "/home/graham/workspace/experiments/sparta",
+    "exit_code": 124,
+    "usable_output": false
+  },
+  "checks": [
+    {
+      "command": "uv run --project skills/monitor-herdr pytest -q skills/monitor-herdr/tests/test_monitor_herdr.py",
+      "working_directory": "/home/graham/workspace/experiments/agent-skills-monitor-herdr-fix",
+      "mocked": true,
+      "live": false,
+      "result": "61 passed in 40.85s",
+      "proves": "Classifier and monitor selection logic handle valid, missing, out-of-project, and bare receipt cases."
+    },
+    {
+      "command": "skills/monitor-herdr/sanity.sh",
+      "working_directory": "/home/graham/workspace/experiments/agent-skills-monitor-herdr-fix",
+      "mocked": true,
+      "live": false,
+      "result": "70 passed in 55.83s",
+      "proves": "Skill sanity suite remains passing after the classifier contract change."
+    },
+    {
+      "command": "uv run --project skills/monitor-herdr pytest -q skills/monitor-herdr/evals/test_real_world_e2e.py",
+      "working_directory": "/home/graham/workspace/experiments/agent-skills-monitor-herdr-fix",
+      "mocked": true,
+      "live": false,
+      "result": "9 passed in 15.19s",
+      "proves": "Deterministic Herdr-like socket flows still pass through selection, transport accounting, and false-positive suppression."
+    },
+    {
+      "command": "python3 /home/graham/workspace/experiments/agent-skills/scripts/check_mock_evidence_claims.py",
+      "working_directory": "/home/graham/workspace/experiments/agent-skills-monitor-herdr-fix",
+      "mocked": false,
+      "live": false,
+      "result": "OK: checked 575 test file(s); no mock+proof claim violations",
+      "proves": "No mocked test files use banned proof-claim language."
+    },
+    {
+      "command": "skills/monitor-herdr/run.sh tick --space codex --min-stopped-seconds 0",
+      "working_directory": "/home/graham/workspace/experiments/agent-skills-monitor-herdr-fix",
+      "mocked": false,
+      "live": true,
+      "result": "status=OBSERVED; ok=true; apply=false; selected_count=2; prompts_count=2; achieved_claims=5; all achieved_claims had action=observe_only and select_for_prompt=false",
+      "receipt": "/home/graham/.local/state/monitor-herdr/receipts/monitor-herdr-20260725T214604157966Z/receipt.json",
+      "proves": "Live Herdr observation from the clean worktree did not send prompts, and current achieved-stop panes were left observation-only."
+    }
+  ],
+  "does_not_prove": [
+    "It does not prove that an apply run would send prompts to the two non-achieved panes correctly.",
+    "It does not prove any restarted agent's downstream task result."
+  ],
+  "status": "passed"
+}
