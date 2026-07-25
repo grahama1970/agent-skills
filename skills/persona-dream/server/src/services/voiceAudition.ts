@@ -24,6 +24,41 @@ function normalizedToken(value: unknown): string {
   return typeof value === 'string' ? value.trim().replace(/[^a-z0-9_-]/gi, '').toLowerCase() : ''
 }
 
+// Per-tone default (intensity weight, valence). Overridden by explicit request
+// intensity/valence carrying the persona-dream arc_state weighting.
+const toneAffectDefaults: Record<string, { intensity: number; valence: number }> = {
+  neutral_warm: { intensity: 0.4, valence: 0.3 },
+  calm_precise: { intensity: 0.35, valence: 0.1 },
+  careful_concerned: { intensity: 0.5, valence: -0.3 },
+  serious_low_energy: { intensity: 0.4, valence: -0.5 },
+  memory_confident: { intensity: 0.6, valence: 0.5 },
+  memory_uncertain: { intensity: 0.45, valence: -0.2 },
+  curious_searching: { intensity: 0.5, valence: 0.2 },
+  playful_light: { intensity: 0.75, valence: 0.7 },
+  relieved: { intensity: 0.7, valence: 0.6 },
+  firm_boundary: { intensity: 0.85, valence: -0.7 },
+  identity_clarification: { intensity: 0.5, valence: -0.1 },
+  one_at_a_time_interrupt: { intensity: 0.8, valence: -0.6 },
+  deflect_calm: { intensity: 0.45, valence: -0.4 },
+  grief_safe: { intensity: 0.4, valence: -0.6 },
+  wait_presence: { intensity: 0.25, valence: 0.0 },
+}
+
+function clamp(value: number, lo: number, hi: number): number { return Math.max(lo, Math.min(hi, value)) }
+function coerceNum(value: unknown): number | null { const n = typeof value === 'number' ? value : Number(value); return Number.isFinite(n) ? n : null }
+
+// Weighted emotion -> base ChatterboxTTS controls (verified: Turbo ignores these;
+// the /synthesize-emotion base endpoint honors them). intensity is the WEIGHT and
+// scales exaggeration; negative valence (guarded) lowers cfg_weight.
+function emotionKnobs(tone: string, requestedIntensity: unknown, requestedValence: unknown): { exaggeration: number; cfg_weight: number; temperature: number; intensity: number; valence: number } {
+  const base = toneAffectDefaults[tone] ?? { intensity: 0.4, valence: 0.0 }
+  const intensity = clamp(coerceNum(requestedIntensity) ?? base.intensity, 0, 1)
+  const valence = clamp(coerceNum(requestedValence) ?? base.valence, -1, 1)
+  const exaggeration = Number(clamp(0.3 + 0.9 * intensity, 0.3, 1.4).toFixed(3))
+  const cfg_weight = Number(clamp(0.5 - 0.2 * Math.max(0, -valence), 0.3, 0.5).toFixed(3))
+  return { exaggeration, cfg_weight, temperature: 0.7, intensity, valence }
+}
+
 function normalizeSpacing(text: string): string { return text.replace(/[ \t]+/g, ' ').replace(/\s+([,.;:!?])/g, '$1').trim() }
 function stripControls(text: string): string { return normalizeSpacing(text.replace(/\[[^\]]+\]/g, '').replace(/<[^>]+>/g, '')) }
 function cueFromText(text: string): string {
@@ -62,9 +97,10 @@ export function createChatterboxVoiceAuditionPort(options: ChatterboxVoiceAdapte
       const ttsRenderText = renderText(text, cleanText, selectedCue)
       const stagedRef = resolve(options.hostReferenceRoot, basename(refReal))
       const chatterboxRef = existsSync(stagedRef) ? `${options.containerReferenceRoot.replace(/\/+$/, '')}/${basename(stagedRef)}` : refReal
-      const upstream = await (options.fetchImpl ?? fetch)(`${options.agentUrl.replace(/\/+$/, '')}/synthesize`, {
+      const knobs = emotionKnobs(tone, request.intensity, request.valence)
+      const upstream = await (options.fetchImpl ?? fetch)(`${options.agentUrl.replace(/\/+$/, '')}/synthesize-emotion`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: ttsRenderText, ref_audio: chatterboxRef, label: `dream-${character}-${Date.now()}`, delivery_stage: deliveryStage, temperature: 0.7 }),
+        body: JSON.stringify({ text: ttsRenderText, ref_audio: chatterboxRef, label: `dream-${character}-${Date.now()}`, exaggeration: knobs.exaggeration, cfg_weight: knobs.cfg_weight, temperature: knobs.temperature }),
       })
       const payload = await upstream.json().catch(() => null) as Record<string, unknown> | null
       if (!upstream.ok || payload?.ok !== true) throw new Error(String(payload?.error ?? payload?.detail ?? `Chatterbox returned ${upstream.status}`))
@@ -79,8 +115,8 @@ export function createChatterboxVoiceAuditionPort(options: ChatterboxVoiceAdapte
       const receiptPath = outPath.replace(/\.wav$/i, '.json')
       const pauseBeforeMs = pause(request.pauseBeforeMs)
       const pauseAfterMs = pause(request.pauseAfterMs)
-      await writeFile(receiptPath, JSON.stringify({ schema: 'persona_dream.voice_audition_receipt.v1', created_at: new Date().toISOString(), mocked: false, live: true, character, answer_text: cleanText, answer_text_sha256: createHash('sha256').update(cleanText).digest('hex'), tts_render_text: ttsRenderText, tts_render_text_sha256: createHash('sha256').update(ttsRenderText).digest('hex'), tone, delivery_stage: deliveryStage, paralinguistic_cue: paralinguisticCue, chatterbox_tags: paralinguisticCue ? [paralinguisticCue] : [], selected_paralinguistic_cue: selectedCue, inline_paralinguistic_cue: inlineCue, pause_before_ms: pauseBeforeMs, pause_after_ms: pauseAfterMs, ref_audio: refReal, chatterbox_ref_audio: chatterboxRef, chatterbox_agent_url: options.agentUrl, chatterbox_receipt: payload, output_wav: outPath }, null, 2))
-      return { status: 'ok', mocked: false, live: true, character, audioPath: outPath, audioUrl: `/api/projects/dream/asset?path=${encodeURIComponent(outPath)}`, receiptPath, receiptUrl: `/api/projects/dream/asset?path=${encodeURIComponent(receiptPath)}`, durationSeconds: payload.duration_seconds, ttsRenderText, tone, deliveryStage, paralinguisticCue, chatterboxTags: paralinguisticCue ? [paralinguisticCue] : [], selectedParalinguisticCue: selectedCue, inlineParalinguisticCue: inlineCue, pauseBeforeMs, pauseAfterMs }
+      await writeFile(receiptPath, JSON.stringify({ schema: 'persona_dream.voice_audition_receipt.v1', created_at: new Date().toISOString(), mocked: false, live: true, character, answer_text: cleanText, answer_text_sha256: createHash('sha256').update(cleanText).digest('hex'), tts_render_text: ttsRenderText, tts_render_text_sha256: createHash('sha256').update(ttsRenderText).digest('hex'), tone, delivery_stage: deliveryStage, paralinguistic_cue: paralinguisticCue, chatterbox_tags: paralinguisticCue ? [paralinguisticCue] : [], selected_paralinguistic_cue: selectedCue, inline_paralinguistic_cue: inlineCue, pause_before_ms: pauseBeforeMs, pause_after_ms: pauseAfterMs, ref_audio: refReal, chatterbox_ref_audio: chatterboxRef, chatterbox_agent_url: options.agentUrl, chatterbox_endpoint: 'synthesize-emotion', emotion_knobs: knobs, chatterbox_receipt: payload, output_wav: outPath }, null, 2))
+      return { status: 'ok', mocked: false, live: true, character, audioPath: outPath, audioUrl: `/api/projects/dream/asset?path=${encodeURIComponent(outPath)}`, receiptPath, receiptUrl: `/api/projects/dream/asset?path=${encodeURIComponent(receiptPath)}`, durationSeconds: payload.duration_seconds, ttsRenderText, tone, deliveryStage, paralinguisticCue, chatterboxTags: paralinguisticCue ? [paralinguisticCue] : [], selectedParalinguisticCue: selectedCue, inlineParalinguisticCue: inlineCue, pauseBeforeMs, pauseAfterMs, emotionKnobs: knobs }
     },
   }
 }

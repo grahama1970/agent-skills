@@ -1,0 +1,24 @@
+{
+  "schema": "persona-dream.wired_emotion_e2e_proof.v1",
+  "date": "2026-07-25",
+  "claim": "The REAL persona-dream voice adapter (voiceAudition.ts) now maps weighted emotion (tone + intensity + valence) to base-model controls and renders via the live /synthesize-emotion endpoint. Proven end-to-end through the unmodified adapter logic, not a script or mock.",
+  "wiring": {
+    "adapter": "server/src/services/voiceAudition.ts",
+    "contract": "server/src/services/contracts.ts (added optional intensity, valence)",
+    "change": "fetch target /synthesize -> /synthesize-emotion; new emotionKnobs(tone,intensity,valence) -> {exaggeration,cfg_weight,temperature}",
+    "mapping": {"exaggeration": "clamp(0.3+0.9*intensity, 0.3, 1.4)", "cfg_weight": "clamp(0.5-0.2*max(0,-valence), 0.3, 0.5)"}
+  },
+  "how_run": "node --experimental-strip-types over the REAL voiceAudition.ts via createChatterboxVoiceAuditionPort with the production defaults; live chatterbox server :8018.",
+  "cases": [
+    {"name": "wait_w02", "tone": "wait_presence", "intensity": 0.2, "knobs": {"exaggeration": 0.48, "cfg_weight": 0.5,  "valence": 0.0},  "dur_s": 3.28, "rms_dbfs": -34.60, "sha12": "eeff204698d6"},
+    {"name": "firm_w02", "tone": "firm_boundary", "intensity": 0.2, "knobs": {"exaggeration": 0.48, "cfg_weight": 0.36, "valence": -0.7}, "dur_s": 3.28, "rms_dbfs": -34.27, "sha12": "43638b0781da"},
+    {"name": "firm_w09", "tone": "firm_boundary", "intensity": 0.9, "knobs": {"exaggeration": 1.11, "cfg_weight": 0.36, "valence": -0.7}, "dur_s": 3.88, "rms_dbfs": -26.10, "sha12": "181135651a60"}
+  ],
+  "weight_isolation": "firm_boundary, intensity 0.2 -> 0.9 (ONLY the weight changes): -34.27 -> -26.10 dBFS (+8.17 dB), 3.28 -> 3.88 s, distinct sha. The intensity weight alone measurably moves the voice through the full real adapter path.",
+  "independent_verification": [
+    "adapter output WAVs measured with stdlib wave+audioop (this receipt's numbers)",
+    "receipt chatterbox_receipt.engine == chatterbox_base + honors_exaggeration_cfg_weight == true (server-authored, see sample_receipt.json)",
+    "chatterbox container access log: POST /synthesize-emotion 200 OK x3 (server_access_log.txt)"
+  ],
+  "not_proven": "The full express host app was not started (library router; no local toolchain). The adapter was executed directly via its production factory against the live server. /tau/voice-render (the Embry coordinator path) still uses the Turbo batch renderer; the same emotionKnobs mapping applies there next. memory.intent still returns flat memory_confident upstream."
+}
