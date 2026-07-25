@@ -42,6 +42,25 @@ def test_webclaude_backend_uses_claude_project_root(tmp_path: Path, monkeypatch:
     assert loaded.tab_id == "837360812"
 
 
+def test_webgrok_backend_uses_grok_project_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("BROWSER_ORACLE_WEBGROK_PROJECT_ROOT", str(tmp_path))
+
+    assert "webgrok" in SUPPORTED_BACKENDS
+    assert project_root("webgrok") == tmp_path
+
+    bind(
+        "grok-review",
+        "webgrok",
+        tab_id="837361111",
+        conversation_url="https://grok.com/",
+        manual=True,
+    )
+    loaded = load("grok-review", "webgrok")
+    assert loaded is not None
+    assert loaded.backend == "webgrok"
+    assert loaded.tab_id == "837361111"
+
+
 def test_verify_manual_binding_fails_on_url_mismatch_without_mutating(tmp_path: Path) -> None:
     surf = tmp_path / "surf"
     surf.write_text(

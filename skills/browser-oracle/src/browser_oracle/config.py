@@ -8,7 +8,14 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 SKILLS_DIR = SKILL_ROOT.parent
 
-SUPPORTED_BACKENDS = ("webgpt", "cursor-browser", "webgemini", "webkimi", "webclaude")
+SUPPORTED_BACKENDS = (
+    "webgpt",
+    "cursor-browser",
+    "webgemini",
+    "webkimi",
+    "webclaude",
+    "webgrok",
+)
 
 BACKEND_PROJECT_ROOT_ENV = {
     "webgpt": "BROWSER_ORACLE_WEBGPT_PROJECT_ROOT",
@@ -16,6 +23,7 @@ BACKEND_PROJECT_ROOT_ENV = {
     "webgemini": "BROWSER_ORACLE_WEBGEMINI_PROJECT_ROOT",
     "webkimi": "BROWSER_ORACLE_WEBKIMI_PROJECT_ROOT",
     "webclaude": "BROWSER_ORACLE_WEBCLAUDE_PROJECT_ROOT",
+    "webgrok": "BROWSER_ORACLE_WEBGROK_PROJECT_ROOT",
 }
 
 DEFAULT_PROJECT_ROOTS = {
@@ -24,6 +32,7 @@ DEFAULT_PROJECT_ROOTS = {
     "webgemini": Path.home() / ".pi" / "webgemini-projects",
     "webkimi": Path.home() / ".pi" / "webkimi-projects",
     "webclaude": Path.home() / ".pi" / "webclaude-projects",
+    "webgrok": Path.home() / ".pi" / "webgrok-projects",
 }
 
 
