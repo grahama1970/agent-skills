@@ -1,0 +1,16 @@
+{
+  "schema": "persona-dream.tau_voice_render_emotion_proof.v1",
+  "date": "2026-07-25",
+  "claim": "The /tau/voice-render coordinator path now honors weighted emotion via the base model, gated so default rendering is unchanged. Proven live over HTTP.",
+  "server_change": {"repo": "experiments/chatterbox", "file": "src/chatterbox/agent/server.py", "branch": "persona-dream-emotion-render-endpoint",
+    "mechanism": "emotion_knobs_from_delivery(voice_delivery) -> base-model exaggeration/cfg_weight inside shared synthesize_to_file; used by /tau/voice-render and /synthesize-batch. voice_delivery_for_request now forwards intensity/valence/use_base_emotion."},
+  "live_tau_voice_render": [
+    {"turn_id": "turbo_default", "voice_delivery": {"tone": "firm_boundary"}, "engine": "chatterbox_turbo", "emotion_knobs": null, "dur_s": 3.12, "rms_dbfs": -27.86, "sha12": "4c4cb722fa67", "note": "no emotion -> unchanged Turbo (regression check PASS)"},
+    {"turn_id": "tau_firm_w02", "voice_delivery": {"tone": "firm_boundary", "intensity": 0.2, "use_base_emotion": true}, "engine": "chatterbox_base", "emotion_knobs": {"exaggeration": 0.48, "cfg_weight": 0.36}, "dur_s": 3.24, "rms_dbfs": -23.13, "sha12": "71885a952831"},
+    {"turn_id": "tau_firm_w09", "voice_delivery": {"tone": "firm_boundary", "intensity": 0.9, "use_base_emotion": true}, "engine": "chatterbox_base", "emotion_knobs": {"exaggeration": 1.11, "cfg_weight": 0.36}, "dur_s": 4.00, "rms_dbfs": -20.70, "sha12": "4e09317408bb"}
+  ],
+  "weight_isolation": "same tone firm_boundary, intensity 0.2 -> 0.9: -23.13 -> -20.70 dBFS, 3.24 -> 4.00 s, distinct sha, engine flips to chatterbox_base.",
+  "note_on_delta_size": "The server render path is stochastic (stochasticity.deterministic_audio=false, no fixed seed), so per-run loudness deltas are noisier than the fixed-seed proofs (weight_proof/, +6-8 dB). Direction/monotonicity hold; engine-switch and knob-derivation are deterministic and server-authored.",
+  "independent_verification": ["stdlib WAV measurement of tau output chunks", "server-authored chunk engine + emotion_knobs in HTTP response", "container access log: POST /tau/voice-render 200 x3 (server_access_log.txt)"],
+  "not_proven": "Full express host app HTTP route (POST /voices/audition) not started (no local toolchain; adapter proven via production factory instead). memory.intent still returns flat memory_confident upstream. ASR-verified batch path (asr_verify=true) still renders Turbo; emotion applies to the non-ASR render path."
+}
