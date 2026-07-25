@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import shutil
 import subprocess
@@ -36,6 +37,15 @@ ROOT = Path(__file__).resolve().parents[1]
 GMO = "http://127.0.0.1:8601"
 CHATTERBOX = "http://127.0.0.1:8018"
 CHATTERBOX_OUT_HOST = Path.home() / "workspace/experiments/chatterbox/logs"
+
+
+def _load(name):
+    """Load a sibling script as a module (same pattern as write_dream_journal.py)."""
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    m = importlib.util.module_from_spec(spec)
+    sys.modules[name] = m
+    spec.loader.exec_module(m)
+    return m
 
 TOM_TO_VOICE = {
     "desire": ("yearning", "yearning_warm", "measured"),
@@ -137,9 +147,77 @@ def build_profile(node: dict, toms: list[dict]) -> dict:
     }
 
 
-def render_top_weight(profile: dict, out_dir: Path) -> dict:
+def arc_state_brief(ledger: dict) -> dict:
+    """Compact, plain summary of the persona's ACCUMULATED self (arc_state),
+    the part that changes over cycles. Path B feeds this into the spoken line so
+    the voice carries the accumulated character, not just today's dream."""
+    arc = (ledger or {}).get("arc_state") or {}
+    def _clip(items, n=4):
+        return [str(x)[:200] for x in (items or [])][:n]
+    deltas = arc.get("recent_arc_deltas") or []
+    return {
+        "self_claims": _clip(arc.get("current_self_claims")),
+        "active_tensions": _clip(arc.get("active_tensions")),
+        "earned_permissions": _clip(arc.get("earned_permissions")),
+        "recurring_avoidances": _clip(arc.get("recurring_avoidances")),
+        "cycles_lived": len(deltas),
+        "latest_shift": (deltas[-1].get("now") if deltas else None),
+    }
+
+
+def arc_conditioned_line(persona_id: str, dream_statement: str, tag: str) -> dict:
+    """Path B: generate the ONE short line the persona would actually SAY now,
+    conditioned on (a) its accumulated self from the Continuity Ledger and
+    (b) today's dream residue. The persona (system prompt + accumulated-self
+    context) drives the wording, so the accumulated character is audible in what
+    and how it is said. Routed through the documented /tau text-reasoning adapter
+    (no direct scillm). Falls back to the raw dream statement if unavailable."""
+    provenance = {"mode": "arc_conditioned", "persona_id": persona_id,
+                  "fallback_used": False, "fallback_reason": None}
+    try:
+        continuity_ledger = _load("continuity_ledger")
+        adapter = _load("tau_text_reasoning_adapter")
+        ledger = continuity_ledger.read_ledger(persona_id)
+        brief = arc_state_brief(ledger)
+        core = (ledger or {}).get("identity_core") or {}
+        persona_name = persona_id.replace("_", " ").title()
+        prompt = (
+            f"You ARE {persona_name}. This is your voice, spoken aloud, right now.\n\n"
+            f"Who you are (immutable core): {json.dumps(core.get('persistent_conflicts') or core, ensure_ascii=False)[:600]}\n"
+            f"Who you have BECOME across {brief['cycles_lived']} dream-cycles (this is the accumulated self "
+            f"that must colour how you speak now):\n"
+            f"- self-claims: {brief['self_claims']}\n"
+            f"- active tensions: {brief['active_tensions']}\n"
+            f"- earned permissions: {brief['earned_permissions']}\n"
+            f"- recurring avoidances: {brief['recurring_avoidances']}\n"
+            f"- most recent shift: {brief['latest_shift']}\n\n"
+            f"Tonight's dream left this residue in you (emotional register '{tag}'):\n"
+            f"  \"{str(dream_statement)[:300]}\"\n\n"
+            f"Say ONE short line aloud (<= 30 words) — the thing you would actually say now, "
+            f"in first person. It must sound like someone who has lived those {brief['cycles_lived']} "
+            f"cycles: the wording, restraint, and emphasis carry the accumulated self, not a summary of it. "
+            f"Do not explain, do not narrate the dream, do not name the emotion.\n\n"
+            f'Respond ONLY as a JSON object: {{"spoken_line": "<the line>", '
+            f'"why_this_wording": "<one short clause on what in the accumulated self shaped it>"}}'
+        )
+        parsed, _ = adapter.dispatch_text_reasoning(
+            prompt, "persona-dream-arc-voice-line",
+            output_contract={"spoken_line": "string", "why_this_wording": "string"})
+        line = (parsed or {}).get("spoken_line", "").strip()
+        if not line:
+            raise RuntimeError("adapter returned no spoken_line")
+        return {"line": line, "brief": brief,
+                "why": (parsed or {}).get("why_this_wording", "").strip()[:300],
+                "provenance": provenance}
+    except Exception as e:  # noqa: BLE001 — Path B is additive; never break the deterministic path
+        provenance.update(fallback_used=True, fallback_reason=str(e)[:200])
+        return {"line": str(dream_statement), "brief": None, "why": None,
+                "provenance": provenance}
+
+
+def render_top_weight(profile: dict, out_dir: Path, spoken_line: str | None = None) -> dict:
     top = profile["weights"][0]
-    line = top["sources"][0]["statement"] or "I dreamed, and something in it stayed with me."
+    line = spoken_line or top["sources"][0]["statement"] or "I dreamed, and something in it stayed with me."
     label = f"vw_{profile['dream_node_key'][-12:]}_{top['emotional_tag']}"
     resp = post(f"{CHATTERBOX}/synthesize", {
         "text": line, "label": label,
@@ -175,6 +253,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dream-key", required=True)
     parser.add_argument("--render", action="store_true")
+    parser.add_argument("--arc-voice", action="store_true",
+                        help="Path B: condition the spoken line on the persona's "
+                             "accumulated arc_state (Continuity Ledger), so the voice "
+                             "carries the accumulated character, not just today's dream.")
     parser.add_argument("--out-dir", type=Path, default=None)
     args = parser.parse_args()
 
@@ -190,6 +272,17 @@ def main() -> int:
     out_dir = args.out_dir or (ROOT / "reports/goal_v3/voice_weights" / args.dream_key)
     out_dir.mkdir(parents=True, exist_ok=True)
     profile = build_profile(node, toms)
+
+    spoken_line = None
+    if args.arc_voice:
+        top = profile["weights"][0]
+        av = arc_conditioned_line(
+            node.get("persona_id"),
+            top["sources"][0]["statement"] or "",
+            top["emotional_tag"])
+        spoken_line = av["line"]
+        profile["arc_voice"] = av  # audit: brief, generated line, provenance/fallback
+
     profile_path = out_dir / "dream_voice_weight_profile.v1.json"
     profile_path.write_text(json.dumps(profile, indent=2, sort_keys=True) + "\n")
 
@@ -202,11 +295,12 @@ def main() -> int:
         "profile_sha256": sha256_text(profile_path.read_text()),
         "weights_summary": [{k: w[k] for k in ("emotional_tag", "tone", "weight")}
                             for w in profile["weights"]],
+        "arc_voice": profile.get("arc_voice"),  # Path B: arc_state-conditioned line + provenance
         "render": None,
         "live": None,  # set from the engine response after render
     }
     if args.render:
-        receipt["render"] = render_top_weight(profile, out_dir)
+        receipt["render"] = render_top_weight(profile, out_dir, spoken_line=spoken_line)
         em = receipt["render"].get("engine_meta") or {}
         receipt["live"] = bool(em.get("live", em.get("engine") == "chatterbox_turbo"))
     receipt_path = out_dir / "dream_voice_weights_receipt.v1.json"
