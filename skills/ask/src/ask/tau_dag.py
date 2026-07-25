@@ -57,6 +57,12 @@ ROUNDTABLE_HANDLERS = {
         "runtime": "browser",
         "proof_required": "surf_sentinel_meta",
     },
+    "webgrok": {
+        "transport_owner": "$surf",
+        "transport": "grok.submit",
+        "runtime": "browser",
+        "proof_required": "surf_sentinel_meta",
+    },
     # Local coding agent. Runs `codex exec` inside a caller-named workspace
     # (git worktree) with a writable sandbox; the node's response is the
     # summary plus the actual `git diff` of the workspace, so a downstream
@@ -74,6 +80,7 @@ _HANDLER_ALIASES = {
     "kimi": "webkimi",
     "claude": "webclaude",
     "gemini": "webgemini",
+    "grok": "webgrok",
 }
 FAIL_CLOSED_ON = [
     "goal_hash_mismatch",

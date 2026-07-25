@@ -41,6 +41,11 @@ def test_plan_lists_roundtable_eval_cases(tmp_path: Path) -> None:
     assert "plan-only" in result["what_remains_unverified"][0]
 
 
+def test_worker_declares_webgrok_browser_submit_transport() -> None:
+    assert tau_roundtable_worker.HANDLER_BACKENDS["webgrok"] == "webgrok"
+    assert tau_roundtable_worker.HANDLER_SUBMIT_COMMANDS["webgrok"] == "grok.submit"
+
+
 def test_join_command_checker_rejects_empty_args(tmp_path: Path) -> None:
     spec_dir = tmp_path / "join"
     spec_dir.mkdir()

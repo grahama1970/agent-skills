@@ -5,7 +5,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ask.tau_dag import compile_tau_dag_bundle, infer_compile_input, resolve_scillm_model_route
+from ask.tau_dag import (
+    ROUNDTABLE_HANDLERS,
+    compile_tau_dag_bundle,
+    infer_compile_input,
+    resolve_scillm_model_route,
+)
 
 
 TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
@@ -281,6 +286,40 @@ def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_p
     )
     command = command_spec["command"]
     assert command[command.index("--browser-oracle-project") + 1] == "tau"
+
+
+def test_webgrok_routes_as_browser_handler_not_scillm_model(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Roundtable webgrok and webgpt.",
+        repo="local/agent-skills",
+        target="roundtable-webgrok",
+        handler_projects=["webgrok=tau", "webgpt=tau"],
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    dag = bundle["dag"]
+    assert dag["context"]["handler_projects"] == {"webgrok": "tau", "webgpt": "tau"}
+    grok = next(node for node in dag["nodes"] if node["id"] == "handler-webgrok")
+    assert grok["context"]["handler_policy"]["runtime"] == "browser"
+    assert grok["context"]["handler_policy"]["transport"] == "grok.submit"
+    assert "model" not in grok["context"]["handler_policy"]
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-webgrok", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    command = command_spec["command"]
+    assert command[command.index("--handler") + 1] == "webgrok"
+    assert command[command.index("--browser-oracle-project") + 1] == "tau"
+    assert "--scillm-base-url" in command
+
+
+def test_webgrok_alias_is_declared_as_supported_roundtable_handler() -> None:
+    assert ROUNDTABLE_HANDLERS["webgrok"]["runtime"] == "browser"
+    assert ROUNDTABLE_HANDLERS["webgrok"]["transport"] == "grok.submit"
 
 
 def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path) -> None:

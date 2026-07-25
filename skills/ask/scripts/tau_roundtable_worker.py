@@ -24,12 +24,14 @@ HANDLER_BACKENDS = {
     "webclaude": "webclaude",
     "webkimi": "webkimi",
     "webgemini": "webgemini",
+    "webgrok": "webgrok",
 }
 HANDLER_SUBMIT_COMMANDS = {
     "webgpt": "webgpt.submit",
     "webclaude": "claude.submit",
     "webkimi": "kimi.submit",
     "webgemini": "gemini.submit",
+    "webgrok": "grok.submit",
 }
 ATTACH_FILE_HANDLERS = {"webgpt", "webkimi", "webgemini"}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
