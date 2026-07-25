@@ -1195,6 +1195,7 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
         model: model,
         deepSearch: deepSearch || false,
         timeout: timeout || 300000,
+        targetTabId: msg.targetTabId || msg.tabId,
         getCookies: () => requestCallExtension(
           requestContext,
           "get_cookies",
@@ -1240,6 +1241,18 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
       }
       if (result.modelSelectionFailed) {
         response.modelSelectionFailed = true;
+      }
+      if (result.promptEntry) {
+        response.promptEntry = result.promptEntry;
+      }
+      if (result.submitInfo) {
+        response.submitInfo = result.submitInfo;
+      }
+      if (result.controlledTabId) {
+        response.controlledTabId = result.controlledTabId;
+      }
+      if (result.reusedTab) {
+        response.reusedTab = true;
       }
       sendToolResponse(socket, originalId, response, null);
     }).catch((err) => {

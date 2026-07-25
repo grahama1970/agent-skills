@@ -774,7 +774,7 @@ surf cursor-browser.submit \
 - `controlled_view_id` in meta JSON is the **viewId**.
 
 
-### WebGemini / WebKimi / WebPerplexity (Chrome)
+### WebGemini / WebKimi / WebGrok / WebPerplexity (Chrome)
 
 Same sentinel proof contract as WebGPT where `*.submit` applies. Requires surf-cli extension (`/tmp/surf.sock`).
 
@@ -782,9 +782,24 @@ Same sentinel proof contract as WebGPT where `*.submit` applies. Requires surf-c
 |---|---|
 | "review design in Gemini", "ask Gemini about UX" | `surf gemini.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
 | "review prose in Kimi", "writing critique in Kimi" | `surf kimi.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
+| "ask Grok", "use WebGrok", "Grok seat" | `surf grok.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
 | "research on Perplexity", "what is current about X" | `surf perplexity "question" [--no-activate]` (one-shot; no `--tab-id`) |
 
-Tab ids from `surf tab.list` filtered to `gemini.google.com` or `kimi.com`. Always pass explicit `--tab-id` when the human named a tab. Prefer `/ask webgemini`, `/ask webkimi`, `/ask webperplexity` for artifacts and bundle validation.
+Tab ids from `surf tab.list` filtered to `gemini.google.com`, `kimi.com`,
+`grok.com`, or `x.com`. Always pass explicit `--tab-id` when the human named a
+tab. Prefer `/ask webgemini`, `/ask webkimi`, `/ask webgrok`, or
+`/ask webperplexity` for artifacts and bundle validation.
+
+`grok.submit` is a downstream sentinel wrapper around upstream `surf grok`. With
+`--tab-id`, Surf passes that exact tab into the Grok client, verifies the prompt
+text landed in the TipTap/ProseMirror composer, tries the visible send button,
+then presses Enter if the click leaves the editor full. Metadata records
+`tab_bound_control_proof: exact_tab_prompt_verified_submit_observed` for this
+path.
+
+If the Grok editor still contains the prompt after both the click and Enter
+paths, `grok.submit` fails closed instead of pretending the browser accepted the
+task. Do not retry a large bundle until a tiny sentinel ping succeeds.
 
 `claude.submit` is the Surf transport used by `$ask`/Tau `webclaude` nodes. A
 Claude tab can lose its Surf content script while another long browser node is
@@ -811,6 +826,14 @@ surf web.sanity --json                 # machine-readable report only
 Reports land in `/tmp/surf-web-sanity-<timestamp>/` as `sanity-report.md` and
 `sanity-report.json`. Per-oracle artifacts include stderr, meta JSON, and
 `debug-bundle.txt` (host log tail + matching tabs).
+
+If a browser-handler submit fails with `Timed out waiting for browser lock`,
+preserve the error text. Current Surf includes `owner_pid`, `owner_socket`,
+`owner_created_at`, and `lock_dir` in that failure. Treat it as an operational
+transport blocker for `/ask`/Tau, not as a semantic failure from the browser
+model. Do not use `--no-lock` for `webgpt`, `webclaude`, `webkimi`, `webgemini`,
+or `webgrok` submits; wait for the owner or route the lane through a separate
+Surf socket/profile.
 
 Tab ids default from state files (`/tmp/surf-webgpt-controlled-tab-id`, etc.) or
 `tab.list` discovery. Override with `--webgpt-tab-id`, `--gemini-tab-id`,

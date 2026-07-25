@@ -125,6 +125,43 @@ function grokSendButtonFinderScript() {
   `;
 }
 
+function grokComposerFinderScript() {
+  return `
+    const isVisible = (el) => {
+      if (!el) return false;
+      const style = window.getComputedStyle?.(el);
+      const rect = el.getBoundingClientRect?.();
+      return (!style || (style.visibility !== 'hidden' && style.display !== 'none')) &&
+             (!rect || (rect.width > 0 && rect.height > 0));
+    };
+    const candidates = Array.from(document.querySelectorAll([
+      'textarea',
+      '[contenteditable="true"][role="textbox"]',
+      '[contenteditable="true"].ProseMirror',
+      '.ProseMirror[contenteditable="true"]',
+      '[data-testid="grokComposerInput"]',
+      '[aria-label*="Ask" i]',
+      '[placeholder*="Ask" i]'
+    ].join(',')));
+    const input = candidates.find(isVisible) || null;
+    const readInputText = (el) => {
+      if (!el) return '';
+      if ('value' in el) return String(el.value || '');
+      return String(el.innerText || el.textContent || '');
+    };
+  `;
+}
+
+function promptTextMatches(actual, expected) {
+  const normalize = (text) => String(text || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+  const a = normalize(actual);
+  const e = normalize(expected);
+  if (!a || !e) return false;
+  const head = e.slice(0, Math.min(120, e.length));
+  const tail = e.slice(Math.max(0, e.length - 120));
+  return a.includes(head) && a.includes(tail);
+}
+
 function hasRequiredCookies(cookies) {
   if (!cookies || !Array.isArray(cookies)) return false;
   // auth_token is the primary session cookie for X.com
@@ -194,7 +231,8 @@ async function waitForGrokReady(cdp, timeoutMs = 20000) {
       const hasInput = !!document.querySelector('textarea, [contenteditable="true"][role="textbox"], [data-testid="grokComposerInput"]');
       const hasGrokBranding = document.body.innerText.includes('Grok') ||
                                !!document.querySelector('[data-testid*="grok"]');
-      const isGrokPage = location.pathname.includes('/grok');
+      const isGrokHost = /(^|\\.)grok\\.com$/i.test(location.hostname);
+      const isGrokPage = isGrokHost || location.pathname.includes('/grok');
       const isLoginPage = location.pathname.includes('/login') || location.pathname.includes('/i/flow');
 
       return {
@@ -407,12 +445,165 @@ async function typePrompt(cdp, inputCdp, prompt) {
 
   await delay(300);
 
-  // Type using CDP Input API
+  await evaluate(cdp, `(() => {
+    ${grokComposerFinderScript()}
+    if (!input) return { success: false, error: 'Input not found' };
+    input.focus?.();
+    if ('value' in input) {
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+      document.execCommand?.('selectAll', false, null);
+      document.execCommand?.('delete', false, null);
+      input.textContent = '';
+      input.dispatchEvent(new InputEvent('input', {
+        bubbles: true,
+        cancelable: true,
+        inputType: 'deleteContentBackward',
+        data: null
+      }));
+    }
+    return { success: true, textLength: readInputText(input).trim().length };
+  })()`);
+
+  // Type using CDP Input API so app state receives real text insertion events.
   await inputCdp("Input.insertText", { text: prompt });
   await delay(200);
+
+  const typed = await evaluate(cdp, `(() => {
+    ${grokComposerFinderScript()}
+    return {
+      success: !!input,
+      text: readInputText(input),
+      textLength: readInputText(input).length,
+      tag: input?.tagName || null,
+      className: String(input?.className || '')
+    };
+  })()`);
+  if (promptTextMatches(typed?.text, prompt)) {
+    return { method: "cdp_insert_text", textLength: typed.textLength };
+  }
+
+  const pasteText = JSON.stringify(prompt);
+  const pasted = await evaluate(cdp, `(() => {
+    ${grokComposerFinderScript()}
+    if (!input) return { success: false, error: 'Input not found' };
+    const text = ${pasteText};
+    input.focus?.();
+    if ('value' in input) {
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    } else {
+      document.execCommand?.('selectAll', false, null);
+      document.execCommand?.('delete', false, null);
+      input.textContent = '';
+      input.dispatchEvent(new InputEvent('input', {
+        bubbles: true,
+        cancelable: true,
+        inputType: 'deleteContentBackward',
+        data: null
+      }));
+    }
+
+    let pasteDispatched = false;
+    try {
+      const data = new DataTransfer();
+      data.setData('text/plain', text);
+      const event = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: data
+      });
+      pasteDispatched = input.dispatchEvent(event);
+    } catch (_) {}
+
+    if (!readInputText(input).includes(text.slice(0, Math.min(80, text.length)))) {
+      if ('value' in input) {
+        input.value = text;
+      } else {
+        input.textContent = text;
+      }
+      input.dispatchEvent(new InputEvent('beforeinput', {
+        bubbles: true,
+        cancelable: true,
+        inputType: 'insertFromPaste',
+        data: text
+      }));
+      input.dispatchEvent(new InputEvent('input', {
+        bubbles: true,
+        cancelable: true,
+        inputType: 'insertFromPaste',
+        data: text
+      }));
+    }
+
+    const finalText = readInputText(input);
+    return {
+      success: true,
+      pasteDispatched,
+      text: finalText,
+      textLength: finalText.length,
+      tag: input.tagName,
+      className: String(input.className || '')
+    };
+  })()`);
+
+  if (!promptTextMatches(pasted?.text, prompt)) {
+    throw new Error(`Grok prompt entry failed verification: expected ${prompt.length} chars, saw ${pasted?.textLength || 0}`);
+  }
+
+  return { method: "synthetic_paste_with_input_events", textLength: pasted.textLength };
+}
+
+async function getSubmitObservation(cdp, beforeUrl = '') {
+  return await evaluate(cdp, `(() => {
+    ${grokComposerFinderScript()}
+    const editorText = readInputText(input).trim();
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const buttonText = buttons.map(b => [
+      b.getAttribute('aria-label') || '',
+      b.getAttribute('data-testid') || '',
+      b.innerText || b.textContent || ''
+    ].join(' ')).join('\\n');
+    const bodyText = document.body.innerText || '';
+    const hasStopButton = /\\b(stop|cancel)\\b/i.test(buttonText);
+    const generatingText = /\\b(thinking|searching|generating)\\b/i.test(bodyText);
+    const url = location.href;
+    const urlChanged = Boolean(${JSON.stringify(beforeUrl)} && url !== ${JSON.stringify(beforeUrl)});
+    return {
+      url,
+      urlChanged,
+      editorTextLength: editorText.length,
+      editorTextSample: editorText.slice(0, 200),
+      hasStopButton,
+      generatingText,
+      accepted: editorText.length === 0 || hasStopButton || generatingText || urlChanged
+    };
+  })()`);
+}
+
+async function pressEnter(inputCdp) {
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Enter",
+    code: "Enter",
+    windowsVirtualKeyCode: 13,
+    nativeVirtualKeyCode: 13,
+    text: "\r",
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Enter",
+    code: "Enter",
+    windowsVirtualKeyCode: 13,
+    nativeVirtualKeyCode: 13,
+  });
 }
 
 async function submitPrompt(cdp, inputCdp) {
+  const before = await getSubmitObservation(cdp);
+
   // Try to click send button
   const clicked = await evaluate(cdp, `(() => {
     ${buildClickDispatcher()}
@@ -427,26 +618,26 @@ async function submitPrompt(cdp, inputCdp) {
     return { success: false };
   })()`);
 
-  if (!clicked || !clicked.success) {
-    // Fallback: press Enter
-    await inputCdp("Input.dispatchKeyEvent", {
-      type: "keyDown",
-      key: "Enter",
-      code: "Enter",
-      windowsVirtualKeyCode: 13,
-      nativeVirtualKeyCode: 13,
-      text: "\r",
-    });
-    await inputCdp("Input.dispatchKeyEvent", {
-      type: "keyUp",
-      key: "Enter",
-      code: "Enter",
-      windowsVirtualKeyCode: 13,
-      nativeVirtualKeyCode: 13,
-    });
+  await delay(800);
+  let observation = await getSubmitObservation(cdp, before?.url || '');
+  let enterFallbackUsed = false;
+
+  if (!observation?.accepted) {
+    enterFallbackUsed = true;
+    await pressEnter(inputCdp);
+    await delay(800);
+    observation = await getSubmitObservation(cdp, before?.url || '');
   }
 
-  await delay(500);
+  if (!observation?.accepted) {
+    throw new Error(`Grok submit not observed after ${clicked?.success ? 'send click and Enter' : 'Enter'}; editor still has ${observation?.editorTextLength ?? 'unknown'} chars`);
+  }
+
+  return {
+    clickAttempt: clicked || { success: false },
+    observation,
+    enterFallbackUsed,
+  };
 }
 
 // ============================================================================
@@ -726,6 +917,7 @@ async function query(options) {
     model,
     deepSearch = false,
     timeout = 300000, // 5 minutes default (Grok Thinking is slow)
+    targetTabId,
     getCookies,
     createTab,
     closeTab,
@@ -739,21 +931,26 @@ async function query(options) {
   const startTime = Date.now();
   log("Starting Grok query");
 
-  // Check cookies for X.com authentication
-  const { cookies } = await raceAbort(getCookies, signal);
-  if (!hasRequiredCookies(cookies)) {
-    throw new Error("X.com login required - log in to x.com in Chrome first");
+  // Existing grok.com tabs may be authenticated with Grok cookies rather than
+  // X.com auth_token. For exact-tab control, page login checks are authoritative.
+  if (!targetTabId) {
+    const { cookies } = await raceAbort(getCookies, signal);
+    if (!hasRequiredCookies(cookies)) {
+      throw new Error("X.com login required - log in to x.com in Chrome first");
+    }
+    log(`Got ${cookies.length} cookies`);
+  } else {
+    log("Skipping X.com cookie precheck for existing Grok tab");
   }
-  log(`Got ${cookies.length} cookies`);
 
-  // Create tab
-  const tabInfo = await raceAbort(createTab, signal);
+  // Create tab, unless the caller supplied an exact controlled Grok tab.
+  const tabInfo = targetTabId ? { tabId: targetTabId, existing: true } : await raceAbort(createTab, signal);
   const { tabId } = tabInfo || {};
 
   if (!tabId) {
     throw new Error(`Failed to create Grok tab: ${JSON.stringify(tabInfo)}`);
   }
-  log(`Created tab ${tabId}`);
+  log(`${targetTabId ? 'Using existing' : 'Created'} tab ${tabId}`);
 
   const cdp = (expr) => raceAbort(() => cdpEvaluate(tabId, expr), signal);
   const inputCdp = (method, params) => raceAbort(() => cdpCommand(tabId, method, params), signal);
@@ -819,11 +1016,11 @@ async function query(options) {
     }
 
     // Type prompt
-    await typePrompt(cdp, inputCdp, prompt);
-    log("Prompt typed");
+    const promptEntry = await typePrompt(cdp, inputCdp, prompt);
+    log(`Prompt typed (${promptEntry.method}, ${promptEntry.textLength} chars)`);
 
     // Submit
-    await submitPrompt(cdp, inputCdp);
+    const submitInfo = await submitPrompt(cdp, inputCdp);
     log("Submitted, waiting for response...");
 
     // Wait for response
@@ -842,13 +1039,19 @@ async function query(options) {
       url: response.url,
       partial: response.partial || false,
       warnings: warnings.length > 0 ? warnings : undefined,
+      promptEntry,
+      submitInfo,
+      controlledTabId: tabId,
+      reusedTab: Boolean(targetTabId),
       tookMs: Date.now() - startTime,
     };
   } finally {
-    try {
-      await closeTab(tabId);
-    } catch (error) {
-      log(`Failed to close Grok tab ${tabId}: ${error?.message || error}`);
+    if (!targetTabId) {
+      try {
+        await closeTab(tabId);
+      } catch (error) {
+        log(`Failed to close Grok tab ${tabId}: ${error?.message || error}`);
+      }
     }
   }
 }

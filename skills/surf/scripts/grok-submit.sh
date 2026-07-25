@@ -21,11 +21,11 @@ Options:
   --model MODEL             Optional Grok model: auto, fast, expert, grok-4.20-beta.
   --deep-search             Enable Grok DeepSearch.
   --with-page               Include current page context using upstream surf grok.
-  --tab-id ID               Verify this live Grok/X tab before submit.
+  --tab-id ID               Use this exact live Grok/X tab before submit.
   --url URL                 Resolve and verify an already-open Grok/X tab.
-  --no-activate             Accepted for Tau/browser-handler parity. Current
-                            upstream grok transport is not exact-tab targeted;
-                            this wrapper records that proof limitation.
+  --no-activate             Accepted for Tau/browser-handler parity. Grok uses
+                            exact-tab CDP control; some Chrome/Grok states may
+                            still require the tab to be visible to generate.
 EOF
 }
 
@@ -199,6 +199,9 @@ fi
 stderr_log="$(mktemp /tmp/surf-grok-submit-stderr.XXXXXX.log)"
 raw_tmp="$(mktemp /tmp/surf-grok-submit-raw.XXXXXX.md)"
 args=(grok "$submitted_prompt" --timeout "$timeout_s")
+if [[ -n "$requested_tab_id" ]]; then
+  args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
+fi
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
 fi
@@ -332,7 +335,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_url": target_url or None,
     "resolved_url": resolved_url or None,
     "tab_identity_preflight": json.loads(preflight or "{}"),
-    "tab_bound_control_proof": "preflight_only_raw_grok_transport_not_exact_tab_targeted",
+    "tab_bound_control_proof": "exact_tab_prompt_verified_submit_observed" if requested_tab_id else "upstream_grok_created_tab",
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,
     "clean_contains_sentinel": sentinel in out_text,

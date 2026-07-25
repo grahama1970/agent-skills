@@ -104,8 +104,32 @@ describe("browser lock", () => {
         staleMs: 60_000,
         sleep: () => undefined,
       }),
-    ).toThrow("Timed out waiting for browser lock");
+    ).toThrow(/Timed out waiting for browser lock.*owner_pid=.*owner_socket=.*lock_dir=.*Do not use --no-lock/s);
 
     held.release();
+  });
+
+  it("includes owner metadata when a live process holds the lock", () => {
+    const lockDir = getBrowserLockDir("/tmp/surf.sock", tempDir);
+    fs.mkdirSync(lockDir);
+    fs.writeFileSync(
+      path.join(lockDir, "owner.json"),
+      JSON.stringify({
+        pid: process.pid,
+        token: "live-owner",
+        socketPath: "unix:/tmp/surf.sock",
+        createdAt: "2026-07-25T13:58:59.000Z",
+      }),
+    );
+
+    expect(() =>
+      acquireBrowserLock("/tmp/surf.sock", tempDir, {
+        timeoutMs: -1,
+        staleMs: 60_000,
+        sleep: () => undefined,
+      }),
+    ).toThrow(
+      /owner_pid=.*owner_created_at=2026-07-25T13:58:59.000Z owner_socket=unix:\/tmp\/surf.sock lock_dir=.*separate Surf socket\/profile/s,
+    );
   });
 });

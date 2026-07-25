@@ -66,6 +66,19 @@ function ownerMatches(left, right) {
   return Boolean(left && right && left.token && left.token === right.token);
 }
 
+function formatLockOwner(owner, lockDir) {
+  if (!owner) return `owner=unknown lockDir=${lockDir}`;
+  const fields = [
+    `owner_pid=${owner.pid ?? "unknown"}`,
+    `owner_created_at=${owner.createdAt ?? "unknown"}`,
+    `owner_socket=${owner.socketPath ?? "unknown"}`,
+    `lock_dir=${lockDir}`,
+  ];
+  if (owner.tool) fields.push(`owner_tool=${owner.tool}`);
+  if (owner.command) fields.push(`owner_command=${owner.command}`);
+  return fields.join(" ");
+}
+
 function tryCreateStaleClaim(lockDir, staleMs, now = Date.now()) {
   const claimDir = path.join(lockDir, "stale-claim");
   try {
@@ -151,8 +164,9 @@ function acquireBrowserLock(socketPath, tempDir, options = {}) {
     if (claimAndRemoveStaleLock(lockDir, staleMs)) continue;
 
     if (Date.now() - startedAt >= timeoutMs) {
+      const owner = readLockOwner(lockDir);
       throw new Error(
-        `Timed out waiting for browser lock after ${Math.round(timeoutMs / 1000)}s. Use --no-lock to bypass.`,
+        `Timed out waiting for browser lock after ${Math.round(timeoutMs / 1000)}s. ${formatLockOwner(owner, lockDir)}. Do not use --no-lock for browser-handler submits; wait for the owner or use a separate Surf socket/profile.`,
       );
     }
 

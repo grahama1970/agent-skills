@@ -1203,6 +1203,7 @@ function mapToolToMessage(tool, args, tabId) {
         model: a.model,
         deepSearch: a["deep-search"] || a.deepSearch || false,
         withPage: a["with-page"],
+        targetTabId: a["target-tab-id"] !== undefined ? parseInt(a["target-tab-id"], 10) : (a.targetTabId !== undefined ? parseInt(a.targetTabId, 10) : undefined),
         timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 300000,
         ...baseMsg
       };
