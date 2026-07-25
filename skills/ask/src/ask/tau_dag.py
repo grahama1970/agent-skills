@@ -224,6 +224,22 @@ def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
     if not input.target:
         missing.append(_question("target", "Which issue, task, file, or work target should the DAG bind to?"))
     if input.handlers:
+        unsupported_handlers = unsupported_handler_routes(input)
+        if unsupported_handlers:
+            missing.append(
+                _question(
+                    "handler_routes",
+                    (
+                        "These handler route(s) look like OAuth/Codex-only model selectors, not "
+                        f"SciLLM API handlers: {', '.join(unsupported_handlers)}. "
+                        "Ask does not yet have a native OAuth-backed Codex/subagent Tau lane for "
+                        "those labels. Use --handler codex with --handler-workspace codex=/path "
+                        "for the local Codex CLI workspace lane, choose a supported browser "
+                        "handler, or use a SciLLM-compatible API handler such as gpt-5.5-high."
+                    ),
+                    expects="supported_handler_route",
+                )
+            )
         if not input.immutable_goal:
             missing.append(
                 _question(
@@ -301,6 +317,21 @@ def unsupported_model_routes(input: TauDagCompileInput) -> list[str]:
         lower = model.lower().strip()
         if lower.startswith(("webgpt", "$webgpt", "chatgpt", "$chatgpt")):
             unsupported.append(model)
+    return sorted(set(unsupported))
+
+
+def unsupported_handler_routes(input: TauDagCompileInput) -> list[str]:
+    """Return handler labels that must not be silently routed to scillm.chat."""
+
+    unsupported: list[str] = []
+    for index, handler in enumerate(input.handlers):
+        if handler in ROUNDTABLE_HANDLERS:
+            continue
+        if _handler_provider_hint(input, index):
+            continue
+        lower = handler.lower().strip()
+        if lower.endswith("-xhigh"):
+            unsupported.append(handler)
     return sorted(set(unsupported))
 
 

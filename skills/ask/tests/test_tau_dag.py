@@ -480,6 +480,48 @@ def test_chutes_prefixed_handler_is_canonicalized_before_scillm_dispatch(tmp_pat
     assert command[command.index("--provider-hint") + 1] == "chutes"
 
 
+def test_oauth_only_xhigh_handler_fails_preflight_before_scillm_dispatch(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Ask gpt-5.5-xhigh to review this project-agent bundle.",
+        repo="local/ask",
+        target="oauth-handler-route",
+        immutable_goal="The requested handler route is classified before any provider dispatch.",
+        handlers=["gpt-5.5-xhigh"],
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "NEEDS_INTERVIEW"
+    assert "handler_routes" in bundle["missing_fields"]
+    question = next(item for item in bundle["questions"] if item["field"] == "handler_routes")
+    assert "OAuth/Codex-only" in question["question"]
+    assert "gpt-5.5-xhigh" in question["question"]
+    assert not (Path(bundle["run_dir"]) / "command-specs" / "handler-gpt-5-5-xhigh").exists()
+
+
+def test_supported_high_api_handler_still_compiles_to_scillm(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Ask gpt-5.5-high to answer the ping.",
+        repo="local/ask",
+        target="scillm-handler-route",
+        immutable_goal="The SciLLM-compatible handler answers the ping.",
+        handlers=["gpt-5.5-high"],
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-gpt-5-5-high", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    command = command_spec["command"]
+    assert command[command.index("--handler") + 1] == "gpt-5.5-high"
+
+
 def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_path: Path) -> None:
     request = infer_compile_input(
         "$ask concurrently webgpt, webclaude, webkimi and chutes deepseek-ai/DeepSeek-V3.2-TEE   What is  2+2?",

@@ -49,6 +49,20 @@ shape or sanity command is needed.
   --handler gpt-5.5 --handler webclaude \
   --topology sequential --execute --json
 
+# OAuth/Codex-only xhigh handler labels fail preflight until a native lane exists.
+./run.sh tau-dag "Ask gpt-5.5-xhigh to review this bundle." \
+  --repo local/ask --target oauth-handler-preflight \
+  --immutable-goal "The requested handler route is classified before dispatch." \
+  --handler gpt-5.5-xhigh --json
+
+# Local Codex CLI workspace lane. This is the supported non-SciLLM Codex handler.
+./run.sh tau-dag "Ask codex to make the focused patch, then ask webclaude to review it." \
+  --repo local/ask --target codex-webclaude-pipeline \
+  --immutable-goal "The Codex workspace diff is produced and reviewed against the acceptance bar." \
+  --handler codex --handler webclaude \
+  --handler-workspace codex=/path/to/worktree \
+  --topology sequential --json
+
 # Natural Chutes exact-model single call.
 ./run.sh tau-dag "chutes deepseek-ai/DeepSeek-V3.2-TEE: what is 2+2?" \
   --repo local/ask --target chutes-deepseek-ping \

@@ -199,6 +199,13 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   canonicalizes that to one API handler with `provider_hint=chutes` before Tau
   writes the DAG. Do not pass the transport prefix as the model id: use
   `deepseek-ai/DeepSeek-V3.2-TEE`, not `chutes/deepseek-ai/DeepSeek-V3.2-TEE`.
+  OAuth/Codex-only selector labels such as `gpt-5.5-xhigh` are not silently
+  downrouted through `scillm.chat` when used as handlers. Until a native
+  OAuth-backed Codex/subagent Tau lane exists for those labels, `$ask` fails
+  preflight with `NEEDS_INTERVIEW`. Use `--handler codex --handler-workspace
+  codex=/path/to/worktree` for the local Codex CLI workspace lane, a supported
+  browser handler such as `webgpt`/`webclaude`, or a SciLLM-compatible API
+  handler such as `gpt-5.5-high`.
   Mixed web/API panels may use natural concurrent syntax:
   `concurrently webgpt, webclaude, webkimi and chutes deepseek-ai/DeepSeek-V3.2-TEE <prompt>`.
 - **Browser transport**: browser handlers execute through `$surf` and
