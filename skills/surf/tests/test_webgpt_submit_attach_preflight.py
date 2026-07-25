@@ -1459,3 +1459,67 @@ esac
     assert meta["focus_invariant_ok"] is False
     assert meta["transport_degraded"] is True
     assert meta["recovered_output"] is True
+
+
+def test_webgpt_submit_recovers_focus_drift_when_tab_id_line_missing_but_preflight_verified(
+    tmp_path: Path,
+) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf '837352334\\tAgentic Research - Boris Loop\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    count_file="$PWD/focus-state-count"
+    count="$(cat "$count_file" 2>/dev/null || printf '0')"
+    count="$((count + 1))"
+    printf '%s' "$count" > "$count_file"
+    if [[ "$count" -eq 1 ]]; then
+      printf '{"focusedWindowId":456,"activeTabId":123}\\n'
+    else
+      printf '{"focusedWindowId":999,"activeTabId":888}\\n'
+    fi
+    ;;
+  js)
+    printf '"cdp-ok"\\n'
+    ;;
+  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'external reviewer verdict\\n%s\\n' "$sentinel"
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 0
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == "external reviewer verdict\n"
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "recovered_focus_changed"
+    assert meta["failure"] == "focus_stolen_despite_no_activate"
+    assert meta["proof_status"] == "response_proven"
+    assert meta["response_proof_status"] == "response_proven"
+    assert meta["controlled_tab_id"] == "837352334"
+    assert meta["conversation_url"] == "https://chatgpt.com/c/example"
+    assert meta["raw_contains_sentinel"] is True
+    assert meta["clean_contains_sentinel"] is False
+    assert meta["focus_invariant_ok"] is False
+    assert meta["transport_degraded"] is True

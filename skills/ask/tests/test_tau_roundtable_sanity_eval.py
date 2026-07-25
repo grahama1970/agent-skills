@@ -456,6 +456,102 @@ def test_worker_webgpt_receipt_includes_transport_summary(tmp_path: Path) -> Non
     ]
 
 
+def test_worker_preserves_degraded_webgpt_sentinel_response_after_focus_drift(tmp_path: Path) -> None:
+    request_file = tmp_path / "request.json"
+    request_file.write_text(json.dumps({"request": "Ask webgpt to review the bundle."}), encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    artifact_dir.mkdir(parents=True)
+    args = SimpleNamespace(
+        node_id="handler-webgpt",
+        handler="webgpt",
+        topology="concurrent",
+        request_file=str(request_file),
+        browser_oracle_project="tau",
+        next_agent="join",
+        artifact_dir=str(artifact_dir),
+        surf_run=str(tmp_path / "surf-run.sh"),
+        browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
+        scillm_base_url="http://127.0.0.1:4001",
+        scillm_api_key="",
+        prior_node=[],
+        timeout=300,
+        stable_polls=2,
+        no_activate=True,
+        evidence=[],
+        codex_workspace="",
+        browser_model_preference="",
+    )
+    sentinel = "<<<WEBGPT_DONE:20260725T164452Z:8a6dc2c2>>>"
+
+    def fake_run_cmd(command: list[str], *, cwd: Path, timeout: int) -> tau_roundtable_worker.CmdResult:
+        if "resolve" in command:
+            return tau_roundtable_worker.CmdResult(
+                command,
+                0,
+                json.dumps({"tab_id": "837361097", "conversation_url": "https://chatgpt.com/c/example"}),
+                "",
+                0.01,
+            )
+        if "webgpt.submit" in command:
+            response_path = Path(command[command.index("--output") + 1])
+            raw_path = Path(command[command.index("--raw-output") + 1])
+            meta_path = Path(command[command.index("--meta-output") + 1])
+            response_path.write_text("WebGPT advisory response.\n", encoding="utf-8")
+            raw_path.write_text(f"WebGPT advisory response.\n{sentinel}\n", encoding="utf-8")
+            meta_path.write_text(
+                json.dumps(
+                    {
+                        "status": "failed",
+                        "failure": "focus_stolen_despite_no_activate",
+                        "proof_status": "degraded_focus",
+                        "response_proof_status": "response_unproven",
+                        "sentinel": sentinel,
+                        "requested_tab_id": "837361097",
+                        "controlled_tab_id": None,
+                        "raw_contains_sentinel": True,
+                        "clean_contains_sentinel": False,
+                        "clean_contamination_markers": [],
+                        "focus_changed": True,
+                        "focus_invariant_ok": False,
+                        "submitted_to_chatgpt": True,
+                        "tab_identity_preflight": {
+                            "ok": True,
+                            "tab_id": "837361097",
+                            "tab": {
+                                "id": "837361097",
+                                "url": "https://chatgpt.com/c/example",
+                                "title": "ChatGPT",
+                            },
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            return tau_roundtable_worker.CmdResult(command, 5, "", "focus stolen", 0.01)
+        return tau_roundtable_worker.CmdResult(command, 99, "", "unexpected command", 0.01)
+
+    original_run_cmd = tau_roundtable_worker._run_cmd
+    tau_roundtable_worker._run_cmd = fake_run_cmd
+    try:
+        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+    finally:
+        tau_roundtable_worker._run_cmd = original_run_cmd
+
+    assert result["exit_code"] == 0
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["ok"] is True
+    assert receipt["failure"] is None
+    assert receipt["response_chars"] == len("WebGPT advisory response.\n")
+    assert receipt["submit_meta"]["status"] == "recovered_focus_changed"
+    assert receipt["submit_meta"]["proof_status"] == "response_proven"
+    assert receipt["submit_meta"]["response_proof_status"] == "response_proven"
+    assert receipt["submit_meta"]["controlled_tab_id"] == "837361097"
+    assert receipt["submit_meta"]["conversation_url"] == "https://chatgpt.com/c/example"
+    assert receipt["submit_meta"]["transport_degraded"] is True
+    assert receipt["recovery_packet"] is None
+
+
 def test_browser_failure_classifier_keeps_tab_url_mismatch_distinct() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
         failure="tab 837360921 URL mismatch: expected https://claude.ai/new, saw https://claude.ai/chat/live-url",

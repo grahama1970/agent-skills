@@ -2279,6 +2279,23 @@ focus_changed = (
 )
 no_activate = no_activate_s == "1"
 
+identity_tab = identity.get("tab") if isinstance(identity, dict) else {}
+if not isinstance(identity_tab, dict):
+    identity_tab = {}
+identity_tab_id = str(identity.get("tab_id") or identity_tab.get("id") or "").strip() if isinstance(identity, dict) else ""
+identity_tab_url = str(identity_tab.get("url") or "").strip()
+identity_ok_for_requested_tab = (
+    isinstance(identity, dict)
+    and identity.get("ok") is True
+    and bool(requested_tab_id)
+    and identity_tab_id == str(requested_tab_id)
+)
+if not tab_id and identity_ok_for_requested_tab and sentinel in raw_text and sentinel not in out_text and not contamination:
+    tab_id = str(requested_tab_id)
+    current_url = current_url or identity_tab_url or None
+    if not conversation_url and identity_tab_url and "/c/" in identity_tab_url:
+        conversation_url = identity_tab_url
+
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
 focus_stolen_mid = focus_stolen_mid_s == "1"
 focus_violation = no_activate and (focus_changed or focus_stolen_mid)

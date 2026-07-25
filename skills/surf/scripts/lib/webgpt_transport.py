@@ -121,6 +121,41 @@ def _raw_contains_sentinel(meta: dict[str, Any], receipt: dict[str, Any], raw_pa
         return False
 
 
+def _identity_verified_requested_tab(meta: dict[str, Any]) -> bool:
+    identity = meta.get("tab_identity_preflight")
+    if not isinstance(identity, dict) or identity.get("ok") is not True:
+        return False
+    requested_tab = str(meta.get("requested_tab_id") or "").strip()
+    if not requested_tab:
+        return False
+    tab = identity.get("tab")
+    if not isinstance(tab, dict):
+        tab = {}
+    identity_tab = str(identity.get("tab_id") or tab.get("id") or "").strip()
+    return identity_tab == requested_tab
+
+
+def _degraded_focus_response_available(
+    meta: dict[str, Any],
+    receipt: dict[str, Any],
+    raw_path: Path | None,
+) -> bool:
+    failure = str(meta.get("failure") or "")
+    if failure not in {"focus_stolen_mid_submit", "focus_stolen_despite_no_activate"}:
+        return False
+    if meta.get("focus_invariant_ok") is not False:
+        return False
+    if not _identity_verified_requested_tab(meta):
+        return False
+    if not _raw_contains_sentinel(meta, receipt, raw_path):
+        return False
+    if meta.get("clean_contains_sentinel") is True:
+        return False
+    if meta.get("clean_contamination_markers"):
+        return False
+    return True
+
+
 def _transport_state(meta: dict[str, Any], receipt: dict[str, Any], raw_path: Path | None, meta_path: Path | None) -> str:
     status = str(meta.get("status") or "")
     failure = str(meta.get("failure") or "")
@@ -149,6 +184,8 @@ def _transport_state(meta: dict[str, Any], receipt: dict[str, Any], raw_path: Pa
         return "missing_response_artifacts"
     if submitted and meta.get("response_timed_out") and raw_path is None:
         return "missing_response_artifacts"
+    if submitted and _degraded_focus_response_available(meta, receipt, raw_path):
+        return "completed_with_focus_drift"
     if submitted and not raw_has_sentinel and status not in {"completed", "recovered_focus_changed"}:
         return "submitted_only"
     if status:

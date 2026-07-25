@@ -124,6 +124,48 @@ def test_transport_summary_completed_with_focus_drift() -> None:
     assert "audit" in summary["next_command"]
 
 
+def test_transport_summary_recovers_failed_focus_drift_with_verified_raw_sentinel() -> None:
+    tmp = Path("/tmp/surf-transport-test-failed-focus-drift-raw-sentinel")
+    tmp.mkdir(parents=True, exist_ok=True)
+    sentinel = "<<<WEBGPT_DONE:20260725T164452Z:8a6dc2c2>>>"
+    round_dir = write_round(
+        tmp,
+        meta={
+            "status": "failed",
+            "failure": "focus_stolen_despite_no_activate",
+            "sentinel": sentinel,
+            "requested_tab_id": "837361097",
+            "controlled_tab_id": None,
+            "raw_contains_sentinel": True,
+            "clean_contains_sentinel": False,
+            "clean_contamination_markers": [],
+            "focus_changed": True,
+            "focus_invariant_ok": False,
+            "submitted_to_chatgpt": True,
+            "tab_identity_preflight": {
+                "ok": True,
+                "tab_id": "837361097",
+                "tab": {
+                    "id": "837361097",
+                    "url": "https://chatgpt.com/c/example",
+                    "title": "ChatGPT",
+                },
+            },
+        },
+        receipt={"status": "submitted_to_chatgpt", "submitted_to_chatgpt": True},
+        raw_text=f"review verdict\n{sentinel}\n",
+    )
+    (round_dir / "02_response.md").write_text("review verdict\n", encoding="utf-8")
+
+    summary = write_summary(round_dir)
+
+    assert summary["final_transport_state"] == "completed_with_focus_drift"
+    assert summary["raw_sentinel_present"] is True
+    assert summary["focus_changed"] is True
+    assert summary["needs_attention"] is None
+    assert "audit" in summary["next_command"]
+
+
 def test_transport_summary_missing_sentinel() -> None:
     tmp = Path("/tmp/surf-transport-test-missing-sentinel")
     tmp.mkdir(parents=True, exist_ok=True)

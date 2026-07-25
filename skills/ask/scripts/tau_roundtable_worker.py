@@ -199,6 +199,14 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             commands.append(submit.summary())
             if meta_path.is_file():
                 submit_meta = _read_json(meta_path)
+            degraded_response_recovered = _normalize_degraded_webgpt_response(
+                handler=handler,
+                meta_path=meta_path,
+                response_path=response_path,
+                raw_path=raw_path,
+            )
+            if degraded_response_recovered:
+                submit_meta = _read_json(meta_path)
             transport_summary_path, transport_summary = _load_webgpt_transport_summary(artifact_dir)
             if submit.returncode != 0 and _should_retry_webgpt_stale_binding(
                 handler=handler,
@@ -222,8 +230,16 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                     submit_meta = retry["submit_meta"]
                     tab_id = retry["tab_id"]
                     binding_refresh = retry["binding_refresh"]
+                    degraded_response_recovered = _normalize_degraded_webgpt_response(
+                        handler=handler,
+                        meta_path=meta_path,
+                        response_path=response_path,
+                        raw_path=raw_path,
+                    )
+                    if degraded_response_recovered:
+                        submit_meta = _read_json(meta_path)
                     transport_summary_path, transport_summary = _load_webgpt_transport_summary(artifact_dir)
-            if submit.returncode != 0:
+            if submit.returncode != 0 and not degraded_response_recovered:
                 raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
             response_text = response_path.read_text(encoding="utf-8")
             post_submit_refresh = _refresh_browser_binding_after_proven_submit(
@@ -578,6 +594,88 @@ def _extract_tab_id(text: str) -> str:
                 return str(value)
     match = re.search(r"\btab(?:Id|[_ -]?id)?[\"':=\s]+(\d{3,})\b", text, flags=re.IGNORECASE)
     return match.group(1) if match else ""
+
+
+def _normalize_degraded_webgpt_response(
+    *,
+    handler: str,
+    meta_path: Path,
+    response_path: Path,
+    raw_path: Path,
+) -> bool:
+    if handler != "webgpt" or not meta_path.is_file() or not response_path.is_file() or not raw_path.is_file():
+        return False
+    try:
+        meta = _read_json(meta_path)
+        raw_text = raw_path.read_text(encoding="utf-8", errors="replace")
+        clean_text = response_path.read_text(encoding="utf-8", errors="replace")
+    except (OSError, json.JSONDecodeError, RuntimeError):
+        return False
+    if not _is_degraded_webgpt_response_available(meta, raw_text=raw_text, clean_text=clean_text):
+        return False
+
+    requested_tab = str(meta.get("requested_tab_id") or "").strip()
+    identity = meta.get("tab_identity_preflight") if isinstance(meta.get("tab_identity_preflight"), dict) else {}
+    tab = identity.get("tab") if isinstance(identity.get("tab"), dict) else {}
+    tab_url = str(tab.get("url") or "").strip()
+    focus_warning = str(meta.get("failure") or "focus_stolen_despite_no_activate")
+    meta.update(
+        {
+            "status": "recovered_focus_changed",
+            "failure": focus_warning,
+            "focus_drift_warning": focus_warning,
+            "proof_status": "response_proven",
+            "response_proof_status": "response_proven",
+            "controlled_tab_id": str(meta.get("controlled_tab_id") or requested_tab),
+            "controlled_tab_id_mismatch": False,
+            "transport_degraded": True,
+            "recovered_output": True,
+            "agent_diagnosis": (
+                "ChatGPT returned the current sentinel-bearing assistant response from the verified requested tab; "
+                "focus changed during no-activate mode, so background focus proof is degraded."
+            ),
+            "agent_action": (
+                "Use raw_output, output, and meta_output as degraded reviewer response evidence; "
+                "preserve focus_drift_warning and do not claim clean background focus invariance."
+            ),
+        }
+    )
+    if tab_url:
+        if not meta.get("current_url"):
+            meta["current_url"] = tab_url
+        if not meta.get("tab_url"):
+            meta["tab_url"] = tab_url
+        if _is_chatgpt_conversation_url(tab_url) and not meta.get("conversation_url"):
+            meta["conversation_url"] = tab_url
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return True
+
+
+def _is_degraded_webgpt_response_available(meta: dict[str, Any], *, raw_text: str, clean_text: str) -> bool:
+    failure = str(meta.get("failure") or "")
+    if failure not in {"focus_stolen_mid_submit", "focus_stolen_despite_no_activate"}:
+        return False
+    if meta.get("focus_invariant_ok") is not False:
+        return False
+    sentinel = str(meta.get("sentinel") or "")
+    if not sentinel or sentinel not in raw_text or sentinel in clean_text:
+        return False
+    if meta.get("raw_contains_sentinel") is False or meta.get("clean_contains_sentinel") is True:
+        return False
+    if meta.get("clean_contamination_markers"):
+        return False
+    requested_tab = str(meta.get("requested_tab_id") or "").strip()
+    controlled_tab = str(meta.get("controlled_tab_id") or "").strip()
+    if controlled_tab and requested_tab and controlled_tab != requested_tab:
+        return False
+    identity = meta.get("tab_identity_preflight")
+    if not isinstance(identity, dict) or identity.get("ok") is not True:
+        return False
+    tab = identity.get("tab")
+    if not isinstance(tab, dict):
+        tab = {}
+    identity_tab = str(identity.get("tab_id") or tab.get("id") or "").strip()
+    return bool(requested_tab and identity_tab == requested_tab)
 
 
 def _refresh_browser_binding_after_proven_submit(
