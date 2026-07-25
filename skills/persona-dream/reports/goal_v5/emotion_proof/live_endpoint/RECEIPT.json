@@ -1,0 +1,20 @@
+{
+  "schema": "persona-dream.live_emotion_endpoint_proof.v1",
+  "date": "2026-07-25",
+  "claim": "The running production chatterbox voice server (:8018) now honors emotion weighting over HTTP via a new /synthesize-emotion base-model endpoint. This is block #1 (render target) built and proven live, not in a script.",
+  "server_change": {
+    "repo": "experiments/chatterbox",
+    "file": "src/chatterbox/agent/server.py",
+    "branch": "persona-dream-emotion-render-endpoint",
+    "endpoint": "POST /synthesize-emotion",
+    "engine": "chatterbox_base",
+    "why": "ChatterboxTurboTTS (the server's default model) ignores exaggeration/cfg_weight -- verified: exaggeration 0.0/0.5/1.2 via prepare_conditionals+generate produce identical audio (-26.84 dBFS, F0 179.4, 3.52s). The base ChatterboxTTS honors them."
+  },
+  "restart_proof": {"health_ok": true, "engine": "chatterbox_turbo", "device": "cuda", "model_load_seconds": 8.701, "endpoint_registered": true},
+  "live_http_result": [
+    {"label": "live_calm",    "exaggeration": 0.3, "cfg_weight": 0.5, "generation_seconds": 13.961, "dur_s": 3.96, "rms_dbfs": -27.29, "sha256_16": "3aeca20cde215ed1", "bytes": 190158},
+    {"label": "live_intense", "exaggeration": 1.2, "cfg_weight": 0.3, "generation_seconds": 3.046,  "dur_s": 4.44, "rms_dbfs": -19.08, "sha256_16": "ac37bc972c485024", "bytes": 213198}
+  ],
+  "signal": "same text, calm->intense over HTTP: -27.29 -> -19.08 dBFS (+8.21 dB), duration 3.96 -> 4.44 s, distinct sha256. Measured independently from the server-produced /out WAVs with stdlib wave+audioop; sha matches the HTTP response bodies.",
+  "not_proven": "voiceAudition.ts / /tau/voice-render still call /synthesize (Turbo); routing the production persona path to /synthesize-emotion + supplying the weighted emotion from persona-dream arc_state / a corrected memory.intent is the remaining wiring. Subjective human tone acceptance not scored."
+}
