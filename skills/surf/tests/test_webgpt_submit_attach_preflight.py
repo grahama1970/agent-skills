@@ -17,7 +17,7 @@ def run_submit(
     tmp_path: Path,
     archive: Path,
     fake_run_body: str | None = None,
-    tab_id: str = "837352334",
+    tab_id: str | None = "837352334",
     extra_args: list[str] | None = None,
     no_activate: bool = True,
     request_text: str = "review the attached bundle\n",
@@ -39,25 +39,25 @@ def run_submit(
     env["SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS"] = "0"
     env["SURF_WEBGPT_HOST_LOG"] = str(tmp_path / "surf-host.log")
     env["TMPDIR"] = str(tmp_path)
+    command = [
+        "bash",
+        str(WEBGPT_SUBMIT),
+        "--input",
+        str(request),
+        "--output",
+        str(output),
+        "--meta-output",
+        str(meta),
+        "--attach-file",
+        str(archive),
+    ]
+    if tab_id is not None:
+        command.extend(["--tab-id", tab_id, "--expect-url", "https://chatgpt.com/c/example"])
+    if no_activate:
+        command.append("--no-activate")
+    command.extend(extra_args or [])
     return subprocess.run(
-        [
-            "bash",
-            str(WEBGPT_SUBMIT),
-            "--input",
-            str(request),
-            "--output",
-            str(output),
-            "--meta-output",
-            str(meta),
-            "--attach-file",
-            str(archive),
-            "--tab-id",
-            tab_id,
-            "--expect-url",
-            "https://chatgpt.com/c/example",
-            *(["--no-activate"] if no_activate else []),
-            *(extra_args or []),
-        ],
+        command,
         cwd=tmp_path,
         env=env,
         text=True,
@@ -665,6 +665,88 @@ esac
 
     assert proc.returncode == 0, proc.stderr
     assert env_log.read_text(encoding="utf-8").strip() == "0"
+
+
+def test_webgpt_submit_auto_open_binds_missing_browser_oracle_tab(
+    tmp_path: Path, monkeypatch
+) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    bo_log = tmp_path / "browser-oracle.log"
+    fake_browser_oracle = tmp_path / "browser-oracle-run.sh"
+    fake_browser_oracle.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(bo_log)!r}
+case "${{1:-}}" in
+  resolve)
+    printf '{{"status":"ok","project":"demo","tab_id":"123","conversation_url":"https://chatgpt.com/c/demo"}}\\n'
+    ;;
+  reconcile)
+    printf '{{"status":"needs_attention","rows":[{{"project":"demo","status":"missing_live_tab","stored_tab_id":"123","stored_url":"https://chatgpt.com/c/demo"}}]}}\\n'
+    exit 1
+    ;;
+  open-bind)
+    printf '{{"status":"open_bound","project":"demo","tab_id":"456","conversation_url":"https://chatgpt.com/c/demo","state_path":"/tmp/demo.json"}}\\n'
+    ;;
+  *)
+    echo "unexpected browser-oracle command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_browser_oracle.chmod(0o755)
+    monkeypatch.setenv("BROWSER_ORACLE_RUN", str(fake_browser_oracle))
+    fake_run = """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    if [[ "${2:-}" == "--json" ]]; then
+      printf '[{"id":456,"title":"ChatGPT demo","url":"https://chatgpt.com/c/demo"}]\n'
+    else
+      printf '456\tChatGPT demo\thttps://chatgpt.com/c/demo\n'
+    fi
+    ;;
+  focus.state)
+    printf '{"active_tab_id":"123","active_window_id":"456"}\n'
+    ;;
+  js)
+    printf '"cdp-ok"\n'
+    ;;
+  chatgpt)
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'Prompt accepted: sentinel=%s\n' "$sentinel" > "${SURF_WEBGPT_HOST_LOG:-/tmp/surf-host.log}"
+    printf 'browser oracle rebound response\n%s\n' "$sentinel"
+    echo 'Tab ID: 456' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(tmp_path, archive, fake_run, tab_id=None, extra_args=["--project", "demo"])
+
+    assert proc.returncode == 0, proc.stderr
+    log = bo_log.read_text(encoding="utf-8")
+    assert "resolve --from" in log
+    assert "reconcile --backend webgpt --json --project demo" in log
+    assert "open-bind demo --backend webgpt --url https://chatgpt.com/c/demo --manual --json" in log
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["requested_tab_id"] == "456"
+    assert meta["controlled_tab_id"] == "456"
+    assert meta["controlled_tab_id_mismatch"] is False
 
 
 def test_webgpt_submit_cloudflare_challenge_fails_closed_without_extract_retry(tmp_path: Path) -> None:

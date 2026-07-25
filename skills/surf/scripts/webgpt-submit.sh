@@ -52,6 +52,11 @@ Options:
                             SURF_WEBGPT_REASONING or "Pro".
   --project NAME            browser-oracle project binding (~/.pi/webgpt-projects/<name>.json).
   --browser-oracle-from PATH  Walk-up directory for .ask/browser-oracles.yaml (default: cwd).
+  --create-tab              Open/bind a fresh reviewer tab explicitly.
+                            Project browser-oracle bindings also auto-open a
+                            replacement by default when the stored tab id is
+                            no longer live. Set
+                            SURF_BROWSER_ORACLE_CREATE_MISSING=0 to disable.
   --tab-id ID               Use this exact Chrome tab as the controlled WebGPT tab.
   --url URL                 Resolve an already-open ChatGPT tab by exact URL.
   --expect-url URL          When using --tab-id, require that tab to match this
@@ -61,8 +66,6 @@ Options:
   --allow-unverified-tab-id Allow a bare --tab-id even when multiple ChatGPT
                             tabs are open. Use only for privileged/manual
                             recovery where URL/title identity is unavailable.
-  --create-tab              Open a fresh ChatGPT tab (inactive) and control that tab.
-                            Skips persisted controlled-tab state file lookup.
   --no-remember             Do not read or write the global controlled-tab state file.
   --no-activate             Background controlled-tab mode. Do not foreground
                             the tab or its window. Requires --tab-id, --url, or
@@ -210,7 +213,7 @@ if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
     if [[ -n "$bo_resolved_project" && -n "$bo_resolved_tab" ]]; then
       bo_reconcile_payload="$(browser_oracle_reconcile_json webgpt "$bo_resolved_project" "${SURF_BROWSER_ORACLE_PRUNE_MISSING:-0}" || true)"
       bo_reconcile_status="$(python3 -c 'import json,sys; d=json.load(sys.stdin); rows=d.get("rows") or []; print((rows[0].get("status") if rows else ""))' <<<"$bo_reconcile_payload" 2>/dev/null || true)"
-      if [[ "$bo_reconcile_status" == "missing_live_tab" && -n "$bo_resolved_url" && ( "${SURF_BROWSER_ORACLE_CREATE_MISSING:-0}" == "1" || "${SURF_BROWSER_ORACLE_CREATE_MISSING:-0}" == "true" ) ]]; then
+      if [[ "$bo_reconcile_status" == "missing_live_tab" && -n "$bo_resolved_url" && ( "${SURF_BROWSER_ORACLE_CREATE_MISSING:-1}" == "1" || "${SURF_BROWSER_ORACLE_CREATE_MISSING:-1}" == "true" ) ]]; then
         bo_open_payload="$(browser_oracle_open_bind_json "$bo_resolved_project" webgpt "$bo_resolved_url" 2>/dev/null || true)"
         bo_new_tab="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("tab_id") or "")' <<<"$bo_open_payload" 2>/dev/null || true)"
         if [[ -n "$bo_new_tab" ]]; then

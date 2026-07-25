@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
@@ -11,7 +12,7 @@ from typing import Optional
 import typer
 from loguru import logger
 
-from .bindings import BindingError, bind, list_bindings, load, unbind, verify
+from .bindings import BindingError, bind, list_bindings, load, state_path, unbind, verify
 from .config import SUPPORTED_BACKENDS, project_root, surf_run_path
 from .registry import register_mapping, resolve_project
 from .walkup import find_all_registries, find_registry
@@ -157,6 +158,188 @@ def list_cmd(
             typer.echo(
                 f"{row['name']}\t{row['backend']}\ttab={row.get('tab_id') or row.get('view_id')}\t{row['state_path']}"
             )
+
+
+def _live_tabs(backend: str) -> tuple[list[dict], str | None]:
+    if backend == "cursor-browser":
+        return [], None
+    surf = surf_run_path()
+    if not surf.exists():
+        return [], f"surf runtime not found: {surf}"
+    try:
+        proc = subprocess.run(
+            [str(surf), "tab.list", "--json"],
+            cwd=surf.parent,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except Exception as exc:
+        return [], str(exc)
+    if proc.returncode != 0:
+        return [], proc.stderr.strip() or proc.stdout.strip() or f"tab.list exit {proc.returncode}"
+    try:
+        payload = json.loads(proc.stdout or "[]")
+    except Exception as exc:
+        return [], f"tab.list JSON parse failed: {exc}"
+    rows = payload.get("tabs") if isinstance(payload, dict) else payload
+    if not isinstance(rows, list):
+        return [], "tab.list JSON was not a list"
+    tabs: list[dict] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        tab_id = str(row.get("id") or row.get("tabId") or row.get("tab_id") or "")
+        if not tab_id:
+            continue
+        tabs.append({**row, "tab_id": tab_id, "url": str(row.get("url") or "")})
+    return tabs, None
+
+
+def _norm_url(url: str) -> str:
+    return str(url or "").strip().rstrip("/")
+
+
+@app.command("reconcile")
+def reconcile_cmd(
+    backend: str = typer.Option("webgpt", "--backend"),
+    project: str = typer.Option("", "--project"),
+    prune_missing: bool = typer.Option(False, "--prune-missing"),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Scan stored bindings against live Surf tab inventory."""
+    if backend not in SUPPORTED_BACKENDS:
+        typer.echo(f"unsupported backend {backend!r}", err=True)
+        raise typer.Exit(2)
+    bindings = [load(project, backend)] if project else list_bindings(backend)
+    bindings = [state for state in bindings if state is not None]
+    tabs, inventory_error = _live_tabs(backend)
+    by_id = {str(tab.get("tab_id")): tab for tab in tabs}
+    rows = []
+    exit_code = 0
+    for state in bindings:
+        live = by_id.get(str(state.tab_id))
+        url_matches = [
+            tab
+            for tab in tabs
+            if state.conversation_url and _norm_url(tab.get("url", "")) == _norm_url(state.conversation_url)
+        ]
+        row = {
+            "project": state.name,
+            "backend": state.backend,
+            "state_path": str(state_path(state.name, state.backend)),
+            "stored_tab_id": state.tab_id,
+            "stored_url": state.conversation_url,
+            "bound_manually": state.bound_manually,
+            "inventory_count": len(tabs),
+            "url_matches": url_matches,
+        }
+        if inventory_error:
+            row.update({"status": "scan_failed", "error": inventory_error})
+            exit_code = 1
+        elif not state.tab_id:
+            row.update({"status": "missing_live_tab", "reason": "binding_has_no_tab_id"})
+            exit_code = 1
+        elif live is None:
+            row.update({"status": "missing_live_tab"})
+            if prune_missing:
+                removed = unbind(state.name, state.backend)
+                row["pruned"] = removed
+            exit_code = 1
+        else:
+            live_url = str(live.get("url") or "")
+            row["live_tab"] = live
+            row["live_url"] = live_url
+            if state.conversation_url and _norm_url(live_url) != _norm_url(state.conversation_url):
+                row["status"] = "url_mismatch"
+                exit_code = 1
+            else:
+                row["status"] = "ready"
+                if live_url:
+                    refreshed = bind(
+                        state.name,
+                        state.backend,
+                        tab_id=state.tab_id,
+                        conversation_url=live_url,
+                        manual=state.bound_manually,
+                    )
+                    row["refreshed_binding"] = refreshed.to_dict()
+        rows.append(row)
+    payload = {
+        "backend": backend,
+        "project": project or None,
+        "status": "ok" if exit_code == 0 else "needs_attention",
+        "rows": rows,
+    }
+    _emit(payload, as_json)
+    if exit_code:
+        raise typer.Exit(exit_code)
+
+
+def _extract_new_tab_id(payload: object) -> str:
+    if isinstance(payload, dict):
+        for key in ("tabId", "tab_id", "id"):
+            value = payload.get(key)
+            if value:
+                return str(value)
+        tabs = payload.get("tabs")
+        if isinstance(tabs, list) and tabs:
+            return _extract_new_tab_id(tabs[0])
+    return ""
+
+
+@app.command("open-bind")
+def open_bind_cmd(
+    name: str = typer.Argument(..., help="Project name to bind."),
+    backend: str = typer.Option("webgpt", "--backend"),
+    url: str = typer.Option(..., "--url", help="Reviewer URL to open and bind."),
+    window: bool = typer.Option(True, "--window/--no-window", help="Open webgpt in a reviewer window by default."),
+    manual: bool = typer.Option(True, "--manual/--auto", help="Persist as a manual long-lived binding."),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Open a fresh reviewer tab/window and persist the resulting binding."""
+    if backend not in SUPPORTED_BACKENDS:
+        typer.echo(f"unsupported backend {backend!r}", err=True)
+        raise typer.Exit(2)
+    if backend == "cursor-browser":
+        typer.echo("open-bind is not supported for cursor-browser", err=True)
+        raise typer.Exit(2)
+    surf = surf_run_path()
+    use_window = backend == "webgpt" and window and os.environ.get("BROWSER_ORACLE_OPEN_BIND_WINDOW", "1") not in {"0", "false", "False"}
+    if use_window:
+        cmd = [str(surf), "window.new", url, "--json"]
+        if os.environ.get("BROWSER_ORACLE_OPEN_BIND_UNFOCUSED", "1") not in {"0", "false", "False"}:
+            cmd.append("--unfocused")
+    else:
+        cmd = [str(surf), "tab.new", url, "--json"]
+        if os.environ.get("BROWSER_ORACLE_OPEN_BIND_UNFOCUSED", "1") not in {"0", "false", "False"}:
+            cmd.append("--background")
+    try:
+        proc = subprocess.run(cmd, cwd=surf.parent, capture_output=True, text=True, timeout=45)
+    except Exception as exc:
+        typer.echo(f"surf open failed: {exc}", err=True)
+        raise typer.Exit(1)
+    if proc.returncode != 0:
+        typer.echo(proc.stderr.strip() or proc.stdout.strip() or f"surf open exit {proc.returncode}", err=True)
+        raise typer.Exit(proc.returncode)
+    try:
+        open_payload = json.loads(proc.stdout or "{}")
+    except Exception as exc:
+        typer.echo(f"surf open JSON parse failed: {exc}", err=True)
+        raise typer.Exit(1)
+    tab_id = _extract_new_tab_id(open_payload)
+    if not tab_id:
+        typer.echo("surf open did not return a tab id", err=True)
+        raise typer.Exit(1)
+    state = bind(name, backend, tab_id=tab_id, conversation_url=url, manual=manual)
+    payload = {
+        "status": "open_bound",
+        **state.to_dict(),
+        "state_path": str(state_path(state.name, state.backend)),
+        "open_command": cmd,
+        "open_result": open_payload,
+    }
+    _emit(payload, as_json)
 
 
 @app.command("unbind")

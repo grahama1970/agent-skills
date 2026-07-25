@@ -33,6 +33,57 @@ browser_oracle_resolve_json() {
   printf '%s' "$out"
 }
 
+browser_oracle_reconcile_json() {
+  local backend="${1:-webgpt}"
+  local project="${2:-}"
+  local prune_missing="${3:-0}"
+
+  local skill_dir
+  skill_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  local bo_run="${BROWSER_ORACLE_RUN:-${skill_dir}/../browser-oracle/run.sh}"
+
+  if [[ ! -x "$bo_run" ]]; then
+    echo '{"status":"skipped","reason":"browser_oracle_missing","rows":[]}'
+    return 1
+  fi
+
+  local -a cmd=("$bo_run" reconcile --backend "$backend" --json)
+  if [[ -n "$project" ]]; then
+    cmd+=(--project "$project")
+  fi
+  if [[ "$prune_missing" == "1" || "$prune_missing" == "true" ]]; then
+    cmd+=(--prune-missing)
+  fi
+
+  local out
+  if ! out="$("${cmd[@]}" 2>/dev/null)"; then
+    printf '%s' "$out"
+    return 2
+  fi
+  printf '%s' "$out"
+}
+
+browser_oracle_open_bind_json() {
+  local project="${1:-}"
+  local backend="${2:-webgpt}"
+  local url="${3:-}"
+
+  local skill_dir
+  skill_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  local bo_run="${BROWSER_ORACLE_RUN:-${skill_dir}/../browser-oracle/run.sh}"
+
+  if [[ ! -x "$bo_run" ]]; then
+    echo '{"status":"skipped","reason":"browser_oracle_missing"}'
+    return 1
+  fi
+  if [[ -z "$project" || -z "$url" ]]; then
+    echo '{"status":"failed","reason":"project_and_url_required"}'
+    return 2
+  fi
+
+  "$bo_run" open-bind "$project" --backend "$backend" --url "$url" --manual --json
+}
+
 # Apply resolved tab/url to caller variables: tab_id_var expect_url_var project_var
 browser_oracle_apply_webgpt() {
   local from_path="${1:-.}"
