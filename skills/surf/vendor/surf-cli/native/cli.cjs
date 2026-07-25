@@ -55,6 +55,9 @@ function installBrowserLock({ noLock, timeoutMs }, endpoint) {
       const lock = acquireBrowserLock(endpoint.key, SURF_TMP, { timeoutMs });
       releaseBrowserLock = lock.release;
     } catch (error) {
+      if (error && error.code === "SURF_BROWSER_LOCK_TIMEOUT" && error.surfLockBlocker) {
+        console.error(`SURF_BROWSER_LOCK_BLOCKED ${JSON.stringify(error.surfLockBlocker)}`);
+      }
       console.error("Error:", error && error.message ? error.message : String(error));
       process.exit(1);
     }

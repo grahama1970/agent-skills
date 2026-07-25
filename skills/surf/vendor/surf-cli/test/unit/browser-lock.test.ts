@@ -5,7 +5,7 @@ declare const require: (moduleName: string) => any;
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { acquireBrowserLock, getBrowserLockDir } = require("../../native/browser-lock.cjs");
+const { acquireBrowserLock, browserLockBlockerPayload, getBrowserLockDir } = require("../../native/browser-lock.cjs");
 
 describe("browser lock", () => {
   let tempDir: string;
@@ -131,5 +131,27 @@ describe("browser lock", () => {
     ).toThrow(
       /owner_pid=.*owner_created_at=2026-07-25T13:58:59.000Z owner_socket=unix:\/tmp\/surf.sock lock_dir=.*separate Surf socket\/profile/s,
     );
+  });
+
+  it("creates a first-class lock blocker payload with owner metadata", () => {
+    const payload = browserLockBlockerPayload({
+      owner: {
+        pid: process.pid,
+        socketPath: "unix:/tmp/surf.sock",
+        createdAt: "2026-07-25T13:58:59.000Z",
+        tool: "webgpt.submit",
+      },
+      lockDir: "/tmp/surf-lock-example",
+      endpointKey: "unix:/tmp/surf.sock",
+      timeoutMs: 60000,
+    });
+
+    expect(payload.schema).toBe("surf.browser_lock_blocker.v1");
+    expect(payload.status).toBe("BLOCKED");
+    expect(payload.blocker).toBe("surf_browser_lock_timeout");
+    expect(payload.owner?.pid).toBe(process.pid);
+    expect(payload.owner?.socket).toBe("unix:/tmp/surf.sock");
+    expect(payload.owner?.tool).toBe("webgpt.submit");
+    expect(payload.recovery.do_not_use_no_lock_for_browser_handlers).toBe(true);
   });
 });

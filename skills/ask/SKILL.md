@@ -267,6 +267,7 @@ Compete is fail-closed by design:
 | Fewer than two handlers | Emits an `$interview` packet instead of a DAG |
 | Non-concurrent topology | Emits an `$interview` packet; isolation requires concurrent candidates |
 | Missing candidate receipt | Join reports `NEEDS_ATTENTION` |
+| Browser transport blocker such as `surf_browser_lock_timeout` | Join reports `NEEDS_ATTENTION` with `failure_kind:"transport"` and `transport_blockers`; do not score the lane semantically |
 | Candidate claims a feature without local proof | Project agent must not promote it |
 | Tie or no clear winner | Report `NEEDS_ATTENTION`; do not fabricate a winner |
 | Winner-continuation packet exists | It is a next request, not proof that revision was submitted |
@@ -281,6 +282,13 @@ Required compete artifacts:
 - `node-artifacts/join/compete-scorecard.json`
 - `node-artifacts/join/winner-continuation-request.md` or legacy
   `node-artifacts/join/winner-revision-request.md`
+
+If Surf reports `SURF_BROWSER_LOCK_BLOCKED` or
+`failure_code:"surf_browser_lock_timeout"`, the competition is transport
+blocked, not candidate-failed. Inspect `transport_blockers` in the scorecard
+and the lane `browser-recovery-packet.json`. The recovery command must not add
+`--no-lock`; wait for the named lock owner or move that lane to a separate Surf
+socket/profile before rerunning.
 
 Do not claim compete success from model prose. Closure still requires local
 deterministic evidence: tests, schema checks, endpoint responses, screenshots,

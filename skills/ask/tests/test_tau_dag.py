@@ -425,6 +425,98 @@ def test_compete_join_fails_closed_without_explicit_verified_features(tmp_path: 
     assert "no_explicit_verified_features_to_promote" in scorecard["blockers"]
 
 
+def test_compete_join_reports_browser_lock_as_transport_blocker(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Compete browser handlers under controlled lock contention."}) + "\n",
+        encoding="utf-8",
+    )
+    artifacts = tmp_path / "node-artifacts"
+    for node_id, handler in (("handler-webgpt", "webgpt"), ("handler-webclaude", "webclaude")):
+        node_dir = artifacts / node_id
+        node_dir.mkdir(parents=True)
+        response_path = node_dir / "response.md"
+        response_path.write_text("", encoding="utf-8")
+        recovery_packet = {
+            "schema": "ask.browser_failure_recovery_packet.v1",
+            "status": "NEEDS_ATTENTION",
+            "failure_code": "surf_browser_lock_timeout",
+            "auto_retry_allowed": False,
+            "auto_retry_blocked_reason": "surf_browser_lock_owner_still_running",
+            "next_command": ["/repo/skills/surf/run.sh", f"{handler}.submit", "--input", "prompt.md"],
+            "evidence": {
+                "surf_lock_blocker": {
+                    "schema": "surf.browser_lock_blocker.v1",
+                    "blocker": "surf_browser_lock_timeout",
+                    "owner": {"pid": 1838917, "socket": "unix:/tmp/surf.sock"},
+                }
+            },
+        }
+        (node_dir / "browser-recovery-packet.json").write_text(
+            json.dumps(recovery_packet) + "\n",
+            encoding="utf-8",
+        )
+        (node_dir / "node-receipt.json").write_text(
+            json.dumps(
+                {
+                    "schema": "ask.tau_dag_handler_receipt.v1",
+                    "node_id": node_id,
+                    "handler": handler,
+                    "status": "BLOCKED",
+                    "ok": False,
+                    "mocked": False,
+                    "live": True,
+                    "provider_live": False,
+                    "response_path": str(response_path),
+                    "failure": "Timed out waiting for browser lock after 60s.",
+                    "failure_code": "surf_browser_lock_timeout",
+                    "recovery_packet_path": str(node_dir / "browser-recovery-packet.json"),
+                    "recovery_packet": recovery_packet,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    join_dir = artifacts / "join"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "join",
+            "--handler",
+            "join",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(join_dir),
+            "--surf-run",
+            "/bin/false",
+            "--browser-oracle-run",
+            "/bin/false",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 1, completed.stderr
+    scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
+    assert scorecard["status"] == "NEEDS_ATTENTION"
+    assert scorecard["failure_kind"] == "transport"
+    assert "competition_transport_blocked" in scorecard["blockers"]
+    assert len(scorecard["transport_blockers"]) == 2
+    assert {item["failure_code"] for item in scorecard["transport_blockers"]} == {"surf_browser_lock_timeout"}
+    assert all(item["failure_kind"] == "transport" for item in scorecard["candidates"])
+    assert scorecard["winner_handler"] == ""
+
+
 def test_compete_join_promotes_only_explicit_verified_features(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(json.dumps({"request": "Implement the feature in isolation."}) + "\n", encoding="utf-8")

@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -82,6 +83,7 @@ def _summarize(
     command_root = Path(str(bundle.get("command_spec_root"))) if bundle.get("command_spec_root") else None
     dag = _read_json(dag_path)
     join = _node(dag, "join")
+    controlled_transport = _run_controlled_transport_blocker_join(output_root)
     checks = [
         _check("cli_returncode", completed.returncode == 0, {"returncode": completed.returncode}),
         _check("json_payload", bool(payload), {}),
@@ -97,6 +99,11 @@ def _summarize(
         _check("command_specs_mark_compete", _command_specs_mark_compete(command_root), {"command_spec_root": str(command_root) if command_root else None}),
         _check("webclaude_compete_model_policy", _webclaude_model_policy(dag), {"node": _node(dag, "handler-webclaude")}),
         _check("webclaude_command_requests_opus_5_high", _webclaude_command_requests_model(command_root), {"command_spec_root": str(command_root) if command_root else None}),
+        _check(
+            "controlled_browser_lock_compete_join",
+            controlled_transport.get("ok") is True,
+            controlled_transport,
+        ),
     ]
     ok = all(item["ok"] for item in checks)
     return {
@@ -112,14 +119,17 @@ def _summarize(
             "mixed browser/API handler command spec generation",
             "webclaude compete browser model preference propagation",
             "compete scorecard and winner revision contract",
+            "compete join classification for controlled Surf browser-lock transport blockers",
         ],
         "what_remains_unverified": [
             "No browser or API provider was called.",
             "No candidate implementation quality was evaluated.",
             "No winner revision request was submitted to a live handler.",
+            "The controlled transport case uses fixture handler receipts; Surf's separate lock-contention sanity proves native lock behavior.",
         ],
         "output_root": str(output_root),
         "dag_path": str(dag_path) if dag_path else None,
+        "controlled_transport_blocker": controlled_transport,
         "checks": checks,
         "stdout_tail": completed.stdout[-4000:],
         "stderr_tail": completed.stderr[-4000:],
@@ -197,6 +207,114 @@ def _webclaude_command_requests_model(root: Path | None) -> bool:
     if "--browser-model-preference" not in command:
         return False
     return command[command.index("--browser-model-preference") + 1] == "Opus 5 High"
+
+
+def _run_controlled_transport_blocker_join(output_root: Path) -> dict[str, Any]:
+    artifacts = output_root / "controlled-browser-lock-contention" / "node-artifacts"
+    request_path = artifacts.parent / "request.json"
+    request_path.parent.mkdir(parents=True, exist_ok=True)
+    request_path.write_text(
+        json.dumps({"request": "Controlled Ask compete browser-handler lock contention."}) + "\n",
+        encoding="utf-8",
+    )
+    for node_id, handler in (("handler-webgpt", "webgpt"), ("handler-webclaude", "webclaude")):
+        node_dir = artifacts / node_id
+        node_dir.mkdir(parents=True, exist_ok=True)
+        response_path = node_dir / "response.md"
+        response_path.write_text("", encoding="utf-8")
+        recovery_packet = {
+            "schema": "ask.browser_failure_recovery_packet.v1",
+            "status": "NEEDS_ATTENTION",
+            "failure_code": "surf_browser_lock_timeout",
+            "auto_retry_allowed": False,
+            "auto_retry_blocked_reason": "surf_browser_lock_owner_still_running",
+            "next_command": [str(ASK_DIR.parent / "surf" / "run.sh"), f"{handler}.submit", "--input", str(node_dir / "prompt.md")],
+            "evidence": {
+                "surf_lock_blocker": {
+                    "schema": "surf.browser_lock_blocker.v1",
+                    "blocker": "surf_browser_lock_timeout",
+                    "owner": {"pid": 1838917, "socket": "unix:/tmp/surf.sock"},
+                }
+            },
+        }
+        (node_dir / "browser-recovery-packet.json").write_text(
+            json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        (node_dir / "node-receipt.json").write_text(
+            json.dumps(
+                {
+                    "schema": "ask.tau_dag_handler_receipt.v1",
+                    "node_id": node_id,
+                    "handler": handler,
+                    "status": "BLOCKED",
+                    "ok": False,
+                    "mocked": False,
+                    "live": True,
+                    "provider_live": False,
+                    "response_path": str(response_path),
+                    "failure": "SURF_BROWSER_LOCK_BLOCKED {...}",
+                    "failure_code": "surf_browser_lock_timeout",
+                    "recovery_packet_path": str(node_dir / "browser-recovery-packet.json"),
+                    "recovery_packet": recovery_packet,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    join_dir = artifacts / "join"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_DIR / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "join",
+            "--handler",
+            "join",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(join_dir),
+            "--surf-run",
+            str(ASK_DIR.parent / "surf" / "run.sh"),
+            "--browser-oracle-run",
+            str(ASK_DIR.parent / "browser-oracle" / "run.sh"),
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    scorecard_path = join_dir / "compete-scorecard.json"
+    scorecard = _read_json(scorecard_path)
+    transport_blockers = scorecard.get("transport_blockers") if isinstance(scorecard.get("transport_blockers"), list) else []
+    ok = (
+        completed.returncode == 1
+        and scorecard.get("status") == "NEEDS_ATTENTION"
+        and scorecard.get("failure_kind") == "transport"
+        and "competition_transport_blocked" in (scorecard.get("blockers") or [])
+        and len(transport_blockers) == 2
+    )
+    return {
+        "ok": ok,
+        "mocked": False,
+        "live": False,
+        "fixture_backed_handler_receipts": True,
+        "returncode": completed.returncode,
+        "artifact_dir": str(artifacts.parent),
+        "scorecard_path": str(scorecard_path),
+        "transport_blocker_count": len(transport_blockers),
+        "blockers": scorecard.get("blockers") or [],
+        "failure_kind": scorecard.get("failure_kind"),
+        "stdout_tail": completed.stdout[-1000:],
+        "stderr_tail": completed.stderr[-1000:],
+    }
 
 
 def _read_json(path: Path | None) -> dict[str, Any]:

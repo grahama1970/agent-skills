@@ -30,6 +30,9 @@ Options:
   --kimi-tab-id ID        Controlled Kimi tab
   --no-activate           Background mode for standing-tab oracles
   --full-webgpt           Also run surf webgpt.sanity (slow, ~15 min)
+  --lock-contention-self-test
+                          Run a controlled fake-socket lock contention case and
+                          write transport blocker artifacts without touching Chrome
   --fail-fast             Stop after first oracle failure
   --json                  Print only JSON report to stdout
   -h, --help              Show help
@@ -47,6 +50,7 @@ no_activate=0
 full_webgpt=0
 fail_fast=0
 json_only=0
+lock_contention_self_test=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -59,6 +63,7 @@ while [[ $# -gt 0 ]]; do
     --kimi-tab-id) kimi_tab="${2:-}"; shift 2 ;;
     --no-activate) no_activate=1; shift ;;
     --full-webgpt) full_webgpt=1; shift ;;
+    --lock-contention-self-test) lock_contention_self_test=1; shift ;;
     --fail-fast) fail_fast=1; shift ;;
     --json) json_only=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -128,6 +133,121 @@ collect_debug() {
   } >"$oracle_dir/debug-bundle.txt" 2>&1
 }
 
+run_lock_contention_self_test() {
+  local odir="$output_dir/oracles/lock-contention"
+  mkdir -p "$odir"
+  node - "$SKILL_DIR" "$odir" <<'NODE'
+const fs = require("fs");
+const net = require("net");
+const os = require("os");
+const path = require("path");
+const { spawn } = require("child_process");
+
+const skillDir = process.argv[2];
+const outDir = process.argv[3];
+const surfCliDir = path.join(skillDir, "vendor", "surf-cli");
+const cliPath = path.join(surfCliDir, "native", "cli.cjs");
+const { acquireBrowserLock } = require(path.join(surfCliDir, "native", "browser-lock.cjs"));
+const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "surf-web-sanity-lock-"));
+const socketPath = path.join(tempRoot, "surf.sock");
+const stdoutPath = path.join(outDir, "stdout.log");
+const stderrPath = path.join(outDir, "submit.stderr.log");
+const blockerPath = path.join(outDir, "transport-blocker.json");
+const resultPath = path.join(outDir, "result.json");
+let requestCount = 0;
+
+function writeJson(file, payload) {
+  fs.writeFileSync(file, JSON.stringify(payload, null, 2) + "\n");
+}
+
+function finish(server, lock, payload, code) {
+  try { if (lock) lock.release(); } catch {}
+  try { server.close(); } catch {}
+  try { fs.rmSync(tempRoot, { recursive: true, force: true }); } catch {}
+  writeJson(resultPath, payload);
+  process.exit(code);
+}
+
+const server = net.createServer((socket) => {
+  socket.on("data", () => { requestCount += 1; });
+});
+
+server.listen(socketPath, () => {
+  const endpointKey = `unix:${socketPath}`;
+  const lock = acquireBrowserLock(endpointKey, tempRoot, { timeoutMs: 1000 });
+  const childEnv = {
+    ...process.env,
+    SURF_SOCKET: socketPath,
+    SURF_TMP: tempRoot,
+  };
+  delete childEnv.SURF_NO_LOCK;
+  delete childEnv.SURF_LOCK_TIMEOUT_MS;
+  delete childEnv.SURF_REMOTE;
+  const child = spawn(process.execPath, [cliPath, "page.state", "--lock-timeout", "0.05"], {
+    cwd: surfCliDir,
+    env: childEnv,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", chunk => { stdout += chunk.toString(); });
+  child.stderr.on("data", chunk => { stderr += chunk.toString(); });
+  child.on("close", code => {
+    fs.writeFileSync(stdoutPath, stdout);
+    fs.writeFileSync(stderrPath, stderr);
+    const line = stderr.split(/\r?\n/).find(item => item.startsWith("SURF_BROWSER_LOCK_BLOCKED "));
+    let blocker = {};
+    if (line) {
+      try {
+        blocker = JSON.parse(line.slice("SURF_BROWSER_LOCK_BLOCKED ".length));
+      } catch {}
+    }
+    if (Object.keys(blocker).length > 0) {
+      writeJson(blockerPath, blocker);
+    }
+    const ok = code === 1
+      && blocker.schema === "surf.browser_lock_blocker.v1"
+      && blocker.blocker === "surf_browser_lock_timeout"
+      && blocker.owner
+      && blocker.owner.pid === process.pid
+      && blocker.owner.socket === endpointKey
+      && requestCount === 0;
+    finish(server, lock, {
+      schema: "surf.web_sanity_lock_contention_result.v1",
+      id: "lock-contention",
+      label: "Surf browser lock contention",
+      status: ok ? "pass" : "fail",
+      expected: "deterministic lock blocker before socket dispatch",
+      got: blocker.blocker || null,
+      exit_code: code,
+      note: ok ? "lock_blocker_artifact_written" : "lock_blocker_artifact_missing_or_dispatch_interleaved",
+      tab_id: null,
+      artifact_dir: outDir,
+      mocked: false,
+      live: false,
+      controlled_contention: true,
+      request_count: requestCount,
+      stdout_path: stdoutPath,
+      stderr_path: stderrPath,
+      transport_blocker_path: Object.keys(blocker).length > 0 ? blockerPath : null,
+      blocker,
+      claims: {
+        proves: [
+          "A held Surf browser lock is reported as a structured transport blocker with owner metadata.",
+          "The contending command did not dispatch to the socket while the lock was held.",
+          "The report includes artifacts instead of only terminal timeout text."
+        ],
+        does_not_prove: [
+          "A live provider tab accepted a prompt.",
+          "A browser model produced a semantic answer."
+        ]
+      }
+    }, ok ? 0 : 1);
+  });
+});
+NODE
+}
+
 
 write_oracle_result() {
   python3 - "$@" <<'PY'
@@ -135,6 +255,77 @@ import json, pathlib, sys
 out = pathlib.Path(sys.argv[1])
 payload = json.loads(sys.argv[2])
 out.write_text(json.dumps(payload, indent=2) + "\n")
+PY
+}
+
+write_final_report() {
+  local overall="$1"
+  local preflight_status="$2"
+  python3 - "$output_dir" "$overall" "$preflight_status" "$json_only" <<'PY'
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+overall, preflight, json_only = sys.argv[2], sys.argv[3], sys.argv[4] == "1"
+checks = []
+pf = root / "preflight" / "checks.json"
+if pf.exists():
+    checks = json.loads(pf.read_text()).get("checks", [])
+oracle_rows = []
+for result_path in sorted((root / "oracles").rglob("result.json")):
+    oracle_rows.append(json.loads(result_path.read_text()))
+report = {
+    "status": overall,
+    "preflight_status": preflight,
+    "artifact_dir": str(root),
+    "preflight_checks": checks,
+    "oracles": oracle_rows,
+}
+(root / "sanity-report.json").write_text(json.dumps(report, indent=2) + "\n")
+lines = [
+    "# Surf web oracle sanity report",
+    "",
+    f"**Overall:** {overall.upper()}",
+    f"**Artifacts:** `{root}`",
+    "",
+    "## Preflight",
+    "",
+    "| Check | Status | Detail |",
+    "|---|---|---|",
+]
+for c in checks:
+    lines.append(f"| {c['id']} | {'PASS' if c['ok'] else 'FAIL'} | {c.get('detail', '')} |")
+lines.extend([
+    "",
+    "## Oracles",
+    "",
+    "| Oracle | Status | Expected | Got | Sec | Note | Tab |",
+    "|---|---|---|---|---:|---|---|",
+])
+for o in oracle_rows:
+    lines.append(
+        f"| {o.get('label', o.get('id', '?'))} | {o.get('status', '?').upper()} | "
+        f"{o.get('expected', '-')} | {o.get('got', '-')} | {o.get('took_s', '-')} | "
+        f"{o.get('note', '')} | {o.get('tab_id') or '-'} |"
+    )
+failed = [o for o in oracle_rows if o.get("status") != "pass"]
+if failed:
+    lines.extend(["", "## Failure debug pointers", ""])
+    for o in failed:
+        adir = o.get("artifact_dir") or ""
+        lines.append(f"### {o.get('id')}")
+        lines.append(f"- Artifacts: `{adir}`")
+        lines.append(f"- stderr: `{adir}/submit.stderr.log`")
+        lines.append(f"- debug bundle: `{adir}/debug-bundle.txt`")
+        if o.get("transport_blocker_path"):
+            lines.append(f"- transport blocker: `{o.get('transport_blocker_path')}`")
+        lines.append("")
+(root / "sanity-report.md").write_text("\n".join(lines) + "\n")
+if json_only:
+    print(json.dumps(report, indent=2))
+else:
+    print((root / "sanity-report.md").read_text())
 PY
 }
 
@@ -336,6 +527,18 @@ maybe_stop() {
     fi
   fi
 }
+
+if [[ $lock_contention_self_test -eq 1 ]]; then
+  overall="pass"
+  preflight_status="skipped_controlled_contention"
+  if ! run_lock_contention_self_test; then
+    overall="fail"
+  fi
+  write_final_report "$overall" "$preflight_status"
+  [[ "$overall" == "pass" ]] || exit 1
+  exit 0
+fi
+
 webgpt_tab="$(resolve_tab "$webgpt_tab" "${SURF_WEBGPT_TAB_STATE:-/tmp/surf-webgpt-controlled-tab-id}" 'chatgpt\.com')"
 gemini_tab="$(resolve_tab "$gemini_tab" "${SURF_GEMINI_TAB_STATE:-/tmp/surf-gemini-controlled-tab-id}" 'gemini\.google\.com')"
 kimi_tab="$(resolve_tab "$kimi_tab" "${SURF_KIMI_TAB_STATE:-/tmp/surf-kimi-controlled-tab-id}" 'kimi\.com')"
@@ -405,69 +608,6 @@ PY2
   maybe_stop "$fstatus"
 fi
 
-python3 - "$output_dir" "$overall" "$preflight_status" "$json_only" <<'PY'
-import json
-import pathlib
-import sys
-
-root = pathlib.Path(sys.argv[1])
-overall, preflight, json_only = sys.argv[2], sys.argv[3], sys.argv[4] == "1"
-checks = []
-pf = root / "preflight" / "checks.json"
-if pf.exists():
-    checks = json.loads(pf.read_text()).get("checks", [])
-oracle_rows = []
-for result_path in sorted((root / "oracles").rglob("result.json")):
-    oracle_rows.append(json.loads(result_path.read_text()))
-report = {
-    "status": overall,
-    "preflight_status": preflight,
-    "artifact_dir": str(root),
-    "preflight_checks": checks,
-    "oracles": oracle_rows,
-}
-(root / "sanity-report.json").write_text(json.dumps(report, indent=2) + "\n")
-lines = [
-    "# Surf web oracle sanity report",
-    "",
-    f"**Overall:** {overall.upper()}",
-    f"**Artifacts:** `{root}`",
-    "",
-    "## Preflight",
-    "",
-    "| Check | Status | Detail |",
-    "|---|---|---|",
-]
-for c in checks:
-    lines.append(f"| {c['id']} | {'PASS' if c['ok'] else 'FAIL'} | {c.get('detail', '')} |")
-lines.extend([
-    "",
-    "## Oracles",
-    "",
-    "| Oracle | Status | Expected | Got | Sec | Note | Tab |",
-    "|---|---|---|---|---:|---|---|",
-])
-for o in oracle_rows:
-    lines.append(
-        f"| {o.get('label', o.get('id', '?'))} | {o.get('status', '?').upper()} | "
-        f"{o.get('expected', '—')} | {o.get('got', '—')} | {o.get('took_s', '—')} | "
-        f"{o.get('note', '')} | {o.get('tab_id') or '—'} |"
-    )
-failed = [o for o in oracle_rows if o.get("status") != "pass"]
-if failed:
-    lines.extend(["", "## Failure debug pointers", ""])
-    for o in failed:
-        adir = o.get("artifact_dir") or ""
-        lines.append(f"### {o.get('id')}")
-        lines.append(f"- Artifacts: `{adir}`")
-        lines.append(f"- stderr: `{adir}/submit.stderr.log`")
-        lines.append(f"- debug bundle: `{adir}/debug-bundle.txt`")
-        lines.append("")
-(root / "sanity-report.md").write_text("\n".join(lines) + "\n")
-if json_only:
-    print(json.dumps(report, indent=2))
-else:
-    print((root / "sanity-report.md").read_text())
-PY
+write_final_report "$overall" "$preflight_status"
 
 [[ "$overall" == "pass" ]] || exit 1

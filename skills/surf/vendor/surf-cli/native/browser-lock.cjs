@@ -79,6 +79,41 @@ function formatLockOwner(owner, lockDir) {
   return fields.join(" ");
 }
 
+function browserLockBlockerPayload({ owner, lockDir, endpointKey, timeoutMs }) {
+  return {
+    schema: "surf.browser_lock_blocker.v1",
+    status: "BLOCKED",
+    blocker: "surf_browser_lock_timeout",
+    reason: "Timed out waiting for the per-socket Surf browser lock.",
+    timeout_ms: timeoutMs,
+    lock_dir: lockDir,
+    endpoint_key: endpointKey,
+    owner: owner
+      ? {
+          pid: owner.pid ?? null,
+          created_at: owner.createdAt ?? null,
+          socket: owner.socketPath ?? null,
+          tool: owner.tool ?? null,
+          command: owner.command ?? null,
+        }
+      : null,
+    recovery: {
+      do_not_use_no_lock_for_browser_handlers: true,
+      next_command: "wait for the owner process to finish or run this lane through a separate Surf socket/profile",
+    },
+  };
+}
+
+function createBrowserLockTimeoutError({ owner, lockDir, endpointKey, timeoutMs }) {
+  const payload = browserLockBlockerPayload({ owner, lockDir, endpointKey, timeoutMs });
+  const error = new Error(
+    `Timed out waiting for browser lock after ${Math.round(timeoutMs / 1000)}s. ${formatLockOwner(owner, lockDir)}. Do not use --no-lock for browser-handler submits; wait for the owner or use a separate Surf socket/profile.`,
+  );
+  error.code = "SURF_BROWSER_LOCK_TIMEOUT";
+  error.surfLockBlocker = payload;
+  return error;
+}
+
 function tryCreateStaleClaim(lockDir, staleMs, now = Date.now()) {
   const claimDir = path.join(lockDir, "stale-claim");
   try {
@@ -165,9 +200,7 @@ function acquireBrowserLock(socketPath, tempDir, options = {}) {
 
     if (Date.now() - startedAt >= timeoutMs) {
       const owner = readLockOwner(lockDir);
-      throw new Error(
-        `Timed out waiting for browser lock after ${Math.round(timeoutMs / 1000)}s. ${formatLockOwner(owner, lockDir)}. Do not use --no-lock for browser-handler submits; wait for the owner or use a separate Surf socket/profile.`,
-      );
+      throw createBrowserLockTimeoutError({ owner, lockDir, endpointKey: socketPath, timeoutMs });
     }
 
     sleep(waitMs);
@@ -179,5 +212,6 @@ module.exports = {
   DEFAULT_STALE_MS,
   DEFAULT_TIMEOUT_MS,
   acquireBrowserLock,
+  browserLockBlockerPayload,
   getBrowserLockDir,
 };

@@ -40,6 +40,17 @@ BROWSER_TAB_READ_TIMEOUT = "browser_tab_read_timeout"
 BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
+SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
+BROWSER_TRANSPORT_BLOCKERS = {
+    WEBGPT_CONVERSATION_FULL_BLOCKER,
+    WEBGPT_BINDING_STALE_BLOCKER,
+    BROWSER_TAB_IDENTITY_MISMATCH,
+    BROWSER_TAB_READ_TIMEOUT,
+    BROWSER_ACCESS_BLOCKED,
+    BROWSER_PROVIDER_RATE_LIMITED,
+    BROWSER_TOOL_UNSUPPORTED,
+    SURF_BROWSER_LOCK_TIMEOUT,
+}
 
 
 def main() -> int:
@@ -271,10 +282,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        if recovery_packet.get("failure_code") in {
-            WEBGPT_CONVERSATION_FULL_BLOCKER,
-            WEBGPT_BINDING_STALE_BLOCKER,
-        }:
+        if recovery_packet.get("failure_code") in BROWSER_TRANSPORT_BLOCKERS:
             status = "BLOCKED"
 
     verdict = _extract_verdict(response_text)
@@ -675,11 +683,13 @@ def _browser_failure_recovery_packet(
             BROWSER_ACCESS_BLOCKED,
             BROWSER_PROVIDER_RATE_LIMITED,
             BROWSER_TOOL_UNSUPPORTED,
+            SURF_BROWSER_LOCK_TIMEOUT,
         }
         and bool(bundle_paths)
         and can_attach
     )
     stale_binding = _webgpt_stale_binding_details(submit_meta)
+    surf_lock_blocker = _surf_lock_blocker_details(failure=failure, commands=commands, submit_meta=submit_meta)
     next_command = _recovery_next_command(
         args,
         request_payload=request_payload,
@@ -710,6 +720,7 @@ def _browser_failure_recovery_packet(
             "submit_meta_status": submit_meta.get("status") or submit_meta.get("status_code"),
             "last_command": commands[-1] if commands else None,
             "stale_binding": stale_binding,
+            "surf_lock_blocker": surf_lock_blocker,
         },
         "local_readable_bundle_paths": bundle_paths,
         "requires_local_readable_bundle": _requires_local_readable_bundle(failure_code),
@@ -765,6 +776,8 @@ def _classify_browser_failure(
         return BROWSER_PROVIDER_RATE_LIMITED
     if _looks_browser_tool_unsupported(haystack):
         return BROWSER_TOOL_UNSUPPORTED
+    if _looks_surf_browser_lock_timeout(haystack, commands, submit_meta):
+        return SURF_BROWSER_LOCK_TIMEOUT
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
     if _looks_tab_identity_mismatch(haystack, submit_meta):
@@ -876,6 +889,67 @@ def _looks_browser_tool_unsupported(text: str) -> bool:
         "unsupported command",
     )
     return any(marker in text for marker in markers)
+
+
+def _looks_surf_browser_lock_timeout(text: str, commands: list[dict[str, Any]], meta: dict[str, Any]) -> bool:
+    if meta.get("blocker") == SURF_BROWSER_LOCK_TIMEOUT or meta.get("failure_code") == SURF_BROWSER_LOCK_TIMEOUT:
+        return True
+    if "surf_browser_lock_timeout" in text or "surf_browser_lock_blocked" in text:
+        return True
+    return any(_surf_lock_blocker_details(failure="", commands=[command], submit_meta={}) for command in commands)
+
+
+def _surf_lock_blocker_details(
+    *, failure: str, commands: list[dict[str, Any]], submit_meta: dict[str, Any]
+) -> dict[str, Any]:
+    candidates: list[str] = [failure, json.dumps(submit_meta, sort_keys=True, default=str)]
+    for command in commands:
+        if isinstance(command, dict):
+            candidates.extend(
+                [
+                    str(command.get("stderr_excerpt") or ""),
+                    str(command.get("stdout_excerpt") or ""),
+                ]
+            )
+    for text in candidates:
+        for line in str(text).splitlines():
+            if not line.startswith("SURF_BROWSER_LOCK_BLOCKED "):
+                continue
+            try:
+                payload = json.loads(line[len("SURF_BROWSER_LOCK_BLOCKED ") :].strip())
+            except json.JSONDecodeError:
+                continue
+            if isinstance(payload, dict) and payload.get("blocker") == SURF_BROWSER_LOCK_TIMEOUT:
+                return payload
+    haystack = "\n".join(candidates)
+    if "timed out waiting for browser lock" not in haystack.lower():
+        return {}
+    owner_match = re.search(
+        r"owner_pid=(?P<pid>\S+).*?owner_created_at=(?P<created_at>\S+).*?owner_socket=(?P<socket>\S+).*?lock_dir=(?P<lock_dir>\S+)",
+        haystack,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    owner: dict[str, Any] | None = None
+    lock_dir = None
+    if owner_match:
+        pid_text = owner_match.group("pid")
+        owner = {
+            "pid": int(pid_text) if pid_text.isdigit() else pid_text,
+            "created_at": owner_match.group("created_at"),
+            "socket": owner_match.group("socket"),
+        }
+        lock_dir = owner_match.group("lock_dir")
+    return {
+        "schema": "surf.browser_lock_blocker.v1",
+        "status": "BLOCKED",
+        "blocker": SURF_BROWSER_LOCK_TIMEOUT,
+        "owner": owner,
+        "lock_dir": lock_dir,
+        "recovery": {
+            "do_not_use_no_lock_for_browser_handlers": True,
+            "next_command": "wait for the owner process to finish or use a separate Surf socket/profile",
+        },
+    }
 
 
 def _looks_tab_identity_mismatch(text: str, meta: dict[str, Any]) -> bool:
@@ -1084,6 +1158,32 @@ def _recovery_next_command(
             command.extend(["--url", url])
         command.extend(["--manual", "--json"])
         return command
+    if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
+        command = [
+            str(args.surf_run),
+            HANDLER_SUBMIT_COMMANDS[str(args.handler)],
+            "--input",
+            str(prompt_path),
+            "--output",
+            str(response_path.with_name("response.after-lock.md")),
+            "--raw-output",
+            str(raw_path.with_name("response.after-lock.raw.md")),
+            "--meta-output",
+            str(meta_path.with_name("response.after-lock.meta.json")),
+            "--timeout",
+            str(args.timeout),
+            "--stable-polls",
+            str(args.stable_polls),
+        ]
+        tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "").strip()
+        url = str(browser_oracle.get("conversation_url") or "").strip()
+        if tab_id:
+            command.extend(["--tab-id", tab_id])
+        if url:
+            command.extend(["--expect-url" if str(args.handler) == "webgpt" else "--url", url])
+        if args.no_activate:
+            command.append("--no-activate")
+        return command
     if bundle_path and can_attach:
         retry_prompt = prompt_path.with_name("retry-with-local-bundle.md")
         retry_prompt.write_text(
@@ -1165,6 +1265,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_ACCESS_BLOCKED: "The browser provider presented an access challenge before the request could be submitted.",
         BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
+        SURF_BROWSER_LOCK_TIMEOUT: "The Surf browser lock is held by another live command; the browser lane was not submitted.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
         "prompt_too_large_or_stalled": "The browser submit appears to have timed out, stalled, or exceeded prompt size limits.",
@@ -1189,6 +1290,8 @@ def _auto_retry_blocked_reason(
         return "browser_provider_rate_limit_requires_backoff"
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "surf_runtime_command_mismatch_requires_repair"
+    if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
+        return "surf_browser_lock_owner_still_running"
     if not bundle_paths:
         return "missing_local_readable_bundle"
     if not can_attach:
@@ -1214,6 +1317,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return "Back off this browser provider until the limit clears; use a different handler or rerun later with the same verified tab."
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "Repair the Surf wrapper/provider adapter command mapping, then rerun the Tau DAG node. Do not retry the same browser call unchanged."
+    if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
+        return (
+            "Do not use --no-lock. Wait for the lock owner named in evidence.surf_lock_blocker, "
+            "then run next_command, or move this lane to a separate Surf socket/profile."
+        )
     if has_bundle and not can_attach:
         return (
             f"Do not auto-retry {handler}: the current Surf transport does not expose --attach-file for this handler. "
@@ -1242,6 +1350,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_ACCESS_BLOCKED,
         BROWSER_PROVIDER_RATE_LIMITED,
         BROWSER_TOOL_UNSUPPORTED,
+        SURF_BROWSER_LOCK_TIMEOUT,
         "stale_raw_capture",
     }
 
@@ -1336,6 +1445,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
     node_artifacts_root = artifact_dir.parent
     handler_receipts = []
     blockers = []
+    transport_blockers = []
     for path in sorted(node_artifacts_root.glob("handler-*/node-receipt.json")):
         receipt = _read_json(path)
         if receipt.get("schema") != "ask.tau_dag_handler_receipt.v1":
@@ -1354,10 +1464,30 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
             "verified_features": verified_features,
             "feature_count": len(verified_features),
             "failure": receipt.get("failure") or "",
+            "failure_code": receipt.get("failure_code") or "",
+            "failure_kind": "semantic",
         }
+        recovery_packet = receipt.get("recovery_packet") if isinstance(receipt.get("recovery_packet"), dict) else {}
+        if str(candidate["failure_code"]) in BROWSER_TRANSPORT_BLOCKERS:
+            candidate["failure_kind"] = "transport"
+            transport_blockers.append(
+                {
+                    "node_id": candidate["node_id"],
+                    "handler": candidate["handler"],
+                    "failure_code": candidate["failure_code"],
+                    "status": candidate["status"],
+                    "recovery_packet_path": receipt.get("recovery_packet_path"),
+                    "next_command": recovery_packet.get("next_command"),
+                    "auto_retry_blocked_reason": recovery_packet.get("auto_retry_blocked_reason"),
+                    "evidence": recovery_packet.get("evidence"),
+                }
+            )
         handler_receipts.append(candidate)
         if candidate["ok"] is not True:
-            blockers.append(f"{candidate['node_id']}: {candidate['failure'] or candidate['status']}")
+            if candidate["failure_kind"] == "transport":
+                blockers.append(f"{candidate['node_id']}: transport_blocker:{candidate['failure_code']}")
+            else:
+                blockers.append(f"{candidate['node_id']}: {candidate['failure'] or candidate['status']}")
 
     selectable = [item for item in handler_receipts if item["ok"] is True]
     selectable.sort(key=lambda item: (item["feature_count"], item["provider_live"], item["live"]), reverse=True)
@@ -1376,6 +1506,8 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
                 all_verified_features.append(feature)
     if not all_verified_features:
         blockers.append("no_explicit_verified_features_to_promote")
+    if transport_blockers:
+        blockers.append("competition_transport_blocked")
     status = "PASS" if winner_handler and not blockers else "NEEDS_ATTENTION"
     ok = status == "PASS"
 
@@ -1417,7 +1549,9 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         "winner_handler": winner_handler,
         "winner_node_id": winner.get("node_id") if winner and winner_handler else "",
         "selection_basis": "deterministic_receipts_and_explicit_verified_feature_markers",
+        "failure_kind": "transport" if transport_blockers else ("semantic_or_evidence" if blockers else "none"),
         "candidates": handler_receipts,
+        "transport_blockers": transport_blockers,
         "verified_features": all_verified_features,
         "blockers": blockers,
         "revision_request_path": str(revision_path),
@@ -1426,6 +1560,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
                 "Candidate node receipts were collected.",
                 "The scorecard fail-closed when no clear receipt-backed winner existed.",
                 "Only explicit VERIFIED_FEATURE markers were promoted into the revision packet.",
+                "Browser transport blockers were separated from semantic candidate failures.",
             ],
             "does_not_prove": [
                 "The winning candidate is semantically best.",

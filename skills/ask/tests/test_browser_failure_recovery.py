@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -263,3 +264,44 @@ def test_webclaude_does_not_auto_retry_even_with_readable_bundle_until_transport
     assert packet["auto_retry_allowed"] is False
     assert packet["auto_retry_blocked_reason"] == "handler_transport_does_not_support_attach_file"
     assert "does not expose --attach-file" in packet["fallback_instruction"]
+
+
+def test_surf_browser_lock_timeout_is_transport_blocker_with_owner_metadata(tmp_path: Path) -> None:
+    blocker = {
+        "schema": "surf.browser_lock_blocker.v1",
+        "status": "BLOCKED",
+        "blocker": "surf_browser_lock_timeout",
+        "owner": {
+            "pid": 1838917,
+            "created_at": "2026-07-25T14:00:07.031Z",
+            "socket": "unix:/tmp/surf.sock",
+        },
+        "lock_dir": "/tmp/surf-lock-199a427adfd8d6cd",
+        "recovery": {
+            "do_not_use_no_lock_for_browser_handlers": True,
+            "next_command": "wait for the owner process to finish or run this lane through a separate Surf socket/profile",
+        },
+    }
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure=(
+            "SURF_BROWSER_LOCK_BLOCKED "
+            + json.dumps(blocker)
+            + "\nError: Timed out waiting for browser lock after 60s."
+        ),
+        browser_oracle={
+            "project": "tau",
+            "tab_id": "837359291",
+            "conversation_url": "https://chatgpt.com/c/example",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.SURF_BROWSER_LOCK_TIMEOUT
+    assert packet["requires_local_readable_bundle"] is False
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "surf_browser_lock_owner_still_running"
+    assert packet["evidence"]["surf_lock_blocker"]["owner"]["pid"] == 1838917
+    assert "--no-lock" not in packet["next_command"]
+    assert packet["next_command"][:2] == [str(tmp_path / "skills" / "surf" / "run.sh"), "webgpt.submit"]
+    assert "--expect-url" in packet["next_command"]

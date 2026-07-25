@@ -447,6 +447,11 @@ if [[ "$1" == "setup" || "$1" == "sanity" || "$1" == "doctor" ]]; then
     exec "$SKILL_DIR/sanity.sh" "${@:2}"
 fi
 
+if [[ "$1" == "web.sanity" ]]; then
+    "$SKILL_DIR/scripts/ensure-surf-cli.sh" || true
+    exec "$SKILL_DIR/scripts/web-oracles-sanity.sh" "${@:2}"
+fi
+
 if [[ "$1" == "extension.build" ]]; then
     exec "$SKILL_DIR/scripts/ensure-surf-cli.sh" "${@:2}"
 fi

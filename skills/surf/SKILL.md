@@ -821,6 +821,7 @@ failure, and prints a report:
 surf web.sanity --no-activate
 surf sanity web --only webperplexity   # alias; single oracle
 surf web.sanity --json                 # machine-readable report only
+surf web.sanity --lock-contention-self-test --json
 ```
 
 Reports land in `/tmp/surf-web-sanity-<timestamp>/` as `sanity-report.md` and
@@ -834,6 +835,14 @@ transport blocker for `/ask`/Tau, not as a semantic failure from the browser
 model. Do not use `--no-lock` for `webgpt`, `webclaude`, `webkimi`, `webgemini`,
 or `webgrok` submits; wait for the owner or route the lane through a separate
 Surf socket/profile.
+
+When debugging `/ask` browser-handler competition contention, run the
+`--lock-contention-self-test` case first. It does not touch Chrome or a provider
+tab; it holds a fake-socket lock, runs the native CLI through the normal lock
+path, and writes `transport-blocker.json`, `submit.stderr.log`, and
+`result.json`. The expected proof is `blocker:"surf_browser_lock_timeout"`,
+owner metadata, and `request_count:0`, which proves the contending command did
+not interleave into another active browser command.
 
 Tab ids default from state files (`/tmp/surf-webgpt-controlled-tab-id`, etc.) or
 `tab.list` discovery. Override with `--webgpt-tab-id`, `--gemini-tab-id`,

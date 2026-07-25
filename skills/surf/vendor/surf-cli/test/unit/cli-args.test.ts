@@ -1206,6 +1206,72 @@ describe("CLI argument parsing", () => {
 
       expect(secondDone.code).toBe(1);
       expect(secondDone.stderr).toContain("Timed out waiting for browser lock");
+      expect(secondDone.stderr).toContain("SURF_BROWSER_LOCK_BLOCKED ");
+      expect(firstDone.code).toBe(0);
+      expect(requestCount).toBe(1);
+    } finally {
+      server.close();
+      cleanupSocket(socketPath);
+    }
+  });
+
+  it("emits machine-readable browser lock blocker JSON before dispatch", async () => {
+    const socketPath = createSocketPath();
+    cleanupSocket(socketPath);
+    let requestCount = 0;
+    let resolveFirstRequest!: () => void;
+    const firstRequest = new Promise<void>((resolve) => {
+      resolveFirstRequest = resolve;
+    });
+
+    const server = net.createServer((socket: any) => {
+      let buffer = "";
+      socket.on("data", (chunk: { toString(): string }) => {
+        buffer += chunk.toString();
+        const lineEnd = buffer.indexOf("\n");
+        if (lineEnd === -1) {
+          return;
+        }
+        const request = JSON.parse(buffer.slice(0, lineEnd));
+        requestCount++;
+        resolveFirstRequest();
+        setTimeout(() => {
+          socket.write(
+            `${JSON.stringify({ id: request.id, result: { content: [{ type: "text", text: "first" }] } })}\n`,
+          );
+          socket.end();
+        }, 300);
+      });
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      server.on("error", reject);
+      server.listen(socketPath, resolve);
+    });
+
+    try {
+      const first = spawnCliWithSocket(["page.text"], socketPath);
+      await waitFor(firstRequest, 1000, "first request");
+      const secondDone = await spawnCliWithSocket([
+        "page.state",
+        "--lock-timeout",
+        "0.05",
+      ], socketPath).done;
+      const firstDone = await first.done;
+      const blockerLine = secondDone.stderr
+        .split(/\r?\n/)
+        .find((line: string) => line.startsWith("SURF_BROWSER_LOCK_BLOCKED "));
+      const blocker = blockerLine
+        ? JSON.parse(blockerLine.slice("SURF_BROWSER_LOCK_BLOCKED ".length))
+        : {};
+
+      expect(secondDone.code).toBe(1);
+      expect(blocker.schema).toBe("surf.browser_lock_blocker.v1");
+      expect(blocker.blocker).toBe("surf_browser_lock_timeout");
+      expect(Number.isInteger(blocker.owner.pid)).toBe(true);
+      expect(blocker.owner.pid).toBeGreaterThan(0);
+      expect(blocker.owner.socket).toBe(`unix:${socketPath}`);
+      expect(blocker.recovery.do_not_use_no_lock_for_browser_handlers).toBe(true);
       expect(firstDone.code).toBe(0);
       expect(requestCount).toBe(1);
     } finally {
