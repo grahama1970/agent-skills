@@ -1,0 +1,39 @@
+{
+  "schema": "persona-dream.emotion_proof.v1",
+  "date": "2026-07-25",
+  "claim": "Emotion / conversational tone CAN be driven acoustically in chatterbox via the base ChatterboxTTS exaggeration + cfg_weight controls; the Turbo engine currently wired into persona-dream ignores them.",
+  "method": {
+    "engine": "chatterbox.tts.ChatterboxTTS (base model), inside container chatterbox-fork-agent-server, /usr/bin/python3.11, torch 2.6.0+cu124, cpu",
+    "generate_signature": "generate(text, repetition_penalty=1.2, min_p=0.05, top_p=1.0, audio_prompt_path=None, exaggeration=0.5, cfg_weight=0.5, temperature=0.8)",
+    "controls_for_confound": "fixed text + torch.manual_seed(1234) before every generate, so exaggeration/cfg_weight are the ONLY variables",
+    "text": "I already told you where I stand. Do not ask me again.",
+    "sample_rate_hz": 24000,
+    "measurement": "torch (rms/f0) AND independent stdlib wave+audioop read-back; both agree to 0.01 dB"
+  },
+  "positive_result_base_model": [
+    {"cond": "calm",       "exaggeration": 0.3, "cfg_weight": 0.5, "dur_s": 3.92, "rms_dbfs": -18.41, "f0_mean_hz": 157.4, "f0_std_hz": 61.4, "f0_range_hz": 278.4, "wav_sha256_16": "9fcee20b704450e0"},
+    {"cond": "default",    "exaggeration": 0.5, "cfg_weight": 0.5, "dur_s": 3.32, "rms_dbfs": -17.93, "f0_mean_hz": 125.0, "f0_std_hz": 25.3, "f0_range_hz": 112.9, "wav_sha256_16": "5335803767105809"},
+    {"cond": "expressive", "exaggeration": 0.8, "cfg_weight": 0.3, "dur_s": 2.76, "rms_dbfs": -16.49, "f0_mean_hz": 173.6, "f0_std_hz": 36.5, "f0_range_hz": 261.4, "wav_sha256_16": "70849bbd82996997"},
+    {"cond": "intense",    "exaggeration": 1.2, "cfg_weight": 0.3, "dur_s": 2.96, "rms_dbfs": -15.41, "f0_mean_hz": 193.3, "f0_std_hz": 39.4, "f0_range_hz": 130.0, "wav_sha256_16": "332bffb4207f2f3d"}
+  ],
+  "positive_signal": {
+    "loudness_dbfs_monotonic": "-18.41 -> -17.93 -> -16.49 -> -15.41 (+3.00 dB, strictly monotonic with exaggeration)",
+    "duration_shortens": "3.92 -> 3.32 -> 2.76 s as exaggeration rises 0.3 -> 0.8 (speech rate rises); intense 2.96 s",
+    "distinct_audio": "all 4 wav sha256 differ - genuinely different renders, not a cached/identical response",
+    "f0_note": "f0 mean/range is noisier (crude detect_pitch_frequency, differing voiced-frame counts); loudness+duration are the clean, defensible deltas"
+  },
+  "negative_control_turbo_engine": {
+    "endpoint": "http://127.0.0.1:8018/presets (engine=chatterbox_turbo)",
+    "supported_params": ["norm_loudness", "repetition_penalty", "temperature", "top_k", "top_p"],
+    "ignored_turbo_params": ["cfg_weight", "exaggeration", "min_p"],
+    "dedicated_tag_channel": "unsupported",
+    "accepted_tags": [],
+    "meaning": "the engine persona-dream currently renders through self-declares the emotion knobs as ignored; raw contract saved as turbo_presets.contract.json"
+  },
+  "conclusion": "PROVEN: emotion/tone is a real, measurable acoustic control in chatterbox through base-model exaggeration/cfg_weight. It is dead through the Turbo service. Next step for persona-dream: route the affect->voice bridge to a base-ChatterboxTTS render path and map arc_state/mood intensity -> exaggeration, valence -> cfg_weight.",
+  "artifacts": {
+    "script": "base_emotion_proof.py",
+    "wavs": ["wav/emo_calm.wav", "wav/emo_default.wav", "wav/emo_expressive.wav", "wav/emo_intense.wav"],
+    "turbo_contract": "turbo_presets.contract.json"
+  }
+}
