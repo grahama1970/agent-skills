@@ -122,10 +122,13 @@ ask artifacts.
   dissent, research between rounds, and executable slices before local proof.
 - For substantial compete/bakeoff workflows, apply
   `$best-practices-competition`: isolated candidates, identical task packets,
-  local feature verification, evidence-backed winner selection, and bounded
-  winner revision requests. Do not share participant information between
-  candidate lanes or rounds; help each lane only with its own review, local
-  evidence, and permitted research tools.
+  local feature verification, evidence-backed winner selection, and
+  winner-only continuation until the immutable goal is met. Treat iterative
+  competitions as dynamically expanding Tau DAGs, or as linked next-round DAGs
+  under the same immutable goal hash when the installed runtime cannot append
+  nodes in place. Do not share participant information between candidate lanes
+  or rounds; help each lane only with its own review, local evidence, and
+  permitted research tools.
 - Pass the bundle to the documented ask mode. Do not compress a review target
   into an informal prompt when the mode has a target option.
 - Report artifact paths as evidence. Browser reviewers or model
@@ -165,10 +168,11 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
 - **Compete / bakeoff (isolated candidates)**: use `./run.sh compete` when the
   user wants multiple web/API handlers to solve the same task in isolation,
   then have the project agent compare the results, harvest only locally
-  verified features, pick a clear winner when the evidence supports one, and
-  prepare a bounded winner revision request. This is NOT a roundtable:
-  competitors do not see each other's first-round output. Browser handlers and
-  `$scillm` model names are mixed with the same `--handler` flag.
+  verified features after N rounds, pick a clear winner when the evidence
+  supports one, and continue iterating with the winning participant until the
+  immutable goal is met. This is NOT a roundtable: competitors do not see each
+  other's output during candidate isolation. Browser handlers and `$scillm`
+  model names are mixed with the same `--handler` flag.
 - **Creator-reviewer loop (pipeline, not a roundtable)**: use `--topology
   sequential` and list the creator handler first, then reviewer handlers. Downstream handlers receive prior
   handler receipts and response excerpts. If the request asks for pass/fail
@@ -203,6 +207,10 @@ while compete candidates are isolated.
 Between candidate iterations, the project agent may use `$brave-search`,
 `$github-search`, or `$dogpile` to help a candidate unblock, but it must not
 share another candidate's output, approach, score, or failure analysis.
+Iteration should be represented as a dynamically expanding Tau DAG whenever
+the runtime supports appending nodes. Otherwise, launch a linked next-round DAG
+that preserves the same immutable goal hash and cites the previous run
+directory as input evidence.
 
 Canonical compile command:
 
@@ -239,11 +247,17 @@ Project-agent responsibilities after a compete run:
    contracts, allowed files, and deterministic proof commands.
 3. Treat candidate `VERIFIED_FEATURE:` lines as claims until locally checked.
    Promote only features the project agent can verify against repository state.
-4. Accept a winner only when there is a clear receipt-backed and locally
+4. After N rounds, harvest useful features feature-by-feature. Losing
+   participants may provide no useful ideas, one useful feature, or several
+   useful features; the project agent decides from local evidence.
+5. Accept a winner only when there is a clear receipt-backed and locally
    checked advantage. If there is a tie, missing candidate receipt, provider
    blocker, unclear patch, or no local proof, report `NEEDS_ATTENTION`.
-5. Send the winner revision request only after pruning unverified features. The
-   winner should keep its own implementation as the base and add only the
+6. Close the competition phase after winner selection. Continue iterating with
+   the winning participant until the immutable goal is met or a real
+   `NEEDS_ATTENTION` blocker is recorded.
+7. Send a winner-continuation request only after pruning unverified features.
+   The winner should keep its own implementation as the base and add only the
    explicitly verified features from other candidates.
 
 Compete is fail-closed by design:
@@ -255,7 +269,7 @@ Compete is fail-closed by design:
 | Missing candidate receipt | Join reports `NEEDS_ATTENTION` |
 | Candidate claims a feature without local proof | Project agent must not promote it |
 | Tie or no clear winner | Report `NEEDS_ATTENTION`; do not fabricate a winner |
-| Winner revision packet exists | It is a next request, not proof that revision was submitted |
+| Winner-continuation packet exists | It is a next request, not proof that revision was submitted |
 
 Required compete artifacts:
 
@@ -265,7 +279,8 @@ Required compete artifacts:
 - `node-artifacts/<candidate>/node-receipt.json`
 - `node-artifacts/<candidate>/response.md`
 - `node-artifacts/join/compete-scorecard.json`
-- `node-artifacts/join/winner-revision-request.md`
+- `node-artifacts/join/winner-continuation-request.md` or legacy
+  `node-artifacts/join/winner-revision-request.md`
 
 Do not claim compete success from model prose. Closure still requires local
 deterministic evidence: tests, schema checks, endpoint responses, screenshots,

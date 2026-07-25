@@ -38,9 +38,14 @@ for phrase in (
     "brave-search",
     "github-search",
     "dogpile",
+    "dynamically expanding Tau DAG",
+    "After N rounds",
+    "winning participant",
+    "immutable goal",
+    "may or may not contribute useful ideas",
     "isolated candidate receipts",
     "VERIFIED_FEATURE",
-    "winner revision request",
+    "winner-continuation request",
     "NEEDS_ATTENTION",
 ):
     if phrase not in body:

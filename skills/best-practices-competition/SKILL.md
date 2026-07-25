@@ -56,9 +56,13 @@ Compete candidates are claims until checked.
 
 The project agent owns the competition contract, candidate isolation, artifact
 collection, feature verification, scorecard, winner decision, and final
-revision request. `$ask` owns the runtime entrypoint and should compile the
-competition into Tau-owned candidate nodes and a join node. `$tau`, `$surf`,
-`$browser-oracle`, and `$scillm` own transport and provider execution.
+winner-only continuation. `$ask` owns the runtime entrypoint and should compile
+the competition into Tau-owned candidate nodes and a join node. For iterative
+competitions, the control plane is a dynamically expanding Tau DAG: each round
+adds the next candidate or winner-continuation nodes under the same immutable
+goal, or launches an explicitly linked next-round Tau DAG when the installed
+runtime cannot append nodes in place. `$tau`, `$surf`, `$browser-oracle`, and
+`$scillm` own transport and provider execution.
 
 Browser-backed handlers and API-backed handlers are peers. Do not privilege or
 discard a candidate merely because it arrived through a different transport.
@@ -110,7 +114,9 @@ candidate's approach, code, score, feature ideas, or failure analysis.
 
 4. **Compile through `$ask compete`.**
    Use `$ask` as the front door. The competition should become a Tau DAG with
-   concurrent candidate nodes and a join node.
+   concurrent candidate nodes and a join node. If the competition spans more
+   than one round, preserve the same immutable goal hash and link each
+   next-round DAG to the previous round's receipts.
 
 5. **Preserve all receipts.**
    Read `request.json`, `dag.json`, command specs, candidate receipts,
@@ -135,22 +141,33 @@ candidate's approach, code, score, feature ideas, or failure analysis.
    against repository state, skill contracts, and the narrow deterministic proof
    command. Unchecked features stay out of the winner request.
 
-9. **Score with evidence.**
+9. **Harvest useful features after N rounds.**
+   After the configured round count, or earlier if the evidence clearly
+   converges, decide feature-by-feature what is useful. Losing participants may
+   provide no useful ideas, one useful feature, or several useful features; the
+   project agent decides from local evidence and records accepted, rejected, and
+   unchecked feature claims. Do not share the harvested list with candidates
+   until the isolated competition phase has closed.
+
+10. **Score with evidence.**
    Score criteria such as correctness, minimality, maintainability, contract
    fit, proof quality, and failure handling. Tie every score to artifacts or
    local checks.
 
-10. **Pick a winner or fail closed.**
+11. **Pick a winner or fail closed.**
    Pick a winner only when one candidate has a clear evidence-backed advantage.
    If candidates are tied, incomplete, blocked, unverifiable, or all wrong,
    report `NEEDS_ATTENTION` instead of fabricating a winner.
 
-11. **Send one bounded winner revision request.**
-    Ask the winning candidate to keep its own implementation as the base and add
-    only locally verified features harvested from other candidates. The
-    revision request is a next step, not proof that the revision happened.
+12. **Continue with the winning participant.**
+    Once the winner is chosen, stop the broad competition and continue
+    iterating with the winning participant until the immutable goal is met or a
+    real `NEEDS_ATTENTION` blocker is recorded. Ask the winner to keep its own
+    implementation as the base and add only locally verified features harvested
+    from other candidates. The winner-continuation request is a next step, not
+    proof that the revision happened.
 
-12. **Verify the final implementation locally.**
+13. **Verify the final implementation locally.**
     Competition output can guide the patch, but closure requires local
     deterministic evidence appropriate to the task.
 
@@ -183,6 +200,13 @@ Ask every candidate for:
 ## Iteration And Research Rules
 
 The project agent may run iterative competitions, but isolation still applies.
+Treat those iterations as a dynamically expanding Tau DAG: round 1 creates
+isolated candidate nodes and a join node; later rounds add lane-local repair
+nodes, fresh common-task candidate nodes, or a winner-continuation node with
+explicit dependencies on the prior receipts. If the current `$ask` or `$tau`
+runtime cannot mutate an existing DAG, the project agent must launch a linked
+next-round DAG with the same immutable goal hash and cite the previous run
+directory as input evidence.
 
 Allowed lane-local help:
 
@@ -206,6 +230,30 @@ Forbidden cross-lane leakage:
 If cross-lane leakage happens, mark the competition contaminated and restart
 from a fresh shared packet or convert it to a roundtable with human approval.
 
+## Winner Continuation
+
+After N rounds, do not keep all candidates alive by default. The project agent
+must choose a clear winner when evidence supports one, then continue iterating
+with the winning participant until the immutable goal has been met.
+
+Winner continuation packet:
+
+```text
+Winning participant:
+Immutable goal:
+Winner base to keep:
+Verified features to add:
+Rejected or unchecked features to exclude:
+Required proof commands:
+Stop condition:
+```
+
+Only locally verified harvested features may be included. A losing participant
+may or may not contribute useful ideas; the project agent decides feature by
+feature and records the reason. If the winner cannot make progress after a
+focused continuation attempt, either run one explicit fallback round with the
+remaining candidates or report `NEEDS_ATTENTION` with the failing evidence.
+
 ## Scoring Contract
 
 The project agent's scorecard must include:
@@ -214,10 +262,11 @@ The project agent's scorecard must include:
   not run;
 - artifact paths for every candidate;
 - feature claims accepted, rejected, or unchecked;
+- harvest decision for every useful feature considered from every candidate;
 - local checks run by the project agent;
 - criterion scores with evidence;
 - winner, tie, or `NEEDS_ATTENTION`;
-- bounded winner revision request, if a winner exists.
+- bounded winner-continuation request and status, if a winner exists.
 
 Do not score a candidate higher for sounding confident. Score only what can be
 reconciled with the task packet, codebase, skill contracts, and proof artifacts.
@@ -256,7 +305,7 @@ required browser-oracle bindings or provider credentials are available.
 | Candidate feature is not locally checkable | Do not promote it |
 | All candidates fail the same gate | Stop the family and report systemic failure |
 | No clear evidence-backed winner | Report tie or `NEEDS_ATTENTION` |
-| Winner revision request exists | Treat it as a request packet, not final proof |
+| Winner-continuation request exists | Treat it as a request packet, not final proof |
 
 ## Common Failure Modes
 
@@ -270,6 +319,7 @@ required browser-oracle bindings or provider credentials are available.
 | Winner picked from style | Score against criteria and artifacts |
 | Over-broad final revision | Bound the request to verified features only |
 | Ignored losing candidate insight | Preserve rejected and accepted feature reasons |
+| Competition continues after clear winner | Close competition and iterate with the winner |
 | Browser/API transport hidden | Mark per-candidate transport status explicitly |
 
 ## Closure Boundary
@@ -281,7 +331,8 @@ A competition can close its selection phase when it has:
 - a scorecard with local checks;
 - explicit accepted/rejected/unchecked feature claims;
 - a winner, tie, or `NEEDS_ATTENTION`;
-- a bounded winner revision request when a winner exists.
+- a bounded winner-continuation request when a winner exists.
 
-It cannot close the user's implementation goal by itself. Final closure requires
-the selected implementation to be applied and locally proven.
+It cannot close the user's immutable goal by itself. Final closure requires the
+selected implementation to be applied and locally proven against that immutable
+goal.
