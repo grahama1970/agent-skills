@@ -42,6 +42,10 @@ SCILLM_URL = os.environ.get(
     os.environ.get("SCILLM_API_BASE", "http://localhost:4001"),
 )
 SCILLM_MODEL = os.environ.get("SCILLM_EVIDENCE_CASE_MODEL", "gemini-flash")
+ALLOW_DIRECT_SCILLM_RENDER = os.environ.get(
+    "CREATE_EVIDENCE_CASE_ALLOW_DIRECT_SCILLM",
+    "",
+).lower() in {"1", "true", "yes"}
 
 
 class ScillmRenderError(RuntimeError):
@@ -317,7 +321,7 @@ class EvidenceCaseRunner:
         score = gates_to_score(n_passed, n_total)
 
         steps.append({
-            "gate": "scillm_synthesize",
+            "gate": "answer_render",
             "passed": verdict_state == "satisfied",
             "detail": f"verdict={verdict_state}",
         })
@@ -523,6 +527,11 @@ EVIDENCE_CASE:
         result: dict = {}
         llm_citations: list = []
         content = ""
+        if not ALLOW_DIRECT_SCILLM_RENDER:
+            return self._deterministic_render_fallback(
+                evidence_case,
+                "direct SciLLM render disabled; route provider rendering through Tau",
+            )
         api_key = resolve_scillm_api_key()
 
         for attempt in range(1, self.MAX_RENDER_RETRIES + 1):
