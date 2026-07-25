@@ -849,6 +849,8 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
         backgroundHiddenPolls: result.backgroundHiddenPolls,
         backgroundPollCount: result.backgroundPollCount,
         hiddenRecoveryUsed: result.hiddenRecoveryUsed,
+        stableResponseWithoutSentinel: result.stableResponseWithoutSentinel,
+        stableStallMs: result.stableStallMs,
         responseTimedOut: result.responseTimedOut,
         timeoutError: result.timeoutError,
         activated: result.activated,

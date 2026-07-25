@@ -24,6 +24,11 @@ Options:
   --submitted-output PATH   Submitted prompt with sentinel injection.
   --sentinel auto|MARKER    Completion marker. Default: auto.
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
+  --stable-stall-ms MS      With a sentinel, stop waiting after assistant text
+                            is unchanged for this many milliseconds without
+                            the sentinel. Default:
+                            SURF_WEBGPT_STABLE_STALL_MS or 30000.
+                            Set 0 to wait until --timeout.
   --timeout SECONDS         Browser wait timeout. Default: 2400 (40 minutes).
   --advisory-after SECONDS  Soft wait before returning same-tab available text
                             without a sentinel. Default:
@@ -93,6 +98,7 @@ receipt_output=""
 submitted_output=""
 sentinel="auto"
 stable_polls=3
+stable_stall_ms="${SURF_WEBGPT_STABLE_STALL_MS:-30000}"
 timeout_s="${SURF_WEBGPT_TIMEOUT:-2400}"
 advisory_after_s="${SURF_WEBGPT_ADVISORY_AFTER_SECONDS:-0}"
 rate_limit_wait_s="${SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS:-300}"
@@ -133,6 +139,7 @@ while [[ $# -gt 0 ]]; do
     --submitted-output) submitted_output="${2:-}"; shift 2 ;;
     --sentinel) sentinel="${2:-}"; shift 2 ;;
     --stable-polls) stable_polls="${2:-}"; shift 2 ;;
+    --stable-stall-ms) stable_stall_ms="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --advisory-after) advisory_after_s="${2:-}"; shift 2 ;;
     --roundtrip-preflight) roundtrip_preflight=1; shift ;;
@@ -170,6 +177,10 @@ fi
 
 if [[ -z "$input" || -z "$output" ]]; then
   usage >&2
+  exit 2
+fi
+if ! [[ "$stable_stall_ms" =~ ^[0-9]+$ ]]; then
+  echo "--stable-stall-ms must be an integer >= 0" >&2
   exit 2
 fi
 if ! [[ "$roundtrip_timeout_s" =~ ^[0-9]+$ ]] || [[ "$roundtrip_timeout_s" -lt 5 ]]; then
@@ -368,6 +379,10 @@ elif meta.get("chatgpt_too_many_requests_detected") is True:
         action = "Surf dismissed the modal, cooled down, and retried successfully; preserve chatgpt_rate_limit metadata as degraded throttle evidence."
     else:
         action = "Surf exhausted its bounded cooldown retry. Do not open parallel WebGPT attempts; preserve the receipt and let the outer scheduler wait before requeueing an explicitly verified tab."
+elif meta.get("stable_response_without_sentinel") is True:
+    proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
+    diagnosis = "Surf stopped waiting because assistant text stabilized without the current completion sentinel before the full timeout."
+    action = "Do not treat output as completion proof. Preserve raw_output as advisory text, then recover with webgpt.extract using this sentinel or bind a fresh verified tab for deliberate resubmission."
 elif failure == "submit_failed":
     ready_error = str(meta.get("chatgpt_ready_error") or "")
     if ready_error:
@@ -1013,6 +1028,7 @@ fi
 
 heartbeat_output="$(dirname "$meta_output")/webgpt_heartbeat.json"
 submitted_query="$(cat "$submitted_output")"
+export SURF_WEBGPT_STABLE_STALL_MS="$stable_stall_ms"
 args=(chatgpt "$submitted_query" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab --heartbeat-file "$heartbeat_output")
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
@@ -1556,6 +1572,8 @@ chatgpt_rate_limit_action = None
 chatgpt_rate_limit_retry_attempted = False
 chatgpt_rate_limit_exhausted = None
 chatgpt_rate_limit_error = None
+stable_response_without_sentinel = False
+stable_stall_ms = None
 if "ChatGPT prompt composer is not empty before submit" in stderr_text:
     chatgpt_ready_error = "composer_not_empty"
 elif "ChatGPT page is in a stopped-generation state before submit" in stderr_text:
@@ -1571,6 +1589,13 @@ for line in reversed(stderr_text.splitlines()):
         response_timed_out = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TimeoutError:") and timeout_error is None:
         timeout_error = line.split(":", 1)[1].strip()
+    elif line.startswith("StableResponseWithoutSentinel:"):
+        stable_response_without_sentinel = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("StableStallMs:") and stable_stall_ms is None:
+        try:
+            stable_stall_ms = int(line.split(":", 1)[1].strip())
+        except Exception:
+            stable_stall_ms = None
     elif line.startswith("ResponseSource:") and response_source is None:
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("ConversationUrl:") and conversation_url is None:
@@ -1676,6 +1701,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "response_source": response_source,
     "response_timed_out": response_timed_out,
     "timeout_error": timeout_error,
+    "stable_response_without_sentinel": stable_response_without_sentinel,
+    "stable_stall_ms": stable_stall_ms,
     "raw_contains_sentinel": sentinel in raw_text,
     "clean_contains_sentinel": sentinel in out_text,
     "raw_chars": len(raw_text),
@@ -1756,11 +1783,20 @@ chatgpt_rate_limit_action = None
 chatgpt_rate_limit_retry_attempted = False
 chatgpt_rate_limit_exhausted = None
 chatgpt_rate_limit_error = None
+stable_response_without_sentinel = False
+stable_stall_ms = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("ResponseTimedOut:") and response_timed_out is None:
         response_timed_out = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TimeoutError:") and timeout_error is None:
         timeout_error = line.split(":", 1)[1].strip()
+    elif line.startswith("StableResponseWithoutSentinel:"):
+        stable_response_without_sentinel = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("StableStallMs:") and stable_stall_ms is None:
+        try:
+            stable_stall_ms = int(line.split(":", 1)[1].strip())
+        except Exception:
+            stable_stall_ms = None
     elif line.startswith("ResponseSource:") and response_source is None:
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("ConversationUrl:") and conversation_url is None:
@@ -1854,6 +1890,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "response_source": response_source,
     "response_timed_out": response_timed_out,
     "timeout_error": timeout_error,
+    "stable_response_without_sentinel": stable_response_without_sentinel,
+    "stable_stall_ms": stable_stall_ms,
     "raw_contains_sentinel": sentinel in raw_text,
     "clean_contains_sentinel": sentinel in out_text,
     "raw_chars": len(raw_text),

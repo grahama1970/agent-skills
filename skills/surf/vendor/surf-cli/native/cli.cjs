@@ -3804,6 +3804,45 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
+    if (data.responseSource) {
+      console.error(`ResponseSource: ${data.responseSource}`);
+    }
+    if (data.conversationUrl) {
+      console.error(`ConversationUrl: ${data.conversationUrl}`);
+    }
+    if (data.currentUrl) {
+      console.error(`CurrentUrl: ${data.currentUrl}`);
+    }
+    if (data.pageTextContainsSentinel !== undefined) {
+      console.error(`PageTextContainsSentinel: ${data.pageTextContainsSentinel}`);
+    }
+    if (data.documentHiddenAtCompletion !== undefined) {
+      console.error(`DocumentHiddenAtCompletion: ${data.documentHiddenAtCompletion}`);
+    }
+    if (data.visibilityStateAtCompletion) {
+      console.error(`VisibilityStateAtCompletion: ${data.visibilityStateAtCompletion}`);
+    }
+    if (data.backgroundHiddenPolls !== undefined) {
+      console.error(`BackgroundHiddenPolls: ${data.backgroundHiddenPolls}`);
+    }
+    if (data.backgroundPollCount !== undefined) {
+      console.error(`BackgroundPollCount: ${data.backgroundPollCount}`);
+    }
+    if (data.hiddenRecoveryUsed !== undefined) {
+      console.error(`HiddenRecoveryUsed: ${data.hiddenRecoveryUsed}`);
+    }
+    if (data.stableResponseWithoutSentinel !== undefined) {
+      console.error(`StableResponseWithoutSentinel: ${data.stableResponseWithoutSentinel}`);
+    }
+    if (data.stableStallMs !== undefined && data.stableStallMs !== null) {
+      console.error(`StableStallMs: ${data.stableStallMs}`);
+    }
+    if (data.responseTimedOut !== undefined) {
+      console.error(`ResponseTimedOut: ${data.responseTimedOut}`);
+    }
+    if (data.timeoutError) {
+      console.error(`TimeoutError: ${data.timeoutError}`);
+    }
     if (tool === "kimi_tab" && data.attachment) {
       console.error(`Attachment: ${JSON.stringify(data.attachment)}`);
     }

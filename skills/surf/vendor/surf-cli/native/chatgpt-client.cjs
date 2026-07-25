@@ -1209,6 +1209,7 @@ async function waitForSentinelResponse(cdp, timeoutMs = 2700000, options = {}, s
       stableMs >= stableStallMs
     ) {
       const error = new Error(`Stable assistant response stalled without sentinel after ${stableMs}ms`);
+      error.code = "stable_response_without_sentinel";
       error.partialResponse = {
         text: currentText,
         messageId: snapshot.messageId || null,
@@ -1216,6 +1217,8 @@ async function waitForSentinelResponse(cdp, timeoutMs = 2700000, options = {}, s
         sentinel,
         hasSentinel: false,
         source: snapshot.source || "assistant-dom",
+        stableResponseWithoutSentinel: true,
+        stableStallMs: stableMs,
         pageTextContainsSentinel: snapshot.pageTextContainsSentinel === true,
         documentHiddenAtCompletion: snapshot.documentHidden === true,
         visibilityStateAtCompletion: snapshot.visibilityState || null,
@@ -1538,7 +1541,11 @@ async function query(options) {
       response = err.partialResponse;
       responseTimedOut = true;
       timeoutError = err.message;
-      log(`Response timed out; preserving partial assistant text (${response.text.length} chars)`);
+      if (err.code === "stable_response_without_sentinel") {
+        log(`Response stabilized without sentinel; preserving assistant text (${response.text.length} chars)`);
+      } else {
+        log(`Response timed out; preserving partial assistant text (${response.text.length} chars)`);
+      }
     }
     const conversationUrl = await evaluate(cdp, "window.location.href", signal).catch(() => null);
     log(`Response received (${response.text.length} chars)`);
@@ -1567,6 +1574,8 @@ async function query(options) {
       backgroundHiddenPolls: response.backgroundHiddenPolls || 0,
       backgroundPollCount: response.backgroundPollCount || 0,
       hiddenRecoveryUsed: response.hiddenRecoveryUsed === true,
+      stableResponseWithoutSentinel: response.stableResponseWithoutSentinel === true,
+      stableStallMs: response.stableStallMs || null,
       responseTimedOut,
       timeoutError,
       tookMs: Date.now() - startTime,

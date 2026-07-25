@@ -37,6 +37,7 @@ def run_submit(
     env["SURF_RUN_SH"] = str(fake_run)
     env["SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET"] = "0"
     env["SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS"] = "0"
+    env["SURF_WEBGPT_HOST_LOG"] = str(tmp_path / "surf-host.log")
     env["TMPDIR"] = str(tmp_path)
     return subprocess.run(
         [
@@ -598,6 +599,74 @@ esac
     assert meta["raw_response_advisory"] is True
 
 
+def test_webgpt_submit_exports_default_stable_stall_budget(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    env_log = tmp_path / "stable-stall-env.log"
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + f"""  chatgpt)
+    printf '%s\\n' "${{SURF_WEBGPT_STABLE_STALL_MS:-unset}}" > {str(env_log)!r}
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${{2:-}}"
+        break
+      fi
+      shift
+    done
+    printf 'finished answer\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 0, proc.stderr
+    assert env_log.read_text(encoding="utf-8").strip() == "30000"
+
+
+def test_webgpt_submit_stable_stall_zero_disables_fast_stall(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    env_log = tmp_path / "stable-stall-env.log"
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + f"""  chatgpt)
+    printf '%s\\n' "${{SURF_WEBGPT_STABLE_STALL_MS:-unset}}" > {str(env_log)!r}
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${{2:-}}"
+        break
+      fi
+      shift
+    done
+    printf 'finished answer\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run, extra_args=["--stable-stall-ms", "0"])
+
+    assert proc.returncode == 0, proc.stderr
+    assert env_log.read_text(encoding="utf-8").strip() == "0"
+
+
 def test_webgpt_submit_cloudflare_challenge_fails_closed_without_extract_retry(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
@@ -972,6 +1041,49 @@ esac
     assert meta["raw_response_advisory"] is True
 
 
+def test_webgpt_submit_stable_without_sentinel_is_reported_in_meta(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'Prompt accepted: sentinel=%s\n' "$sentinel" > "${SURF_WEBGPT_HOST_LOG:-/tmp/surf-host.log}"
+    echo 'complete stabilized reviewer answer without sentinel'
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    echo 'ResponseTimedOut: true' >&2
+    echo 'StableResponseWithoutSentinel: true' >&2
+    echo 'StableStallMs: 31000' >&2
+    echo 'TimeoutError: Stable assistant response stalled without sentinel after 31000ms' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 4
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "missing_sentinel"
+    assert meta["failure"] == "missing_sentinel"
+    assert meta["stable_response_without_sentinel"] is True
+    assert meta["stable_stall_ms"] == 31000
+    assert meta["proof_status"] == "submitted_no_response_proof"
+    assert "stabilized without the current completion sentinel" in meta["agent_diagnosis"]
+
+
 def test_webgpt_submit_empty_timeout_has_distinct_fresh_conversation_failure(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
@@ -1043,9 +1155,21 @@ async function cdpEvaluate(_expr) {{
       console.error('unexpected error', err.message);
       process.exit(3);
     }}
+    if (err.code !== 'stable_response_without_sentinel') {{
+      console.error('unexpected error code', err.code);
+      process.exit(4);
+    }}
+    if (err.partialResponse.stableResponseWithoutSentinel !== true) {{
+      console.error('stable flag missing');
+      process.exit(5);
+    }}
+    if (!Number.isFinite(err.partialResponse.stableStallMs)) {{
+      console.error('stable stall ms missing');
+      process.exit(6);
+    }}
     if (Date.now() - started > 5000) {{
       console.error('waited too long');
-      process.exit(4);
+      process.exit(7);
     }}
   }}
 }})();
