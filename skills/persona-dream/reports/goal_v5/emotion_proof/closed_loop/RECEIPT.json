@@ -1,0 +1,19 @@
+{
+  "schema": "persona-dream.closed_loop_intent_to_voice.v1",
+  "date": "2026-07-25",
+  "claim": "The full loop is closed live: memory.intent classifies affect tone AND emits the emotion WEIGHT (intensity+valence); that weight flows through /tau/voice-render to a base-model render with distinct controls and distinct audio.",
+  "correction_of_stale_note": "PROJECT_KNOWLEDGE.md:75 (2026-07-08) said /intent returns flat memory_confident for hostile/discouraged. Verified live 2026-07-25: it already classifies hostile->deflect_calm, discouraged->careful_concerned, neutral->neutral_warm. That note is stale. The real gap was intensity=None (no weight).",
+  "change": {"repo": "graph-memory-operator", "file": "src/graph_memory/service/app/_intent.py", "commit": "68cbe76",
+    "what": "_voice_delivery_for_intent now emits intensity + valence (per-tone defaults, confidence-scaled for memory_confident, caller-overridable)."},
+  "live_intent": [
+    {"q": "hostile", "tone": "deflect_calm", "intensity": 0.55, "valence": -0.4},
+    {"q": "discouraged", "tone": "careful_concerned", "intensity": 0.5, "valence": -0.3},
+    {"q": "neutral", "tone": "neutral_warm", "intensity": 0.4, "valence": 0.3}
+  ],
+  "end_to_end": [
+    {"path": "intent(hostile) -> tau/voice-render", "engine": "chatterbox_base", "knobs": {"exaggeration": 0.795, "cfg_weight": 0.42}, "dur_s": 3.32, "rms_dbfs": -24.06, "sha12": "57eef92f8589"},
+    {"path": "intent(neutral) -> tau/voice-render", "engine": "chatterbox_base", "knobs": {"exaggeration": 0.66,  "cfg_weight": 0.5},  "dur_s": 3.20, "rms_dbfs": -23.50, "sha12": "2a3ee6af0b8c"}
+  ],
+  "note": "Intent-derived intensity produces deterministically distinct render knobs (exaggeration 0.795 vs 0.66) and distinct audio (sha). Clean fixed-seed acoustic monotonicity is in weight_proof/; server render is stochastic so per-run loudness deltas are small.",
+  "loop_status": "CLOSED end-to-end: verdict/affect -> memory.intent (tone + intensity weight) -> chatterbox base render (exaggeration/cfg_weight) -> audible tone. Proven at all render rungs: voiceAudition adapter, /tau/voice-render, full HTTP host route."
+}
