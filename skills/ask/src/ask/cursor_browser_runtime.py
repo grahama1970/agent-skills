@@ -22,12 +22,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .env import load_dotenv_once
 from .ask_config import (
     CURSOR_BROWSER_DEFAULT_TIMEOUT,
     CURSOR_BROWSER_STABLE_POLLS,
     SURF_RUN,
 )
 from . import cursor_browser_project
+
+load_dotenv_once()
+
 CursorBrowserTabError = type("CursorBrowserTabError", (RuntimeError,), {})
 CursorBrowserBackendError = type("CursorBrowserBackendError", (RuntimeError,), {})
 

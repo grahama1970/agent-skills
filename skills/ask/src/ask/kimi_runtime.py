@@ -36,8 +36,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .env import load_dotenv_once
 from .ask_config import SURF_RUN, KIMI_DEFAULT_TIMEOUT, KIMI_STABLE_POLLS
 from .kimi_capacity import KimiCapacityBusyError, is_kimi_capacity_busy
+
+load_dotenv_once()
 
 
 @dataclass(frozen=True)

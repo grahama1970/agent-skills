@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,6 +22,14 @@ import typer
 
 
 ASK_ROOT = Path(__file__).resolve().parents[1]
+SRC = ASK_ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from ask.env import load_dotenv_once
+
+load_dotenv_once()
+
 REPO_ROOT = ASK_ROOT.parents[1]
 DEFAULT_SCILLM_BASE = os.environ.get("SCILLM_BASE_URL", "http://localhost:4001").rstrip("/")
 DEFAULT_SCILLM_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")

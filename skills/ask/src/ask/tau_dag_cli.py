@@ -9,6 +9,7 @@ from typing import Annotated
 
 import typer
 
+from .env import load_dotenv_once
 from .tau_dag import (
     DEFAULT_OUTPUT_ROOT,
     DEFAULT_SCILLM_API_KEY,
@@ -21,6 +22,7 @@ from .tau_dag import (
     run_tau_dag_bundle,
 )
 
+load_dotenv_once()
 
 app = typer.Typer(help="Compile /ask requests into strict Tau DAGs.")
 

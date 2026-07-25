@@ -14,7 +14,10 @@ from typing import Any
 
 import httpx
 
+from .env import load_dotenv_once
 from .ask_config import SCILLM_API_KEY, SCILLM_BASE_URL
+
+load_dotenv_once()
 
 AGENT_ID_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 CODING_INTENT_RE = re.compile(

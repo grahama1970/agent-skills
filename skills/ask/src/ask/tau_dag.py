@@ -17,6 +17,9 @@ from typing import Any
 
 import httpx
 
+from .env import load_dotenv_once
+
+load_dotenv_once()
 
 ASK_SKILL_ROOT = Path(__file__).resolve().parents[2]
 TAU_DAG_SCHEMA = "tau.dag_contract.v1"
