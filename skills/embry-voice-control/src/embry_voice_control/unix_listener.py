@@ -27,6 +27,7 @@ DEFAULT_REALTIMESTT_PYTHON = DEFAULT_REALTIMESTT_REPO / ".venv-fastapi/bin/pytho
 DEFAULT_PROOF_SCRIPT = DEFAULT_REALTIMESTT_REPO / "proofs/embry_pipewire_ingress/run_pipewire_realtimestt_ingress.py"
 DEFAULT_EXPECTED_PHRASE = "embry the capital of france is paris"
 WAKE_WORD = "embry"
+WAKE_INITIALISM_ALIASES = (("k", "m", "b"),)
 
 
 def now_iso() -> str:
@@ -55,6 +56,14 @@ def append_jsonl(path: Path, event: dict[str, Any]) -> None:
 def normalize_text(text: str) -> str:
     """Normalize transcript text for wake-word and phrase checks."""
     return " ".join(re.findall(r"[a-z0-9]+", text.lower()))
+
+
+def wake_phrase_detected(text: str) -> bool:
+    """Return true when ASR text contains the Embry wake phrase."""
+    tokens = normalize_text(text).split()
+    if WAKE_WORD in tokens:
+        return True
+    return any(tokens[: len(alias)] == list(alias) for alias in WAKE_INITIALISM_ALIASES)
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -130,7 +139,7 @@ def emit_listener_events(
     final_text = str(transcript.get("final") or "")
     normalized_final = normalize_text(final_text)
     realtime_events = underlying_receipt.get("realtimestt", {}).get("realtime_transcript_events", [])
-    wake_detected = WAKE_WORD in normalized_final.split()
+    wake_detected = wake_phrase_detected(final_text)
 
     append_jsonl(events_path, {
         "type": "listener.state",
@@ -149,7 +158,7 @@ def emit_listener_events(
         if not text:
             continue
         partial_norm = normalize_text(text)
-        if WAKE_WORD in partial_norm.split():
+        if wake_phrase_detected(text):
             wake_detected = True
             append_jsonl(events_path, {
                 "type": "listener.wake_detected",

@@ -10,7 +10,8 @@ UI input, or mocked transcript events.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -21,12 +22,16 @@ from uuid import uuid4
 import httpx
 from loguru import logger
 
+from embry_voice_control.event_journal import append_event
+
 
 DEFAULT_OUTPUT_ROOT = Path("/mnt/storage12tb/skills/embry-voice-control/outputs/e2e")
 DEFAULT_UNIX_LISTENER_ROOT = DEFAULT_OUTPUT_ROOT / "unix-listener"
 DEFAULT_BASE_URL = "http://127.0.0.1:3001/api/projects/embry-voice"
+DEFAULT_JOURNAL_DB = Path("/mnt/storage12tb/skills/embry-voice-control/state/voice-events.sqlite3")
 DEFAULT_EXPECTED_ANSWER = "paris"
 WAKE_WORD = "embry"
+SOURCE_CONTRACT = "unix_pipewire_realtimestt_to_sparta_live_turn"
 
 
 def now_iso() -> str:
@@ -53,6 +58,25 @@ def read_json(path: Path) -> dict[str, Any]:
     return data
 
 
+def canonical_json(value: Any) -> str:
+    """Return stable compact JSON."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def sha256_text(text: str) -> str:
+    """Hash text as lowercase hex."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    """Hash a file as lowercase hex."""
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def normalize_text(text: str) -> str:
     """Normalize text for deterministic matching."""
     return " ".join(re.findall(r"[a-z0-9]+", text.lower()))
@@ -61,12 +85,217 @@ def normalize_text(text: str) -> str:
 def strip_wake_word(transcript: str) -> str:
     """Remove the leading Embry wake word from a transcript."""
     stripped = transcript.strip()
-    return re.sub(r"^\s*embry[\s,.:;-]+", "", stripped, flags=re.IGNORECASE).strip()
+    stripped = re.sub(r"^\s*k[\s,.:;-]+m[\s,.:;-]+b[\s,.:;-]+", "", stripped, flags=re.IGNORECASE)
+    return re.sub(r"^\s*(?:hey[\s,.:;-]+)?embry[\s,.:;-]+", "", stripped, flags=re.IGNORECASE).strip()
+
+
+def event_time(base_created_at: str, offset_ms: int) -> str:
+    """Return stable event times derived from a receipt timestamp."""
+    try:
+        base = datetime.fromisoformat(base_created_at.replace("Z", "+00:00"))
+    except ValueError:
+        base = datetime.now(timezone.utc)
+    return (base.replace(tzinfo=base.tzinfo or timezone.utc) + timedelta(milliseconds=offset_ms)).isoformat()
+
+
+def build_journal_event(
+    *,
+    event_type: str,
+    session_id: str,
+    turn_id: str,
+    created_at: str,
+    causation_id: str,
+    correlation_id: str,
+    payload: dict[str, Any],
+    artifact_hashes: dict[str, str],
+    producer: str = "embry-voice-control.listener-turn-live",
+) -> dict[str, Any]:
+    """Build one journal event matching the existing event_journal contract."""
+    seed = canonical_json({
+        "event_type": event_type,
+        "session_id": session_id,
+        "turn_id": turn_id,
+        "payload": payload,
+    })
+    return {
+        "schema": "embry.voice_event.v2",
+        "event_id": f"{event_type}.{sha256_text(seed)[:16]}",
+        "session_id": session_id,
+        "turn_id": turn_id,
+        "type": event_type,
+        "created_at": created_at,
+        "causation_id": causation_id,
+        "correlation_id": correlation_id,
+        "producer": producer,
+        "mocked": False,
+        "live": True,
+        "artifact_hashes": artifact_hashes,
+        "receipt_hash": "sha256:" + sha256_text(canonical_json(payload)),
+        "payload": payload,
+    }
 
 
 def normalize_url(base_url: str, suffix: str) -> str:
     """Join a base URL and suffix without losing path prefixes."""
     return f"{base_url.rstrip('/')}/{suffix.lstrip('/')}"
+
+
+def publish_listener_turn_journal(
+    *,
+    journal_db: Path,
+    receipt_created_at: str,
+    listener_receipt_path: Path,
+    listener_receipt: dict[str, Any],
+    turn_text: str,
+    request_payload: dict[str, Any],
+    response: dict[str, Any],
+    local_playback: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Publish an accepted listener-turn-live receipt to the UI journal."""
+    session_id = str(response.get("sessionId") or request_payload.get("sessionId") or "")
+    turn_id = str(response.get("turnId") or request_payload.get("turnId") or session_id)
+    if not session_id or not turn_id:
+        raise ValueError("journal_session_or_turn_missing")
+
+    listener_events = listener_receipt.get("listener_events", {})
+    final_transcript = str(listener_events.get("final_transcript") or "")
+    response_audio = response.get("audioAuthority") if isinstance(response.get("audioAuthority"), dict) else {}
+    response_envelope = response.get("voiceEnvelope") if isinstance(response.get("voiceEnvelope"), dict) else response_audio.get("envelope")
+    audio_path = str(response.get("audioPath") or response_audio.get("path") or "")
+    audio_sha256 = str(response_audio.get("sha256") or "")
+    if audio_path:
+        path = Path(audio_path)
+        if path.is_file():
+            audio_sha256 = sha256_file(path)
+    audio_duration_ms = response.get("durationMs") or response_audio.get("durationMs")
+    if isinstance(response_envelope, dict):
+        audio_duration_ms = response_envelope.get("durationMs") or audio_duration_ms
+    artifact_hashes = {
+        "listener_receipt_sha256": "sha256:" + sha256_file(listener_receipt_path),
+        "turn_text_sha256": "sha256:" + sha256_text(turn_text),
+    }
+    if audio_sha256:
+        artifact_hashes["audio_sha256"] = "sha256:" + audio_sha256.removeprefix("sha256:")
+
+    correlation_id = f"listener-turn-live:{session_id}"
+    listener_payload = {
+        "text": final_transcript,
+        "turn_text": turn_text,
+        "wake_authority": "unix_pipewire_realtimestt_journal",
+        "wake_detected": bool(listener_events.get("wake_detected")),
+        "source_contract": SOURCE_CONTRACT,
+        "listener_receipt_path": str(listener_receipt_path),
+        "underlying_receipt_path": listener_receipt.get("underlying_receipt_path"),
+        "events_path": listener_events.get("events_path"),
+    }
+    listener_event = append_event(journal_db, build_journal_event(
+        event_type="listener.final_transcript",
+        session_id=session_id,
+        turn_id=turn_id,
+        created_at=event_time(receipt_created_at, 0),
+        causation_id=correlation_id,
+        correlation_id=correlation_id,
+        payload=listener_payload,
+        artifact_hashes=artifact_hashes,
+    ))
+
+    memory_payload = {
+        "answer": response.get("answerText"),
+        "memory": response.get("memory"),
+        "route_taken": nested_value(response, "tauBoundary.route_taken"),
+        "source_contract": SOURCE_CONTRACT,
+    }
+    memory_event = append_event(journal_db, build_journal_event(
+        event_type="memory.answer_resolved",
+        session_id=session_id,
+        turn_id=turn_id,
+        created_at=event_time(receipt_created_at, 1),
+        causation_id=listener_event["event_id"],
+        correlation_id=correlation_id,
+        payload=memory_payload,
+        artifact_hashes=artifact_hashes,
+    ))
+
+    tau_payload = {
+        "reasoningSteps": response.get("reasoningSteps"),
+        "tauBoundary": response.get("tauBoundary"),
+        "turnAuthority": response.get("turnAuthority"),
+        "source_contract": SOURCE_CONTRACT,
+    }
+    tau_event = append_event(journal_db, build_journal_event(
+        event_type="tau.turn_plan.completed",
+        session_id=session_id,
+        turn_id=turn_id,
+        created_at=event_time(receipt_created_at, 2),
+        causation_id=memory_event["event_id"],
+        correlation_id=correlation_id,
+        payload=tau_payload,
+        artifact_hashes=artifact_hashes,
+    ))
+
+    audio_payload = {
+        "artifactId": response_audio.get("artifactId"),
+        "authority": response_audio.get("authority"),
+        "path": audio_path,
+        "url": response.get("audioUrl") or response_audio.get("url"),
+        "sha256": audio_sha256.removeprefix("sha256:") if audio_sha256 else None,
+        "bytes": Path(audio_path).stat().st_size if audio_path and Path(audio_path).is_file() else None,
+        "durationMs": audio_duration_ms,
+        "duration_ms": audio_duration_ms,
+        "envelope": response_envelope,
+    }
+    render_payload = {
+        "answer": response.get("answerText"),
+        "audio": audio_payload,
+        "audioPath": audio_path,
+        "audioUrl": response.get("audioUrl"),
+        "receiptPath": response.get("receiptPath"),
+        "receiptUrl": response.get("receiptUrl"),
+        "voiceEnvelope": response_envelope,
+    }
+    render_event = append_event(journal_db, build_journal_event(
+        event_type="chatterbox.voice_render.completed",
+        session_id=session_id,
+        turn_id=turn_id,
+        created_at=event_time(receipt_created_at, 3),
+        causation_id=tau_event["event_id"],
+        correlation_id=correlation_id,
+        payload=render_payload,
+        artifact_hashes=artifact_hashes,
+    ))
+
+    stored = [listener_event, memory_event, tau_event, render_event]
+    if local_playback.get("requested") and local_playback.get("played"):
+        playback_authority_id = f"pipewire-playback:{sha256_text(canonical_json(local_playback))[:16]}"
+        playback_payload = {
+            "authority_id": playback_authority_id,
+            "command": local_playback.get("command"),
+            "played": local_playback.get("played"),
+            "sink": {
+                "driver": local_playback.get("driver"),
+                "target": local_playback.get("target"),
+            },
+            "timing_gate": {
+                "expected_duration_ms": audio_duration_ms,
+                "plausible": local_playback.get("returncode") == 0,
+                "returncode": local_playback.get("returncode"),
+            },
+        }
+        previous_id = render_event["event_id"]
+        for index, event_type in enumerate(("playback.requested", "playback.started", "playback.ended"), start=4):
+            event = append_event(journal_db, build_journal_event(
+                event_type=event_type,
+                session_id=session_id,
+                turn_id=turn_id,
+                created_at=event_time(receipt_created_at, index),
+                causation_id=previous_id,
+                correlation_id=correlation_id,
+                payload=playback_payload,
+                artifact_hashes=artifact_hashes,
+            ))
+            stored.append(event)
+            previous_id = event["event_id"]
+    return stored
 
 
 def nested_value(data: dict[str, Any], dotted_path: str) -> Any:
@@ -277,6 +506,7 @@ def run_listener_turn_live(
     play_local: bool = False,
     local_playback_target: str = "64",
     local_playback_timeout: float = 30.0,
+    journal_db: Path | None = DEFAULT_JOURNAL_DB,
 ) -> dict[str, Any]:
     """Run listener transcript -> live-turn -> Chatterbox artifact sanity."""
     run_id = new_run_id()
@@ -313,10 +543,32 @@ def run_listener_turn_live(
         local_playback=local_playback,
         require_local_playback=play_local,
     )
+    created_at = now_iso()
+    journal_events: list[dict[str, Any]] = []
+    journal_error: str | None = None
+    if acceptance["pass"] and journal_db is not None:
+        try:
+            journal_events = publish_listener_turn_journal(
+                journal_db=journal_db,
+                receipt_created_at=created_at,
+                listener_receipt_path=listener_path,
+                listener_receipt=listener_receipt,
+                turn_text=turn_text,
+                request_payload=payload,
+                response=response,
+                local_playback=local_playback,
+            )
+        except Exception as exc:  # pragma: no cover - surfaced in receipt.
+            logger.error("listener-turn journal publication failed: {}", exc)
+            journal_error = str(exc)
+    acceptance["checks"]["journal_projection_events_published"] = (
+        journal_db is None or (journal_error is None and len(journal_events) >= 7)
+    )
+    acceptance["pass"] = bool(acceptance["pass"] and acceptance["checks"]["journal_projection_events_published"])
     receipt = {
         "schema": "embry_voice_control.listener_turn_live_receipt.v1",
         "run_id": run_id,
-        "created_at": now_iso(),
+        "created_at": created_at,
         "mocked": False,
         "live": True,
         "used_ui": False,
@@ -332,6 +584,21 @@ def run_listener_turn_live(
         "response_status_code": response_status_code,
         "response_excerpt": compact_value(response),
         "local_playback": local_playback,
+        "journal": {
+            "requested": journal_db is not None,
+            "db_path": str(journal_db) if journal_db is not None else None,
+            "published": journal_error is None and bool(journal_events),
+            "event_count": len(journal_events),
+            "events": [
+                {
+                    "event_id": event["event_id"],
+                    "type": event["type"],
+                    "sequence": event["sequence"],
+                }
+                for event in journal_events
+            ],
+            "error": journal_error,
+        },
         "acceptance": acceptance,
         "receipt_path": str(receipt_path),
         "claims": {

@@ -32,6 +32,7 @@ from embry_voice_control.embry_chat import run_embry_chat_static_query_live
 from embry_voice_control.live_wake import run_wake_capital_france
 from embry_voice_control.listener_turn import DEFAULT_BASE_URL as LISTENER_TURN_BASE_URL
 from embry_voice_control.listener_turn import DEFAULT_EXPECTED_ANSWER
+from embry_voice_control.listener_turn import DEFAULT_JOURNAL_DB
 from embry_voice_control.listener_turn import DEFAULT_OUTPUT_ROOT as LISTENER_TURN_OUTPUT_ROOT
 from embry_voice_control.listener_turn import DEFAULT_UNIX_LISTENER_ROOT
 from embry_voice_control.listener_turn import run_listener_turn_live
@@ -830,6 +831,7 @@ def listener_turn_live(
     play_local: bool = typer.Option(False, help="Play returned Chatterbox WAV through local PipeWire"),
     local_playback_target: str = typer.Option("64", help="PipeWire playback target for --play-local"),
     local_playback_timeout: float = typer.Option(30.0, help="Local playback timeout in seconds"),
+    journal_db: Path | None = typer.Option(DEFAULT_JOURNAL_DB, help="Embry voice event journal to publish accepted turns; pass none only for isolated tests"),
 ) -> None:
     """Route the latest Unix listener transcript into /live-turn and require Chatterbox audio."""
     receipt = run_listener_turn_live(
@@ -842,6 +844,7 @@ def listener_turn_live(
         play_local=play_local,
         local_playback_target=local_playback_target,
         local_playback_timeout=local_playback_timeout,
+        journal_db=journal_db,
     )
     acceptance = receipt["acceptance"]
     typer.echo(json.dumps({
@@ -852,6 +855,7 @@ def listener_turn_live(
         "turn_text": receipt["turn_text"],
         "answer_text": acceptance["answer_text"],
         "local_playback": receipt.get("local_playback"),
+        "journal": receipt.get("journal"),
         "failed_checks": [
             key for key, value in acceptance["checks"].items()
             if value is not True and key not in {"used_browser_mic", "used_ui", "used_mock_transcript"}
