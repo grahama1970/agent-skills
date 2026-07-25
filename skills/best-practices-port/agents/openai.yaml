@@ -1,0 +1,4 @@
+interface:
+  display_name: "Best Practices Port"
+  short_description: "Disciplined feature porting workflow"
+  default_prompt: "Use $best-practices-port to port one bounded feature slice while preserving destination-specific behavior."
