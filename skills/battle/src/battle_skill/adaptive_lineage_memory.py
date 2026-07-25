@@ -33,6 +33,10 @@ from .adaptive_lineage_engine import (
 )
 
 MEMORY_COLLECTION = "battle_lineage_graph"
+# One typed edge collection for every battle edge type (relation attribute),
+# materialized by the daemon-owned POST /edges/upsert. The daemon traverses it
+# for multihop recall of battle_lineage_graph seeds.
+MEMORY_EDGE_COLLECTION = "battle_lineage_edges"
 MEMORY_NODE_SCHEMA = "battle.lineage_memory_node.v2"
 MEMORY_RECALL_SCHEMA = "battle.lineage_memory_recall.v2"
 MEMORY_WRITEBACK_SCHEMA = "battle.lineage_survivor_writeback.v3"
@@ -496,19 +500,73 @@ class MemoryBackend:
             collection=self.collection,
             documents=[survivor_document, bad_document],
         )
+
+        # Materialize the inline graph_edges_raw into REAL edge documents so the
+        # daemon can traverse them for multihop recall. Battle only emits edge
+        # intent (HTTP contract); the daemon owns the edge collection.
+        edge_ack = self._materialize_edges(
+            [(survivor_key, survivor_document), (bad_key, bad_document)]
+        )
         return {
             "schema": MEMORY_WRITEBACK_SCHEMA,
             "status": "PASS",
             "collection": self.collection,
+            "edge_collection": MEMORY_EDGE_COLLECTION,
             "survivor_key": survivor_key,
             "bad_genetic_material_key": bad_key,
             "survivor_tags": survivor_document["tags"],
             "bad_genetic_material_tags": bad_document["tags"],
             "scope": scope.as_dict(),
             "write_ack": json_safe(write_ack),
+            "edge_ack": json_safe(edge_ack),
             "deterministic_keys": True,
             "daemon_owned_multihop": True,
         }
+
+    def _materialize_edges(
+        self, nodes: Sequence[tuple[str, Mapping[str, Any]]]
+    ) -> Mapping[str, Any]:
+        """Convert each node's inline graph_edges_raw into daemon edge documents.
+
+        An inline ``{"edge_type": rel, "target_id": key}`` on node K becomes an
+        edge ``{_from: <collection>/K, _to: <collection>/target, relation: rel}``.
+        Edges are only ever emitted between nodes of a single role's subgraph, so
+        a multihop from one role's seed cannot reach another role's node.
+        """
+        edges: list[dict[str, Any]] = []
+        for node_key, document in nodes:
+            for raw in document.get("graph_edges_raw") or []:
+                if not isinstance(raw, Mapping):
+                    continue
+                relation = raw.get("edge_type")
+                target = raw.get("target_id")
+                if not relation or not target:
+                    continue
+                edges.append(
+                    {
+                        "_from": f"{self.collection}/{node_key}",
+                        "_to": f"{self.collection}/{target}",
+                        "relation": str(relation),
+                    }
+                )
+        if not edges:
+            return {"upserted": 0, "skipped": 0, "errors": [], "total": 0}
+        response = self._post(
+            "/edges/upsert",
+            {
+                "collection": MEMORY_EDGE_COLLECTION,
+                "edges": [json_safe(edge) for edge in edges],
+                "idempotent": True,
+            },
+        )
+        errors = response.get("errors")
+        if isinstance(errors, Sequence) and not isinstance(
+            errors, (str, bytes)
+        ) and errors:
+            raise AdaptiveLineageContractError(
+                f"Memory /edges/upsert reported errors: {json_safe(errors)}"
+            )
+        return response
 
 
 class FakeMemoryHttpClient:
@@ -527,6 +585,7 @@ class FakeMemoryHttpClient:
     ) -> None:
         self.default_collection = default_collection
         self.documents: dict[str, dict[str, dict[str, Any]]] = {}
+        self.edges: dict[str, list[dict[str, Any]]] = {}
         self.calls: list[dict[str, Any]] = []
         self.seed(documents, collection=default_collection)
 
@@ -575,6 +634,8 @@ class FakeMemoryHttpClient:
                 body = self._store(payload)
             elif path == "/upsert":
                 body = self._upsert(payload)
+            elif path == "/edges/upsert":
+                body = self._edges_upsert(payload)
             elif path == "/recall":
                 body = self._recall(payload)
             else:
@@ -590,6 +651,26 @@ class FakeMemoryHttpClient:
                 json={"ok": False, "error": str(exc)},
             )
         return httpx.Response(200, request=request, json=body)
+
+    def _edges_upsert(self, payload: Mapping[str, Any]) -> dict[str, Any]:
+        collection = str(payload["collection"])
+        edges = payload["edges"]
+        if not isinstance(edges, Sequence) or isinstance(edges, (str, bytes)):
+            raise TypeError("/edges/upsert edges must be a list")
+        stored = self.edges.setdefault(collection, [])
+        for raw in edges:
+            if not isinstance(raw, Mapping):
+                raise TypeError("/edges/upsert edges must contain only objects")
+            if not (raw.get("_from") and raw.get("_to") and raw.get("relation")):
+                raise ValueError("edge requires _from, _to, and relation")
+            stored.append(dict(raw))
+        return {
+            "collection": collection,
+            "upserted": len(edges),
+            "skipped": 0,
+            "errors": [],
+            "total": len(edges),
+        }
 
     def _store(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         collection = str(payload["collection"])
