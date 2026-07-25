@@ -7,11 +7,8 @@ unset VIRTUAL_ENV
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Enforce skill-local uv environment for python invocations.
-shopt -s expand_aliases
-alias python='uv run --project "$SCRIPT_DIR" python'
-alias python3='uv run --project "$SCRIPT_DIR" python'
-
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/ingest-code-runner-venv}"
+export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-/tmp/ingest-code-runner-pycache}"
 
 PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
 
@@ -26,7 +23,12 @@ PYTHON="${PYTHON:-python3}"
 # Check for uv
 if command -v uv &>/dev/null; then
     # Don't cd - preserve user's working directory so paths like "." resolve correctly
-    exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/ingest_code.py" "$@"
+    exec uv run --no-project --isolated \
+        --with typer \
+        --with httpx \
+        --with loguru \
+        --with python-dotenv \
+        python "$SCRIPT_DIR/ingest_code.py" "$@"
 else
     exec "$PYTHON" "$SCRIPT_DIR/ingest_code.py" "$@"
 fi

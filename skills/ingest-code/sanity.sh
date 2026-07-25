@@ -3,7 +3,7 @@ set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/ingest-code-sanity-venv}"
 export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-/tmp/ingest-code-sanity-pycache}"
-UV_PYTHON=(uv run --isolated --with typer --with httpx --with python-dotenv python)
+UV_PYTHON=(uv run --no-project --isolated --with typer --with httpx --with loguru --with python-dotenv python)
 
 echo "=== [ingest-code] Sanity Check ==="
 
