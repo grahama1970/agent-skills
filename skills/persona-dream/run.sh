@@ -148,6 +148,7 @@ Commands:
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   build-pctom-external-proof-archive  Copy GOAL.md-cited /tmp receipts into the durable in-repo archive
   verify-pctom-external-proof-archive  Re-read the durable proof archive and confirm every digest still matches
+  check-pctom-degenerate-benefit-claim  Block benefit-with-confidence claims built on zero-variance paired deltas
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
   check-tom-belief-distributions  Validate PCTOM-R Gate 2 ToM distribution invariants
@@ -673,6 +674,9 @@ case "$COMMAND" in
     ;;
   verify-pctom-external-proof-archive)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_pctom_external_proof_archive.py" --verify "$@"
+    ;;
+  check-pctom-degenerate-benefit-claim)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_degenerate_benefit_claim.py" "$@"
     ;;
   build-social-episode-corpus)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_social_episode_corpus.py" "$@"

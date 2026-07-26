@@ -190,19 +190,72 @@ not re-validate any archived receipt's own claims.
 
 ### Next objective
 
-R2 is met, so the next accepted artifact must come from one of these, and the
-choice is the operator's:
+R2 is met, so the successor is the sealed powered trial. Note that the PCTOM
+powered trial is agent-only: `contracts/pctom-powered-trial-protocol.v1.json`
+records `human_content_judgment_required: false`, so it needs no listener
+recruitment and the `GOAL_V5_PREREG.md` listener-spend cap does not govern it.
+It is 64 episodes x 4 conditions of live Tau execution, gated by four
+pre-execution gates and by `trial_execution_allowed: false` in the seal.
 
-1. Execute the sealed powered-trial protocol — the live efficacy study R2
-   deliberately left unrun. `GOAL_V5_PREREG.md` caps this at one round of
-   listener spend and requires fresh operator authorization, so it may not
-   start without that authorization.
-2. Continue the open PCTOM-R planning-benefit question under the existing
-   `Next Critical Path` section, which remains unclosed: planning benefit over
-   the strongest baseline is still unproven.
+Gate 2 (`deterministic_preflight`) was run on 2026-07-26 and returns
+`PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE`. It must not be treated as
+clearance, for the reason below.
+
+### Powered-trial blocker: the primary metric is a constant
+
+The preflight reports `primary_benefit_with_confidence: true` for
+`belief_brier`, CD minus strongest baseline `-0.0798`, interval upper below
+zero. That result is vacuous:
+
+```text
+belief_brier paired deltas over 64 sealed_test episodes: distinct values = 1
+primary_cd_minus_baseline_ci: lower == upper == -0.07979999999999995
+per-case belief Brier, all 128 scores per condition identical:
+  M 0.4550   R 0.3050   D 0.2198   CD 0.1400
+```
+
+Root cause is `scripts/run_condition_comparison.py`, which assigns beliefs from
+a static `CONDITION_PROFILES` ladder — `belief_true` M 0.45, R 0.55, D 0.62,
+CD 0.70 — that does not depend on the episode, its hidden state, or any dream
+content. The multi-class Brier of each row reproduces the observed value
+exactly, so CD "wins" the preregistered primary hypothesis
+`mean_belief_brier(CD) < mean_belief_brier(best_of_M_R_D)` by arithmetic on a
+typed table, decided before any Tau call. The bootstrap is degenerate: every
+resample of a constant returns the same mean, so `upper < 0` holds by
+construction, not by measurement.
+
+`action_brier` and `planning_regret` do carry variance (3 distinct values over
+64 episodes) and neither asserts benefit; `planning_benefit_with_confidence` is
+`false`. So the standing "planning benefit remains pending" position is intact,
+and only the belief-Brier claim is affected.
+
+This is recorded, not repaired. Reshaping the corpus so the primary metric
+varies would be exactly the corpus-tuning-to-force-a-CD-win that the
+`Next Critical Path` section rules out. The fail-closed response is a gate:
+
+```text
+checker: scripts/check_pctom_degenerate_benefit_claim.py
+dispatch: ./run.sh check-pctom-degenerate-benefit-claim
+receipt: evidence/pctom-degenerate-benefit-claim.v1.json
+status over the 2026-07-26 preflight: BLOCKED_PCTOM_DEGENERATE_BENEFIT_CLAIM
+errors:
+  - degenerate_benefit_claim:belief_brier:primary_benefit_with_confidence:distinct=1
+  - collapsed_primary_confidence_interval:lower==upper==-0.07979999999999995
+fixtures: 1 positive (varied deltas, PASS), 2 negative (constant deltas,
+          collapsed interval), each BLOCKED for its own distinct reason
+```
+
+Therefore the powered trial must not be unsealed yet. Running 256 live Tau
+calls against a primary hypothesis that is already decided by a constant would
+spend real execution to confirm a table lookup. The next accepted artifact must
+first make the primary metric a measurement: the belief distribution has to
+depend on the episode's hidden state and on the condition's actual reasoning,
+not on a per-condition constant. Until then `trial_execution_allowed` stays
+`false`.
 
 No agent may report R2 as licensing a live efficacy claim. The R2 PASS proves
-readiness to run the study, not any result from it.
+readiness to run the study, not any result from it — and per the above, not yet
+even that.
 
 ## Alignment Lock
 

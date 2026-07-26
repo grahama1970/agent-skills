@@ -1,0 +1,9 @@
+{
+ "primary_metric": "belief_brier",
+ "primary_benefit_with_confidence": true,
+ "planning_benefit_with_confidence": false,
+ "primary_cd_minus_baseline_ci": {
+  "lower": -0.11,
+  "upper": -0.03
+ }
+}

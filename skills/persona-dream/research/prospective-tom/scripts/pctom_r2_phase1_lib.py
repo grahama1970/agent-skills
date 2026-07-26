@@ -22,7 +22,10 @@ BLOCKED_ARCHIVE_STATUS = "BLOCKED_PCTOM_ARCHIVE_INTEGRITY"
 PASS_DISCOVERY_STATUS = "PASS_PCTOM_RECEIPT_DISCOVERY"
 BLOCKED_DISCOVERY_STATUS = "BLOCKED_PCTOM_RECEIPT_DISCOVERY"
 
-EXCLUDED_DIR_PARTS = {"__pycache__"}
+# "external-proof-archive" holds copies of /tmp-cited run receipts. It carries its
+# own hash-bound manifest and verify pass, so folding it into the code archive
+# manifest would conflate two archives and hash ~15k copied files on every audit.
+EXCLUDED_DIR_PARTS = {"__pycache__", "external-proof-archive"}
 EXCLUDED_SUFFIXES = {".pyc"}
 ARCHIVE_SELF_REL = "evidence/pctom-archive-manifest.v1.json"
 EXCLUDED_ARCHIVE_RECEIPTS = {

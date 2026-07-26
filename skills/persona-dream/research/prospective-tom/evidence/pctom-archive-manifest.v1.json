@@ -1,11 +1,11 @@
 {
   "counts": {
-    "entries": 272,
+    "entries": 282,
     "receipts": 11,
     "schemas": 34,
-    "scripts": 107
+    "scripts": 109
   },
-  "created_at": "2026-07-22T14:33:02Z",
+  "created_at": "2026-07-26T17:30:28Z",
   "entries": [
     {
       "category": "contracts",
@@ -69,6 +69,12 @@
     },
     {
       "category": "evidence",
+      "path": "evidence/pctom-degenerate-benefit-claim.v1.json",
+      "sha256": "sha256:4c0c4eda25a9eaefbfa9cf8318ecae182996576bfccebe553a81430ae7965535",
+      "size_bytes": 2546
+    },
+    {
+      "category": "evidence",
       "path": "evidence/pctom-deterministic-scoring-surface.v1.json",
       "sha256": "sha256:26b956ab0d83c230dea30fd6eff8c8710263d830484e0ac8c256e370c7ed3a82",
       "size_bytes": 6291
@@ -78,6 +84,12 @@
       "path": "evidence/pctom-evidence-scope-ledger.v1.json",
       "sha256": "sha256:e86cf6736be4acd367c6edd80696f50d4ec5b2914f2153ba5fdd26b289a18313",
       "size_bytes": 41521
+    },
+    {
+      "category": "evidence",
+      "path": "evidence/pctom-external-proof-archive.v1.json",
+      "sha256": "sha256:4ea2a51380ef90041842fdc8059164bd6eab847e6908641398e236a4d0c2f7dc",
+      "size_bytes": 5698737
     },
     {
       "category": "fixtures",
@@ -138,6 +150,42 @@
       "path": "fixtures/audit-mutations/unauthorized-origin/mutation.json",
       "sha256": "sha256:bdeb2e8d498ba03c736f1929db25ab800a9c36ea820475d3f4fac994e0785762",
       "size_bytes": 319
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/degenerate-benefit-claim/negative_collapsed_interval/deltas.json",
+      "sha256": "sha256:8dc70f5a5559258e1e9d912b9e3c58ce57c6fb52949c6451c43cac3fd0a8bd01",
+      "size_bytes": 11228
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/degenerate-benefit-claim/negative_collapsed_interval/receipt.json",
+      "sha256": "sha256:0c5c746f062268a6d1c10b089362c44b84e8a4ce61accca1a956332077661d35",
+      "size_bytes": 197
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/degenerate-benefit-claim/negative_constant_deltas/deltas.json",
+      "sha256": "sha256:7634880d07bf9ca8a19bf5ea62ebe8733d6bd74571c1202751d93ec0b16ee3fa",
+      "size_bytes": 11246
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/degenerate-benefit-claim/negative_constant_deltas/receipt.json",
+      "sha256": "sha256:5e116aa23798e0ca4755143613951310b17c6c7220c5af2c7a9f6842b61b9971",
+      "size_bytes": 199
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/degenerate-benefit-claim/positive_varied_deltas/deltas.json",
+      "sha256": "sha256:8dc70f5a5559258e1e9d912b9e3c58ce57c6fb52949c6451c43cac3fd0a8bd01",
+      "size_bytes": 11228
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/degenerate-benefit-claim/positive_varied_deltas/receipt.json",
+      "sha256": "sha256:c09809cc9314de2e2c234c1f321176705ff79ba83b74dbd1f1d399fa0c175a40",
+      "size_bytes": 197
     },
     {
       "category": "fixtures",
@@ -1131,6 +1179,12 @@
     },
     {
       "category": "scripts",
+      "path": "scripts/build_pctom_external_proof_archive.py",
+      "sha256": "sha256:f2498475e1f3feb0ce044f96d95f0efe5ad89eac9face27d455fd96b1ea38193",
+      "size_bytes": 9145
+    },
+    {
+      "category": "scripts",
       "path": "scripts/build_pctom_powered_trial_protocol.py",
       "sha256": "sha256:1201c04e940839b457f24aae5c04dfa86be47e66d7a5f175c7123010a3c799b7",
       "size_bytes": 832
@@ -1218,6 +1272,12 @@
       "path": "scripts/check_pctom_calibration_abstention.py",
       "sha256": "sha256:2071b475e2abc4f5c5d0a1c70e54f80dc80c003b80fc188fb6f3158ec59d3cbf",
       "size_bytes": 22717
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_pctom_degenerate_benefit_claim.py",
+      "sha256": "sha256:e4401736cf313a14c4fba01a96d4afa4b40cb7e2022ce31ab2d3599a7dd8c4e8",
+      "size_bytes": 5878
     },
     {
       "category": "scripts",
@@ -1336,8 +1396,8 @@
     {
       "category": "scripts",
       "path": "scripts/pctom_r2_phase1_lib.py",
-      "sha256": "sha256:19f5fd77c16a710b90993acb7f196d8bfcbcb41be5e580a0c3ea852162a7d889",
-      "size_bytes": 22526
+      "sha256": "sha256:4cb8e6a7a7783979342dd9466fc7d18a6611d8c3a92194f638f71373af0995c8",
+      "size_bytes": 22796
     },
     {
       "category": "scripts",
@@ -1640,7 +1700,7 @@
       "size_bytes": 30353
     }
   ],
-  "entries_sha256": "sha256:fe1ca28c762e58c40f0c154aa4b7a33da6168ffa97420750a9da732aaa8c70d1",
+  "entries_sha256": "sha256:583a7f3b138ec8d7ff6242777db89c37e1702e711c3a526c4942f4389a84627c",
   "excluded_paths": [
     "evidence/pctom-archive-manifest.v1.json"
   ],
@@ -1656,7 +1716,7 @@
   "memory_write_attempts": 0,
   "mocked": false,
   "provider_call_attempts": 0,
-  "root": "skills/persona-dream/research/prospective-tom",
+  "root": "research/prospective-tom",
   "schema": "persona_dream.research.prospective_tom.pctom_archive_manifest.v1",
   "status": "ARCHIVE_MANIFEST_BUILT"
 }

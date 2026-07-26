@@ -1,0 +1,68 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "that a non-degenerate series demonstrates counterfactual-dream benefit",
+      "the correctness of the underlying scoring or corpus",
+      "live Tau execution or powered-trial readiness"
+    ],
+    "proves": [
+      "whether each paired-delta series carries any episode-to-episode variance",
+      "whether a benefit-with-confidence field is asserted over a constant series"
+    ]
+  },
+  "created_at": "2026-07-26T17:28:44Z",
+  "errors": [
+    "degenerate_benefit_claim:belief_brier:primary_benefit_with_confidence:distinct=1",
+    "collapsed_primary_confidence_interval:lower==upper==-0.07979999999999995"
+  ],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "action_brier": {
+      "benefit_claimed": false,
+      "claim_field": null,
+      "degenerate": false,
+      "distinct": 3,
+      "max": 0.31333333333333335,
+      "min": -0.28666666666666674,
+      "n": 64,
+      "variance": 0.06250000000000001
+    },
+    "belief_brier": {
+      "benefit_claimed": true,
+      "claim_field": "primary_benefit_with_confidence",
+      "degenerate": true,
+      "distinct": 1,
+      "max": -0.07979999999999995,
+      "min": -0.07979999999999995,
+      "n": 64,
+      "variance": 0.0
+    },
+    "planning_regret": {
+      "benefit_claimed": false,
+      "claim_field": "planning_benefit_with_confidence",
+      "degenerate": false,
+      "distinct": 3,
+      "max": 0.8500000000000001,
+      "min": -0.8500000000000001,
+      "n": 64,
+      "variance": 0.11289062500000002
+    }
+  },
+  "min_distinct_required": 2,
+  "mocked": false,
+  "paired_delta_path": "/home/graham/workspace/experiments/persona-dream-runs/sealed-test-preflight-20260726T172453Z/artifacts/sealed_test_paired_deltas.json",
+  "paired_delta_sha256": "sha256:90b1d46b213e76d409ee1237d6c4f69c90857d326c3dc7d55d7ff35a9a5e18bc",
+  "primary_metric": "belief_brier",
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_degenerate_benefit_claim_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "source_receipt": "/home/graham/workspace/experiments/persona-dream-runs/sealed-test-preflight-20260726T172453Z/sealed_test_statistical_confidence_receipt.v1.json",
+  "source_receipt_sha256": "sha256:7228996ae07b978e6fb78ced6124b7295f1661400950d2b672cfcb2406992b30",
+  "status": "BLOCKED_PCTOM_DEGENERATE_BENEFIT_CLAIM"
+}

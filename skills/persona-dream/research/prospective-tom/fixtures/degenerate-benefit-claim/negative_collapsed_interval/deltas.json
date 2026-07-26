@@ -1,0 +1,517 @@
+{
+ "schema": "fixture",
+ "belief_brier": [
+  {
+   "episode_id": "ep-00",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2133,
+   "cd_minus_baseline": -0.0867
+  },
+  {
+   "episode_id": "ep-01",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2284,
+   "cd_minus_baseline": -0.0716
+  },
+  {
+   "episode_id": "ep-02",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2794,
+   "cd_minus_baseline": -0.0206
+  },
+  {
+   "episode_id": "ep-03",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2152,
+   "cd_minus_baseline": -0.0848
+  },
+  {
+   "episode_id": "ep-04",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2211,
+   "cd_minus_baseline": -0.0789
+  },
+  {
+   "episode_id": "ep-05",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2322,
+   "cd_minus_baseline": -0.0678
+  },
+  {
+   "episode_id": "ep-06",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1759,
+   "cd_minus_baseline": -0.1241
+  },
+  {
+   "episode_id": "ep-07",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2217,
+   "cd_minus_baseline": -0.0783
+  },
+  {
+   "episode_id": "ep-08",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2382,
+   "cd_minus_baseline": -0.0618
+  },
+  {
+   "episode_id": "ep-09",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.261,
+   "cd_minus_baseline": -0.039
+  },
+  {
+   "episode_id": "ep-10",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1632,
+   "cd_minus_baseline": -0.1368
+  },
+  {
+   "episode_id": "ep-11",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1925,
+   "cd_minus_baseline": -0.1075
+  },
+  {
+   "episode_id": "ep-12",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1627,
+   "cd_minus_baseline": -0.1373
+  },
+  {
+   "episode_id": "ep-13",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2634,
+   "cd_minus_baseline": -0.0366
+  },
+  {
+   "episode_id": "ep-14",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2471,
+   "cd_minus_baseline": -0.0529
+  },
+  {
+   "episode_id": "ep-15",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1559,
+   "cd_minus_baseline": -0.1441
+  },
+  {
+   "episode_id": "ep-16",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2875,
+   "cd_minus_baseline": -0.0125
+  },
+  {
+   "episode_id": "ep-17",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2851,
+   "cd_minus_baseline": -0.0149
+  },
+  {
+   "episode_id": "ep-18",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2415,
+   "cd_minus_baseline": -0.0585
+  },
+  {
+   "episode_id": "ep-19",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2362,
+   "cd_minus_baseline": -0.0638
+  },
+  {
+   "episode_id": "ep-20",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.172,
+   "cd_minus_baseline": -0.128
+  },
+  {
+   "episode_id": "ep-21",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1521,
+   "cd_minus_baseline": -0.1479
+  },
+  {
+   "episode_id": "ep-22",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.224,
+   "cd_minus_baseline": -0.076
+  },
+  {
+   "episode_id": "ep-23",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1583,
+   "cd_minus_baseline": -0.1417
+  },
+  {
+   "episode_id": "ep-24",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1766,
+   "cd_minus_baseline": -0.1234
+  },
+  {
+   "episode_id": "ep-25",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1839,
+   "cd_minus_baseline": -0.1161
+  },
+  {
+   "episode_id": "ep-26",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1542,
+   "cd_minus_baseline": -0.1458
+  },
+  {
+   "episode_id": "ep-27",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.215,
+   "cd_minus_baseline": -0.085
+  },
+  {
+   "episode_id": "ep-28",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2117,
+   "cd_minus_baseline": -0.0883
+  },
+  {
+   "episode_id": "ep-29",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2679,
+   "cd_minus_baseline": -0.0321
+  },
+  {
+   "episode_id": "ep-30",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2227,
+   "cd_minus_baseline": -0.0773
+  },
+  {
+   "episode_id": "ep-31",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2396,
+   "cd_minus_baseline": -0.0604
+  },
+  {
+   "episode_id": "ep-32",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.22,
+   "cd_minus_baseline": -0.08
+  },
+  {
+   "episode_id": "ep-33",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2427,
+   "cd_minus_baseline": -0.0573
+  },
+  {
+   "episode_id": "ep-34",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.214,
+   "cd_minus_baseline": -0.086
+  },
+  {
+   "episode_id": "ep-35",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1889,
+   "cd_minus_baseline": -0.1111
+  },
+  {
+   "episode_id": "ep-36",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2897,
+   "cd_minus_baseline": -0.0103
+  },
+  {
+   "episode_id": "ep-37",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2894,
+   "cd_minus_baseline": -0.0106
+  },
+  {
+   "episode_id": "ep-38",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2676,
+   "cd_minus_baseline": -0.0324
+  },
+  {
+   "episode_id": "ep-39",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2491,
+   "cd_minus_baseline": -0.0509
+  },
+  {
+   "episode_id": "ep-40",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1941,
+   "cd_minus_baseline": -0.1059
+  },
+  {
+   "episode_id": "ep-41",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1822,
+   "cd_minus_baseline": -0.1178
+  },
+  {
+   "episode_id": "ep-42",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1905,
+   "cd_minus_baseline": -0.1095
+  },
+  {
+   "episode_id": "ep-43",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1598,
+   "cd_minus_baseline": -0.1402
+  },
+  {
+   "episode_id": "ep-44",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2573,
+   "cd_minus_baseline": -0.0427
+  },
+  {
+   "episode_id": "ep-45",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2061,
+   "cd_minus_baseline": -0.0939
+  },
+  {
+   "episode_id": "ep-46",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2685,
+   "cd_minus_baseline": -0.0315
+  },
+  {
+   "episode_id": "ep-47",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2041,
+   "cd_minus_baseline": -0.0959
+  },
+  {
+   "episode_id": "ep-48",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2841,
+   "cd_minus_baseline": -0.0159
+  },
+  {
+   "episode_id": "ep-49",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2686,
+   "cd_minus_baseline": -0.0314
+  },
+  {
+   "episode_id": "ep-50",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1501,
+   "cd_minus_baseline": -0.1499
+  },
+  {
+   "episode_id": "ep-51",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1794,
+   "cd_minus_baseline": -0.1206
+  },
+  {
+   "episode_id": "ep-52",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2774,
+   "cd_minus_baseline": -0.0226
+  },
+  {
+   "episode_id": "ep-53",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2158,
+   "cd_minus_baseline": -0.0842
+  },
+  {
+   "episode_id": "ep-54",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2873,
+   "cd_minus_baseline": -0.0127
+  },
+  {
+   "episode_id": "ep-55",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2056,
+   "cd_minus_baseline": -0.0944
+  },
+  {
+   "episode_id": "ep-56",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1602,
+   "cd_minus_baseline": -0.1398
+  },
+  {
+   "episode_id": "ep-57",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2381,
+   "cd_minus_baseline": -0.0619
+  },
+  {
+   "episode_id": "ep-58",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.259,
+   "cd_minus_baseline": -0.041
+  },
+  {
+   "episode_id": "ep-59",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1878,
+   "cd_minus_baseline": -0.1122
+  },
+  {
+   "episode_id": "ep-60",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1622,
+   "cd_minus_baseline": -0.1378
+  },
+  {
+   "episode_id": "ep-61",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.1966,
+   "cd_minus_baseline": -0.1034
+  },
+  {
+   "episode_id": "ep-62",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.285,
+   "cd_minus_baseline": -0.015
+  },
+  {
+   "episode_id": "ep-63",
+   "metric": "belief_brier",
+   "baseline_condition": "D",
+   "baseline_value": 0.3,
+   "cd_value": 0.2561,
+   "cd_minus_baseline": -0.0439
+  }
+ ]
+}
