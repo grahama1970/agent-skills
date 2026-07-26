@@ -1,7 +1,12 @@
 from pathlib import Path
 
 from embry_voice_control.event_journal import list_events
-from embry_voice_control.listener_turn import publish_listener_turn_journal, strip_wake_word
+from embry_voice_control.listener_turn import (
+    build_turn_payload,
+    listener_events_from_receipt,
+    publish_listener_turn_journal,
+    strip_wake_word,
+)
 
 
 def test_strip_wake_word_supports_observed_kmb_initialism() -> None:
@@ -18,6 +23,51 @@ def test_strip_wake_word_supports_observed_emory_spelling() -> None:
     assert strip_wake_word("Hey Emory, what is the capital of France?") == (
         "what is the capital of France?"
     )
+
+
+def test_build_turn_payload_can_carry_conversation_context() -> None:
+    listener_receipt = {
+        "underlying_receipt_path": "/tmp/underlying.json",
+        "listener_events": {
+            "final_transcript": "Hey Embree make her brave ask one more clarifying question.",
+            "wake_detected": True,
+            "events_path": "/tmp/events.jsonl",
+        },
+    }
+    payload = build_turn_payload(
+        run_id="r",
+        listener_receipt_path=Path("/tmp/listener.json"),
+        listener_receipt=listener_receipt,
+        turn_text="make her brave ask one more clarifying question.",
+        session_id="embry-story-session",
+        turn_id="embry-story-session:turn-002",
+        conversation_context="Embry told a short story about Nori the cat and asked whether Nori should be brave.",
+    )
+
+    assert payload["sessionId"] == "embry-story-session"
+    assert payload["turnId"] == "embry-story-session:turn-002"
+    assert payload["conversationContext"].startswith("Embry told a short story about Nori")
+    assert payload["contextEvidence"]["schema"] == "embry_voice_control.listener_turn_context_evidence.v1"
+    assert payload["contextEvidence"]["context_sha256"].startswith("sha256:")
+
+
+def test_listener_events_from_receipt_supports_acoustic_transcript_shape() -> None:
+    receipt = {
+        "acceptance": {"pass": True},
+        "transcript": {
+            "final": "Hey Embree make her brave ask one more clarifying question.",
+            "normalized_final": "hey embree make her brave ask one more clarifying question",
+        },
+        "realtimestt": {"events_path": "/tmp/realtime.jsonl", "event_count": 12},
+    }
+
+    events = listener_events_from_receipt(receipt)
+
+    assert events["final_transcript"] == "Hey Embree make her brave ask one more clarifying question."
+    assert events["wake_detected"] is True
+    assert events["wake_word"] == "embry"
+    assert events["events_path"] == "/tmp/realtime.jsonl"
+    assert events["realtime_event_count"] == 12
 
 
 def test_publish_listener_turn_journal_writes_projection_events(tmp_path: Path) -> None:

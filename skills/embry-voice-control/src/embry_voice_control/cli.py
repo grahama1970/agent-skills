@@ -832,6 +832,9 @@ def listener_turn_live(
     local_playback_target: str = typer.Option("64", help="PipeWire playback target for --play-local"),
     local_playback_timeout: float = typer.Option(30.0, help="Local playback timeout in seconds"),
     journal_db: Path | None = typer.Option(DEFAULT_JOURNAL_DB, help="Embry voice event journal to publish accepted turns; pass none only for isolated tests"),
+    session_id: str | None = typer.Option(None, help="Stable live-turn session id for multi-turn conversation proofs"),
+    turn_id: str | None = typer.Option(None, help="Stable live-turn turn id for deterministic proof receipts"),
+    conversation_context: str = typer.Option("", help="Prior conversation context to send to /live-turn"),
 ) -> None:
     """Route the latest Unix listener transcript into /live-turn and require Chatterbox audio."""
     receipt = run_listener_turn_live(
@@ -845,6 +848,9 @@ def listener_turn_live(
         local_playback_target=local_playback_target,
         local_playback_timeout=local_playback_timeout,
         journal_db=journal_db,
+        session_id=session_id,
+        turn_id=turn_id,
+        conversation_context=conversation_context,
     )
     acceptance = receipt["acceptance"]
     typer.echo(json.dumps({
