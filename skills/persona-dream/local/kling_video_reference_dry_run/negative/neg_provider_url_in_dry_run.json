@@ -1,0 +1,511 @@
+{
+  "aspect_ratio": "16:9",
+  "audio_strategy": "Ambience and foley are on. Kai cue is VOICE_TEXT_ONLY because no provider voice IDs are locked.",
+  "callback_url": null,
+  "claims": {
+    "does_not_prove": [
+      "current Kling provider schema compatibility",
+      "provider-accessible media URLs",
+      "reference upload readiness",
+      "voice readiness",
+      "cost approval",
+      "manual acceptance",
+      "live Kling generation",
+      "that attaching the previous clip reduces identity drift",
+      "that the current Kling endpoint accepts this video_list shape"
+    ],
+    "proves": [
+      "accepted storyboard evidence was distilled into a local dry-run Kling scene packet",
+      "all provider prompt tokens are declared",
+      "paid_call_authorized is false",
+      "submitted is false",
+      "no provider request was submitted"
+    ]
+  },
+  "cost_estimate": {
+    "currency": "credits",
+    "docs_checked": [
+      "pending_current_provider_pricing_schema"
+    ],
+    "duration_s": 10.0,
+    "estimated_credits": 90,
+    "formula": "duration_s * rate_credits_per_s; provider pricing requires current-account verification",
+    "rate_credits_per_s": 9,
+    "selected_mode": "std",
+    "status": "DRY_RUN_ESTIMATE_UNVERIFIED"
+  },
+  "duration_s": 10.0,
+  "element_list": [
+    {
+      "allowed_variation": [
+        "wet hair movement",
+        "subtle expression changes",
+        "natural salt spray"
+      ],
+      "description": "Embry, adult woman surfer, brown hair, navy rashguard/polo continuity, controlled under heat and glare.",
+      "do_not_change": [
+        "do not change Embry into a male surfer",
+        "do not change brown hair",
+        "do not change navy rashguard/polo continuity",
+        "do not remove or hide Embry"
+      ],
+      "element_id": "element_embry_v1",
+      "ignore": [
+        "contact sheet grid",
+        "labels",
+        "borders",
+        "reference layout artifacts"
+      ],
+      "live_blockers": [
+        "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES"
+      ],
+      "reference_pack_status": "DRAFT_CONTACT_SHEET_SOURCE_ONLY",
+      "source_asset_ids": [
+        "embry_character_sheet"
+      ],
+      "source_assets": [
+        {
+          "bundle_path": "references/01-embry_character_sheet.jpg",
+          "generator_attachment_required": true,
+          "id": "embry_character_sheet",
+          "media_type": "image",
+          "pane_visible": true,
+          "pane_visible_required": true,
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+          "reference_only_not_output": true,
+          "reviewer_attachment_required": true,
+          "role": "primary_identity_reference",
+          "sent_to_generator_required": true,
+          "sent_to_reviewer_required": true,
+          "sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840",
+          "source_path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+          "title": "Embry character sheet montage"
+        }
+      ],
+      "token": "<<<element_embry>>>",
+      "type": "character_reference"
+    },
+    {
+      "allowed_variation": [
+        "wet hair movement",
+        "subtle stance changes",
+        "natural surf posture"
+      ],
+      "description": "Kai Akana, young Hawaiian male surfer, curly dark hair, black rashguard, calm and lineup-aware.",
+      "do_not_change": [
+        "do not replace Kai with a generic surfer",
+        "do not remove Kai where required",
+        "do not change black rashguard continuity"
+      ],
+      "element_id": "element_kai_v1",
+      "ignore": [
+        "contact sheet grid",
+        "labels",
+        "borders",
+        "reference layout artifacts"
+      ],
+      "live_blockers": [
+        "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES"
+      ],
+      "reference_pack_status": "DRAFT_CONTACT_SHEET_SOURCE_ONLY",
+      "source_asset_ids": [
+        "kai_character_sheet"
+      ],
+      "source_assets": [
+        {
+          "bundle_path": "references/02-kai_character_sheet.png",
+          "generator_attachment_required": true,
+          "id": "kai_character_sheet",
+          "media_type": "image",
+          "pane_visible": true,
+          "pane_visible_required": true,
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+          "reference_only_not_output": true,
+          "reviewer_attachment_required": true,
+          "role": "primary_identity_reference",
+          "sent_to_generator_required": true,
+          "sent_to_reviewer_required": true,
+          "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700",
+          "source_path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+          "title": "Kai Akana character sheet"
+        }
+      ],
+      "token": "<<<element_kai>>>",
+      "type": "character_reference"
+    },
+    {
+      "allowed_variation": [
+        "water shimmer",
+        "small swell movement",
+        "spray",
+        "glare"
+      ],
+      "description": "Kahaluu Bay / Kona Coast public reef break, clear shallow water over dark lava reef, hot glare, public lineup pressure.",
+      "do_not_change": [
+        "do not turn into a private empty beach",
+        "do not remove the lava reef boundary",
+        "do not turn into a generic tropical postcard",
+        "do not turn the water into a pool or sandbar"
+      ],
+      "element_id": "element_kahaluu_lava_reef_v1",
+      "ignore": [],
+      "live_blockers": [
+        "BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING"
+      ],
+      "reference_pack_status": "BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING",
+      "source_asset_ids": [],
+      "source_assets": [],
+      "token": "<<<element_kahaluu_lava_reef>>>",
+      "type": "scene_environment"
+    }
+  ],
+  "external_task_id": null,
+  "image_list": [
+    {
+      "asset_id": "sb_001.start_frame",
+      "hash": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+      "panel_id": "sb_001",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+      "role": "storyboard_visual_anchor",
+      "sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+      "status": "LOCKED_LOCAL_ONLY",
+      "token": "<<<image_1>>>"
+    },
+    {
+      "asset_id": "sb_002.start_frame",
+      "hash": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+      "panel_id": "sb_002",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+      "role": "storyboard_visual_anchor",
+      "sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+      "status": "LOCKED_LOCAL_ONLY",
+      "token": "<<<image_2>>>"
+    },
+    {
+      "asset_id": "sb_003.start_frame",
+      "hash": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+      "panel_id": "sb_003",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+      "role": "storyboard_visual_anchor",
+      "sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+      "status": "LOCKED_LOCAL_ONLY",
+      "token": "<<<image_3>>>"
+    },
+    {
+      "asset_id": "sb_004.start_frame",
+      "hash": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
+      "panel_id": "sb_004",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+      "role": "storyboard_visual_anchor",
+      "sha256": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
+      "status": "LOCKED_LOCAL_ONLY",
+      "token": "<<<image_4>>>"
+    }
+  ],
+  "live_call_block_reason": "video_list[0] is a LOCKED_LOCAL_ONLY filesystem path; Kling requires a provider-accessible URL. Also unchanged: GENERATED_UNREVIEWED dry-run only: manual review missing, provider schema unverified, provider-accessible URLs missing, reference packs not split into clean Element images, environment references missing, provider voice IDs missing, cost estimate unverified, and paid-call authorization is false.",
+  "live_call_blockers": [
+    "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING",
+    "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED",
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+    "BLOCKED_ENVIRONMENT_ELEMENT_REFERENCES_MISSING",
+    "BLOCKED_PROVIDER_VOICE_IDS_MISSING",
+    "BLOCKED_COST_ESTIMATE_UNVERIFIED",
+    "BLOCKED_PAID_CALL_NOT_AUTHORIZED",
+    "BLOCKED_VIDEO_REFERENCE_NOT_PROVIDER_ACCESSIBLE_URL"
+  ],
+  "live_submit_status": "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+  "mode": "std",
+  "model": "kling-v3-omni",
+  "multi_prompt": [
+    {
+      "cinematography": {
+        "atmosphere": "hot humid Kona surf glare, salt spray, public lineup pressure",
+        "camera_mount": "water-housed action or cinema camera for the waterline plate; shore safety B-camera optional",
+        "camera_movement": "slow observational drift with the swell, no dramatic push",
+        "color_grade": "realistic coastal daylight, clear water, dark lava reef",
+        "composition": "Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.",
+        "director_note": "Embry keeps agency; Kai remains restrained, not a rescuer.",
+        "environment_lock": "Kahaluu Bay / Kona Coast public lava reef break",
+        "focus_behavior": "identity-readable faces, no spray/glare occlusion",
+        "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
+        "lighting": "hard coastal glare softened by water spray",
+        "shot_size": "WS",
+        "temporal_pacing": "four restrained 2.5 second beats within a 10 second dry run"
+      },
+      "dialogue": [],
+      "duration_s": 2.5,
+      "image_status": "LOCKED_LOCAL_ONLY",
+      "index": 0,
+      "prompt": "Continue the story from the attached video <<<video_1>>>. Keep the characters, clothing, location, lighting, colors, body positions, and action continuity from <<<video_1>>>. Do not remake the attached clip; start at the moment after it ends. sb_001 0.0-2.5s. Use storyboard anchor <<<image_1>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules. Camera stays waterline, slow observational drift with the swell, no dramatic push; composition: Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground. Acting beats: Embry scans the lineup and chooses not to rush. Kai watches the reef and the locals before giving any cue. Both characters show autonomy through restraint rather than speech. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted.",
+      "provider_text": "Continue the story from the attached video <<<video_1>>>. Keep the characters, clothing, location, lighting, colors, body positions, and action continuity from <<<video_1>>>. Do not remake the attached clip; start at the moment after it ends. sb_001 0.0-2.5s. Use storyboard anchor <<<image_1>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules. Camera stays waterline, slow observational drift with the swell, no dramatic push; composition: Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground. Acting beats: Embry scans the lineup and chooses not to rush. Kai watches the reef and the locals before giving any cue. Both characters show autonomy through restraint rather than speech. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted.",
+      "visual_anchor": "<<<image_1>>>",
+      "voice_status": "NO_DIALOGUE"
+    },
+    {
+      "cinematography": {
+        "atmosphere": "hot humid Kona surf glare, salt spray, public lineup pressure",
+        "camera_mount": "water housing with close-focus capability; safety spotter required near reef",
+        "camera_movement": "small handheld/swell movement tracking Embry's grip reset",
+        "color_grade": "realistic coastal daylight, clear water, dark lava reef",
+        "composition": "Hands, rail, wax, Embry's face, and reef line all remain legible.",
+        "director_note": "Embry keeps agency; Kai remains restrained, not a rescuer.",
+        "environment_lock": "Kahaluu Bay / Kona Coast public lava reef break",
+        "focus_behavior": "identity-readable faces, no spray/glare occlusion",
+        "lens": "moderate wide water-housing perspective, approximately 28-40mm equivalent",
+        "lighting": "bright glare off clear water with wet skin highlights",
+        "shot_size": "MS",
+        "temporal_pacing": "four restrained 2.5 second beats within a 10 second dry run"
+      },
+      "dialogue": [],
+      "duration_s": 2.5,
+      "image_status": "LOCKED_LOCAL_ONLY",
+      "index": 1,
+      "prompt": "sb_002 2.5-5.0s. Use storyboard anchor <<<image_2>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. Camera stays low waterline close to the board rail, small handheld/swell movement tracking Embry's grip reset; composition: Hands, rail, wax, Embry's face, and reef line all remain legible. Acting beats: Embry notices the palm skid without melodrama. She resets her grip deliberately instead of pretending she is fine. The physical correction is the autonomy beat. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted.",
+      "provider_text": "sb_002 2.5-5.0s. Use storyboard anchor <<<image_2>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. Camera stays low waterline close to the board rail, small handheld/swell movement tracking Embry's grip reset; composition: Hands, rail, wax, Embry's face, and reef line all remain legible. Acting beats: Embry notices the palm skid without melodrama. She resets her grip deliberately instead of pretending she is fine. The physical correction is the autonomy beat. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted.",
+      "visual_anchor": "<<<image_2>>>",
+      "voice_status": "NO_DIALOGUE"
+    },
+    {
+      "cinematography": {
+        "atmosphere": "hot humid Kona surf glare, salt spray, public lineup pressure",
+        "camera_mount": "water housing with operator outside the path; optional shore lens for continuity",
+        "camera_movement": "gentle lateral drift that keeps Kai outside and Embry nearer the decision point",
+        "color_grade": "realistic coastal daylight, clear water, dark lava reef",
+        "composition": "Kai, Embry, channel, and shared lineup geometry are all visible.",
+        "director_note": "Embry keeps agency; Kai remains restrained, not a rescuer.",
+        "environment_lock": "Kahaluu Bay / Kona Coast public lava reef break",
+        "focus_behavior": "identity-readable faces, no spray/glare occlusion",
+        "lens": "wide-to-normal water-housing perspective, approximately 30-45mm equivalent",
+        "lighting": "wet rashguard highlights and high water glare",
+        "shot_size": "MWS",
+        "temporal_pacing": "four restrained 2.5 second beats within a 10 second dry run"
+      },
+      "dialogue": [
+        {
+          "speaker": "Kai",
+          "status": "VOICE_TEXT_ONLY",
+          "text": "Kai: If we paddle now, we're cutting across the lineup."
+        }
+      ],
+      "duration_s": 2.5,
+      "image_status": "LOCKED_LOCAL_ONLY",
+      "index": 2,
+      "prompt": "sb_003 5.0-7.5s. Use storyboard anchor <<<image_3>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue. Camera stays waterline, slightly outside the pair, gentle lateral drift that keeps Kai outside and Embry nearer the decision point; composition: Kai, Embry, channel, and shared lineup geometry are all visible. Acting beats: Kai conserves energy and waits. He notices the lineup first, then the channel, then Embry's cadence. His cue is restrained; Embry keeps agency. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted. Text-only cue, not live voiced audio: Kai: If we paddle now, we're cutting across the lineup.",
+      "provider_text": "sb_003 5.0-7.5s. Use storyboard anchor <<<image_3>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue. Camera stays waterline, slightly outside the pair, gentle lateral drift that keeps Kai outside and Embry nearer the decision point; composition: Kai, Embry, channel, and shared lineup geometry are all visible. Acting beats: Kai conserves energy and waits. He notices the lineup first, then the channel, then Embry's cadence. His cue is restrained; Embry keeps agency. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted. Text-only cue, not live voiced audio: Kai: If we paddle now, we're cutting across the lineup.",
+      "visual_anchor": "<<<image_3>>>",
+      "voice_status": "VOICE_TEXT_ONLY"
+    },
+    {
+      "cinematography": {
+        "atmosphere": "hot humid Kona surf glare, salt spray, public lineup pressure",
+        "camera_mount": "water-housed camera for the accepted keyframe; B-camera can confirm geography from shore",
+        "camera_movement": "brief forward glide with the shoulder as Embry chooses the safe line",
+        "color_grade": "realistic coastal daylight, clear water, dark lava reef",
+        "composition": "Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.",
+        "director_note": "Embry keeps agency; Kai remains restrained, not a rescuer.",
+        "environment_lock": "Kahaluu Bay / Kona Coast public lava reef break",
+        "focus_behavior": "identity-readable faces, no spray/glare occlusion",
+        "lens": "wide water-housing perspective, approximately 24-35mm equivalent",
+        "lighting": "bright silver glare on the wave face with spray highlights",
+        "shot_size": "POV",
+        "temporal_pacing": "four restrained 2.5 second beats within a 10 second dry run"
+      },
+      "dialogue": [],
+      "duration_s": 2.5,
+      "image_status": "LOCKED_LOCAL_ONLY",
+      "index": 3,
+      "prompt": "sb_004 7.5-10.0s. Use storyboard anchor <<<image_4>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision. Camera stays waterline just inside the wave shoulder, brief forward glide with the shoulder as Embry chooses the safe line; composition: Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry. Acting beats: Embry lets the wrong moment pass. She commits only when the water and lineup give permission. Kai's reaction is understated and does not steal the beat. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted.",
+      "provider_text": "sb_004 7.5-10.0s. Use storyboard anchor <<<image_4>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision. Camera stays waterline just inside the wave shoulder, brief forward glide with the shoulder as Embry chooses the safe line; composition: Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry. Acting beats: Embry lets the wrong moment pass. She commits only when the water and lineup give permission. Kai's reaction is understated and does not steal the beat. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted.",
+      "visual_anchor": "<<<image_4>>>",
+      "voice_status": "NO_DIALOGUE"
+    }
+  ],
+  "negative_prompt": [
+    "no generic replacement surfers",
+    "do not change Embry into a male surfer",
+    "do not remove Embry",
+    "do not remove Kai",
+    "do not hide faces with spray, glare, board, or camera angle",
+    "no contact sheet, grid, collage, reference board, UI screenshot, captions, labels, arrows, or name tags",
+    "no private empty beach",
+    "no reckless heroic takeoff",
+    "do not violate public lineup etiquette",
+    "do not turn lava reef into sandbar or pool",
+    "do not drift into a generic tropical surf postcard"
+  ],
+  "paid_call_authorized": false,
+  "polling_plan": "Dry run only. If later approved, poll provider task endpoint every 15s for at most 80 attempts and persist terminal raw response.",
+  "provider": "kling",
+  "provider_dry_run_fields": {
+    "aspect_ratio": "16:9",
+    "callback_url": null,
+    "duration": 10,
+    "element_list": [
+      {
+        "description": "Embry, adult woman surfer, brown hair, navy rashguard/polo continuity, controlled under heat and glare.",
+        "source_assets": [
+          "embry_character_sheet"
+        ],
+        "token": "<<<element_embry>>>",
+        "type": "character_reference"
+      },
+      {
+        "description": "Kai Akana, young Hawaiian male surfer, curly dark hair, black rashguard, calm and lineup-aware.",
+        "source_assets": [
+          "kai_character_sheet"
+        ],
+        "token": "<<<element_kai>>>",
+        "type": "character_reference"
+      },
+      {
+        "description": "Kahaluu Bay / Kona Coast public reef break, clear shallow water over dark lava reef, hot glare, public lineup pressure.",
+        "source_assets": [],
+        "token": "<<<element_kahaluu_lava_reef>>>",
+        "type": "scene_environment"
+      }
+    ],
+    "external_task_id": null,
+    "image_list": [
+      {
+        "image": null,
+        "source_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+        "token": "<<<image_1>>>"
+      },
+      {
+        "image": null,
+        "source_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+        "token": "<<<image_2>>>"
+      },
+      {
+        "image": null,
+        "source_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+        "token": "<<<image_3>>>"
+      },
+      {
+        "image": null,
+        "source_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+        "token": "<<<image_4>>>"
+      }
+    ],
+    "mode": "std",
+    "model": "kling-v3-omni",
+    "multi_prompt": [
+      {
+        "duration": 2.5,
+        "index": 0,
+        "prompt": "sb_001 0.0-2.5s. Use storyboard anchor <<<image_1>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules. Camera stays waterline, slow observational drift with the swell, no dramatic push; composition: Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground. Acting beats: Embry scans the lineup and chooses not to rush. Kai watches the reef and the locals before giving any cue. Both characters show autonomy through restraint rather than speech. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted."
+      },
+      {
+        "duration": 2.5,
+        "index": 1,
+        "prompt": "sb_002 2.5-5.0s. Use storyboard anchor <<<image_2>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. Camera stays low waterline close to the board rail, small handheld/swell movement tracking Embry's grip reset; composition: Hands, rail, wax, Embry's face, and reef line all remain legible. Acting beats: Embry notices the palm skid without melodrama. She resets her grip deliberately instead of pretending she is fine. The physical correction is the autonomy beat. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted."
+      },
+      {
+        "duration": 2.5,
+        "index": 2,
+        "prompt": "sb_003 5.0-7.5s. Use storyboard anchor <<<image_3>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue. Camera stays waterline, slightly outside the pair, gentle lateral drift that keeps Kai outside and Embry nearer the decision point; composition: Kai, Embry, channel, and shared lineup geometry are all visible. Acting beats: Kai conserves energy and waits. He notices the lineup first, then the channel, then Embry's cadence. His cue is restrained; Embry keeps agency. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted. Text-only cue, not live voiced audio: Kai: If we paddle now, we're cutting across the lineup."
+      },
+      {
+        "duration": 2.5,
+        "index": 3,
+        "prompt": "sb_004 7.5-10.0s. Use storyboard anchor <<<image_4>>> with <<<element_embry>>>, <<<element_kai>>>, and <<<element_kahaluu_lava_reef>>>. Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision. Camera stays waterline just inside the wave shoulder, brief forward glide with the shoulder as Embry chooses the safe line; composition: Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry. Acting beats: Embry lets the wrong moment pass. She commits only when the water and lineup give permission. Kai's reaction is understated and does not steal the beat. Keep faces identity-readable and preserve public reef lineup etiquette. Native ambience and foley only unless voice status is later accepted."
+      }
+    ],
+    "multi_shot": true,
+    "negative_prompt": [
+      "no generic replacement surfers",
+      "do not change Embry into a male surfer",
+      "do not remove Embry",
+      "do not remove Kai",
+      "do not hide faces with spray, glare, board, or camera angle",
+      "no contact sheet, grid, collage, reference board, UI screenshot, captions, labels, arrows, or name tags",
+      "no private empty beach",
+      "no reckless heroic takeoff",
+      "do not violate public lineup etiquette",
+      "do not turn lava reef into sandbar or pool",
+      "do not drift into a generic tropical surf postcard"
+    ],
+    "paid_call_authorized": false,
+    "shot_type": "customize",
+    "sound": "on",
+    "submitted": false
+  },
+  "retry_policy": "No live provider attempts in this round. Allow at most two dry-run packet revisions after review.",
+  "run_id": "persona-dream-kahaluu-10s-dryrun-001",
+  "schema": "kling.scene_packet.v1",
+  "source_artifacts": {
+    "media_lock_manifest": "storyboard_media_lock_manifest.json",
+    "provider_final_gate": "provider_final_gate_receipt_video_reference.json",
+    "provider_payload_mapping_receipt": "provider_payload_mapping_receipt.json",
+    "reference_pack_audit": "kling_reference_pack_audit.json",
+    "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+    "token_binding_linter": "token_binding_linter_receipt.json"
+  },
+  "status": "GENERATED_UNREVIEWED",
+  "storage_plan": {
+    "download_output_to": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_08_kling_scene_packet/outputs/kling_output.mp4",
+    "ffprobe_json": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_08_kling_scene_packet/outputs/ffprobe.json",
+    "frame_contact_sheet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_08_kling_scene_packet/outputs/frame_contact_sheet.jpg",
+    "raw_response_json": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_08_kling_scene_packet/outputs/provider_response.json"
+  },
+  "submitted": false,
+  "video_list": [
+    {
+      "continuity_contract": {
+        "do_not": [
+          "remake the attached clip",
+          "restart the same action",
+          "reinterpret Embry or Kai identity"
+        ],
+        "keep": [
+          "characters",
+          "clothing",
+          "location",
+          "lighting",
+          "colors",
+          "body positions",
+          "action continuity"
+        ],
+        "start_at": "the moment after the attached clip ends"
+      },
+      "duration_s": 10.041667,
+      "path": "/home/graham/workspace/experiments/agent-skills-pd-archive/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return.mp4",
+      "provider_accessible_url": "https://cdn.example/prev.mp4",
+      "role": "continue_from_previous_clip",
+      "sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+      "source": "frozen historical Kling return validated by the watch gauntlet (watch_gauntlet/991c311f365f)",
+      "status": "LOCKED_LOCAL_ONLY",
+      "token": "<<<video_1>>>",
+      "video_id": "prior_accepted_kling_return_991c311f365f"
+    }
+  ],
+  "voice_examples": [
+    {
+      "source": "Storyboard text cue exists; no provider voice_id exists for this dry-run packet.",
+      "speaker": "Kai",
+      "status": "VOICE_TEXT_ONLY"
+    }
+  ],
+  "voice_list": [],
+  "voice_status": {
+    "ambience_and_foley": "ON",
+    "live_blockers": [
+      "BLOCKED_PROVIDER_VOICE_IDS_MISSING"
+    ],
+    "provider_voice_ids": [],
+    "provider_voice_ids_locked": false,
+    "spoken_dialogue_live_ready": false,
+    "status": "VOICE_TEXT_ONLY"
+  },
+  "work_backwards_chain": [
+    "accepted_storyboard_packet",
+    "storyboard_media_lock_manifest",
+    "kling_reference_pack_audit",
+    "kling_context_distiller",
+    "token_binding_linter",
+    "kling_scene_packet_dry_run",
+    "provider_payload_mapping_receipt",
+    "provider_final_gate"
+  ]
+}

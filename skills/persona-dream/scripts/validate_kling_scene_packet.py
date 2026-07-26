@@ -19,7 +19,7 @@ from typing import Any
 
 PASS_STATUS = "PASS_KLING_SCENE_PACKET_DRY_RUN"
 BLOCKED_STATUS = "BLOCKED_KLING_SCENE_PACKET_DRY_RUN"
-TOKEN_RE = re.compile(r"<<<(?:image_[0-9]+|element_[a-z0-9_]+)>>>")
+TOKEN_RE = re.compile(r"<<<(?:image_[0-9]+|element_[a-z0-9_]+|video_[0-9]+)>>>")
 REQUIRED_ELEMENT_TOKENS = {
     "<<<element_embry>>>",
     "<<<element_kai>>>",
@@ -220,7 +220,15 @@ def validate_tokens_and_timing(packet: dict[str, Any], media_lock: dict[str, Any
 
     image_tokens = [item.get("token") for item in image_list if isinstance(item, dict)]
     element_tokens = [item.get("token") for item in element_list if isinstance(item, dict)]
-    declared_tokens = {token for token in image_tokens + element_tokens if isinstance(token, str)}
+    video_list = packet.get("video_list")
+    video_list = video_list if isinstance(video_list, list) else []
+    video_tokens = [item.get("token") for item in video_list if isinstance(item, dict)]
+    facts["video_count"] = len(video_list)
+    if len(video_tokens) != len(set(video_tokens)):
+        add_blocker(blockers, "BLOCKED_TOKEN_BINDING", "video_list.token", "video tokens must be unique")
+    declared_tokens = {
+        token for token in image_tokens + element_tokens + video_tokens if isinstance(token, str)
+    }
     if len(image_tokens) != len(set(image_tokens)):
         add_blocker(blockers, "BLOCKED_TOKEN_BINDING", "image_list.token", "image tokens must be unique")
     if len(element_tokens) != len(set(element_tokens)):
@@ -271,6 +279,57 @@ def validate_tokens_and_timing(packet: dict[str, Any], media_lock: dict[str, Any
         facts["token_binding_status"] = "BLOCKED"
     facts["time_ranges"] = ranges
     return facts
+
+
+def validate_video_list(packet: dict[str, Any], scene_path: Path, blockers: list[dict[str, Any]]) -> None:
+    """Video references are optional; when declared they must be provable.
+
+    Kling Omni supports <<<video_N>>> bound through video_list. A declared video
+    reference is only meaningful if the file exists and its digest matches, so an
+    unreadable or drifted reference blocks rather than passing as decoration.
+    """
+    video_list = packet.get("video_list")
+    if video_list is None:
+        return
+    if not isinstance(video_list, list) or not video_list:
+        add_blocker(blockers, "BLOCKED_TOKEN_BINDING", "video_list", "declared but empty or not a list")
+        return
+    for index, item in enumerate(video_list):
+        prefix = f"video_list[{index}]"
+        if not isinstance(item, dict):
+            add_blocker(blockers, "BLOCKED_TOKEN_BINDING", prefix, "entry is not an object")
+            continue
+        token = item.get("token")
+        if not isinstance(token, str) or not re.fullmatch(r"<<<video_[0-9]+>>>", token):
+            add_blocker(blockers, "BLOCKED_TOKEN_BINDING", f"{prefix}.token", f"expected <<<video_N>>>, observed {token!r}")
+        declared = item.get("sha256")
+        raw_path = item.get("path")
+        if not isinstance(raw_path, str) or not raw_path:
+            add_blocker(blockers, "BLOCKED_TOKEN_BINDING", f"{prefix}.path", "missing")
+        else:
+            candidate = Path(raw_path)
+            if not candidate.is_absolute():
+                candidate = (scene_path.parent / candidate).resolve()
+            if not candidate.is_file():
+                add_blocker(blockers, "BLOCKED_TOKEN_BINDING", f"{prefix}.path", f"file not found: {candidate}")
+            elif not isinstance(declared, str) or not declared.startswith("sha256:"):
+                add_blocker(blockers, "BLOCKED_TOKEN_BINDING", f"{prefix}.sha256", "missing sha256")
+            elif sha256_file(candidate) != declared:
+                add_blocker(blockers, "BLOCKED_TOKEN_BINDING", f"{prefix}.sha256", "digest does not match file on disk")
+        if item.get("provider_accessible_url"):
+            add_blocker(
+                blockers,
+                "BLOCKED_PROVIDER_MAPPING_SUBMITTED_IN_DRY_RUN",
+                f"{prefix}.provider_accessible_url",
+                "dry run must not carry a provider-accessible video URL",
+            )
+        elif "BLOCKED_VIDEO_REFERENCE_NOT_PROVIDER_ACCESSIBLE_URL" not in (packet.get("live_call_blockers") or []):
+            add_blocker(
+                blockers,
+                "BLOCKED_KLING_SCENE_PACKET_SCHEMA",
+                "live_call_blockers",
+                "video_list without a provider URL requires BLOCKED_VIDEO_REFERENCE_NOT_PROVIDER_ACCESSIBLE_URL",
+            )
 
 
 def validate_voice(packet: dict[str, Any], blockers: list[dict[str, Any]]) -> None:
@@ -351,6 +410,7 @@ def build_receipt(scene_path: Path) -> dict[str, Any]:
     )
     media_facts = validate_media_lock(media_lock, blockers)
     token_facts = validate_tokens_and_timing(packet, media_lock, blockers)
+    validate_video_list(packet, scene_path, blockers)
     validate_voice(packet, blockers)
     validate_provider_mapping(provider_mapping, final_gate, packet, blockers)
 
