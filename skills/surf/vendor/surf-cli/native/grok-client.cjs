@@ -647,6 +647,7 @@ async function submitPrompt(cdp, inputCdp) {
 // Extract Grok's response from the full page body text
 function extractGrokResponse(bodyText, userPrompt = '', chipTexts = []) {
   if (!bodyText) return null;
+  const sentinel = userPrompt.match(/<<<GROK_DONE:[^>\r\n]+>>>/)?.[0] || null;
 
   // Suggestion chips are captured from the DOM as button texts; count occurrences.
   const chipCounts = new Map();
@@ -665,6 +666,9 @@ function extractGrokResponse(bodyText, userPrompt = '', chipTexts = []) {
     /^(History|Private|Create Images|Edit Image|Latest News)$/i,
     /^(Create recurring tasks|Get access to|Explore)$/i,
     /^(Think Harder)$/i,
+    /^Automation-only instruction:/i,
+    /^Do not print anything after that marker\.?$/i,
+    /^Thought for \d+s$/i,
     /^(Auto|Fast|Expert)$/i, // Model names
     /^Grok\s*\d/i, // Grok 4.x model names
     /^@\w+$/, // Username mentions alone
@@ -687,7 +691,13 @@ function extractGrokResponse(bodyText, userPrompt = '', chipTexts = []) {
 
   // Extract content after the last question
   const contentLines = [];
-  const startIndex = lastQuestionIndex >= 0 ? lastQuestionIndex + 1 : 0;
+  const sentinelIndexes = sentinel
+    ? lines.flatMap((line, index) => line === sentinel ? [index] : [])
+    : [];
+  const promptSentinelIndex = sentinelIndexes.length >= 2 ? sentinelIndexes[0] : -1;
+  const startIndex = promptSentinelIndex >= 0
+    ? promptSentinelIndex + 1
+    : lastQuestionIndex >= 0 ? lastQuestionIndex + 1 : 0;
 
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i];
@@ -713,7 +723,14 @@ function extractGrokResponse(bodyText, userPrompt = '', chipTexts = []) {
 
   // If we found content after the question, return the response
   if (responseLines.length > 0) {
-    return responseLines.join('\n').trim();
+    const response = responseLines.join('\n').trim();
+    if (sentinel) {
+      const markerIndex = response.indexOf(sentinel);
+      if (markerIndex >= 0) {
+        return response.slice(0, markerIndex + sentinel.length).trim();
+      }
+    }
+    return response;
   }
 
   // Fallback: look for the LAST standalone numeric answer

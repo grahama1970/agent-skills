@@ -1756,7 +1756,7 @@ def _write_roundtable_command_spec(
     payload = {
         "command": command,
         "cwd": str(run_dir),
-        "timeout_s": 6000 if handler == "codex" else (1800 if is_subagent_handler else (1200 if handler == "webgpt" else 420)),
+        "timeout_s": 6000 if handler == "codex" else (1800 if is_subagent_handler else (1200 if handler == "webgpt" else (900 if handler == "webgemini" else 420))),
         "requires_network": node_id != "join",
         "mutates": handler == "codex",
         "requires_clean_worktree": False,

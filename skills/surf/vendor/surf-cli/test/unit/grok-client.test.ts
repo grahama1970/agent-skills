@@ -5,6 +5,27 @@ const { extractGrokResponse, normalizeGrokModelLabel } = grokClient;
 
 describe("grok-client", () => {
   describe("extractGrokResponse", () => {
+    it("removes echoed automation prompt and suggestion text after the terminal sentinel", () => {
+      const sentinel = "<<<GROK_DONE:native-test>>>";
+      const bodyText = [
+        "Automation-only instruction: answer the user's request normally.",
+        sentinel,
+        "Do not print anything after that marker.",
+        "Thought for 4s",
+        "GROK_NATIVE_RESULT: 4",
+        sentinel,
+        "Explore Grok's reasoning capabilities",
+        "Investigate xAI's model architecture",
+      ].join("\n");
+
+      const result = extractGrokResponse(
+        bodyText,
+        `Automation-only instruction: answer normally.\n${sentinel}\nDo not print anything after that marker.`,
+      );
+
+      expect(result).toBe(`GROK_NATIVE_RESULT: 4\n${sentinel}`);
+    });
+
     it("extracts a short non-numeric answer", () => {
       const bodyText = `Grok
 reply with the word pong. nothing else.

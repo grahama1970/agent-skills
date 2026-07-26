@@ -187,7 +187,13 @@ if not tab:
 url = str(tab.get("url") or "")
 host = urllib.parse.urlparse(url).netloc.lower()
 provider_ok = host in {"grok.com", "www.grok.com", "x.com", "www.x.com"}
-url_ok = (not expected_url) or url.rstrip("/") == expected_url
+expected = urllib.parse.urlparse(expected_url) if expected_url else None
+if not expected:
+    url_ok = True
+elif expected.path in {"", "/"} and not expected.query and not expected.fragment:
+    url_ok = host.removeprefix("www.") == expected.netloc.lower().removeprefix("www.")
+else:
+    url_ok = url.rstrip("/") == expected_url
 print(json.dumps({
     "ok": bool(provider_ok and url_ok),
     "expected_tab_id": tab_id,
@@ -245,7 +251,7 @@ fi
 focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 attempt=0
-if [[ -n "$requested_tab_id" && "${SURF_GROK_NATIVE_EXACT_TAB_FIRST:-0}" != "1" ]]; then
+if [[ -n "$requested_tab_id" && "${SURF_GROK_NATIVE_EXACT_TAB_FIRST:-1}" != "1" ]]; then
   fallback_args=(
     python3 "${SCRIPT_DIR}/grok_generic_fallback.py"
     --surf-run "$RUN_SH"

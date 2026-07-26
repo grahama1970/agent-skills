@@ -50,6 +50,8 @@ target_url=""
 no_activate=0
 attach_files=()
 tab_state_file="${SURF_GEMINI_TAB_STATE:-/tmp/surf-gemini-controlled-tab-id}"
+stall_retry_attempts="${SURF_GEMINI_STALL_RETRY_ATTEMPTS:-1}"
+stall_cooldown_s="${SURF_GEMINI_STALL_COOLDOWN_SECONDS:-120}"
 
 add_attach_files_arg() {
   local value="$1"
@@ -190,15 +192,40 @@ fi
 focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-set +e
-if command -v timeout >/dev/null 2>&1; then
-  hard_timeout_s=$((timeout_s + 60))
-  timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
-else
-  "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
-fi
-status=$?
-set -e
+stall_retry_count=0
+while true; do
+  set +e
+  if command -v timeout >/dev/null 2>&1; then
+    hard_timeout_s=$((timeout_s + 60))
+    timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+  else
+    "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+  fi
+  status=$?
+  set -e
+  if [[ $status -eq 0 ]]; then
+    break
+  fi
+  haystack="$(cat "$stderr_log" "$raw_tmp" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
+  if [[ "$stall_retry_count" -ge "$stall_retry_attempts" ]] || \
+     [[ "$haystack" != *"response timeout"* && "$haystack" != *"system is currently busy"* && "$haystack" != *"temporarily busy"* && "$haystack" != *"high demand"* ]]; then
+    break
+  fi
+  stall_retry_count=$((stall_retry_count + 1))
+  echo "Gemini stalled; cooling down ${stall_cooldown_s}s before retry ${stall_retry_count}/${stall_retry_attempts}." >&2
+  sleep "$stall_cooldown_s"
+  if [[ -n "${requested_tab_id:-}" ]]; then
+    set +e
+    "$RUN_SH" go "https://gemini.google.com/app" --tab-id "$requested_tab_id" --json >/dev/null 2>>"$stderr_log"
+    reset_status=$?
+    set -e
+    if [[ $reset_status -ne 0 ]]; then
+      status=$reset_status
+      echo "Gemini exact-tab reset failed before stalled-response retry." >>"$stderr_log"
+      break
+    fi
+  fi
+done
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Post-run focus snapshot for proof.
@@ -207,9 +234,9 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, retry_count, retry_attempts, cooldown_s = sys.argv[1:]
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
@@ -221,6 +248,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "stall_retry_count": int(retry_count),
+    "stall_retry_attempts": int(retry_attempts),
+    "stall_cooldown_seconds": int(cooldown_s),
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -265,9 +295,9 @@ clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, retry_count, retry_attempts, cooldown_s = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -356,6 +386,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "stall_retry_count": int(retry_count),
+    "stall_retry_attempts": int(retry_attempts),
+    "stall_cooldown_seconds": int(cooldown_s),
     "stable_polls": int(stable),
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,

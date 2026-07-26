@@ -1165,6 +1165,23 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
     const { query, model, deepSearch, withPage, timeout } = extensionMsg;
 
     queueAiRequest(async () => {
+      const requestGrokCdp = async (operation, message, compatibilityMessage) => {
+        try {
+          const result = await requestCallExtension(requestContext, operation, message);
+          if (!/Unknown message type: GROK_(?:EVALUATE|CDP_COMMAND)/i.test(result?.error || "")) {
+            return result;
+          }
+          log(`[grok] loaded extension lacks ${message.type}; retrying compatible exact-tab CDP alias`);
+          return requestCallExtension(requestContext, `${operation}_compat`, compatibilityMessage);
+        } catch (error) {
+          if (!/Unknown message type: GROK_(?:EVALUATE|CDP_COMMAND)/i.test(error?.message || "")) {
+            throw error;
+          }
+          log(`[grok] loaded extension lacks ${message.type}; retrying compatible exact-tab CDP alias`);
+          return requestCallExtension(requestContext, `${operation}_compat`, compatibilityMessage);
+        }
+      };
+
       // 1. Get page context if requested
       let pageContext = null;
       if (withPage) {
@@ -1207,15 +1224,15 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
           { type: "GROK_NEW_TAB" },
         ),
         closeTab: (tabIdToClose) => requestCallExtension(requestContext, "close_tab", { type: "GROK_CLOSE_TAB", tabId: tabIdToClose }, 45000, true),
-        cdpEvaluate: (tabId, expression) => requestCallExtension(
-          requestContext,
+        cdpEvaluate: (tabId, expression) => requestGrokCdp(
           "cdp_evaluate",
           { type: "GROK_EVALUATE", tabId, expression },
+          { type: "KIMI_EVALUATE", tabId, expression },
         ),
-        cdpCommand: (tabId, method, params) => requestCallExtension(
-          requestContext,
+        cdpCommand: (tabId, method, params) => requestGrokCdp(
           "cdp_command",
           { type: "GROK_CDP_COMMAND", tabId, method, params },
+          { type: "KIMI_CDP_COMMAND", tabId, method, params },
         ),
         log: (msg) => log(`[grok] ${msg}`)
       });

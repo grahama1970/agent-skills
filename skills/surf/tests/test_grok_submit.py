@@ -85,6 +85,22 @@ def test_grok_submit_dispatches_from_run_sh_help() -> None:
     assert "surf grok.submit --input request.md --output response.md" in proc.stdout
 
 
+def test_grok_submit_defaults_to_atomic_native_exact_tab_transport() -> None:
+    source = GROK_SUBMIT.read_text(encoding="utf-8")
+
+    assert '${SURF_GROK_NATIVE_EXACT_TAB_FIRST:-1}' in source
+
+
+def test_grok_native_host_uses_backward_compatible_exact_tab_cdp_aliases() -> None:
+    host = (
+        REPO_ROOT / "skills/surf/vendor/surf-cli/native/host.cjs"
+    ).read_text(encoding="utf-8")
+
+    assert "requestGrokCdp" in host
+    assert '{ type: "KIMI_EVALUATE", tabId, expression }' in host
+    assert '{ type: "KIMI_CDP_COMMAND", tabId, method, params }' in host
+
+
 def test_grok_fallback_returns_iife_results_from_surf_js(tmp_path: Path) -> None:
     fake_surf = tmp_path / "surf"
     fake_surf.write_text(
@@ -241,6 +257,29 @@ def test_grok_submit_rejects_wrong_tab_before_provider_submit(tmp_path: Path) ->
     assert meta["failure"] == "browser_tab_identity_mismatch"
     assert meta["proof_status"] == "wrong_tab"
     assert meta["tab_identity_preflight"]["provider_ok"] is False
+
+
+def test_grok_submit_accepts_conversation_route_for_provider_root_url(tmp_path: Path) -> None:
+    fake_surf = tmp_path / "surf"
+    write_fake_surf(
+        fake_surf,
+        tab_url="https://grok.com/c/conversation-id",
+        response="pong\n<<<GROK_DONE:TEST>>>",
+    )
+
+    proc = run_grok_submit(
+        tmp_path,
+        fake_surf,
+        "--tab-id",
+        "123",
+        "--url",
+        "https://grok.com/",
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    meta = json.loads((tmp_path / "response.md.meta.json").read_text(encoding="utf-8"))
+    assert meta["tab_identity_preflight"]["provider_ok"] is True
+    assert meta["tab_identity_preflight"]["url_ok"] is True
 
 
 def test_grok_submit_classifies_unknown_message_type_as_tool_unsupported(tmp_path: Path) -> None:
