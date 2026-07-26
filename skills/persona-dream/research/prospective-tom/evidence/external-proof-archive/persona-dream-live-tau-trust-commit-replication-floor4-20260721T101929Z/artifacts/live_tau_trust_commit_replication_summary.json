@@ -1,0 +1,148 @@
+{
+  "action_receipt_sha256": "sha256:b896eab33db33d2b4b2d7615aeaf672b6809c0b84f3f2a00e5c7cf473d7b4c7a",
+  "comparisons": {
+    "action_brier": {
+      "cd_minus_strongest_baseline": 0.10539999999999994,
+      "cd_value": 0.7687999999999999,
+      "lower_is_better": true,
+      "metric": "action_brier",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_value": 0.6634
+    },
+    "belief_brier": {
+      "cd_minus_strongest_baseline": -0.034924999999999984,
+      "cd_value": 0.38007500000000005,
+      "lower_is_better": true,
+      "metric": "belief_brier",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_value": 0.41500000000000004
+    },
+    "planning_regret": {
+      "cd_minus_strongest_baseline": -0.15000000000000002,
+      "cd_value": 0.275,
+      "lower_is_better": true,
+      "metric": "planning_regret",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_value": 0.42500000000000004
+    }
+  },
+  "condition_means": {
+    "action_brier": {
+      "CD": 0.7687999999999999,
+      "D": 0.6634,
+      "M": 0.6634,
+      "R": 0.6634
+    },
+    "belief_brier": {
+      "CD": 0.38007500000000005,
+      "D": 0.41500000000000004,
+      "M": 0.41500000000000004,
+      "R": 0.41500000000000004
+    },
+    "planning_regret": {
+      "CD": 0.275,
+      "D": 0.42500000000000004,
+      "M": 0.42500000000000004,
+      "R": 0.42500000000000004
+    }
+  },
+  "condition_receipt_sha256": "sha256:f5a502de99d26e5163b05e1ae4601397020873fda926a5318a04ebe931dec0a5",
+  "planning_summary": {
+    "action_switch_count": 2,
+    "delta_counts": {
+      "-0.8500000000000001": 1,
+      "0.0": 2,
+      "0.25": 1
+    },
+    "direction_counts": {
+      "BENEFIT": 1,
+      "HARM": 1,
+      "TIE": 2
+    },
+    "episodes": 4,
+    "mean_cd_minus_baseline": -0.15000000000000002,
+    "nonzero_action_switch_count": 2,
+    "nonzero_delta_count": 2,
+    "oracle_match_transitions": {
+      "GAIN": 1,
+      "LOSS": 1,
+      "UNCHANGED": 2
+    },
+    "planning_benefit_with_confidence": false,
+    "planning_regret_ci": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:fba91b47de3d1197013d23ff15580eaabe259de18a2bf2766f7714631a25ff48",
+      "lower": -0.6375000000000001,
+      "mean": -0.15000000000000002,
+      "samples": 10000,
+      "seed": 20260724,
+      "upper": 0.1875
+    },
+    "rows": [
+      {
+        "action_switched": false,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": true,
+        "baseline_regret": 0.0,
+        "cd_action": "SET_BOUNDARY",
+        "cd_matches_oracle": true,
+        "cd_minus_baseline": 0.0,
+        "cd_regret": 0.0,
+        "direction": "TIE",
+        "episode_id": "sealedte-trust-commit-01",
+        "oracle_action": "SET_BOUNDARY",
+        "oracle_match_transition": "UNCHANGED"
+      },
+      {
+        "action_switched": false,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": false,
+        "baseline_regret": 0.8500000000000001,
+        "cd_action": "SET_BOUNDARY",
+        "cd_matches_oracle": false,
+        "cd_minus_baseline": 0.0,
+        "cd_regret": 0.8500000000000001,
+        "direction": "TIE",
+        "episode_id": "sealedte-trust-commit-02",
+        "oracle_action": "ASK_CLARIFYING_QUESTION",
+        "oracle_match_transition": "UNCHANGED"
+      },
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": false,
+        "baseline_regret": 0.8500000000000001,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": true,
+        "cd_minus_baseline": -0.8500000000000001,
+        "cd_regret": 0.0,
+        "direction": "BENEFIT",
+        "episode_id": "sealedte-trust-commit-03",
+        "oracle_action": "ASK_CLARIFYING_QUESTION",
+        "oracle_match_transition": "GAIN"
+      },
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": true,
+        "baseline_regret": 0.0,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": false,
+        "cd_minus_baseline": 0.25,
+        "cd_regret": 0.25,
+        "direction": "HARM",
+        "episode_id": "sealedte-trust-commit-04",
+        "oracle_action": "SET_BOUNDARY",
+        "oracle_match_transition": "LOSS"
+      }
+    ]
+  },
+  "scenario_family": "trust_commitment_relationship",
+  "schema": "persona_dream.research.prospective_tom.live_tau_trust_commit_replication_summary.v1",
+  "split": "sealed_test",
+  "trust_episode_limit": 4
+}

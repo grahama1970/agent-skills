@@ -1,0 +1,38 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "caller_skill": "persona-dream",
+  "created_at": "2026-07-21T14:57:19.613172+00:00",
+  "diagnostic_case_id": "domain_payload_simple_response",
+  "diagnostic_elapsed_s": 2.346,
+  "http_status": 200,
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "output_contract_sha256": "sha256:691cc1d7e36c1dfc3df3e8a3cd1016f767a0ca8ea6f75225fed4099aacebda30",
+  "parsed_json": {
+    "case_id": "domain_payload_simple_response",
+    "diagnostic_ready": true
+  },
+  "prompt_byte_count": 2912,
+  "prompt_char_count": 2912,
+  "prompt_sha256": "sha256:33c80151c7b08752aceb30dcf77e9b17edfb1237c11f3f15df408dda1d4417e9",
+  "request": {
+    "messages": "<redacted-prompt>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-text-reasoning",
+      "role": "pctom-prompt-timeout-diagnostic-domain_payload_simple_response"
+    },
+    "temperature": 0
+  },
+  "response_content": "{\"diagnostic_ready\":true,\"case_id\":\"domain_payload_simple_response\"}",
+  "role": "pctom-prompt-timeout-diagnostic-domain_payload_simple_response",
+  "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+  "status": "PASS",
+  "surface": "scillm.chat_completions.text"
+}

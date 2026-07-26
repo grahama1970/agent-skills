@@ -1,0 +1,77 @@
+{
+  "gate0_negative_statuses": {
+    "bad_source_hash": "BLOCKED_PCTOM_GATE0_LINEAGE",
+    "outcome_visible": "BLOCKED_PCTOM_GATE0_LINEAGE",
+    "unaccepted_residue": "BLOCKED_PCTOM_GATE0_LINEAGE",
+    "unresolved_branch": "BLOCKED_PCTOM_GATE0_LINEAGE"
+  },
+  "gate0_positive_status": "PASS_PCTOM_GATE0_LINEAGE",
+  "gate1_counts": {
+    "episodes": 12,
+    "families": 4,
+    "family_counts": {
+      "coordination_conflict": 3,
+      "information_asymmetry_false_belief": 3,
+      "preference_desire_uncertainty": 3,
+      "trust_commitment_relationship": 3
+    },
+    "first_order_labels": 12,
+    "second_order_labels": 12
+  },
+  "gate1_status": "PASS_SOCIAL_EPISODE_CORPUS",
+  "gate2_negative_statuses": {
+    "bad_probability_sum": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "canonical_memory_write": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "counterfactual_literal_mix": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "hidden_evidence_ref": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "outcome_visible": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "perspective_label_mismatch": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "unsupported_not_abstained": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS"
+  },
+  "gate2_positive_status": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+  "gate3_distribution_status": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+  "gate3_negative_errors": {
+    "counterfactual_not_synthetic": [
+      "branch_1_counterfactual_synthetic_not_true",
+      "branch_1_intervention_not_synthetic"
+    ],
+    "factual_uses_counterfactual_distribution": [
+      "branch_0_factual_branch_uses_counterfactual_distribution:gate3-counterfactual-bdi-001"
+    ],
+    "held_fixed_includes_intervention": [
+      "branch_1_held_fixed_includes_intervened_variable:counterpart_policy.expected_actual_next_action",
+      "branch_1_branch_held_fixed_includes_intervened_variable:counterpart_policy.expected_actual_next_action"
+    ],
+    "hidden_source_evidence": [
+      "branch_0_unresolved_or_hidden_source_ref:social_episode_observation:dev-info-asym-01:hidden_world_state:changed_constraint"
+    ],
+    "missing_factual_branch": [
+      "missing_factual_branch"
+    ],
+    "unresolved_distribution_ref": [
+      "branch_0_unresolved_distribution_ref:missing-distribution"
+    ]
+  },
+  "gate3_negative_statuses": {
+    "counterfactual_not_synthetic": "BLOCKED_COUNTERFACTUAL_BRANCHES",
+    "factual_uses_counterfactual_distribution": "BLOCKED_COUNTERFACTUAL_BRANCHES",
+    "held_fixed_includes_intervention": "BLOCKED_COUNTERFACTUAL_BRANCHES",
+    "hidden_source_evidence": "BLOCKED_COUNTERFACTUAL_BRANCHES",
+    "missing_factual_branch": "BLOCKED_COUNTERFACTUAL_BRANCHES",
+    "unresolved_distribution_ref": "BLOCKED_COUNTERFACTUAL_BRANCHES"
+  },
+  "gate3_positive_counts": {
+    "branches": 2,
+    "counterfactual_branches": 1,
+    "distribution_refs": 2,
+    "factual_branches": 1,
+    "interventions": 1,
+    "resolved_source_evidence_refs": 4
+  },
+  "gate3_positive_status": "PASS_COUNTERFACTUAL_BRANCHES",
+  "git_diff_check": "clean",
+  "json_parse": "json_files_parsed=47",
+  "mock_claim_checker": "absent",
+  "out_root": "/tmp/persona-dream-pctom-gate3-final-20260721T004724Z",
+  "python_ast_parse": "python_files_ast_parsed=5"
+}

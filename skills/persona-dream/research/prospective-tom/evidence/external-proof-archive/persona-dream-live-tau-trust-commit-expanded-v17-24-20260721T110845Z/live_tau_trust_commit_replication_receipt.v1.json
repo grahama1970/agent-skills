@@ -1,0 +1,315 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_selection_receipt_passed": true,
+    "all_conditions_have_expected_action_counts": true,
+    "condition_receipt_passed": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "only_trust_commit_episodes_selected": true,
+    "planning_rows_cover_expected_episodes": true,
+    "tau_receipts_hash_bound": true,
+    "unsupported_writes_absent": true,
+    "variant_max_respected": true,
+    "variant_min_respected": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "production retry machinery",
+      "live Memory recall in the sealed-test loop",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "a focused trust/commitment subset was rerun through live Tau M/R/D/CD condition predictions",
+      "the live Tau trust/commitment outputs were sealed before deterministic outcome reveal and scored by Gate 5",
+      "the live Tau trust/commitment scores were mapped into constrained Gate 6 action selections and planning-regret rows",
+      "planning-regret CD-minus-baseline deltas were recomputed for the trust/commitment subset",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 8,
+      "D": 8,
+      "M": 8,
+      "R": 8
+    },
+    "action_switch_count": 1,
+    "cases": 32,
+    "episodes": 8,
+    "nonzero_action_switch_count": 1,
+    "nonzero_delta_count": 1,
+    "oracle_match_transitions": {
+      "GAIN": 1,
+      "UNCHANGED": 7
+    },
+    "planning_regret_scores_per_condition": {
+      "CD": 8,
+      "D": 8,
+      "M": 8,
+      "R": 8
+    },
+    "selected_episode_ids": [
+      "sealedte-trust-commit-17",
+      "sealedte-trust-commit-18",
+      "sealedte-trust-commit-19",
+      "sealedte-trust-commit-20",
+      "sealedte-trust-commit-21",
+      "sealedte-trust-commit-22",
+      "sealedte-trust-commit-23",
+      "sealedte-trust-commit-24"
+    ]
+  },
+  "created_at": "2026-07-21T11:34:10Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episodes_per_family": 24,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_action_selection_receipt": "/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/live_tau_trust_commit_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "live_tau_action_selection_receipt_sha256": "sha256:fe97f44f2b308b19dd9165026e86f03feaa4403a7b17811a99f7deca76c87a5f",
+  "live_tau_condition_comparison_receipt": "/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/live_tau_trust_commit_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "live_tau_condition_comparison_receipt_sha256": "sha256:cc798da19aa42db398dc1a1da33d3001d49ced29ceec912f403617c71ba9d8f8",
+  "live_tau_reexecuted": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "action_receipt_sha256": "sha256:fe97f44f2b308b19dd9165026e86f03feaa4403a7b17811a99f7deca76c87a5f",
+    "comparisons": {
+      "action_brier": {
+        "cd_minus_strongest_baseline": -0.026050000000000018,
+        "cd_value": 0.64235,
+        "lower_is_better": true,
+        "metric": "action_brier",
+        "strongest_baseline_condition": "M",
+        "strongest_baseline_value": 0.6684
+      },
+      "belief_brier": {
+        "cd_minus_strongest_baseline": -0.009062500000000029,
+        "cd_value": 0.4059375,
+        "lower_is_better": true,
+        "metric": "belief_brier",
+        "strongest_baseline_condition": "M",
+        "strongest_baseline_value": 0.41500000000000004
+      },
+      "planning_regret": {
+        "cd_minus_strongest_baseline": -0.10625000000000007,
+        "cd_value": 0.53125,
+        "lower_is_better": true,
+        "metric": "planning_regret",
+        "strongest_baseline_condition": "M",
+        "strongest_baseline_value": 0.6375000000000001
+      }
+    },
+    "condition_means": {
+      "action_brier": {
+        "CD": 0.64235,
+        "D": 0.6684,
+        "M": 0.6684,
+        "R": 0.6684
+      },
+      "belief_brier": {
+        "CD": 0.4059375,
+        "D": 0.41500000000000004,
+        "M": 0.41500000000000004,
+        "R": 0.41500000000000004
+      },
+      "planning_regret": {
+        "CD": 0.53125,
+        "D": 0.6375000000000001,
+        "M": 0.6375000000000001,
+        "R": 0.6375000000000001
+      }
+    },
+    "condition_receipt_sha256": "sha256:cc798da19aa42db398dc1a1da33d3001d49ced29ceec912f403617c71ba9d8f8",
+    "episodes_per_family": 24,
+    "planning_summary": {
+      "action_switch_count": 1,
+      "delta_counts": {
+        "-0.8500000000000001": 1,
+        "0.0": 7
+      },
+      "direction_counts": {
+        "BENEFIT": 1,
+        "TIE": 7
+      },
+      "episodes": 8,
+      "mean_cd_minus_baseline": -0.10625000000000001,
+      "nonzero_action_switch_count": 1,
+      "nonzero_delta_count": 1,
+      "oracle_match_transitions": {
+        "GAIN": 1,
+        "UNCHANGED": 7
+      },
+      "planning_benefit_with_confidence": false,
+      "planning_regret_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:deed8e67dcec93d44b96b95e547d2ceb5b8eb7775aa84b163629786ddfc0b1aa",
+        "lower": -0.31875000000000003,
+        "mean": -0.10625000000000001,
+        "samples": 10000,
+        "seed": 20260724,
+        "upper": 0.0
+      },
+      "rows": [
+        {
+          "action_switched": false,
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "cd_action": "SET_BOUNDARY",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.0,
+          "cd_regret": 0.8500000000000001,
+          "direction": "TIE",
+          "episode_id": "sealedte-trust-commit-17",
+          "oracle_action": "ASK_CLARIFYING_QUESTION",
+          "oracle_match_transition": "UNCHANGED"
+        },
+        {
+          "action_switched": false,
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "cd_action": "SET_BOUNDARY",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.0,
+          "cd_regret": 0.8500000000000001,
+          "direction": "TIE",
+          "episode_id": "sealedte-trust-commit-18",
+          "oracle_action": "ASK_CLARIFYING_QUESTION",
+          "oracle_match_transition": "UNCHANGED"
+        },
+        {
+          "action_switched": false,
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "cd_action": "SET_BOUNDARY",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": 0.0,
+          "cd_regret": 0.0,
+          "direction": "TIE",
+          "episode_id": "sealedte-trust-commit-19",
+          "oracle_action": "SET_BOUNDARY",
+          "oracle_match_transition": "UNCHANGED"
+        },
+        {
+          "action_switched": false,
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "cd_action": "SET_BOUNDARY",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.0,
+          "cd_regret": 0.8500000000000001,
+          "direction": "TIE",
+          "episode_id": "sealedte-trust-commit-20",
+          "oracle_action": "ASK_CLARIFYING_QUESTION",
+          "oracle_match_transition": "UNCHANGED"
+        },
+        {
+          "action_switched": false,
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "cd_action": "SET_BOUNDARY",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.0,
+          "cd_regret": 0.8500000000000001,
+          "direction": "TIE",
+          "episode_id": "sealedte-trust-commit-21",
+          "oracle_action": "ASK_CLARIFYING_QUESTION",
+          "oracle_match_transition": "UNCHANGED"
+        },
+        {
+          "action_switched": false,
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "cd_action": "SET_BOUNDARY",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": 0.0,
+          "cd_regret": 0.0,
+          "direction": "TIE",
+          "episode_id": "sealedte-trust-commit-22",
+          "oracle_action": "SET_BOUNDARY",
+          "oracle_match_transition": "UNCHANGED"
+        },
+        {
+          "action_switched": true,
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-23",
+          "oracle_action": "ASK_CLARIFYING_QUESTION",
+          "oracle_match_transition": "GAIN"
+        },
+        {
+          "action_switched": false,
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "cd_action": "SET_BOUNDARY",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.0,
+          "cd_regret": 0.8500000000000001,
+          "direction": "TIE",
+          "episode_id": "sealedte-trust-commit-24",
+          "oracle_action": "ASK_CLARIFYING_QUESTION",
+          "oracle_match_transition": "UNCHANGED"
+        }
+      ]
+    },
+    "scenario_family": "trust_commitment_relationship",
+    "schema": "persona_dream.research.prospective_tom.live_tau_trust_commit_replication_summary.v1",
+    "split": "sealed_test",
+    "trust_episode_limit": 8,
+    "variant_max": 24,
+    "variant_min": 17
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z",
+  "planning_benefit_with_confidence": false,
+  "planning_rows_path": "/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/artifacts/trust_commit_planning_rows.json",
+  "planning_rows_sha256": "sha256:3000d58a2c7a41f68bb92d0dca93325d23646fbbab56d9fb59ecf6d41990c153",
+  "processing_time_s": 1524.794,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/live_tau_trust_commit_replication_receipt.v1.json",
+  "receipt_sha256": "sha256:9323b4523f5b0e492bbe5b920c85bf22e82c268cc731ee5fc511ec6ceadf1a8d",
+  "scenario_family": "trust_commitment_relationship",
+  "schema": "persona_dream.research.prospective_tom.live_tau_trust_commit_replication_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION",
+  "summary_path": "/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/artifacts/live_tau_trust_commit_replication_summary.json",
+  "summary_sha256": "sha256:2b22b3afc2b95cfef339a771423d0c777a2e710a8a21bf031c7fa3ebbff7ce2e",
+  "tau_call_attempts": 32,
+  "tau_live_call_performed": 32,
+  "trust_episode_limit": 8,
+  "variant_max": 24,
+  "variant_min": 17
+}

@@ -1,0 +1,220 @@
+{
+  "artifact_sha256": {
+    "base_live_memory_revision_recall_manifest": "sha256:a6da8e62a17393cb934082cb98c885c08a140c69882d38cd9e811e0c67956aa6",
+    "base_sealed_test_manifest": "sha256:1f22b8182f595bb61a023b4a71cfa423b5a044d814d1a6c1eaf0402ee6d1b474",
+    "causal_replay": "sha256:0c64db578eb318884239ef3827e235404d3bbe55385591bcf82ac85d5c20c198",
+    "fault_manifests": "sha256:57c612065c4e59c347b6e800527cadb1c4d27bd4d7cf35681ecb68b051ad3025",
+    "fault_trials": "sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92",
+    "live_memory_fault_probes": "sha256:73d5e99c74b7add89f82b7974f2ec7692b12b68facdf2967b56285b282ce1442"
+  },
+  "artifacts": {
+    "base_live_memory_revision_recall_manifest": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/artifacts/base_live_memory_revision_recall_manifest.json",
+    "base_sealed_test_manifest": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/artifacts/base_sealed_test_manifest.json",
+    "causal_replay": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/artifacts/causal_replay.json",
+    "fault_manifests_root": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/artifacts/fault_manifests",
+    "fault_trials": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/artifacts/fault_trials.json",
+    "live_memory_fault_probes": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/artifacts/live_memory_fault_probes.json"
+  },
+  "base_receipts": {
+    "live_memory_revision_recall": {
+      "checks": {
+        "base_receipt_hash_recomputed": true,
+        "base_revision_recall_passed": true,
+        "conditions_represented": true,
+        "human_content_judgment_absent": true,
+        "live_memory_recall_hits_per_condition": true,
+        "live_memory_recall_hits_present": true,
+        "live_memory_recall_performed": true,
+        "memory_exact_reread_complete": true,
+        "memory_semantic_exact_reread_complete": true,
+        "memory_semantic_upsert_http_ok": true,
+        "memory_upsert_http_ok": true,
+        "prior_and_posterior_distinguished": true,
+        "synthetic_literal_boundary_preserved": true,
+        "unsupported_writes_absent": true
+      },
+      "counts": {
+        "base_revision_documents": 16,
+        "memory_documents_prepared": 16,
+        "memory_documents_upserted": 16,
+        "memory_exact_rereads": 16,
+        "memory_semantic_documents_prepared": 16,
+        "memory_semantic_documents_upserted": 16,
+        "memory_semantic_exact_rereads": 16,
+        "revision_documents_per_condition": {
+          "CD": 4,
+          "D": 4,
+          "M": 4,
+          "R": 4
+        },
+        "revision_recall_hits": 16,
+        "revision_recall_hits_per_condition": {
+          "CD": 4,
+          "D": 4,
+          "M": 4,
+          "R": 4
+        },
+        "revision_recall_queries": 4,
+        "write_violations": 0
+      },
+      "exact_audit_collection": "persona_dream_pctom_revision_recall",
+      "receipt_path": "/tmp/persona-dream-live-memory-revision-recall-strict120-v17-20260721T1547Z/live_memory_revision_recall_receipt.v1.json",
+      "receipt_sha256": "sha256:c4f9b19e1de31d08ace3b7d17909dcb8cde1ca7656a0aa3345d18d11fc93ce22",
+      "root": "/tmp/persona-dream-live-memory-revision-recall-strict120-v17-20260721T1547Z",
+      "semantic_recall_collection": "lessons",
+      "status": "PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL"
+    },
+    "sealed_test_statistical_confidence": {
+      "checks": {
+        "all_conditions_have_64_action_decisions": true,
+        "all_conditions_have_64_scores": true,
+        "all_conditions_have_64_sealed_commitments": true,
+        "episode_count_is_64": true,
+        "human_content_judgment_absent": true,
+        "llm_judge_absent": true,
+        "planning_confidence_interval_upper_below_zero": false,
+        "primary_confidence_interval_upper_below_zero": true,
+        "primary_metric_is_preregistered": true,
+        "split_is_sealed_test": true,
+        "strongest_baseline_is_allowed": true,
+        "unsupported_writes_absent": true
+      },
+      "counts": {
+        "action_decisions_per_condition": {
+          "CD": 64,
+          "D": 64,
+          "M": 64,
+          "R": 64
+        },
+        "bootstrap_samples": 2000,
+        "cases": 256,
+        "deterministic_scores_per_condition": {
+          "CD": 64,
+          "D": 64,
+          "M": 64,
+          "R": 64
+        },
+        "episodes_consumed": 64,
+        "families_consumed": 4,
+        "paired_delta_counts": {
+          "action_brier": 64,
+          "belief_brier": 64,
+          "planning_regret": 64
+        },
+        "sealed_commitments_per_condition": {
+          "CD": 64,
+          "D": 64,
+          "M": 64,
+          "R": 64
+        }
+      },
+      "receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_statistical_confidence_receipt.v1.json",
+      "receipt_sha256": "sha256:e0163494c88513d4827b160bfc124de82218b3f2caac7bd06124cce448625e27",
+      "root": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z",
+      "status": "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE"
+    }
+  },
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_live_memory_revision_recall_passed": true,
+    "base_sealed_test_receipt_passed": true,
+    "causal_replay_written": true,
+    "continued_with_unknown_state_absent": true,
+    "live_memory_baseline_recall_ok": true,
+    "live_memory_malformed_payload_blocked": true,
+    "live_memory_unreachable_blocked": true,
+    "permitted_terminal_outcomes_only": true,
+    "required_fault_families_present": true,
+    "side_effect_violations_absent": true,
+    "unsupported_writes_absent": true
+  },
+  "controlled_faults_used": true,
+  "counts": {
+    "canonical_memory_write_attempts": 0,
+    "causal_replay_receipts": 1,
+    "fault_families": 8,
+    "fault_trials": 8,
+    "identity_write_attempts": 0,
+    "live_memory_fault_probes": 4,
+    "memory_write_attempts": 0,
+    "provider_call_attempts": 0,
+    "source_memory_write_attempts": 0,
+    "tau_call_attempts": 0
+  },
+  "errors": [],
+  "fault_surface": {
+    "active_partial_state_violations": 0,
+    "allowed_terminal_outcomes": [
+      "BLOCKED_BEFORE_SIDE_EFFECT",
+      "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "RECOVERED_WITH_EQUIVALENT_END_STATE"
+    ],
+    "continued_with_unknown_state": 0,
+    "controlled_fault_definition_count": 5,
+    "fault_families": [
+      "interrupted_persistence",
+      "memory_collection_visibility_or_stale_recall",
+      "memory_malformed_payload",
+      "memory_timeout_or_unreachable",
+      "model_malformed_structured_output",
+      "retry_after_uncertain_completion",
+      "schema_drift",
+      "untrusted_tool_text"
+    ],
+    "fault_family_counts": {
+      "interrupted_persistence": 1,
+      "memory_collection_visibility_or_stale_recall": 1,
+      "memory_malformed_payload": 1,
+      "memory_timeout_or_unreachable": 1,
+      "model_malformed_structured_output": 1,
+      "retry_after_uncertain_completion": 1,
+      "schema_drift": 1,
+      "untrusted_tool_text": 1
+    },
+    "live_fault_performed_count": 3,
+    "permitted_terminal_outcomes_only": true,
+    "required_fault_families": [
+      "interrupted_persistence",
+      "memory_collection_visibility_or_stale_recall",
+      "memory_malformed_payload",
+      "memory_timeout_or_unreachable",
+      "model_malformed_structured_output",
+      "retry_after_uncertain_completion",
+      "schema_drift",
+      "untrusted_tool_text"
+    ],
+    "side_effect_violations": 0,
+    "terminal_outcome_counts": {
+      "BLOCKED_BEFORE_SIDE_EFFECT": 4,
+      "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE": 2,
+      "RECOVERED_WITH_EQUIVALENT_END_STATE": 2
+    }
+  },
+  "fixture_backed": false,
+  "generated_at": "2026-07-21T15:44:59Z",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "limitations": [
+    "This probes live Memory /recall faults and controlled local model/tool/schema/persistence/retry faults.",
+    "It does not prove live Tau sealed-test execution.",
+    "It does not prove production retry machinery inside a deployed orchestrator.",
+    "It does not call paid providers or prove video, audio, or semantic dream quality.",
+    "It does not mutate canonical/source/identity memory."
+  ],
+  "live": true,
+  "live_memory_fault_probes_performed": true,
+  "live_memory_root": "/tmp/persona-dream-live-memory-revision-recall-strict120-v17-20260721T1547Z",
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/live_fault_injection_surface_receipt.v1.json",
+  "receipt_sha256": "sha256:aa0bf2389ff88f299ccfaf77f3b017e40e4159d851fc7928aca379cb49ded84f",
+  "run_id": "persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z",
+  "schema": "persona_dream.research.prospective_tom.live_fault_injection_surface_receipt.v1",
+  "sealed_test_root": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE",
+  "tau_call_attempts": 0
+}

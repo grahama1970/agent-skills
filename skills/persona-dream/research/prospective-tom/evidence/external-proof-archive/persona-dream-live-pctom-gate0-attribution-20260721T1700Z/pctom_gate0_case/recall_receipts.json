@@ -1,0 +1,145 @@
+[
+  {
+    "accepted_count": 24,
+    "accepted_normalized_count": 24,
+    "accepted_persona_ids": [
+      "embry",
+      "embry_lawson"
+    ],
+    "accepted_source_ids": [
+      "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+      "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+      "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+      "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+      "embry_gap_unresolved_thread_instagram_after_kai_001",
+      "embry_gap_preference_chess_pie_home_recipe_001",
+      "embry_gap_knowledge_gap_brandon_interview_unknowns_001",
+      "embry_age19_23_b01_memory_010",
+      "embry_age19_23_b01_memory_036",
+      "embry_age23_current_b01_memory_024",
+      "embry_gap_preference_bachelor_monday_opinions_001",
+      "embry_age23_current_b01_memory_008",
+      "embry_age15_19_b03_memory_048",
+      "embry_age19_23_b01_memory_002",
+      "embry_age15_19_b01_memory_012",
+      "embry_age15_19_b03_memory_044",
+      "embry_gap_preference_rocket_launch_commentators_001",
+      "embry_age15_19_b02_memory_047",
+      "embry_age15_19_b02_memory_022",
+      "embry_age10_15_b01_memory_009",
+      "embry_age15_19_b03_memory_008",
+      "embry_age15_19_b01_memory_004",
+      "embry_age15_19_b02_memory_031",
+      "embry_age15_19_b03_memory_015"
+    ],
+    "accepted_source_ids_sha256": "sha256:3857cebbf1be9e61e90b0209a33dd5a79eebaf221b6045aaa7486d8a562a07c5",
+    "collections": [
+      "persona_memory"
+    ],
+    "confidence": 0.769,
+    "count": 32,
+    "discarded_persona_mismatch_count": 8,
+    "dropped_empty_text_count": 0,
+    "found": true,
+    "k": 32,
+    "persona_id": "embry",
+    "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence",
+    "scope": "persona-dream",
+    "should_scan": false,
+    "status": "ok"
+  },
+  {
+    "accepted_count": 1,
+    "accepted_normalized_count": 1,
+    "accepted_persona_ids": [
+      "embry",
+      "embry_lawson"
+    ],
+    "accepted_source_ids": [
+      "47452948"
+    ],
+    "accepted_source_ids_sha256": "sha256:99954c1caacb01215ad6b79192da869e1f3a464c5be17931c625e0bcb20c1b63",
+    "collections": null,
+    "confidence": 1.0,
+    "count": 1,
+    "discarded_persona_mismatch_count": 0,
+    "dropped_empty_text_count": 0,
+    "found": true,
+    "k": 1,
+    "persona_id": "embry",
+    "query": "recent unresolved themes persona memory SPARTA NIST MITRE evidence",
+    "scope": "embry-memories",
+    "should_scan": false,
+    "status": "ok"
+  },
+  {
+    "accepted_count": 1,
+    "accepted_normalized_count": 1,
+    "accepted_persona_ids": [
+      "embry",
+      "embry_lawson"
+    ],
+    "accepted_source_ids": [
+      "308496696438"
+    ],
+    "accepted_source_ids_sha256": "sha256:13e6ff2b2e67f7f14289cb48c21de768449f2a0431652a123f9354c9b998269a",
+    "collections": null,
+    "confidence": 1.0,
+    "count": 1,
+    "discarded_persona_mismatch_count": 0,
+    "dropped_empty_text_count": 0,
+    "found": true,
+    "k": 1,
+    "persona_id": "embry",
+    "query": "recent dream motif visual surreal recurring image",
+    "scope": "embry-dreams",
+    "should_scan": false,
+    "status": "ok"
+  },
+  {
+    "accepted_count": 1,
+    "accepted_normalized_count": 0,
+    "accepted_persona_ids": [
+      "embry",
+      "embry_lawson"
+    ],
+    "accepted_source_ids": [],
+    "accepted_source_ids_sha256": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "collections": null,
+    "confidence": 52.256,
+    "count": 1,
+    "discarded_persona_mismatch_count": 0,
+    "dropped_empty_text_count": 1,
+    "found": true,
+    "k": 1,
+    "persona_id": "embry",
+    "query": "dream reflection mood unresolved image feeling",
+    "scope": "embry-dream-journals",
+    "should_scan": false,
+    "status": "ok"
+  },
+  {
+    "accepted_count": 1,
+    "accepted_normalized_count": 1,
+    "accepted_persona_ids": [
+      "embry",
+      "embry_lawson"
+    ],
+    "accepted_source_ids": [
+      "47807240"
+    ],
+    "accepted_source_ids_sha256": "sha256:2f8effb77711d2e5ed33411d41adc0fe1642f8082c329f382d1c77b107624d25",
+    "collections": null,
+    "confidence": 1.0,
+    "count": 1,
+    "discarded_persona_mismatch_count": 0,
+    "dropped_empty_text_count": 0,
+    "found": true,
+    "k": 1,
+    "persona_id": "embry",
+    "query": "embry recent task failure contradiction insight",
+    "scope": "operational",
+    "should_scan": false,
+    "status": "ok"
+  }
+]

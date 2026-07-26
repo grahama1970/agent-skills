@@ -1,0 +1,127 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "all_rows_expose_offer_cooperation_affordance": true,
+    "avoid_or_unsafe_contrast_rows_present": true,
+    "human_content_judgment_absent": true,
+    "keep_cooperation_positive_rows_present": true,
+    "llm_judge_absent": true,
+    "negative_mutations_fail_closed": true,
+    "positive_instrument_passed": true,
+    "unsupported_writes_absent": true,
+    "variants_disjoint_from_prior_1_36_corpus": true,
+    "visible_packets_hash_bound": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution over the exposure/contrast corpus",
+      "CD will select OFFER_COOPERATION",
+      "planning benefit",
+      "confidence-bounded CD benefit",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a deterministic cooperation exposure/contrast corpus exists beyond variants 1-36",
+      "every visible packet exposes OFFER_COOPERATION as a non-oracle action affordance before outcome reveal",
+      "the corpus retains both keep-cooperation positive rows and avoid/unsafe-cooperation contrast rows",
+      "visible packets omit actual_next_action, counterpart_policy, contrast_class, oracle_agent_action, and hidden cooperation safety fields",
+      "negative mutations for missing offer affordance, missing avoid rows, avoid-row offer leakage, visible outcome leakage, and missing withheld oracle fields fail closed",
+      "no Tau call, Memory write, provider call, canonical write, identity write, source-memory write, human content judgment, or LLM judge was used"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/cooperation_exposure_contrast_instrument_corpus.v1.json",
+  "corpus_sha256": "sha256:ff503d03644505d53ca707ed95ef6e13341e606d8163c0a1e57afd34cb24c408",
+  "counts": {
+    "avoid_or_unsafe_cooperation_contrast_rows": 4,
+    "episodes": 8,
+    "keep_cooperation_positive_rows": 4,
+    "negative_mutations": 5,
+    "negative_mutations_failed_closed": 5,
+    "offer_cooperation_affordance_rows": 8,
+    "variant_max": 44,
+    "variant_min": 37,
+    "visible_packet_hashes": [
+      "sha256:afab421da43fb69aac32dfe52e4f5f39645d97e3ca87543affeef0ca8fe7b19d",
+      "sha256:5dde3087febb2ee6e13b8ea0a97c0890c952dc5d6979615cb4ab90c790e39131",
+      "sha256:56a5fb6bc873cc0abc5042eef8d1914cd7b310cd742ac0deba78c4b45e4ac774",
+      "sha256:9478ad1881f8678fded62d928be052a5cf2bc49726f1ea2d989f13d58ca258e5",
+      "sha256:117b30cb4b4929ba18bd19662c05f52d5e2c203866fb93b014d6378c6f88299b",
+      "sha256:817241201b7fb4bbbd9298dfa690190902993b9f91e914c3c92763ee6e984806",
+      "sha256:8c7767658681074fa2a9582905daf6c927b07a55d418dd1a09904806d86b9ac9",
+      "sha256:b78995a585706db7d6800ab8bb8c14dadf38296949ceec2bb9959000a49bcc36"
+    ],
+    "visible_packets_sha256": "sha256:491dede12e0946fa2e6f1fd153e48afbe33edb0b943c2b990d8b5cb19457e8f6"
+  },
+  "created_at": "2026-07-21T22:46:41Z",
+  "deterministic_simulator_corpus": true,
+  "episode_count": 8,
+  "errors": [],
+  "fixture_backed": false,
+  "generator_version": "pctom_cooperation_exposure_contrast_instrument.v1",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_results": {
+    "avoid_row_actual_offer": {
+      "errors": [
+        "episode_1_avoid_actual_offer_leak:KAI_OFFERS_COOPERATION"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/avoid_row_actual_offer/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/avoid_row_actual_offer/check.json"
+    },
+    "missing_avoid_contrast_rows": {
+      "errors": [
+        "missing_avoid_or_unsafe_cooperation_contrast_rows"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/missing_avoid_contrast_rows/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/missing_avoid_contrast_rows/check.json"
+    },
+    "missing_oracle_withheld_field": {
+      "errors": [
+        "episode_0_withheld_required_field_missing:oracle_agent_action"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/missing_oracle_withheld_field/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/missing_oracle_withheld_field/check.json"
+    },
+    "missing_visible_offer_affordance": {
+      "errors": [
+        "episode_0_missing_visible_offer_cooperation_affordance"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/missing_visible_offer_affordance/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/missing_visible_offer_affordance/check.json"
+    },
+    "visible_outcome_key_leak": {
+      "errors": [
+        "episode_0_visible_packet_contains_hidden_or_outcome_key"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/visible_outcome_key_leak/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations/visible_outcome_key_leak/check.json"
+    }
+  },
+  "negative_root": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/negative_mutations",
+  "output_root": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z",
+  "pair_count": 4,
+  "positive_check_path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/cooperation_exposure_contrast_positive_check.json",
+  "positive_check_sha256": "sha256:4c8b75641b7c348b4bf39f820ab7150e0accd85719cbd8ace8012da0875d110a",
+  "processing_time_s": 0.011,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/cooperation_exposure_contrast_instrument_receipt.v1.json",
+  "receipt_sha256": "sha256:1919eaaf30b995bf0a21d8d5e4c2d5fde31b91a47c39b1fa28dceaffe8d3d818",
+  "schema": "persona_dream.research.prospective_tom.cooperation_exposure_contrast_instrument_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_COOPERATION_EXPOSURE_CONTRAST_INSTRUMENT",
+  "tau_call_attempts": 0,
+  "variant_start": 37,
+  "visible_packets_path": "/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/artifacts/cooperation_exposure_contrast_visible_packets.v1.json",
+  "visible_packets_sha256": "sha256:cbece65bfb6d6972df8bd253cf6a52d94f925e1043028e12fa98aa6a33e0bcca"
+}

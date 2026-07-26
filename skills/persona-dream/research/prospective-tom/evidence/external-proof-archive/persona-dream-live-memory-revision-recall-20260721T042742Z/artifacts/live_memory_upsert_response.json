@@ -1,0 +1,8 @@
+{
+  "collection": "persona_dream_pctom_revision_recall",
+  "errors": [],
+  "inserted": 16,
+  "total": 16,
+  "updated": 0,
+  "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pctom_revision_recall_20260721T042743139976Z_13_129680474638016.jsonl"
+}

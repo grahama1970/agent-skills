@@ -1,0 +1,14 @@
+{
+  "contradictions": [
+    {
+      "bridge_a": "Resilience",
+      "bridge_b": "Fragility",
+      "description": "Resilience is held against Fragility: The source records questions about Embry's transition from SpaceX to Aerospace,  / Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, b",
+      "item_a": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+      "item_b": "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+      "score": 0.5
+    }
+  ],
+  "run_id": "persona-dream-live-pctom-gate0-r2",
+  "schema": "persona_dream.contradiction_report.v1"
+}

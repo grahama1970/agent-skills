@@ -39,6 +39,9 @@ htmlcov/
 .local/
 scratch/
 artifacts/
+# persona-dream durable proof archive: the generic artifacts/ rule above would
+# silently drop archived receipts, leaving the archive short of its manifest.
+!skills/persona-dream/research/prospective-tom/evidence/external-proof-archive/**/artifacts/
 reviews/
 create-architecture/
 *.task_state.json

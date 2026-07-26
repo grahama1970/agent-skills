@@ -1,0 +1,20 @@
+{
+  "condition_receipt_sha256": "sha256:e7ae95b4ea6a9bb9aaebaa3253f16c840534fd8fef47d23737abc002bcdd5c37",
+  "corpus_file_sha256": "sha256:ef82b0d890cbba4479b7910c276657fc4dd0fdab4d5b5b3c62774499454fa2eb",
+  "corpus_path": "/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "episode_limit": 8,
+  "episodes_per_family": 24,
+  "freeze_manifest_sha256": "sha256:99b347731c99ce0e030e9ed6987086ff465099a45091794982ec1f43bbd44c61",
+  "frozen_before_scoring_summary": true,
+  "generated_at": "2026-07-21T00:00:00Z",
+  "human_content_judgment_required": false,
+  "llm_judge_used": false,
+  "metrics_summary_path": "/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/condition_comparison/artifacts/condition_metrics_summary.json",
+  "metrics_summary_sha256": "sha256:d69f598f08cfbcac071b6e8262683f4f62ce2556f59ad9fd9a593a71da1b54be",
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "scenario_family_filter": "trust_commitment_relationship",
+  "schema": "persona_dream.research.prospective_tom.heldout_freeze_manifest.v1",
+  "split": "explicitly_frozen_heldout",
+  "variant_max": 26,
+  "variant_min": 25
+}

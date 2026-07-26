@@ -1,0 +1,20 @@
+{
+  "rows": [
+    {
+      "action_switched": false,
+      "baseline_action": "SET_BOUNDARY",
+      "baseline_condition": "M",
+      "baseline_matches_oracle": true,
+      "baseline_regret": 0.0,
+      "cd_action": "SET_BOUNDARY",
+      "cd_matches_oracle": true,
+      "cd_minus_baseline": 0.0,
+      "cd_regret": 0.0,
+      "direction": "TIE",
+      "episode_id": "sealedte-trust-commit-01",
+      "oracle_action": "SET_BOUNDARY",
+      "oracle_match_transition": "UNCHANGED"
+    }
+  ],
+  "schema": "persona_dream.research.prospective_tom.live_tau_trust_commit_planning_rows.v1"
+}

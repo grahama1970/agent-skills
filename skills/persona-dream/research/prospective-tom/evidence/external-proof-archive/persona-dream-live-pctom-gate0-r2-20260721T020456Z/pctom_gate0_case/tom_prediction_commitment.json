@@ -1,0 +1,108 @@
+{
+  "condition": "CD",
+  "episode_id": "live-persona-dream-live-pctom-gate0-r2",
+  "outcome_visible": false,
+  "prediction_id": "live-persona-dream-live-pctom-gate0-r2-prediction-0001",
+  "prediction_payload": {
+    "action_distribution": [
+      {
+        "action": "ASK_CLARIFYING_QUESTION",
+        "probability": 0.5
+      },
+      {
+        "action": "WAIT",
+        "probability": 0.3
+      },
+      {
+        "action": "ABSTAIN",
+        "probability": 0.2
+      }
+    ],
+    "belief_distributions": [
+      {
+        "abstain": false,
+        "counterfactual": false,
+        "distribution": [
+          {
+            "probability": 0.34,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.33,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.33,
+            "value": "UNKNOWN"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "scope": "persona-dream",
+            "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+          },
+          {
+            "scope": "persona-dream",
+            "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+          },
+          {
+            "scope": "persona-dream",
+            "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+          },
+          {
+            "scope": "persona-dream",
+            "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+          },
+          {
+            "scope": "persona-dream",
+            "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001"
+          },
+          {
+            "scope": "persona-dream",
+            "source_id": "embry_gap_preference_chess_pie_home_recipe_001"
+          }
+        ],
+        "mental_state_type": "belief",
+        "perspective_order": 2,
+        "prediction_horizon": "next_utterance",
+        "proposition": "Embry is uncertain what another agent believes and should preserve source-grounded uncertainty.",
+        "subject": "embry",
+        "target": "counterpart"
+      }
+    ],
+    "condition": "CD",
+    "dream_branch_refs": [
+      "live-branch-factual-0001",
+      "live-branch-cf-clarify-0001"
+    ],
+    "episode_id": "live-persona-dream-live-pctom-gate0-r2",
+    "evidence_residue_refs": [
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_preference_chess_pie_home_recipe_001"
+      }
+    ]
+  },
+  "prediction_payload_sha256": "sha256:a39563d2ec7687368691a85ef67b6d2aed525665461d26a582337ae41c97cfb0",
+  "sealed_at": "2026-07-21T02:05:01Z"
+}

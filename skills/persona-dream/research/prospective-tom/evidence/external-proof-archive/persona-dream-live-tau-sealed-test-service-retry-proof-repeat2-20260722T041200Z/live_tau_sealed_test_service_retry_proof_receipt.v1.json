@@ -1,0 +1,90 @@
+{
+  "artifacts": {
+    "retry_service_manifest": "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z/artifacts/retry_service_manifest.json",
+    "service_start_receipt": "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z/service/service_start_receipt.json",
+    "service_stop_receipt": "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z/service/service_stop_receipt.json"
+  },
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "all_unique_jobs_have_results": true,
+    "allowed_terminal_outcomes_only": true,
+    "continued_with_unknown_state_absent": true,
+    "duplicate_action_decisions_promoted_absent": true,
+    "duplicate_active_predictions_promoted_absent": true,
+    "duplicate_submission_idempotent": true,
+    "duplicate_submission_not_promoted": true,
+    "equivalent_end_state_after_retry": true,
+    "exact_retry_completed": true,
+    "http_service_boundary_exercised": true,
+    "interrupted_persistence_blocked": true,
+    "missing_base_root_blocked": true,
+    "service_process_exit_zero": true,
+    "service_process_started": true,
+    "side_effect_violations_absent": true,
+    "uncertain_retry_completed": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "a permanently deployed external production service",
+      "new live Tau execution",
+      "live Memory service fault injection",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a separate local HTTP service process can accept retry jobs through a service boundary",
+      "duplicate service submission for the same job id is idempotent and not promoted as a second active job",
+      "the service recovers equivalent active state for exact retry and retry-after-uncertain-completion jobs",
+      "the service blocks missing-base-root and interrupted-persistence jobs without active-state promotion",
+      "the service preserves recovered/blocked/quarantined terminal-outcome discipline from the sealed-test retry proof",
+      "no Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "counts": {
+    "action_decisions": 256,
+    "active_predictions": 256,
+    "blocked_jobs": 2,
+    "completed_jobs": 2,
+    "continued_with_unknown_state": 0,
+    "duplicate_action_decisions_promoted": 0,
+    "duplicate_active_predictions_promoted": 0,
+    "duplicate_submissions_detected": 1,
+    "gate6_receipts": 256,
+    "http_requests_submitted": 5,
+    "quarantined_jobs": 0,
+    "retry_fault_trials": 8,
+    "side_effect_violations": 0,
+    "terminal_outcome_counts": {
+      "BLOCKED_BEFORE_SIDE_EFFECT": 2,
+      "RECOVERED_WITH_EQUIVALENT_END_STATE": 2
+    },
+    "unique_service_jobs": 4
+  },
+  "created_at": "2026-07-22T03:42:32Z",
+  "errors": [],
+  "fixture_backed": false,
+  "http_service_boundary_exercised": true,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "local_service_process": true,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z",
+  "permanently_deployed_external_service": false,
+  "processing_time_s": 1.290239,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json",
+  "receipt_sha256": "sha256:75179079a9dca235c1f24ab191aa909399f349c7500ae2a0f729255965559f9e",
+  "schema": "pctom.live_tau_sealed_test.service_retry_proof_receipt.v1",
+  "service_root": "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z/service",
+  "service_url": "http://127.0.0.1:40523",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF",
+  "tau_call_attempts": 0
+}

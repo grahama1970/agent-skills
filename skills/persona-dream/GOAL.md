@@ -1,6 +1,6 @@
 # Persona Dream Immutable Goal
 
-Last updated: 2026-07-22 UTC
+Last updated: 2026-07-26 UTC
 
 ## Immutable Goal Evidence
 
@@ -83,6 +83,106 @@ Current voice-lane evidence:
 This evidence closes the ASR-batch emotion propagation gap only. It does not
 prove subjective tone acceptance, browser or microphone input behavior, paid
 provider execution, semantic dream quality, or full product readiness.
+
+## PCTOM-R2 Successor Program And Evidence Durability
+
+Recorded 2026-07-26. Until this section existed, `GOAL.md` contained no mention
+of PCTOM-R2 even though the R2 contract, its checkers, and its final audit
+receipt already lived in the same research namespace. That omission is the
+mismatch this amendment closes; it is not a new goal.
+
+### R2 contract
+
+The successor objective after the bounded PCTOM-R mechanism lane is frozen in:
+
+```text
+research/prospective-tom/contracts/pctom-r2-experimental-integrity-and-trial-readiness.v1.md
+contract_sha256: sha256:ddad3a9e866aca1203d020435283fd235f2657ebf9864d0815b05ce72bf7aa10
+```
+
+R2 is an experimental-integrity and replication-readiness contract: durable
+scope-indexed evidence custody, accepted-source lineage, pre-seal outcome
+isolation, deterministic scoring with abstention accounting, audit-tamper
+detection, crash-safe transitions, replayable corpora, and a sealed
+endpoint-aligned powered-trial protocol. It explicitly excludes running or
+claiming the powered live efficacy study.
+
+### R2 final stop condition is met
+
+```text
+receipt: research/prospective-tom/receipts/pctom-r2-replication-readiness-audit.v1.json
+status: PASS_PCTOM_R2_REPLICATION_READINESS
+receipt_sha256: sha256:172cd1ae4f77e64c73d9ff681259257c9d22e13470835451e53f61a739afa192
+created_at: 2026-07-22T14:33:03Z
+required_receipts_passed: 12/12
+negative_fixtures_blocked: 48/48
+readiness_negative_fixtures_blocked: 5/5
+mutation_score: 1.0
+unrouted_receipts: 0
+preseal_outcome_dependencies: 0
+accepted_source_lineage_missing: 0
+restart_non_equivalent_recoveries: 0
+human_content_judgment_rows: 0
+llm_judge_rows: 0
+forbidden_side_effects: 0
+live_efficacy_claimed: false
+```
+
+Re-run live on 2026-07-26 from a clean `origin/main` worktree; the audit
+recomputed `PASS_PCTOM_R2_REPLICATION_READINESS` with `errors: []` and the same
+counters. This is deterministic local evidence. It does not prove live Tau
+powered-trial execution, counterfactual-dream prediction benefit, planning
+benefit, paid provider execution, or semantic dream quality.
+
+### Evidence durability repair
+
+`GOAL.md` hash-cites 257 resolvable `/tmp/persona-dream-*` proof paths. `/tmp`
+on this workstation is configured `D /tmp 1777 root root 30d`, so those paths
+are removed at boot and aged out after 30 days; `systemd-tmpfiles-clean.timer`
+is active. The receipt chain backing an R2 PASS therefore had no durable
+custody, which is the one thing R2's own canonical goal demands.
+
+Those receipts are now archived inside the repository:
+
+```text
+manifest: research/prospective-tom/evidence/pctom-external-proof-archive.v1.json
+builder: research/prospective-tom/scripts/build_pctom_external_proof_archive.py
+dispatch: ./run.sh build-pctom-external-proof-archive | verify-pctom-external-proof-archive
+status: EXTERNAL_PROOF_ARCHIVE_BUILT
+cited_sources: 257    archived_sources: 257    missing_sources: 0
+json_files: 860       bytes: 12476098          dir_walk_depth: 2
+entries_sha256: sha256:fa746981a8948a164b00c0f3ae54ca32f5239235897bb373d062dcc0e02839a1
+verify: PASS_EXTERNAL_PROOF_ARCHIVE (860 files re-read, errors: [])
+```
+
+Each archived copy was digest-compared against its source at copy time, and the
+manifest binds the `GOAL.md` digest it was built from. Independent cross-check:
+the archived
+`persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/objective/pctom_objective_evidence_audit_receipt.v1.json`
+is byte-identical to its `/tmp` original and carries
+`sha256:88e5f6941af8b1ed6336a19ce01c568b8075051b46a5f3df2666ee789edeeb14`,
+the exact `predecessor_receipt_sha256` the R2 contract names.
+
+The archive preserves JSON receipts only. Non-JSON artifacts under the cited
+roots (media, logs, stdout captures) remain `/tmp`-only and are still
+perishable. Archiving proves custody and digest continuity; it does not
+re-validate any archived receipt's own claims.
+
+### Next objective
+
+R2 is met, so the next accepted artifact must come from one of these, and the
+choice is the operator's:
+
+1. Execute the sealed powered-trial protocol — the live efficacy study R2
+   deliberately left unrun. `GOAL_V5_PREREG.md` caps this at one round of
+   listener spend and requires fresh operator authorization, so it may not
+   start without that authorization.
+2. Continue the open PCTOM-R planning-benefit question under the existing
+   `Next Critical Path` section, which remains unclosed: planning benefit over
+   the strongest baseline is still unproven.
+
+No agent may report R2 as licensing a live efficacy claim. The R2 PASS proves
+readiness to run the study, not any result from it.
 
 ## Alignment Lock
 

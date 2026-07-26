@@ -1,0 +1,73 @@
+{
+  "base_receipt": "/tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/live_tau_action_linked_revision_receipt.v1.json",
+  "base_receipt_sha256": "sha256:2f642fe5cb41a23f762a870356bea62b8eb7c3d37d9f3d47e05c9dbbe4166ebe",
+  "base_root": "/tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_action_linked_revision_passed": true,
+    "base_receipt_hash_recomputed": true,
+    "conditions_represented": true,
+    "human_content_judgment_absent": true,
+    "prior_and_posterior_distinguished": true,
+    "synthetic_literal_boundary_preserved": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Memory recall after revision",
+      "held-out statistical prediction benefit",
+      "planning benefit over the strongest baseline",
+      "real external service fault injection",
+      "production retry machinery",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video or semantic dream quality"
+    ],
+    "proves": [
+      "action-linked revisions can be found by deterministic local recall queries over live-originated revision artifacts",
+      "prior and posterior distributions are distinguishable in recalled revision documents",
+      "synthetic counterfactual branches remain excluded from literal history in recalled revision context",
+      "canonical, identity, and source-memory writes remain absent"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "base_revision_cases": 16,
+    "revision_documents": 16,
+    "revision_documents_per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "revision_recall_hits": 16,
+    "revision_recall_queries": 4,
+    "write_violations": 0
+  },
+  "created_at": "2026-07-21T03:56:40Z",
+  "deterministic_artifact_recall": true,
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_memory_recall_performed": false,
+  "live_tau_originated_revision_artifacts_consumed": true,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-revision-recall-20260721T035640Z",
+  "provider_call_attempts": 0,
+  "recall_index": "/tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/artifacts/revision_recall_index.json",
+  "recall_results": "/tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/artifacts/revision_recall_results.json",
+  "receipt_path": "/tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/live_tau_revision_recall_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_revision_recall_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_REVISION_RECALL",
+  "tau_call_attempts": 0
+}

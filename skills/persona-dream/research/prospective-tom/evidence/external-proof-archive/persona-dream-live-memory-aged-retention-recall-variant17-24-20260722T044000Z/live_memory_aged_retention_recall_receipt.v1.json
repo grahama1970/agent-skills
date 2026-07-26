@@ -1,0 +1,96 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "human_content_judgment_absent": true,
+    "minimum_age_satisfied": true,
+    "nested_delayed_recall_passed": true,
+    "nested_no_write_path": true,
+    "nested_prior_and_posterior_distinguished": true,
+    "nested_synthetic_literal_boundary_preserved": true,
+    "source_receipt_hash_recomputed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "multi-day wall-clock retention",
+      "internet-hosted or permanently deployed Memory service availability",
+      "new live Tau execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "live no-write PCTOM-R Memory delayed recall was accepted only after elapsed_age_s >= min_age_s (3653.0 >= 1800)",
+      "the nested delayed-recall checker exact-reread prior noncanonical research documents and searchable mirrors",
+      "the nested delayed-recall checker retrieved condition-scoped revision context through live Memory /recall",
+      "prior/posterior distinction and synthetic/literal separation survived aged delayed recall",
+      "the aged-retention wrapper and nested checker used zero Memory writes, provider calls, Tau calls, canonical writes, identity writes, source-memory writes, LLM judges, or human content judgment"
+    ]
+  },
+  "counts": {
+    "nested_delayed_exact_rereads": 128,
+    "nested_delayed_recall_hits": 40,
+    "nested_delayed_recall_hits_per_condition": {
+      "CD": 10,
+      "D": 10,
+      "M": 10,
+      "R": 10
+    },
+    "nested_delayed_recall_queries": 4,
+    "nested_delayed_semantic_exact_rereads": 128,
+    "nested_source_memory_documents": 128,
+    "nested_source_semantic_documents": 128,
+    "nested_write_violations": 0
+  },
+  "created_at": "2026-07-22T04:34:11Z",
+  "elapsed_age_s": 3653.0,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "min_age_s": 1800,
+  "minimum_age_satisfied": true,
+  "mocked": false,
+  "nested_delayed_recall": {
+    "command": [
+      "/tmp/agent-skills-pctom-next-lYheQb/skills/persona-dream/.venv/bin/python3",
+      "/tmp/agent-skills-pctom-next-lYheQb/skills/persona-dream/research/prospective-tom/scripts/run_live_memory_revision_delayed_recall.py",
+      "--source-root",
+      "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z",
+      "--output-root",
+      "/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/nested_delayed_recall",
+      "--receipt-out",
+      "/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/nested_delayed_recall/live_memory_revision_delayed_recall_receipt.v1.json",
+      "--memory-base-url",
+      "http://127.0.0.1:8601",
+      "--recall-attempts",
+      "3",
+      "--recall-sleep-s",
+      "1.0",
+      "--json"
+    ],
+    "executed": true,
+    "receipt_path": "/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/nested_delayed_recall/live_memory_revision_delayed_recall_receipt.v1.json",
+    "receipt_sha256": "sha256:73fa38ce5cf1e38d256368c4f2a84444051159da5b87723a54897a0daa070131",
+    "returncode": 0,
+    "status": "PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL",
+    "stderr_tail": "",
+    "stdout_tail": "_distinguished\": true,\n    \"source_live_memory_revision_recall_passed\": true,\n    \"source_receipt_hash_recomputed\": true,\n    \"synthetic_literal_boundary_preserved\": true,\n    \"unsupported_writes_absent\": true\n  },\n  \"claims\": {\n    \"does_not_prove\": [\n      \"Memory service restart\",\n      \"long-duration wall-clock retention beyond the source artifact interval\",\n      \"new live Tau execution\",\n      \"paid provider execution\",\n      \"video, audio, or semantic dream quality\",\n      \"complete live Phase 01-16 runtime execution\"\n    ],\n    \"proves\": [\n      \"a fresh no-write process can exact-reread previously persisted noncanonical PCTOM-R revision documents\",\n      \"a fresh no-write process can exact-reread the searchable semantic mirrors\",\n      \"a fresh no-write process can retrieve delayed condition-scoped revision context through live Memory /recall\",\n      \"prior/posterior distinction and synthetic/literal separation survive delayed recall\",\n      \"no Memory write, provider call, Tau call, canonical write, identity write, source-memory write, LLM judge, or human content judgment was used\"\n    ]\n  },\n  \"collection\": \"persona_dream_pctom_revision_recall\",\n  \"conditions\": [\n    \"M\",\n    \"R\",\n    \"D\",\n    \"CD\"\n  ],\n  \"counts\": {\n    \"delayed_exact_rereads\": 128,\n    \"delayed_recall_hits\": 40,\n    \"delayed_recall_hits_per_condition\": {\n      \"CD\": 10,\n      \"D\": 10,\n      \"M\": 10,\n      \"R\": 10\n    },\n    \"delayed_recall_queries\": 4,\n    \"delayed_semantic_exact_rereads\": 128,\n    \"source_memory_documents\": 128,\n    \"source_semantic_documents\": 128,\n    \"write_violations\": 0\n  },\n  \"created_at\": \"2026-07-22T04:34:25Z\",\n  \"delayed_exact_rereads\": \"/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/nested_delayed_recall/artifacts/delayed_exact_rereads.json\",\n  \"delayed_recall_results\": \"/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/nested_delayed_recall/artifacts/delayed_recall_results.json\",\n  \"delayed_semantic_exact_rereads\": \"/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/nested_delayed_recall/artifacts/delayed_semantic_exact_rereads.json\",\n  \"errors\": [],\n  \"fixture_backed\": false,\n  \"fresh_process_delayed_recall\": true,\n  \"fresh_process_pid\": 277157,\n  \"fresh_process_started_after_source_receipt\": true,\n  \"human_content_judgment_required\": false,\n  \"identity_write_attempts\": 0,\n  \"live\": true,\n  \"llm_judge_used\": false,\n  \"memory_base_url\": \"http://127.0.0.1:8601\",\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"output_root\": \"/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/nested_delayed_recall\",\n  \"processing_time_s\": 14.463759,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/nested_delayed_recall/live_memory_revision_delayed_recall_receipt.v1.json\",\n  \"receipt_sha256\": \"sha256:a2c6004ccc69851de7c47bcf3d68c24acfe9706ad43fc573dc9c7da92c3b5545\",\n  \"schema\": \"persona_dream.research.prospective_tom.live_memory_revision_delayed_recall_receipt.v1\",\n  \"semantic_recall_collection\": \"lessons\",\n  \"source_created_at\": \"2026-07-22T03:33:18Z\",\n  \"source_document_index\": \"/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/artifacts/live_memory_revision_documents.json\",\n  \"source_memory_write_attempts\": 0,\n  \"source_receipt\": \"/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json\",\n  \"source_receipt_sha256\": \"sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a\",\n  \"source_root\": \"/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z\",\n  \"source_semantic_document_index\": \"/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/artifacts/live_memory_semantic_documents.json\",\n  \"status\": \"PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL\",\n  \"tau_call_attempts\": 0\n}\n"
+  },
+  "output_root": "/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z",
+  "processing_time_s": 14.564197,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/live_memory_aged_retention_recall_receipt.v1.json",
+  "receipt_sha256": "sha256:a4374d1cfba1939f7926936285b95fff186dfb284ad275adfbe454a5a69982e3",
+  "schema": "persona_dream.research.prospective_tom.live_memory_aged_retention_recall_receipt.v1",
+  "source_created_at": "2026-07-22T03:33:18Z",
+  "source_memory_write_attempts": 0,
+  "source_receipt": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json",
+  "source_receipt_sha256": "sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a",
+  "source_root": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z",
+  "status": "PASS_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL",
+  "tau_call_attempts": 0
+}

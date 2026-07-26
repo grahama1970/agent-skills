@@ -1,0 +1,71 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "paid provider execution",
+      "semantic dream quality",
+      "complete Phase 01-16 media runtime execution",
+      "future receipts not routed through this objective audit"
+    ],
+    "proves": [
+      "the current top-level PCTOM-R success receipt is bound to the same expanded goal-coverage receipt",
+      "all active text-first PCTOM-R objective clauses have named coverage evidence",
+      "the objective evidence surface includes fail-closed negative fixtures and unsupported-evidence abstention coverage"
+    ]
+  },
+  "counts": {
+    "coverage_ids_missing": 0,
+    "coverage_ids_seen": 15,
+    "evidence_receipts_seen": 37,
+    "live_positive_evidence_receipts": 16,
+    "negative_evidence_receipts": 10,
+    "positive_evidence_receipts": 27,
+    "required_coverage_ids": 15
+  },
+  "elapsed_s": 0.00077,
+  "errors": [],
+  "fixture_backed": false,
+  "generated_at": "2026-07-22T05:49:02Z",
+  "goal_coverage_receipt": {
+    "file_sha256": "sha256:0bd35aa8defe78c5e2c9a5c0bb23e5b78dc3ddc0f3cf6fa44d72cadc1ccc8db7",
+    "fixture_backed": false,
+    "live": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_receipt.v1.json",
+    "receipt_sha256": "sha256:19d64e0123136e7dd5bc856e12f7ec5e4b29657e044da6135ee4454e86bf8ca4",
+    "schema": "persona_dream.research.prospective_tom.goal_coverage_receipt.v1",
+    "status": "PASS_PCTOM_GOAL_COVERAGE"
+  },
+  "live": false,
+  "mocked": false,
+  "objective": {
+    "clauses": {
+      "autonomous_without_human_content_judgment": true,
+      "deterministic_hidden_state_social_episodes": true,
+      "deterministic_scoring": true,
+      "fail_closed_reliability_checks": true,
+      "non_destructive_belief_revision": true,
+      "provenance_bound_recall_residue": true,
+      "provider_video_not_critical_path": true,
+      "sealed_prediction_commitments": true,
+      "unsupported_evidence_abstention": true,
+      "valid_tom_distributions": true
+    },
+    "name": "PCTOM-R text-first prospective Theory-of-Mind reliability lane",
+    "provider_video_critical_path": false
+  },
+  "output_root": "/tmp/persona-dream-pctom-objective-evidence-20260722T121100Z",
+  "receipt_path": "/tmp/persona-dream-pctom-objective-evidence-20260722T121100Z/pctom_objective_evidence_audit_receipt.v1.json",
+  "receipt_sha256": "sha256:e3af1de4805ee98be1b629d6e7315ba7b20f4ec3aa07142faae8021f02a5a84c",
+  "schema": "persona_dream.research.prospective_tom.objective_evidence_audit_receipt.v1",
+  "status": "PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT",
+  "success_receipt": {
+    "file_sha256": "sha256:187aa07785be09c9d84a71585721a61e2149def0d280dc49d9200bfa8b919867",
+    "fixture_backed": false,
+    "live": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-pctom-success-criteria-expanded-coverage-r2-20260722T120400Z/pctom_success_criteria_audit_receipt.v1.json",
+    "receipt_sha256": "sha256:adeb6ad468edc718c087998865b94d7f9e38ab6653bcca53e2070b5ad8b75c96",
+    "schema": "persona_dream.research.prospective_tom.success_criteria_audit_receipt.v1",
+    "status": "PASS_PCTOM_SUCCESS_CRITERIA_AUDIT"
+  }
+}

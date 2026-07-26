@@ -1,0 +1,66 @@
+{
+  "causal_replay_path": "/tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/artifacts/condition_causal_replay.json",
+  "causal_replay_sha256": "sha256:1ca23e961f9fa4e720f324b95bb75d582548b9b7dc28ffa0d0a58344fd19b1d5",
+  "checks": {
+    "causal_failure_localization_written": true,
+    "counterfactual_matches_expected": true,
+    "exactly_one_tool_return_removed_or_replaced": true,
+    "first_divergent_receipt_identified": true,
+    "no_canonical_identity_source_writes": true,
+    "no_unknown_state_continuation": true,
+    "replay_schema_valid": true,
+    "replay_starts_at_first_divergence": true,
+    "state_comparison_present": true,
+    "surface_hash_bound": true,
+    "surface_schema_valid": true,
+    "target_trial_fault_or_divergent": true,
+    "target_trial_resolved": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "real service fault injection",
+      "production causal replay",
+      "statistical prediction benefit",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the supplied replay targets a resolved faulted or divergent Gate 8 trial",
+      "the first divergent receipt is identified and replay starts at that boundary",
+      "exactly one suspected tool return is removed or replaced for counterfactual replay",
+      "the factual, counterfactual, and expected end-state hashes are compared",
+      "the counterfactual replay localizes a cause without continuing unknown state",
+      "canonical memory, identity, and source-memory writes are absent"
+    ]
+  },
+  "counts": {
+    "first_divergent_receipts": 1,
+    "forbidden_terminal_outcomes": 0,
+    "forbidden_write_attempts": 0,
+    "localized_causes": 1,
+    "state_comparisons": 1,
+    "suspected_tool_returns": 1,
+    "target_trials": 1
+  },
+  "created_at": "2026-07-21T03:26:59Z",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "causal_confidence": 1.0,
+    "first_divergent_receipt_id": "condition-live-receipt-004-read-condition-case-index",
+    "localized_cause_type": "STALE_ARTIFACT",
+    "target_terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+    "target_trial_id": "condition-live-reliability-stale_artifact-001"
+  },
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/receipts/condition_causal_replay_check_receipt.json",
+  "reliability_surface_path": "/tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/artifacts/condition_reliability_surface.json",
+  "reliability_surface_sha256": "sha256:fd7b94763f75c166cc8171b3df289aa6986e093225dd2e096d7823898f7bf454",
+  "schema": "persona_dream.research.prospective_tom.causal_replay_check_receipt.v1",
+  "status": "PASS_TOM_CAUSAL_REPLAY",
+  "tau_call_attempts": 0
+}

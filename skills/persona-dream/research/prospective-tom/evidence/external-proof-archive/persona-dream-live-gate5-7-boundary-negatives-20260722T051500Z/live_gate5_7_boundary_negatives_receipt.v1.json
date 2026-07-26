@@ -1,0 +1,184 @@
+{
+  "action_selection": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_action_selection/artifacts/cases/sealedte-info-asym-17/M/action_selection.json",
+  "belief_revision": "/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/artifacts/cases/sealedte-info-asym-17/M/tom_belief_revision.json",
+  "canonical_memory_write_attempts": 0,
+  "case_root": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-17/M",
+  "checks": {
+    "gate5_invalid_actual_action_fails_closed": true,
+    "gate6_invalid_selected_action_fails_closed": true,
+    "gate7_prior_audit_boundary_fails_closed": true,
+    "human_content_judgment_absent": true,
+    "source_gate5_6_7_pass": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "new Tau text-call execution",
+      "new Memory recall",
+      "paid provider execution",
+      "semantic dream quality",
+      "long-duration wall-clock retention",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a live-originated Gate 5-7 case still passes source validators before mutation",
+      "Gate 5 rejects an outcome reveal whose actual counterpart action is outside the deterministic episode action set",
+      "Gate 6 rejects an action-selection artifact whose selected action is outside the constrained action vocabulary",
+      "Gate 7 rejects belief revision that fails to preserve the prior as auditable or mutates evidence"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "corpus_sha256": "sha256:8014a8405aab9d9ea81cbce1168f74ffdcf661b35bf63f735fc09d9e0e82870e",
+  "counts": {
+    "negative_cases": 3,
+    "negative_cases_blocked": 3,
+    "negative_cases_expected_errors_matched": 3,
+    "positive_source_checks": 3,
+    "positive_source_passes": 3
+  },
+  "created_at": "2026-07-22T04:51:12Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "live_originated_artifacts_consumed": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_results": [
+    {
+      "case": "gate5_invalid_actual_action",
+      "errors": [
+        "outcome_actual_next_action_not_allowed:__INVALID_COUNTERPART_ACTION__",
+        "action_actual_value_missing_from_distribution:__INVALID_COUNTERPART_ACTION__"
+      ],
+      "exit_code": 1,
+      "expected_error_needles": [
+        "outcome_actual_next_action_not_allowed"
+      ],
+      "expected_errors_matched": true,
+      "expected_status_blocked": true,
+      "matched_error_needles": [
+        "outcome_actual_next_action_not_allowed"
+      ],
+      "mutated_artifact_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate5_invalid_actual_action/tom_outcome_reveal.json",
+      "mutated_artifact_sha256": "sha256:0330a9cd742240f20008d1caa3ff76dba53efde9b8eb445286a8557a15b41c67",
+      "receipt_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate5_invalid_actual_action/receipt.json",
+      "status": "BLOCKED_TOM_SCORING_RECEIPT",
+      "stderr_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate5_invalid_actual_action/stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate5_invalid_actual_action/stdout.json"
+    },
+    {
+      "case": "gate6_invalid_selected_action",
+      "errors": [
+        "selected_action_not_in_vocabulary:__INVALID_AGENT_ACTION__",
+        "selected_action_missing_from_options:__INVALID_AGENT_ACTION__"
+      ],
+      "exit_code": 1,
+      "expected_error_needles": [
+        "selected_action_not_in_vocabulary"
+      ],
+      "expected_errors_matched": true,
+      "expected_status_blocked": true,
+      "matched_error_needles": [
+        "selected_action_not_in_vocabulary"
+      ],
+      "mutated_artifact_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate6_invalid_selected_action/action_selection.json",
+      "mutated_artifact_sha256": "sha256:8c08989a0dd726cd7768741d8f6f5e92facd1d63b007cb52f4bf65556934bfb6",
+      "receipt_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate6_invalid_selected_action/receipt.json",
+      "status": "BLOCKED_TOM_ACTION_SELECTION",
+      "stderr_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate6_invalid_selected_action/stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate6_invalid_selected_action/stdout.json"
+    },
+    {
+      "case": "gate7_prior_not_auditable",
+      "errors": [
+        "evidence_mutations_not_empty:[{'mutation': 'fixture_tamper_prior_audit_boundary'}]",
+        "prior_remains_auditable_not_true"
+      ],
+      "exit_code": 1,
+      "expected_error_needles": [
+        "prior_remains_auditable_not_true",
+        "evidence_mutations_not_empty"
+      ],
+      "expected_errors_matched": true,
+      "expected_status_blocked": true,
+      "matched_error_needles": [
+        "prior_remains_auditable_not_true",
+        "evidence_mutations_not_empty"
+      ],
+      "mutated_artifact_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate7_prior_not_auditable/tom_belief_revision.json",
+      "mutated_artifact_sha256": "sha256:0f3c209ff9b4a04d4cb460943124096b18591e5e6724f1e9c35d3cf258714b43",
+      "receipt_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate7_prior_not_auditable/receipt.json",
+      "status": "BLOCKED_TOM_BELIEF_REVISION",
+      "stderr_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate7_prior_not_auditable/stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/negative_cases/gate7_prior_not_auditable/stdout.json"
+    }
+  ],
+  "output_root": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z",
+  "positive_results": [
+    {
+      "case": "gate5_source_positive",
+      "exit_code": 0,
+      "receipt_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate5_source_positive_receipt.json",
+      "status": "PASS_TOM_SCORING_RECEIPT",
+      "stderr_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate5_source_positive.stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate5_source_positive.stdout.json"
+    },
+    {
+      "case": "gate6_source_positive",
+      "exit_code": 0,
+      "receipt_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate6_source_positive_receipt.json",
+      "status": "PASS_TOM_ACTION_SELECTION",
+      "stderr_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate6_source_positive.stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate6_source_positive.stdout.json"
+    },
+    {
+      "case": "gate7_source_positive",
+      "exit_code": 0,
+      "receipt_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate7_source_positive_receipt.json",
+      "status": "PASS_TOM_BELIEF_REVISION",
+      "stderr_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate7_source_positive.stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/positive_source/gate7_source_positive.stdout.json"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json",
+  "receipt_sha256": "sha256:073f442055685be34598a531babad47ce583f96d98f800370813fa0942013993",
+  "schema": "persona_dream.research.prospective_tom.live_gate5_7_boundary_negatives_receipt.v1",
+  "scoring_receipt": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-17/M/gate5_scoring_receipt.json",
+  "source_artifacts": {
+    "action_selection": {
+      "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/source/action_selection.json",
+      "sha256": "sha256:60e2e9ee9688e4d2663ce17f48da3ab44f6b16fe1a8f3812bf613c42524224eb"
+    },
+    "belief_revision": {
+      "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/source/tom_belief_revision.json",
+      "sha256": "sha256:6343b287e96d1eacb9a32f2aacdfac9c9b5f18785de4274fc9df7e1b433a6703"
+    },
+    "branches": {
+      "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/source/counterfactual_branch_bundle.json",
+      "sha256": "sha256:263caa582e10df52299a53972a5337bc28cbd0d5d936f1aa37c9500b2d213139"
+    },
+    "commitments": {
+      "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/source/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:0cc5f5e2c81321902f97f1966184b52dd037dddde9bc34005a9bf766c9a72512"
+    },
+    "distributions": {
+      "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/source/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:25ba3143a0b2320db953eff85a1664f96388ed423592c26706f3fc8b41f1cd1e"
+    },
+    "outcome": {
+      "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/source/tom_outcome_reveal.json",
+      "sha256": "sha256:c3740f845017c3809468c3d64eec83a2ab0af6f25ce94501f31cac0399d385ef"
+    },
+    "scoring_receipt": {
+      "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/source/gate5_scoring_receipt.json",
+      "sha256": "sha256:341b86a2259a743f155601f178cea73b941a2e930e280bdfc15204ea87e357f8"
+    }
+  },
+  "source_artifacts_sha256": "sha256:870cea07530d865b396e3c0f663d209ae4715396c47b65f1f25289112598f434",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_LIVE_GATE5_7_BOUNDARY_NEGATIVES",
+  "tau_call_attempts": 0
+}

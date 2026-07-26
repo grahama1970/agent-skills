@@ -1,0 +1,183 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "all_case_indexes_hash_bound": true,
+    "all_conditions_present": true,
+    "audited_rows_match_expected_shape": true,
+    "calibration_present_for_all_rows": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "risk_coverage_present_for_all_rows": true,
+    "source_mode_live_hash_bound": true,
+    "source_rows_match_full64_shape": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "that abstention improves decisions when unsupported evidence is injected",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the consumed case indexes contain deterministic calibration metrics for every audited Gate 5 scoring row",
+      "the consumed case indexes contain deterministic risk-coverage fields for every audited Gate 5 scoring row",
+      "the audit hash-bound source receipts, condition receipts, case indexes, summary artifacts, and row artifacts",
+      "the audit consumed existing live Tau receipts without reexecuting Tau or using human/LLM content judgment"
+    ]
+  },
+  "counts": {
+    "abstained_rows": 0,
+    "calibration_bucket_items": 1536,
+    "calibration_rows": 512,
+    "case_indexes": 0,
+    "case_rows": 512,
+    "covered_rows": 512,
+    "expected_case_rows": 512,
+    "raw_case_rows": 512,
+    "risk_coverage_rows": 512,
+    "source_records": 2,
+    "source_roots": 2
+  },
+  "created_at": "2026-07-22T05:24:58Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_receipts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "abstention_observed": false,
+    "mean_coverage": 1.0,
+    "mean_expected_calibration_error": 0.36621092838541663,
+    "mean_selective_accuracy": 0.3671875
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z",
+  "processing_time_s": 0.026,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z/pctom_calibration_abstention_audit_receipt.v1.json",
+  "receipt_sha256": "sha256:32cd4119562b98aa7e74757e27d06658820f487b751052322e9a44fb39419bca",
+  "row_artifact_path": "/tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z/artifacts/calibration_abstention_audit_rows.v1.json",
+  "row_artifact_sha256": "sha256:17f80c56cde82e6d58deeed58cacf79f7e7f7c5d3ce6c504c7321bb963b23250",
+  "schema": "persona_dream.research.prospective_tom.calibration_abstention_audit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "sources": [
+    {
+      "case_index_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_condition_comparison/artifacts/live_condition_case_index.json",
+      "case_index_sha256": "sha256:638a507224dd5c09c713c7312e6436ddcbfcba10e1609b4a7fee03bf929cbfc0",
+      "condition_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+      "condition_receipt_sha256": "sha256:dc12c7de88f4df9e5c352884a6026b378a8edeab419b2904224f300df254d6b9",
+      "condition_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+      "live": true,
+      "mocked": false,
+      "run_index": 1,
+      "source_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_replication_receipt.v1.json",
+      "source_receipt_sha256": "sha256:a57e9d2d963d5e1513cd3615293a0c223cf601240beea17e8513d5cf58005583",
+      "source_root": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z",
+      "source_status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION"
+    },
+    {
+      "case_index_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z/live_tau_sealed_test_condition_comparison/artifacts/live_condition_case_index.json",
+      "case_index_sha256": "sha256:b37689d09b77392d34da8e4c4377e6fb6b07cb0d077674027f5d60e1b26ccb80",
+      "condition_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+      "condition_receipt_sha256": "sha256:ffb2053fd24fff2857e0787a677c519b69f5483aead4c137a2ebb10ee7bf47ca",
+      "condition_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+      "live": true,
+      "mocked": false,
+      "run_index": 2,
+      "source_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z/live_tau_sealed_test_replication_receipt.v1.json",
+      "source_receipt_sha256": "sha256:edb8312c86cd8ab0870c96a572fa6b02b4ea4019cfca05d6bd93fb6ba69672a5",
+      "source_root": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z",
+      "source_status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION"
+    }
+  ],
+  "status": "PASS_PCTOM_CALIBRATION_ABSTENTION_AUDIT",
+  "summary": {
+    "condition_summary": {
+      "CD": {
+        "abstained_rows": 0,
+        "mean_coverage": 1.0,
+        "mean_expected_calibration_error": 0.3792621536458333,
+        "mean_selective_accuracy": 0.359375,
+        "rows": 128
+      },
+      "D": {
+        "abstained_rows": 0,
+        "mean_coverage": 1.0,
+        "mean_expected_calibration_error": 0.363888875,
+        "mean_selective_accuracy": 0.375,
+        "rows": 128
+      },
+      "M": {
+        "abstained_rows": 0,
+        "mean_coverage": 1.0,
+        "mean_expected_calibration_error": 0.3598610989583333,
+        "mean_selective_accuracy": 0.3671875,
+        "rows": 128
+      },
+      "R": {
+        "abstained_rows": 0,
+        "mean_coverage": 1.0,
+        "mean_expected_calibration_error": 0.3618315859375,
+        "mean_selective_accuracy": 0.3671875,
+        "rows": 128
+      }
+    },
+    "counts": {
+      "abstained_rows": 0,
+      "calibration_bucket_items": 1536,
+      "calibration_rows": 512,
+      "case_indexes": 0,
+      "case_rows": 512,
+      "covered_rows": 512,
+      "expected_case_rows": 512,
+      "raw_case_rows": 512,
+      "risk_coverage_rows": 512,
+      "source_records": 2,
+      "source_roots": 2
+    },
+    "metrics": {
+      "abstention_observed": false,
+      "mean_coverage": 1.0,
+      "mean_expected_calibration_error": 0.36621092838541663,
+      "mean_selective_accuracy": 0.3671875
+    },
+    "schema": "persona_dream.research.prospective_tom.calibration_abstention_summary.v1",
+    "sources": [
+      {
+        "case_index_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_condition_comparison/artifacts/live_condition_case_index.json",
+        "case_index_sha256": "sha256:638a507224dd5c09c713c7312e6436ddcbfcba10e1609b4a7fee03bf929cbfc0",
+        "condition_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+        "condition_receipt_sha256": "sha256:dc12c7de88f4df9e5c352884a6026b378a8edeab419b2904224f300df254d6b9",
+        "condition_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+        "live": true,
+        "mocked": false,
+        "run_index": 1,
+        "source_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_replication_receipt.v1.json",
+        "source_receipt_sha256": "sha256:a57e9d2d963d5e1513cd3615293a0c223cf601240beea17e8513d5cf58005583",
+        "source_root": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z",
+        "source_status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION"
+      },
+      {
+        "case_index_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z/live_tau_sealed_test_condition_comparison/artifacts/live_condition_case_index.json",
+        "case_index_sha256": "sha256:b37689d09b77392d34da8e4c4377e6fb6b07cb0d077674027f5d60e1b26ccb80",
+        "condition_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+        "condition_receipt_sha256": "sha256:ffb2053fd24fff2857e0787a677c519b69f5483aead4c137a2ebb10ee7bf47ca",
+        "condition_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+        "live": true,
+        "mocked": false,
+        "run_index": 2,
+        "source_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z/live_tau_sealed_test_replication_receipt.v1.json",
+        "source_receipt_sha256": "sha256:edb8312c86cd8ab0870c96a572fa6b02b4ea4019cfca05d6bd93fb6ba69672a5",
+        "source_root": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z",
+        "source_status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION"
+      }
+    ]
+  },
+  "summary_path": "/tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z/artifacts/calibration_abstention_summary.v1.json",
+  "summary_sha256": "sha256:defd73810307fec7afcbc9d3ad122cc76c9cccabe3fa884487752f19ad73c8da"
+}

@@ -1,0 +1,26 @@
+{
+  "actual_next_action": "KAI_HINTS_CONSTRAINT",
+  "canonical_memory_write": false,
+  "episode_id": "dev-info-asym-01",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "live-tau-eq-action-paraphrase-001",
+      "expected_top_action": "KAI_HINTS_CONSTRAINT",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "live-tau-gate4-commitment-cd-001"
+    }
+  ],
+  "factual_branch_id": "live-tau-gate3-factual-observed",
+  "hidden_state_labels": {
+    "live-tau-gate2-factual-bdi-001": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "live-tau-gate3-factual-observed"
+  ],
+  "outcome_id": "live-tau-outcome-dev-info-asym-01",
+  "outcome_visible": true,
+  "prediction_id": "live-tau-gate4-commitment-cd-001",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T02:28:07Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

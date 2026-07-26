@@ -1,0 +1,161 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "case_root": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-17/M",
+  "checks": {
+    "gate2_bad_probability_fails_closed": true,
+    "gate3_counterfactual_synthetic_boundary_fails_closed": true,
+    "gate4_sealed_payload_hash_boundary_fails_closed": true,
+    "source_gate2_3_4_pass": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "new Tau text-call execution",
+      "new Memory recall",
+      "paid provider execution",
+      "semantic dream quality",
+      "long-duration wall-clock retention",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a live-originated Gate 2-4 case still passes source validators before mutation",
+      "Gate 2 rejects a malformed probability distribution before accepting the bundle",
+      "Gate 3 rejects a counterfactual branch whose synthetic marker is stripped",
+      "Gate 4 rejects a sealed prediction payload edited without recomputing its commitment hash"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "corpus_sha256": "sha256:8014a8405aab9d9ea81cbce1168f74ffdcf661b35bf63f735fc09d9e0e82870e",
+  "counts": {
+    "negative_cases": 3,
+    "negative_cases_blocked": 3,
+    "negative_cases_expected_errors_matched": 3,
+    "positive_source_checks": 3,
+    "positive_source_passes": 3
+  },
+  "created_at": "2026-07-22T04:20:53Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "live_originated_artifacts_consumed": true,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_results": [
+    {
+      "case": "gate2_bad_probability_sum",
+      "errors": [
+        "distribution_0_distribution_sum:1.490000"
+      ],
+      "exit_code": 1,
+      "expected_error_needles": [
+        "distribution_0_distribution_sum"
+      ],
+      "expected_errors_matched": true,
+      "expected_status_blocked": true,
+      "matched_error_needles": [
+        "distribution_0_distribution_sum"
+      ],
+      "mutated_artifact_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate2_bad_probability_sum/tom_belief_distribution_bundle.json",
+      "mutated_artifact_sha256": "sha256:652385c0b4d46e070557a9bfa66ee2589cca597e233286ee63c3aac620e1c6c6",
+      "receipt_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate2_bad_probability_sum/receipt.json",
+      "status": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+      "stderr_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate2_bad_probability_sum/stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate2_bad_probability_sum/stdout.json"
+    },
+    {
+      "case": "gate3_counterfactual_not_synthetic",
+      "errors": [
+        "branch_1_counterfactual_synthetic_not_true",
+        "branch_1_intervention_not_synthetic"
+      ],
+      "exit_code": 1,
+      "expected_error_needles": [
+        "counterfactual_synthetic_not_true",
+        "intervention_not_synthetic"
+      ],
+      "expected_errors_matched": true,
+      "expected_status_blocked": true,
+      "matched_error_needles": [
+        "counterfactual_synthetic_not_true",
+        "intervention_not_synthetic"
+      ],
+      "mutated_artifact_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate3_counterfactual_not_synthetic/counterfactual_branch_bundle.json",
+      "mutated_artifact_sha256": "sha256:c8ecb50b46cb9f971e374808e316888244c4883b231baf7774d9c443c5bc4336",
+      "receipt_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate3_counterfactual_not_synthetic/receipt.json",
+      "status": "BLOCKED_COUNTERFACTUAL_BRANCHES",
+      "stderr_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate3_counterfactual_not_synthetic/stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate3_counterfactual_not_synthetic/stdout.json"
+    },
+    {
+      "case": "gate4_prediction_payload_hash_mismatch",
+      "errors": [
+        "commitment_0_prediction_payload_sha256_mismatch:sha256:bd3b79aee32973cfe007a8774102ebbebb61fa24d2fd59dda671d670cd7aff90:sha256:076bf5e7d057e100aafa940a95a3c2d7fe29119b2cce54a7a31eabc47eec3152"
+      ],
+      "exit_code": 1,
+      "expected_error_needles": [
+        "prediction_payload_sha256_mismatch"
+      ],
+      "expected_errors_matched": true,
+      "expected_status_blocked": true,
+      "matched_error_needles": [
+        "prediction_payload_sha256_mismatch"
+      ],
+      "mutated_artifact_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate4_prediction_payload_hash_mismatch/tom_prediction_commitment_bundle.json",
+      "mutated_artifact_sha256": "sha256:8e522311226a101bf8a21ba26086ce73c8f6e6585efc1c71c191cafa7e18122c",
+      "receipt_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate4_prediction_payload_hash_mismatch/receipt.json",
+      "status": "BLOCKED_TOM_PREDICTION_COMMITMENTS",
+      "stderr_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate4_prediction_payload_hash_mismatch/stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/negative_cases/gate4_prediction_payload_hash_mismatch/stdout.json"
+    }
+  ],
+  "output_root": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z",
+  "positive_results": [
+    {
+      "case": "gate2_source_positive",
+      "exit_code": 0,
+      "receipt_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate2_source_positive_receipt.json",
+      "status": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "stderr_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate2_source_positive.stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate2_source_positive.stdout.json"
+    },
+    {
+      "case": "gate3_source_positive",
+      "exit_code": 0,
+      "receipt_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate3_source_positive_receipt.json",
+      "status": "PASS_COUNTERFACTUAL_BRANCHES",
+      "stderr_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate3_source_positive.stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate3_source_positive.stdout.json"
+    },
+    {
+      "case": "gate4_source_positive",
+      "exit_code": 0,
+      "receipt_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate4_source_positive_receipt.json",
+      "status": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "stderr_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate4_source_positive.stdout.json.stderr.txt",
+      "stdout_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/positive_source/gate4_source_positive.stdout.json"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json",
+  "receipt_sha256": "sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1",
+  "schema": "persona_dream.research.prospective_tom.live_gate2_4_boundary_negatives_receipt.v1",
+  "source_artifacts": {
+    "branches": {
+      "path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/source/counterfactual_branch_bundle.json",
+      "sha256": "sha256:263caa582e10df52299a53972a5337bc28cbd0d5d936f1aa37c9500b2d213139"
+    },
+    "commitments": {
+      "path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/source/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:0cc5f5e2c81321902f97f1966184b52dd037dddde9bc34005a9bf766c9a72512"
+    },
+    "distributions": {
+      "path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/source/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:25ba3143a0b2320db953eff85a1664f96388ed423592c26706f3fc8b41f1cd1e"
+    }
+  },
+  "source_artifacts_sha256": "sha256:1cd85e6cdc56dde5fe1ef7a8b77294e15d59d14436ea33760d1c7f15d8a971a9",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_LIVE_GATE2_4_BOUNDARY_NEGATIVES",
+  "tau_call_attempts": 0
+}

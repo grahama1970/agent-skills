@@ -1,0 +1,59 @@
+{
+  "action_receipt_sha256": "sha256:1cd02c27df839b8f08c5b4ba7435377a156f7e6310a5d9b108326e6e9113344d",
+  "comparison": {
+    "cd_minus_strongest_baseline": 0.0,
+    "cd_value": 0.4875,
+    "lower_is_better": true,
+    "metric": "planning_regret",
+    "strongest_baseline_condition": "M",
+    "strongest_baseline_value": 0.4875
+  },
+  "condition_receipt_sha256": "sha256:d2ce252dc180edfd847379d6188f19667f77e0fd0b633ea83828e659f83c34ec",
+  "condition_regret_means": {
+    "CD": 0.4875,
+    "D": 0.4875,
+    "M": 0.4875,
+    "R": 0.4875
+  },
+  "episodes_per_family": 24,
+  "family_episode_limit": 2,
+  "planning_summary": {
+    "action_switch_count": 0,
+    "direction_counts": {
+      "TIE": 8
+    },
+    "episodes": 8,
+    "episodes_per_family": {
+      "information_asymmetry_false_belief": 2,
+      "preference_desire_uncertainty": 2,
+      "trust_commitment_relationship": 2,
+      "unknown": 2
+    },
+    "families": [
+      "information_asymmetry_false_belief",
+      "preference_desire_uncertainty",
+      "trust_commitment_relationship",
+      "unknown"
+    ],
+    "mean_cd_minus_baseline": 0.0,
+    "nonzero_delta_count": 0,
+    "oracle_match_transitions": {
+      "UNCHANGED": 8
+    },
+    "planning_benefit_with_confidence": false,
+    "planning_regret_ci": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:8ba92bb4f9a9048ee1ba4aba43e0830530748217873afeeb3cb0483e43bf2f98",
+      "lower": 0.0,
+      "mean": 0.0,
+      "samples": 2000,
+      "seed": 20260726,
+      "upper": 0.0
+    },
+    "row_pattern_sha256": "sha256:7b66990d2e463f15eab5ee0c4e60e16bab096e36e006b6ce135395c9974a0a86"
+  },
+  "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_summary.v1",
+  "split": "sealed_test",
+  "variant_max": 18,
+  "variant_min": 17
+}

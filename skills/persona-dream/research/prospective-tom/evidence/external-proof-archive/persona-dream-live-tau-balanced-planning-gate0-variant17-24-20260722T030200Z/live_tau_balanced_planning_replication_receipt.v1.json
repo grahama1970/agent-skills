@@ -1,0 +1,178 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_selection_receipt_passed": true,
+    "all_conditions_have_expected_action_counts": true,
+    "all_four_families_selected": true,
+    "balanced_family_counts": true,
+    "condition_blocked_before_case_acceptance": false,
+    "condition_outer_timeout_contained_if_triggered": true,
+    "condition_receipt_passed": true,
+    "gate0_attribution_loaded_if_requested": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "planning_rows_cover_expected_episodes": true,
+    "tau_receipts_hash_bound": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Memory recall in the sealed-test loop",
+      "permanently deployed external production retry service",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "a balanced four-family sealed-test slice was run through live Tau M/R/D/CD condition predictions",
+      "the live Tau outputs were sealed before deterministic outcome reveal and scored by Gate 5",
+      "the live Tau scores were mapped into constrained Gate 6 action selections and planning-regret rows",
+      "planning-regret CD-minus-baseline deltas were recomputed across all four scenario families",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 32,
+      "D": 32,
+      "M": 32,
+      "R": 32
+    },
+    "action_switch_count": 10,
+    "cases": 128,
+    "episodes": 32,
+    "episodes_per_family": {
+      "coordination_conflict": 8,
+      "information_asymmetry_false_belief": 8,
+      "preference_desire_uncertainty": 8,
+      "trust_commitment_relationship": 8
+    },
+    "families": [
+      "coordination_conflict",
+      "information_asymmetry_false_belief",
+      "preference_desire_uncertainty",
+      "trust_commitment_relationship"
+    ],
+    "nonzero_delta_count": 10,
+    "oracle_match_transitions": {
+      "GAIN": 8,
+      "LOSS": 2,
+      "UNCHANGED": 22
+    },
+    "planning_regret_scores_per_condition": {
+      "CD": 32,
+      "D": 32,
+      "M": 32,
+      "R": 32
+    }
+  },
+  "created_at": "2026-07-22T03:20:27Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episodes_per_family": 24,
+  "errors": [],
+  "family_episode_limit": 8,
+  "fixture_backed": false,
+  "gate0_case_root": "/tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_action_selection_receipt": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "live_tau_action_selection_receipt_sha256": "sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df",
+  "live_tau_condition_comparison_receipt": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "live_tau_condition_comparison_receipt_sha256": "sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c",
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": true,
+  "live_tau_reexecuted_by_this_command": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "action_receipt_sha256": "sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df",
+    "comparison": {
+      "cd_minus_strongest_baseline": -0.16874999999999998,
+      "cd_value": 0.196875,
+      "lower_is_better": true,
+      "metric": "planning_regret",
+      "strongest_baseline_condition": "R",
+      "strongest_baseline_value": 0.365625
+    },
+    "condition_receipt_sha256": "sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c",
+    "condition_regret_means": {
+      "CD": 0.196875,
+      "D": 0.365625,
+      "M": 0.3734375,
+      "R": 0.365625
+    },
+    "episodes_per_family": 24,
+    "family_episode_limit": 8,
+    "planning_summary": {
+      "action_switch_count": 10,
+      "direction_counts": {
+        "BENEFIT": 8,
+        "HARM": 2,
+        "TIE": 22
+      },
+      "episodes": 32,
+      "episodes_per_family": {
+        "coordination_conflict": 8,
+        "information_asymmetry_false_belief": 8,
+        "preference_desire_uncertainty": 8,
+        "trust_commitment_relationship": 8
+      },
+      "families": [
+        "coordination_conflict",
+        "information_asymmetry_false_belief",
+        "preference_desire_uncertainty",
+        "trust_commitment_relationship"
+      ],
+      "mean_cd_minus_baseline": -0.16875,
+      "nonzero_delta_count": 10,
+      "oracle_match_transitions": {
+        "GAIN": 8,
+        "LOSS": 2,
+        "UNCHANGED": 22
+      },
+      "planning_benefit_with_confidence": true,
+      "planning_regret_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:3543de4431a9dcb4cd0292f544720d06b245f9563ca9b308c20ecbc38fdfe17b",
+        "lower": -0.290625,
+        "mean": -0.16875,
+        "samples": 10000,
+        "seed": 20260727,
+        "upper": -0.056249999999999994
+      },
+      "row_pattern_sha256": "sha256:0bf19f55c2a710662e4302d2629a4c1cf3fe12a7af3ee51cca13576d7366a7af"
+    },
+    "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_summary.v1",
+    "split": "sealed_test",
+    "variant_max": 24,
+    "variant_min": 17
+  },
+  "mocked": false,
+  "outer_timeout_s": 5400.0,
+  "output_root": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z",
+  "planning_benefit_with_confidence": true,
+  "planning_rows_path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/artifacts/balanced_planning_rows.json",
+  "planning_rows_sha256": "sha256:d3d08813f902dcc8827d4573cf673496ceb3aab968e9b01c1fbecadfb5250c6b",
+  "processing_time_s": 1483.327,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json",
+  "receipt_sha256": "sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272",
+  "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_replication_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION",
+  "summary_path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/artifacts/live_tau_balanced_planning_summary.json",
+  "summary_sha256": "sha256:51a93909c23306930951e20c9a1c97d1ed5188a47b54c091e800d03ff6117265",
+  "tau_call_attempts": 128,
+  "tau_live_call_performed": 128,
+  "timeout_s": 120.0,
+  "variant_max": 24,
+  "variant_min": 17
+}

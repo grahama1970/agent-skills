@@ -1,0 +1,32 @@
+{
+  "action_index_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_action_selection/artifacts/live_condition_action_decisions.json",
+  "action_index_sha256": "sha256:da5e4d2d4cbbffcf46e059849b9fecb56fb7477d928bcce6ff77371b65453c0d",
+  "action_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "action_receipt_sha256": "sha256:c7d372099eaed70b1a49c2103a92fb6d27c9bf8e77e101e1d9a6691088e2279f",
+  "action_root": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_action_selection",
+  "artifacts": {
+    "pctom_end_to_end_lineage_receipt": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_end_to_end_lineage_receipt.json",
+    "pctom_oracle_policy_sensitivity": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_oracle_policy_sensitivity.jsonl",
+    "pctom_oracle_policy_sensitivity_receipt": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_oracle_policy_sensitivity_receipt.json"
+  },
+  "condition_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "condition_receipt_sha256": "sha256:b0fadfdb6ae2797f6d5611ee0fb4edd38f034c04e95b00815df211359ff9dbbe",
+  "condition_root": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison",
+  "created_at": "2026-07-22T00:48:53Z",
+  "fixed_policy": {
+    "action_mapping": "run_pctom_causal_identifiability_gate._counterpart_to_agent_action",
+    "action_vocabulary": [
+      "ASK_CLARIFYING_QUESTION",
+      "WAIT",
+      "DISCLOSE_INFORMATION",
+      "OFFER_COOPERATION",
+      "SET_BOUNDARY",
+      "ACT_INDEPENDENTLY",
+      "ABSTAIN"
+    ],
+    "anti_oracle_selection_rule": "lowest probability non-actual committed action that maps to a distinct agent action when possible",
+    "utility_function": "expected_task_reward + expected_information_gain - expected_social_cost"
+  },
+  "manifest_sha256": "sha256:a0350a67cdcad5dc8fe264a365f8e8ceb60dfc95c9fa47b6c0c1ac679ec4dd50",
+  "schema": "persona_dream.research.prospective_tom.causal_identifiability_manifest.v1"
+}

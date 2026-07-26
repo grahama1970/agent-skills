@@ -1,0 +1,66 @@
+{
+  "causal_replay_path": "/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/artifacts/cooperation_visible_pressure_causal_replay.v1.json",
+  "causal_replay_sha256": "sha256:eee437412b0e40e87d5b072bc1a2457f119a4f753f438196ee755a292b8bbaf9",
+  "checks": {
+    "causal_failure_localization_written": true,
+    "counterfactual_matches_expected": true,
+    "exactly_one_tool_return_removed_or_replaced": true,
+    "first_divergent_receipt_identified": true,
+    "no_canonical_identity_source_writes": true,
+    "no_unknown_state_continuation": true,
+    "replay_schema_valid": true,
+    "replay_starts_at_first_divergence": true,
+    "state_comparison_present": true,
+    "surface_hash_bound": true,
+    "surface_schema_valid": true,
+    "target_trial_fault_or_divergent": true,
+    "target_trial_resolved": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "real service fault injection",
+      "production causal replay",
+      "statistical prediction benefit",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the supplied replay targets a resolved faulted or divergent Gate 8 trial",
+      "the first divergent receipt is identified and replay starts at that boundary",
+      "exactly one suspected tool return is removed or replaced for counterfactual replay",
+      "the factual, counterfactual, and expected end-state hashes are compared",
+      "the counterfactual replay localizes a cause without continuing unknown state",
+      "canonical memory, identity, and source-memory writes are absent"
+    ]
+  },
+  "counts": {
+    "first_divergent_receipts": 1,
+    "forbidden_terminal_outcomes": 0,
+    "forbidden_write_attempts": 0,
+    "localized_causes": 1,
+    "state_comparisons": 1,
+    "suspected_tool_returns": 1,
+    "target_trials": 1
+  },
+  "created_at": "2026-07-22T00:18:23Z",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "causal_confidence": 1.0,
+    "first_divergent_receipt_id": "visible-pressure-receipt-006-validate-pre-outcome-rule-inputs",
+    "localized_cause_type": "PRE_OUTCOME_ORACLE_OR_HIDDEN_FIELD_LEAK",
+    "target_terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+    "target_trial_id": "visible-pressure-fault-oracle-leak-001"
+  },
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_check_receipt.v1.json",
+  "reliability_surface_path": "/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/artifacts/cooperation_visible_pressure_reliability_surface.v1.json",
+  "reliability_surface_sha256": "sha256:33fc7a18c913fd6b8818331b8bde8261ea94469e8419d6f78be61ce2b8247909",
+  "schema": "persona_dream.research.prospective_tom.causal_replay_check_receipt.v1",
+  "status": "PASS_TOM_CAUSAL_REPLAY",
+  "tau_call_attempts": 0
+}

@@ -1,0 +1,1546 @@
+{
+  "action_brier": [
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-coord-conflict-01",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-02",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-03",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-coord-conflict-04",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-05",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-06",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-coord-conflict-07",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-08",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.264,
+      "cd_value": 0.9374,
+      "episode_id": "sealedte-coord-conflict-09",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-coord-conflict-10",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-11",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-12",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-coord-conflict-13",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-14",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-coord-conflict-15",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-coord-conflict-16",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-info-asym-01",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-02",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-03",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-info-asym-04",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-05",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-06",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-info-asym-07",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-08",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-09",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-info-asym-10",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-11",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-12",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-info-asym-13",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-14",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-info-asym-15",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-info-asym-16",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-pref-desire-01",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-pref-desire-02",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": -0.01979999999999993,
+      "cd_value": 0.6536000000000001,
+      "episode_id": "sealedte-pref-desire-03",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-pref-desire-04",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-pref-desire-05",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": -0.0726,
+      "cd_value": 0.6008,
+      "episode_id": "sealedte-pref-desire-06",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": -0.12459999999999971,
+      "cd_value": 0.5288000000000002,
+      "episode_id": "sealedte-pref-desire-07",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-pref-desire-08",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-pref-desire-09",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": -0.09339999999999982,
+      "cd_value": 0.56,
+      "episode_id": "sealedte-pref-desire-10",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-pref-desire-11",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-pref-desire-12",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-pref-desire-13",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.33540000000000014,
+      "cd_value": 1.0088000000000001,
+      "episode_id": "sealedte-pref-desire-14",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": -0.11339999999999995,
+      "cd_value": 0.56,
+      "episode_id": "sealedte-pref-desire-15",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": -0.18839999999999985,
+      "cd_value": 0.465,
+      "episode_id": "sealedte-pref-desire-16",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-trust-commit-01",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-trust-commit-02",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-trust-commit-03",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-trust-commit-04",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": -0.16699999999999993,
+      "cd_value": 0.5064000000000001,
+      "episode_id": "sealedte-trust-commit-05",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.051999999999999935,
+      "cd_value": 0.7253999999999999,
+      "episode_id": "sealedte-trust-commit-06",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-trust-commit-07",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-trust-commit-08",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-trust-commit-09",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.13140000000000007,
+      "cd_value": 0.7847999999999999,
+      "episode_id": "sealedte-trust-commit-10",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-trust-commit-11",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-trust-commit-12",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-trust-commit-13",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": -0.05819999999999992,
+      "cd_value": 0.6152000000000001,
+      "episode_id": "sealedte-trust-commit-14",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6734,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6734,
+      "episode_id": "sealedte-trust-commit-15",
+      "metric": "action_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.6533999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.6533999999999999,
+      "episode_id": "sealedte-trust-commit-16",
+      "metric": "action_brier"
+    }
+  ],
+  "base_live_tau_replication_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+  "belief_brier": [
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-01",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-02",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-03",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-04",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-05",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-06",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-07",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-08",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.09389999999999998,
+      "cd_value": 0.32110000000000005,
+      "episode_id": "sealedte-coord-conflict-09",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-10",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-11",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-12",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-13",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-14",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-15",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-coord-conflict-16",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-01",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-02",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-03",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-04",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-05",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-06",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-07",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-08",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-09",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-10",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-11",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-12",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-13",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-14",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-15",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-info-asym-16",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-01",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-02",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.1643,
+      "cd_value": 0.25070000000000003,
+      "episode_id": "sealedte-pref-desire-03",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-04",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-05",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.12670000000000003,
+      "cd_value": 0.2883,
+      "episode_id": "sealedte-pref-desire-06",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.0902,
+      "cd_value": 0.32480000000000003,
+      "episode_id": "sealedte-pref-desire-07",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-08",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-09",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.14560000000000006,
+      "cd_value": 0.2694,
+      "episode_id": "sealedte-pref-desire-10",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-11",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-12",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-pref-desire-13",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.1683,
+      "cd_value": 0.24670000000000003,
+      "episode_id": "sealedte-pref-desire-14",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.07250000000000006,
+      "cd_value": 0.34249999999999997,
+      "episode_id": "sealedte-pref-desire-15",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.09179999999999999,
+      "cd_value": 0.32320000000000004,
+      "episode_id": "sealedte-pref-desire-16",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-01",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-02",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-03",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-04",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.06180000000000002,
+      "cd_value": 0.3532,
+      "episode_id": "sealedte-trust-commit-05",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.07669999999999999,
+      "cd_value": 0.33830000000000005,
+      "episode_id": "sealedte-trust-commit-06",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-07",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-08",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-09",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.05700000000000005,
+      "cd_value": 0.358,
+      "episode_id": "sealedte-trust-commit-10",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-11",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-12",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-13",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": -0.02250000000000002,
+      "cd_value": 0.3925,
+      "episode_id": "sealedte-trust-commit-14",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-15",
+      "metric": "belief_brier"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.41500000000000004,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.41500000000000004,
+      "episode_id": "sealedte-trust-commit-16",
+      "metric": "belief_brier"
+    }
+  ],
+  "planning_regret": [
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-coord-conflict-01",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-02",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-03",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-coord-conflict-04",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-05",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-06",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-coord-conflict-07",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-08",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-09",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-coord-conflict-10",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-11",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-12",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-coord-conflict-13",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-14",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-coord-conflict-15",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-coord-conflict-16",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-01",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-02",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-03",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-04",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-05",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-06",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-07",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-08",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-09",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-10",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-11",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-12",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-13",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-14",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-15",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-info-asym-16",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-pref-desire-01",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-02",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-03",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-pref-desire-04",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-05",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-06",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-pref-desire-07",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-08",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-09",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-pref-desire-10",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-11",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-12",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-pref-desire-13",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-14",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.5499999999999999,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.5499999999999999,
+      "episode_id": "sealedte-pref-desire-15",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-pref-desire-16",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-trust-commit-01",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.8500000000000001,
+      "episode_id": "sealedte-trust-commit-02",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.8500000000000001,
+      "episode_id": "sealedte-trust-commit-03",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-trust-commit-04",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": -0.8500000000000001,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-trust-commit-05",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": -0.8500000000000001,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-trust-commit-06",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-trust-commit-07",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.8500000000000001,
+      "episode_id": "sealedte-trust-commit-08",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.8500000000000001,
+      "episode_id": "sealedte-trust-commit-09",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.25,
+      "cd_value": 0.25,
+      "episode_id": "sealedte-trust-commit-10",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.8500000000000001,
+      "episode_id": "sealedte-trust-commit-11",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.8500000000000001,
+      "episode_id": "sealedte-trust-commit-12",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-trust-commit-13",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": -0.8500000000000001,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-trust-commit-14",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.8500000000000001,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.8500000000000001,
+      "episode_id": "sealedte-trust-commit-15",
+      "metric": "planning_regret"
+    },
+    {
+      "baseline_condition": "M",
+      "baseline_value": 0.0,
+      "cd_minus_baseline": 0.0,
+      "cd_value": 0.0,
+      "episode_id": "sealedte-trust-commit-16",
+      "metric": "planning_regret"
+    }
+  ],
+  "schema": "persona_dream.research.prospective_tom.live_tau_full64_paired_deltas.v1"
+}

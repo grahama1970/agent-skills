@@ -1,0 +1,133 @@
+{
+  "audit_path": "/tmp/persona-dream-cooperation-feature-split-prereq-audit-20260721T212150Z/artifacts/cooperation_feature_split_prerequisite_audit.json",
+  "audit_sha256": "sha256:fe06b76a850e0760841712fbf1d116faab2df18c9a216826162c49b8692382bf",
+  "broad_planning_benefit_claimed": false,
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "acceptance_receipt_passed": true,
+    "diagnostic_receipt_passed": true,
+    "feature_split_acceptance_allowed": false,
+    "missing_contrast_blocks_replacement_policy": true,
+    "negative_checks_failed_closed": true,
+    "no_judgment_used": true,
+    "no_new_tau_calls": true,
+    "pre_outcome_fields_exclude_oracle_or_outcome": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "a replacement cooperation feature split is valid",
+      "broad held-out planning benefit",
+      "confidence-bounded CD planning benefit",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "current live-originated cooperation evidence is one-sided for replacement feature-split learning",
+      "the accepted keep-cooperation row has pre-outcome basis that excludes oracle/outcome fields",
+      "no replacement cooperation policy or broad planning-benefit claim is accepted by this audit"
+    ]
+  },
+  "conclusion": "FEATURE_SPLIT_BLOCKED_INSUFFICIENT_CONTRAST",
+  "created_at": "2026-07-21T21:21:50Z",
+  "errors": [],
+  "feature_split_acceptance_allowed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "input_no_intervention_acceptance_receipt": "/tmp/persona-dream-cooperation-no-intervention-policy-proof-20260721T211544Z/cooperation_no_intervention_policy_acceptance_receipt.v1.json",
+  "input_no_intervention_acceptance_receipt_sha256": "sha256:6d8364272378e827dd662850260708d99e6ce0564d0c6e29905e0361ed6a54b8",
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted_by_this_command": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "missing_prerequisites": [
+    "missing_unsafe_or_avoid_cooperation_contrast_candidate"
+  ],
+  "mocked": false,
+  "negative_checks_path": "/tmp/persona-dream-cooperation-feature-split-prereq-audit-20260721T212150Z/artifacts/cooperation_feature_split_prerequisite_negative_checks.json",
+  "negative_checks_sha256": "sha256:30453dfc7e69a60a4b0d453a0f35638b490f28d16949316875c187ab876f9f69",
+  "negative_results": {
+    "acceptance_status_not_pass": {
+      "checks": {
+        "acceptance_receipt_passed": false,
+        "diagnostic_receipt_passed": true,
+        "feature_split_acceptance_allowed": false,
+        "missing_contrast_blocks_replacement_policy": true,
+        "no_judgment_used": true,
+        "no_new_tau_calls": true,
+        "pre_outcome_fields_exclude_oracle_or_outcome": true,
+        "unsupported_writes_absent": true
+      },
+      "errors": [
+        "acceptance_status_not_pass:BLOCKED_PCTOM_COOPERATION_NO_INTERVENTION_POLICY_ACCEPTANCE"
+      ],
+      "failed_closed": true
+    },
+    "accepted_pre_outcome_oracle_leak": {
+      "checks": {
+        "acceptance_receipt_passed": true,
+        "diagnostic_receipt_passed": true,
+        "feature_split_acceptance_allowed": false,
+        "missing_contrast_blocks_replacement_policy": true,
+        "no_judgment_used": true,
+        "no_new_tau_calls": true,
+        "pre_outcome_fields_exclude_oracle_or_outcome": false,
+        "unsupported_writes_absent": true
+      },
+      "errors": [
+        "accepted_row_0_pre_outcome_basis_leaks_oracle_or_outcome"
+      ],
+      "failed_closed": true
+    },
+    "broad_planning_benefit_claim_injected": {
+      "checks": {
+        "acceptance_receipt_passed": true,
+        "diagnostic_receipt_passed": true,
+        "feature_split_acceptance_allowed": false,
+        "missing_contrast_blocks_replacement_policy": true,
+        "no_judgment_used": true,
+        "no_new_tau_calls": true,
+        "pre_outcome_fields_exclude_oracle_or_outcome": true,
+        "unsupported_writes_absent": true
+      },
+      "errors": [
+        "acceptance_broad_planning_benefit_claimed"
+      ],
+      "failed_closed": true
+    },
+    "missing_keep_cooperation_candidate": {
+      "checks": {
+        "acceptance_receipt_passed": true,
+        "diagnostic_receipt_passed": true,
+        "feature_split_acceptance_allowed": false,
+        "missing_contrast_blocks_replacement_policy": true,
+        "no_judgment_used": true,
+        "no_new_tau_calls": true,
+        "pre_outcome_fields_exclude_oracle_or_outcome": true,
+        "unsupported_writes_absent": true
+      },
+      "errors": [],
+      "failed_closed": true
+    }
+  },
+  "observed_contrast": {
+    "accepted_keep_cooperation_positive_candidates": 1,
+    "diagnostic_avoid_or_unsafe_cooperation_candidates": 0,
+    "diagnostic_avoid_or_unsafe_label_count": 0,
+    "diagnostic_candidate_count": 1,
+    "diagnostic_keep_cooperation_label_count": 1
+  },
+  "output_root": "/tmp/persona-dream-cooperation-feature-split-prereq-audit-20260721T212150Z",
+  "processing_time_s": 0.001,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-cooperation-feature-split-prereq-audit-20260721T212150Z/cooperation_feature_split_prerequisite_audit_receipt.v1.json",
+  "receipt_sha256": "sha256:b4b382e52f0d85c4a0f5144057f5145d96a1d5b30b0bcee8cf13daa09d827acb",
+  "replacement_policy_claimed": false,
+  "schema": "persona_dream.research.prospective_tom.cooperation_feature_split_prerequisite_audit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_COOPERATION_FEATURE_SPLIT_PREREQUISITE_AUDIT",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0
+}

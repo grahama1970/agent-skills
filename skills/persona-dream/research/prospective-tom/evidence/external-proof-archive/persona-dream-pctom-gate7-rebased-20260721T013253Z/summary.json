@@ -1,0 +1,358 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "live Memory recall",
+      "live Tau model generation",
+      "paid provider or video execution",
+      "semantic dream quality",
+      "longitudinal post-revision memory recall",
+      "Gate 8 reliability surface",
+      "Gate 9 causal replay"
+    ],
+    "proves": [
+      "PCTOM-R Gate 0-7 deterministic fixture contracts execute locally after replay on current origin/main",
+      "negative fixtures fail closed at each implemented gate",
+      "Gate 7 belief revision preserves sealed prior snapshots and blocks evidence/source/identity writes in fixtures"
+    ]
+  },
+  "command_count": 53,
+  "commands": [
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "gate0_positive",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate0_positive.stdout.txt"
+    },
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "gate1_positive",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate1_positive.stdout.txt"
+    },
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "gate2_positive",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate2_positive.stdout.txt"
+    },
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "gate3_positive",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate3_positive.stdout.txt"
+    },
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "gate4_positive",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_positive.stdout.txt"
+    },
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "gate5_positive",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate5_positive.stdout.txt"
+    },
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "gate6_positive",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate6_positive.stdout.txt"
+    },
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "gate7_positive",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_positive.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate0_negative_bad_source_hash",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate0_negative_bad_source_hash.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate0_negative_outcome_visible",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate0_negative_outcome_visible.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate0_negative_unaccepted_residue",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate0_negative_unaccepted_residue.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate0_negative_unresolved_branch",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate0_negative_unresolved_branch.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate2_negative_bad_probability_sum",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate2_negative_bad_probability_sum.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate2_negative_canonical_memory_write",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate2_negative_canonical_memory_write.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate2_negative_counterfactual_literal_mix",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate2_negative_counterfactual_literal_mix.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate2_negative_hidden_evidence_ref",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate2_negative_hidden_evidence_ref.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate2_negative_outcome_visible",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate2_negative_outcome_visible.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate2_negative_perspective_label_mismatch",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate2_negative_perspective_label_mismatch.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate2_negative_unsupported_not_abstained",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate2_negative_unsupported_not_abstained.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate3_negative_counterfactual_not_synthetic",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate3_negative_counterfactual_not_synthetic.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate3_negative_factual_uses_counterfactual_distribution",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate3_negative_factual_uses_counterfactual_distribution.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate3_negative_held_fixed_includes_intervention",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate3_negative_held_fixed_includes_intervention.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate3_negative_hidden_source_evidence",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate3_negative_hidden_source_evidence.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate3_negative_missing_factual_branch",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate3_negative_missing_factual_branch.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate3_negative_unresolved_distribution_ref",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate3_negative_unresolved_distribution_ref.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate4_negative_bad_payload_hash",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_negative_bad_payload_hash.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate4_negative_canonical_memory_write",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_negative_canonical_memory_write.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate4_negative_evidence_bundle_hash_mismatch",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_negative_evidence_bundle_hash_mismatch.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate4_negative_forbidden_outcome_leak",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_negative_forbidden_outcome_leak.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate4_negative_model_receipt_hash_mismatch",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_negative_model_receipt_hash_mismatch.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate4_negative_outcome_visible",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_negative_outcome_visible.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate4_negative_unresolved_branch_ref",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_negative_unresolved_branch_ref.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate4_negative_unresolved_distribution_ref",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate4_negative_unresolved_distribution_ref.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate5_negative_action_not_allowed",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate5_negative_action_not_allowed.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate5_negative_missing_hidden_label",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate5_negative_missing_hidden_label.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate5_negative_outcome_not_visible",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate5_negative_outcome_not_visible.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate5_negative_reveal_before_seal",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate5_negative_reveal_before_seal.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate5_negative_synthetic_branch_as_literal_history",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate5_negative_synthetic_branch_as_literal_history.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate5_negative_unknown_prediction_id",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate5_negative_unknown_prediction_id.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate6_negative_canonical_memory_write",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate6_negative_canonical_memory_write.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate6_negative_invalid_action",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate6_negative_invalid_action.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate6_negative_missing_information_gain",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate6_negative_missing_information_gain.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate6_negative_oracle_not_max",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate6_negative_oracle_not_max.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate6_negative_planning_regret_mismatch",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate6_negative_planning_regret_mismatch.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate6_negative_scoring_hash_mismatch",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate6_negative_scoring_hash_mismatch.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate7_negative_canonical_memory_write",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_negative_canonical_memory_write.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate7_negative_posterior_bad_sum",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_negative_posterior_bad_sum.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate7_negative_prior_not_auditable",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_negative_prior_not_auditable.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate7_negative_prior_overwritten",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_negative_prior_overwritten.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate7_negative_scoring_not_pass",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_negative_scoring_not_pass.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate7_negative_source_memory_write",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_negative_source_memory_write.stdout.txt"
+    },
+    {
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "name": "gate7_negative_unresolved_prior_hypothesis",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_negative_unresolved_prior_hypothesis.stdout.txt"
+    },
+    {
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "name": "git_diff_check",
+      "stdout_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/git_diff_check.stdout.txt"
+    },
+    {
+      "exit_code": null,
+      "expected_exit_code": null,
+      "name": "check_mock_evidence_claims",
+      "skipped": "missing scripts/check_mock_evidence_claims.py",
+      "stdout_path": null
+    }
+  ],
+  "created_at": "2026-07-21T01:32:53Z",
+  "expected_negative_failures": 44,
+  "fixture_backed": true,
+  "head": "f3618855703c21c18dcc6cb325c2187dea858a9f",
+  "json_files_parsed": 83,
+  "live": false,
+  "mocked": false,
+  "proof_scope": "deterministic offline fixture matrix for PCTOM-R Gates 0-7 after rebase",
+  "python_files_ast_parsed": 9,
+  "status": "PASS",
+  "unexpected_failures": [],
+  "worktree": "/tmp/agent-skills-pctom-gate7-20260721T012304Z"
+}

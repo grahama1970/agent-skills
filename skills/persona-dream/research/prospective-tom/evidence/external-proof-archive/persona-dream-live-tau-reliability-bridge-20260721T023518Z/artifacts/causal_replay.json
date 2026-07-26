@@ -1,0 +1,45 @@
+{
+  "canonical_memory_write": false,
+  "comparison": {
+    "counterfactual_end_state_sha256": "sha256:5ce866c8897be03e382f2f8c83defffed83e11f9e2b6e1bf4e1714f77dd086ad",
+    "counterfactual_matches_expected": true,
+    "expected_end_state_sha256": "sha256:5ce866c8897be03e382f2f8c83defffed83e11f9e2b6e1bf4e1714f77dd086ad",
+    "factual_end_state_sha256": "sha256:4aa2d2c20f4dbbad20f848b439576ae43fe8b2ba217bc4e112ba6825bfef7ac1"
+  },
+  "first_divergent_receipt": {
+    "boundary": "score_revision_artifact_load",
+    "expected_state_sha256": "sha256:5ce866c8897be03e382f2f8c83defffed83e11f9e2b6e1bf4e1714f77dd086ad",
+    "observed_state_sha256": "sha256:4aa2d2c20f4dbbad20f848b439576ae43fe8b2ba217bc4e112ba6825bfef7ac1",
+    "receipt_id": "live-receipt-003-load-score-revision-artifact",
+    "receipt_index": 3
+  },
+  "identity_write": false,
+  "localized_cause": {
+    "causal_confidence": 1.0,
+    "cause_type": "STALE_ARTIFACT",
+    "evidence_refs": [
+      "live-gate8-trial-stale-artifact-001",
+      "live-receipt-003-load-score-revision-artifact",
+      "live-tool-return-stale-score-revision-artifact-001"
+    ],
+    "receipt_id": "live-receipt-003-load-score-revision-artifact",
+    "tool_return_id": "live-tool-return-stale-score-revision-artifact-001"
+  },
+  "reliability_surface_sha256": "sha256:df923a38043845e171aa3f7908e490897e279ce6fccd0d8a3d2cd025a4086e5a",
+  "replay_id": "live-gate9-replay-stale-score-revision-artifact-001",
+  "replay_start_receipt_id": "live-receipt-003-load-score-revision-artifact",
+  "schema": "persona_dream.research.prospective_tom.causal_replay.v1",
+  "source_memory_write": false,
+  "surface_id": "live-gate8-surface-dev-info-asym-01-cd",
+  "suspected_tool_return": {
+    "operation": "REPLACE_TOOL_RETURN",
+    "original_return_sha256": "sha256:a57ba2a3c9689212b4893ad00d37a4fea8cd4e37ffd15a40e7c8c3c5c21356cb",
+    "receipt_id": "live-receipt-003-load-score-revision-artifact",
+    "replacement_return_sha256": "sha256:1079f80f80a2dedaca64e556156a6e795fee463810bcac44c108457a533c12de",
+    "tool_name": "local_artifact_store.read",
+    "tool_return_id": "live-tool-return-stale-score-revision-artifact-001"
+  },
+  "terminal_outcome": "CAUSAL_FAILURE_LOCALIZED",
+  "trial_id": "live-gate8-trial-stale-artifact-001",
+  "unknown_state_continued": false
+}

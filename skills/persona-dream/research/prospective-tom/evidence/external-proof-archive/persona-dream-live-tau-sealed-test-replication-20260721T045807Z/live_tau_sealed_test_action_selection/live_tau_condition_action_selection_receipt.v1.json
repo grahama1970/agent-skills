@@ -1,0 +1,123 @@
+{
+  "action_set": [
+    "ASK_CLARIFYING_QUESTION",
+    "WAIT",
+    "DISCLOSE_INFORMATION",
+    "OFFER_COOPERATION",
+    "SET_BOUNDARY",
+    "ACT_INDEPENDENTLY",
+    "ABSTAIN"
+  ],
+  "base_receipt": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "base_receipt_sha256": "sha256:6cc6e33772e0044658b4bd917c651f706d99542d06d9eaffda516b2773cc5580",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_receipt_hash_recomputed": true,
+    "base_receipt_passed": true,
+    "conditions_represented": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "reward_or_regret_scores_recomputed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "held-out statistical prediction benefit",
+      "planning benefit over the strongest baseline",
+      "longitudinal recall after action-linked belief revision",
+      "real external service fault injection",
+      "production retry machinery",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video or semantic dream quality"
+    ],
+    "proves": [
+      "repeated live Tau M/R/D/CD condition artifacts can feed constrained Gate 6 action selection",
+      "each condition has at least one deterministic reward or planning-regret score",
+      "oracle policy references deterministic simulator policy rather than an LLM judge",
+      "no human content judgment, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_cases_written": 16,
+    "action_decisions_per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "base_cases": 16,
+    "base_tau_call_attempts": 16,
+    "cases_seen": 16,
+    "deterministic_reward_or_regret_scores_per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "individual_status_counts": {
+      "PASS_TOM_ACTION_SELECTION": 16
+    }
+  },
+  "created_at": "2026-07-21T05:10:51Z",
+  "decision_index": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/live_condition_action_decisions.json",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "mean_planning_regret_by_condition": {
+      "CD": 0.0,
+      "D": 0.0,
+      "M": 0.0,
+      "R": 0.0
+    },
+    "selected_actions_by_condition": {
+      "CD": [
+        "WAIT",
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "SET_BOUNDARY"
+      ],
+      "D": [
+        "WAIT",
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "SET_BOUNDARY"
+      ],
+      "M": [
+        "WAIT",
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "SET_BOUNDARY"
+      ],
+      "R": [
+        "WAIT",
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "SET_BOUNDARY"
+      ]
+    }
+  },
+  "mocked": false,
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "output_root": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_condition_action_selection_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION",
+  "tau_call_attempts": 0
+}

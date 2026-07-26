@@ -1,0 +1,70 @@
+{
+  "gate0_negative_statuses": {
+    "bad_source_hash": "BLOCKED_PCTOM_GATE0_LINEAGE",
+    "outcome_visible": "BLOCKED_PCTOM_GATE0_LINEAGE",
+    "unaccepted_residue": "BLOCKED_PCTOM_GATE0_LINEAGE",
+    "unresolved_branch": "BLOCKED_PCTOM_GATE0_LINEAGE"
+  },
+  "gate0_positive_status": "PASS_PCTOM_GATE0_LINEAGE",
+  "gate1_counts": {
+    "episodes": 12,
+    "families": 4,
+    "family_counts": {
+      "coordination_conflict": 3,
+      "information_asymmetry_false_belief": 3,
+      "preference_desire_uncertainty": 3,
+      "trust_commitment_relationship": 3
+    },
+    "first_order_labels": 12,
+    "second_order_labels": 12
+  },
+  "gate1_status": "PASS_SOCIAL_EPISODE_CORPUS",
+  "gate2_negative_errors": {
+    "bad_probability_sum": [
+      "distribution_0_distribution_sum:0.900000"
+    ],
+    "canonical_memory_write": [
+      "bundle_canonical_memory_write_not_false"
+    ],
+    "counterfactual_literal_mix": [
+      "distribution_0_literal_prediction_uses_counterfactual_evidence:dev-info-asym-01:do:kai_gives_no_warning"
+    ],
+    "hidden_evidence_ref": [
+      "distribution_0_unresolved_or_hidden_evidence_ref:social_episode_observation:dev-info-asym-01:hidden_world_state:changed_constraint",
+      "distribution_0_unsupported_claim_marked_supported"
+    ],
+    "outcome_visible": [
+      "bundle_outcome_visible_not_false"
+    ],
+    "perspective_label_mismatch": [
+      "distribution_0_supported_hypothesis_not_in_episode_labels"
+    ],
+    "unsupported_not_abstained": [
+      "distribution_0_supported_hypothesis_not_in_episode_labels",
+      "distribution_0_unsupported_claim_marked_supported"
+    ]
+  },
+  "gate2_negative_statuses": {
+    "bad_probability_sum": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "canonical_memory_write": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "counterfactual_literal_mix": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "hidden_evidence_ref": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "outcome_visible": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "perspective_label_mismatch": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS",
+    "unsupported_not_abstained": "BLOCKED_TOM_BELIEF_DISTRIBUTIONS"
+  },
+  "gate2_positive_counts": {
+    "abstained_or_pending": 1,
+    "counterfactual_distributions": 0,
+    "distributions": 3,
+    "label_matched_distributions": 2,
+    "resolved_evidence_refs": 4,
+    "supported": 2
+  },
+  "gate2_positive_status": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+  "git_diff_check": "clean",
+  "json_parse": "json_files_parsed=38",
+  "mock_claim_checker": "absent",
+  "out_root": "/tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z",
+  "python_ast_parse": "python_files_ast_parsed=4"
+}

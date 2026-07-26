@@ -1,0 +1,617 @@
+{
+  "autonomous_judgment_boundary": {
+    "coverage_evidence_autonomous_violations": [],
+    "coverage_evidence_rows_checked": 43,
+    "human_content_judgment_required_rows": 0,
+    "llm_judge_used_rows": 0,
+    "mocked_not_false_rows": 0
+  },
+  "claims": {
+    "does_not_prove": [
+      "paid provider execution",
+      "semantic dream quality",
+      "complete Phase 01-16 media runtime execution",
+      "future receipts not routed through this objective audit"
+    ],
+    "proves": [
+      "the current top-level PCTOM-R success receipt is bound to the same expanded goal-coverage receipt",
+      "all active text-first PCTOM-R objective clauses have named coverage evidence",
+      "the objective evidence surface includes fail-closed negative fixtures and unsupported-evidence abstention coverage",
+      "negative evidence rows have BLOCKED status and clean autonomous/mock flags when fail_closed_reliability_checks is true",
+      "the supplied coverage evidence rows require no human content judgment, no LLM judge, and non-mocked receipts when autonomous_without_human_content_judgment is true",
+      "the supplied receipt bundle keeps provider/video work outside the current critical path when provider_video_not_critical_path is true"
+    ]
+  },
+  "counts": {
+    "child_evidence_receipts_checked": 43,
+    "coverage_ids_missing": 0,
+    "coverage_ids_seen": 15,
+    "evidence_receipts_seen": 43,
+    "live_positive_evidence_receipts": 19,
+    "negative_evidence_receipts": 12,
+    "positive_evidence_receipts": 31,
+    "required_coverage_ids": 15
+  },
+  "coverage_evidence_boundary": {
+    "items": [
+      {
+        "coverage_id": "autonomous_no_human_judgment",
+        "live_positive_evidence": 0,
+        "negative_evidence": 1,
+        "positive_evidence": 1
+      },
+      {
+        "coverage_id": "cross_stage_hash_lineage",
+        "live_positive_evidence": 1,
+        "negative_evidence": 1,
+        "positive_evidence": 1
+      },
+      {
+        "coverage_id": "gate0_provenance_bound_recall_residue",
+        "live_positive_evidence": 5,
+        "negative_evidence": 0,
+        "positive_evidence": 5
+      },
+      {
+        "coverage_id": "gate1_deterministic_hidden_state_social_episodes",
+        "live_positive_evidence": 1,
+        "negative_evidence": 2,
+        "positive_evidence": 3
+      },
+      {
+        "coverage_id": "gate2_valid_tom_distributions",
+        "live_positive_evidence": 0,
+        "negative_evidence": 0,
+        "positive_evidence": 1
+      },
+      {
+        "coverage_id": "gate3_counterfactual_branches_synthetic",
+        "live_positive_evidence": 0,
+        "negative_evidence": 0,
+        "positive_evidence": 1
+      },
+      {
+        "coverage_id": "gate4_sealed_prediction_commitments",
+        "live_positive_evidence": 0,
+        "negative_evidence": 1,
+        "positive_evidence": 1
+      },
+      {
+        "coverage_id": "gate5_deterministic_scoring",
+        "live_positive_evidence": 0,
+        "negative_evidence": 0,
+        "positive_evidence": 1
+      },
+      {
+        "coverage_id": "gate6_action_selection_planning",
+        "live_positive_evidence": 2,
+        "negative_evidence": 0,
+        "positive_evidence": 3
+      },
+      {
+        "coverage_id": "gate7_non_destructive_belief_revision",
+        "live_positive_evidence": 1,
+        "negative_evidence": 0,
+        "positive_evidence": 2
+      },
+      {
+        "coverage_id": "gate8_fault_containment",
+        "live_positive_evidence": 3,
+        "negative_evidence": 0,
+        "positive_evidence": 3
+      },
+      {
+        "coverage_id": "gate9_causal_replay",
+        "live_positive_evidence": 2,
+        "negative_evidence": 0,
+        "positive_evidence": 2
+      },
+      {
+        "coverage_id": "memory_retention_and_recall",
+        "live_positive_evidence": 4,
+        "negative_evidence": 1,
+        "positive_evidence": 4
+      },
+      {
+        "coverage_id": "negative_fixtures_fail_closed",
+        "live_positive_evidence": 0,
+        "negative_evidence": 5,
+        "positive_evidence": 2
+      },
+      {
+        "coverage_id": "unsupported_evidence_abstention",
+        "live_positive_evidence": 0,
+        "negative_evidence": 1,
+        "positive_evidence": 1
+      }
+    ],
+    "required_coverage_rows_checked": 15,
+    "rows_missing_positive_evidence": [],
+    "rows_missing_required_negative_evidence": []
+  },
+  "elapsed_s": 0.012714,
+  "errors": [],
+  "fail_closed_negative_boundary": {
+    "items": [
+      {
+        "coverage_id": "gate1_deterministic_hidden_state_social_episodes",
+        "index": 7,
+        "path": "/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY",
+        "violations": []
+      },
+      {
+        "coverage_id": "gate1_deterministic_hidden_state_social_episodes",
+        "index": 9,
+        "path": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-negative-action-20260722T150000Z/social_episode_independent_replay_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY",
+        "violations": []
+      },
+      {
+        "coverage_id": "gate4_sealed_prediction_commitments",
+        "index": 13,
+        "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT",
+        "violations": []
+      },
+      {
+        "coverage_id": "cross_stage_hash_lineage",
+        "index": 26,
+        "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT",
+        "violations": []
+      },
+      {
+        "coverage_id": "autonomous_no_human_judgment",
+        "index": 28,
+        "path": "/tmp/persona-dream-autonomous-no-human-judgment-surface-negative-human-required-20260722T090100Z/output/autonomous_no_human_judgment_surface_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE",
+        "violations": []
+      },
+      {
+        "coverage_id": "memory_retention_and_recall",
+        "index": 33,
+        "path": "/tmp/persona-dream-live-memory-aged-retention-negative-too-young-20260722T044100Z/live_memory_aged_retention_recall_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL",
+        "violations": []
+      },
+      {
+        "coverage_id": "negative_fixtures_fail_closed",
+        "index": 36,
+        "path": "/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY",
+        "violations": []
+      },
+      {
+        "coverage_id": "negative_fixtures_fail_closed",
+        "index": 37,
+        "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT",
+        "violations": []
+      },
+      {
+        "coverage_id": "negative_fixtures_fail_closed",
+        "index": 38,
+        "path": "/tmp/persona-dream-live-memory-aged-retention-negative-too-young-20260722T044100Z/live_memory_aged_retention_recall_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL",
+        "violations": []
+      },
+      {
+        "coverage_id": "negative_fixtures_fail_closed",
+        "index": 39,
+        "path": "/tmp/persona-dream-autonomous-no-human-judgment-surface-negative-human-required-20260722T090100Z/output/autonomous_no_human_judgment_surface_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE",
+        "violations": []
+      },
+      {
+        "coverage_id": "negative_fixtures_fail_closed",
+        "index": 40,
+        "path": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-negative-action-20260722T150000Z/social_episode_independent_replay_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY",
+        "violations": []
+      },
+      {
+        "coverage_id": "unsupported_evidence_abstention",
+        "index": 42,
+        "path": "/tmp/persona-dream-pctom-unsupported-evidence-abstention-negative-supported-20260722T112100Z/pctom_unsupported_evidence_abstention_receipt.v1.json",
+        "status": "BLOCKED_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION",
+        "violations": []
+      }
+    ],
+    "negative_evidence_row_violations": [],
+    "negative_evidence_rows_checked": 12,
+    "negative_human_content_judgment_rows": 0,
+    "negative_llm_judge_rows": 0,
+    "negative_mocked_not_false_rows": 0,
+    "negative_status_not_blocked_rows": 0
+  },
+  "fixture_backed": false,
+  "generated_at": "2026-07-22T07:34:14Z",
+  "goal_coverage_receipt": {
+    "calculated_receipt_sha256": "sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6",
+    "file_sha256": "sha256:413a32e99d9bf1e67b96dcb063f2fc0fb1bd10449192bbb0e5f123fa4fe921d9",
+    "fixture_backed": false,
+    "live": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/coverage/pctom_goal_coverage_receipt.v1.json",
+    "receipt_sha256": "sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6",
+    "receipt_sha256_matches_content": true,
+    "schema": "persona_dream.research.prospective_tom.goal_coverage_receipt.v1",
+    "status": "PASS_PCTOM_GOAL_COVERAGE"
+  },
+  "live": false,
+  "mocked": false,
+  "objective": {
+    "clauses": {
+      "action_selection_planning": true,
+      "autonomous_without_human_content_judgment": true,
+      "counterfactual_branches_synthetic": true,
+      "cross_stage_hash_lineage": true,
+      "deterministic_hidden_state_social_episodes": true,
+      "deterministic_scoring": true,
+      "fail_closed_reliability_checks": true,
+      "memory_retention_and_recall": true,
+      "non_destructive_belief_revision": true,
+      "provenance_bound_recall_residue": true,
+      "provider_video_not_critical_path": true,
+      "sealed_prediction_commitments": true,
+      "unsupported_evidence_abstention": true,
+      "valid_tom_distributions": true
+    },
+    "name": "PCTOM-R text-first prospective Theory-of-Mind reliability lane",
+    "provider_video_critical_path": false
+  },
+  "output_root": "/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/objective",
+  "provider_video_boundary": {
+    "coverage_child_forbidden_side_effects": [],
+    "coverage_forbidden_side_effects": [],
+    "coverage_missing_does_not_prove_claims": [],
+    "required_does_not_prove_claims": [
+      "complete Phase 01-16 media runtime execution",
+      "paid provider execution"
+    ],
+    "success_forbidden_side_effects": [],
+    "success_missing_does_not_prove_claims": []
+  },
+  "receipt_integrity": {
+    "child_file_hash_mismatches": [],
+    "child_file_sha256_mismatches": 0,
+    "items": [
+      {
+        "calculated": "sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4",
+        "label": "success",
+        "matches": true,
+        "required": true,
+        "stored": "sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4"
+      },
+      {
+        "calculated": "sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6",
+        "label": "goal_coverage",
+        "matches": true,
+        "required": true,
+        "stored": "sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6"
+      },
+      {
+        "calculated": "sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272",
+        "label": "coverage_evidence_0",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272"
+      },
+      {
+        "calculated": "sha256:2903066090fdff791feb509c2f5c670af6f2327f3389d9cc899f8a236d8a8032",
+        "label": "coverage_evidence_1",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:2903066090fdff791feb509c2f5c670af6f2327f3389d9cc899f8a236d8a8032"
+      },
+      {
+        "calculated": "sha256:d743bd2fb2f63e0f75de8e27740bc1af6efd3beec02b7c09585d24051e8f2bee",
+        "label": "coverage_evidence_2",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:ed8002a321cf58b0d884d4b7723305325b5334a8e3fa17ed8200c28d55b264be"
+      },
+      {
+        "calculated": "sha256:57c3b0615427b423dbf63d4ebd57b57807788c4e1cecdad69500513259c239f1",
+        "label": "coverage_evidence_3",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:57c3b0615427b423dbf63d4ebd57b57807788c4e1cecdad69500513259c239f1"
+      },
+      {
+        "calculated": "sha256:236eef18ae76a9087c692df3b11cdd4860e8db2a030e82527fb0383b025e2d8a",
+        "label": "coverage_evidence_4",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:236eef18ae76a9087c692df3b11cdd4860e8db2a030e82527fb0383b025e2d8a"
+      },
+      {
+        "calculated": "sha256:583a3efab6057044422403b715a056fade6f6d2ec4e283b5d25e183e7fd2098a",
+        "label": "coverage_evidence_5",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:251fff9eb8b07cc160347e234d5dc9d1efe1d1cc026a05dda44545b526e988ff"
+      },
+      {
+        "calculated": "sha256:bd0e8535f170e54867dcf65410138a77755686f9656da5188f773dc7bfce35b2",
+        "label": "coverage_evidence_6",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:aefadffad7c90c5d038ec9527bf0ef2eccfc00800a80512affd5e69be9657f21"
+      },
+      {
+        "calculated": "sha256:36663bca3d09101fa26132fd83929aff09f68b01d9585a335aea4dbb2d9ba933",
+        "label": "coverage_evidence_7",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd"
+      },
+      {
+        "calculated": "sha256:455bc68bf753cb5046edf5d81be796f166552b36f2a79f82cd9993a99559612b",
+        "label": "coverage_evidence_8",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:ee57dbdfb09f200e9734def1a5806c015f5d41b039855a231a1e81f1f02c89c1"
+      },
+      {
+        "calculated": "sha256:8da3bf46af93b9c598da98a0a3cfcca598bf9e867374d7c68e9e3090dc867a4d",
+        "label": "coverage_evidence_9",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:2b5d1dcc317323ea04e934d689e14486633cfbd6e092d97e7ebbad86f66d542e"
+      },
+      {
+        "calculated": "sha256:27b1cbefbbd11ee10e428c9f7c3a46d7c73fd91deac272b02a2f8a4cc46a8d7f",
+        "label": "coverage_evidence_10",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1"
+      },
+      {
+        "calculated": "sha256:27b1cbefbbd11ee10e428c9f7c3a46d7c73fd91deac272b02a2f8a4cc46a8d7f",
+        "label": "coverage_evidence_11",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1"
+      },
+      {
+        "calculated": "sha256:27b1cbefbbd11ee10e428c9f7c3a46d7c73fd91deac272b02a2f8a4cc46a8d7f",
+        "label": "coverage_evidence_12",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1"
+      },
+      {
+        "calculated": "sha256:0213ce95f806b9d841098a2821e00e294903464f98b8d1b3bfa3ce284593d902",
+        "label": "coverage_evidence_13",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:20bf4655a0b1fe01199bf52833a97129488e6afa46e2c592bc5d8d448bd019b3"
+      },
+      {
+        "calculated": "sha256:d213975951c305bc93e24accc79c936228d9d5af92503453d34128ccbb118b7e",
+        "label": "coverage_evidence_14",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:073f442055685be34598a531babad47ce583f96d98f800370813fa0942013993"
+      },
+      {
+        "calculated": "sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272",
+        "label": "coverage_evidence_15",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272"
+      },
+      {
+        "calculated": "sha256:d213975951c305bc93e24accc79c936228d9d5af92503453d34128ccbb118b7e",
+        "label": "coverage_evidence_16",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:073f442055685be34598a531babad47ce583f96d98f800370813fa0942013993"
+      },
+      {
+        "calculated": "sha256:236eef18ae76a9087c692df3b11cdd4860e8db2a030e82527fb0383b025e2d8a",
+        "label": "coverage_evidence_17",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:236eef18ae76a9087c692df3b11cdd4860e8db2a030e82527fb0383b025e2d8a"
+      },
+      {
+        "calculated": "sha256:a4e0d5699e7153a0a0fab94a0f06093e0f69d0b656bfbc00864c479336aa1217",
+        "label": "coverage_evidence_18",
+        "matches": false,
+        "required": false,
+        "stored": null
+      },
+      {
+        "calculated": "sha256:d213975951c305bc93e24accc79c936228d9d5af92503453d34128ccbb118b7e",
+        "label": "coverage_evidence_19",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:073f442055685be34598a531babad47ce583f96d98f800370813fa0942013993"
+      },
+      {
+        "calculated": "sha256:adc6013cdaffdcf506e3f281bdefd7303e8f9d6461987f6e25f417c631faa0ab",
+        "label": "coverage_evidence_20",
+        "matches": false,
+        "required": false,
+        "stored": null
+      },
+      {
+        "calculated": "sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f",
+        "label": "coverage_evidence_21",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f"
+      },
+      {
+        "calculated": "sha256:dc609a0b82f203bc8ba73477894140b896f90f1cdf9659ef019a080b074e0b9d",
+        "label": "coverage_evidence_22",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:adb6190f59be7999f28698c3915a063dcb383dccd212de3d26416900b2c69f6e"
+      },
+      {
+        "calculated": "sha256:adc6013cdaffdcf506e3f281bdefd7303e8f9d6461987f6e25f417c631faa0ab",
+        "label": "coverage_evidence_23",
+        "matches": false,
+        "required": false,
+        "stored": null
+      },
+      {
+        "calculated": "sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f",
+        "label": "coverage_evidence_24",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f"
+      },
+      {
+        "calculated": "sha256:d743bd2fb2f63e0f75de8e27740bc1af6efd3beec02b7c09585d24051e8f2bee",
+        "label": "coverage_evidence_25",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:ed8002a321cf58b0d884d4b7723305325b5334a8e3fa17ed8200c28d55b264be"
+      },
+      {
+        "calculated": "sha256:0213ce95f806b9d841098a2821e00e294903464f98b8d1b3bfa3ce284593d902",
+        "label": "coverage_evidence_26",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:20bf4655a0b1fe01199bf52833a97129488e6afa46e2c592bc5d8d448bd019b3"
+      },
+      {
+        "calculated": "sha256:374e83a9015a500ca6def7ac8e3dfc5677bdf57331e09f2d8578a8b3cb372b8a",
+        "label": "coverage_evidence_27",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:374e83a9015a500ca6def7ac8e3dfc5677bdf57331e09f2d8578a8b3cb372b8a"
+      },
+      {
+        "calculated": "sha256:2320082b585245df8a7576f529de443cae6b3aa563136e46050277c3bf94f99e",
+        "label": "coverage_evidence_28",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:2320082b585245df8a7576f529de443cae6b3aa563136e46050277c3bf94f99e"
+      },
+      {
+        "calculated": "sha256:2b049941ae1170309c494b3876c7857ba5d4f56c983960c729f61c61e3c636a4",
+        "label": "coverage_evidence_29",
+        "matches": false,
+        "required": false,
+        "stored": null
+      },
+      {
+        "calculated": "sha256:78cbc0e4d67191700c328a55d80129848c04b6a74c927519c0d6a213d935bd27",
+        "label": "coverage_evidence_30",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:db582b1fd3737d2162e1745fdb13bd08345b4dcb9ed57706b797b0acad8e984e"
+      },
+      {
+        "calculated": "sha256:896d0e520437d449214d0fd4682d8ef9a8acff16a1e42d13b164049f70a8440f",
+        "label": "coverage_evidence_31",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:f21e540c7dee0520ab4ee6cf0594e872c88b86ef3d95d6434c433adb978cbbfc"
+      },
+      {
+        "calculated": "sha256:6973446f6d59fb2655e1893b71e8dd1ef7411637213c5a3f1c7bc3f3d34e37bd",
+        "label": "coverage_evidence_32",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:a4374d1cfba1939f7926936285b95fff186dfb284ad275adfbe454a5a69982e3"
+      },
+      {
+        "calculated": "sha256:06a81f21a19245cce13f6a4e9c8e974ecca79eff04bc937de33384131532f2a0",
+        "label": "coverage_evidence_33",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:570aa04762329319804927d8dd5b5137f56af021484eae1084e37a6396d8be75"
+      },
+      {
+        "calculated": "sha256:27b1cbefbbd11ee10e428c9f7c3a46d7c73fd91deac272b02a2f8a4cc46a8d7f",
+        "label": "coverage_evidence_34",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1"
+      },
+      {
+        "calculated": "sha256:d213975951c305bc93e24accc79c936228d9d5af92503453d34128ccbb118b7e",
+        "label": "coverage_evidence_35",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:073f442055685be34598a531babad47ce583f96d98f800370813fa0942013993"
+      },
+      {
+        "calculated": "sha256:36663bca3d09101fa26132fd83929aff09f68b01d9585a335aea4dbb2d9ba933",
+        "label": "coverage_evidence_36",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd"
+      },
+      {
+        "calculated": "sha256:0213ce95f806b9d841098a2821e00e294903464f98b8d1b3bfa3ce284593d902",
+        "label": "coverage_evidence_37",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:20bf4655a0b1fe01199bf52833a97129488e6afa46e2c592bc5d8d448bd019b3"
+      },
+      {
+        "calculated": "sha256:06a81f21a19245cce13f6a4e9c8e974ecca79eff04bc937de33384131532f2a0",
+        "label": "coverage_evidence_38",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:570aa04762329319804927d8dd5b5137f56af021484eae1084e37a6396d8be75"
+      },
+      {
+        "calculated": "sha256:2320082b585245df8a7576f529de443cae6b3aa563136e46050277c3bf94f99e",
+        "label": "coverage_evidence_39",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:2320082b585245df8a7576f529de443cae6b3aa563136e46050277c3bf94f99e"
+      },
+      {
+        "calculated": "sha256:8da3bf46af93b9c598da98a0a3cfcca598bf9e867374d7c68e9e3090dc867a4d",
+        "label": "coverage_evidence_40",
+        "matches": false,
+        "required": false,
+        "stored": "sha256:2b5d1dcc317323ea04e934d689e14486633cfbd6e092d97e7ebbad86f66d542e"
+      },
+      {
+        "calculated": "sha256:e26e29aebd860664199bac9ad0de4818a6c13691d4a21aac246b9c0398864894",
+        "label": "coverage_evidence_41",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:e26e29aebd860664199bac9ad0de4818a6c13691d4a21aac246b9c0398864894"
+      },
+      {
+        "calculated": "sha256:04dca2e1106e5dee74aae95b2984a78de066ea4b8e7352ed256543d0fc0af297",
+        "label": "coverage_evidence_42",
+        "matches": true,
+        "required": false,
+        "stored": "sha256:04dca2e1106e5dee74aae95b2984a78de066ea4b8e7352ed256543d0fc0af297"
+      }
+    ],
+    "legacy_child_receipt_sha256_self_mismatches_or_missing": 30,
+    "receipts_checked": 45,
+    "required_receipt_sha256_self_mismatches": 0,
+    "required_receipts_checked": 2
+  },
+  "receipt_path": "/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/objective/pctom_objective_evidence_audit_receipt.v1.json",
+  "receipt_sha256": "sha256:88e5f6941af8b1ed6336a19ce01c568b8075051b46a5f3df2666ee789edeeb14",
+  "schema": "persona_dream.research.prospective_tom.objective_evidence_audit_receipt.v1",
+  "status": "PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT",
+  "success_receipt": {
+    "calculated_receipt_sha256": "sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4",
+    "file_sha256": "sha256:810f033e5ed680a4eacb797e5bf80d419063faea0a3766be71780a1103fcae15",
+    "fixture_backed": false,
+    "live": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/success/pctom_success_criteria_audit_receipt.v1.json",
+    "receipt_sha256": "sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4",
+    "receipt_sha256_matches_content": true,
+    "schema": "persona_dream.research.prospective_tom.success_criteria_audit_receipt.v1",
+    "status": "PASS_PCTOM_SUCCESS_CRITERIA_AUDIT"
+  }
+}

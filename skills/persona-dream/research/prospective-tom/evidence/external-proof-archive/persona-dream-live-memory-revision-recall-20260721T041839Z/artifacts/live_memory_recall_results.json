@@ -1,0 +1,170 @@
+[
+  {
+    "attempts": [
+      {
+        "attempt": 1,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      },
+      {
+        "attempt": 2,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      },
+      {
+        "attempt": 3,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      }
+    ],
+    "condition": "M",
+    "hit_count": 0,
+    "hits": [],
+    "query": "Persona Dream PCTOM-R action-linked revision recall condition M prior posterior distinguished synthetic literal boundary preserved run 9e1f9fef0944",
+    "query_id": "live-memory-revision-recall-m"
+  },
+  {
+    "attempts": [
+      {
+        "attempt": 1,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      },
+      {
+        "attempt": 2,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      },
+      {
+        "attempt": 3,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      }
+    ],
+    "condition": "R",
+    "hit_count": 0,
+    "hits": [],
+    "query": "Persona Dream PCTOM-R action-linked revision recall condition R prior posterior distinguished synthetic literal boundary preserved run 9e1f9fef0944",
+    "query_id": "live-memory-revision-recall-r"
+  },
+  {
+    "attempts": [
+      {
+        "attempt": 1,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      },
+      {
+        "attempt": 2,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      },
+      {
+        "attempt": 3,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      }
+    ],
+    "condition": "D",
+    "hit_count": 0,
+    "hits": [],
+    "query": "Persona Dream PCTOM-R action-linked revision recall condition D prior posterior distinguished synthetic literal boundary preserved run 9e1f9fef0944",
+    "query_id": "live-memory-revision-recall-d"
+  },
+  {
+    "attempts": [
+      {
+        "attempt": 1,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      },
+      {
+        "attempt": 2,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      },
+      {
+        "attempt": 3,
+        "confidence": 0.0,
+        "error": null,
+        "found": false,
+        "hit_count": 0,
+        "hits": [],
+        "http_status": 200,
+        "item_count": 0,
+        "should_scan": true
+      }
+    ],
+    "condition": "CD",
+    "hit_count": 0,
+    "hits": [],
+    "query": "Persona Dream PCTOM-R action-linked revision recall condition CD prior posterior distinguished synthetic literal boundary preserved run 9e1f9fef0944",
+    "query_id": "live-memory-revision-recall-cd"
+  }
+]

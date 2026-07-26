@@ -1,0 +1,81 @@
+{
+  "about": "PCTOM-R Gate 0 provenance recall",
+  "case_root": "/tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z/pctom_gate0_case",
+  "claims": {
+    "does_not_prove": [
+      "semantic quality of the live recalled memories",
+      "that the recalled memories were optimal for ToM prediction",
+      "live Tau generation of distributions or commitments",
+      "outcome reveal scoring",
+      "belief revision",
+      "fault-injected live reliability",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "live Memory /recall produced accepted source ids without fixtures",
+      "accepted live source ids were normalized into a PCTOM Gate 0 residue case without human content judgment",
+      "the derived case preserved query receipt to accepted source id to normalized residue to dream branch to sealed prediction lineage",
+      "the derived sealed prediction payload and accepted source-id lists were hash-bound by the Gate 0 checker",
+      "no Memory writeback, Tau call, or provider call was attempted"
+    ]
+  },
+  "created_at": "2026-07-22T06:35:44Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "limit": 2,
+  "live": true,
+  "live_memory_counts": {
+    "accepted_source_id_pair_count": 19,
+    "failed_query_count": 0,
+    "residue_count": 2,
+    "successful_query_count": 5,
+    "unique_source_count": 2
+  },
+  "live_memory_receipt_file_sha256": "sha256:9c9c695002eb615e3fcc6c008f9ac92d6152ae2e849355a64d2bb802f8616881",
+  "live_memory_receipt_path": "/tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z/live_memory_recall_receipt.v1.json",
+  "live_memory_receipt_sha256": null,
+  "live_memory_status": "PASS_LIVE_MEMORY_RECALL",
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z",
+  "pctom_case_counts": {
+    "dream_branches": 2,
+    "normalized_residue": 2,
+    "prediction_evidence_refs": 2,
+    "recall_receipts": 5
+  },
+  "pctom_gate0_counts": {
+    "accepted_source_ids": 19,
+    "dream_branches": 2,
+    "normalized_residue": 2,
+    "prediction_branch_links": 2,
+    "prediction_branch_residue_pairs": 2,
+    "prediction_evidence_links": 2,
+    "recall_receipts": 5
+  },
+  "pctom_gate0_lineage_checks": {
+    "accepted_source_id_hashes_recomputed": true,
+    "dream_branches_link_to_residue": true,
+    "prediction_evidence_carried_by_prediction_branches": true,
+    "prediction_links_to_branches": true,
+    "prediction_links_to_residue": true,
+    "prediction_payload_hash_recomputed": true,
+    "prediction_sealed_before_reveal": true,
+    "residue_links_to_recall_receipts": true
+  },
+  "pctom_gate0_receipt_file_sha256": "sha256:4e22b6511dcacfe65098b2b7422b690b677eb351dc3d1302fada1cc8d13dda7b",
+  "pctom_gate0_receipt_path": "/tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z/pctom_gate0_lineage_receipt.v1.json",
+  "pctom_gate0_receipt_sha256": "sha256:f5db4c9813a2416e7769e22df657284715ff6f8e40514973f2553f4870a9ae8b",
+  "pctom_gate0_status": "PASS_PCTOM_GATE0_LINEAGE",
+  "persona_id": "embry",
+  "processing_time_s": 3.568,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z/live_pctom_gate0_receipt.v1.json",
+  "receipt_sha256": "sha256:57c3b0615427b423dbf63d4ebd57b57807788c4e1cecdad69500513259c239f1",
+  "run_id": "persona-dream-live-pctom-gate0-20260722T063540Z",
+  "schema": "persona_dream.research.prospective_tom.live_gate0_lineage_receipt.v1",
+  "status": "PASS_LIVE_PCTOM_GATE0_LINEAGE",
+  "tau_call_attempts": 0
+}

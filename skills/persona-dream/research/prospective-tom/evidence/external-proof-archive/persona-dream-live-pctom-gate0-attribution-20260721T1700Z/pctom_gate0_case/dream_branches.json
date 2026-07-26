@@ -1,0 +1,70 @@
+[
+  {
+    "branch_id": "live-branch-factual-0001",
+    "branch_type": "factual",
+    "counterfactual": false,
+    "episode_id": "live-persona-dream-live-pctom-gate0-attribution-20260721T1700Z",
+    "predicted_observation": "A future social prediction should remain grounded in the accepted live residue.",
+    "source_residue_refs": [
+      {
+        "accepted_source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+        "accepted_source_ids_sha256": "sha256:3857cebbf1be9e61e90b0209a33dd5a79eebaf221b6045aaa7486d8a562a07c5",
+        "query_receipt_index": 0,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      },
+      {
+        "accepted_source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+        "accepted_source_ids_sha256": "sha256:3857cebbf1be9e61e90b0209a33dd5a79eebaf221b6045aaa7486d8a562a07c5",
+        "query_receipt_index": 0,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      },
+      {
+        "accepted_source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+        "accepted_source_ids_sha256": "sha256:3857cebbf1be9e61e90b0209a33dd5a79eebaf221b6045aaa7486d8a562a07c5",
+        "query_receipt_index": 0,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+      },
+      {
+        "accepted_source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+        "accepted_source_ids_sha256": "sha256:3857cebbf1be9e61e90b0209a33dd5a79eebaf221b6045aaa7486d8a562a07c5",
+        "query_receipt_index": 0,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+      },
+      {
+        "accepted_source_id": "embry_gap_unresolved_thread_instagram_after_kai_001",
+        "accepted_source_ids_sha256": "sha256:3857cebbf1be9e61e90b0209a33dd5a79eebaf221b6045aaa7486d8a562a07c5",
+        "query_receipt_index": 0,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001"
+      },
+      {
+        "accepted_source_id": "embry_gap_preference_chess_pie_home_recipe_001",
+        "accepted_source_ids_sha256": "sha256:3857cebbf1be9e61e90b0209a33dd5a79eebaf221b6045aaa7486d8a562a07c5",
+        "query_receipt_index": 0,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_preference_chess_pie_home_recipe_001"
+      }
+    ]
+  },
+  {
+    "branch_id": "live-branch-cf-clarify-0001",
+    "branch_type": "counterfactual",
+    "counterfactual": true,
+    "episode_id": "live-persona-dream-live-pctom-gate0-attribution-20260721T1700Z",
+    "intervention_id": "do-agent-asks-clarifying-question",
+    "predicted_observation": "A clarifying question should reduce unsupported ToM certainty.",
+    "source_residue_refs": [
+      {
+        "accepted_source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+        "accepted_source_ids_sha256": "sha256:3857cebbf1be9e61e90b0209a33dd5a79eebaf221b6045aaa7486d8a562a07c5",
+        "query_receipt_index": 0,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      }
+    ]
+  }
+]

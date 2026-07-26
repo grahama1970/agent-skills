@@ -1,0 +1,22 @@
+{
+  "corpus_sha256": "sha256:3b80c6a04f24dda488d881b0934ae8200e71cef67d94258d8eec09af8f465028",
+  "created_at": "2026-07-21T00:15:45Z",
+  "episode_count": 12,
+  "episodes_sha256": "sha256:713877facd124815548959012da04818d31e8790ed4b914bcdb1b59b8a759d3e",
+  "family_counts": {
+    "coordination_conflict": 3,
+    "information_asymmetry_false_belief": 3,
+    "preference_desire_uncertainty": 3,
+    "trust_commitment_relationship": 3
+  },
+  "fixture_backed": false,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output": "/tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z/generated_social_episode_corpus.v1.json",
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.social_episode_corpus_build_receipt.v1",
+  "split": "development",
+  "status": "PASS_SOCIAL_EPISODE_CORPUS_BUILT",
+  "tau_call_attempts": 0
+}

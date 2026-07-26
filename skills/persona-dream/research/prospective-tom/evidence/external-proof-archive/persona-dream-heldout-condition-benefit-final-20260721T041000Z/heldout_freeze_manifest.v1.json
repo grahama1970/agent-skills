@@ -1,0 +1,17 @@
+{
+  "condition_receipt_sha256": "sha256:7fb1788b7ed5923292668d880a4fdede3ace486056e0838673eaab0cd040067c",
+  "corpus_file_sha256": "sha256:5ab3690fa9623b593848285dc84f07c46d01b73344ea066e845bf3e8f5a3e1f2",
+  "corpus_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "episode_limit": 24,
+  "episodes_per_family": 6,
+  "freeze_manifest_sha256": "sha256:8a18edb4658a73c702b4e26b5adc2086268d719aa149d4ad8aa5f975865e6bfb",
+  "frozen_before_scoring_summary": true,
+  "generated_at": "2026-07-21T00:00:00Z",
+  "human_content_judgment_required": false,
+  "llm_judge_used": false,
+  "metrics_summary_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/condition_metrics_summary.json",
+  "metrics_summary_sha256": "sha256:3929f4bfb2a2ed0ca6067f179104a97e93167b1b1cfaaf724b2efd4260eefdb9",
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "schema": "persona_dream.research.prospective_tom.heldout_freeze_manifest.v1",
+  "split": "explicitly_frozen_heldout"
+}

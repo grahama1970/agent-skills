@@ -1,0 +1,168 @@
+{
+  "case_root": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/pctom_gate0_case",
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "semantic dream quality",
+      "future prediction accuracy",
+      "outcome reveal scoring",
+      "belief revision",
+      "pipeline reliability under repeated faults",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "fixture case files mechanically preserve recall receipt to accepted source id to normalized residue to dream branch to sealed prediction lineage",
+      "accepted source-id lists and prediction payload are hash-bound in the fixture case",
+      "the checker fails closed for unresolved or tampered local fixture links"
+    ]
+  },
+  "counts": {
+    "accepted_source_ids": 28,
+    "dream_branches": 2,
+    "normalized_residue": 6,
+    "prediction_branch_links": 2,
+    "prediction_evidence_links": 6,
+    "recall_receipts": 5
+  },
+  "created_at": "2026-07-21T02:05:57Z",
+  "errors": [],
+  "fixture_backed": true,
+  "lineage": {
+    "branch_lineage_links": [
+      {
+        "branch_id": "live-branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      },
+      {
+        "branch_id": "live-branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      },
+      {
+        "branch_id": "live-branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+      },
+      {
+        "branch_id": "live-branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+      },
+      {
+        "branch_id": "live-branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001"
+      },
+      {
+        "branch_id": "live-branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "embry_gap_preference_chess_pie_home_recipe_001"
+      },
+      {
+        "branch_id": "live-branch-cf-clarify-0001",
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      }
+    ],
+    "prediction_branch_links": [
+      "live-branch-factual-0001",
+      "live-branch-cf-clarify-0001"
+    ],
+    "prediction_evidence_links": [
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "embry_gap_preference_chess_pie_home_recipe_001"
+      }
+    ],
+    "residue_lineage_links": [
+      {
+        "accepted_order": 0,
+        "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+        "query_receipt_index": 0,
+        "residue_index": 0,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      },
+      {
+        "accepted_order": 1,
+        "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+        "query_receipt_index": 0,
+        "residue_index": 1,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      },
+      {
+        "accepted_order": 2,
+        "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+        "query_receipt_index": 0,
+        "residue_index": 2,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+      },
+      {
+        "accepted_order": 3,
+        "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+        "query_receipt_index": 0,
+        "residue_index": 3,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+      },
+      {
+        "accepted_order": 4,
+        "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+        "query_receipt_index": 0,
+        "residue_index": 4,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001"
+      },
+      {
+        "accepted_order": 5,
+        "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+        "query_receipt_index": 0,
+        "residue_index": 5,
+        "scope": "persona-dream",
+        "source_id": "embry_gap_preference_chess_pie_home_recipe_001"
+      }
+    ]
+  },
+  "lineage_checks": {
+    "accepted_source_id_hashes_recomputed": true,
+    "dream_branches_link_to_residue": true,
+    "prediction_links_to_branches": true,
+    "prediction_links_to_residue": true,
+    "prediction_payload_hash_recomputed": true,
+    "prediction_sealed_before_reveal": true,
+    "residue_links_to_recall_receipts": true
+  },
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/pctom_gate0_lineage_receipt.recheck.json",
+  "schema": "persona_dream.research.prospective_tom.gate0_lineage_check_receipt.v1",
+  "status": "PASS_PCTOM_GATE0_LINEAGE",
+  "tau_call_attempts": 0
+}

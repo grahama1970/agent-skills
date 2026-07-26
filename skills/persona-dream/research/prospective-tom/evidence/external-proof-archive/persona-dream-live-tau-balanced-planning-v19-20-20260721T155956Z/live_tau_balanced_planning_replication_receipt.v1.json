@@ -1,0 +1,182 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_selection_receipt_passed": false,
+    "all_conditions_have_expected_action_counts": false,
+    "all_four_families_selected": true,
+    "balanced_family_counts": false,
+    "condition_receipt_passed": false,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "planning_rows_cover_expected_episodes": false,
+    "tau_receipts_hash_bound": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "confidence-bounded planning benefit",
+      "live Memory recall in the sealed-test loop",
+      "permanently deployed external production retry service",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "the balanced live Tau planning replication failed closed before accepting a balanced planning claim"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 8,
+      "D": 7,
+      "M": 8,
+      "R": 7
+    },
+    "action_switch_count": 0,
+    "cases": 32,
+    "episodes": 7,
+    "episodes_per_family": {
+      "coordination_conflict": 2,
+      "information_asymmetry_false_belief": 1,
+      "preference_desire_uncertainty": 2,
+      "trust_commitment_relationship": 2
+    },
+    "families": [
+      "coordination_conflict",
+      "information_asymmetry_false_belief",
+      "preference_desire_uncertainty",
+      "trust_commitment_relationship"
+    ],
+    "nonzero_delta_count": 0,
+    "oracle_match_transitions": {
+      "UNCHANGED": 7
+    },
+    "planning_regret_scores_per_condition": {
+      "CD": 8,
+      "D": 7,
+      "M": 8,
+      "R": 7
+    }
+  },
+  "created_at": "2026-07-21T16:27:08Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episodes_per_family": 24,
+  "errors": [
+    "live_condition_status:BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+    "live_condition_error:sealedte-info-asym-19:R:tau_status:BLOCKED",
+    "live_condition_error:sealedte-info-asym-19:R:tau_error:scillm_http_status_502",
+    "live_condition_error:sealedte-info-asym-19:R:tau_parsed_json_not_object",
+    "live_condition_error:sealedte-info-asym-19:D:tau_status:BLOCKED",
+    "live_condition_error:sealedte-info-asym-19:D:tau_error:scillm_http_status_502",
+    "live_condition_error:sealedte-info-asym-19:D:tau_parsed_json_not_object",
+    "action_selection_status:BLOCKED_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION",
+    "action_selection_error:base_status_mismatch:BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON:PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+    "action_selection_error:case_index_1_tau_not_pass:BLOCKED:True",
+    "action_selection_error:case_index_2_tau_not_pass:BLOCKED:True",
+    "episode_missing_conditions:sealedte-info-asym-19:['R', 'D']",
+    "planning_rows_mismatch:7:8",
+    "planning_family_count_mismatch:information_asymmetry_false_belief:1:2",
+    "action_decisions_per_condition_mismatch:R:7:8",
+    "planning_regret_scores_per_condition_mismatch:R:7:8",
+    "action_decisions_per_condition_mismatch:D:7:8",
+    "planning_regret_scores_per_condition_mismatch:D:7:8"
+  ],
+  "family_episode_limit": 2,
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_action_selection_receipt": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "live_tau_action_selection_receipt_sha256": "sha256:ce6e6d396b3e265d449d4a2749f9e1b28117708e6cd4d3db516bb3ad1f022173",
+  "live_tau_condition_comparison_receipt": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "live_tau_condition_comparison_receipt_sha256": "sha256:4e02a9626ce67aa85b57d331f5febee73bae0ef2e1baa2fa84c969820e252114",
+  "live_tau_originated_artifacts_consumed": false,
+  "live_tau_reexecuted": true,
+  "live_tau_reexecuted_by_this_command": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "action_receipt_sha256": "sha256:ce6e6d396b3e265d449d4a2749f9e1b28117708e6cd4d3db516bb3ad1f022173",
+    "comparison": {
+      "cd_minus_strongest_baseline": 0.0,
+      "cd_value": 0.24375,
+      "lower_is_better": true,
+      "metric": "planning_regret",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_value": 0.24375
+    },
+    "condition_receipt_sha256": "sha256:4e02a9626ce67aa85b57d331f5febee73bae0ef2e1baa2fa84c969820e252114",
+    "condition_regret_means": {
+      "CD": 0.24375,
+      "D": 0.2785714285714286,
+      "M": 0.24375,
+      "R": 0.2785714285714286
+    },
+    "episodes_per_family": 24,
+    "family_episode_limit": 2,
+    "planning_summary": {
+      "action_switch_count": 0,
+      "direction_counts": {
+        "TIE": 7
+      },
+      "episodes": 7,
+      "episodes_per_family": {
+        "coordination_conflict": 2,
+        "information_asymmetry_false_belief": 1,
+        "preference_desire_uncertainty": 2,
+        "trust_commitment_relationship": 2
+      },
+      "families": [
+        "coordination_conflict",
+        "information_asymmetry_false_belief",
+        "preference_desire_uncertainty",
+        "trust_commitment_relationship"
+      ],
+      "mean_cd_minus_baseline": 0.0,
+      "nonzero_delta_count": 0,
+      "oracle_match_transitions": {
+        "UNCHANGED": 7
+      },
+      "planning_benefit_with_confidence": false,
+      "planning_regret_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:32de948c898564c50e9dd87cd6aff2fd8b73295aa70fc471c437f25f4562cd2f",
+        "lower": 0.0,
+        "mean": 0.0,
+        "samples": 10000,
+        "seed": 20260726,
+        "upper": 0.0
+      },
+      "row_pattern_sha256": "sha256:8cb5ca9d67b23bb156550a558d45adc7695b3b73651baeecc117d6d4206a93e5"
+    },
+    "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_summary.v1",
+    "split": "sealed_test",
+    "variant_max": 20,
+    "variant_min": 19
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z",
+  "planning_benefit_with_confidence": false,
+  "planning_rows_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/artifacts/balanced_planning_rows.json",
+  "planning_rows_sha256": "sha256:b372abfa9233c3bc75620cc178f20ed86ba2df3fc3dcea49e3abe3932e2253e7",
+  "processing_time_s": 1632.21,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_planning_replication_receipt.v1.json",
+  "receipt_sha256": "sha256:9f7fddbca26b1442e62c0c81e0beb7c3e695975ae52eeae88f81502721e4a585",
+  "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_replication_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "BLOCKED_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION",
+  "summary_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/artifacts/live_tau_balanced_planning_summary.json",
+  "summary_sha256": "sha256:cbd6fdf3bea75888279eb35e86515aca175c99745ec3a30224689a7f9bd1c5fe",
+  "tau_call_attempts": 32,
+  "tau_live_call_performed": 32,
+  "variant_max": 20,
+  "variant_min": 19
+}

@@ -1,0 +1,32 @@
+{
+  "action_receipt_sha256": null,
+  "comparison": {
+    "cd_minus_strongest_baseline": null,
+    "cd_value": null,
+    "lower_is_better": true,
+    "metric": "planning_regret",
+    "strongest_baseline_condition": null,
+    "strongest_baseline_value": null
+  },
+  "condition_receipt_sha256": null,
+  "condition_regret_means": {},
+  "episodes_per_family": 24,
+  "family_episode_limit": 2,
+  "planning_summary": {
+    "action_switch_count": 0,
+    "direction_counts": {},
+    "episodes": 0,
+    "episodes_per_family": {},
+    "families": [],
+    "mean_cd_minus_baseline": null,
+    "nonzero_delta_count": 0,
+    "oracle_match_transitions": {},
+    "planning_benefit_with_confidence": false,
+    "planning_regret_ci": null,
+    "row_pattern_sha256": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_summary.v1",
+  "split": "sealed_test",
+  "variant_max": 18,
+  "variant_min": 17
+}

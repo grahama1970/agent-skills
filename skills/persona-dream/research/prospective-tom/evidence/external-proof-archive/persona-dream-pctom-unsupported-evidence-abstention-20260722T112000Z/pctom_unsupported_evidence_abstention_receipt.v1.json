@@ -1,0 +1,60 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "four_families_exercised": true,
+    "gate2_unsupported_abstention_passed": true,
+    "gate5_abstention_scored": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "negative_gate2_blocks": false,
+    "unsupported_evidence_abstention_exercised": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau generation of an abstention response",
+      "paid provider execution",
+      "semantic dream quality",
+      "complete Phase 01-16 media runtime execution"
+    ],
+    "proves": [
+      "unsupported factual ToM hypotheses abstain or remain pending with UNKNOWN certainty under the existing Gate 2 validator",
+      "abstained prediction commitments are sealed and scored by Gate 5 with risk coverage set to zero",
+      "the unsupported-evidence abstention exercise covers all four deterministic social episode families"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus.v1.json",
+  "corpus_sha256": "sha256:e29475d5f02db694cac595e26347ebcaef5a44ebbd24ef0fc19598eb1e8e2419",
+  "counts": {
+    "abstained_rows": 4,
+    "case_rows": 4,
+    "families": 4,
+    "gate2_blocked": 0,
+    "gate2_pass": 4,
+    "gate5_pass": 4,
+    "risk_coverage_rows": 4,
+    "unsupported_distribution_rows": 8
+  },
+  "created_at": "2026-07-22T05:31:00Z",
+  "deterministic_gate_receipts_consumed": true,
+  "elapsed_s": 0.309736,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_mode": null,
+  "output_root": "/tmp/persona-dream-pctom-unsupported-evidence-abstention-20260722T112000Z",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-unsupported-evidence-abstention-20260722T112000Z/pctom_unsupported_evidence_abstention_receipt.v1.json",
+  "receipt_sha256": "sha256:e26e29aebd860664199bac9ad0de4818a6c13691d4a21aac246b9c0398864894",
+  "row_artifact_path": "/tmp/persona-dream-pctom-unsupported-evidence-abstention-20260722T112000Z/artifacts/unsupported_evidence_abstention_rows.v1.json",
+  "row_artifact_sha256": "sha256:3b0b79c7ac1c2f823cabde9a00d2b1a710c650427c46b6f9f97863bacbf5b664",
+  "schema": "persona_dream.research.prospective_tom.unsupported_evidence_abstention_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION"
+}

@@ -1,0 +1,248 @@
+{
+  "attempts": [
+    {
+      "command": [
+        "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/run.sh",
+        "run-live-tau-sealed-test-retry-proof",
+        "--base-root",
+        "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+        "--output-root",
+        "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry",
+        "--json"
+      ],
+      "cwd": "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream",
+      "duration_s": 0.087292,
+      "exit_code": 0,
+      "label": "exact_retry",
+      "parse_error": null,
+      "stderr_excerpt": "",
+      "stderr_sha256": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "stdout_excerpt": "{\n  \"artifacts\": {\n    \"action_decision_index\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/action_decision_index.json\",\n    \"active_prediction_index\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/active_prediction_index.json\",\n    \"base_retry_manifest\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/base_retry_manifest.json\",\n    \"causal_retry_replay\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/causal_retry_replay.json\",\n    \"retry_fault_trials\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/retry_fault_trials.json\"\n  },\n  \"base_receipt\": \"/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live",
+      "stdout_sha256": "sha256:026cb28f4d8b65e1f1afdb7685cd3f4dccd296bb87f4f90a75443344e534dc76"
+    },
+    {
+      "command": [
+        "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/run.sh",
+        "run-live-tau-sealed-test-retry-proof",
+        "--base-root",
+        "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+        "--output-root",
+        "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/retry_after_uncertain_completion",
+        "--json"
+      ],
+      "cwd": "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream",
+      "duration_s": 0.084853,
+      "exit_code": 0,
+      "label": "retry_after_uncertain_completion",
+      "parse_error": null,
+      "stderr_excerpt": "",
+      "stderr_sha256": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "stdout_excerpt": "{\n  \"artifacts\": {\n    \"action_decision_index\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/retry_after_uncertain_completion/artifacts/action_decision_index.json\",\n    \"active_prediction_index\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/retry_after_uncertain_completion/artifacts/active_prediction_index.json\",\n    \"base_retry_manifest\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/retry_after_uncertain_completion/artifacts/base_retry_manifest.json\",\n    \"causal_retry_replay\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/retry_after_uncertain_completion/artifacts/causal_retry_replay.json\",\n    \"retry_fault_trials\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/retry_after_uncertain_completion/artifacts/retry_fault_trial",
+      "stdout_sha256": "sha256:6e62c032f03650546fa6d47b49285dc33eb25b93b6635552ee547b284414a414"
+    },
+    {
+      "command": [
+        "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/run.sh",
+        "run-live-tau-sealed-test-retry-proof",
+        "--base-root",
+        "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/missing-base-root",
+        "--output-root",
+        "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/missing_base_root",
+        "--json"
+      ],
+      "cwd": "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream",
+      "duration_s": 0.07706,
+      "exit_code": 1,
+      "label": "missing_base_root",
+      "parse_error": null,
+      "stderr_excerpt": "",
+      "stderr_sha256": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "stdout_excerpt": "{\n  \"artifacts\": {\n    \"action_decision_index\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/missing_base_root/artifacts/action_decision_index.json\",\n    \"active_prediction_index\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/missing_base_root/artifacts/active_prediction_index.json\",\n    \"base_retry_manifest\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/missing_base_root/artifacts/base_retry_manifest.json\",\n    \"causal_retry_replay\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/missing_base_root/artifacts/causal_retry_replay.json\",\n    \"retry_fault_trials\": \"/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/missing_base_root/artifacts/retry_fault_trials.json\"\n  },\n  \"base_receipt\": \"/tmp/persona-dream-live-tau-sealed-test-run",
+      "stdout_sha256": "sha256:8626908f7772b115df7b31c8c27111c80a93069220240fbffca9e1185cced3d5"
+    },
+    {
+      "command": [
+        "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/run.sh",
+        "run-live-tau-sealed-test-retry-proof",
+        "--base-root",
+        "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+        "--output-root",
+        "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/interrupted_persistence_output_root",
+        "--json"
+      ],
+      "cwd": "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream",
+      "duration_s": 0.085041,
+      "exit_code": 1,
+      "label": "interrupted_persistence",
+      "parse_error": "json_object_not_found",
+      "stderr_excerpt": "Traceback (most recent call last):\n  File \"/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 629, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 620, in main\n    receipt = run(args.base_root, args.output_root)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 526, in run\n    _write_json(artifacts / \"active_prediction_index.json\", active_prediction_index)\n  File \"/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 37, in _write_json\n    path.parent.mkdir(parents=True, exist_ok=True)\n  File \"/home/graham/.local",
+      "stderr_sha256": "sha256:67c0accbd67720ea567ce7de1d1b81d9e4ac9a1a2de523e9773501e81a9bd6eb",
+      "stdout_excerpt": "",
+      "stdout_sha256": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+    }
+  ],
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+  "child_states": {
+    "exact_retry": {
+      "action_decisions": 16,
+      "active_predictions": 16,
+      "base_receipt_sha256": "sha256:c066eabd3d5a1a08f4a426cdd7347f91e969998795872d4d2e7e773b84f94087",
+      "canonical_memory_write_attempts": 0,
+      "checks": {
+        "action_decisions_unique": true,
+        "active_predictions_unique": true,
+        "allowed_terminal_outcomes_only": true,
+        "base_receipt_passed": true,
+        "causal_replay_written": true,
+        "commitment_hashes_recomputed": true,
+        "continued_with_unknown_state_absent": true,
+        "predictions_have_actions": true,
+        "side_effect_violations_absent": true,
+        "unsupported_writes_absent": true
+      },
+      "continued_with_unknown_state": 0,
+      "controlled_retry_faults_used": true,
+      "fault_family_counts": {
+        "conflicting_active_prediction_pointer": 1,
+        "duplicate_commitment_replay_different_hash": 1,
+        "duplicate_commitment_replay_same_hash": 1,
+        "exact_retry": 1,
+        "interrupted_action_selection": 1,
+        "partial_tau_output_before_gate4": 1,
+        "retry_after_uncertain_completion": 1,
+        "stale_gate5_score": 1
+      },
+      "gate6_receipts": 16,
+      "human_content_judgment_required": false,
+      "identity_write_attempts": 0,
+      "live": true,
+      "live_tau_originated_artifacts_consumed": true,
+      "live_tau_reexecuted": false,
+      "memory_write_attempts": 0,
+      "mocked": false,
+      "provider_call_attempts": 0,
+      "retry_fault_trials": 8,
+      "side_effect_violations": 0,
+      "source_memory_write_attempts": 0,
+      "status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF",
+      "terminal_outcome_counts": {
+        "BLOCKED_BEFORE_SIDE_EFFECT": 3,
+        "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE": 2,
+        "RECOVERED_WITH_EQUIVALENT_END_STATE": 3
+      }
+    },
+    "interrupted_persistence": {
+      "action_decisions": 0,
+      "active_predictions": 0,
+      "canonical_memory_write_attempts": 0,
+      "continued_with_unknown_state": 0,
+      "fault_family": "interrupted_persistence",
+      "identity_write_attempts": 0,
+      "memory_write_attempts": 0,
+      "provider_call_attempts": 0,
+      "side_effect_violations": 0,
+      "source_memory_write_attempts": 0,
+      "status": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT"
+    },
+    "missing_base_root": {
+      "action_decisions": 0,
+      "active_predictions": 0,
+      "base_receipt_sha256": null,
+      "canonical_memory_write_attempts": 0,
+      "checks": {
+        "action_decisions_unique": false,
+        "active_predictions_unique": false,
+        "allowed_terminal_outcomes_only": true,
+        "base_receipt_passed": false,
+        "causal_replay_written": true,
+        "commitment_hashes_recomputed": true,
+        "continued_with_unknown_state_absent": true,
+        "predictions_have_actions": true,
+        "side_effect_violations_absent": true,
+        "unsupported_writes_absent": true
+      },
+      "continued_with_unknown_state": 0,
+      "controlled_retry_faults_used": true,
+      "fault_family_counts": {
+        "conflicting_active_prediction_pointer": 1,
+        "duplicate_commitment_replay_different_hash": 1,
+        "duplicate_commitment_replay_same_hash": 1,
+        "exact_retry": 1,
+        "interrupted_action_selection": 1,
+        "partial_tau_output_before_gate4": 1,
+        "retry_after_uncertain_completion": 1,
+        "stale_gate5_score": 1
+      },
+      "gate6_receipts": 0,
+      "human_content_judgment_required": false,
+      "identity_write_attempts": 0,
+      "live": true,
+      "live_tau_originated_artifacts_consumed": true,
+      "live_tau_reexecuted": false,
+      "memory_write_attempts": 0,
+      "mocked": false,
+      "provider_call_attempts": 0,
+      "retry_fault_trials": 8,
+      "side_effect_violations": 0,
+      "source_memory_write_attempts": 0,
+      "status": "BLOCKED_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF",
+      "terminal_outcome_counts": {
+        "BLOCKED_BEFORE_SIDE_EFFECT": 3,
+        "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE": 2,
+        "RECOVERED_WITH_EQUIVALENT_END_STATE": 3
+      }
+    },
+    "retry_after_uncertain_completion": {
+      "action_decisions": 16,
+      "active_predictions": 16,
+      "base_receipt_sha256": "sha256:c066eabd3d5a1a08f4a426cdd7347f91e969998795872d4d2e7e773b84f94087",
+      "canonical_memory_write_attempts": 0,
+      "checks": {
+        "action_decisions_unique": true,
+        "active_predictions_unique": true,
+        "allowed_terminal_outcomes_only": true,
+        "base_receipt_passed": true,
+        "causal_replay_written": true,
+        "commitment_hashes_recomputed": true,
+        "continued_with_unknown_state_absent": true,
+        "predictions_have_actions": true,
+        "side_effect_violations_absent": true,
+        "unsupported_writes_absent": true
+      },
+      "continued_with_unknown_state": 0,
+      "controlled_retry_faults_used": true,
+      "fault_family_counts": {
+        "conflicting_active_prediction_pointer": 1,
+        "duplicate_commitment_replay_different_hash": 1,
+        "duplicate_commitment_replay_same_hash": 1,
+        "exact_retry": 1,
+        "interrupted_action_selection": 1,
+        "partial_tau_output_before_gate4": 1,
+        "retry_after_uncertain_completion": 1,
+        "stale_gate5_score": 1
+      },
+      "gate6_receipts": 16,
+      "human_content_judgment_required": false,
+      "identity_write_attempts": 0,
+      "live": true,
+      "live_tau_originated_artifacts_consumed": true,
+      "live_tau_reexecuted": false,
+      "memory_write_attempts": 0,
+      "mocked": false,
+      "provider_call_attempts": 0,
+      "retry_fault_trials": 8,
+      "side_effect_violations": 0,
+      "source_memory_write_attempts": 0,
+      "status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF",
+      "terminal_outcome_counts": {
+        "BLOCKED_BEFORE_SIDE_EFFECT": 3,
+        "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE": 2,
+        "RECOVERED_WITH_EQUIVALENT_END_STATE": 3
+      }
+    }
+  },
+  "run_sh": "/tmp/persona-dream-orch-main-cMiWqY/skills/persona-dream/run.sh",
+  "run_sh_sha256": "sha256:7fc44adff9abeca0c7a73682fb0b00403431fd1fefe809fdc67b328f5b7bf28d",
+  "schema": "pctom.runsh_orchestration_retry_trace.v1"
+}

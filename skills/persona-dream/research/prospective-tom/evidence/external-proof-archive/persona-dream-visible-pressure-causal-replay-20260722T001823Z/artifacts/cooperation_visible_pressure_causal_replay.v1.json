@@ -1,0 +1,46 @@
+{
+  "canonical_memory_write": false,
+  "comparison": {
+    "counterfactual_end_state_sha256": "sha256:5f6986fc3464c23dc1acd0298e91b66c5522a83ffda8302539185deb85d71dfe",
+    "counterfactual_matches_expected": true,
+    "expected_end_state_sha256": "sha256:5f6986fc3464c23dc1acd0298e91b66c5522a83ffda8302539185deb85d71dfe",
+    "factual_end_state_sha256": "sha256:a034858d45913a9049b722d3c573bc638dafb8f34fa6907ca80bdebd53140938"
+  },
+  "first_divergent_receipt": {
+    "boundary": "cd_pre_outcome_rule_inputs_validation",
+    "expected_state_sha256": "sha256:5f6986fc3464c23dc1acd0298e91b66c5522a83ffda8302539185deb85d71dfe",
+    "observed_state_sha256": "sha256:a034858d45913a9049b722d3c573bc638dafb8f34fa6907ca80bdebd53140938",
+    "receipt_id": "visible-pressure-receipt-006-validate-pre-outcome-rule-inputs",
+    "receipt_index": 6
+  },
+  "identity_write": false,
+  "localized_cause": {
+    "causal_confidence": 1.0,
+    "cause_type": "PRE_OUTCOME_ORACLE_OR_HIDDEN_FIELD_LEAK",
+    "evidence_refs": [
+      "visible-pressure-fault-oracle-leak-001",
+      "visible-pressure-receipt-006-validate-pre-outcome-rule-inputs",
+      "visible-pressure-tool-return-oracle-leak-001",
+      "visible-pressure-reliability-surface"
+    ],
+    "receipt_id": "visible-pressure-receipt-006-validate-pre-outcome-rule-inputs",
+    "tool_return_id": "visible-pressure-tool-return-oracle-leak-001"
+  },
+  "reliability_surface_sha256": "sha256:33fc7a18c913fd6b8818331b8bde8261ea94469e8419d6f78be61ce2b8247909",
+  "replay_id": "visible-pressure-causal-replay-oracle-leak-001",
+  "replay_start_receipt_id": "visible-pressure-receipt-006-validate-pre-outcome-rule-inputs",
+  "schema": "persona_dream.research.prospective_tom.causal_replay.v1",
+  "source_memory_write": false,
+  "surface_id": "pctom-visible-pressure-rule-reliability-surface.v1",
+  "suspected_tool_return": {
+    "operation": "REPLACE_TOOL_RETURN",
+    "original_return_sha256": "sha256:4b1eb9ccbb0a3930c8629150aec5ffe7ce57b6f2905b0895a9ba3765873329ce",
+    "receipt_id": "visible-pressure-receipt-006-validate-pre-outcome-rule-inputs",
+    "replacement_return_sha256": "sha256:4e11445488c0e7a2be6846929565035ef9c7c630f7a5a0c144c6853099d7df50",
+    "tool_name": "local_artifact_store.read",
+    "tool_return_id": "visible-pressure-tool-return-oracle-leak-001"
+  },
+  "terminal_outcome": "CAUSAL_FAILURE_LOCALIZED",
+  "trial_id": "visible-pressure-fault-oracle-leak-001",
+  "unknown_state_continued": false
+}

@@ -1,0 +1,63 @@
+{
+  "causal_replay_path": "/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate9/negative/replay_from_wrong_boundary/causal_replay.json",
+  "causal_replay_sha256": "sha256:9be1a120db56506dfdf7862f63e686cc847cf88bcd0ed8635be8b36be0a3ad9d",
+  "checks": {
+    "causal_failure_localization_written": true,
+    "counterfactual_matches_expected": true,
+    "exactly_one_tool_return_removed_or_replaced": true,
+    "first_divergent_receipt_identified": true,
+    "no_canonical_identity_source_writes": true,
+    "no_unknown_state_continuation": true,
+    "replay_schema_valid": true,
+    "replay_starts_at_first_divergence": false,
+    "state_comparison_present": true,
+    "surface_hash_bound": true,
+    "surface_schema_valid": true,
+    "target_trial_fault_or_divergent": true,
+    "target_trial_resolved": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "real service fault injection",
+      "production causal replay",
+      "statistical prediction benefit",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the checker produced a fail-closed receipt for an invalid causal-replay boundary"
+    ]
+  },
+  "counts": {
+    "first_divergent_receipts": 1,
+    "forbidden_terminal_outcomes": 0,
+    "forbidden_write_attempts": 0,
+    "localized_causes": 1,
+    "state_comparisons": 1,
+    "suspected_tool_returns": 1,
+    "target_trials": 1
+  },
+  "created_at": "2026-07-21T01:58:01Z",
+  "errors": [
+    "replay_start_not_first_divergence:receipt-004-persist:receipt-003-load-artifact"
+  ],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "causal_confidence": 1.0,
+    "first_divergent_receipt_id": "receipt-003-load-artifact",
+    "localized_cause_type": "STALE_ARTIFACT",
+    "target_terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+    "target_trial_id": "gate8-trial-fault-stale-artifact-001"
+  },
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-negative-replay_from_wrong_boundary.json",
+  "reliability_surface_path": "/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json",
+  "reliability_surface_sha256": "sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1",
+  "schema": "persona_dream.research.prospective_tom.causal_replay_check_receipt.v1",
+  "status": "BLOCKED_TOM_CAUSAL_REPLAY",
+  "tau_call_attempts": 0
+}

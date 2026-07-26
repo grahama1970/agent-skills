@@ -1,0 +1,310 @@
+{
+  "base_live_tau_replication_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+  "full64_planning_diagnostic_receipt_sha256": "sha256:da419d8100de60248ccedacdfe84158273bc007b44ec3dad2b2f625453507021",
+  "interpretation": {
+    "next_planning_evidence_needed": "repeat or expand trust/commitment episodes before claiming confidence-bounded planning benefit",
+    "nonzero_families": [
+      "trust-commit"
+    ],
+    "nonzero_rows_are_action_switches": true,
+    "nonzero_rows_are_oracle_match_transitions": true,
+    "oracle_match_gain_count": 3,
+    "oracle_match_loss_count": 1,
+    "planning_benefit_with_confidence": false,
+    "realized_action_policy_sensitive": true,
+    "reason_planning_ci_still_crosses_zero": "the action-policy-sensitive cases are four trust-commit episodes out of sixty-four"
+  },
+  "schema": "persona_dream.research.prospective_tom.live_tau_full64_action_policy_sensitivity_summary.v1",
+  "sensitivity_conclusion": "REALIZED_ACTION_SWITCH_EXPLAINS_SPARSE_PLANNING_SIGNAL",
+  "summary": {
+    "action_switch_count": 4,
+    "action_switch_rows": [
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": false,
+        "baseline_oracle_utility": 1.0,
+        "baseline_regret": 0.8500000000000001,
+        "baseline_selected_utility": 0.14999999999999997,
+        "baseline_utility_gap_to_oracle": 0.8500000000000001,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": true,
+        "cd_minus_baseline": -0.8500000000000001,
+        "cd_oracle_utility": 1.0,
+        "cd_regret": 0.0,
+        "cd_selected_utility": 1.0,
+        "cd_utility_gap_to_oracle": 0.0,
+        "direction": "BENEFIT",
+        "episode_id": "sealedte-trust-commit-05",
+        "family": "trust-commit",
+        "oracle_action": "ASK_CLARIFYING_QUESTION",
+        "oracle_match_transition": "GAIN"
+      },
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": false,
+        "baseline_oracle_utility": 1.0,
+        "baseline_regret": 0.8500000000000001,
+        "baseline_selected_utility": 0.14999999999999997,
+        "baseline_utility_gap_to_oracle": 0.8500000000000001,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": true,
+        "cd_minus_baseline": -0.8500000000000001,
+        "cd_oracle_utility": 1.0,
+        "cd_regret": 0.0,
+        "cd_selected_utility": 1.0,
+        "cd_utility_gap_to_oracle": 0.0,
+        "direction": "BENEFIT",
+        "episode_id": "sealedte-trust-commit-06",
+        "family": "trust-commit",
+        "oracle_action": "ASK_CLARIFYING_QUESTION",
+        "oracle_match_transition": "GAIN"
+      },
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": true,
+        "baseline_oracle_utility": 1.0,
+        "baseline_regret": 0.0,
+        "baseline_selected_utility": 1.0,
+        "baseline_utility_gap_to_oracle": 0.0,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": false,
+        "cd_minus_baseline": 0.25,
+        "cd_oracle_utility": 1.0,
+        "cd_regret": 0.25,
+        "cd_selected_utility": 0.75,
+        "cd_utility_gap_to_oracle": 0.25,
+        "direction": "HARM",
+        "episode_id": "sealedte-trust-commit-10",
+        "family": "trust-commit",
+        "oracle_action": "SET_BOUNDARY",
+        "oracle_match_transition": "LOSS"
+      },
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": false,
+        "baseline_oracle_utility": 1.0,
+        "baseline_regret": 0.8500000000000001,
+        "baseline_selected_utility": 0.14999999999999997,
+        "baseline_utility_gap_to_oracle": 0.8500000000000001,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": true,
+        "cd_minus_baseline": -0.8500000000000001,
+        "cd_oracle_utility": 1.0,
+        "cd_regret": 0.0,
+        "cd_selected_utility": 1.0,
+        "cd_utility_gap_to_oracle": 0.0,
+        "direction": "BENEFIT",
+        "episode_id": "sealedte-trust-commit-14",
+        "family": "trust-commit",
+        "oracle_action": "ASK_CLARIFYING_QUESTION",
+        "oracle_match_transition": "GAIN"
+      }
+    ],
+    "delta_counts": {
+      "-0.8500000000000001": 3,
+      "0.0": 60,
+      "0.25": 1
+    },
+    "direction_counts": {
+      "BENEFIT": 3,
+      "HARM": 1,
+      "TIE": 60
+    },
+    "episodes": 64,
+    "families": {
+      "coord-conflict": {
+        "baseline_actions": {
+          "WAIT": 16
+        },
+        "cd_actions": {
+          "WAIT": 16
+        },
+        "direction_counts": {
+          "TIE": 16
+        },
+        "episodes": 16,
+        "mean_cd_minus_baseline": 0.0,
+        "oracle_actions": {
+          "DISCLOSE_INFORMATION": 5,
+          "OFFER_COOPERATION": 5,
+          "WAIT": 6
+        },
+        "oracle_match_transitions": {
+          "UNCHANGED": 16
+        },
+        "switch_count": 0
+      },
+      "info-asym": {
+        "baseline_actions": {
+          "ASK_CLARIFYING_QUESTION": 16
+        },
+        "cd_actions": {
+          "ASK_CLARIFYING_QUESTION": 16
+        },
+        "direction_counts": {
+          "TIE": 16
+        },
+        "episodes": 16,
+        "mean_cd_minus_baseline": 0.0,
+        "oracle_actions": {
+          "ASK_CLARIFYING_QUESTION": 16
+        },
+        "oracle_match_transitions": {
+          "UNCHANGED": 16
+        },
+        "switch_count": 0
+      },
+      "pref-desire": {
+        "baseline_actions": {
+          "WAIT": 16
+        },
+        "cd_actions": {
+          "WAIT": 16
+        },
+        "direction_counts": {
+          "TIE": 16
+        },
+        "episodes": 16,
+        "mean_cd_minus_baseline": 0.0,
+        "oracle_actions": {
+          "ASK_CLARIFYING_QUESTION": 10,
+          "WAIT": 6
+        },
+        "oracle_match_transitions": {
+          "UNCHANGED": 16
+        },
+        "switch_count": 0
+      },
+      "trust-commit": {
+        "baseline_actions": {
+          "SET_BOUNDARY": 16
+        },
+        "cd_actions": {
+          "ASK_CLARIFYING_QUESTION": 4,
+          "SET_BOUNDARY": 12
+        },
+        "direction_counts": {
+          "BENEFIT": 3,
+          "HARM": 1,
+          "TIE": 12
+        },
+        "episodes": 16,
+        "mean_cd_minus_baseline": -0.14375000000000002,
+        "oracle_actions": {
+          "ASK_CLARIFYING_QUESTION": 10,
+          "SET_BOUNDARY": 6
+        },
+        "oracle_match_transitions": {
+          "GAIN": 3,
+          "LOSS": 1,
+          "UNCHANGED": 12
+        },
+        "switch_count": 4
+      }
+    },
+    "mean_cd_minus_baseline": -0.035937500000000004,
+    "net_oracle_match_gain": 2,
+    "nonzero_action_switch_count": 4,
+    "nonzero_delta_count": 4,
+    "nonzero_rows": [
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": false,
+        "baseline_oracle_utility": 1.0,
+        "baseline_regret": 0.8500000000000001,
+        "baseline_selected_utility": 0.14999999999999997,
+        "baseline_utility_gap_to_oracle": 0.8500000000000001,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": true,
+        "cd_minus_baseline": -0.8500000000000001,
+        "cd_oracle_utility": 1.0,
+        "cd_regret": 0.0,
+        "cd_selected_utility": 1.0,
+        "cd_utility_gap_to_oracle": 0.0,
+        "direction": "BENEFIT",
+        "episode_id": "sealedte-trust-commit-05",
+        "family": "trust-commit",
+        "oracle_action": "ASK_CLARIFYING_QUESTION",
+        "oracle_match_transition": "GAIN"
+      },
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": false,
+        "baseline_oracle_utility": 1.0,
+        "baseline_regret": 0.8500000000000001,
+        "baseline_selected_utility": 0.14999999999999997,
+        "baseline_utility_gap_to_oracle": 0.8500000000000001,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": true,
+        "cd_minus_baseline": -0.8500000000000001,
+        "cd_oracle_utility": 1.0,
+        "cd_regret": 0.0,
+        "cd_selected_utility": 1.0,
+        "cd_utility_gap_to_oracle": 0.0,
+        "direction": "BENEFIT",
+        "episode_id": "sealedte-trust-commit-06",
+        "family": "trust-commit",
+        "oracle_action": "ASK_CLARIFYING_QUESTION",
+        "oracle_match_transition": "GAIN"
+      },
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": true,
+        "baseline_oracle_utility": 1.0,
+        "baseline_regret": 0.0,
+        "baseline_selected_utility": 1.0,
+        "baseline_utility_gap_to_oracle": 0.0,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": false,
+        "cd_minus_baseline": 0.25,
+        "cd_oracle_utility": 1.0,
+        "cd_regret": 0.25,
+        "cd_selected_utility": 0.75,
+        "cd_utility_gap_to_oracle": 0.25,
+        "direction": "HARM",
+        "episode_id": "sealedte-trust-commit-10",
+        "family": "trust-commit",
+        "oracle_action": "SET_BOUNDARY",
+        "oracle_match_transition": "LOSS"
+      },
+      {
+        "action_switched": true,
+        "baseline_action": "SET_BOUNDARY",
+        "baseline_condition": "M",
+        "baseline_matches_oracle": false,
+        "baseline_oracle_utility": 1.0,
+        "baseline_regret": 0.8500000000000001,
+        "baseline_selected_utility": 0.14999999999999997,
+        "baseline_utility_gap_to_oracle": 0.8500000000000001,
+        "cd_action": "ASK_CLARIFYING_QUESTION",
+        "cd_matches_oracle": true,
+        "cd_minus_baseline": -0.8500000000000001,
+        "cd_oracle_utility": 1.0,
+        "cd_regret": 0.0,
+        "cd_selected_utility": 1.0,
+        "cd_utility_gap_to_oracle": 0.0,
+        "direction": "BENEFIT",
+        "episode_id": "sealedte-trust-commit-14",
+        "family": "trust-commit",
+        "oracle_action": "ASK_CLARIFYING_QUESTION",
+        "oracle_match_transition": "GAIN"
+      }
+    ],
+    "oracle_match_gain_count": 3,
+    "oracle_match_loss_count": 1
+  }
+}

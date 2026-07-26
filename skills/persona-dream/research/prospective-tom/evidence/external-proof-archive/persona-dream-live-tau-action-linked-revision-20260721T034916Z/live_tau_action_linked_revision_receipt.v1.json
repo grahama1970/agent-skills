@@ -1,0 +1,86 @@
+{
+  "base_receipt": "/tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json",
+  "base_receipt_sha256": "sha256:95521d5fa8171e96b0466df8015ddf9f7154144d1e959eb490322ad1d479861e",
+  "base_root": "/tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_action_selection_passed": true,
+    "base_receipt_hash_recomputed": true,
+    "conditions_represented": true,
+    "human_content_judgment_absent": true,
+    "posterior_revisions_present": true,
+    "prior_remains_auditable": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "held-out statistical prediction benefit",
+      "planning benefit over the strongest baseline",
+      "longitudinal recall after action-linked revision",
+      "real external service fault injection",
+      "production retry machinery",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video or semantic dream quality"
+    ],
+    "proves": [
+      "live-originated Gate 6 action decisions can be linked to strict Gate 7 non-destructive belief revisions",
+      "each condition has at least one action-linked prior hypothesis and posterior revision",
+      "sealed prior hypotheses remain auditable while posterior current-use distributions are hash-bound",
+      "action linkage is preserved outside the strict belief-revision schema without mutating evidence",
+      "no human content judgment, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "base_action_cases": 16,
+    "decision_rows_seen": 16,
+    "individual_status_counts": {
+      "PASS_TOM_BELIEF_REVISION": 16
+    },
+    "posterior_action_revisions_per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "prior_action_hypotheses_per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "revision_cases_written": 16
+  },
+  "created_at": "2026-07-21T03:49:16Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_action_artifacts_consumed": true,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "mean_surprise_by_condition": {
+      "CD": 0.656042179280377,
+      "D": 0.6931471805599453,
+      "M": 0.6931471805599453,
+      "R": 0.6931471805599453
+    }
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/live_tau_action_linked_revision_receipt.v1.json",
+  "revision_index": "/tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/artifacts/live_action_linked_belief_revisions.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_action_linked_revision_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION",
+  "tau_call_attempts": 0
+}

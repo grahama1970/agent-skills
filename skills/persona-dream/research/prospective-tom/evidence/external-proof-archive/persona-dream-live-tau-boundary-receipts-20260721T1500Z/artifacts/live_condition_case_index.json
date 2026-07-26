@@ -1,0 +1,82 @@
+[
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/artifacts/cases/sealedte-coord-conflict-01/M",
+    "condition": "M",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "prompt_byte_count": 15865,
+    "prompt_char_count": 15865,
+    "prompt_sha256": "sha256:d8608855cbbca1643644f548dc0e2aea5f06c4b1f4f8855f6ec4ac2c504050a7",
+    "receipt_root": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/receipts/cases/sealedte-coord-conflict-01/M",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/receipts/cases/sealedte-coord-conflict-01/M/tau_text_reasoning_receipt.json",
+    "tau_status": "BLOCKED_DISPATCH_ERROR"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/artifacts/cases/sealedte-coord-conflict-01/R",
+    "condition": "R",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "prompt_byte_count": 15877,
+    "prompt_char_count": 15877,
+    "prompt_sha256": "sha256:6b0533be9fe43dd58891eeb026866f1db1fc8266fdb54c7fa111b95181ad5a01",
+    "receipt_root": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/receipts/cases/sealedte-coord-conflict-01/R",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/receipts/cases/sealedte-coord-conflict-01/R/tau_text_reasoning_receipt.json",
+    "tau_status": "BLOCKED_DISPATCH_ERROR"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/artifacts/cases/sealedte-coord-conflict-01/D",
+    "condition": "D",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "prompt_byte_count": 15845,
+    "prompt_char_count": 15845,
+    "prompt_sha256": "sha256:ad578fb947b49d205e39ea4d24ee06d3551b7d8490ed6fef7ce386e4cc66eb47",
+    "receipt_root": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/receipts/cases/sealedte-coord-conflict-01/D",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/receipts/cases/sealedte-coord-conflict-01/D/tau_text_reasoning_receipt.json",
+    "tau_status": "BLOCKED_DISPATCH_ERROR"
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/artifacts/cases/sealedte-coord-conflict-01/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "prompt_byte_count": 15849,
+    "prompt_char_count": 15849,
+    "prompt_sha256": "sha256:cb0bece9ffe72400fc1b956b077b96522d21e518adfff5b9c55d455574c8c9fd",
+    "receipt_root": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/receipts/cases/sealedte-coord-conflict-01/CD",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/receipts/cases/sealedte-coord-conflict-01/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "BLOCKED_BY_SYSTEMIC_FAILURE"
+  }
+]

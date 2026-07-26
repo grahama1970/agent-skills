@@ -1,0 +1,205 @@
+{
+  "action_decision_index_path": "/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/action_selection/heldout_action_decisions.json",
+  "benefit_observed": false,
+  "canonical_memory_write_attempts": 0,
+  "cd_minus_strongest_baseline": null,
+  "checks": {
+    "action_decisions_present": false,
+    "cd_delta_reported": false,
+    "condition_receipt_hash_recomputed": true,
+    "conditions_represented": false,
+    "deterministic_scores_present": false,
+    "freeze_manifest_written": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "scenario_family_filter_respected": true,
+    "sealed_commitments_present": false,
+    "split_is_explicitly_frozen_heldout": true,
+    "strongest_baseline_is_allowed": false,
+    "unsupported_writes_absent": true,
+    "variant_max_respected": true,
+    "variant_min_respected": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau held-out execution",
+      "live Memory recall after revision",
+      "production retry machinery",
+      "real external service fault injection",
+      "statistical confidence intervals over 64 sealed test episodes",
+      "planning-regret benefit when regret is tied across conditions",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video quality",
+      "semantic dream quality"
+    ],
+    "proves": [
+      "the held-out condition-benefit runner failed closed before claiming held-out evidence"
+    ]
+  },
+  "condition_case_index_path": "/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/condition_comparison/artifacts/condition_case_index.json",
+  "condition_receipt_path": "/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/condition_comparison/condition_comparison_receipt.v1.json",
+  "condition_receipt_sha256": "sha256:e7ae95b4ea6a9bb9aaebaa3253f16c840534fd8fef47d23737abc002bcdd5c37",
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "cases": 0,
+    "deterministic_scores_per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "episodes_consumed": 0,
+    "episodes_in_corpus": 96,
+    "families_consumed": 0,
+    "gate6_status_counts": {},
+    "planning_regret_scores_per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "sealed_commitments_per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "selected_episode_ids": []
+  },
+  "created_at": "2026-07-21T11:01:57Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [
+    "condition_comparison_status:BLOCKED_PCTOM_CONDITION_COMPARISON",
+    "condition_comparison_error:sealed_commitments_per_condition_insufficient:{'M': 0, 'R': 0, 'D': 0, 'CD': 0}",
+    "condition_comparison_error:deterministic_scores_per_condition_insufficient:{'M': 0, 'R': 0, 'D': 0, 'CD': 0}",
+    "action_decisions_per_condition_insufficient:M:0",
+    "planning_regret_scores_per_condition_insufficient:M:0",
+    "action_decisions_per_condition_insufficient:R:0",
+    "planning_regret_scores_per_condition_insufficient:R:0",
+    "action_decisions_per_condition_insufficient:D:0",
+    "planning_regret_scores_per_condition_insufficient:D:0",
+    "action_decisions_per_condition_insufficient:CD:0",
+    "planning_regret_scores_per_condition_insufficient:CD:0",
+    "invalid_strongest_baseline_condition:None",
+    "missing_cd_minus_strongest_baseline",
+    "sealed_commitments_per_condition_insufficient:M:0",
+    "deterministic_scores_per_condition_insufficient:M:0",
+    "sealed_commitments_per_condition_insufficient:R:0",
+    "deterministic_scores_per_condition_insufficient:R:0",
+    "sealed_commitments_per_condition_insufficient:D:0",
+    "deterministic_scores_per_condition_insufficient:D:0",
+    "sealed_commitments_per_condition_insufficient:CD:0",
+    "deterministic_scores_per_condition_insufficient:CD:0"
+  ],
+  "fixture_backed": false,
+  "frozen_heldout_manifest_path": "/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/heldout_freeze_manifest.v1.json",
+  "frozen_heldout_manifest_sha256": "sha256:99b347731c99ce0e030e9ed6987086ff465099a45091794982ec1f43bbd44c61",
+  "generated_at": "2026-07-21T00:00:00Z",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "condition_metrics": {
+      "CD": {
+        "cases": 0,
+        "mean_action_brier": null,
+        "mean_action_log_loss": null,
+        "mean_belief_brier": null,
+        "mean_belief_log_loss": null
+      },
+      "D": {
+        "cases": 0,
+        "mean_action_brier": null,
+        "mean_action_log_loss": null,
+        "mean_belief_brier": null,
+        "mean_belief_log_loss": null
+      },
+      "M": {
+        "cases": 0,
+        "mean_action_brier": null,
+        "mean_action_log_loss": null,
+        "mean_belief_brier": null,
+        "mean_belief_log_loss": null
+      },
+      "R": {
+        "cases": 0,
+        "mean_action_brier": null,
+        "mean_action_log_loss": null,
+        "mean_belief_brier": null,
+        "mean_belief_log_loss": null
+      },
+      "comparison": {
+        "cd_mean_action_brier": null,
+        "cd_minus_strongest_baseline": null,
+        "lower_is_better": true,
+        "primary_metric": "mean_action_brier",
+        "strongest_baseline_condition": null,
+        "strongest_baseline_mean_action_brier": null
+      }
+    },
+    "mean_planning_regret_by_condition": {
+      "CD": null,
+      "D": null,
+      "M": null,
+      "R": null
+    },
+    "planning_regret_comparison": {
+      "benefit_observed": false,
+      "cd_minus_strongest_baseline": null,
+      "cd_score": null,
+      "lower_is_better": true,
+      "metric": "mean_planning_regret",
+      "strongest_baseline_condition": null,
+      "strongest_baseline_score": null
+    },
+    "primary_comparison": {
+      "benefit_observed": false,
+      "cd_minus_strongest_baseline": null,
+      "cd_score": null,
+      "lower_is_better": true,
+      "primary_metric": "mean_belief_brier",
+      "proper_score": true,
+      "strongest_baseline_condition": null,
+      "strongest_baseline_score": null
+    },
+    "selected_actions_by_condition": {
+      "CD": [],
+      "D": [],
+      "M": [],
+      "R": []
+    }
+  },
+  "mocked": false,
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "oracle_policy_source": "deterministic simulator labels and counterpart policy rules",
+  "output_root": "/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z",
+  "preregistered_primary_metric": "mean_belief_brier",
+  "primary_metric": "mean_belief_brier",
+  "processing_time_s": 0.016,
+  "proper_score_metric": true,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/heldout_condition_benefit_receipt.v1.json",
+  "scenario_family_filter": "trust_commitment_relationship",
+  "schema": "persona_dream.research.prospective_tom.heldout_condition_benefit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "explicitly_frozen_heldout",
+  "status": "BLOCKED_PCTOM_HELDOUT_CONDITION_BENEFIT",
+  "strongest_baseline_condition": null,
+  "tau_call_attempts": 0,
+  "variant_max": 26,
+  "variant_min": 25
+}

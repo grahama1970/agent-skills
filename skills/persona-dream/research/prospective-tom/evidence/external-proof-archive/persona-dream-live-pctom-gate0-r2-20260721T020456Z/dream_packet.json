@@ -1,0 +1,203 @@
+{
+  "contact_sheet": "contact_sheet.png",
+  "contradictions": [
+    {
+      "bridge_a": "Resilience",
+      "bridge_b": "Fragility",
+      "description": "Resilience is held against Fragility: The source records questions about Embry's transition from SpaceX to Aerospace,  / Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, b",
+      "item_a": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+      "item_b": "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+      "score": 0.5
+    }
+  ],
+  "created_at": "2026-07-21T02:04:56Z",
+  "downstream_routes": {
+    "full_movie": "$ask create-movie to render accepted dream packet with create-movie@v1 on dream_packet.json",
+    "preferred_motion": "Dockerized ComfyUI on the local A5000 running TurboDiffusion TurboWan2.2-I2V-A14B-720P with workflow/API receipts.",
+    "wan_14b": "Use TurboDiffusion A14B only when ComfyUI readiness proves the distilled model and required text encoder/VAE are mounted; route non-distilled A14B/S2V/Animate-class jobs to devops/runpod or a larger GPU.",
+    "wan_ti2v_5b": "For local A5000/24GB rendering, use Wan2.2-TI2V-5B with --offload_model True --convert_model_dtype --t5_cpu after a reference frame or image prompt is accepted."
+  },
+  "dream_prompt": "Synthetic dream for Embry.  The requested dream topic is pipeline robustness autonomous dream residue.Memory residue gathers around what, source, embry, specific, stated, unresolved. Bridge tones: Fragility, Loyalty, Resilience. Core tension: Resilience is held against Fragility: The source records questions about Embry's transition from SpaceX to Aerospace,  / Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, b. Render as symbolic images, not factual claims.",
+  "frame_prompts": [
+    {
+      "frame_id": "frame_01",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, The source records questions about Embry's transition from SpaceX to Aerospace, including what she expected, when she felt competent, and the origin of a succulent at her desk.\n\nCo, symbolic, cinematic still, contact sheet frame, bridge tone: Fragility, Resilience, Loyalty",
+      "source_ids": [
+        "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_02",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Three weeks ago, Embry tried to watch the film Moana but had to stop partway through because its themes were too emotionally resonant, and the source asks what she can now watch fo, symbolic, cinematic still, contact sheet frame, bridge tone: Loyalty",
+      "source_ids": [
+        "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_03",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Embry has unpacked boxes whose contents are unknown, and the source leaves unresolved what they contain, the presence of items from specific people, and what opening them would mea, symbolic, cinematic still, contact sheet frame, bridge tone: Loyalty",
+      "source_ids": [
+        "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_04",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, but the source does not state what question Embry asked or what advice stuck.\n\nContext: The source fr, symbolic, cinematic still, contact sheet frame, bridge tone: Fragility, Loyalty",
+      "source_ids": [
+        "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_05",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved.\n\nContext: The source presents this Instag, symbolic, cinematic still, contact sheet frame, bridge tone: Loyalty",
+      "source_ids": [
+        "embry_gap_unresolved_thread_instagram_after_kai_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_06",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Embry saved her grandmother's chess pie recipe in her phone notes 4 years ago, having typed it out during a phone call; she associates its specific sweetness with the feeling of ho, symbolic, cinematic still, contact sheet frame, bridge tone: Loyalty",
+      "source_ids": [
+        "embry_gap_preference_chess_pie_home_recipe_001"
+      ],
+      "synthetic": true
+    }
+  ],
+  "mode": "static_dream",
+  "persona": {
+    "display_name": "Embry",
+    "id": "embry"
+  },
+  "reflection": "I woke with what, source, embry, specific still arranged like images rather than answers. The dream was synthetic, but it kept the source traces intact: 6 memory residues and 1 explicit tensions. I should treat this as a reflective lead, not as evidence or a durable identity change.",
+  "residue_items": [
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 1.0,
+        "dense": 0.35614824,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "The source records questions about Embry's transition from SpaceX to Aerospace, including what she expected, when she felt competent, and the origin of a succulent at her desk.\n\nContext: The source describes the event of Embry's first day at Aerospace 5 months ago, marking a transition from SpaceX. It lists unresolved questions about her expectations, her moment of competence, and the origin of a dying succulent found at her desk.\nEvidence: L50: #### 2. First Day at Aerospace\nL51: **When:** 5 months ago\nL52: **What:** The transition from SpaceX. First time in the building. Finding her desk.\nL53: **Questions:**\nL54: - What did she expect vs. what she found?\nL55: - When did she first feel competent here?\nL56: - The dying succulent - was it already there or did she buy it?\nL57: **Theme:** Starting over, the boxes begin\nEmotion: not stated in source; not stated in source\nTheory of mind: knowledge_gap: Embry's knowledge about her first day at Aerospace is incomplete; the source records questions about her expectations versus reality, the moment she felt competent, and whether she bought the succulent or found it at her desk.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.96875,
+        "dense": 0.37328428,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Three weeks ago, Embry tried to watch the film Moana but had to stop partway through because its themes were too emotionally resonant, and the source asks what she can now watch for comfort.\n\nContext: The source states that Embry put on Moana three weeks ago on a Sunday but could not finish it. Specific themes (the ocean, leaving, returning) and the song 'How Far I'll Go' 'hit too hard,' prompting her to turn it off. The source questions whether she has tried again and what comfort movie she can actually watch.\nEvidence: L230: **When:** 3 weeks ago\nL231: **What:** Put on Moana one Sunday, couldn't finish it\nL233: - The ocean, the leaving, the returning\nL234: - \"How Far I'll Go\" hit too hard\nL235: - Turned it off at the grandmother scene\nL237: - Has she tried again?\nL238: - What comfort movie can she actually watch?\nEmotion: not stated in source; not stated in source\nTheory of mind: unresolved_thread: The question of what comfort movie Embry can now watch remains unresolved, as does whether she has attempted to watch Moana again.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.875,
+        "dense": 0.41698593,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry has unpacked boxes whose contents are unknown, and the source leaves unresolved what they contain, the presence of items from specific people, and what opening them would mean.\n\nContext: The source presents the unpacked boxes as a present, ongoing unresolved thread. It asks what they contain, whether there are items from Kai or Maya from Langley, what opening them would mean, and what specific item might break Embry if found.\nEvidence: L98: **When:** Present, ongoing\nL99: **What:** What's in the boxes she hasn't opened?\nL100: **Questions:**\nL101: - Is there a Kai box?\nL102: - Is there a box from Maya, from Langley?\nL103: - What would it mean to open them?\nL104: - What specific item would break her if she found it?\nEmotion: not stated in source; not stated in source\nTheory of mind: unresolved_thread: The contents of the unpacked boxes, whether they contain items from Kai or Maya, and what opening them would mean remain unresolved.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.90625,
+        "dense": 0.3693375,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, but the source does not state what question Embry asked or what advice stuck.\n\nContext: The source frames a moment of mentorship with Dr. Okafor as ongoing and unresolved. It states known details but explicitly lists questions about the specific question Embry asked and the advice that stuck.\nEvidence: L72: **What:** A specific moment of mentorship\nL74: - Senior engineer, 60s\nL75: - Embry respects her, doesn't want to bother her\nL77: - What question did Embry ask that surprised her?\nL78: - What advice stuck?\nEmotion: not stated in source; not stated in source\nTheory of mind: knowledge_gap: The specific content of Embry's question and Dr. Okafor's advice from their mentorship moment is unknown.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.9375,
+        "dense": 0.32917288,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved.\n\nContext: The source presents this Instagram-checking as a present and shameful unresolved thread. Embry looks, hates herself for it, and the source asks what she saw that hurt most, if she has almost texted him, and if she knows it is unhealthy.\nEvidence: L215: #### 18. Still Checking His Instagram\nL216: **When:** Present, shameful\nL217: **What:** She looks at Kai's Instagram and hates herself for it\nL219: - Maybe once a week\nL220: - Always regrets it\nL221: - He seems fine (is he fine?)\nL222: - She noticed when he took down their photos\nL223: **Questions:**\nL224: - What did she see that hurt most?\nL225: - Has she almost texted him?\nL226: - Does she know this is unhealthy?\nEmotion: not stated in source; not stated in source\nTheory of mind: unresolved_thread: Several questions about Embry's behavior of checking Kai's Instagram are left unresolved, including what specific content hurt her most, if she has almost texted him, and whether she recognizes the behavior as unhealthy.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.8125,
+        "dense": 0.39259285,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_preference_chess_pie_home_recipe_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry saved her grandmother's chess pie recipe in her phone notes 4 years ago, having typed it out during a phone call; she associates its specific sweetness with the feeling of home.\n\nContext: Embry typed out the recipe during a phone call with her grandmother, who had walked her through it one Thanksgiving. She has made the pie twice while living in El Segundo.\nEvidence: L254: #### 21. The Recipe in Her Phone Notes\nL255: **When:** Saved 4 years ago\nL256: **What:** Grandma's chess pie recipe, typed out during a phone call\nL258: - Grandma walked her through it one Thanksgiving\nL259: - She's made it twice in El Segundo\nL260: - The specific sugar-butter-egg sweetness = home\nEmotion: not stated in source; not stated in source\nTheory of mind: preference: Embry prefers her grandmother's chess pie recipe and associates its specific sweetness with the feeling of home.",
+      "type": "Memory Residue"
+    }
+  ],
+  "run_id": "persona-dream-live-pctom-gate0-r2",
+  "schema": "persona_dream.packet.v1",
+  "secondary_persona": null,
+  "synthetic_content_notice": "Dream prompts and reflections are synthetic interpretations of cited residue, not factual claims."
+}

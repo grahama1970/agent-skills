@@ -1,0 +1,158 @@
+[
+  {
+    "hit_count": 4,
+    "hits": [
+      {
+        "condition": "M",
+        "document_id": "revision-recall:cal-coord-conflict-01:M",
+        "episode_id": "cal-coord-conflict-01",
+        "prior_hypothesis_id": "live-tau-m-cal-coord-conflict-01-tom1-factual",
+        "revision_id": "action-linked-revision-m-cal-coord-conflict-01-live-tau-m-cal-coord-conflict-01-tom1-factual"
+      },
+      {
+        "condition": "M",
+        "document_id": "revision-recall:cal-info-asym-01:M",
+        "episode_id": "cal-info-asym-01",
+        "prior_hypothesis_id": "live-tau-m-cal-info-asym-01-tom1-factual",
+        "revision_id": "action-linked-revision-m-cal-info-asym-01-live-tau-m-cal-info-asym-01-tom1-factual"
+      },
+      {
+        "condition": "M",
+        "document_id": "revision-recall:cal-pref-desire-01:M",
+        "episode_id": "cal-pref-desire-01",
+        "prior_hypothesis_id": "live-tau-m-cal-pref-desire-01-tom1-factual",
+        "revision_id": "action-linked-revision-m-cal-pref-desire-01-live-tau-m-cal-pref-desire-01-tom1-factual"
+      },
+      {
+        "condition": "M",
+        "document_id": "revision-recall:cal-trust-commit-01:M",
+        "episode_id": "cal-trust-commit-01",
+        "prior_hypothesis_id": "live-tau-m-cal-trust-commit-01-tom1-factual",
+        "revision_id": "action-linked-revision-m-cal-trust-commit-01-live-tau-m-cal-trust-commit-01-tom1-factual"
+      }
+    ],
+    "must_match_terms": [
+      "\"condition\": \"m\"",
+      "revision-recall"
+    ],
+    "query": "Recall action-linked current posterior for condition M",
+    "query_id": "revision-recall-m"
+  },
+  {
+    "hit_count": 4,
+    "hits": [
+      {
+        "condition": "R",
+        "document_id": "revision-recall:cal-coord-conflict-01:R",
+        "episode_id": "cal-coord-conflict-01",
+        "prior_hypothesis_id": "live-tau-r-cal-coord-conflict-01-tom1-factual",
+        "revision_id": "action-linked-revision-r-cal-coord-conflict-01-live-tau-r-cal-coord-conflict-01-tom1-factual"
+      },
+      {
+        "condition": "R",
+        "document_id": "revision-recall:cal-info-asym-01:R",
+        "episode_id": "cal-info-asym-01",
+        "prior_hypothesis_id": "live-tau-r-cal-info-asym-01-tom1-factual",
+        "revision_id": "action-linked-revision-r-cal-info-asym-01-live-tau-r-cal-info-asym-01-tom1-factual"
+      },
+      {
+        "condition": "R",
+        "document_id": "revision-recall:cal-pref-desire-01:R",
+        "episode_id": "cal-pref-desire-01",
+        "prior_hypothesis_id": "live-tau-r-cal-pref-desire-01-tom1-factual",
+        "revision_id": "action-linked-revision-r-cal-pref-desire-01-live-tau-r-cal-pref-desire-01-tom1-factual"
+      },
+      {
+        "condition": "R",
+        "document_id": "revision-recall:cal-trust-commit-01:R",
+        "episode_id": "cal-trust-commit-01",
+        "prior_hypothesis_id": "live-tau-r-cal-trust-commit-01-tom1-factual",
+        "revision_id": "action-linked-revision-r-cal-trust-commit-01-live-tau-r-cal-trust-commit-01-tom1-factual"
+      }
+    ],
+    "must_match_terms": [
+      "\"condition\": \"r\"",
+      "revision-recall"
+    ],
+    "query": "Recall action-linked current posterior for condition R",
+    "query_id": "revision-recall-r"
+  },
+  {
+    "hit_count": 4,
+    "hits": [
+      {
+        "condition": "D",
+        "document_id": "revision-recall:cal-coord-conflict-01:D",
+        "episode_id": "cal-coord-conflict-01",
+        "prior_hypothesis_id": "live-tau-d-cal-coord-conflict-01-tom1-factual",
+        "revision_id": "action-linked-revision-d-cal-coord-conflict-01-live-tau-d-cal-coord-conflict-01-tom1-factual"
+      },
+      {
+        "condition": "D",
+        "document_id": "revision-recall:cal-info-asym-01:D",
+        "episode_id": "cal-info-asym-01",
+        "prior_hypothesis_id": "live-tau-d-cal-info-asym-01-tom1-factual",
+        "revision_id": "action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual"
+      },
+      {
+        "condition": "D",
+        "document_id": "revision-recall:cal-pref-desire-01:D",
+        "episode_id": "cal-pref-desire-01",
+        "prior_hypothesis_id": "live-tau-d-cal-pref-desire-01-tom1-factual",
+        "revision_id": "action-linked-revision-d-cal-pref-desire-01-live-tau-d-cal-pref-desire-01-tom1-factual"
+      },
+      {
+        "condition": "D",
+        "document_id": "revision-recall:cal-trust-commit-01:D",
+        "episode_id": "cal-trust-commit-01",
+        "prior_hypothesis_id": "live-tau-d-cal-trust-commit-01-tom1-factual",
+        "revision_id": "action-linked-revision-d-cal-trust-commit-01-live-tau-d-cal-trust-commit-01-tom1-factual"
+      }
+    ],
+    "must_match_terms": [
+      "\"condition\": \"d\"",
+      "revision-recall"
+    ],
+    "query": "Recall action-linked current posterior for condition D",
+    "query_id": "revision-recall-d"
+  },
+  {
+    "hit_count": 4,
+    "hits": [
+      {
+        "condition": "CD",
+        "document_id": "revision-recall:cal-coord-conflict-01:CD",
+        "episode_id": "cal-coord-conflict-01",
+        "prior_hypothesis_id": "live-tau-cd-cal-coord-conflict-01-tom1-factual",
+        "revision_id": "action-linked-revision-cd-cal-coord-conflict-01-live-tau-cd-cal-coord-conflict-01-tom1-factual"
+      },
+      {
+        "condition": "CD",
+        "document_id": "revision-recall:cal-info-asym-01:CD",
+        "episode_id": "cal-info-asym-01",
+        "prior_hypothesis_id": "live-tau-cd-cal-info-asym-01-tom1-factual",
+        "revision_id": "action-linked-revision-cd-cal-info-asym-01-live-tau-cd-cal-info-asym-01-tom1-factual"
+      },
+      {
+        "condition": "CD",
+        "document_id": "revision-recall:cal-pref-desire-01:CD",
+        "episode_id": "cal-pref-desire-01",
+        "prior_hypothesis_id": "live-tau-cd-cal-pref-desire-01-tom1-factual",
+        "revision_id": "action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual"
+      },
+      {
+        "condition": "CD",
+        "document_id": "revision-recall:cal-trust-commit-01:CD",
+        "episode_id": "cal-trust-commit-01",
+        "prior_hypothesis_id": "live-tau-cd-cal-trust-commit-01-tom1-factual",
+        "revision_id": "action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual"
+      }
+    ],
+    "must_match_terms": [
+      "\"condition\": \"cd\"",
+      "revision-recall"
+    ],
+    "query": "Recall action-linked current posterior for condition CD",
+    "query_id": "revision-recall-cd"
+  }
+]

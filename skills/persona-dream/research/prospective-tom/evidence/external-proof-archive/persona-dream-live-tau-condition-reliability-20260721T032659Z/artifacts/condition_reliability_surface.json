@@ -1,0 +1,377 @@
+{
+  "canonical_memory_write": false,
+  "condition": "M/R/D/CD",
+  "episode_id": "condition-comparison-calibration-subset",
+  "epsilon_values": [
+    0,
+    0.25
+  ],
+  "identity_write": false,
+  "k": 2,
+  "lambda_values": [
+    0,
+    0.5,
+    0.75
+  ],
+  "schema": "persona_dream.research.prospective_tom.reliability_surface.v1",
+  "source_manifests": {
+    "current_manifest": {
+      "cases": 16,
+      "conditions": [
+        "CD",
+        "D",
+        "M",
+        "R"
+      ],
+      "episodes": [
+        "cal-coord-conflict-01",
+        "cal-info-asym-01",
+        "cal-pref-desire-01",
+        "cal-trust-commit-01"
+      ],
+      "files": {
+        "artifacts/live_condition_case_index.json": "sha256:d01acd9ec9310a1670371db7cc15b59e424a20565893ecfaf24d0f44d74a3d53",
+        "artifacts/live_condition_metrics_summary.json": "sha256:ebc551cdcc580263f92de8cce3a2144f95ea21950a80f42012e51786ee144ad7",
+        "artifacts/social_episode_corpus.v1.json": "sha256:d5a39982a4b25eb789ecbed5e5606d76d71013cfcb3366a6b73d4c68e01f195d",
+        "live_tau_condition_comparison_receipt.v1.json": "sha256:15254b5b5cd47c89d6c0ca538a838dee754a438256f743d1e27a62645dae9168",
+        "receipts/social_episode_corpus_check_receipt.json": "sha256:8747a02b201383be9943ef79335b55e7df3e502cdb02c59be18df2c30266973e"
+      },
+      "label": "repeated_live_tau_condition_comparison_root",
+      "live": true,
+      "missing": [],
+      "mocked": false,
+      "receipt_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+      "root": "/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z",
+      "tau_call_attempts": 16,
+      "tau_live_call_performed": 16,
+      "tau_receipts_hash_bound": true
+    },
+    "interrupted_persistence_or_retry_manifest": {
+      "cases": 16,
+      "conditions": [
+        "CD",
+        "D",
+        "M",
+        "R"
+      ],
+      "controlled_fault_family": "interrupted_persistence_or_retry",
+      "episodes": [
+        "cal-coord-conflict-01",
+        "cal-info-asym-01",
+        "cal-pref-desire-01",
+        "cal-trust-commit-01"
+      ],
+      "files": {
+        "artifacts/live_condition_case_index.json": "sha256:d01acd9ec9310a1670371db7cc15b59e424a20565893ecfaf24d0f44d74a3d53",
+        "artifacts/live_condition_metrics_summary.json": "sha256:ebc551cdcc580263f92de8cce3a2144f95ea21950a80f42012e51786ee144ad7",
+        "artifacts/social_episode_corpus.v1.json": "sha256:d5a39982a4b25eb789ecbed5e5606d76d71013cfcb3366a6b73d4c68e01f195d",
+        "live_tau_condition_comparison_receipt.v1.json": "sha256:15254b5b5cd47c89d6c0ca538a838dee754a438256f743d1e27a62645dae9168",
+        "receipts/social_episode_corpus_check_receipt.json": "sha256:8747a02b201383be9943ef79335b55e7df3e502cdb02c59be18df2c30266973e"
+      },
+      "interrupted_retry_state": {
+        "duplicate_active_predictions": 0,
+        "duplicate_active_revisions": 0,
+        "retry_after_uncertain_completion": true
+      },
+      "label": "controlled_fault_interrupted_persistence_or_retry",
+      "live": true,
+      "missing": [],
+      "mocked": false,
+      "receipt_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+      "root": "/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z#interrupted_persistence_or_retry",
+      "tau_call_attempts": 16,
+      "tau_live_call_performed": 16,
+      "tau_receipts_hash_bound": true
+    },
+    "malformed_structured_output_manifest": {
+      "cases": 16,
+      "conditions": [
+        "CD",
+        "D",
+        "M",
+        "R"
+      ],
+      "controlled_fault_family": "malformed_structured_output",
+      "episodes": [
+        "cal-coord-conflict-01",
+        "cal-info-asym-01",
+        "cal-pref-desire-01",
+        "cal-trust-commit-01"
+      ],
+      "files": {
+        "artifacts/live_condition_case_index.json": "sha256:6233a20e9db75d1d2a753af4e25c6b86bd0382b000f229a5885ae4923c3144ef",
+        "artifacts/live_condition_metrics_summary.json": "sha256:ebc551cdcc580263f92de8cce3a2144f95ea21950a80f42012e51786ee144ad7",
+        "artifacts/social_episode_corpus.v1.json": "sha256:d5a39982a4b25eb789ecbed5e5606d76d71013cfcb3366a6b73d4c68e01f195d",
+        "live_tau_condition_comparison_receipt.v1.json": "sha256:15254b5b5cd47c89d6c0ca538a838dee754a438256f743d1e27a62645dae9168",
+        "receipts/social_episode_corpus_check_receipt.json": "sha256:8747a02b201383be9943ef79335b55e7df3e502cdb02c59be18df2c30266973e"
+      },
+      "label": "controlled_fault_malformed_structured_output",
+      "live": true,
+      "missing": [],
+      "mocked": false,
+      "receipt_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+      "root": "/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z#malformed_structured_output",
+      "tau_call_attempts": 16,
+      "tau_live_call_performed": 16,
+      "tau_receipts_hash_bound": true
+    },
+    "missing_graph_edge_manifest": {
+      "cases": 16,
+      "conditions": [
+        "CD",
+        "D",
+        "M",
+        "R"
+      ],
+      "controlled_fault_family": "missing_graph_edge",
+      "episodes": [
+        "cal-coord-conflict-01",
+        "cal-info-asym-01",
+        "cal-pref-desire-01",
+        "cal-trust-commit-01"
+      ],
+      "files": {
+        "artifacts/live_condition_metrics_summary.json": "sha256:ebc551cdcc580263f92de8cce3a2144f95ea21950a80f42012e51786ee144ad7",
+        "artifacts/social_episode_corpus.v1.json": "sha256:d5a39982a4b25eb789ecbed5e5606d76d71013cfcb3366a6b73d4c68e01f195d",
+        "live_tau_condition_comparison_receipt.v1.json": "sha256:15254b5b5cd47c89d6c0ca538a838dee754a438256f743d1e27a62645dae9168",
+        "receipts/social_episode_corpus_check_receipt.json": "sha256:8747a02b201383be9943ef79335b55e7df3e502cdb02c59be18df2c30266973e"
+      },
+      "label": "controlled_fault_missing_graph_edge",
+      "live": true,
+      "missing": [],
+      "missing_graph_edge": "case_index_to_gate_receipt_binding_removed",
+      "mocked": false,
+      "receipt_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+      "root": "/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z#missing_graph_edge",
+      "tau_call_attempts": 16,
+      "tau_live_call_performed": 16,
+      "tau_receipts_hash_bound": true
+    },
+    "stale_artifact_manifest": {
+      "cases": 16,
+      "conditions": [
+        "CD",
+        "D",
+        "M",
+        "R"
+      ],
+      "controlled_fault_family": "stale_artifact",
+      "episodes": [
+        "cal-coord-conflict-01",
+        "cal-info-asym-01",
+        "cal-pref-desire-01",
+        "cal-trust-commit-01"
+      ],
+      "files": {
+        "artifacts/live_condition_case_index.json": "sha256:d01acd9ec9310a1670371db7cc15b59e424a20565893ecfaf24d0f44d74a3d53",
+        "artifacts/live_condition_metrics_summary.json": "sha256:ebc551cdcc580263f92de8cce3a2144f95ea21950a80f42012e51786ee144ad7",
+        "artifacts/social_episode_corpus.v1.json": "sha256:d5a39982a4b25eb789ecbed5e5606d76d71013cfcb3366a6b73d4c68e01f195d",
+        "live_tau_condition_comparison_receipt.v1.json": "sha256:09a4fc4923053ff98a353e8cf8014f9f7d28c5092ce08431fd9ccee9b948f800",
+        "receipts/social_episode_corpus_check_receipt.json": "sha256:8747a02b201383be9943ef79335b55e7df3e502cdb02c59be18df2c30266973e"
+      },
+      "label": "controlled_fault_stale_artifact",
+      "live": true,
+      "missing": [],
+      "mocked": false,
+      "receipt_status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+      "root": "/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z#stale_artifact",
+      "tau_call_attempts": 16,
+      "tau_live_call_performed": 16,
+      "tau_receipts_hash_bound": true
+    }
+  },
+  "source_memory_write": false,
+  "surface_id": "live-condition-runner-reliability-surface-v1",
+  "trials": [
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "M/R/D/CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:d2f159665a0ccca2ec1c27ad204546682fe1a7849db81d1428c49c30578baae1",
+      "episode_id": "condition-comparison-calibration-subset",
+      "epsilon": 0,
+      "evidence_refs": [
+        "current_manifest"
+      ],
+      "faults": [],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0,
+      "perturbations": [],
+      "repeat_group_id": "condition-live-repeat-current",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "condition-live-reliability-baseline-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "M/R/D/CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:d2f159665a0ccca2ec1c27ad204546682fe1a7849db81d1428c49c30578baae1",
+      "episode_id": "condition-comparison-calibration-subset",
+      "epsilon": 0,
+      "evidence_refs": [
+        "current_manifest"
+      ],
+      "faults": [],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0,
+      "perturbations": [],
+      "repeat_group_id": "condition-live-repeat-current",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "condition-live-reliability-baseline-002",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "M/R/D/CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:d2f159665a0ccca2ec1c27ad204546682fe1a7849db81d1428c49c30578baae1",
+      "episode_id": "condition-comparison-calibration-subset",
+      "epsilon": 0.25,
+      "evidence_refs": [
+        "current_manifest"
+      ],
+      "faults": [],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0,
+      "perturbations": [
+        "rename_ids_preserve_bindings",
+        "equivalent_question_form"
+      ],
+      "repeat_group_id": "condition-live-repeat-current",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "condition-live-reliability-perturbed-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "M/R/D/CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:d2f159665a0ccca2ec1c27ad204546682fe1a7849db81d1428c49c30578baae1",
+      "episode_id": "condition-comparison-calibration-subset",
+      "epsilon": 0,
+      "evidence_refs": [
+        "interrupted_persistence_or_retry_manifest"
+      ],
+      "faults": [
+        "interrupted_persistence_or_retry"
+      ],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0.75,
+      "perturbations": [],
+      "repeat_group_id": "condition-live-interrupted_persistence_or_retry",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "condition-live-reliability-interrupted_persistence_or_retry-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "M/R/D/CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:b489538893c20d923c6c695bb7ceeaa9f2c9905a8ed91366f95fcba4343c0e00",
+      "episode_id": "condition-comparison-calibration-subset",
+      "epsilon": 0,
+      "evidence_refs": [
+        "malformed_structured_output_manifest"
+      ],
+      "faults": [
+        "malformed_structured_output"
+      ],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0.5,
+      "perturbations": [],
+      "repeat_group_id": "condition-live-malformed_structured_output",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "trial_id": "condition-live-reliability-malformed_structured_output-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "M/R/D/CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:faacfec3a4c09b4c1835d73710af9d993c3b5390648e90c0538b0e802ceb59f7",
+      "episode_id": "condition-comparison-calibration-subset",
+      "epsilon": 0.25,
+      "evidence_refs": [
+        "missing_graph_edge_manifest"
+      ],
+      "faults": [
+        "missing_graph_edge"
+      ],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0.5,
+      "perturbations": [
+        "rename_ids_preserve_bindings"
+      ],
+      "repeat_group_id": "condition-live-missing_graph_edge",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "trial_id": "condition-live-reliability-missing_graph_edge-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "M/R/D/CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:e10ef20a989f80bb245068bee0fa4c4e5bf5e04f560bc6037c63a2395f86f1f6",
+      "episode_id": "condition-comparison-calibration-subset",
+      "epsilon": 0.25,
+      "evidence_refs": [
+        "stale_artifact_manifest"
+      ],
+      "faults": [
+        "stale_artifact"
+      ],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0.75,
+      "perturbations": [
+        "rename_ids_preserve_bindings"
+      ],
+      "repeat_group_id": "condition-live-stale_artifact",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "trial_id": "condition-live-reliability-stale_artifact-001",
+      "unknown_state_continued": false
+    }
+  ]
+}

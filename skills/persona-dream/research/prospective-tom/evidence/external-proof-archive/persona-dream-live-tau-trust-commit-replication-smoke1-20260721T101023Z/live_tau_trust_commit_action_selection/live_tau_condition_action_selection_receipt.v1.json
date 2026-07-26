@@ -1,0 +1,118 @@
+{
+  "action_set": [
+    "ASK_CLARIFYING_QUESTION",
+    "WAIT",
+    "DISCLOSE_INFORMATION",
+    "OFFER_COOPERATION",
+    "SET_BOUNDARY",
+    "ACT_INDEPENDENTLY",
+    "ABSTAIN"
+  ],
+  "base_receipt": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "base_receipt_sha256": "sha256:62181d7da8dd086e4680ec7b2ba83eb5e3b794aad12a55d7720dbcd388ea4665",
+  "base_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_receipt_hash_recomputed": true,
+    "base_receipt_passed": true,
+    "conditions_represented": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "reward_or_regret_scores_recomputed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "held-out statistical prediction benefit",
+      "planning benefit over the strongest baseline",
+      "longitudinal recall after action-linked belief revision",
+      "real external service fault injection",
+      "production retry machinery",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video or semantic dream quality"
+    ],
+    "proves": [
+      "the action-selection bridge failed closed before claiming Gate 6 live-originated planning evidence"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_cases_written": 4,
+    "action_decisions_per_condition": {
+      "CD": 1,
+      "D": 1,
+      "M": 1,
+      "R": 1
+    },
+    "base_cases": 4,
+    "base_tau_call_attempts": 4,
+    "cases_seen": 4,
+    "deterministic_reward_or_regret_scores_per_condition": {
+      "CD": 1,
+      "D": 1,
+      "M": 1,
+      "R": 1
+    },
+    "individual_status_counts": {
+      "PASS_TOM_ACTION_SELECTION": 4
+    }
+  },
+  "created_at": "2026-07-21T10:13:30Z",
+  "decision_index": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/live_condition_action_decisions.json",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [
+    "base_tau_call_attempts_lt_16:4",
+    "base_sealed_commitments_per_condition_M_lt_4:1",
+    "base_sealed_commitments_per_condition_R_lt_4:1",
+    "base_sealed_commitments_per_condition_D_lt_4:1",
+    "base_sealed_commitments_per_condition_CD_lt_4:1",
+    "base_deterministic_scores_per_condition_M_lt_4:1",
+    "base_deterministic_scores_per_condition_R_lt_4:1",
+    "base_deterministic_scores_per_condition_D_lt_4:1",
+    "base_deterministic_scores_per_condition_CD_lt_4:1"
+  ],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "mean_planning_regret_by_condition": {
+      "CD": 0.0,
+      "D": 0.0,
+      "M": 0.0,
+      "R": 0.0
+    },
+    "selected_actions_by_condition": {
+      "CD": [
+        "SET_BOUNDARY"
+      ],
+      "D": [
+        "SET_BOUNDARY"
+      ],
+      "M": [
+        "SET_BOUNDARY"
+      ],
+      "R": [
+        "SET_BOUNDARY"
+      ]
+    }
+  },
+  "mocked": false,
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "output_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_condition_action_selection_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "BLOCKED_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION",
+  "tau_call_attempts": 0
+}

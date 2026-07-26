@@ -1,0 +1,58 @@
+[
+  {
+    "case_root": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/artifacts/cases/sealedte-coord-conflict-01/M",
+    "condition": "M",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/receipts/cases/sealedte-coord-conflict-01/M",
+    "scoring_metrics": {},
+    "statuses": {},
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/receipts/cases/sealedte-coord-conflict-01/M/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "case_root": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/artifacts/cases/sealedte-coord-conflict-01/R",
+    "condition": "R",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/receipts/cases/sealedte-coord-conflict-01/R",
+    "scoring_metrics": {},
+    "statuses": {},
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/receipts/cases/sealedte-coord-conflict-01/R/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "case_root": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/artifacts/cases/sealedte-coord-conflict-01/D",
+    "condition": "D",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/receipts/cases/sealedte-coord-conflict-01/D",
+    "scoring_metrics": {},
+    "statuses": {},
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/receipts/cases/sealedte-coord-conflict-01/D/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "case_root": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/artifacts/cases/sealedte-coord-conflict-01/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/receipts/cases/sealedte-coord-conflict-01/CD",
+    "scoring_metrics": {},
+    "statuses": {},
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/receipts/cases/sealedte-coord-conflict-01/CD/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  }
+]

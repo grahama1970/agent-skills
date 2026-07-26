@@ -1,0 +1,283 @@
+{
+  "action_decision_index_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/action_selection/heldout_action_decisions.json",
+  "benefit_observed": true,
+  "canonical_memory_write_attempts": 0,
+  "cd_minus_strongest_baseline": -0.07979999999999995,
+  "checks": {
+    "action_decisions_present": true,
+    "cd_delta_reported": true,
+    "condition_receipt_hash_recomputed": true,
+    "conditions_represented": true,
+    "deterministic_scores_present": true,
+    "freeze_manifest_written": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "sealed_commitments_present": true,
+    "split_is_explicitly_frozen_heldout": true,
+    "strongest_baseline_is_allowed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau held-out execution",
+      "live Memory recall after revision",
+      "production retry machinery",
+      "real external service fault injection",
+      "statistical confidence intervals over 64 sealed test episodes",
+      "planning-regret benefit when regret is tied across conditions",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video quality",
+      "semantic dream quality"
+    ],
+    "proves": [
+      "an explicitly frozen held-out split was generated from deterministic simulator configuration",
+      "M, R, D, and CD conditions each produced sealed commitments before reveal",
+      "M, R, D, and CD conditions each produced deterministic Gate 5 scores",
+      "M, R, D, and CD conditions each produced constrained Gate 6 action decisions",
+      "the preregistered proper score comparison reports CD against the strongest M/R/D baseline",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "condition_case_index_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/condition_case_index.json",
+  "condition_receipt_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/condition_comparison_receipt.v1.json",
+  "condition_receipt_sha256": "sha256:7fb1788b7ed5923292668d880a4fdede3ace486056e0838673eaab0cd040067c",
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 24,
+      "D": 24,
+      "M": 24,
+      "R": 24
+    },
+    "cases": 96,
+    "deterministic_scores_per_condition": {
+      "CD": 24,
+      "D": 24,
+      "M": 24,
+      "R": 24
+    },
+    "episodes_consumed": 24,
+    "episodes_in_corpus": 24,
+    "families_consumed": 4,
+    "gate6_status_counts": {
+      "PASS_TOM_ACTION_SELECTION": 96
+    },
+    "planning_regret_scores_per_condition": {
+      "CD": 24,
+      "D": 24,
+      "M": 24,
+      "R": 24
+    },
+    "sealed_commitments_per_condition": {
+      "CD": 24,
+      "D": 24,
+      "M": 24,
+      "R": 24
+    }
+  },
+  "created_at": "2026-07-21T04:12:02Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "frozen_heldout_manifest_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/heldout_freeze_manifest.v1.json",
+  "frozen_heldout_manifest_sha256": "sha256:8a18edb4658a73c702b4e26b5adc2086268d719aa149d4ad8aa5f975865e6bfb",
+  "generated_at": "2026-07-21T00:00:00Z",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "condition_metrics": {
+      "CD": {
+        "cases": 24,
+        "mean_action_brier": 0.7133333333333334,
+        "mean_action_log_loss": 1.168852632439994,
+        "mean_belief_brier": 0.14000000000000004,
+        "mean_belief_log_loss": 0.35667494393873245
+      },
+      "D": {
+        "cases": 24,
+        "mean_action_brier": 0.7083333333333334,
+        "mean_action_log_loss": 1.1552453009332422,
+        "mean_belief_brier": 0.2198,
+        "mean_belief_log_loss": 0.47803580094299986
+      },
+      "M": {
+        "cases": 24,
+        "mean_action_brier": 0.6666666666666666,
+        "mean_action_log_loss": 1.0986122886681098,
+        "mean_belief_brier": 0.45500000000000007,
+        "mean_belief_log_loss": 0.7985076962177716
+      },
+      "R": {
+        "cases": 24,
+        "mean_action_brier": 0.7133333333333334,
+        "mean_action_log_loss": 1.168852632439994,
+        "mean_belief_brier": 0.30499999999999994,
+        "mean_belief_log_loss": 0.5978370007556204
+      },
+      "comparison": {
+        "cd_mean_action_brier": 0.7133333333333334,
+        "cd_minus_strongest_baseline": 0.046666666666666745,
+        "lower_is_better": true,
+        "primary_metric": "mean_action_brier",
+        "strongest_baseline_condition": "M",
+        "strongest_baseline_mean_action_brier": 0.6666666666666666
+      }
+    },
+    "mean_planning_regret_by_condition": {
+      "CD": 0.18333333333333335,
+      "D": 0.18333333333333335,
+      "M": 0.325,
+      "R": 0.325
+    },
+    "planning_regret_comparison": {
+      "benefit_observed": false,
+      "cd_minus_strongest_baseline": 0.0,
+      "cd_score": 0.18333333333333335,
+      "lower_is_better": true,
+      "metric": "mean_planning_regret",
+      "strongest_baseline_condition": "D",
+      "strongest_baseline_score": 0.18333333333333335
+    },
+    "primary_comparison": {
+      "benefit_observed": true,
+      "cd_minus_strongest_baseline": -0.07979999999999995,
+      "cd_score": 0.14000000000000004,
+      "lower_is_better": true,
+      "primary_metric": "mean_belief_brier",
+      "proper_score": true,
+      "strongest_baseline_condition": "D",
+      "strongest_baseline_score": 0.2198
+    },
+    "selected_actions_by_condition": {
+      "CD": [
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "DISCLOSE_INFORMATION",
+        "DISCLOSE_INFORMATION",
+        "DISCLOSE_INFORMATION",
+        "DISCLOSE_INFORMATION",
+        "DISCLOSE_INFORMATION",
+        "DISCLOSE_INFORMATION"
+      ],
+      "D": [
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "OFFER_COOPERATION",
+        "OFFER_COOPERATION",
+        "OFFER_COOPERATION",
+        "OFFER_COOPERATION",
+        "OFFER_COOPERATION",
+        "OFFER_COOPERATION"
+      ],
+      "M": [
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT"
+      ],
+      "R": [
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT",
+        "WAIT"
+      ]
+    }
+  },
+  "mocked": false,
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "oracle_policy_source": "deterministic simulator labels and counterpart policy rules",
+  "output_root": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z",
+  "preregistered_primary_metric": "mean_belief_brier",
+  "primary_metric": "mean_belief_brier",
+  "processing_time_s": 0.524,
+  "proper_score_metric": true,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/heldout_condition_benefit_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.heldout_condition_benefit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "explicitly_frozen_heldout",
+  "status": "PASS_PCTOM_HELDOUT_CONDITION_BENEFIT",
+  "strongest_baseline_condition": "D",
+  "tau_call_attempts": 0
+}

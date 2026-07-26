@@ -1,0 +1,293 @@
+{
+  "action_index_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_action_selection/artifacts/live_condition_action_decisions.json",
+  "action_index_sha256": "sha256:da5e4d2d4cbbffcf46e059849b9fecb56fb7477d928bcce6ff77371b65453c0d",
+  "base_live_tau_replication_receipt": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json",
+  "base_live_tau_replication_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_is_full64_live_tau": true,
+    "base_receipt_passed": true,
+    "confidence_receipt_passed": true,
+    "diagnostic_identifies_sparse_family_concentrated_signal": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "nonzero_deltas_are_family_concentrated": true,
+    "planning_ci_crosses_zero": true,
+    "planning_rows_cover_64_episodes": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "confidence-bounded planning-regret benefit",
+      "planning benefit under repeated live Tau seeds",
+      "planning benefit under a larger or differently balanced sealed-test corpus",
+      "production retry machinery",
+      "live Memory recall in the sealed-test loop",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "the accepted full64 live Tau action decisions were consumed without reexecuting Tau",
+      "the planning-regret confidence interval crosses zero",
+      "the planning signal is sparse: 60 ties, 3 beneficial deltas, and 1 harmful delta",
+      "all nonzero planning-regret deltas are concentrated in the trust-commit family",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "confidence_root": "/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z",
+  "counts": {
+    "benefit_count": 3,
+    "episodes": 64,
+    "harm_count": 1,
+    "nonzero_count": 4,
+    "nonzero_families": [
+      "trust-commit"
+    ],
+    "tie_count": 60
+  },
+  "created_at": "2026-07-21T09:35:04Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "diagnostic_conclusion": "SPARSE_FAMILY_CONCENTRATED_SIGNAL",
+  "diagnostic_summary_path": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/artifacts/planning_diagnostic_summary.json",
+  "diagnostic_summary_sha256": "sha256:0b2de231a37427e50c2635a8673e4273fd7c9a9a4a4d5580be9e5a0bb2c2193d",
+  "errors": [],
+  "fixture_backed": false,
+  "full64_statistical_confidence_receipt": "/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json",
+  "full64_statistical_confidence_receipt_sha256": "sha256:299f499b59b4cbf37bbde42df7a293fe2d064658724fa53d63dd677fc40a5574",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "base_live_tau_replication_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+    "diagnostic_conclusion": "SPARSE_FAMILY_CONCENTRATED_SIGNAL",
+    "full64_statistical_confidence_receipt_sha256": "sha256:299f499b59b4cbf37bbde42df7a293fe2d064658724fa53d63dd677fc40a5574",
+    "interpretation": {
+      "benefit_count": 3,
+      "confidence_bounded_planning_benefit": false,
+      "harm_count": 1,
+      "next_planning_evidence_needed": "repeat or expand trust/commitment planning episodes and action-policy sensitivity before claiming planning benefit",
+      "nonzero_count": 4,
+      "nonzero_families": [
+        "trust-commit"
+      ],
+      "planning_point_estimate_is_negative": true,
+      "reason_ci_crosses_zero": "60 of 64 paired planning-regret deltas are ties; the four nonzero deltas are all in trust-commit episodes",
+      "tie_count": 60
+    },
+    "planning_ci_crosses_zero": true,
+    "planning_regret_ci": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:cc6733fb62520f67703c9f2b0313300dd74e03d8c1ed74463f4e900db16eb6de",
+      "lower": -0.08515625000000002,
+      "mean": -0.035937500000000004,
+      "samples": 10000,
+      "seed": 20260723,
+      "upper": 0.00390625
+    },
+    "schema": "persona_dream.research.prospective_tom.live_tau_full64_planning_diagnostic_summary.v1",
+    "summary": {
+      "baseline_actions": {
+        "ASK_CLARIFYING_QUESTION": 16,
+        "SET_BOUNDARY": 16,
+        "WAIT": 32
+      },
+      "cd_actions": {
+        "ASK_CLARIFYING_QUESTION": 20,
+        "SET_BOUNDARY": 12,
+        "WAIT": 32
+      },
+      "delta_counts": {
+        "-0.8500000000000001": 3,
+        "0.0": 60,
+        "0.25": 1
+      },
+      "direction_counts": {
+        "BENEFIT": 3,
+        "HARM": 1,
+        "TIE": 60
+      },
+      "episodes": 64,
+      "families": {
+        "coord-conflict": {
+          "baseline_actions": {
+            "WAIT": 16
+          },
+          "cd_actions": {
+            "WAIT": 16
+          },
+          "delta_counts": {
+            "0.0": 16
+          },
+          "direction_counts": {
+            "TIE": 16
+          },
+          "episodes": 16,
+          "mean_cd_minus_baseline": 0.0,
+          "oracle_actions": {
+            "DISCLOSE_INFORMATION": 5,
+            "OFFER_COOPERATION": 5,
+            "WAIT": 6
+          }
+        },
+        "info-asym": {
+          "baseline_actions": {
+            "ASK_CLARIFYING_QUESTION": 16
+          },
+          "cd_actions": {
+            "ASK_CLARIFYING_QUESTION": 16
+          },
+          "delta_counts": {
+            "0.0": 16
+          },
+          "direction_counts": {
+            "TIE": 16
+          },
+          "episodes": 16,
+          "mean_cd_minus_baseline": 0.0,
+          "oracle_actions": {
+            "ASK_CLARIFYING_QUESTION": 16
+          }
+        },
+        "pref-desire": {
+          "baseline_actions": {
+            "WAIT": 16
+          },
+          "cd_actions": {
+            "WAIT": 16
+          },
+          "delta_counts": {
+            "0.0": 16
+          },
+          "direction_counts": {
+            "TIE": 16
+          },
+          "episodes": 16,
+          "mean_cd_minus_baseline": 0.0,
+          "oracle_actions": {
+            "ASK_CLARIFYING_QUESTION": 10,
+            "WAIT": 6
+          }
+        },
+        "trust-commit": {
+          "baseline_actions": {
+            "SET_BOUNDARY": 16
+          },
+          "cd_actions": {
+            "ASK_CLARIFYING_QUESTION": 4,
+            "SET_BOUNDARY": 12
+          },
+          "delta_counts": {
+            "-0.8500000000000001": 3,
+            "0.0": 12,
+            "0.25": 1
+          },
+          "direction_counts": {
+            "BENEFIT": 3,
+            "HARM": 1,
+            "TIE": 12
+          },
+          "episodes": 16,
+          "mean_cd_minus_baseline": -0.14375000000000002,
+          "oracle_actions": {
+            "ASK_CLARIFYING_QUESTION": 10,
+            "SET_BOUNDARY": 6
+          }
+        }
+      },
+      "mean_cd_minus_baseline": -0.035937500000000004,
+      "nonzero_delta_rows": [
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-05",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-06",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.25,
+          "cd_regret": 0.25,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-trust-commit-10",
+          "family": "trust-commit",
+          "oracle_action": "SET_BOUNDARY"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-14",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        }
+      ],
+      "oracle_actions": {
+        "ASK_CLARIFYING_QUESTION": 36,
+        "DISCLOSE_INFORMATION": 5,
+        "OFFER_COOPERATION": 5,
+        "SET_BOUNDARY": 6,
+        "WAIT": 12
+      }
+    }
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z",
+  "planning_benefit_with_confidence": false,
+  "planning_ci_crosses_zero": true,
+  "planning_rows_path": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/artifacts/planning_delta_rows.json",
+  "planning_rows_sha256": "sha256:20fa390066a123276313527463bccc922334043890ca664b2bd288056d76bb63",
+  "processing_time_s": 0.004,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/live_tau_full64_planning_diagnostic_receipt.v1.json",
+  "receipt_sha256": "sha256:77a01ac124ae0c72a227af560e1702b906f3bd3f38400d76c85b62b79808b489",
+  "schema": "persona_dream.research.prospective_tom.live_tau_full64_planning_diagnostic_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_FULL64_PLANNING_DIAGNOSTIC",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0
+}

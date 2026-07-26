@@ -1,0 +1,62 @@
+[
+  {
+    "action_selection_path": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/M/action_selection.json",
+    "case_root": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/M",
+    "condition": "M",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [],
+    "gate6_receipt_path": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/M/gate6_action_selection_receipt.json",
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "receipt_root": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/M",
+    "selected_action": "WAIT",
+    "source_case_root": "/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/M",
+    "source_receipt_root": "/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/M",
+    "status": "PASS_TOM_ACTION_SELECTION"
+  },
+  {
+    "action_selection_path": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/R/action_selection.json",
+    "case_root": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/R",
+    "condition": "R",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [],
+    "gate6_receipt_path": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/R/gate6_action_selection_receipt.json",
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "receipt_root": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/R",
+    "selected_action": "WAIT",
+    "source_case_root": "/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/R",
+    "source_receipt_root": "/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/R",
+    "status": "PASS_TOM_ACTION_SELECTION"
+  },
+  {
+    "action_selection_path": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/D/action_selection.json",
+    "case_root": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/D",
+    "condition": "D",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [],
+    "gate6_receipt_path": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/D/gate6_action_selection_receipt.json",
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "receipt_root": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/D",
+    "selected_action": "WAIT",
+    "source_case_root": "/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/D",
+    "source_receipt_root": "/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/D",
+    "status": "PASS_TOM_ACTION_SELECTION"
+  },
+  {
+    "action_selection_path": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/CD/action_selection.json",
+    "case_root": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-coord-conflict-01",
+    "errors": [],
+    "gate6_receipt_path": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/CD/gate6_action_selection_receipt.json",
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "receipt_root": "/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/CD",
+    "selected_action": "WAIT",
+    "source_case_root": "/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/artifacts/cases/sealedte-coord-conflict-01/CD",
+    "source_receipt_root": "/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/receipts/cases/sealedte-coord-conflict-01/CD",
+    "status": "PASS_TOM_ACTION_SELECTION"
+  }
+]

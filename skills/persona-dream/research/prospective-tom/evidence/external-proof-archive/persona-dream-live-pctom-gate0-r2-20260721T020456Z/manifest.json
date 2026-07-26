@@ -1,0 +1,55 @@
+{
+  "artifacts": [
+    "contact_sheet.png",
+    "contradiction_report.json",
+    "dream_packet.json",
+    "dream_prompt.txt",
+    "dream_reflection.md",
+    "dream_request.json",
+    "frame_prompts.json",
+    "manifest.json",
+    "memory_write_receipt.json",
+    "pipeline_stage_report.json",
+    "pipeline_stage_report.md",
+    "residue_links.json",
+    "response.json"
+  ],
+  "created_at": "2026-07-21T02:04:56Z",
+  "mode": "static_dream",
+  "next_lanes": {
+    "assembly": "Use minimal FFmpeg only after accepted clips exist; hand broader production to create-movie.",
+    "continuity": "Run VLM/LLM checks through scillm against character_scene_bible.json.",
+    "i2v": "Use Dockerized ComfyUI TurboDiffusion TurboWan2.2-I2V-A14B-720P for accepted keyframes.",
+    "keyframes": "Use local/containerized keyframe workflow first; Chutes z-image-turbo only after canary proof.",
+    "self_improvement_loop": "Generated keyframes/clips must be checked, corrected, regenerated or explicitly fall back before advancing.",
+    "stage_reports": "Each stage must write text/visual outputs and failure gaps to pipeline_stage_report.json and pipeline_stage_report.md."
+  },
+  "output_dir": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z",
+  "required_modes": {
+    "static_dream": [
+      "dream_request.json",
+      "response.json",
+      "residue_links.json",
+      "contradiction_report.json",
+      "dream_packet.json",
+      "dream_prompt.txt",
+      "frame_prompts.json",
+      "contact_sheet.png",
+      "dream_reflection.md",
+      "memory_write_receipt.json",
+      "manifest.json"
+    ],
+    "video_plan": [
+      "dream_story.md",
+      "dream_story.json",
+      "character_scene_bible.json",
+      "storyboard.json",
+      "timed_transcript.json",
+      "multimodal_prompts.json",
+      "voice_handoff_plan.json",
+      "manifest.json"
+    ]
+  },
+  "run_id": "persona-dream-live-pctom-gate0-r2",
+  "schema": "persona_dream.manifest.v1"
+}

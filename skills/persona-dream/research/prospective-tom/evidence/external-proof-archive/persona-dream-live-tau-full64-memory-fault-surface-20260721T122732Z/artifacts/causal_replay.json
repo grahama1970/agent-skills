@@ -1,0 +1,16 @@
+{
+  "canonical_memory_write": false,
+  "causal_replay_id": "causal-replay-full64-memory-collection-visibility-001",
+  "first_divergent_receipt": "live_memory_revision_recall:custom_exact_collection_visibility",
+  "human_content_judgment_required": false,
+  "identity_write": false,
+  "provider_call": false,
+  "replacement_tool_return": "condition-scoped searchable Memory /recall response",
+  "replay_start_boundary": "Memory /recall collection selection",
+  "resulting_state_sha256": "sha256:6d8d89aa13b3a32b062c68acbaa1c7eb7199630fee923b03dca581b34e0126a6",
+  "resulting_terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+  "schema": "pctom.full64_memory_fault_causal_replay.v1",
+  "source_memory_write": false,
+  "suspected_tool_return_removed_or_replaced": "collection-scoped /recall response",
+  "target_trial_id": "memory-collection-visibility-full64-001"
+}

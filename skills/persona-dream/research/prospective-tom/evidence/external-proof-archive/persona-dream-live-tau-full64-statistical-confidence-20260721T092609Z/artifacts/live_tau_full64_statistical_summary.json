@@ -1,0 +1,67 @@
+{
+  "alpha": 0.05,
+  "base_live_tau_replication_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+  "baseline_conditions": {
+    "action_brier": "M",
+    "belief_brier": "M",
+    "planning_regret": "M"
+  },
+  "bootstrap_samples": 10000,
+  "bootstrap_seed": 20260721,
+  "condition_means": {
+    "action_brier": {
+      "CD": 0.6650468749999999,
+      "D": 0.6658999999999999,
+      "M": 0.6658999999999999,
+      "R": 0.6658999999999999
+    },
+    "belief_brier": {
+      "CD": 0.39669843750000006,
+      "D": 0.41500000000000004,
+      "M": 0.41500000000000004,
+      "R": 0.41500000000000004
+    }
+  },
+  "paired_delta_confidence_intervals": {
+    "action_brier": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:e2bb16f153b415a3fe038e4c5a33f3371c0032df38809c0eded1287d47db7974",
+      "lower": -0.017147578124999976,
+      "mean": -0.0008531249999999832,
+      "samples": 10000,
+      "seed": 20260722,
+      "upper": 0.017281250000000012
+    },
+    "belief_brier": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:2970543afba639c7964a67755dfe9aa7b54c34ecdee7af503c07ba469db00738",
+      "lower": -0.029314882812500002,
+      "mean": -0.018301562500000004,
+      "samples": 10000,
+      "seed": 20260721,
+      "upper": -0.008604609375000004
+    },
+    "planning_regret": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:cc6733fb62520f67703c9f2b0313300dd74e03d8c1ed74463f4e900db16eb6de",
+      "lower": -0.08515625000000002,
+      "mean": -0.035937500000000004,
+      "samples": 10000,
+      "seed": 20260723,
+      "upper": 0.00390625
+    }
+  },
+  "paired_delta_counts": {
+    "action_brier": 64,
+    "belief_brier": 64,
+    "planning_regret": 64
+  },
+  "planning_regret_means": {
+    "CD": 0.26875,
+    "D": 0.3046875,
+    "M": 0.3046875,
+    "R": 0.3046875
+  },
+  "primary_metric": "belief_brier",
+  "schema": "persona_dream.research.prospective_tom.live_tau_full64_statistical_summary.v1"
+}

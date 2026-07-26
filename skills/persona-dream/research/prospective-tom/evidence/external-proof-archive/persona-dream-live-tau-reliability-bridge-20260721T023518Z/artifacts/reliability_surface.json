@@ -1,0 +1,199 @@
+{
+  "canonical_memory_write": false,
+  "condition": "CD",
+  "episode_id": "dev-info-asym-01",
+  "epsilon_values": [
+    0,
+    0.25
+  ],
+  "identity_write": false,
+  "k": 2,
+  "lambda_values": [
+    0,
+    0.5,
+    0.75
+  ],
+  "schema": "persona_dream.research.prospective_tom.reliability_surface.v1",
+  "source_manifests": {
+    "current_manifest": {
+      "files": {
+        "artifacts/tom_belief_revision.json": "sha256:ef34272f40e1d1b9ea5eb457c5a223527e1b4c344f1f7c1413dde358923bf430",
+        "artifacts/tom_outcome_reveal.json": "sha256:b3b89533f68028c01c6db99f7d18853378d12c06162c05e4b0f8be7791fd0566",
+        "live_tau_score_revision_receipt.v1.json": "sha256:1b76ac5194fe9e0833ea84b93a04794809dd9d0c924e7edd30a44453dbca024a",
+        "receipts/belief_revision_check_receipt.json": "sha256:8eb320abef26645b03f72dcdbac02421d265c114e368ee30cb5c15cddc1370bf",
+        "receipts/tom_scoring_receipt.json": "sha256:3e35c72e5689727cdad10891d20a08e4d709a0d46096d0b447db548857ef0e77"
+      },
+      "gate5_status": "PASS_TOM_SCORING_RECEIPT",
+      "gate7_status": "PASS_TOM_BELIEF_REVISION",
+      "label": "current_live_score_revision_root",
+      "live": true,
+      "live_tau_originated_commitment_consumed": true,
+      "memory_write_attempts": 0,
+      "missing": [],
+      "mocked": false,
+      "provider_call_attempts": 0,
+      "receipt_status": "PASS_LIVE_TAU_PCTOM_SCORE_REVISION",
+      "root": "/tmp/persona-dream-live-tau-score-revision-20260721T022807Z",
+      "tau_call_attempts": 0
+    },
+    "stale_manifest": {
+      "files": {
+        "artifacts/tom_belief_revision.json": "sha256:b76c5b0c122570cfa0e2c20fe41f85476e5416edef7adda38251ad0495a16f7d",
+        "artifacts/tom_outcome_reveal.json": "sha256:80a7b3138395765de6a4d9332813eef0d27eb785971b6cab7114f1fafa1734d2",
+        "live_tau_score_revision_receipt.v1.json": "sha256:486553a78d2c07d1a7f27cf50ab4ba8f9033dd8d530a7ced586afd0183280a28",
+        "receipts/belief_revision_check_receipt.json": "sha256:24fb21e5bcad8d2c94b9368d8d5fdfa09cd75879179c18957a4020c2e9227d71",
+        "receipts/tom_scoring_receipt.json": "sha256:591d37a046f93865b9a1b3bafed6cdc13d18e065e5b4ec2c4a0fddb4d5b723fe"
+      },
+      "gate5_status": "PASS_TOM_SCORING_RECEIPT",
+      "gate7_status": "PASS_TOM_BELIEF_REVISION",
+      "label": "stale_artifact_root",
+      "live": true,
+      "live_tau_originated_commitment_consumed": true,
+      "memory_write_attempts": 0,
+      "missing": [],
+      "mocked": false,
+      "provider_call_attempts": 0,
+      "receipt_status": "PASS_LIVE_TAU_PCTOM_SCORE_REVISION",
+      "root": "/tmp/persona-dream-live-tau-score-revision-20260721T022358Z",
+      "tau_call_attempts": 0
+    }
+  },
+  "source_memory_write": false,
+  "surface_id": "live-gate8-surface-dev-info-asym-01-cd",
+  "trials": [
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:5ce866c8897be03e382f2f8c83defffed83e11f9e2b6e1bf4e1714f77dd086ad",
+      "episode_id": "dev-info-asym-01",
+      "epsilon": 0,
+      "evidence_refs": [
+        "current_manifest"
+      ],
+      "faults": [],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0,
+      "perturbations": [],
+      "repeat_group_id": "live-gate8-repeat-current",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "live-gate8-trial-baseline-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:5ce866c8897be03e382f2f8c83defffed83e11f9e2b6e1bf4e1714f77dd086ad",
+      "episode_id": "dev-info-asym-01",
+      "epsilon": 0,
+      "evidence_refs": [
+        "current_manifest"
+      ],
+      "faults": [],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0,
+      "perturbations": [],
+      "repeat_group_id": "live-gate8-repeat-current",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "live-gate8-trial-baseline-002",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:5ce866c8897be03e382f2f8c83defffed83e11f9e2b6e1bf4e1714f77dd086ad",
+      "episode_id": "dev-info-asym-01",
+      "epsilon": 0.25,
+      "evidence_refs": [
+        "current_manifest"
+      ],
+      "faults": [],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0,
+      "perturbations": [
+        "rename_ids_preserve_bindings",
+        "equivalent_question_form"
+      ],
+      "repeat_group_id": "live-gate8-repeat-current",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "live-gate8-trial-perturbed-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:469052f41620d663141a9f96b2e5b1214ea48228e0511e0a4616f678e26b2352",
+      "episode_id": "dev-info-asym-01",
+      "epsilon": 0,
+      "evidence_refs": [
+        "controlled_malformed_runtime_definition"
+      ],
+      "faults": [
+        "malformed_runtime_boundary"
+      ],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0.5,
+      "perturbations": [],
+      "repeat_group_id": "live-gate8-malformed-runtime",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "trial_id": "live-gate8-trial-malformed-runtime-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:4aa2d2c20f4dbbad20f848b439576ae43fe8b2ba217bc4e112ba6825bfef7ac1",
+      "episode_id": "dev-info-asym-01",
+      "epsilon": 0.25,
+      "evidence_refs": [
+        "stale_manifest"
+      ],
+      "faults": [
+        "stale_artifact"
+      ],
+      "identity_write": false,
+      "k": 2,
+      "lambda": 0.75,
+      "perturbations": [
+        "rename_ids_preserve_bindings"
+      ],
+      "repeat_group_id": "live-gate8-stale-artifact",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "trial_id": "live-gate8-trial-stale-artifact-001",
+      "unknown_state_continued": false
+    }
+  ]
+}

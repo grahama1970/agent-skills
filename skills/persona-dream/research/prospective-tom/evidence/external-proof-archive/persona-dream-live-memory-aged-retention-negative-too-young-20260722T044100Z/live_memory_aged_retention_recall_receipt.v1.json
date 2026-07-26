@@ -1,0 +1,68 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "human_content_judgment_absent": true,
+    "minimum_age_satisfied": false,
+    "nested_delayed_recall_passed": false,
+    "nested_no_write_path": false,
+    "nested_prior_and_posterior_distinguished": false,
+    "nested_synthetic_literal_boundary_preserved": false,
+    "source_receipt_hash_recomputed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live no-write recall after the requested minimum age",
+      "multi-day wall-clock retention",
+      "new live Tau execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the aged-retention wrapper failed closed before accepting delayed recall evidence"
+    ]
+  },
+  "counts": {
+    "nested_delayed_exact_rereads": 0,
+    "nested_delayed_recall_hits": 0,
+    "nested_delayed_recall_queries": 0,
+    "nested_delayed_semantic_exact_rereads": 0,
+    "nested_source_memory_documents": 0,
+    "nested_source_semantic_documents": 0,
+    "nested_write_violations": 0
+  },
+  "created_at": "2026-07-22T04:34:34Z",
+  "elapsed_age_s": 3676.0,
+  "errors": [
+    "minimum_age_not_satisfied:3676.0:999999999"
+  ],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "min_age_s": 999999999,
+  "minimum_age_satisfied": false,
+  "mocked": false,
+  "nested_delayed_recall": {
+    "executed": false,
+    "receipt_path": null,
+    "receipt_sha256": null,
+    "status": "SKIPPED_MINIMUM_AGE_NOT_SATISFIED"
+  },
+  "output_root": "/tmp/persona-dream-live-memory-aged-retention-negative-too-young-20260722T044100Z",
+  "processing_time_s": 0.000429,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-memory-aged-retention-negative-too-young-20260722T044100Z/live_memory_aged_retention_recall_receipt.v1.json",
+  "receipt_sha256": "sha256:570aa04762329319804927d8dd5b5137f56af021484eae1084e37a6396d8be75",
+  "schema": "persona_dream.research.prospective_tom.live_memory_aged_retention_recall_receipt.v1",
+  "source_created_at": "2026-07-22T03:33:18Z",
+  "source_memory_write_attempts": 0,
+  "source_receipt": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json",
+  "source_receipt_sha256": "sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a",
+  "source_root": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z",
+  "status": "BLOCKED_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL",
+  "tau_call_attempts": 0
+}

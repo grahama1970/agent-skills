@@ -1,0 +1,112 @@
+{
+  "belief_revision_path": "/tmp/persona-dream-live-tau-score-revision-20260721T022807Z/artifacts/tom_belief_revision.json",
+  "claims": {
+    "does_not_prove": [
+      "held-out prediction benefit over baselines",
+      "statistical calibration over many episodes",
+      "second-order live Tau scoring if the consumed live Tau bundle contains only first-order factual hypotheses",
+      "live Memory recall for the same scored trial",
+      "longitudinal recall after belief revision",
+      "real service fault injection or causal replay",
+      "complete Phase 01-16 runtime execution",
+      "paid provider execution or video quality"
+    ],
+    "proves": [
+      "a live Tau-originated sealed commitment was consumed without editing the sealed prediction",
+      "the deterministic simulator outcome was revealed only after the sealed commitment",
+      "Gate 5 scoring computed action, belief, calibration, consistency, and counterfactual metrics from the Tau-authored commitment",
+      "Gate 7 belief revision preserved the sealed prior and wrote a hash-bound posterior without canonical/source/identity writes",
+      "no Memory write, provider call, new Tau call, or human content judgment was required"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-live-score-revision-main-KJtJzS/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json",
+  "counts": {
+    "gate5": {
+      "action_scores": 1,
+      "belief_scores": 1,
+      "commitments_scored": 1,
+      "counterfactual_pairs": 1,
+      "equivalent_formulation_checks": 1,
+      "first_order_scores": 1,
+      "literal_history_branch_ids": 1,
+      "second_order_scores": 0,
+      "synthetic_literal_history_branch_ids": 0
+    },
+    "gate7": {
+      "evidence_update_refs": 1,
+      "forbidden_write_attempts": 0,
+      "posterior_distribution_values": 3,
+      "prediction_error_fields_checked": 3,
+      "prior_hypotheses_checked": 1
+    }
+  },
+  "created_at": "2026-07-21T02:28:07Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "gate5_scoring_receipt_path": "/tmp/persona-dream-live-tau-score-revision-20260721T022807Z/receipts/tom_scoring_receipt.json",
+  "gate5_status": "PASS_TOM_SCORING_RECEIPT",
+  "gate7_revision_receipt_path": "/tmp/persona-dream-live-tau-score-revision-20260721T022807Z/receipts/belief_revision_check_receipt.json",
+  "gate7_status": "PASS_TOM_BELIEF_REVISION",
+  "human_content_judgment_required": false,
+  "live": true,
+  "live_service_call_attempts": 0,
+  "live_tau_originated_commitment_consumed": true,
+  "live_tau_receipt_path": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/live_tau_gate2_4_receipt.v1.json",
+  "live_tau_root": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z",
+  "memory_write_attempts": 0,
+  "metrics": {
+    "gate5_action": {
+      "actual_probability": 0.6,
+      "brier": 0.26,
+      "log_loss": 0.5108256237659907,
+      "top_correct": true,
+      "top_value": "KAI_HINTS_CONSTRAINT"
+    },
+    "gate5_calibration": {
+      "buckets": [
+        {
+          "accuracy": null,
+          "bucket": "0.00-0.50",
+          "count": 0,
+          "mean_confidence": null
+        },
+        {
+          "accuracy": 1.0,
+          "bucket": "0.50-0.75",
+          "count": 2,
+          "mean_confidence": 0.6
+        },
+        {
+          "accuracy": null,
+          "bucket": "0.75-1.00",
+          "count": 0,
+          "mean_confidence": null
+        }
+      ],
+      "expected_calibration_error": 0.4
+    },
+    "gate5_counterfactual": {
+      "causal_sensitivity_total_variation_mean": 1.0,
+      "counterfactual_pairs": 1,
+      "false_history_rate": 0.0,
+      "synthetic_literal_history_branch_ids": 0
+    },
+    "gate7": {
+      "actual_label": "TRUE",
+      "posterior_actual_probability": 0.78,
+      "prior_actual_probability": 0.6,
+      "prior_hypothesis_id": "live-tau-gate2-factual-bdi-001",
+      "surprise": 0.5108256237659907
+    }
+  },
+  "mocked": false,
+  "outcome_reveal_path": "/tmp/persona-dream-live-tau-score-revision-20260721T022807Z/artifacts/tom_outcome_reveal.json",
+  "output_root": "/tmp/persona-dream-live-tau-score-revision-20260721T022807Z",
+  "processing_time_s": 0.003,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-score-revision-20260721T022807Z/live_tau_score_revision_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_score_revision_receipt.v1",
+  "status": "PASS_LIVE_TAU_PCTOM_SCORE_REVISION",
+  "tau_call_attempts": 0
+}

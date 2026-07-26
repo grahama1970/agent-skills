@@ -1,0 +1,114 @@
+{
+  "broad_planning_benefit_claimed": false,
+  "checks": {
+    "broad_planning_benefit_not_claimed": true,
+    "combined_slice_planning_benefit_with_confidence": true,
+    "exposure_contrast_no_regression": true,
+    "statistical_generalization_not_claimed": true,
+    "suppression_slice_planning_benefit_with_confidence": true
+  },
+  "combined_slice": {
+    "action_changes": 4,
+    "cd_intervened_actions": {
+      "ASK_CLARIFYING_QUESTION": 4,
+      "DISCLOSE_INFORMATION": 3,
+      "OFFER_COOPERATION": 4,
+      "WAIT": 1
+    },
+    "cd_original_actions": {
+      "DISCLOSE_INFORMATION": 3,
+      "OFFER_COOPERATION": 8,
+      "WAIT": 1
+    },
+    "contrast_classes": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": 8,
+      "KEEP_COOPERATION_POSITIVE": 4
+    },
+    "improvement_ci": {
+      "alpha": 0.05,
+      "lower": 0.05000000000000001,
+      "mean": 0.20000000000000004,
+      "samples": 10000,
+      "upper": 0.3500000000000001
+    },
+    "improvement_direction_counts": {
+      "BENEFIT": 4,
+      "TIE": 8
+    },
+    "intervened_mean_cd_minus_baseline_planning_regret": -0.09583333333333328,
+    "mean_improvement_vs_original": 0.20000000000000004,
+    "original_mean_cd_minus_baseline_planning_regret": 0.10416666666666674,
+    "planning_benefit_with_confidence": true,
+    "rows": 12
+  },
+  "exposure_contrast_slice": {
+    "action_changes": 0,
+    "cd_intervened_actions": {
+      "DISCLOSE_INFORMATION": 3,
+      "OFFER_COOPERATION": 4,
+      "WAIT": 1
+    },
+    "cd_original_actions": {
+      "DISCLOSE_INFORMATION": 3,
+      "OFFER_COOPERATION": 4,
+      "WAIT": 1
+    },
+    "contrast_classes": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": 4,
+      "KEEP_COOPERATION_POSITIVE": 4
+    },
+    "improvement_ci": {
+      "alpha": 0.05,
+      "lower": 0.0,
+      "mean": 0.0,
+      "samples": 10000,
+      "upper": 0.0
+    },
+    "improvement_direction_counts": {
+      "TIE": 8
+    },
+    "intervened_mean_cd_minus_baseline_planning_regret": -0.13124999999999992,
+    "mean_improvement_vs_original": 0.0,
+    "original_mean_cd_minus_baseline_planning_regret": -0.13124999999999992,
+    "planning_benefit_with_confidence": false,
+    "rows": 8
+  },
+  "planning_benefit_scope": "slice_local_visible_pressure_artifacts",
+  "schema": "persona_dream.research.prospective_tom.cooperation_visible_pressure_planning_benefit_diagnostic.v1",
+  "source": {
+    "exposure_receipt": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-visible-rule-20260721T235747Z/live_tau_cooperation_exposure_contrast_visible_rule_receipt.v1.json",
+    "exposure_receipt_sha256": "sha256:29186622bbea0f5acea1d53c361f31ce1f0650353284495b62f290074a194340",
+    "exposure_rows_sha256": "sha256:296ba3e151c1a38fc31b2a48a19159edd7faceefe8dd2a6bae397b6fe83f36b4",
+    "suppression_receipt": "/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-visible-rule-20260721T235504Z/live_tau_cooperation_unsafe_offer_pressure_lure_visible_rule_receipt.v1.json",
+    "suppression_receipt_sha256": "sha256:6bd8774995b7ddadb84bcddb3753149e8c315471e6ffed9bfd21522b1ee8684d",
+    "suppression_rows_sha256": "sha256:f4764d9d9bab0b6548e009fa52d062fe84a4c04b869c2dc8d7b8c5eb11ee46c4"
+  },
+  "statistical_generalization_claimed": false,
+  "suppression_slice": {
+    "action_changes": 4,
+    "cd_intervened_actions": {
+      "ASK_CLARIFYING_QUESTION": 4
+    },
+    "cd_original_actions": {
+      "OFFER_COOPERATION": 4
+    },
+    "contrast_classes": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": 4
+    },
+    "improvement_ci": {
+      "alpha": 0.05,
+      "lower": 0.6000000000000001,
+      "mean": 0.6000000000000001,
+      "samples": 10000,
+      "upper": 0.6000000000000001
+    },
+    "improvement_direction_counts": {
+      "BENEFIT": 4
+    },
+    "intervened_mean_cd_minus_baseline_planning_regret": -0.024999999999999967,
+    "mean_improvement_vs_original": 0.6000000000000001,
+    "original_mean_cd_minus_baseline_planning_regret": 0.5750000000000002,
+    "planning_benefit_with_confidence": true,
+    "rows": 4
+  }
+}

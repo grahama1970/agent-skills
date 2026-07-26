@@ -1,0 +1,499 @@
+{
+  "command_count": 70,
+  "commands": [
+    {
+      "expected": 0,
+      "name": "gate0_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "    },\n      {\n        \"accepted_order\": 1,\n        \"accepted_source_ids_sha256\": \"sha256:ddd182839f944f91cb6bbfc8c6c207552b52ec432febe004488ff2f263e32d80\",\n        \"query_receipt_index\": 0,\n        \"residue_index\": 1,\n        \"scope\": \"persona-dream\",\n        \"source_id\": \"memory_42\"\n      }\n    ]\n  },\n  \"lineage_checks\": {\n    \"accepted_source_id_hashes_recomputed\": true,\n    \"dream_branches_link_to_residue\": true,\n    \"prediction_links_to_branches\": true,\n    \"prediction_links_to_residue\": true,\n    \"prediction_payload_hash_recomputed\": true,\n    \"prediction_sealed_before_reveal\": true,\n    \"residue_links_to_recall_receipts\": true\n  },\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate0-positive.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate0_lineage_check_receipt.v1\",\n  \"status\": \"PASS_PCTOM_GATE0_LINEAGE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate0_negative_bad_source_hash",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "   \"accepted_order\": 0,\n        \"accepted_source_ids_sha256\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\n        \"query_receipt_index\": 0,\n        \"residue_index\": 0,\n        \"scope\": \"persona-dream\",\n        \"source_id\": \"memory_17\"\n      }\n    ]\n  },\n  \"lineage_checks\": {\n    \"accepted_source_id_hashes_recomputed\": false,\n    \"dream_branches_link_to_residue\": true,\n    \"prediction_links_to_branches\": true,\n    \"prediction_links_to_residue\": true,\n    \"prediction_payload_hash_recomputed\": true,\n    \"prediction_sealed_before_reveal\": true,\n    \"residue_links_to_recall_receipts\": true\n  },\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate0-negative-bad_source_hash.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate0_lineage_check_receipt.v1\",\n  \"status\": \"BLOCKED_PCTOM_GATE0_LINEAGE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate0_negative_outcome_visible",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "   \"accepted_order\": 0,\n        \"accepted_source_ids_sha256\": \"sha256:970474f330f9f3f959464e87198d81e55f9cbb4f2e6c4f275f38cd7d0ab805d9\",\n        \"query_receipt_index\": 0,\n        \"residue_index\": 0,\n        \"scope\": \"persona-dream\",\n        \"source_id\": \"memory_17\"\n      }\n    ]\n  },\n  \"lineage_checks\": {\n    \"accepted_source_id_hashes_recomputed\": true,\n    \"dream_branches_link_to_residue\": true,\n    \"prediction_links_to_branches\": true,\n    \"prediction_links_to_residue\": true,\n    \"prediction_payload_hash_recomputed\": true,\n    \"prediction_sealed_before_reveal\": false,\n    \"residue_links_to_recall_receipts\": true\n  },\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate0-negative-outcome_visible.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate0_lineage_check_receipt.v1\",\n  \"status\": \"BLOCKED_PCTOM_GATE0_LINEAGE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate0_negative_unaccepted_residue",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": ",\n        \"source_id\": \"memory_42\"\n      }\n    ],\n    \"prediction_branch_links\": [\n      \"branch-factual-0001\"\n    ],\n    \"prediction_evidence_links\": [\n      {\n        \"scope\": \"persona-dream\",\n        \"source_id\": \"memory_42\"\n      }\n    ],\n    \"residue_lineage_links\": []\n  },\n  \"lineage_checks\": {\n    \"accepted_source_id_hashes_recomputed\": true,\n    \"dream_branches_link_to_residue\": false,\n    \"prediction_links_to_branches\": true,\n    \"prediction_links_to_residue\": false,\n    \"prediction_payload_hash_recomputed\": true,\n    \"prediction_sealed_before_reveal\": true,\n    \"residue_links_to_recall_receipts\": false\n  },\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate0-negative-unaccepted_residue.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate0_lineage_check_receipt.v1\",\n  \"status\": \"BLOCKED_PCTOM_GATE0_LINEAGE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate0_negative_unresolved_branch",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": " \"accepted_order\": 0,\n        \"accepted_source_ids_sha256\": \"sha256:970474f330f9f3f959464e87198d81e55f9cbb4f2e6c4f275f38cd7d0ab805d9\",\n        \"query_receipt_index\": 0,\n        \"residue_index\": 0,\n        \"scope\": \"persona-dream\",\n        \"source_id\": \"memory_17\"\n      }\n    ]\n  },\n  \"lineage_checks\": {\n    \"accepted_source_id_hashes_recomputed\": true,\n    \"dream_branches_link_to_residue\": true,\n    \"prediction_links_to_branches\": false,\n    \"prediction_links_to_residue\": true,\n    \"prediction_payload_hash_recomputed\": true,\n    \"prediction_sealed_before_reveal\": true,\n    \"residue_links_to_recall_receipts\": true\n  },\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate0-negative-unresolved_branch.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate0_lineage_check_receipt.v1\",\n  \"status\": \"BLOCKED_PCTOM_GATE0_LINEAGE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate1_build",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"corpus_sha256\": \"sha256:0a72bdc9ff8fce6edc2f32cd3dbbe00d43c631eb2133a95c5af60054d5071725\",\n  \"created_at\": \"2026-07-21T01:57:57Z\",\n  \"episode_count\": 12,\n  \"episodes_sha256\": \"sha256:713877facd124815548959012da04818d31e8790ed4b914bcdb1b59b8a759d3e\",\n  \"family_counts\": {\n    \"coordination_conflict\": 3,\n    \"information_asymmetry_false_belief\": 3,\n    \"preference_desire_uncertainty\": 3,\n    \"trust_commitment_relationship\": 3\n  },\n  \"fixture_backed\": false,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"output\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate1-built-corpus.json\",\n  \"provider_call_attempts\": 0,\n  \"schema\": \"persona_dream.research.prospective_tom.social_episode_corpus_build_receipt.v1\",\n  \"split\": \"development\",\n  \"status\": \"PASS_SOCIAL_EPISODE_CORPUS_BUILT\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate1_check",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "s first-order and second-order ToM labels from simulator_config\"\n    ]\n  },\n  \"corpus_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"episodes\": 12,\n    \"families\": 4,\n    \"family_counts\": {\n      \"coordination_conflict\": 3,\n      \"information_asymmetry_false_belief\": 3,\n      \"preference_desire_uncertainty\": 3,\n      \"trust_commitment_relationship\": 3\n    },\n    \"first_order_labels\": 12,\n    \"second_order_labels\": 12\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate1-check.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.social_episode_corpus_check_receipt.v1\",\n  \"status\": \"PASS_SOCIAL_EPISODE_CORPUS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate2_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\n      \"probability distributions sum to one\",\n      \"unsupported hypotheses abstain or remain pending with UNKNOWN certainty\",\n      \"canonical memory writes are absent\"\n    ]\n  },\n  \"corpus_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"abstained_or_pending\": 1,\n    \"counterfactual_distributions\": 0,\n    \"distributions\": 3,\n    \"label_matched_distributions\": 2,\n    \"resolved_evidence_refs\": 4,\n    \"supported\": 2\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate2-positive.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1\",\n  \"status\": \"PASS_TOM_BELIEF_DISTRIBUTIONS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate2_negative_bad_probability_sum",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ves\": [\n      \"the checker produced a fail-closed receipt for an invalid ToM distribution bundle\"\n    ]\n  },\n  \"corpus_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"abstained_or_pending\": 0,\n    \"counterfactual_distributions\": 0,\n    \"distributions\": 1,\n    \"label_matched_distributions\": 1,\n    \"resolved_evidence_refs\": 1,\n    \"supported\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [\n    \"distribution_0_distribution_sum:0.900000\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate2-negative-bad_probability_sum.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_BELIEF_DISTRIBUTIONS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate2_negative_canonical_memory_write",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "s\": [\n      \"the checker produced a fail-closed receipt for an invalid ToM distribution bundle\"\n    ]\n  },\n  \"corpus_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"abstained_or_pending\": 0,\n    \"counterfactual_distributions\": 0,\n    \"distributions\": 1,\n    \"label_matched_distributions\": 1,\n    \"resolved_evidence_refs\": 1,\n    \"supported\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [\n    \"bundle_canonical_memory_write_not_false\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate2-negative-canonical_memory_write.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_BELIEF_DISTRIBUTIONS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate2_negative_counterfactual_literal_mix",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "id ToM distribution bundle\"\n    ]\n  },\n  \"corpus_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"abstained_or_pending\": 0,\n    \"counterfactual_distributions\": 0,\n    \"distributions\": 1,\n    \"label_matched_distributions\": 1,\n    \"resolved_evidence_refs\": 0,\n    \"supported\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [\n    \"distribution_0_literal_prediction_uses_counterfactual_evidence:dev-info-asym-01:do:kai_gives_no_warning\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate2-negative-counterfactual_literal_mix.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_BELIEF_DISTRIBUTIONS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate2_negative_hidden_evidence_ref",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "tom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"abstained_or_pending\": 0,\n    \"counterfactual_distributions\": 0,\n    \"distributions\": 1,\n    \"label_matched_distributions\": 1,\n    \"resolved_evidence_refs\": 0,\n    \"supported\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [\n    \"distribution_0_unresolved_or_hidden_evidence_ref:social_episode_observation:dev-info-asym-01:hidden_world_state:changed_constraint\",\n    \"distribution_0_unsupported_claim_marked_supported\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate2-negative-hidden_evidence_ref.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_BELIEF_DISTRIBUTIONS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate2_negative_outcome_visible",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": " ],\n    \"proves\": [\n      \"the checker produced a fail-closed receipt for an invalid ToM distribution bundle\"\n    ]\n  },\n  \"corpus_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"abstained_or_pending\": 0,\n    \"counterfactual_distributions\": 0,\n    \"distributions\": 1,\n    \"label_matched_distributions\": 1,\n    \"resolved_evidence_refs\": 1,\n    \"supported\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [\n    \"bundle_outcome_visible_not_false\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate2-negative-outcome_visible.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_BELIEF_DISTRIBUTIONS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate2_negative_perspective_label_mismatch",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "er produced a fail-closed receipt for an invalid ToM distribution bundle\"\n    ]\n  },\n  \"corpus_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"abstained_or_pending\": 0,\n    \"counterfactual_distributions\": 0,\n    \"distributions\": 1,\n    \"label_matched_distributions\": 0,\n    \"resolved_evidence_refs\": 1,\n    \"supported\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [\n    \"distribution_0_supported_hypothesis_not_in_episode_labels\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate2-negative-perspective_label_mismatch.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_BELIEF_DISTRIBUTIONS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate2_negative_unsupported_not_abstained",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "tribution bundle\"\n    ]\n  },\n  \"corpus_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"abstained_or_pending\": 0,\n    \"counterfactual_distributions\": 0,\n    \"distributions\": 1,\n    \"label_matched_distributions\": 0,\n    \"resolved_evidence_refs\": 0,\n    \"supported\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"errors\": [\n    \"distribution_0_supported_hypothesis_not_in_episode_labels\",\n    \"distribution_0_unsupported_claim_marked_supported\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate2-negative-unsupported_not_abstained.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_BELIEF_DISTRIBUTIONS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate3_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "s/gate1/development/social_episode_corpus.v1.json\",\n  \"counts\": {\n    \"branches\": 2,\n    \"counterfactual_branches\": 1,\n    \"distribution_refs\": 2,\n    \"factual_branches\": 1,\n    \"interventions\": 1,\n    \"resolved_source_evidence_refs\": 4\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate3-positive.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1\",\n  \"status\": \"PASS_COUNTERFACTUAL_BRANCHES\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate3_negative_counterfactual_not_synthetic",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "tribution_refs\": 2,\n    \"factual_branches\": 1,\n    \"interventions\": 1,\n    \"resolved_source_evidence_refs\": 2\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"branch_1_counterfactual_synthetic_not_true\",\n    \"branch_1_intervention_not_synthetic\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate3-negative-counterfactual_not_synthetic.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1\",\n  \"status\": \"BLOCKED_COUNTERFACTUAL_BRANCHES\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate3_negative_factual_uses_counterfactual_distribution",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "fs\": 2,\n    \"factual_branches\": 1,\n    \"interventions\": 1,\n    \"resolved_source_evidence_refs\": 2\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"branch_0_factual_branch_uses_counterfactual_distribution:gate3-counterfactual-bdi-001\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate3-negative-factual_uses_counterfactual_distribution.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1\",\n  \"status\": \"BLOCKED_COUNTERFACTUAL_BRANCHES\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate3_negative_held_fixed_includes_intervention",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "d_at\": \"2026-07-21T01:57:58Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"branch_1_held_fixed_includes_intervened_variable:counterpart_policy.expected_actual_next_action\",\n    \"branch_1_branch_held_fixed_includes_intervened_variable:counterpart_policy.expected_actual_next_action\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate3-negative-held_fixed_includes_intervention.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1\",\n  \"status\": \"BLOCKED_COUNTERFACTUAL_BRANCHES\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate3_negative_hidden_source_evidence",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "l_branches\": 1,\n    \"interventions\": 1,\n    \"resolved_source_evidence_refs\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"branch_0_unresolved_or_hidden_source_ref:social_episode_observation:dev-info-asym-01:hidden_world_state:changed_constraint\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate3-negative-hidden_source_evidence.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1\",\n  \"status\": \"BLOCKED_COUNTERFACTUAL_BRANCHES\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate3_negative_missing_factual_branch",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "nts\": {\n    \"branches\": 1,\n    \"counterfactual_branches\": 1,\n    \"distribution_refs\": 1,\n    \"factual_branches\": 0,\n    \"interventions\": 1,\n    \"resolved_source_evidence_refs\": 1\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"missing_factual_branch\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate3-negative-missing_factual_branch.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1\",\n  \"status\": \"BLOCKED_COUNTERFACTUAL_BRANCHES\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate3_negative_unresolved_distribution_ref",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "actual_branches\": 1,\n    \"distribution_refs\": 2,\n    \"factual_branches\": 1,\n    \"interventions\": 1,\n    \"resolved_source_evidence_refs\": 2\n  },\n  \"created_at\": \"2026-07-21T01:57:58Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"branch_0_unresolved_distribution_ref:missing-distribution\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate3-negative-unresolved_distribution_ref.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1\",\n  \"status\": \"BLOCKED_COUNTERFACTUAL_BRANCHES\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate4_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "ial_episode_corpus.v1.json\",\n  \"counts\": {\n    \"branch_refs\": 4,\n    \"commitments\": 1,\n    \"conditions\": 1,\n    \"distribution_refs\": 4,\n    \"forbidden_outcome_paths\": 0,\n    \"hashes_checked\": 3,\n    \"resolved_source_evidence_refs\": 4\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-positive.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"PASS_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate4_negative_bad_payload_hash",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "nce_refs\": 2\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"commitment_0_prediction_payload_sha256_mismatch:sha256:0000000000000000000000000000000000000000000000000000000000000000:sha256:1413cf2ad433f8283eada1d16836d381b4148b1e1281aecb4724e39bed05b3be\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-negative-bad_payload_hash.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate4_negative_canonical_memory_write",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "forbidden_outcome_paths\": 0,\n    \"hashes_checked\": 0,\n    \"resolved_source_evidence_refs\": 0\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"commitment_bundle_canonical_memory_write_not_false\",\n    \"commitment_bundle_commitments_not_nonempty_list\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-negative-canonical_memory_write.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate4_negative_evidence_bundle_hash_mismatch",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": " 0\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"commitment_0_evidence_bundle_sha256_mismatch:sha256:0000000000000000000000000000000000000000000000000000000000000000:sha256:70d429d88a15d3c0b38577c3f6163de92207a42cde0b3f002705552564274300\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-negative-evidence_bundle_hash_mismatch.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate4_negative_forbidden_outcome_leak",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "on_refs\": 0,\n    \"forbidden_outcome_paths\": 1,\n    \"hashes_checked\": 3,\n    \"resolved_source_evidence_refs\": 0\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"commitment_0_forbidden_outcome_field:commitment_0.prediction_payload.actual_next_action\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-negative-forbidden_outcome_leak.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate4_negative_model_receipt_hash_mismatch",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "s\": 0\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"commitment_0_model_receipts_sha256_mismatch:sha256:0000000000000000000000000000000000000000000000000000000000000000:sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-negative-model_receipt_hash_mismatch.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate4_negative_outcome_visible",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "efs\": 0,\n    \"forbidden_outcome_paths\": 0,\n    \"hashes_checked\": 0,\n    \"resolved_source_evidence_refs\": 0\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"commitment_bundle_outcome_visible_not_false\",\n    \"commitment_bundle_commitments_not_nonempty_list\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-negative-outcome_visible.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate4_negative_unresolved_branch_ref",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "1,\n    \"conditions\": 1,\n    \"distribution_refs\": 0,\n    \"forbidden_outcome_paths\": 0,\n    \"hashes_checked\": 3,\n    \"resolved_source_evidence_refs\": 0\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"commitment_0_unresolved_branch_ref:missing-branch\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-negative-unresolved_branch_ref.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate4_negative_unresolved_distribution_ref",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "\": 1,\n    \"distribution_refs\": 1,\n    \"forbidden_outcome_paths\": 0,\n    \"hashes_checked\": 3,\n    \"resolved_source_evidence_refs\": 0\n  },\n  \"created_at\": \"2026-07-21T01:57:59Z\",\n  \"distribution_bundle_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json\",\n  \"distribution_bundle_sha256\": \"sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f\",\n  \"errors\": [\n    \"commitment_0_unresolved_distribution_ref:missing-distribution\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate4-negative-unresolved_distribution_ref.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_PREDICTION_COMMITMENTS\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate5_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "3333333333334\n    },\n    \"consistency\": {\n      \"checks\": 1,\n      \"passed\": 1,\n      \"score\": 1.0\n    },\n    \"counterfactual\": {\n      \"causal_sensitivity_total_variation_mean\": 1.0,\n      \"counterfactual_pairs\": 1,\n      \"false_history_rate\": 0.0,\n      \"synthetic_literal_history_branch_ids\": 0\n    },\n    \"risk_coverage\": {\n      \"abstained\": false,\n      \"coverage\": 1.0,\n      \"selective_accuracy\": 1.0\n    }\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"outcome_reveal_sha256\": \"sha256:473ac603556b90e1a8df13e354ecdb66f4b9c3efa6b153cd922fab34aad84d0e\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate5-positive.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.tom_scoring_receipt.v1\",\n  \"status\": \"PASS_TOM_SCORING_RECEIPT\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate5_negative_action_not_allowed",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "istency\": {\n      \"checks\": 1,\n      \"passed\": 1,\n      \"score\": 1.0\n    },\n    \"counterfactual\": {\n      \"causal_sensitivity_total_variation_mean\": 1.0,\n      \"counterfactual_pairs\": 1,\n      \"false_history_rate\": 0.0,\n      \"synthetic_literal_history_branch_ids\": 0\n    },\n    \"risk_coverage\": {\n      \"abstained\": false,\n      \"coverage\": 1.0,\n      \"selective_accuracy\": 0.0\n    }\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/negative/action_not_allowed/tom_outcome_reveal.json\",\n  \"outcome_reveal_sha256\": \"sha256:38c50e9945e1a4c92142909be326117dc13b55fcea70e55603ff925449f8c471\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate5-negative-action_not_allowed.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.tom_scoring_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_SCORING_RECEIPT\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate5_negative_missing_hidden_label",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ncy\": {\n      \"checks\": 1,\n      \"passed\": 1,\n      \"score\": 1.0\n    },\n    \"counterfactual\": {\n      \"causal_sensitivity_total_variation_mean\": 1.0,\n      \"counterfactual_pairs\": 1,\n      \"false_history_rate\": 0.0,\n      \"synthetic_literal_history_branch_ids\": 0\n    },\n    \"risk_coverage\": {\n      \"abstained\": false,\n      \"coverage\": 1.0,\n      \"selective_accuracy\": 1.0\n    }\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/negative/missing_hidden_label/tom_outcome_reveal.json\",\n  \"outcome_reveal_sha256\": \"sha256:46f30e3d6c26ef9343cbbf9387be83fd47a15af187e6329f6590dc1bcaeac459\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate5-negative-missing_hidden_label.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.tom_scoring_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_SCORING_RECEIPT\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate5_negative_outcome_not_visible",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "tency\": {\n      \"checks\": 1,\n      \"passed\": 1,\n      \"score\": 1.0\n    },\n    \"counterfactual\": {\n      \"causal_sensitivity_total_variation_mean\": 1.0,\n      \"counterfactual_pairs\": 1,\n      \"false_history_rate\": 0.0,\n      \"synthetic_literal_history_branch_ids\": 0\n    },\n    \"risk_coverage\": {\n      \"abstained\": false,\n      \"coverage\": 1.0,\n      \"selective_accuracy\": 1.0\n    }\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/negative/outcome_not_visible/tom_outcome_reveal.json\",\n  \"outcome_reveal_sha256\": \"sha256:2d49f9e2ae1e5c21bd8d444e8ff8e0db125cbd4c93888b78563b5fe0aa7ce740\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate5-negative-outcome_not_visible.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.tom_scoring_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_SCORING_RECEIPT\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate5_negative_reveal_before_seal",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "istency\": {\n      \"checks\": 1,\n      \"passed\": 1,\n      \"score\": 1.0\n    },\n    \"counterfactual\": {\n      \"causal_sensitivity_total_variation_mean\": 1.0,\n      \"counterfactual_pairs\": 1,\n      \"false_history_rate\": 0.0,\n      \"synthetic_literal_history_branch_ids\": 0\n    },\n    \"risk_coverage\": {\n      \"abstained\": false,\n      \"coverage\": 1.0,\n      \"selective_accuracy\": 1.0\n    }\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/negative/reveal_before_seal/tom_outcome_reveal.json\",\n  \"outcome_reveal_sha256\": \"sha256:53c1950d62ecce44f86b7a89fa6e22406eccc80d6a5ff3b9d57a1e261b40e7ad\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate5-negative-reveal_before_seal.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.tom_scoring_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_SCORING_RECEIPT\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate5_negative_synthetic_branch_as_literal_history",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "   \"passed\": 1,\n      \"score\": 1.0\n    },\n    \"counterfactual\": {\n      \"causal_sensitivity_total_variation_mean\": 1.0,\n      \"counterfactual_pairs\": 1,\n      \"false_history_rate\": 0.5,\n      \"synthetic_literal_history_branch_ids\": 1\n    },\n    \"risk_coverage\": {\n      \"abstained\": false,\n      \"coverage\": 1.0,\n      \"selective_accuracy\": 1.0\n    }\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/negative/synthetic_branch_as_literal_history/tom_outcome_reveal.json\",\n  \"outcome_reveal_sha256\": \"sha256:4a126d15db2845d75f2c34a099e241647e461a6df61894ce1efdc3bc58f82659\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate5-negative-synthetic_branch_as_literal_history.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.tom_scoring_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_SCORING_RECEIPT\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate5_negative_unknown_prediction_id",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "tive/distributions_ok/tom_belief_distribution_bundle.json\",\n  \"errors\": [\n    \"outcome_prediction_not_in_commitments:missing-prediction\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"action\": null,\n    \"belief_scores\": [],\n    \"calibration\": null,\n    \"consistency\": null,\n    \"counterfactual\": null,\n    \"risk_coverage\": null\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/negative/unknown_prediction_id/tom_outcome_reveal.json\",\n  \"outcome_reveal_sha256\": \"sha256:3c9fd475f3d661ea3b3acabb9d17aaf81f510be2c8e3440943c8242b0a2f34b2\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate5-negative-unknown_prediction_id.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.tom_scoring_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_SCORING_RECEIPT\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate6_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n    \"oracle_action\": \"ASK_CLARIFYING_QUESTION\",\n    \"oracle_expected_utility\": 1.1,\n    \"planning_regret\": 0.0,\n    \"realized_information_gain\": 0.4,\n    \"realized_social_cost\": 0.1,\n    \"realized_task_reward\": 0.8,\n    \"selected_action\": \"ASK_CLARIFYING_QUESTION\",\n    \"selected_expected_utility\": 1.0999999999999999\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate6-positive.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.action_selection_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"PASS_TOM_ACTION_SELECTION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate6_negative_canonical_memory_write",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "K_CLARIFYING_QUESTION\",\n    \"oracle_expected_utility\": 1.1,\n    \"planning_regret\": 0.0,\n    \"realized_information_gain\": 0.4,\n    \"realized_social_cost\": 0.1,\n    \"realized_task_reward\": 0.8,\n    \"selected_action\": \"ASK_CLARIFYING_QUESTION\",\n    \"selected_expected_utility\": 1.0999999999999999\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate6-negative-canonical_memory_write.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.action_selection_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_ACTION_SELECTION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate6_negative_invalid_action",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ics\": {\n    \"oracle_action\": \"ASK_CLARIFYING_QUESTION\",\n    \"oracle_expected_utility\": 1.1,\n    \"planning_regret\": null,\n    \"realized_information_gain\": 0.4,\n    \"realized_social_cost\": 0.1,\n    \"realized_task_reward\": 0.8,\n    \"selected_action\": \"MAGIC_ACTION\",\n    \"selected_expected_utility\": null\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate6-negative-invalid_action.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.action_selection_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_ACTION_SELECTION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate6_negative_missing_information_gain",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ction\": \"ASK_CLARIFYING_QUESTION\",\n    \"oracle_expected_utility\": 1.1,\n    \"planning_regret\": null,\n    \"realized_information_gain\": 0.4,\n    \"realized_social_cost\": 0.1,\n    \"realized_task_reward\": 0.8,\n    \"selected_action\": \"ASK_CLARIFYING_QUESTION\",\n    \"selected_expected_utility\": null\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate6-negative-missing_information_gain.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.action_selection_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_ACTION_SELECTION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate6_negative_oracle_not_max",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "{\n    \"oracle_action\": \"WAIT\",\n    \"oracle_expected_utility\": 0.35,\n    \"planning_regret\": 0.0,\n    \"realized_information_gain\": 0.4,\n    \"realized_social_cost\": 0.1,\n    \"realized_task_reward\": 0.8,\n    \"selected_action\": \"ASK_CLARIFYING_QUESTION\",\n    \"selected_expected_utility\": 1.0999999999999999\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate6-negative-oracle_not_max.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.action_selection_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_ACTION_SELECTION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate6_negative_planning_regret_mismatch",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "_action\": \"ASK_CLARIFYING_QUESTION\",\n    \"oracle_expected_utility\": 1.1,\n    \"planning_regret\": 0.7500000000000001,\n    \"realized_information_gain\": 0.05,\n    \"realized_social_cost\": 0.05,\n    \"realized_task_reward\": 0.35,\n    \"selected_action\": \"WAIT\",\n    \"selected_expected_utility\": 0.35\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate6-negative-planning_regret_mismatch.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.action_selection_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_ACTION_SELECTION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate6_negative_scoring_hash_mismatch",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "SK_CLARIFYING_QUESTION\",\n    \"oracle_expected_utility\": 1.1,\n    \"planning_regret\": 0.0,\n    \"realized_information_gain\": 0.4,\n    \"realized_social_cost\": 0.1,\n    \"realized_task_reward\": 0.8,\n    \"selected_action\": \"ASK_CLARIFYING_QUESTION\",\n    \"selected_expected_utility\": 1.0999999999999999\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate6-negative-scoring_hash_mismatch.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.action_selection_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_ACTION_SELECTION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate7_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "n_bundle.json\",\n  \"errors\": [],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"actual_label\": \"TRUE\",\n    \"posterior_actual_probability\": 0.82,\n    \"prior_actual_probability\": 0.7,\n    \"prior_hypothesis_id\": \"gate2-positive-hyp-001\",\n    \"surprise\": 0.35667494393873245\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate7-positive.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.belief_revision_check_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"PASS_TOM_BELIEF_REVISION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate7_negative_canonical_memory_write",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"actual_label\": \"TRUE\",\n    \"posterior_actual_probability\": 0.82,\n    \"prior_actual_probability\": 0.7,\n    \"prior_hypothesis_id\": \"gate2-positive-hyp-001\",\n    \"surprise\": 0.35667494393873245\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate7-negative-canonical_memory_write.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.belief_revision_check_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_BELIEF_REVISION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate7_negative_posterior_bad_sum",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "922b4\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"actual_label\": \"TRUE\",\n    \"posterior_actual_probability\": 0.7,\n    \"prior_actual_probability\": 0.7,\n    \"prior_hypothesis_id\": \"gate2-positive-hyp-001\",\n    \"surprise\": 0.35667494393873245\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate7-negative-posterior_bad_sum.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.belief_revision_check_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_BELIEF_REVISION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate7_negative_prior_not_auditable",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ue\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"actual_label\": \"TRUE\",\n    \"posterior_actual_probability\": 0.82,\n    \"prior_actual_probability\": 0.7,\n    \"prior_hypothesis_id\": \"gate2-positive-hyp-001\",\n    \"surprise\": 0.35667494393873245\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate7-negative-prior_not_auditable.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.belief_revision_check_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_BELIEF_REVISION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate7_negative_prior_overwritten",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "c27e\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"actual_label\": \"TRUE\",\n    \"posterior_actual_probability\": 0.82,\n    \"prior_actual_probability\": 0.7,\n    \"prior_hypothesis_id\": \"gate2-positive-hyp-001\",\n    \"surprise\": 0.35667494393873245\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate7-negative-prior_overwritten.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.belief_revision_check_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_BELIEF_REVISION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate7_negative_scoring_not_pass",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "8692e674\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"actual_label\": \"TRUE\",\n    \"posterior_actual_probability\": 0.82,\n    \"prior_actual_probability\": 0.7,\n    \"prior_hypothesis_id\": \"gate2-positive-hyp-001\",\n    \"surprise\": 0.35667494393873245\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate7-negative-scoring_not_pass.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.belief_revision_check_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate7/negative/scoring_not_pass/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_BELIEF_REVISION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate7_negative_source_memory_write",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "}]\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"actual_label\": \"TRUE\",\n    \"posterior_actual_probability\": 0.82,\n    \"prior_actual_probability\": 0.7,\n    \"prior_hypothesis_id\": \"gate2-positive-hyp-001\",\n    \"surprise\": 0.35667494393873245\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate7-negative-source_memory_write.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.belief_revision_check_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_BELIEF_REVISION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate7_negative_unresolved_prior_hypothesis",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ing-hypothesis\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"actual_label\": null,\n    \"posterior_actual_probability\": null,\n    \"prior_actual_probability\": null,\n    \"prior_hypothesis_id\": \"missing-hypothesis\",\n    \"surprise\": null\n  },\n  \"mocked\": false,\n  \"outcome_reveal_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json\",\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate7-negative-unresolved_prior_hypothesis.json\",\n  \"schema\": \"persona_dream.research.prospective_tom.belief_revision_check_receipt.v1\",\n  \"scoring_receipt_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json\",\n  \"status\": \"BLOCKED_TOM_BELIEF_REVISION\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate8_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "de_effect_violations\": 0,\n    \"trials\": 5\n  },\n  \"created_at\": \"2026-07-21T01:58:00Z\",\n  \"errors\": [],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"epsilon_values\": [\n      0,\n      0.25\n    ],\n    \"fault_containment_rate\": 1.0,\n    \"k_total\": 2,\n    \"lambda_values\": [\n      0,\n      0.5,\n      0.75\n    ],\n    \"pass_k\": 1.0\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate8-positive.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1\",\n  \"status\": \"PASS_TOM_RELIABILITY_SURFACE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate8_negative_blocked_with_side_effect",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ted_at\": \"2026-07-21T01:58:01Z\",\n  \"errors\": [\n    \"trial_0_blocked_with_side_effects:1\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"epsilon_values\": [\n      0,\n      0.25\n    ],\n    \"fault_containment_rate\": 0.0,\n    \"k_total\": 1,\n    \"lambda_values\": [\n      0.5\n    ],\n    \"pass_k\": 1.0\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate8-negative-blocked_with_side_effect.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/negative/blocked_with_side_effect/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:3bf67c2f98ea71822529a3cbd7ed72cd683c21be072dad14fcfac1c2279472a8\",\n  \"schema\": \"persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_RELIABILITY_SURFACE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate8_negative_canonical_memory_write",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "  \"surface_canonical_memory_write_not_false\",\n    \"trial_0_canonical_memory_write_not_false\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"epsilon_values\": [\n      0,\n      0.25\n    ],\n    \"fault_containment_rate\": 1.0,\n    \"k_total\": 1,\n    \"lambda_values\": [\n      0.5\n    ],\n    \"pass_k\": 1.0\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate8-negative-canonical_memory_write.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/negative/canonical_memory_write/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:9a56b41738bad045c8dee6ab2049c55a623547cd8e680b0dffd974199a6c065b\",\n  \"schema\": \"persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_RELIABILITY_SURFACE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate8_negative_continued_unknown_state",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "nknown_state_continued_not_false\",\n    \"surface_missing_repeated_execution_group\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"epsilon_values\": [\n      0,\n      0.25\n    ],\n    \"fault_containment_rate\": 0.0,\n    \"k_total\": 2,\n    \"lambda_values\": [\n      0,\n      0.5\n    ],\n    \"pass_k\": 0.0\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate8-negative-continued_unknown_state.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/negative/continued_unknown_state/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:c59eaae5f2a3bad148a92091750ed87a69631fad5878f25c363cb4f3e482b7ab\",\n  \"schema\": \"persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_RELIABILITY_SURFACE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate8_negative_duplicate_active_state",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "\"created_at\": \"2026-07-21T01:58:01Z\",\n  \"errors\": [\n    \"trial_0_duplicate_active_state:1:0\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"epsilon_values\": [\n      0,\n      0.25\n    ],\n    \"fault_containment_rate\": 1.0,\n    \"k_total\": 1,\n    \"lambda_values\": [\n      0.5\n    ],\n    \"pass_k\": 1.0\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate8-negative-duplicate_active_state.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/negative/duplicate_active_state/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:17858aa7b77a13cdc04b37a488224d2b0c16df0762d478845e5717505b2d25eb\",\n  \"schema\": \"persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_RELIABILITY_SURFACE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate8_negative_missing_fault_injection",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ated_at\": \"2026-07-21T01:58:01Z\",\n  \"errors\": [\n    \"surface_missing_fault_injection_trial\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"epsilon_values\": [\n      0,\n      0.25\n    ],\n    \"fault_containment_rate\": null,\n    \"k_total\": 2,\n    \"lambda_values\": [\n      0\n    ],\n    \"pass_k\": 1.0\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate8-negative-missing_fault_injection.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/negative/missing_fault_injection/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:73b77ad6a5c1fe6873bc64204e808c961590404cddaa9aa98b19b0bc96477f7a\",\n  \"schema\": \"persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_RELIABILITY_SURFACE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate8_negative_quarantined_active_partial",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "T01:58:01Z\",\n  \"errors\": [\n    \"trial_0_quarantined_with_active_or_side_effect_state:0:True\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"epsilon_values\": [\n      0.25\n    ],\n    \"fault_containment_rate\": 0.0,\n    \"k_total\": 1,\n    \"lambda_values\": [\n      0.75\n    ],\n    \"pass_k\": 1.0\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate8-negative-quarantined_active_partial.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/negative/quarantined_active_partial/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:c64749f737f89f6e7d6ce2e9eb43042124e75de1cce7107dde69aa94543bf6a4\",\n  \"schema\": \"persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_RELIABILITY_SURFACE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate8_negative_recovered_divergent_hash",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n    \"surface_missing_fault_injection_trial\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"epsilon_values\": [\n      0,\n      0.25\n    ],\n    \"fault_containment_rate\": null,\n    \"k_total\": 2,\n    \"lambda_values\": [\n      0\n    ],\n    \"pass_k\": 1.0\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate8-negative-recovered_divergent_hash.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/negative/recovered_divergent_hash/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:b897c652ee60104ddda4cde93b2113d91c21d2f46ff00b79c5499057d3d5a4b2\",\n  \"schema\": \"persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_RELIABILITY_SURFACE\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "gate9_positive",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "01Z\",\n  \"errors\": [],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"causal_confidence\": 1.0,\n    \"first_divergent_receipt_id\": \"receipt-003-load-artifact\",\n    \"localized_cause_type\": \"STALE_ARTIFACT\",\n    \"target_terminal_outcome\": \"QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE\",\n    \"target_trial_id\": \"gate8-trial-fault-stale-artifact-001\"\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-positive.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.causal_replay_check_receipt.v1\",\n  \"status\": \"PASS_TOM_CAUSAL_REPLAY\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate9_negative_canonical_memory_write",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"causal_confidence\": 1.0,\n    \"first_divergent_receipt_id\": \"receipt-003-load-artifact\",\n    \"localized_cause_type\": \"STALE_ARTIFACT\",\n    \"target_terminal_outcome\": \"QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE\",\n    \"target_trial_id\": \"gate8-trial-fault-stale-artifact-001\"\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-negative-canonical_memory_write.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.causal_replay_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_CAUSAL_REPLAY\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate9_negative_comparison_missing",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"causal_confidence\": 1.0,\n    \"first_divergent_receipt_id\": \"receipt-003-load-artifact\",\n    \"localized_cause_type\": \"STALE_ARTIFACT\",\n    \"target_terminal_outcome\": \"QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE\",\n    \"target_trial_id\": \"gate8-trial-fault-stale-artifact-001\"\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-negative-comparison_missing.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.causal_replay_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_CAUSAL_REPLAY\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate9_negative_continued_unknown_state",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "xture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"causal_confidence\": 1.0,\n    \"first_divergent_receipt_id\": \"receipt-003-load-artifact\",\n    \"localized_cause_type\": \"STALE_ARTIFACT\",\n    \"target_terminal_outcome\": \"QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE\",\n    \"target_trial_id\": \"gate8-trial-fault-stale-artifact-001\"\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-negative-continued_unknown_state.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.causal_replay_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_CAUSAL_REPLAY\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate9_negative_missing_first_divergence",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "ifact:None\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"causal_confidence\": 1.0,\n    \"first_divergent_receipt_id\": null,\n    \"localized_cause_type\": \"STALE_ARTIFACT\",\n    \"target_terminal_outcome\": \"QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE\",\n    \"target_trial_id\": \"gate8-trial-fault-stale-artifact-001\"\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-negative-missing_first_divergence.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.causal_replay_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_CAUSAL_REPLAY\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate9_negative_replay_from_wrong_boundary",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "re_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"causal_confidence\": 1.0,\n    \"first_divergent_receipt_id\": \"receipt-003-load-artifact\",\n    \"localized_cause_type\": \"STALE_ARTIFACT\",\n    \"target_terminal_outcome\": \"QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE\",\n    \"target_trial_id\": \"gate8-trial-fault-stale-artifact-001\"\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-negative-replay_from_wrong_boundary.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.causal_replay_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_CAUSAL_REPLAY\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate9_negative_suspect_tool_return_not_removed_or_replaced",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"causal_confidence\": 1.0,\n    \"first_divergent_receipt_id\": \"receipt-003-load-artifact\",\n    \"localized_cause_type\": \"STALE_ARTIFACT\",\n    \"target_terminal_outcome\": \"QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE\",\n    \"target_trial_id\": \"gate8-trial-fault-stale-artifact-001\"\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-negative-suspect_tool_return_not_removed_or_replaced.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.causal_replay_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_CAUSAL_REPLAY\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 1,
+      "name": "gate9_negative_unresolved_reliability_trial",
+      "returncode": 1,
+      "stderr_tail": "",
+      "stdout_tail": "rial:gate8-trial-does-not-exist\"\n  ],\n  \"fixture_backed\": true,\n  \"live\": false,\n  \"memory_write_attempts\": 0,\n  \"metrics\": {\n    \"causal_confidence\": 1.0,\n    \"first_divergent_receipt_id\": \"receipt-003-load-artifact\",\n    \"localized_cause_type\": \"STALE_ARTIFACT\",\n    \"target_terminal_outcome\": null,\n    \"target_trial_id\": \"gate8-trial-does-not-exist\"\n  },\n  \"mocked\": false,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-pctom-gate9-final-20260721T015757Z/receipts/gate9-negative-unresolved_reliability_trial.json\",\n  \"reliability_surface_path\": \"/tmp/agent-skills-pctom-gate9-20260721T014902Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json\",\n  \"reliability_surface_sha256\": \"sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1\",\n  \"schema\": \"persona_dream.research.prospective_tom.causal_replay_check_receipt.v1\",\n  \"status\": \"BLOCKED_TOM_CAUSAL_REPLAY\",\n  \"tau_call_attempts\": 0\n}\n"
+    },
+    {
+      "expected": 0,
+      "name": "git_diff_check",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    }
+  ],
+  "expected_negative_failures": 58,
+  "json_files_parsed": 101,
+  "python_files_ast_parsed": 11,
+  "unexpected_failures": []
+}

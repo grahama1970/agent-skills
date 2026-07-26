@@ -1,0 +1,649 @@
+{
+  "action_index_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_action_selection/artifacts/live_condition_action_decisions.json",
+  "action_index_sha256": "sha256:a7abdad667633fc8ed07406fab69788f846d33dcfd71343bbf43c80bce4d449f",
+  "base_live_tau_replication_receipt": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_replication_receipt.v1.json",
+  "base_live_tau_replication_receipt_sha256": "sha256:a57e9d2d963d5e1513cd3615293a0c223cf601240beea17e8513d5cf58005583",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_is_full64_live_tau": true,
+    "base_receipt_passed": true,
+    "confidence_receipt_passed": true,
+    "diagnostic_conclusion_supported": true,
+    "diagnostic_identifies_broad_but_uncertain_signal": true,
+    "diagnostic_identifies_sparse_family_concentrated_signal": false,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "nonzero_deltas_are_family_concentrated": false,
+    "planning_ci_crosses_zero": true,
+    "planning_rows_cover_64_episodes": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "confidence-bounded planning-regret benefit",
+      "planning benefit under repeated live Tau seeds",
+      "planning benefit under a larger or differently balanced sealed-test corpus",
+      "production retry machinery",
+      "live Memory recall in the sealed-test loop",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "the accepted full64 live Tau action decisions were consumed without reexecuting Tau",
+      "the planning-regret confidence interval crosses zero",
+      "the planning diagnostic conclusion is BROAD_BUT_UNCERTAIN_SIGNAL",
+      "the planning signal contains 39 ties, 14 beneficial deltas, and 11 harmful deltas",
+      "nonzero planning-regret deltas appear in 3 scenario families",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "confidence_root": "/tmp/persona-dream-live-tau-full64-statistical-confidence-gate0-20260722T015400Z",
+  "counts": {
+    "benefit_count": 14,
+    "episodes": 64,
+    "harm_count": 11,
+    "nonzero_count": 25,
+    "nonzero_families": [
+      "coord-conflict",
+      "pref-desire",
+      "trust-commit"
+    ],
+    "tie_count": 39
+  },
+  "created_at": "2026-07-22T01:55:09Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "diagnostic_conclusion": "BROAD_BUT_UNCERTAIN_SIGNAL",
+  "diagnostic_summary_path": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-gate0-r2-20260722T015509Z/artifacts/planning_diagnostic_summary.json",
+  "diagnostic_summary_sha256": "sha256:713637761b022c2799c7ab4b165e16841b29d3da9abea96e41a095ba65072cc9",
+  "errors": [],
+  "fixture_backed": false,
+  "full64_statistical_confidence_receipt": "/tmp/persona-dream-live-tau-full64-statistical-confidence-gate0-20260722T015400Z/live_tau_full64_statistical_confidence_receipt.v1.json",
+  "full64_statistical_confidence_receipt_sha256": "sha256:9a455861c2607f49c58b56049c3e0480571da67a8cdfbc634f1c7a5149365661",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "base_live_tau_replication_receipt_sha256": "sha256:a57e9d2d963d5e1513cd3615293a0c223cf601240beea17e8513d5cf58005583",
+    "diagnostic_conclusion": "BROAD_BUT_UNCERTAIN_SIGNAL",
+    "full64_statistical_confidence_receipt_sha256": "sha256:9a455861c2607f49c58b56049c3e0480571da67a8cdfbc634f1c7a5149365661",
+    "interpretation": {
+      "benefit_count": 14,
+      "confidence_bounded_planning_benefit": false,
+      "harm_count": 11,
+      "next_planning_evidence_needed": "repeat the full64 live Tau run across seeds or expand the corpus/action policy because beneficial and harmful deltas are spread across families",
+      "nonzero_count": 25,
+      "nonzero_families": [
+        "coord-conflict",
+        "pref-desire",
+        "trust-commit"
+      ],
+      "planning_point_estimate_is_negative": true,
+      "reason_ci_crosses_zero": "39 of 64 paired planning-regret deltas are ties; 14 are beneficial, 11 are harmful, and nonzero deltas appear in coord-conflict, pref-desire, trust-commit",
+      "tie_count": 39
+    },
+    "planning_ci_crosses_zero": true,
+    "planning_regret_ci": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:58d30f6da71d8fc8fe46e4791505a912becb61208c99bca075622cc3d85d303f",
+      "lower": -0.19533203124999998,
+      "mean": -0.09531250000000001,
+      "samples": 10000,
+      "seed": 20260723,
+      "upper": 0.0031249999999999997
+    },
+    "schema": "persona_dream.research.prospective_tom.live_tau_full64_planning_diagnostic_summary.v1",
+    "summary": {
+      "baseline_actions": {
+        "ASK_CLARIFYING_QUESTION": 18,
+        "SET_BOUNDARY": 16,
+        "WAIT": 30
+      },
+      "cd_actions": {
+        "ASK_CLARIFYING_QUESTION": 33,
+        "OFFER_COOPERATION": 6,
+        "WAIT": 25
+      },
+      "delta_counts": {
+        "-0.5499999999999999": 4,
+        "-0.8500000000000001": 10,
+        "0.0": 39,
+        "0.25": 6,
+        "0.30000000000000016": 1,
+        "0.5499999999999999": 2,
+        "0.8500000000000001": 2
+      },
+      "direction_counts": {
+        "BENEFIT": 14,
+        "HARM": 11,
+        "TIE": 39
+      },
+      "episodes": 64,
+      "families": {
+        "coord-conflict": {
+          "baseline_actions": {
+            "WAIT": 16
+          },
+          "cd_actions": {
+            "OFFER_COOPERATION": 6,
+            "WAIT": 10
+          },
+          "delta_counts": {
+            "-0.5499999999999999": 3,
+            "0.0": 10,
+            "0.30000000000000016": 1,
+            "0.8500000000000001": 2
+          },
+          "direction_counts": {
+            "BENEFIT": 3,
+            "HARM": 3,
+            "TIE": 10
+          },
+          "episodes": 16,
+          "mean_cd_minus_baseline": 0.021875000000000033,
+          "oracle_actions": {
+            "DISCLOSE_INFORMATION": 5,
+            "OFFER_COOPERATION": 5,
+            "WAIT": 6
+          }
+        },
+        "info-asym": {
+          "baseline_actions": {
+            "ASK_CLARIFYING_QUESTION": 16
+          },
+          "cd_actions": {
+            "ASK_CLARIFYING_QUESTION": 16
+          },
+          "delta_counts": {
+            "0.0": 16
+          },
+          "direction_counts": {
+            "TIE": 16
+          },
+          "episodes": 16,
+          "mean_cd_minus_baseline": 0.0,
+          "oracle_actions": {
+            "ASK_CLARIFYING_QUESTION": 16
+          }
+        },
+        "pref-desire": {
+          "baseline_actions": {
+            "ASK_CLARIFYING_QUESTION": 2,
+            "WAIT": 14
+          },
+          "cd_actions": {
+            "ASK_CLARIFYING_QUESTION": 1,
+            "WAIT": 15
+          },
+          "delta_counts": {
+            "-0.5499999999999999": 1,
+            "0.0": 13,
+            "0.5499999999999999": 2
+          },
+          "direction_counts": {
+            "BENEFIT": 1,
+            "HARM": 2,
+            "TIE": 13
+          },
+          "episodes": 16,
+          "mean_cd_minus_baseline": 0.034374999999999996,
+          "oracle_actions": {
+            "ASK_CLARIFYING_QUESTION": 10,
+            "WAIT": 6
+          }
+        },
+        "trust-commit": {
+          "baseline_actions": {
+            "SET_BOUNDARY": 16
+          },
+          "cd_actions": {
+            "ASK_CLARIFYING_QUESTION": 16
+          },
+          "delta_counts": {
+            "-0.8500000000000001": 10,
+            "0.25": 6
+          },
+          "direction_counts": {
+            "BENEFIT": 10,
+            "HARM": 6
+          },
+          "episodes": 16,
+          "mean_cd_minus_baseline": -0.43750000000000006,
+          "oracle_actions": {
+            "ASK_CLARIFYING_QUESTION": 10,
+            "SET_BOUNDARY": 6
+          }
+        }
+      },
+      "mean_cd_minus_baseline": -0.09531250000000001,
+      "nonzero_delta_rows": [
+        {
+          "baseline_action": "WAIT",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.5499999999999999,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "OFFER_COOPERATION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.5499999999999999,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-coord-conflict-02",
+          "family": "coord-conflict",
+          "oracle_action": "OFFER_COOPERATION"
+        },
+        {
+          "baseline_action": "WAIT",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.5499999999999999,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "OFFER_COOPERATION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.5499999999999999,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-coord-conflict-05",
+          "family": "coord-conflict",
+          "oracle_action": "OFFER_COOPERATION"
+        },
+        {
+          "baseline_action": "WAIT",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.5499999999999999,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "OFFER_COOPERATION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.30000000000000016,
+          "cd_regret": 0.8500000000000001,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-coord-conflict-09",
+          "family": "coord-conflict",
+          "oracle_action": "DISCLOSE_INFORMATION"
+        },
+        {
+          "baseline_action": "WAIT",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "OFFER_COOPERATION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.8500000000000001,
+          "cd_regret": 0.8500000000000001,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-coord-conflict-10",
+          "family": "coord-conflict",
+          "oracle_action": "WAIT"
+        },
+        {
+          "baseline_action": "WAIT",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.5499999999999999,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "OFFER_COOPERATION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.5499999999999999,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-coord-conflict-11",
+          "family": "coord-conflict",
+          "oracle_action": "OFFER_COOPERATION"
+        },
+        {
+          "baseline_action": "WAIT",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "OFFER_COOPERATION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.8500000000000001,
+          "cd_regret": 0.8500000000000001,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-coord-conflict-13",
+          "family": "coord-conflict",
+          "oracle_action": "WAIT"
+        },
+        {
+          "baseline_action": "ASK_CLARIFYING_QUESTION",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "WAIT",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.5499999999999999,
+          "cd_regret": 0.5499999999999999,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-pref-desire-02",
+          "family": "pref-desire",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "ASK_CLARIFYING_QUESTION",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "WAIT",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.5499999999999999,
+          "cd_regret": 0.5499999999999999,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-pref-desire-08",
+          "family": "pref-desire",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "WAIT",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.5499999999999999,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.5499999999999999,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-pref-desire-12",
+          "family": "pref-desire",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.25,
+          "cd_regret": 0.25,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-trust-commit-01",
+          "family": "trust-commit",
+          "oracle_action": "SET_BOUNDARY"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-02",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-03",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.25,
+          "cd_regret": 0.25,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-trust-commit-04",
+          "family": "trust-commit",
+          "oracle_action": "SET_BOUNDARY"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-05",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-06",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.25,
+          "cd_regret": 0.25,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-trust-commit-07",
+          "family": "trust-commit",
+          "oracle_action": "SET_BOUNDARY"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-08",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-09",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.25,
+          "cd_regret": 0.25,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-trust-commit-10",
+          "family": "trust-commit",
+          "oracle_action": "SET_BOUNDARY"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-11",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-12",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.25,
+          "cd_regret": 0.25,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-trust-commit-13",
+          "family": "trust-commit",
+          "oracle_action": "SET_BOUNDARY"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-14",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": false,
+          "baseline_regret": 0.8500000000000001,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": true,
+          "cd_minus_baseline": -0.8500000000000001,
+          "cd_regret": 0.0,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "BENEFIT",
+          "episode_id": "sealedte-trust-commit-15",
+          "family": "trust-commit",
+          "oracle_action": "ASK_CLARIFYING_QUESTION"
+        },
+        {
+          "baseline_action": "SET_BOUNDARY",
+          "baseline_condition": "M",
+          "baseline_matches_oracle": true,
+          "baseline_regret": 0.0,
+          "baseline_source_status": "PASS_TOM_ACTION_SELECTION",
+          "cd_action": "ASK_CLARIFYING_QUESTION",
+          "cd_matches_oracle": false,
+          "cd_minus_baseline": 0.25,
+          "cd_regret": 0.25,
+          "cd_source_status": "PASS_TOM_ACTION_SELECTION",
+          "direction": "HARM",
+          "episode_id": "sealedte-trust-commit-16",
+          "family": "trust-commit",
+          "oracle_action": "SET_BOUNDARY"
+        }
+      ],
+      "oracle_actions": {
+        "ASK_CLARIFYING_QUESTION": 36,
+        "DISCLOSE_INFORMATION": 5,
+        "OFFER_COOPERATION": 5,
+        "SET_BOUNDARY": 6,
+        "WAIT": 12
+      }
+    }
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-gate0-r2-20260722T015509Z",
+  "planning_benefit_with_confidence": false,
+  "planning_ci_crosses_zero": true,
+  "planning_rows_path": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-gate0-r2-20260722T015509Z/artifacts/planning_delta_rows.json",
+  "planning_rows_sha256": "sha256:65f9ac0972e4dcb3d3470b5edc05f8f5333175d2a86be2a2621767c2b4efac75",
+  "processing_time_s": 0.005,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-gate0-r2-20260722T015509Z/live_tau_full64_planning_diagnostic_receipt.v1.json",
+  "receipt_sha256": "sha256:e81720ca722343d8a8246b2277d43bde5a3d4f0695be8adddd5c9964fea616b9",
+  "schema": "persona_dream.research.prospective_tom.live_tau_full64_planning_diagnostic_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_FULL64_PLANNING_DIAGNOSTIC",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0
+}

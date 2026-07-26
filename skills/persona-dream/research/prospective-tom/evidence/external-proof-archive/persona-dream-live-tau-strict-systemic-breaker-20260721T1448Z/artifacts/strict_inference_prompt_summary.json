@@ -1,0 +1,31 @@
+{
+  "action_receipt_sha256": null,
+  "condition_receipt_sha256": "sha256:03c0b4f7edb0e5ec3905939d9469817da082e87c4f865d3dc213db2ca77aaf01",
+  "distribution_summary": {
+    "blocked_case_count": 16,
+    "non_template_distribution_count": 0,
+    "template_counts": {},
+    "template_distribution_count": 0,
+    "top_predicted_action_counts": {}
+  },
+  "episodes_per_family": 24,
+  "family_episode_limit": 1,
+  "planning_summary": {
+    "action_switch_count": 0,
+    "direction_counts": {},
+    "episodes": 0,
+    "episodes_per_family": {},
+    "families": [],
+    "mean_cd_minus_baseline": null,
+    "nonzero_delta_count": 0,
+    "oracle_match_transitions": {},
+    "planning_benefit_with_confidence": false,
+    "planning_regret_ci": null,
+    "row_pattern_sha256": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "policy_id": "strict_inference_prompt_no_template_probabilities.v1",
+  "schema": "persona_dream.research.prospective_tom.strict_inference_prompt_summary.v1",
+  "split": "sealed_test",
+  "variant_max": 17,
+  "variant_min": 17
+}

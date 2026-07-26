@@ -1,0 +1,138 @@
+{
+  "action_set": [
+    "ASK_CLARIFYING_QUESTION",
+    "WAIT",
+    "DISCLOSE_INFORMATION",
+    "OFFER_COOPERATION",
+    "SET_BOUNDARY",
+    "ACT_INDEPENDENTLY",
+    "ABSTAIN"
+  ],
+  "base_receipt": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "base_receipt_sha256": "sha256:4e02a9626ce67aa85b57d331f5febee73bae0ef2e1baa2fa84c969820e252114",
+  "base_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_receipt_hash_recomputed": true,
+    "base_receipt_passed": false,
+    "conditions_represented": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "reward_or_regret_scores_recomputed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "held-out statistical prediction benefit",
+      "planning benefit over the strongest baseline",
+      "longitudinal recall after action-linked belief revision",
+      "real external service fault injection",
+      "production retry machinery",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video or semantic dream quality"
+    ],
+    "proves": [
+      "the action-selection bridge failed closed before claiming Gate 6 live-originated planning evidence"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_cases_written": 30,
+    "action_decisions_per_condition": {
+      "CD": 8,
+      "D": 7,
+      "M": 8,
+      "R": 7
+    },
+    "base_cases": 32,
+    "base_tau_call_attempts": 32,
+    "cases_seen": 32,
+    "deterministic_reward_or_regret_scores_per_condition": {
+      "CD": 8,
+      "D": 7,
+      "M": 8,
+      "R": 7
+    },
+    "individual_status_counts": {
+      "PASS_TOM_ACTION_SELECTION": 30
+    }
+  },
+  "created_at": "2026-07-21T16:27:08Z",
+  "decision_index": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_action_selection/artifacts/live_condition_action_decisions.json",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [
+    "base_status_mismatch:BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON:PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+    "case_index_1_tau_not_pass:BLOCKED:True",
+    "case_index_2_tau_not_pass:BLOCKED:True"
+  ],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "mean_planning_regret_by_condition": {
+      "CD": 0.24375,
+      "D": 0.2785714285714286,
+      "M": 0.24375,
+      "R": 0.2785714285714286
+    },
+    "selected_actions_by_condition": {
+      "CD": [
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "WAIT",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "WAIT",
+        "WAIT"
+      ],
+      "D": [
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "WAIT",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "WAIT",
+        "WAIT"
+      ],
+      "M": [
+        "ASK_CLARIFYING_QUESTION",
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "WAIT",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "WAIT",
+        "WAIT"
+      ],
+      "R": [
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "WAIT",
+        "SET_BOUNDARY",
+        "SET_BOUNDARY",
+        "WAIT",
+        "WAIT"
+      ]
+    }
+  },
+  "mocked": false,
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "output_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_action_selection",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_condition_action_selection_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "BLOCKED_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION",
+  "tau_call_attempts": 0
+}

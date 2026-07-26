@@ -1,0 +1,54 @@
+{
+  "action_receipt_sha256": "sha256:c7d372099eaed70b1a49c2103a92fb6d27c9bf8e77e101e1d9a6691088e2279f",
+  "comparisons": {
+    "action_brier": {
+      "cd_minus_strongest_baseline": -0.0008531250000000101,
+      "cd_value": 0.6650468749999999,
+      "lower_is_better": true,
+      "metric": "action_brier",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_value": 0.6658999999999999
+    },
+    "belief_brier": {
+      "cd_minus_strongest_baseline": -0.01830156249999998,
+      "cd_value": 0.39669843750000006,
+      "lower_is_better": true,
+      "metric": "belief_brier",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_value": 0.41500000000000004
+    },
+    "planning_regret": {
+      "cd_minus_strongest_baseline": -0.03593750000000001,
+      "cd_value": 0.26875,
+      "lower_is_better": true,
+      "metric": "planning_regret",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_value": 0.3046875
+    }
+  },
+  "condition_means": {
+    "action_brier": {
+      "CD": 0.6650468749999999,
+      "D": 0.6658999999999999,
+      "M": 0.6658999999999999,
+      "R": 0.6658999999999999
+    },
+    "belief_brier": {
+      "CD": 0.39669843750000006,
+      "D": 0.41500000000000004,
+      "M": 0.41500000000000004,
+      "R": 0.41500000000000004
+    },
+    "planning_regret": {
+      "CD": 0.26875,
+      "D": 0.3046875,
+      "M": 0.3046875,
+      "R": 0.3046875
+    }
+  },
+  "condition_receipt_sha256": "sha256:b0fadfdb6ae2797f6d5611ee0fb4edd38f034c04e95b00815df211359ff9dbbe",
+  "episode_limit": 64,
+  "full_64_episode_replication": true,
+  "schema": "persona_dream.research.prospective_tom.live_tau_sealed_test_replication_summary.v1",
+  "split": "sealed_test"
+}

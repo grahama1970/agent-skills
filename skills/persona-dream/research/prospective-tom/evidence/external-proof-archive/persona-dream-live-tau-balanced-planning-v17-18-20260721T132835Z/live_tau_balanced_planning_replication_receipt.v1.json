@@ -1,0 +1,164 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_selection_receipt_passed": true,
+    "all_conditions_have_expected_action_counts": true,
+    "all_four_families_selected": false,
+    "balanced_family_counts": false,
+    "condition_receipt_passed": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "planning_rows_cover_expected_episodes": true,
+    "tau_receipts_hash_bound": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "confidence-bounded planning benefit",
+      "live Memory recall in the sealed-test loop",
+      "permanently deployed external production retry service",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "the balanced live Tau planning replication failed closed before accepting a balanced planning claim"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 8,
+      "D": 8,
+      "M": 8,
+      "R": 8
+    },
+    "action_switch_count": 0,
+    "cases": 32,
+    "episodes": 8,
+    "episodes_per_family": {
+      "information_asymmetry_false_belief": 2,
+      "preference_desire_uncertainty": 2,
+      "trust_commitment_relationship": 2,
+      "unknown": 2
+    },
+    "families": [
+      "information_asymmetry_false_belief",
+      "preference_desire_uncertainty",
+      "trust_commitment_relationship",
+      "unknown"
+    ],
+    "nonzero_delta_count": 0,
+    "oracle_match_transitions": {
+      "UNCHANGED": 8
+    },
+    "planning_regret_scores_per_condition": {
+      "CD": 8,
+      "D": 8,
+      "M": 8,
+      "R": 8
+    }
+  },
+  "created_at": "2026-07-21T13:54:03Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episodes_per_family": 24,
+  "errors": [
+    "planning_families_mismatch:['information_asymmetry_false_belief', 'preference_desire_uncertainty', 'trust_commitment_relationship', 'unknown']",
+    "planning_family_count_mismatch:coordination_conflict:None:2"
+  ],
+  "family_episode_limit": 2,
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_action_selection_receipt": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/live_tau_balanced_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "live_tau_action_selection_receipt_sha256": "sha256:1cd02c27df839b8f08c5b4ba7435377a156f7e6310a5d9b108326e6e9113344d",
+  "live_tau_condition_comparison_receipt": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/live_tau_balanced_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "live_tau_condition_comparison_receipt_sha256": "sha256:d2ce252dc180edfd847379d6188f19667f77e0fd0b633ea83828e659f83c34ec",
+  "live_tau_reexecuted": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "action_receipt_sha256": "sha256:1cd02c27df839b8f08c5b4ba7435377a156f7e6310a5d9b108326e6e9113344d",
+    "comparison": {
+      "cd_minus_strongest_baseline": 0.0,
+      "cd_value": 0.4875,
+      "lower_is_better": true,
+      "metric": "planning_regret",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_value": 0.4875
+    },
+    "condition_receipt_sha256": "sha256:d2ce252dc180edfd847379d6188f19667f77e0fd0b633ea83828e659f83c34ec",
+    "condition_regret_means": {
+      "CD": 0.4875,
+      "D": 0.4875,
+      "M": 0.4875,
+      "R": 0.4875
+    },
+    "episodes_per_family": 24,
+    "family_episode_limit": 2,
+    "planning_summary": {
+      "action_switch_count": 0,
+      "direction_counts": {
+        "TIE": 8
+      },
+      "episodes": 8,
+      "episodes_per_family": {
+        "information_asymmetry_false_belief": 2,
+        "preference_desire_uncertainty": 2,
+        "trust_commitment_relationship": 2,
+        "unknown": 2
+      },
+      "families": [
+        "information_asymmetry_false_belief",
+        "preference_desire_uncertainty",
+        "trust_commitment_relationship",
+        "unknown"
+      ],
+      "mean_cd_minus_baseline": 0.0,
+      "nonzero_delta_count": 0,
+      "oracle_match_transitions": {
+        "UNCHANGED": 8
+      },
+      "planning_benefit_with_confidence": false,
+      "planning_regret_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:8ba92bb4f9a9048ee1ba4aba43e0830530748217873afeeb3cb0483e43bf2f98",
+        "lower": 0.0,
+        "mean": 0.0,
+        "samples": 2000,
+        "seed": 20260726,
+        "upper": 0.0
+      },
+      "row_pattern_sha256": "sha256:7b66990d2e463f15eab5ee0c4e60e16bab096e36e006b6ce135395c9974a0a86"
+    },
+    "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_summary.v1",
+    "split": "sealed_test",
+    "variant_max": 18,
+    "variant_min": 17
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z",
+  "planning_benefit_with_confidence": false,
+  "planning_rows_path": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/artifacts/balanced_planning_rows.json",
+  "planning_rows_sha256": "sha256:238d9eed0c8852b794e53648efe020db6be41b9d6ddd68d5d23dffaffe6da3ce",
+  "processing_time_s": 1527.671,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/live_tau_balanced_planning_replication_receipt.v1.json",
+  "receipt_sha256": "sha256:731bbbd56d3b63fbb4922c0f60247594f650530c1bb1fdae1ddb65ce300208f3",
+  "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_replication_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "BLOCKED_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION",
+  "summary_path": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/artifacts/live_tau_balanced_planning_summary.json",
+  "summary_sha256": "sha256:dc74580544b1c96716da2bf8a2aff0b393f32e614ccc516887b109dfcf995c5a",
+  "tau_call_attempts": 32,
+  "tau_live_call_performed": 32,
+  "variant_max": 18,
+  "variant_min": 17
+}

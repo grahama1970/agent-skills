@@ -1,0 +1,111 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "counts": {
+    "action_switch_count": 4,
+    "direction_counts": {
+      "BENEFIT": 2,
+      "HARM": 2,
+      "TIE": 4
+    },
+    "nonzero_action_switch_count": 4,
+    "nonzero_delta_count": 4,
+    "oracle_match_transitions": {
+      "GAIN": 2,
+      "LOSS": 2,
+      "UNCHANGED": 4
+    },
+    "passed_seed_receipts": 2,
+    "seed_receipts": 2,
+    "total_cases": 32,
+    "total_planning_rows": 8,
+    "total_tau_call_attempts": 32
+  },
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_receipts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "planning": {
+    "mean_cd_minus_baseline": -0.15000000000000002,
+    "planning_benefit_with_confidence": false,
+    "planning_regret_ci": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:a5897646ada1437f954f72b6a65adbafa031f149784884ca010b03b66f27a5ea",
+      "lower": -0.42500000000000004,
+      "mean": -0.15000000000000002,
+      "samples": 10000,
+      "seed": 20260725,
+      "upper": 0.125
+    }
+  },
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.live_tau_trust_commit_repeated_seed_summary.v1",
+  "source_memory_write_attempts": 0,
+  "source_receipt_hashes_sha256": "sha256:4c0e809c5b03f2a92f857e64300fb0d391c5652fba1fa212f5167a4420e58533",
+  "source_receipts": [
+    {
+      "action_switch_count": 2,
+      "cases": 16,
+      "declared_receipt_sha256": "sha256:5f48744ff53af7104c0e1f9a90b0c20bdc2bd620641a1622754877b9afe1234a",
+      "episodes": 4,
+      "nonzero_delta_count": 2,
+      "oracle_match_transitions": {
+        "GAIN": 1,
+        "LOSS": 1,
+        "UNCHANGED": 2
+      },
+      "output_root": "/tmp/persona-dream-live-tau-trust-commit-replication-floor4-20260721T101929Z",
+      "planning_benefit_with_confidence": false,
+      "planning_mean_cd_minus_baseline": -0.15000000000000002,
+      "planning_regret_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:fba91b47de3d1197013d23ff15580eaabe259de18a2bf2766f7714631a25ff48",
+        "lower": -0.6375000000000001,
+        "mean": -0.15000000000000002,
+        "samples": 10000,
+        "seed": 20260724,
+        "upper": 0.1875
+      },
+      "receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-floor4-20260721T101929Z/live_tau_trust_commit_replication_receipt.v1.json",
+      "receipt_sha256": "sha256:7e72b947a925a4ca8f9ad783d03abcc63887284b204b4f1253b62a191518ee12",
+      "seed_index": 1,
+      "source_errors": [],
+      "status": "PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION",
+      "tau_call_attempts": 16
+    },
+    {
+      "action_switch_count": 2,
+      "cases": 16,
+      "declared_receipt_sha256": "sha256:2adb25523067da6cbc6372daa9512892ec871106d4b429e36c46f369d9ef8a65",
+      "episodes": 4,
+      "nonzero_delta_count": 2,
+      "oracle_match_transitions": {
+        "GAIN": 1,
+        "LOSS": 1,
+        "UNCHANGED": 2
+      },
+      "output_root": "/tmp/persona-dream-live-tau-trust-commit-replication-floor4-repeat2-20260721T103729Z",
+      "planning_benefit_with_confidence": false,
+      "planning_mean_cd_minus_baseline": -0.15000000000000002,
+      "planning_regret_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:fba91b47de3d1197013d23ff15580eaabe259de18a2bf2766f7714631a25ff48",
+        "lower": -0.6375000000000001,
+        "mean": -0.15000000000000002,
+        "samples": 10000,
+        "seed": 20260724,
+        "upper": 0.1875
+      },
+      "receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-floor4-repeat2-20260721T103729Z/live_tau_trust_commit_replication_receipt.v1.json",
+      "receipt_sha256": "sha256:161208530f5be002f23136701c6153a3f9e3ace1a784f1bc2eae151ab8527c97",
+      "seed_index": 2,
+      "source_errors": [],
+      "status": "PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION",
+      "tau_call_attempts": 16
+    }
+  ]
+}

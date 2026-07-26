@@ -1,0 +1,49 @@
+{
+  "checks": {
+    "all_conditions_have_64_action_decisions": true,
+    "all_conditions_have_64_scores": true,
+    "all_conditions_have_64_sealed_commitments": true,
+    "episode_count_is_64": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "planning_confidence_interval_upper_below_zero": false,
+    "primary_confidence_interval_upper_below_zero": true,
+    "primary_metric_is_preregistered": true,
+    "split_is_sealed_test": true,
+    "strongest_baseline_is_allowed": true,
+    "unsupported_writes_absent": true
+  },
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "bootstrap_samples": 2000,
+    "cases": 256,
+    "deterministic_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "episodes_consumed": 64,
+    "families_consumed": 4,
+    "paired_delta_counts": {
+      "action_brier": 64,
+      "belief_brier": 64,
+      "planning_regret": 64
+    },
+    "sealed_commitments_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    }
+  },
+  "receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_statistical_confidence_receipt.v1.json",
+  "receipt_sha256": "sha256:e0163494c88513d4827b160bfc124de82218b3f2caac7bd06124cce448625e27",
+  "root": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z",
+  "status": "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE"
+}

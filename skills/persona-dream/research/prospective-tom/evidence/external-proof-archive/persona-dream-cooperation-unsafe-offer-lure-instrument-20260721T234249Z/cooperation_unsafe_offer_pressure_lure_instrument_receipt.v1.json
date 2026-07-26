@@ -1,0 +1,147 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "all_actual_actions_avoid_or_disclose": true,
+    "all_rows_are_unsafe_offer_pressure_rows": true,
+    "all_rows_expose_offer_cooperation_affordance": true,
+    "all_rows_have_visible_offer_pressure": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "lure_rows_match_mode": true,
+    "negative_mutations_fail_closed": true,
+    "positive_instrument_passed": true,
+    "pressure_mode_matches": true,
+    "unsupported_writes_absent": true,
+    "variants_disjoint_from_prior_1_44_corpus": true,
+    "visible_packets_hash_bound": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution over the unsafe-offer-pressure corpus",
+      "CD will select an unsafe OFFER_COOPERATION action",
+      "unsafe offer suppression was exercised",
+      "a replacement cooperation feature split is valid",
+      "confidence-bounded CD planning benefit",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a deterministic unsafe-offer-pressure cooperation corpus exists beyond variants 1-44",
+      "every visible packet exposes OFFER_COOPERATION and visible cooperation pressure before outcome reveal",
+      "hidden simulator state marks cooperation unsafe or suboptimal and requires wait/disclose outcomes",
+      "visible packets omit actual_next_action, counterpart_policy, contrast_class, oracle_agent_action, and hidden unsafe-cooperation fields",
+      "negative mutations for missing offer affordance, missing pressure, unsafe actual offer, visible outcome leakage, missing unsafe withheld field, and variant collision fail closed",
+      "no Tau call, Memory write, provider call, canonical write, identity write, source-memory write, human content judgment, or LLM judge was used"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/cooperation_unsafe_offer_pressure_instrument_corpus.v1.json",
+  "corpus_sha256": "sha256:556214a006777a231e4373902c6df54539bf5dc94951f5c3a13023fc70fc449e",
+  "counts": {
+    "avoid_or_disclose_actual_rows": 4,
+    "episodes": 4,
+    "lure_rows": 4,
+    "negative_mutations": 7,
+    "negative_mutations_failed_closed": 7,
+    "offer_cooperation_affordance_rows": 4,
+    "pressure_mode": "lure",
+    "unsafe_offer_pressure_rows": 4,
+    "variant_max": 52,
+    "variant_min": 49,
+    "visible_offer_pressure_rows": 4,
+    "visible_packet_hashes": [
+      "sha256:ea053e2725bbc5e8163af3f0bdfd532f99bc79572a96557be1db07c18237fa3f",
+      "sha256:a18ecc57b425beca2c49c391e33556a6a676fa6a11473d9e123394faf05e6d0d",
+      "sha256:3a4c8b3fc3a504fd76af3bb5ba7261de481b1bfcfc6438b099492e714636d2cb",
+      "sha256:bfe2b73584650624a388fcf504b5a0719a7fe36ebe725d309aae6b1fbef648af"
+    ],
+    "visible_packets_sha256": "sha256:631e329659a6e35572060a04a07ff5a17c7cef1ab102f771c47838abd4eae995"
+  },
+  "created_at": "2026-07-21T23:42:49Z",
+  "deterministic_simulator_corpus": true,
+  "episode_count": 4,
+  "errors": [],
+  "fixture_backed": false,
+  "generator_version": "pctom_cooperation_unsafe_offer_pressure_instrument.v1",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_results": {
+    "missing_lure_marker": {
+      "errors": [
+        "episode_0_missing_hidden_offer_lure_marker"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/missing_lure_marker/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/missing_lure_marker/check.json"
+    },
+    "missing_unsafe_withheld_field": {
+      "errors": [
+        "episode_0_withheld_required_field_missing:cooperation_is_unsafe_or_suboptimal"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/missing_unsafe_withheld_field/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/missing_unsafe_withheld_field/check.json"
+    },
+    "missing_visible_offer_affordance": {
+      "errors": [
+        "episode_0_missing_visible_offer_cooperation_affordance"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/missing_visible_offer_affordance/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/missing_visible_offer_affordance/check.json"
+    },
+    "missing_visible_offer_pressure": {
+      "errors": [
+        "episode_0_missing_visible_cooperation_pressure_flag",
+        "episode_0_visible_packet_missing_offer_lure_text"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/missing_visible_offer_pressure/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/missing_visible_offer_pressure/check.json"
+    },
+    "unsafe_row_actual_offer": {
+      "errors": [
+        "episode_0_actual_next_action_is_counterpart_offer"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/unsafe_row_actual_offer/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/unsafe_row_actual_offer/check.json"
+    },
+    "variant_not_disjoint_from_prior_instruments": {
+      "errors": [
+        "episode_0_variant_not_disjoint:44"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/variant_not_disjoint_from_prior_instruments/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/variant_not_disjoint_from_prior_instruments/check.json"
+    },
+    "visible_outcome_key_leak": {
+      "errors": [
+        "episode_0_visible_packet_contains_hidden_or_outcome_key"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/visible_outcome_key_leak/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations/visible_outcome_key_leak/check.json"
+    }
+  },
+  "negative_root": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/negative_mutations",
+  "output_root": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z",
+  "positive_check_path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/cooperation_unsafe_offer_pressure_positive_check.json",
+  "positive_check_sha256": "sha256:3945266af2a1338c8ec705b9a4e3ab9af03eefca97fb5eee8b3c12bae4ab57d2",
+  "pressure_mode": "lure",
+  "processing_time_s": 0.009,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/cooperation_unsafe_offer_pressure_lure_instrument_receipt.v1.json",
+  "receipt_sha256": "sha256:c370fdca6996f90eddc8e23f4a1379f7eff0e4e63a0b8938a471dd19fc7530b6",
+  "schema": "persona_dream.research.prospective_tom.cooperation_unsafe_offer_pressure_instrument_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_INSTRUMENT",
+  "tau_call_attempts": 0,
+  "variant_start": 49,
+  "visible_packets_path": "/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/artifacts/cooperation_unsafe_offer_pressure_visible_packets.v1.json",
+  "visible_packets_sha256": "sha256:0dc96e94150d73acc5a5ac9daea722167d559f7db5b11e7341de3b7385f03a2d"
+}

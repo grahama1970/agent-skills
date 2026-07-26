@@ -1,0 +1,146 @@
+{
+  "base_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "base_receipt_sha256": "sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c",
+  "base_root": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison",
+  "canonical_memory_write_attempts": 0,
+  "causal_replay_receipts": 1,
+  "checks": {
+    "gate8": {
+      "blocked_trials_before_side_effect": true,
+      "has_fault_injection": true,
+      "has_repeated_execution": true,
+      "has_semantic_perturbation": true,
+      "no_canonical_identity_source_writes": true,
+      "no_unknown_state_continuation": true,
+      "quarantined_trials_no_active_partial": true,
+      "recovered_trials_equivalent": true,
+      "retries_do_not_duplicate_active_state": true,
+      "surface_schema_valid": true,
+      "terminal_outcomes_allowed": true
+    },
+    "gate9": {
+      "causal_failure_localization_written": true,
+      "counterfactual_matches_expected": true,
+      "exactly_one_tool_return_removed_or_replaced": true,
+      "first_divergent_receipt_identified": true,
+      "no_canonical_identity_source_writes": true,
+      "no_unknown_state_continuation": true,
+      "replay_schema_valid": true,
+      "replay_starts_at_first_divergence": true,
+      "state_comparison_present": true,
+      "surface_hash_bound": true,
+      "surface_schema_valid": true,
+      "target_trial_fault_or_divergent": true,
+      "target_trial_resolved": true
+    }
+  },
+  "claims": {
+    "does_not_prove": [
+      "real external service fault injection",
+      "production retry machinery",
+      "held-out test-set prediction benefit",
+      "action-selection regret improvement",
+      "longitudinal recall after revision",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution or video quality"
+    ],
+    "proves": [
+      "a repeated live Tau condition-comparison receipt was consumed as the reliability subject",
+      "Gate 8 accepted repeated, perturbed, and fault-injected condition-runner artifact trials",
+      "required fault families were represented: stale_artifact, missing_graph_edge, malformed_structured_output, interrupted_persistence_or_retry",
+      "terminal outcomes were limited to recovered equivalent state, blocked before side effect, or quarantined with no active partial state",
+      "Gate 9 localized a stale-artifact divergence by replacing one suspected tool return",
+      "no Memory write, provider call, new Tau call, canonical memory write, identity write, source-memory write, duplicate active prediction, duplicate active revision, or human content judgment was required"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "continued_with_unknown_state": 0,
+  "controlled_fault_definition": true,
+  "counts": {
+    "gate8": {
+      "blocked": 2,
+      "equivalent_end_state_trials": 4,
+      "fault_injected_trials": 4,
+      "forbidden_terminal_outcomes": 0,
+      "perturbed_trials": 3,
+      "quarantined": 1,
+      "recovered": 4,
+      "repeat_groups": 5,
+      "side_effect_violations": 0,
+      "trials": 7
+    },
+    "gate9": {
+      "first_divergent_receipts": 1,
+      "forbidden_terminal_outcomes": 0,
+      "forbidden_write_attempts": 0,
+      "localized_causes": 1,
+      "state_comparisons": 1,
+      "suspected_tool_returns": 1,
+      "target_trials": 1
+    }
+  },
+  "created_at": "2026-07-22T03:23:23Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fault_families": [
+    "interrupted_persistence_or_retry",
+    "malformed_structured_output",
+    "missing_graph_edge",
+    "stale_artifact"
+  ],
+  "fixture_backed": false,
+  "gate8_receipt_path": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/receipts/condition_reliability_surface_check_receipt.json",
+  "gate8_status": "PASS_TOM_RELIABILITY_SURFACE",
+  "gate9_receipt_path": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/receipts/condition_causal_replay_check_receipt.json",
+  "gate9_status": "PASS_TOM_CAUSAL_REPLAY",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_repeated_condition_comparison_consumed": true,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "gate8": {
+      "epsilon_values": [
+        0,
+        0.25
+      ],
+      "fault_containment_rate": 1.0,
+      "k_total": 2,
+      "lambda_values": [
+        0,
+        0.5,
+        0.75
+      ],
+      "pass_k": 1.0
+    },
+    "gate9": {
+      "causal_confidence": 1.0,
+      "first_divergent_receipt_id": "condition-live-receipt-004-read-condition-case-index",
+      "localized_cause_type": "STALE_ARTIFACT",
+      "target_terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "target_trial_id": "condition-live-reliability-stale_artifact-001"
+    }
+  },
+  "missing_fault_families": [],
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z",
+  "processing_time_s": 0.012,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json",
+  "replay_path": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/artifacts/condition_causal_replay.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_condition_reliability_bridge_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE",
+  "surface_path": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/artifacts/condition_reliability_surface.json",
+  "tau_call_attempts": 0,
+  "terminal_outcome_counts": {
+    "BLOCKED_BEFORE_SIDE_EFFECT": 2,
+    "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE": 1,
+    "RECOVERED_WITH_EQUIVALENT_END_STATE": 4
+  }
+}

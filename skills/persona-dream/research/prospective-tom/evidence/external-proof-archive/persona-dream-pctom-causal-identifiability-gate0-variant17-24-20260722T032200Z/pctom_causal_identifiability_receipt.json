@@ -1,0 +1,109 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_receipt_passed": true,
+    "condition_receipt_passed": true,
+    "fixed_action_policy_recomputed": true,
+    "human_content_judgment_absent": true,
+    "lineage_100_percent_complete": true,
+    "llm_judge_absent": true,
+    "post_reveal_inputs_not_used_for_commitment": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "that counterfactual dreaming improves prediction or planning",
+      "that every historical PCTOM-R artifact already has complete raw Memory recall attribution",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the fixed action selector can be recomputed from sealed committed next-action distributions",
+      "oracle-aligned and anti-oracle policy projections are compared under the same deterministic utility function",
+      "lineage receipt confirms every evidence reference includes accepted raw source ids and content hashes",
+      "no new Tau, Memory, provider, canonical-memory, identity, or source-memory write was attempted"
+    ]
+  },
+  "counts": {
+    "action_index_rows": 128,
+    "actual_to_anti_oracle_action_switch_count": 53,
+    "actual_to_oracle_action_switch_count": 67,
+    "lineage_complete_rows": 128,
+    "lineage_rows": 128,
+    "sensitivity_rows": 128
+  },
+  "created_at": "2026-07-22T03:20:40Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "lineage_receipt_path": "/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_end_to_end_lineage_receipt.json",
+  "lineage_receipt_sha256": "sha256:28cb8a34fa22b98bb06b4964ab8971afd0592c3e0624b216796a1f61c4f4cdd3",
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "manifest_path": "/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_manifest.json",
+  "manifest_sha256": "sha256:cd1e541c6fc5f58b394743220e07f673292aeb173680da8c747e316baf321b95",
+  "memory_write_attempts": 0,
+  "metrics": {
+    "lineage": {
+      "complete_rows": 128,
+      "evidence_refs_with_accepted_raw_source_id": 384,
+      "evidence_refs_with_raw_source_digest": 384,
+      "incomplete_rows": [],
+      "lineage_completeness": 1.0,
+      "rows": 128,
+      "total_evidence_refs": 384
+    },
+    "policy_sensitivity": {
+      "actual_selected_actions": {
+        "ASK_CLARIFYING_QUESTION": 43,
+        "SET_BOUNDARY": 24,
+        "WAIT": 61
+      },
+      "actual_to_anti_oracle_action_switch_count": 53,
+      "actual_to_oracle_action_switch_count": 67,
+      "actual_to_oracle_regret_delta_mean": -0.325390625,
+      "anti_oracle_minus_actual_regret_delta_mean": 0.18085937500000004,
+      "anti_oracle_selected_actions": {
+        "ASK_CLARIFYING_QUESTION": 48,
+        "DISCLOSE_INFORMATION": 20,
+        "OFFER_COOPERATION": 12,
+        "SET_BOUNDARY": 24,
+        "WAIT": 24
+      },
+      "anti_oracle_worsens_regret_count": 53,
+      "conditions": {
+        "CD": 32,
+        "D": 32,
+        "M": 32,
+        "R": 32
+      },
+      "oracle_improves_regret_count": 67,
+      "oracle_selected_actions": {
+        "ASK_CLARIFYING_QUESTION": 80,
+        "DISCLOSE_INFORMATION": 12,
+        "OFFER_COOPERATION": 12,
+        "SET_BOUNDARY": 8,
+        "WAIT": 16
+      },
+      "rows": 128
+    }
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z",
+  "processing_time_s": 0.081,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json",
+  "receipt_sha256": "sha256:2903066090fdff791feb509c2f5c670af6f2327f3389d9cc899f8a236d8a8032",
+  "schema": "persona_dream.research.prospective_tom.causal_identifiability_gate_receipt.v1",
+  "sensitivity_receipt_path": "/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_oracle_policy_sensitivity_receipt.json",
+  "sensitivity_receipt_sha256": "sha256:830e8a8a1af1ba53f1201fb8eccaf1718277df80e8b3cf629770339b403b466b",
+  "sensitivity_rows_path": "/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_oracle_policy_sensitivity.jsonl",
+  "sensitivity_rows_sha256": "sha256:cd6ed83d230f7813774b9047ccb2424847ee8e8bd18861e0c7b521928487f7da",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE",
+  "tau_call_attempts": 0
+}

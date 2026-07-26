@@ -1,0 +1,215 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution",
+      "all possible future receipts unless they are passed through this audit"
+    ],
+    "proves": [
+      "selected PCTOM-R receipts on this machine explicitly avoid human content judgment or fail closed if such a flag is true",
+      "selected PCTOM-R receipts are not mocked and do not use an LLM judge as a scorer",
+      "the aggregate audit rejects PASS-like evidence when a forbidden human/LLM judgment flag or mocked receipt is introduced"
+    ]
+  },
+  "counts": {
+    "explicit_human_content_judgment_false": 15,
+    "fixture_backed_true": 0,
+    "human_flag_mentions": 15,
+    "human_forbidden_true": 0,
+    "live_false": 3,
+    "live_true": 12,
+    "llm_judge_absent": 4,
+    "llm_judge_false": 11,
+    "llm_judge_mentions": 79,
+    "llm_judge_true": 0,
+    "mocked_false": 15,
+    "mocked_true": 0,
+    "pass_status_receipts": 15,
+    "provider_or_canonical_write_counters": 0,
+    "receipts_seen": 15
+  },
+  "elapsed_s": 0.006821,
+  "errors": [],
+  "expect_receipts": 15,
+  "fixture_backed": false,
+  "generated_at": "2026-07-22T04:57:43Z",
+  "human_content_judgment_required": false,
+  "live": false,
+  "live_originated_artifacts_consumed": true,
+  "llm_judge_used": false,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-autonomous-no-human-judgment-surface-20260722T090000Z",
+  "receipt_path": "/tmp/persona-dream-autonomous-no-human-judgment-surface-20260722T090000Z/autonomous_no_human_judgment_surface_receipt.v1.json",
+  "receipt_sha256": "sha256:374e83a9015a500ca6def7ac8e3dfc5677bdf57331e09f2d8578a8b3cb372b8a",
+  "receipts": [
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_replication_receipt.v1",
+      "sha256": "sha256:0ac24f56252a1bbe59180e04d32ffb78b9702373b29d5e51a4aef32e418b5220",
+      "status": "PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json",
+      "schema": "persona_dream.research.prospective_tom.causal_identifiability_gate_receipt.v1",
+      "sha256": "sha256:82fb21cabda6d2f06ab3a880f30f5db9165a19e6cc27c742486b110bc8f2dae6",
+      "status": "PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": null,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_tau_condition_reliability_bridge_receipt.v1",
+      "sha256": "sha256:0fd7d4c4747d1d3eaa54c47d7d9ab7b93a61cbcd01c4e727b0450c9d4a850c86",
+      "status": "PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": null,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_tau_action_linked_revision_receipt.v1",
+      "sha256": "sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93",
+      "status": "PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": null,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_memory_revision_recall_receipt.v1",
+      "sha256": "sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a",
+      "status": "PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_memory_revision_delayed_recall_receipt.v1",
+      "sha256": "sha256:407bc6471541f5ed0e83766e59db13b9048f8857c51d14d3149e0c3bf350934a",
+      "status": "PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/live_memory_restart_delayed_recall_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_memory_restart_delayed_recall_receipt.v1",
+      "sha256": "sha256:1af7cca4f0070d9890245f382c12393a1a51a9b84806bb3c0bf661015e613792",
+      "status": "PASS_PCTOM_LIVE_MEMORY_RESTART_DELAYED_RECALL"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/live_memory_aged_retention_recall_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_memory_aged_retention_recall_receipt.v1",
+      "sha256": "sha256:d0a93f0d94f511050d5d6049602ff4959888b0e9f03fc3b633f22cf7b73b4d38",
+      "status": "PASS_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_fault_injection_surface_receipt.v1",
+      "sha256": "sha256:0178c7993aa3b9a65bf549dc73d3f98b8566802d45d6673865a217464a81b0bf",
+      "status": "PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json",
+      "schema": "pctom.live_tau_full64.memory_fault_surface_receipt.v1",
+      "sha256": "sha256:e1bce6e0691430bbd923df267220151773c429e0ccf2fb293f74010de46be782",
+      "status": "PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": false,
+      "llm_judge_used": null,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_gate2_4_boundary_negatives_receipt.v1",
+      "sha256": "sha256:4520d043aae50ca0c687264dbcd0da430774f5ea573c9bda7490cbd4b96b5946",
+      "status": "PASS_PCTOM_LIVE_GATE2_4_BOUNDARY_NEGATIVES"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": false,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_gate5_7_boundary_negatives_receipt.v1",
+      "sha256": "sha256:8809d0ce4acfafd55938a2c8362dd3d54b92b7d0cf3db02f1b5a25e25e1f25bf",
+      "status": "PASS_PCTOM_LIVE_GATE5_7_BOUNDARY_NEGATIVES"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z/live_stage_hash_lineage_audit_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.live_stage_hash_lineage_audit_receipt.v1",
+      "sha256": "sha256:28cbf9afddfafedd783f489e16677b7237ed9deafb353f4ec5b9a0d695f0e3ac",
+      "status": "PASS_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": true,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-social-simulator-service-proof-20260722T082000Z/social_simulator_service_proof_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.social_simulator_service_proof_receipt.v1",
+      "sha256": "sha256:d9ce7e14e570081997fe0d29708d4cde258418f068dd6484d880f01e7a6e306e",
+      "status": "PASS_PCTOM_SOCIAL_SIMULATOR_SERVICE_PROOF"
+    },
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": false,
+      "live": false,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-pctom-social-corpus-independent-replay-sealed64-20260722T064500Z/social_episode_independent_replay_receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.social_episode_independent_replay_receipt.v1",
+      "sha256": "sha256:7d225e3dff14eb1ca267466f97eadd16ed1d61d14532703bc023080c46feb997",
+      "status": "PASS_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY"
+    }
+  ],
+  "require_explicit_human_content_judgment_false": true,
+  "schema": "persona_dream.research.prospective_tom.autonomous_no_human_judgment_surface_receipt.v1",
+  "status": "PASS_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE"
+}

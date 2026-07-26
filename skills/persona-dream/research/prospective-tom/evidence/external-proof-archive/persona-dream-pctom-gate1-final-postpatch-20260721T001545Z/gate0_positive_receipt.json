@@ -1,0 +1,100 @@
+{
+  "case_root": "/tmp/agent-skills-pctom-gate1-HLubJv/skills/persona-dream/research/prospective-tom/fixtures/gate0/positive/lineage_ok",
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "semantic dream quality",
+      "future prediction accuracy",
+      "outcome reveal scoring",
+      "belief revision",
+      "pipeline reliability under repeated faults",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "fixture case files mechanically preserve recall receipt to accepted source id to normalized residue to dream branch to sealed prediction lineage",
+      "accepted source-id lists and prediction payload are hash-bound in the fixture case",
+      "the checker fails closed for unresolved or tampered local fixture links"
+    ]
+  },
+  "counts": {
+    "accepted_source_ids": 2,
+    "dream_branches": 2,
+    "normalized_residue": 2,
+    "prediction_branch_links": 2,
+    "prediction_evidence_links": 2,
+    "recall_receipts": 1
+  },
+  "created_at": "2026-07-21T00:15:45Z",
+  "errors": [],
+  "fixture_backed": true,
+  "lineage": {
+    "branch_lineage_links": [
+      {
+        "branch_id": "branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "memory_17"
+      },
+      {
+        "branch_id": "branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "memory_42"
+      },
+      {
+        "branch_id": "branch-cf-ask-0001",
+        "scope": "persona-dream",
+        "source_id": "memory_17"
+      }
+    ],
+    "prediction_branch_links": [
+      "branch-factual-0001",
+      "branch-cf-ask-0001"
+    ],
+    "prediction_evidence_links": [
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_17"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_42"
+      }
+    ],
+    "residue_lineage_links": [
+      {
+        "accepted_order": 0,
+        "accepted_source_ids_sha256": "sha256:ddd182839f944f91cb6bbfc8c6c207552b52ec432febe004488ff2f263e32d80",
+        "query_receipt_index": 0,
+        "residue_index": 0,
+        "scope": "persona-dream",
+        "source_id": "memory_17"
+      },
+      {
+        "accepted_order": 1,
+        "accepted_source_ids_sha256": "sha256:ddd182839f944f91cb6bbfc8c6c207552b52ec432febe004488ff2f263e32d80",
+        "query_receipt_index": 0,
+        "residue_index": 1,
+        "scope": "persona-dream",
+        "source_id": "memory_42"
+      }
+    ]
+  },
+  "lineage_checks": {
+    "accepted_source_id_hashes_recomputed": true,
+    "dream_branches_link_to_residue": true,
+    "prediction_links_to_branches": true,
+    "prediction_links_to_residue": true,
+    "prediction_payload_hash_recomputed": true,
+    "prediction_sealed_before_reveal": true,
+    "residue_links_to_recall_receipts": true
+  },
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z/gate0_positive_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate0_lineage_check_receipt.v1",
+  "status": "PASS_PCTOM_GATE0_LINEAGE",
+  "tau_call_attempts": 0
+}

@@ -1,0 +1,277 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "long-duration wall-clock retention beyond this restart interval",
+      "new live Tau execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution",
+      "non-Memory external service fault injection"
+    ],
+    "proves": [
+      "the user service embry-memory restarted and changed MainPID before post-restart recall",
+      "after Memory service restart, a fresh no-write delayed-recall process exact-reread persisted PCTOM-R revision records and semantic mirrors",
+      "after Memory service restart, live Memory /recall returned condition-scoped PCTOM-R revision context for M/R/D/CD",
+      "the post-restart delayed-recall proof used no Memory write, canonical write, identity write, source-memory write, Tau call, provider call, LLM judge, or human content judgment"
+    ]
+  },
+  "created_at": "2026-07-22T04:05:54Z",
+  "delayed_recall_artifact_sha256": {
+    "delayed_exact_rereads": "sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e",
+    "delayed_recall_results": "sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde",
+    "delayed_semantic_exact_rereads": "sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0"
+  },
+  "delayed_recall_command": [
+    "/tmp/agent-skills-pctom-next-cBR9sM/skills/persona-dream/.venv/bin/python3",
+    "/tmp/agent-skills-pctom-next-cBR9sM/skills/persona-dream/research/prospective-tom/scripts/run_live_memory_revision_delayed_recall.py",
+    "--source-root",
+    "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z",
+    "--output-root",
+    "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart",
+    "--receipt-out",
+    "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart/live_memory_revision_delayed_recall_receipt.v1.json",
+    "--memory-base-url",
+    "http://127.0.0.1:8601",
+    "--recall-attempts",
+    "3",
+    "--recall-sleep-s",
+    "1.0",
+    "--json"
+  ],
+  "delayed_recall_counts": {
+    "delayed_exact_rereads": 128,
+    "delayed_recall_hits": 40,
+    "delayed_recall_hits_per_condition": {
+      "CD": 10,
+      "D": 10,
+      "M": 10,
+      "R": 10
+    },
+    "delayed_recall_queries": 4,
+    "delayed_semantic_exact_rereads": 128,
+    "source_memory_documents": 128,
+    "source_semantic_documents": 128,
+    "write_violations": 0
+  },
+  "delayed_recall_receipt": "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart/live_memory_revision_delayed_recall_receipt.v1.json",
+  "delayed_recall_receipt_sha256": "sha256:f93870e00a64a8555d2c95a946cadfab6fa8874f0e926c667a239d8f09d9f8df",
+  "delayed_recall_result": {
+    "argv": [
+      "/tmp/agent-skills-pctom-next-cBR9sM/skills/persona-dream/.venv/bin/python3",
+      "/tmp/agent-skills-pctom-next-cBR9sM/skills/persona-dream/research/prospective-tom/scripts/run_live_memory_revision_delayed_recall.py",
+      "--source-root",
+      "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z",
+      "--output-root",
+      "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart",
+      "--receipt-out",
+      "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart/live_memory_revision_delayed_recall_receipt.v1.json",
+      "--memory-base-url",
+      "http://127.0.0.1:8601",
+      "--recall-attempts",
+      "3",
+      "--recall-sleep-s",
+      "1.0",
+      "--json"
+    ],
+    "duration_s": 14.316163,
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "nguished\": true,\n    \"source_live_memory_revision_recall_passed\": true,\n    \"source_receipt_hash_recomputed\": true,\n    \"synthetic_literal_boundary_preserved\": true,\n    \"unsupported_writes_absent\": true\n  },\n  \"claims\": {\n    \"does_not_prove\": [\n      \"Memory service restart\",\n      \"long-duration wall-clock retention beyond the source artifact interval\",\n      \"new live Tau execution\",\n      \"paid provider execution\",\n      \"video, audio, or semantic dream quality\",\n      \"complete live Phase 01-16 runtime execution\"\n    ],\n    \"proves\": [\n      \"a fresh no-write process can exact-reread previously persisted noncanonical PCTOM-R revision documents\",\n      \"a fresh no-write process can exact-reread the searchable semantic mirrors\",\n      \"a fresh no-write process can retrieve delayed condition-scoped revision context through live Memory /recall\",\n      \"prior/posterior distinction and synthetic/literal separation survive delayed recall\",\n      \"no Memory write, provider call, Tau call, canonical write, identity write, source-memory write, LLM judge, or human content judgment was used\"\n    ]\n  },\n  \"collection\": \"persona_dream_pctom_revision_recall\",\n  \"conditions\": [\n    \"M\",\n    \"R\",\n    \"D\",\n    \"CD\"\n  ],\n  \"counts\": {\n    \"delayed_exact_rereads\": 128,\n    \"delayed_recall_hits\": 40,\n    \"delayed_recall_hits_per_condition\": {\n      \"CD\": 10,\n      \"D\": 10,\n      \"M\": 10,\n      \"R\": 10\n    },\n    \"delayed_recall_queries\": 4,\n    \"delayed_semantic_exact_rereads\": 128,\n    \"source_memory_documents\": 128,\n    \"source_semantic_documents\": 128,\n    \"write_violations\": 0\n  },\n  \"created_at\": \"2026-07-22T04:05:54Z\",\n  \"delayed_exact_rereads\": \"/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart/artifacts/delayed_exact_rereads.json\",\n  \"delayed_recall_results\": \"/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart/artifacts/delayed_recall_results.json\",\n  \"delayed_semantic_exact_rereads\": \"/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart/artifacts/delayed_semantic_exact_rereads.json\",\n  \"errors\": [],\n  \"fixture_backed\": false,\n  \"fresh_process_delayed_recall\": true,\n  \"fresh_process_pid\": 4156003,\n  \"fresh_process_started_after_source_receipt\": true,\n  \"human_content_judgment_required\": false,\n  \"identity_write_attempts\": 0,\n  \"live\": true,\n  \"llm_judge_used\": false,\n  \"memory_base_url\": \"http://127.0.0.1:8601\",\n  \"memory_write_attempts\": 0,\n  \"mocked\": false,\n  \"output_root\": \"/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart\",\n  \"processing_time_s\": 14.221335,\n  \"provider_call_attempts\": 0,\n  \"receipt_path\": \"/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/delayed_after_restart/live_memory_revision_delayed_recall_receipt.v1.json\",\n  \"receipt_sha256\": \"sha256:a622877f4c39f67b51e601cf6c7f46746f989915df110ffcda0ba43d0d60fa95\",\n  \"schema\": \"persona_dream.research.prospective_tom.live_memory_revision_delayed_recall_receipt.v1\",\n  \"semantic_recall_collection\": \"lessons\",\n  \"source_created_at\": \"2026-07-22T03:33:18Z\",\n  \"source_document_index\": \"/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/artifacts/live_memory_revision_documents.json\",\n  \"source_memory_write_attempts\": 0,\n  \"source_receipt\": \"/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json\",\n  \"source_receipt_sha256\": \"sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a\",\n  \"source_root\": \"/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z\",\n  \"source_semantic_document_index\": \"/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/artifacts/live_memory_semantic_documents.json\",\n  \"status\": \"PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL\",\n  \"tau_call_attempts\": 0\n}\n",
+    "timeout": false
+  },
+  "delayed_recall_status": "PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "llm_judge_used": false,
+  "memory_base_url": "http://127.0.0.1:8601",
+  "memory_service_restart_attempts": 1,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z",
+  "pid_changed": true,
+  "post_health": {
+    "data": {
+      "memory_db_connected": true,
+      "ok": true,
+      "sparta_controls_count": 12491,
+      "sparta_corpus_ok": true,
+      "sparta_corpus_required": true,
+      "status": "ok"
+    },
+    "duration_s": 0.02201,
+    "error": null,
+    "http_status": 200,
+    "ok": true
+  },
+  "post_main_pid": "4155998",
+  "post_systemctl": {
+    "argv": [
+      "systemctl",
+      "--user",
+      "show",
+      "embry-memory",
+      "--property=LoadState,ActiveState,SubState,MainPID,ExecMainPID,FragmentPath",
+      "--no-pager"
+    ],
+    "duration_s": 0.006912,
+    "fields": {
+      "ActiveState": "active",
+      "ExecMainPID": "4155998",
+      "FragmentPath": "/home/graham/.config/systemd/user/embry-memory.service",
+      "LoadState": "loaded",
+      "MainPID": "4155998",
+      "SubState": "running"
+    },
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "MainPID=4155998\nExecMainPID=4155998\nLoadState=loaded\nActiveState=active\nSubState=running\nFragmentPath=/home/graham/.config/systemd/user/embry-memory.service\n",
+    "timeout": false
+  },
+  "pre_health": {
+    "data": {
+      "memory_db_connected": true,
+      "ok": true,
+      "sparta_controls_count": 12491,
+      "sparta_corpus_ok": true,
+      "sparta_corpus_required": true,
+      "status": "ok"
+    },
+    "duration_s": 0.060955,
+    "error": null,
+    "http_status": 200,
+    "ok": true
+  },
+  "pre_main_pid": "4090",
+  "pre_systemctl": {
+    "argv": [
+      "systemctl",
+      "--user",
+      "show",
+      "embry-memory",
+      "--property=LoadState,ActiveState,SubState,MainPID,ExecMainPID,FragmentPath",
+      "--no-pager"
+    ],
+    "duration_s": 0.010934,
+    "fields": {
+      "ActiveState": "active",
+      "ExecMainPID": "4090",
+      "FragmentPath": "/home/graham/.config/systemd/user/embry-memory.service",
+      "LoadState": "loaded",
+      "MainPID": "4090",
+      "SubState": "running"
+    },
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "MainPID=4090\nExecMainPID=4090\nLoadState=loaded\nActiveState=active\nSubState=running\nFragmentPath=/home/graham/.config/systemd/user/embry-memory.service\n",
+    "timeout": false
+  },
+  "processing_time_s": 15.441668,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/live_memory_restart_delayed_recall_receipt.v1.json",
+  "receipt_sha256": "sha256:f21e540c7dee0520ab4ee6cf0594e872c88b86ef3d95d6434c433adb978cbbfc",
+  "restart_result": {
+    "argv": [
+      "systemctl",
+      "--user",
+      "restart",
+      "embry-memory"
+    ],
+    "duration_s": 1.024093,
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "",
+    "timeout": false
+  },
+  "schema": "persona_dream.research.prospective_tom.live_memory_restart_delayed_recall_receipt.v1",
+  "service_name": "embry-memory",
+  "source_memory_write_attempts": 0,
+  "source_root": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z",
+  "status": "PASS_PCTOM_LIVE_MEMORY_RESTART_DELAYED_RECALL",
+  "tau_call_attempts": 0,
+  "wait_result": {
+    "attempts": [
+      {
+        "at": "2026-07-22T04:05:39Z",
+        "health": {
+          "data": {
+            "memory_db_connected": true,
+            "ok": true,
+            "sparta_controls_count": 12491,
+            "sparta_corpus_ok": true,
+            "sparta_corpus_required": true,
+            "status": "ok"
+          },
+          "duration_s": 0.02201,
+          "error": null,
+          "http_status": 200,
+          "ok": true
+        },
+        "systemctl": {
+          "argv": [
+            "systemctl",
+            "--user",
+            "show",
+            "embry-memory",
+            "--property=LoadState,ActiveState,SubState,MainPID,ExecMainPID,FragmentPath",
+            "--no-pager"
+          ],
+          "duration_s": 0.006912,
+          "fields": {
+            "ActiveState": "active",
+            "ExecMainPID": "4155998",
+            "FragmentPath": "/home/graham/.config/systemd/user/embry-memory.service",
+            "LoadState": "loaded",
+            "MainPID": "4155998",
+            "SubState": "running"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "MainPID=4155998\nExecMainPID=4155998\nLoadState=loaded\nActiveState=active\nSubState=running\nFragmentPath=/home/graham/.config/systemd/user/embry-memory.service\n",
+          "timeout": false
+        }
+      }
+    ],
+    "final_health": {
+      "data": {
+        "memory_db_connected": true,
+        "ok": true,
+        "sparta_controls_count": 12491,
+        "sparta_corpus_ok": true,
+        "sparta_corpus_required": true,
+        "status": "ok"
+      },
+      "duration_s": 0.02201,
+      "error": null,
+      "http_status": 200,
+      "ok": true
+    },
+    "final_systemctl": {
+      "argv": [
+        "systemctl",
+        "--user",
+        "show",
+        "embry-memory",
+        "--property=LoadState,ActiveState,SubState,MainPID,ExecMainPID,FragmentPath",
+        "--no-pager"
+      ],
+      "duration_s": 0.006912,
+      "fields": {
+        "ActiveState": "active",
+        "ExecMainPID": "4155998",
+        "FragmentPath": "/home/graham/.config/systemd/user/embry-memory.service",
+        "LoadState": "loaded",
+        "MainPID": "4155998",
+        "SubState": "running"
+      },
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "MainPID=4155998\nExecMainPID=4155998\nLoadState=loaded\nActiveState=active\nSubState=running\nFragmentPath=/home/graham/.config/systemd/user/embry-memory.service\n",
+      "timeout": false
+    },
+    "ready": true
+  }
+}

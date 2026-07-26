@@ -1,0 +1,57 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "new live Tau execution",
+      "new live Memory recall",
+      "real service fault injection",
+      "statistical prediction or planning benefit",
+      "complete PCTOM-R reliability across every boundary",
+      "semantic dream quality",
+      "paid provider execution"
+    ],
+    "proves": [
+      "a standard Gate 8 R(k, epsilon, lambda) reliability surface was built from the visible-pressure reliability receipt",
+      "the surface includes repeated execution, semantic perturbation, and controlled fault trials",
+      "fault trials use only recovered-equivalent, blocked-before-side-effect, or quarantined-no-active-partial-state outcomes",
+      "the builder made zero Tau, Memory, provider, canonical-memory, identity, or source-memory writes"
+    ]
+  },
+  "controlled_faults_used": true,
+  "counts": {
+    "fault_trials": 6,
+    "perturbed_trials": 3,
+    "repeat_groups": 6,
+    "terminal_outcomes": {
+      "BLOCKED_BEFORE_SIDE_EFFECT": 3,
+      "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE": 2,
+      "RECOVERED_WITH_EQUIVALENT_END_STATE": 7
+    },
+    "trials": 12
+  },
+  "created_at": "2026-07-22T00:14:04Z",
+  "errors": [],
+  "fixture_backed": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "live_source_artifacts_consumed": true,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z",
+  "processing_time_s": 0.001,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/cooperation_visible_pressure_reliability_surface_build_receipt.v1.json",
+  "receipt_sha256": "sha256:224a31ebd5ff7b9fe7f5308a6ef03b4f89e3ab38e7bef44a6486f0014b5494af",
+  "schema": "persona_dream.research.prospective_tom.cooperation_visible_pressure_reliability_surface_build_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "source_tau_call_attempts_consumed": 48,
+  "status": "PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_RELIABILITY_SURFACE_BUILT",
+  "surface_file_sha256": "sha256:e56a223d0f75b106ecd646616c23bbad9ce821323c27df5b267a92b746c739de",
+  "surface_path": "/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/artifacts/cooperation_visible_pressure_reliability_surface.v1.json",
+  "surface_sha256": "sha256:33fc7a18c913fd6b8818331b8bde8261ea94469e8419d6f78be61ce2b8247909",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0,
+  "visible_pressure_reliability_receipt": "/tmp/persona-dream-cooperation-visible-pressure-rule-reliability-20260722T000807Z/cooperation_visible_pressure_rule_reliability_receipt.v1.json",
+  "visible_pressure_reliability_receipt_file_sha256": "sha256:f6e872ec1cac83af0bb93b3486126a54cf4c770dd41e42e0d8310ea649c111c4",
+  "visible_pressure_reliability_receipt_sha256": "sha256:b97ccc1e42084971f9d1611e545f972fd76cb676023ac98c8f8fd885a08d6fb2"
+}

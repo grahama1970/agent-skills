@@ -1,0 +1,7 @@
+{
+  "port": 49025,
+  "schema": "pctom.retry_service.start_receipt.v1",
+  "service_root": "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/service",
+  "started_at": "2026-07-21T12:18:12Z",
+  "status": "STARTED"
+}

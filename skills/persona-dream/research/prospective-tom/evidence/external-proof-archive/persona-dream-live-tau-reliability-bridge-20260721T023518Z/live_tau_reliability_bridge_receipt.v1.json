@@ -1,0 +1,124 @@
+{
+  "checks": {
+    "gate8": {
+      "blocked_trials_before_side_effect": true,
+      "has_fault_injection": true,
+      "has_repeated_execution": true,
+      "has_semantic_perturbation": true,
+      "no_canonical_identity_source_writes": true,
+      "no_unknown_state_continuation": true,
+      "quarantined_trials_no_active_partial": true,
+      "recovered_trials_equivalent": true,
+      "retries_do_not_duplicate_active_state": true,
+      "surface_schema_valid": true,
+      "terminal_outcomes_allowed": true
+    },
+    "gate9": {
+      "causal_failure_localization_written": true,
+      "counterfactual_matches_expected": true,
+      "exactly_one_tool_return_removed_or_replaced": true,
+      "first_divergent_receipt_identified": true,
+      "no_canonical_identity_source_writes": true,
+      "no_unknown_state_continuation": true,
+      "replay_schema_valid": true,
+      "replay_starts_at_first_divergence": true,
+      "state_comparison_present": true,
+      "surface_hash_bound": true,
+      "surface_schema_valid": true,
+      "target_trial_fault_or_divergent": true,
+      "target_trial_resolved": true
+    }
+  },
+  "claims": {
+    "does_not_prove": [
+      "external service fault injection",
+      "production retry machinery",
+      "statistical prediction benefit",
+      "held-out M/R/D/CD comparison",
+      "longitudinal recall after revision",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution or video quality"
+    ],
+    "proves": [
+      "a live Tau-originated PCTOM score/revision case was consumed as the reliability subject",
+      "Gate 8 accepted repeated, perturbed, blocked, and quarantined trials over live-originated artifact hashes",
+      "the controlled stale-artifact fault was quarantined with no active partial state",
+      "Gate 9 localized the first divergent receipt and replacement tool return for the stale-artifact boundary",
+      "no Memory write, provider call, new Tau call, duplicate active prediction, duplicate active revision, or human content judgment was required"
+    ]
+  },
+  "controlled_fault_definition": true,
+  "counts": {
+    "gate8": {
+      "blocked": 1,
+      "equivalent_end_state_trials": 3,
+      "fault_injected_trials": 2,
+      "forbidden_terminal_outcomes": 0,
+      "perturbed_trials": 2,
+      "quarantined": 1,
+      "recovered": 3,
+      "repeat_groups": 3,
+      "side_effect_violations": 0,
+      "trials": 5
+    },
+    "gate9": {
+      "first_divergent_receipts": 1,
+      "forbidden_terminal_outcomes": 0,
+      "forbidden_write_attempts": 0,
+      "localized_causes": 1,
+      "state_comparisons": 1,
+      "suspected_tool_returns": 1,
+      "target_trials": 1
+    }
+  },
+  "created_at": "2026-07-21T02:35:18Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "gate8_receipt_path": "/tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z/receipts/reliability_surface_check_receipt.json",
+  "gate8_status": "PASS_TOM_RELIABILITY_SURFACE",
+  "gate9_receipt_path": "/tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z/receipts/causal_replay_check_receipt.json",
+  "gate9_status": "PASS_TOM_CAUSAL_REPLAY",
+  "human_content_judgment_required": false,
+  "live": true,
+  "live_score_root": "/tmp/persona-dream-live-tau-score-revision-20260721T022807Z",
+  "live_service_call_attempts": 0,
+  "live_tau_originated_case_consumed": true,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "gate8": {
+      "epsilon_values": [
+        0,
+        0.25
+      ],
+      "fault_containment_rate": 1.0,
+      "k_total": 2,
+      "lambda_values": [
+        0,
+        0.5,
+        0.75
+      ],
+      "pass_k": 1.0
+    },
+    "gate9": {
+      "causal_confidence": 1.0,
+      "first_divergent_receipt_id": "live-receipt-003-load-score-revision-artifact",
+      "localized_cause_type": "STALE_ARTIFACT",
+      "target_terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "target_trial_id": "live-gate8-trial-stale-artifact-001"
+    }
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z",
+  "processing_time_s": 0.003,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z/live_tau_reliability_bridge_receipt.v1.json",
+  "replay_path": "/tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z/artifacts/causal_replay.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_reliability_bridge_receipt.v1",
+  "source_manifest_sha256": "sha256:5ce866c8897be03e382f2f8c83defffed83e11f9e2b6e1bf4e1714f77dd086ad",
+  "stale_manifest_sha256": "sha256:4aa2d2c20f4dbbad20f848b439576ae43fe8b2ba217bc4e112ba6825bfef7ac1",
+  "stale_root": "/tmp/persona-dream-live-tau-score-revision-20260721T022358Z",
+  "status": "PASS_LIVE_TAU_PCTOM_RELIABILITY_BRIDGE",
+  "surface_path": "/tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z/artifacts/reliability_surface.json",
+  "tau_call_attempts": 0
+}

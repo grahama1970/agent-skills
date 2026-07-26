@@ -1,0 +1,133 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "all_actual_actions_avoid_or_disclose": true,
+    "all_rows_are_unsafe_offer_pressure_rows": true,
+    "all_rows_expose_offer_cooperation_affordance": true,
+    "all_rows_have_visible_offer_pressure": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "negative_mutations_fail_closed": true,
+    "positive_instrument_passed": true,
+    "unsupported_writes_absent": true,
+    "variants_disjoint_from_prior_1_44_corpus": true,
+    "visible_packets_hash_bound": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution over the unsafe-offer-pressure corpus",
+      "CD will select an unsafe OFFER_COOPERATION action",
+      "unsafe offer suppression was exercised",
+      "a replacement cooperation feature split is valid",
+      "confidence-bounded CD planning benefit",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a deterministic unsafe-offer-pressure cooperation corpus exists beyond variants 1-44",
+      "every visible packet exposes OFFER_COOPERATION and visible cooperation pressure before outcome reveal",
+      "hidden simulator state marks cooperation unsafe or suboptimal and requires wait/disclose outcomes",
+      "visible packets omit actual_next_action, counterpart_policy, contrast_class, oracle_agent_action, and hidden unsafe-cooperation fields",
+      "negative mutations for missing offer affordance, missing pressure, unsafe actual offer, visible outcome leakage, missing unsafe withheld field, and variant collision fail closed",
+      "no Tau call, Memory write, provider call, canonical write, identity write, source-memory write, human content judgment, or LLM judge was used"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/cooperation_unsafe_offer_pressure_instrument_corpus.v1.json",
+  "corpus_sha256": "sha256:fca0d06bd6a0a79f26c5cf79da4957f4532efabe258c35e95fc786769e358c90",
+  "counts": {
+    "avoid_or_disclose_actual_rows": 4,
+    "episodes": 4,
+    "negative_mutations": 6,
+    "negative_mutations_failed_closed": 6,
+    "offer_cooperation_affordance_rows": 4,
+    "unsafe_offer_pressure_rows": 4,
+    "variant_max": 48,
+    "variant_min": 45,
+    "visible_offer_pressure_rows": 4,
+    "visible_packet_hashes": [
+      "sha256:e63a0784c805dba4e3f524bc57dfef20d1c96e62180710b3c59c88541697d306",
+      "sha256:733873fad0d4ed346fbdb506482012a559d25aaf6cea06d65a89286c2de80aad",
+      "sha256:63ad2456c34be801d6aff5a72713a406fedbc576741beb39a4bc556dfc931141",
+      "sha256:89154830f20af3b6200d6fe22562b51c0a9d41efb905c1d9b9a620e4f09957c2"
+    ],
+    "visible_packets_sha256": "sha256:af047337b05e83945791cc93718d3ff3f23c1c445d063bed9ccc17c549e13b33"
+  },
+  "created_at": "2026-07-21T23:17:18Z",
+  "deterministic_simulator_corpus": true,
+  "episode_count": 4,
+  "errors": [],
+  "fixture_backed": false,
+  "generator_version": "pctom_cooperation_unsafe_offer_pressure_instrument.v1",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_results": {
+    "missing_unsafe_withheld_field": {
+      "errors": [
+        "episode_0_withheld_required_field_missing:cooperation_is_unsafe_or_suboptimal"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/missing_unsafe_withheld_field/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/missing_unsafe_withheld_field/check.json"
+    },
+    "missing_visible_offer_affordance": {
+      "errors": [
+        "episode_0_missing_visible_offer_cooperation_affordance"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/missing_visible_offer_affordance/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/missing_visible_offer_affordance/check.json"
+    },
+    "missing_visible_offer_pressure": {
+      "errors": [
+        "episode_0_missing_visible_cooperation_pressure_flag"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/missing_visible_offer_pressure/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/missing_visible_offer_pressure/check.json"
+    },
+    "unsafe_row_actual_offer": {
+      "errors": [
+        "episode_0_actual_next_action_is_counterpart_offer"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/unsafe_row_actual_offer/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/unsafe_row_actual_offer/check.json"
+    },
+    "variant_not_disjoint_from_prior_instruments": {
+      "errors": [
+        "episode_0_variant_not_disjoint:44"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/variant_not_disjoint_from_prior_instruments/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/variant_not_disjoint_from_prior_instruments/check.json"
+    },
+    "visible_outcome_key_leak": {
+      "errors": [
+        "episode_0_visible_packet_contains_hidden_or_outcome_key"
+      ],
+      "failed_closed": true,
+      "path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/visible_outcome_key_leak/corpus.json",
+      "receipt": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations/visible_outcome_key_leak/check.json"
+    }
+  },
+  "negative_root": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/negative_mutations",
+  "output_root": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z",
+  "positive_check_path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/cooperation_unsafe_offer_pressure_positive_check.json",
+  "positive_check_sha256": "sha256:9a45d876f3036b20ad554bb1499d837d2bb46afd4ce8354fe8449811a943453c",
+  "processing_time_s": 0.009,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/cooperation_unsafe_offer_pressure_instrument_receipt.v1.json",
+  "receipt_sha256": "sha256:97b3675285cf5845a4b93f6f99893219527138a811d1c43e0bb400e49444b0f7",
+  "schema": "persona_dream.research.prospective_tom.cooperation_unsafe_offer_pressure_instrument_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_INSTRUMENT",
+  "tau_call_attempts": 0,
+  "variant_start": 45,
+  "visible_packets_path": "/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/artifacts/cooperation_unsafe_offer_pressure_visible_packets.v1.json",
+  "visible_packets_sha256": "sha256:dbba4f701b84646c5d28dc842dda020e5dcb2a49482c62242636a001d45077db"
+}
