@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import time
@@ -51,12 +52,11 @@ def main() -> int:
         if not focus.get("ok"):
             raise FallbackError("Grok composer was not focusable", evidence=evidence)
 
-        _surf(
-            args.surf_run,
-            ["type", prompt, "--clear", "--submit", "--tab-id", args.tab_id],
-            timeout=90,
-        )
-        evidence["submitted_by"] = "surf_type_clear_submit"
+        submitted_prompt = _single_line_prompt(prompt)
+        submit_evidence = _submit_prompt(args.surf_run, args.tab_id, submitted_prompt)
+        evidence.update(submit_evidence)
+        evidence["submitted_prompt_shape"] = "single_line"
+        evidence["submitted_prompt_chars"] = len(submitted_prompt)
 
         raw_text, poll_evidence = _wait_for_sentinel(
             args.surf_run,
@@ -90,6 +90,59 @@ def _surf(surf_run: str, args: list[str], *, timeout: int = 60) -> subprocess.Co
     )
 
 
+def _single_line_prompt(prompt: str) -> str:
+    return re.sub(r"\s+", " ", prompt).strip()
+
+
+def _submit_prompt(surf_run: str, tab_id: str, prompt: str) -> dict[str, Any]:
+    _surf(surf_run, ["type", prompt, "--clear", "--tab-id", tab_id], timeout=90)
+    typed_text = _composer_text(surf_run, tab_id)
+    if not _prompt_delivery_matches(prompt, typed_text):
+        raise FallbackError(
+            "Grok composer did not contain the complete prompt before submit",
+            evidence={"typed_prompt_chars": len(typed_text)},
+        )
+
+    _surf(surf_run, ["key", "Enter", "--tab-id", tab_id], timeout=60)
+    time.sleep(1)
+    if _composer_text(surf_run, tab_id):
+        click_js = r"""
+return (() => {
+  const button = document.querySelector('button[type="submit"]');
+  if (!button || button.disabled) return false;
+  button.click();
+  return true;
+})()
+"""
+        clicked = _surf_jsonish(surf_run, ["js", click_js, "--tab-id", tab_id], timeout=60)
+        if clicked is not True:
+            raise FallbackError(
+                "Grok submit button was unavailable after Enter",
+                evidence={"submit_button_clicked": clicked},
+            )
+        time.sleep(1)
+    remaining = _composer_text(surf_run, tab_id)
+    if remaining:
+        raise FallbackError(
+            "Grok composer still contains the prompt after click and Enter",
+            evidence={"remaining_composer_chars": len(remaining)},
+        )
+    return {
+        "submitted_by": "surf_type_clear_click_enter_fallback",
+        "submit_confirmed": True,
+        "composer_cleared_after_submit": True,
+    }
+
+
+def _prompt_delivery_matches(expected: str, actual: str) -> bool:
+    sentinel_match = re.search(r"<<<GROK_DONE:[^>]+>>>", expected)
+    if sentinel_match and sentinel_match.group(0) not in actual:
+        return False
+    compact_expected = re.sub(r"[^a-z0-9]+", "", expected.lower())
+    compact_actual = re.sub(r"[^a-z0-9]+", "", actual.lower())
+    return bool(compact_expected) and compact_expected in compact_actual
+
+
 def _surf_jsonish(surf_run: str, args: list[str], *, timeout: int = 60) -> Any:
     proc = _surf(surf_run, args, timeout=timeout)
     return _decode_surf_stdout(proc.stdout)
@@ -113,7 +166,7 @@ def _decode_surf_stdout(stdout: str) -> Any:
 
 def _focus_composer(surf_run: str, tab_id: str) -> dict[str, Any]:
     js = r"""
-(() => {
+return (() => {
   const visible = (el) => {
     const style = getComputedStyle(el);
     const rect = el.getBoundingClientRect();
@@ -160,7 +213,7 @@ def _focus_composer(surf_run: str, tab_id: str) -> dict[str, Any]:
 
 def _upload_attachments(surf_run: str, tab_id: str, attachments: list[Path]) -> list[dict[str, Any]]:
     expose_js = r"""
-(() => {
+return (() => {
   const input = document.querySelector('input[type="file"]');
   if (!input) return {ok:false, reason:'file_input_not_found'};
   input.id = 'surf-grok-submit-upload-input';
@@ -236,6 +289,22 @@ def _wait_for_sentinel(
     sentinel_seen_at: int | None = None
     while time.time() < deadline:
         poll_count += 1
+        page_text = _page_text(surf_run, tab_id)
+        lower_page = page_text.lower()
+        if any(
+            marker in lower_page
+            for marker in (
+                "system is currently busy",
+                "temporarily busy",
+                "high demand",
+                "under heavy usage",
+                "capacity is busy",
+            )
+        ):
+            raise FallbackError(
+                "Grok provider capacity busy: high demand",
+                evidence={"poll_count": poll_count, "provider_busy": True},
+            )
         last_text = _latest_sentinel_text(surf_run, tab_id, sentinel)
         if sentinel in last_text:
             sentinel_seen_at = sentinel_seen_at or poll_count
@@ -261,7 +330,7 @@ def _wait_for_sentinel(
 
 def _latest_sentinel_text(surf_run: str, tab_id: str, sentinel: str) -> str:
     js = f"""
-(() => {{
+return (() => {{
   const sentinel = {json.dumps(sentinel)};
   const selector = [
     'article',
@@ -272,10 +341,18 @@ def _latest_sentinel_text(surf_run: str, tab_id: str, sentinel: str) -> str:
     'main div'
   ].join(',');
   const texts = Array.from(document.querySelectorAll(selector))
+    .filter((el) => !el.closest('textarea, [role="textbox"], form'))
     .map((el) => (el.innerText || '').trim())
     .filter((text) => text.includes(sentinel));
-  texts.sort((a, b) => a.length - b.length);
-  return texts[0] || document.body.innerText || '';
+  const assistantOnly = texts.filter((text) => {{
+    const lower = text.toLowerCase();
+    return !lower.includes('automation-only instruction') &&
+      !lower.includes('completion contract for browser automation') &&
+      !lower.includes('do not print anything after that marker');
+  }});
+  const candidates = assistantOnly.length ? assistantOnly : [];
+  candidates.sort((a, b) => a.length - b.length);
+  return candidates[0] || '';
 }})()
 """
     value = _surf_jsonish(surf_run, ["js", js, "--tab-id", tab_id], timeout=60)
@@ -288,6 +365,24 @@ def _latest_sentinel_text(surf_run: str, tab_id: str, sentinel: str) -> str:
 
 def _page_text(surf_run: str, tab_id: str) -> str:
     value = _surf_jsonish(surf_run, ["js", "return document.body.innerText || ''", "--tab-id", tab_id], timeout=60)
+    return value if isinstance(value, str) else str(value or "")
+
+
+def _composer_text(surf_run: str, tab_id: str) -> str:
+    js = r"""
+return (() => {
+  const candidates = Array.from(document.querySelectorAll(
+    'textarea, [contenteditable="true"][role="textbox"], [data-testid="grokComposerInput"], [role="textbox"]'
+  )).filter((el) => {
+    const rect = el.getBoundingClientRect();
+    const style = getComputedStyle(el);
+    return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+  });
+  const el = candidates[candidates.length - 1];
+  return el ? String(el.value || el.innerText || el.textContent || '').trim() : '';
+})()
+"""
+    value = _surf_jsonish(surf_run, ["js", js, "--tab-id", tab_id], timeout=60)
     return value if isinstance(value, str) else str(value or "")
 
 

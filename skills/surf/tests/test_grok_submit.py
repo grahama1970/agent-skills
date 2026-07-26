@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -8,6 +9,15 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GROK_SUBMIT = REPO_ROOT / "skills/surf/scripts/grok-submit.sh"
+GROK_FALLBACK = REPO_ROOT / "skills/surf/scripts/grok_generic_fallback.py"
+
+
+def load_grok_fallback():
+    spec = importlib.util.spec_from_file_location("grok_generic_fallback", GROK_FALLBACK)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def write_fake_surf(path: Path, *, tab_url: str, response: str = "") -> None:
@@ -41,6 +51,7 @@ def run_grok_submit(tmp_path: Path, fake_surf: Path, *extra: str) -> subprocess.
     output = tmp_path / "response.md"
     env = os.environ.copy()
     env["SURF_RUN_SH"] = str(fake_surf)
+    env["SURF_GROK_NATIVE_EXACT_TAB_FIRST"] = "1"
     return subprocess.run(
         [
             "bash",
@@ -72,6 +83,123 @@ def test_grok_submit_dispatches_from_run_sh_help() -> None:
 
     assert proc.returncode == 0
     assert "surf grok.submit --input request.md --output response.md" in proc.stdout
+
+
+def test_grok_fallback_returns_iife_results_from_surf_js(tmp_path: Path) -> None:
+    fake_surf = tmp_path / "surf"
+    fake_surf.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" != "js" || "${2:-}" != *"return ("* ]]; then
+  printf '%s\n' 'undefined'
+  exit 0
+fi
+if [[ "$2" == *"const sentinel"* ]]; then
+  printf '%s\n' '"response <<<GROK_DONE:TEST>>>"'
+else
+  printf '%s\n' '{"ok":true,"tag":"DIV"}'
+fi
+""",
+        encoding="utf-8",
+    )
+    fake_surf.chmod(0o755)
+    fallback = load_grok_fallback()
+
+    assert fallback._focus_composer(str(fake_surf), "123")["ok"] is True
+    assert fallback._latest_sentinel_text(
+        str(fake_surf),
+        "123",
+        "<<<GROK_DONE:TEST>>>",
+    ) == "response <<<GROK_DONE:TEST>>>"
+    assert GROK_FALLBACK.read_text(encoding="utf-8").count("return (() =>") == 5
+
+
+def test_grok_fallback_flattens_multiline_prompt_before_submit() -> None:
+    fallback = load_grok_fallback()
+
+    assert fallback._single_line_prompt(
+        "Position:\nPING_RESULT: 4\n\n<<<GROK_DONE:TEST>>>\n"
+    ) == "Position: PING_RESULT: 4 <<<GROK_DONE:TEST>>>"
+
+
+def test_grok_fallback_confirms_composer_cleared_after_submit(tmp_path: Path) -> None:
+    state = tmp_path / "composer.txt"
+    state.write_text("", encoding="utf-8")
+    fake_surf = tmp_path / "surf"
+    fake_surf.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  type)
+    printf '%s' "${{2:-}}" > {state}
+    ;;
+  key)
+    : > {state}
+    ;;
+  js)
+    python3 -c 'import json,sys; print(json.dumps(open(sys.argv[1]).read()))' {state}
+    ;;
+  *)
+    echo "unexpected fake surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_surf.chmod(0o755)
+    fallback = load_grok_fallback()
+
+    evidence = fallback._submit_prompt(
+        str(fake_surf),
+        "123",
+        "Complete prompt <<<GROK_DONE:TEST>>>",
+    )
+
+    assert evidence["submit_confirmed"] is True
+    assert evidence["composer_cleared_after_submit"] is True
+    assert state.read_text(encoding="utf-8") == ""
+
+
+def test_grok_fallback_accepts_prosemirror_punctuation_normalization() -> None:
+    fallback = load_grok_fallback()
+    sentinel = "<<<GROK_DONE:TEST>>>"
+
+    assert fallback._prompt_delivery_matches(
+        f"Answer the user's request. {sentinel}",
+        f"Answer the users request {sentinel}",
+    )
+    assert not fallback._prompt_delivery_matches(
+        f"Answer the user's request. {sentinel}",
+        "Answer the users request",
+    )
+
+
+def test_grok_fallback_detects_provider_capacity_without_waiting(tmp_path: Path) -> None:
+    fake_surf = tmp_path / "surf"
+    fake_surf.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' '"High Demand: Grok is under heavy usage right now."'
+""",
+        encoding="utf-8",
+    )
+    fake_surf.chmod(0o755)
+    fallback = load_grok_fallback()
+
+    try:
+        fallback._wait_for_sentinel(
+            str(fake_surf),
+            "123",
+            "<<<GROK_DONE:TEST>>>",
+            timeout_s=30,
+            stable_polls=1,
+        )
+    except fallback.FallbackError as exc:
+        assert "capacity busy" in str(exc)
+        assert exc.evidence["provider_busy"] is True
+    else:
+        raise AssertionError("provider capacity should fail fast")
 
 
 def test_grok_submit_cleans_terminal_sentinel_and_writes_meta(tmp_path: Path) -> None:
