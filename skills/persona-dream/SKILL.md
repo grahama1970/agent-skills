@@ -94,6 +94,30 @@ timed transcript -> voice_handoff_plan.json -> create-movie/audio-lane
 -> TTS / voice conversion / eval / mix / mux receipts
 ```
 
+## Which Lane Are You In
+
+This file documents the media production spine (Phases 01-16: dream packet,
+storyboard, image/motion/audio lanes, provider gates). That is **not** the
+controlling goal of the project. An agent that reads only this file will work on
+the wrong lane. Route first:
+
+| If the task is about | Read | Status |
+|---|---|---|
+| Dream packets, storyboards, images, motion, provider/video, voice handoff | this file | supporting media spine |
+| The controlling research objective, gate model, evidence boundaries | `GOAL.md` | **active immutable goal** (PCTOM-R; PCTOM-R2 replication readiness met) |
+| Prospective ToM research code, contracts, checkers, receipts | `research/prospective-tom/` | active research namespace |
+| Autonomous dreaming, dream-colored voice affect, listener study | `GOAL_V3.md`, `GOAL_V4.md`, `GOAL_V5_PREREG.md`, `README.md` | supporting voice/integration lane |
+
+`GOAL.md` is authoritative when this file and it disagree. Per its Alignment
+Lock, provider/video, richer renderers, dashboards, and subjective
+dream-quality gates are **not** the current critical path, even though this
+file describes them in detail. The voice lane may advance as supporting
+infrastructure when tied to deterministic or live receipts (`GOAL.md`,
+"Supporting Voice Lane Record"), not as a replacement for the research goal.
+
+Do not start provider, video, or dream-aesthetic work from this file alone
+without an explicit human instruction reactivating that lane.
+
 ## Boundary
 
 Own:
