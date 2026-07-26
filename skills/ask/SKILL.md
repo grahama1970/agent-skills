@@ -246,8 +246,11 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   response and the other handler seats have terminal receipts, Ask/Tau emits a
   `DEGRADED` join receipt instead of discarding the panel. Failed seats must be
   indexed as `NEEDS_ATTENTION` with `failure_code`, `response_path`, and
-  `recovery_packet_path`. If no handler produces usable reviewer evidence, the
-  join status is `NEEDS_ATTENTION`.
+  `recovery_packet_path`. The join receipt and Markdown summary must include
+  `degradation_analysis` explaining why the aggregate degraded, grouped failure
+  codes, failed seats, and exact recovery commands when recovery packets exist.
+  If no handler produces usable reviewer evidence, the join status is
+  `NEEDS_ATTENTION`.
 
 ## Compete / Bakeoff Protocol
 
@@ -323,6 +326,7 @@ Compete is fail-closed by design:
 | All-browser execute preflight fails | Blocks before Tau launch and records terminal candidate/join statuses |
 | Missing candidate receipt | Join reports `NEEDS_ATTENTION` |
 | Candidate lane transport or provider error | Lane records `NEEDS_ATTENTION` and exits successfully so the join can emit the partial scorecard |
+| Degraded or blocked candidate set | `compete-scorecard.json` includes `degradation_analysis` with blockers, failed candidates, failure codes, and recovery commands |
 | Candidate claims a feature without local proof | Project agent must not promote it |
 | Tie or no clear winner | Report `NEEDS_ATTENTION`; do not fabricate a winner |
 | Winner-continuation packet exists | It is a next request, not proof that revision was submitted |

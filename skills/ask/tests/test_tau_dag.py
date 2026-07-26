@@ -1532,6 +1532,14 @@ def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet
     assert indexed["gpt-5.5"]["failure_code"] == "scillm_auth_invalid_api_key"
     assert indexed["gpt-5.5"]["recovery_packet_path"] == str(recovery_path)
     assert receipt["unresolved_gaps"][0]["failure_code"] == "scillm_auth_invalid_api_key"
+    analysis = receipt["degradation_analysis"]
+    assert analysis["status"] == "DEGRADED"
+    assert "1 of 2 handler seat(s) produced usable responses" in analysis["why"]
+    assert analysis["failure_codes"] == {"scillm_auth_invalid_api_key": 1}
+    assert analysis["failed_seats"][0]["next_command"].startswith("export SCILLM_PROXY_KEY")
+    summary = (join_dir / "roundtable-summary.md").read_text(encoding="utf-8")
+    assert "## Degradation Analysis" in summary
+    assert "scillm_auth_invalid_api_key" in summary
 
 
 def test_run_tau_dag_bundle_synthesizes_degraded_join_when_tau_skips_join(monkeypatch, tmp_path: Path) -> None:
@@ -1621,6 +1629,7 @@ def test_run_tau_dag_bundle_synthesizes_degraded_join_when_tau_skips_join(monkey
     failed = next(item for item in join["handler_response_index"] if item["handler"] == "gpt-5.5")
     assert failed["failure_code"] == "scillm_auth_invalid_api_key"
     assert failed["recovery_packet_path"] == str(recovery_path)
+    assert join["degradation_analysis"]["failure_codes"] == {"scillm_auth_invalid_api_key": 1}
 
 
 def test_tau_dag_cli_json_reports_degraded_join_path(monkeypatch, tmp_path: Path) -> None:
@@ -1934,6 +1943,20 @@ def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp
     assert blockers["webclaude"]["failure_code"] == "browser_tab_read_timeout"
     assert "competition_transport_blocked" in scorecard["blockers"]
     assert "no_explicit_verified_features_to_promote" in scorecard["blockers"]
+    analysis = scorecard["degradation_analysis"]
+    assert analysis["status"] == "NEEDS_ATTENTION"
+    assert "2 of 3 candidate lane(s) failed or need attention" in analysis["why"]
+    assert analysis["failure_codes"] == {
+        "browser_tab_read_timeout": 1,
+        "prompt_too_large_or_stalled": 1,
+    }
+    assert {item["handler"] for item in analysis["failed_candidates"]} == {"webgpt", "webclaude"}
+    assert any("webgpt.submit" in item["next_command"] for item in analysis["recovery_commands"])
+    receipt = json.loads((join_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["degradation_analysis"]["transport_blocker_count"] == 2
+    summary = (join_dir / "compete-summary.md").read_text(encoding="utf-8")
+    assert "## Degradation Analysis" in summary
+    assert "prompt_too_large_or_stalled" in summary
 
 
 def test_compete_join_promotes_only_explicit_verified_features(tmp_path: Path) -> None:

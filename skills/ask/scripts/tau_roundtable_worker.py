@@ -2010,6 +2010,25 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
     else:
         status = "NEEDS_ATTENTION"
     ok = status == "PASS"
+    degradation_analysis = _roundtable_degradation_analysis(
+        status=status,
+        handler_receipts=handler_receipts,
+        usable_responses=usable_responses,
+        failures=failures,
+    )
+    if degradation_analysis["why"]:
+        lines.extend(["## Degradation Analysis", ""])
+        lines.append(degradation_analysis["why"])
+        lines.append("")
+        for item in degradation_analysis["failed_seats"]:
+            lines.extend(
+                [
+                    f"- `{item.get('node_id')}` / `{item.get('handler')}`: `{item.get('failure_code')}`",
+                    f"  recovery: `{item.get('recovery_packet_path') or 'missing'}`",
+                ]
+            )
+        lines.append("")
+        summary_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     receipt = {
         "schema": "ask.tau_dag_roundtable_join_receipt.v1",
         "created_at": _now(),
@@ -2024,6 +2043,7 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
         "handler_response_index": handler_receipts,
         "usable_response_count": len(usable_responses),
         "failed_seat_count": len(failures),
+        "degradation_analysis": degradation_analysis,
         "summary_path": str(summary_path),
         "unresolved_gaps": failures,
         "provider_receipt": {
@@ -2047,6 +2067,7 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
         artifacts=[receipt_path, summary_path],
         evidence=[
             {"kind": "roundtable_join_receipt", "path": str(receipt_path), "status": status},
+            {"kind": "degradation_analysis", **degradation_analysis},
             {
                 "kind": "handler_response_index",
                 "count": len(handler_receipts),
@@ -2057,6 +2078,68 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
         ],
     )
     return {"exit_code": 0, "handoff": handoff}
+
+
+def _roundtable_degradation_analysis(
+    *,
+    status: str,
+    handler_receipts: list[dict[str, Any]],
+    usable_responses: list[dict[str, Any]],
+    failures: list[dict[str, Any]],
+) -> dict[str, Any]:
+    failed_seats = []
+    failure_codes: dict[str, int] = {}
+    recovery_commands = []
+    for failure in failures:
+        code = str(failure.get("failure_code") or "handler_execution_failed")
+        failure_codes[code] = failure_codes.get(code, 0) + 1
+        recovery_packet_path = str(failure.get("recovery_packet_path") or "")
+        recovery_packet = _read_optional_json(Path(recovery_packet_path)) if recovery_packet_path else {}
+        next_command = str(recovery_packet.get("next_command") or "")
+        failed = {
+            "node_id": failure.get("node_id"),
+            "handler": failure.get("handler"),
+            "status": failure.get("status"),
+            "failure_code": code,
+            "failure": failure.get("failure"),
+            "recovery_packet_path": recovery_packet_path or None,
+            "next_command": next_command or None,
+            "auto_retry_allowed": recovery_packet.get("auto_retry_allowed"),
+            "auto_retry_blocked_reason": recovery_packet.get("auto_retry_blocked_reason"),
+        }
+        failed_seats.append(failed)
+        if next_command:
+            recovery_commands.append(
+                {
+                    "node_id": failure.get("node_id"),
+                    "handler": failure.get("handler"),
+                    "failure_code": code,
+                    "next_command": next_command,
+                }
+            )
+    if status == "PASS":
+        why = "All handler seats produced usable responses; no degradation."
+    elif usable_responses:
+        why = (
+            f"{len(usable_responses)} of {len(handler_receipts)} handler seat(s) produced usable responses; "
+            f"{len(failed_seats)} terminal seat(s) need attention."
+        )
+    else:
+        why = (
+            f"0 of {len(handler_receipts)} handler seat(s) produced usable responses; "
+            "the aggregate has no reviewer evidence to preserve."
+        )
+    return {
+        "schema": "ask.tau_dag_degradation_analysis.v1",
+        "status": status,
+        "why": why,
+        "usable_response_count": len(usable_responses),
+        "handler_count": len(handler_receipts),
+        "failed_seat_count": len(failed_seats),
+        "failure_codes": failure_codes,
+        "failed_seats": failed_seats,
+        "recovery_commands": recovery_commands,
+    }
 
 
 def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
@@ -2087,6 +2170,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
             "feature_count": len(verified_features),
             "failure": receipt.get("failure") or "",
             "failure_code": receipt.get("failure_code") or "",
+            "recovery_packet_path": receipt.get("recovery_packet_path"),
             "failure_kind": "semantic",
         }
         recovery_packet = receipt.get("recovery_packet") if isinstance(receipt.get("recovery_packet"), dict) else {}
@@ -2132,6 +2216,14 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         blockers.append("competition_transport_blocked")
     status = "PASS" if winner_handler and not blockers else "NEEDS_ATTENTION"
     ok = status == "PASS"
+    degradation_analysis = _compete_degradation_analysis(
+        status=status,
+        candidates=handler_receipts,
+        blockers=blockers,
+        transport_blockers=transport_blockers,
+        winner_handler=winner_handler,
+        verified_features=all_verified_features,
+    )
 
     revision_lines = [
         "# Winner Revision Request",
@@ -2176,6 +2268,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         "transport_blockers": transport_blockers,
         "verified_features": all_verified_features,
         "blockers": blockers,
+        "degradation_analysis": degradation_analysis,
         "revision_request_path": str(revision_path),
         "proof_scope": {
             "proves": [
@@ -2210,6 +2303,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         "summary_path": str(summary_path),
         "handler_response_index": handler_receipts,
         "unresolved_gaps": blockers,
+        "degradation_analysis": degradation_analysis,
         "provider_receipt": {
             "schema": "ask.tau_dag_provider_route_receipt.v1",
             "status": status,
@@ -2231,12 +2325,83 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         artifacts=[receipt_path, scorecard_path, revision_path, summary_path],
         evidence=[
             {"kind": "compete_scorecard", "path": str(scorecard_path), "status": status},
+            {"kind": "degradation_analysis", **degradation_analysis},
             {"kind": "verified_feature_packet", "count": len(all_verified_features), "items": all_verified_features},
             {"kind": "winner_revision_request", "path": str(revision_path), "winner_handler": winner_handler},
             {"kind": "unresolved_gaps", "items": blockers},
         ],
     )
     return {"exit_code": 0 if ok else 1, "handoff": handoff}
+
+
+def _compete_degradation_analysis(
+    *,
+    status: str,
+    candidates: list[dict[str, Any]],
+    blockers: list[str],
+    transport_blockers: list[dict[str, Any]],
+    winner_handler: str,
+    verified_features: list[str],
+) -> dict[str, Any]:
+    failed_candidates = []
+    failure_codes: dict[str, int] = {}
+    recovery_commands = []
+    for candidate in candidates:
+        if candidate.get("ok") is True:
+            continue
+        code = str(candidate.get("failure_code") or "candidate_output_not_selectable")
+        failure_codes[code] = failure_codes.get(code, 0) + 1
+        recovery_packet_path = str(candidate.get("recovery_packet_path") or "")
+        recovery_packet = _read_optional_json(Path(recovery_packet_path)) if recovery_packet_path else {}
+        next_command = str(recovery_packet.get("next_command") or "")
+        failed_candidates.append(
+            {
+                "node_id": candidate.get("node_id"),
+                "handler": candidate.get("handler"),
+                "status": candidate.get("status"),
+                "failure_kind": candidate.get("failure_kind"),
+                "failure_code": code,
+                "failure": candidate.get("failure"),
+                "recovery_packet_path": recovery_packet_path or None,
+                "next_command": next_command or None,
+                "auto_retry_allowed": recovery_packet.get("auto_retry_allowed"),
+                "auto_retry_blocked_reason": recovery_packet.get("auto_retry_blocked_reason"),
+            }
+        )
+        if next_command:
+            recovery_commands.append(
+                {
+                    "node_id": candidate.get("node_id"),
+                    "handler": candidate.get("handler"),
+                    "failure_code": code,
+                    "next_command": next_command,
+                }
+            )
+    if status == "PASS":
+        why = f"Winner `{winner_handler}` selected from receipt-backed verified features."
+    elif not candidates:
+        why = "No candidate receipts were available, so the competition cannot be scored."
+    elif failed_candidates:
+        why = (
+            f"{len(failed_candidates)} of {len(candidates)} candidate lane(s) failed or need attention; "
+            f"{len(verified_features)} explicit VERIFIED_FEATURE item(s) were available."
+        )
+    else:
+        why = "Candidate receipts were collected, but selection failed closed because scorecard blockers remain."
+    return {
+        "schema": "ask.tau_dag_degradation_analysis.v1",
+        "status": status,
+        "why": why,
+        "candidate_count": len(candidates),
+        "failed_candidate_count": len(failed_candidates),
+        "winner_handler": winner_handler or None,
+        "verified_feature_count": len(verified_features),
+        "failure_codes": failure_codes,
+        "blockers": blockers,
+        "transport_blocker_count": len(transport_blockers),
+        "failed_candidates": failed_candidates,
+        "recovery_commands": recovery_commands,
+    }
 
 
 def _extract_verified_features(text: str) -> list[str]:
@@ -2251,6 +2416,7 @@ def _extract_verified_features(text: str) -> list[str]:
 
 
 def _compete_summary(scorecard: dict[str, Any]) -> str:
+    degradation = scorecard.get("degradation_analysis") if isinstance(scorecard.get("degradation_analysis"), dict) else {}
     lines = [
         "# Tau Compete Join",
         "",
@@ -2258,9 +2424,18 @@ def _compete_summary(scorecard: dict[str, Any]) -> str:
         f"- winner: `{scorecard.get('winner_handler') or 'NEEDS_ATTENTION'}`",
         f"- candidates: `{len(scorecard.get('candidates') or [])}`",
         "",
-        "## Candidates",
-        "",
     ]
+    if degradation.get("why"):
+        lines.extend(["## Degradation Analysis", "", str(degradation.get("why")), ""])
+        for item in degradation.get("failed_candidates") or []:
+            lines.extend(
+                [
+                    f"- `{item.get('node_id')}` / `{item.get('handler')}`: `{item.get('failure_code')}`",
+                    f"  recovery: `{item.get('recovery_packet_path') or 'missing'}`",
+                ]
+            )
+        lines.append("")
+    lines.extend(["## Candidates", ""])
     for candidate in scorecard.get("candidates") or []:
         lines.extend(
             [
@@ -2926,6 +3101,15 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise RuntimeError(f"JSON root is not an object: {path}")
     return payload
+
+
+def _read_optional_json(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    try:
+        return _read_json(path)
+    except (OSError, json.JSONDecodeError, RuntimeError):
+        return {}
 
 
 def _load_webgpt_transport_summary(artifact_dir: Path) -> tuple[Path | None, dict[str, Any]]:
