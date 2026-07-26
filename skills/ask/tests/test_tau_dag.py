@@ -450,7 +450,7 @@ raise SystemExit(2)
         for command in receipt["commands"]
     )
     assert any(
-        command.get("recovery_attempt") == "webgpt_stale_binding_submit_after_rebind"
+        command.get("recovery_attempt") == "webgpt_stale_binding_submit_after_new_tab_rebind"
         for command in receipt["commands"]
     )
 
@@ -1339,6 +1339,147 @@ raise SystemExit(2)
     assert receipt["failure_code"] == "browser_tab_read_timeout"
     assert recovery["status"] == "NEEDS_ATTENTION"
     assert recovery["failure_code"] == "browser_tab_read_timeout"
+
+
+def test_roundtable_webgrok_stale_binding_retries_existing_provider_tab_before_blocking(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Live browser-backed Grok smoke. Return PING_RESULT: 4."}) + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgrok"
+    bind_log = tmp_path / "bind-log.jsonl"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+if args[:2] == ["tab.list", "--json"]:
+    print(json.dumps([
+        {"id": 111, "title": "Grok old", "url": "https://grok.com/", "active": False},
+        {"id": 222, "title": "Grok current", "url": "https://grok.com/", "active": True},
+    ]))
+    raise SystemExit(0)
+if args[:1] == ["grok.submit"]:
+    tab_id = args[args.index("--tab-id") + 1]
+    output = Path(args[args.index("--output") + 1])
+    raw = Path(args[args.index("--raw-output") + 1])
+    meta = Path(args[args.index("--meta-output") + 1])
+    if tab_id == "111":
+        raw.write_text("")
+        meta.write_text(json.dumps({
+            "status": "failed",
+            "failure": "grok_auth_required",
+            "blocker": "BLOCKED_GROK_AUTH_REQUIRED",
+            "tab_identity_preflight": {
+                "ok": True,
+                "provider_ok": True,
+                "expected_tab_id": "111",
+                "live_url": "https://grok.com/",
+            },
+        }) + "\\n")
+        print("Not authenticated - log in to x.com first", file=sys.stderr)
+        raise SystemExit(1)
+    if tab_id == "222":
+        output.write_text("PING_RESULT: 4\\n")
+        raw.write_text("PING_RESULT: 4\\n<<<GROK_DONE:TEST>>>\\n")
+        meta.write_text(json.dumps({
+            "status": "completed",
+            "proof_status": "response_proven",
+            "requested_tab_id": "222",
+            "resolved_url": "https://grok.com/",
+        }) + "\\n")
+        raise SystemExit(0)
+    raise SystemExit(9)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        f"""#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    print(json.dumps({{
+        "backend": "webgrok",
+        "project": "webgrok-project",
+        "tab_id": "111",
+        "conversation_url": "https://grok.com/",
+        "status": "ok",
+    }}))
+    raise SystemExit(0)
+if args[:1] == ["bind"]:
+    Path({str(bind_log)!r}).write_text(json.dumps({{
+        "args": args,
+    }}) + "\\n")
+    print(json.dumps({{
+        "name": args[1],
+        "backend": "webgrok",
+        "tab_id": args[args.index("--tab-id") + 1],
+        "conversation_url": args[args.index("--url") + 1],
+        "state_path": "/tmp/webgrok-project.json",
+    }}))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-webgrok",
+            "--handler",
+            "webgrok",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "roundtable",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            str(surf),
+            "--browser-oracle-run",
+            str(browser_oracle),
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["ok"] is True
+    assert receipt["browser_oracle"]["tab_id"] == "222"
+    assert receipt["browser_oracle_binding_refresh"]["status"] == "updated"
+    commands = receipt["commands"]
+    assert any(item.get("recovery_attempt") == "webgrok_stale_binding_scan_live_tabs" for item in commands)
+    assert any(
+        item.get("recovery_attempt") == "webgrok_stale_binding_submit_existing_tab"
+        and item.get("candidate_tab_id") == "222"
+        for item in commands
+    )
+    bound = json.loads(bind_log.read_text(encoding="utf-8"))
+    assert bound["args"][bound["args"].index("--tab-id") + 1] == "222"
 
 
 def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp_path: Path) -> None:

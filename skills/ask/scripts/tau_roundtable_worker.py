@@ -226,16 +226,18 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             if degraded_response_recovered:
                 submit_meta = _read_json(meta_path)
             transport_summary_path, transport_summary = _load_webgpt_transport_summary(artifact_dir)
-            if submit.returncode != 0 and _should_retry_webgpt_stale_binding(
+            if submit.returncode != 0 and _should_retry_browser_stale_binding(
                 handler=handler,
                 url=url,
                 submit_meta=submit_meta,
                 submit=submit,
             ):
-                retry = _retry_webgpt_stale_binding(
+                retry = _retry_browser_stale_binding(
                     args,
+                    handler=handler,
                     project=project,
                     url=url,
+                    current_tab_id=tab_id,
                     prompt_path=prompt_path,
                     response_path=response_path,
                     raw_path=raw_path,
@@ -248,6 +250,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                     submit_meta = retry["submit_meta"]
                     tab_id = retry["tab_id"]
                     binding_refresh = retry["binding_refresh"]
+                    if isinstance(resolve_payload, dict):
+                        resolve_payload["tab_id"] = tab_id
+                        if binding_refresh and binding_refresh.get("current_url"):
+                            resolve_payload["conversation_url"] = binding_refresh["current_url"]
                     degraded_response_recovered = _normalize_degraded_webgpt_response(
                         handler=handler,
                         meta_path=meta_path,
@@ -529,31 +535,55 @@ def _browser_submit_command(
     return command
 
 
-def _should_retry_webgpt_stale_binding(
+def _should_retry_browser_stale_binding(
     *,
     handler: str,
     url: str,
     submit_meta: dict[str, Any],
     submit: CommandResult,
 ) -> bool:
-    if handler != "webgpt" or not url:
+    if handler not in HANDLER_SUBMIT_COMMANDS or not url:
         return False
     haystack = "\n".join(
         [
             str(submit_meta.get("failure") or ""),
+            str(submit_meta.get("blocker") or ""),
+            str(submit_meta.get("proof_status") or ""),
             str(submit_meta.get("agent_diagnosis") or ""),
             submit.stderr,
             submit.stdout,
         ]
+    ).lower()
+    if _looks_browser_tool_unsupported(haystack) or _looks_browser_provider_rate_limited(haystack, submit_meta):
+        return False
+    retry_markers = (
+        "tab_identity_preflight_failed",
+        "browser_tab_identity_mismatch",
+        "tab_not_open_chatgpt",
+        "tab_not_open_claude",
+        "tab_not_open_kimi",
+        "tab_not_open_gemini",
+        "tab_not_open_grok",
+        "not authenticated",
+        "login required",
+        "log in to x.com",
+        "input field: not found",
+        "send button: not found",
+        "input field not found",
+        "send button not found",
+        "composer not found",
+        "no composer",
     )
-    return "tab_identity_preflight_failed" in haystack or "tab_not_open_chatgpt" in haystack
+    return any(marker in haystack for marker in retry_markers)
 
 
-def _retry_webgpt_stale_binding(
+def _retry_browser_stale_binding(
     args: argparse.Namespace,
     *,
+    handler: str,
     project: str,
     url: str,
+    current_tab_id: str,
     prompt_path: Path,
     response_path: Path,
     raw_path: Path,
@@ -561,6 +591,55 @@ def _retry_webgpt_stale_binding(
     attachment_paths: list[str],
     commands: list[dict[str, Any]],
 ) -> dict[str, Any] | None:
+    candidates = _live_provider_tab_candidates(
+        args,
+        handler=handler,
+        requested_url=url,
+        exclude_tab_id=current_tab_id,
+        commands=commands,
+    )
+    for candidate in candidates[:4]:
+        tab_id = str(candidate.get("id") or "").strip()
+        candidate_url = str(candidate.get("url") or url).strip()
+        if not tab_id:
+            continue
+        retry_cmd = _browser_submit_command(
+            args,
+            handler=handler,
+            prompt_path=prompt_path,
+            response_path=response_path,
+            raw_path=raw_path,
+            meta_path=meta_path,
+            tab_id=tab_id,
+            url=candidate_url or url,
+            attachment_paths=attachment_paths,
+        )
+        retry = _run_cmd(retry_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
+        retry_summary = retry.summary()
+        retry_summary["recovery_attempt"] = f"{handler}_stale_binding_submit_existing_tab"
+        retry_summary["candidate_tab_id"] = tab_id
+        retry_summary["candidate_url"] = candidate_url or None
+        commands.append(retry_summary)
+        submit_meta = _read_json(meta_path) if meta_path.is_file() else {}
+        if retry.returncode != 0:
+            continue
+        binding_refresh = _bind_browser_oracle_url(
+            args,
+            project=project,
+            tab_id=tab_id,
+            backend=HANDLER_BACKENDS[handler],
+            previous_url=url,
+            current_url=candidate_url or url,
+            commands=commands,
+        )
+        return {
+            "submit": retry,
+            "submit_meta": submit_meta,
+            "tab_id": tab_id,
+            "binding_refresh": binding_refresh,
+        }
+    if handler != "webgpt":
+        return None
     open_tab = _run_cmd([str(args.surf_run), "tab.new", url], cwd=Path(args.surf_run).parent, timeout=90)
     open_summary = open_tab.summary()
     open_summary["recovery_attempt"] = "webgpt_stale_binding_open_url"
@@ -583,14 +662,14 @@ def _retry_webgpt_stale_binding(
         args,
         project=project,
         tab_id=tab_id,
-        backend=HANDLER_BACKENDS["webgpt"],
+        backend=HANDLER_BACKENDS[handler],
         previous_url="",
         current_url=url,
         commands=commands,
     )
     retry_cmd = _browser_submit_command(
         args,
-        handler="webgpt",
+        handler=handler,
         prompt_path=prompt_path,
         response_path=response_path,
         raw_path=raw_path,
@@ -601,7 +680,7 @@ def _retry_webgpt_stale_binding(
     )
     retry = _run_cmd(retry_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
     retry_summary = retry.summary()
-    retry_summary["recovery_attempt"] = "webgpt_stale_binding_submit_after_rebind"
+    retry_summary["recovery_attempt"] = f"{handler}_stale_binding_submit_after_new_tab_rebind"
     commands.append(retry_summary)
     submit_meta = _read_json(meta_path) if meta_path.is_file() else {}
     return {
@@ -610,6 +689,61 @@ def _retry_webgpt_stale_binding(
         "tab_id": tab_id,
         "binding_refresh": binding_refresh,
     }
+
+
+def _live_provider_tab_candidates(
+    args: argparse.Namespace,
+    *,
+    handler: str,
+    requested_url: str,
+    exclude_tab_id: str,
+    commands: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    tab_list = _run_cmd([str(args.surf_run), "tab.list", "--json"], cwd=Path(args.surf_run).parent, timeout=60)
+    summary = tab_list.summary()
+    summary["recovery_attempt"] = f"{handler}_stale_binding_scan_live_tabs"
+    commands.append(summary)
+    if tab_list.returncode != 0:
+        return []
+    try:
+        payload = json.loads(tab_list.stdout)
+    except json.JSONDecodeError:
+        return []
+    if isinstance(payload, dict):
+        payload = payload.get("tabs", [])
+    if not isinstance(payload, list):
+        return []
+    candidates: list[dict[str, Any]] = []
+    for tab in payload:
+        if not isinstance(tab, dict):
+            continue
+        tab_id = str(tab.get("id") or "").strip()
+        if not tab_id or tab_id == str(exclude_tab_id):
+            continue
+        tab_url = str(tab.get("url") or "").strip()
+        if not _is_provider_url(handler, tab_url, requested_url):
+            continue
+        candidates.append(tab)
+    return sorted(candidates, key=lambda item: (not bool(item.get("active")), str(item.get("id") or "")))
+
+
+def _is_provider_url(handler: str, tab_url: str, requested_url: str = "") -> bool:
+    url = tab_url or requested_url
+    if not url:
+        return False
+    parsed = urllib.parse.urlparse(url)
+    host = parsed.netloc.lower()
+    if handler == "webgpt":
+        return host in {"chatgpt.com", "www.chatgpt.com"}
+    if handler == "webclaude":
+        return host in {"claude.ai", "www.claude.ai"}
+    if handler == "webkimi":
+        return host in {"kimi.com", "www.kimi.com"}
+    if handler == "webgemini":
+        return host in {"gemini.google.com"}
+    if handler == "webgrok":
+        return host in {"grok.com", "www.grok.com", "x.com", "www.x.com"}
+    return False
 
 
 def _extract_tab_id(text: str) -> str:

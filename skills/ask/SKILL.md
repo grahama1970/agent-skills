@@ -437,6 +437,16 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
 - Use the configured tab id when available. If the tab is missing, wrong, stale,
   or cannot be proven to match the requested reviewer, stop with
   `NEEDS_ATTENTION`.
+- Project agents should not manually remember or perform stale-tab rebinding
+  during normal Ask runs. Browser-oracle bindings are starting hints. If Surf
+  reports a stale/wrong provider tab, missing composer, or auth-like stale-tab
+  failure, `$ask` scans already-open same-provider tabs, retries a bounded
+  candidate set, and updates the browser-oracle binding only after a successful
+  submit. The proof appears in `node-receipt.json` as
+  `browser_oracle_binding_refresh` plus command entries such as
+  `<handler>_stale_binding_scan_live_tabs` and
+  `<handler>_stale_binding_submit_existing_tab`. If no candidate succeeds, the
+  lane stays `NEEDS_ATTENTION` with a recovery packet.
 - **Browser tab lifecycle for browser handlers**:
   1. Create or reuse a provider tab with `$surf`: `skills/surf/run.sh tab.new
      "https://chatgpt.com/"`, `... tab.new "https://claude.ai/"`, `... tab.new
