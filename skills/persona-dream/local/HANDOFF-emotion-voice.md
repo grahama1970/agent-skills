@@ -29,8 +29,32 @@ Proof receipts + WAVs: `skills/persona-dream/reports/goal_v5/emotion_proof/{,wei
 
 ## Optional future work (nothing blocking)
 - Decide default-on emotion (base render currently triggers whenever `intensity` is present in voice_delivery).
-- ASR-verified batch path (`asr_verify=true`) still renders Turbo; extend emotion to it if needed.
 - Human subjective tone acceptance not scored.
+
+## 2026-07-26 continuation
+- ASR-verified batch path is now closed live. A pre-fix probe showed
+  `/synthesize-batch` with `asr_verify=true` preserved top-level
+  `voice_delivery.intensity/valence/use_base_emotion` but dropped it from the
+  accepted ASR candidate, rendering `engine=chatterbox_turbo` with
+  `emotion_knobs=null`.
+- Chatterbox fix pushed to `grahama1970/chatterbox@main` as
+  `d6d2c436d5d7e9981703a8bbdd1493946b9c6c44`:
+  `synthesis_request_with_overrides` now carries
+  `base_request.voice_delivery` into ASR candidates, and batch/cache metadata
+  derives `engine`/`emotion_knobs` from `emotion_knobs_from_delivery`.
+- Focused proof: `PYTHONPATH=src python -m pytest -q
+  tests/test_agent_server_primitives.py -k
+  'asr_candidate_request_preserves_weighted_voice_delivery or
+  accepted_audio_cache_material_records_base_engine_for_weighted_emotion or
+  accepted_audio_cache_key_changes_with_text'` -> 3 passed.
+- Live proof: `/synthesize-batch` with `asr_verify=true`, `asr_cache=false`,
+  `tone=firm_boundary`, `intensity=0.9`, `valence=-0.7`,
+  `use_base_emotion=true` returned `mocked=false`, `live=true`,
+  top/chunk/ASR `engine=chatterbox_base`, emotion knobs
+  `{exaggeration: 1.11, cfg_weight: 0.36}`, ASR transcript
+  "I will hold the boundary clearly.", WER 0.0, `failed_gates=[]`.
+- Receipt:
+  `skills/persona-dream/reports/goal_v5/emotion_proof/asr_batch/RECEIPT.json`.
 
 ## Live services (verified 200)
 chatterbox `:8018`, memory `:8601` — both running the merged code.

@@ -1,0 +1,70 @@
+{
+  "schema": "persona-dream.asr_batch_emotion_proof.v1",
+  "date": "2026-07-26",
+  "claim": "The ASR-verified /synthesize-batch path preserves weighted emotion into the accepted ASR candidate and renders through the base Chatterbox engine.",
+  "mocked": false,
+  "live": true,
+  "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+  "request": {
+    "answer_text": "I will hold the boundary clearly.",
+    "label": "persona-dream-asr-emotion-live-final",
+    "use_blessed_qra_cache": false,
+    "asr_verify": true,
+    "asr_cache": false,
+    "asr_max_candidates": 1,
+    "voice_delivery": {
+      "tone": "firm_boundary",
+      "intensity": 0.9,
+      "valence": -0.7,
+      "use_base_emotion": true,
+      "source": "memory.intent"
+    }
+  },
+  "fix": {
+    "repo": "experiments/chatterbox",
+    "commit": "d6d2c436d5d7e9981703a8bbdd1493946b9c6c44",
+    "file": "src/chatterbox/agent/server.py",
+    "summary": "Preserve base_request.voice_delivery in ASR candidate synthesis requests and derive batch/cache engine metadata from emotion_knobs_from_delivery.",
+    "focused_tests": "PYTHONPATH=src python -m pytest -q tests/test_agent_server_primitives.py -k 'asr_candidate_request_preserves_weighted_voice_delivery or accepted_audio_cache_material_records_base_engine_for_weighted_emotion or accepted_audio_cache_key_changes_with_text'",
+    "focused_tests_result": "3 passed, 34 deselected"
+  },
+  "live_result": {
+    "ok": true,
+    "engine": "chatterbox_base",
+    "cache_material_engine": "chatterbox_base",
+    "chunk_engine": "chatterbox_base",
+    "asr_engine": "chatterbox_base",
+    "emotion_knobs": {
+      "exaggeration": 1.11,
+      "cfg_weight": 0.36,
+      "temperature": 0.7,
+      "intensity": 0.9,
+      "valence": -0.7
+    },
+    "asr_transcript": "I will hold the boundary clearly.",
+    "asr_gate": {
+      "ok": true,
+      "wer": 0.0,
+      "repeated_ngram_hits": [],
+      "failed_gates": []
+    },
+    "finished_wav_sha256": "0d5c4a6395bb0aad9a7f57fc0a48a1adf2685972dce080766b8403256a325ac4",
+    "finished_wav_duration_seconds": 2.6,
+    "failed_gates": []
+  },
+  "receipt_paths": {
+    "request": "/tmp/persona-dream-asr-batch-emotion-20260726T1302Z/request.json",
+    "response": "/tmp/persona-dream-asr-batch-emotion-20260726T1302Z/response.json",
+    "summary": "/tmp/persona-dream-asr-batch-emotion-20260726T1302Z/summary.json"
+  },
+  "proves": [
+    "ASR-verified batch rendering carries weighted voice_delivery into the accepted candidate synthesis call.",
+    "The accepted ASR candidate uses chatterbox_base with emotion knobs derived from intensity and valence.",
+    "The live ASR gate accepted the generated audio with WER 0.0."
+  ],
+  "does_not_prove": [
+    "Subjective human tone acceptance.",
+    "Paid provider video generation.",
+    "Browser or Jabra microphone voice-input behavior."
+  ]
+}
