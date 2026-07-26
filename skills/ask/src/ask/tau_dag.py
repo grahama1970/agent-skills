@@ -1450,9 +1450,20 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
     }
     handler_nodes: list[dict[str, Any]] = []
     is_compete = input.workflow_mode == "compete"
-    for index, (handler, node_id) in enumerate(zip(input.handlers, _handler_node_ids(input.handlers))):
+    node_ids = _handler_node_ids(input.handlers)
+    browser_resource_chain = [
+        node_id
+        for handler, node_id in zip(input.handlers, node_ids)
+        if _is_browser_handler(handler)
+    ]
+    for index, (handler, node_id) in enumerate(zip(input.handlers, node_ids)):
         provider_hint = _handler_provider_hint(input, index)
         prior_nodes = _roundtable_prior_nodes(input, node_id)
+        scheduler_dependencies = list(prior_nodes)
+        if input.topology == "concurrent" and node_id in browser_resource_chain:
+            browser_index = browser_resource_chain.index(node_id)
+            if browser_index > 0:
+                scheduler_dependencies = [browser_resource_chain[browser_index - 1]]
         required_evidence = [
             "handler_response_receipt",
             "normalized_handler_receipt",
@@ -1468,7 +1479,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                 "max_attempts": 1,
                 "command_spec": f"command-specs/{node_id}/tau-dispatch-command.json",
                 "required_evidence": required_evidence,
-                "depends_on": prior_nodes,
+                "depends_on": scheduler_dependencies,
                 "context": {
                     "role": "roundtable_handler",
                     "workflow_mode": input.workflow_mode,
@@ -1490,6 +1501,8 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                     "immutable_goal": input.immutable_goal,
                     "topology": input.topology,
                     "prior_nodes": prior_nodes,
+                    "scheduler_dependencies": scheduler_dependencies,
+                    "transport_resource": "surf_socket" if _is_browser_handler(handler) else None,
                     "requires_prior_receipts": bool(prior_nodes),
                     "requires_verdict": bool(prior_nodes) and _roundtable_requires_verdict(input.request),
                     "isolation_required": is_compete,
@@ -1546,7 +1559,16 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             previous = str(node["id"])
         edges.append({"from": previous, "to": "join"})
     else:
-        edges.extend({"from": str(node["id"]), "to": "join"} for node in handler_nodes)
+        edges.extend(
+            {"from": left, "to": right}
+            for left, right in zip(browser_resource_chain, browser_resource_chain[1:])
+        )
+        last_browser = browser_resource_chain[-1] if browser_resource_chain else ""
+        edges.extend(
+            {"from": str(node["id"]), "to": "join"}
+            for node in handler_nodes
+            if str(node["id"]) not in browser_resource_chain or str(node["id"]) == last_browser
+        )
     edges.append({"from": "join", "to": "human"})
     return {
         "schema": TAU_DAG_SCHEMA,
@@ -1581,6 +1603,9 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                 for handler in input.handlers
                 if handler in ROUNDTABLE_HANDLERS
             },
+            "browser_transport_serialized": input.topology == "concurrent"
+            and len(browser_resource_chain) > 1,
+            "browser_transport_chain": browser_resource_chain,
         },
         "provider_sensitive": False,
         "requires_provider_route": False,
@@ -1902,6 +1927,19 @@ def _roundtable_next_agent(input: TauDagCompileInput, node_id: str) -> str:
             return "join"
         if index + 1 < len(node_ids):
             return node_ids[index + 1]
+    elif input.topology == "concurrent":
+        browser_node_ids = [
+            candidate_node_id
+            for handler, candidate_node_id in zip(
+                input.handlers,
+                _handler_node_ids(input.handlers),
+            )
+            if _is_browser_handler(handler)
+        ]
+        if node_id in browser_node_ids:
+            index = browser_node_ids.index(node_id)
+            if index + 1 < len(browser_node_ids):
+                return browser_node_ids[index + 1]
     return "join"
 
 

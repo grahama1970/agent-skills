@@ -144,8 +144,17 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
         "handler-webgemini",
         "join",
     ]
-    assert {"from": "handler-webkimi", "to": "join"} in dag["edges"]
+    assert {"from": "handler-webkimi", "to": "handler-webclaude"} in dag["edges"]
+    assert {"from": "handler-webclaude", "to": "handler-webgpt"} in dag["edges"]
+    assert {"from": "handler-webgpt", "to": "handler-webgemini"} in dag["edges"]
     assert {"from": "handler-webgemini", "to": "join"} in dag["edges"]
+    assert dag["context"]["browser_transport_serialized"] is True
+    assert dag["context"]["browser_transport_chain"] == [
+        "handler-webkimi",
+        "handler-webclaude",
+        "handler-webgpt",
+        "handler-webgemini",
+    ]
     join = dag["nodes"][-1]
     assert join["join"]["requires_completed"] == [
         "handler-webkimi",
@@ -156,6 +165,11 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
     kimi = dag["nodes"][0]
     assert kimi["agent"] == "handler-webkimi"
     assert kimi["context"]["handler"] == "webkimi"
+    assert kimi["context"]["prior_nodes"] == []
+    assert kimi["context"]["scheduler_dependencies"] == []
+    assert dag["nodes"][1]["context"]["prior_nodes"] == []
+    assert dag["nodes"][1]["context"]["scheduler_dependencies"] == ["handler-webkimi"]
+    assert dag["nodes"][1]["context"]["requires_prior_receipts"] is False
     assert kimi["context"]["immutable_goal"] == request.immutable_goal
     assert kimi["context"]["prompt_contract"]["immutable_goal"] == request.immutable_goal
     assert f"Immutable goal / acceptance bar: {request.immutable_goal}" in kimi["context"]["prompt_contract"]["user_template"]
@@ -218,7 +232,7 @@ def test_dag_template_roundtable_defaults_to_concurrent_handler_dag(tmp_path: Pa
     assert dag["context"]["dag_template"] == "roundtable"
     assert dag["context"]["roundtable_topology"] == "concurrent"
     assert dag["edges"] == [
-        {"from": "handler-webgpt", "to": "join"},
+        {"from": "handler-webgpt", "to": "handler-webclaude"},
         {"from": "handler-webclaude", "to": "join"},
         {"from": "join", "to": "human"},
     ]
@@ -807,8 +821,8 @@ def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_
         "deepseek-ai/deepseek-v3.2-tee",
     ]
     assert dag["edges"] == [
-        {"from": "handler-webgpt", "to": "join"},
-        {"from": "handler-webclaude", "to": "join"},
+        {"from": "handler-webgpt", "to": "handler-webclaude"},
+        {"from": "handler-webclaude", "to": "handler-webkimi"},
         {"from": "handler-webkimi", "to": "join"},
         {"from": "handler-deepseek-ai-deepseek-v3-2-tee", "to": "join"},
         {"from": "join", "to": "human"},
@@ -867,17 +881,24 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
     assert dag["context"]["transport_adapter"] == "handler_neutral_adapter"
     assert dag["context"]["handlers"] == ["webgpt", "webclaude", "gpt-5.5-high"]
     assert dag["edges"] == [
-        {"from": "handler-webgpt", "to": "join"},
+        {"from": "handler-webgpt", "to": "handler-webclaude"},
         {"from": "handler-webclaude", "to": "join"},
         {"from": "handler-gpt-5-5-high", "to": "join"},
         {"from": "join", "to": "human"},
     ]
+    assert dag["context"]["browser_transport_serialized"] is True
     candidates = [node for node in dag["nodes"] if str(node["id"]).startswith("handler-")]
     assert candidates
     assert all(node["context"]["workflow_mode"] == "compete" for node in candidates)
     assert all(node["context"]["isolation_required"] is True for node in candidates)
     assert all(node["context"]["prompt_contract"]["isolation_required"] is True for node in candidates)
     assert all(node["context"]["prompt_contract"]["immutable_goal"] == request.immutable_goal for node in candidates)
+    claude = next(node for node in candidates if node["id"] == "handler-webclaude")
+    api = next(node for node in candidates if node["id"] == "handler-gpt-5-5-high")
+    assert claude["depends_on"] == ["handler-webgpt"]
+    assert claude["context"]["prior_nodes"] == []
+    assert claude["context"]["requires_prior_receipts"] is False
+    assert api["depends_on"] == []
     join = next(node for node in dag["nodes"] if node["id"] == "join")
     assert join["context"]["role"] == "compete_evaluator"
     assert "compete_scorecard" in join["required_evidence"]
