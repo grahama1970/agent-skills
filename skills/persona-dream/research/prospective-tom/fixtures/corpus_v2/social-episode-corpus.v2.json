@@ -1,0 +1,5080 @@
+{
+  "counts": {
+    "ambiguous_episodes": 32,
+    "discriminative_episodes": 32,
+    "episodes": 64,
+    "families": 4,
+    "label_balance_true": 0.5,
+    "labels": 128,
+    "labels_false": 64,
+    "labels_true": 64,
+    "revealing_prior_episodes": 32,
+    "shared_prior_episodes": 32,
+    "unresolvable_episodes": 16
+  },
+  "episodes": [
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-info-asym-01",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-01.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-01.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_believes_embry_is_stale": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ESCALATED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Before you act, I need to flag something about the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 1
+    },
+    {
+      "actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-info-asym-02",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-02.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-02.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_believes_embry_is_stale": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_STOOD_DOWN",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let me check where we are on the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 2
+    },
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-info-asym-03",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-03.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-03.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_believes_embry_is_stale": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ESCALATED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let me check where we are on the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 3
+    },
+    {
+      "actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-info-asym-04",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-04.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-04.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_believes_embry_is_stale": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ACKNOWLEDGED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Nothing new on the constraint, carry on when ready."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 4
+    },
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-info-asym-05",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-05.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-05.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_believes_embry_is_stale": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ACKNOWLEDGED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Before you act, I need to flag something about the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 5
+    },
+    {
+      "actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-info-asym-06",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-06.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-06.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_believes_embry_is_stale": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ACKNOWLEDGED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let me check where we are on the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 6
+    },
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-info-asym-07",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-07.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-07.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_believes_embry_is_stale": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ACKNOWLEDGED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let me check where we are on the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 7
+    },
+    {
+      "actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-info-asym-08",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-08.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-08.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_believes_embry_is_stale": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_STOOD_DOWN",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Nothing new on the constraint, carry on when ready."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 8
+    },
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-info-asym-09",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-09.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-09.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_believes_embry_is_stale": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ESCALATED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Before you act, I need to flag something about the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 9
+    },
+    {
+      "actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-info-asym-10",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-10.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-10.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_believes_embry_is_stale": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_STOOD_DOWN",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let me check where we are on the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 10
+    },
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-info-asym-11",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-11.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-11.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_believes_embry_is_stale": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ESCALATED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let me check where we are on the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 11
+    },
+    {
+      "actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-info-asym-12",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-12.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-12.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_believes_embry_is_stale": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ACKNOWLEDGED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Nothing new on the constraint, carry on when ready."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 12
+    },
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-info-asym-13",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-13.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-13.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_believes_embry_is_stale": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ACKNOWLEDGED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Before you act, I need to flag something about the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 13
+    },
+    {
+      "actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-info-asym-14",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-14.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-14.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_believes_embry_is_stale": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ACKNOWLEDGED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let me check where we are on the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 14
+    },
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-info-asym-15",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-15.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-15.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_believes_embry_is_stale": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_ACKNOWLEDGED",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let me check where we are on the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 15
+    },
+    {
+      "actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "KAI_INTERRUPTS_WITH_CORRECTION",
+        "KAI_PROCEEDS_NORMALLY",
+        "KAI_WARNS_PRIVATELY"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_is_stale": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_ROUTINE_CONFIRMATION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-info-asym-16",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-info-asym-16.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-info-asym-16.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_believes_embry_is_stale": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_believes_embry_is_stale",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_STOOD_DOWN",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Nothing new on the constraint, carry on when ready."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 16
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-pref-desire-01",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-01.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-01.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_prefers_quiet_review": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_DECLINED_MEETING",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "I would rather read it on my own time."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 1
+    },
+    {
+      "actual_next_action": "KAI_CALLS_LIVE_SYNC",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CALLS_LIVE_SYNC",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-pref-desire-02",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-02.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-02.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_prefers_quiet_review": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_BOOKED_CALL",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We should settle the review approach."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 2
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-pref-desire-03",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-03.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-03.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_prefers_quiet_review": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_DECLINED_MEETING",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We should settle the review approach."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 3
+    },
+    {
+      "actual_next_action": "KAI_CALLS_LIVE_SYNC",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CALLS_LIVE_SYNC",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-pref-desire-04",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-04.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-04.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_prefers_quiet_review": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_READ_NOTES",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us just get on a call and close it now."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 4
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-pref-desire-05",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-05.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-05.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_prefers_quiet_review": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_READ_NOTES",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "I would rather read it on my own time."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 5
+    },
+    {
+      "actual_next_action": "KAI_CALLS_LIVE_SYNC",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CALLS_LIVE_SYNC",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-pref-desire-06",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-06.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-06.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_prefers_quiet_review": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_READ_NOTES",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We should settle the review approach."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 6
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-pref-desire-07",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-07.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-07.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_prefers_quiet_review": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_READ_NOTES",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We should settle the review approach."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 7
+    },
+    {
+      "actual_next_action": "KAI_CALLS_LIVE_SYNC",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CALLS_LIVE_SYNC",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-pref-desire-08",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-08.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-08.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_prefers_quiet_review": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_BOOKED_CALL",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us just get on a call and close it now."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 8
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-pref-desire-09",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-09.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-09.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_prefers_quiet_review": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_DECLINED_MEETING",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "I would rather read it on my own time."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 9
+    },
+    {
+      "actual_next_action": "KAI_CALLS_LIVE_SYNC",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CALLS_LIVE_SYNC",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-pref-desire-10",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-10.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-10.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_prefers_quiet_review": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_BOOKED_CALL",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We should settle the review approach."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 10
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-pref-desire-11",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-11.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-11.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_prefers_quiet_review": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_DECLINED_MEETING",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We should settle the review approach."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 11
+    },
+    {
+      "actual_next_action": "KAI_CALLS_LIVE_SYNC",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CALLS_LIVE_SYNC",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-pref-desire-12",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-12.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-12.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_prefers_quiet_review": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_READ_NOTES",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us just get on a call and close it now."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 12
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-pref-desire-13",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-13.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-13.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_prefers_quiet_review": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_READ_NOTES",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "I would rather read it on my own time."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 13
+    },
+    {
+      "actual_next_action": "KAI_CALLS_LIVE_SYNC",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CALLS_LIVE_SYNC",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-pref-desire-14",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-14.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-14.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_prefers_quiet_review": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_READ_NOTES",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We should settle the review approach."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 14
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-pref-desire-15",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-15.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-15.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_prefers_quiet_review": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_READ_NOTES",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We should settle the review approach."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 15
+    },
+    {
+      "actual_next_action": "KAI_CALLS_LIVE_SYNC",
+      "allowed_next_actions": [
+        "KAI_CALLS_LIVE_SYNC",
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_ASYNC_NOTES",
+        "KAI_REQUESTS_FAST_HANDOFF"
+      ],
+      "counterpart_beliefs": {
+        "kai_prefers_quiet_review": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CALLS_LIVE_SYNC",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-pref-desire-16",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-pref-desire-16.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai wants the quieter review path.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-pref-desire-16.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai wants the quieter review path.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_prefers_quiet_review": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_prefers_quiet_review",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_BOOKED_CALL",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us just get on a call and close it now."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 16
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-trust-commit-01",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-01.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-01.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_trusts_embry_unsupervised": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_SKIPPED_REVIEW",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "It is yours, I do not need to see it again."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 1
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-trust-commit-02",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-02.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-02.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_trusts_embry_unsupervised": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_REQUIRED_SIGNOFF",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us be clear about who owns the next step."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 2
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-trust-commit-03",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-03.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-03.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_trusts_embry_unsupervised": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_SKIPPED_REVIEW",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us be clear about who owns the next step."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 3
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-trust-commit-04",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-04.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-04.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_trusts_embry_unsupervised": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_CHECKED_STATUS",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Send it back to me before anything ships."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 4
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-trust-commit-05",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-05.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-05.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_trusts_embry_unsupervised": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_CHECKED_STATUS",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "It is yours, I do not need to see it again."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 5
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-trust-commit-06",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-06.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-06.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_trusts_embry_unsupervised": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_CHECKED_STATUS",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us be clear about who owns the next step."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 6
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-trust-commit-07",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-07.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-07.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_trusts_embry_unsupervised": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_CHECKED_STATUS",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us be clear about who owns the next step."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 7
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-trust-commit-08",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-08.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-08.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_trusts_embry_unsupervised": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_REQUIRED_SIGNOFF",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Send it back to me before anything ships."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 8
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-trust-commit-09",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-09.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-09.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_trusts_embry_unsupervised": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_SKIPPED_REVIEW",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "It is yours, I do not need to see it again."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 9
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-trust-commit-10",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-10.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-10.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_trusts_embry_unsupervised": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_REQUIRED_SIGNOFF",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us be clear about who owns the next step."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 10
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-trust-commit-11",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-11.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-11.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_trusts_embry_unsupervised": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_SKIPPED_REVIEW",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us be clear about who owns the next step."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 11
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-trust-commit-12",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-12.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-12.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_trusts_embry_unsupervised": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_CHECKED_STATUS",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Send it back to me before anything ships."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 12
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-trust-commit-13",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-13.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-13.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_trusts_embry_unsupervised": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_CHECKED_STATUS",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "It is yours, I do not need to see it again."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 13
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-trust-commit-14",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-14.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-14.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_trusts_embry_unsupervised": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_CHECKED_STATUS",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us be clear about who owns the next step."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 14
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-trust-commit-15",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-15.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-15.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_trusts_embry_unsupervised": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_CHECKED_STATUS",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us be clear about who owns the next step."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 15
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_DELEGATES_TRUST",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_SETS_BOUNDARY",
+        "KAI_STEPS_BACK"
+      ],
+      "counterpart_beliefs": {
+        "kai_trusts_embry_unsupervised": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-trust-commit-16",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-trust-commit-16.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai trusts Embry to hold the commitment unsupervised.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-trust-commit-16.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai trusts Embry to hold the commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_trusts_embry_unsupervised": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_trusts_embry_unsupervised",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_REQUIRED_SIGNOFF",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Send it back to me before anything ships."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 16
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-coord-conflict-01",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-01.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-01.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_intends_cooperation": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_SHARED_WORKSPACE",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us build the draft together from here."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "coordination_conflict",
+      "variant": 1
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-coord-conflict-02",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-02.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-02.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_intends_cooperation": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_FORKED_COPY",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We need to decide how to split this."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "coordination_conflict",
+      "variant": 2
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-coord-conflict-03",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-03.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-03.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_intends_cooperation": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_SHARED_WORKSPACE",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We need to decide how to split this."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "coordination_conflict",
+      "variant": 3
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-coord-conflict-04",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-04.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-04.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_intends_cooperation": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_OPENED_THREAD",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "I will take my part separately and we compare later."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "coordination_conflict",
+      "variant": 4
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-coord-conflict-05",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-05.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-05.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_intends_cooperation": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_OPENED_THREAD",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us build the draft together from here."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "coordination_conflict",
+      "variant": 5
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-coord-conflict-06",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-06.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-06.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_intends_cooperation": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_OPENED_THREAD",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We need to decide how to split this."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "coordination_conflict",
+      "variant": 6
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-coord-conflict-07",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-07.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-07.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_intends_cooperation": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_OPENED_THREAD",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We need to decide how to split this."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "coordination_conflict",
+      "variant": 7
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-coord-conflict-08",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-08.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-08.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_intends_cooperation": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_FORKED_COPY",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "I will take my part separately and we compare later."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "coordination_conflict",
+      "variant": 8
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-coord-conflict-09",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-09.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-09.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_intends_cooperation": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_SHARED_WORKSPACE",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us build the draft together from here."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "coordination_conflict",
+      "variant": 9
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-coord-conflict-10",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-10.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-10.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_intends_cooperation": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_FORKED_COPY",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We need to decide how to split this."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "coordination_conflict",
+      "variant": 10
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-coord-conflict-11",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-11.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-11.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_intends_cooperation": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_SHARED_WORKSPACE",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We need to decide how to split this."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "coordination_conflict",
+      "variant": 11
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-coord-conflict-12",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-12.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-12.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_intends_cooperation": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_OPENED_THREAD",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "I will take my part separately and we compare later."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "coordination_conflict",
+      "variant": 12
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-coord-conflict-13",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-13.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-13.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_intends_cooperation": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_OPENED_THREAD",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Let us build the draft together from here."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "coordination_conflict",
+      "variant": 13
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-coord-conflict-14",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-14.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-14.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_intends_cooperation": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_OPENED_THREAD",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We need to decide how to split this."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "coordination_conflict",
+      "variant": 14
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "ambiguous",
+      "episode_id": "sealed_t-coord-conflict-15",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-15.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-15.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": true,
+        "kai_intends_cooperation": true
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": false,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_OPENED_THREAD",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "We need to decide how to split this."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "shared",
+      "scenario_family": "coordination_conflict",
+      "variant": 15
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ACTS_INDEPENDENTLY",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_intends_cooperation": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "act consistently with own mental state"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v2",
+        "policy_rule": "choose an action from the action set consistent with the hidden mental state; actions_when_true and actions_when_false are disjoint; the counterpart's previously observed action follows the same consistency rule, so a revealing prior action is compatible with exactly one hidden state"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_consistency": true
+      },
+      "cue_mode": "discriminative",
+      "episode_id": "sealed_t-coord-conflict-16",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "sealed_t-coord-conflict-16.tom1",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai intends to cooperate on the shared draft.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "FALSE"
+        },
+        {
+          "label_id": "sealed_t-coord-conflict-16.tom2",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai intends to cooperate on the shared draft.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "FALSE"
+        }
+      ],
+      "hidden_world_state": {
+        "counterpart_state_is_positive": false,
+        "kai_intends_cooperation": false
+      },
+      "information_access_by_agent": {
+        "cue_is_discriminative": true,
+        "embry_observes_hidden_state": false,
+        "embry_observes_utterance": true,
+        "withheld_fields": [
+          "kai_intends_cooperation",
+          "counterpart_state_is_positive"
+        ]
+      },
+      "observable_history": [
+        {
+          "observed_prior_action": "KAI_PREVIOUSLY_FORKED_COPY",
+          "speaker": "kai"
+        },
+        {
+          "speaker": "kai",
+          "utterance": "I will take my part separately and we compare later."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "Understood, let me confirm what you need."
+        }
+      ],
+      "prior_action_mode": "revealing",
+      "scenario_family": "coordination_conflict",
+      "variant": 16
+    }
+  ],
+  "episodes_per_family": 16,
+  "episodes_sha256": "sha256:a31dca1bbc5a948aa1756f4010c932e5d324658107a46159225e9919de6b86d0",
+  "errors": [],
+  "generated_at": "2026-07-26T17:44:01Z",
+  "schema": "persona_dream.research.prospective_tom.social_episode_corpus.v2",
+  "split": "sealed_test",
+  "status": "PASS_SOCIAL_EPISODE_CORPUS_V2"
+}

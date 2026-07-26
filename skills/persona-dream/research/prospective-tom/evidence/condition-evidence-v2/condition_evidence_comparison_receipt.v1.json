@@ -1,0 +1,86 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "cd_minus_strongest_baseline": -0.11355,
+  "claims": {
+    "does_not_prove": [
+      "that a live model under each condition's prompt reproduces these estimator ceilings",
+      "counterfactual-dream benefit for any live system",
+      "planning benefit, calibration beyond this corpus, or live Tau execution"
+    ],
+    "proves": [
+      "belief predictions vary per episode because they are derived from agent-visible evidence",
+      "the paired CD-minus-baseline deltas carry non-zero variance, so the metric can discriminate",
+      "each condition can be wrong, and the unresolvable tier caps every condition below perfect"
+    ]
+  },
+  "condition_mean_belief_brier": {
+    "CD": 0.17435,
+    "D": 0.34255,
+    "M": 0.515,
+    "R": 0.2879
+  },
+  "condition_top_label_accuracy": {
+    "CD": 0.875,
+    "D": 0.7656,
+    "M": 0.5,
+    "R": 0.75
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "corpus_path": "research/prospective-tom/fixtures/corpus_v2/social-episode-corpus.v2.json",
+  "corpus_sha256": "sha256:a31dca1bbc5a948aa1756f4010c932e5d324658107a46159225e9919de6b86d0",
+  "counts": {
+    "episodes": 64,
+    "labels_false": 64,
+    "labels_true": 64,
+    "unresolvable_episodes": 16
+  },
+  "created_at": "2026-07-26T17:44:08Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "paired_delta_distinct_values": 2,
+  "primary_benefit_with_confidence": true,
+  "primary_cd_minus_baseline_ci": {
+    "alpha": 0.05,
+    "bootstrap_samples": 10000,
+    "lower": -0.163228,
+    "seed": 20260721,
+    "upper": -0.070969
+  },
+  "primary_metric": "belief_brier",
+  "provider_call_attempts": 0,
+  "resolution_paths": {
+    "CD": {
+      "both_branches_consistent_abstained": 16,
+      "counterfactual_consistency": 16,
+      "surface_cue": 32
+    },
+    "D": {
+      "single_trajectory_commit": 32,
+      "surface_cue": 32
+    },
+    "M": {
+      "base_rate_only": 64
+    },
+    "R": {
+      "ambiguous_abstained": 32,
+      "surface_cue": 32
+    }
+  },
+  "schema": "persona_dream.research.prospective_tom.condition_evidence_comparison_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_CONDITION_EVIDENCE_COMPARISON",
+  "strongest_baseline_condition": "R",
+  "tau_call_attempts": 0
+}

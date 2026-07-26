@@ -19,7 +19,7 @@
     "files": 15352,
     "missing_sources": 0
   },
-  "created_at": "2026-07-26T17:30:08Z",
+  "created_at": "2026-07-26T17:44:49Z",
   "dir_walk_depth": 2,
   "entries": [
     {
@@ -78328,7 +78328,7 @@
   "entries_sha256": "sha256:2fa7c20c2497a06a0c8b1cf4d57550cbab5c84c596e73c2768e66a65c3594cee",
   "fixture_backed": false,
   "goal_md": "GOAL.md",
-  "goal_md_sha256": "sha256:59140dfc1c4e4851770c867b9befbbf73a68e8bf0dfee8f28751cd1370440721",
+  "goal_md_sha256": "sha256:9337a124a0ab3a3cd6ca75829edeb23dd3b9c3251e73ef097cb52e36c4d9ac67",
   "human_content_judgment_required": false,
   "identity_write_attempts": 0,
   "live": false,

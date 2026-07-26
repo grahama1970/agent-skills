@@ -149,6 +149,8 @@ Commands:
   build-pctom-external-proof-archive  Copy GOAL.md-cited /tmp receipts into the durable in-repo archive
   verify-pctom-external-proof-archive  Re-read the durable proof archive and confirm every digest still matches
   check-pctom-degenerate-benefit-claim  Block benefit-with-confidence claims built on zero-variance paired deltas
+  build-social-episode-corpus-v2  Build a PCTOM corpus with balanced TRUE/FALSE ToM labels
+  run-condition-evidence-comparison  Score M/R/D/CD belief predictions derived from visible evidence
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
   check-tom-belief-distributions  Validate PCTOM-R Gate 2 ToM distribution invariants
@@ -677,6 +679,12 @@ case "$COMMAND" in
     ;;
   check-pctom-degenerate-benefit-claim)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_degenerate_benefit_claim.py" "$@"
+    ;;
+  build-social-episode-corpus-v2)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_social_episode_corpus_v2.py" "$@"
+    ;;
+  run-condition-evidence-comparison)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_condition_evidence_comparison.py" "$@"
     ;;
   build-social-episode-corpus)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_social_episode_corpus.py" "$@"

@@ -245,6 +245,83 @@ fixtures: 1 positive (varied deltas, PASS), 2 negative (constant deltas,
           collapsed interval), each BLOCKED for its own distinct reason
 ```
 
+### v2 evidence lane: the metric now discriminates
+
+Built 2026-07-26, additive. All five sealed protocol endpoints still hash-match,
+so nothing under the seal was mutated.
+
+The v1 corpus has a second defect below the CONDITION_PROFILES constant: **all
+128 ground-truth ToM labels are `TRUE`** across all 64 episodes and all four
+families, because each family generator hardcodes `first_order`/`second_order`
+to `"TRUE"`. Under a constant label the optimal policy is "assert TRUE at
+probability 1.0" and belief Brier measures confidence, not correctness. Fixing
+the estimator alone could not have made the metric a measurement.
+
+```text
+corpus:  ./run.sh build-social-episode-corpus-v2
+         fixtures/corpus_v2/social-episode-corpus.v2.json
+         64 episodes, 128 labels, balance_true 0.5000
+         32 discriminative cue / 32 ambiguous cue
+         32 revealing prior action / 32 shared
+         16 unresolvable (ambiguous cue AND shared prior) -- caps every condition
+
+runner:  ./run.sh run-condition-evidence-comparison
+         evidence/condition-evidence-v2/condition_evidence_comparison_receipt.v1.json
+         status: PASS_PCTOM_CONDITION_EVIDENCE_COMPARISON
+```
+
+Estimators read only an allowlisted visible view (`observable_history`,
+`information_access_by_agent`, `allowed_next_actions`, `counterpart_policy`,
+`scenario_family`, `episode_id`). `hidden_world_state`, `counterpart_beliefs`,
+`cue_mode`, `prior_action_mode`, and the labels are scoring-only. The leakage
+check asserts the allowlist excludes every evaluator field and that the view
+actually drops fields the episode carries; it was proven to fire by mutating the
+allowlist, rather than being a check that cannot fail.
+
+Result over the committed fixture:
+
+```text
+mean belief Brier   M 0.5150   R 0.2879   D 0.3426   CD 0.1744
+top-label accuracy  M 0.5000   R 0.7500   D 0.7656   CD 0.8750
+strongest baseline: R
+cd_minus_strongest_baseline: -0.11355
+paired bootstrap 95% CI: [-0.163228, -0.070969]  (width 0.092259, not collapsed)
+paired_delta_distinct_values: 2   pvariance: 0.038681
+```
+
+Read this carefully, because it is easy to overclaim:
+
+- M scores at chance (0.5000), which is the correct behaviour for a base-rate
+  estimator against a balanced label set. Under the v1 corpus M could not score
+  at chance no matter what it did.
+- D has HIGHER accuracy than R (0.7656 vs 0.7500) but WORSE Brier (0.3426 vs
+  0.2879), because a single dream trajectory commits confidently to a guess and
+  is penalised when wrong. A condition can now lose, which is the point.
+- CD's advantage follows from the estimator definitions written in
+  `run_condition_evidence_comparison.py` -- CD is the only condition defined to
+  test both hypotheses against the observed prior action. **This is not evidence
+  that live counterfactual dreaming helps.** It establishes that the measurement
+  apparatus can separate conditions and can rank CD last if CD reasons badly.
+- The deltas take only 2 distinct values (0.0 and -0.4542), so the metric is
+  discriminating but coarse. Graded evidence strength would be needed for a
+  finer-grained per-episode signal.
+
+The same gate that blocks the v1 lane passes the v2 lane, which is the intended
+discrimination:
+
+```text
+v1 sealed_test preflight -> BLOCKED_PCTOM_DEGENERATE_BENEFIT_CLAIM
+v2 evidence lane         -> PASS_PCTOM_NON_DEGENERATE_BENEFIT_CLAIM
+                            belief_brier distinct=2 variance=0.038681
+```
+
+Remaining before the powered trial can be unsealed: the live condition runner
+(`run_live_tau_condition_comparison.py`) still routes Tau output through the v1
+corpus and its constant labels, and the sealed protocol binds the v1 corpus
+hash. Re-sealing the protocol against a v2-style corpus, with live Tau
+generating the belief distributions instead of deterministic estimators, is the
+next accepted artifact.
+
 Therefore the powered trial must not be unsealed yet. Running 256 live Tau
 calls against a primary hypothesis that is already decided by a constant would
 spend real execution to confirm a table lookup. The next accepted artifact must

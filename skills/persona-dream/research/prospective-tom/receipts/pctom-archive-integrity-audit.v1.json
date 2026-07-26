@@ -12,17 +12,17 @@
     ]
   },
   "counts": {
-    "entries": 282,
+    "entries": 288,
     "receipts": 11,
     "schemas": 34,
-    "scripts": 109
+    "scripts": 111
   },
-  "created_at": "2026-07-26T17:30:28Z",
+  "created_at": "2026-07-26T17:44:52Z",
   "errors": [],
   "fixture_backed": true,
   "live": false,
   "manifest_path": "evidence/pctom-archive-manifest.v1.json",
-  "manifest_sha256": "sha256:918083812f3debffd1138aaeb9c737417b1a28f47ab1dd42213e8639077a48d0",
+  "manifest_sha256": "sha256:8bf411fea94322ca38cc656da77ec5d5998b2e104ca6affa46d71cf07faf3cf8",
   "memory_write_attempts": 0,
   "mocked": false,
   "negative_fixture_results": [

@@ -1,11 +1,11 @@
 {
   "counts": {
-    "entries": 282,
+    "entries": 288,
     "receipts": 11,
     "schemas": 34,
-    "scripts": 109
+    "scripts": 111
   },
-  "created_at": "2026-07-26T17:30:28Z",
+  "created_at": "2026-07-26T17:44:52Z",
   "entries": [
     {
       "category": "contracts",
@@ -57,6 +57,24 @@
     },
     {
       "category": "evidence",
+      "path": "evidence/condition-evidence-v2/artifacts/paired_deltas.json",
+      "sha256": "sha256:012546f632cb382f35fcec4cb3d3bfa42aca687da5a39d03d57edbc432821f3e",
+      "size_bytes": 13803
+    },
+    {
+      "category": "evidence",
+      "path": "evidence/condition-evidence-v2/artifacts/per_episode_rows.json",
+      "sha256": "sha256:16be5f49a8dd042c56955e70421bb10a66c4a2f87dcb4515f80493a25ddf2f8c",
+      "size_bytes": 33754
+    },
+    {
+      "category": "evidence",
+      "path": "evidence/condition-evidence-v2/condition_evidence_comparison_receipt.v1.json",
+      "sha256": "sha256:5b76a6aefc836240b453128f32bad911d1ed93a3b43e109a0d2cbfe4080a56b9",
+      "size_bytes": 2492
+    },
+    {
+      "category": "evidence",
       "path": "evidence/pctom-accepted-source-lineage.v1.json",
       "sha256": "sha256:1847024ea4cd5c77fb99bacbfb9743239baf372f7d0dca4747c6610b9ff3da18",
       "size_bytes": 6954
@@ -88,7 +106,7 @@
     {
       "category": "evidence",
       "path": "evidence/pctom-external-proof-archive.v1.json",
-      "sha256": "sha256:4ea2a51380ef90041842fdc8059164bd6eab847e6908641398e236a4d0c2f7dc",
+      "sha256": "sha256:132cf236b0fe364959d33b8ceb9788648f5bb3b34e1169324f7c9a8825391330",
       "size_bytes": 5698737
     },
     {
@@ -150,6 +168,12 @@
       "path": "fixtures/audit-mutations/unauthorized-origin/mutation.json",
       "sha256": "sha256:bdeb2e8d498ba03c736f1929db25ab800a9c36ea820475d3f4fac994e0785762",
       "size_bytes": 319
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/corpus_v2/social-episode-corpus.v2.json",
+      "sha256": "sha256:60fe07e5e8e5ea2f6edcac2dcc6cacbcf969cbfa6a8add116140d269237ebc02",
+      "size_bytes": 182485
     },
     {
       "category": "fixtures",
@@ -1197,6 +1221,12 @@
     },
     {
       "category": "scripts",
+      "path": "scripts/build_social_episode_corpus_v2.py",
+      "sha256": "sha256:9d77410c901af34740a1cfbf252500de62f582c0c1f588e169b2cb1a465c07ab",
+      "size_bytes": 13033
+    },
+    {
+      "category": "scripts",
       "path": "scripts/check_autonomous_no_human_judgment_surface.py",
       "sha256": "sha256:230cffef35afaaa4da61b6fa32f675b4b22d5db7f47ce77856322e0cc7028f64",
       "size_bytes": 11724
@@ -1422,6 +1452,12 @@
       "path": "scripts/run_condition_comparison.py",
       "sha256": "sha256:0bce5bae7e5ca493acd6619d475b5e27e324f58efc6002034c4aa3953c78236d",
       "size_bytes": 29889
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_condition_evidence_comparison.py",
+      "sha256": "sha256:4ef240d4e2d383834aacfae18c21ae484ee0889e753f0afa5b85b5325f6da9d7",
+      "size_bytes": 14207
     },
     {
       "category": "scripts",
@@ -1700,7 +1736,7 @@
       "size_bytes": 30353
     }
   ],
-  "entries_sha256": "sha256:583a7f3b138ec8d7ff6242777db89c37e1702e711c3a526c4942f4389a84627c",
+  "entries_sha256": "sha256:85891cde05a6766d595c6152dea12807b5096314a2e594e9328fb670a9a611f3",
   "excluded_paths": [
     "evidence/pctom-archive-manifest.v1.json"
   ],
