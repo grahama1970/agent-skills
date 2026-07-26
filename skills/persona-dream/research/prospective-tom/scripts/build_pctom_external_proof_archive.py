@@ -3,8 +3,9 @@
 
 GOAL.md hash-cites receipts that live under /tmp. `/tmp` is configured with
 `D /tmp 1777 root root 30d`, so those paths are removed on boot and aged out
-after 30 days. This script copies the cited JSON receipts into the research
-namespace and records a hash-bound manifest so the citations survive.
+after 30 days. This script copies the cited receipts and their sibling
+artifacts into the research namespace and records a hash-bound manifest so the
+citations survive.
 
 Inputs:  GOAL.md (source of cited paths), the cited /tmp paths themselves.
 Outputs: evidence/external-proof-archive/<root>/... copies, plus one manifest.
@@ -35,6 +36,7 @@ ARCHIVE_REL = "evidence/external-proof-archive"
 MANIFEST_REL = "evidence/pctom-external-proof-archive.v1.json"
 TOPLEVEL_BUCKET = "_toplevel"
 DEFAULT_DEPTH = 2
+SKIP_DIRS = {".venv", "site-packages", "node_modules", "__pycache__", ".git"}
 
 
 def cited_paths(goal_md: Path) -> list[str]:
@@ -43,23 +45,39 @@ def cited_paths(goal_md: Path) -> list[str]:
     return sorted(p for p in raw if len(p) > len("/tmp/persona-dream-"))
 
 
-def collect_json(source: str, depth: int) -> list[Path]:
-    """JSON receipts for one citation: the file itself, or a depth-bounded walk."""
+def collect_files(source: str, depth: int) -> list[Path]:
+    """Artifacts for one citation: the file itself, or a filtered walk.
+
+    Two rules, because a depth bound alone gets this wrong in both directions:
+
+    - Every ``.json`` is taken at any depth. Aggregate receipts reference
+      per-case receipts (``gate5_scoring_receipt.json`` and friends) that sit
+      three or more levels down; a depth-2 cut silently dropped 14357 of them.
+    - Other file types are taken only above ``depth``, which keeps the shallow
+      stdout/txt/cfg captures without pulling in generated media and binaries.
+
+    ``SKIP_DIRS``, plus any directory holding a ``pyvenv.cfg``, removes vendored
+    and virtualenv trees: regenerable, not evidence, and uv writes a ``*``
+    ``.gitignore`` inside them that would keep them out of the commit anyway.
+    """
     path = Path(source)
     if path.is_file():
-        return [path] if path.suffix == ".json" else []
+        return [path]
     if not path.is_dir():
         return []
     base = str(path).rstrip("/").count(os.sep)
     found: list[Path] = []
-    for current, _dirs, files in os.walk(path):
-        if current.count(os.sep) - base >= depth:
-            continue
-        found.extend(Path(current) / f for f in files if f.endswith(".json"))
+    for current, dirs, files in os.walk(path):
+        dirs[:] = [
+            d for d in dirs
+            if d not in SKIP_DIRS and not (Path(current) / d / "pyvenv.cfg").exists()
+        ]
+        shallow = current.count(os.sep) - base < depth
+        found.extend(Path(current) / f for f in files if shallow or f.endswith(".json"))
     return sorted(found)
 
 
-def proof_root(source: str) -> Path:
+def proof_root(source: str) -> tuple[Path, str]:
     """The /tmp/persona-dream-* directory a citation belongs to.
 
     Keying the bucket on the immediate parent collides: many roots carry the
@@ -90,10 +108,10 @@ def build(root: Path, goal_md: Path, depth: int) -> dict[str, Any]:
         if not Path(source).exists():
             missing.append(source)
             continue
-        found = collect_json(source, depth)
+        found = collect_files(source, depth)
         if not found:
-            # Path exists but carries no JSON receipt at this depth.
-            entries.append({"source": source, "json_files": 0, "files": []})
+            # Path exists but carries no file at this depth.
+            entries.append({"source": source, "file_count": 0, "files": []})
             continue
 
         src_root, bucket_name = proof_root(source)
@@ -115,7 +133,7 @@ def build(root: Path, goal_md: Path, depth: int) -> dict[str, Any]:
                 "sha256": digest,
                 "size_bytes": size,
             })
-        entries.append({"source": source, "json_files": len(files), "files": files})
+        entries.append({"source": source, "file_count": len(files), "files": files})
 
     entries.sort(key=lambda row: row["source"])
     manifest = {
@@ -142,18 +160,18 @@ def build(root: Path, goal_md: Path, depth: int) -> dict[str, Any]:
             "cited_sources": len(entries) + len(missing),
             "archived_sources": len(entries),
             "missing_sources": len(missing),
-            "json_files": copied_files,
+            "files": copied_files,
             "bytes": copied_bytes,
         },
         "claims": {
             "proves": [
-                "the JSON receipts cited by GOAL.md were readable at archive time",
+                "the files cited by GOAL.md were readable at archive time",
                 "each archived copy matches its source digest byte-for-byte",
                 "the archive is inside the repository and no longer depends on /tmp retention",
             ],
             "does_not_prove": [
                 "the correctness of any archived receipt's own claims",
-                "that non-JSON artifacts under the cited roots were preserved",
+                "that artifacts deeper than dir_walk_depth were preserved",
                 "live re-execution of any archived run",
             ],
         },

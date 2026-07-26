@@ -1,0 +1,101 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "R",
+      "episode_id": "sealedte-pref-desire-01",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "sealedte-pref-desire-01-r-tom1-factual",
+          "sealedte-pref-desire-01-r-tom2-factual",
+          "sealedte-pref-desire-01-r-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:ac71b4a15ad17c0f52fc7c224cb79e3ec58f0103cae578bf09bbb252379979be",
+        "branch_refs": [
+          "sealedte-pref-desire-01-r-factual",
+          "sealedte-pref-desire-01-r-counterfactual"
+        ],
+        "distribution_bundle_sha256": "sha256:d3e0757eb27c5cc7edede71ff76a662577eacd146118fea44cd18e9c6325897f",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-pref-desire-01:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-01:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:b61fb8ca0d5d6095a72eb91ed44cb20b7f79e57f46eb6e30ac9cd2056568dec4",
+      "model_receipts": [
+        {
+          "condition": "R",
+          "live_call_performed": false,
+          "mocked": false,
+          "model": "deterministic_pctom_condition_prior.v1",
+          "notes": "No LLM judge or provider call; deterministic protocol instrumentation.",
+          "receipt_id": "sealedte-pref-desire-01-r-deterministic-condition-prior"
+        }
+      ],
+      "model_receipts_sha256": "sha256:9bf1692a48c25a1680d733197547a018760faca2b5833ee263a1a69f6cbc78c1",
+      "outcome_visible": false,
+      "prediction_id": "sealedte-pref-desire-01-r-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "sealedte-pref-desire-01-r-tom1-factual",
+          "sealedte-pref-desire-01-r-tom2-factual",
+          "sealedte-pref-desire-01-r-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "sealedte-pref-desire-01-r-factual",
+          "sealedte-pref-desire-01-r-counterfactual"
+        ],
+        "condition": "R",
+        "condition_method": "textual_reflection_prior",
+        "episode_id": "sealedte-pref-desire-01",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-pref-desire-01:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-01:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.5,
+            "value": "KAI_CHOOSES_QUIET_REVIEW"
+          },
+          {
+            "probability": 0.3,
+            "value": "KAI_REQUESTS_FAST_HANDOFF"
+          },
+          {
+            "probability": 0.2,
+            "value": "KAI_OFFERS_SHARED_DRAFT"
+          }
+        ]
+      },
+      "prediction_payload_sha256": "sha256:299a5187deb7a603b477b40e251ce082a8900fb545ef1d2dd14ef925f368a737",
+      "sealed_at": "2026-07-21T03:16:01Z"
+    }
+  ],
+  "episode_id": "sealedte-pref-desire-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

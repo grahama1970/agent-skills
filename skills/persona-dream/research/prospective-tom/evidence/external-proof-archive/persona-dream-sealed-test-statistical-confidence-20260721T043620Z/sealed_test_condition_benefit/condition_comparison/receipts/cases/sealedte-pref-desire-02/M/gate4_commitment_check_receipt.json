@@ -1,0 +1,63 @@
+{
+  "branch_bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-02/M/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:36edb536c8ca9f22110444d2c37acedd1f7f6688e4dae8cfcc551a184f385327",
+  "checks": {
+    "branch_refs_resolve": true,
+    "bundle_sealed_before_reveal": true,
+    "distribution_refs_resolve": true,
+    "evidence_bundle_hashes_match": true,
+    "evidence_refs_resolve": true,
+    "model_receipt_hashes_match": true,
+    "no_canonical_memory_write": true,
+    "no_prediction_edits_after_reveal": true,
+    "outcome_absent_from_commitment": true,
+    "payload_hashes_match": true,
+    "prediction_distributions_sum_to_one": true,
+    "upstream_bundle_hashes_match": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "calibration quality",
+      "outcome reveal execution",
+      "deterministic scoring",
+      "belief revision",
+      "Tau text-call execution",
+      "live Memory recall",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied prediction commitments are sealed before outcome reveal",
+      "prediction payloads, model receipts, and evidence bundles are hash-bound",
+      "upstream Gate 2 and Gate 3 bundle hashes match the committed evidence bundle",
+      "branch, distribution, and visible source-evidence references resolve",
+      "forbidden outcome/ground-truth fields are absent from commitments",
+      "canonical memory writes and post-reveal edits are absent"
+    ]
+  },
+  "commitment_bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-02/M/tom_prediction_commitment_bundle.json",
+  "commitment_bundle_sha256": "sha256:bf2477dcba6e0a4d63b2e4252ce25c1889d4d9b2d215b431f3a1bff9174f7b61",
+  "corpus_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "branch_refs": 4,
+    "commitments": 1,
+    "conditions": 1,
+    "distribution_refs": 6,
+    "forbidden_outcome_paths": 0,
+    "hashes_checked": 3,
+    "resolved_source_evidence_refs": 6
+  },
+  "created_at": "2026-07-21T04:36:20Z",
+  "distribution_bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-02/M/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:c695d828e3a4bee5bcef80f6f2e131dfb1f47c77fed4bc66d9e8790233a81434",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/receipts/cases/sealedte-pref-desire-02/M/gate4_commitment_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1",
+  "status": "PASS_TOM_PREDICTION_COMMITMENTS",
+  "tau_call_attempts": 0
+}

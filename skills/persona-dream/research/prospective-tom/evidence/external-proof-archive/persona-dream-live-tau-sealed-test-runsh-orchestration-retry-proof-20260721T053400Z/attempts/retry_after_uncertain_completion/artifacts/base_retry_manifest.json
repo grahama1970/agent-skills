@@ -1,0 +1,45 @@
+{
+  "action_summary": {
+    "action_decision_count": 16,
+    "per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "unique_episode_prediction_pairs": 16
+  },
+  "base_receipt_sha256": "sha256:c066eabd3d5a1a08f4a426cdd7347f91e969998795872d4d2e7e773b84f94087",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+  "base_status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION",
+  "commitment_summary": {
+    "commitment_count": 16,
+    "per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "unique_episode_condition_pairs": 16,
+    "unique_prediction_ids": 16
+  },
+  "gate6_summary": {
+    "gate6_receipt_count": 16,
+    "per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "statuses": {
+      "PASS_TOM_ACTION_SELECTION": 16
+    }
+  },
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": false,
+  "missing_actions": [],
+  "orphan_actions": [],
+  "schema": "pctom.live_tau_sealed_test.retry_manifest.v1",
+  "state_hash": "sha256:60eac9ebec17c889dcf89c66bf26d5f914e3062f9f81b7e88d5ea54fb4891c06",
+  "tau_call_attempts": 0
+}

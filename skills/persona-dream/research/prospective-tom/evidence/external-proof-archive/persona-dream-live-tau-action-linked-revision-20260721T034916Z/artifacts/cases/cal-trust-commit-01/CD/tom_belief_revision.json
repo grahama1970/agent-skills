@@ -1,0 +1,93 @@
+{
+  "canonical_memory_write": false,
+  "episode_id": "cal-trust-commit-01",
+  "evidence_mutations": [],
+  "identity_write": false,
+  "observed_outcome_id": "live-tau-condition-outcome-cal-trust-commit-01-cd",
+  "outcome_reveal_sha256": "sha256:738b50ab87d58125b9c06913288cb8cec5dba185afb0cc9566fe6c58c8cfec4a",
+  "posterior_distribution": [
+    {
+      "probability": 0.6799999999999999,
+      "value": "TRUE"
+    },
+    {
+      "probability": 0.16,
+      "value": "FALSE"
+    },
+    {
+      "probability": 0.16,
+      "value": "UNKNOWN"
+    }
+  ],
+  "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+  "prediction_error": {
+    "actual_label": "TRUE",
+    "brier": 0.375,
+    "log_loss": 0.6931471805599453,
+    "prior_actual_probability": 0.5,
+    "top_correct": true
+  },
+  "prediction_id": "live-tau-cd-cal-trust-commit-01-prediction",
+  "prior_audit_ref": {
+    "distribution_bundle_sha256": "sha256:ea2092b4f0bfb234ce42a6649250ca7225f09b3bccb0150c427b2536c97b55e3",
+    "hypothesis_id": "live-tau-cd-cal-trust-commit-01-tom1-factual"
+  },
+  "prior_distribution": {
+    "abstain": false,
+    "counterfactual": false,
+    "counterfactual_context": null,
+    "distribution": [
+      {
+        "probability": 0.5,
+        "value": "TRUE"
+      },
+      {
+        "probability": 0.25,
+        "value": "FALSE"
+      },
+      {
+        "probability": 0.25,
+        "value": "UNKNOWN"
+      }
+    ],
+    "episode_id": "cal-trust-commit-01",
+    "evidence_refs": [
+      {
+        "scope": "social_episode_observation",
+        "source_id": "cal-trust-commit-01:observable_history:0"
+      },
+      {
+        "scope": "social_episode_access",
+        "source_id": "cal-trust-commit-01:information_access_by_agent"
+      },
+      {
+        "scope": "social_episode_observation",
+        "source_id": "cal-trust-commit-01:observable_history:1"
+      }
+    ],
+    "hypothesis_id": "live-tau-cd-cal-trust-commit-01-tom1-factual",
+    "mental_state_type": "belief",
+    "perspective_order": 1,
+    "prediction_horizon": "next_action",
+    "proposition": "Kai believes the prior commitment changes the meaning of Embry's next action.",
+    "subject": "kai",
+    "support_status": "supported",
+    "target": "embry"
+  },
+  "prior_distribution_sha256": "sha256:34f1caea90847eb5ac97178e27f9547526ba42fc583c94080488b91ee8ef782a",
+  "prior_hypothesis_id": "live-tau-cd-cal-trust-commit-01-tom1-factual",
+  "prior_remains_auditable": true,
+  "revision_id": "action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual",
+  "schema": "persona_dream.research.prospective_tom.tom_belief_revision.v1",
+  "scoring_receipt_sha256": "sha256:2855fcc87b94f51f6dadb9e627a5fe10cf046a67624a662b3d399acc084e8cb2",
+  "source_memory_write": false,
+  "supersedes_for_current_use": true,
+  "surprise": 0.6931471805599453,
+  "update_evidence_refs": [
+    {
+      "scope": "outcome_reveal",
+      "source_id": "live-tau-condition-outcome-cal-trust-commit-01-cd"
+    }
+  ],
+  "update_reason": "Action-selected live Tau condition case consumed deterministic outcome evidence; current-use posterior is updated while preserving the sealed prior and separate action linkage."
+}

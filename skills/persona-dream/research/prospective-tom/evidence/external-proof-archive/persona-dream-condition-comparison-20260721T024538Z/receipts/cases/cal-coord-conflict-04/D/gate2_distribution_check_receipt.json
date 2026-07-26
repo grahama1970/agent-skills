@@ -1,0 +1,52 @@
+{
+  "bundle_path": "/tmp/persona-dream-condition-comparison-20260721T024538Z/artifacts/cases/cal-coord-conflict-04/D/tom_belief_distribution_bundle.json",
+  "bundle_sha256": "sha256:40ab53ac5abea80568b5970d1e98af56b30bbf41417f7745cbbb6762d9089d82",
+  "checks": {
+    "bundle_sealed_before_reveal": true,
+    "counterfactual_not_literal_history": true,
+    "counterfactuals_explicitly_marked": true,
+    "evidence_refs_resolve": true,
+    "no_canonical_memory_write": true,
+    "perspectives_match_episode_labels": true,
+    "probabilities_sum_to_one": true,
+    "unsupported_abstains_or_pending": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "calibration quality",
+      "Tau text-call execution",
+      "live Memory recall",
+      "outcome reveal or scoring",
+      "belief revision",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied ToM belief distribution bundle is sealed before reveal",
+      "supported hypotheses resolve visible evidence and match Gate 1 episode labels",
+      "probability distributions sum to one",
+      "unsupported hypotheses abstain or remain pending with UNKNOWN certainty",
+      "canonical memory writes are absent"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-condition-comparison-20260721T024538Z/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "abstained_or_pending": 0,
+    "counterfactual_distributions": 1,
+    "distributions": 3,
+    "label_matched_distributions": 3,
+    "resolved_evidence_refs": 6,
+    "supported": 3
+  },
+  "created_at": "2026-07-21T02:45:38Z",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-condition-comparison-20260721T024538Z/receipts/cases/cal-coord-conflict-04/D/gate2_distribution_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1",
+  "status": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+  "tau_call_attempts": 0
+}

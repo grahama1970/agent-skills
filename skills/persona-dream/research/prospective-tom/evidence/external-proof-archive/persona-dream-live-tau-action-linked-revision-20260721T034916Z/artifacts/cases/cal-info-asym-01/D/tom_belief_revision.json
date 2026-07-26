@@ -1,0 +1,93 @@
+{
+  "canonical_memory_write": false,
+  "episode_id": "cal-info-asym-01",
+  "evidence_mutations": [],
+  "identity_write": false,
+  "observed_outcome_id": "live-tau-condition-outcome-cal-info-asym-01-d",
+  "outcome_reveal_sha256": "sha256:2c034184705636504adfe920414492bfbeabfb8c912621db7a0c4f25d024fe7a",
+  "posterior_distribution": [
+    {
+      "probability": 0.6799999999999999,
+      "value": "TRUE"
+    },
+    {
+      "probability": 0.16,
+      "value": "FALSE"
+    },
+    {
+      "probability": 0.16,
+      "value": "UNKNOWN"
+    }
+  ],
+  "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+  "prediction_error": {
+    "actual_label": "TRUE",
+    "brier": 0.375,
+    "log_loss": 0.6931471805599453,
+    "prior_actual_probability": 0.5,
+    "top_correct": true
+  },
+  "prediction_id": "live-tau-d-cal-info-asym-01-prediction",
+  "prior_audit_ref": {
+    "distribution_bundle_sha256": "sha256:e11abb5e28e9f2b85c8b037245af71799ba5f1f25a4e353552c109515587400d",
+    "hypothesis_id": "live-tau-d-cal-info-asym-01-tom1-factual"
+  },
+  "prior_distribution": {
+    "abstain": false,
+    "counterfactual": false,
+    "counterfactual_context": null,
+    "distribution": [
+      {
+        "probability": 0.5,
+        "value": "TRUE"
+      },
+      {
+        "probability": 0.25,
+        "value": "FALSE"
+      },
+      {
+        "probability": 0.25,
+        "value": "UNKNOWN"
+      }
+    ],
+    "episode_id": "cal-info-asym-01",
+    "evidence_refs": [
+      {
+        "scope": "social_episode_observation",
+        "source_id": "cal-info-asym-01:observable_history:0"
+      },
+      {
+        "scope": "social_episode_access",
+        "source_id": "cal-info-asym-01:information_access_by_agent"
+      },
+      {
+        "scope": "social_episode_observation",
+        "source_id": "cal-info-asym-01:observable_history:1"
+      }
+    ],
+    "hypothesis_id": "live-tau-d-cal-info-asym-01-tom1-factual",
+    "mental_state_type": "belief",
+    "perspective_order": 1,
+    "prediction_horizon": "next_action",
+    "proposition": "Kai believes Embry has stale constraint information.",
+    "subject": "kai",
+    "support_status": "supported",
+    "target": "embry"
+  },
+  "prior_distribution_sha256": "sha256:b9ff1a0864c76da5d6c567532734bb21c5cd0e6802f51513ea175c612c0e4613",
+  "prior_hypothesis_id": "live-tau-d-cal-info-asym-01-tom1-factual",
+  "prior_remains_auditable": true,
+  "revision_id": "action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual",
+  "schema": "persona_dream.research.prospective_tom.tom_belief_revision.v1",
+  "scoring_receipt_sha256": "sha256:413b561255a2ae998a564d9b9941b84eace4ab2a1c8c9b02afdcb523470d0e8f",
+  "source_memory_write": false,
+  "supersedes_for_current_use": true,
+  "surprise": 0.6931471805599453,
+  "update_evidence_refs": [
+    {
+      "scope": "outcome_reveal",
+      "source_id": "live-tau-condition-outcome-cal-info-asym-01-d"
+    }
+  ],
+  "update_reason": "Action-selected live Tau condition case consumed deterministic outcome evidence; current-use posterior is updated while preserving the sealed prior and separate action linkage."
+}

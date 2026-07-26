@@ -1,0 +1,17 @@
+{
+  "canonical_memory_write": false,
+  "causal_confidence": 1.0,
+  "counterfactual_terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+  "factual_terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+  "first_divergent_receipt_id": "receipt-002-active-prediction-pointer",
+  "identity_write": false,
+  "localized_cause_type": "CONFLICTING_ACTIVE_PREDICTION_POINTER",
+  "provider_call": false,
+  "replacement": "reuse original commitment hash-bound bundle",
+  "replay_boundary": "after_commitment_hash_recompute_before_active_pointer_write",
+  "schema": "pctom.live_tau_sealed_test.retry_causal_replay.v1",
+  "source_memory_write": false,
+  "suspected_event": "duplicate commitment replay with a different prediction payload hash",
+  "target_trial_id": "duplicate-commitment-replay-different-hash-001",
+  "tau_call": false
+}

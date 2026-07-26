@@ -1,0 +1,27 @@
+{
+  "actual_next_action": "KAI_SETS_BOUNDARY",
+  "canonical_memory_write": false,
+  "episode_id": "explicit-trust-commit-01",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "explicit-trust-commit-01-r-equivalent-action",
+      "expected_top_action": "KAI_SETS_BOUNDARY",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "explicit-trust-commit-01-r-prediction"
+    }
+  ],
+  "factual_branch_id": "explicit-trust-commit-01-r-factual",
+  "hidden_state_labels": {
+    "explicit-trust-commit-01-r-tom1-factual": "TRUE",
+    "explicit-trust-commit-01-r-tom2-factual": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "explicit-trust-commit-01-r-factual"
+  ],
+  "outcome_id": "explicit-trust-commit-01-r-outcome",
+  "outcome_visible": true,
+  "prediction_id": "explicit-trust-commit-01-r-prediction",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T04:12:01Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

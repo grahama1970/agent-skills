@@ -1,0 +1,27 @@
+{
+  "actual_next_action": "KAI_ASKS_TO_WAIT",
+  "canonical_memory_write": false,
+  "episode_id": "explicit-coord-conflict-04",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "explicit-coord-conflict-04-cd-equivalent-action",
+      "expected_top_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "explicit-coord-conflict-04-cd-prediction"
+    }
+  ],
+  "factual_branch_id": "explicit-coord-conflict-04-cd-factual",
+  "hidden_state_labels": {
+    "explicit-coord-conflict-04-cd-tom1-factual": "TRUE",
+    "explicit-coord-conflict-04-cd-tom2-factual": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "explicit-coord-conflict-04-cd-factual"
+  ],
+  "outcome_id": "explicit-coord-conflict-04-cd-outcome",
+  "outcome_visible": true,
+  "prediction_id": "explicit-coord-conflict-04-cd-prediction",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T04:21:03Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

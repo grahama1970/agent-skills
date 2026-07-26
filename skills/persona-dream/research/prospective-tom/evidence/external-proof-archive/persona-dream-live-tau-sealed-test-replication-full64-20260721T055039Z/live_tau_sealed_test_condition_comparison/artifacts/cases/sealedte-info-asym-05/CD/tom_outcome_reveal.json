@@ -1,0 +1,27 @@
+{
+  "actual_next_action": "KAI_WARNS_PRIVATELY",
+  "canonical_memory_write": false,
+  "episode_id": "sealedte-info-asym-05",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "live-tau-condition-cd-eq-action",
+      "expected_top_action": "KAI_HINTS_CONSTRAINT",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "live-tau-cd-sealedte-info-asym-05-prediction"
+    }
+  ],
+  "factual_branch_id": "live-tau-cd-sealedte-info-asym-05-factual",
+  "hidden_state_labels": {
+    "live-tau-cd-sealedte-info-asym-05-tom1-factual": "TRUE",
+    "live-tau-cd-sealedte-info-asym-05-tom2-factual": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "live-tau-cd-sealedte-info-asym-05-factual"
+  ],
+  "outcome_id": "live-tau-condition-outcome-sealedte-info-asym-05-cd",
+  "outcome_visible": true,
+  "prediction_id": "live-tau-cd-sealedte-info-asym-05-prediction",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T06:06:09Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

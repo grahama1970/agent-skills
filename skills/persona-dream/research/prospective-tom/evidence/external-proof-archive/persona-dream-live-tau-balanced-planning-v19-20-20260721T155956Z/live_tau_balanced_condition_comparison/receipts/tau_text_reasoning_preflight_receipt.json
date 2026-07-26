@@ -1,0 +1,35 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "caller_skill": "persona-dream",
+  "created_at": "2026-07-21T15:59:57.248783+00:00",
+  "http_status": 200,
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "output_contract_sha256": "sha256:2ef822d3affa6f56343af8527ed909164c7199bfea57535ede09eb7ff1e0c6f3",
+  "parsed_json": {
+    "note": "preflight_only",
+    "route_ready": true,
+    "surface": "tau_scillm_text_reasoning"
+  },
+  "prompt_sha256": "sha256:0dd295a23ddbf4658de67a2d631dee65efe3e86d0a8c02d02395661c55af5e1e",
+  "request": {
+    "messages": "<redacted-prompt>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-text-reasoning",
+      "role": "pctom-live-condition-preflight"
+    },
+    "temperature": 0
+  },
+  "response_content": "{\"route_ready\":true,\"surface\":\"tau_scillm_text_reasoning\",\"note\":\"preflight_only\"}",
+  "role": "pctom-live-condition-preflight",
+  "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+  "status": "PASS",
+  "surface": "scillm.chat_completions.text"
+}

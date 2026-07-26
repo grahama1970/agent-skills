@@ -1,0 +1,58 @@
+{
+  "branch_bundle_path": "/tmp/agent-skills-pctom-gate7-20260721T012304Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/negative/held_fixed_includes_intervention/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:27547ca67c4ea77ba7b7ac80c6cd8f652878beedaab73002b7dfce317200d2d2",
+  "checks": {
+    "action_distributions_valid": true,
+    "counterfactual_branches_use_counterfactual_distributions": true,
+    "counterfactuals_are_synthetic": true,
+    "distribution_refs_resolve": true,
+    "evidence_refs_resolve_to_visible_episode_fields": true,
+    "factual_branches_use_factual_distributions": true,
+    "has_counterfactual_branch": true,
+    "has_factual_branch": true,
+    "held_fixed_excludes_intervened_variable": false,
+    "no_canonical_memory_write": true,
+    "one_intervention_variable": true,
+    "outcome_not_visible": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "counterfactual causal correctness",
+      "calibration quality",
+      "Tau text-call execution",
+      "live Memory recall",
+      "outcome reveal or scoring",
+      "belief revision",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the checker produced a fail-closed receipt for an invalid counterfactual branch bundle"
+    ]
+  },
+  "corpus_path": "/tmp/agent-skills-pctom-gate7-20260721T012304Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json",
+  "counts": {
+    "branches": 2,
+    "counterfactual_branches": 1,
+    "distribution_refs": 2,
+    "factual_branches": 1,
+    "interventions": 1,
+    "resolved_source_evidence_refs": 2
+  },
+  "created_at": "2026-07-21T01:32:54Z",
+  "distribution_bundle_path": "/tmp/agent-skills-pctom-gate7-20260721T012304Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f",
+  "errors": [
+    "branch_1_held_fixed_includes_intervened_variable:counterpart_policy.expected_actual_next_action",
+    "branch_1_branch_held_fixed_includes_intervened_variable:counterpart_policy.expected_actual_next_action"
+  ],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate3_negative_held_fixed_includes_intervention.json",
+  "schema": "persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1",
+  "status": "BLOCKED_COUNTERFACTUAL_BRANCHES",
+  "tau_call_attempts": 0
+}

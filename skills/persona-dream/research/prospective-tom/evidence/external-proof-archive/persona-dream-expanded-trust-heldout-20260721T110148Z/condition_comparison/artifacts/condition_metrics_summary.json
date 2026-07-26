@@ -1,0 +1,38 @@
+{
+  "CD": {
+    "cases": 8,
+    "mean_action_brier": 0.6799999999999999,
+    "mean_action_log_loss": 1.1137794724407306,
+    "mean_belief_brier": 0.14000000000000004,
+    "mean_belief_log_loss": 0.35667494393873245
+  },
+  "D": {
+    "cases": 8,
+    "mean_action_brier": 0.6875,
+    "mean_action_log_loss": 1.126364168409911,
+    "mean_belief_brier": 0.2198,
+    "mean_belief_log_loss": 0.4780358009429998
+  },
+  "M": {
+    "cases": 8,
+    "mean_action_brier": 0.6666666666666667,
+    "mean_action_log_loss": 1.0986122886681098,
+    "mean_belief_brier": 0.45500000000000007,
+    "mean_belief_log_loss": 0.7985076962177716
+  },
+  "R": {
+    "cases": 8,
+    "mean_action_brier": 0.755,
+    "mean_action_log_loss": 1.2283158139249999,
+    "mean_belief_brier": 0.30499999999999994,
+    "mean_belief_log_loss": 0.5978370007556204
+  },
+  "comparison": {
+    "cd_mean_action_brier": 0.6799999999999999,
+    "cd_minus_strongest_baseline": 0.013333333333333197,
+    "lower_is_better": true,
+    "primary_metric": "mean_action_brier",
+    "strongest_baseline_condition": "M",
+    "strongest_baseline_mean_action_brier": 0.6666666666666667
+  }
+}

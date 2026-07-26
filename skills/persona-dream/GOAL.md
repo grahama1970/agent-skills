@@ -150,9 +150,9 @@ builder: research/prospective-tom/scripts/build_pctom_external_proof_archive.py
 dispatch: ./run.sh build-pctom-external-proof-archive | verify-pctom-external-proof-archive
 status: EXTERNAL_PROOF_ARCHIVE_BUILT
 cited_sources: 257    archived_sources: 257    missing_sources: 0
-json_files: 860       bytes: 12476098          dir_walk_depth: 2
-entries_sha256: sha256:fa746981a8948a164b00c0f3ae54ca32f5239235897bb373d062dcc0e02839a1
-verify: PASS_EXTERNAL_PROOF_ARCHIVE (860 files re-read, errors: [])
+files: 15352          bytes: 79727847          dir_walk_depth: 2
+entries_sha256: sha256:2fa7c20c2497a06a0c8b1cf4d57550cbab5c84c596e73c2768e66a65c3594cee
+verify: PASS_EXTERNAL_PROOF_ARCHIVE (15352 files re-read, errors: [])
 ```
 
 Each archived copy was digest-compared against its source at copy time, and the
@@ -163,10 +163,30 @@ is byte-identical to its `/tmp` original and carries
 `sha256:88e5f6941af8b1ed6336a19ce01c568b8075051b46a5f3df2666ee789edeeb14`,
 the exact `predecessor_receipt_sha256` the R2 contract names.
 
-The archive preserves JSON receipts only. Non-JSON artifacts under the cited
-roots (media, logs, stdout captures) remain `/tmp`-only and are still
-perishable. Archiving proves custody and digest continuity; it does not
-re-validate any archived receipt's own claims.
+Archive scope, and why it is what it is. Two selection rules apply, because a
+depth bound alone is wrong in both directions:
+
+- every `.json` is archived at any depth. The aggregate receipts cited above
+  reference per-case receipts (`gate5_scoring_receipt.json`,
+  `gate6_action_selection_receipt.json`, `tom_prediction_commitment_bundle.json`
+  and siblings) that sit three or more levels below a cited root. An earlier
+  depth-2-only cut silently dropped 14357 of them while still reporting PASS;
+  that would have archived the summaries and lost the evidence they summarise.
+- other file types are archived only above `dir_walk_depth: 2`, which keeps the
+  shallow stdout, `.txt`, and `.cfg` captures without pulling in generated
+  media. Unbounded recursion over the same 257 citations is 24184 files and
+  979.4 MB, nearly all of it frames, video, and audio — regenerable provider
+  output, out of scope per the R2 contract.
+
+`SKIP_DIRS` additionally excludes `.venv`, `site-packages`, `node_modules`,
+`__pycache__`, and `.git`, as does any directory holding a `pyvenv.cfg` -- seven
+proof roots carry a `uv-venv/` virtualenv, which is regenerable rather than
+evidence and which uv marks with a `*` `.gitignore` that would have kept it out
+of the commit regardless.
+
+Known remaining gap: non-JSON artifacts deeper than depth 2 are not archived
+and stay `/tmp`-only. Archiving proves custody and digest continuity; it does
+not re-validate any archived receipt's own claims.
 
 ### Next objective
 

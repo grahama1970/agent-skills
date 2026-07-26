@@ -1,0 +1,195 @@
+{
+  "schema": "pctom.live_tau_sealed_test.retry_fault_trials.v1",
+  "trials": [
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "details": {
+        "base_receipt_sha256": "sha256:missing",
+        "post_state_hash": "sha256:04cfbd7ff4bab51d2fdbf1097d22daa1a1a783fd511b3c0b75db05252a1fba3b",
+        "pre_state_hash": "sha256:04cfbd7ff4bab51d2fdbf1097d22daa1a1a783fd511b3c0b75db05252a1fba3b"
+      },
+      "duplicate_action_decisions": 0,
+      "duplicate_active_predictions": 0,
+      "duplicates_created": 0,
+      "evidence_refs": [
+        "base_receipt",
+        "active_prediction_index",
+        "action_decision_index"
+      ],
+      "fault_family": "exact_retry",
+      "identity_write": false,
+      "provider_call": false,
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "tau_call": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "retry-exact-receipt-replay-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "details": {
+        "pending_marker_replayed": true,
+        "post_state_hash": "sha256:04cfbd7ff4bab51d2fdbf1097d22daa1a1a783fd511b3c0b75db05252a1fba3b",
+        "pre_state_hash": "sha256:04cfbd7ff4bab51d2fdbf1097d22daa1a1a783fd511b3c0b75db05252a1fba3b"
+      },
+      "duplicate_action_decisions": 0,
+      "duplicate_active_predictions": 0,
+      "duplicates_created": 0,
+      "evidence_refs": [
+        "base_receipt",
+        "retry_manifest"
+      ],
+      "fault_family": "retry_after_uncertain_completion",
+      "identity_write": false,
+      "provider_call": false,
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "tau_call": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "retry-after-uncertain-completion-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "details": {
+        "active_prediction_added": false,
+        "missing_commitment_bundle": true
+      },
+      "duplicate_action_decisions": 0,
+      "duplicate_active_predictions": 0,
+      "duplicates_created": 0,
+      "evidence_refs": [
+        "active_prediction_index"
+      ],
+      "fault_family": "partial_tau_output_before_gate4",
+      "identity_write": false,
+      "provider_call": false,
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "tau_call": false,
+      "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "trial_id": "partial-tau-output-before-gate4-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "details": {
+        "action_decision_added": false,
+        "score_hash_mismatch_detected": true
+      },
+      "duplicate_action_decisions": 0,
+      "duplicate_active_predictions": 0,
+      "duplicates_created": 0,
+      "evidence_refs": [
+        "action_decision_index"
+      ],
+      "fault_family": "stale_gate5_score",
+      "identity_write": false,
+      "provider_call": false,
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "tau_call": false,
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "trial_id": "stale-gate5-score-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "details": {
+        "active_action_added": false,
+        "gate6_pass_missing": true
+      },
+      "duplicate_action_decisions": 0,
+      "duplicate_active_predictions": 0,
+      "duplicates_created": 0,
+      "evidence_refs": [
+        "gate6_receipt_index"
+      ],
+      "fault_family": "interrupted_action_selection",
+      "identity_write": false,
+      "provider_call": false,
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "tau_call": false,
+      "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "trial_id": "interrupted-action-selection-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "details": {
+        "conflict_detected": true,
+        "conflict_promoted": false
+      },
+      "duplicate_action_decisions": 0,
+      "duplicate_active_predictions": 1,
+      "duplicates_created": 0,
+      "evidence_refs": [
+        "active_prediction_index"
+      ],
+      "fault_family": "conflicting_active_prediction_pointer",
+      "identity_write": false,
+      "provider_call": false,
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "tau_call": false,
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "trial_id": "conflicting-active-prediction-pointer-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "details": {
+        "post_state_hash": "sha256:04cfbd7ff4bab51d2fdbf1097d22daa1a1a783fd511b3c0b75db05252a1fba3b",
+        "pre_state_hash": "sha256:04cfbd7ff4bab51d2fdbf1097d22daa1a1a783fd511b3c0b75db05252a1fba3b",
+        "same_hash_deduplicated": true
+      },
+      "duplicate_action_decisions": 0,
+      "duplicate_active_predictions": 0,
+      "duplicates_created": 0,
+      "evidence_refs": [
+        "active_prediction_index"
+      ],
+      "fault_family": "duplicate_commitment_replay_same_hash",
+      "identity_write": false,
+      "provider_call": false,
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "tau_call": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "duplicate-commitment-replay-same-hash-001",
+      "unknown_state_continued": false
+    },
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": false,
+      "details": {
+        "active_prediction_added": false,
+        "different_hash_rejected": true
+      },
+      "duplicate_action_decisions": 0,
+      "duplicate_active_predictions": 1,
+      "duplicates_created": 0,
+      "evidence_refs": [
+        "active_prediction_index"
+      ],
+      "fault_family": "duplicate_commitment_replay_different_hash",
+      "identity_write": false,
+      "provider_call": false,
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "tau_call": false,
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "trial_id": "duplicate-commitment-replay-different-hash-001",
+      "unknown_state_continued": false
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "base_receipts_sha256": "sha256:6ae9d8b917165758845991a0e28f3df5889e433f01c09b73d1a1fb17d771a11c",
+  "expected_terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+  "fault_family": "schema_drift",
+  "mutation": "remove full64 counts and live Memory recall checks",
+  "schema": "pctom.controlled_fault_manifest.v1"
+}

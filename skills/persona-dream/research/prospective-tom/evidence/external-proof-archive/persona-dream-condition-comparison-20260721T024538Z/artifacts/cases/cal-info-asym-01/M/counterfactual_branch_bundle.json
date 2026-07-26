@@ -1,0 +1,116 @@
+{
+  "branches": [
+    {
+      "branch_id": "cal-info-asym-01-m-factual",
+      "branch_type": "factual",
+      "episode_id": "cal-info-asym-01",
+      "expected_observation": "M factual branch preserves the visible social history.",
+      "held_fixed": [
+        "counterpart_goals.kai_primary_goal",
+        "information_access_by_agent",
+        "observable_history"
+      ],
+      "intervention": null,
+      "predicted_action_distribution": [
+        {
+          "probability": 0.3333333333333333,
+          "value": "KAI_HINTS_CONSTRAINT"
+        },
+        {
+          "probability": 0.3333333333333333,
+          "value": "KAI_WARNS_PRIVATELY"
+        },
+        {
+          "probability": 0.3333333333333333,
+          "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+        }
+      ],
+      "predicted_bdi_distribution_refs": [
+        "cal-info-asym-01-m-tom1-factual",
+        "cal-info-asym-01-m-tom2-factual"
+      ],
+      "source_evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-info-asym-01:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "cal-info-asym-01:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-info-asym-01:observable_history:1"
+        }
+      ],
+      "synthetic": false,
+      "uncertainty": 0.45
+    },
+    {
+      "branch_id": "cal-info-asym-01-m-counterfactual",
+      "branch_type": "counterfactual",
+      "episode_id": "cal-info-asym-01",
+      "expected_observation": "M counterfactual branch is synthetic and not literal history.",
+      "held_fixed": [
+        "counterpart_goals.kai_primary_goal",
+        "information_access_by_agent",
+        "observable_history"
+      ],
+      "intervention": {
+        "episode_id": "cal-info-asym-01",
+        "expected_observation": "The counterpart policy is replaced by an unspecified alternative.",
+        "held_fixed": [
+          "counterpart_goals.kai_primary_goal",
+          "information_access_by_agent",
+          "observable_history"
+        ],
+        "intervened_value": "UNKNOWN",
+        "intervened_variable": "counterpart_policy.expected_actual_next_action",
+        "intervention_id": "cal-info-asym-01-m-do-policy-alternative",
+        "synthetic": true
+      },
+      "predicted_action_distribution": [
+        {
+          "probability": 0.0,
+          "value": "KAI_HINTS_CONSTRAINT"
+        },
+        {
+          "probability": 0.0,
+          "value": "KAI_WARNS_PRIVATELY"
+        },
+        {
+          "probability": 0.0,
+          "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+        },
+        {
+          "probability": 1.0,
+          "value": "UNKNOWN"
+        }
+      ],
+      "predicted_bdi_distribution_refs": [
+        "cal-info-asym-01-m-tom1-counterfactual"
+      ],
+      "source_evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-info-asym-01:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "cal-info-asym-01:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-info-asym-01:observable_history:1"
+        }
+      ],
+      "synthetic": true,
+      "uncertainty": 0.6
+    }
+  ],
+  "canonical_memory_write": false,
+  "condition": "M",
+  "episode_id": "cal-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+}

@@ -1,0 +1,101 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "episode_id": "cal-trust-commit-01",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "cal-trust-commit-01-cd-tom1-factual",
+          "cal-trust-commit-01-cd-tom2-factual",
+          "cal-trust-commit-01-cd-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:e625c3d458154c77c8641568dca3d85c1e6e885b0bb08f54d504efda671d811f",
+        "branch_refs": [
+          "cal-trust-commit-01-cd-factual",
+          "cal-trust-commit-01-cd-counterfactual"
+        ],
+        "distribution_bundle_sha256": "sha256:58ce54803ef68fd2fa93bfd425a3cbd515157463825ec7571b69e1b6f100186a",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-trust-commit-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "cal-trust-commit-01:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-trust-commit-01:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:c56ec0d0fbed0ebc061acc53d74601b61e47a2567a4c2d82f2c1b948320cdf04",
+      "model_receipts": [
+        {
+          "condition": "CD",
+          "live_call_performed": false,
+          "mocked": false,
+          "model": "deterministic_pctom_condition_prior.v1",
+          "notes": "No LLM judge or provider call; deterministic protocol instrumentation.",
+          "receipt_id": "cal-trust-commit-01-cd-deterministic-condition-prior"
+        }
+      ],
+      "model_receipts_sha256": "sha256:0dea9293fdf08198b7dc9a31b31a7d03dd5b21d01daa788eeb7b03db4d4cc8db",
+      "outcome_visible": false,
+      "prediction_id": "cal-trust-commit-01-cd-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "cal-trust-commit-01-cd-tom1-factual",
+          "cal-trust-commit-01-cd-tom2-factual",
+          "cal-trust-commit-01-cd-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "cal-trust-commit-01-cd-factual",
+          "cal-trust-commit-01-cd-counterfactual"
+        ],
+        "condition": "CD",
+        "condition_method": "counterfactual_dream_prior",
+        "episode_id": "cal-trust-commit-01",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-trust-commit-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "cal-trust-commit-01:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-trust-commit-01:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.2,
+            "value": "KAI_SETS_BOUNDARY"
+          },
+          {
+            "probability": 0.3,
+            "value": "KAI_RESTATES_COMMITMENT"
+          },
+          {
+            "probability": 0.5,
+            "value": "KAI_DELEGATES_TRUST"
+          }
+        ]
+      },
+      "prediction_payload_sha256": "sha256:a566c2bfe1aa13902586987b5350384f6eb9850f783c469908772e80cb3b73c7",
+      "sealed_at": "2026-07-21T03:12:03Z"
+    }
+  ],
+  "episode_id": "cal-trust-commit-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

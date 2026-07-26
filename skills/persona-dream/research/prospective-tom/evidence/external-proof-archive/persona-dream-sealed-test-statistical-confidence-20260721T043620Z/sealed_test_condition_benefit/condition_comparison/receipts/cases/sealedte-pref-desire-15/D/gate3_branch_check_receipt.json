@@ -1,0 +1,60 @@
+{
+  "branch_bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-15/D/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:c6975c5efd95e68fba9fd76f2254a0d1f67a4879cc38f5ac5e59611f7d6bee56",
+  "checks": {
+    "action_distributions_valid": true,
+    "counterfactual_branches_use_counterfactual_distributions": true,
+    "counterfactuals_are_synthetic": true,
+    "distribution_refs_resolve": true,
+    "evidence_refs_resolve_to_visible_episode_fields": true,
+    "factual_branches_use_factual_distributions": true,
+    "has_counterfactual_branch": true,
+    "has_factual_branch": true,
+    "held_fixed_excludes_intervened_variable": true,
+    "no_canonical_memory_write": true,
+    "one_intervention_variable": true,
+    "outcome_not_visible": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "counterfactual causal correctness",
+      "calibration quality",
+      "Tau text-call execution",
+      "live Memory recall",
+      "outcome reveal or scoring",
+      "belief revision",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied branch bundle has factual and counterfactual branches",
+      "counterfactual branches are marked synthetic and have one intervention variable",
+      "held-fixed variables exclude the intervened variable",
+      "branch evidence resolves to agent-visible episode fields",
+      "branch BDI refs resolve to matching factual/counterfactual ToM distributions",
+      "predicted action distributions sum to one over allowed actions"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "branches": 2,
+    "counterfactual_branches": 1,
+    "distribution_refs": 3,
+    "factual_branches": 1,
+    "interventions": 1,
+    "resolved_source_evidence_refs": 6
+  },
+  "created_at": "2026-07-21T04:36:21Z",
+  "distribution_bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-15/D/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:e4f598b31909c3e61d7129602051e1432a58e0162c8a51fb648f1e312fc64475",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_condition_benefit/condition_comparison/receipts/cases/sealedte-pref-desire-15/D/gate3_branch_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1",
+  "status": "PASS_COUNTERFACTUAL_BRANCHES",
+  "tau_call_attempts": 0
+}

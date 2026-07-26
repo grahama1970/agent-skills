@@ -1,0 +1,100 @@
+{
+  "action_options": [
+    {
+      "action": "ASK_CLARIFYING_QUESTION",
+      "expected_information_gain": 0.3,
+      "expected_social_cost": 0.1,
+      "expected_task_reward": 0.8,
+      "expected_utility": 1.0,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "WAIT",
+      "expected_information_gain": 0.1,
+      "expected_social_cost": 0.1,
+      "expected_task_reward": 0.45,
+      "expected_utility": 0.45000000000000007,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "DISCLOSE_INFORMATION",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "OFFER_COOPERATION",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "SET_BOUNDARY",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "ACT_INDEPENDENTLY",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "ABSTAIN",
+      "expected_information_gain": 0.1,
+      "expected_social_cost": 0.0,
+      "expected_task_reward": 0.2,
+      "expected_utility": 0.30000000000000004,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    }
+  ],
+  "canonical_memory_write": false,
+  "decision_basis": {
+    "base_receipt_sha256": "sha256:596af6d315707dca21e758e0a2d3b8123542f952986a7a48fc5b92d9fcc0594c",
+    "condition": "CD",
+    "human_content_judgment_required": false,
+    "mapping_rule_id": "counterpart_action_to_constrained_agent_action.v1",
+    "prediction_id": "sealedte-pref-desire-02-cd-prediction",
+    "scoring_status": "PASS_TOM_SCORING_RECEIPT",
+    "selected_counterpart_action_probability": 0.5,
+    "selected_from_predicted_counterpart_action": "KAI_OFFERS_SHARED_DRAFT"
+  },
+  "episode_id": "sealedte-pref-desire-02",
+  "oracle_policy": {
+    "action": "ASK_CLARIFYING_QUESTION",
+    "actual_next_action": "KAI_REQUESTS_FAST_HANDOFF",
+    "counterpart_policy_id": "preference_desire_uncertainty.policy.v1",
+    "expected_utility": 1.0,
+    "llm_judge_used": false,
+    "policy_reference": "deterministic_simulator_policy.v1"
+  },
+  "outcome_id": "sealedte-pref-desire-02-cd-outcome",
+  "outcome_reveal_sha256": "sha256:2b6a6eb3e086533bd0833e21002480d3b643ebab84d360598a258739294cd0a4",
+  "planning_regret": 0.0,
+  "prediction_id": "sealedte-pref-desire-02-cd-prediction",
+  "realized_outcome": {
+    "information_gain": 0.3,
+    "observed_counterpart_action": "KAI_REQUESTS_FAST_HANDOFF",
+    "social_cost": 0.1,
+    "task_reward": 0.8
+  },
+  "schema": "persona_dream.research.prospective_tom.action_selection.v1",
+  "scoring_receipt_sha256": "sha256:89d1a9a7e6e5c45a94aaaa33a88913875a1fc7d8024bee77bb6cd2042d76d162",
+  "selected_action": "ASK_CLARIFYING_QUESTION"
+}

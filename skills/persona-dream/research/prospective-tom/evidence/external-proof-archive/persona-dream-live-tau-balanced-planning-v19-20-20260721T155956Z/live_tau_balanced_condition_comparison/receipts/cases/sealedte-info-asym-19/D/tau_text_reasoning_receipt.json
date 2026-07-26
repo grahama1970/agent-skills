@@ -1,0 +1,32 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "caller_skill": "persona-dream",
+  "created_at": "2026-07-21T16:00:53.605175+00:00",
+  "error": "scillm_http_status_502",
+  "http_status": 502,
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+  "parsed_json": null,
+  "prompt_sha256": "sha256:c003f4928171183c63379765cc9155406fb022ceb4842ba299d6f250fb607ef6",
+  "request": {
+    "messages": "<redacted-prompt>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-text-reasoning",
+      "role": "pctom-live-condition-d"
+    },
+    "temperature": 0
+  },
+  "response_text": "{\"error\":{\"message\":\"All groups exhausted for model='gpt-5.5' (chain=['gpt-5.5']): Codex API 429: {\\\"error\\\":{\\\"type\\\":\\\"usage_limit_reached\\\",\\\"message\\\":\\\"The usage limit has been reached\\\",\\\"plan_type\\\":\\\"pro\\\",\\\"resets_at\\\":1784983906,\\\"eligible_promo\\\":null,\\\"resets_in_seconds\\\":334163}}\",\"type\":\"router_error\",\"code\":502,\"advice\":\"Reduce concurrency and process requests in chunks of 4.\",\"skill\":\"/best-practices-scillm\",\"recommendation\":\"CHUNK_SIZE = 4\\nresults = []\\nfor i in range(0, len(prompts), CHUNK_SIZE):\\n    chunk = prompts[i:i + CHUNK_SIZE]\\n    chunk_results = await asyncio.gather(*(call_proxy(p) for p in chunk))\\n    results.extend(chunk_results)\",\"analysis\":\"deterministic\"}}",
+  "role": "pctom-live-condition-d",
+  "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+  "status": "BLOCKED",
+  "surface": "scillm.chat_completions.text"
+}

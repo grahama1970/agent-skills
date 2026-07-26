@@ -1,0 +1,9 @@
+{
+  "duplicate_action_decisions_promoted": 0,
+  "duplicate_active_predictions_promoted": 0,
+  "expected_terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+  "fault_family": "retry_after_uncertain_completion",
+  "mutation": "reuse local HTTP service duplicate job boundary",
+  "schema": "pctom.controlled_fault_manifest.v1",
+  "service_receipt_sha256": "sha256:e45393a550d0ff4416308a69cbbca89cad148a953712bf4385c39c19d036f4d0"
+}

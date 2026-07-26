@@ -1,0 +1,113 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "R",
+      "episode_id": "sealedte-pref-desire-17",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "live-tau-r-sealedte-pref-desire-17-tom1-factual",
+          "live-tau-r-sealedte-pref-desire-17-tom2-factual",
+          "live-tau-r-sealedte-pref-desire-17-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:2dd1cf0c444557eb0861dc4770bf613e79459e7a69917381720c62db9f573bc9",
+        "branch_refs": [
+          "live-tau-r-sealedte-pref-desire-17-factual",
+          "live-tau-r-sealedte-pref-desire-17-counterfactual"
+        ],
+        "condition": "R",
+        "distribution_bundle_sha256": "sha256:75340a3d4cd96189483f5bb94aade8dc5703ead57c3178c9e176d68730c0f375",
+        "episode_id": "sealedte-pref-desire-17",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-17:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-pref-desire-17:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-17:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:a5b7cf35c1f0d2f8d6093a60570dd74c1e62e2a7b600d30327dcd86346dc4d28",
+      "model_receipts": [
+        {
+          "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+          "caller_skill": "persona-dream",
+          "created_at": "2026-07-21T13:35:39.529934+00:00",
+          "http_status": 200,
+          "live": true,
+          "live_call_performed": true,
+          "mocked": false,
+          "model": "gpt-5.5",
+          "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+          "prompt_sha256": "sha256:804db20dbcca736a1a8f986ee73a0c99edeac27bbe5912192c81823ad85f79f5",
+          "role": "pctom-live-condition-r",
+          "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+          "status": "PASS",
+          "surface": "scillm.chat_completions.text"
+        }
+      ],
+      "model_receipts_sha256": "sha256:5370ebeca1fc6bdf3a07dec9d8f40df3c89bd9f82d6b60396ead745e01fa3183",
+      "outcome_visible": false,
+      "prediction_id": "live-tau-r-sealedte-pref-desire-17-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "live-tau-r-sealedte-pref-desire-17-tom1-factual",
+          "live-tau-r-sealedte-pref-desire-17-tom2-factual",
+          "live-tau-r-sealedte-pref-desire-17-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "live-tau-r-sealedte-pref-desire-17-factual",
+          "live-tau-r-sealedte-pref-desire-17-counterfactual"
+        ],
+        "condition": "R",
+        "condition_method": "Reflection condition: reason textually over the visible evidence and the prediction targets. Do not introduce a synthetic dream trajectory. Use only visible evidence refs plus the required synthetic counterfactual ref.",
+        "episode_id": "sealedte-pref-desire-17",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-17:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-pref-desire-17:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-17:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.34,
+            "value": "KAI_CHOOSES_QUIET_REVIEW"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_REQUESTS_FAST_HANDOFF"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_OFFERS_SHARED_DRAFT"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:3a4d312e8816ea3a9d90f31ccdb1d4b8f4120fc6cc2a1c9414124b9b00bb5440",
+      "sealed_at": "2026-07-21T13:36:29Z"
+    }
+  ],
+  "episode_id": "sealedte-pref-desire-17",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

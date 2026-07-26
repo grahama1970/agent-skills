@@ -1,0 +1,132 @@
+{
+  "canonical_memory_write": false,
+  "condition": "CD",
+  "distributions": [
+    {
+      "abstain": false,
+      "counterfactual": false,
+      "counterfactual_context": null,
+      "distribution": [
+        {
+          "probability": 0.7,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.2,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.1,
+          "value": "UNKNOWN"
+        }
+      ],
+      "episode_id": "cal-pref-desire-04",
+      "evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-pref-desire-04:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "cal-pref-desire-04:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-pref-desire-04:observable_history:1"
+        }
+      ],
+      "hypothesis_id": "cal-pref-desire-04-cd-tom1-factual",
+      "mental_state_type": "desire",
+      "perspective_order": 1,
+      "prediction_horizon": "next_action",
+      "proposition": "Kai wants the plan to respect a private working preference.",
+      "subject": "kai",
+      "support_status": "supported",
+      "target": "embry"
+    },
+    {
+      "abstain": false,
+      "counterfactual": false,
+      "counterfactual_context": null,
+      "distribution": [
+        {
+          "probability": 0.7,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.2,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.1,
+          "value": "UNKNOWN"
+        }
+      ],
+      "episode_id": "cal-pref-desire-04",
+      "evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-pref-desire-04:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "cal-pref-desire-04:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-pref-desire-04:observable_history:1"
+        }
+      ],
+      "hypothesis_id": "cal-pref-desire-04-cd-tom2-factual",
+      "mental_state_type": "belief",
+      "perspective_order": 2,
+      "prediction_horizon": "next_action",
+      "proposition": "Embry believes Kai thinks Embry is optimizing throughput over preference.",
+      "subject": "embry",
+      "support_status": "supported",
+      "target": "kai"
+    },
+    {
+      "abstain": false,
+      "counterfactual": true,
+      "counterfactual_context": {
+        "condition": "CD",
+        "intervention_id": "cal-pref-desire-04-cd-do-policy-alternative",
+        "synthetic": true
+      },
+      "distribution": [
+        {
+          "probability": 0.7,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.2,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.1,
+          "value": "UNKNOWN"
+        }
+      ],
+      "episode_id": "cal-pref-desire-04",
+      "evidence_refs": [
+        {
+          "scope": "synthetic_counterfactual",
+          "source_id": "cal-pref-desire-04:CD:do-counterpart-policy-alternative"
+        }
+      ],
+      "hypothesis_id": "cal-pref-desire-04-cd-tom1-counterfactual",
+      "mental_state_type": "desire",
+      "perspective_order": 1,
+      "prediction_horizon": "next_action",
+      "proposition": "Kai wants the plan to respect a private working preference.",
+      "subject": "kai",
+      "support_status": "supported",
+      "target": "embry"
+    }
+  ],
+  "episode_id": "cal-pref-desire-04",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+  "sealed": true
+}

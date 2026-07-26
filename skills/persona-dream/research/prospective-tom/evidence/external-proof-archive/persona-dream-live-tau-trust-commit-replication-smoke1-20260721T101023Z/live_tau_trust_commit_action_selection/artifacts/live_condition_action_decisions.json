@@ -1,0 +1,62 @@
+[
+  {
+    "action_selection_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/cases/sealedte-trust-commit-01/M/action_selection.json",
+    "case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/cases/sealedte-trust-commit-01/M",
+    "condition": "M",
+    "episode_id": "sealedte-trust-commit-01",
+    "errors": [],
+    "gate6_receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/receipts/cases/sealedte-trust-commit-01/M/gate6_action_selection_receipt.json",
+    "oracle_action": "SET_BOUNDARY",
+    "planning_regret": 0.0,
+    "receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/receipts/cases/sealedte-trust-commit-01/M",
+    "selected_action": "SET_BOUNDARY",
+    "source_case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/artifacts/cases/sealedte-trust-commit-01/M",
+    "source_receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/M",
+    "status": "PASS_TOM_ACTION_SELECTION"
+  },
+  {
+    "action_selection_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/cases/sealedte-trust-commit-01/R/action_selection.json",
+    "case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/cases/sealedte-trust-commit-01/R",
+    "condition": "R",
+    "episode_id": "sealedte-trust-commit-01",
+    "errors": [],
+    "gate6_receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/receipts/cases/sealedte-trust-commit-01/R/gate6_action_selection_receipt.json",
+    "oracle_action": "SET_BOUNDARY",
+    "planning_regret": 0.0,
+    "receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/receipts/cases/sealedte-trust-commit-01/R",
+    "selected_action": "SET_BOUNDARY",
+    "source_case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/artifacts/cases/sealedte-trust-commit-01/R",
+    "source_receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/R",
+    "status": "PASS_TOM_ACTION_SELECTION"
+  },
+  {
+    "action_selection_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/cases/sealedte-trust-commit-01/D/action_selection.json",
+    "case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/cases/sealedte-trust-commit-01/D",
+    "condition": "D",
+    "episode_id": "sealedte-trust-commit-01",
+    "errors": [],
+    "gate6_receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/receipts/cases/sealedte-trust-commit-01/D/gate6_action_selection_receipt.json",
+    "oracle_action": "SET_BOUNDARY",
+    "planning_regret": 0.0,
+    "receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/receipts/cases/sealedte-trust-commit-01/D",
+    "selected_action": "SET_BOUNDARY",
+    "source_case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/artifacts/cases/sealedte-trust-commit-01/D",
+    "source_receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/D",
+    "status": "PASS_TOM_ACTION_SELECTION"
+  },
+  {
+    "action_selection_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/cases/sealedte-trust-commit-01/CD/action_selection.json",
+    "case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/artifacts/cases/sealedte-trust-commit-01/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-trust-commit-01",
+    "errors": [],
+    "gate6_receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/receipts/cases/sealedte-trust-commit-01/CD/gate6_action_selection_receipt.json",
+    "oracle_action": "SET_BOUNDARY",
+    "planning_regret": 0.0,
+    "receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_action_selection/receipts/cases/sealedte-trust-commit-01/CD",
+    "selected_action": "SET_BOUNDARY",
+    "source_case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/artifacts/cases/sealedte-trust-commit-01/CD",
+    "source_receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/CD",
+    "status": "PASS_TOM_ACTION_SELECTION"
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "branch_bundle_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-coord-conflict-16/D/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:9fc0645bf50dc6468b35d00db45cfec27002f74ba687a38a6e5c57a9a571e60b",
+  "checks": {
+    "action_distributions_valid": true,
+    "counterfactual_branches_use_counterfactual_distributions": true,
+    "counterfactuals_are_synthetic": true,
+    "distribution_refs_resolve": true,
+    "evidence_refs_resolve_to_visible_episode_fields": true,
+    "factual_branches_use_factual_distributions": true,
+    "has_counterfactual_branch": true,
+    "has_factual_branch": true,
+    "held_fixed_excludes_intervened_variable": true,
+    "no_canonical_memory_write": true,
+    "one_intervention_variable": true,
+    "outcome_not_visible": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "counterfactual causal correctness",
+      "calibration quality",
+      "Tau text-call execution",
+      "live Memory recall",
+      "outcome reveal or scoring",
+      "belief revision",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied branch bundle has factual and counterfactual branches",
+      "counterfactual branches are marked synthetic and have one intervention variable",
+      "held-fixed variables exclude the intervened variable",
+      "branch evidence resolves to agent-visible episode fields",
+      "branch BDI refs resolve to matching factual/counterfactual ToM distributions",
+      "predicted action distributions sum to one over allowed actions"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "branches": 2,
+    "counterfactual_branches": 1,
+    "distribution_refs": 3,
+    "factual_branches": 1,
+    "interventions": 1,
+    "resolved_source_evidence_refs": 6
+  },
+  "created_at": "2026-07-21T09:14:53Z",
+  "distribution_bundle_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-coord-conflict-16/D/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:dcdd3b1096e2bf8a0f0e7a49759469c3ff2a55be98b0601ec81310b4616dbb01",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/receipts/cases/sealedte-coord-conflict-16/D/gate3_branch_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1",
+  "status": "PASS_COUNTERFACTUAL_BRANCHES",
+  "tau_call_attempts": 0
+}

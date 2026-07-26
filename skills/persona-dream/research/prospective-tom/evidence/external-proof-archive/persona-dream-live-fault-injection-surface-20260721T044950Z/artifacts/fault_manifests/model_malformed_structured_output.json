@@ -1,0 +1,8 @@
+{
+  "base_manifest_sha256": "sha256:8f62c5c635c771e72f8d5d75f245a0c58a33a1ef0f5a45330a1df001e748858e",
+  "expected_terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+  "fault_family": "model_malformed_structured_output",
+  "mutation": "replace_prediction_payload_object_with_string",
+  "reason": "Gate 2/4 consumers require structured distributions and hash-bound payload objects.",
+  "schema": "persona_dream.research.prospective_tom.controlled_fault_manifest.v1"
+}

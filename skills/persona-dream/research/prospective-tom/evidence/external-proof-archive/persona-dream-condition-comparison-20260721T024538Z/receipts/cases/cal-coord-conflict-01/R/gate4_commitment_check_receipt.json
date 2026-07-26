@@ -1,0 +1,63 @@
+{
+  "branch_bundle_path": "/tmp/persona-dream-condition-comparison-20260721T024538Z/artifacts/cases/cal-coord-conflict-01/R/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:58ee2c6cc5f38a2711b5ec7c13a7b055bdca9c14cf36d3dd714a8da992032a97",
+  "checks": {
+    "branch_refs_resolve": true,
+    "bundle_sealed_before_reveal": true,
+    "distribution_refs_resolve": true,
+    "evidence_bundle_hashes_match": true,
+    "evidence_refs_resolve": true,
+    "model_receipt_hashes_match": true,
+    "no_canonical_memory_write": true,
+    "no_prediction_edits_after_reveal": true,
+    "outcome_absent_from_commitment": true,
+    "payload_hashes_match": true,
+    "prediction_distributions_sum_to_one": true,
+    "upstream_bundle_hashes_match": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "calibration quality",
+      "outcome reveal execution",
+      "deterministic scoring",
+      "belief revision",
+      "Tau text-call execution",
+      "live Memory recall",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied prediction commitments are sealed before outcome reveal",
+      "prediction payloads, model receipts, and evidence bundles are hash-bound",
+      "upstream Gate 2 and Gate 3 bundle hashes match the committed evidence bundle",
+      "branch, distribution, and visible source-evidence references resolve",
+      "forbidden outcome/ground-truth fields are absent from commitments",
+      "canonical memory writes and post-reveal edits are absent"
+    ]
+  },
+  "commitment_bundle_path": "/tmp/persona-dream-condition-comparison-20260721T024538Z/artifacts/cases/cal-coord-conflict-01/R/tom_prediction_commitment_bundle.json",
+  "commitment_bundle_sha256": "sha256:c3a7d6bc6b94ebfa1a698155b2814a3507fd9f39ecd498b7d1e38dd48e223c90",
+  "corpus_path": "/tmp/persona-dream-condition-comparison-20260721T024538Z/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "branch_refs": 4,
+    "commitments": 1,
+    "conditions": 1,
+    "distribution_refs": 6,
+    "forbidden_outcome_paths": 0,
+    "hashes_checked": 3,
+    "resolved_source_evidence_refs": 6
+  },
+  "created_at": "2026-07-21T02:45:38Z",
+  "distribution_bundle_path": "/tmp/persona-dream-condition-comparison-20260721T024538Z/artifacts/cases/cal-coord-conflict-01/R/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:8a10d59bfb3443a0dd53f357ce94f497c3ad753f9272c06cee4bbbe867fdf283",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-condition-comparison-20260721T024538Z/receipts/cases/cal-coord-conflict-01/R/gate4_commitment_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1",
+  "status": "PASS_TOM_PREDICTION_COMMITMENTS",
+  "tau_call_attempts": 0
+}

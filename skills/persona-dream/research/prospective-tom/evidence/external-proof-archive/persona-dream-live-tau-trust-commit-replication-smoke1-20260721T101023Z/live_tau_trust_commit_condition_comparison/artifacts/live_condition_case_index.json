@@ -1,0 +1,346 @@
+[
+  {
+    "case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/artifacts/cases/sealedte-trust-commit-01/M",
+    "condition": "M",
+    "episode_id": "sealedte-trust-commit-01",
+    "errors": [],
+    "receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-trust-commit-01-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-trust-commit-01-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "tau_live_call_performed": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/artifacts/cases/sealedte-trust-commit-01/R",
+    "condition": "R",
+    "episode_id": "sealedte-trust-commit-01",
+    "errors": [],
+    "receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-01-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-01-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "tau_live_call_performed": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/R/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/artifacts/cases/sealedte-trust-commit-01/D",
+    "condition": "D",
+    "episode_id": "sealedte-trust-commit-01",
+    "errors": [],
+    "receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-d-sealedte-trust-commit-01-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-d-sealedte-trust-commit-01-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "tau_live_call_performed": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/D/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "case_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/artifacts/cases/sealedte-trust-commit-01/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-trust-commit-01",
+    "errors": [],
+    "receipt_root": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-trust-commit-01-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-trust-commit-01-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "tau_live_call_performed": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_condition_comparison/receipts/cases/sealedte-trust-commit-01/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  }
+]

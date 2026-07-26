@@ -1,0 +1,2722 @@
+[
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-17/M",
+    "condition": "M",
+    "episode_id": "explicit-trust-commit-17",
+    "prediction_id": "explicit-trust-commit-17-m-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-17/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3333333333333333,
+        "brier": 0.6666666666666667,
+        "log_loss": 1.0986122886681098,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-17-m-tom1-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-17-m-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.6666666666666666,
+            "bucket": "0.00-0.50",
+            "count": 3,
+            "mean_confidence": 0.41111111111111115
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.50-0.75",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.2555555555555555
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-17/R",
+    "condition": "R",
+    "episode_id": "explicit-trust-commit-17",
+    "prediction_id": "explicit-trust-commit-17-r-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-17/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3,
+        "brier": 0.7799999999999999,
+        "log_loss": 1.2039728043259361,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-17-r-tom1-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-17-r-tom2-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.3
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.55
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3999999999999999
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-17/D",
+    "condition": "D",
+    "episode_id": "explicit-trust-commit-17",
+    "prediction_id": "explicit-trust-commit-17-d-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-17/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.5,
+        "brier": 0.375,
+        "log_loss": 0.6931471805599453,
+        "top_correct": true,
+        "top_value": "KAI_RESTATES_COMMITMENT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-17-d-tom1-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-17-d-tom2-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": null,
+            "bucket": "0.00-0.50",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 3,
+            "mean_confidence": 0.58
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.42000000000000004
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_RESTATES_COMMITMENT"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-17/CD",
+    "condition": "CD",
+    "episode_id": "explicit-trust-commit-17",
+    "prediction_id": "explicit-trust-commit-17-cd-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-17/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3,
+        "brier": 0.7799999999999999,
+        "log_loss": 1.2039728043259361,
+        "top_correct": false,
+        "top_value": "KAI_DELEGATES_TRUST"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-17-cd-tom1-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-17-cd-tom2-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.3
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.7
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_DELEGATES_TRUST"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-18/M",
+    "condition": "M",
+    "episode_id": "explicit-trust-commit-18",
+    "prediction_id": "explicit-trust-commit-18-m-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-18/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3333333333333333,
+        "brier": 0.6666666666666667,
+        "log_loss": 1.0986122886681098,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-18-m-tom1-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-18-m-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.6666666666666666,
+            "bucket": "0.00-0.50",
+            "count": 3,
+            "mean_confidence": 0.41111111111111115
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.50-0.75",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.2555555555555555
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-18/R",
+    "condition": "R",
+    "episode_id": "explicit-trust-commit-18",
+    "prediction_id": "explicit-trust-commit-18-r-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-18/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.2,
+        "brier": 0.9800000000000001,
+        "log_loss": 1.6094379124341003,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-18-r-tom1-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-18-r-tom2-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.2
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.55
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3666666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-18/D",
+    "condition": "D",
+    "episode_id": "explicit-trust-commit-18",
+    "prediction_id": "explicit-trust-commit-18-d-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-18/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.25,
+        "brier": 0.875,
+        "log_loss": 1.3862943611198906,
+        "top_correct": false,
+        "top_value": "KAI_RESTATES_COMMITMENT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-18-d-tom1-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-18-d-tom2-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.25
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.62
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3366666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_RESTATES_COMMITMENT"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-18/CD",
+    "condition": "CD",
+    "episode_id": "explicit-trust-commit-18",
+    "prediction_id": "explicit-trust-commit-18-cd-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-18/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.5,
+        "brier": 0.38,
+        "log_loss": 0.6931471805599453,
+        "top_correct": true,
+        "top_value": "KAI_DELEGATES_TRUST"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-18-cd-tom1-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-18-cd-tom2-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": null,
+            "bucket": "0.00-0.50",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 3,
+            "mean_confidence": 0.6333333333333333
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3666666666666667
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_DELEGATES_TRUST"
+  },
+  {
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-19/M",
+    "condition": "M",
+    "episode_id": "explicit-trust-commit-19",
+    "prediction_id": "explicit-trust-commit-19-m-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-19/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3333333333333333,
+        "brier": 0.6666666666666667,
+        "log_loss": 1.0986122886681098,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-19-m-tom1-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-19-m-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 3,
+            "mean_confidence": 0.41111111111111115
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.50-0.75",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.5888888888888888
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-19/R",
+    "condition": "R",
+    "episode_id": "explicit-trust-commit-19",
+    "prediction_id": "explicit-trust-commit-19-r-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-19/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.5,
+        "brier": 0.38,
+        "log_loss": 0.6931471805599453,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-19-r-tom1-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-19-r-tom2-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": null,
+            "bucket": "0.00-0.50",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 3,
+            "mean_confidence": 0.5333333333333333
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.4666666666666667
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-19/D",
+    "condition": "D",
+    "episode_id": "explicit-trust-commit-19",
+    "prediction_id": "explicit-trust-commit-19-d-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-19/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.25,
+        "brier": 0.875,
+        "log_loss": 1.3862943611198906,
+        "top_correct": false,
+        "top_value": "KAI_RESTATES_COMMITMENT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-19-d-tom1-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-19-d-tom2-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.25
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.62
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3366666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_RESTATES_COMMITMENT"
+  },
+  {
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-19/CD",
+    "condition": "CD",
+    "episode_id": "explicit-trust-commit-19",
+    "prediction_id": "explicit-trust-commit-19-cd-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-19/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.2,
+        "brier": 0.9800000000000001,
+        "log_loss": 1.6094379124341003,
+        "top_correct": false,
+        "top_value": "KAI_DELEGATES_TRUST"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-19-cd-tom1-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-19-cd-tom2-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.2
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.7
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.26666666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_DELEGATES_TRUST"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-20/M",
+    "condition": "M",
+    "episode_id": "explicit-trust-commit-20",
+    "prediction_id": "explicit-trust-commit-20-m-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-20/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3333333333333333,
+        "brier": 0.6666666666666667,
+        "log_loss": 1.0986122886681098,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-20-m-tom1-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-20-m-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.6666666666666666,
+            "bucket": "0.00-0.50",
+            "count": 3,
+            "mean_confidence": 0.41111111111111115
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.50-0.75",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.2555555555555555
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-20/R",
+    "condition": "R",
+    "episode_id": "explicit-trust-commit-20",
+    "prediction_id": "explicit-trust-commit-20-r-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-20/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3,
+        "brier": 0.7799999999999999,
+        "log_loss": 1.2039728043259361,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-20-r-tom1-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-20-r-tom2-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.3
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.55
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3999999999999999
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-20/D",
+    "condition": "D",
+    "episode_id": "explicit-trust-commit-20",
+    "prediction_id": "explicit-trust-commit-20-d-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-20/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.5,
+        "brier": 0.375,
+        "log_loss": 0.6931471805599453,
+        "top_correct": true,
+        "top_value": "KAI_RESTATES_COMMITMENT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-20-d-tom1-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-20-d-tom2-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": null,
+            "bucket": "0.00-0.50",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 3,
+            "mean_confidence": 0.58
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.42000000000000004
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_RESTATES_COMMITMENT"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-20/CD",
+    "condition": "CD",
+    "episode_id": "explicit-trust-commit-20",
+    "prediction_id": "explicit-trust-commit-20-cd-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-20/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3,
+        "brier": 0.7799999999999999,
+        "log_loss": 1.2039728043259361,
+        "top_correct": false,
+        "top_value": "KAI_DELEGATES_TRUST"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-20-cd-tom1-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-20-cd-tom2-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.3
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.7
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_DELEGATES_TRUST"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-21/M",
+    "condition": "M",
+    "episode_id": "explicit-trust-commit-21",
+    "prediction_id": "explicit-trust-commit-21-m-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-21/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3333333333333333,
+        "brier": 0.6666666666666667,
+        "log_loss": 1.0986122886681098,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-21-m-tom1-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-21-m-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.6666666666666666,
+            "bucket": "0.00-0.50",
+            "count": 3,
+            "mean_confidence": 0.41111111111111115
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.50-0.75",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.2555555555555555
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-21/R",
+    "condition": "R",
+    "episode_id": "explicit-trust-commit-21",
+    "prediction_id": "explicit-trust-commit-21-r-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-21/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.2,
+        "brier": 0.9800000000000001,
+        "log_loss": 1.6094379124341003,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-21-r-tom1-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-21-r-tom2-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.2
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.55
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3666666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-21/D",
+    "condition": "D",
+    "episode_id": "explicit-trust-commit-21",
+    "prediction_id": "explicit-trust-commit-21-d-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-21/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.25,
+        "brier": 0.875,
+        "log_loss": 1.3862943611198906,
+        "top_correct": false,
+        "top_value": "KAI_RESTATES_COMMITMENT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-21-d-tom1-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-21-d-tom2-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.25
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.62
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3366666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_RESTATES_COMMITMENT"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-21/CD",
+    "condition": "CD",
+    "episode_id": "explicit-trust-commit-21",
+    "prediction_id": "explicit-trust-commit-21-cd-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-21/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.5,
+        "brier": 0.38,
+        "log_loss": 0.6931471805599453,
+        "top_correct": true,
+        "top_value": "KAI_DELEGATES_TRUST"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-21-cd-tom1-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-21-cd-tom2-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": null,
+            "bucket": "0.00-0.50",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 3,
+            "mean_confidence": 0.6333333333333333
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3666666666666667
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_DELEGATES_TRUST"
+  },
+  {
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-22/M",
+    "condition": "M",
+    "episode_id": "explicit-trust-commit-22",
+    "prediction_id": "explicit-trust-commit-22-m-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-22/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3333333333333333,
+        "brier": 0.6666666666666667,
+        "log_loss": 1.0986122886681098,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-22-m-tom1-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-22-m-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 3,
+            "mean_confidence": 0.41111111111111115
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.50-0.75",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.5888888888888888
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-22/R",
+    "condition": "R",
+    "episode_id": "explicit-trust-commit-22",
+    "prediction_id": "explicit-trust-commit-22-r-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-22/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.5,
+        "brier": 0.38,
+        "log_loss": 0.6931471805599453,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-22-r-tom1-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-22-r-tom2-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": null,
+            "bucket": "0.00-0.50",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 3,
+            "mean_confidence": 0.5333333333333333
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.4666666666666667
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-22/D",
+    "condition": "D",
+    "episode_id": "explicit-trust-commit-22",
+    "prediction_id": "explicit-trust-commit-22-d-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-22/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.25,
+        "brier": 0.875,
+        "log_loss": 1.3862943611198906,
+        "top_correct": false,
+        "top_value": "KAI_RESTATES_COMMITMENT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-22-d-tom1-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-22-d-tom2-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.25
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.62
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3366666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_RESTATES_COMMITMENT"
+  },
+  {
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-22/CD",
+    "condition": "CD",
+    "episode_id": "explicit-trust-commit-22",
+    "prediction_id": "explicit-trust-commit-22-cd-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-22/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.2,
+        "brier": 0.9800000000000001,
+        "log_loss": 1.6094379124341003,
+        "top_correct": false,
+        "top_value": "KAI_DELEGATES_TRUST"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-22-cd-tom1-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-22-cd-tom2-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.2
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.7
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.26666666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_DELEGATES_TRUST"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-23/M",
+    "condition": "M",
+    "episode_id": "explicit-trust-commit-23",
+    "prediction_id": "explicit-trust-commit-23-m-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-23/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3333333333333333,
+        "brier": 0.6666666666666667,
+        "log_loss": 1.0986122886681098,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-23-m-tom1-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-23-m-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.6666666666666666,
+            "bucket": "0.00-0.50",
+            "count": 3,
+            "mean_confidence": 0.41111111111111115
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.50-0.75",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.2555555555555555
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-23/R",
+    "condition": "R",
+    "episode_id": "explicit-trust-commit-23",
+    "prediction_id": "explicit-trust-commit-23-r-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-23/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3,
+        "brier": 0.7799999999999999,
+        "log_loss": 1.2039728043259361,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-23-r-tom1-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-23-r-tom2-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.3
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.55
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3999999999999999
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-23/D",
+    "condition": "D",
+    "episode_id": "explicit-trust-commit-23",
+    "prediction_id": "explicit-trust-commit-23-d-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-23/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.5,
+        "brier": 0.375,
+        "log_loss": 0.6931471805599453,
+        "top_correct": true,
+        "top_value": "KAI_RESTATES_COMMITMENT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-23-d-tom1-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-23-d-tom2-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": null,
+            "bucket": "0.00-0.50",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 3,
+            "mean_confidence": 0.58
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.42000000000000004
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_RESTATES_COMMITMENT"
+  },
+  {
+    "actual_next_action": "KAI_RESTATES_COMMITMENT",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-23/CD",
+    "condition": "CD",
+    "episode_id": "explicit-trust-commit-23",
+    "prediction_id": "explicit-trust-commit-23-cd-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-23/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3,
+        "brier": 0.7799999999999999,
+        "log_loss": 1.2039728043259361,
+        "top_correct": false,
+        "top_value": "KAI_DELEGATES_TRUST"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-23-cd-tom1-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-23-cd-tom2-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.3
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.7
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_DELEGATES_TRUST"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-24/M",
+    "condition": "M",
+    "episode_id": "explicit-trust-commit-24",
+    "prediction_id": "explicit-trust-commit-24-m-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-24/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.3333333333333333,
+        "brier": 0.6666666666666667,
+        "log_loss": 1.0986122886681098,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-24-m-tom1-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "explicit-trust-commit-24-m-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.6666666666666666,
+            "bucket": "0.00-0.50",
+            "count": 3,
+            "mean_confidence": 0.41111111111111115
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.50-0.75",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.2555555555555555
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-24/R",
+    "condition": "R",
+    "episode_id": "explicit-trust-commit-24",
+    "prediction_id": "explicit-trust-commit-24-r-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-24/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.2,
+        "brier": 0.9800000000000001,
+        "log_loss": 1.6094379124341003,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-24-r-tom1-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.55,
+          "brier": 0.30499999999999994,
+          "hypothesis_id": "explicit-trust-commit-24-r-tom2-factual",
+          "log_loss": 0.5978370007556204,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.2
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.55
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3666666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_SETS_BOUNDARY"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-24/D",
+    "condition": "D",
+    "episode_id": "explicit-trust-commit-24",
+    "prediction_id": "explicit-trust-commit-24-d-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-24/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.25,
+        "brier": 0.875,
+        "log_loss": 1.3862943611198906,
+        "top_correct": false,
+        "top_value": "KAI_RESTATES_COMMITMENT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-24-d-tom1-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.62,
+          "brier": 0.2198,
+          "hypothesis_id": "explicit-trust-commit-24-d-tom2-factual",
+          "log_loss": 0.4780358009429998,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.0,
+            "bucket": "0.00-0.50",
+            "count": 1,
+            "mean_confidence": 0.25
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 2,
+            "mean_confidence": 0.62
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3366666666666666
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_RESTATES_COMMITMENT"
+  },
+  {
+    "actual_next_action": "KAI_DELEGATES_TRUST",
+    "case_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/artifacts/cases/explicit-trust-commit-24/CD",
+    "condition": "CD",
+    "episode_id": "explicit-trust-commit-24",
+    "prediction_id": "explicit-trust-commit-24-cd-prediction",
+    "receipt_root": "/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/condition_comparison/receipts/cases/explicit-trust-commit-24/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.5,
+        "brier": 0.38,
+        "log_loss": 0.6931471805599453,
+        "top_correct": true,
+        "top_value": "KAI_DELEGATES_TRUST"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-24-cd-tom1-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.7,
+          "brier": 0.14000000000000004,
+          "hypothesis_id": "explicit-trust-commit-24-cd-tom2-factual",
+          "log_loss": 0.35667494393873245,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": null,
+            "bucket": "0.00-0.50",
+            "count": 0,
+            "mean_confidence": null
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 3,
+            "mean_confidence": 0.6333333333333333
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.3666666666666667
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "top_action": "KAI_DELEGATES_TRUST"
+  }
+]

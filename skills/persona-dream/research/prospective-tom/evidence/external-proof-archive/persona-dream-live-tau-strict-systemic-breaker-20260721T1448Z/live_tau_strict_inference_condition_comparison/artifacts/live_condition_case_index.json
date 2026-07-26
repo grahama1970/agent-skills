@@ -1,0 +1,252 @@
+[
+  {
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-info-asym-17/M",
+    "condition": "M",
+    "episode_id": "sealedte-info-asym-17",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-info-asym-17/M",
+    "scoring_metrics": {},
+    "statuses": {},
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-info-asym-17/M/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-info-asym-17/R",
+    "condition": "R",
+    "episode_id": "sealedte-info-asym-17",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-info-asym-17/R",
+    "scoring_metrics": {},
+    "statuses": {},
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-info-asym-17/R/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-info-asym-17/D",
+    "condition": "D",
+    "episode_id": "sealedte-info-asym-17",
+    "errors": [
+      "tau_text_reasoning_failed:Tau dispatch timed out after 5.0s"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-info-asym-17/D",
+    "scoring_metrics": {},
+    "statuses": {},
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-info-asym-17/D/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-info-asym-17/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-info-asym-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-info-asym-17/CD",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-info-asym-17/CD/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-pref-desire-17/M",
+    "condition": "M",
+    "episode_id": "sealedte-pref-desire-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-pref-desire-17/M",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-pref-desire-17/M/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-pref-desire-17/R",
+    "condition": "R",
+    "episode_id": "sealedte-pref-desire-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-pref-desire-17/R",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-pref-desire-17/R/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-pref-desire-17/D",
+    "condition": "D",
+    "episode_id": "sealedte-pref-desire-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-pref-desire-17/D",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-pref-desire-17/D/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-pref-desire-17/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-pref-desire-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-pref-desire-17/CD",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-pref-desire-17/CD/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-trust-commit-17/M",
+    "condition": "M",
+    "episode_id": "sealedte-trust-commit-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-trust-commit-17/M",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-trust-commit-17/M/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-trust-commit-17/R",
+    "condition": "R",
+    "episode_id": "sealedte-trust-commit-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-trust-commit-17/R",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-trust-commit-17/R/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-trust-commit-17/D",
+    "condition": "D",
+    "episode_id": "sealedte-trust-commit-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-trust-commit-17/D",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-trust-commit-17/D/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-trust-commit-17/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-trust-commit-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-trust-commit-17/CD",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-trust-commit-17/CD/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-coord-conflict-17/M",
+    "condition": "M",
+    "episode_id": "sealedte-coord-conflict-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-coord-conflict-17/M",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-coord-conflict-17/M/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-coord-conflict-17/R",
+    "condition": "R",
+    "episode_id": "sealedte-coord-conflict-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-coord-conflict-17/R",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-coord-conflict-17/R/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-coord-conflict-17/D",
+    "condition": "D",
+    "episode_id": "sealedte-coord-conflict-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-coord-conflict-17/D",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-coord-conflict-17/D/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  },
+  {
+    "blocked_by_systemic_failure": true,
+    "case_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/artifacts/cases/sealedte-coord-conflict-17/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-coord-conflict-17",
+    "errors": [
+      "blocked_by_systemic_failure:tau_text_reasoning_timeout"
+    ],
+    "receipt_root": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-coord-conflict-17/CD",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": "tau_text_reasoning_timeout",
+    "tau_live_call_performed": false,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_condition_comparison/receipts/cases/sealedte-coord-conflict-17/CD/tau_text_reasoning_receipt.json",
+    "tau_status": null
+  }
+]

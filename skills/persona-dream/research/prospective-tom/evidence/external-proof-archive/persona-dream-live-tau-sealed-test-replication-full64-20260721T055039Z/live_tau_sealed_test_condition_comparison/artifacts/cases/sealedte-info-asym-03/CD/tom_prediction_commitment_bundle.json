@@ -1,0 +1,114 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "episode_id": "sealedte-info-asym-03",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "live-tau-cd-sealedte-info-asym-03-tom1-factual",
+          "live-tau-cd-sealedte-info-asym-03-tom2-factual",
+          "live-tau-cd-sealedte-info-asym-03-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:5c04f22dd95e844a43c3b5953aff0b1e55522ed1f73c92c50f8c5d88332bfc82",
+        "branch_refs": [
+          "live-tau-cd-sealedte-info-asym-03-factual",
+          "live-tau-cd-sealedte-info-asym-03-counterfactual"
+        ],
+        "condition": "CD",
+        "distribution_bundle_sha256": "sha256:5420627508dd5340614451eab19520be0b779f53a00110fbbae27ce40f3d562e",
+        "episode_id": "sealedte-info-asym-03",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-03:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-info-asym-03:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-03:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:c0e167c374f572dd78a61653c30d55d0cca0ec6adfad50703adcfbd02f197271",
+      "model_receipts": [
+        {
+          "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+          "caller_skill": "persona-dream",
+          "created_at": "2026-07-21T05:58:51.337517+00:00",
+          "http_status": 200,
+          "live": true,
+          "live_call_performed": true,
+          "mocked": false,
+          "model": "gpt-5.5",
+          "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+          "prompt_sha256": "sha256:b555eb2d34f987ef248ee1a7587ad6293b994771e698c9db1f4702f80c5e9a47",
+          "role": "pctom-live-condition-cd",
+          "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+          "status": "PASS",
+          "surface": "scillm.chat_completions.text"
+        }
+      ],
+      "model_receipts_sha256": "sha256:2a90f36faa7748599616338a37affae070ad3377b80c4fd8114aa8c643e749e6",
+      "outcome_visible": false,
+      "prediction_id": "live-tau-cd-sealedte-info-asym-03-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "live-tau-cd-sealedte-info-asym-03-tom1-factual",
+          "live-tau-cd-sealedte-info-asym-03-tom2-factual",
+          "live-tau-cd-sealedte-info-asym-03-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "live-tau-cd-sealedte-info-asym-03-factual",
+          "live-tau-cd-sealedte-info-asym-03-counterfactual"
+        ],
+        "condition": "CD",
+        "condition_method": "Counterfactual-dream condition: compare the factual branch against the specified do()-style counterfactual branch and make the predicted action distribution sensitive to that intervention.",
+        "episode_id": "sealedte-info-asym-03",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-03:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-info-asym-03:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-03:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.34,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "prediction_id": "live-tau-cd-sealedte-info-asym-03-prediction",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:93e314d29f0f1bacc2e4bf0f00a6683fc4e4f2bc1961e20fc3dba5aec9c5f363",
+      "sealed_at": "2026-07-21T05:59:40Z"
+    }
+  ],
+  "episode_id": "sealedte-info-asym-03",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

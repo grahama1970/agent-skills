@@ -1,0 +1,2806 @@
+[
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-19/M",
+    "condition": "M",
+    "episode_id": "sealedte-info-asym-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:beb7eea05dbcda11a6b2633d2692d25bd27adaf28ac0f7f87178f085db1ecaf8",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-19/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_HINTS_CONSTRAINT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-info-asym-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-info-asym-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-19/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-19/R",
+    "condition": "R",
+    "episode_id": "sealedte-info-asym-19",
+    "errors": [
+      "tau_status:BLOCKED",
+      "tau_error:scillm_http_status_502",
+      "tau_parsed_json_not_object"
+    ],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:f1ed03630df2c00077889865d13dce72a4a2cf9824c22c456e1bf6060c87c16f",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-19/R",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-19/R/tau_text_reasoning_receipt.json",
+    "tau_status": "BLOCKED"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-19/D",
+    "condition": "D",
+    "episode_id": "sealedte-info-asym-19",
+    "errors": [
+      "tau_status:BLOCKED",
+      "tau_error:scillm_http_status_502",
+      "tau_parsed_json_not_object"
+    ],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:c003f4928171183c63379765cc9155406fb022ceb4842ba299d6f250fb607ef6",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-19/D",
+    "scoring_metrics": {},
+    "statuses": {},
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-19/D/tau_text_reasoning_receipt.json",
+    "tau_status": "BLOCKED"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-19/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-info-asym-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:6e8c6788405aeb42372560a81e4f9b0cfd6167ccc49c8817953746444729efb9",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-19/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_HINTS_CONSTRAINT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-info-asym-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-info-asym-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-19/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-20/M",
+    "condition": "M",
+    "episode_id": "sealedte-info-asym-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:8ffc1af482bd2de1fa58b051a0a61e33fff3f7f68b12e6c64fbbe3d6353a21ca",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-20/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_HINTS_CONSTRAINT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-info-asym-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-info-asym-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-20/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-20/R",
+    "condition": "R",
+    "episode_id": "sealedte-info-asym-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:0ffc5685b9b98dfa20ec4e96bddc08834ceb758e45d704310ca79ca7009cdb3e",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-20/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_HINTS_CONSTRAINT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-r-sealedte-info-asym-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-r-sealedte-info-asym-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-20/R/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-20/D",
+    "condition": "D",
+    "episode_id": "sealedte-info-asym-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:bcb2450a17cd4a8ba47f954aa1b3664e7075cf0423df64d7c9bbe38f92798b2f",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-20/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_HINTS_CONSTRAINT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-d-sealedte-info-asym-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-d-sealedte-info-asym-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-20/D/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-20/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-info-asym-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:8df796a853eb5644e1f24a10dd88a33e9089e1d17562998a2a2b3755aa2a6d76",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-20/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_HINTS_CONSTRAINT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-info-asym-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-info-asym-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-20/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-pref-desire-19/M",
+    "condition": "M",
+    "episode_id": "sealedte-pref-desire-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:6a1139f91830edaf1848f7c0757a28976852135057a0197b1c9975053cefc9d1",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-19/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-pref-desire-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-pref-desire-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-19/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-pref-desire-19/R",
+    "condition": "R",
+    "episode_id": "sealedte-pref-desire-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:f4440d81359fcbe92aadc89b54312a8ad48e16966055d41e76063ca7bd3539f5",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-19/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-r-sealedte-pref-desire-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-r-sealedte-pref-desire-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-19/R/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-pref-desire-19/D",
+    "condition": "D",
+    "episode_id": "sealedte-pref-desire-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:217df64d4dac634b5135250665ae0cd84080ab6edc54b68102321d905f343c8f",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-19/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-d-sealedte-pref-desire-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-d-sealedte-pref-desire-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-19/D/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-pref-desire-19/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-pref-desire-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:45dd0928baee542028aa4d24598172267b75969a583e64c58e784cbd6f22d76d",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-19/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-pref-desire-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-pref-desire-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-19/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-pref-desire-20/M",
+    "condition": "M",
+    "episode_id": "sealedte-pref-desire-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:5132678fa65c0b35792519fc98951c47d8fc3545d73a76edc3f69d2662bb971f",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-20/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-pref-desire-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-pref-desire-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-20/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-pref-desire-20/R",
+    "condition": "R",
+    "episode_id": "sealedte-pref-desire-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:0ceb96cb45f9456207e42f42cac146a2591f939aba19be6dcf1a597b811ecd1d",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-20/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-r-sealedte-pref-desire-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-r-sealedte-pref-desire-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-20/R/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-pref-desire-20/D",
+    "condition": "D",
+    "episode_id": "sealedte-pref-desire-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:5c7584e217fb77bcc6f01a8a491a99c7b9113a7ea6a5c66062aed9518a32192a",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-20/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-d-sealedte-pref-desire-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-d-sealedte-pref-desire-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-20/D/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-pref-desire-20/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-pref-desire-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:55b050fa614d7a147bdb9cbfed9e31ee7737cc5d9fc89ffe2bec1f86631fc419",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-20/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-pref-desire-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-pref-desire-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-pref-desire-20/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-trust-commit-19/M",
+    "condition": "M",
+    "episode_id": "sealedte-trust-commit-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:3ecb518e2c8b8fb894fe1554a38301550cb8c5297acbabc322802665cfbfe145",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-19/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-trust-commit-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-trust-commit-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-19/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-trust-commit-19/R",
+    "condition": "R",
+    "episode_id": "sealedte-trust-commit-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:5399a45437cf780f075da1ed31363023245749ccef2a06627feae591fb27afff",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-19/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-19/R/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-trust-commit-19/D",
+    "condition": "D",
+    "episode_id": "sealedte-trust-commit-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:e680156c6a9b8a0fbed300070cc4f620c315b701bd313af8a2c764072194ded7",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-19/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-d-sealedte-trust-commit-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-d-sealedte-trust-commit-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-19/D/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-trust-commit-19/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-trust-commit-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:4f97a156c61558b038bb7328be944356efd6229edc7b2e6cf319eb4f4c982c30",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-19/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-trust-commit-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-trust-commit-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-19/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-trust-commit-20/M",
+    "condition": "M",
+    "episode_id": "sealedte-trust-commit-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:5943d9982e5045d6926a963f5749bb1856d49f0ed3699a62ba70e88c8b7d9cfd",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-20/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-trust-commit-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-trust-commit-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-20/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-trust-commit-20/R",
+    "condition": "R",
+    "episode_id": "sealedte-trust-commit-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:25659402b22ec4a208ec780ee1b331224a8719d95222842cc56fdaeb356961dd",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-20/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-20/R/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-trust-commit-20/D",
+    "condition": "D",
+    "episode_id": "sealedte-trust-commit-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:c24f0d7071f06cb1295af4623a4e3c1494b87242bbefe8b8a2f963a18a16eb8f",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-20/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-d-sealedte-trust-commit-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-d-sealedte-trust-commit-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-20/D/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-trust-commit-20/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-trust-commit-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:472e976d0b1ce69d9940de0da2237580450bf7003df5d8a5ec065db8d0240d54",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-20/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_SETS_BOUNDARY"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-trust-commit-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-trust-commit-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-trust-commit-20/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-coord-conflict-19/M",
+    "condition": "M",
+    "episode_id": "sealedte-coord-conflict-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:73abb80625a652846ff4b27e4cb619e8439b03b14c7ed90f427215e1af6ef842",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-19/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_ASKS_TO_WAIT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-coord-conflict-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-coord-conflict-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-19/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-coord-conflict-19/R",
+    "condition": "R",
+    "episode_id": "sealedte-coord-conflict-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:de566728dbb18d715b1641ac5e37ebce79f0e2428e8704a39bd6fecbb1c21913",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-19/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_ASKS_TO_WAIT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-r-sealedte-coord-conflict-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-r-sealedte-coord-conflict-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-19/R/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-coord-conflict-19/D",
+    "condition": "D",
+    "episode_id": "sealedte-coord-conflict-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:b0ae38363cf3238c9da3066f2b38764ab383843b20908917f76330bbfc23a4eb",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-19/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_ASKS_TO_WAIT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-d-sealedte-coord-conflict-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-d-sealedte-coord-conflict-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-19/D/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-coord-conflict-19/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-coord-conflict-19",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:f9971d7128a9b13e03fd8445c79a43825fd8d5221605b739b786829cb7c11588",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-19/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.34,
+        "brier": 0.6533999999999999,
+        "log_loss": 1.0788096613719298,
+        "top_correct": true,
+        "top_value": "KAI_ASKS_TO_WAIT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-coord-conflict-19-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-coord-conflict-19-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 1.0,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.395
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.57
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-19/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-coord-conflict-20/M",
+    "condition": "M",
+    "episode_id": "sealedte-coord-conflict-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:908e6cf5d53dd99a2d796bdc25b6b67b857eaff44aec1945a757e05758e28701",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-20/M",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_ASKS_TO_WAIT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-m-sealedte-coord-conflict-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-m-sealedte-coord-conflict-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-20/M/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-coord-conflict-20/R",
+    "condition": "R",
+    "episode_id": "sealedte-coord-conflict-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:638eebe2e4036d928f52480773304431ce8a851f27a18cbea085a565b33c30a6",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-20/R",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_ASKS_TO_WAIT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-r-sealedte-coord-conflict-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-r-sealedte-coord-conflict-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-20/R/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-coord-conflict-20/D",
+    "condition": "D",
+    "episode_id": "sealedte-coord-conflict-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:0bc078e7cde50ecf26fe447b4311105c3551abd2a520987028d48a044de760cf",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-20/D",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_ASKS_TO_WAIT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-d-sealedte-coord-conflict-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-d-sealedte-coord-conflict-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-20/D/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  },
+  {
+    "blocked_by_systemic_failure": false,
+    "case_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-coord-conflict-20/CD",
+    "condition": "CD",
+    "episode_id": "sealedte-coord-conflict-20",
+    "errors": [],
+    "prompt_byte_count": null,
+    "prompt_char_count": null,
+    "prompt_sha256": "sha256:b69248a46f5884aed34d49a13f39a3789c4880988e60877233d08765baee4ff9",
+    "receipt_root": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-20/CD",
+    "scoring_metrics": {
+      "action": {
+        "actual_probability": 0.33,
+        "brier": 0.6734,
+        "log_loss": 1.1086626245216111,
+        "top_correct": false,
+        "top_value": "KAI_ASKS_TO_WAIT"
+      },
+      "belief_scores": [
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.5,
+          "brier": 0.375,
+          "hypothesis_id": "live-tau-cd-sealedte-coord-conflict-20-tom1-factual",
+          "log_loss": 0.6931471805599453,
+          "perspective_order": 1,
+          "top_correct": true,
+          "top_value": "TRUE"
+        },
+        {
+          "actual_label": "TRUE",
+          "actual_probability": 0.45,
+          "brier": 0.45500000000000007,
+          "hypothesis_id": "live-tau-cd-sealedte-coord-conflict-20-tom2-factual",
+          "log_loss": 0.7985076962177716,
+          "perspective_order": 2,
+          "top_correct": true,
+          "top_value": "TRUE"
+        }
+      ],
+      "calibration": {
+        "buckets": [
+          {
+            "accuracy": 0.5,
+            "bucket": "0.00-0.50",
+            "count": 2,
+            "mean_confidence": 0.39
+          },
+          {
+            "accuracy": 1.0,
+            "bucket": "0.50-0.75",
+            "count": 1,
+            "mean_confidence": 0.5
+          },
+          {
+            "accuracy": null,
+            "bucket": "0.75-1.00",
+            "count": 0,
+            "mean_confidence": null
+          }
+        ],
+        "expected_calibration_error": 0.24
+      },
+      "consistency": {
+        "checks": 1,
+        "passed": 1,
+        "score": 1.0
+      },
+      "counterfactual": {
+        "causal_sensitivity_total_variation_mean": 1.0,
+        "counterfactual_pairs": 1,
+        "false_history_rate": 0.0,
+        "synthetic_literal_history_branch_ids": 0
+      },
+      "risk_coverage": {
+        "abstained": false,
+        "coverage": 1.0,
+        "selective_accuracy": 0.0
+      }
+    },
+    "statuses": {
+      "gate2": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+      "gate3": "PASS_COUNTERFACTUAL_BRANCHES",
+      "gate4": "PASS_TOM_PREDICTION_COMMITMENTS",
+      "gate5": "PASS_TOM_SCORING_RECEIPT"
+    },
+    "systemic_failure_signature": null,
+    "tau_live_call_performed": true,
+    "tau_receipt_exists": true,
+    "tau_receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-coord-conflict-20/CD/tau_text_reasoning_receipt.json",
+    "tau_status": "PASS"
+  }
+]
