@@ -103,7 +103,7 @@ function grokSendButtonFinderScript() {
       const testId = (button.getAttribute('data-testid') || '').trim().toLowerCase();
       return label === 'send' || label === 'submit' ||
              label.startsWith('send ') || label.startsWith('submit ') ||
-             testId === 'groksend' || testId === 'send-button' ||
+             testId === 'groksend' || testId === 'send-button' || testId === 'chat-submit' ||
              testId.includes('composer-send') || testId.includes('grok-send');
     };
     const input = document.querySelector('textarea, [contenteditable="true"][role="textbox"], [data-testid="grokComposerInput"]');
@@ -143,7 +143,12 @@ function grokComposerFinderScript() {
       '[aria-label*="Ask" i]',
       '[placeholder*="Ask" i]'
     ].join(',')));
-    const input = candidates.find(isVisible) || null;
+    const visibleCandidates = candidates.filter(isVisible);
+    const input = visibleCandidates.find(el =>
+      el.matches('.ProseMirror[contenteditable="true"], [contenteditable="true"].ProseMirror')
+    ) || visibleCandidates.find(el =>
+      el.matches('[contenteditable="true"][role="textbox"], [data-testid="grokComposerInput"]')
+    ) || visibleCandidates[0] || null;
     const readInputText = (el) => {
       if (!el) return '';
       if ('value' in el) return String(el.value || '');
@@ -184,6 +189,50 @@ async function evaluate(cdp, expression, signal) {
     throw new Error(result.error);
   }
   return result.result?.value;
+}
+
+async function attachFiles(cdp, inputCdp, filePaths, log = () => {}, signal) {
+  const fs = require("fs");
+  const path = require("path");
+  const files = (filePaths || []).map(filePath => path.resolve(filePath));
+  if (files.length === 0) return [];
+
+  const expected = files.map(filePath => {
+    const stat = fs.statSync(filePath);
+    if (!stat.isFile()) {
+      throw new Error(`Grok attachment is not a regular file: ${filePath}`);
+    }
+    return { name: path.basename(filePath), size: stat.size };
+  });
+
+  const doc = await inputCdp("DOM.getDocument", { depth: 0, pierce: false });
+  if (!doc?.root?.nodeId) {
+    throw new Error("Grok attachment DOM.getDocument returned no root nodeId");
+  }
+  const node = await inputCdp("DOM.querySelector", {
+    nodeId: doc.root.nodeId,
+    selector: 'input[type="file"]',
+  });
+  if (!node?.nodeId) {
+    throw new Error("Grok attachment input[type=file] was not found in the exact target tab");
+  }
+
+  await inputCdp("DOM.setFileInputFiles", { files, nodeId: node.nodeId });
+  const actual = await evaluate(
+    cdp,
+    `(() => {
+      const input = document.querySelector('input[type="file"]');
+      return Array.from(input?.files || [], file => ({name:file.name, size:file.size}));
+    })()`,
+    signal,
+  );
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error(
+      `Grok attachment FileList verification failed: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+    );
+  }
+  log(`Attached and verified ${files.length} file(s) in exact target tab`);
+  return actual;
 }
 
 // ============================================================================
@@ -566,9 +615,7 @@ async function getSubmitObservation(cdp, beforeUrl = '') {
       b.getAttribute('data-testid') || '',
       b.innerText || b.textContent || ''
     ].join(' ')).join('\\n');
-    const bodyText = document.body.innerText || '';
     const hasStopButton = /\\b(stop|cancel)\\b/i.test(buttonText);
-    const generatingText = /\\b(thinking|searching|generating)\\b/i.test(bodyText);
     const url = location.href;
     const urlChanged = Boolean(${JSON.stringify(beforeUrl)} && url !== ${JSON.stringify(beforeUrl)});
     return {
@@ -577,20 +624,30 @@ async function getSubmitObservation(cdp, beforeUrl = '') {
       editorTextLength: editorText.length,
       editorTextSample: editorText.slice(0, 200),
       hasStopButton,
-      generatingText,
-      accepted: editorText.length === 0 || hasStopButton || generatingText || urlChanged
+      accepted: editorText.length === 0
     };
   })()`);
 }
 
-async function pressEnter(inputCdp) {
+async function focusComposer(cdp) {
+  return await evaluate(cdp, `(() => {
+    ${grokComposerFinderScript()}
+    if (!input) return false;
+    input.focus();
+    return document.activeElement === input || input.contains(document.activeElement);
+  })()`);
+}
+
+async function pressEnter(cdp, inputCdp) {
+  if (!await focusComposer(cdp)) {
+    throw new Error("Grok composer could not be focused before Enter fallback");
+  }
   await inputCdp("Input.dispatchKeyEvent", {
-    type: "keyDown",
+    type: "rawKeyDown",
     key: "Enter",
     code: "Enter",
     windowsVirtualKeyCode: 13,
     nativeVirtualKeyCode: 13,
-    text: "\r",
   });
   await inputCdp("Input.dispatchKeyEvent", {
     type: "keyUp",
@@ -604,19 +661,49 @@ async function pressEnter(inputCdp) {
 async function submitPrompt(cdp, inputCdp) {
   const before = await getSubmitObservation(cdp);
 
-  // Try to click send button
-  const clicked = await evaluate(cdp, `(() => {
-    ${buildClickDispatcher()}
+  const clickTargetDeadline = Date.now() + 10000;
+  let clickTarget = { success: false };
+  while (Date.now() < clickTargetDeadline && !clickTarget.success) {
+    clickTarget = await evaluate(cdp, `(() => {
+      ${grokSendButtonFinderScript()}
 
-    ${grokSendButtonFinderScript()}
+      if (sendBtn) {
+        const rect = sendBtn.getBoundingClientRect();
+        return {
+          success: true,
+          method: 'cdp_mouse',
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
+      }
 
-    if (sendBtn) {
-      dispatchClickSequence(sendBtn);
-      return { success: true, method: 'button' };
-    }
-
-    return { success: false };
-  })()`);
+      return { success: false };
+    })()`);
+    if (!clickTarget.success) await delay(250);
+  }
+  if (clickTarget?.success) {
+    await inputCdp("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: clickTarget.x,
+      y: clickTarget.y,
+    });
+    await inputCdp("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: clickTarget.x,
+      y: clickTarget.y,
+      button: "left",
+      buttons: 1,
+      clickCount: 1,
+    });
+    await inputCdp("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: clickTarget.x,
+      y: clickTarget.y,
+      button: "left",
+      buttons: 0,
+      clickCount: 1,
+    });
+  }
 
   await delay(800);
   let observation = await getSubmitObservation(cdp, before?.url || '');
@@ -624,17 +711,17 @@ async function submitPrompt(cdp, inputCdp) {
 
   if (!observation?.accepted) {
     enterFallbackUsed = true;
-    await pressEnter(inputCdp);
+    await pressEnter(cdp, inputCdp);
     await delay(800);
     observation = await getSubmitObservation(cdp, before?.url || '');
   }
 
   if (!observation?.accepted) {
-    throw new Error(`Grok submit not observed after ${clicked?.success ? 'send click and Enter' : 'Enter'}; editor still has ${observation?.editorTextLength ?? 'unknown'} chars`);
+    throw new Error(`Grok submit not observed after ${clickTarget?.success ? 'CDP send click and Enter' : 'Enter'}; editor still has ${observation?.editorTextLength ?? 'unknown'} chars`);
   }
 
   return {
-    clickAttempt: clicked || { success: false },
+    clickAttempt: clickTarget || { success: false },
     observation,
     enterFallbackUsed,
   };
@@ -759,6 +846,7 @@ async function waitForResponse(cdp, timeoutMs = 300000, userPrompt = '', signal)
   let thinkingComplete = false;
   let lastResponseText = '';
   let responseStableCycles = 0;
+  const sentinel = userPrompt.match(/<<<GROK_DONE:[^>\r\n]+>>>/)?.[0] || null;
 
   while (Date.now() < deadline) {
     // Get page state with multiple completion indicators
@@ -837,6 +925,8 @@ async function waitForResponse(cdp, timeoutMs = 300000, userPrompt = '', signal)
 
     const bodyText = snapshot.bodyText;
     const bodyLength = snapshot.bodyLength;
+    const sentinelOccurrences = sentinel ? bodyText.split(sentinel).length - 1 : 0;
+    const assistantSentinelObserved = !sentinel || sentinelOccurrences >= 2;
 
     // Track thinking time (for thinking models)
     if (snapshot.thinkingSecs) {
@@ -857,10 +947,10 @@ async function waitForResponse(cdp, timeoutMs = 300000, userPrompt = '', signal)
     const chipTexts = snapshot.chipTexts || [];
     lastChipTexts = chipTexts;
     let currentResponseText = '';
-    if (snapshot.responseText && snapshot.responseText.length > 10) {
+    if (assistantSentinelObserved && snapshot.responseText && snapshot.responseText.length > 10) {
       currentResponseText = extractGrokResponse(snapshot.responseText, userPrompt, chipTexts) || '';
     }
-    if (!currentResponseText || currentResponseText.length < 5) {
+    if (assistantSentinelObserved && (!currentResponseText || currentResponseText.length < 5)) {
       currentResponseText = extractGrokResponse(bodyText, userPrompt, chipTexts) || '';
     }
 
@@ -912,7 +1002,10 @@ async function waitForResponse(cdp, timeoutMs = 300000, userPrompt = '', signal)
   }
 
   // Timeout - return whatever we have (partial response is better than nothing)
-  const finalText = extractGrokResponse(previousText, userPrompt, lastChipTexts);
+  const finalSentinelOccurrences = sentinel ? previousText.split(sentinel).length - 1 : 0;
+  const finalText = (!sentinel || finalSentinelOccurrences >= 2)
+    ? extractGrokResponse(previousText, userPrompt, lastChipTexts)
+    : null;
   if (finalText && finalText.trim().length > 0) {
     return {
       text: finalText,
@@ -931,6 +1024,7 @@ async function waitForResponse(cdp, timeoutMs = 300000, userPrompt = '', signal)
 async function query(options) {
   const {
     prompt,
+    files = [],
     model,
     deepSearch = false,
     timeout = 300000, // 5 minutes default (Grok Thinking is slow)
@@ -1032,6 +1126,8 @@ async function query(options) {
       }
     }
 
+    const attachments = await attachFiles(cdp, inputCdp, files, log, signal);
+
     // Type prompt
     const promptEntry = await typePrompt(cdp, inputCdp, prompt);
     log(`Prompt typed (${promptEntry.method}, ${promptEntry.textLength} chars)`);
@@ -1056,6 +1152,7 @@ async function query(options) {
       url: response.url,
       partial: response.partial || false,
       warnings: warnings.length > 0 ? warnings : undefined,
+      attachments,
       promptEntry,
       submitInfo,
       controlledTabId: tabId,
@@ -1296,6 +1393,7 @@ module.exports = {
   getGrokModelMatchLabels,
   grokModelLabelsMatch,
   waitForResponse,
+  attachFiles,
   GROK_URL,
   GROK_MODELS,
   DEFAULT_GROK_MODELS,

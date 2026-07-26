@@ -91,6 +91,12 @@ def test_grok_submit_defaults_to_atomic_native_exact_tab_transport() -> None:
     assert '${SURF_GROK_NATIVE_EXACT_TAB_FIRST:-1}' in source
 
 
+def test_grok_submit_routes_attachments_through_exact_tab_native_transport() -> None:
+    source = GROK_SUBMIT.read_text(encoding="utf-8")
+
+    assert 'args+=(--files "$attach_files_csv")' in source
+
+
 def test_grok_native_host_uses_backward_compatible_exact_tab_cdp_aliases() -> None:
     host = (
         REPO_ROOT / "skills/surf/vendor/surf-cli/native/host.cjs"
@@ -99,6 +105,115 @@ def test_grok_native_host_uses_backward_compatible_exact_tab_cdp_aliases() -> No
     assert "requestGrokCdp" in host
     assert '{ type: "KIMI_EVALUATE", tabId, expression }' in host
     assert '{ type: "KIMI_CDP_COMMAND", tabId, method, params }' in host
+
+
+def test_grok_client_sets_and_verifies_exact_tab_file_input(tmp_path: Path) -> None:
+    attachment = tmp_path / "visual evidence.png"
+    attachment.write_bytes(b"real attachment bytes")
+    script = r"""
+const client = require(process.argv[1]);
+const file = process.argv[2];
+const fs = require("fs");
+const path = require("path");
+const calls = [];
+const inputCdp = async (method, params) => {
+  calls.push({method, params});
+  if (method === "DOM.getDocument") return {root: {nodeId: 11}};
+  if (method === "DOM.querySelector") return {nodeId: 22};
+  if (method === "DOM.setFileInputFiles") return {};
+  throw new Error(`unexpected method ${method}`);
+};
+const cdp = async () => ({
+  result: {value: [{name: path.basename(file), size: fs.statSync(file).size}]}
+});
+client.attachFiles(cdp, inputCdp, [file]).then(attachments => {
+  process.stdout.write(JSON.stringify({attachments, calls}));
+}).catch(error => {
+  process.stderr.write(error.stack);
+  process.exit(1);
+});
+"""
+    proc = subprocess.run(
+        [
+            "node",
+            "-e",
+            script,
+            str(REPO_ROOT / "skills/surf/vendor/surf-cli/native/grok-client.cjs"),
+            str(attachment),
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["attachments"] == [{"name": attachment.name, "size": attachment.stat().st_size}]
+    assert [call["method"] for call in result["calls"]] == [
+        "DOM.getDocument",
+        "DOM.querySelector",
+        "DOM.setFileInputFiles",
+    ]
+    assert result["calls"][-1]["params"] == {
+        "files": [str(attachment.resolve())],
+        "nodeId": 22,
+    }
+
+
+def test_grok_client_does_not_accept_prompt_sentinel_as_response() -> None:
+    script = r"""
+const client = require(process.argv[1]);
+const sentinel = "<<<GROK_DONE:TEST>>>";
+const prompt = `Inspect the image.\n${sentinel}`;
+const cdp = async () => ({
+  result: {value: {
+    bodyText: prompt,
+    responseText: prompt,
+    bodyLength: prompt.length,
+    hasStopBtn: false,
+    thinkingDone: false,
+    thinkingSecs: null,
+    isThinking: false,
+    chipTexts: [],
+    url: "https://grok.com/"
+  }}
+});
+client.waitForResponse(cdp, 20, prompt).then(result => {
+  process.stdout.write(JSON.stringify(result));
+  process.exit(2);
+}).catch(error => {
+  process.stdout.write(error.message);
+});
+"""
+    proc = subprocess.run(
+        [
+            "node",
+            "-e",
+            script,
+            str(REPO_ROOT / "skills/surf/vendor/surf-cli/native/grok-client.cjs"),
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert "Response timeout" in proc.stdout
+
+
+def test_grok_submit_observation_ignores_page_wide_generating_text() -> None:
+    source = (
+        REPO_ROOT / "skills/surf/vendor/surf-cli/native/grok-client.cjs"
+    ).read_text(encoding="utf-8")
+
+    assert "accepted: editorText.length === 0" in source
+    assert "hasStopButton || generatingText || urlChanged" not in source
+    assert "testId === 'chat-submit'" in source
+    assert "clickTargetDeadline = Date.now() + 10000" in source
+    assert 'type: "mousePressed"' in source
+    assert 'type: "rawKeyDown"' in source
 
 
 def test_grok_fallback_returns_iife_results_from_surf_js(tmp_path: Path) -> None:

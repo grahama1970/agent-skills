@@ -1162,7 +1162,7 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
   }
 
   if (extensionMsg.type === "GROK_QUERY") {
-    const { query, model, deepSearch, withPage, timeout } = extensionMsg;
+    const { query, files, model, deepSearch, withPage, timeout } = extensionMsg;
 
     queueAiRequest(async () => {
       const requestGrokCdp = async (operation, message, compatibilityMessage) => {
@@ -1208,6 +1208,7 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
       // 3. Call Grok client
       const result = await grokClient.query({
         prompt: fullPrompt,
+        files,
         signal: requestContext.signal,
         model: model,
         deepSearch: deepSearch || false,
@@ -1264,6 +1265,9 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
       }
       if (result.submitInfo) {
         response.submitInfo = result.submitInfo;
+      }
+      if (result.attachments) {
+        response.attachments = result.attachments;
       }
       if (result.controlledTabId) {
         response.controlledTabId = result.controlledTabId;

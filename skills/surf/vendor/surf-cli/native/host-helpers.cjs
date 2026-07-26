@@ -1197,9 +1197,16 @@ function mapToolToMessage(tool, args, tabId) {
         };
       }
       if (!a.query) throw new Error("query required");
+      {
+        const files = a.files
+          ? (typeof a.files === "string" ? a.files.split(",").map(file => file.trim()).filter(Boolean) : a.files)
+          : a.file
+            ? [a.file]
+            : [];
       return {
         type: "GROK_QUERY",
         query: a.query,
+        files,
         model: a.model,
         deepSearch: a["deep-search"] || a.deepSearch || false,
         withPage: a["with-page"],
@@ -1207,6 +1214,7 @@ function mapToolToMessage(tool, args, tabId) {
         timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 300000,
         ...baseMsg
       };
+      }
     case "aistudio": {
       if (!a.query) throw new Error("query required");
 

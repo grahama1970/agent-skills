@@ -248,6 +248,10 @@ fi
 if [[ "$with_page" -eq 1 ]]; then
   args+=(--with-page)
 fi
+if [[ "${#attach_file_abs[@]}" -gt 0 ]]; then
+  attach_files_csv="$(IFS=,; printf '%s' "${attach_file_abs[*]}")"
+  args+=(--files "$attach_files_csv")
+fi
 
 focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

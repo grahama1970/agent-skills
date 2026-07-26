@@ -511,6 +511,7 @@ const TOOLS = {
           "with-page": "Include current page context",
           model: "Model: auto, fast (default), expert, grok-4.20-beta",
           "deep-search": "Enable DeepSearch for X post searching",
+          files: "Comma-separated local file paths to attach in the exact target tab",
           timeout: "Timeout in seconds (default: 300)",
           validate: "Check Grok UI and scrape available models (no query sent)",
           "save-models": "Save discovered models to surf.json config"
