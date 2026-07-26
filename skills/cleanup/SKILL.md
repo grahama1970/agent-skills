@@ -2,8 +2,9 @@
 name: cleanup
 description: >
   Assess the project to reorganize or deprecate unused/outdated files.
-  Produces dependency-informed review candidates and removes confirmed junk
-  only after a complete ingest-code Tree-sitter precondition.
+  Joins each candidate against per-candidate dependency evidence, blocks
+  mutation per class on the evidence that class actually needs, and keeps
+  assessment running when indexing is unavailable.
 allowed-tools: Bash, Read, Grep, Glob
 triggers:
   - cleanup this project
@@ -35,9 +36,16 @@ This skill performs a deep assessment of the codebase to identify technical debt
 - **Junk file cleanup**: Removes logs, temp files, cache dirs
 - **Unused-file candidate detection**: Uses lexical absence only to nominate
   review candidates; it never treats that signal as removal proof
-- **Ingest-code precondition**: Requires a current repository-root
-  `$ingest-code --treesitter` scan before `--execute`, and reports its symbols,
-  imports/calls, relationship edges, scan roots, and proof limits
+- **Per-candidate dependency evidence**: Joins each candidate against
+  `.cleanup-evidence.json` and emits a verdict per file. Aggregate ingest
+  counters are reported with their proof limits, never as per-file safety
+- **Per-class mutation authority**: Each mutation class carries the evidence it
+  actually needs; no class inherits authority from an unrelated index
+- **Resumable phase receipt**: `--plan`, `--execute`, and the default summary
+  write phase states for local dependency analysis, Memory indexing,
+  assessment, and mutation. `--dry-run` returns the same receipt inline under
+  `phase_receipt` instead of writing it; `--worktree-audit` produces its own
+  audit artifacts and no phase receipt
 - **Doc staleness**: Flags docs with TODO/FIXME or >365 days without changes
 - **Worktree triage**: Classifies dirty git entries into commit/archive/review
   buckets before any attempt to clean or commit a large mixed worktree
@@ -53,32 +61,113 @@ This skill performs a deep assessment of the codebase to identify technical debt
 - **Reviewer-blocker receipts**: Treats unavailable `$ask`/WebGPT/Surf browser
   lanes as external blockers with durable request, receipt, and lock-owner
   evidence instead of killing or bypassing active reviewer processes
+- **Degraded marker honesty**: A `.ingest-code.json` that claims completion
+  while scanning zero files, disabling the code index, or storing zero
+  Tree-sitter symbols is degraded aggregate context, not complete indexing
+
+## Evidence Model
+
+Indexing failures never stop non-mutating work. `--dry-run`, `--plan`, and
+`--worktree-audit` always run. `--plan`, `--execute`, and the default summary
+write a phase receipt with four independent states (`--dry-run` returns it
+inline under `phase_receipt`):
+
+```
+local_dependency_analysis: complete | incomplete | unavailable
+memory_indexing:           complete | blocked | unknown
+assessment:                complete
+mutation:                  allowed_limited | no_authorized_mutations
+```
+
+A Memory outage blocks `memory_indexing` only. It must not block assessment,
+planning, or the worktree audit.
+
+Each mutation class carries its own evidence requirement:
+
+| Class | Evidence required | Current status |
+|---|---|---|
+| `junk_untracked_removal` | untracked status + junk pattern + no literal reference from a tracked file | allowed when candidates clear provenance |
+| `tracked_file_mutation` | per-candidate evidence from `.cleanup-evidence.json` + project-native before/after readiness proof | blocked until both are present |
+| `root_stray_mutation` | human owner decision | review-only |
+| `artifact_archive` | human owner decision | review-only |
+
+Untracked junk removal does not require dependency edges: it only ever touches
+paths git does not track. Requiring a repository-wide index for it costs a live
+ingestion and proves nothing about the paths being removed.
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | The run completed and every decision was made on evidence. Zero actions is a success: nothing to clean, and withheld candidates, both exit `0`. |
+| `2` | Cleanup could not evaluate the evidence it was given — a corrupt evidence artifact or marker, an artifact belonging to another repository, or a git state that yields no tracked files. |
+| `1` | Unhandled error. |
+
+Missing evidence is not an error. It blocks the mutation classes that need it,
+is recorded in the phase receipt, and exits `0`. Automation should read
+`mutation_classes` in the receipt rather than inferring intent from the exit
+code alone.
+
+`$ingest-code scan` writes `.cleanup-evidence.json` in Phase 0, from local
+analysis, before any Memory write — so a Memory outage yields
+`local_dependency_analysis: complete` with `memory_indexing: blocked` rather than
+losing the analysis. See `references/cleanup-evidence-contract.md` for the
+`cleanup.evidence.v1` schema and per-candidate verdict semantics.
+
+### Proof limits of the aggregate marker
+
+`.ingest-code.json` holds scalar counters. It is reported for context and is
+never per-file safety evidence. Every run states these limits explicitly:
+
+- `coverage_proof=count_only` — a scanned-file count, not a path set. It can
+  pass while the wrong files were scanned.
+- `freshness_proof=mtime_only` — filesystem mtime is unreliable after checkout,
+  copy, rebase, or clock change.
+- `edge_scope=python_imports_only` — `$ingest-code` resolves edges from Python
+  static imports (`ingest_code.py:2992-3008`). For any other language an empty
+  reference set carries no information.
+- `aggregate_only` — `edges_stored` is a storage count and says nothing about
+  any individual candidate.
+- `zero_scan_is_degraded` — if the marker claims `completed: true` but
+  `files_scanned` is `0`, `code_index.enabled` is false, or Tree-sitter stores
+  no symbols, cleanup must report marker warnings and must not set
+  `memory_indexing: complete` from that marker.
+- `verdict_counts_not_evidence_absence` — candidates with explicit verdicts
+  such as `entry_root`, `referenced`, or `outside_analysis_scope` have evidence
+  that blocks mutation. They must not be reported as "lacking evidence"; only
+  missing, stale, corrupt, failed, or out-of-scope records are unusable evidence.
 
 ## Workflow
 
-1. **Code evidence** (`$ingest-code`): Run a complete repository-root
-   Tree-sitter scan before cleanup execution:
-   `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
-2. **Assessment** (`--dry-run`): Scan the codebase for:
+1. **Assessment** (`--dry-run`): always runs, index or no index. Scans the
+   codebase for:
    - Root-level artifacts and stray directories → review only
-   - Untracked "junk" files (logs, temp images, build artifacts) → delete
-   - Tracked files with no lexical references → non-mutating review candidates
+   - Untracked "junk" files (logs, temp images, build artifacts) → per-path
+     provenance verdict; only cleared paths become removable
+   - Tracked files with no lexical references → non-mutating review candidates,
+     each joined against per-candidate dependency evidence
    - Outdated documentation files
-3. **Planning** (`--plan`): Generate a **Cleanup Plan** markdown file for review.
-4. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown ownership/risk
+2. **Planning** (`--plan`): Generate a **Cleanup Plan** markdown file that shows
+   phase states, proof limits, marker warnings, and one verdict row per
+   candidate.
+3. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown ownership/risk
    buckets for dirty files so agents do not blindly stage unrelated work.
-5. **Repo-of-record declaration**: Identify the live project checkout, branch,
+4. **Repo-of-record declaration**: Identify the live project checkout, branch,
    dirty inventory, and any secondary clean worktree used only for commit
    isolation.
-6. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
+5. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
    run the project's easy sanity command before moving source-like files.
-7. **Execution** (`--execute`): Perform cleanup operations with user confirmation:
-   - Refuse execution when ingest-code evidence is missing, partial, stale,
-     belongs to another repository, or lacks Tree-sitter coverage
-   - Keep root strays, artifacts, and lexically unreferenced tracked files
-     review-only
-   - Remove junk files (with optional `--force` to skip prompts)
-   - Log all actions to `local/CLEANUP_LOG.md`
+6. **Code evidence** (`$ingest-code`): Only required to unblock tracked-file
+   mutation, never to run assessment. Run
+   `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
+   If this leaves a completed marker with zero scanned files or a disabled code
+   index, treat the marker as degraded and rely on `.cleanup-evidence.json` for
+   local dependency analysis only.
+7. **Execution** (`--execute`): Perform authorized mutations with confirmation:
+   - Remove only untracked junk paths that cleared per-path provenance
+     (`--force` skips the prompt, not the provenance check)
+   - Keep root strays, artifacts, and tracked candidates review-only
+   - Log all actions to `local/CLEANUP_LOG.md` and the phase receipt
 8. **Post-cleanup proof**: Rerun the same sanity command and relevant
    `best-practices-*` checks for changed files, then commit/push only the
    coherent cleanup slice.
@@ -86,21 +175,35 @@ This skill performs a deep assessment of the codebase to identify technical debt
 ## How to Use
 
 1. Trigger with "cleanup this project" or "archive artifacts".
-2. Run `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
-3. Run `bash .pi/skills/cleanup/run.sh --dry-run` to see JSON findings.
-4. Run `bash .pi/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
-5. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
-6. If a clean worktree is needed for commit isolation, record both paths in the
+2. Run `bash .pi/skills/cleanup/run.sh --dry-run` to see JSON findings. This
+   works with no index present; the phase receipt records what was unavailable.
+3. Run `bash .pi/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
+4. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
+5. If a clean worktree is needed for commit isolation, record both paths in the
    plan: the live repo of record and the temporary commit worktree.
-7. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute` to perform cleanup.
-8. Use `--force` only to skip confirmation for junk files. It cannot bypass the
-   ingest-code precondition or enable root/dead-candidate mutation.
+6. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
+7. Use `--force` only to skip the confirmation prompt for junk removal. It
+   cannot bypass per-path provenance or authorize any other mutation class.
+8. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
+   with `--receipt`) to see which phase blocked and how to resume it.
 
 ## Environment
 
-| Variable | Default | Description |
-|---|---|---|
-| `CLEANUP_ARCHIVE_ROOT` | `/mnt/storage12tb/artifacts` | Where to archive large artifacts |
+The skill reads no environment variables. `CLEANUP_ARCHIVE_ROOT` and
+`--archive-root` were removed: archiving became review-only, which left the
+archive mover with no callers, and the knobs configured a code path that could
+not run. Archiving a root artifact is a human decision, made with `mv`.
+
+## Own Output Paths
+
+Cleanup excludes what it and its evidence producer write — `.cleanup-evidence.json`,
+`.ingest-code.json`, `artifacts/cleanup/`, `local/CLEANUP_LOG*`, `CLEANUP_PLAN.md`
+— from root strays and untracked findings, and lists them separately under
+`own_cleanup_outputs`. Without this a successful run leaves artifacts that the
+next run reports as work, so cleanup manufactures findings for itself.
+
+They are excluded, not hidden. Add them to the project's `.gitignore` as well;
+cleanup does not edit `.gitignore`.
 
 ## Safety Features
 
@@ -108,10 +211,23 @@ This skill performs a deep assessment of the codebase to identify technical debt
   with no lexical reference as review candidates and never deletes them.
 - **Root artifacts are review-only**: Binary/media files at project root may be
   runtime inputs and are never moved automatically.
-- **Ingest-code runs first**: Cleanup execution requires a complete,
-  repository-root Tree-sitter marker whose scan covers all tracked code and
-  predates no tracked code changes. The marker and dependency edges inform
-  review; they do not prove that a file is unused.
+- **Evidence must match the mutation**: A mutation class is authorized only by
+  evidence about the paths it touches. Aggregate ingest counters never authorize
+  anything, and no class inherits authority from an unrelated index. Requiring a
+  repository-wide scan before deleting untracked cache files is cost without
+  proof; requiring per-candidate evidence before touching tracked files is proof.
+- **Lexical absence is not evidence**: No file may be moved because a token
+  search found nothing. A tracked candidate needs a `no_inbound_references`
+  verdict from `.cleanup-evidence.json` **and** project-native before/after
+  readiness checks. Static analysis narrows candidates; it never authorizes.
+- **Indexing failures block only indexing**: If Memory is unavailable, cleanup
+  records `memory_indexing: blocked` and continues assessment, planning, and
+  worktree audit. Only mutation classes whose evidence is genuinely missing
+  stay blocked.
+- **High-risk dirty worktree stops execution**: If `--worktree-audit` shows
+  untracked source/config, broad tracked edits, root strays, or other high-risk
+  entries, the next cleanup artifact is the plan/audit. Do not run `--execute`
+  to make the tree look cleaner; that risks moving active project work.
 - **Untracked source is not disposable**: Untracked files under `src/`, `tests/`,
   `scripts/`, `configs/`, `docker/`, or `.github/` may satisfy tracked imports,
   CLI entrypoints, service routes, tests, or runtime contracts. Do not quarantine,
@@ -152,10 +268,10 @@ This skill performs a deep assessment of the codebase to identify technical debt
 | `--dry-run` | Print JSON findings without making changes |
 | `--plan` | Generate a Cleanup Plan markdown file |
 | `--worktree-audit` | Generate JSON + Markdown dirty-worktree buckets for commit-safe triage |
-| `--execute` | Remove confirmed junk only after the ingest-code precondition passes |
-| `--force` | Skip confirmation for junk only; cannot bypass evidence gates |
+| `--execute` | Remove untracked junk paths that cleared per-path provenance |
+| `--force` | Skip the junk confirmation prompt only; cannot bypass provenance or authorize another class |
 | `--output <file>` | Specify output file for plan (default: CLEANUP_PLAN.md) |
-| `--archive-root <path>` | Override archive destination path |
+| `--receipt <file>` | Phase receipt path (default: artifacts/cleanup/cleanup_receipt.json) |
 
 ## Worktree Triage Contract
 
