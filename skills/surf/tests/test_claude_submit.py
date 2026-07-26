@@ -137,6 +137,10 @@ esac
     invocations = invocation_log.read_text(encoding="utf-8")
     assert "upload --ref e3 --files" in invocations
     assert str(attachment.resolve()) in invocations
+    submitted = (tmp_path / "response.md.submitted.md").read_text(encoding="utf-8")
+    assert "Automation-only instruction" in submitted
+    assert "Do not mention," in submitted
+    assert "For transport verification" not in submitted
 
 
 def test_claude_submit_recovers_missing_content_script_with_same_tab_reload(tmp_path: Path) -> None:

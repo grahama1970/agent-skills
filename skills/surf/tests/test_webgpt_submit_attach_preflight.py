@@ -511,6 +511,47 @@ esac
     assert meta["clean_contains_sentinel"] is False
 
 
+def test_webgpt_submit_strips_chatgpt_feedback_chrome_after_sentinel(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'clean response\\n%s\\n\\nIs this conversation helpful so far?\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == "clean response\n"
+    raw = (tmp_path / "response.md.raw.md").read_text(encoding="utf-8")
+    assert "Is this conversation helpful so far?" in raw
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["raw_contains_sentinel"] is True
+    assert meta["clean_contains_sentinel"] is False
+
+
 def test_webgpt_submit_clean_failure_writes_meta_for_real_text_after_sentinel(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)

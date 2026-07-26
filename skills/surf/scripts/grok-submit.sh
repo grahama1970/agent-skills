@@ -238,6 +238,9 @@ haystack = (stderr_text + "\n" + raw_text).lower()
 if "not authenticated" in haystack or "login required" in haystack or "log in to x.com" in haystack:
     failure = "grok_auth_required"
     blocker = "BLOCKED_GROK_AUTH_REQUIRED"
+elif "unknown message type: grok_evaluate" in haystack:
+    failure = "grok_tool_unsupported"
+    blocker = "BLOCKED_GROK_TOOL_UNSUPPORTED"
 elif "premium" in haystack or "subscribe" in haystack:
     failure = "grok_subscription_required"
     blocker = "BLOCKED_GROK_SUBSCRIPTION_REQUIRED"

@@ -113,3 +113,38 @@ def test_grok_submit_rejects_wrong_tab_before_provider_submit(tmp_path: Path) ->
     assert meta["failure"] == "browser_tab_identity_mismatch"
     assert meta["proof_status"] == "wrong_tab"
     assert meta["tab_identity_preflight"]["provider_ok"] is False
+
+
+def test_grok_submit_classifies_unknown_message_type_as_tool_unsupported(tmp_path: Path) -> None:
+    fake_surf = tmp_path / "surf"
+    fake_surf.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf '%s\n' '[{"id":123,"title":"Grok","url":"https://grok.com/"}]'
+    ;;
+  focus.state)
+    printf '%s\n' '{"activeTabId":999,"activeTabUrl":"https://example.test/"}'
+    ;;
+  grok)
+    echo 'Error: Unknown message type: GROK_EVALUATE' >&2
+    exit 1
+    ;;
+  *)
+    echo "unexpected fake surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_surf.chmod(0o755)
+
+    proc = run_grok_submit(tmp_path, fake_surf, "--tab-id", "123", "--url", "https://grok.com")
+
+    assert proc.returncode == 1
+    meta = json.loads((tmp_path / "response.md.meta.json").read_text(encoding="utf-8"))
+    assert meta["failure"] == "grok_tool_unsupported"
+    assert meta["blocker"] == "BLOCKED_GROK_TOOL_UNSUPPORTED"
+    assert meta["proof_status"] == "provider_blocked"

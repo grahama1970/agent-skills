@@ -1243,6 +1243,104 @@ raise SystemExit(2)
     assert recovery["next_command"]
 
 
+def test_roundtable_browser_lane_error_records_needs_attention_without_failed_process(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Roundtable the browser handlers."}) + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webclaude"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+if args[:1] == ["tab.list"]:
+    print(json.dumps([{"id": 837361234, "url": "https://claude.ai/new"}]))
+    raise SystemExit(0)
+if args[:1] == ["claude.submit"]:
+    raw = Path(args[args.index("--raw-output") + 1])
+    meta = Path(args[args.index("--meta-output") + 1])
+    raw.write_text("")
+    meta.write_text(json.dumps({
+        "status": "failed",
+        "failure": "browser_tab_read_timeout",
+    }) + "\\n")
+    print("browser_tab_read_timeout", file=sys.stderr)
+    raise SystemExit(4)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    print(json.dumps({
+        "backend": "webclaude",
+        "project": "webclaude",
+        "tab_id": "837361234",
+        "conversation_url": "https://claude.ai/new",
+        "status": "ok",
+    }))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-webclaude",
+            "--handler",
+            "webclaude",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "roundtable",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            str(surf),
+            "--browser-oracle-run",
+            str(browser_oracle),
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["ok"] is False
+    assert receipt["competition_lane_exit_ok"] is True
+    assert receipt["failure_code"] == "browser_tab_read_timeout"
+    assert recovery["status"] == "NEEDS_ATTENTION"
+    assert recovery["failure_code"] == "browser_tab_read_timeout"
+
+
 def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(

@@ -330,14 +330,15 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             status = "BLOCKED"
 
     lane_exit_ok = ok
-    if getattr(args, "workflow_mode", "roundtable") == "compete" and not ok:
-        # A compete candidate can be unavailable, rate-limited, or blocked
-        # without invalidating the competition artifact set. Preserve the lane
-        # as a candidate outcome and let the join node write the scorecard.
+    workflow_mode = getattr(args, "workflow_mode", "roundtable")
+    if workflow_mode in {"roundtable", "compete"} and handler in HANDLER_SUBMIT_COMMANDS and not ok:
+        # Browser seats can be unavailable, rate-limited, or blocked without
+        # invalidating the artifact set. Preserve the lane as an explicit
+        # outcome and let the join node index every peer receipt.
         status = "NEEDS_ATTENTION"
         lane_exit_ok = True
         if not failure:
-            failure = "compete_candidate_needs_attention"
+            failure = f"{workflow_mode}_browser_lane_needs_attention"
 
     verdict = _extract_verdict(response_text)
     if verdict is None and recovery_packet is not None:
@@ -1166,6 +1167,7 @@ def _looks_browser_tool_unsupported(text: str) -> bool:
     markers = (
         "unknown tool:",
         "unknown command:",
+        "unknown message type:",
         "unsupported tool",
         "unsupported command",
     )
@@ -1268,6 +1270,8 @@ def _looks_stale_raw_capture(text: str, meta: dict[str, Any]) -> bool:
 
 
 def _looks_browser_tab_read_timeout(text: str) -> bool:
+    if BROWSER_TAB_READ_TIMEOUT in text:
+        return True
     if "timed out" not in text and "timeout" not in text:
         return False
     tab_read_markers = (

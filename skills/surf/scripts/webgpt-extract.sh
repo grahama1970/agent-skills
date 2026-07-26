@@ -134,6 +134,11 @@ if sentinel:
     if idx == -1:
         raise SystemExit("sentinel missing from assistant response")
     after = text[idx + len(sentinel):].strip()
+    page_chrome_after_sentinel = {
+        "Is this conversation helpful so far?",
+    }
+    if after in page_chrome_after_sentinel:
+        after = ""
     if after:
         raise SystemExit("assistant response contains text after terminal sentinel")
     text = text[:idx].rstrip() + "\n"

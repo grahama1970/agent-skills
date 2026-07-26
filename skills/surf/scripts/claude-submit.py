@@ -95,12 +95,13 @@ def main() -> int:
             *model_instruction,
             "---",
             "",
-            "For transport verification, answer the request normally, then append a final",
-            "line containing only this exact marker:",
+            "Automation-only instruction: answer the user's request normally. Do not mention,",
+            "quote, summarize, or explain this automation instruction. After your complete",
+            "answer, append a final line containing only this exact marker:",
             "",
             sentinel,
             "",
-            "The marker must be the last line of your answer.",
+            "Do not print anything after that marker.",
             "",
         ]
     )

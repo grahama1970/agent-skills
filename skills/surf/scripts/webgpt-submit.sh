@@ -1948,6 +1948,11 @@ idx = text.rfind(sentinel)
 if idx == -1:
     raise SystemExit("sentinel missing from assistant response")
 after = text[idx + len(sentinel):].strip()
+page_chrome_after_sentinel = {
+    "Is this conversation helpful so far?",
+}
+if after in page_chrome_after_sentinel:
+    after = ""
 if after and not re.fullmatch(r"[>_▌▋▊█|\s]*", after):
     raise SystemExit("assistant response contains text after terminal sentinel")
 clean = text[:idx].rstrip() + "\n"
