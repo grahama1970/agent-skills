@@ -242,6 +242,12 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
 - **Evidence**: `--json` returns the Ask Tau bundle path, provider/handler gate,
   and Tau execution receipt when `--execute` is used. Preserve `dag.json`,
   command specs, node receipts, and join receipts.
+- **Partial roundtable failures**: when at least one handler returns a usable
+  response and the other handler seats have terminal receipts, Ask/Tau emits a
+  `DEGRADED` join receipt instead of discarding the panel. Failed seats must be
+  indexed as `NEEDS_ATTENTION` with `failure_code`, `response_path`, and
+  `recovery_packet_path`. If no handler produces usable reviewer evidence, the
+  join status is `NEEDS_ATTENTION`.
 
 ## Compete / Bakeoff Protocol
 

@@ -8,6 +8,7 @@ import json
 import os
 import re
 import signal
+import shlex
 import subprocess
 import sys
 import time
@@ -35,6 +36,7 @@ HANDLER_SUBMIT_COMMANDS = {
 }
 ATTACH_FILE_HANDLERS = {"webgpt", "webclaude", "webkimi", "webgemini", "webgrok"}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
+HANDLER_RECOVERY_PACKET_SCHEMA = "ask.handler_failure_recovery_packet.v1"
 WEBGPT_CONVERSATION_FULL_BLOCKER = "BLOCKED_WEBGPT_CONVERSATION_FULL"
 WEBGPT_BINDING_STALE_BLOCKER = "BLOCKED_WEBGPT_BINDING_STALE"
 BROWSER_TAB_IDENTITY_MISMATCH = "browser_tab_identity_mismatch"
@@ -107,7 +109,9 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     meta_path = artifact_dir / "response.meta.json"
     prompt_path = artifact_dir / "prompt.md"
     receipt_path = artifact_dir / "node-receipt.json"
-    recovery_packet_path = artifact_dir / "browser-recovery-packet.json"
+    recovery_packet_path = artifact_dir / (
+        "browser-recovery-packet.json" if handler in HANDLER_SUBMIT_COMMANDS else "handler-recovery-packet.json"
+    )
     commands: list[dict[str, Any]] = []
     prior_receipts = _load_prior_receipts(artifact_dir.parent, args.prior_node)
     prompt_path.write_text(
@@ -334,17 +338,35 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         )
         if recovery_packet.get("failure_code") in BROWSER_TRANSPORT_BLOCKERS:
             status = "BLOCKED"
+    if not ok and recovery_packet is None:
+        recovery_packet = _handler_failure_recovery_packet(
+            args,
+            request_payload=request_payload,
+            failure=failure,
+            response_text=response_text,
+            submit_meta=submit_meta,
+            commands=commands,
+            response_path=response_path,
+            raw_path=raw_path,
+            meta_path=meta_path,
+            prompt_path=prompt_path,
+        )
+        recovery_packet_path.write_text(
+            json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        status = "NEEDS_ATTENTION"
 
     lane_exit_ok = ok
     workflow_mode = getattr(args, "workflow_mode", "roundtable")
-    if workflow_mode in {"roundtable", "compete"} and handler in HANDLER_SUBMIT_COMMANDS and not ok:
-        # Browser seats can be unavailable, rate-limited, or blocked without
-        # invalidating the artifact set. Preserve the lane as an explicit
-        # outcome and let the join node index every peer receipt.
+    if workflow_mode in {"roundtable", "compete"} and not ok:
+        # Seats can be unavailable, rate-limited, auth-blocked, or provider-
+        # blocked without invalidating the artifact set. Preserve the lane as a
+        # terminal outcome and let the join node index every peer receipt.
         status = "NEEDS_ATTENTION"
         lane_exit_ok = True
         if not failure:
-            failure = f"{workflow_mode}_browser_lane_needs_attention"
+            failure = f"{workflow_mode}_lane_needs_attention"
 
     verdict = _extract_verdict(response_text)
     if verdict is None and recovery_packet is not None:
@@ -1780,6 +1802,144 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
     }
 
 
+def _handler_failure_recovery_packet(
+    args: argparse.Namespace,
+    *,
+    request_payload: dict[str, Any],
+    failure: str,
+    response_text: str,
+    submit_meta: dict[str, Any],
+    commands: list[dict[str, Any]],
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    prompt_path: Path,
+) -> dict[str, Any]:
+    handler = str(args.handler)
+    failure_code = _classify_handler_failure(handler=handler, failure=failure, submit_meta=submit_meta)
+    return {
+        "schema": HANDLER_RECOVERY_PACKET_SCHEMA,
+        "status": "NEEDS_ATTENTION",
+        "mocked": False,
+        "live": bool(commands),
+        "failure_code": failure_code,
+        "handler": handler,
+        "node_id": args.node_id,
+        "reason": _handler_recovery_reason(failure_code),
+        "evidence": {
+            "failure_excerpt": failure.strip()[:2000],
+            "response_chars": len(response_text),
+            "submit_meta_status": submit_meta.get("status") or submit_meta.get("status_code"),
+            "last_command": commands[-1] if commands else None,
+            "scillm_base_url": str(getattr(args, "scillm_base_url", "") or "") or None,
+        },
+        "response_path": str(response_path),
+        "raw_response_path": str(raw_path),
+        "meta_path": str(meta_path),
+        "prompt_path": str(prompt_path),
+        "auto_retry_allowed": False,
+        "auto_retry_blocked_reason": _handler_auto_retry_blocked_reason(failure_code),
+        "next_command": _handler_recovery_next_command(args, request_payload, failure_code),
+        "fallback_instruction": _handler_fallback_instruction(failure_code),
+    }
+
+
+def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[str, Any]) -> str:
+    haystack = "\n".join([handler, failure, json.dumps(submit_meta, sort_keys=True, default=str)]).lower()
+    if "prior_handler_receipts_not_ready" in haystack:
+        return "prior_handler_receipts_not_ready"
+    if "http 401" in haystack or "invalid api key" in haystack or "authentication_error" in haystack:
+        return "scillm_auth_invalid_api_key"
+    if "not_found_error" in haystack or "model not found" in haystack or ("model:" in haystack and "404" in haystack):
+        return "scillm_model_not_found"
+    if "http 502" in haystack or "all groups exhausted" in haystack or "router_error" in haystack:
+        return "scillm_provider_route_failed"
+    if "subagent-runner" in haystack:
+        return "subagent_runner_failed"
+    if "codex" in haystack:
+        return "codex_handler_failed"
+    if "timed out" in haystack or "timeout" in haystack:
+        return "handler_timeout"
+    return "handler_execution_failed"
+
+
+def _handler_recovery_reason(failure_code: str) -> str:
+    return {
+        "prior_handler_receipts_not_ready": "A sequential lane could not run because an upstream handler receipt was not usable.",
+        "scillm_auth_invalid_api_key": "SciLLM rejected the configured bearer token.",
+        "scillm_model_not_found": "SciLLM routed the requested model to a provider/model id that is not available.",
+        "scillm_provider_route_failed": "SciLLM exhausted provider routes for the requested model.",
+        "subagent_runner_failed": "The local subagent-runner handler did not produce a usable answer.",
+        "codex_handler_failed": "The local Codex handler did not produce the required workspace evidence.",
+        "handler_timeout": "The handler did not produce a usable answer before its timeout.",
+        "handler_execution_failed": "The handler exited without a usable response.",
+    }.get(failure_code, "The handler exited without a usable response.")
+
+
+def _handler_auto_retry_blocked_reason(failure_code: str) -> str:
+    if failure_code == "scillm_auth_invalid_api_key":
+        return "auth_requires_configured_scillm_proxy_key"
+    if failure_code in {"scillm_model_not_found", "scillm_provider_route_failed"}:
+        return "provider_route_requires_model_or_provider_repair"
+    if failure_code == "prior_handler_receipts_not_ready":
+        return "upstream_receipt_not_usable"
+    return "generic_handler_failure_requires_project_agent_review"
+
+
+def _handler_recovery_next_command(
+    args: argparse.Namespace,
+    request_payload: dict[str, Any],
+    failure_code: str,
+) -> str:
+    request_text = str(request_payload.get("request") or "").strip()
+    parts = ["cd", "skills/ask", "&&", "./run.sh", "tau-dag", request_text or "repeat the same request"]
+    for key, flag in (
+        ("repo", "--repo"),
+        ("target", "--target"),
+        ("immutable_goal", "--immutable-goal"),
+    ):
+        value = str(request_payload.get(key) or "").strip()
+        if value:
+            parts.extend([flag, value])
+    handlers = request_payload.get("handlers") or [getattr(args, "handler", "")]
+    for handler in handlers:
+        handler_value = str(handler or "").strip()
+        if handler_value:
+            parts.extend(["--handler", handler_value])
+    for project in request_payload.get("handler_projects") or []:
+        project_value = str(project or "").strip()
+        if project_value:
+            parts.extend(["--handler-project", project_value])
+    topology = str(request_payload.get("topology") or getattr(args, "topology", "") or "").strip()
+    if topology:
+        parts.extend(["--topology", topology])
+    workflow_mode = str(request_payload.get("workflow_mode") or getattr(args, "workflow_mode", "") or "").strip()
+    if workflow_mode:
+        parts.extend(["--workflow-mode", workflow_mode])
+    base = " ".join(shlex.quote(part) for part in parts)
+    if failure_code == "scillm_auth_invalid_api_key":
+        return (
+            "export SCILLM_PROXY_KEY=<configured proxy key>; "
+            + base
+            + " --execute --allow-provider-calls --json"
+        )
+    if failure_code in {"scillm_model_not_found", "scillm_provider_route_failed"}:
+        return base + " --execute --allow-provider-calls --json # after selecting an available SciLLM model route"
+    return base + " --execute --json"
+
+
+def _handler_fallback_instruction(failure_code: str) -> str:
+    if failure_code == "scillm_auth_invalid_api_key":
+        return "Configure SCILLM_PROXY_KEY, SCILLM_MASTER_KEY, or LITELLM_MASTER_KEY for the running SciLLM proxy before retrying."
+    if failure_code == "scillm_model_not_found":
+        return "Use an available model id from the SciLLM provider list or repair the provider route."
+    if failure_code == "scillm_provider_route_failed":
+        return "Check SciLLM provider health and rerun with a route that has capacity."
+    if failure_code == "prior_handler_receipts_not_ready":
+        return "Inspect the upstream node receipt and recovery packet before rerunning the dependent lane."
+    return "Inspect the handler recovery packet, then rerun only after the named blocker is addressed."
+
+
 def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
     if args.workflow_mode == "compete":
         return _run_compete_join(args, start, artifact_dir)
@@ -1788,13 +1948,38 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
     node_artifacts_root = artifact_dir.parent
     handler_receipts = []
     failures = []
+    usable_responses = []
     for path in sorted(node_artifacts_root.glob("handler-*/node-receipt.json")):
         receipt = _read_json(path)
         if receipt.get("schema") != "ask.tau_dag_handler_receipt.v1":
             continue
-        handler_receipts.append({"path": str(path), **receipt})
+        response_path = Path(str(receipt.get("response_path") or ""))
+        response_chars = response_path.stat().st_size if response_path.is_file() else int(receipt.get("response_chars") or 0)
+        indexed_receipt = {
+            "path": str(path),
+            **receipt,
+            "response_chars": response_chars,
+            "failure_code": receipt.get("failure_code") or _classify_handler_failure(
+                handler=str(receipt.get("handler") or ""),
+                failure=str(receipt.get("failure") or ""),
+                submit_meta=receipt.get("submit_meta") if isinstance(receipt.get("submit_meta"), dict) else {},
+            ),
+            "recovery_packet_path": receipt.get("recovery_packet_path"),
+        }
+        handler_receipts.append(indexed_receipt)
+        if receipt.get("ok") is True and response_chars > 0:
+            usable_responses.append(indexed_receipt)
         if receipt.get("ok") is not True:
-            failures.append(f"{receipt.get('node_id')}: {receipt.get('failure') or receipt.get('status')}")
+            failures.append(
+                {
+                    "node_id": receipt.get("node_id"),
+                    "handler": receipt.get("handler"),
+                    "status": receipt.get("status"),
+                    "failure": receipt.get("failure") or receipt.get("status"),
+                    "failure_code": indexed_receipt.get("failure_code"),
+                    "recovery_packet_path": indexed_receipt.get("recovery_packet_path"),
+                }
+            )
     lines = [
         "# Tau Roundtable Join",
         "",
@@ -1818,8 +2003,13 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
             lines.append(text[:2000])
             lines.append("")
     summary_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
-    ok = bool(handler_receipts) and not failures
-    status = "PASS" if ok else "BLOCKED"
+    if handler_receipts and not failures and len(usable_responses) == len(handler_receipts):
+        status = "PASS"
+    elif usable_responses:
+        status = "DEGRADED"
+    else:
+        status = "NEEDS_ATTENTION"
+    ok = status == "PASS"
     receipt = {
         "schema": "ask.tau_dag_roundtable_join_receipt.v1",
         "created_at": _now(),
@@ -1832,6 +2022,8 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
         "live": any(item.get("live") is True for item in handler_receipts),
         "provider_live": ok and all(item.get("provider_live") is True for item in handler_receipts),
         "handler_response_index": handler_receipts,
+        "usable_response_count": len(usable_responses),
+        "failed_seat_count": len(failures),
         "summary_path": str(summary_path),
         "unresolved_gaps": failures,
         "provider_receipt": {
@@ -1855,11 +2047,16 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
         artifacts=[receipt_path, summary_path],
         evidence=[
             {"kind": "roundtable_join_receipt", "path": str(receipt_path), "status": status},
-            {"kind": "handler_response_index", "count": len(handler_receipts), "failures": failures},
+            {
+                "kind": "handler_response_index",
+                "count": len(handler_receipts),
+                "usable_response_count": len(usable_responses),
+                "failures": failures,
+            },
             {"kind": "unresolved_gaps", "items": failures},
         ],
     )
-    return {"exit_code": 0 if ok else 1, "handoff": handoff}
+    return {"exit_code": 0, "handoff": handoff}
 
 
 def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:

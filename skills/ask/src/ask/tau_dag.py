@@ -30,7 +30,7 @@ DEFAULT_SCILLM_API_KEY = ""
 DEFAULT_TAU_PROJECT_ROOT = Path("/home/graham/workspace/experiments/tau")
 DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 COMPETE_WEBCLAUDE_MODEL = "Opus 5 High"
-TERMINAL_STATUSES = {"PASS", "BLOCKED", "FAILED", "ERROR"}
+TERMINAL_STATUSES = {"PASS", "DEGRADED", "NEEDS_ATTENTION", "BLOCKED", "FAILED", "ERROR"}
 ROUNDTABLE_TOPOLOGIES = {"concurrent", "sequential"}
 SUPPORTED_DAG_TEMPLATES = {
     "single-call": {
@@ -689,6 +689,7 @@ def run_tau_dag_bundle(
     receipt_path = receipt_dir / "dag-receipt.json"
     receipt = _read_json(receipt_path) if receipt_path.exists() else None
     status = str(receipt.get("status") if isinstance(receipt, dict) else "UNKNOWN")
+    degraded_join = _ensure_degraded_roundtable_join(bundle)
     node_provider_receipts = _collect_node_provider_receipts(run_dir / "node-artifacts")
     # Semantic review verdicts must bubble to the bundle: a reviewer node that
     # returns VERDICT: NEEDS_ATTENTION/FAIL completes its transport (node PASS)
@@ -708,6 +709,15 @@ def run_tau_dag_bundle(
     worst_verdict = max(review_verdicts.values(), key=lambda v: _verdict_rank.get(v, 1), default=None)
     if worst_verdict and worst_verdict != "PASS" and status == "PASS":
         status = worst_verdict
+    join_receipt = _roundtable_join_receipt(run_dir)
+    join_artifact_path = str(run_dir / "node-artifacts" / "join" / "node-receipt.json") if join_receipt else ""
+    join_status = str(join_receipt.get("status") or "") if isinstance(join_receipt, dict) else ""
+    if join_status in {"DEGRADED", "NEEDS_ATTENTION", "BLOCKED", "FAIL", "FAILED", "ERROR"}:
+        status = "NEEDS_ATTENTION" if join_status in {"BLOCKED", "FAIL", "FAILED", "ERROR"} else join_status
+    elif join_status == "PASS" and dag_run["returncode"] == 0:
+        status = "PASS"
+    if dag_run["returncode"] != 0 and status not in {"DEGRADED", "NEEDS_ATTENTION"}:
+        status = "ERROR"
     provider_live = bool(
         isinstance(receipt, dict) and receipt.get("provider_live") is True
     ) or any(item.get("provider_live") is True for item in node_provider_receipts)
@@ -722,7 +732,7 @@ def run_tau_dag_bundle(
     result = {
         "schema": "ask.tau_dag_execution.v1",
         "status": status,
-        "ok": isinstance(receipt, dict) and receipt.get("ok") is True,
+        "ok": status == "PASS",
         "mocked": False,
         "live": True,
         "provider_live": provider_live,
@@ -736,6 +746,9 @@ def run_tau_dag_bundle(
         "receipt_path": str(receipt_path),
         "receipt": receipt,
         "node_provider_receipts": node_provider_receipts,
+        "join_artifact_path": join_artifact_path or None,
+        "join_receipt": join_receipt,
+        "degraded_join": degraded_join,
         "polls": polls,
         "viewer": viewer,
         "proof_scope": {
@@ -750,9 +763,6 @@ def run_tau_dag_bundle(
         },
     }
     _write_json(run_dir / "execution-status.json", result)
-    if dag_run["returncode"] != 0:
-        result["status"] = "ERROR"
-        result["ok"] = False
     return result
 
 
@@ -792,6 +802,112 @@ def poll_tau_status(
         if status in TERMINAL_STATUSES or time.monotonic() >= deadline:
             return polls
         time.sleep(max(0.1, interval_seconds))
+
+
+def _ensure_degraded_roundtable_join(bundle: dict[str, Any]) -> dict[str, Any] | None:
+    dag = bundle.get("dag") if isinstance(bundle.get("dag"), dict) else {}
+    dag_context = dag.get("context") if isinstance(dag.get("context"), dict) else {}
+    if str(dag_context.get("workflow_mode") or "") != "roundtable":
+        return None
+    run_dir = Path(str(bundle.get("run_dir") or ""))
+    if not run_dir:
+        return None
+    join_receipt_path = run_dir / "node-artifacts" / "join" / "node-receipt.json"
+    if join_receipt_path.is_file() and join_receipt_path.stat().st_size > 0:
+        return {
+            "schema": "ask.tau_dag_degraded_join_completion.v1",
+            "status": "existing",
+            "join_artifact_path": str(join_receipt_path),
+        }
+
+    expected_nodes = _roundtable_handler_node_ids_from_dag(dag)
+    if not expected_nodes:
+        return None
+    receipt_paths = {
+        node_id: run_dir / "node-artifacts" / node_id / "node-receipt.json"
+        for node_id in expected_nodes
+    }
+    missing = [node_id for node_id, path in receipt_paths.items() if not path.is_file()]
+    if missing:
+        return {
+            "schema": "ask.tau_dag_degraded_join_completion.v1",
+            "status": "skipped",
+            "reason": "handler_receipts_missing",
+            "missing_handler_receipts": missing,
+        }
+    nonterminal = []
+    for node_id, path in receipt_paths.items():
+        receipt = _read_json(path)
+        receipt_status = str(receipt.get("status") or "")
+        if receipt_status not in TERMINAL_STATUSES:
+            nonterminal.append({"node_id": node_id, "status": receipt_status, "path": str(path)})
+    if nonterminal:
+        return {
+            "schema": "ask.tau_dag_degraded_join_completion.v1",
+            "status": "skipped",
+            "reason": "handler_receipts_not_terminal",
+            "nonterminal_handler_receipts": nonterminal,
+        }
+
+    spec_path = run_dir / "command-specs" / "join" / "tau-dispatch-command.json"
+    if not spec_path.is_file():
+        return {
+            "schema": "ask.tau_dag_degraded_join_completion.v1",
+            "status": "skipped",
+            "reason": "join_command_spec_missing",
+            "expected_path": str(spec_path),
+        }
+    spec = _read_json(spec_path)
+    command = spec.get("command")
+    if not isinstance(command, list) or not all(isinstance(item, str) for item in command):
+        return {
+            "schema": "ask.tau_dag_degraded_join_completion.v1",
+            "status": "skipped",
+            "reason": "join_command_spec_invalid",
+            "path": str(spec_path),
+        }
+    cwd = Path(str(spec.get("cwd") or run_dir))
+    result = _run_command(command, cwd=cwd)
+    join_receipt = _read_json(join_receipt_path) if join_receipt_path.is_file() else None
+    return {
+        "schema": "ask.tau_dag_degraded_join_completion.v1",
+        "status": "emitted" if isinstance(join_receipt, dict) else "failed",
+        "join_artifact_path": str(join_receipt_path) if isinstance(join_receipt, dict) else None,
+        "join_status": join_receipt.get("status") if isinstance(join_receipt, dict) else None,
+        "command": command,
+        "returncode": result["returncode"],
+        "stdout_excerpt": result["stdout"][:2000],
+        "stderr_excerpt": result["stderr"][:2000],
+    }
+
+
+def _roundtable_handler_node_ids_from_dag(dag: dict[str, Any]) -> list[str]:
+    nodes = dag.get("nodes") if isinstance(dag.get("nodes"), list) else []
+    node_ids: list[str] = []
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        context = node.get("context") if isinstance(node.get("context"), dict) else {}
+        if context.get("role") != "roundtable_handler":
+            continue
+        node_id = str(node.get("id") or "").strip()
+        if node_id:
+            node_ids.append(node_id)
+    return node_ids
+
+
+def _roundtable_join_receipt(run_dir: Path) -> dict[str, Any] | None:
+    path = run_dir / "node-artifacts" / "join" / "node-receipt.json"
+    if not path.is_file():
+        return None
+    try:
+        receipt = _read_json(path)
+    except (OSError, json.JSONDecodeError, TauDagError):
+        return None
+    schema = str(receipt.get("schema") or "")
+    if schema not in {"ask.tau_dag_roundtable_join_receipt.v1", "ask.tau_dag_compete_join_receipt.v1"}:
+        return None
+    return receipt
 
 
 def tau_viewer_link(
@@ -849,6 +965,11 @@ def _collect_node_provider_receipts(artifacts_root: Path) -> list[dict[str, Any]
                 "mocked": provider_receipt.get("mocked") is True,
                 "live": provider_receipt.get("live") is True,
                 "provider_live": provider_receipt.get("provider_live") is True,
+                "response_path": node_receipt.get("response_path"),
+                "response_chars": node_receipt.get("response_chars"),
+                "failure": node_receipt.get("failure"),
+                "failure_code": node_receipt.get("failure_code"),
+                "recovery_packet_path": node_receipt.get("recovery_packet_path"),
                 "route": provider_receipt.get("route"),
                 "execution_owner": provider_receipt.get("execution_owner"),
                 "provider_transport": provider_receipt.get("provider_transport"),

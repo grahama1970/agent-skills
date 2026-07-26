@@ -3,14 +3,21 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+from typer.testing import CliRunner
+
+import ask.tau_dag as tau_dag
+import ask.tau_dag_cli as tau_dag_cli
 from ask.tau_dag import (
     browser_compete_blocked_execution,
     compile_tau_dag_bundle,
     infer_compile_input,
     probe_browser_compete_handler_gate,
     resolve_scillm_model_route,
+    run_tau_dag_bundle,
 )
 
 
@@ -1339,6 +1346,327 @@ raise SystemExit(2)
     assert receipt["failure_code"] == "browser_tab_read_timeout"
     assert recovery["status"] == "NEEDS_ATTENTION"
     assert recovery["failure_code"] == "browser_tab_read_timeout"
+
+
+def test_roundtable_scillm_auth_error_records_recovery_packet_without_failed_process(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Roundtable the API handlers."}) + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-gpt-5-5"
+
+    class AuthFailureHandler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            self.send_response(401)
+            self.send_header("content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(
+                b'{"error":{"message":"Invalid API key","type":"authentication_error","code":401}}'
+            )
+
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), AuthFailureHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+                "--node-id",
+                "handler-gpt-5-5",
+                "--handler",
+                "gpt-5.5",
+                "--topology",
+                "concurrent",
+                "--workflow-mode",
+                "roundtable",
+                "--request-file",
+                str(request_path),
+                "--artifact-dir",
+                str(artifact_dir),
+                "--surf-run",
+                "/bin/false",
+                "--browser-oracle-run",
+                "/bin/false",
+                "--scillm-base-url",
+                base_url,
+                "--scillm-api-key",
+                "stale-default-key",
+                "--timeout",
+                "3",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "handler-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["ok"] is False
+    assert receipt["competition_lane_exit_ok"] is True
+    assert receipt["failure_code"] == "scillm_auth_invalid_api_key"
+    assert receipt["recovery_packet_path"] == str(artifact_dir / "handler-recovery-packet.json")
+    assert recovery["status"] == "NEEDS_ATTENTION"
+    assert "SCILLM_PROXY_KEY=<configured proxy key>" in recovery["next_command"]
+    assert "--handler gpt-5.5" in recovery["next_command"]
+    assert "--execute --allow-provider-calls --json" in recovery["next_command"]
+
+
+def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Roundtable the partial receipts."}) + "\n",
+        encoding="utf-8",
+    )
+    artifacts = tmp_path / "node-artifacts"
+    pass_dir = artifacts / "handler-webkimi"
+    pass_dir.mkdir(parents=True)
+    pass_response = pass_dir / "response.md"
+    pass_response.write_text("## Position\nUsable WebKimi response.\n", encoding="utf-8")
+    (pass_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-webkimi",
+                "handler": "webkimi",
+                "status": "PASS",
+                "ok": True,
+                "mocked": False,
+                "live": True,
+                "provider_live": True,
+                "response_path": str(pass_response),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    fail_dir = artifacts / "handler-gpt-5-5"
+    fail_dir.mkdir(parents=True)
+    fail_response = fail_dir / "response.md"
+    fail_response.write_text("", encoding="utf-8")
+    recovery_path = fail_dir / "handler-recovery-packet.json"
+    recovery_path.write_text(
+        json.dumps(
+            {
+                "schema": "ask.handler_failure_recovery_packet.v1",
+                "status": "NEEDS_ATTENTION",
+                "handler": "gpt-5.5",
+                "node_id": "handler-gpt-5-5",
+                "failure_code": "scillm_auth_invalid_api_key",
+                "next_command": "export SCILLM_PROXY_KEY=<configured proxy key>; cd skills/ask && ./run.sh tau-dag ...",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (fail_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-gpt-5-5",
+                "handler": "gpt-5.5",
+                "status": "NEEDS_ATTENTION",
+                "ok": False,
+                "mocked": False,
+                "live": True,
+                "provider_live": False,
+                "response_path": str(fail_response),
+                "failure": "scillm.chat failed HTTP 401: Invalid API key",
+                "failure_code": "scillm_auth_invalid_api_key",
+                "recovery_packet_path": str(recovery_path),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    join_dir = artifacts / "join"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "join",
+            "--handler",
+            "join",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "roundtable",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(join_dir),
+            "--surf-run",
+            "/bin/false",
+            "--browser-oracle-run",
+            "/bin/false",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((join_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "DEGRADED"
+    assert receipt["ok"] is False
+    assert receipt["usable_response_count"] == 1
+    assert receipt["failed_seat_count"] == 1
+    indexed = {item["handler"]: item for item in receipt["handler_response_index"]}
+    assert indexed["webkimi"]["response_path"] == str(pass_response)
+    assert indexed["gpt-5.5"]["failure_code"] == "scillm_auth_invalid_api_key"
+    assert indexed["gpt-5.5"]["recovery_packet_path"] == str(recovery_path)
+    assert receipt["unresolved_gaps"][0]["failure_code"] == "scillm_auth_invalid_api_key"
+
+
+def test_run_tau_dag_bundle_synthesizes_degraded_join_when_tau_skips_join(monkeypatch, tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Roundtable webkimi and gpt-5.5 about the partial failure.",
+        repo="local/agent-skills",
+        target="issue-1015-fixture",
+        immutable_goal="Emit a degraded join when one terminal seat fails and another has a response.",
+        handlers=["webkimi", "gpt-5.5"],
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    artifacts = run_dir / "node-artifacts"
+    pass_dir = artifacts / "handler-webkimi"
+    pass_dir.mkdir(parents=True, exist_ok=True)
+    pass_response = pass_dir / "response.md"
+    pass_response.write_text("## Position\nFixture response from WebKimi.\n", encoding="utf-8")
+    (pass_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-webkimi",
+                "handler": "webkimi",
+                "status": "PASS",
+                "ok": True,
+                "mocked": False,
+                "live": True,
+                "provider_live": True,
+                "response_path": str(pass_response),
+                "provider_receipt": {"schema": "ask.tau_dag_provider_route_receipt.v1", "status": "PASS", "ok": True, "live": True, "provider_live": True},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    fail_dir = artifacts / "handler-gpt-5-5"
+    fail_dir.mkdir(parents=True, exist_ok=True)
+    fail_response = fail_dir / "response.md"
+    fail_response.write_text("", encoding="utf-8")
+    recovery_path = fail_dir / "handler-recovery-packet.json"
+    recovery_path.write_text(
+        json.dumps({"schema": "ask.handler_failure_recovery_packet.v1", "failure_code": "scillm_auth_invalid_api_key", "next_command": "export SCILLM_PROXY_KEY=<configured proxy key>"})
+        + "\n",
+        encoding="utf-8",
+    )
+    (fail_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-gpt-5-5",
+                "handler": "gpt-5.5",
+                "status": "NEEDS_ATTENTION",
+                "ok": False,
+                "mocked": False,
+                "live": True,
+                "provider_live": False,
+                "response_path": str(fail_response),
+                "failure": "scillm.chat failed HTTP 401: Invalid API key",
+                "failure_code": "scillm_auth_invalid_api_key",
+                "recovery_packet_path": str(recovery_path),
+                "provider_receipt": {"schema": "ask.tau_dag_provider_route_receipt.v1", "status": "NEEDS_ATTENTION", "ok": False, "live": True, "provider_live": False},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "join skipped after upstream failure", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    execution = run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    join_path = run_dir / "node-artifacts" / "join" / "node-receipt.json"
+    assert execution["status"] == "DEGRADED"
+    assert execution["join_artifact_path"] == str(join_path)
+    assert execution["degraded_join"]["status"] == "emitted"
+    assert join_path.is_file()
+    join = json.loads(join_path.read_text(encoding="utf-8"))
+    assert join["status"] == "DEGRADED"
+    failed = next(item for item in join["handler_response_index"] if item["handler"] == "gpt-5.5")
+    assert failed["failure_code"] == "scillm_auth_invalid_api_key"
+    assert failed["recovery_packet_path"] == str(recovery_path)
+
+
+def test_tau_dag_cli_json_reports_degraded_join_path(monkeypatch, tmp_path: Path) -> None:
+    join_path = tmp_path / "node-artifacts" / "join" / "node-receipt.json"
+    join_path.parent.mkdir(parents=True)
+    join_path.write_text("{}\n", encoding="utf-8")
+
+    def fake_run_tau_dag_bundle(*args, **kwargs):
+        return {
+            "schema": "ask.tau_dag_execution.v1",
+            "status": "DEGRADED",
+            "ok": False,
+            "mocked": False,
+            "live": True,
+            "provider_live": True,
+            "join_artifact_path": str(join_path),
+        }
+
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_run_tau_dag_bundle)
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "run",
+            "Roundtable webkimi and gpt-5.5.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "issue-1015-cli",
+            "--immutable-goal",
+            "Report degraded join path.",
+            "--handler",
+            "webkimi",
+            "--handler",
+            "gpt-5.5",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 4
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "DEGRADED"
+    assert payload["join_artifact_path"] == str(join_path)
 
 
 def test_roundtable_webgrok_stale_binding_retries_existing_provider_tab_before_blocking(tmp_path: Path) -> None:

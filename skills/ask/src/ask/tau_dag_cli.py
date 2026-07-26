@@ -251,6 +251,7 @@ def run(
         "bundle": bundle,
         "provider_gate": provider_gate,
         "execution": execution,
+        "join_artifact_path": execution.get("join_artifact_path") if isinstance(execution, dict) else None,
     }
     if json_output:
         typer.echo(json.dumps(output, indent=2, sort_keys=True))
