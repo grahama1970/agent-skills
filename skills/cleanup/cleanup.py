@@ -12,17 +12,26 @@ This script performs a thorough assessment of the codebase to identify:
 The workflow:
 1. Assessment (--dry-run): Scan and generate findings
 2. Planning (--plan): Generate a Cleanup Plan markdown
-3. Execution (--execute): Perform cleanup (archive or remove, with confirmation)
-4. Finalization: Record cleanup in local/CLEANUP_LOG.md
+3. Execution (--execute): Remove untracked junk cleared by per-path provenance
+4. Finalization: Record cleanup in local/CLEANUP_LOG.md and the phase receipt
+
+Evidence model: assessment, planning, and worktree audit never depend on an
+index and always run. Each mutation class carries its own evidence requirement.
+Untracked junk removal needs untracked status plus per-path provenance, not
+dependency edges. Tracked-file mutation needs per-candidate evidence from the
+cleanup evidence artifact (references/cleanup-evidence-contract.md) plus
+project-native readiness proof, and is blocked until that artifact exists.
 """
 
 import fnmatch
+import hashlib
 import os
 import shutil
 import subprocess
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 from datetime import datetime
 from typing import Any, List, Dict, Set, Tuple, Optional
@@ -32,12 +41,6 @@ import typer
 
 
 load_dotenv(override=False)
-
-# ── Archive destination (12TB storage) ──────────────────────────────────────
-ARCHIVE_ROOT = Path(os.getenv(
-    "CLEANUP_ARCHIVE_ROOT",
-    "/mnt/storage12tb/artifacts",
-))
 
 # Patterns that typically indicate junk files (safe to delete)
 JUNK_PATTERNS = [
@@ -106,6 +109,44 @@ DEAD_FILE_CANDIDATE_EXTENSIONS = {
     ".c", ".cc", ".cpp", ".go", ".h", ".hpp", ".java", ".js", ".jsx",
     ".py", ".pyi", ".rs", ".ts", ".tsx",
 }
+
+# Files whose mention of a path configures ignoring it, not depending on it.
+IGNORE_CONFIG_BASENAMES = {
+    ".gitignore",
+    ".dockerignore",
+    ".npmignore",
+    ".eslintignore",
+    ".prettierignore",
+}
+
+# Per-candidate dependency evidence produced by $ingest-code from local
+# Tree-sitter analysis. Independent of Memory persistence; see
+# references/cleanup-evidence-contract.md.
+CLEANUP_EVIDENCE_FILENAME = ".cleanup-evidence.json"
+CLEANUP_EVIDENCE_CONTRACT = "cleanup.evidence.v1"
+CLEANUP_RECEIPT_CONTRACT = "cleanup.phase_receipt.v1"
+DEFAULT_RECEIPT_PATH = "artifacts/cleanup/cleanup_receipt.json"
+
+# Paths this skill and its evidence producer create. Without this, a successful
+# run leaves artifacts that the next run reports as findings — cleanup
+# generating work for itself.
+CLEANUP_OUTPUT_PREFIXES = ("artifacts/cleanup/", "local/CLEANUP_LOG")
+CLEANUP_OUTPUT_FILES = {
+    ".cleanup-evidence.json",
+    ".ingest-code.json",
+    "CLEANUP_PLAN.md",
+}
+
+
+def is_cleanup_output(filepath: str) -> bool:
+    """True when a path is something cleanup or its producer wrote."""
+    normalized = filepath.removeprefix("./").rstrip("/")
+    if normalized in CLEANUP_OUTPUT_FILES:
+        return True
+    return any(
+        normalized == prefix.rstrip("/") or normalized.startswith(prefix)
+        for prefix in CLEANUP_OUTPUT_PREFIXES
+    )
 
 def log_error(message: str) -> None:
     print(f"[ERROR] {message}", file=sys.stderr)
@@ -370,6 +411,12 @@ def get_untracked_files() -> List[str]:
 
 
 def get_all_tracked_files() -> Set[str]:
+    """Return tracked paths, queried fresh every call.
+
+    Deliberately uncached: a cached snapshot goes stale the moment anything
+    commits, and a wrong tracked set silently breaks junk provenance and the
+    coverage gate. `git ls-files` is cheap next to the file-content pass.
+    """
     success, output = run_command(["git", "ls-files"], check=False)
     if success:
         return set(output.strip().split("\n")) if output.strip() else set()
@@ -443,6 +490,8 @@ def scan_root_strays() -> List[Dict[str, str]]:
     untracked = get_untracked_files()
     root_entries: Dict[str, List[str]] = {}
     for f in untracked:
+        if is_cleanup_output(f):
+            continue  # Never report our own receipts, logs, or evidence.
         top = f.split("/")[0]
         root_entries.setdefault(top, []).append(f)
 
@@ -529,32 +578,6 @@ def get_project_name() -> str:
     return Path.cwd().name
 
 
-def archive_file(filepath: str, project: str) -> str:
-    """
-    Move a file or directory to the archive drive.
-
-    Returns the archive destination path.
-    """
-    today = datetime.now().strftime("%Y-%m-%d")
-    dest_dir = ARCHIVE_ROOT / project / today
-    dest_dir.mkdir(parents=True, exist_ok=True)
-
-    src = Path(filepath)
-    dest = dest_dir / src.name
-
-    # Avoid overwriting
-    if dest.exists():
-        stem = dest.stem
-        suffix = dest.suffix
-        counter = 1
-        while dest.exists():
-            dest = dest_dir / f"{stem}_{counter}{suffix}"
-            counter += 1
-
-    shutil.move(str(src), str(dest))
-    return str(dest)
-
-
 def read_file_content(filepath: str) -> str:
     try:
         with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
@@ -565,6 +588,12 @@ def read_file_content(filepath: str) -> str:
 
 
 def find_file_references(filepath: str, search_paths: List[str]) -> List[str]:
+    """Walk `search_paths` looking for any mention of one file.
+
+    Retained for callers that need a single-file answer. The assessment path
+    uses `scan_repository_references` instead: this walks the tree once per
+    file, so using it per candidate is quadratic.
+    """
     references = []
     filename = os.path.basename(filepath)
     stem = os.path.splitext(filename)[0]
@@ -593,39 +622,66 @@ def find_file_references(filepath: str, search_paths: List[str]) -> List[str]:
     return references
 
 
-def build_reference_index(search_dirs: List[str]) -> Dict[str, Set[str]]:
-    """Return lexical reference terms for tracked text files.
+def scan_repository_references(
+    search_dirs: List[str],
+    literal_needles: Optional[Set[str]] = None,
+) -> Tuple[Dict[str, Set[str]], Dict[str, List[str]]]:
+    """Read every tracked text file once and answer both reference questions.
 
-    This is candidate-generation evidence only. It is not a language server,
-    import resolver, or proof that an absent term means a file is unused.
+    Returns the lexical token index used to nominate dead-file candidates, and
+    literal-path hits used for untracked-junk provenance. Both need a full pass
+    over the same files; doing them separately doubles the I/O for no gain.
+
+    The token index is candidate-generation evidence only. It is not a language
+    server, import resolver, or proof that an absent term means a file is unused.
     """
     index: Dict[str, Set[str]] = {}
-    tracked_files = sorted(get_all_tracked_files())
+    needles = literal_needles or set()
+    literal_hits: Dict[str, List[str]] = {needle: [] for needle in needles}
     normalized_roots = {
         str(Path(search_dir)).removeprefix("./").rstrip("/")
         for search_dir in search_dirs
     }
 
-    for filepath in tracked_files:
+    for filepath in sorted(get_all_tracked_files()):
         path = Path(filepath)
         if path.suffix.lower() not in REFERENCE_TEXT_EXTENSIONS:
             continue
-        if normalized_roots and "." not in normalized_roots:
-            if not any(filepath == root or filepath.startswith(f"{root}/") for root in normalized_roots):
-                continue
         if any(part in SKIP_DIRS for part in path.parts):
             continue
 
         content = read_file_content(filepath)
         if not content:
             continue
+
+        # Ignore-configuration mentions a path in order to exclude it, which is
+        # not a dependency on it.
+        if needles and path.name not in IGNORE_CONFIG_BASENAMES:
+            for needle in needles:
+                if needle in content:
+                    literal_hits[needle].append(filepath)
+
+        in_scope = not normalized_roots or "." in normalized_roots or any(
+            filepath == root or filepath.startswith(f"{root}/") for root in normalized_roots
+        )
+        if not in_scope:
+            continue
         for term in set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", content)):
             index.setdefault(term, set()).add(filepath)
         index.setdefault(filepath, set()).add(filepath)
+
+    return index, literal_hits
+
+
+def build_reference_index(search_dirs: List[str]) -> Dict[str, Set[str]]:
+    """Return the lexical token index alone, for callers that need only it."""
+    index, _ = scan_repository_references(search_dirs)
     return index
 
 
-def scan_for_dead_files() -> List[Dict[str, str]]:
+def scan_for_dead_files(
+    index: Optional[Dict[str, Set[str]]] = None,
+) -> List[Dict[str, str]]:
     """Generate review-only candidates from weak lexical evidence.
 
     A missing lexical reference cannot prove that code is unused. Dynamic
@@ -639,12 +695,11 @@ def scan_for_dead_files() -> List[Dict[str, str]]:
     if os.path.exists("README.md"):
         readme_content = read_file_content("README.md")
 
-    search_dirs = [".", "src", "lib", "packages", "docs"]
-    search_dirs = [d for d in search_dirs if os.path.exists(d)]
-
-    # Build index once
-    log_info("Building reference index...")
-    index = build_reference_index(search_dirs)
+    if index is None:
+        search_dirs = [".", "src", "lib", "packages", "docs"]
+        search_dirs = [d for d in search_dirs if os.path.exists(d)]
+        log_info("Building reference index...")
+        index = build_reference_index(search_dirs)
 
     for filepath in tracked_files:
         path = Path(filepath)
@@ -721,13 +776,29 @@ def scan_ingest_code_evidence(marker_path: str = ".ingest-code.json") -> Dict[st
 
     completed = marker.get("completed") is True and marker.get("run_status") == "complete"
     code_index = marker.get("code_index") if isinstance(marker.get("code_index"), dict) else {}
+    files_scanned = marker.get("files_scanned")
+    symbols_stored = code_index.get("symbols_stored", 0)
+    marker_warnings: List[str] = []
+    if completed and (not isinstance(files_scanned, int) or files_scanned <= 0):
+        marker_warnings.append(
+            "marker claims completion but files_scanned is zero or missing"
+        )
+    if completed and not code_index.get("enabled", False):
+        marker_warnings.append("marker claims completion but code_index.enabled is false")
+    if completed and code_index.get("treesitter", False) and symbols_stored == 0:
+        marker_warnings.append(
+            "marker claims Tree-sitter mode but stored zero structured symbols"
+        )
+    status = "complete" if completed and not marker_warnings else "incomplete"
     return {
         **base,
-        "status": "complete" if completed else "incomplete",
+        "status": status,
+        "marker_claimed_complete": completed,
+        "marker_warnings": marker_warnings,
         "repository_path": marker.get("path"),
         "ingested_at": marker.get("ingested_at"),
         "scope": marker.get("scope"),
-        "files_scanned": marker.get("files_scanned"),
+        "files_scanned": files_scanned,
         "edges_stored": marker.get("edges_stored"),
         "scan_roots": marker.get("scan_roots", []),
         "completed_scan_roots": marker.get("completed_scan_roots", []),
@@ -803,6 +874,531 @@ def validate_ingest_code_precondition(evidence: Dict[str, Any]) -> List[str]:
     return errors
 
 
+def describe_ingest_proof_limits(evidence: Dict[str, Any]) -> List[str]:
+    """State what the aggregate ingest marker can and cannot establish.
+
+    The marker holds scalar counters only. Reporting them beside cleanup
+    candidates without saying what they omit is how counts get mistaken for
+    per-file safety evidence.
+    """
+    limits = [
+        "coverage_proof=count_only: the marker compares a scanned-file count "
+        "against tracked code files; it does not prove which paths were scanned",
+        "freshness_proof=mtime_only: staleness is judged by filesystem mtime, "
+        "which is unreliable after checkout, copy, rebase, or clock change",
+        "edge_scope=python_imports_only: $ingest-code resolves dependency edges "
+        "from Python static imports; other languages, dynamic imports, CLI "
+        "entrypoints, and configuration references contribute no edges",
+        f"aggregate_only: edges_stored={evidence.get('edges_stored', 'unknown')} "
+        "is a storage count and says nothing about any individual candidate",
+    ]
+    for warning in evidence.get("marker_warnings", []) or []:
+        limits.append(f"marker_warning={warning}")
+    return limits
+
+
+def _working_tree_sha256(filepath: str) -> Optional[str]:
+    """Return the sha256 of a working-tree file, or None if unreadable."""
+    try:
+        return hashlib.sha256(Path(filepath).read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def scan_cleanup_evidence_artifact(
+    artifact_path: str = CLEANUP_EVIDENCE_FILENAME,
+) -> Dict[str, Any]:
+    """Read the per-candidate dependency evidence artifact.
+
+    This artifact — not the aggregate marker — is the only evidence source that
+    can support tracked-file mutation, because it carries exact scanned paths,
+    content hashes, parse outcomes, resolved edges, and per-candidate inbound
+    references. See references/cleanup-evidence-contract.md for the schema.
+    """
+    path = Path(artifact_path)
+    base: Dict[str, Any] = {
+        "artifact_path": str(path),
+        "contract": CLEANUP_EVIDENCE_CONTRACT,
+        "proves": (
+            "per-candidate inbound references, parse outcomes, and proof scope "
+            "for exactly the paths and content hashes it lists"
+        ),
+        "does_not_prove": (
+            "anything about paths it omits, languages outside its proof scope, "
+            "or references that exist only at runtime"
+        ),
+        "producer_command": (
+            f"{Path(__file__).resolve().parent.parent / 'ingest-code' / 'run.sh'} "
+            f"scan {Path.cwd()} --treesitter --cleanup-evidence"
+        ),
+    }
+    if not path.exists():
+        return {**base, "status": "missing"}
+
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        return {**base, "status": "invalid", "error": str(exc)}
+
+    if not isinstance(payload, dict):
+        return {**base, "status": "invalid", "error": "artifact must be a JSON object"}
+    if payload.get("contract") != CLEANUP_EVIDENCE_CONTRACT:
+        return {
+            **base,
+            "status": "invalid",
+            "error": f"unsupported contract: {payload.get('contract')!r}",
+        }
+    files = payload.get("files")
+    if not isinstance(files, dict):
+        return {**base, "status": "invalid", "error": "artifact must contain a files object"}
+
+    return {
+        **base,
+        "status": "complete" if payload.get("analysis_complete") is True else "incomplete",
+        "repository_path": payload.get("repository_path"),
+        "generated_at": payload.get("generated_at"),
+        "proof_scope": payload.get("proof_scope", {}),
+        "scan_failures": payload.get("scan_failures", []),
+        "files": files,
+    }
+
+
+def evaluate_candidate_dependency_evidence(
+    filepath: str,
+    artifact: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Join one cleanup candidate against the dependency evidence artifact.
+
+    Static evidence never authorizes mutation on its own. Even a candidate with
+    zero inbound references still requires project-native before/after readiness
+    proof, so ``mutation_allowed`` is False in every branch.
+    """
+    verdict: Dict[str, Any] = {
+        "path": filepath,
+        "evidence_source": artifact.get("artifact_path", CLEANUP_EVIDENCE_FILENAME),
+        "mutation_allowed": False,
+    }
+
+    if artifact.get("status") != "complete":
+        return {
+            **verdict,
+            "verdict": "no_dependency_evidence",
+            "reason": (
+                "cleanup evidence artifact status is "
+                f"{artifact.get('status', 'missing')!r}"
+            ),
+        }
+
+    record = artifact.get("files", {}).get(filepath)
+    if not isinstance(record, dict):
+        return {
+            **verdict,
+            "verdict": "outside_proof_scope",
+            "reason": "candidate is not covered by the evidence artifact",
+        }
+
+    recorded_hash = record.get("content_sha256")
+    if not recorded_hash or _working_tree_sha256(filepath) != recorded_hash:
+        return {
+            **verdict,
+            "verdict": "stale_evidence",
+            "reason": "working-tree content hash does not match the analyzed content",
+        }
+
+    parse_status = record.get("parse_status")
+    if parse_status == "not_analyzed":
+        return {
+            **verdict,
+            "verdict": "outside_analysis_scope",
+            "reason": (
+                f"language {record.get('language', 'unknown')!r} is outside the "
+                "edge-resolution scope, so an empty reference set proves nothing"
+            ),
+        }
+    if parse_status != "ok":
+        return {
+            **verdict,
+            "verdict": "parse_failed",
+            "reason": f"parse_status={parse_status!r}; edges are incomplete",
+        }
+
+    inbound = list(record.get("inbound_references", []))
+    entrypoints = list(record.get("entrypoint_references", []))
+    entry_kinds = list(record.get("entry_kinds", []))
+    dynamic = list(record.get("dynamic_reference_warnings", []))
+    verdict.update({
+        "inbound_references": inbound,
+        "entrypoint_references": entrypoints,
+        "entry_kinds": entry_kinds,
+        "dynamic_reference_warnings": dynamic,
+    })
+
+    # A pytest module or a `__main__` script runs without anything importing
+    # it, so an empty reference set says nothing about whether it is used.
+    if entry_kinds:
+        return {
+            **verdict,
+            "verdict": "entry_root",
+            "reason": f"file is an entry root by convention: {', '.join(entry_kinds)}",
+        }
+
+    if inbound or entrypoints:
+        return {
+            **verdict,
+            "verdict": "referenced",
+            "reason": "candidate has resolved inbound or entrypoint references",
+        }
+    if dynamic:
+        return {
+            **verdict,
+            "verdict": "unresolved_dynamic_references",
+            "reason": "analysis recorded dynamic references it could not resolve",
+        }
+    unresolved_sites = artifact.get("proof_scope", {}).get("unresolved_dynamic_site_count", 0)
+    return {
+        **verdict,
+        "verdict": "no_inbound_references",
+        "reason": (
+            "no inbound references inside the proof scope; mutation still "
+            "requires project-native before/after readiness proof"
+        ),
+        "proof_scope_caveats": (
+            [
+                f"{unresolved_sites} dynamic import sites in this repository "
+                "resolve no target, so any file could be reached at runtime"
+            ]
+            if unresolved_sites
+            else []
+        ),
+        "readiness_required": [
+            "run the project's sanity command before the move",
+            "run import/entrypoint smoke checks for the owning package",
+            "rerun both after the move and restore on failure",
+        ],
+    }
+
+
+def find_literal_references(needles: Set[str]) -> Dict[str, List[str]]:
+    """Return tracked text files that literally contain each needle path."""
+    if not needles:
+        return {}
+    _, hits = scan_repository_references(["."], literal_needles=needles)
+    return hits
+
+
+def junk_candidate_needles(untracked_files: List[str]) -> Set[str]:
+    """Return the literal paths whose provenance must be checked."""
+    return {f.rstrip("/") for f in untracked_files if is_junk_file(f)}
+
+
+def evaluate_junk_candidates(
+    untracked_files: List[str],
+    literal_hits: Optional[Dict[str, List[str]]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    """Decide, per path, whether an untracked junk-pattern file may be removed.
+
+    Dependency edges are irrelevant to this class: the mutation only ever
+    touches paths git does not track. The relevant evidence is untracked status,
+    the junk pattern that nominated the path, and the absence of a literal
+    reference from tracked code or configuration.
+    """
+    candidates = [f for f in untracked_files if is_junk_file(f)]
+    if not candidates:
+        return {}
+
+    tracked_files = get_all_tracked_files()
+    references = (
+        literal_hits
+        if literal_hits is not None
+        else find_literal_references(junk_candidate_needles(untracked_files))
+    )
+
+    verdicts: Dict[str, Dict[str, Any]] = {}
+    for candidate in candidates:
+        needle = candidate.rstrip("/")
+        referenced_by = references.get(needle, [])
+        if candidate in tracked_files or needle in tracked_files:
+            verdicts[candidate] = {
+                "path": candidate,
+                "removal_allowed": False,
+                "reason": "path is tracked by git; junk removal only covers untracked paths",
+                "referenced_by": referenced_by,
+            }
+        elif referenced_by:
+            verdicts[candidate] = {
+                "path": candidate,
+                "removal_allowed": False,
+                "reason": "tracked files reference this path literally; review before removal",
+                "referenced_by": referenced_by,
+            }
+        else:
+            verdicts[candidate] = {
+                "path": candidate,
+                "removal_allowed": True,
+                "reason": "untracked, matches a junk pattern, and no tracked file names it",
+                "referenced_by": [],
+            }
+    return verdicts
+
+
+def evaluate_mutation_readiness(
+    findings: Dict[str, Any],
+    ingest_evidence: Dict[str, Any],
+    evidence_artifact: Dict[str, Any],
+    junk_verdicts: Dict[str, Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Report phase states and per-class mutation authority.
+
+    Assessment never depends on indexing. Local dependency analysis, Memory
+    indexing, assessment, and mutation are tracked as separate states so a
+    Memory outage blocks only what it actually invalidates.
+    """
+    artifact_status = evidence_artifact.get("status", "missing")
+    marker_complete = ingest_evidence.get("status") == "complete"
+    marker_claimed_complete = ingest_evidence.get("marker_claimed_complete") is True
+
+    if artifact_status == "complete":
+        local_analysis = "complete"
+    elif artifact_status in {"incomplete", "invalid"}:
+        local_analysis = "incomplete"
+    elif marker_complete or marker_claimed_complete:
+        local_analysis = "unavailable_legacy_marker"
+    else:
+        local_analysis = "unavailable"
+
+    if marker_complete:
+        memory_indexing = "complete"
+    elif local_analysis == "complete":
+        memory_indexing = "blocked"
+    else:
+        memory_indexing = "unknown"
+
+    junk_allowed = [v["path"] for v in junk_verdicts.values() if v["removal_allowed"]]
+    junk_blocked = [v["path"] for v in junk_verdicts.values() if not v["removal_allowed"]]
+
+    if junk_allowed:
+        junk_status = "allowed"
+    elif junk_verdicts:
+        # Candidates existed and every one failed provenance. That is a blocked
+        # class, not an empty one; collapsing the two hides withheld paths.
+        junk_status = "blocked"
+    else:
+        junk_status = "no_candidates"
+
+    classes: Dict[str, Any] = {
+        "junk_untracked_removal": {
+            "status": junk_status,
+            "evidence_required": "untracked status + junk pattern + no literal tracked reference",
+            "allowed_paths": sorted(junk_allowed),
+            "blocked_paths": sorted(junk_blocked),
+            "note": (
+                "this class never touches tracked files, so it does not require "
+                "dependency edges or a repository-wide index"
+            ),
+        },
+        "tracked_file_mutation": {
+            "status": "blocked",
+            "evidence_required": (
+                "per-candidate dependency evidence from the cleanup evidence "
+                "artifact plus project-native before/after readiness proof"
+            ),
+            "reasons": [],
+            "candidate_count": len(findings.get("dead_files", [])),
+        },
+        "root_stray_mutation": {
+            "status": "review_only",
+            "evidence_required": "human owner decision; root paths may be runtime inputs",
+        },
+        "artifact_archive": {
+            "status": "review_only",
+            "evidence_required": "human owner decision; artifacts may be runtime inputs",
+        },
+    }
+
+    tracked_reasons = classes["tracked_file_mutation"]["reasons"]
+    if artifact_status != "complete":
+        tracked_reasons.append(
+            f"cleanup evidence artifact is {artifact_status}; run "
+            f"{evidence_artifact.get('producer_command', 'ingest-code with --cleanup-evidence')}"
+        )
+    candidate_verdicts = findings.get("candidate_dependency_evidence", [])
+    verdict_counts = Counter(
+        str(verdict.get("verdict", "unknown")) for verdict in candidate_verdicts
+    )
+    no_reference_candidates = verdict_counts.get("no_inbound_references", 0)
+    unusable_evidence_count = sum(
+        verdict_counts.get(verdict, 0)
+        for verdict in (
+            "no_dependency_evidence",
+            "outside_proof_scope",
+            "stale_evidence",
+            "parse_failed",
+            "outside_analysis_scope",
+        )
+    )
+    dependency_blocked_count = max(
+        len(candidate_verdicts) - no_reference_candidates - unusable_evidence_count,
+        0,
+    )
+    if candidate_verdicts:
+        classes["tracked_file_mutation"]["verdict_counts"] = dict(sorted(verdict_counts.items()))
+    if unusable_evidence_count:
+        tracked_reasons.append(
+            f"{unusable_evidence_count} candidates have missing, stale, failed, "
+            "or out-of-scope dependency evidence"
+        )
+    if dependency_blocked_count:
+        tracked_reasons.append(
+            f"{dependency_blocked_count} candidates have dependency evidence that "
+            "blocks mutation"
+        )
+    if no_reference_candidates:
+        tracked_reasons.append(
+            f"{no_reference_candidates} candidates have no inbound references "
+            "inside the current proof scope but still require readiness proof"
+        )
+    tracked_reasons.append(
+        "readiness proof is a separate project-native check and is never inferred "
+        "from static analysis"
+    )
+
+    mutation = "allowed_limited" if junk_allowed else "no_authorized_mutations"
+
+    return {
+        "phases": {
+            "local_dependency_analysis": local_analysis,
+            "memory_indexing": memory_indexing,
+            "assessment": "complete",
+            "mutation": mutation,
+        },
+        "mutation_classes": classes,
+        "proof_limits": describe_ingest_proof_limits(ingest_evidence)
+        + [
+            f"evidence_artifact_status={artifact_status}",
+            "unresolved_dynamic_sites="
+            + str(evidence_artifact.get("proof_scope", {}).get("unresolved_dynamic_site_count", 0))
+            + ": each one is a runtime path static analysis cannot follow",
+            "artifact_proof_scope="
+            + json.dumps(evidence_artifact.get("proof_scope", {}), sort_keys=True),
+        ],
+    }
+
+
+def unusable_evidence_errors(findings: Dict[str, Any]) -> List[str]:
+    """Return conditions under which cleanup cannot judge its own evidence.
+
+    Absent evidence is a known state that blocks mutation and exits 0. Corrupt
+    or foreign evidence is different: cleanup was handed something it cannot
+    trust, and continuing would mean guessing. That is the only exit-2 case.
+    """
+    errors: List[str] = []
+
+    artifact = findings.get("cleanup_evidence_artifact", {})
+    if artifact.get("status") == "invalid":
+        errors.append(
+            f"cleanup evidence artifact is unreadable: {artifact.get('error', 'unknown error')}"
+        )
+    else:
+        artifact_repo = artifact.get("repository_path")
+        if artifact_repo and Path(str(artifact_repo)).resolve() != Path.cwd().resolve():
+            errors.append(
+                f"cleanup evidence artifact belongs to {artifact_repo}, not this repository"
+            )
+
+    marker = findings.get("ingest_code_evidence", {})
+    if marker.get("status") == "invalid":
+        errors.append(f"ingest-code marker is unreadable: {marker.get('error', 'unknown error')}")
+
+    if not get_all_tracked_files() and findings.get("untracked_files"):
+        errors.append("git reported no tracked files; cleanup cannot establish provenance")
+
+    return errors
+
+
+def build_phase_receipt(
+    findings: Dict[str, Any],
+    readiness: Dict[str, Any],
+    actions_taken: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Build the resumable phase receipt for this cleanup invocation."""
+    ingest_evidence = findings.get("ingest_code_evidence", {})
+    evidence_artifact = findings.get("cleanup_evidence_artifact", {})
+    return {
+        "contract": CLEANUP_RECEIPT_CONTRACT,
+        "generated_at": datetime.now().isoformat(),
+        "repository_path": str(Path.cwd().resolve()),
+        "phases": readiness["phases"],
+        "mutation_classes": readiness["mutation_classes"],
+        "proof_limits": readiness["proof_limits"],
+        "inputs": {
+            "ingest_marker": {
+                "path": ingest_evidence.get("marker_path"),
+                "status": ingest_evidence.get("status"),
+                "marker_claimed_complete": ingest_evidence.get("marker_claimed_complete"),
+                "marker_warnings": ingest_evidence.get("marker_warnings", []),
+                "files_scanned": ingest_evidence.get("files_scanned"),
+                "code_index": ingest_evidence.get("code_index", {}),
+            },
+            "cleanup_evidence_artifact": {
+                "path": evidence_artifact.get("artifact_path"),
+                "status": evidence_artifact.get("status"),
+                "scan_failures": evidence_artifact.get("scan_failures", []),
+            },
+        },
+        "counts": {
+            "root_strays": len(findings.get("root_strays", [])),
+            "untracked_files": len(findings.get("untracked_files", [])),
+            "lexical_review_candidates": len(findings.get("dead_files", [])),
+            "outdated_docs": len(findings.get("outdated_docs", [])),
+        },
+        "actions_taken": actions_taken or [],
+        "unusable_evidence": unusable_evidence_errors(findings),
+        "resume_commands": [
+            evidence_artifact.get("producer_command", ""),
+            ingest_evidence.get("recommended_command", ""),
+        ],
+    }
+
+
+def write_phase_receipt(receipt: Dict[str, Any], receipt_path: str) -> Path:
+    """Persist the phase receipt so a blocked run stays resumable."""
+    path = Path(receipt_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(receipt, indent=2, default=str))
+    return path
+
+
+def get_last_commit_times() -> Dict[str, int]:
+    """Return the last commit timestamp for every path, in one git call.
+
+    Asking `git log -1 <file>` per file forks once per document; on a repo with
+    a few thousand tracked docs that dominates the entire run. One history walk
+    answers the same question for every path at once.
+    """
+    success, output = run_command(
+        ["git", "log", "--format=@%ct", "--name-only", "--no-renames"],
+        check=False,
+    )
+    if not success:
+        log_warning("Could not read git history for document staleness")
+        return {}
+
+    times: Dict[str, int] = {}
+    current: Optional[int] = None
+    for line in output.splitlines():
+        if line.startswith("@"):
+            try:
+                current = int(line[1:])
+            except ValueError:
+                current = None
+            continue
+        path = line.strip()
+        if path and current is not None and path not in times:
+            # History is newest-first, so the first sighting is the newest.
+            times[path] = current
+    return times
+
+
 def scan_for_outdated_docs() -> List[Dict[str, str]]:
     outdated = []
 
@@ -811,6 +1407,9 @@ def scan_for_outdated_docs() -> List[Dict[str, str]]:
         for filepath in get_all_tracked_files()
         if filepath.endswith(".md") and Path(filepath).name != "README.md"
     )
+    commit_times = get_last_commit_times()
+    now = datetime.now().timestamp()
+
     for filepath in tracked_docs:
         content = read_file_content(filepath)
 
@@ -821,22 +1420,16 @@ def scan_for_outdated_docs() -> List[Dict[str, str]]:
                 "reason": "Contains TODO/FIXME markers"
             })
 
-        success, output = run_command(
-            ["git", "log", "-1", "--format=%ct", filepath],
-            check=False
-        )
-        if success and output.strip():
-            try:
-                timestamp = int(output.strip())
-                age_days = (datetime.now().timestamp() - timestamp) / 86400
-                if age_days > 365:
-                    outdated.append({
-                        "path": filepath,
-                        "status": "stale",
-                        "reason": f"Not modified in {int(age_days)} days"
-                    })
-            except (ValueError, TypeError):
-                pass
+        timestamp = commit_times.get(filepath)
+        if timestamp is None:
+            continue
+        age_days = (now - timestamp) / 86400
+        if age_days > 365:
+            outdated.append({
+                "path": filepath,
+                "status": "stale",
+                "reason": f"Not modified in {int(age_days)} days"
+            })
 
     return outdated
 
@@ -846,7 +1439,6 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append("# Cleanup Plan")
     plan.append("")
     plan.append(f"Generated: {datetime.now().isoformat()}")
-    plan.append(f"Archive root: `{ARCHIVE_ROOT}`")
     plan.append("")
 
     ingest_evidence = findings.get("ingest_code_evidence", {})
@@ -860,6 +1452,10 @@ def generate_cleanup_plan(findings: Dict) -> str:
         f"- Structured symbols stored: "
         f"`{ingest_evidence.get('code_index', {}).get('symbols_stored', 'unknown')}`"
     )
+    if ingest_evidence.get("marker_claimed_complete") is True and ingest_evidence.get("status") != "complete":
+        plan.append("- Marker claim: `completed`, but aggregate proof is degraded")
+    for warning in ingest_evidence.get("marker_warnings", []) or []:
+        plan.append(f"- Warning: {warning}")
     plan.append(f"- Proves: {ingest_evidence.get('proves', 'ingest status only')}")
     plan.append(
         f"- Does not prove: "
@@ -869,6 +1465,43 @@ def generate_cleanup_plan(findings: Dict) -> str:
         f"- Refresh command: `{ingest_evidence.get('recommended_command', 'not available')}`"
     )
     plan.append("")
+
+    artifact = findings.get("cleanup_evidence_artifact", {})
+    readiness = findings.get("mutation_readiness", {})
+    plan.append("## Per-Candidate Dependency Evidence")
+    plan.append("")
+    plan.append(f"- Artifact: `{artifact.get('artifact_path', CLEANUP_EVIDENCE_FILENAME)}`")
+    plan.append(f"- Status: `{artifact.get('status', 'missing')}`")
+    plan.append(f"- Producer: `{artifact.get('producer_command', 'not available')}`")
+    if artifact.get("scan_failures"):
+        plan.append(f"- Scan failures: `{len(artifact['scan_failures'])}`")
+    plan.append("")
+    if readiness.get("phases"):
+        plan.append("| Phase | State |")
+        plan.append("|---|---|")
+        for phase, state in readiness["phases"].items():
+            plan.append(f"| `{phase}` | `{state}` |")
+        plan.append("")
+    if readiness.get("proof_limits"):
+        plan.append("Proof limits:")
+        plan.append("")
+        for limit in readiness["proof_limits"]:
+            plan.append(f"- {limit}")
+        plan.append("")
+
+    candidate_evidence = findings.get("candidate_dependency_evidence", [])
+    if candidate_evidence:
+        plan.append("### Candidate Verdicts")
+        plan.append("")
+        plan.append("| Candidate | Verdict | Inbound refs | Mutation |")
+        plan.append("|---|---|---|---|")
+        for verdict in candidate_evidence:
+            inbound = len(verdict.get("inbound_references", []))
+            plan.append(
+                f"| `{verdict['path']}` | `{verdict['verdict']}` | {inbound} | "
+                f"`{'allowed' if verdict.get('mutation_allowed') else 'blocked'}` |"
+            )
+        plan.append("")
 
     # Root strays (review only)
     if findings.get("root_strays"):
@@ -890,7 +1523,11 @@ def generate_cleanup_plan(findings: Dict) -> str:
         for change in findings["uncommitted_changes"]:
             plan.append(f"- `{change}`")
         plan.append("")
-        plan.append("**Action Required**: Review and commit or stash these changes.")
+        plan.append(
+            "**Action Required**: Run `--worktree-audit` and resolve these by "
+            "bucket. Commit only the coherent cleanup slice by explicit path. Do "
+            "not blanket-stash or blanket-commit a dirty worktree."
+        )
         plan.append("")
 
     # Untracked files
@@ -987,7 +1624,21 @@ def log_cleanup(findings: Dict, actions_taken: List[str]) -> None:
 
 
 def confirm_action(action: str) -> bool:
-    response = input(f"{action} [y/N]: ").strip().lower()
+    """Ask for confirmation, declining safely when there is nobody to ask.
+
+    Nightly and CI runs have no stdin. Prompting there used to raise EOFError,
+    which surfaced as a bare "Aborted." and exit 1 — a scheduler reads that as a
+    failed job rather than "declined, nothing was touched".
+    """
+    if not sys.stdin.isatty():
+        log_warning(f"{action} — declined automatically (no interactive stdin)")
+        log_warning("Pass --force to authorize this without a prompt")
+        return False
+    try:
+        response = input(f"{action} [y/N]: ").strip().lower()
+    except EOFError:
+        log_warning(f"{action} — declined automatically (stdin closed)")
+        return False
     return response in ("y", "yes")
 
 
@@ -1001,12 +1652,23 @@ def execute_cleanup(findings: Dict, force: bool = False) -> List[str]:
             f"Found {len(strays)} root-level review candidates; automatic archival is disabled"
         )
 
-    # ── 2. Remove junk files ─────────────────────────────────────────────
+    # ── 2. Remove junk files with per-path provenance ───────────────────
     untracked = findings.get("untracked_files", [])
-    junk_files = [f for f in untracked if is_junk_file(f)]
+    junk_verdicts = findings.get("junk_verdicts") or {}
+    pattern_matches = [f for f in untracked if is_junk_file(f)]
+    junk_files = [f for f in pattern_matches if junk_verdicts.get(f, {}).get("removal_allowed")]
+    withheld = [f for f in pattern_matches if f not in junk_files]
+
+    if withheld:
+        log_warning(f"{len(withheld)} junk-pattern paths withheld by provenance")
+        for f in withheld:
+            reason = junk_verdicts.get(f, {}).get(
+                "reason", "no provenance verdict was computed for this path"
+            )
+            log_warning(f"  {f}: {reason}")
 
     if junk_files:
-        log_info(f"Found {len(junk_files)} junk files to clean")
+        log_info(f"Found {len(junk_files)} junk files cleared for removal")
 
         for f in junk_files:
             if not force and not confirm_action(f"Remove junk file: {f}"):
@@ -1033,7 +1695,7 @@ def execute_cleanup(findings: Dict, force: bool = False) -> List[str]:
         )
 
     # ── 4. Remaining untracked ───────────────────────────────────────────
-    other_untracked = [f for f in untracked if not is_junk_file(f)]
+    other_untracked = [f for f in untracked if f not in junk_files]
     if other_untracked:
         log_info(f"Found {len(other_untracked)} other untracked files")
         log_info("Review these files - use 'git clean -i' for interactive cleanup")
@@ -1050,15 +1712,11 @@ def main(
     plan: bool = typer.Option(False, "--plan", help="Generate a Cleanup Plan markdown file"),
     execute: bool = typer.Option(False, "--execute", help="Perform cleanup actions (with confirmation)"),
     worktree_audit: bool = typer.Option(False, "--worktree-audit", help="Write a commit-safe dirty worktree ownership/risk audit"),
-    force: bool = typer.Option(False, "--force", help="Skip confirmation prompts for junk/archive (dead files still require confirmation)"),
+    force: bool = typer.Option(False, "--force", help="Skip confirmation prompts for junk removal only; cannot authorize any other mutation class"),
     output: str = typer.Option("CLEANUP_PLAN.md", "--output", help="Output file for plan"),
-    archive_root: Optional[str] = typer.Option(None, "--archive-root", help="Override archive destination path"),
+    receipt: str = typer.Option(DEFAULT_RECEIPT_PATH, "--receipt", help="Path for the resumable phase receipt"),
 ) -> None:
     """Deep codebase assessment and technical debt cleanup."""
-    global ARCHIVE_ROOT
-    if archive_root:
-        ARCHIVE_ROOT = Path(archive_root)
-
     if worktree_audit:
         audit = build_worktree_audit()
         output_path = Path(output)
@@ -1078,18 +1736,65 @@ def main(
 
     log_info("Starting assessment...")
 
+    all_untracked = get_untracked_files()
+    own_outputs = [f for f in all_untracked if is_cleanup_output(f)]
+    untracked_files = [f for f in all_untracked if not is_cleanup_output(f)]
+
+    # One pass over tracked text files answers both the dead-file token index
+    # and the junk-provenance literal search.
+    search_dirs = [d for d in [".", "src", "lib", "packages", "docs"] if os.path.exists(d)]
+    log_info("Scanning repository references...")
+    reference_index, literal_hits = scan_repository_references(
+        search_dirs, literal_needles=junk_candidate_needles(untracked_files)
+    )
+
     findings = {
         "root_strays": scan_root_strays(),
         "uncommitted_changes": get_git_status(),
-        "untracked_files": get_untracked_files(),
-        "dead_files": scan_for_dead_files(),
+        "untracked_files": untracked_files,
+        "own_cleanup_outputs": own_outputs,
+        "dead_files": scan_for_dead_files(reference_index),
         "outdated_docs": scan_for_outdated_docs(),
         "ingest_code_evidence": scan_ingest_code_evidence(),
+        "cleanup_evidence_artifact": scan_cleanup_evidence_artifact(),
     }
 
+    # Join each candidate against per-file dependency evidence. Assessment
+    # never depends on Memory: a blocked index degrades the verdicts, it does
+    # not stop the scan.
+    artifact = findings["cleanup_evidence_artifact"]
+    findings["candidate_dependency_evidence"] = [
+        evaluate_candidate_dependency_evidence(candidate["path"], artifact)
+        for candidate in findings["dead_files"]
+    ]
+    findings["junk_verdicts"] = evaluate_junk_candidates(
+        findings["untracked_files"], literal_hits=literal_hits
+    )
+    findings["ingest_proof_limits"] = describe_ingest_proof_limits(
+        findings["ingest_code_evidence"]
+    )
+    findings["mutation_readiness"] = evaluate_mutation_readiness(
+        findings,
+        findings["ingest_code_evidence"],
+        artifact,
+        findings["junk_verdicts"],
+    )
+
+    receipt_payload = build_phase_receipt(findings, findings["mutation_readiness"])
+
+    # Surfaced in every mode, not just --execute. Warnings go to stderr so
+    # --dry-run keeps a clean JSON stdout.
+    for error in receipt_payload["unusable_evidence"]:
+        log_warning(f"Unusable evidence: {error}")
+
     if dry_run:
+        # --dry-run makes no changes. The receipt is returned inline instead of
+        # written, so the mode keeps its "no writes" contract.
+        findings["phase_receipt"] = receipt_payload
         print(json.dumps(findings, indent=2, default=str))
         return
+
+    receipt_path = write_phase_receipt(receipt_payload, receipt)
 
     if plan:
         log_info("Generating cleanup plan...")
@@ -1099,30 +1804,60 @@ def main(
             f.write(cleanup_plan)
 
         log_info(f"Cleanup plan written to: {output}")
+        log_info(f"Phase receipt written to: {receipt_path}")
         log_info("Review the plan and run with --execute when ready")
         return
 
     if execute:
-        ingest_errors = validate_ingest_code_precondition(
-            findings["ingest_code_evidence"]
-        )
-        if ingest_errors:
-            log_error("Cleanup execution requires a current full ingest-code Tree-sitter scan")
-            for error in ingest_errors:
+        readiness = findings["mutation_readiness"]
+        junk_class = readiness["mutation_classes"]["junk_untracked_removal"]
+
+        log_info("Mutation authority by class:")
+        for name, detail in readiness["mutation_classes"].items():
+            log_info(f"  {name}: {detail['status']}")
+
+        # Withholding a candidate is cleanup working, not cleanup failing;
+        # execute_cleanup reports each withheld path. Exit 2 is reserved for
+        # evidence this run could not evaluate at all.
+        unusable = unusable_evidence_errors(findings)
+        if unusable:
+            log_error("Cleanup cannot evaluate the evidence it was given")
+            for error in unusable:
                 log_error(f"  {error}")
-            log_error(
-                f"Run first: {findings['ingest_code_evidence']['recommended_command']}"
-            )
+            log_error(f"Phase receipt: {receipt_path}")
             raise typer.Exit(code=2)
 
-        if findings["uncommitted_changes"]:
-            log_warning("You have uncommitted changes!")
-            for change in findings["uncommitted_changes"]:
+        # The guard exists to protect work cleanup is not responsible for.
+        # Counting the junk it is about to remove, or its own receipts, makes it
+        # ask permission because of the very files it was invoked to handle.
+        # `git status` collapses an untracked directory to `?? dir/`, so a
+        # membership test against file paths misses it. An entry is unrelated
+        # only if some path under it is something cleanup does not own.
+        unowned = {
+            path
+            for path in findings["untracked_files"]
+            if path not in set(junk_class.get("allowed_paths", []))
+        }
+        unrelated_changes = []
+        for change in findings["uncommitted_changes"]:
+            status, _, raw = change.partition(" ")
+            path = raw.strip().strip('"')
+            if status == "??":
+                if any(p == path or p.startswith(path.rstrip("/") + "/") for p in unowned):
+                    unrelated_changes.append(change)
+            else:
+                unrelated_changes.append(change)
+
+        if unrelated_changes:
+            log_warning(
+                f"{len(unrelated_changes)} uncommitted changes are unrelated to this cleanup"
+            )
+            for change in unrelated_changes:
                 log_warning(f"  {change}")
 
             if not force:
                 if not confirm_action("Continue anyway?"):
-                    log_info("Cleanup aborted.")
+                    log_info("Cleanup aborted; nothing was changed.")
                     return
 
         log_info("=" * 50)
@@ -1142,6 +1877,10 @@ def main(
             log_cleanup(findings, actions_taken)
             log_info("Cleanup logged to: local/CLEANUP_LOG.md")
 
+        receipt_path = write_phase_receipt(
+            build_phase_receipt(findings, readiness, actions_taken), receipt
+        )
+        log_info(f"Phase receipt written to: {receipt_path}")
         log_info(f"Cleanup complete. {len(actions_taken)} actions taken.")
         return
 
@@ -1155,12 +1894,17 @@ def main(
     log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
     log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
     log_info("=" * 50)
+    for phase_name, state in findings["mutation_readiness"]["phases"].items():
+        log_info(f"{phase_name}: {state}")
+    log_info(f"Phase receipt: {receipt_path}")
+    log_info("=" * 50)
     log_info("")
     log_info("Use --dry-run for JSON output")
     log_info("Use --plan to generate a cleanup plan")
     log_info("Use --worktree-audit to classify dirty worktree entries before commit")
-    log_info("Use --execute to perform cleanup (with confirmation)")
-    log_info("Use --execute --force to auto-archive artifacts")
+    log_info("Use --execute to remove cleared untracked junk (with confirmation)")
+    log_info("Use --execute --force to skip junk confirmation prompts")
+    log_info("Root artifacts, root strays, and tracked candidates are review-only")
 
 
 if __name__ == "__main__":
