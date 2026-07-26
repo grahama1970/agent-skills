@@ -52,8 +52,14 @@ def main() -> int:
     parser.add_argument("--no-activate", action="store_true")
     parser.add_argument(
         "--attach-file",
-        default="",
+        action="append",
+        default=[],
         help="Attach a file to the Claude message before submitting the prompt.",
+    )
+    parser.add_argument(
+        "--attach-files",
+        default="",
+        help="Comma-separated file paths to attach to the Claude message.",
     )
     args = parser.parse_args()
 
@@ -67,9 +73,10 @@ def main() -> int:
 
     if not input_path.is_file():
         raise SystemExit(f"Input file not found: {input_path}")
-    attach_file = Path(args.attach_file).expanduser() if args.attach_file else None
-    if attach_file and not attach_file.is_file():
-        raise SystemExit(f"--attach-file: file not found: {attach_file}")
+    attach_files = _normalize_attach_files(args.attach_file, args.attach_files)
+    for attach_file in attach_files:
+        if not attach_file.is_file():
+            raise SystemExit(f"--attach-file: file not found: {attach_file}")
     if "SURF_RUN_SH" not in os.environ and not Path("/tmp/surf.sock").exists():
         raise SystemExit("surf claude.submit requires the surf browser extension socket at /tmp/surf.sock.")
 
@@ -136,7 +143,7 @@ def main() -> int:
             raise SubmitFailure("No Claude tab id supplied, resolved, or remembered.")
         tab_identity_preflight = _assert_claude_tab(requested_tab_id, args.url)
         _ensure_claude_content_script_ready(requested_tab_id, content_script_recovery)
-        attachment = _attach_file(requested_tab_id, attach_file) if attach_file else None
+        attachments = _attach_files(requested_tab_id, attach_files) if attach_files else []
         _ensure_claude_content_script_ready(requested_tab_id, content_script_recovery)
         _submit_prompt(requested_tab_id, submitted_prompt)
         raw_text = _wait_for_sentinel(
@@ -163,8 +170,8 @@ def main() -> int:
             focus_after=focus_after,
             clean_text=clean_text,
             raw_text=raw_text,
-            attach_file=attach_file,
-            attachment=attachment,
+            attach_files=attach_files,
+            attachments=attachments,
             content_script_recovery=content_script_recovery,
             tab_identity_preflight=tab_identity_preflight,
         )
@@ -199,8 +206,8 @@ def main() -> int:
                     focus_after=focus_after,
                     clean_text=clean_text,
                     raw_text=raw_text,
-                    attach_file=attach_file,
-                    attachment=None,
+                    attach_files=attach_files,
+                    attachments=[],
                     content_script_recovery=content_script_recovery,
                     tab_identity_preflight=tab_identity_preflight,
                 )
@@ -373,7 +380,20 @@ def _submit_prompt(tab_id: str, prompt: str) -> None:
         _surf(["key", "Enter", "--tab-id", tab_id], timeout=60)
 
 
-def _attach_file(tab_id: str, attach_file: Path) -> dict[str, Any]:
+def _normalize_attach_files(values: list[str], comma_separated: str) -> list[Path]:
+    paths: list[Path] = []
+    for value in values:
+        if value:
+            paths.append(Path(value).expanduser())
+    if comma_separated:
+        for part in comma_separated.split(","):
+            part = part.strip()
+            if part:
+                paths.append(Path(part).expanduser())
+    return paths
+
+
+def _attach_files(tab_id: str, attach_files: list[Path]) -> list[dict[str, Any]]:
     expose_script = (
         "const input=document.querySelector('input[type=file][data-testid=file-upload],"
         "input[type=file][aria-label=\"Upload files\"]');"
@@ -390,15 +410,20 @@ def _attach_file(tab_id: str, attach_file: Path) -> dict[str, Any]:
     upload_ref = _find_ref(read, r'button "Upload files" \[(e\d+)\] type="file"')
     if not upload_ref:
         raise SubmitFailure("Claude upload file input ref not found after expose step")
-    attach_file_abs = attach_file.resolve()
-    _surf(["upload", "--ref", upload_ref, "--files", str(attach_file_abs), "--tab-id", tab_id], timeout=60)
-    visible = _wait_for_attachment(tab_id, attach_file_abs.name)
-    return {
-        "path": str(attach_file_abs),
-        "filename": attach_file_abs.name,
-        "upload_ref": upload_ref,
-        "preview_visible": visible,
-    }
+    resolved = [attach_file.resolve() for attach_file in attach_files]
+    _surf(["upload", "--ref", upload_ref, "--files", ",".join(str(path) for path in resolved), "--tab-id", tab_id], timeout=120)
+    attachments: list[dict[str, Any]] = []
+    for attach_file_abs in resolved:
+        visible = _wait_for_attachment(tab_id, attach_file_abs.name)
+        attachments.append(
+            {
+                "path": str(attach_file_abs),
+                "filename": attach_file_abs.name,
+                "upload_ref": upload_ref,
+                "preview_visible": visible,
+            }
+        )
+    return attachments
 
 
 def _wait_for_attachment(tab_id: str, filename: str) -> bool:
@@ -463,8 +488,8 @@ def _success_meta(
     focus_after: dict[str, Any],
     clean_text: str,
     raw_text: str,
-    attach_file: Path | None = None,
-    attachment: dict[str, Any] | None = None,
+    attach_files: list[Path] | None = None,
+    attachments: list[dict[str, Any]] | None = None,
     content_script_recovery: list[dict[str, Any]] | None = None,
     tab_identity_preflight: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -481,7 +506,19 @@ def _success_meta(
         focus_before.get("focusedWindowId") != focus_after.get("focusedWindowId")
         or focus_before.get("activeTabId") != focus_after.get("activeTabId")
     )
-    status = "completed" if not contamination and sentinel in raw_text and sentinel not in clean_text else "failed"
+    attach_files = attach_files or []
+    attachments = attachments or []
+    attachment_missing = bool(attach_files) and len(attachments) != len(attach_files)
+    attachment_preview_missing = any(item.get("preview_visible") is False for item in attachments)
+    status = (
+        "completed"
+        if not contamination
+        and sentinel in raw_text
+        and sentinel not in clean_text
+        and not attachment_missing
+        and not attachment_preview_missing
+        else "failed"
+    )
     return {
         "status": status,
         "failure": None if status == "completed" else "missing_sentinel_or_contaminated_clean_output",
@@ -502,10 +539,12 @@ def _success_meta(
             if args.model
             else None
         ),
-        "attach_file": str(attach_file.resolve()) if attach_file else None,
-        "attachment": attachment,
-        "attachment_missing": bool(attach_file and not attachment),
-        "attachment_preview_missing": bool(attachment and not attachment.get("preview_visible")),
+        "attach_file": str(attach_files[0].resolve()) if len(attach_files) == 1 else None,
+        "attach_files": [str(path.resolve()) for path in attach_files],
+        "attachment": attachments[0] if len(attachments) == 1 else None,
+        "attachments": attachments,
+        "attachment_missing": attachment_missing,
+        "attachment_preview_missing": attachment_preview_missing,
         "stable_polls": int(args.stable_polls),
         "timeout_s": int(args.timeout),
         "raw_contains_sentinel": sentinel in raw_text,
@@ -569,7 +608,8 @@ def _write_failed_meta(
             if args.model
             else None
         ),
-        "attach_file": str(Path(args.attach_file).expanduser()) if args.attach_file else None,
+        "attach_file": str(Path(args.attach_file[-1]).expanduser()) if args.attach_file else None,
+        "attach_files": [str(path) for path in _normalize_attach_files(args.attach_file, getattr(args, "attach_files", ""))],
         "attachment": None,
         "raw_contains_sentinel": sentinel in raw_text,
         "clean_contains_sentinel": False,

@@ -27,10 +27,12 @@ Options:
                             so an authenticated Gemini tab is already open.
   --attach-file PATH        Attach a file to the Gemini message (uses CDP
                             DOM.setFileInputFiles via the surf chatgpt --file
-                            flag). The prompt body is sent normally; Kimi
+                            flag). The prompt body is sent normally; Gemini
                             reads the attached file alongside it. Use this
                             instead of inlining large bundles in the prompt
                             to stay under the OS argv limit.
+  --attach-files PATHS      Comma-separated attachment paths. Gemini wrapper
+                            currently sends one file; pass one local bundle.
 EOF
 }
 
@@ -46,8 +48,19 @@ model=""
 tab_id=""
 target_url=""
 no_activate=0
-attach_file=""
+attach_files=()
 tab_state_file="${SURF_GEMINI_TAB_STATE:-/tmp/surf-gemini-controlled-tab-id}"
+
+add_attach_files_arg() {
+  local value="$1"
+  local IFS=','
+  local part
+  for part in $value; do
+    if [[ -n "$part" ]]; then
+      attach_files+=("$part")
+    fi
+  done
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -63,7 +76,8 @@ while [[ $# -gt 0 ]]; do
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
     --no-activate) no_activate=1; shift ;;
-    --attach-file) attach_file="${2:-}"; shift 2 ;;
+    --attach-file) attach_files+=("${2:-}"); shift 2 ;;
+    --attach-files) add_attach_files_arg "${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -157,7 +171,12 @@ if [[ "$no_activate" -eq 1 ]]; then
   args+=(--no-activate)
 fi
 
-if [[ -n "$attach_file" ]]; then
+if [[ "${#attach_files[@]}" -gt 1 ]]; then
+  echo "surf gemini.submit accepts --attach-files for flag parity, but this wrapper sends one attachment. Pass one local bundle." >&2
+  exit 2
+fi
+if [[ "${#attach_files[@]}" -eq 1 ]]; then
+  attach_file="${attach_files[0]}"
   if [[ ! -f "$attach_file" ]]; then
     echo "--attach-file: file not found: $attach_file" >&2
     exit 2

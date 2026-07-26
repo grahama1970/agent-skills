@@ -31,6 +31,8 @@ Options:
                             reads the attached file alongside it. Use this
                             instead of inlining large bundles in the prompt
                             to stay under the OS argv limit.
+  --attach-files PATHS      Comma-separated attachment paths. Kimi currently
+                            accepts one attachment; multiple paths fail closed.
 EOF
 }
 
@@ -47,9 +49,22 @@ reasoning="${SURF_KIMI_DEFAULT_REASONING:-High}"
 tab_id=""
 target_url=""
 no_activate=0
-attach_file=""
+attach_files=()
 attach_file_abs=""
 tab_state_file="${SURF_KIMI_TAB_STATE:-/tmp/surf-kimi-controlled-tab-id}"
+provider_busy_cooldown_s="${SURF_KIMI_PROVIDER_BUSY_COOLDOWN_SECONDS:-120}"
+provider_busy_retry_attempts="${SURF_KIMI_PROVIDER_BUSY_RETRY_ATTEMPTS:-1}"
+
+add_attach_files_arg() {
+  local value="$1"
+  local IFS=','
+  local part
+  for part in $value; do
+    if [[ -n "$part" ]]; then
+      attach_files+=("$part")
+    fi
+  done
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -66,7 +81,8 @@ while [[ $# -gt 0 ]]; do
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
     --no-activate) no_activate=1; shift ;;
-    --attach-file) attach_file="${2:-}"; shift 2 ;;
+    --attach-file) attach_files+=("${2:-}"); shift 2 ;;
+    --attach-files) add_attach_files_arg "${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -84,6 +100,10 @@ if [[ -z "${SURF_RUN_SH:-}" && ! -S /tmp/surf.sock ]]; then
   echo "surf kimi.submit requires the surf browser extension socket at /tmp/surf.sock." >&2
   echo "Run: surf setup" >&2
   exit 3
+fi
+if [[ "${#attach_files[@]}" -gt 1 ]]; then
+  echo "surf kimi.submit accepts --attach-files for flag parity, but Kimi transport currently supports one attachment. Pass one local bundle or choose another handler for multi-file upload." >&2
+  exit 2
 fi
 
 if [[ "$sentinel" == "auto" || -z "$sentinel" ]]; then
@@ -163,7 +183,8 @@ if [[ "$no_activate" -eq 1 ]]; then
   args+=(--no-activate)
 fi
 
-if [[ -n "$attach_file" ]]; then
+if [[ "${#attach_files[@]}" -eq 1 ]]; then
+  attach_file="${attach_files[0]}"
   if [[ ! -f "$attach_file" ]]; then
     echo "--attach-file: file not found: $attach_file" >&2
     exit 2
@@ -177,15 +198,30 @@ fi
 focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-set +e
-if command -v timeout >/dev/null 2>&1; then
-  hard_timeout_s=$((timeout_s + 60))
-  timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
-else
-  "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
-fi
-status=$?
-set -e
+provider_busy_cooldown_count=0
+attempt=0
+while true; do
+  set +e
+  if command -v timeout >/dev/null 2>&1; then
+    hard_timeout_s=$((timeout_s + 60))
+    timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+  else
+    "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+  fi
+  status=$?
+  set -e
+  haystack="$(cat "$stderr_log" "$raw_tmp" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
+  if [[ "$haystack" == *"system is currently busy"* || "$haystack" == *"temporarily busy"* || "$haystack" == *"high demand"* || "$haystack" == *"capacity is busy"* || "$haystack" == *"please try again later"* ]]; then
+    if [[ "$attempt" -lt "$provider_busy_retry_attempts" ]]; then
+      attempt=$((attempt + 1))
+      provider_busy_cooldown_count=$((provider_busy_cooldown_count + 1))
+      echo "Kimi provider busy; cooling down ${provider_busy_cooldown_s}s before retry ${attempt}/${provider_busy_retry_attempts}." >&2
+      sleep "$provider_busy_cooldown_s"
+      continue
+    fi
+  fi
+  break
+done
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Post-run focus snapshot for proof.
@@ -194,15 +230,18 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$provider_busy_cooldown_s" "$provider_busy_cooldown_count" "$provider_busy_retry_attempts" "$attach_file_abs" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, requested_model, requested_reasoning = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, requested_model, requested_reasoning, cooldown_s, cooldown_count, retry_attempts, attach_file = sys.argv[1:]
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
-lower_stderr = stderr_text.lower()
+raw_text = pathlib.Path(raw).read_text(errors="replace") if pathlib.Path(raw).exists() else ""
+lower_stderr = (stderr_text + "\n" + raw_text).lower()
 kimi_provider_capacity_busy = (
     "kimi provider capacity busy" in lower_stderr
     or "system is currently busy" in lower_stderr
     or "capacity is busy" in lower_stderr
+    or "temporarily busy" in lower_stderr
+    or "high demand" in lower_stderr
     or "please try again later" in lower_stderr
 )
 pathlib.Path(meta).write_text(json.dumps({
@@ -224,6 +263,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_url": target_url or None,
     "requested_model": requested_model or None,
     "requested_reasoning": requested_reasoning or None,
+    "attach_file": attach_file or None,
+    "provider_busy_cooldown_seconds": int(cooldown_s),
+    "provider_busy_cooldown_count": int(cooldown_count),
+    "provider_busy_retry_attempts": int(retry_attempts),
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -233,11 +276,16 @@ PY
 fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$provider_busy_cooldown_s" "$provider_busy_cooldown_count" "$provider_busy_retry_attempts" "$attach_file_abs" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, requested_model, requested_reasoning = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, requested_model, requested_reasoning, cooldown_s, cooldown_count, retry_attempts, attach_file = sys.argv[1:]
+text = pathlib.Path(raw).read_text(errors="replace") if pathlib.Path(raw).exists() else ""
+busy = any(needle in text.lower() for needle in ["system is currently busy", "temporarily busy", "high demand", "capacity is busy", "please try again later"])
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
+    "failure": "kimi_provider_capacity_busy" if busy else "missing_sentinel",
+    "blocker": "BLOCKED_KIMI_PROVIDER_CAPACITY" if busy else None,
+    "proof_status": "provider_capacity_limited" if busy else "submitted_no_response_proof",
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -248,6 +296,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_url": target_url or None,
     "requested_model": requested_model or None,
     "requested_reasoning": requested_reasoning or None,
+    "attach_file": attach_file or None,
+    "provider_busy_cooldown_seconds": int(cooldown_s),
+    "provider_busy_cooldown_count": int(cooldown_count),
+    "provider_busy_retry_attempts": int(retry_attempts),
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -270,9 +322,9 @@ clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$attach_file_abs" "$model" "$reasoning" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$attach_file_abs" "$model" "$reasoning" "$provider_busy_cooldown_s" "$provider_busy_cooldown_count" "$provider_busy_retry_attempts" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, attach_file, requested_model, requested_reasoning = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, attach_file, requested_model, requested_reasoning, cooldown_s, cooldown_count, retry_attempts = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -382,6 +434,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "attachment": attachment,
     "attachment_missing": attachment_missing,
     "attachment_preview_missing": attachment_preview_missing,
+    "provider_busy_cooldown_seconds": int(cooldown_s),
+    "provider_busy_cooldown_count": int(cooldown_count),
+    "provider_busy_retry_attempts": int(retry_attempts),
     "stable_polls": int(stable),
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,

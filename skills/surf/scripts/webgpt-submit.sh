@@ -79,6 +79,8 @@ Options:
                             reads the attached file alongside it. Use this
                             instead of inlining large bundles in the prompt
                             to stay under the OS argv limit.
+  --attach-files PATHS      Comma-separated attachment paths. ChatGPT wrapper
+                            currently sends one file; pass one local bundle.
   --warn-only               Downgrade preflight path warnings from block to warn.
   --require-attachment PATTERN
                             After response, verify a downloadable file button
@@ -119,7 +121,7 @@ no_activate=0
 create_tab=0
 no_remember=0
 allow_foreground_controlled=0
-attach_file=""
+attach_files=()
 roundtrip_preflight=0
 roundtrip_timeout_s="${SURF_WEBGPT_ROUNDTRIP_PREFLIGHT_TIMEOUT:-60}"
 roundtrip_output_dir=""
@@ -131,6 +133,17 @@ require_attachment=""
 auto_download_patterns=()
 verify_cmd=""
 repo_root=""
+
+add_attach_files_arg() {
+  local value="$1"
+  local IFS=','
+  local part
+  for part in $value; do
+    if [[ -n "$part" ]]; then
+      attach_files+=("$part")
+    fi
+  done
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -162,7 +175,8 @@ while [[ $# -gt 0 ]]; do
     --create-tab) create_tab=1; shift ;;
     --no-remember) no_remember=1; shift ;;
     --allow-foreground-controlled) allow_foreground_controlled=1; no_activate=1; shift ;;
-    --attach-file) attach_file="${2:-}"; shift 2 ;;
+    --attach-file) attach_files+=("${2:-}"); shift 2 ;;
+    --attach-files) add_attach_files_arg "${2:-}"; shift 2 ;;
     --warn-only) warn_only=1; shift ;;
     --require-attachment) require_attachment="${2:-}"; shift 2 ;;
     --auto-download) auto_download_patterns+=("${2:-}"); shift 2 ;;
@@ -431,7 +445,12 @@ PY
 }
 
 attach_file_abs=""
-if [[ -n "$attach_file" ]]; then
+if [[ "${#attach_files[@]}" -gt 1 ]]; then
+  echo "surf webgpt.submit accepts --attach-files for flag parity, but this wrapper sends one attachment. Pass one local bundle or zip." >&2
+  exit 2
+fi
+if [[ "${#attach_files[@]}" -eq 1 ]]; then
+  attach_file="${attach_files[0]}"
   if [[ ! -f "$attach_file" ]]; then
     echo "--attach-file: file not found: $attach_file" >&2
     exit 2

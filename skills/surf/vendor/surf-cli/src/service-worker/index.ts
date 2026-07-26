@@ -54,6 +54,10 @@ const providerUploadStrategies = {
     directInputSelector: 'form input[type="file"]:not([accept*="image"]), input[type="file"]:not([accept*="image"]), input[type="file"]',
     openerSelector: 'button[data-testid="composer-plus-btn"], button[aria-label="Add files and more"]',
   },
+  grok: {
+    directInputSelector: 'input[type="file"]',
+    openerSelector: 'button[aria-label*="Attach"], button[data-testid="attach-button"], button[aria-label*="Upload"]',
+  },
 };
 
 async function setFileInputFilesBySelector(
@@ -78,7 +82,7 @@ async function setFileInputFilesBySelector(
 async function uploadFilesWithChooser(
   tabId: number,
   filePaths: string[],
-  provider: "gemini" | "chatgpt",
+  provider: "gemini" | "chatgpt" | "grok",
 ): Promise<void> {
   await cdp.sendCommand(tabId, "Page.setInterceptFileChooserDialog", { enabled: true });
 
@@ -126,6 +130,13 @@ async function uploadFilesWithChooser(
       });
       return;
     }
+    if (provider === "grok") {
+      await cdp.sendCommand(tabId, "Runtime.evaluate", {
+        expression: `document.querySelector(${JSON.stringify(providerUploadStrategies.grok.openerSelector)})?.click()`,
+        userGesture: true,
+      });
+      return;
+    }
 
     await cdp.sendCommand(tabId, "Runtime.evaluate", {
       expression: `document.querySelector(${JSON.stringify(providerUploadStrategies.chatgpt.openerSelector)})?.click()`,
@@ -158,7 +169,7 @@ async function uploadFilesWithChooser(
 }
 
 async function uploadFilesToProviderTab(
-  provider: "gemini" | "chatgpt",
+  provider: "gemini" | "chatgpt" | "grok",
   tabId: number,
   filePaths: string[],
 ): Promise<{ success: true }> {
@@ -170,6 +181,14 @@ async function uploadFilesToProviderTab(
       tabId,
       filePaths,
       providerUploadStrategies.chatgpt.directInputSelector,
+    );
+    if (directUpload) return { success: true };
+  }
+  if (provider === "grok") {
+    const directUpload = await setFileInputFilesBySelector(
+      tabId,
+      filePaths,
+      providerUploadStrategies.grok.directInputSelector,
     );
     if (directUpload) return { success: true };
   }
@@ -3563,7 +3582,7 @@ export async function handleMessage(
       if (!uploadTabId || !filePaths?.length) {
         throw new Error(`${message.type} requires tabId and filePaths`);
       }
-      if (provider !== "gemini" && provider !== "chatgpt") {
+      if (provider !== "gemini" && provider !== "chatgpt" && provider !== "grok") {
         throw new Error(`Unsupported upload provider: ${provider}`);
       }
       return uploadFilesToProviderTab(provider, uploadTabId, filePaths);

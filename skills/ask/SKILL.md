@@ -232,6 +232,13 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `$browser-oracle` from Tau command specs. Use `--handler-project
   handler=project` when the browser-oracle project differs from the handler
   name, for example `--handler-project webgpt=tau`.
+- **Browser attachments**: project agents should not reason provider-by-provider
+  for local bundles. Put readable local evidence in one bundle when possible
+  and let `$ask` forward it to Surf as `--attach-file`; Surf browser wrappers
+  also accept `--attach-files` for direct debugging. Supported browser handlers
+  are `webgpt`, `webclaude`, `webkimi`, `webgemini`, and `webgrok`. If a
+  provider cannot accept the specific file shape, Surf fails closed with
+  attachment metadata; do not silently inline a huge bundle.
 - **Evidence**: `--json` returns the Ask Tau bundle path, provider/handler gate,
   and Tau execution receipt when `--execute` is used. Preserve `dag.json`,
   command specs, node receipts, and join receipts.
@@ -507,6 +514,12 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   as `browser_provider_rate_limited`. Preserve the recovery packet and use a
   different handler or rerun later; do not keep submitting Kimi prompts into a
   capacity-busy tab.
+- If WebKimi or WebGrok reports `System is currently busy`, `capacity is busy`,
+  `BLOCKED_KIMI_PROVIDER_CAPACITY`, `BLOCKED_GROK_PROVIDER_CAPACITY`, or
+  `proof_status: provider_capacity_limited`, treat it as a lane-local provider
+  capacity limit. Surf may wait a bounded cooldown and retry that one lane, but
+  the project agent must not pause, cancel, or rerun healthy roundtable or
+  competition participants because another participant is cooling down.
 - Do not use raw `surf` as a substitute for `$ask`; use it only for transport
   debugging, direct project-level WebGPT workflows, or Tau command specs emitted
   by `./run.sh tau-dag`.

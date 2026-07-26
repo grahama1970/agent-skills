@@ -797,6 +797,30 @@ then presses Enter if the click leaves the editor full. Metadata records
 `tab_bound_control_proof: exact_tab_prompt_verified_submit_observed` for this
 path.
 
+For explicit `--tab-id` Grok runs, `grok.submit` uses generic Surf exact-tab
+control by default: focus the Grok composer with `surf js`, send the prompt
+with `surf type --clear --submit --tab-id <id>`, and poll the DOM until the
+current sentinel appears. This avoids stale installed extensions that do not
+yet support native `GROK_EVALUATE`. Set `SURF_GROK_NATIVE_EXACT_TAB_FIRST=1`
+only for debugging the native Grok path. The proof metadata records
+`transport_fallback: generic_surf_js_type_submit` in `fallback_summary`.
+
+All browser submit wrappers accept `--attach-file PATH` and `--attach-files
+PATH[,PATH...]` for one simple project-agent contract. Prefer one local bundle.
+Claude can upload multiple files directly. WebGPT, Gemini, and Kimi currently
+send one attachment and fail closed if multiple files are passed. Grok uploads
+through its visible file input when available; if Grok exposes no upload input
+or no preview appears, `grok.submit` fails with attachment evidence instead of
+pretending the file was attached.
+
+If a provider says `System is currently busy`, `capacity is busy`, or a similar
+provider-capacity message, only that submit wrapper waits. Kimi and Grok use
+bounded lane-local cooldowns by default
+(`SURF_KIMI_PROVIDER_BUSY_COOLDOWN_SECONDS`,
+`SURF_GROK_PROVIDER_BUSY_COOLDOWN_SECONDS`; retry counts default to one). In
+Ask/Tau roundtables or competitions, do not pause or rerun healthy participant
+lanes because another lane is cooling down.
+
 If the Grok editor still contains the prompt after both the click and Enter
 paths, `grok.submit` fails closed instead of pretending the browser accepted the
 task. Do not retry a large bundle until a tiny sentinel ping succeeds.

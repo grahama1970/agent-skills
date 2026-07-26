@@ -246,7 +246,7 @@ def test_stale_raw_capture_takes_precedence_over_missing_sentinel(tmp_path: Path
     assert "stale" in packet["fallback_instruction"]
 
 
-def test_webclaude_does_not_auto_retry_even_with_readable_bundle_until_transport_supports_attach_file(
+def test_webclaude_auto_retry_uses_readable_bundle_when_transport_supports_attach_file(
     tmp_path: Path,
 ) -> None:
     bundle = tmp_path / "review-bundle.md"
@@ -260,10 +260,12 @@ def test_webclaude_does_not_auto_retry_even_with_readable_bundle_until_transport
 
     assert packet["failure_code"] == "repo_access_blocked"
     assert packet["local_readable_bundle_paths"] == [str(bundle)]
-    assert packet["attach_file_supported"] is False
-    assert packet["auto_retry_allowed"] is False
-    assert packet["auto_retry_blocked_reason"] == "handler_transport_does_not_support_attach_file"
-    assert "does not expose --attach-file" in packet["fallback_instruction"]
+    assert packet["attach_file_supported"] is True
+    assert packet["auto_retry_allowed"] is True
+    assert packet["auto_retry_blocked_reason"] is None
+    assert "--attach-file" in packet["next_command"]
+    assert packet["next_command"][packet["next_command"].index("--attach-file") + 1] == str(bundle)
+    assert "attached" in packet["fallback_instruction"]
 
 
 def test_surf_browser_lock_timeout_is_transport_blocker_with_owner_metadata(tmp_path: Path) -> None:

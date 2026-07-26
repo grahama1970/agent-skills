@@ -33,7 +33,7 @@ HANDLER_SUBMIT_COMMANDS = {
     "webgemini": "gemini.submit",
     "webgrok": "grok.submit",
 }
-ATTACH_FILE_HANDLERS = {"webgpt", "webkimi", "webgemini"}
+ATTACH_FILE_HANDLERS = {"webgpt", "webclaude", "webkimi", "webgemini", "webgrok"}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
 WEBGPT_CONVERSATION_FULL_BLOCKER = "BLOCKED_WEBGPT_CONVERSATION_FULL"
 WEBGPT_BINDING_STALE_BLOCKER = "BLOCKED_WEBGPT_BINDING_STALE"
@@ -1277,6 +1277,10 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
         return True
     if meta.get("kimi_provider_capacity_busy") is True:
         return True
+    if meta.get("failure") in {"kimi_provider_capacity_busy", "grok_provider_capacity_busy"}:
+        return True
+    if meta.get("blocker") in {"BLOCKED_KIMI_PROVIDER_CAPACITY", "BLOCKED_GROK_PROVIDER_CAPACITY"}:
+        return True
     rate_limit = meta.get("chatgpt_rate_limit")
     if isinstance(rate_limit, dict) and rate_limit.get("exhausted") is True:
         return True
@@ -1288,7 +1292,9 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
         "system is currently busy",
         "capacity is busy",
         "kimi_provider_capacity_busy",
+        "grok_provider_capacity_busy",
         "blocked_kimi_provider_capacity",
+        "blocked_grok_provider_capacity",
         "provider_capacity_limited",
         "temporarily limited access",
         "rate_limited",

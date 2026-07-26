@@ -4,7 +4,7 @@ const networkStore = require("./network-store.cjs");
 
 function buildProviderUploadMessage(provider, tabId, filePaths, id) {
   const normalizedProvider = String(provider || "").toLowerCase();
-  if (!["chatgpt", "gemini"].includes(normalizedProvider)) {
+  if (!["chatgpt", "gemini", "grok"].includes(normalizedProvider)) {
     throw new Error(`Unsupported upload provider: ${provider}`);
   }
   return { type: "AI_UPLOAD_FILE_TO_TAB", provider: normalizedProvider, tabId, filePaths, id };
