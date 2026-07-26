@@ -297,14 +297,26 @@ Read this carefully, because it is easy to overclaim:
 - D has HIGHER accuracy than R (0.7656 vs 0.7500) but WORSE Brier (0.3426 vs
   0.2879), because a single dream trajectory commits confidently to a guess and
   is penalised when wrong. A condition can now lose, which is the point.
-- CD's advantage follows from the estimator definitions written in
-  `run_condition_evidence_comparison.py` -- CD is the only condition defined to
-  test both hypotheses against the observed prior action. **This is not evidence
-  that live counterfactual dreaming helps.** It establishes that the measurement
-  apparatus can separate conditions and can rank CD last if CD reasons badly.
-- The deltas take only 2 distinct values (0.0 and -0.4542), so the metric is
-  discriminating but coarse. Graded evidence strength would be needed for a
-  finer-grained per-episode signal.
+- **RETRACTED 2026-07-26, same day. The CD result above is a tautology and must
+  not be cited as evidence.** I built 16 episodes that only CD's method can
+  resolve, and CD resolved exactly those 16 -- the identical set, confirmed by
+  comparing the designed set against the win set. The 64 paired values contain
+  only two numbers, `0.0` 48 times and `-0.4542` 16 times, so the entire result
+  is the count 16-of-64 times a constant. The bootstrap interval quoted above is
+  a binomial interval on 16-of-64, rescaled; presenting it as a paired bootstrap
+  made a readback of my own corpus design look like a measurement with
+  uncertainty. This is the v1 defect repeated one level up: v1 wrote the answer
+  into a constants table, v2 wrote it into the corpus structure.
+- **Also retracted: "D has higher accuracy than R but worse Brier."** That gap
+  is driven by a typed constant `COMMITTED = 0.70` in
+  `run_condition_evidence_comparison.py` -- the same 0.70 this section
+  criticizes. Sweeping it 0.45 to 0.90 moves D's Brier from 0.3141 to 0.4318
+  while D's accuracy never leaves 0.7656. The accuracy edge over R (0.7656 vs
+  0.7500) is one episode of hash luck.
+- What survives: the v1 lane cannot test its own hypothesis (all 128 labels are
+  TRUE), and the degenerate-claim gate correctly blocks it. The v2 corpus is a
+  balanced-label fixture, usable as a fixture. Its *comparison result* is not
+  evidence of anything.
 
 The same gate that blocks the v1 lane passes the v2 lane, which is the intended
 discrimination:

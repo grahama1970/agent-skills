@@ -34,7 +34,7 @@
     "source_memory_write_attempts": 0,
     "status_errors": 0
   },
-  "created_at": "2026-07-26T17:44:53Z",
+  "created_at": "2026-07-26T18:00:15Z",
   "errors": [],
   "fixture_backed": true,
   "human_content_judgment_rows": 0,
@@ -91,7 +91,7 @@
     }
   ],
   "provider_call_attempts": 0,
-  "receipt_sha256": "sha256:ff1d214e04dcc7103c7035b70b50dbe4979d647524c99f46c07b2bf870ba929c",
+  "receipt_sha256": "sha256:4698e11eefae95ec3da0d81cdd2a2824b0c3fee655e8975a9e61cbe05d29d4c1",
   "required_receipts": [
     {
       "expected_status": "PASS_PCTOM_R2_CONTRACT",
@@ -162,7 +162,7 @@
       "observed_status": "PASS_PCTOM_ARCHIVE_INTEGRITY",
       "path": "receipts/pctom-archive-integrity-audit.v1.json",
       "receipt_id": "archive_integrity",
-      "sha256": "sha256:b197c1636ffea1733554e85056bfb4b6f2be795112daafd00e205129219bd660",
+      "sha256": "sha256:536386736606dc9df770311234af8d3403b84504d1b609d9c89aa25cb8f24132",
       "status_ok": true
     },
     {
@@ -170,7 +170,7 @@
       "observed_status": "PASS_PCTOM_RECEIPT_DISCOVERY",
       "path": "receipts/pctom-receipt-discovery-audit.v1.json",
       "receipt_id": "receipt_discovery",
-      "sha256": "sha256:1204f8faead0a9f28b739d5d692b91f270f452f43024c64392f76cc10ee1f4b9",
+      "sha256": "sha256:1228a8be2184670daa3ea9281c5551bc6c640c068fcf9f2745a1b9ec2377cffc",
       "status_ok": true
     },
     {

@@ -17,12 +17,12 @@
     "schemas": 34,
     "scripts": 111
   },
-  "created_at": "2026-07-26T17:44:52Z",
+  "created_at": "2026-07-26T18:00:15Z",
   "errors": [],
   "fixture_backed": true,
   "live": false,
   "manifest_path": "evidence/pctom-archive-manifest.v1.json",
-  "manifest_sha256": "sha256:8bf411fea94322ca38cc656da77ec5d5998b2e104ca6affa46d71cf07faf3cf8",
+  "manifest_sha256": "sha256:4391a1558d812eb08b1773785d01b24a394bd5158248bab2cde499ab1394314d",
   "memory_write_attempts": 0,
   "mocked": false,
   "negative_fixture_results": [

@@ -5,7 +5,7 @@
     "schemas": 34,
     "scripts": 111
   },
-  "created_at": "2026-07-26T17:44:52Z",
+  "created_at": "2026-07-26T18:00:14Z",
   "entries": [
     {
       "category": "contracts",
@@ -106,7 +106,7 @@
     {
       "category": "evidence",
       "path": "evidence/pctom-external-proof-archive.v1.json",
-      "sha256": "sha256:132cf236b0fe364959d33b8ceb9788648f5bb3b34e1169324f7c9a8825391330",
+      "sha256": "sha256:30ad4cf688770fdeb86da35a3cc01b15697cb3776f16cbd4856f995e1492a263",
       "size_bytes": 5698737
     },
     {
@@ -1736,7 +1736,7 @@
       "size_bytes": 30353
     }
   ],
-  "entries_sha256": "sha256:85891cde05a6766d595c6152dea12807b5096314a2e594e9328fb670a9a611f3",
+  "entries_sha256": "sha256:bd3b69eb30d263f7483c625de9c774830bf4d6ceb50bd09922418d340241b05c",
   "excluded_paths": [
     "evidence/pctom-archive-manifest.v1.json"
   ],
