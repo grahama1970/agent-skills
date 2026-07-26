@@ -76,7 +76,16 @@ const assistantSnapshotExpression = (sentinel) => {
     const stopVisible = Boolean(document.querySelector(STOP_SELECTOR));
     const isUserNode = (node) => {
       if (!(node instanceof HTMLElement)) return true;
-      if (node.closest('[data-message-author-role="user"], [data-testid*="user"], [class*="user-message"], [class*="UserMessage"]')) return true;
+      if (node.closest([
+        '[data-message-author-role="user"]',
+        '[data-testid*="user"]',
+        '[class*="user-message"]',
+        '[class*="UserMessage"]',
+        'user-query-content',
+        '.user-query-container',
+        '.query-content',
+        '[id^="user-query-content-"]',
+      ].join(', '))) return true;
       return false;
     };
     const nodes = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
@@ -84,9 +93,17 @@ const assistantSnapshotExpression = (sentinel) => {
     let text = '';
     let source = 'page-text';
     if (nodes.length) {
-      const last = nodes[nodes.length - 1];
-      text = (last.innerText || last.textContent || '').trim();
-      source = 'assistant-dom';
+      const candidates = nodes.map((node) => ({
+        node,
+        text: (node.innerText || node.textContent || '').trim(),
+      })).filter((candidate) => candidate.text.length > 0);
+      const selected = SENTINEL
+        ? [...candidates].reverse().find((candidate) => candidate.text.includes(SENTINEL))
+        : candidates[candidates.length - 1];
+      if (selected) {
+        text = selected.text;
+        source = 'assistant-dom';
+      }
     }
     if (!text) {
       const marker = 'Gemini said';
@@ -691,4 +708,9 @@ async function query(options) {
   }
 }
 
-module.exports = { query, extractAssistantResponse, GEMINI_TAB_URL };
+module.exports = {
+  query,
+  extractAssistantResponse,
+  assistantSnapshotExpression,
+  GEMINI_TAB_URL,
+};

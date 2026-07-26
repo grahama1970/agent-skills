@@ -272,17 +272,25 @@ raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
 tab_id = None
+tab_id_source = None
 activated = None
 tab_was_created = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
+        tab_id_source = "stderr"
+    elif line.startswith("ControlledTabID:") and tab_id is None:
+        tab_id = line.split(":", 1)[1].strip()
+        tab_id_source = "stderr_controlled_tab_id"
     elif line.startswith("Activated:") and activated is None:
         activated = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TabWasCreated:") and tab_was_created is None:
         tab_was_created = line.split(":", 1)[1].strip() == "true"
     if tab_id is not None and activated is not None and tab_was_created is not None:
         break
+if tab_id is None and requested_tab_id:
+    tab_id = requested_tab_id
+    tab_id_source = "requested_tab_id_fallback"
 contamination = []
 for needle in [
     "Skip to content",
@@ -356,6 +364,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "controlled_tab_id": tab_id,
+    "controlled_tab_id_source": tab_id_source,
     "controlled_tab_id_mismatch": tab_mismatch,
     "no_activate": no_activate,
     "tab_was_created": tab_was_created,
