@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "surf.provider_result.v1",
+  "title": "Surf provider result",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "provider",
+    "proof_status",
+    "delivery",
+    "target",
+    "model",
+    "artifacts",
+    "immutable_request_snapshot",
+    "retryability",
+    "stale_binding_repair",
+    "bounded_error"
+  ],
+  "properties": {
+    "schema": { "const": "surf.provider_result.v1" },
+    "schema_version": { "type": "string" },
+    "provider": { "enum": ["webgpt", "claude", "gemini", "kimi", "grok", "unknown"] },
+    "proof_status": { "type": "string" },
+    "success": { "type": "boolean" },
+    "delivery": {
+      "type": "object",
+      "required": ["submitted", "delivery_proven", "sentinel", "raw_contains_sentinel"]
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "requested_tab_id",
+        "controlled_tab_id",
+        "requested_view_id",
+        "controlled_view_id",
+        "requested_url",
+        "actual_url",
+        "controlled_tab_id_mismatch"
+      ]
+    },
+    "model": {
+      "type": "object",
+      "required": ["requested", "observed", "reasoning", "selection_proven"]
+    },
+    "artifacts": {
+      "type": "object",
+      "required": ["input", "submitted_output", "output", "raw_output", "stderr_log", "receipt", "meta"]
+    },
+    "immutable_request_snapshot": {
+      "type": "object",
+      "required": ["required", "present", "input_sha256", "submitted_sha256"]
+    },
+    "retryability": {
+      "type": "object",
+      "required": ["retryable", "reason"]
+    },
+    "stale_binding_repair": {
+      "type": "object",
+      "required": ["detected", "repair_attempted", "repair_result", "new_tab_id", "new_url"]
+    },
+    "bounded_error": {
+      "type": "object",
+      "required": ["code", "message", "exit_code", "stderr_tail"]
+    }
+  }
+}

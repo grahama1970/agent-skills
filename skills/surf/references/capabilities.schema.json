@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "surf.capabilities.v1",
+  "title": "Surf capability contract",
+  "type": "object",
+  "required": ["schema", "schema_version", "skill", "engine", "transport", "providers", "contracts"],
+  "properties": {
+    "schema": { "const": "surf.capabilities.v1" },
+    "schema_version": { "type": "string" },
+    "skill": {
+      "type": "object",
+      "required": ["name", "path", "skill_md_sha256", "contract_references"],
+      "properties": {
+        "name": { "const": "surf" },
+        "path": { "type": "string" },
+        "skill_md_sha256": { "type": ["string", "null"] },
+        "contract_references": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "required": ["kind", "package_version", "path", "dist_present", "lock_present"],
+      "properties": {
+        "kind": { "const": "vendored_surf_cli" },
+        "package_version": { "type": ["string", "null"] },
+        "path": { "type": "string" },
+        "dist_present": { "type": "boolean" },
+        "dist_fresh": { "type": ["boolean", "null"] },
+        "lock_present": { "type": "boolean" }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "required": ["extension_socket_path", "extension_socket_present", "cdp_fallback"],
+      "properties": {
+        "extension_socket_path": { "type": "string" },
+        "extension_socket_present": { "type": "boolean" },
+        "cdp_fallback": { "type": "boolean" }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "required": ["webgpt", "claude", "gemini", "kimi", "grok"]
+    },
+    "contracts": {
+      "type": "object",
+      "required": ["capabilities_schema", "provider_result_schema", "immutable_submit_schema", "vendor_update_gate"]
+    }
+  }
+}

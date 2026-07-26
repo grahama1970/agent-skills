@@ -507,6 +507,14 @@ if [[ "$1" == "extension.fresh" ]]; then
     exec "$SKILL_DIR/scripts/extension-fresh.sh" "${@:2}"
 fi
 
+if [[ "$1" == "capabilities" ]]; then
+    exec python3 "$SKILL_DIR/scripts/surf_capabilities.py" "${@:2}"
+fi
+
+if [[ "$1" == "meta.normalize" ]]; then
+    exec python3 "$SKILL_DIR/scripts/surf_meta_normalize.py" "${@:2}"
+fi
+
 if [[ "$1" == "vendor.sync" ]]; then
     exec "$SKILL_DIR/scripts/vendor-sync.sh" "${@:2}"
 fi
@@ -622,6 +630,8 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf extension.reload   Reload Chrome extension after build"
     echo "  surf tab.maintenance    Scan/rebind tabs; guarded reload requires an explicit trigger"
     echo "  surf extension.fresh    Check whether dist matches source"
+    echo "  surf capabilities --json  Show versioned engine/provider/recovery contract"
+    echo "  surf meta.normalize --meta response.meta.json --json [--strict]  Normalize provider proof metadata"
     echo "  surf vendor.sync        Sync vendor/surf-cli from Embry fork"
     echo "  surf vendor.status      Show vendored commit + dist freshness"
     echo "  surf install <ext-id>   Install native host for extension"
