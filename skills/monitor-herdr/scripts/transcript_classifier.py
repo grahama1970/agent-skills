@@ -17,7 +17,7 @@ def latest_transcript_region(text: str, limit: int = 2800) -> str:
 
 def strip_monitor_prompt(text: str) -> str:
     text = re.sub(
-        r"RESTART CHECK FROM monitor-(?:herdr|confused-agents)[\s\S]*?(?=\n\s*gpt-[^\n]*·|\Z)",
+        r"RESTART CHECK FROM monitor-(?:herdr|confused-agents)[\s\S]*?(?=\n\s*(?:Status/Phase\s*:(?!\s*<)|Immutable Goal\s*:(?!\s*<))|\n\s*gpt-[^\n]*·|\Z)",
         "",
         text,
         flags=re.IGNORECASE,

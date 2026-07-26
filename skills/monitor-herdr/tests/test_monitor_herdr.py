@@ -492,6 +492,47 @@ def test_monitor_prompt_boilerplate_does_not_override_goal_achieved(tmp_path: Pa
     assert candidate["action"] == "observe_only"
 
 
+def test_monitor_prompt_before_done_receipt_does_not_hide_receipt(tmp_path: Path) -> None:
+    receipt = tmp_path / "receipt.json"
+    receipt.write_text("{}", encoding="utf-8")
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pS",
+    }
+    text = f"""
+    RESTART CHECK FROM monitor-herdr
+    Status/Phase: <one line>
+    Immutable Goal: <known goal, UNKNOWN, or ACHIEVED_WITH_RECEIPT:path>
+    Evidence: <latest concrete command/result/artifact path, or NONE>
+    Disposition: <choose exactly one of RESUMING_NOW | BLOCKED_NEEDS_HUMAN | DONE_WITH_RECEIPT>
+
+    Status/Phase: Stop-condition proof completed.
+    Immutable Goal: ACHIEVED_WITH_RECEIPT:{receipt}
+    Evidence: pytest returned 0; receipt {receipt}
+    Next: STOP_ALLOWED because the immutable goal has a fresh receipt.
+    Disposition: DONE_WITH_RECEIPT
+    """
+
+    current = monitor.latest_transcript_region(text)
+    candidate = monitor.classify_pane(
+        FakeHerdr(text),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"done"},
+        only_obvious_early_stops=False,
+    )
+
+    assert "Status/Phase: <one line>" not in current
+    assert monitor.transcript_goal_claim(current, project_root=tmp_path)["state"] == "achieved"
+    assert candidate is not None
+    assert candidate["action"] == "observe_only"
+    assert candidate["classification"] == "goal_stop_allowed"
+
+
 def test_human_blocker_is_not_restarted_without_early_marker(tmp_path: Path) -> None:
     (tmp_path / "GOAL.md").write_text("Deploy after approval.", encoding="utf-8")
     pane = {
