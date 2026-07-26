@@ -49,6 +49,7 @@ BROWSER_TAB_READ_TIMEOUT = "browser_tab_read_timeout"
 BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
+BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
 SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
 BROWSER_TRANSPORT_BLOCKERS = {
@@ -59,6 +60,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_ACCESS_BLOCKED,
     BROWSER_PROVIDER_RATE_LIMITED,
     BROWSER_TOOL_UNSUPPORTED,
+    BROWSER_ATTACHMENT_UNAVAILABLE,
     SURF_BROWSER_LOCK_TIMEOUT,
     SURF_BROWSER_CONNECTION_UNAVAILABLE,
     "repo_access_blocked",
@@ -327,6 +329,12 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 }
             )
         ok = bool(response_text.strip())
+        if ok and browser_attachment_paths and _response_denies_attachment_access(response_text):
+            failure = (
+                f"{BROWSER_ATTACHMENT_UNAVAILABLE}: provider response explicitly denied access "
+                "to the attached evidence"
+            )
+            ok = False
         if ok and _requires_verdict(request_text, prior_receipts):
             ok = _has_verdict(response_text)
             if not ok:
@@ -1259,6 +1267,7 @@ def _browser_failure_recovery_packet(
             BROWSER_ACCESS_BLOCKED,
             BROWSER_PROVIDER_RATE_LIMITED,
             BROWSER_TOOL_UNSUPPORTED,
+            BROWSER_ATTACHMENT_UNAVAILABLE,
         }
         and bool(bundle_paths)
         and can_attach
@@ -1354,6 +1363,8 @@ def _classify_browser_failure(
         return BROWSER_ACCESS_BLOCKED
     if _looks_browser_tool_unsupported(haystack):
         return BROWSER_TOOL_UNSUPPORTED
+    if BROWSER_ATTACHMENT_UNAVAILABLE in haystack or _response_denies_attachment_access(response_text):
+        return BROWSER_ATTACHMENT_UNAVAILABLE
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
     if _looks_tab_identity_mismatch(haystack, submit_meta):
@@ -1416,6 +1427,36 @@ def _looks_repo_access_blocked(text: str) -> bool:
         "no such file or directory",
     )
     return any(marker in text for marker in markers)
+
+
+def _response_denies_attachment_access(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text.lower())
+    markers = (
+        "attachment is inaccessible",
+        "attachment is not accessible",
+        "attachment is not mounted",
+        "attached file is inaccessible",
+        "attached file is not accessible",
+        "attached image is inaccessible",
+        "attached image is not accessible",
+        "attached local image cannot be inspected",
+        "attached image cannot be inspected",
+        "attachment cannot be inspected",
+        "attachment is unreachable",
+        "local attachment is unreachable",
+        "image file was not provided",
+        "image file was not attached",
+        "image was not provided",
+        "image was not attached",
+        "no image content was provided",
+        "no image content is available",
+        "missing image asset",
+        "does not exist on the accessible filesystem",
+        "unable to inspect the visual contents",
+        "cannot inspect the visual contents",
+        "file was not provided or rendered",
+    )
+    return any(marker in normalized for marker in markers)
 
 
 def _looks_browser_access_blocked(text: str, meta: dict[str, Any]) -> bool:
@@ -1697,6 +1738,8 @@ def _recovery_next_command(
     meta_path: Path,
     prompt_path: Path,
 ) -> list[str]:
+    if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
+        return []
     if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
         stale = _webgpt_stale_binding_details(submit_meta)
         project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
@@ -1864,6 +1907,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_ACCESS_BLOCKED: "The browser provider presented an access challenge before the request could be submitted.",
         BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
+        BROWSER_ATTACHMENT_UNAVAILABLE: "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
         SURF_BROWSER_LOCK_TIMEOUT: "The Surf browser lock is held by another live command; the browser lane was not submitted.",
         SURF_BROWSER_CONNECTION_UNAVAILABLE: "The Surf native host or socket disconnected before the browser lane completed.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
@@ -1890,6 +1934,8 @@ def _auto_retry_blocked_reason(
         return "browser_provider_rate_limit_requires_backoff"
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "surf_runtime_command_mismatch_requires_repair"
+    if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
+        return "attachment_transport_must_be_repaired"
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return "surf_browser_lock_owner_still_running"
     if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
@@ -1919,6 +1965,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return "Back off this browser provider until the limit clears; use a different handler or rerun later with the same verified tab."
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "Repair the Surf wrapper/provider adapter command mapping, then rerun the Tau DAG node. Do not retry the same browser call unchanged."
+    if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
+        return (
+            "Do not retry the same attachment submission unchanged. Repair or replace this provider's "
+            "attachment transport, then rerun a focused attachment check before using the lane."
+        )
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return (
             "Do not use --no-lock. Wait for the lock owner named in evidence.surf_lock_blocker, "
@@ -1957,6 +2008,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_ACCESS_BLOCKED,
         BROWSER_PROVIDER_RATE_LIMITED,
         BROWSER_TOOL_UNSUPPORTED,
+        BROWSER_ATTACHMENT_UNAVAILABLE,
         SURF_BROWSER_LOCK_TIMEOUT,
         SURF_BROWSER_CONNECTION_UNAVAILABLE,
         "stale_raw_capture",

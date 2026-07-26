@@ -365,6 +365,104 @@ def test_worker_does_not_treat_false_busy_metadata_as_provider_limited() -> None
     assert failure_code == "prompt_too_large_or_stalled"
 
 
+@pytest.mark.parametrize(
+    "response_text",
+    [
+        "TESTER_STATUS: UNKNOWN\nThe attachment is inaccessible and is not mounted.",
+        "The image file was not provided or rendered, so I cannot inspect the visual contents.",
+        "The attached local image cannot be inspected. Local attachment is unreachable.",
+    ],
+)
+def test_worker_rejects_explicit_attachment_access_denials(response_text: str) -> None:
+    assert tau_roundtable_worker._response_denies_attachment_access(response_text) is True
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="",
+        response_text=response_text,
+        raw_text=response_text,
+        prompt_text="Inspect the attached visual evidence.",
+        submit_meta={"status": "completed"},
+        commands=[],
+    )
+    assert failure_code == tau_roundtable_worker.BROWSER_ATTACHMENT_UNAVAILABLE
+
+
+def test_worker_does_not_reject_cautious_answer_without_attachment_denial() -> None:
+    response_text = "TESTER_STATUS: UNKNOWN\nThe status label is too small to read confidently."
+
+    assert tau_roundtable_worker._response_denies_attachment_access(response_text) is False
+
+
+def test_worker_fails_closed_when_browser_response_denies_attached_evidence(tmp_path: Path) -> None:
+    image_path = tmp_path / "visual-evidence.png"
+    image_path.write_bytes(b"\x89PNG\r\n\x1a\n")
+    request_file = tmp_path / "request.json"
+    request_file.write_text(
+        json.dumps({"request": f"Inspect {image_path} and report the visible labels."}),
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgrok"
+    artifact_dir.mkdir(parents=True)
+    args = SimpleNamespace(
+        node_id="handler-webgrok",
+        handler="webgrok",
+        topology="concurrent",
+        workflow_mode="roundtable",
+        request_file=str(request_file),
+        browser_oracle_project="webgrok",
+        provider_hint="",
+        next_agent="join",
+        artifact_dir=str(artifact_dir),
+        surf_run=str(tmp_path / "surf-run.sh"),
+        browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
+        scillm_base_url="http://127.0.0.1:4001",
+        scillm_api_key="",
+        prior_node=[],
+        timeout=300,
+        stable_polls=2,
+        no_activate=True,
+        evidence=[],
+        codex_workspace="",
+        browser_model_preference="",
+    )
+
+    def fake_run_cmd(command: list[str], *, cwd: Path, timeout: int) -> tau_roundtable_worker.CmdResult:
+        if "resolve" in command:
+            return tau_roundtable_worker.CmdResult(
+                command,
+                0,
+                json.dumps({"tab_id": "837361318", "conversation_url": "https://grok.com/"}),
+                "",
+                0.01,
+            )
+        if "grok.submit" in command:
+            response_path = Path(command[command.index("--output") + 1])
+            raw_path = Path(command[command.index("--raw-output") + 1])
+            meta_path = Path(command[command.index("--meta-output") + 1])
+            response = "TESTER_STATUS: UNKNOWN\nThe attachment is inaccessible and is not mounted."
+            response_path.write_text(response, encoding="utf-8")
+            raw_path.write_text(response, encoding="utf-8")
+            meta_path.write_text(json.dumps({"status": "completed"}), encoding="utf-8")
+            return tau_roundtable_worker.CmdResult(command, 0, "", "", 0.01)
+        return tau_roundtable_worker.CmdResult(command, 99, "", "unexpected command", 0.01)
+
+    original_run_cmd = tau_roundtable_worker._run_cmd
+    tau_roundtable_worker._run_cmd = fake_run_cmd
+    try:
+        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+    finally:
+        tau_roundtable_worker._run_cmd = original_run_cmd
+
+    assert result["exit_code"] == 0
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["ok"] is False
+    assert receipt["provider_live"] is False
+    assert receipt["browser_attachment_paths"] == [str(image_path)]
+    assert receipt["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UNAVAILABLE
+    assert receipt["recovery_packet"]["auto_retry_allowed"] is False
+    assert receipt["recovery_packet"]["next_command"] == []
+
+
 def test_worker_webgpt_receipt_includes_transport_summary(tmp_path: Path) -> None:
     request_file = tmp_path / "request.json"
     request_file.write_text(json.dumps({"request": "Ask webgpt to review the bundle."}), encoding="utf-8")

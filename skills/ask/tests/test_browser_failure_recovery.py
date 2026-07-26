@@ -268,6 +268,29 @@ def test_webclaude_auto_retry_uses_readable_bundle_when_transport_supports_attac
     assert "attached" in packet["fallback_instruction"]
 
 
+def test_attachment_unavailable_fails_closed_without_unchanged_retry(tmp_path: Path) -> None:
+    bundle = tmp_path / "visual-evidence.png"
+    bundle.write_bytes(b"\x89PNG\r\n\x1a\n")
+    packet = _packet(
+        tmp_path,
+        handler="webgrok",
+        failure="browser_attachment_unavailable: provider response denied attachment access",
+        response_text=(
+            "TESTER_STATUS: UNKNOWN\n"
+            "The attachment is inaccessible and is not mounted in my accessible filesystem."
+        ),
+        prompt_text=f"Inspect {bundle} and report the visible labels.",
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UNAVAILABLE
+    assert packet["local_readable_bundle_paths"] == [str(bundle)]
+    assert packet["attach_file_supported"] is True
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_transport_must_be_repaired"
+    assert packet["next_command"] == []
+    assert "Do not retry the same attachment submission unchanged" in packet["fallback_instruction"]
+
+
 def test_surf_browser_lock_timeout_is_transport_blocker_with_owner_metadata(tmp_path: Path) -> None:
     blocker = {
         "schema": "surf.browser_lock_blocker.v1",
