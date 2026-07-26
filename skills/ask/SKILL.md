@@ -309,6 +309,7 @@ Compete is fail-closed by design:
 | Missing immutable goal or acceptance bar | Emits an `$interview` packet before browser/API calls |
 | All-browser execute preflight fails | Blocks before Tau launch and records terminal candidate/join statuses |
 | Missing candidate receipt | Join reports `NEEDS_ATTENTION` |
+| Candidate lane transport or provider error | Lane records `NEEDS_ATTENTION` and exits successfully so the join can emit the partial scorecard |
 | Candidate claims a feature without local proof | Project agent must not promote it |
 | Tie or no clear winner | Report `NEEDS_ATTENTION`; do not fabricate a winner |
 | Winner-continuation packet exists | It is a next request, not proof that revision was submitted |
@@ -454,7 +455,18 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
      `--handler-project <handler>=<project>`.
   5. Execute through `$ask`/Tau, not raw Surf:
      `./run.sh tau-dag "<request>" --handler <handler> --execute --json`.
-  6. Close temporary tabs only after their receipts are no longer needed:
+  6. To clear old roundtable or competition context before a new run, start a
+     fresh chat on the exact bound tab before executing Ask. Use guarded Surf
+     navigation so the wrong tab is not overwritten:
+     `skills/surf/run.sh go "<fresh-url>" --tab-id <id> --expect-url "<current-url>"`.
+     Fresh URLs are `https://chatgpt.com/` for `webgpt`,
+     `https://claude.ai/new` for `webclaude`, `https://www.kimi.com/` for
+     `webkimi`, `https://gemini.google.com/app` for `webgemini`, and
+     `https://grok.com/` for `webgrok`. Then run `tab.list --json`, bind the
+     tab's current URL with `$browser-oracle`, and execute `$ask`. For WebGPT,
+     `skills/surf/run.sh webgpt.submit --create-tab ...` is also supported when
+     a separate fresh reviewer tab is preferable to reusing the existing tab id.
+  7. Close temporary tabs only after their receipts are no longer needed:
      `skills/surf/run.sh tab.close <id>` when supported by the installed Surf
      version, otherwise use the provider-specific close command documented by
      `$surf`. Do not close a tab bound to an active browser-oracle project

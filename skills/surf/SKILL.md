@@ -811,6 +811,37 @@ silently chooses a different Claude session. If same-tab reload does not restore
 readability, the run fails before prompt submission and the caller must refresh
 or rebind the Claude reviewer tab.
 
+### Fresh chat on an existing provider tab
+
+When a project agent needs to clear old roundtable or competition context, use
+guarded navigation on the exact tab id, then rebind the tab before submitting.
+This is the cross-provider fresh-chat primitive:
+
+```bash
+surf tab.list --json
+surf go "<fresh-url>" --tab-id <TAB_ID> --expect-url "<CURRENT_URL>"
+surf tab.list --json
+```
+
+Fresh URLs:
+
+| Backend | Fresh URL |
+| --- | --- |
+| `webgpt` | `https://chatgpt.com/` |
+| `webclaude` | `https://claude.ai/new` |
+| `webkimi` | `https://www.kimi.com/` |
+| `webgemini` | `https://gemini.google.com/app` |
+| `webgrok` | `https://grok.com/` |
+
+After the navigation, bind the updated tab identity with `$browser-oracle`, then
+submit through `$ask`/Tau or the matching `*.submit` command. Do not reuse an
+old conversation URL as the identity assertion after fresh-chat navigation.
+
+For WebGPT, `webgpt.submit --create-tab` opens a separate fresh reviewer tab
+when isolation is preferable to reusing the existing tab id. The same-tab path
+above is still the explicit way to clear a known tab without changing which tab
+the browser-oracle project controls.
+
 ### Web oracle sanity (all browser backends)
 
 When webgpt / webgemini / webkimi / webperplexity break frequently, run one

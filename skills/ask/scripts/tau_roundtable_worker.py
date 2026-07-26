@@ -52,6 +52,10 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_PROVIDER_RATE_LIMITED,
     BROWSER_TOOL_UNSUPPORTED,
     SURF_BROWSER_LOCK_TIMEOUT,
+    "repo_access_blocked",
+    "missing_sentinel",
+    "prompt_too_large_or_stalled",
+    "stale_raw_capture",
 }
 
 
@@ -325,6 +329,16 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         if recovery_packet.get("failure_code") in BROWSER_TRANSPORT_BLOCKERS:
             status = "BLOCKED"
 
+    lane_exit_ok = ok
+    if getattr(args, "workflow_mode", "roundtable") == "compete" and not ok:
+        # A compete candidate can be unavailable, rate-limited, or blocked
+        # without invalidating the competition artifact set. Preserve the lane
+        # as a candidate outcome and let the join node write the scorecard.
+        status = "NEEDS_ATTENTION"
+        lane_exit_ok = True
+        if not failure:
+            failure = "compete_candidate_needs_attention"
+
     verdict = _extract_verdict(response_text)
     if verdict is None and recovery_packet is not None:
         verdict = str(recovery_packet.get("failure_code") or "") or None
@@ -359,6 +373,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "verdict": verdict,
         "failure": failure or None,
         "failure_code": recovery_packet.get("failure_code") if recovery_packet else None,
+        "competition_lane_exit_ok": lane_exit_ok,
         "recovery_packet": recovery_packet,
         "provider_receipt": {
             "schema": "ask.tau_dag_provider_route_receipt.v1",
@@ -465,7 +480,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         artifacts=artifacts,
         evidence=evidence,
     )
-    return {"exit_code": 0 if ok else 1, "handoff": handoff}
+    return {"exit_code": 0 if lane_exit_ok else 1, "handoff": handoff}
 
 
 def _browser_submit_command(
@@ -1755,7 +1770,13 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
             else:
                 blockers.append(f"{candidate['node_id']}: {candidate['failure'] or candidate['status']}")
 
-    selectable = [item for item in handler_receipts if item["ok"] is True]
+    all_verified_features: list[str] = []
+    for candidate in handler_receipts:
+        for feature in candidate["verified_features"]:
+            if feature not in all_verified_features:
+                all_verified_features.append(feature)
+
+    selectable = [item for item in handler_receipts if item["ok"] is True and item["feature_count"] > 0]
     selectable.sort(key=lambda item: (item["feature_count"], item["provider_live"], item["live"]), reverse=True)
     winner = selectable[0] if selectable else None
     tied = bool(len(selectable) > 1 and selectable[0]["feature_count"] == selectable[1]["feature_count"])
@@ -1764,12 +1785,6 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         blockers.append("winner_tie_requires_project_agent_review")
     if not winner_handler:
         blockers.append("no_clear_winner_from_receipts")
-
-    all_verified_features: list[str] = []
-    for candidate in handler_receipts:
-        for feature in candidate["verified_features"]:
-            if feature not in all_verified_features:
-                all_verified_features.append(feature)
     if not all_verified_features:
         blockers.append("no_explicit_verified_features_to_promote")
     if transport_blockers:

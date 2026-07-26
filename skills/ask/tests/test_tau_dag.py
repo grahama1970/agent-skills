@@ -1140,7 +1140,232 @@ def test_compete_join_fails_closed_without_explicit_verified_features(tmp_path: 
     scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
     assert receipt["status"] == "NEEDS_ATTENTION"
     assert scorecard["status"] == "NEEDS_ATTENTION"
-    assert "winner_tie_requires_project_agent_review" in scorecard["blockers"]
+    assert "no_clear_winner_from_receipts" in scorecard["blockers"]
+    assert "no_explicit_verified_features_to_promote" in scorecard["blockers"]
+
+
+def test_compete_browser_lane_error_records_needs_attention_without_failed_process(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Implement the feature in isolation."}) + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+if args[:1] == ["webgpt.submit"]:
+    raw = Path(args[args.index("--raw-output") + 1])
+    meta = Path(args[args.index("--meta-output") + 1])
+    raw.write_text("browser_tab_read_timeout: no stable assistant response\\n")
+    meta.write_text(json.dumps({
+        "status": "failed",
+        "failure": "browser_tab_read_timeout",
+    }) + "\\n")
+    print("browser_tab_read_timeout", file=sys.stderr)
+    raise SystemExit(5)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    print(json.dumps({
+        "backend": "webgpt",
+        "project": "webgpt",
+        "tab_id": "837361011",
+        "conversation_url": "https://chatgpt.com/c/compete-lane",
+        "status": "ok",
+    }))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-webgpt",
+            "--handler",
+            "webgpt",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            str(surf),
+            "--browser-oracle-run",
+            str(browser_oracle),
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["ok"] is False
+    assert receipt["competition_lane_exit_ok"] is True
+    assert receipt["failure_code"] in {
+        "browser_tab_read_timeout",
+        "prompt_too_large_or_stalled",
+    }
+    assert receipt["recovery_packet_path"] == str(artifact_dir / "browser-recovery-packet.json")
+    assert recovery["status"] == "NEEDS_ATTENTION"
+    assert recovery["next_command"]
+
+
+def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Implement the feature in isolation."}) + "\n",
+        encoding="utf-8",
+    )
+    artifacts = tmp_path / "node-artifacts"
+    pass_dir = artifacts / "handler-webkimi"
+    pass_dir.mkdir(parents=True)
+    pass_response = pass_dir / "response.md"
+    pass_response.write_text("WebKimi candidate response with useful prose but no local proof marker.\n", encoding="utf-8")
+    (pass_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-webkimi",
+                "handler": "webkimi",
+                "status": "PASS",
+                "ok": True,
+                "mocked": False,
+                "live": True,
+                "provider_live": True,
+                "response_path": str(pass_response),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    blocked_cases = [
+        (
+            "handler-webgpt",
+            "webgpt",
+            "prompt_too_large_or_stalled",
+            "skills/surf/run.sh webgpt.submit --input prompt.md --attach-file bundle.zip",
+        ),
+        (
+            "handler-webclaude",
+            "webclaude",
+            "browser_tab_read_timeout",
+            "skills/surf/run.sh claude.submit --input prompt.md",
+        ),
+    ]
+    for node_id, handler, failure_code, next_command in blocked_cases:
+        node_dir = artifacts / node_id
+        node_dir.mkdir(parents=True)
+        response_path = node_dir / "response.md"
+        response_path.write_text("", encoding="utf-8")
+        recovery_path = node_dir / "browser-recovery-packet.json"
+        recovery_packet = {
+            "schema": "ask.browser_failure_recovery_packet.v1",
+            "status": "NEEDS_ATTENTION",
+            "handler": handler,
+            "node_id": node_id,
+            "failure_code": failure_code,
+            "next_command": next_command,
+            "auto_retry_allowed": False,
+            "auto_retry_blocked_reason": "fixture_blocker",
+            "evidence": {"failure_excerpt": failure_code},
+        }
+        recovery_path.write_text(json.dumps(recovery_packet) + "\n", encoding="utf-8")
+        (node_dir / "node-receipt.json").write_text(
+            json.dumps(
+                {
+                    "schema": "ask.tau_dag_handler_receipt.v1",
+                    "node_id": node_id,
+                    "handler": handler,
+                    "status": "NEEDS_ATTENTION",
+                    "ok": False,
+                    "mocked": False,
+                    "live": True,
+                    "provider_live": False,
+                    "response_path": str(response_path),
+                    "failure": failure_code,
+                    "failure_code": failure_code,
+                    "recovery_packet_path": str(recovery_path),
+                    "recovery_packet": recovery_packet,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    join_dir = artifacts / "join"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "join",
+            "--handler",
+            "join",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(join_dir),
+            "--surf-run",
+            "/bin/false",
+            "--browser-oracle-run",
+            "/bin/false",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 1, completed.stderr
+    scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
+    assert scorecard["status"] == "NEEDS_ATTENTION"
+    assert scorecard["winner_handler"] == ""
+    assert len(scorecard["candidates"]) == 3
+    kimi = next(candidate for candidate in scorecard["candidates"] if candidate["handler"] == "webkimi")
+    assert kimi["ok"] is True
+    assert kimi["response_path"] == str(pass_response)
+    blockers = {item["handler"]: item for item in scorecard["transport_blockers"]}
+    assert blockers["webgpt"]["next_command"] == "skills/surf/run.sh webgpt.submit --input prompt.md --attach-file bundle.zip"
+    assert blockers["webclaude"]["failure_code"] == "browser_tab_read_timeout"
+    assert "competition_transport_blocked" in scorecard["blockers"]
     assert "no_explicit_verified_features_to_promote" in scorecard["blockers"]
 
 
