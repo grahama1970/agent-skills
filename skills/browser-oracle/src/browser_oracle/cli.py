@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
-import sys
 from pathlib import Path
 from typing import Optional
 
 import typer
-from loguru import logger
 
 from .bindings import BindingError, bind, list_bindings, load, state_path, unbind, verify
 from .config import SUPPORTED_BACKENDS, project_root, surf_run_path
@@ -277,6 +276,11 @@ def reconcile_cmd(
 
 
 def _extract_new_tab_id(payload: object) -> str:
+    if isinstance(payload, str):
+        for pattern in (r"\bCreated tab (\d+)\b", r"\(tab (\d+)\)"):
+            match = re.search(pattern, payload)
+            if match:
+                return match.group(1)
     if isinstance(payload, dict):
         for key in ("tabId", "tab_id", "id"):
             value = payload.get(key)

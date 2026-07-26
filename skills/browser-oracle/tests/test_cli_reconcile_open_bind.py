@@ -84,3 +84,49 @@ esac
     assert payload["conversation_url"] == "https://chatgpt.com/c/demo"
     assert load("demo", "webgpt").tab_id == "456"
     assert "window.new https://chatgpt.com/c/demo --json --unfocused" in calls.read_text(encoding="utf-8")
+
+
+def test_open_bind_accepts_live_surf_window_string_payload(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("BROWSER_ORACLE_WEBGPT_PROJECT_ROOT", str(tmp_path / "bindings"))
+    surf = _fake_surf(
+        tmp_path / "surf-run.sh",
+        """
+printf '%s\\n' '"Window 837361281 (tab 837361282)\\nUse --window-id 837361281 to target this window"'
+""",
+    )
+    monkeypatch.setenv("BROWSER_ORACLE_SURF_RUN", str(surf))
+
+    result = runner.invoke(
+        app,
+        ["open-bind", "demo", "--backend", "webgpt", "--url", "https://chatgpt.com/", "--json"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["tab_id"] == "837361282"
+
+
+def test_open_bind_accepts_live_surf_tab_string_payload(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("BROWSER_ORACLE_WEBGPT_PROJECT_ROOT", str(tmp_path / "bindings"))
+    surf = _fake_surf(
+        tmp_path / "surf-run.sh",
+        """
+printf '"Created tab 837361275: https://claude.ai/new"\\n'
+""",
+    )
+    monkeypatch.setenv("BROWSER_ORACLE_SURF_RUN", str(surf))
+
+    result = runner.invoke(
+        app,
+        [
+            "open-bind",
+            "demo",
+            "--backend",
+            "webclaude",
+            "--url",
+            "https://claude.ai/new",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["tab_id"] == "837361275"
