@@ -1460,10 +1460,6 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         provider_hint = _handler_provider_hint(input, index)
         prior_nodes = _roundtable_prior_nodes(input, node_id)
         scheduler_dependencies = list(prior_nodes)
-        if input.topology == "concurrent" and node_id in browser_resource_chain:
-            browser_index = browser_resource_chain.index(node_id)
-            if browser_index > 0:
-                scheduler_dependencies = [browser_resource_chain[browser_index - 1]]
         required_evidence = [
             "handler_response_receipt",
             "normalized_handler_receipt",
@@ -1560,14 +1556,8 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         edges.append({"from": previous, "to": "join"})
     else:
         edges.extend(
-            {"from": left, "to": right}
-            for left, right in zip(browser_resource_chain, browser_resource_chain[1:])
-        )
-        last_browser = browser_resource_chain[-1] if browser_resource_chain else ""
-        edges.extend(
             {"from": str(node["id"]), "to": "join"}
             for node in handler_nodes
-            if str(node["id"]) not in browser_resource_chain or str(node["id"]) == last_browser
         )
     edges.append({"from": "join", "to": "human"})
     return {
@@ -1603,7 +1593,8 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                 for handler in input.handlers
                 if handler in ROUNDTABLE_HANDLERS
             },
-            "browser_transport_serialized": input.topology == "concurrent"
+            "browser_transport_serialized": False,
+            "browser_transport_lock_queued": input.topology == "concurrent"
             and len(browser_resource_chain) > 1,
             "browser_transport_chain": browser_resource_chain,
         },
@@ -1756,7 +1747,7 @@ def _write_roundtable_command_spec(
     payload = {
         "command": command,
         "cwd": str(run_dir),
-        "timeout_s": 6000 if handler == "codex" else (1800 if is_subagent_handler else (1200 if handler == "webgpt" else (900 if handler == "webgemini" else 420))),
+        "timeout_s": 6000 if handler == "codex" else (1800 if is_subagent_handler else (3900 if handler in ROUNDTABLE_HANDLERS and handler != "codex" else 420)),
         "requires_network": node_id != "join",
         "mutates": handler == "codex",
         "requires_clean_worktree": False,

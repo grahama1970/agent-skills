@@ -144,11 +144,12 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
         "handler-webgemini",
         "join",
     ]
-    assert {"from": "handler-webkimi", "to": "handler-webclaude"} in dag["edges"]
-    assert {"from": "handler-webclaude", "to": "handler-webgpt"} in dag["edges"]
-    assert {"from": "handler-webgpt", "to": "handler-webgemini"} in dag["edges"]
+    assert {"from": "handler-webkimi", "to": "join"} in dag["edges"]
+    assert {"from": "handler-webclaude", "to": "join"} in dag["edges"]
+    assert {"from": "handler-webgpt", "to": "join"} in dag["edges"]
     assert {"from": "handler-webgemini", "to": "join"} in dag["edges"]
-    assert dag["context"]["browser_transport_serialized"] is True
+    assert dag["context"]["browser_transport_serialized"] is False
+    assert dag["context"]["browser_transport_lock_queued"] is True
     assert dag["context"]["browser_transport_chain"] == [
         "handler-webkimi",
         "handler-webclaude",
@@ -168,7 +169,7 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
     assert kimi["context"]["prior_nodes"] == []
     assert kimi["context"]["scheduler_dependencies"] == []
     assert dag["nodes"][1]["context"]["prior_nodes"] == []
-    assert dag["nodes"][1]["context"]["scheduler_dependencies"] == ["handler-webkimi"]
+    assert dag["nodes"][1]["context"]["scheduler_dependencies"] == []
     assert dag["nodes"][1]["context"]["requires_prior_receipts"] is False
     assert kimi["context"]["immutable_goal"] == request.immutable_goal
     assert kimi["context"]["prompt_contract"]["immutable_goal"] == request.immutable_goal
@@ -232,7 +233,7 @@ def test_dag_template_roundtable_defaults_to_concurrent_handler_dag(tmp_path: Pa
     assert dag["context"]["dag_template"] == "roundtable"
     assert dag["context"]["roundtable_topology"] == "concurrent"
     assert dag["edges"] == [
-        {"from": "handler-webgpt", "to": "handler-webclaude"},
+        {"from": "handler-webgpt", "to": "join"},
         {"from": "handler-webclaude", "to": "join"},
         {"from": "join", "to": "human"},
     ]
@@ -821,8 +822,8 @@ def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_
         "deepseek-ai/deepseek-v3.2-tee",
     ]
     assert dag["edges"] == [
-        {"from": "handler-webgpt", "to": "handler-webclaude"},
-        {"from": "handler-webclaude", "to": "handler-webkimi"},
+        {"from": "handler-webgpt", "to": "join"},
+        {"from": "handler-webclaude", "to": "join"},
         {"from": "handler-webkimi", "to": "join"},
         {"from": "handler-deepseek-ai-deepseek-v3-2-tee", "to": "join"},
         {"from": "join", "to": "human"},
@@ -881,12 +882,13 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
     assert dag["context"]["transport_adapter"] == "handler_neutral_adapter"
     assert dag["context"]["handlers"] == ["webgpt", "webclaude", "gpt-5.5-high"]
     assert dag["edges"] == [
-        {"from": "handler-webgpt", "to": "handler-webclaude"},
+        {"from": "handler-webgpt", "to": "join"},
         {"from": "handler-webclaude", "to": "join"},
         {"from": "handler-gpt-5-5-high", "to": "join"},
         {"from": "join", "to": "human"},
     ]
-    assert dag["context"]["browser_transport_serialized"] is True
+    assert dag["context"]["browser_transport_serialized"] is False
+    assert dag["context"]["browser_transport_lock_queued"] is True
     candidates = [node for node in dag["nodes"] if str(node["id"]).startswith("handler-")]
     assert candidates
     assert all(node["context"]["workflow_mode"] == "compete" for node in candidates)
@@ -895,7 +897,7 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
     assert all(node["context"]["prompt_contract"]["immutable_goal"] == request.immutable_goal for node in candidates)
     claude = next(node for node in candidates if node["id"] == "handler-webclaude")
     api = next(node for node in candidates if node["id"] == "handler-gpt-5-5-high")
-    assert claude["depends_on"] == ["handler-webgpt"]
+    assert claude["depends_on"] == []
     assert claude["context"]["prior_nodes"] == []
     assert claude["context"]["requires_prior_receipts"] is False
     assert api["depends_on"] == []
@@ -2385,6 +2387,101 @@ def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp
     summary = (join_dir / "compete-summary.md").read_text(encoding="utf-8")
     assert "## Degradation Analysis" in summary
     assert "prompt_too_large_or_stalled" in summary
+
+
+def test_compete_join_never_names_winner_when_transport_blocked(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({"request": "Implement the feature."}) + "\n", encoding="utf-8")
+    artifacts = tmp_path / "node-artifacts"
+
+    pass_dir = artifacts / "handler-gpt-5-5"
+    pass_dir.mkdir(parents=True)
+    pass_response = pass_dir / "response.md"
+    pass_response.write_text("RESULT: 4\nVERIFIED_FEATURE: deterministic arithmetic\n", encoding="utf-8")
+    (pass_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-gpt-5-5",
+                "handler": "gpt-5.5",
+                "status": "PASS",
+                "ok": True,
+                "mocked": False,
+                "live": True,
+                "provider_live": True,
+                "response_path": str(pass_response),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    blocked_dir = artifacts / "handler-webkimi"
+    blocked_dir.mkdir(parents=True)
+    blocked_response = blocked_dir / "response.md"
+    blocked_response.write_text("", encoding="utf-8")
+    recovery = {
+        "failure_code": "browser_provider_rate_limited",
+        "next_command": "retry later",
+        "auto_retry_blocked_reason": "browser_provider_rate_limit_requires_backoff",
+        "evidence": {},
+    }
+    (blocked_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-webkimi",
+                "handler": "webkimi",
+                "status": "NEEDS_ATTENTION",
+                "ok": False,
+                "mocked": False,
+                "live": True,
+                "provider_live": False,
+                "response_path": str(blocked_response),
+                "failure_code": "browser_provider_rate_limited",
+                "recovery_packet": recovery,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    join_dir = artifacts / "join"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "join",
+            "--handler",
+            "join",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(join_dir),
+            "--surf-run",
+            "/bin/false",
+            "--browser-oracle-run",
+            "/bin/false",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
+    assert scorecard["status"] == "NEEDS_ATTENTION"
+    assert scorecard["ok"] is False
+    assert scorecard["winner_handler"] == ""
+    assert scorecard["winner_node_id"] == ""
+    assert "competition_transport_blocked" in scorecard["blockers"]
+    assert "- winner: `NEEDS_ATTENTION`" in (join_dir / "compete-summary.md").read_text(encoding="utf-8")
 
 
 def test_compete_join_promotes_only_explicit_verified_features(tmp_path: Path) -> None:

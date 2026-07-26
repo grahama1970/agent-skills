@@ -19,6 +19,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 HANDLER_BACKENDS = {
     "webgpt": "webgpt",
@@ -45,6 +50,7 @@ BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
+SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
 BROWSER_TRANSPORT_BLOCKERS = {
     WEBGPT_CONVERSATION_FULL_BLOCKER,
     WEBGPT_BINDING_STALE_BLOCKER,
@@ -54,6 +60,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_PROVIDER_RATE_LIMITED,
     BROWSER_TOOL_UNSUPPORTED,
     SURF_BROWSER_LOCK_TIMEOUT,
+    SURF_BROWSER_CONNECTION_UNAVAILABLE,
     "repo_access_blocked",
     "missing_sentinel",
     "prompt_too_large_or_stalled",
@@ -88,6 +95,8 @@ def main() -> int:
     parser.add_argument("--subagent-reasoning-effort", default="")
     parser.add_argument("--subagent-requested-model", default="")
     args = parser.parse_args()
+    if args.handler in HANDLER_SUBMIT_COMMANDS:
+        os.environ.setdefault("SURF_LOCK_TIMEOUT_MS", "1800000")
 
     start = _read_stdin_handoff()
     artifact_dir = Path(args.artifact_dir)
@@ -230,7 +239,11 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 url=url,
                 attachment_paths=browser_attachment_paths,
             )
-            submit = _run_cmd(submit_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
+            submit = _run_cmd(
+                submit_cmd,
+                cwd=Path(args.surf_run).parent,
+                timeout=_browser_submit_timeout(handler, args.timeout),
+            )
             commands.append(submit.summary())
             if meta_path.is_file():
                 submit_meta = _read_json(meta_path)
@@ -678,7 +691,7 @@ def _should_retry_browser_stale_binding(
     handler: str,
     url: str,
     submit_meta: dict[str, Any],
-    submit: CommandResult,
+    submit: CmdResult,
 ) -> bool:
     if handler not in HANDLER_SUBMIT_COMMANDS or not url:
         return False
@@ -752,7 +765,11 @@ def _retry_browser_stale_binding(
             url=candidate_url or url,
             attachment_paths=attachment_paths,
         )
-        retry = _run_cmd(retry_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
+        retry = _run_cmd(
+            retry_cmd,
+            cwd=Path(args.surf_run).parent,
+            timeout=_browser_submit_timeout(handler, args.timeout),
+        )
         retry_summary = retry.summary()
         retry_summary["recovery_attempt"] = f"{handler}_stale_binding_submit_existing_tab"
         retry_summary["candidate_tab_id"] = tab_id
@@ -816,7 +833,11 @@ def _retry_browser_stale_binding(
         url=url,
         attachment_paths=attachment_paths,
     )
-    retry = _run_cmd(retry_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
+    retry = _run_cmd(
+        retry_cmd,
+        cwd=Path(args.surf_run).parent,
+        timeout=_browser_submit_timeout(handler, args.timeout),
+    )
     retry_summary = retry.summary()
     retry_summary["recovery_attempt"] = f"{handler}_stale_binding_submit_after_new_tab_rebind"
     commands.append(retry_summary)
@@ -1311,7 +1332,6 @@ def _classify_browser_failure(
             failure,
             response_text,
             raw_text,
-            prompt_text,
             json.dumps(submit_meta, sort_keys=True, default=str),
             json.dumps(commands[-1] if commands else {}, sort_keys=True, default=str),
         ]
@@ -1324,14 +1344,16 @@ def _classify_browser_failure(
         return WEBGPT_CONVERSATION_FULL_BLOCKER
     if _webgpt_stale_binding_details(submit_meta):
         return WEBGPT_BINDING_STALE_BLOCKER
-    if _looks_browser_access_blocked(haystack, submit_meta):
-        return BROWSER_ACCESS_BLOCKED
-    if _looks_browser_provider_rate_limited(haystack, submit_meta):
-        return BROWSER_PROVIDER_RATE_LIMITED
-    if _looks_browser_tool_unsupported(haystack):
-        return BROWSER_TOOL_UNSUPPORTED
     if _looks_surf_browser_lock_timeout(haystack, commands, submit_meta):
         return SURF_BROWSER_LOCK_TIMEOUT
+    if _looks_surf_browser_connection_unavailable(haystack):
+        return SURF_BROWSER_CONNECTION_UNAVAILABLE
+    if _looks_browser_provider_rate_limited(haystack, submit_meta):
+        return BROWSER_PROVIDER_RATE_LIMITED
+    if _looks_browser_access_blocked(haystack, submit_meta):
+        return BROWSER_ACCESS_BLOCKED
+    if _looks_browser_tool_unsupported(haystack):
+        return BROWSER_TOOL_UNSUPPORTED
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
     if _looks_tab_identity_mismatch(haystack, submit_meta):
@@ -1458,6 +1480,17 @@ def _looks_surf_browser_lock_timeout(text: str, commands: list[dict[str, Any]], 
     if "surf_browser_lock_timeout" in text or "surf_browser_lock_blocked" in text:
         return True
     return any(_surf_lock_blocker_details(failure="", commands=[command], submit_meta={}) for command in commands)
+
+
+def _looks_surf_browser_connection_unavailable(text: str) -> bool:
+    markers = (
+        "socket connect failed",
+        "socket not found",
+        "surf connection closed before response",
+        "native messaging host disconnected",
+        "failed to connect to surf",
+    )
+    return any(marker in text for marker in markers)
 
 
 def _surf_lock_blocker_details(
@@ -1721,7 +1754,7 @@ def _recovery_next_command(
             command.extend(["--url", url])
         command.extend(["--manual", "--json"])
         return command
-    if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
+    if failure_code in {SURF_BROWSER_LOCK_TIMEOUT, SURF_BROWSER_CONNECTION_UNAVAILABLE}:
         command = [
             str(args.surf_run),
             HANDLER_SUBMIT_COMMANDS[str(args.handler)],
@@ -1829,6 +1862,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
         SURF_BROWSER_LOCK_TIMEOUT: "The Surf browser lock is held by another live command; the browser lane was not submitted.",
+        SURF_BROWSER_CONNECTION_UNAVAILABLE: "The Surf native host or socket disconnected before the browser lane completed.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
         "prompt_too_large_or_stalled": "The browser submit appears to have timed out, stalled, or exceeded prompt size limits.",
@@ -1855,6 +1889,8 @@ def _auto_retry_blocked_reason(
         return "surf_runtime_command_mismatch_requires_repair"
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return "surf_browser_lock_owner_still_running"
+    if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
+        return "surf_browser_connection_must_recover"
     if not bundle_paths:
         return "missing_local_readable_bundle"
     if not can_attach:
@@ -1885,6 +1921,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "Do not use --no-lock. Wait for the lock owner named in evidence.surf_lock_blocker, "
             "then run next_command, or move this lane to a separate Surf socket/profile."
         )
+    if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
+        return (
+            "Confirm the Surf native host and /tmp/surf.sock are available, then run next_command. "
+            "Do not treat this local transport failure as provider throttling."
+        )
     if has_bundle and not can_attach:
         return (
             f"Do not auto-retry {handler}: the current Surf transport does not expose --attach-file for this handler. "
@@ -1914,6 +1955,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_PROVIDER_RATE_LIMITED,
         BROWSER_TOOL_UNSUPPORTED,
         SURF_BROWSER_LOCK_TIMEOUT,
+        SURF_BROWSER_CONNECTION_UNAVAILABLE,
         "stale_raw_capture",
     }
 
@@ -2424,17 +2466,18 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
     selectable.sort(key=lambda item: (item["feature_count"], item["provider_live"], item["live"]), reverse=True)
     winner = selectable[0] if selectable else None
     tied = bool(len(selectable) > 1 and selectable[0]["feature_count"] == selectable[1]["feature_count"])
-    winner_handler = str(winner.get("handler") or "") if winner and not tied else ""
+    candidate_winner_handler = str(winner.get("handler") or "") if winner and not tied else ""
     if tied:
         blockers.append("winner_tie_requires_project_agent_review")
-    if not winner_handler:
+    if not candidate_winner_handler:
         blockers.append("no_clear_winner_from_receipts")
     if not all_verified_features:
         blockers.append("no_explicit_verified_features_to_promote")
     if transport_blockers:
         blockers.append("competition_transport_blocked")
-    status = "PASS" if winner_handler and not blockers else "NEEDS_ATTENTION"
+    status = "PASS" if candidate_winner_handler and not blockers else "NEEDS_ATTENTION"
     ok = status == "PASS"
+    winner_handler = candidate_winner_handler if ok else ""
     degradation_analysis = _compete_degradation_analysis(
         status=status,
         candidates=handler_receipts,
@@ -2802,6 +2845,30 @@ class CmdResult:
         }
 
 
+def _browser_submit_timeout(handler: str, provider_timeout: int) -> int:
+    try:
+        lock_wait_ms = (
+            os.environ["SURF_LOCK_TIMEOUT_MS"]
+            if "SURF_LOCK_TIMEOUT_MS" in os.environ
+            else "0"
+        )
+        lock_wait_seconds = max(
+            0,
+            int(lock_wait_ms or 0) // 1000,
+        )
+    except ValueError:
+        lock_wait_seconds = 60
+    if handler == "webgpt":
+        # webgpt-submit permits three default 300-second rate-limit cooldowns
+        # before the final provider observation.
+        return max(provider_timeout + (3 * 300) + lock_wait_seconds + 150, 180)
+    if handler == "webgemini":
+        # gemini-submit permits two provider observations separated by its
+        # default 120-second stalled-response cooldown.
+        return max((2 * (provider_timeout + 60)) + 120 + lock_wait_seconds + 30, 180)
+    return max(provider_timeout + lock_wait_seconds + 90, 180)
+
+
 def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:
     started = time.time()
     proc = subprocess.Popen(
@@ -2894,7 +2961,6 @@ def _run_subagent_handler(
     subagent_root.mkdir(parents=True, exist_ok=True)
     answer_file = artifact_dir / "subagent-answer.txt"
     spec_file = artifact_dir / "subagent-spec.json"
-    prompt_text = prompt_path.read_text(encoding="utf-8")
     answer_file.write_text("", encoding="utf-8")
     task_id = f"ask-tau-{_safe_fragment(args.node_id)}-{int(time.time())}"
     command = [

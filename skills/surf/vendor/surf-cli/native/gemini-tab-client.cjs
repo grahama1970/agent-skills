@@ -493,32 +493,87 @@ async function clickSend(cdp, inputCdp) {
     await delay(100);
   }
 
-  for (const modifiers of [2, 4, 8, 0]) {
-    await inputCdp("Input.dispatchKeyEvent", {
-      type: "keyDown",
-      key: "Enter",
-      code: "Enter",
-      windowsVirtualKeyCode: 13,
-      nativeVirtualKeyCode: 13,
-      modifiers,
-      text: modifiers ? undefined : "\r",
-    });
-    await inputCdp("Input.dispatchKeyEvent", {
-      type: "keyUp",
-      key: "Enter",
-      code: "Enter",
-      windowsVirtualKeyCode: 13,
-      nativeVirtualKeyCode: 13,
-      modifiers,
-    });
-    await delay(250);
-    const generating = await evaluate(
-      cdp,
-      `Boolean(document.querySelector('${SELECTORS.stopButton}'))`,
-    ).catch(() => false);
-    if (generating) return true;
-  }
+  await pressEnter(inputCdp);
   return true;
+}
+
+async function pressEnter(inputCdp) {
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Enter",
+    code: "Enter",
+    windowsVirtualKeyCode: 13,
+    nativeVirtualKeyCode: 13,
+    text: "\r",
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Enter",
+    code: "Enter",
+    windowsVirtualKeyCode: 13,
+    nativeVirtualKeyCode: 13,
+  });
+}
+
+async function waitForSubmitAccepted(cdp, prompt, baselineUrl, timeoutMs = 10000) {
+  const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
+  const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
+  const expectedBaselineUrl = JSON.stringify(baselineUrl || "");
+  const promptSelectors = JSON.stringify(SELECTORS.promptTextarea.split(", ").map((item) => item.trim()));
+  const deadline = Date.now() + timeoutMs;
+  let lastState = null;
+  while (Date.now() < deadline) {
+    lastState = await evaluate(
+      cdp,
+      `(() => {
+        const promptStart = ${promptStart};
+        const promptEnd = ${promptEnd};
+        const baselineUrl = ${expectedBaselineUrl};
+        const promptSelectors = ${promptSelectors};
+        let composer = null;
+        for (const selector of promptSelectors) {
+          composer = document.querySelector(selector);
+          if (composer) break;
+        }
+        const composerText = composer ? (composer.innerText || composer.value || composer.textContent || '') : '';
+        const userTurns = Array.from(document.querySelectorAll([
+          '[data-message-author-role="user"]',
+          '[data-testid*="user"]',
+          '[class*="user-message"]',
+          '[class*="UserMessage"]',
+          'user-query-content',
+          '.user-query-container',
+          '.query-content',
+          '[id^="user-query-content-"]',
+        ].join(', ')));
+        const lastUser = userTurns.length ? userTurns[userTurns.length - 1] : null;
+        const lastUserText = lastUser ? (lastUser.innerText || lastUser.textContent || '') : '';
+        return {
+          stopVisible: Boolean(document.querySelector('${SELECTORS.stopButton}')),
+          composerChars: composerText.length,
+          composerStillContainsPrompt: Boolean(
+            composerText && composerText.includes(promptStart) && composerText.includes(promptEnd)
+          ),
+          lastUserContainsPrompt: Boolean(
+            lastUserText && lastUserText.includes(promptStart) && lastUserText.includes(promptEnd)
+          ),
+          currentUrl: location.href,
+          urlChanged: Boolean(baselineUrl && location.href !== baselineUrl),
+        };
+      })()`,
+    );
+    if (
+      lastState?.stopVisible
+      || lastState?.lastUserContainsPrompt
+      || (lastState?.urlChanged && lastState?.composerChars === 0)
+    ) {
+      return { accepted: true, ...lastState };
+    }
+    await delay(200);
+  }
+  const error = new Error("Gemini did not accept submitted prompt: prompt remained in the composer after send");
+  error.geminiSubmitState = lastState || null;
+  throw error;
 }
 
 async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
@@ -568,19 +623,33 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
     const sentinelFresh = Boolean(
       sentinel && hasSentinel && baselineText && !baselineText.includes(sentinel),
     );
-    if (hasSentinel) {
-      const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
+    const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
+    const grewAfterBaseline = baselineText
+      ? (currentLength > (baselineText.length + 5))
+      : currentLength > 0;
+    const stableResponseWithoutSentinel = Boolean(
+      sentinel
+      && !hasSentinel
+      && options.submissionAccepted === true
+      && stableEnough
+      && stableMs >= 5000
+      && assistantSource
+      && changedFromBaseline
+      && grewAfterBaseline
+      && !snapshot.stopVisible
+    );
+    if (hasSentinel || stableResponseWithoutSentinel) {
       const finishedVisible = snapshot.finished;
-      const grewAfterBaseline = baselineText
-        ? (currentLength > (baselineText.length + 5))
-        : currentLength > 0;
       const responseComplete = sentinel
         ? (
-          stableEnough
-          && assistantSource
-          && (
-            sentinelFresh
-            || (changedFromBaseline && sawGenerating && grewAfterBaseline)
+          stableResponseWithoutSentinel
+          || (
+            stableEnough
+            && assistantSource
+            && (
+              sentinelFresh
+              || (changedFromBaseline && sawGenerating && grewAfterBaseline)
+            )
           )
         )
         : ((!snapshot.stopVisible || finishedVisible) && stableEnough);
@@ -593,6 +662,7 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
           hasSentinel,
           source: snapshot.source,
           pageTextContainsSentinel: snapshot.pageTextContainsSentinel,
+          stableResponseWithoutSentinel,
         };
       }
     }
@@ -669,9 +739,19 @@ async function query(options) {
     }
     log("Prompt ready");
     const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
+    const baselineUrl = await evaluate(cdp, "window.location.href").catch(() => "");
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
     await clickSend(cdp, inputCdp);
+    let submitState;
+    try {
+      submitState = await waitForSubmitAccepted(cdp, prompt, baselineUrl, 6000);
+    } catch (error) {
+      log(`Send click was not accepted; pressing Enter on the controlled tab: ${error.message}`);
+      await pressEnter(inputCdp);
+      submitState = await waitForSubmitAccepted(cdp, prompt, baselineUrl, 10000);
+    }
+    log(`Prompt accepted: stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
     log("Prompt sent, waiting for response...");
     const genDeadline = Date.now() + 20000;
     while (Date.now() < genDeadline) {
@@ -683,6 +763,7 @@ async function query(options) {
       sentinel,
       stablePolls,
       baselineText: baseline?.text || "",
+      submissionAccepted: submitState?.accepted === true,
     });
     const conversationUrl = await evaluate(cdp, "window.location.href").catch(() => null);
     log(`Response received (${response.text.length} chars)`);
@@ -696,6 +777,7 @@ async function query(options) {
       responseSource: response.source,
       sentinel,
       hasSentinel: response.hasSentinel,
+      stableResponseWithoutSentinel: response.stableResponseWithoutSentinel === true,
       tookMs: Date.now() - startTime,
       activated: tabInfo.activated === true,
       tabWasCreated: tabInfo.tabWasCreated === true,

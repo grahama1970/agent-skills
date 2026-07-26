@@ -152,6 +152,11 @@ print(data.get("status"))' /tmp/endpoint.json
 These checks are intentionally outside the default test suite.
 
 ```bash
+# Release gate: repeated live, non-mocked mixed browser/API roundtable and
+# competition runs. This resets the configured browser tabs to fresh chats.
+uv run --project skills/ask python \
+  skills/ask/evals/live_mixed_dag_e2e.py --iterations 2 --allow-live
+
 uv run python scripts/live_sanity_report.py --plan-only --profile smoke
 uv run python scripts/live_sanity_report.py --allow-live --profile smoke
 uv run python scripts/webclaude_sanity_eval.py --plan-only

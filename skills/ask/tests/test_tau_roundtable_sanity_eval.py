@@ -8,6 +8,8 @@ import sys
 from types import SimpleNamespace
 from pathlib import Path
 
+import pytest
+
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_roundtable_sanity_eval.py"
 SPEC = importlib.util.spec_from_file_location("tau_roundtable_sanity_eval", SCRIPT_PATH)
@@ -634,6 +636,72 @@ def test_browser_failure_classifier_marks_provider_limit_distinct() -> None:
         )
         == "browser_provider_rate_limit_requires_backoff"
     )
+
+
+def test_browser_failure_classifier_ignores_failure_names_in_prompt() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="submit_failed",
+        response_text="",
+        raw_text="",
+        prompt_text=(
+            "Return no browser_access_blocked or transport blockers. "
+            "The provider may report browser_provider_rate_limited."
+        ),
+        submit_meta={
+            "status": "failed",
+            "failure": "submit_failed",
+            "blocker": "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT",
+            "proof_status": "rate_limited",
+            "browser_access_blocked": False,
+            "chatgpt_too_many_requests_detected": True,
+            "chatgpt_rate_limit": {"exhausted": True},
+        },
+        commands=[],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "Error: Socket connect failed: Socket not found. Attempted socket: /tmp/surf.sock",
+        "Error: Surf connection closed before response",
+    ],
+)
+def test_browser_failure_classifier_keeps_socket_loss_distinct_from_provider_limit(
+    failure: str,
+) -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure=failure,
+        response_text="",
+        raw_text="",
+        prompt_text=(
+            "A sibling candidate may be browser_provider_rate_limited. "
+            "Preserve that state in the scorecard."
+        ),
+        submit_meta={
+            "status": "failed",
+            "failure": failure,
+            "chatgpt_too_many_requests_detected": True,
+            "chatgpt_rate_limit": {"exhausted": True},
+        },
+        commands=[{"returncode": 1, "stderr_excerpt": failure}],
+    )
+
+    assert failure_code == tau_roundtable_worker.SURF_BROWSER_CONNECTION_UNAVAILABLE
+    assert failure_code != tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED
+
+
+def test_gemini_worker_timeout_covers_stall_retry_envelope(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("SURF_LOCK_TIMEOUT_MS", "1800000")
+    assert tau_roundtable_worker._browser_submit_timeout("webgpt", 900) == 3750
+    assert tau_roundtable_worker._browser_submit_timeout("webgemini", 300) == 2670
+    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 2190
+    monkeypatch.setenv("SURF_LOCK_TIMEOUT_MS", "invalid")
+    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 450
 
 
 def test_browser_failure_classifier_marks_unknown_tool_as_runtime_mismatch() -> None:

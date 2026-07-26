@@ -107,7 +107,7 @@ stable_stall_ms="${SURF_WEBGPT_STABLE_STALL_MS:-30000}"
 timeout_s="${SURF_WEBGPT_TIMEOUT:-2400}"
 advisory_after_s="${SURF_WEBGPT_ADVISORY_AFTER_SECONDS:-0}"
 rate_limit_wait_s="${SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS:-300}"
-rate_limit_retry_attempts="${SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS:-1}"
+rate_limit_retry_attempts="${SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS:-3}"
 model=""
 reasoning="${SURF_WEBGPT_REASONING:-Pro}"
 tab_id=""
@@ -894,11 +894,17 @@ attempt_chatgpt_too_many_requests_cooldown() {
     echo "ChatGPTRateLimitAction: dismiss_got_it_cooldown_and_retry"
   } >> "$stderr_log"
 
-  if [[ -z "${requested_tab_id:-}" ]]; then
-    echo "ChatGPTRateLimitDismissError: requested_tab_id_missing" >> "$stderr_log"
-  else
-    local dismiss_js dismiss_out
-    dismiss_js='(() => {
+  if ! [[ "$rate_limit_retry_attempts" =~ ^[0-9]+$ ]] || [[ "$rate_limit_retry_attempts" -lt 1 ]]; then
+    {
+      echo "ChatGPTRateLimitRetryAttempted: false"
+      echo "ChatGPTRateLimitExhausted: true"
+      echo "ChatGPTRateLimitError: retry_disabled"
+    } >> "$stderr_log"
+    return 1
+  fi
+
+  local dismiss_js dismiss_out retry_number retry_status retry_stderr
+  dismiss_js='(() => {
       const visible = (el) => {
         if (!(el instanceof HTMLElement)) return false;
         const rect = el.getBoundingClientRect();
@@ -919,7 +925,12 @@ attempt_chatgpt_too_many_requests_cooldown() {
       target.click();
       return JSON.stringify({dismissed: true, text: (target.innerText || target.textContent || "").trim(), url: location.href});
     })()'
-    if dismiss_out="$("$RUN_SH" js "$dismiss_js" --tab-id "$requested_tab_id" --no-activate 2>&1)"; then
+
+  for ((retry_number = 1; retry_number <= rate_limit_retry_attempts; retry_number++)); do
+    echo "ChatGPTRateLimitRetryNumber: ${retry_number}" >> "$stderr_log"
+    if [[ -z "${requested_tab_id:-}" ]]; then
+      echo "ChatGPTRateLimitDismissError: requested_tab_id_missing" >> "$stderr_log"
+    elif dismiss_out="$("$RUN_SH" js "$dismiss_js" --tab-id "$requested_tab_id" --no-activate 2>&1)"; then
       {
         echo "ChatGPTRateLimitDismissAttempted: true"
         echo "ChatGPTRateLimitDismissed: true"
@@ -932,38 +943,39 @@ attempt_chatgpt_too_many_requests_cooldown() {
         echo "ChatGPTRateLimitDismissError: ${dismiss_out}"
       } >> "$stderr_log"
     fi
-  fi
 
-  if ! [[ "$rate_limit_retry_attempts" =~ ^[0-9]+$ ]] || [[ "$rate_limit_retry_attempts" -lt 1 ]]; then
-    {
-      echo "ChatGPTRateLimitRetryAttempted: false"
-      echo "ChatGPTRateLimitExhausted: true"
-      echo "ChatGPTRateLimitError: retry_disabled"
-    } >> "$stderr_log"
-    return 1
-  fi
+    if [[ "$rate_limit_wait_s" =~ ^[0-9]+$ ]] && [[ "$rate_limit_wait_s" -gt 0 ]]; then
+      echo "ChatGPTRateLimitCooldownStarted: true" >> "$stderr_log"
+      sleep "$rate_limit_wait_s"
+    else
+      echo "ChatGPTRateLimitCooldownStarted: false" >> "$stderr_log"
+    fi
+    echo "ChatGPTRateLimitRetryAttempted: true" >> "$stderr_log"
 
-  if [[ "$rate_limit_wait_s" =~ ^[0-9]+$ ]] && [[ "$rate_limit_wait_s" -gt 0 ]]; then
-    echo "ChatGPTRateLimitCooldownStarted: true" >> "$stderr_log"
-    sleep "$rate_limit_wait_s"
-  else
-    echo "ChatGPTRateLimitCooldownStarted: false" >> "$stderr_log"
-  fi
-  echo "ChatGPTRateLimitRetryAttempted: true" >> "$stderr_log"
-
-  if run_submit > "$raw_tmp" 2>> "$stderr_log"; then
-    write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
-    write_webgpt_heartbeat "submitted" "rate_limit_cooldown_retry" "$receipt_output" "$raw_output" "$timeout_s"
-    echo "ChatGPTRateLimitExhausted: false" >> "$stderr_log"
-    return 0
-  else
-    local retry_status=$?
+    retry_stderr="$(mktemp "${TMPDIR:-/tmp}/surf-webgpt-rate-retry.XXXXXX.log")"
+    if run_submit > "$raw_tmp" 2>"$retry_stderr"; then
+      cat "$retry_stderr" >> "$stderr_log"
+      rm -f "$retry_stderr"
+      write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+      write_webgpt_heartbeat "submitted" "rate_limit_cooldown_retry" "$receipt_output" "$raw_output" "$timeout_s"
+      echo "ChatGPTRateLimitExhausted: false" >> "$stderr_log"
+      return 0
+    else
+      retry_status=$?
+    fi
+    cat "$retry_stderr" >> "$stderr_log"
+    if [[ "$retry_number" -lt "$rate_limit_retry_attempts" ]] \
+      && grep -Eiq "ChatGPT is rate limited: too many requests|Too many requests|making requests too quickly|temporarily limited access to your conversations" "$retry_stderr"; then
+      rm -f "$retry_stderr"
+      continue
+    fi
+    rm -f "$retry_stderr"
     {
       echo "ChatGPTRateLimitExhausted: true"
       echo "ChatGPTRateLimitError: retry_failed_exit_${retry_status}"
     } >> "$stderr_log"
     return "$retry_status"
-  fi
+  done
 }
 # Dedicated reviewer tab (inactive). Avoids reusing global state or auto-picking
 # the newest chatgpt.com tab (often the user's foreground conversation).

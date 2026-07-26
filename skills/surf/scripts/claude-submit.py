@@ -728,7 +728,19 @@ def _page_text(tab_id: str, *, timeout: int) -> str:
 
 
 def _run_surf(args: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
-    return subprocess.run([str(RUN_SH), *args], capture_output=True, text=True, timeout=timeout)
+    try:
+        lock_wait_seconds = max(
+            0,
+            (int(os.environ.get("SURF_LOCK_TIMEOUT_MS", "60000")) + 999) // 1000,
+        )
+    except ValueError:
+        lock_wait_seconds = 60
+    return subprocess.run(
+        [str(RUN_SH), *args],
+        capture_output=True,
+        text=True,
+        timeout=timeout + lock_wait_seconds,
+    )
 
 
 def _raise_surf_failure(args: list[str], proc: subprocess.CompletedProcess[str]) -> None:

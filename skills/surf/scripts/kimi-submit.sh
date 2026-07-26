@@ -44,6 +44,7 @@ submitted_output=""
 sentinel="auto"
 stable_polls=3
 timeout_s=300
+surf_lock_wait_ms="${SURF_LOCK_TIMEOUT_MS:-60000}"
 model="${SURF_KIMI_DEFAULT_MODEL:-Instant}"
 reasoning="${SURF_KIMI_DEFAULT_REASONING:-High}"
 tab_id=""
@@ -203,7 +204,8 @@ attempt=0
 while true; do
   set +e
   if command -v timeout >/dev/null 2>&1; then
-    hard_timeout_s=$((timeout_s + 60))
+    [[ "$surf_lock_wait_ms" =~ ^[0-9]+$ ]] || surf_lock_wait_ms=60000
+    hard_timeout_s=$((timeout_s + 60 + ((surf_lock_wait_ms + 999) / 1000)))
     timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
   else
     "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"

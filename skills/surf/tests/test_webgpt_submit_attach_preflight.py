@@ -905,7 +905,7 @@ esac
     assert meta["controlled_tab_id"] == "837352334"
     assert meta["chatgpt_too_many_requests_detected"] is True
     assert meta["chatgpt_rate_limit"]["wait_seconds"] == 0
-    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 1
+    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 3
     assert meta["chatgpt_rate_limit"]["dismiss_attempted"] is True
     assert meta["chatgpt_rate_limit"]["dismissed"] is False
     assert meta["chatgpt_rate_limit"]["retry_attempted"] is True
@@ -958,6 +958,7 @@ esac
     assert meta["proof_status"] == "rate_limited"
     assert meta["chatgpt_too_many_requests_detected"] is True
     assert meta["chatgpt_rate_limit"]["error"] == "retry_failed_exit_42"
+    assert chatgpt_count_file.read_text(encoding="utf-8") == "4"
 
 
 def test_webgpt_submit_clicks_start_new_chat_same_tab_on_conversation_max_length(tmp_path: Path) -> None:
@@ -1117,7 +1118,7 @@ esac
     assert meta["controlled_tab_id"] == "837352334"
     assert meta["chatgpt_too_many_requests_detected"] is True
     assert meta["chatgpt_rate_limit"]["wait_seconds"] == 0
-    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 1
+    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 3
     assert meta["chatgpt_rate_limit"]["dismiss_attempted"] is True
     assert meta["chatgpt_rate_limit"]["dismissed"] is True
     assert meta["chatgpt_rate_limit"]["retry_attempted"] is True

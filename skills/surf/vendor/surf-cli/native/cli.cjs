@@ -3819,6 +3819,12 @@ async function handleResponse(response) {
     if (data.pageTextContainsSentinel !== undefined) {
       console.error(`PageTextContainsSentinel: ${data.pageTextContainsSentinel}`);
     }
+    if (data.hasSentinel !== undefined) {
+      console.error(`HasSentinel: ${data.hasSentinel}`);
+    }
+    if (data.stableResponseWithoutSentinel !== undefined) {
+      console.error(`StableResponseWithoutSentinel: ${data.stableResponseWithoutSentinel}`);
+    }
     if (data.documentHiddenAtCompletion !== undefined) {
       console.error(`DocumentHiddenAtCompletion: ${data.documentHiddenAtCompletion}`);
     }

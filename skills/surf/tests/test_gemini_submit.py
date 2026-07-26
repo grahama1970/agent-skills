@@ -5,6 +5,8 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GEMINI_SUBMIT = REPO_ROOT / "skills/surf/scripts/gemini-submit.sh"
@@ -77,7 +79,88 @@ esac
     assert payload["controlled_tab_id_mismatch"] is False
 
 
-def test_gemini_submit_retries_stalled_exact_tab_after_cooldown(tmp_path: Path) -> None:
+def test_gemini_submit_accepts_fresh_stable_response_without_sentinel(
+    tmp_path: Path,
+) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    fake_run = tmp_path / "surf-run.sh"
+
+    request.write_text("Reply with exactly: gemini smoke\n", encoding="utf-8")
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  focus.state)
+    printf '{"focusedWindowId":1,"activeTabId":837361258}\\n'
+    ;;
+  gemini_tab)
+    printf 'gemini smoke\\n'
+    echo 'ControlledTabID: 837361258' >&2
+    echo 'Activated: false' >&2
+    echo 'StableResponseWithoutSentinel: true' >&2
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "bash",
+            str(GEMINI_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--meta-output",
+            str(meta),
+            "--sentinel",
+            "<<<GEMINI_DONE:test>>>",
+            "--tab-id",
+            "837361258",
+            "--no-activate",
+            "--stable-polls",
+            "2",
+            "--timeout",
+            "5",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert response.read_text(encoding="utf-8") == "gemini smoke\n"
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "completed"
+    assert payload["raw_contains_sentinel"] is False
+    assert payload["stable_response_without_sentinel"] is True
+    assert payload["proof_status"] == "response_proven_without_sentinel"
+
+
+@pytest.mark.parametrize(
+    "first_error",
+    [
+        "Error: Response timeout",
+        "Error: Gemini did not accept submitted prompt: prompt remained in the composer after send",
+    ],
+)
+def test_gemini_submit_retries_stalled_exact_tab_after_cooldown(
+    tmp_path: Path,
+    first_error: str,
+) -> None:
     request = tmp_path / "request.md"
     response = tmp_path / "response.md"
     meta = tmp_path / "response.meta.json"
@@ -100,7 +183,7 @@ case "${{1:-}}" in
     count=$((count + 1))
     printf '%s' "$count" > {attempts}
     if [[ "$count" -eq 1 ]]; then
-      echo 'Error: Response timeout' >&2
+      echo {first_error!r} >&2
       exit 1
     fi
     printf 'gemini smoke<<<GEMINI_DONE:test>>>\\n'

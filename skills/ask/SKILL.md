@@ -510,8 +510,8 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
 - If a WebGPT/Tau browser-handler receipt or Surf metadata reports
   `chatgpt_too_many_requests_detected` or `chatgpt_rate_limit`, treat it as
   Surf's provider-throttle cooldown path. Surf clicks **Got it** when possible,
-  waits `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS`, and retries once by default on
-  the same controlled tab. Do not reclassify it as a reviewer failure,
+  waits `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS`, and makes up to three bounded
+  retries by default on the same controlled tab. Do not reclassify it as a reviewer failure,
   browser-oracle mismatch, download failure, or sentinel parser defect. If Surf
   succeeds after cooldown, preserve the throttle metadata and continue. If
   `proof_status: rate_limited` or `chatgpt_rate_limit.exhausted: true`, mark
@@ -530,6 +530,18 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   capacity limit. Surf may wait a bounded cooldown and retry that one lane, but
   the project agent must not pause, cancel, or rerun healthy roundtable or
   competition participants because another participant is cooling down.
+- Concurrent browser handlers remain independent Tau nodes. Their active Surf
+  commands queue on the shared browser lock, but provider cooldown sleeps do
+  not hold that lock and must not become DAG dependencies between participants.
+- A missing Surf socket, native-host disconnect, or `Surf connection closed
+  before response` is local transport failure
+  `surf_browser_connection_unavailable`, not provider throttling. Recover the
+  Surf host/socket and rerun only the affected lane; do not apply a provider
+  cooldown.
+- Competition joins preserve every terminal candidate receipt, including
+  blocked lanes, but populate `winner_handler` and `winner_node_id` only when
+  the scorecard is blocker-free `PASS`. A `NEEDS_ATTENTION` scorecard never
+  names a winner.
 - Do not use raw `surf` as a substitute for `$ask`; use it only for transport
   debugging, direct project-level WebGPT workflows, or Tau command specs emitted
   by `./run.sh tau-dag`.
@@ -557,6 +569,17 @@ When a reference file is selected, read it completely before running that mode.
 
 For common commands and opt-in live sanity checks, read
 `docs/ASK_COMMAND_AND_SANITY_REFERENCE.md`.
+
+The release gate for mixed browser/API roundtable and competition transport is:
+
+```bash
+uv run --project skills/ask python \
+  skills/ask/evals/live_mixed_dag_e2e.py --iterations 2 --allow-live
+```
+
+It resets each bound browser tab to a fresh chat, executes both Tau DAG modes,
+and fails unless every browser/API lane and the join are live, non-mocked, and
+usable. It can take several hours when providers impose cooldowns.
 
 ## Output Expectations
 

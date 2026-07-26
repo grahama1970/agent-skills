@@ -52,6 +52,7 @@ attach_files=()
 tab_state_file="${SURF_GEMINI_TAB_STATE:-/tmp/surf-gemini-controlled-tab-id}"
 stall_retry_attempts="${SURF_GEMINI_STALL_RETRY_ATTEMPTS:-1}"
 stall_cooldown_s="${SURF_GEMINI_STALL_COOLDOWN_SECONDS:-120}"
+surf_lock_wait_ms="${SURF_LOCK_TIMEOUT_MS:-60000}"
 
 add_attach_files_arg() {
   local value="$1"
@@ -196,7 +197,8 @@ stall_retry_count=0
 while true; do
   set +e
   if command -v timeout >/dev/null 2>&1; then
-    hard_timeout_s=$((timeout_s + 60))
+    [[ "$surf_lock_wait_ms" =~ ^[0-9]+$ ]] || surf_lock_wait_ms=60000
+    hard_timeout_s=$((timeout_s + 60 + ((surf_lock_wait_ms + 999) / 1000)))
     timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
   else
     "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
@@ -208,7 +210,7 @@ while true; do
   fi
   haystack="$(cat "$stderr_log" "$raw_tmp" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
   if [[ "$stall_retry_count" -ge "$stall_retry_attempts" ]] || \
-     [[ "$haystack" != *"response timeout"* && "$haystack" != *"system is currently busy"* && "$haystack" != *"temporarily busy"* && "$haystack" != *"high demand"* ]]; then
+     [[ "$haystack" != *"response timeout"* && "$haystack" != *"did not accept submitted prompt"* && "$haystack" != *"system is currently busy"* && "$haystack" != *"temporarily busy"* && "$haystack" != *"high demand"* ]]; then
     break
   fi
   stall_retry_count=$((stall_retry_count + 1))
@@ -259,7 +261,12 @@ PY
   exit "$status"
 fi
 
-if ! grep -Fq "$sentinel" "$raw_output"; then
+stable_response_without_sentinel=0
+if grep -Fq "StableResponseWithoutSentinel: true" "$stderr_log"; then
+  stable_response_without_sentinel=1
+fi
+
+if ! grep -Fq "$sentinel" "$raw_output" && [[ "$stable_response_without_sentinel" -ne 1 ]]; then
   python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" <<'PY'
 import json, pathlib, sys
 meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url = sys.argv[1:]
@@ -281,12 +288,15 @@ PY
   exit 4
 fi
 
-python3 - "$raw_output" "$output" "$sentinel" <<'PY'
+python3 - "$raw_output" "$output" "$sentinel" "$stable_response_without_sentinel" <<'PY'
 import pathlib, sys
-raw_path, out_path, sentinel = sys.argv[1:]
+raw_path, out_path, sentinel, stable_without_sentinel = sys.argv[1:]
 text = pathlib.Path(raw_path).read_text()
 idx = text.rfind(sentinel)
 if idx == -1:
+    if stable_without_sentinel == "1":
+        pathlib.Path(out_path).write_text(text.rstrip() + "\n")
+        raise SystemExit(0)
     raise SystemExit("sentinel missing from assistant response")
 after = text[idx + len(sentinel):].strip()
 if after:
@@ -363,7 +373,7 @@ status = "completed" if (
     tab_id
     and not tab_mismatch
     and not contamination
-    and sentinel in raw_text
+    and (sentinel in raw_text or "StableResponseWithoutSentinel: true" in stderr_text)
     and sentinel not in out_text
     and not activation_violation
 ) else "failed"
@@ -392,6 +402,14 @@ pathlib.Path(meta).write_text(json.dumps({
     "stable_polls": int(stable),
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,
+    "stable_response_without_sentinel": "StableResponseWithoutSentinel: true" in stderr_text,
+    "proof_status": (
+        "response_proven"
+        if sentinel in raw_text
+        else "response_proven_without_sentinel"
+        if "StableResponseWithoutSentinel: true" in stderr_text
+        else "missing_sentinel"
+    ),
     "clean_contains_sentinel": sentinel in out_text,
     "clean_contamination_markers": contamination,
     "raw_chars": len(raw_text),
