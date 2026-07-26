@@ -162,6 +162,53 @@ def test_eval_plain_no_immutable_goal_never_enters_prompt(tmp_path: Path) -> Non
     assert client.enter_count == 0
 
 
+def test_eval_goal_file_without_restart_signal_never_enters_prompt(tmp_path: Path) -> None:
+    project = tmp_path / "legitimate_stop"
+    project.mkdir()
+    (project / "GOAL.md").write_text("Finish the project goal.", encoding="utf-8")
+    client = EvalHerdrClient(
+        panes=[{"workspace_id": "w1", "pane_id": "w1:p1", "agent": "codex", "agent_status": "idle", "cwd": str(project)}],
+        text_by_pane={"w1:p1": "Improve documentation in @filename"},
+    )
+
+    exit_code, result = run_eval_tick(tmp_path, client)
+
+    assert exit_code == 0
+    assert result["ok"] is True
+    assert result["stopped_panes"][0]["classification"] == "immutable_goal_present_no_restart_signal"
+    assert result["stopped_panes"][0]["action"] == "observe_only"
+    assert result["selected_panes"] == []
+    assert client.sent_text_count == 0
+    assert client.enter_count == 0
+
+
+def test_eval_unproven_completion_claim_without_restart_signal_never_enters_prompt(tmp_path: Path) -> None:
+    project = tmp_path / "unproven_done"
+    project.mkdir()
+    (project / "GOAL.md").write_text("Finish the project goal.", encoding="utf-8")
+    client = EvalHerdrClient(
+        panes=[{"workspace_id": "w1", "pane_id": "w1:p1", "agent": "codex", "agent_status": "idle", "cwd": str(project)}],
+        text_by_pane={
+            "w1:p1": (
+                "Status/Phase: Stop-condition proof completed.\n"
+                "Immutable Goal: ACHIEVED_WITH_RECEIPT:missing-receipt.json\n"
+                "Evidence: none\n"
+                "Disposition: DONE_WITH_RECEIPT\n"
+            )
+        },
+    )
+
+    exit_code, result = run_eval_tick(tmp_path, client)
+
+    assert exit_code == 0
+    assert result["ok"] is True
+    assert result["stopped_panes"][0]["classification"] == "completion_claim_unproven_no_restart_signal"
+    assert result["stopped_panes"][0]["action"] == "observe_only"
+    assert result["selected_panes"] == []
+    assert client.sent_text_count == 0
+    assert client.enter_count == 0
+
+
 def test_eval_no_immutable_goal_with_explicit_early_stop_enters_prompt(tmp_path: Path) -> None:
     project = tmp_path / "nogal_early"
     project.mkdir()

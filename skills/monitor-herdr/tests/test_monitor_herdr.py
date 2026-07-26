@@ -396,6 +396,30 @@ def test_done_agent_without_goal_and_no_early_marker_can_stop(tmp_path: Path) ->
     assert candidate["classification"] == "no_immutable_goal"
 
 
+def test_goal_file_without_current_restart_signal_does_not_prompt(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish the project goal.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "idle",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pX",
+    }
+
+    candidate = monitor.classify_pane(
+        FakeHerdr("Improve documentation in @filename"),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"idle"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "observe_only"
+    assert candidate["classification"] == "immutable_goal_present_no_restart_signal"
+    assert "no_current_restart_signal" in candidate["selection_reasons"]
+
+
 def test_cwd_prefix_rejects_sibling_path(tmp_path: Path) -> None:
     prefix = tmp_path / "scope"
     sibling = tmp_path / "scope-other"
@@ -998,6 +1022,67 @@ def test_achieved_receipt_suppresses_soft_remaining_work_marker(tmp_path: Path) 
     assert candidate is not None
     assert candidate["action"] == "observe_only"
     assert candidate["classification"] == "goal_stop_allowed"
+
+
+def test_unproven_completion_claim_without_restart_signal_does_not_prompt(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "idle",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pZ",
+    }
+    text = """
+    Status/Phase: Stop-condition proof completed.
+    Immutable Goal: ACHIEVED_WITH_RECEIPT:missing-receipt.json
+    Evidence: receipt exists somewhere, but not in this block.
+    Next: STOP_ALLOWED because the immutable goal has receipt-backed proof.
+    Disposition: DONE_WITH_RECEIPT
+    """
+
+    candidate = monitor.classify_pane(
+        FakeHerdr(text),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"idle"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "observe_only"
+    assert candidate["classification"] == "completion_claim_unproven_no_restart_signal"
+
+
+def test_closure_claim_blocked_remains_restart_signal(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "idle",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pZ",
+    }
+    text = """
+    Status/Phase: Stop-condition proof completed.
+    Immutable Goal: ACHIEVED_WITH_RECEIPT:missing-receipt.json
+    Evidence: none
+    Disposition: DONE_WITH_RECEIPT
+    Closure claim blocked. This is a high-risk or disputed task.
+    """
+
+    candidate = monitor.classify_pane(
+        FakeHerdr(text),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"idle"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "restart_continue"
+    assert candidate["classification"] == "stopped_or_early_stop"
+    assert any("closure claim blocked" in item for item in candidate["early_stop_markers"])
 
 
 def test_existing_receipt_without_duplicate_evidence_line_allows_stop(tmp_path: Path) -> None:

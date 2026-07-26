@@ -71,6 +71,14 @@ def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dic
     return {"state": "none", "source": "latest_transcript_region"}
 
 
+def completion_claim_present(text: str) -> bool:
+    block = latest_operational_block(text)
+    goal = structured_line_value(block, "Immutable Goal").lower()
+    if goal.startswith("achieved_with_receipt:") or goal == "done_with_receipt":
+        return True
+    return bool(re.search(r"^\s*(?:DONE_WITH_RECEIPT|Goal achieved)(?:\s|$)", block, flags=re.IGNORECASE | re.MULTILINE))
+
+
 def goal_allows_stop(text: str, *, goal_found: bool, has_early_markers: bool, project_root: Path | None = None) -> bool:
     if exhausted_blocker_claim(text, project_root=project_root):
         return True

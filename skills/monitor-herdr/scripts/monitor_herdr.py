@@ -22,7 +22,7 @@ from cron_support import install_cron, latest_cron_receipt_summary, latest_recei
 from goal_discovery import discover_immutable_goal, path_is_relative_to, project_root_for_cwd
 from herdr_terminal_control import pane_run_submit, wait_for_agent_idle
 from prompt_builder import build_prompt
-from transcript_classifier import exhausted_blocker_claim, goal_allows_stop, latest_transcript_region, transcript_goal_claim, valid_attempt_value
+from transcript_classifier import completion_claim_present, exhausted_blocker_claim, goal_allows_stop, latest_transcript_region, transcript_goal_claim, valid_attempt_value
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 STATE_ROOT = Path.home() / ".local" / "state" / "monitor-herdr"
@@ -50,6 +50,7 @@ EARLY_STOP_PATTERNS = [
     r"\bstop hook \((?:blocked|stopped)\)",
     r"\bstatus response blocked as too vague\b",
     r"\bclosure claim lacks deterministic proof\b",
+    r"\bclosure claim blocked\b",
 ]
 
 HUMAN_BLOCKER_PATTERNS = [
@@ -709,10 +710,26 @@ def classify_pane(
         classification = "goal_stop_allowed"
         action = "observe_only"
         reasons = [f"stopped_status:{status}", f"goal_claim:{goal_claim['state']}"]
+    elif goal_claim["state"] == "unmet" and completion_claim_present(current_text) and not early_markers:
+        classification = "completion_claim_unproven_no_restart_signal"
+        action = "observe_only"
+        reasons = [
+            f"stopped_status:{status}",
+            "completion_claim_present",
+            "no_current_restart_signal",
+        ]
     elif human_markers and not early_markers:
         classification = "legitimate_human_blocker"
         action = "needs_human"
         reasons = [f"human_blocker:{item}" for item in human_markers[:5]]
+    elif immutable_goal.get("found") and goal_claim["state"] == "none" and not early_markers:
+        classification = "immutable_goal_present_no_restart_signal"
+        action = "observe_only"
+        reasons = [
+            f"stopped_status:{status}",
+            "immutable_goal_found",
+            "no_current_restart_signal",
+        ]
     else:
         classification = "stopped_or_early_stop"
         action = "restart_continue"
