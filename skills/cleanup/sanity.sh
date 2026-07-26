@@ -12,4 +12,9 @@ uv run --project "$SCRIPT_DIR" python -m py_compile "$SCRIPT_DIR/cleanup.py" \
 # CLI smoke
 uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/cleanup.py" --help > /dev/null 2>&1 \
   && echo "  [PASS] --help works" || { echo "  [FAIL] --help failed"; exit 1; }
+# Behavioral safety checks include positive candidate discovery, negative
+# runtime-dependency controls, ingest preconditions, and forbidden mutation.
+uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/test_cleanup.py" \
+  && echo "  [PASS] behavioral safety checks" \
+  || { echo "  [FAIL] behavioral safety checks"; exit 1; }
 echo "Result: PASS"

@@ -21,6 +21,7 @@ import os
 import shutil
 import subprocess
 import json
+import re
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -93,6 +94,17 @@ SKIP_DIRS = {
     ".next",
     ".nuxt",
     ".cache",
+}
+
+REFERENCE_TEXT_EXTENSIONS = {
+    ".c", ".cc", ".cpp", ".go", ".h", ".hpp", ".java", ".js", ".jsx",
+    ".json", ".md", ".py", ".pyi", ".rs", ".sh", ".toml", ".ts", ".tsx",
+    ".yaml", ".yml",
+}
+
+DEAD_FILE_CANDIDATE_EXTENSIONS = {
+    ".c", ".cc", ".cpp", ".go", ".h", ".hpp", ".java", ".js", ".jsx",
+    ".py", ".pyi", ".rs", ".ts", ".tsx",
 }
 
 def log_error(message: str) -> None:
@@ -437,7 +449,8 @@ def scan_root_strays() -> List[Dict[str, str]]:
     for top, files in root_entries.items():
         full = Path(top)
 
-        # Root-level artifact files
+        # Root-level artifacts may be runtime inputs, fixtures, or deployment
+        # assets. Classification alone never grants mutation authority.
         if full.is_file() and is_artifact_file(top):
             sz = get_file_size(top)
             strays.append({
@@ -445,7 +458,7 @@ def scan_root_strays() -> List[Dict[str, str]]:
                 "status": "artifact",
                 "size": sz,
                 "reason": f"Binary/media artifact at root ({_human_size(sz)})",
-                "action": "archive",
+                "action": "review",
             })
         # Root-level large files
         elif full.is_file() and not is_junk_file(top):
@@ -458,7 +471,8 @@ def scan_root_strays() -> List[Dict[str, str]]:
                     "reason": f"Large file at root ({_human_size(sz)})",
                     "action": "review",
                 })
-        # Root-level directories that aren't expected
+        # Untracked root directories can satisfy dynamic imports, deployment
+        # mounts, or local service contracts. Never archive them heuristically.
         elif full.is_dir() and top not in get_expected_root_dirs():
             total = sum(get_file_size(f) for f in files)
             strays.append({
@@ -466,7 +480,7 @@ def scan_root_strays() -> List[Dict[str, str]]:
                 "status": "stray_dir",
                 "size": total,
                 "reason": f"Untracked directory at root ({_human_size(total)}, {len(files)} files)",
-                "action": "archive",
+                "action": "review",
             })
 
     # ── Tracked root-level files that aren't infrastructure ─────────────
@@ -580,29 +594,44 @@ def find_file_references(filepath: str, search_paths: List[str]) -> List[str]:
 
 
 def build_reference_index(search_dirs: List[str]) -> Dict[str, Set[str]]:
-    """Walk codebase once, return {term: set_of_files_containing_it}."""
+    """Return lexical reference terms for tracked text files.
+
+    This is candidate-generation evidence only. It is not a language server,
+    import resolver, or proof that an absent term means a file is unused.
+    """
     index: Dict[str, Set[str]] = {}
-    for search_dir in search_dirs:
-        if not os.path.exists(search_dir):
+    tracked_files = sorted(get_all_tracked_files())
+    normalized_roots = {
+        str(Path(search_dir)).removeprefix("./").rstrip("/")
+        for search_dir in search_dirs
+    }
+
+    for filepath in tracked_files:
+        path = Path(filepath)
+        if path.suffix.lower() not in REFERENCE_TEXT_EXTENSIONS:
             continue
-        for root, dirs, files in os.walk(search_dir):
-            dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
-            for file in files:
-                if not file.endswith((".md", ".py", ".ts", ".js", ".json", ".yaml", ".yml")):
-                    continue
-                full_path = os.path.join(root, file)
-                content = read_file_content(full_path)
-                if not content:
-                    continue
-                # Index all words/identifiers that appear
-                for term in set(content.split()):
-                    index.setdefault(term, set()).add(full_path)
-                # Also index the content itself for substring checks
-                index.setdefault(full_path, set()).add("__self__")
+        if normalized_roots and "." not in normalized_roots:
+            if not any(filepath == root or filepath.startswith(f"{root}/") for root in normalized_roots):
+                continue
+        if any(part in SKIP_DIRS for part in path.parts):
+            continue
+
+        content = read_file_content(filepath)
+        if not content:
+            continue
+        for term in set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", content)):
+            index.setdefault(term, set()).add(filepath)
+        index.setdefault(filepath, set()).add(filepath)
     return index
 
 
 def scan_for_dead_files() -> List[Dict[str, str]]:
+    """Generate review-only candidates from weak lexical evidence.
+
+    A missing lexical reference cannot prove that code is unused. Dynamic
+    imports, framework discovery, package entrypoints, build manifests, and
+    runtime configuration all require separate dependency and readiness proof.
+    """
     dead_files = []
     tracked_files = get_all_tracked_files()
 
@@ -618,80 +647,196 @@ def scan_for_dead_files() -> List[Dict[str, str]]:
     index = build_reference_index(search_dirs)
 
     for filepath in tracked_files:
-        if filepath.endswith((".lock", ".gitignore", ".gitattributes")):
+        path = Path(filepath)
+        if path.suffix.lower() not in DEAD_FILE_CANDIDATE_EXTENSIONS:
             continue
         if ".pi/skills/" in filepath or ".kilocode/skills/" in filepath:
             continue
-
-        filename = os.path.basename(filepath)
-
-        # Check README directly
-        if filepath in readme_content or filename in readme_content:
+        if path.name in {"__init__.py", "__main__.py", "conftest.py"}:
+            continue
+        if path.parts and path.parts[0] in {"tests", "scripts", "migrations"}:
             continue
 
-        # Check index for filename or filepath references
-        found = False
-        if filename in index or filepath in index:
-            found = True
-        if not found:
-            # Check filepath with different separators
-            for variant in [filepath, filepath.replace("/", "."), filepath.replace("/", "_")]:
-                if variant in index:
-                    found = True
-                    break
+        filename = os.path.basename(filepath)
+        stem = path.stem
 
-        if not found:
+        # Check README directly
+        if filepath in readme_content or filename in readme_content or stem in readme_content:
+            continue
+
+        # Require a reference from another tracked text file. The result is
+        # still heuristic because lexical references do not model runtime use.
+        reference_files: Set[str] = set()
+        for variant in {
+            filename,
+            stem,
+            filepath,
+            filepath.replace("/", "."),
+            filepath.replace("/", "_"),
+        }:
+            reference_files.update(index.get(variant, set()))
+        reference_files.discard(filepath)
+
+        if not reference_files:
             full_path = os.path.join(os.getcwd(), filepath)
             if not os.path.exists(full_path):
                 dead_files.append({
                     "path": filepath,
                     "status": "missing",
-                    "reason": "Tracked but not found on disk"
+                    "reason": "Tracked but not found on disk",
+                    "evidence_level": "git_state",
+                    "mutation_allowed": False,
                 })
             else:
                 dead_files.append({
                     "path": filepath,
-                    "status": "unreferenced",
-                    "reason": "No references found in codebase"
+                    "status": "lexically_unreferenced_candidate",
+                    "reason": "No lexical reference found in another tracked text file",
+                    "evidence_level": "heuristic_only",
+                    "mutation_allowed": False,
                 })
 
     return dead_files
 
 
+def scan_ingest_code_evidence(marker_path: str = ".ingest-code.json") -> Dict[str, Any]:
+    """Summarize the local ingest-code marker without overstating its proof."""
+    path = Path(marker_path)
+    base: Dict[str, Any] = {
+        "marker_path": str(path),
+        "proves": "the recorded ingest-code workflow completed with the reported scope",
+        "does_not_prove": "that any file is unused or safe to move/delete",
+        "recommended_command": (
+            f"{Path(__file__).resolve().parent.parent / 'ingest-code' / 'run.sh'} "
+            f"scan {Path.cwd()} --treesitter"
+        ),
+    }
+    if not path.exists():
+        return {**base, "status": "missing"}
+
+    try:
+        marker = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        return {**base, "status": "invalid", "error": str(exc)}
+
+    completed = marker.get("completed") is True and marker.get("run_status") == "complete"
+    code_index = marker.get("code_index") if isinstance(marker.get("code_index"), dict) else {}
+    return {
+        **base,
+        "status": "complete" if completed else "incomplete",
+        "repository_path": marker.get("path"),
+        "ingested_at": marker.get("ingested_at"),
+        "scope": marker.get("scope"),
+        "files_scanned": marker.get("files_scanned"),
+        "edges_stored": marker.get("edges_stored"),
+        "scan_roots": marker.get("scan_roots", []),
+        "completed_scan_roots": marker.get("completed_scan_roots", []),
+        "code_index": {
+            "enabled": code_index.get("enabled", False),
+            "treesitter": code_index.get("treesitter", False),
+            "symbols_stored": code_index.get("symbols_stored", 0),
+            "content_hashes": code_index.get("content_hashes", False),
+        },
+    }
+
+
+def validate_ingest_code_precondition(evidence: Dict[str, Any]) -> List[str]:
+    """Require a current, repository-wide Tree-sitter scan before execution."""
+    errors: List[str] = []
+    repo_root = Path.cwd().resolve()
+
+    if evidence.get("status") != "complete":
+        return ["ingest-code marker is not complete"]
+
+    marker_repo = evidence.get("repository_path")
+    if not marker_repo:
+        errors.append("ingest-code marker does not identify its repository")
+    else:
+        try:
+            if Path(str(marker_repo)).resolve() != repo_root:
+                errors.append("ingest-code marker belongs to a different repository")
+        except OSError:
+            errors.append("ingest-code repository path cannot be resolved")
+
+    code_index = evidence.get("code_index", {})
+    if not code_index.get("enabled") or not code_index.get("treesitter"):
+        errors.append("ingest-code Tree-sitter code index is not complete")
+
+    completed_roots = {
+        Path(str(root)).resolve()
+        for root in evidence.get("completed_scan_roots", [])
+        if root
+    }
+    if repo_root not in completed_roots:
+        errors.append("ingest-code did not complete a repository-root scan")
+
+    tracked_code_files = [
+        path
+        for path in get_all_tracked_files()
+        if Path(path).suffix.lower() in DEAD_FILE_CANDIDATE_EXTENSIONS
+    ]
+    files_scanned = evidence.get("files_scanned")
+    if not isinstance(files_scanned, int) or files_scanned < len(tracked_code_files):
+        errors.append(
+            "ingest-code marker does not cover all tracked code files "
+            f"({files_scanned!r} scanned, {len(tracked_code_files)} tracked)"
+        )
+
+    marker_time = evidence.get("ingested_at")
+    try:
+        ingested_at = datetime.fromisoformat(str(marker_time)).timestamp()
+    except (TypeError, ValueError):
+        errors.append("ingest-code marker has no valid ingestion timestamp")
+    else:
+        newer_files = []
+        for filepath in tracked_code_files:
+            try:
+                if Path(filepath).stat().st_mtime > ingested_at:
+                    newer_files.append(filepath)
+            except OSError:
+                continue
+        if newer_files:
+            errors.append(
+                f"{len(newer_files)} tracked code files changed after ingest-code completed"
+            )
+
+    return errors
+
+
 def scan_for_outdated_docs() -> List[Dict[str, str]]:
     outdated = []
 
-    for root, dirs, files in os.walk("."):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+    tracked_docs = sorted(
+        filepath
+        for filepath in get_all_tracked_files()
+        if filepath.endswith(".md") and Path(filepath).name != "README.md"
+    )
+    for filepath in tracked_docs:
+        content = read_file_content(filepath)
 
-        for file in files:
-            if file.endswith(".md") and file != "README.md":
-                filepath = os.path.join(root, file)
-                content = read_file_content(filepath)
+        if "TODO" in content or "FIXME" in content:
+            outdated.append({
+                "path": filepath,
+                "status": "incomplete",
+                "reason": "Contains TODO/FIXME markers"
+            })
 
-                if "TODO" in content or "FIXME" in content:
+        success, output = run_command(
+            ["git", "log", "-1", "--format=%ct", filepath],
+            check=False
+        )
+        if success and output.strip():
+            try:
+                timestamp = int(output.strip())
+                age_days = (datetime.now().timestamp() - timestamp) / 86400
+                if age_days > 365:
                     outdated.append({
                         "path": filepath,
-                        "status": "incomplete",
-                        "reason": "Contains TODO/FIXME markers"
+                        "status": "stale",
+                        "reason": f"Not modified in {int(age_days)} days"
                     })
-
-                success, output = run_command(
-                    ["git", "log", "-1", "--format=%ct", filepath],
-                    check=False
-                )
-                if success and output.strip():
-                    try:
-                        timestamp = int(output.strip())
-                        age_days = (datetime.now().timestamp() - timestamp) / 86400
-                        if age_days > 365:
-                            outdated.append({
-                                "path": filepath,
-                                "status": "stale",
-                                "reason": f"Not modified in {int(age_days)} days"
-                            })
-                    except (ValueError, TypeError):
-                        pass
+            except (ValueError, TypeError):
+                pass
 
     return outdated
 
@@ -704,11 +849,35 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append(f"Archive root: `{ARCHIVE_ROOT}`")
     plan.append("")
 
-    # Root strays (artifacts)
+    ingest_evidence = findings.get("ingest_code_evidence", {})
+    plan.append("## Ingest-Code Evidence")
+    plan.append("")
+    plan.append(f"- Status: `{ingest_evidence.get('status', 'missing')}`")
+    plan.append(f"- Marker: `{ingest_evidence.get('marker_path', '.ingest-code.json')}`")
+    plan.append(f"- Files scanned: `{ingest_evidence.get('files_scanned', 'unknown')}`")
+    plan.append(f"- Dependency edges stored: `{ingest_evidence.get('edges_stored', 'unknown')}`")
+    plan.append(
+        f"- Structured symbols stored: "
+        f"`{ingest_evidence.get('code_index', {}).get('symbols_stored', 'unknown')}`"
+    )
+    plan.append(f"- Proves: {ingest_evidence.get('proves', 'ingest status only')}")
+    plan.append(
+        f"- Does not prove: "
+        f"{ingest_evidence.get('does_not_prove', 'that files are safe to remove')}"
+    )
+    plan.append(
+        f"- Refresh command: `{ingest_evidence.get('recommended_command', 'not available')}`"
+    )
+    plan.append("")
+
+    # Root strays (review only)
     if findings.get("root_strays"):
-        plan.append("## Root-Level Strays (Archive to 12TB)")
+        plan.append("## Root-Level Strays (Review Only)")
         plan.append("")
-        plan.append("These files/dirs don't belong at project root and should be archived:")
+        plan.append(
+            "These paths need owner, dependency, ingest-code, and readiness review. "
+            "The cleanup CLI will not archive them automatically:"
+        )
         plan.append("")
         for s in findings["root_strays"]:
             plan.append(f"- `{s['path']}` — {s['reason']} → **{s['action']}**")
@@ -748,12 +917,16 @@ def generate_cleanup_plan(findings: Dict) -> str:
 
     # Dead files
     if findings.get("dead_files"):
-        plan.append("## Potentially Dead Files")
+        plan.append("## Lexically Unreferenced Candidates (Review Only)")
         plan.append("")
         for file_info in findings["dead_files"]:
             plan.append(f"- `{file_info['path']}` - {file_info['status']}: {file_info['reason']}")
         plan.append("")
-        plan.append("**WARNING**: Review carefully before removing these files.")
+        plan.append(
+            "**NON-MUTATING**: Lexical absence is not unused-code proof. Confirm "
+            "with language-aware references, ingest-code relationships, package "
+            "entrypoints/configuration, and before/after project sanity checks."
+        )
         plan.append("")
 
     # Outdated docs
@@ -767,10 +940,10 @@ def generate_cleanup_plan(findings: Dict) -> str:
     # Summary
     plan.append("## Summary")
     plan.append("")
-    plan.append(f"- Root strays to archive: {len(findings.get('root_strays', []))}")
+    plan.append(f"- Root strays requiring review: {len(findings.get('root_strays', []))}")
     plan.append(f"- Uncommitted changes: {len(findings.get('uncommitted_changes', []))}")
     plan.append(f"- Untracked files: {len(findings.get('untracked_files', []))}")
-    plan.append(f"- Potentially dead files: {len(findings.get('dead_files', []))}")
+    plan.append(f"- Lexically unreferenced review candidates: {len(findings.get('dead_files', []))}")
     plan.append(f"- Potentially outdated docs: {len(findings.get('outdated_docs', []))}")
     plan.append("")
 
@@ -820,27 +993,13 @@ def confirm_action(action: str) -> bool:
 
 def execute_cleanup(findings: Dict, force: bool = False) -> List[str]:
     actions_taken = []
-    project = get_project_name()
 
-    # ── 1. Archive root strays ───────────────────────────────────────────
+    # ── 1. Root strays are assessment-only ──────────────────────────────
     strays = findings.get("root_strays", [])
-    archivable = [s for s in strays if s.get("action") == "archive"]
-    if archivable:
-        if not ARCHIVE_ROOT.exists():
-            log_error(f"Archive root {ARCHIVE_ROOT} does not exist. Mount the drive first.")
-        else:
-            log_info(f"Found {len(archivable)} items to archive → {ARCHIVE_ROOT}/{project}/")
-            for s in archivable:
-                path = s["path"].rstrip("/")
-                if not os.path.exists(path):
-                    continue
-                if force or confirm_action(f"Archive {path} ({s['reason']}) to 12TB?"):
-                    try:
-                        dest = archive_file(path, project)
-                        actions_taken.append(f"Archived: {path} → {dest}")
-                        log_info(f"Archived: {path} → {dest}")
-                    except Exception as e:
-                        log_error(f"Failed to archive {path}: {e}")
+    if strays:
+        log_warning(
+            f"Found {len(strays)} root-level review candidates; automatic archival is disabled"
+        )
 
     # ── 2. Remove junk files ─────────────────────────────────────────────
     untracked = findings.get("untracked_files", [])
@@ -865,25 +1024,13 @@ def execute_cleanup(findings: Dict, force: bool = False) -> List[str]:
             except Exception as e:
                 log_error(f"Failed to remove {f}: {e}")
 
-    # ── 3. Dead files (always require confirmation) ──────────────────────
+    # ── 3. Lexical candidates are assessment-only ───────────────────────
     dead_files = findings.get("dead_files", [])
     if dead_files:
-        log_warning(f"Found {len(dead_files)} potentially dead files")
-        log_warning("These files require manual review before removal")
-
-        for file_info in dead_files:
-            filepath = file_info["path"]
-            log_info(f"Dead file: {filepath} - {file_info['reason']}")
-
-            if confirm_action(f"Remove dead file: {filepath}?"):
-                success, _ = run_command(["git", "rm", filepath], check=False)
-                if success:
-                    actions_taken.append(f"Removed from git: {filepath}")
-                    log_info(f"Removed from git: {filepath}")
-                else:
-                    log_error(f"Failed to remove from git: {filepath}")
-            else:
-                log_warning(f"Skipping: {filepath}")
+        log_warning(
+            f"Found {len(dead_files)} lexically unreferenced candidates; "
+            "tracked-file removal is disabled"
+        )
 
     # ── 4. Remaining untracked ───────────────────────────────────────────
     other_untracked = [f for f in untracked if not is_junk_file(f)]
@@ -937,6 +1084,7 @@ def main(
         "untracked_files": get_untracked_files(),
         "dead_files": scan_for_dead_files(),
         "outdated_docs": scan_for_outdated_docs(),
+        "ingest_code_evidence": scan_ingest_code_evidence(),
     }
 
     if dry_run:
@@ -955,6 +1103,18 @@ def main(
         return
 
     if execute:
+        ingest_errors = validate_ingest_code_precondition(
+            findings["ingest_code_evidence"]
+        )
+        if ingest_errors:
+            log_error("Cleanup execution requires a current full ingest-code Tree-sitter scan")
+            for error in ingest_errors:
+                log_error(f"  {error}")
+            log_error(
+                f"Run first: {findings['ingest_code_evidence']['recommended_command']}"
+            )
+            raise typer.Exit(code=2)
+
         if findings["uncommitted_changes"]:
             log_warning("You have uncommitted changes!")
             for change in findings["uncommitted_changes"]:
@@ -968,10 +1128,10 @@ def main(
         log_info("=" * 50)
         log_info("Cleanup Summary")
         log_info("=" * 50)
-        log_info(f"Root strays to archive:    {len(findings['root_strays'])}")
+        log_info(f"Root strays for review:    {len(findings['root_strays'])}")
         log_info(f"Uncommitted changes:       {len(findings['uncommitted_changes'])}")
         log_info(f"Untracked files:           {len(findings['untracked_files'])}")
-        log_info(f"Potentially dead files:    {len(findings['dead_files'])}")
+        log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
         log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
         log_info("=" * 50)
 
@@ -989,10 +1149,10 @@ def main(
     log_info("=" * 50)
     log_info("Cleanup Assessment")
     log_info("=" * 50)
-    log_info(f"Root strays to archive:    {len(findings['root_strays'])}")
+    log_info(f"Root strays for review:    {len(findings['root_strays'])}")
     log_info(f"Uncommitted changes:       {len(findings['uncommitted_changes'])}")
     log_info(f"Untracked files:           {len(findings['untracked_files'])}")
-    log_info(f"Potentially dead files:    {len(findings['dead_files'])}")
+    log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
     log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
     log_info("=" * 50)
     log_info("")

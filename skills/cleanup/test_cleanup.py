@@ -12,6 +12,7 @@ import json
 import tempfile
 import shutil
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -200,7 +201,11 @@ class TestCleanup:
         self.assert_in("# Cleanup Plan", plan, "Plan should have header")
         self.assert_in("Uncommitted Changes", plan, "Plan should have uncommitted changes section")
         self.assert_in("Untracked Files", plan, "Plan should have untracked files section")
-        self.assert_in("Potentially Dead Files", plan, "Plan should have dead files section")
+        self.assert_in(
+            "Lexically Unreferenced Candidates",
+            plan,
+            "Plan should identify review-only reference candidates",
+        )
         self.assert_in("junk.log", plan, "Plan should mention junk.log")
 
     def test_parse_porcelain_status(self):
@@ -255,6 +260,135 @@ class TestCleanup:
         # The reference may be "main.py" or "./main.py" depending on the path
         has_main_py = any("main.py" in ref for ref in references)
         self.assert_true(has_main_py, "main.py should reference utils.py")
+
+    def test_root_directory_and_artifact_are_review_only(self):
+        """Root heuristics must never grant automatic archive authority."""
+        print("\nTesting root candidate mutation safety...")
+
+        runtime_dir = Path("runtime_bundle")
+        runtime_dir.mkdir()
+        (runtime_dir / "required.py").write_text("VALUE = 1\n")
+        Path("required-model.onnx").write_bytes(b"model")
+
+        findings = cleanup.scan_root_strays()
+        by_path = {item["path"]: item for item in findings}
+
+        self.assert_equal(
+            by_path["runtime_bundle/"]["action"],
+            "review",
+            "Untracked root directories must be review-only",
+        )
+        self.assert_equal(
+            by_path["required-model.onnx"]["action"],
+            "review",
+            "Root artifacts may be runtime dependencies and must be review-only",
+        )
+
+    def test_ingest_code_marker_is_informative_not_removal_proof(self):
+        """A valid marker reports structured evidence and its proof boundary."""
+        print("\nTesting ingest-code marker evidence...")
+
+        marker = {
+            "path": self.temp_dir,
+            "ingested_at": datetime.now(timezone.utc).isoformat(),
+            "files_scanned": 1,
+            "edges_stored": 2,
+            "scope": "code",
+            "run_status": "complete",
+            "completed": True,
+            "scan_roots": [self.temp_dir],
+            "completed_scan_roots": [self.temp_dir],
+            "code_index": {
+                "enabled": True,
+                "treesitter": True,
+                "symbols_stored": 3,
+                "content_hashes": True,
+            },
+        }
+        Path(".ingest-code.json").write_text(json.dumps(marker))
+
+        evidence = cleanup.scan_ingest_code_evidence()
+
+        self.assert_equal(evidence["status"], "complete", "Marker should be complete")
+        self.assert_equal(evidence["edges_stored"], 2, "Edge evidence should be visible")
+        self.assert_in(
+            "does_not_prove",
+            evidence,
+            "Evidence must explicitly state that it cannot prove unused files",
+        )
+        self.assert_true(
+            "--dry-run" not in evidence["recommended_command"],
+            "The required ingest command must write a completed marker",
+        )
+
+    def test_ingest_code_precondition_requires_full_current_treesitter_scan(self):
+        """Execution must reject partial, stale, or non-Tree-sitter ingest markers."""
+        print("\nTesting ingest-code execution precondition...")
+
+        source = Path("src/app.py")
+        source.parent.mkdir()
+        source.write_text("def main():\n    return 0\n")
+        subprocess.run(["git", "add", str(source)], capture_output=True)
+        subprocess.run(["git", "commit", "-m", "add source"], capture_output=True)
+
+        valid = {
+            "status": "complete",
+            "repository_path": self.temp_dir,
+            "ingested_at": "2999-01-01T00:00:00+00:00",
+            "files_scanned": 1,
+            "completed_scan_roots": [self.temp_dir],
+            "code_index": {"enabled": True, "treesitter": True},
+        }
+        self.assert_equal(
+            cleanup.validate_ingest_code_precondition(valid),
+            [],
+            "A current full Tree-sitter scan should satisfy the gate",
+        )
+
+        partial = dict(valid, files_scanned=0)
+        partial_errors = cleanup.validate_ingest_code_precondition(partial)
+        self.assert_true(
+            any("does not cover" in error for error in partial_errors),
+            "A partial scan must fail the gate",
+        )
+
+        no_treesitter = {**valid, "code_index": {"enabled": True, "treesitter": False}}
+        treesitter_errors = cleanup.validate_ingest_code_precondition(no_treesitter)
+        self.assert_true(
+            any("Tree-sitter" in error for error in treesitter_errors),
+            "A scan without Tree-sitter must fail the gate",
+        )
+
+    def test_execute_never_mutates_root_or_dead_candidates(self):
+        """Heuristic root/dead findings remain report-only during execution."""
+        print("\nTesting execution mutation boundary...")
+
+        root_dir = Path("required_runtime")
+        root_dir.mkdir()
+        (root_dir / "plugin.py").write_text("PLUGIN = True\n")
+        tracked = Path("tracked_runtime.py")
+        tracked.write_text("VALUE = 1\n")
+        subprocess.run(["git", "add", str(tracked)], capture_output=True)
+        subprocess.run(["git", "commit", "-m", "add tracked runtime"], capture_output=True)
+
+        actions = cleanup.execute_cleanup({
+            "root_strays": [{
+                "path": "required_runtime/",
+                "action": "archive",
+                "reason": "legacy unsafe classification",
+            }],
+            "untracked_files": [],
+            "dead_files": [{
+                "path": "tracked_runtime.py",
+                "status": "lexically_unreferenced_candidate",
+                "reason": "heuristic only",
+                "mutation_allowed": False,
+            }],
+        }, force=True)
+
+        self.assert_equal(actions, [], "Review-only findings must produce no actions")
+        self.assert_true(root_dir.exists(), "Root runtime directory must remain")
+        self.assert_true(tracked.exists(), "Tracked candidate must remain")
     
     def test_log_cleanup(self):
         """Test logging cleanup actions"""
@@ -298,6 +432,10 @@ class TestCleanup:
             self.test_parse_porcelain_status()
             self.test_classify_worktree_entry()
             self.test_find_file_references()
+            self.test_root_directory_and_artifact_are_review_only()
+            self.test_ingest_code_marker_is_informative_not_removal_proof()
+            self.test_ingest_code_precondition_requires_full_current_treesitter_scan()
+            self.test_execute_never_mutates_root_or_dead_candidates()
             self.test_log_cleanup()
             
         finally:

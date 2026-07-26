@@ -2,7 +2,8 @@
 name: cleanup
 description: >
   Assess the project to reorganize or deprecate unused/outdated files.
-  Archives large artifacts to 12TB drive, cleans the git workspace, and commits changes.
+  Produces dependency-informed review candidates and removes confirmed junk
+  only after a complete ingest-code Tree-sitter precondition.
 allowed-tools: Bash, Read, Grep, Glob
 triggers:
   - cleanup this project
@@ -13,11 +14,11 @@ triggers:
   - archive artifacts
   - move artifacts to storage
 metadata:
-  short-description: Deep codebase assessment and technical debt cleanup with 12TB archive
+  short-description: Dependency-informed, fail-closed codebase cleanup
 
 provides:
   - cleanup
-composes: [task-monitor]
+composes: [ingest-code, task-monitor]
 complies:
   - best-practices-skills
   - best-practices-python
@@ -29,10 +30,14 @@ This skill performs a deep assessment of the codebase to identify technical debt
 
 ## Key Features
 
-- **Artifact archival**: Detects binary/media files (`.wav`, `.mp4`, `.pt`, `.ckpt`, `.parquet`, etc.) and moves them to `/mnt/storage12tb/artifacts/<project>/<date>/` instead of deleting
+- **Artifact review**: Detects binary/media files (`.wav`, `.mp4`, `.pt`, `.ckpt`, `.parquet`, etc.) but keeps root-level candidates review-only because they may be runtime inputs
 - **Root stray detection**: Flags untracked directories at project root that don't belong (e.g. `personaplex/`, `data_horus/`)
 - **Junk file cleanup**: Removes logs, temp files, cache dirs
-- **Dead file detection**: Finds tracked files with no references in codebase
+- **Unused-file candidate detection**: Uses lexical absence only to nominate
+  review candidates; it never treats that signal as removal proof
+- **Ingest-code precondition**: Requires a current repository-root
+  `$ingest-code --treesitter` scan before `--execute`, and reports its symbols,
+  imports/calls, relationship edges, scan roots, and proof limits
 - **Doc staleness**: Flags docs with TODO/FIXME or >365 days without changes
 - **Worktree triage**: Classifies dirty git entries into commit/archive/review
   buckets before any attempt to clean or commit a large mixed worktree
@@ -51,38 +56,45 @@ This skill performs a deep assessment of the codebase to identify technical debt
 
 ## Workflow
 
-1. **Assessment** (`--dry-run`): Scan the codebase for:
-   - Root-level artifacts and stray directories → archive to 12TB
+1. **Code evidence** (`$ingest-code`): Run a complete repository-root
+   Tree-sitter scan before cleanup execution:
+   `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
+2. **Assessment** (`--dry-run`): Scan the codebase for:
+   - Root-level artifacts and stray directories → review only
    - Untracked "junk" files (logs, temp images, build artifacts) → delete
-   - Tracked files that are no longer referenced in the codebase
+   - Tracked files with no lexical references → non-mutating review candidates
    - Outdated documentation files
-2. **Planning** (`--plan`): Generate a **Cleanup Plan** markdown file for review.
-3. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown ownership/risk
+3. **Planning** (`--plan`): Generate a **Cleanup Plan** markdown file for review.
+4. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown ownership/risk
    buckets for dirty files so agents do not blindly stage unrelated work.
-4. **Repo-of-record declaration**: Identify the live project checkout, branch,
+5. **Repo-of-record declaration**: Identify the live project checkout, branch,
    dirty inventory, and any secondary clean worktree used only for commit
    isolation.
-5. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
+6. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
    run the project's easy sanity command before moving source-like files.
-6. **Execution** (`--execute`): Perform cleanup operations with user confirmation:
-   - Archive artifacts to 12TB drive (with optional `--force` to skip prompts)
+7. **Execution** (`--execute`): Perform cleanup operations with user confirmation:
+   - Refuse execution when ingest-code evidence is missing, partial, stale,
+     belongs to another repository, or lacks Tree-sitter coverage
+   - Keep root strays, artifacts, and lexically unreferenced tracked files
+     review-only
    - Remove junk files (with optional `--force` to skip prompts)
-   - Remove dead tracked files (always requires confirmation, never auto-deleted)
    - Log all actions to `local/CLEANUP_LOG.md`
-7. **Post-cleanup proof**: Rerun the same sanity command and relevant
+8. **Post-cleanup proof**: Rerun the same sanity command and relevant
    `best-practices-*` checks for changed files, then commit/push only the
    coherent cleanup slice.
 
 ## How to Use
 
 1. Trigger with "cleanup this project" or "archive artifacts".
-2. Run `bash .pi/skills/cleanup/run.sh --dry-run` to see JSON findings.
-3. Run `bash .pi/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
-4. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
-5. If a clean worktree is needed for commit isolation, record both paths in the
+2. Run `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
+3. Run `bash .pi/skills/cleanup/run.sh --dry-run` to see JSON findings.
+4. Run `bash .pi/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
+5. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
+6. If a clean worktree is needed for commit isolation, record both paths in the
    plan: the live repo of record and the temporary commit worktree.
-6. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute` to perform cleanup.
-7. Use `--force` to skip confirmation for junk files and archives (dead files still require confirmation).
+7. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute` to perform cleanup.
+8. Use `--force` only to skip confirmation for junk files. It cannot bypass the
+   ingest-code precondition or enable root/dead-candidate mutation.
 
 ## Environment
 
@@ -92,8 +104,14 @@ This skill performs a deep assessment of the codebase to identify technical debt
 
 ## Safety Features
 
-- **Dead files always require confirmation**: The skill will never auto-delete tracked files that appear unreferenced. You must explicitly confirm each deletion.
-- **Artifacts are archived, not deleted**: Binary/media files are moved to the 12TB drive, not destroyed.
+- **Lexical absence never authorizes deletion**: The skill reports tracked files
+  with no lexical reference as review candidates and never deletes them.
+- **Root artifacts are review-only**: Binary/media files at project root may be
+  runtime inputs and are never moved automatically.
+- **Ingest-code runs first**: Cleanup execution requires a complete,
+  repository-root Tree-sitter marker whose scan covers all tracked code and
+  predates no tracked code changes. The marker and dependency edges inform
+  review; they do not prove that a file is unused.
 - **Untracked source is not disposable**: Untracked files under `src/`, `tests/`,
   `scripts/`, `configs/`, `docker/`, or `.github/` may satisfy tracked imports,
   CLI entrypoints, service routes, tests, or runtime contracts. Do not quarantine,
@@ -134,8 +152,8 @@ This skill performs a deep assessment of the codebase to identify technical debt
 | `--dry-run` | Print JSON findings without making changes |
 | `--plan` | Generate a Cleanup Plan markdown file |
 | `--worktree-audit` | Generate JSON + Markdown dirty-worktree buckets for commit-safe triage |
-| `--execute` | Perform cleanup operations with confirmation |
-| `--force` | Skip confirmation for junk/archive (dead files still require confirmation) |
+| `--execute` | Remove confirmed junk only after the ingest-code precondition passes |
+| `--force` | Skip confirmation for junk only; cannot bypass evidence gates |
 | `--output <file>` | Specify output file for plan (default: CLEANUP_PLAN.md) |
 | `--archive-root <path>` | Override archive destination path |
 
