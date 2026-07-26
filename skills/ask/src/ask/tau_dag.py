@@ -475,13 +475,17 @@ def unsupported_model_routes(input: TauDagCompileInput) -> list[str]:
 def default_scillm_api_key() -> str:
     """Resolve the scillm bearer per the tau#114 auth contract.
 
-    The deployed master key wins; the ambient SCILLM_PROXY_KEY is LAST
-    because stale dev defaults linger in shells after a key override is
-    configured (that inversion was this function's bug). When no ambient
-    master key is exported, fall back to the scillm deployment .env --
-    the compose files name that file as the key's canonical home.
+    The ambient proxy key wins because it reflects the running proxy's current
+    authentication contract. Other explicitly exported keys follow, then the
+    deployment .env is used only as a fallback.
     """
-    for var in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY", "SCILLM_API_KEY", "SCILLM_PROXY_API_KEY"):
+    for var in (
+        "SCILLM_PROXY_KEY",
+        "SCILLM_MASTER_KEY",
+        "LITELLM_MASTER_KEY",
+        "SCILLM_API_KEY",
+        "SCILLM_PROXY_API_KEY",
+    ):
         value = os.environ.get(var)
         if value:
             return value
@@ -497,7 +501,7 @@ def default_scillm_api_key() -> str:
             for var in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"):
                 if line.startswith(f"{var}=") and line.split("=", 1)[1].strip():
                     return line.split("=", 1)[1].strip().strip('"')
-    return os.environ.get("SCILLM_PROXY_KEY") or DEFAULT_SCILLM_API_KEY
+    return DEFAULT_SCILLM_API_KEY
 
 
 def build_interview_packet(
