@@ -1,0 +1,43 @@
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+
+SKILL_DIR = Path(__file__).resolve().parents[1]
+CAPABILITIES = SKILL_DIR / "scripts" / "surf_capabilities.py"
+RUN_SH = SKILL_DIR / "run.sh"
+
+
+def run_json(command: list[str]) -> dict:
+    proc = subprocess.run(command, cwd=SKILL_DIR, text=True, capture_output=True)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def assert_capability_payload(payload: dict) -> None:
+    assert payload["schema"] == "surf.capabilities.v1"
+    assert payload["schema_version"] == "1.0.0"
+    assert payload["skill"]["name"] == "surf"
+    assert payload["skill"]["skill_md_sha256"]
+    assert payload["engine"]["kind"] == "vendored_surf_cli"
+    assert payload["engine"]["package_version"] == "2.9.0"
+    assert payload["transport"]["cdp_fallback"] is True
+    assert set(payload["providers"]) == {"webgpt", "claude", "gemini", "kimi", "grok"}
+    assert payload["providers"]["kimi"]["default_model"] == "Instant"
+    assert payload["providers"]["kimi"]["default_reasoning"] == "High"
+    assert payload["lock_behavior"]["browser_lock_required_for_provider_submits"] is True
+    assert "webgpt.submit" in payload["lock_behavior"]["no_lock_forbidden_for"]
+    assert payload["contracts"]["provider_result_schema"] == "surf.provider_result.v1"
+    assert "references/vendor-update-gate.md" in payload["skill"]["contract_references"]
+
+
+def test_capabilities_script_emits_versioned_contract() -> None:
+    payload = run_json(["python3", str(CAPABILITIES), "--json"])
+    assert_capability_payload(payload)
+
+
+def test_run_sh_routes_capabilities_command() -> None:
+    payload = run_json([str(RUN_SH), "capabilities", "--json"])
+    assert_capability_payload(payload)

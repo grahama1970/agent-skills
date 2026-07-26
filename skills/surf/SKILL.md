@@ -136,6 +136,30 @@ webgpt raw response has sentinel but parser reports degraded = sentinel/parser i
 preflight fails = tab identity/focus/browser binding issue
 ```
 
+### Capability And Result Contracts
+
+Before diagnosing provider breakage after a Surf update, capture the versioned
+contract and normalize any provider meta receipt:
+
+```bash
+./run.sh capabilities --json
+./run.sh meta.normalize --meta response.meta.json --json --strict
+```
+
+`capabilities --json` reports the vendored engine version, skill identity,
+provider support, lock behavior, recovery features, and update-gate references.
+`meta.normalize` converts WebGPT, Claude, Gemini, Kimi, and Grok receipts into
+`surf.provider_result.v1` with proof status, controlled tab/view id, URL, model,
+reasoning, delivery proof, retryability, stale-binding repair, bounded error
+details, and immutable request snapshot hashes.
+
+Contract references live in:
+
+- `references/capabilities.schema.json`
+- `references/provider-result.schema.json`
+- `references/immutable-submit-contract.md`
+- `references/vendor-update-gate.md`
+
 ## First-Time Setup
 
 Run the sanity check to verify setup or get installation instructions:
