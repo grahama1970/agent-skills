@@ -47,6 +47,34 @@ ${HOME}/workspace/experiments/tau
 Do not duplicate Tau implementation in this skill. Use the scripts here to
 locate the repo, run known proof commands, inspect receipts, and summarize gaps.
 
+## Current Operating Priority
+
+Read the Tau repo's `GOAL.md` before claiming product status. The active product
+target is not just Pi TUI parity and not just a pile of receipts. Tau must let a
+human choose and run five canonical real DAG workflows, preserve the
+human-owned goal through every node and attempt, and show truthful dynamic
+progress, accepted evidence, blockers, required human decisions, resume, and
+completion in one shared React Flow viewer.
+
+Pi TUI parity work is a usability slice for replacing Codex/Claude Code as a
+daily harness. Port useful Pi terminal capabilities without overwriting
+Tau-specific control-plane behavior: Memory-first routing, SciLLM as the
+internal provider boundary, `tau.dag_contract.v1`, typed receipts, fail-closed
+evidence gates, Herdr/monitor surfaces, `$ask` DAG compilation, and human-owned
+goal boundaries.
+
+When a human asks for model or reviewer collaboration through `$ask`, the
+preferred path is:
+
+```text
+human request -> $ask -> final tau.dag_contract.v1 -> Tau execution -> live Tau viewer/results
+```
+
+`$ask` should interview the human when the DAG is incomplete, emit the final DAG
+before execution, and let Tau dispatch handler nodes. Browser handlers route
+through Surf/browser-oracle command specs. API/model handlers route through
+Tau-owned SciLLM adapters, not direct project-agent SciLLM calls.
+
 ## Provider Boundary: SciLLM Is Internal
 
 Tau owns provider/model orchestration. Project agents must not call `$scillm`,
