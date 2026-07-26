@@ -52,6 +52,38 @@ This supersedes the prior media-spine and Kling-video goals for current work.
 Those goals remain historical evidence in Git and in `GOAL_V2.md`, but they are
 not the active critical path unless the human explicitly reactivates them.
 
+## Supporting Voice Lane Record
+
+On 2026-07-26 the operator explicitly chose the recommended continuation from
+`local/HANDOFF-emotion-voice.md`: finish the weighted-emotion Chatterbox ASR
+batch path and preserve the receipt on `agent-skills@main`. This records a
+supporting integration lane, not a reactivation of provider/video, human
+subjective review, or complete Phase 01-16 media runtime as the active critical
+path.
+
+The lane decision is:
+
+```text
+voice lane: weighted-emotion Chatterbox integration may advance as supporting
+infrastructure evidence when it is tied to local deterministic or live
+receipts; PCTOM-R remains the controlling immutable research objective.
+```
+
+Current voice-lane evidence:
+
+- `reports/goal_v5/emotion_proof/asr_batch/RECEIPT.json` records a live,
+  non-mocked `/synthesize-batch` proof where top/chunk/ASR candidate rendering
+  preserved `voice_delivery.intensity`, `voice_delivery.valence`, and
+  `use_base_emotion=true`, selected `chatterbox_base`, emitted derived
+  emotion knobs, and passed the ASR gate with WER 0.0.
+- Chatterbox commit `d6d2c436d5d7e9981703a8bbdd1493946b9c6c44` preserves
+  weighted `voice_delivery` through ASR candidate synthesis and reports
+  batch/cache engine metadata from `emotion_knobs_from_delivery`.
+
+This evidence closes the ASR-batch emotion propagation gap only. It does not
+prove subjective tone acceptance, browser or microphone input behavior, paid
+provider execution, semantic dream quality, or full product readiness.
+
 ## Alignment Lock
 
 For this active goal, "aligned" has a narrow operational meaning:
