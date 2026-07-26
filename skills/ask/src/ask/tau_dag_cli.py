@@ -61,6 +61,17 @@ def run(
         str,
         typer.Option("--workflow-mode", help="Workflow mode: roundtable or compete."),
     ] = "roundtable",
+    dag_template: Annotated[
+        str,
+        typer.Option(
+            "--dag-template",
+            "--pattern",
+            help=(
+                "Named DAG template/pattern: single-call, prompt-chain, creator-reviewer, "
+                "reflection-loop, roundtable, compete."
+            ),
+        ),
+    ] = "",
     join_handler: Annotated[
         str,
         typer.Option("--join-handler", help="Roundtable join/adjudicator handler label."),
@@ -142,6 +153,7 @@ def run(
         handlers=handler,
         topology=topology,
         workflow_mode=workflow_mode,
+        dag_template=dag_template,
         join_handler=join_handler,
         handler_projects=handler_project,
         handler_workspaces=handler_workspace,
@@ -320,6 +332,7 @@ def compete(
         handlers=handler,
         topology="concurrent",
         workflow_mode="compete",
+        dag_template="compete",
         join_handler="join",
         handler_projects=handler_project,
         handler_workspaces=handler_workspace,

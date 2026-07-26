@@ -163,6 +163,25 @@ ask artifacts.
 
 Use `./run.sh tau-dag` for current handler/model orchestration.
 
+- **Template selector**: prefer `--dag-template <name>` or its alias
+  `--pattern <name>` when the user names a known agentic shape. This keeps
+  project agents from manually translating prose into `--topology` and
+  `--workflow-mode`. Supported Ask-side templates are:
+
+| Template | Shape Ask emits now |
+| --- | --- |
+| `single-call` | One handler node plus join/human terminal |
+| `prompt-chain` | Sequential handler pipeline with prior receipts |
+| `creator-reviewer` | Sequential creator then reviewer; pass/fail requests require verdicts |
+| `reflection-loop` | Sequential draft/review/revise-style receipt chain |
+| `roundtable` | Concurrent handlers with equal shared context and join |
+| `compete` | Concurrent isolated candidates with compete evaluator join |
+
+  Recognized but not yet executable Ask-side templates such as `tool-use`,
+  `rag-review`, `human-approval`, `exception-recovery`, `priority-queue`, and
+  `exploration-research` fail closed with `NEEDS_INTERVIEW` and a recovery
+  packet that points to the Tau native-template work. Do not simulate those
+  templates in prompt prose.
 - **Single call**: use one Tau handler or one solver/reviewer model. This is the
   path for "ask webclaude", "ask webkimi", "ask webgemini", "ask webgpt", or one
   API-backed model such as `gpt-5.5`, `claude-sonnet-4-6`, or another model

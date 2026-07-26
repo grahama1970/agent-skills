@@ -6,6 +6,28 @@ shape or sanity command is needed.
 ## Tau DAG Command Patterns
 
 ```bash
+# Template selector form. --pattern is an alias for --dag-template.
+./run.sh tau-dag "Evaluate this implementation plan." \
+  --repo local/ask --target template-roundtable \
+  --immutable-goal "Every handler reviews the same plan and preserves dissent." \
+  --dag-template roundtable \
+  --handler webgpt --handler webclaude --handler webkimi --json
+
+# Creator-reviewer template. Ask selects sequential topology from the template.
+./run.sh tau-dag "Ask webgpt to produce the work, then ask webclaude to review for pass/fail." \
+  --repo local/ask --target template-creator-reviewer \
+  --immutable-goal "Creator produces the work and reviewer returns PASS, FAIL, or NEEDS_ATTENTION." \
+  --pattern creator-reviewer \
+  --handler webgpt --handler webclaude --json
+
+# Unsupported native Tau templates fail closed with an interview packet until
+# grahama1970/tau#131 provides the template registry.
+./run.sh tau-dag "Review retrieved evidence." \
+  --repo local/ask --target template-rag-review \
+  --immutable-goal "Do not fake retrieval gates." \
+  --dag-template rag-review \
+  --handler webgpt --handler webclaude --json
+
 # Compile a single browser-handler call without executing it.
 ./run.sh tau-dag "Ask webclaude to answer: <prompt>" \
   --repo local/ask --target single-webclaude \

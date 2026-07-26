@@ -176,6 +176,141 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
     assert validate.stdout.strip() == "ok"
 
 
+def test_dag_template_roundtable_defaults_to_concurrent_handler_dag(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Evaluate the implementation plan.",
+        repo="local/agent-skills",
+        target="template-roundtable",
+        immutable_goal="All handlers review the same plan and preserve dissent.",
+        handlers=["webgpt", "webclaude"],
+        dag_template="roundtable",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    dag = bundle["dag"]
+    assert request.dag_template == "roundtable"
+    assert request.topology == "concurrent"
+    assert request.workflow_mode == "roundtable"
+    assert dag["context"]["dag_template"] == "roundtable"
+    assert dag["context"]["roundtable_topology"] == "concurrent"
+    assert dag["edges"] == [
+        {"from": "handler-webgpt", "to": "join"},
+        {"from": "handler-webclaude", "to": "join"},
+        {"from": "join", "to": "human"},
+    ]
+    assert dag["nodes"][0]["context"]["dag_template"] == "roundtable"
+
+
+def test_dag_template_creator_reviewer_defaults_to_sequential_receipt_chain(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Ask webgpt to do the work, then ask webclaude to review the work for pass/fail.",
+        repo="local/agent-skills",
+        target="template-creator-reviewer",
+        immutable_goal="Creator produces the work and reviewer returns PASS, FAIL, or NEEDS_ATTENTION.",
+        handlers=["webgpt", "webclaude"],
+        dag_template="creator-reviewer",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    assert request.topology == "sequential"
+    assert request.workflow_mode == "roundtable"
+    dag = bundle["dag"]
+    assert dag["context"]["dag_template"] == "creator-reviewer"
+    assert dag["edges"] == [
+        {"from": "handler-webgpt", "to": "handler-webclaude"},
+        {"from": "handler-webclaude", "to": "join"},
+        {"from": "join", "to": "human"},
+    ]
+    reviewer = next(node for node in dag["nodes"] if node["id"] == "handler-webclaude")
+    assert reviewer["context"]["requires_prior_receipts"] is True
+    assert reviewer["context"]["prompt_contract"]["requires_verdict"] is True
+
+
+def test_dag_template_compete_sets_compete_mode_and_concurrent(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Compare implementation approaches.",
+        repo="local/agent-skills",
+        target="template-compete",
+        immutable_goal="Choose a winner only from locally verifiable features.",
+        handlers=["webgpt", "webclaude"],
+        dag_template="bakeoff",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    assert request.dag_template == "compete"
+    assert request.workflow_mode == "compete"
+    assert request.topology == "concurrent"
+    assert bundle["dag"]["context"]["dag_template"] == "compete"
+    join = next(node for node in bundle["dag"]["nodes"] if node["id"] == "join")
+    assert join["context"]["role"] == "compete_evaluator"
+
+
+def test_dag_template_unknown_routes_to_interview_options(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Run the work.",
+        repo="local/agent-skills",
+        target="template-unknown",
+        immutable_goal="Do not dispatch unknown templates.",
+        handlers=["webgpt"],
+        dag_template="mystery-template",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "NEEDS_INTERVIEW"
+    assert "dag_template" in bundle["missing_fields"]
+    question = next(item for item in bundle["questions"] if item["field"] == "dag_template")
+    assert question["recovery_packet"]["failure_code"] == "unknown_dag_template"
+    assert any(option["value"] == "roundtable" for option in question["options"])
+
+
+def test_dag_template_tau_native_request_fails_closed_with_tau_ticket(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Review retrieved evidence.",
+        repo="local/agent-skills",
+        target="template-rag-review",
+        immutable_goal="Do not fake retrieval gates.",
+        handlers=["webgpt", "webclaude"],
+        dag_template="rag",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "NEEDS_INTERVIEW"
+    question = next(item for item in bundle["questions"] if item["field"] == "dag_template")
+    assert question["recovery_packet"]["failure_code"] == "tau_native_template_required"
+    assert question["recovery_packet"]["tau_ticket"] == "https://github.com/grahama1970/tau/issues/131"
+
+
+def test_dag_template_missing_handlers_uses_interview_recovery_packet(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Evaluate the implementation plan.",
+        repo="local/agent-skills",
+        target="template-missing-handlers",
+        immutable_goal="The selected template must not dispatch without handlers.",
+        dag_template="roundtable",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "NEEDS_INTERVIEW"
+    question = next(item for item in bundle["questions"] if item["field"] == "handlers")
+    assert question["recovery_packet"]["failure_code"] == "template_missing_handlers"
+    assert "webgpt" in question["options"]
+
+
 def test_webgrok_handler_compiles_to_surf_grok_submit(tmp_path: Path) -> None:
     request = infer_compile_input(
         "Ask webgrok to identify one browser orchestration risk.",

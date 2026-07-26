@@ -32,6 +32,77 @@ DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 COMPETE_WEBCLAUDE_MODEL = "Opus 5 High"
 TERMINAL_STATUSES = {"PASS", "BLOCKED", "FAILED", "ERROR"}
 ROUNDTABLE_TOPOLOGIES = {"concurrent", "sequential"}
+SUPPORTED_DAG_TEMPLATES = {
+    "single-call": {
+        "description": "One Tau handler/browser/API/subagent node answers the request, then joins to human.",
+        "topology": "concurrent",
+        "workflow_mode": "roundtable",
+        "min_handlers": 1,
+    },
+    "prompt-chain": {
+        "description": "A linear sequence of handlers where each downstream node receives prior receipts.",
+        "topology": "sequential",
+        "workflow_mode": "roundtable",
+        "min_handlers": 2,
+    },
+    "creator-reviewer": {
+        "description": "Creator node followed by reviewer node; pass/fail requests require a verdict schema.",
+        "topology": "sequential",
+        "workflow_mode": "roundtable",
+        "min_handlers": 2,
+    },
+    "reflection-loop": {
+        "description": "Draft/review/revise style sequential loop using receipt-backed prior context.",
+        "topology": "sequential",
+        "workflow_mode": "roundtable",
+        "min_handlers": 2,
+    },
+    "roundtable": {
+        "description": "Multiple handlers receive equal shared context, then a join node preserves dissent.",
+        "topology": "concurrent",
+        "workflow_mode": "roundtable",
+        "min_handlers": 2,
+    },
+    "compete": {
+        "description": "Isolated competitors work from equal context; join selects from verified features.",
+        "topology": "concurrent",
+        "workflow_mode": "compete",
+        "min_handlers": 2,
+    },
+}
+TAU_NATIVE_TEMPLATE_REQUESTS = {
+    "tool-use": "Tool invocation policy and tool receipt gates need native Tau template expansion.",
+    "rag-review": "Retrieval inputs, corpus binding, and citation gates need native Tau template expansion.",
+    "human-approval": "Approval node semantics and resume boundaries need native Tau template expansion.",
+    "exception-recovery": "Recovery branches and retry policy need native Tau template expansion.",
+    "priority-queue": "Priority scoring, budget policy, and queue semantics need native Tau template expansion.",
+    "exploration-research": "Exploration branches and source diversity gates need native Tau template expansion.",
+}
+DAG_TEMPLATE_ALIASES = {
+    "single": "single-call",
+    "single-handler": "single-call",
+    "singlecall": "single-call",
+    "chain": "prompt-chain",
+    "promptchain": "prompt-chain",
+    "sequential-chain": "prompt-chain",
+    "creator-review": "creator-reviewer",
+    "create-review": "creator-reviewer",
+    "review-loop": "creator-reviewer",
+    "reflect": "reflection-loop",
+    "reflection": "reflection-loop",
+    "competition": "compete",
+    "bakeoff": "compete",
+    "tools": "tool-use",
+    "tooluse": "tool-use",
+    "rag": "rag-review",
+    "retrieval": "rag-review",
+    "hitl": "human-approval",
+    "human-in-the-loop": "human-approval",
+    "recovery": "exception-recovery",
+    "priority": "priority-queue",
+    "exploration": "exploration-research",
+    "research": "exploration-research",
+}
 ROUNDTABLE_HANDLERS = {
     "webgpt": {
         "transport_owner": "$surf",
@@ -133,6 +204,7 @@ class TauDagCompileInput:
     handler_projects: tuple[str, ...] = ()
     handler_workspaces: tuple[str, ...] = ()
     handler_provider_hints: tuple[str, ...] = ()
+    dag_template: str = ""
     ask_id: str | None = None
     output_root: Path = DEFAULT_OUTPUT_ROOT
     local_fixture: bool = False
@@ -156,6 +228,7 @@ def infer_compile_input(
     join_handler: str = "join",
     handler_projects: list[str] | None = None,
     handler_workspaces: list[str] | None = None,
+    dag_template: str = "",
     ask_id: str | None = None,
     output_root: Path = DEFAULT_OUTPUT_ROOT,
     local_fixture: bool = False,
@@ -169,6 +242,7 @@ def infer_compile_input(
     inferred_handlers, inferred_provider_hints = _canonicalize_handlers(handlers or [])
     normalized_request = request.strip()
     lower = normalized_request.lower()
+    normalized_template = _normalize_dag_template(dag_template)
     inferred_immutable_goal = immutable_goal.strip() or _infer_immutable_goal(normalized_request)
     if not inferred_handlers:
         natural_handlers = _infer_mixed_concurrent_handlers(normalized_request) or _infer_single_chutes_handler(normalized_request)
@@ -192,6 +266,13 @@ def infer_compile_input(
         fable_match = re.search(r"\bclaude\s+fab(?:le|el)\b", lower)
         if fable_match:
             inferred_reviewer = "claude-fable"
+    resolved_topology = _normalize_topology(topology or ("sequential" if "sequential" in lower else "concurrent"))
+    resolved_workflow_mode = _normalize_workflow_mode(workflow_mode)
+    template_spec = SUPPORTED_DAG_TEMPLATES.get(normalized_template)
+    if template_spec:
+        if not topology:
+            resolved_topology = str(template_spec["topology"])
+        resolved_workflow_mode = str(template_spec["workflow_mode"])
     return TauDagCompileInput(
         request=normalized_request,
         repo=repo.strip(),
@@ -201,12 +282,13 @@ def infer_compile_input(
         reviewer_model=_normalize_model(inferred_reviewer) if inferred_reviewer else "",
         criteria=tuple(item.strip() for item in (criteria or []) if item.strip()),
         handlers=tuple(inferred_handlers),
-        topology=_normalize_topology(topology or ("sequential" if "sequential" in lower else "concurrent")),
-        workflow_mode=_normalize_workflow_mode(workflow_mode),
+        topology=resolved_topology,
+        workflow_mode=resolved_workflow_mode,
         join_handler=_normalize_handler(join_handler) if join_handler else "join",
         handler_projects=tuple(item.strip() for item in (handler_projects or []) if item.strip()),
         handler_workspaces=tuple(item.strip() for item in (handler_workspaces or []) if item.strip()),
         handler_provider_hints=tuple(inferred_provider_hints[: len(inferred_handlers)]),
+        dag_template=normalized_template,
         ask_id=ask_id,
         output_root=output_root,
         local_fixture=local_fixture,
@@ -218,14 +300,99 @@ def infer_compile_input(
 
 def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
     missing: list[dict[str, Any]] = []
+    template_spec = SUPPORTED_DAG_TEMPLATES.get(input.dag_template)
+    if input.dag_template and template_spec is None:
+        native_reason = TAU_NATIVE_TEMPLATE_REQUESTS.get(input.dag_template)
+        if native_reason:
+            missing.append(
+                _question(
+                    "dag_template",
+                    (
+                        f"The DAG template '{input.dag_template}' is recognized but needs native Tau "
+                        f"template-registry support before Ask can execute it. {native_reason} "
+                        "Use one of the currently supported Ask templates or track grahama1970/tau#131."
+                    ),
+                    expects="supported_template",
+                    options=_dag_template_options(),
+                    recovery_packet={
+                        "failure_code": "tau_native_template_required",
+                        "next_command": "./run.sh tau-dag '<request>' --dag-template roundtable --handler <h1> --handler <h2> --immutable-goal '<goal>' --json",
+                        "tau_ticket": "https://github.com/grahama1970/tau/issues/131",
+                    },
+                )
+            )
+        else:
+            missing.append(
+                _question(
+                    "dag_template",
+                    f"Unknown DAG template '{input.dag_template}'. Select a supported template.",
+                    expects="supported_template",
+                    options=_dag_template_options(),
+                    recovery_packet={
+                        "failure_code": "unknown_dag_template",
+                        "next_command": "./run.sh tau-dag '<request>' --dag-template roundtable --handler <h1> --handler <h2> --immutable-goal '<goal>' --json",
+                    },
+                )
+            )
     if not input.request:
         missing.append(_question("request", "What exact problem should the Tau DAG solve?"))
     if not input.repo:
         missing.append(_question("repo", "Which repository or project identifier should the DAG bind to?"))
     if not input.target:
         missing.append(_question("target", "Which issue, task, file, or work target should the DAG bind to?"))
-    if input.handlers:
+    if template_spec:
+        min_handlers = int(template_spec["min_handlers"])
+        if len(input.handlers) < min_handlers:
+            missing.append(
+                _question(
+                    "handlers",
+                    (
+                        f"Template '{input.dag_template}' needs at least {min_handlers} handler"
+                        f"{'s' if min_handlers != 1 else ''}. Provide browser handlers, API model handlers, "
+                        "or subagent selectors."
+                    ),
+                    expects="list[str]",
+                    options=[
+                        "webgpt",
+                        "webclaude",
+                        "webkimi",
+                        "webgemini",
+                        "gpt-5.5-high",
+                        "gpt-5.5-xhigh",
+                        "chutes deepseek-ai/DeepSeek-V3.2-TEE",
+                    ],
+                    recovery_packet={
+                        "failure_code": "template_missing_handlers",
+                        "next_command": f"./run.sh tau-dag '<request>' --dag-template {input.dag_template} --handler <handler> --immutable-goal '<goal>' --json",
+                    },
+                )
+            )
+        expected_topology = str(template_spec["topology"])
+        if input.topology != expected_topology:
+            missing.append(
+                _question(
+                    "topology",
+                    f"Template '{input.dag_template}' requires {expected_topology} topology.",
+                    expects=expected_topology,
+                    recovery_packet={
+                        "failure_code": "template_topology_mismatch",
+                        "next_command": f"./run.sh tau-dag '<request>' --dag-template {input.dag_template} --topology {expected_topology} --json",
+                    },
+                )
+            )
         if not input.immutable_goal:
+            missing.append(
+                _question(
+                    "immutable_goal",
+                    (
+                        f"Template '{input.dag_template}' requires an explicit immutable goal or acceptance bar "
+                        "to share with every participant before Tau dispatch."
+                    ),
+                    expects="str",
+                )
+            )
+    if input.handlers:
+        if not input.immutable_goal and not template_spec:
             missing.append(
                 _question(
                     "immutable_goal",
@@ -380,10 +547,12 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
             "criteria": list(input.criteria),
             "handlers": list(input.handlers),
             "handler_provider_hints": list(input.handler_provider_hints),
+            "dag_template": input.dag_template,
             "topology": input.topology,
             "workflow_mode": input.workflow_mode,
             "join_handler": input.join_handler,
             "handler_projects": list(input.handler_projects),
+            "handler_workspaces": list(input.handler_workspaces),
             "local_fixture": input.local_fixture,
         },
     )
@@ -1071,6 +1240,7 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
                 "prompt_contract": _solver_prompt_contract(input, model=model, index=index),
                 "context": {
                     "role": "concurrent_solver",
+                    **_dag_template_context(input),
                     "model": model,
                     "request": input.request,
                     "criteria": list(input.criteria),
@@ -1100,6 +1270,7 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
         "prompt_contract": _reviewer_prompt_contract(input),
         "context": {
             "role": "comparative_reviewer",
+            **_dag_template_context(input),
             "model": input.reviewer_model,
             "criteria": list(input.criteria),
             "request": input.request,
@@ -1126,6 +1297,7 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
             "delegated_runtime": "$tau",
             "interview_skill": "$interview",
             "best_practices": "$best-practices-tau-dag",
+            **_dag_template_context(input),
             "request": input.request,
             "run_dir": str(run_dir),
             "execution_owner": "$tau",
@@ -1174,6 +1346,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                 "context": {
                     "role": "roundtable_handler",
                     "workflow_mode": input.workflow_mode,
+                    **_dag_template_context(input),
                     "handler": handler,
                     "provider_hint": provider_hint,
                     "handler_policy": _handler_policy(
@@ -1216,6 +1389,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         "context": {
             "role": "compete_evaluator" if is_compete else "roundtable_join",
             "workflow_mode": input.workflow_mode,
+            **_dag_template_context(input),
             "prompt_contract": _roundtable_join_prompt_contract(input),
             "request": input.request,
             "immutable_goal": input.immutable_goal,
@@ -1265,6 +1439,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "compiled_by": "$ask",
             "delegated_runtime": "$tau",
             "transport_owner": "$surf_or_api_adapter",
+            **_dag_template_context(input),
             "request": input.request,
             "immutable_goal": input.immutable_goal,
             "run_dir": str(run_dir),
@@ -1900,6 +2075,7 @@ def _dag_id(input: TauDagCompileInput) -> str:
             ",".join(input.criteria),
             ",".join(input.handlers),
             ",".join(input.handler_provider_hints),
+            input.dag_template,
             input.topology,
             input.join_handler,
             ",".join(input.handler_projects),
@@ -1920,6 +2096,7 @@ def _goal_hash(input: TauDagCompileInput) -> str:
         "criteria": list(input.criteria),
         "handlers": list(input.handlers),
         "handler_provider_hints": list(input.handler_provider_hints),
+        "dag_template": input.dag_template,
         "topology": input.topology,
         "workflow_mode": input.workflow_mode,
         "join_handler": input.join_handler,
@@ -2089,6 +2266,11 @@ def _normalize_workflow_mode(value: str) -> str:
     return "roundtable"
 
 
+def _normalize_dag_template(value: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]+", "-", value.strip().lower().removeprefix("$")).strip("-")
+    return DAG_TEMPLATE_ALIASES.get(normalized, normalized)
+
+
 def _infer_roundtable_handlers(lower_request: str) -> list[str]:
     if "roundtable" not in lower_request and "handler" not in lower_request and "compete" not in lower_request:
         return []
@@ -2109,8 +2291,42 @@ def _slug(value: str) -> str:
     return slug or f"request-{int(time.time())}"
 
 
-def _question(field: str, prompt: str, *, expects: str = "str") -> dict[str, Any]:
-    return {"field": field, "question": prompt, "expects": expects, "required": True}
+def _dag_template_options() -> list[dict[str, str]]:
+    options = [
+        {"value": name, "description": str(spec["description"])}
+        for name, spec in SUPPORTED_DAG_TEMPLATES.items()
+    ]
+    options.extend(
+        {"value": name, "description": f"Tau-native requested: {description}"}
+        for name, description in TAU_NATIVE_TEMPLATE_REQUESTS.items()
+    )
+    return options
+
+
+def _dag_template_context(input: TauDagCompileInput) -> dict[str, Any]:
+    if not input.dag_template:
+        return {}
+    spec = SUPPORTED_DAG_TEMPLATES.get(input.dag_template)
+    return {
+        "dag_template": input.dag_template,
+        "dag_template_description": str(spec.get("description") if spec else ""),
+    }
+
+
+def _question(
+    field: str,
+    prompt: str,
+    *,
+    expects: str = "str",
+    options: list[Any] | None = None,
+    recovery_packet: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"field": field, "question": prompt, "expects": expects, "required": True}
+    if options:
+        payload["options"] = options
+    if recovery_packet:
+        payload["recovery_packet"] = recovery_packet
+    return payload
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
