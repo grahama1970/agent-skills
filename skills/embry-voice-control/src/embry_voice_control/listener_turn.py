@@ -31,6 +31,7 @@ DEFAULT_BASE_URL = "http://127.0.0.1:3001/api/projects/embry-voice"
 DEFAULT_JOURNAL_DB = Path("/mnt/storage12tb/skills/embry-voice-control/state/voice-events.sqlite3")
 DEFAULT_EXPECTED_ANSWER = "paris"
 WAKE_WORD = "embry"
+WAKE_WORD_TRANSCRIPT_ALIASES = ("embry", "embree", "emory")
 SOURCE_CONTRACT = "unix_pipewire_realtimestt_to_sparta_live_turn"
 
 
@@ -86,7 +87,8 @@ def strip_wake_word(transcript: str) -> str:
     """Remove the leading Embry wake word from a transcript."""
     stripped = transcript.strip()
     stripped = re.sub(r"^\s*k[\s,.:;-]+m[\s,.:;-]+b[\s,.:;-]+", "", stripped, flags=re.IGNORECASE)
-    return re.sub(r"^\s*(?:hey[\s,.:;-]+)?embry[\s,.:;-]+", "", stripped, flags=re.IGNORECASE).strip()
+    wake_aliases = "|".join(re.escape(alias) for alias in WAKE_WORD_TRANSCRIPT_ALIASES)
+    return re.sub(rf"^\s*(?:hey[\s,.:;-]+)?(?:{wake_aliases})[\s,.:;-]+", "", stripped, flags=re.IGNORECASE).strip()
 
 
 def event_time(base_created_at: str, offset_ms: int) -> str:

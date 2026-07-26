@@ -8,6 +8,18 @@ def test_strip_wake_word_supports_observed_kmb_initialism() -> None:
     assert strip_wake_word("K.M.B. What is the capital of France?") == "What is the capital of France?"
 
 
+def test_strip_wake_word_supports_observed_embree_spelling() -> None:
+    assert strip_wake_word("Hey Embree make her brave ask one more clarifying question.") == (
+        "make her brave ask one more clarifying question."
+    )
+
+
+def test_strip_wake_word_supports_observed_emory_spelling() -> None:
+    assert strip_wake_word("Hey Emory, what is the capital of France?") == (
+        "what is the capital of France?"
+    )
+
+
 def test_publish_listener_turn_journal_writes_projection_events(tmp_path: Path) -> None:
     db = tmp_path / "voice-events.sqlite3"
     listener_receipt_path = tmp_path / "listener.json"
