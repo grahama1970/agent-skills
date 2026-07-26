@@ -92,6 +92,12 @@ def test_kimi_provider_capacity_busy_fails_fast() -> None:
     assert "capacity is busy" in source
     assert "Kimi provider capacity busy" in source
     assert "promptNeedle" in source
+    assert "providerBusyAfterPrompt" in source
+    assert "busyMarkerIndex > promptSentinelIndex" in source
+    assert "Kimi attachment upload failed: preview entered error state" in source
+    assert "Kimi attachment upload did not become ready within 20s" in source
+    assert "Kimi prompt submission was not accepted: composer still contains draft" in source
+    assert "waitForSubmissionAcceptance" in source
     assert 'type: "keyDown"' in source
     assert 'key: "Enter"' in source
 

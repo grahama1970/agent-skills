@@ -348,6 +348,23 @@ def test_worker_classifies_kimi_capacity_busy_as_provider_limited() -> None:
     assert failure_code == tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED
 
 
+def test_worker_does_not_treat_false_busy_metadata_as_provider_limited() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="Error: Response timeout",
+        response_text="",
+        raw_text="",
+        prompt_text="Inspect the attached image.",
+        submit_meta={
+            "status": "failed",
+            "kimi_provider_capacity_busy": False,
+            "provider_busy_cooldown_count": 0,
+        },
+        commands=[],
+    )
+
+    assert failure_code == "prompt_too_large_or_stalled"
+
+
 def test_worker_webgpt_receipt_includes_transport_summary(tmp_path: Path) -> None:
     request_file = tmp_path / "request.json"
     request_file.write_text(json.dumps({"request": "Ask webgpt to review the bundle."}), encoding="utf-8")

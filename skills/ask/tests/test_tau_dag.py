@@ -1396,6 +1396,97 @@ raise SystemExit(2)
     assert str(evidence) not in browser_prompt.read_text(encoding="utf-8")
 
 
+def test_browser_lane_attaches_readable_image_path_before_submit(tmp_path: Path) -> None:
+    evidence = tmp_path / "page-overlay.webp"
+    evidence.write_bytes(b"RIFF-test-webp")
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": f"Inspect the image at {evidence}."}) + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webkimi"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        f"""#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+if args[:1] == ["kimi.submit"]:
+    attachment = args[args.index("--attach-file") + 1]
+    if attachment != {str(evidence.resolve())!r}:
+        print("missing image attachment", file=sys.stderr)
+        raise SystemExit(8)
+    Path(args[args.index("--output") + 1]).write_text("## Position\\nImage inspected.\\n")
+    Path(args[args.index("--raw-output") + 1]).write_text("## Position\\nImage inspected.\\n")
+    Path(args[args.index("--meta-output") + 1]).write_text(json.dumps({{"status": "ok"}}) + "\\n")
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+if sys.argv[1:2] == ["resolve"]:
+    print(json.dumps({
+        "backend": "webkimi",
+        "project": "webkimi",
+        "tab_id": "837361015",
+        "conversation_url": "https://www.kimi.com/chat/image-proof",
+        "status": "ok",
+    }))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-webkimi",
+            "--handler",
+            "webkimi",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "roundtable",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            str(surf),
+            "--browser-oracle-run",
+            str(browser_oracle),
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["browser_attachment_paths"] == [str(evidence.resolve())]
+    assert receipt["browser_local_path_preflight"]["attached_file_count"] == 1
+
+
 def test_roundtable_browser_lane_error_records_needs_attention_without_failed_process(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(

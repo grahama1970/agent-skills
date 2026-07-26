@@ -195,6 +195,14 @@ const assistantSnapshotExpression = (sentinel) => {
         || lowerResponseText.includes('temporarily busy')
         || lowerResponseText.includes('high demand')
       ));
+    const promptSentinelIndex = SENTINEL ? pageText.lastIndexOf(SENTINEL) : -1;
+    const busyMarkerIndex = Math.max(
+      lowerPageText.lastIndexOf('system is currently busy'),
+      lowerPageText.lastIndexOf('temporarily busy'),
+      lowerPageText.lastIndexOf('please try again later'),
+      lowerPageText.lastIndexOf('high demand'),
+    );
+    const providerBusyAfterPrompt = promptSentinelIndex >= 0 && busyMarkerIndex > promptSentinelIndex;
     return {
       text,
       stopVisible,
@@ -202,6 +210,7 @@ const assistantSnapshotExpression = (sentinel) => {
       providerBusy: providerBusyInResponse,
       providerBusyInPage,
       providerBusyInResponse,
+      providerBusyAfterPrompt,
       source,
       pageTextContainsSentinel,
       sentinelMatch,
@@ -606,38 +615,35 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
   // a prompt that references a missing attachment.
   const previewDeadline = Date.now() + 20000;
   while (Date.now() < previewDeadline) {
-    const preview = await evaluate(
+    const previewState = await evaluate(
       cdp,
       `(() => {
-        const previewSelectors = [
-          '[class*="attachment"]',
-          '[class*="file"]',
-          '[class*="upload"]',
-          '[class*="image"]',
-          '[class*="preview"]',
-          '[class*="chat-input-prepend"] *',
-          '[class*="chat-input-inline-prepend"] *',
-          '[data-testid*="attachment"]',
-          'div[role="img"][aria-label]',
-          'div[data-testid="composer-attachments"] div',
-          'form div[draggable="true"]',
-        ];
-        for (const sel of previewSelectors) {
-          if (document.querySelector(sel)) return true;
-        }
-        return false;
+        const attachmentArea = document.querySelector('.chat-editor-attachment-area');
+        const errorNode = attachmentArea?.querySelector(
+          '.error, [class*="error"], .error-icon, [aria-label*="error" i]',
+        );
+        if (errorNode) return 'error';
+        const loadingNode = attachmentArea?.querySelector(
+          '.loading, [class*="loading"], [aria-busy="true"]',
+        );
+        if (loadingNode) return 'pending';
+        const readyNode = attachmentArea?.querySelector(
+          'img, [class*="file-item"], [class*="attachment-item"], [class*="preview"]',
+        );
+        if (readyNode) return 'visible';
+        return 'pending';
       })()`,
     );
-    if (preview) {
+    if (previewState === "error") {
+      throw new Error("Kimi attachment upload failed: preview entered error state");
+    }
+    if (previewState === "visible") {
       log(`File attachment preview visible`);
       return { attached: true };
     }
     await delay(250);
   }
-  // No preview shown, but the input file was set. Return this explicitly so
-  // wrappers can treat attachment support as unproven or failed.
-  log(`File attachment set (no Kimi preview detected within 20s)`);
-  return { attached: true, previewVisible: false };
+  throw new Error("Kimi attachment upload did not become ready within 20s");
 }
 
 
@@ -744,7 +750,11 @@ async function clickSend(cdp, inputCdp) {
         return 'missing';
       })()`
     );
-    if (result === "clicked-global" || result === "clicked-near") return true;
+    if (result === "clicked-global" || result === "clicked-near") {
+      const accepted = await waitForSubmissionAcceptance(cdp, promptSelectors, 2500);
+      if (accepted) return true;
+      break;
+    }
     if (result === "disabled") {
       await delay(150);
       continue;
@@ -772,13 +782,32 @@ async function clickSend(cdp, inputCdp) {
       modifiers,
     });
     await delay(250);
-    const generating = await evaluate(
-      cdp,
-      `Boolean(document.querySelector('${SELECTORS.stopButton}'))`,
-    ).catch(() => false);
-    if (generating) return true;
+    if (await waitForSubmissionAcceptance(cdp, promptSelectors, 1200)) return true;
   }
-  return true;
+  return false;
+}
+
+async function waitForSubmissionAcceptance(cdp, promptSelectors, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const accepted = await evaluate(
+      cdp,
+      `(() => {
+        const promptSelectors = ${promptSelectors};
+        let prompt = null;
+        for (const selector of promptSelectors) {
+          prompt = document.querySelector(selector);
+          if (prompt) break;
+        }
+        const promptText = (prompt?.innerText || prompt?.textContent || prompt?.value || '').trim();
+        const generating = Boolean(document.querySelector('${SELECTORS.stopButton}'));
+        return generating || promptText.length === 0;
+      })()`,
+    ).catch(() => false);
+    if (accepted) return true;
+    await delay(150);
+  }
+  return false;
 }
 
 async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
@@ -868,6 +897,7 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
 
 function shouldAbortForProviderBusy(snapshot, baselineText = "", hasSentinel = false) {
   if (!snapshot || hasSentinel) return false;
+  if (snapshot.providerBusyAfterPrompt === true) return true;
   if (snapshot.providerBusyInResponse !== true) return false;
   const currentText = snapshot.text || "";
   const changedFromBaseline = !baselineText || (currentText && currentText !== baselineText && !baselineText.includes(currentText));
@@ -953,7 +983,10 @@ async function query(options) {
     }
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
-    await clickSend(cdp, inputCdp);
+    const submitted = await clickSend(cdp, inputCdp);
+    if (!submitted) {
+      throw new Error("Kimi prompt submission was not accepted: composer still contains draft");
+    }
     log("Prompt sent, waiting for response...");
     const genDeadline = Date.now() + 20000;
     while (Date.now() < genDeadline) {

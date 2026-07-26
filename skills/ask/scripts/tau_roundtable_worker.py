@@ -1451,10 +1451,6 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
         "please try again later",
         "system is currently busy",
         "capacity is busy",
-        "kimi_provider_capacity_busy",
-        "grok_provider_capacity_busy",
-        "blocked_kimi_provider_capacity",
-        "blocked_grok_provider_capacity",
         "provider_capacity_limited",
         "temporarily limited access",
         "rate_limited",
@@ -1669,8 +1665,15 @@ def _is_bundle_like(path: Path) -> bool:
     if any(token in name for token in ("bundle", "review", "target", "evidence", "handoff")):
         return True
     return suffixes in {
+        ".bmp",
+        ".gif",
+        ".jpeg",
+        ".jpg",
         ".md",
+        ".pdf",
+        ".png",
         ".txt",
+        ".webp",
         ".json",
         ".jsonl",
         ".zip",
