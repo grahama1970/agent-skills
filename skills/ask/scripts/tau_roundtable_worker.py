@@ -138,6 +138,9 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     transport_summary: dict[str, Any] = {}
     transport_summary_path: Path | None = None
     binding_refresh: dict[str, Any] | None = None
+    submit_prompt_path = prompt_path
+    browser_attachment_paths: list[str] = []
+    browser_local_path_preflight: dict[str, Any] | None = None
     failure = ""
     recovery_packet: dict[str, Any] | None = None
     started = _now()
@@ -206,16 +209,26 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 prior_response = str(prior.get("response_path") or "")
                 if prior_response and Path(prior_response).is_file():
                     attachment_paths.append(prior_response)
+            (
+                submit_prompt_path,
+                browser_attachment_paths,
+                browser_local_path_preflight,
+            ) = _prepare_browser_submit_payload(
+                handler=handler,
+                prompt_path=prompt_path,
+                request_payload=request_payload,
+                attachment_paths=attachment_paths,
+            )
             submit_cmd = _browser_submit_command(
                 args,
                 handler=handler,
-                prompt_path=prompt_path,
+                prompt_path=submit_prompt_path,
                 response_path=response_path,
                 raw_path=raw_path,
                 meta_path=meta_path,
                 tab_id=tab_id,
                 url=url,
-                attachment_paths=attachment_paths,
+                attachment_paths=browser_attachment_paths,
             )
             submit = _run_cmd(submit_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
             commands.append(submit.summary())
@@ -246,7 +259,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                     response_path=response_path,
                     raw_path=raw_path,
                     meta_path=meta_path,
-                    attachment_paths=attachment_paths,
+                    attachment_paths=browser_attachment_paths,
                     commands=commands,
                 )
                 if retry:
@@ -389,6 +402,9 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
         "webgpt_transport_summary": transport_summary or None,
         "prompt_path": str(prompt_path),
+        "browser_prompt_path": str(submit_prompt_path) if submit_prompt_path != prompt_path else None,
+        "browser_attachment_paths": browser_attachment_paths,
+        "browser_local_path_preflight": browser_local_path_preflight,
         "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
         "response_chars": len(response_text),
         "browser_oracle": resolve_payload,
@@ -555,6 +571,106 @@ def _browser_submit_command(
     if args.no_activate:
         command.append("--no-activate")
     return command
+
+
+def _prepare_browser_submit_payload(
+    *,
+    handler: str,
+    prompt_path: Path,
+    request_payload: dict[str, Any],
+    attachment_paths: list[str],
+) -> tuple[Path, list[str], dict[str, Any]]:
+    prompt_text = prompt_path.read_text(encoding="utf-8", errors="replace")
+    local_candidates = _local_path_candidates(prompt_text)
+    readable_bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
+    combined_attachments = _unique_existing_files([*attachment_paths, *readable_bundle_paths])
+    if not local_candidates:
+        return (
+            prompt_path,
+            combined_attachments,
+            {
+                "schema": "ask.browser_local_path_preflight.v1",
+                "status": "PASS",
+                "local_path_count": 0,
+                "attached_file_count": len(combined_attachments),
+                "sanitized_prompt_path": None,
+            },
+        )
+
+    attached_by_resolved = {str(Path(path).resolve()): index + 1 for index, path in enumerate(combined_attachments)}
+    sanitized = prompt_text
+    replacements: list[dict[str, Any]] = []
+    for candidate in local_candidates:
+        path = Path(candidate).expanduser()
+        label = "local-only path not attached"
+        attachment_index = None
+        if path.is_file():
+            try:
+                attachment_index = attached_by_resolved.get(str(path.resolve()))
+            except OSError:
+                attachment_index = None
+        if attachment_index is not None:
+            label = f"attached local evidence file ATTACHMENT_{attachment_index}"
+        replacement = f"[{label}: {path.name}]"
+        sanitized = sanitized.replace(candidate, replacement)
+        replacements.append(
+            {
+                "path": candidate,
+                "file_exists": path.is_file(),
+                "attached": attachment_index is not None,
+                "attachment_index": attachment_index,
+                "replacement": replacement,
+            }
+        )
+
+    sanitized_prompt_path = prompt_path.with_name("browser-readable-prompt.md")
+    attachment_lines = []
+    for index, path in enumerate(combined_attachments, start=1):
+        attachment_lines.append(f"- ATTACHMENT_{index}: {Path(path).name}")
+    if attachment_lines:
+        sanitized += "\n\nLocal evidence attachments available to the browser model:\n" + "\n".join(attachment_lines)
+        sanitized += "\nUse the attached files as source material; do not rely on local filesystem paths.\n"
+    sanitized_prompt_path.write_text(sanitized, encoding="utf-8")
+    return (
+        sanitized_prompt_path,
+        combined_attachments,
+        {
+            "schema": "ask.browser_local_path_preflight.v1",
+            "status": "PASS" if handler in ATTACH_FILE_HANDLERS or not readable_bundle_paths else "NEEDS_ATTENTION",
+            "local_path_count": len(local_candidates),
+            "attached_file_count": len(combined_attachments),
+            "sanitized_prompt_path": str(sanitized_prompt_path),
+            "replacements": replacements,
+        },
+    )
+
+
+def _local_path_candidates(text: str) -> list[str]:
+    candidates: list[str] = []
+    for candidate in _extract_path_candidates(text):
+        if candidate.startswith("//") or "://" in candidate:
+            continue
+        path = Path(candidate).expanduser()
+        if not path.is_absolute():
+            continue
+        if candidate not in candidates:
+            candidates.append(candidate)
+    return candidates
+
+
+def _unique_existing_files(paths: list[str]) -> list[str]:
+    unique: list[str] = []
+    for item in paths:
+        path = Path(str(item)).expanduser()
+        if not path.is_file():
+            continue
+        try:
+            resolved = str(path.resolve())
+        except OSError:
+            continue
+        if resolved not in unique:
+            unique.append(resolved)
+    return unique
 
 
 def _should_retry_browser_stale_binding(
@@ -1510,7 +1626,7 @@ def _local_readable_bundle_paths(prompt_text: str, request_payload: dict[str, An
 
 def _extract_path_candidates(text: str) -> list[str]:
     quoted = re.findall(r"['\"](/[^'\"\s]+)['\"]", text)
-    bare = re.findall(r"(?<![\w:])(/[^\s`'\"<>]+)", text)
+    bare = re.findall(r"(?<![\w:/])(/[^\s`'\"<>]+)", text)
     return [item.rstrip(").,;:]") for item in [*quoted, *bare]]
 
 
@@ -1833,6 +1949,12 @@ def _handler_failure_recovery_packet(
             "last_command": commands[-1] if commands else None,
             "scillm_base_url": str(getattr(args, "scillm_base_url", "") or "") or None,
         },
+        "provider_diagnosis": _handler_provider_diagnosis(
+            handler=handler,
+            failure=failure,
+            submit_meta=submit_meta,
+            failure_code=failure_code,
+        ),
         "response_path": str(response_path),
         "raw_response_path": str(raw_path),
         "meta_path": str(meta_path),
@@ -1848,9 +1970,20 @@ def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[s
     haystack = "\n".join([handler, failure, json.dumps(submit_meta, sort_keys=True, default=str)]).lower()
     if "prior_handler_receipts_not_ready" in haystack:
         return "prior_handler_receipts_not_ready"
-    if "http 401" in haystack or "invalid api key" in haystack or "authentication_error" in haystack:
+    if (
+        "http 401" in haystack
+        or "invalid api key" in haystack
+        or "authentication_error" in haystack
+        or "autherror" in haystack
+        or "please pass a valid api key" in haystack
+    ):
         return "scillm_auth_invalid_api_key"
-    if "not_found_error" in haystack or "model not found" in haystack or ("model:" in haystack and "404" in haystack):
+    if (
+        "unknown model" in haystack
+        or "not_found_error" in haystack
+        or "model not found" in haystack
+        or ("model:" in haystack and "404" in haystack)
+    ):
         return "scillm_model_not_found"
     if "http 502" in haystack or "all groups exhausted" in haystack or "router_error" in haystack:
         return "scillm_provider_route_failed"
@@ -1861,6 +1994,92 @@ def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[s
     if "timed out" in haystack or "timeout" in haystack:
         return "handler_timeout"
     return "handler_execution_failed"
+
+
+def _handler_provider_diagnosis(
+    *,
+    handler: str,
+    failure: str,
+    submit_meta: dict[str, Any],
+    failure_code: str,
+) -> dict[str, Any]:
+    """Extract actionable provider repair hints from SciLLM-style failures."""
+    haystack = "\n".join([failure, json.dumps(submit_meta, sort_keys=True, default=str)])
+    suggested_models = _extract_suggested_models(haystack)
+    available_models = _extract_available_models(haystack)
+    routed_model, provider_chain = _extract_model_route(haystack)
+    diagnosis = {
+        "schema": "ask.handler_provider_diagnosis.v1",
+        "handler": handler,
+        "failure_code": failure_code,
+        "http_status": _extract_http_status(haystack),
+        "routed_model": routed_model,
+        "provider_chain": provider_chain,
+        "suggested_models": suggested_models,
+        "available_models_sample": available_models[:24],
+        "available_model_count": len(available_models),
+        "health_command": "curl -sS http://127.0.0.1:4001/v1/scillm/health | jq .",
+        "models_command": "curl -sS http://127.0.0.1:4001/v1/scillm/models | jq .",
+    }
+    if failure_code == "scillm_auth_invalid_api_key":
+        diagnosis["repair_hint"] = (
+            "Configure SCILLM_PROXY_KEY, SCILLM_MASTER_KEY, or LITELLM_MASTER_KEY "
+            "for the running proxy before rerunning this handler."
+        )
+    elif failure_code == "scillm_model_not_found":
+        diagnosis["repair_hint"] = (
+            "Select one of suggested_models or an available model from available_models_sample, "
+            "then rerun the same Ask DAG."
+        )
+    elif failure_code == "scillm_provider_route_failed":
+        diagnosis["repair_hint"] = (
+            "Check provider health and capacity before retrying; do not relaunch all healthy seats."
+        )
+    else:
+        diagnosis["repair_hint"] = "Inspect failure_excerpt and rerun only after the named blocker is addressed."
+    return diagnosis
+
+
+def _extract_http_status(text: str) -> int | None:
+    match = re.search(r"\bHTTP\s+(\d{3})\b", text, flags=re.IGNORECASE)
+    if not match:
+        match = re.search(r'"code"\s*:\s*(\d{3})\b', text)
+    return int(match.group(1)) if match else None
+
+
+def _extract_suggested_models(text: str) -> list[str]:
+    suggestions = []
+    for match in re.finditer(r"Did you mean:\s*([^?\\.\\n]+)", text, flags=re.IGNORECASE):
+        candidate = match.group(1).strip(" '\"`.,")
+        if candidate and candidate not in suggestions:
+            suggestions.append(candidate)
+    return suggestions
+
+
+def _extract_available_models(text: str) -> list[str]:
+    match = re.search(r"Available:\s*([^\"\\n]+)", text, flags=re.IGNORECASE)
+    if not match:
+        return []
+    raw = match.group(1).strip().rstrip(".")
+    models = []
+    for item in raw.split(","):
+        model = item.strip(" '\"`.")
+        if model and model not in models:
+            models.append(model)
+    return models
+
+
+def _extract_model_route(text: str) -> tuple[str | None, list[str]]:
+    model_match = re.search(r"model='([^']+)'", text)
+    routed_model = model_match.group(1) if model_match else None
+    chain_match = re.search(r"chain=\[([^\]]*)\]", text)
+    chain: list[str] = []
+    if chain_match:
+        for item in chain_match.group(1).split(","):
+            value = item.strip(" '\"`")
+            if value:
+                chain.append(value)
+    return routed_model, chain
 
 
 def _handler_recovery_reason(failure_code: str) -> str:
@@ -2331,7 +2550,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
             {"kind": "unresolved_gaps", "items": blockers},
         ],
     )
-    return {"exit_code": 0 if ok else 1, "handoff": handoff}
+    return {"exit_code": 0, "handoff": handoff}
 
 
 def _compete_degradation_analysis(

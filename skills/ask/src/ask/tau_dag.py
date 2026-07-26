@@ -807,7 +807,8 @@ def poll_tau_status(
 def _ensure_degraded_roundtable_join(bundle: dict[str, Any]) -> dict[str, Any] | None:
     dag = bundle.get("dag") if isinstance(bundle.get("dag"), dict) else {}
     dag_context = dag.get("context") if isinstance(dag.get("context"), dict) else {}
-    if str(dag_context.get("workflow_mode") or "") != "roundtable":
+    workflow_mode = str(dag_context.get("workflow_mode") or "")
+    if workflow_mode not in {"roundtable", "compete"}:
         return None
     run_dir = Path(str(bundle.get("run_dir") or ""))
     if not run_dir:

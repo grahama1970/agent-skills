@@ -1142,7 +1142,7 @@ def test_compete_join_fails_closed_without_explicit_verified_features(tmp_path: 
         check=False,
     )
 
-    assert completed.returncode == 1, completed.stderr
+    assert completed.returncode == 0, completed.stderr
     receipt = json.loads((join_dir / "node-receipt.json").read_text(encoding="utf-8"))
     scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
     assert receipt["status"] == "NEEDS_ATTENTION"
@@ -1248,6 +1248,115 @@ raise SystemExit(2)
     assert receipt["recovery_packet_path"] == str(artifact_dir / "browser-recovery-packet.json")
     assert recovery["status"] == "NEEDS_ATTENTION"
     assert recovery["next_command"]
+
+
+def test_browser_lane_sanitizes_local_paths_and_attaches_bundle_before_submit(tmp_path: Path) -> None:
+    evidence = tmp_path / "review-target.md"
+    evidence.write_text("# Evidence\n\nThe answer should be 4.\n", encoding="utf-8")
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": f"Review this URL https://example.com/review and local evidence file: {evidence}"})
+        + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        f"""#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+if args[:1] == ["webgpt.submit"]:
+    input_path = Path(args[args.index("--input") + 1])
+    prompt = input_path.read_text()
+    if {str(evidence)!r} in prompt:
+        print("bare local path reached browser prompt", file=sys.stderr)
+        raise SystemExit(9)
+    if "https://example.com/review" not in prompt:
+        print("non-local URL was incorrectly sanitized", file=sys.stderr)
+        raise SystemExit(7)
+    attachments = [
+        args[index + 1]
+        for index, item in enumerate(args)
+        if item == "--attach-file" and index + 1 < len(args)
+    ]
+    if {str(evidence.resolve())!r} not in attachments:
+        print("missing local evidence attachment", file=sys.stderr)
+        raise SystemExit(8)
+    Path(args[args.index("--output") + 1]).write_text("## Position\\n2 + 2 = 4.\\n")
+    Path(args[args.index("--raw-output") + 1]).write_text("## Position\\n2 + 2 = 4.\\n")
+    Path(args[args.index("--meta-output") + 1]).write_text(json.dumps({{"status": "ok"}}) + "\\n")
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    print(json.dumps({
+        "backend": "webgpt",
+        "project": "webgpt",
+        "tab_id": "837361013",
+        "conversation_url": "https://chatgpt.com/c/local-path-preflight",
+        "status": "ok",
+    }))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-webgpt",
+            "--handler",
+            "webgpt",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            str(surf),
+            "--browser-oracle-run",
+            str(browser_oracle),
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    browser_prompt = Path(receipt["browser_prompt_path"])
+    assert receipt["status"] == "PASS"
+    assert str(evidence.resolve()) in receipt["browser_attachment_paths"]
+    assert receipt["browser_local_path_preflight"]["local_path_count"] >= 1
+    assert receipt["browser_local_path_preflight"]["attached_file_count"] == 1
+    assert str(evidence) in Path(receipt["prompt_path"]).read_text(encoding="utf-8")
+    assert str(evidence) not in browser_prompt.read_text(encoding="utf-8")
 
 
 def test_roundtable_browser_lane_error_records_needs_attention_without_failed_process(tmp_path: Path) -> None:
@@ -1422,6 +1531,179 @@ def test_roundtable_scillm_auth_error_records_recovery_packet_without_failed_pro
     assert "SCILLM_PROXY_KEY=<configured proxy key>" in recovery["next_command"]
     assert "--handler gpt-5.5" in recovery["next_command"]
     assert "--execute --allow-provider-calls --json" in recovery["next_command"]
+
+
+def test_roundtable_unknown_scillm_model_records_suggestions_in_recovery_packet(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps(
+            {
+                "request": "Roundtable the API handlers.",
+                "repo": "local/agent-skills",
+                "target": "issue-1010-model-suggestions",
+                "immutable_goal": "Invalid SciLLM model names produce actionable recovery packets.",
+                "handlers": ["kimi-k2.6", "gpt-5.5"],
+                "topology": "concurrent",
+                "workflow_mode": "roundtable",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-kimi-k2-6"
+
+    class UnknownModelHandler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            self.send_response(400)
+            self.send_header("content-type", "application/json")
+            self.end_headers()
+            payload = {
+                "error": {
+                    "message": (
+                        "Unknown model 'kimi-k2.6'. Did you mean: oc-kimi? "
+                        "Available: claude, gpt-5.5, oc-kimi, gemini-flash."
+                    ),
+                    "type": "invalid_request_error",
+                    "code": 400,
+                }
+            }
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), UnknownModelHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+                "--node-id",
+                "handler-kimi-k2-6",
+                "--handler",
+                "kimi-k2.6",
+                "--topology",
+                "concurrent",
+                "--workflow-mode",
+                "roundtable",
+                "--request-file",
+                str(request_path),
+                "--artifact-dir",
+                str(artifact_dir),
+                "--surf-run",
+                "/bin/false",
+                "--browser-oracle-run",
+                "/bin/false",
+                "--scillm-base-url",
+                base_url,
+                "--scillm-api-key",
+                "sk-dev-proxy-123",
+                "--timeout",
+                "3",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "handler-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["competition_lane_exit_ok"] is True
+    assert receipt["failure_code"] == "scillm_model_not_found"
+    assert recovery["failure_code"] == "scillm_model_not_found"
+    assert recovery["provider_diagnosis"]["http_status"] == 400
+    assert recovery["provider_diagnosis"]["suggested_models"] == ["oc-kimi"]
+    assert "oc-kimi" in recovery["provider_diagnosis"]["available_models_sample"]
+    assert "--execute --allow-provider-calls --json" in recovery["next_command"]
+    assert "available model id" in recovery["fallback_instruction"]
+
+
+def test_roundtable_scillm_valid_api_key_message_classifies_as_auth_failure(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({"request": "Roundtable the API handlers."}) + "\n", encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-gemini-flash"
+
+    class ValidApiKeyHandler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            self.send_response(400)
+            self.send_header("content-type", "application/json")
+            self.end_headers()
+            payload = {
+                "error": {
+                    "message": (
+                        "All groups exhausted for model='gemini-flash' "
+                        "(chain=['gemini-flash','gemini-flash-free2']): Please pass a valid API key"
+                    ),
+                    "type": "router_error",
+                    "code": 400,
+                }
+            }
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), ValidApiKeyHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+                "--node-id",
+                "handler-gemini-flash",
+                "--handler",
+                "gemini-flash",
+                "--topology",
+                "concurrent",
+                "--workflow-mode",
+                "roundtable",
+                "--request-file",
+                str(request_path),
+                "--artifact-dir",
+                str(artifact_dir),
+                "--surf-run",
+                "/bin/false",
+                "--browser-oracle-run",
+                "/bin/false",
+                "--scillm-base-url",
+                base_url,
+                "--scillm-api-key",
+                "sk-dev-proxy-123",
+                "--timeout",
+                "3",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "handler-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["failure_code"] == "scillm_auth_invalid_api_key"
+    assert recovery["failure_code"] == "scillm_auth_invalid_api_key"
+    assert recovery["provider_diagnosis"]["http_status"] == 400
+    assert recovery["provider_diagnosis"]["routed_model"] == "gemini-flash"
+    assert recovery["provider_diagnosis"]["provider_chain"] == ["gemini-flash", "gemini-flash-free2"]
+    assert recovery["auto_retry_blocked_reason"] == "auth_requires_configured_scillm_proxy_key"
 
 
 def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet(tmp_path: Path) -> None:
@@ -1630,6 +1912,117 @@ def test_run_tau_dag_bundle_synthesizes_degraded_join_when_tau_skips_join(monkey
     assert failed["failure_code"] == "scillm_auth_invalid_api_key"
     assert failed["recovery_packet_path"] == str(recovery_path)
     assert join["degradation_analysis"]["failure_codes"] == {"scillm_auth_invalid_api_key": 1}
+
+
+def test_run_tau_dag_bundle_synthesizes_compete_join_when_all_browser_lanes_need_attention(
+    monkeypatch, tmp_path: Path
+) -> None:
+    request = infer_compile_input(
+        "Compete webgpt and webkimi on a browser-readable evidence bundle.",
+        repo="local/agent-skills",
+        target="issue-1013-fixture",
+        immutable_goal="Emit a compete scorecard even when every browser candidate needs attention.",
+        handlers=["webgpt", "webkimi"],
+        workflow_mode="compete",
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    artifacts = run_dir / "node-artifacts"
+
+    cases = [
+        (
+            "handler-webgpt",
+            "webgpt",
+            "repo_access_blocked",
+            "skills/surf/run.sh webgpt.submit --input retry-with-local-bundle.md --attach-file evidence.zip",
+        ),
+        (
+            "handler-webkimi",
+            "webkimi",
+            "browser_provider_rate_limited",
+            "skills/surf/run.sh kimi.submit --input retry-with-local-bundle.md --attach-file evidence.zip",
+        ),
+    ]
+    for node_id, handler, failure_code, next_command in cases:
+        node_dir = artifacts / node_id
+        node_dir.mkdir(parents=True, exist_ok=True)
+        response_path = node_dir / "response.md"
+        response_path.write_text("", encoding="utf-8")
+        recovery_path = node_dir / "browser-recovery-packet.json"
+        recovery_path.write_text(
+            json.dumps(
+                {
+                    "schema": "ask.browser_failure_recovery_packet.v1",
+                    "status": "NEEDS_ATTENTION",
+                    "handler": handler,
+                    "node_id": node_id,
+                    "failure_code": failure_code,
+                    "next_command": next_command,
+                    "auto_retry_allowed": False,
+                    "auto_retry_blocked_reason": "fixture_blocker",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (node_dir / "node-receipt.json").write_text(
+            json.dumps(
+                {
+                    "schema": "ask.tau_dag_handler_receipt.v1",
+                    "node_id": node_id,
+                    "handler": handler,
+                    "status": "NEEDS_ATTENTION",
+                    "ok": False,
+                    "mocked": False,
+                    "live": True,
+                    "provider_live": False,
+                    "response_path": str(response_path),
+                    "failure": failure_code,
+                    "failure_code": failure_code,
+                    "recovery_packet_path": str(recovery_path),
+                    "provider_receipt": {
+                        "schema": "ask.tau_dag_provider_route_receipt.v1",
+                        "status": "NEEDS_ATTENTION",
+                        "ok": False,
+                        "live": True,
+                        "provider_live": False,
+                    },
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "join skipped after upstream failure", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    execution = run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    join_path = run_dir / "node-artifacts" / "join" / "node-receipt.json"
+    scorecard_path = run_dir / "node-artifacts" / "join" / "compete-scorecard.json"
+    assert execution["status"] == "NEEDS_ATTENTION"
+    assert execution["join_artifact_path"] == str(join_path)
+    assert execution["degraded_join"]["status"] == "emitted"
+    assert execution["join_receipt"]["schema"] == "ask.tau_dag_compete_join_receipt.v1"
+    assert join_path.is_file()
+    scorecard = json.loads(scorecard_path.read_text(encoding="utf-8"))
+    assert scorecard["status"] == "NEEDS_ATTENTION"
+    assert len(scorecard["candidates"]) == 2
+    assert all(candidate["ok"] is False for candidate in scorecard["candidates"])
+    assert scorecard["degradation_analysis"]["candidate_count"] == 2
+    assert scorecard["degradation_analysis"]["verified_feature_count"] == 0
+    assert scorecard["degradation_analysis"]["failure_codes"] == {
+        "browser_provider_rate_limited": 1,
+        "repo_access_blocked": 1,
+    }
+    assert len(scorecard["degradation_analysis"]["recovery_commands"]) == 2
 
 
 def test_tau_dag_cli_json_reports_degraded_join_path(monkeypatch, tmp_path: Path) -> None:
@@ -1930,7 +2323,7 @@ def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp
         check=False,
     )
 
-    assert completed.returncode == 1, completed.stderr
+    assert completed.returncode == 0, completed.stderr
     scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
     assert scorecard["status"] == "NEEDS_ATTENTION"
     assert scorecard["winner_handler"] == ""
