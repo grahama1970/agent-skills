@@ -45,6 +45,26 @@ remain historical or experimental until a fresh paired receipt proves them.
 
 Machine-readable current state lives in `CURRENT_STATUS.json`.
 
+**Operational next step (P2):** build
+`reports/goal_v5/continuity/live_chain/RECEIPT.json`, but harden the continuity
+ledger first. `scripts/continuity_ledger.py` needs atomic write/replace, epoch
+compare-and-set, cycle-derived idempotency, recomputed identity-core hash
+validation, read-time ledger validation, and Embry schema normalization before a
+live continuity receipt can be trusted. After that, bind one session mood before
+turn 1, reread the same mood across turns, preserve answer propositions, route
+the derived voice delivery to Chatterbox, and run the adversarial recognition
+check. Do not expand PCTOM-R, generate a new Kling clip, or run another broad
+assessment before this receipt.
+
+| Lane | Current proof | Boundary |
+|---|---|---|
+| Historical Kling loop | One accepted successor return and canonical persistence path | Not repeatability or prior-video attachment causality |
+| Watch | Restored Tau-routed adjudication for the accepted successor | Not routine availability across fresh cycles |
+| Dream persistence | One canonical write and exact reread path | Not multi-cycle reliability |
+| Continuity ledger | Initial Embry state artifact | Not runtime authority until P2 live-chain receipt |
+| Chatterbox | Live weighted render path with WER 0.0 | Not perceived emotion or stable Embry identity |
+| PCTOM-R | Strong deterministic receipt machinery | No confidence-bounded planning advantage yet |
+
 
 ![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)
 

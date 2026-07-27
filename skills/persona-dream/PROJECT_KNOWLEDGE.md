@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-27 UTC (goal hierarchy alignment + sanity repair) by Codex
+**Last updated:** 2026-07-27 UTC (P2 live continuity-chain next-step synthesis) by Codex
 **Status:** Active development
 
 ## 2026-07-27 — CONTROLLING HIERARCHY aligned across GOAL/README/SKILL
@@ -55,6 +55,43 @@ accepted dream -> Watch observations -> first-person journal -> bounded
 arc_delta -> persisted continuity ledger -> session_mood selected before the
 first user message -> same mood reread throughout session -> Chatterbox
 multi-utterance voice delivery -> adversarial Embry recognition check.
+
+## 2026-07-27 — NEXT STEP synthesized: P2 live continuity-chain
+
+The updated re-review and Claude verification converge: P0/P1 alignment and
+repository truthfulness are a successful repair milestone, not the Embry
+continuity capability. The next receipt target remains:
+`reports/goal_v5/continuity/live_chain/RECEIPT.json`.
+
+Do not start with another broad review, PCTOM-R variant expansion, Kling
+generation, or README polish. The next build must start by hardening the
+continuity ledger so a live-chain receipt cannot pass dishonestly:
+
+1. Patch `scripts/continuity_ledger.py` for atomic temp-file writes plus
+   `os.replace`, epoch compare-and-set, cycle-derived idempotency keys,
+   recomputed identity-core hash validation, read-time ledger validation, and
+   Embry schema normalization.
+2. Add focused tests proving duplicate dream-cycle replay blocks, stale ledger
+   epochs block, identity-core mutation returns a blocked state, and one dream
+   cycle cannot append two arc deltas.
+3. Durably copy or bind the `/tmp/persona-dream-*` PCTOM-R proof roots cited by
+   `GOAL.md` into a repository report path or explicit evidence store before a
+   reboot removes them.
+4. Build the session-mood consumer only after ledger hardening passes: read the
+   latest valid ledger, bind one `session_mood` id before turn 1, assert the
+   same id across multiple turns, preserve answer propositions, derive
+   `dream_voice_weights`, and route the delivery to Chatterbox.
+5. Write the live-chain receipt with positive evidence and negative controls:
+   unsupported journal facts, identity-core rewrite, stale epoch, duplicate
+   replay, mood selected after turn 1, silent mid-session mood change, content
+   drift under emotion, Chatterbox fallback to a control-ignoring engine, and
+   recognition preferring a plausible forgery must all block.
+
+Current evidence classification for this next step: ledger hardening can be
+deterministic local proof; the final continuity-chain receipt must separately
+label which legs are live, fixture-backed, or unverified. Existing Chatterbox
+evidence proves transport/content preservation only; it does not prove
+perceived Embry emotion or session-level recognition.
 
 ## 2026-07-24 — RE-GROUNDED persona roundtable (3 seats) + Continuity Ledger design
 

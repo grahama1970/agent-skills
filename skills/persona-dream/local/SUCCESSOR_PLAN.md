@@ -1,5 +1,11 @@
 # Successor Revision Implementation Plan
 
+**STATUS:** HISTORICAL / SUPERSEDED 2026-07-27. This plan describes the old
+successor-video acceptance lane and still references the prior "immutable
+42-step goal" framing. The current controlling goal is Embry persistent-persona
+continuity; use `GOAL.md`, `CURRENT_STATUS.json`, and
+`PROJECT_KNOWLEDGE.md` for active next steps.
+
 **Created:** 2026-07-18
 **Source of truth:** `GOAL.md` (immutable 42-step goal), `local/HANDOFF.md`
 (2026-07-18 refresh). This plan operationalizes HANDOFF section 5 into four

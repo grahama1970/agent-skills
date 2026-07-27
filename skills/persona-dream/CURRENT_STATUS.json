@@ -1,12 +1,13 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
+  "updated_at": "2026-07-27T13:48:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:193c1adf5bee5579e2c67bcb5e9d7f4f32491a561a29d5619a6f3e8e887fb58f",
     "summary": "Build and verify Embry as a persistent persona whose synthetic dreams produce bounded, provenance-linked changes in self-narrative, arc state, session mood, and voice while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries."
   },
-  "current_phase": "P1_REPOSITORY_TRUTHFULNESS_AND_P0_GOAL_ALIGNMENT",
+  "current_phase": "P2_LIVE_CONTINUITY_CHAIN",
   "latest_alignment_repair_receipt": "skills/persona-dream/reports/goal_v5/alignment_repair/RECEIPT.json",
   "latest_accepted_dream_cycle": {
     "status": "HISTORICAL_ACCEPTED_SINGLE_LOOP",
@@ -93,13 +94,22 @@
     ]
   },
   "active_blockers": [
+    "continuity_ledger.py is not yet hardened for atomic writes, epoch compare-and-set, duplicate-cycle idempotency, recomputed identity-core hash checks, and Embry schema normalization.",
     "Continuity ledger is not yet proven as the runtime authority across real sessions.",
     "Chatterbox proof is transport/content-preservation evidence, not perceptual emotion or identity evidence.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
-    "Repeated full dream-pipeline reliability is not proven."
+    "Repeated full dream-pipeline reliability is not proven.",
+    "Load-bearing PCTOM-R proof roots are still recorded from /tmp paths and need durable repository or evidence-store copies before reboot."
   ],
   "next_step": {
-    "default": "Run full persona-dream sanity, then build the live Embry continuity chain proof.",
-    "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json"
+    "default": "Harden the continuity ledger, then build and run the live Embry continuity-chain proof.",
+    "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "ordered_steps": [
+      "Patch continuity_ledger.py for atomic temp-file replace, epoch compare-and-set, cycle-derived idempotency, recomputed identity-core hash validation, read-time ledger validation, and Embry schema normalization.",
+      "Add focused tests proving duplicate cycle replay blocks, stale ledger epochs block, identity-core mutation blocks, and exactly one arc delta is accepted per dream cycle.",
+      "Durably copy or bind the /tmp PCTOM-R proof roots cited by GOAL.md into a repository report path or explicit evidence store.",
+      "Build the session mood consumer: read latest valid ledger, bind one session_mood id before turn 1, assert the same id across turns, preserve answer propositions, derive dream_voice_weights, and route to Chatterbox.",
+      "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls."
+    ]
   }
 }
