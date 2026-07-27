@@ -1,0 +1,97 @@
+{
+  "schema": "agent_skills.monitor_herdr.idle_age_gate_receipt.v1",
+  "skill": "monitor-herdr",
+  "status": "NEEDS_ATTENTION",
+  "receipt_created_at": "2026-07-21T11:54:00Z",
+  "change_commit_before_receipt": "c43b84eb526f1823e461936a70089383207acea0",
+  "remote": {
+    "name": "origin",
+    "branch": "main",
+    "verified_ref_before_receipt": "c43b84eb526f1823e461936a70089383207acea0"
+  },
+  "herdr_idle_duration_capability": {
+    "official_docs_checked": [
+      "https://herdr.dev/docs/socket-api/",
+      "https://herdr.dev/docs/cli-reference/"
+    ],
+    "installed_cli_checks": {
+      "herdr_api_schema": "not_available: unknown command: api",
+      "herdr_pane_list_json": "not_available: unknown option: --json",
+      "agent_explain_json": "available"
+    },
+    "live_payload_result": {
+      "pane_list_fields": [
+        "agent",
+        "agent_session",
+        "agent_status",
+        "cwd",
+        "focused",
+        "foreground_cwd",
+        "pane_id",
+        "revision",
+        "tab_id",
+        "terminal_id",
+        "workspace_id"
+      ],
+      "herdr_idle_fields_seen": []
+    },
+    "implementation": "monitor-owned first-observed-stopped state with future Herdr idle/since field detection"
+  },
+  "deterministic_proof": {
+    "sanity_command": "./skills/monitor-herdr/sanity.sh",
+    "sanity_exit_code": 0,
+    "sanity_stdout_summary": "58 passed in 30.59s",
+    "mocked": true,
+    "live": false,
+    "proved": [
+      "stopped-age gate waits for a second observation before selecting",
+      "Herdr idle_seconds fields are preferred when present",
+      "cron line renders --min-stopped-seconds 600",
+      "live eval script compiles"
+    ]
+  },
+  "live_observation_proof": {
+    "report_path": "/mnt/storage12tb/skills/monitor-herdr/outputs/live-e2e/live-e2e-20260721T115114299517Z/report.json",
+    "receipt_path": "/home/graham/.local/state/monitor-herdr/receipts/monitor-herdr-20260721T115114421798Z/receipt.json",
+    "status": "PASS",
+    "mocked": false,
+    "live": true,
+    "observed_panes": 13,
+    "stopped_panes": 7,
+    "selected_panes": 0,
+    "prompts": 0,
+    "herdr_idle_fields_seen": []
+  },
+  "live_apply_gap": {
+    "report_path": "/mnt/storage12tb/skills/monitor-herdr/outputs/live-e2e/live-e2e-20260721T115127293390Z/report.json",
+    "receipt_path": "/home/graham/.local/state/monitor-herdr/receipts/monitor-herdr-20260721T115127395849Z/receipt.json",
+    "status": "NEEDS_ATTENTION",
+    "mocked": false,
+    "live": true,
+    "failure": "required_prompt_not_exercised",
+    "reason": "current codex Herdr space had no eligible selected pane even with --min-stopped-seconds 0",
+    "remaining_gate": "run live apply eval against an eligible selected pane and require submit_confirmed:true"
+  },
+  "cron": {
+    "installed": true,
+    "mocked": false,
+    "live": true,
+    "line": "*/10 * * * * cd '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-herdr' && '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-herdr/run.sh' tick --apply --space 'codex' --cwd-prefix '/home/graham/workspace/experiments' --min-stopped-seconds 600 >> '/home/graham/.local/state/monitor-herdr/logs/cron.log' 2>&1 # monitor-herdr herdr cron"
+  },
+  "latest_live_dry_tick": {
+    "receipt_path": "/home/graham/.local/state/monitor-herdr/receipts/monitor-herdr-20260721T115321766361Z/receipt.json",
+    "status": "OBSERVED",
+    "ok": true,
+    "mocked": false,
+    "live": true,
+    "apply": false,
+    "min_stopped_seconds": 600,
+    "observed_panes": 13,
+    "stopped_panes": 7,
+    "selected_panes": 0,
+    "prompts": 0,
+    "age_sources": [
+      "monitor_state"
+    ]
+  }
+}
