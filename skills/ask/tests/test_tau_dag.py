@@ -1149,6 +1149,139 @@ raise SystemExit(2)
     assert [check["live_tab"]["id"] for check in gate["handler_checks"]] == [101, 202]
 
 
+def test_all_browser_compete_gate_accepts_json_after_tooling_chatter(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Compete webgpt and webclaude on this focused patch.",
+        repo="local/agent-skills",
+        target="browser-compete-contaminated-json",
+        immutable_goal="Launch only when both browser bindings resolve to live tabs.",
+        handlers=["webgpt", "webclaude"],
+        handler_projects=["webgpt=tau"],
+        topology="concurrent",
+        workflow_mode="compete",
+        output_root=tmp_path,
+    )
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+if sys.argv[1:3] == ["tab.list", "--json"]:
+    print("Building vendored surf-cli at /tmp/example...")
+    print("added 317 packages, and audited 318 packages in 3s")
+    print(json.dumps([
+        {"id": 101, "url": "https://chatgpt.com/c/live", "title": "ChatGPT"},
+        {"id": 202, "url": "https://claude.ai/chat/live", "title": "Claude"}
+    ]))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    backend = args[args.index("--backend") + 1]
+    print("Resolved 16 packages in 0.90ms")
+    print("Audited 14 packages in 0.22ms")
+    if backend == "webgpt":
+        print(json.dumps({"status": "ok", "backend": backend, "project": "tau", "tab_id": "101"}))
+    elif backend == "webclaude":
+        print(json.dumps({"status": "ok", "backend": backend, "project": "webclaude", "tab_id": "202"}))
+    else:
+        raise SystemExit(3)
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    gate = probe_browser_compete_handler_gate(
+        request,
+        surf_run=surf,
+        browser_oracle_run=browser_oracle,
+        timeout_seconds=2,
+    )
+
+    assert gate["status"] == "READY"
+    assert gate["ok"] is True
+    assert gate["blocked_handler_count"] == 0
+    assert [check["live_tab"]["id"] for check in gate["handler_checks"]] == [101, 202]
+
+
+def test_all_browser_compete_gate_keeps_large_tab_list_before_matching_bindings(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Compete webgpt and webclaude on this focused patch.",
+        repo="local/agent-skills",
+        target="browser-compete-large-tab-list",
+        immutable_goal="Do not lose live bindings when many unrelated Chrome tabs exist.",
+        handlers=["webgpt", "webclaude"],
+        handler_projects=["webgpt=tau"],
+        topology="concurrent",
+        workflow_mode="compete",
+        output_root=tmp_path,
+    )
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+if sys.argv[1:3] == ["tab.list", "--json"]:
+    tabs = [
+        {"id": index, "url": "https://example.com/" + ("x" * 220), "title": "unrelated"}
+        for index in range(40)
+    ]
+    tabs.extend([
+        {"id": 101, "url": "https://chatgpt.com/c/live", "title": "ChatGPT"},
+        {"id": 202, "url": "https://claude.ai/chat/live", "title": "Claude"},
+    ])
+    print(json.dumps(tabs))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    backend = args[args.index("--backend") + 1]
+    if backend == "webgpt":
+        print(json.dumps({"status": "ok", "backend": backend, "project": "tau", "tab_id": "101"}))
+    elif backend == "webclaude":
+        print(json.dumps({"status": "ok", "backend": backend, "project": "webclaude", "tab_id": "202"}))
+    else:
+        raise SystemExit(3)
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    gate = probe_browser_compete_handler_gate(
+        request,
+        surf_run=surf,
+        browser_oracle_run=browser_oracle,
+        timeout_seconds=2,
+    )
+
+    assert gate["status"] == "READY"
+    assert gate["ok"] is True
+    assert gate["blocked_handler_count"] == 0
+    assert [check["live_tab"]["id"] for check in gate["handler_checks"]] == [101, 202]
+
+
 def test_compete_join_fails_closed_without_explicit_verified_features(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(
@@ -2665,7 +2798,8 @@ def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp
     blockers = {item["handler"]: item for item in scorecard["transport_blockers"]}
     assert blockers["webgpt"]["next_command"] == "skills/surf/run.sh webgpt.submit --input prompt.md --attach-file bundle.zip"
     assert blockers["webclaude"]["failure_code"] == "browser_tab_read_timeout"
-    assert "competition_transport_blocked" in scorecard["blockers"]
+    assert "competition_transport_degraded" in scorecard["blockers"]
+    assert "competition_transport_blocked" not in scorecard["blockers"]
     assert "no_explicit_verified_features_to_promote" in scorecard["blockers"]
     analysis = scorecard["degradation_analysis"]
     assert analysis["status"] == "NEEDS_ATTENTION"
@@ -2683,7 +2817,7 @@ def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp
     assert "prompt_too_large_or_stalled" in summary
 
 
-def test_compete_join_never_names_winner_when_transport_blocked(tmp_path: Path) -> None:
+def test_compete_join_selects_clear_winner_when_peer_transport_degraded(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(json.dumps({"request": "Implement the feature."}) + "\n", encoding="utf-8")
     artifacts = tmp_path / "node-artifacts"
@@ -2770,12 +2904,21 @@ def test_compete_join_never_names_winner_when_transport_blocked(tmp_path: Path) 
 
     assert completed.returncode == 0, completed.stderr
     scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
-    assert scorecard["status"] == "NEEDS_ATTENTION"
-    assert scorecard["ok"] is False
-    assert scorecard["winner_handler"] == ""
-    assert scorecard["winner_node_id"] == ""
-    assert "competition_transport_blocked" in scorecard["blockers"]
-    assert "- winner: `NEEDS_ATTENTION`" in (join_dir / "compete-summary.md").read_text(encoding="utf-8")
+    assert scorecard["status"] == "PASS"
+    assert scorecard["ok"] is True
+    assert scorecard["winner_handler"] == "gpt-5.5"
+    assert scorecard["winner_node_id"] == "handler-gpt-5-5"
+    assert "competition_transport_degraded" in scorecard["blockers"]
+    assert "competition_transport_blocked" not in scorecard["blockers"]
+    assert scorecard["failure_kind"] == "degraded_transport"
+    assert scorecard["provider_live"] is True
+    assert scorecard["transport_blockers"][0]["handler"] == "webkimi"
+    assert "Winner `gpt-5.5` was selected from available receipt-backed candidates" in scorecard[
+        "degradation_analysis"
+    ]["why"]
+    summary = (join_dir / "compete-summary.md").read_text(encoding="utf-8")
+    assert "- winner: `gpt-5.5`" in summary
+    assert "browser_provider_rate_limited" in summary
 
 
 def test_compete_join_promotes_only_explicit_verified_features(tmp_path: Path) -> None:

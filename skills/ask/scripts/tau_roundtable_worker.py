@@ -48,6 +48,7 @@ BROWSER_TAB_IDENTITY_MISMATCH = "browser_tab_identity_mismatch"
 BROWSER_TAB_READ_TIMEOUT = "browser_tab_read_timeout"
 BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
+BROWSER_SUBMIT_NOT_ACCEPTED = "browser_submit_not_accepted"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
 BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
 BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
@@ -62,6 +63,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_TAB_READ_TIMEOUT,
     BROWSER_ACCESS_BLOCKED,
     BROWSER_PROVIDER_RATE_LIMITED,
+    BROWSER_SUBMIT_NOT_ACCEPTED,
     BROWSER_TOOL_UNSUPPORTED,
     BROWSER_ATTACHMENT_UNAVAILABLE,
     BROWSER_SENTINEL_TRAILING_CONTENT,
@@ -597,7 +599,10 @@ def _browser_submit_command(
         command.extend(["--tab-id", tab_id])
     if url:
         if handler == "webgpt":
-            command.extend(["--expect-url", url] if tab_id else ["--url", url])
+            if tab_id and not _is_chatgpt_home_url(url):
+                command.extend(["--expect-url", url])
+            elif not tab_id:
+                command.extend(["--url", url])
         else:
             command.extend(["--url", url])
     browser_model_preference = str(getattr(args, "browser_model_preference", "") or "").strip()
@@ -718,6 +723,8 @@ def _should_retry_browser_stale_binding(
     submit: CmdResult,
 ) -> bool:
     if handler not in HANDLER_SUBMIT_COMMANDS or not url:
+        return False
+    if handler == "webgpt" and _is_chatgpt_home_url(url):
         return False
     haystack = "\n".join(
         [
@@ -888,12 +895,7 @@ def _live_provider_tab_candidates(
     commands.append(summary)
     if tab_list.returncode != 0:
         return []
-    try:
-        payload = json.loads(tab_list.stdout)
-    except json.JSONDecodeError:
-        return []
-    if isinstance(payload, dict):
-        payload = payload.get("tabs", [])
+    payload = _parse_json_array_or_tabs(tab_list.stdout)
     if not isinstance(payload, list):
         return []
     candidates: list[dict[str, Any]] = []
@@ -1068,12 +1070,17 @@ def _refresh_browser_binding_before_submit(
     commands: list[dict[str, Any]],
 ) -> dict[str, Any]:
     handler = str(args.handler)
-    if handler != "webclaude":
+    if handler not in {"webclaude", "webgpt"}:
         return {"status": "skipped", "reason": "handler_not_presubmit_refreshable"}
     live_url = _live_tab_url(args.surf_run, tab_id, commands=commands)
     if not live_url:
         return {"status": "skipped", "reason": "live_tab_url_unavailable"}
-    if not _is_claude_new_to_chat_transition(previous_url, live_url):
+    safe_transition = (
+        _is_claude_new_to_chat_transition(previous_url, live_url)
+        if handler == "webclaude"
+        else _is_chatgpt_home_to_chat_transition(previous_url, live_url)
+    )
+    if not safe_transition:
         return {"status": "skipped", "reason": "not_safe_provider_url_transition", "live_url": live_url}
     return _bind_browser_oracle_url(
         args,
@@ -1133,12 +1140,7 @@ def _live_tab_url(surf_run: str, tab_id: str, *, commands: list[dict[str, Any]])
     commands.append(tab_list.summary())
     if tab_list.returncode != 0:
         return ""
-    try:
-        payload = json.loads(tab_list.stdout)
-    except json.JSONDecodeError:
-        return ""
-    if isinstance(payload, dict):
-        payload = payload.get("tabs", [])
+    payload = _parse_json_array_or_tabs(tab_list.stdout)
     if not isinstance(payload, list):
         return ""
     for tab in payload:
@@ -1218,6 +1220,21 @@ def _is_chatgpt_conversation_url(url: str) -> bool:
     return "c" in parts and parts[-1] != "project"
 
 
+def _is_chatgpt_home_url(url: str) -> bool:
+    if not url:
+        return False
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme != "https":
+        return False
+    if parsed.netloc not in {"chatgpt.com", "www.chatgpt.com"}:
+        return False
+    return parsed.path.strip("/") in {"", "new"}
+
+
+def _is_chatgpt_home_to_chat_transition(expected_url: str, live_url: str) -> bool:
+    return _is_chatgpt_home_url(expected_url) and _is_chatgpt_conversation_url(live_url)
+
+
 def _is_claude_conversation_url(url: str) -> bool:
     if not url:
         return False
@@ -1283,6 +1300,7 @@ def _browser_failure_recovery_packet(
             BROWSER_TAB_READ_TIMEOUT,
             BROWSER_ACCESS_BLOCKED,
             BROWSER_PROVIDER_RATE_LIMITED,
+            BROWSER_SUBMIT_NOT_ACCEPTED,
             BROWSER_TOOL_UNSUPPORTED,
             BROWSER_ATTACHMENT_UNAVAILABLE,
             BROWSER_SENTINEL_TRAILING_CONTENT,
@@ -1430,6 +1448,8 @@ def _classify_browser_failure(
         return SURF_BROWSER_CONNECTION_UNAVAILABLE
     if _looks_browser_provider_rate_limited(haystack, submit_meta):
         return BROWSER_PROVIDER_RATE_LIMITED
+    if _looks_browser_submit_not_accepted(haystack, submit_meta):
+        return BROWSER_SUBMIT_NOT_ACCEPTED
     if _looks_browser_access_blocked(haystack, submit_meta):
         return BROWSER_ACCESS_BLOCKED
     if _looks_browser_tool_unsupported(haystack):
@@ -1573,6 +1593,29 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
         "temporarily limited access",
         "rate_limited",
         "browser_provider_rate_limited",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _looks_browser_submit_not_accepted(text: str, meta: dict[str, Any]) -> bool:
+    failure = str(meta.get("failure") or "").lower()
+    blocker = str(meta.get("blocker") or "").lower()
+    if failure == BROWSER_SUBMIT_NOT_ACCEPTED or blocker == BROWSER_SUBMIT_NOT_ACCEPTED:
+        return True
+    if meta.get("submitted_to_chatgpt") is False or meta.get("submitted_to_kimi") is False:
+        return True
+    markers = (
+        "prompt submission was not accepted",
+        "composer still contains draft",
+        "composer still contains the draft",
+        "editor still contains draft",
+        "editor still contains the draft",
+        "submit click did not fire",
+        "submit did not fire",
+        "send did not fire",
+        "message was not submitted",
+        "prompt was not submitted",
+        "input was not submitted",
     )
     return any(marker in text for marker in markers)
 
@@ -1920,6 +1963,25 @@ def _recovery_next_command(
             command.extend(["--url", url])
         command.extend(["--manual", "--json"])
         return command
+    if failure_code == BROWSER_SUBMIT_NOT_ACCEPTED:
+        project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
+        url = str(
+            browser_oracle.get("conversation_url")
+            or submit_meta.get("current_url")
+            or submit_meta.get("requested_url")
+            or ""
+        ).strip()
+        command = [
+            str(args.browser_oracle_run),
+            "open-bind",
+            project,
+            "--backend",
+            HANDLER_BACKENDS[str(args.handler)],
+        ]
+        if url:
+            command.extend(["--url", url])
+        command.extend(["--manual", "--json"])
+        return command
     if failure_code in {SURF_BROWSER_LOCK_TIMEOUT, SURF_BROWSER_CONNECTION_UNAVAILABLE}:
         command = [
             str(args.surf_run),
@@ -2026,6 +2088,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_TAB_READ_TIMEOUT: "The bound browser tab was reachable by identity but did not respond to Surf page reads.",
         BROWSER_ACCESS_BLOCKED: "The browser provider presented an access challenge before the request could be submitted.",
         BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
+        BROWSER_SUBMIT_NOT_ACCEPTED: "Surf reached the browser composer, but the prompt was not accepted as a submitted message.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
         BROWSER_ATTACHMENT_UNAVAILABLE: "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
         BROWSER_SENTINEL_TRAILING_CONTENT: "The browser provider output included text after the terminal sentinel, so the clean assistant turn is not attributable.",
@@ -2055,6 +2118,8 @@ def _auto_retry_blocked_reason(
         return "browser_access_challenge_requires_human_browser_recovery"
     if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
         return "browser_provider_rate_limit_requires_backoff"
+    if failure_code == BROWSER_SUBMIT_NOT_ACCEPTED:
+        return "browser_submit_not_accepted_requires_composer_recovery_or_fresh_tab"
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "surf_runtime_command_mismatch_requires_repair"
     if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
@@ -2092,6 +2157,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return "Complete the provider access challenge in the controlled browser tab, rerun Surf preflight, then rerun the Tau DAG node."
     if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
         return "Back off this browser provider until the limit clears; use a different handler or rerun later with the same verified tab."
+    if failure_code == BROWSER_SUBMIT_NOT_ACCEPTED:
+        return (
+            "Run the next_command to open and bind a clean provider tab, then rerun only this lane. "
+            "Do not treat an uncleared composer draft as a provider rate limit or as a completed response."
+        )
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "Repair the Surf wrapper/provider adapter command mapping, then rerun the Tau DAG node. Do not retry the same browser call unchanged."
     if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
@@ -2151,6 +2221,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_TAB_READ_TIMEOUT,
         BROWSER_ACCESS_BLOCKED,
         BROWSER_PROVIDER_RATE_LIMITED,
+        BROWSER_SUBMIT_NOT_ACCEPTED,
         BROWSER_TOOL_UNSUPPORTED,
         BROWSER_ATTACHMENT_UNAVAILABLE,
         BROWSER_SENTINEL_TRAILING_CONTENT,
@@ -2677,15 +2748,17 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
     winner = selectable[0] if selectable else None
     tied = bool(len(selectable) > 1 and selectable[0]["feature_count"] == selectable[1]["feature_count"])
     candidate_winner_handler = str(winner.get("handler") or "") if winner and not tied else ""
+    fatal_blockers = []
     if tied:
-        blockers.append("winner_tie_requires_project_agent_review")
+        fatal_blockers.append("winner_tie_requires_project_agent_review")
     if not candidate_winner_handler:
-        blockers.append("no_clear_winner_from_receipts")
+        fatal_blockers.append("no_clear_winner_from_receipts")
     if not all_verified_features:
-        blockers.append("no_explicit_verified_features_to_promote")
+        fatal_blockers.append("no_explicit_verified_features_to_promote")
     if transport_blockers:
-        blockers.append("competition_transport_blocked")
-    status = "PASS" if candidate_winner_handler and not blockers else "NEEDS_ATTENTION"
+        blockers.append("competition_transport_degraded")
+    blockers.extend(fatal_blockers)
+    status = "PASS" if candidate_winner_handler and not fatal_blockers else "NEEDS_ATTENTION"
     ok = status == "PASS"
     winner_handler = candidate_winner_handler if ok else ""
     degradation_analysis = _compete_degradation_analysis(
@@ -2731,11 +2804,15 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         "ok": ok,
         "mocked": False,
         "live": any(item["live"] for item in handler_receipts),
-        "provider_live": ok and all(item["provider_live"] for item in handler_receipts),
+        "provider_live": bool(ok and winner and winner.get("provider_live") is True),
         "winner_handler": winner_handler,
         "winner_node_id": winner.get("node_id") if winner and winner_handler else "",
         "selection_basis": "deterministic_receipts_and_explicit_verified_feature_markers",
-        "failure_kind": "transport" if transport_blockers else ("semantic_or_evidence" if blockers else "none"),
+        "failure_kind": (
+            "degraded_transport"
+            if transport_blockers and ok
+            else ("transport" if transport_blockers else ("semantic_or_evidence" if blockers else "none"))
+        ),
         "candidates": handler_receipts,
         "transport_blockers": transport_blockers,
         "verified_features": all_verified_features,
@@ -2849,7 +2926,12 @@ def _compete_degradation_analysis(
                     "next_command": next_command,
                 }
             )
-    if status == "PASS":
+    if status == "PASS" and failed_candidates:
+        why = (
+            f"Winner `{winner_handler}` was selected from available receipt-backed candidates; "
+            f"{len(failed_candidates)} of {len(candidates)} candidate lane(s) failed or need attention."
+        )
+    elif status == "PASS":
         why = f"Winner `{winner_handler}` selected from receipt-backed verified features."
     elif not candidates:
         why = "No candidate receipts were available, so the competition cannot be scored."
@@ -3633,6 +3715,22 @@ def _parse_json_object(text: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise RuntimeError("JSON root is not an object")
     return payload
+
+
+def _parse_json_array_or_tabs(text: str) -> list[dict[str, Any]] | None:
+    stripped = text.strip()
+    for index, char in enumerate(stripped):
+        if char not in "[{":
+            continue
+        try:
+            payload = json.loads(stripped[index:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            payload = payload.get("tabs", [])
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+    return None
 
 
 def _now() -> str:

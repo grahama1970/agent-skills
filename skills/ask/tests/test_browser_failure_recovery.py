@@ -330,3 +330,209 @@ def test_surf_browser_lock_timeout_is_transport_blocker_with_owner_metadata(tmp_
     assert "--no-lock" not in packet["next_command"]
     assert packet["next_command"][:2] == [str(tmp_path / "skills" / "surf" / "run.sh"), "webgpt.submit"]
     assert "--expect-url" in packet["next_command"]
+
+
+def test_webgpt_unverified_clean_output_is_quarantined_not_tab_identity_retry(tmp_path: Path) -> None:
+    sentinel = "<<<ASK_DONE:20260727T1151Z:WEBGPT>>>"
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure="Terminated\n",
+        response_text="A plausible clean answer without the marker.",
+        raw_text=f"A plausible clean answer without the marker.\n{sentinel}\n",
+        prompt_text="Answer with the sentinel on the final line.",
+        submit_meta={
+            "status": "failed",
+            "failure": "missing_controlled_tab_id_or_contaminated_clean_output",
+            "requested_tab_id": "837362426",
+            "controlled_tab_id": None,
+            "submitted_to_chatgpt": True,
+            "raw_contains_sentinel": True,
+            "clean_contains_sentinel": False,
+            "response_proof_status": "response_unproven",
+            "tab_identity_preflight": {
+                "ok": True,
+                "tab_id": "837362426",
+                "tab": {"id": "837362426", "url": "https://chatgpt.com/c/example"},
+            },
+        },
+        browser_oracle={
+            "project": "pdf-oxide-mvp-webgpt-fresh",
+            "tab_id": "837362426",
+            "conversation_url": "https://chatgpt.com/c/example",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.WEBGPT_UNVERIFIED_CLEAN_OUTPUT
+    assert packet["requires_local_readable_bundle"] is False
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "webgpt_controlled_tab_or_clean_output_unproven"
+    assert packet["next_command"] == []
+    assert "Quarantine the WebGPT response" in packet["fallback_instruction"]
+
+    artifact_dir = tmp_path / "artifacts"
+    response_path = artifact_dir / "response.md"
+    response_path.write_text("A plausible clean answer without the marker.", encoding="utf-8")
+    quarantine = tau_roundtable_worker._quarantine_failed_browser_response(
+        response_path=response_path,
+        recovery_packet=packet,
+        response_text="A plausible clean answer without the marker.",
+    )
+
+    assert quarantine["status"] == "QUARANTINED"
+    assert quarantine["failure_code"] == tau_roundtable_worker.WEBGPT_UNVERIFIED_CLEAN_OUTPUT
+    assert not response_path.exists()
+    assert Path(quarantine["quarantine_path"]).name == "response.contaminated.md"
+
+
+def test_gemini_terminal_sentinel_trailing_content_precedes_prompt_stalled(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgemini",
+        failure="assistant response contains text after terminal sentinel",
+        raw_text="ANSWER\n<<<ASK_DONE:20260727T1151Z:GEMINI>>>\nUnrelated older Gemini text after the marker",
+        prompt_text="Answer in one line and end with the sentinel.",
+        submit_meta={},
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_SENTINEL_TRAILING_CONTENT
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "browser_terminal_sentinel_parser_requires_repair_or_fresh_tab"
+    assert packet["next_command"] == []
+    assert "Quarantine" in packet["fallback_instruction"]
+
+
+def test_kimi_composer_draft_is_submit_not_accepted_not_provider_rate_limited(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure="Kimi prompt submission was not accepted: composer still contains draft",
+        prompt_text="Answer PING_RESULT: 4",
+        submit_meta={
+            "status": "failed",
+            "requested_tab_id": "837362335",
+            "current_url": "https://www.kimi.com/chat/example",
+            "kimi_provider_capacity_busy": False,
+            "submitted_to_kimi": False,
+        },
+        browser_oracle={
+            "project": "pdf-oxide-mvp-webkimi",
+            "tab_id": "837362335",
+            "conversation_url": "https://www.kimi.com/chat/example",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_SUBMIT_NOT_ACCEPTED
+    assert packet["requires_local_readable_bundle"] is False
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "browser_submit_not_accepted_requires_composer_recovery_or_fresh_tab"
+    assert packet["next_command"] == [
+        str(tmp_path / "skills" / "browser-oracle" / "run.sh"),
+        "open-bind",
+        "webkimi",
+        "--backend",
+        "webkimi",
+        "--url",
+        "https://www.kimi.com/chat/example",
+        "--manual",
+        "--json",
+    ]
+    assert "clean provider tab" in packet["fallback_instruction"]
+
+
+def test_kimi_system_busy_still_classifies_as_provider_rate_limited(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure="System is currently busy. Please try again later. Composer still contains draft.",
+        prompt_text="Answer PING_RESULT: 4",
+        submit_meta={
+            "status": "failed",
+            "kimi_provider_capacity_busy": True,
+            "submitted_to_kimi": False,
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "browser_provider_rate_limit_requires_backoff"
+
+
+def test_webgpt_submit_command_does_not_expect_home_url_when_tab_id_is_bound(tmp_path: Path) -> None:
+    args = _args(tmp_path, handler="webgpt")
+    command = tau_roundtable_worker._browser_submit_command(
+        args,
+        handler="webgpt",
+        prompt_path=tmp_path / "prompt.md",
+        response_path=tmp_path / "response.md",
+        raw_path=tmp_path / "response.raw.md",
+        meta_path=tmp_path / "response.meta.json",
+        tab_id="837362426",
+        url="https://chatgpt.com/",
+        attachment_paths=[],
+    )
+
+    assert "--tab-id" in command
+    assert command[command.index("--tab-id") + 1] == "837362426"
+    assert "--expect-url" not in command
+    assert "--url" not in command
+
+
+def test_webgpt_submit_command_still_expects_specific_conversation_url(tmp_path: Path) -> None:
+    args = _args(tmp_path, handler="webgpt")
+    command = tau_roundtable_worker._browser_submit_command(
+        args,
+        handler="webgpt",
+        prompt_path=tmp_path / "prompt.md",
+        response_path=tmp_path / "response.md",
+        raw_path=tmp_path / "response.raw.md",
+        meta_path=tmp_path / "response.meta.json",
+        tab_id="837362426",
+        url="https://chatgpt.com/c/6a6749ed-7924-83ea-abda-93d6e2570b04",
+        attachment_paths=[],
+    )
+
+    assert "--expect-url" in command
+    assert command[command.index("--expect-url") + 1] == "https://chatgpt.com/c/6a6749ed-7924-83ea-abda-93d6e2570b04"
+
+
+def test_worker_parses_mixed_stdout_large_tab_list_for_live_url() -> None:
+    tabs = [{"id": index, "url": "https://example.com/" + ("x" * 220)} for index in range(40)]
+    tabs.append({"id": 837362426, "url": "https://chatgpt.com/c/live", "title": "ChatGPT"})
+    text = "Building vendored surf-cli...\n" + json.dumps(tabs)
+
+    parsed = tau_roundtable_worker._parse_json_array_or_tabs(text)
+
+    assert parsed is not None
+    assert parsed[-1]["id"] == 837362426
+
+
+def test_webgpt_home_to_conversation_transition_is_safe_refresh() -> None:
+    assert tau_roundtable_worker._is_chatgpt_home_to_chat_transition(
+        "https://chatgpt.com/",
+        "https://chatgpt.com/c/6a6749ed-7924-83ea-abda-93d6e2570b04",
+    )
+    assert not tau_roundtable_worker._is_chatgpt_home_to_chat_transition(
+        "https://chatgpt.com/c/old",
+        "https://chatgpt.com/c/new",
+    )
+
+
+def test_webgpt_home_url_identity_mismatch_does_not_scan_unrelated_tabs() -> None:
+    retry = tau_roundtable_worker._should_retry_browser_stale_binding(
+        handler="webgpt",
+        url="https://chatgpt.com/",
+        submit_meta={
+            "failure": "tab_identity_preflight_failed",
+            "tab_identity_preflight": {"error": "expected_url_mismatch"},
+        },
+        submit=tau_roundtable_worker.CmdResult(
+            command=["surf", "webgpt.submit"],
+            returncode=1,
+            stdout="",
+            stderr="expected_url_mismatch",
+            duration=0.1,
+        ),
+    )
+
+    assert retry is False

@@ -1375,8 +1375,8 @@ def _run_gate_command(command: list[str], *, cwd: Path, timeout_seconds: float) 
         return {
             "command": command,
             "returncode": completed.returncode,
-            "stdout": completed.stdout[:4000],
-            "stderr": completed.stderr[:4000],
+            "stdout": completed.stdout[:20000],
+            "stderr": completed.stderr[:8000],
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": False,
         }
@@ -1384,8 +1384,8 @@ def _run_gate_command(command: list[str], *, cwd: Path, timeout_seconds: float) 
         return {
             "command": command,
             "returncode": 124,
-            "stdout": str(exc.stdout or "")[:4000],
-            "stderr": str(exc.stderr or "command timed out")[:4000],
+            "stdout": str(exc.stdout or "")[:20000],
+            "stderr": str(exc.stderr or "command timed out")[:8000],
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": True,
         }
@@ -1401,9 +1401,8 @@ def _run_gate_command(command: list[str], *, cwd: Path, timeout_seconds: float) 
 
 
 def _parse_tab_list_payload(text: str) -> list[dict[str, Any]] | None:
-    try:
-        payload = json.loads(text)
-    except json.JSONDecodeError:
+    payload = _extract_json_payload(text)
+    if payload is None:
         return None
     if isinstance(payload, dict):
         payload = payload.get("tabs", [])
@@ -2675,11 +2674,31 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _json_or_none(text: str) -> dict[str, Any] | None:
-    try:
-        payload = json.loads(text)
-    except json.JSONDecodeError:
-        return None
+    payload = _extract_json_payload(text)
     return payload if isinstance(payload, dict) else None
+
+
+def _extract_json_payload(text: str) -> Any | None:
+    decoder = json.JSONDecoder()
+    stripped = text.strip()
+    if not stripped:
+        return None
+    try:
+        payload, end = decoder.raw_decode(stripped)
+    except json.JSONDecodeError:
+        payload = None
+    else:
+        if not stripped[end:].strip():
+            return payload
+    for index, char in enumerate(stripped):
+        if char not in "[{":
+            continue
+        try:
+            payload, _ = decoder.raw_decode(stripped[index:])
+        except json.JSONDecodeError:
+            continue
+        return payload
+    return None
 
 
 def _sha256(path: Path) -> str:
