@@ -66,7 +66,55 @@ echo "PASS: config doctor JSON contract"
 TMP_DIR="$SANITY_TMP/fixtures"
 mkdir -p "$TMP_DIR"
 FIXTURE="$TMP_DIR/cleanup-receipt.json"
-printf '{"moved_files":["obsolete.md"],"kept_files":["required.py"],"review_required":["maybe.md"]}\n' > "$FIXTURE"
+printf '{"moved_files":["obsolete.py"],"kept_files":["required.py"],"review_required":["maybe.md"],"project_knowledge_sync":"synced","memory_sync":"synced"}\n' > "$FIXTURE"
+cat > "$PWD/.cleanup-evidence.json" <<'JSON'
+{
+  "contract": "cleanup.evidence.v1",
+  "analysis_complete": true,
+  "repository_path": ".",
+  "proof_scope": {"languages_with_resolved_edges": ["python"], "known_blind_spots": []},
+  "scan_failures": [],
+  "files": {
+    "obsolete.py": {
+      "content_sha256": "fixture",
+      "parse_status": "ok",
+      "inbound_references": [],
+      "entrypoint_references": [],
+      "entry_kinds": [],
+      "dynamic_reference_warnings": [],
+      "outbound_edges": []
+    },
+    "maybe.md": {
+      "content_sha256": "fixture",
+      "parse_status": "ok",
+      "inbound_references": [],
+      "entrypoint_references": [],
+      "entry_kinds": [],
+      "dynamic_reference_warnings": [],
+      "outbound_edges": []
+    }
+  }
+}
+JSON
+cat > "$PWD/.ingest-code.json" <<'JSON'
+{
+  "ingested_at": "2026-07-27T00:00:00",
+  "started_at": "2026-07-27T00:00:00",
+  "path": ".",
+  "stem": "project-state",
+  "files_scanned": 2,
+  "knowledge_stored": 0,
+  "cwe_stored": 0,
+  "edges_stored": 0,
+  "code_index": {"enabled": false, "backend": "memory", "collection": "code_symbols", "treesitter": true, "symbols_stored": 0},
+  "scope": "code",
+  "run_status": "complete",
+  "completed": true,
+  "scan_roots": ["."],
+  "completed_scan_roots": ["."]
+}
+JSON
+trap 'rm -rf "$SANITY_TMP"; rm -f "$PWD/.cleanup-evidence.json" "$PWD/.ingest-code.json"' EXIT
 TAIL_JSON="$TMP_DIR/cleanup-tail-output.json"
 "$SCRIPT_DIR/run.sh" report --cleanup-tail --cleanup-receipt "$FIXTURE" --quick --json --output "$TAIL_JSON"
 uv run --project "$SCRIPT_DIR" python - "$TAIL_JSON" <<'PY'
@@ -81,6 +129,10 @@ assert report["profile"] == "cleanup-tail-smoke"
 assert report["release_readiness"] == "NOT_ESTABLISHED"
 assert report["cleanup_counts"]["moved"] == 1
 assert report["cleanup_counts"]["review_required"] == 1
+assert report["ingest_code_cleanup_evidence"]["coverage_status"] == "covered"
+assert report["ingest_code_marker"]["normalized_status"] == "fresh"
+assert report["memory_sync"]["status"] == "synced"
+assert report["project_knowledge_sync"]["status"] == "synced"
 assert report["project_sanity"]["assertion_status"] == "not_established"
 assert report["repo_dirty_state"]["available"] is True
 assert (out_dir / "report.json").exists()

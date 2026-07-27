@@ -476,6 +476,117 @@ def _best_practices_from_receipt(receipt: dict, explicit: list[str]) -> list[str
     return sorted(dict.fromkeys(item for item in found if item))
 
 
+def _load_json_artifact(path: Path) -> dict:
+    try:
+        return {"status": "missing", "path": str(path)} if not path.exists() else {
+            "status": "loaded",
+            "path": str(path),
+            "data": json.loads(path.read_text()),
+        }
+    except json.JSONDecodeError as exc:
+        return {"status": "invalid", "path": str(path), "error": str(exc)}
+    except OSError as exc:
+        return {"status": "error", "path": str(path), "error": str(exc)}
+
+
+_SOURCE_LIKE_SUFFIXES = {
+    ".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go", ".java", ".c", ".cpp",
+    ".h", ".hpp", ".sh", ".bash", ".zsh", ".toml", ".yaml", ".yml", ".json",
+    ".md", ".mdx",
+}
+
+
+def _source_like_paths(paths: dict[str, list[str]]) -> list[str]:
+    selected: list[str] = []
+    for bucket in ("moved", "review_required", "deleted"):
+        for raw in paths.get(bucket, []):
+            path = Path(raw)
+            if path.suffix.lower() in _SOURCE_LIKE_SUFFIXES or "/" in raw:
+                selected.append(raw)
+    return sorted(dict.fromkeys(selected))
+
+
+def _cleanup_evidence_status(project_root: Path, candidate_paths: list[str]) -> dict:
+    artifact = _load_json_artifact(project_root / ".cleanup-evidence.json")
+    if artifact["status"] != "loaded":
+        artifact["coverage_status"] = "not_established"
+        artifact["candidate_paths_checked"] = candidate_paths[:100]
+        return artifact
+
+    data = artifact["data"]
+    files = data.get("files", {}) if isinstance(data, dict) else {}
+    scan_failures = data.get("scan_failures", []) if isinstance(data, dict) else []
+    proof_scope = data.get("proof_scope", {}) if isinstance(data, dict) else {}
+    covered = [path for path in candidate_paths if path in files]
+    missing = [path for path in candidate_paths if path not in files]
+    artifact.update({
+        "contract": data.get("contract"),
+        "analysis_complete": data.get("analysis_complete"),
+        "files_indexed": len(files) if isinstance(files, dict) else 0,
+        "scan_failure_count": len(scan_failures) if isinstance(scan_failures, list) else 0,
+        "candidate_paths_checked": candidate_paths[:100],
+        "covered_candidate_paths": covered[:100],
+        "missing_candidate_paths": missing[:100],
+        "proof_scope": proof_scope,
+        "coverage_status": "covered" if candidate_paths and not missing else ("not_required" if not candidate_paths else "partial"),
+    })
+    artifact.pop("data", None)
+    return artifact
+
+
+def _ingest_marker_status(project_root: Path) -> dict:
+    marker = _load_json_artifact(project_root / ".ingest-code.json")
+    if marker["status"] != "loaded":
+        marker["normalized_status"] = marker["status"]
+        return marker
+
+    data = marker["data"]
+    completed = data.get("completed") is True
+    run_status = data.get("run_status")
+    code_index = data.get("code_index", {})
+    has_identity = bool(data.get("path") and data.get("stem") and data.get("scope"))
+    counts_ok = all(isinstance(data.get(key, 0), int) and data.get(key, 0) >= 0 for key in (
+        "files_scanned", "knowledge_stored", "cwe_stored", "edges_stored",
+    ))
+    if completed and run_status == "complete" and has_identity and counts_ok:
+        normalized = "fresh"
+    elif run_status in {"failed", "error"}:
+        normalized = "failed"
+    elif completed is False or run_status in {"running", "incomplete"}:
+        normalized = "running"
+    else:
+        normalized = "invalid"
+
+    marker.update({
+        "normalized_status": normalized,
+        "run_status": run_status,
+        "completed": completed,
+        "files_scanned": data.get("files_scanned"),
+        "knowledge_stored": data.get("knowledge_stored"),
+        "cwe_stored": data.get("cwe_stored"),
+        "edges_stored": data.get("edges_stored"),
+        "code_index": {
+            "enabled": code_index.get("enabled") if isinstance(code_index, dict) else None,
+            "treesitter": code_index.get("treesitter") if isinstance(code_index, dict) else None,
+            "symbols_stored": code_index.get("symbols_stored") if isinstance(code_index, dict) else None,
+        },
+        "proof_boundary": "local marker only; not proof of backend embedding or Qdrant coverage",
+    })
+    marker.pop("data", None)
+    return marker
+
+
+def _receipt_declared_status(receipt: dict, key: str) -> dict:
+    value = receipt.get(key)
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, bool):
+        return {"status": "recorded" if value else "not_established", "source": "cleanup_receipt"}
+    if isinstance(value, str):
+        return {"status": value, "source": "cleanup_receipt"}
+    return {"status": "not_established", "source": "cleanup_tail_no_receipt_field"}
+
+
 def _build_cleanup_tail_report(
     cleanup_receipt: Path,
     quick: bool,
@@ -488,10 +599,15 @@ def _build_cleanup_tail_report(
     state = generate_report(quick=quick, full=False)
     counts = _extract_cleanup_counts(receipt)
     paths = _extract_cleanup_paths(receipt)
+    source_candidates = _source_like_paths(paths)
+    cleanup_evidence = _cleanup_evidence_status(project_root, source_candidates)
+    ingest_marker = _ingest_marker_status(project_root)
     git_status = _git_status_summary(project_root)
     sanity = _run_project_sanity(project_root, project_sanity_cmd)
     best_practices_run = _best_practices_from_receipt(receipt, best_practices_checks)
     knowledge = _project_knowledge_status(project_root)
+    project_knowledge_sync = _receipt_declared_status(receipt, "project_knowledge_sync")
+    memory_sync = _receipt_declared_status(receipt, "memory_sync")
 
     needs_attention = []
     if counts["moved"] > 0:
@@ -524,6 +640,30 @@ def _build_cleanup_tail_report(
             "safe_default": "do not infer memory/project-knowledge sync",
             "resume_hint": "update docs/PROJECT_KNOWLEDGE.md and memory with cleanup lessons",
         })
+    if source_candidates and cleanup_evidence["coverage_status"] != "covered":
+        needs_attention.append({
+            "reason": "cleanup_evidence_not_complete_for_source_candidates",
+            "safe_default": "do_not_claim_candidate_reference_safety",
+            "resume_hint": "run ingest-code scan with --cleanup-evidence before cleanup planning",
+        })
+    if source_candidates and ingest_marker["normalized_status"] != "fresh":
+        needs_attention.append({
+            "reason": "ingest_code_marker_not_fresh_for_source_candidates",
+            "safe_default": "treat code-index coverage as NOT_ESTABLISHED",
+            "resume_hint": "run ingest-code scan/rescan and inspect .ingest-code.json",
+        })
+    if project_knowledge_sync.get("status") not in {"recorded", "synced", "updated", "pass", "ok"}:
+        needs_attention.append({
+            "reason": "project_knowledge_sync_not_recorded",
+            "safe_default": "do not infer PROJECT_KNOWLEDGE.md was updated",
+            "resume_hint": "run project-knowledge update/sync after accepted cleanup lessons",
+        })
+    if memory_sync.get("status") not in {"recorded", "synced", "updated", "pass", "ok"}:
+        needs_attention.append({
+            "reason": "memory_sync_not_recorded",
+            "safe_default": "do not infer cleanup lessons were stored in memory",
+            "resume_hint": "store accepted cleanup lessons through memory/project-knowledge sync",
+        })
 
     doc_drift = state.get("phase_3_doc_drift") if not quick else None
     unresolved = paths["review_required"] + paths["moved"]
@@ -538,7 +678,11 @@ def _build_cleanup_tail_report(
         "overall_readiness": "USABLE_WITH_GAPS" if needs_attention else "READY",
         "release_readiness": "NOT_ESTABLISHED",
         "needs_attention": needs_attention,
-        "source_receipts": {"cleanup": str(cleanup_receipt)},
+        "source_receipts": {
+            "cleanup": str(cleanup_receipt),
+            "cleanup_evidence": cleanup_evidence.get("path"),
+            "ingest_code_marker": ingest_marker.get("path"),
+        },
         "project_root": str(project_root),
         "features": [
             {
@@ -574,6 +718,42 @@ def _build_cleanup_tail_report(
                 "evidence": best_practices_run,
             },
             {
+                "id": "ingest-code-cleanup-evidence",
+                "readiness": "ready" if cleanup_evidence["coverage_status"] == "covered" else "not_established",
+                "required_cases": 1 if source_candidates else 0,
+                "passed_cases": 1 if cleanup_evidence["coverage_status"] == "covered" else 0,
+                "coverage_gaps": cleanup_evidence.get("missing_candidate_paths", [])[:10],
+                "evidence": [cleanup_evidence.get("path", ".cleanup-evidence.json")],
+            },
+            {
+                "id": "ingest-code-marker",
+                "readiness": "ready" if ingest_marker["normalized_status"] == "fresh" else "not_established",
+                "required_cases": 1 if source_candidates else 0,
+                "passed_cases": 1 if ingest_marker["normalized_status"] == "fresh" else 0,
+                "coverage_gaps": [] if ingest_marker["normalized_status"] == "fresh" else [ingest_marker["normalized_status"]],
+                "evidence": [ingest_marker.get("path", ".ingest-code.json")],
+            },
+            {
+                "id": "project-knowledge-memory-sync",
+                "readiness": "ready" if not any(
+                    item.get("status") not in {"recorded", "synced", "updated", "pass", "ok"}
+                    for item in (project_knowledge_sync, memory_sync)
+                ) else "not_established",
+                "required_cases": 2,
+                "passed_cases": sum(
+                    1 for item in (project_knowledge_sync, memory_sync)
+                    if item.get("status") in {"recorded", "synced", "updated", "pass", "ok"}
+                ),
+                "coverage_gaps": [
+                    name for name, item in (
+                        ("project_knowledge_sync", project_knowledge_sync),
+                        ("memory_sync", memory_sync),
+                    )
+                    if item.get("status") not in {"recorded", "synced", "updated", "pass", "ok"}
+                ],
+                "evidence": [project_knowledge_sync.get("source", ""), memory_sync.get("source", "")],
+            },
+            {
                 "id": "cleanup-delete-authority",
                 "readiness": "safe_failure_only",
                 "required_cases": 1,
@@ -607,15 +787,35 @@ def _build_cleanup_tail_report(
                 "assertion_status": "pass",
                 "readiness_contribution": "safe_failure_only",
             },
+            {
+                "id": "cleanup-evidence-artifact-loads",
+                "feature": "ingest-code-cleanup-evidence",
+                "case_type": "artifact-schema",
+                "execution_status": "pass" if cleanup_evidence["status"] == "loaded" else cleanup_evidence["status"],
+                "assertion_status": "pass" if cleanup_evidence["coverage_status"] == "covered" else "not_established",
+                "readiness_contribution": "source_reference_context_only",
+            },
+            {
+                "id": "ingest-code-marker-normalized",
+                "feature": "ingest-code-marker",
+                "case_type": "artifact-schema",
+                "execution_status": "pass" if ingest_marker["status"] == "loaded" else ingest_marker["status"],
+                "assertion_status": "pass" if ingest_marker["normalized_status"] == "fresh" else "not_established",
+                "readiness_contribution": "local_marker_only",
+            },
         ],
         "cleanup_counts": counts,
         "cleanup_paths": {key: value[:100] for key, value in paths.items()},
+        "source_like_cleanup_candidates": source_candidates[:100],
+        "ingest_code_cleanup_evidence": cleanup_evidence,
+        "ingest_code_marker": ingest_marker,
         "repo_dirty_state": git_status,
         "project_sanity": sanity,
         "best_practices_checks_run": best_practices_run,
         "doc_code_drift": doc_drift or {"status": "not_established", "reason": "quick cleanup-tail profile" if quick else "not reported"},
-        "project_knowledge_sync": knowledge,
-        "memory_sync": {"status": "not_established", "safe_default": "update memory after accepted cleanup lessons"},
+        "project_knowledge_file": knowledge,
+        "project_knowledge_sync": project_knowledge_sync,
+        "memory_sync": memory_sync,
         "new_gaps_introduced_by_cleanup": introduced_gaps,
         "unresolved_cleanup_candidates": unresolved[:100],
         "embedded_state_report": state,

@@ -22,6 +22,12 @@ delete, restore, reset, or otherwise mutate project files.
 - Standard mode is local/bounded. Full mode may use current external retrieval
   skills: `/brave-search`, `/github-search`, and `/arxiv`. `/dogpile` is legacy
   deep aggregation and should not be the default freshness path.
+- Cleanup-tail reads local `.cleanup-evidence.json` and `.ingest-code.json`
+  status when source-like cleanup candidates exist. These artifacts are
+  evidence context only; they do not authorize deletion or prove backend
+  embedding coverage.
+- Cleanup-tail treats `project_knowledge_sync` and `memory_sync` as
+  not-established unless the cleanup receipt records them.
 
 ## Cleanup Tail Safety
 
@@ -39,6 +45,8 @@ It does not establish release readiness and does not authorize deletion of
   profile.
 - Full reports may depend on live companion skills such as `/memory` and
   `/dogpile`.
+- Cleanup-tail can identify missing project-knowledge and memory sync evidence,
+  but it does not write lessons itself.
 
 ## Validation
 

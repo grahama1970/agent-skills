@@ -4,7 +4,8 @@ description: >
   Project state and readiness reporting in one command for Embry-style
   project checkouts and cleanup tails. Runs infrastructure metrics, /memory
   recall, doc-code drift, best-practices audit, current external research
-  via /brave-search and /github-search, gap analysis, and post-cleanup
+  via /brave-search and /github-search, ingest-code cleanup evidence checks,
+  project-knowledge/memory sync checks, gap analysis, and post-cleanup
   readiness receipts.
 triggers:
   - "project state"
@@ -31,6 +32,8 @@ composes:
   - service-status
   - data-audit
   - memory
+  - ingest-code
+  - project-knowledge
   - assistant
   - brave-search
   - github-search
@@ -137,13 +140,24 @@ Cleanup-tail reports:
 - repo dirty state after cleanup from `git status --porcelain`
 - optional project-native sanity result from `--project-sanity-cmd`
 - moved/kept/deleted/review-required path counts from the cleanup receipt
+- `.cleanup-evidence.json` coverage from `$ingest-code` Phase 0 for source-like
+  candidates; this narrows reference context but never authorizes mutation
+- `.ingest-code.json` normalized marker status; this is local command evidence,
+  not proof of backend embedding or Qdrant coverage
 - best-practices commands recorded in the receipt or passed via
   `--best-practices-check`
 - doc-code drift when the standard cleanup-tail profile runs
 - stale/deprecated document findings surfaced through doc-code drift
-- project knowledge presence and memory-sync status as explicit evidence gaps
+- project knowledge file presence plus receipt-declared project-knowledge and
+  memory sync status as explicit evidence gaps
 - potential new gaps introduced by cleanup
 - unresolved cleanup candidates
+
+Cleanup-tail must not run broad Memory scans. Memory answers what was already
+stored; local files such as `.cleanup-evidence.json`, `.ingest-code.json`,
+`PROJECT_KNOWLEDGE.md`, and git status answer what exists in the worktree now.
+When receipt fields do not record `project_knowledge_sync` or `memory_sync`,
+the report must mark those rows `not_established`.
 
 ## Configuration
 
@@ -202,6 +216,23 @@ Synthesizes all previous phases into prioritized, actionable gaps with severity 
 Current-state notes for this skill live in `docs/PROJECT_KNOWLEDGE.md`. Treat
 that document as context, not proof. Readiness claims still require the
 machine-readable report and command receipts.
+
+## Cleanup Sequence Fit
+
+Use cleanup-tail at the end of this sequence:
+
+1. `cleanup --worktree-audit`
+2. `cleanup --plan`
+3. `$ingest-code scan <repo> --cleanup-evidence` when tracked/source-like
+   candidates exist
+4. project-native sanity baseline
+5. execute only authorized cleanup actions
+6. rerun project-native sanity and relevant `best-practices-*`
+7. `project-state report --cleanup-tail --cleanup-receipt ... --json --output artifacts/cleanup/project_state_after.json`
+8. update `$project-knowledge` and `$memory` with accepted lessons
+
+The cleanup-tail report answers what still looks unhealthy, stale, drifted, or
+inconsistent. It does not answer whether a file is safe to delete.
 
 ## Visualization
 
