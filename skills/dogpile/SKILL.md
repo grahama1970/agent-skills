@@ -162,6 +162,23 @@ AlienVault OTX are not part of the default readable RSS lane. Treat them as
 separate enrichment/TIP inputs that need freshness, confidence, relevance,
 allowlist, and corroboration checks before any alerting or blocking decision.
 
+### Optional Archive And Book Lane Selection
+
+Wayback and Readarr are disabled by default because they are specialized,
+slower, and often less relevant than Brave, GitHub, ArXiv, YouTube, and feeds.
+Enable them only when the research question specifically needs their evidence
+type.
+
+| Lane | Activate when the project agent needs | Do not activate when |
+|------|----------------------------------------|----------------------|
+| Wayback Machine | Historical proof of a URL, deleted/changed page recovery, timeline reconstruction, prior documentation behavior, archival comparison, or evidence that a claim existed at a specific earlier date | The task only needs current docs/news/search results, the query is not URL-centered, or freshness matters more than historical state |
+| Readarr / books / Usenet | Long-form book/manual discovery, local library coverage, older technical books, offline/owned long-form sources, or research where books may contain deeper background than web snippets | The task needs current APIs/CVEs/news, the query is time-sensitive, or local Readarr/Usenet availability is not relevant |
+
+If either optional lane is enabled, the final synthesis must label its evidence
+surface explicitly: Wayback proves archived page availability/state, not current
+truth; Readarr proves local/long-form source discovery, not web consensus or
+up-to-date technical behavior.
+
 Optional `/agents` profiles are provided for higher-rigor workflows:
 
 - `agents/researcher.yaml`: converts Dogpile receipts into a bounded research
