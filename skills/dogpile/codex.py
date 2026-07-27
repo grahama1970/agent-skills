@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-"""Codex (OpenAI) integration for Dogpile.
+"""scillm integration for Dogpile.
 
 Provides high-reasoning analysis capabilities:
-- search_codex: General reasoning/extraction with fallback chain
+- search_codex: General reasoning/extraction through /scillm
 - search_codex_knowledge: Technical overview queries
 - tailor_queries_for_services: Generate service-specific search queries
 - analyze_query: Analyze query for ambiguity and code-related intent
-
-Now uses llm_fallback module for resilient multi-provider support:
-  Codex -> OpenAI -> Gemini -> Anthropic -> Claude CLI -> Pi CLI
 """
 import json
+import os
 import re
 import sys
 import time
 from pathlib import Path
-from typing import Dict, Optional, Set, Tuple
+from typing import Any, Dict, Optional, Set, Tuple
 
 # Add parent directory to path for package imports when running as script
 _SCRIPT_DIR = Path(__file__).resolve().parent
@@ -23,28 +21,68 @@ if str(_SCRIPT_DIR.parent) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR.parent))
 
 import typer
+import httpx
 
 from dogpile.config import SKILLS_DIR
-from dogpile.utils import log_status, with_semaphore, run_command, capture_execution_metadata
-from dogpile.llm_fallback import (
-    call_with_fallback,
-    call_fast,
-    call_high_reasoning,
-    get_available_providers,
-)
+from dogpile.utils import log_status, with_semaphore, capture_execution_metadata
+
+SCILLM_URL = os.environ.get("SCILLM_URL", "http://localhost:4001")
+SCILLM_API_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")
+SCILLM_MODEL = os.environ.get("DOGPILE_SCILLM_MODEL", "gpt-5.5")
+
+
+def _call_scillm(prompt: str, schema: Optional[Path] = None, timeout_s: float = 120.0) -> str:
+    """Call Dogpile's single active LLM lane.
+
+    Dogpile deliberately does not set max_tokens. scillm owns provider routing,
+    model-specific token controls, and upstream fallback behavior.
+    """
+    effective_prompt = prompt
+    payload: Dict[str, Any] = {
+        "model": SCILLM_MODEL,
+        "messages": [{"role": "user", "content": effective_prompt}],
+    }
+    if schema:
+        try:
+            schema_text = schema.read_text()
+        except Exception:
+            schema_text = ""
+        payload["response_format"] = {"type": "json_object"}
+        if schema_text:
+            payload["messages"][0]["content"] = (
+                f"{effective_prompt}\n\nReturn JSON matching this schema:\n{schema_text}"
+            )
+
+    try:
+        response = httpx.post(
+            f"{SCILLM_URL}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {SCILLM_API_KEY}",
+                "X-Caller-Skill": "dogpile",
+            },
+            json=payload,
+            timeout=timeout_s,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except httpx.HTTPStatusError as e:
+        body = e.response.text[:500] if e.response is not None else ""
+        return f"Error: scillm HTTP {e.response.status_code if e.response else 'unknown'}: {body}"
+    except Exception as e:
+        return f"Error: scillm request failed: {e}"
+
+    try:
+        content = data["choices"][0]["message"]["content"]
+    except Exception:
+        return f"Error: scillm returned unexpected response shape: {str(data)[:500]}"
+    if content is None:
+        return "Error: scillm returned empty content"
+    return str(content)
 
 
 @with_semaphore("llm")
 def search_codex(prompt: str, schema: Optional[Path] = None) -> str:
-    """Use high-reasoning LLM for analysis with fallback chain.
-
-    Tries multiple providers in sequence:
-    1. Codex (gpt-5.2) - high reasoning
-    2. OpenAI API (gpt-4o)
-    3. Gemini (gemini-2.0-flash)
-    4. Anthropic API
-    5. Claude CLI (OAuth)
-    6. Pi CLI
+    """Use Dogpile's single /scillm lane for analysis.
 
     Args:
         prompt: Analysis prompt
@@ -53,23 +91,21 @@ def search_codex(prompt: str, schema: Optional[Path] = None) -> str:
     Returns:
         LLM response text (prefixed with Error: on failure)
     """
-    log_status("Consulting LLM with fallback chain...")
-    log_status(f"Available providers: {', '.join(get_available_providers())}")
+    log_status(f"Consulting /scillm model {SCILLM_MODEL}...")
+    result = _call_scillm(prompt, schema=schema, timeout_s=120.0)
 
-    provider_name, result = call_with_fallback(prompt, schema)
+    if result.startswith("Error:"):
+        log_status("scillm analysis failed", status="FAILED")
+        return result
 
-    if provider_name == "none":
-        log_status("All LLM providers failed", status="ALL_FAILED")
-        return f"Error: {result}"
-
-    log_status(f"LLM analysis finished (via {provider_name})")
+    log_status("scillm analysis finished")
     return result
 
 
 def search_codex_fast(prompt: str, schema: Optional[Path] = None) -> str:
     """Use fast LLM for simple tasks (query tailoring, etc).
 
-    Uses fast provider chain: Gemini Flash -> GPT-4o-mini -> Haiku
+    Uses the same /scillm lane with a shorter timeout.
 
     Args:
         prompt: Analysis prompt
@@ -78,14 +114,13 @@ def search_codex_fast(prompt: str, schema: Optional[Path] = None) -> str:
     Returns:
         LLM response text
     """
-    log_status("Consulting fast LLM...")
+    log_status(f"Consulting /scillm model {SCILLM_MODEL} for fast task...")
+    result = _call_scillm(prompt, schema=schema, timeout_s=60.0)
 
-    provider_name, result = call_fast(prompt, schema)
+    if result.startswith("Error:"):
+        return result
 
-    if provider_name == "none":
-        return f"Error: {result}"
-
-    log_status(f"Fast LLM finished (via {provider_name})")
+    log_status("Fast scillm task finished")
     return result
 
 
@@ -93,7 +128,7 @@ def search_codex_fast(prompt: str, schema: Optional[Path] = None) -> str:
 def search_codex_knowledge(query: str) -> str:
     """Use high-reasoning LLM for technical knowledge.
 
-    Uses high-reasoning provider chain for deep analysis.
+    Uses /scillm for deep analysis.
 
     Args:
         query: Topic to get technical overview for
@@ -108,23 +143,23 @@ def search_codex_knowledge(query: str) -> str:
         f"common pitfalls, and state-of-the-art approaches."
     )
 
-    # Keep the full fallback chain inside Dogpile's Stage 1 wall-clock budget.
-    provider_name, result = call_high_reasoning(prompt, per_provider_timeout_s=75.0)
+    # Keep the LLM lane inside Dogpile's Stage 1 wall-clock budget.
+    result = _call_scillm(prompt, timeout_s=75.0)
 
-    if provider_name == "none":
+    if result.startswith("Error:"):
         log_status("Knowledge query failed", provider="llm", status="FAILED")
-        return f"Error: {result}"
+        return result
 
-    log_status(f"LLM knowledge finished (via {provider_name})", provider="llm", status="DONE")
+    log_status("LLM knowledge finished via scillm", provider="llm", status="DONE")
     return result
 
 
 def tailor_queries_for_services(query: str, is_code_related: bool) -> Dict[str, str]:
     """Generate service-specific queries tailored to each source's strengths.
 
-    Uses Codex to analyze the query and generate optimal queries for:
+    Uses /scillm to analyze the query and generate optimal queries for:
     - arxiv: Academic/technical terms, paper-style queries
-    - perplexity: Natural language explanatory questions
+    - brave_questions: Natural language explanatory questions formerly sent to Perplexity
     - brave: Documentation, tutorials, error messages
     - github: Code terms, library names, function signatures
     - youtube: Tutorial-style, "how to" queries
@@ -146,7 +181,7 @@ Generate OPTIMIZED search queries for each service. Each service has different s
    - Good: "transformer attention mechanism neural networks"
    - Bad: "how do transformers work"
 
-2. **perplexity**: AI synthesis. Use natural language questions for explanations.
+2. **brave_questions**: Natural-language web research questions. These replace the retired Perplexity lane.
    - Good: "What are the best practices for AI agent memory systems in 2025?"
    - Bad: "AI agent memory 2025"
 
@@ -174,7 +209,7 @@ Return JSON with tailored queries for each service. Keep queries concise but spe
 The Brave query must fit Brave's hard limits and should read like a compressed search engine query, not prose.
 Include current year (2025-2026) where relevant for recent results.
 
-{{"arxiv": "...", "perplexity": "...", "brave": "...", "github": "...", "youtube": "...", "readarr": "..."}}"""
+{{"arxiv": "...", "brave_questions": "...", "perplexity": "...", "brave": "...", "github": "...", "youtube": "...", "readarr": "..."}}"""
 
     schema_path = SKILLS_DIR / "codex" / "query_tailor_schema.json"
 
@@ -184,13 +219,14 @@ Include current year (2025-2026) where relevant for recent results.
             "type": "object",
             "properties": {
                 "arxiv": {"type": "string", "description": "Academic paper search query"},
-                "perplexity": {"type": "string", "description": "Natural language question"},
+                "brave_questions": {"type": "string", "description": "Natural language Brave question"},
+                "perplexity": {"type": "string", "description": "Deprecated alias for brave_questions"},
                 "brave": {"type": "string", "description": "Web/documentation search query"},
                 "github": {"type": "string", "description": "Code-focused search query"},
                 "youtube": {"type": "string", "description": "Tutorial-style search query"},
                 "readarr": {"type": "string", "description": "Book/Usenet search query"}
             },
-            "required": ["arxiv", "perplexity", "brave", "github", "youtube", "readarr"],
+            "required": ["arxiv", "brave_questions", "brave", "github", "youtube", "readarr"],
             "additionalProperties": False
         }
         schema_path.parent.mkdir(parents=True, exist_ok=True)
@@ -200,19 +236,20 @@ Include current year (2025-2026) where relevant for recent results.
     # Use fast chain for query tailoring (simple task)
     result_text = search_codex_fast(prompt, schema=schema_path)
 
-    if result_text is None:
-        log_status("Query tailoring returned None (search_codex_fast)")
-        return default_queries
-
     # Default to original query for all services
     default_queries = {
         "arxiv": query,
+        "brave_questions": query,
         "perplexity": query,
         "brave": query,
         "github": query,
         "youtube": query,
         "readarr": query,
     }
+
+    if result_text is None:
+        log_status("Query tailoring returned None (search_codex_fast)")
+        return default_queries
 
     if result_text.startswith("Error:"):
         log_status(f"Query tailoring failed: {result_text[:100]}")

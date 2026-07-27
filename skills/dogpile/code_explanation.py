@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Code explanation stage for Dogpile (Stage 2.5).
 
-After GitHub deep search finds relevant code, this module uses a fast LLM
+After GitHub deep search finds relevant code, this module uses /scillm
 to explain how the code works and why it's relevant to the query.
 
 Graceful degradation: returns None on any failure — the report renders
@@ -16,7 +16,7 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR.parent) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR.parent))
 
-from dogpile.llm_fallback import call_fast
+from dogpile.codex import search_codex_fast
 from dogpile.utils import log_status
 
 
@@ -113,7 +113,7 @@ def explain_code_results(
 ) -> Optional[str]:
     """Generate an LLM explanation of code found during GitHub deep search.
 
-    Uses call_fast() (Gemini Flash -> GPT-4o-mini -> Haiku) for speed and cost.
+    Uses Dogpile's single /scillm lane for consistency with the skill contract.
     Returns None on any failure so the report can render without this section.
 
     Args:
@@ -133,13 +133,13 @@ def explain_code_results(
         prompt = _build_prompt(query, repo, snippets)
         log_status("Generating code explanation...", provider="code_explanation", status="RUNNING")
 
-        provider_name, result = call_fast(prompt)
+        result = search_codex_fast(prompt)
 
-        if provider_name == "none" or result.startswith("Error:"):
+        if result.startswith("Error:"):
             log_status(f"Code explanation failed: {result[:100]}", provider="code_explanation", status="FAILED")
             return None
 
-        log_status(f"Code explanation done (via {provider_name})", provider="code_explanation", status="DONE")
+        log_status("Code explanation done via scillm", provider="code_explanation", status="DONE")
         return result
 
     except Exception as e:

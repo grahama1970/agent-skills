@@ -7,6 +7,7 @@ import json
 import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
 from loguru import logger
@@ -158,6 +159,82 @@ def search_brave(query: str) -> Dict[str, Any]:
             "query": brave_query,
             "query_adjustment": query_meta,
         }
+
+
+def build_brave_question_queries(query: str, tailored: Dict[str, str] | None = None) -> List[str]:
+    """Build bounded Brave queries that replace the retired Perplexity lane.
+
+    Dogpile used to ask Perplexity one natural-language research question. The
+    free replacement is a small set of concurrent Brave searches: the original
+    question, the tailored natural-language question when available, and a
+    source/evidence-oriented variant.
+    """
+    tailored = tailored or {}
+    candidates = [
+        tailored.get("perplexity") or query,
+        tailored.get("brave") or query,
+        f"{query} sources evidence",
+    ]
+
+    queries: List[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        normalized = " ".join(str(candidate).split())
+        if not normalized:
+            continue
+        key = normalized.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        queries.append(normalized)
+    return queries[:3]
+
+
+@capture_execution_metadata("brave_questions", stage="stage1")
+def search_brave_questions(queries: List[str]) -> Dict[str, Any]:
+    """Run multiple Brave web searches concurrently as Perplexity replacement."""
+    if not queries:
+        return {
+            "replacement_for": "perplexity",
+            "queries": [],
+            "results": [],
+            "error": "No Brave question queries were generated",
+        }
+
+    log_status(
+        f"Starting {len(queries)} concurrent Brave question searches...",
+        provider="brave_questions",
+        status="RUNNING",
+    )
+    results: List[Dict[str, Any]] = []
+    with ThreadPoolExecutor(max_workers=min(3, len(queries))) as executor:
+        future_to_query = {executor.submit(search_brave, q): q for q in queries}
+        for future in as_completed(future_to_query):
+            q = future_to_query[future]
+            try:
+                result = future.result()
+            except Exception as exc:
+                logger.error("Brave question search failed for {!r}: {}", q, exc)
+                result = {"error": str(exc), "query": q}
+            results.append({
+                "query": q,
+                "ok": not (isinstance(result, dict) and result.get("error")),
+                "result": result,
+            })
+
+    ok_count = sum(1 for item in results if item["ok"])
+    log_status(
+        f"Brave question searches finished: {ok_count}/{len(results)} succeeded",
+        provider="brave_questions",
+        status="DONE" if ok_count else "ERROR",
+    )
+    return {
+        "replacement_for": "perplexity",
+        "queries": queries,
+        "results": results,
+        "succeeded": ok_count,
+        "total": len(results),
+    }
 
 
 def deep_extract_url(url: str, title: str = "") -> Dict[str, Any]:

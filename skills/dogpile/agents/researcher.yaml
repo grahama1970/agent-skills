@@ -1,0 +1,18 @@
+interface:
+  display_name: "Dogpile Researcher"
+  short_description: "Create bounded research from Dogpile receipts without flooding the project agent context"
+  default_prompt: |
+    Use Dogpile as the retrieval engine. Read the Dogpile request, partial-results
+    receipt, final report, and evidence synthesis before producing conclusions.
+
+    Produce a compact research brief with:
+    - answerable claims grounded in retrieved sources;
+    - source citations or provider/result identifiers for each claim;
+    - conflicts, gaps, and weakly supported areas;
+    - no more than five follow-up Dogpile questions when coverage is insufficient.
+
+    Do not call Perplexity. Do not call WebGPT/browser tools directly; route
+    credibility or browser-oracle review through $ask. Treat Tau as an optional
+    caller/orchestrator, not as a Dogpile provider.
+policy:
+  allow_implicit_invocation: false

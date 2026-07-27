@@ -1,9 +1,10 @@
 ---
 name: dogpile
 description: >
-  Deep research aggregator that searches Brave (Web), Perplexity (AI), GitHub (Code/Issues),
-  ArXiv (Papers), YouTube (Videos), and Wayback Machine simultaneously.
-  Provides a consolidated Markdown report with an ambiguity check and Agentic Handoff.
+  Deep research aggregator that searches Brave (Web), GitHub (Code/Issues),
+  ArXiv (Papers), YouTube (Videos), feed monitors, and optional archival/book
+  sources. Provides a consolidated Markdown report with an ambiguity check,
+  grounded synthesis, and Agentic Handoff.
 allowed-tools:
   - run_command
   - read_file
@@ -14,16 +15,25 @@ triggers:
   - find code
   - search everything
 metadata:
-  short-description: Deep research aggregator (Web, AI, Code, Papers, Videos)
+  short-description: Deep research aggregator (Web, Code, Papers, Videos, Feeds)
 provides:
   - deep-research
   - web-search
 composes:
   - memory
+  - scillm
   - brave-search
+  - github-search
   - arxiv
+  - ingest-youtube
   - fetcher
+  - extractor
+  - ingest-book
   - task-monitor
+complies:
+  - best-practices-skills
+  - best-practices-python
+runtime_self_improvement: substantial
 
 taxonomy:
   - research
@@ -40,7 +50,7 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 ## Analyzed Sources
 
 1.  **scillm LLM lanes (🤖)**: Query ambiguity checks, query tailoring, technical overview, and code/paper relevance evaluation. Dogpile calls `POST http://localhost:4001/v1/chat/completions` with `Authorization: Bearer sk-dev-proxy-123` and `X-Caller-Skill: dogpile`; it does not call OpenAI, Claude, Gemini, or Codex provider APIs directly.
-2.  **Perplexity (🧠)**: AI-synthesized deep answers and reasoning (Sonar Reasoning).
+2.  **Concurrent Brave question lanes (🌐)**: Perplexity replacement. Dogpile fans out multiple bounded Brave web queries and records each result set separately.
 3.  **Brave Search (🌐)**: **Three-Stage Search** (Search → Evaluate → Deep Extract via /fetcher).
 4.  **ArXiv (📄)**: **Three-Stage Search** (Abstracts → Details → Full Paper via /fetcher + /extractor).
 5.  **YouTube (📺)**: **Two-Stage Search** (Metadata → Detailed Transcripts via Whisper/Direct).
@@ -48,13 +58,15 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Stage 1**: Search repositories and issues
     - **Stage 2**: Fetch README.md and metadata for top repos, agent evaluates relevance
     - **Stage 3**: Deep code search inside the selected repository
-7.  **Wayback Machine (🏛️)**: Historical snapshots for URLs.
+7.  **Feed monitors (📰)**: Fresh feed-derived source discovery when configured by the caller or surrounding project workflow.
+8.  **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
+9.  **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
 
 ## Features
 
 1.  **Query Tailoring**: Uses `/scillm` to generate service-specific queries optimized for each source:
     - **ArXiv**: Academic/technical terms
-    - **Perplexity**: Natural language questions
+    - **Brave Questions**: Natural-language research questions formerly sent to Perplexity
     - **Brave**: Documentation-style keyword queries that must fit Brave's hard limits (`<=400` chars, `<=50` words)
     - **GitHub**: Code patterns, library names
     - **YouTube**: Tutorial-style phrases
@@ -67,7 +79,7 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Brave**: Fetches results → Agent evaluates → Full page extraction via /fetcher
     - **YouTube**: Extracts full transcripts for the most relevant videos
 
-4.  **Report Assembly**: Consolidates successful provider results into a Markdown report. LLM source failures are reported as degraded provider results, not as a total search failure.
+4.  **Report Assembly and Synthesis**: Consolidates successful provider results into a Markdown report and generates a compact grounded synthesis. LLM source failures are reported as degraded provider results, not as a total search failure.
 
 5.  **Textual TUI Monitor**: Real-time progress tracking of all concurrent searches via `run.sh monitor`.
 
@@ -91,10 +103,43 @@ Dogpile has exactly one active LLM integration: `/scillm`.
 - JSON tasks: send `response_format: {"type": "json_object"}` and ask for JSON in the prompt
 - Forbidden: `max_tokens` in dogpile's `/scillm` calls
 - Provider names in logs use logical lane names such as `scillm-gpt55`; scillm decides the concrete upstream provider and returns it in the response `model`
-- Retrieval sources: Brave Search, GitHub, ArXiv, Wayback, YouTube, and feed monitors use their native retrieval APIs. `/scillm` is for query tailoring, ranking, summarization, ambiguity checks, and review of retrieved evidence.
-- Perplexity status: currently quota-exhausted. It is skipped and logged as a degraded source even when requested.
+- Retrieval sources: Brave Search, GitHub, ArXiv, YouTube, feed monitors, and opt-in Wayback/Readarr use their native retrieval APIs. `/scillm` is for query tailoring, ranking, summarization, ambiguity checks, and review of retrieved evidence.
+- Perplexity status: retired. Dogpile does not call Perplexity by default or by flag; it records a skipped/degraded source and uses concurrent Brave question searches instead.
 
-If `/scillm` fails, dogpile records the LLM lane as a degraded provider result and continues with Brave, GitHub, ArXiv, YouTube, Readarr, and Wayback results.
+If `/scillm` fails, dogpile records the LLM lane as a degraded provider result and continues with Brave, GitHub, ArXiv, YouTube, feed, optional Readarr, and optional Wayback results.
+
+## Orchestration Boundary
+
+Dogpile is the retrieval and synthesis engine. It should not require Tau for the
+default path and should not call WebGPT/browser tools directly.
+
+- Use `$ask` for WebGPT, browser-oracle, oracle, deep-review, parallel-review, or
+  credibility review workflows.
+- A Tau researcher can sit above Dogpile as an optional caller that runs
+  creator/reviewer loops, consumes Dogpile receipts, and requests follow-up
+  Dogpile fan-outs when the synthesis reports weak coverage.
+- Dogpile itself must emit enough grounded synthesis that a project agent can
+  use the result without guessing from raw provider dumps.
+
+Optional `/agents` profiles are provided for higher-rigor workflows:
+
+- `agents/researcher.yaml`: converts Dogpile receipts into a bounded research
+  brief and follow-up question set.
+- `agents/reviewer.yaml`: checks credibility, source grounding, skipped-provider
+  honesty, and whether more fan-out is needed.
+
+## Automatic Synthesis Contract
+
+Every normal search should produce a compact evidence synthesis in the final
+report and partial-results stream when `/scillm` is available. The synthesis
+must:
+
+- Ground substantive claims in retrieved Brave, GitHub, ArXiv, YouTube, feed, or
+  optional source evidence.
+- Name conflicts, weak coverage, skipped providers, and missing evidence.
+- Include a short "Most useful sources" list.
+- Avoid inventing citations, URLs, or conclusions not supported by retrieved
+  evidence.
 
 ## Persona, Rationale, and Problem Context
 
@@ -188,6 +233,9 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh search "query"` | Run a search |
 | `./run.sh search "query" --html-report --open-report` | Launch a self-contained HTML/CSS report for clearer review |
 | `./run.sh search "query" --preset NAME` | Search with a preset |
+| `./run.sh search "query" --with-readarr` | Include local Readarr/Usenet book search |
+| `./run.sh search "query" --with-wayback` | Include Wayback archive lookup |
+| `./run.sh search "query" --with-perplexity` | Deprecated audit flag; records Perplexity as skipped and never calls the paid API |
 | `./run.sh monitor` | Open the Real-time TUI Monitor |
 | `python cli.py presets` | List available presets |
 | `python cli.py resources` | List all resources |
@@ -397,9 +445,12 @@ curl http://localhost:8765/tasks/dogpile-search
   },
   "provider_status": {
     "brave": "done",
-    "perplexity": "error",
+    "brave_questions": "done",
+    "perplexity": "skipped",
+    "readarr": "skipped",
+    "wayback": "skipped",
     "github": "done",
-    "codex": "rate_limited"
+    "codex_knowledge": "rate_limited"
   },
   "provider_times": {
     "brave": 3.2,

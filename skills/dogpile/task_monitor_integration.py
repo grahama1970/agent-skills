@@ -33,10 +33,12 @@ class DogpileMonitor:
     Pushes updates to task-monitor state file or API.
     """
 
-    # Standard dogpile providers and their stages
+    # Standard dogpile providers and their stages. Optional or retired providers
+    # are still listed so reports can show skipped state instead of stale pending
+    # state.
     PROVIDERS = [
-        "brave", "perplexity", "github", "arxiv",
-        "youtube", "readarr", "wayback", "codex", "discord"
+        "brave", "brave_questions", "github", "arxiv",
+        "youtube", "codex_knowledge", "perplexity", "readarr", "wayback"
     ]
     STAGES = ["tailoring", "stage1", "stage2_github", "stage2_arxiv",
               "stage2_youtube", "stage2_brave", "synthesis"]
@@ -125,7 +127,7 @@ class DogpileMonitor:
         elapsed = now - self.start_time
 
         # Calculate progress
-        providers_done = sum(1 for s in self.provider_status.values() if s in ("done", "error"))
+        providers_done = sum(1 for s in self.provider_status.values() if s in ("done", "error", "skipped"))
         progress_pct = (self.completed_steps / self.total_steps * 100) if self.total_steps > 0 else 0
 
         state = {
@@ -202,6 +204,12 @@ class DogpileMonitor:
         self.completed_steps += 1
         self._update_state()
 
+    def skip_provider(self, provider: str):
+        """Mark an optional or retired provider as intentionally skipped."""
+        self.provider_status[provider] = "skipped"
+        self.completed_steps += 1
+        self._update_state()
+
     def log_rate_limit(self, provider: str, retry_after: Optional[float] = None):
         """Log a rate limit hit."""
         self.rate_limits[provider] = self.rate_limits.get(provider, 0) + 1
@@ -235,6 +243,7 @@ class DogpileMonitor:
         elapsed = time.time() - self.start_time
         providers_done = sum(1 for s in self.provider_status.values() if s == "done")
         providers_error = sum(1 for s in self.provider_status.values() if s == "error")
+        providers_skipped = sum(1 for s in self.provider_status.values() if s == "skipped")
 
         return {
             "query": self.query,
@@ -242,6 +251,7 @@ class DogpileMonitor:
             "providers": {
                 "succeeded": providers_done,
                 "failed": providers_error,
+                "skipped": providers_skipped,
                 "total": len(self.PROVIDERS),
             },
             "errors": len(self.errors),
