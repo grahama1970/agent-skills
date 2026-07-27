@@ -227,6 +227,12 @@ def run_eval() -> dict[str, Any]:
     hybrid = resources.get("Hybrid Analysis") or {}
     shodan = resources.get("Shodan") or {}
     censys = resources.get("Censys") or {}
+    greynoise = resources.get("GreyNoise") or {}
+    securitytrails = resources.get("SecurityTrails") or {}
+    malpedia = resources.get("Malpedia") or {}
+    malpedia_github = resources.get("Malpedia GitHub") or {}
+    phishtank = resources.get("PhishTank") or {}
+    phishtank_github = resources.get("PhishTank Database GitHub") or {}
     cases.append(_case(
         "credentialed_api_references_documented",
         "credentialed_api",
@@ -236,21 +242,41 @@ def run_eval() -> dict[str, Any]:
         and "https://hybrid-analysis.com/docs/api/v2" in skill_md
         and "https://developer.shodan.io/api" in skill_md
         and "https://docs.censys.com/reference/get-started" in skill_md
+        and "https://docs.greynoise.io/reference/getcommunityip" in skill_md
+        and "https://malpedia.caad.fkie.fraunhofer.de/login" in skill_md
+        and "https://checkurl.phishtank.com/checkurl/" in skill_md
         and "doctor)" in run_sh
         and "scripts/doctor.py" in run_sh
         and "paid_plan_only" in (anyrun.get("tags") or [])
         and "optional" in (shodan.get("tags") or [])
         and "optional" in (hybrid.get("tags") or [])
         and "optional" in (censys.get("tags") or [])
+        and "optional" in (greynoise.get("tags") or [])
+        and "cost_prohibitive" in (securitytrails.get("tags") or [])
+        and "invite_only" in (malpedia.get("tags") or [])
+        and "preferred_public" in (malpedia_github.get("tags") or [])
+        and "credentialed_enrichment" in (phishtank.get("tags") or [])
+        and "preferred_public" in (phishtank_github.get("tags") or [])
+        and "SecurityTrails is useful" in skill_md
+        and "Malpedia's website account/API surface is invite-only" in skill_md
+        and "Route that public surface through `$github-search` first" in skill_md
+        and "ProKn1fe/phishtank-database" in skill_md
         and "credentialed_enrichment" in (shodan.get("tags") or [])
-        and "credentialed_enrichment" in (censys.get("tags") or []),
-        "Dogpile documents credentialed API references and marks ANY.RUN, Hybrid Analysis, Shodan, and Censys as optional credentialed sources.",
+        and "credentialed_enrichment" in (censys.get("tags") or [])
+        and "credentialed_enrichment" in (greynoise.get("tags") or []),
+        "Dogpile documents credentialed API references, marks key enrichment sources optional, keeps SecurityTrails cost-prohibitive by default, and prefers public Malpedia GitHub before invite-only API access.",
         "API key validity, paid-plan entitlement, or live API response quality.",
         {
             "anyrun_tags": anyrun.get("tags"),
             "hybrid_analysis_tags": hybrid.get("tags"),
             "shodan_tags": shodan.get("tags"),
             "censys_tags": censys.get("tags"),
+            "greynoise_tags": greynoise.get("tags"),
+            "securitytrails_tags": securitytrails.get("tags"),
+            "malpedia_tags": malpedia.get("tags"),
+            "malpedia_github_tags": malpedia_github.get("tags"),
+            "phishtank_tags": phishtank.get("tags"),
+            "phishtank_github_tags": phishtank_github.get("tags"),
         },
     ))
 

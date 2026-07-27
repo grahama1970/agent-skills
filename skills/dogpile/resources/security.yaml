@@ -430,10 +430,10 @@ resources:
     api_url: https://api.greynoise.io/v3/
     type: api
     method: GET
-    tags: [blue_team, threat_intel, noise, scanning]
+    tags: [blue_team, threat_intel, noise, scanning, optional, credentialed_enrichment]
     rate_limit: 50
     auth_required: true
-    description: Internet background noise analysis
+    description: Optional scan/noise reputation enrichment; Community API supports quick IP lookups, while GNQL and richer context depend on plan entitlement.
 
   - name: Hunter.io
     url: https://hunter.io
@@ -469,10 +469,10 @@ resources:
     api_url: https://api.securitytrails.com/v1/
     type: api
     method: GET
-    tags: [red_team, osint, dns, historical]
+    tags: [red_team, osint, dns, historical, optional, cost_prohibitive]
     rate_limit: 50
     auth_required: true
-    description: Historical DNS and WHOIS data
+    description: Historical DNS and WHOIS data; optional only because current pricing makes it cost-prohibitive for default Dogpile signup.
 
   - name: SAM.gov
     url: https://sam.gov
@@ -565,10 +565,19 @@ resources:
     api_url: https://malpedia.caad.fkie.fraunhofer.de/api/
     type: api
     method: GET
-    tags: [blue_team, malware, families, yara]
+    tags: [blue_team, malware, families, yara, optional, invite_only, credentialed_enrichment]
     rate_limit: 10
     auth_required: true
-    description: Malware family encyclopedia with YARA rules
+    description: Invite-only Malpedia API enrichment for malware family encyclopedia and YARA context; do not treat as a normal signup path.
+
+  - name: Malpedia GitHub
+    url: https://github.com/malpedia
+    type: scrape
+    method: GET
+    tags: [blue_team, malware, families, yara, github, public, preferred_public]
+    rate_limit: 0
+    auth_required: false
+    description: Public Malpedia GitHub organization; prefer for public YARA-signator rules, flossed strings, feedback, and client code before invite-only API access.
 
   - name: ThreatMiner
     url: https://www.threatminer.org
@@ -614,10 +623,19 @@ resources:
     api_url: https://checkurl.phishtank.com/checkurl/
     type: api
     method: POST
-    tags: [blue_team, phishing, urls, verification]
+    tags: [blue_team, phishing, urls, verification, optional, credentialed_enrichment]
     rate_limit: 10
     auth_required: true
-    description: Community phishing URL verification
+    description: Optional credentialed API for specific phishing URL verification; prefer public mirrors for broad feed-style enrichment.
+
+  - name: PhishTank Database GitHub
+    url: https://github.com/ProKn1fe/phishtank-database
+    type: scrape
+    method: GET
+    tags: [blue_team, phishing, urls, github, public, preferred_public]
+    rate_limit: 0
+    auth_required: false
+    description: Public PhishTank database mirror with online-valid JSON, compressed checksum, and archive history; useful for low-friction phishing URL enrichment.
 
   - name: OpenPhish
     url: https://openphish.com

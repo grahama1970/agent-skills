@@ -75,6 +75,17 @@ API_RESOURCES = {
         },
         "plan_note": "Censys Platform API uses Personal Access Tokens; plan tier controls endpoint access and API calls consume credits.",
     },
+    "greynoise": {
+        "registry_name": "GreyNoise",
+        "env_var": "GREYNOISE_API_KEY",
+        "api_url": "https://api.greynoise.io/v3/",
+        "docs": ["https://docs.greynoise.io/reference/getcommunityip"],
+        "probe_url": "https://api.greynoise.io/v3/community/8.8.8.8",
+        "headers": lambda key: {"key": key},
+        "accepted_status_codes": [200, 404],
+        "success_proves": "The GreyNoise Community API request reached the configured endpoint and returned a documented response; HTTP 404 means no record for the probe IP, not an API outage.",
+        "plan_note": "GreyNoise Community API supports quick IP lookups; free-tier and enterprise access differ, and Community probe success does not prove GNQL or enterprise entitlement.",
+    },
 }
 
 
@@ -197,7 +208,8 @@ def _check_api_probe(resource_key: str, timeout_s: float) -> dict[str, Any]:
             "error": repr(exc)[:1000],
             "metadata": {"endpoint": resource["probe_url"], "env_var": env_var, "plan_note": resource["plan_note"]},
         }
-    status = "passed" if response.status_code == 200 else "failed"
+    accepted_status_codes = set(resource.get("accepted_status_codes", [200]))
+    status = "passed" if response.status_code in accepted_status_codes else "failed"
     error = None
     if response.status_code == 401:
         error = f"{resource['registry_name']} rejected the API key with HTTP 401."
@@ -207,17 +219,20 @@ def _check_api_probe(resource_key: str, timeout_s: float) -> dict[str, Any]:
         error = f"{resource['registry_name']} returned HTTP 429; quota or rate limit was reached."
     elif response.status_code != 200:
         error = f"{resource['registry_name']} returned HTTP {response.status_code}."
+    if status == "passed":
+        error = None
     return {
         "name": f"{resource_key}_api_probe",
         "family": "credentialed_api",
         "status": status,
         "what_was_exercised": f"{resource['registry_name']} bounded API probe.",
-        "proves": f"The visible {env_var} can call the configured {resource['registry_name']} endpoint." if status == "passed" else f"The visible {env_var} did not produce a successful API response.",
+        "proves": resource.get("success_proves", f"The visible {env_var} can call the configured {resource['registry_name']} endpoint.") if status == "passed" else f"The visible {env_var} did not produce a successful API response.",
         "does_not_prove": "Premium entitlement, commercial-use compliance, malware sample download access, or remaining quota.",
         "error": error,
         "metadata": {
             "endpoint": resource["probe_url"],
             "status_code": response.status_code,
+            "accepted_status_codes": sorted(accepted_status_codes),
             "env_var": env_var,
             "body_type": response.headers.get("content-type"),
             "api_limits": response.headers.get("api-limits"),
@@ -232,13 +247,14 @@ def main() -> int:
     parser.add_argument("--with-hybrid-analysis", action="store_true", help="Spend one Hybrid Analysis API request to validate HYBRID_ANALYSIS_API_KEY")
     parser.add_argument("--with-shodan", action="store_true", help="Spend one Shodan API info request to validate SHODAN_API_KEY")
     parser.add_argument("--with-censys", action="store_true", help="Spend one Censys Platform API host lookup to validate CENSYS_API_KEY")
+    parser.add_argument("--with-greynoise", action="store_true", help="Spend one GreyNoise Community API IP lookup to validate GREYNOISE_API_KEY")
     parser.add_argument("--timeout-s", type=float, default=20.0)
     parser.add_argument("--out-dir", type=Path, default=REPORTS_DIR / f"doctor-{_utc_stamp()}")
     args = parser.parse_args()
 
     started = time.time()
     checks: list[dict[str, Any]] = []
-    for resource_key in ("virustotal", "anyrun", "hybrid_analysis", "shodan", "censys"):
+    for resource_key in ("virustotal", "anyrun", "hybrid_analysis", "shodan", "censys", "greynoise"):
         env_var = str(API_RESOURCES[resource_key]["env_var"])
         checks.extend([
             _check_env_var(env_var),
@@ -295,6 +311,18 @@ def main() -> int:
             "does_not_prove": "CENSYS_API_KEY validity, plan tier, endpoint access, credits, or endpoint health.",
             "metadata": {"run_with": "./run.sh doctor --with-censys"},
         })
+    if args.with_greynoise:
+        checks.append(_check_api_probe("greynoise", args.timeout_s))
+    else:
+        checks.append({
+            "name": "greynoise_api_probe",
+            "family": "credentialed_api",
+            "status": "skipped_not_requested",
+            "what_was_exercised": "GreyNoise live probe opt-in guard.",
+            "proves": "No GreyNoise Community API lookup was spent by the default doctor run.",
+            "does_not_prove": "GREYNOISE_API_KEY validity, weekly lookup budget, GNQL access, enterprise entitlement, or endpoint health.",
+            "metadata": {"run_with": "./run.sh doctor --with-greynoise"},
+        })
 
     failed = [check for check in checks if check["status"] == "failed"]
     skipped = [check for check in checks if str(check["status"]).startswith("skipped")]
@@ -303,7 +331,7 @@ def main() -> int:
     receipt = {
         "schema": "dogpile.doctor.v1",
         "mocked": False,
-        "live": bool(args.with_virustotal or args.with_hybrid_analysis or args.with_shodan or args.with_censys),
+        "live": bool(args.with_virustotal or args.with_hybrid_analysis or args.with_shodan or args.with_censys or args.with_greynoise),
         "duration_s": round(time.time() - started, 2),
         "summary": {
             "passed": len(passed),
@@ -321,6 +349,7 @@ def main() -> int:
             "hybrid_analysis_api_v2": "https://hybrid-analysis.com/docs/api/v2",
             "shodan_rest_api": "https://developer.shodan.io/api",
             "censys_platform_api": "https://docs.censys.com/reference/get-started",
+            "greynoise_community_api": "https://docs.greynoise.io/reference/getcommunityip",
         },
         "checks": checks,
         "status": status,

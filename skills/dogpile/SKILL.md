@@ -203,7 +203,8 @@ Do not mix these public RSS packs with optional raw/TIP/API sources:
 | Source class | Examples | Credential/access status |
 |--------------|----------|--------------------------|
 | Public raw enrichment | CISA KEV JSON, URLhaus, Spamhaus, OpenPhish | Not part of the readable RSS lane; many public endpoints need custom parsers, TTL/confidence handling, and false-positive controls |
-| Vendor/TIP APIs | VirusTotal, ANY.RUN, Hybrid Analysis, GreyNoise, Malpedia, PhishTank | API key or account required in the resource registry |
+| Vendor/TIP APIs | VirusTotal, ANY.RUN, Hybrid Analysis, GreyNoise, Malpedia API, PhishTank API | API key or account required in the resource registry; Malpedia API is invite-only |
+| Public code/resource mirrors | Malpedia GitHub, PhishTank Database GitHub | No API key; prefer public repo/data evidence before invite-only or credentialed API access when it fits the task |
 | Internet/OSINT APIs | Shodan, Censys, ZoomEye, Hunter.io, SecurityTrails | API key or account required in the resource registry |
 | Manual communities | BHIS Discord, TrustedSec Discord, OffSec Discord, Red Team Village, Hack The Box Discord, BloodHound Gang, and similar Discord/Slack communities | Manual user membership/invite only; not RSS, not an API-key feed, and not assumed bot-readable |
 
@@ -220,6 +221,9 @@ health unless the project explicitly enables that paid/account-backed provider.
 | Hybrid Analysis | <https://hybrid-analysis.com/docs/api/v2> | Optional enrichment | Falcon Sandbox report/feed/search evidence is useful and the key's authorization level covers the endpoint | `HYBRID_ANALYSIS_API_KEY` |
 | Shodan | <https://developer.shodan.io/api> | Optional enrichment | Internet-exposed service, banner, port, device, vulnerability-exposure, or attack-surface context matters | `SHODAN_API_KEY` |
 | Censys | <https://docs.censys.com/reference/get-started> | Optional enrichment | Host, certificate, web-property, service, and structured internet asset intelligence is useful | `CENSYS_API_KEY` |
+| GreyNoise | <https://docs.greynoise.io/reference/getcommunityip> | Optional enrichment | Internet background-noise, scanner reputation, RIOT/common-service context, or alert de-noising matters | `GREYNOISE_API_KEY` |
+| Malpedia API | <https://malpedia.caad.fkie.fraunhofer.de/login> and <https://malpedia.caad.fkie.fraunhofer.de/usage/tos> | Optional invite-only enrichment | A vetted account/API key is already available and malware-family/YARA context is needed beyond public GitHub material | `MALPEDIA_API_KEY` |
+| PhishTank API | <https://checkurl.phishtank.com/checkurl/> | Optional enrichment | A specific suspicious URL needs live PhishTank verification and public mirrors are insufficient | `PHISHTANK_API_KEY` |
 
 ANY.RUN Free Plan API access is unavailable for Interactive Sandbox, TI
 Lookup/YARA Search, and TI Feeds. Dogpile must report ANY.RUN as
@@ -251,6 +255,39 @@ Censys Platform API uses Personal Access Tokens, endpoint access varies by plan
 tier, and calls consume credits. Do not use it for malware behavior,
 news/article freshness, source-code discovery, live drone feeds, or general web
 research.
+
+GreyNoise is strongest for deciding whether an IP is likely internet
+background noise, a scanner, or known benign/common infrastructure. Use it for
+blue-team triage, alert de-noising, scanner reputation, and enrichment of IP
+observables found by Brave, Censys, Shodan, VirusTotal, logs, or feed items. Do
+not use it as a malware sandbox, source-code search, broad web search, or
+proof that an event is harmless without environment-specific corroboration.
+The Community API provides quick IP lookups; free/community and enterprise
+plans differ, so a Community probe does not prove GNQL, timeline, or enterprise
+context access.
+
+SecurityTrails is useful for DNS and historical infrastructure OSINT, but do
+not recommend it as a near-term default signup when its pricing is
+cost-prohibitive for the project. Prefer Censys, Shodan, Brave, and public DNS
+sources first unless a project explicitly needs paid historical DNS/WHOIS.
+
+Malpedia's website account/API surface is invite-only, not open registration.
+Do not present it as a normal signup task. Prefer the public Malpedia GitHub
+organization first for public YARA-signator rules, flossed strings, feedback,
+and client code. Route that public surface through `$github-search` first; clone
+a selected repo only when the project needs deeper local inspection than GitHub
+metadata, README, tree, or code search can provide. Use the invite-only
+Malpedia API only when a vetted key is already available and the project needs
+deeper malware-family enrichment.
+
+For PhishTank-style broad enrichment, prefer the public
+`ProKn1fe/phishtank-database` GitHub mirror before asking for a PhishTank API
+key. It exposes `online-valid.json`, a compressed checksum artifact, and archive
+history and is reported as updating every 24 hours. Use `$github-search` to
+inspect metadata/tree first; clone only if the project needs local checksum,
+diff, or parser work over the JSON. Use the credentialed PhishTank API for
+specific live URL verification when public mirror freshness or structure is not
+enough.
 
 To check the current credential classification, run:
 
@@ -429,6 +466,7 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh doctor --with-hybrid-analysis` | Opt in to one bounded Hybrid Analysis API probe |
 | `./run.sh doctor --with-shodan` | Opt in to one bounded Shodan API info probe |
 | `./run.sh doctor --with-censys` | Opt in to one bounded Censys Platform API host lookup |
+| `./run.sh doctor --with-greynoise` | Opt in to one bounded GreyNoise Community API IP lookup |
 | `./sanity.sh --feature-eval` | Same feature-channel eval through the sanity entrypoint |
 | `./sanity.sh --live-services` | Run the live service matrix for core providers, internal primitives, feed packs, optional lanes, and credential-aware skips |
 | `./sanity.sh --live-services --strict-optional` | Treat optional missing credentials, such as Readarr/NZB keys, as failures |
