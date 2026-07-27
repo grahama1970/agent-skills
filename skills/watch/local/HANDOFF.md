@@ -1,183 +1,248 @@
 # Handoff Report: Watch
 
-**Generated**: 2026-07-16T15:42:36-04:00
+**Generated**: 2026-07-27T15:13:44-04:00
 **Repository**: `/home/graham/workspace/experiments/agent-skills`
-**Local branch observed by handoff gatherer**: `battle-ux8-live-contract`
-**Canonical remote checked**: `origin/main`
+**Observed local branch**: `battle-adaptive-lineage-goal` at `6288f3c63`
+**Observed upstream**: `origin/battle-adaptive-lineage-goal`
+**Canonical proof branch checked**: `origin/main`
 
 ## 1. Project Overview
 
-Watch turns video into timecode-aligned evidence that agents and humans can inspect, annotate, recall, and later bind into evidence cases.
+Watch turns video into timecode-aligned evidence: frames, captions/SRT,
+Whisper transcripts, scene rows, reports, Memory records, YOLO detector
+observations, human identity decisions, and browser-visible annotation state.
 
-The project currently has three overlapping layers:
+The most important invariant is the immutable identity ledger:
 
-1. Batch video analysis: local/web video ingestion, frames, transcripts, QRA scenes, reports, and memory writes.
-2. Watch annotation UX: human/YOLO-assisted annotation, exact keyframes, held/interpolated overlays, unassign stops, YOLO label receipts, Memory/Qdrant tentative suggestions.
-3. Streaming/world-model direction: source sessions, detector observations, sequence events, evidence bundles, and later F-36/drone/Embry OS integration.
+1. Detector track IDs and YOLO boxes are observations, not identity truth.
+2. Memory/Qdrant recall may produce tentative suggestions only.
+3. Human accept/reject/stop/reassign actions own accepted identity state.
+4. A stop closes the current segment, and identity must not propagate across it.
+5. Explicit reassignment starts a new segment, even for the same detector track.
+6. Local receipts persist before remote Memory synchronization.
+7. Reload and restart must replay the same projected identity state.
 
-The immediate durable product object is the Watch sequence ledger: detector boxes are raw observations; Watch owns identity/subject assignment over time, including `UNASSIGN_STOP`, persistence, hydration, and reassignment.
+Pyannote now adds a separate audio-evidence lane for anonymous speaker topology.
+`SPEAKER_00` style labels are acoustic clusters only; they must not be promoted
+to actor, character, or real-world identity without separate accepted evidence.
 
-## 2. Current State (Doc-Code Alignment)
+## 2. Current State
 
-### Implemented
+### Immutable Goal Status
 
-- Batch pipeline exists under `skills/watch/scripts/`.
-- Watch UI exists under `skills/watch/ui/`.
-- UI smoke tests are wired in `skills/watch/ui/package.json`:
-  - `scripts/watchAnnotationSession.smoke.ts`
-  - `scripts/watchYoloSequenceProjection.smoke.ts`
-  - `scripts/watchYoloLabelReceiptReplay.smoke.ts`
-- Recent local Watch commits include:
-  - `1d27db32c watch: prove yolo label receipt replay`
-  - `15c4da3e6 watch: stop yolo label leakage across sequence events`
-  - `90aaa4991 watch: expose row10 annotation smoke test`
-  - `39f3d1e10 watch: reconcile batch contract drift`
-- `origin/main` has newer Watch commits:
-  - `13fa1e9ad watch: persist row 9 yolo stop restart receipt`
-  - `cc12ba6e7 watch: restore row detector candidates in annotation modal`
-  - `f3d596fca watch: preserve yolo stop ledger after hydration`
-  - `4b61fbcd1 watch: register WebGPT browser oracle`
-  - `7eb4dde9c watch: align runtime frame budget default`
-  - `60e652179 watch: fail closed for disabled doc2qra option`
-  - `0d8f69037 watch: repair cast lookup URL quoting`
-  - `0e2e15a6a watch: delegate movie acquisition to ingest-movie`
+The Watch immutable goal has deterministic local proof artifacts on
+`origin/main`:
 
-### Proven Recently Outside This Local Branch
+- Latest pointer:
+  `skills/watch/proofs/immutable-goal/latest.json`
+- Manifest:
+  `skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/manifest.json`
+- Proof commit bound by manifest:
+  `04259f28d65124ba253dc60a88f0745b49ceb90e`
+- Durable proof commit on `origin/main`:
+  `e6398fcb7ebe61af545a4e71b1ab0b34c4f42bb5`
 
-The row-9 immutable-goal proof was produced from a clean main checkout in `/tmp/agent-skills-watch-main`.
+Manifest facts from `origin/main`:
 
-Important artifacts:
-
-- Browser screenshot: `/tmp/codex-ui-verification/agent-skills-watch-main/watch-row9-yolo-stop-restart-proof/20260716T183818Z.png`
-- Before/after browser-oracle JSON:
-  - `/tmp/codex-ui-verification/agent-skills-watch-main/watch-row9-track2-restart-after-stop-corrected/20260716T183016Z.json`
-  - `/tmp/codex-ui-verification/agent-skills-watch-main/watch-row9-track2-stop-before-restart-corrected/20260716T183157Z.json`
-- WebGPT review response: `.codex/webgpt-watch-immutable-goal/round5-row9-stop-restart-proof-assess-response.md`
-- Pushed commit on `origin/main`: `13fa1e9ad watch: persist row 9 yolo stop restart receipt`
-
-That proof established the current row-9 gate on main: a YOLO track can be assigned, stopped/unassigned, restarted, and visibly rehydrated without leaking the prior identity across the stop.
-
-### Drift / Misalignment
-
-- This local checkout is not currently at `origin/main`; Watch status must distinguish local branch state from canonical main.
-- `skills/watch/docs/PROJECT_KNOWLEDGE.md` contains both current facts and historical/planned statements. Treat it as useful context, not a single authoritative implementation map.
-- Generated Watch artifacts under `skills/watch/docs/architecture/generated/` are mostly untracked in this checkout. Decide which receipts are durable project evidence before staging them.
-- Streaming, generic object tracking, F-36 evidence contracts, Embry OS hosting, and live RTSP are still intended/architectural unless backed by a specific proof artifact.
-
-## 3. What is Working Well
-
-- Watch has a real local skill structure with CLI, scripts, UI, docs, and tests.
-- The batch video path is materially implemented: frame extraction, transcripts, reports, visual descriptions, memory-facing records, and recall scoping.
-- The annotation reducer has mature semantics compared with earlier states:
-  - exact keyframes are separate from runtime-held/interpolated overlays;
-  - runtime overlays are not canonical evidence;
-  - `UNASSIGN_STOP` exists as a first-class sequence concept;
-  - same detector track can be reassigned after a stop;
-  - YOLO label receipts exist for replay/projection tests.
-- `origin/main` contains the latest Watch repairs for ingest ownership, cast lookup, doc2qra fail-closed behavior, frame-budget alignment, browser-oracle registration, and row-9 YOLO stop/restart persistence.
-- README documents the YOLO materializer and detector-candidates endpoint for row-level Watch annotation.
-
-## 4. What is Currently Broken
-
-### Local Environment / Repository State
-
-- The full repository has unrelated merge conflicts in `skills/persona-dream/`:
-  - `skills/persona-dream/run.sh`
-  - `skills/persona-dream/scripts/write_phase11_dry_run_bundle.py`
-  - `skills/persona-dream/scripts/write_phase11_media_requirement_manifest.py`
-  - `skills/persona-dream/tests/test_phase11_dry_run_bundle.py`
-  - `skills/persona-dream/tests/test_phase11_media_requirement_manifest.py`
-- Those conflicts are outside Watch, but they can block committing from this checkout.
-- This handoff does not resolve or touch those unrelated conflicts.
-
-### Watch Proof Commands In This Checkout
-
-Attempted narrow proof commands:
-
-```bash
-cd skills/watch/ui && npm test
-cd skills/watch/ui && npm run typecheck
+```json
+{
+  "schema": "watch.immutable_goal_proof.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "commit_sha": "04259f28d65124ba253dc60a88f0745b49ceb90e"
+}
 ```
 
-Result: both commands produced no stdout and became stuck as plain `npm` processes in uninterruptible sleep:
+The manifest assertions include:
 
-```text
-590095 DNs npm   cwd=/home/graham/workspace/experiments/agent-skills/skills/watch/ui
-590104 DNs npm   cwd=/home/graham/workspace/experiments/agent-skills/skills/watch/ui
-```
+- live Qdrant-backed Memory suggestion
+- tentative suggestion non-mutation
+- human accept persistence
+- stop persistence
+- identity absent after stop
+- explicit reassignment persistence
+- reload hydration
+- Memory sync stored
+- pyannote live CUDA diarization
+- anonymous speaker evidence written
+- pyannote does not promote identity
 
-`kill` and `kill -9` did not terminate them because they are in kernel `D` state. This is an environment/I/O blocker for local proof in this checkout, not evidence that the Watch tests passed or failed.
+Command receipt:
+`skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/command-results.json`
 
-### Product / Feature Risks
+All recorded subcommands exited `0` on 2026-07-23:
 
-- Broad identity reliability is still canary-grade. Row-9/row-10 sequence semantics are useful gates, not proof of production character recognition.
-- Rejected-crop poisoning resistance is not broadly proven across all query paths.
-- Durable Memory/Qdrant outbox and retry semantics remain an outstanding hardening item.
-- General object tracking and configurable detector profiles are not complete production features.
-- Live source sessions, source PTS, reconnect/backpressure events, and RTSP/webcam workflows are not complete.
-- F-36/drone/Embry OS integration remains contract-first architecture work, not a completed runtime.
+- `npm run test:backend-immutable`
+- `npm run typecheck`
+- `npm run build`
+- `npm run test:memory-suggestion-live`
+- `npm run test:immutable-browser-live`
+- `npm run test:pyannote-immutable-live`
+
+Committed proof artifacts include 18 files: row-9 suggestion JSON, row-10
+projection/receipt JSON, five browser screenshots, command results, manifest,
+and the pyannote e2e fixture outputs.
+
+Pyannote proof artifacts:
+
+- `skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/pyannote-diarization.json`
+- `skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/pyannote-e2e-summary.json`
+- `skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/pyannote-report-speaker-rows.json`
+- `skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/source-audio.wav`
+- `skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/source-video.mp4`
+
+### Local Branch State
+
+This checkout is not a clean Watch integration branch. It is currently on
+`battle-adaptive-lineage-goal`, and `git status --short -- skills/watch` shows
+Watch-local modified files plus many untracked generated artifacts.
+
+Modified Watch files observed:
+
+- `skills/watch/docs/architecture/create-architecture/watch-reference-hydration-P0/solution/extracted/repo/skills/watch/tests/test_watch_reference_hydration_P0.py`
+- `skills/watch/pyproject.toml`
+- `skills/watch/tests/test_watch_live_ultralytics_tracking.py`
+- `skills/watch/tests/test_watch_reference_download_review_approval_receipt.py`
+- `skills/watch/tests/test_watch_source_session_replay.py`
+- `skills/watch/tests/test_watch_visual_descriptions.py`
+
+Untracked Watch areas observed include:
+
+- `skills/watch/docs/architecture/generated/...`
+- `skills/watch/out/`
+- `skills/watch/services/`
+- `skills/watch/tests/test_diarization_service_engine.py`
+- `skills/watch/tests/test_watch_tracking_crop_extraction.py`
+
+Treat those paths as existing local work. Do not clean, reset, stash, or stage
+them broadly.
+
+Recent Watch commits visible on this branch:
+
+- `d3fffcbb2 watch: land P0C session-chained resume, P0D outbox, first live source`
+- `73b5a4b56 watch: land UI live-event consumption gate with browser proof`
+- `af6b82f72 watch: land P0A/P0B source-session journal + fail-closed replay`
+- `cbcd81ea0 watch: record streaming gate from 3-round WebGPT assessment`
+- `48bbca654 watch: execute Marcus canary live; refute 02:48 claim; fix stale-clip cache`
+- `bfa3e87d1 watch: add handoff report`
+- `13fa1e9ad watch: persist row 9 yolo stop restart receipt`
+- `cc12ba6e7 watch: restore row detector candidates in annotation modal`
+
+The source-session commits are branch-local context. Reconcile them deliberately
+against `origin/main` before treating them as canonical Watch behavior.
+
+## 3. Working Well
+
+- Immutable backend receipts are covered by replay, concurrency, and detector
+  isolation smokes.
+- The browser immutable flow proves accept -> stop -> reassign -> reload for
+  the tested row-10 path.
+- The row-9 Memory/Qdrant suggestion path is live and remains tentative.
+- Receipt projection returns null between stop and reassignment.
+- Memory sync state is durable and included in persisted receipts.
+- The pyannote live gate runs through Docker/CUDA service integration and
+  writes anonymous speaker evidence without identity promotion.
+- `origin/main` includes package scripts for:
+  - `test:backend-immutable`
+  - `test:memory-suggestion-live`
+  - `test:immutable-browser-live`
+  - `test:pyannote-immutable-live`
+  - `test:immutable-goal-live`
+  - `prove:immutable-goal`
+
+## 4. Known Risks And Gaps
+
+- The local workspace is dirty. Use a clean worktree from `origin/main` for
+  proof reruns, mainline edits, or cherry-picks unless the current branch work
+  is the explicit target.
+- The immutable goal is proven for bounded canary paths, not for broad identity
+  recognition, general tracking reliability, or paper-grade generalization.
+- `skills/watch/scripts/watch.py` still fails closed for `--doc2qra`; optional
+  scene-level doc2qra integration is not implemented.
+- `skills/watch/docs/PROJECT_KNOWLEDGE.md` records a row-text materialization
+  gap: `srt_text` has no source ref in the noted gate.
+- Live gates depend on local services and assets:
+  - Memory daemon on `http://127.0.0.1:8601`
+  - pyannote service on `http://127.0.0.1:9001`
+  - `HF_TOKEN` available for pyannote model access
+  - Watch UI npm dependencies installed
+- Generated receipts under `skills/watch/docs/architecture/generated/` are not
+  automatically durable evidence. Commit only intentional proof artifacts.
+- Streaming/source-session work is active but should not dilute or replace the
+  immutable ledger gate.
 
 ## 5. Next Steps
 
-1. Update this working tree to the canonical Watch state on `origin/main` before new Watch work.
-   - Key target: include `13fa1e9ad` and its preceding Watch commits.
-2. Resolve or move away from unrelated `skills/persona-dream` merge conflicts before trying to commit from this checkout.
-3. Re-run narrow Watch proofs from a clean state:
+1. For immutable-goal verification, use a clean `origin/main` worktree and
+   inspect:
 
 ```bash
-cd skills/watch/ui
-npm test
-npm run typecheck
+cat skills/watch/proofs/immutable-goal/latest.json
+jq '{schema,status,mocked,live,commit_sha,assertions}' \
+  skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/manifest.json
+jq '[.[] | {name, command, exit_code}]' \
+  skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/command-results.json
 ```
 
-4. Re-run the row-9 or row-10 browser-oracle proof after reload:
-   - verify sequence ledger visible in UI;
-   - verify stop/unassign persists;
-   - verify the same YOLO track stays unassigned until explicit reassignment;
-   - verify old identity does not leak over the stop.
-5. Decide which generated receipts under `skills/watch/docs/architecture/generated/` are durable evidence and commit only those receipts intentionally.
-6. Keep the next Watch code slice focused on one of these gates:
-   - sequence ledger durability and UI visibility;
-   - detector-candidate materialization for every report row;
-   - Memory/Qdrant suggestion/readiness hardening;
-   - contract reconciliation in `SKILL.md`, README, and project knowledge.
-7. Do not start RTSP/drone/F-36 implementation until source-session contracts and sequence replay gates are deterministic.
+2. To rerun the full gate, first confirm Memory and pyannote health, then run:
 
-## 6. Project Context for Success
+```bash
+npm --prefix skills/watch/ui run prove:immutable-goal
+```
 
-### Key Files
+3. If continuing pyannote work, keep it scoped to anonymous speaker evidence:
+   diarization quality, public fixture reproducibility, service health,
+   transcript alignment, and report/Memory provenance. Do not auto-map speaker
+   clusters to characters.
+
+4. If continuing source-session P0 work from this branch, first inventory and
+   preserve local Watch changes. Then reconcile the branch commits against
+   `origin/main` without broad stash/reset/clean operations.
+
+5. Keep new Watch changes on one proof ladder at a time:
+   - immutable identity ledger
+   - pyannote anonymous speaker topology
+   - source-session replay/outbox/live events
+   - report/documentation contract alignment
+
+## 6. Key Files
 
 - Skill contract: `skills/watch/SKILL.md`
-- User-facing README: `skills/watch/README.md`
+- README: `skills/watch/README.md`
 - Project knowledge: `skills/watch/docs/PROJECT_KNOWLEDGE.md`
 - Batch runtime: `skills/watch/scripts/watch.py`
 - CLI wrapper: `skills/watch/scripts/cli.py`
-- Memory recall: `skills/watch/scripts/video_memory.py`
-- YOLO materializer: `skills/watch/scripts/materialize_yolo_bytetrack_for_report.py`
-- YOLO label sequence viewer: `skills/watch/scripts/show_yolo_label_sequence.py`
-- UI package: `skills/watch/ui/package.json`
-- UI server: `skills/watch/ui/server/index.ts`
-- Annotation reducer/session logic: `skills/watch/ui/src/watchAnnotationSession.ts`
-- Main report/annotation view: `skills/watch/ui/components/WatchReportView.tsx`
-- Row-10 annotation smoke: `skills/watch/ui/scripts/watchAnnotationSession.smoke.ts`
-- YOLO sequence projection smoke: `skills/watch/ui/scripts/watchYoloSequenceProjection.smoke.ts`
-- YOLO label receipt replay smoke: `skills/watch/ui/scripts/watchYoloLabelReceiptReplay.smoke.ts`
+- Diarization client: `skills/watch/scripts/diarization.py`
+- Speaker attribution: `skills/watch/scripts/speaker_attribution.py`
+- Pyannote service: `skills/watch/services/diarization/`
+- UI package scripts: `skills/watch/ui/package.json`
+- Immutable runner: `skills/watch/ui/scripts/watchImmutableGoalLive.smoke.ts`
+- Browser gate: `skills/watch/ui/scripts/watchImmutableGoalBrowserLive.smoke.ts`
+- Pyannote gate: `skills/watch/ui/scripts/watchPyannoteImmutableLive.smoke.ts`
+- Proof utilities: `skills/watch/ui/scripts/proofUtils.ts`
+- Latest proof pointer: `skills/watch/proofs/immutable-goal/latest.json`
 
-### Operating Rules
+## 7. Operating Rules For The Next Agent
 
-- Detector output is not identity truth. YOLO/ByteTrack supplies detector observations and track IDs only.
-- Watch owns subject sequences over detector observations.
-- `UNASSIGN_STOP` closes an active identity segment at the effective time.
-- A later Memory/Qdrant suggestion is tentative and must not restart assignment by itself.
-- Reassignment starts a new Watch sequence segment, even if the detector `track_id` is the same.
-- Runtime-held and runtime-interpolated boxes must not become canonical evidence records.
-- Browser screenshots are required for UI-facing claims; DOM/text checks alone are insufficient.
+- Do not treat detector `track_id` as identity truth.
+- Do not let Memory/Qdrant suggestions mutate accepted identity.
+- Do not propagate identity across a stop.
+- Do not auto-promote pyannote speaker clusters to character identity.
+- Do not claim UI behavior from DOM assertions alone; use screenshots/browser
+  evidence for visible-state claims.
+- Do not use mocked tests as final proof for live Memory, pyannote, or browser
+  claims.
+- Do not clean or reset the current dirty workspace. Stage only task-relevant
+  files.
 
-### Current Best Overall Status
-
-Watch is near a useful canary milestone for movie annotation and YOLO-assisted identity labeling, but not production-complete. The highest-value next step is to keep row-9/row-10 sequence replay as the invariant gate, then use that same sequence contract for broader object/asset tracking.
+## 8. Current Handoff Evidence
 
 mocked: no
-live: partial
-actually exercised in this handoff: local source/docs inspection, git history inspection, remote main fetch, attempted Watch UI proof commands
-unverified in this handoff: current local UI test results, current local typecheck results, fresh browser screenshot from this checkout
+live: no fresh live rerun in this handoff refresh
+actually exercised: local handoff/watch skill reads, Watch git history
+inspection, `origin/main` proof manifest inspection, command receipt inspection,
+Watch path dirty-state inspection
+remaining unverified here: fresh local rerun of `prove:immutable-goal`, fresh
+browser screenshot from this checkout, reconciliation of dirty local branch work
+against `origin/main`
