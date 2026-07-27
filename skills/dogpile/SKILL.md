@@ -26,6 +26,7 @@ composes:
   - github-search
   - arxiv
   - ingest-youtube
+  - ingest-website
   - fetcher
   - extractor
   - ingest-book
@@ -59,8 +60,9 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Stage 2**: Fetch README.md and metadata for top repos, agent evaluates relevance
     - **Stage 3**: Deep code search inside the selected repository
 7.  **Feed monitors (📰, opt-in)**: Fresh RSS feed monitor dry-runs through `consume-feed`; this is source-health/freshness evidence, not query-specific web search.
-8.  **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
-9.  **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
+8.  **Website ingestion (🧠, opt-in handoff)**: Promote selected sites or documentation URLs into `/ingest-website` when durable RAG/memory is intentionally needed.
+9.  **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
+10. **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
 
 ## Features
 
@@ -178,6 +180,24 @@ If either optional lane is enabled, the final synthesis must label its evidence
 surface explicitly: Wayback proves archived page availability/state, not current
 truth; Readarr proves local/long-form source discovery, not web consensus or
 up-to-date technical behavior.
+
+### Optional Website Ingestion Handoff
+
+`ingest-website` is an opt-in post-search handoff, not a normal Dogpile search
+provider. Dogpile may discover and rank URLs, then the project agent can choose
+to ingest selected sites into `/memory` when the source should become durable
+RAG knowledge.
+
+| Handoff | Use when | Avoid when |
+|---------|----------|------------|
+| `/ingest-website --dry-run --output-dir DIR` | Inspectable local capture is needed before committing a crawl to Memory, or the agent needs markdown files as a research artifact | The task only needs a current answer from Dogpile's final report |
+| `/ingest-website --scope NAME` | A documentation site, standards body, vendor docs, project handbook, or stable reference site will be reused across future tasks | The source is noisy, adversarial, temporary, low-trust, paywalled, or likely to churn |
+| `/ingest-website --urls FILE --scope NAME` | Dogpile found a curated set of specific high-value pages and a same-domain crawl would include too much irrelevant material | The target is a broad news site, search-results page, social feed, or arbitrary web crawl |
+
+Before invoking `ingest-website`, the agent should identify the exact selected
+URLs, scope name, max-page/depth limits, whether Memory writes are allowed, and
+the local output directory for receipts. Prefer `--dry-run` first unless the
+human explicitly requested durable Memory ingestion.
 
 Optional `/agents` profiles are provided for higher-rigor workflows:
 
