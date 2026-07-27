@@ -1,6 +1,6 @@
 {
   "schema": "agent_skills.project_watchdog.registry.v1",
-  "updated_at": "2026-06-28",
+  "updated_at": "2026-07-27",
   "defaults": {
     "agents_root": "/home/graham/workspace/experiments/agent-skills/agents",
     "state": "active",
@@ -245,6 +245,54 @@
       ],
       "notes": [
         "Registered as a frequently referenced project. Its safe bounded issue runner needs confirmation before live mutation."
+      ]
+    },
+    {
+      "project_id": "memory",
+      "display_name": "Graph Memory Operator",
+      "repo": "grahama1970/graph-memory-operator",
+      "worktree": "/home/graham/workspace/experiments/memory",
+      "status": "registered",
+      "state_policy": {
+        "default_state": "paused",
+        "pause_allowed_by": [
+          "human",
+          "project-watchdog"
+        ],
+        "stop_allowed_by": [
+          "human"
+        ],
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "bounded-issue-runner",
+          "routing-label-contract",
+          "valid-github-auth"
+        ]
+      },
+      "runner_kind": "project-local",
+      "runner": {
+        "command": "uv run pytest -q",
+        "cwd": "/home/graham/workspace/experiments/memory",
+        "requires_start_handoff": false
+      },
+      "allowed_agents": [
+        "coder",
+        "code-reviewer",
+        "project-or-harness-verifier",
+        "human"
+      ],
+      "capabilities": [
+        "memory-recall",
+        "memory-learn",
+        "graph-traversal"
+      ],
+      "notes": [
+        "Upstream owner of blockers for tau#140/#149; graph-memory-operator#61 is the open Memory-side ticket for Tau skill/tool chain recall.",
+        "Two independent clones of this repo exist on disk. The live checkout is experiments/memory (HEAD 2026-07-27). experiments/graph-memory-operator is a stale clone (HEAD 2025-09-19, 76 dirty files) and must NOT be used as the worktree.",
+        "Paused until a bounded one-issue runner exists. The Makefile exposes recall, multihop, propose, and prune targets but none is a bounded issue tick, and 'uv run pytest -q' is a placeholder verification command, not a repair runner.",
+        "Third routing vocabulary in the fleet: this repo labels issues 'ready-for-agent' + 'area:*', while routing expects 'agent-work' + 'executor:local' and /ticket emits 'type:*' + 'route:*'. 0 of 10 open issues carry agent-work, so it would NOOP even if resumed."
       ]
     }
   ]

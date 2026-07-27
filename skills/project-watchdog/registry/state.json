@@ -28,6 +28,15 @@
       ],
       "state": "paused"
     },
+    "memory": {
+      "reason": "Registered 2026-07-27. No bounded one-issue runner and no routing-label contract yet.",
+      "resume_requires": [
+        "bounded-issue-runner",
+        "routing-label-contract",
+        "valid-github-auth"
+      ],
+      "state": "paused"
+    },
     "pi-mono": {
       "reason": "Registered as a reference project; safe bounded issue runner is not confirmed.",
       "resume_requires": [
