@@ -11,7 +11,9 @@ from youtube_transcripts.utils import (
 )
 from youtube_transcripts.downloader import (
     fetch_video_metadata,
+    search_videos_via_brave,
     search_videos,
+    video_ids_from_text,
     download_audio,
 )
 from youtube_transcripts.transcriber import (
@@ -33,7 +35,9 @@ __all__ = [
     "is_retriable_error",
     "is_rate_limit_error",
     "fetch_video_metadata",
+    "search_videos_via_brave",
     "search_videos",
+    "video_ids_from_text",
     "download_audio",
     "fetch_transcript_with_retry",
     "transcribe_whisper_api",

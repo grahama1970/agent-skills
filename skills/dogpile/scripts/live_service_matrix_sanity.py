@@ -78,6 +78,19 @@ def _run_json_expr(expr: str, *, timeout_s: int = 90) -> tuple[subprocess.Comple
         return completed, None, f"JSON parse failed: {exc}: {json_line[-800:]}"
 
 
+def _parse_first_json_object(text: str) -> Any | None:
+    decoder = json.JSONDecoder()
+    for index, char in enumerate(text):
+        if char != "{":
+            continue
+        try:
+            data, _ = decoder.raw_decode(text[index:])
+        except json.JSONDecodeError:
+            continue
+        return data
+    return None
+
+
 def _status_from_error(error: str | None, *, missing_credential: bool = False) -> str:
     if not error:
         return "passed"
@@ -134,7 +147,42 @@ def _count_brave_results(result: Any) -> int:
     return len(web.get("results", []) or result.get("results", []) or [])
 
 
-def _check_scillm(checks: list[dict[str, Any]], timeout_s: int) -> None:
+def _check_tau_provider_boundary(checks: list[dict[str, Any]], timeout_s: int) -> None:
+    command = [str(SKILLS_DIR / "tau" / "run.sh"), "doctor"]
+    completed = _run(command, cwd=SKILLS_DIR.parent, timeout_s=timeout_s)
+    payload = _parse_first_json_object(completed.stdout or "")
+    runtime_doctor = payload.get("tau_runtime_doctor") if isinstance(payload, dict) else {}
+    status = "passed" if (
+        isinstance(payload, dict)
+        and payload.get("can_call_tau_cli") is True
+        and payload.get("can_call_tau_doctor") is True
+        and isinstance(runtime_doctor, dict)
+        and runtime_doctor.get("status") == "PASS"
+    ) else "failed"
+    error = None
+    if status != "passed":
+        error = (completed.stderr or completed.stdout or "Tau doctor did not report PASS")[-1000:]
+    _add_check(
+        checks,
+        name="tau_provider_boundary",
+        family="llm_orchestration",
+        required=True,
+        status=status,
+        what_was_exercised="Tau skill wrapper doctor and Tau runtime doctor.",
+        proves="Dogpile's required model-orchestration boundary is discoverable and Tau's runtime doctor can execute.",
+        does_not_prove="Full Dogpile synthesis through a Tau provider DAG or the quality of model ranking/summarization.",
+        error=error,
+        command=command,
+        metadata={
+            "wrapper_returncode": completed.returncode,
+            "wrapper_ok": payload.get("ok") if isinstance(payload, dict) else None,
+            "provider_live": payload.get("can_run_provider_live_lane") if isinstance(payload, dict) else None,
+            "runtime_status": runtime_doctor.get("status") if isinstance(runtime_doctor, dict) else None,
+        },
+    )
+
+
+def _check_legacy_scillm(checks: list[dict[str, Any]], timeout_s: int) -> None:
     expr = "(__import__('dogpile.codex', fromlist=['search_codex_fast']).search_codex_fast('Reply with exactly dogpile_sanity_ok.'))"
     _, data, error = _run_json_expr(expr, timeout_s=timeout_s)
     if isinstance(data, str) and not data.startswith("Error:") and data.strip():
@@ -145,13 +193,13 @@ def _check_scillm(checks: list[dict[str, Any]], timeout_s: int) -> None:
         error = error or str(data)
     _add_check(
         checks,
-        name="scillm_fast_lane",
-        family="llm",
-        required=True,
+        name="legacy_scillm_fast_lane",
+        family="llm_orchestration",
+        required=False,
         status=status,
-        what_was_exercised="Dogpile /scillm fast analysis lane via search_codex_fast().",
-        proves="Dogpile can reach its configured local LLM lane and receive text.",
-        does_not_prove="The quality of synthesis or provider-specific ranking.",
+        what_was_exercised="Legacy Dogpile direct SciLLM fast analysis lane via search_codex_fast().",
+        proves="The current legacy adapter can reach local SciLLM and receive text.",
+        does_not_prove="The desired Tau provider boundary, full Dogpile synthesis through Tau, or provider-specific ranking quality.",
         error=error,
     )
 
@@ -275,9 +323,9 @@ def _check_youtube(checks: list[dict[str, Any]], query: str, timeout_s: int) -> 
         family="video",
         required=True,
         status=status,
-        what_was_exercised="Dogpile YouTube metadata search through ingest-youtube.",
-        proves="YouTube/yt-dlp search wiring can return current video IDs.",
-        does_not_prove="Transcript availability for every video.",
+        what_was_exercised="Dogpile YouTube metadata search through ingest-youtube search_videos().",
+        proves="Brave-first YouTube discovery, yt-dlp fallback wiring, and result normalization can return current video IDs.",
+        does_not_prove="Transcript availability for every video, legacy enrichment, or Whisper fallback quality.",
         error=None if status == "passed" else provider_error,
         metadata={"positive_count": count},
     )
@@ -456,7 +504,8 @@ def main() -> int:
 
     check_fns = [
         lambda: _check_perplexity_disabled(checks),
-        lambda: _check_scillm(checks, args.timeout_s),
+        lambda: _check_tau_provider_boundary(checks, args.timeout_s),
+        lambda: _check_legacy_scillm(checks, args.timeout_s),
         lambda: _check_brave(checks, args.query, args.timeout_s),
         lambda: _check_brave_questions(checks, args.query, args.timeout_s),
         lambda: _check_github(checks, args.query, args.timeout_s),

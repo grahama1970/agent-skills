@@ -1,9 +1,10 @@
-"""Post-transcript enrichment via scillm proxy (httpx).
+"""Legacy post-transcript enrichment via direct SciLLM proxy (httpx).
 
 Single LLM call to Gemini 3 Flash (1M context) produces summary + QRA pairs
 in one structured JSON response. No truncation needed.
 
-The scillm proxy handles fallback cascades, JSON repair, and retries.
+This module is retained for compatibility and is no longer on the default CLI
+path. New model-backed transcript enrichment should route through Tau.
 """
 from __future__ import annotations
 
@@ -129,8 +130,8 @@ def enrich_transcript(
 ) -> Dict[str, Any]:
     """Enrich a transcript with summary + QRA pairs in a single LLM call.
 
-    Uses Gemini 3 Flash (1M context) via scillm — sends the full transcript
-    with no truncation and gets back structured JSON with summary and QRA items.
+    Uses the legacy direct SciLLM path to send the full transcript and get back
+    structured JSON with summary and QRA items.
 
     Args:
         full_text: Raw transcript text.

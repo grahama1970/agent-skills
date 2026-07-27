@@ -64,7 +64,7 @@ def _get_transcript_logic(
     no_whisper: bool,
     retries: int,
     monitor: Optional[Any] = None,
-    no_enrich: bool = False,
+    no_enrich: bool = True,
 ) -> dict:
     """Core logic to fetch transcript with fallback and optional doc2qra enrichment."""
     t0 = time.time()
@@ -133,13 +133,13 @@ def _get_transcript_logic(
     took_ms = int((time.time() - t0) * 1000)
     metadata = fetch_video_metadata(vid)
 
-    # Enrich with LLM summary + QRA pairs via scillm proxy
+    # Legacy enrichment is opt-in until this path is routed through Tau.
     summary = ""
     qra: list[dict] = []
     if method and full_text and not no_enrich:
-        typer.echo("Enriching transcript via scillm (summary + QRA)...", err=True)
+        typer.echo("Enriching transcript via legacy scillm path (summary + QRA)...", err=True)
         if monitor:
-            monitor.update(0, item="Enriching via scillm")
+            monitor.update(0, item="Enriching via legacy scillm")
         enrichment = enrich_transcript(
             full_text=full_text,
             metadata=metadata,
@@ -170,7 +170,7 @@ def get(
     lang: str = typer.Option("en", "--lang", "-l", help="Language code"),
     no_proxy: bool = typer.Option(False, "--no-proxy", help="Skip proxy tier"),
     no_whisper: bool = typer.Option(False, "--no-whisper", help="Skip Whisper fallback"),
-    no_enrich: bool = typer.Option(False, "--no-enrich", help="Skip doc2qra enrichment (summary + QRA)"),
+    enrich: bool = typer.Option(False, "--enrich/--no-enrich", help="Opt into legacy transcript enrichment (summary + QRA)"),
     learn: bool = typer.Option(False, "--learn", help="Store transcript + enrichment to ArangoDB memory"),
     scope: str = typer.Option("research", "--scope", "-s", help="Memory scope for --learn"),
     retries: int = typer.Option(3, "--retries", "-r", help="Max retries per tier"),
@@ -195,7 +195,7 @@ def get(
             state_file=str(state_file)
         )
 
-    out = _get_transcript_logic(vid, lang, no_proxy, no_whisper, retries, monitor=monitor, no_enrich=no_enrich)
+    out = _get_transcript_logic(vid, lang, no_proxy, no_whisper, retries, monitor=monitor, no_enrich=not enrich)
     print_json(out)
 
     if out.get("errors"):
