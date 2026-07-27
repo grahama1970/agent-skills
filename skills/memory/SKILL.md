@@ -183,10 +183,10 @@ These endpoints are routing or final-response products, not raw retrieval:
 | Product | When to use | Schema | Surface |
 | --- | --- | --- | --- |
 | `/speaker/resolve` | Resolve listener/diarization/speaker-verification evidence into known, unknown, or ambiguous speaker context before using personal memory. It does not compute embeddings or inspect raw audio. | `memory.speaker_resolution.v1` | HTTP |
-| `/intent` | Classify the user turn into a route, QuerySpec, recall profile, extracted entities, tag families, confidence/ranked candidates, slots, required artifacts, and query plan before retrieval or final-response work. | intent response fields | `./run.sh intent` and HTTP |
-| `/answer` | Return a grounded final answer from deterministic general answers or memory recall evidence. It must not invent unsupported facts. | `memory.answer.v1` | HTTP only for now |
-| `/clarify` | Ask targeted follow-up questions when the query is too vague, has weak recall, unsupported entities, taxonomy gaps, or ambiguous scope. | `memory.clarify.v1` | `./run.sh clarify` and HTTP |
-| `/deflect` | Redirect off-topic, unsafe, no-match, or content-safety turns before they enter recall, evidence-case, QRA, or subagent work. | `memory.deflect.v1` | `./run.sh deflect` and HTTP |
+| `/intent` | Classify the user turn into a route, QuerySpec, recall profile, extracted entities, tag families, confidence/ranked candidates, slots, required artifacts, query plan, and turn-scoped `delivery_context` before retrieval or final-response work. | intent response fields + `memory.delivery_context.v1` | `./run.sh intent` and HTTP |
+| `/answer` | Return clean grounded final text from deterministic general answers or memory recall evidence, plus engine-neutral `delivery_plan`. It must not invent unsupported facts or inject renderer tags. | `memory.answer.v1` + `memory.delivery_plan.v1` | HTTP only for now |
+| `/clarify` | Ask targeted clean follow-up text when the query is too vague, has weak recall, unsupported entities, taxonomy gaps, or ambiguous scope, plus engine-neutral `delivery_plan`. | `memory.clarify.v1` + `memory.delivery_plan.v1` | `./run.sh clarify` and HTTP |
+| `/deflect` | Redirect off-topic, unsafe, no-match, or content-safety turns before they enter recall, evidence-case, QRA, or subagent work, returning clean text plus engine-neutral `delivery_plan`. | `memory.deflect.v1` + `memory.delivery_plan.v1` | `./run.sh deflect` and HTTP |
 
 `/create-evidence-case` depends on this boundary: `ANSWER` means evidence is
 coherent enough to synthesize; `CLARIFY` means the case should not force a
@@ -194,6 +194,89 @@ verdict yet; `DEFLECT` means the request should not enter the evidence pipeline.
 SciLLM may write the human-facing `final_response`, but deterministic memory
 logic owns the route state and source packet. Every SciLLM final-response call
 from memory must include `X-Caller-Skill: memory` and source metadata.
+
+#### Delivery Context, Emotion, And Realtime Voice Boundary
+
+Memory owns grounded text and engine-neutral delivery metadata. Realtime voice
+renderers such as SPARTA/Chatterbox own render manifests, injectable tags, and
+playback parameters.
+
+Do not put Chatterbox tags such as `[laugh]`, `[curious]`, `[pause]`, or any
+engine-specific markup into `final_response`, `source_answer`, clarification
+text, deflection text, compactions, recall text, QRA text, or canonical Memory
+answer content. Tags in Memory text corrupt byte spans, hashes, citations,
+semantic embeddings, compaction provenance, and future recall.
+
+The routing/final-response split is strict:
+
+```text
+/intent
+  -> returns route/query metadata plus delivery_context only
+  -> does not return final text
+  -> must not return delivery_plan because final-text byte spans do not exist
+
+/answer, /clarify, /deflect
+  -> return clean text plus delivery_plan
+  -> delivery_plan spans and text_sha256 are computed over the clean text
+  -> Chatterbox/SPARTA compiles delivery_plan into runtime render_manifest
+```
+
+`delivery_context` is early, turn-scoped metadata. It may include listener
+evidence, resolved speaker state, classifier source, affect category,
+confidence, and routing influence. It must decay by default and must not become
+persona memory unless separately promoted with provenance as a durable user
+preference or repeated stable pattern. Situational frustration is not persona
+memory by default.
+
+`delivery_plan` is final-text metadata. It must be engine-neutral and valid
+against the clean response text hash. It is allowed on `/answer`, `/clarify`,
+and `/deflect` only after clean text exists.
+
+Freeze this v1 tone vocabulary:
+
+```text
+neutral
+calm
+warm
+careful
+firm
+concerned
+curious
+deescalating
+urgent
+```
+
+Freeze these v1 effect keys:
+
+```text
+emphasis
+pause_before_ms
+pause_after_ms
+pace_multiplier
+intensity_delta
+```
+
+Tone influences delivery first, routing second, and never overrides grounding.
+A hostile, frustrated, discouraged, or confused turn may make a response calmer,
+firmer, more careful, more concerned, or more clarifying. It must not convert an
+answerable grounded query into `/deflect` unless safety, off-topic, no-match, or
+answerability rules independently justify that route.
+
+SPARTA/Chatterbox may write a runtime `render_manifest` and injectable tags at
+playback time. Memory may store or reference playback audit artifacts only as
+external evidence. A render manifest is not canonical Memory answer content.
+
+Live proof for this contract in the memory repo:
+
+```bash
+cd ${HOME}/workspace/experiments/memory
+./scripts/prove-delivery-plan-contract.sh --base-url http://127.0.0.1:8601
+```
+
+The proof must show `/intent` has `delivery_context` and no `delivery_plan`,
+while `/answer`, `/clarify`, and `/deflect` have clean text plus
+`delivery_plan`, with no `emotion_tags`, `chatterbox_tags`, or `voice_policy`
+leaking into canonical Memory output.
 
 #### POST /speaker/resolve -- Voice Speaker Identity Product
 
@@ -1349,6 +1432,21 @@ client.post("/upsert", json={
         "evidence": {"commands": ["test -d /old/path"], "result": "missing"},
     }],
 })
+
+# WRONG: putting Chatterbox/emotion tags into Memory answer text
+client.post("/store", json={"document": {
+    "problem": "voice answer",
+    "solution": "[curious] Ask which memory the user means."
+}})
+client.post("/deflect", json={"q": "unsupported", "intent_action": "NO_MATCH"}).json()["emotion_tags"]
+# RIGHT: keep Memory text clean and let SPARTA/Chatterbox inject tags at playback
+resp = client.post("/deflect", json={
+    "q": "unsupported",
+    "intent_action": "NO_MATCH",
+}).json()
+assert "[" not in resp["final_response"]
+assert "delivery_plan" in resp
+assert "emotion_tags" not in resp and "chatterbox_tags" not in resp
 ```
 
 
