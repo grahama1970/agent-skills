@@ -50,8 +50,8 @@ def search_github(query: str) -> Dict[str, Any]:
     if not shutil.which("gh"):
         return {"error": "GitHub CLI (gh) not installed"}
 
-    repos_cmd = ["gh", "search", "repos", query, "--limit", "5", "--json", "fullName,html_url,description,stargazersCount"]
-    issues_cmd = ["gh", "search", "issues", query, "--limit", "5", "--json", "title,html_url,state,repository"]
+    repos_cmd = ["gh", "search", "repos", query, "--limit", "5", "--json", "fullName,url,description,stargazersCount"]
+    issues_cmd = ["gh", "search", "issues", query, "--limit", "5", "--json", "title,url,state,repository"]
 
     repos_out = run_command(repos_cmd)
 
@@ -67,7 +67,11 @@ def search_github(query: str) -> Dict[str, Any]:
     results = {}
     try:
         if not repos_out.startswith("Error:"):
-            results["repos"] = json.loads(repos_out)
+            repos = json.loads(repos_out)
+            for repo in repos:
+                if isinstance(repo, dict) and "html_url" not in repo:
+                    repo["html_url"] = repo.get("url", "")
+            results["repos"] = repos
         else:
             results["repos_error"] = repos_out
     except json.JSONDecodeError:
@@ -75,7 +79,11 @@ def search_github(query: str) -> Dict[str, Any]:
 
     try:
         if not issues_out.startswith("Error:"):
-            results["issues"] = json.loads(issues_out)
+            issues = json.loads(issues_out)
+            for issue in issues:
+                if isinstance(issue, dict) and "html_url" not in issue:
+                    issue["html_url"] = issue.get("url", "")
+            results["issues"] = issues
         else:
             results["issues_error"] = issues_out
     except json.JSONDecodeError:

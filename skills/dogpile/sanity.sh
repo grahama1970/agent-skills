@@ -32,6 +32,14 @@ if [[ "$1" == "--live-e2e" ]]; then
     exit $?
 fi
 
+if [[ "$1" == "--live-services" ]]; then
+    shift
+    echo ""
+    echo "=== Live Service Matrix Sanity ==="
+    "${PY[@]}" "$SCRIPT_DIR/scripts/live_service_matrix_sanity.py" "$@"
+    exit $?
+fi
+
 # Check module structure
 echo ""
 echo "=== Module Structure Check ==="
@@ -48,6 +56,7 @@ MODULES=(
     "codex.py"
     "discord.py"
     "readarr.py"
+    "feeds.py"
     "formatters.py"
     "synthesis.py"
     "cli.py"
@@ -135,7 +144,7 @@ done
 # Check sub-skills
 echo ""
 echo "=== Sub-skill Check ==="
-for skill in arxiv brave-search github-search ingest-youtube consume-feed fetcher extractor; do
+for skill in arxiv brave-search github-search ingest-youtube ingest-website consume-feed fetcher extractor; do
     if [[ -d "$SCRIPT_DIR/../$skill" ]]; then
         echo "  [PASS] Sub-skill '$skill' found"
     else
