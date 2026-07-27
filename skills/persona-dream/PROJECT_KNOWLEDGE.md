@@ -1,7 +1,55 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-27 UTC (P2.1 ledger-hardening step synthesis) by Codex
+**Last updated:** 2026-07-27 UTC (P2 live-chain next-step synthesis) by Codex
 **Status:** Active development
+
+## 2026-07-27 — CURRENT NEXT STEP: P2.4 recognition gate before live-chain receipt
+
+WebGPT's updated review, Claude's clean-checkout verification, and the local
+`CURRENT_STATUS.json` now agree on the operational state:
+
+- Repository durability is met for the previously cited PCTOM-R `/tmp` proof
+  roots; the durable archive and final PCTOM status receipt are present under
+  `research/prospective-tom/`.
+- P2.1 continuity-ledger hardening is implemented and receipted.
+- P2.2 deterministic session-mood binding is implemented and receipted.
+- P2.3 live session-mood rendering through Chatterbox is implemented and
+  receipted.
+- The immutable Embry continuity goal remains `NOT_MET`.
+
+Ticket state folded into current truth:
+
+- GitHub issue #1007 was a stale handoff-governance defect. The handoff no
+  longer says Chatterbox `main HEAD` is `29952e9`; it now cites
+  `d6d2c436d5d7e9981703a8bbdd1493946b9c6c44` as the Chatterbox `origin/main`
+  merge-state evidence. Ticket proof lives at
+  `/tmp/persona-dream-ticket-1007-proof.md`, and `agent-skills@main` read back
+  commit `1cc0dcf8ea40708b29f77431d79e7dfd7b6f59cf`.
+- GitHub issue #1008 asks for a live-Tau held-out PCTOM-R condition-benefit
+  slice. It is valid research debt, but it is not the next critical path for
+  the active persona-continuity goal. Do not expand PCTOM-R variants before the
+  P2 live continuity-chain recognition gate unless the operator explicitly
+  reprioritizes the research workstream.
+
+Next implementation order:
+
+1. Add speaker-similarity and adversarial Embry-recognition checks for the
+   three live session-mood Chatterbox renders. This is the missing bridge
+   between "emotion controls reached Chatterbox" and "speech remains
+   recognizably Embry."
+2. Use those gates in the target receipt
+   `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
+3. The live-chain receipt must still prove or explicitly mark every leg:
+   accepted dream -> Watch observations -> first-person synthetic journal ->
+   bounded arc delta -> hardened ledger append/reread -> session mood selected
+   before turn 1 -> same mood across multiple turns -> Chatterbox outputs ->
+   Embry recognition result.
+
+Evidence boundary: current Chatterbox evidence is `mocked: false`, `live: true`
+for transport, base-engine selection, content preservation, and ASR WER 0.0. It
+does not prove perceived target emotion, naturalness, speaker similarity,
+adversarial recognition, production conversation-service binding, or repeated
+full-pipeline reliability.
 
 ## 2026-07-27 — P2.1 continuity-ledger hardening receipt accepted
 
@@ -186,7 +234,12 @@ arc_delta -> persisted continuity ledger -> session_mood selected before the
 first user message -> same mood reread throughout session -> Chatterbox
 multi-utterance voice delivery -> adversarial Embry recognition check.
 
-## 2026-07-27 — NEXT STEP synthesized: P2 live continuity-chain
+## 2026-07-27 — HISTORICAL NEXT STEP synthesized: P2 live continuity-chain
+
+Status: superseded later on 2026-07-27 by P2.1, P2.2, and P2.3 implementation
+receipts plus the current P2.4 recognition-gate ordering at the top of this
+file. Retained as the historical rationale for why ledger hardening preceded
+session mood and Chatterbox work.
 
 The updated re-review and Claude verification converge: P0/P1 alignment and
 repository truthfulness are a successful repair milestone, not the Embry
