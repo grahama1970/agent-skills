@@ -264,6 +264,46 @@ def format_brave_section(brave_res: Dict[str, Any], brave_deep: List[Dict]) -> L
     return lines
 
 
+def format_brave_questions_section(brave_questions_res: Dict[str, Any]) -> List[str]:
+    """Format concurrent Brave question results replacing Perplexity."""
+    lines = ["## Concurrent Brave Questions"]
+
+    if not isinstance(brave_questions_res, dict):
+        lines.append(f"> Error: unexpected result type {type(brave_questions_res).__name__}")
+        lines.append("")
+        return lines
+
+    if brave_questions_res.get("error"):
+        lines.append(f"> Error: {brave_questions_res['error']}")
+        lines.append("")
+        return lines
+
+    if brave_questions_res.get("replacement_for"):
+        lines.append(f"_Replacement for: {brave_questions_res['replacement_for']}_")
+
+    question_runs = brave_questions_res.get("results", [])
+    if not question_runs:
+        lines.append("No concurrent Brave question results found.")
+        lines.append("")
+        return lines
+
+    for run in question_runs:
+        query = run.get("query", "Unknown query")
+        result = run.get("result", {})
+        lines.append(f"### {query}")
+        if isinstance(result, dict) and result.get("error"):
+            lines.append(f"> Error: {result['error']}")
+            continue
+        web_results = result.get("web", {}).get("results", []) or result.get("results", [])
+        for item in web_results[:3]:
+            lines.append(f"- **[{item.get('title', 'No Title')}]({item.get('url', '#')})**")
+            if item.get("description"):
+                lines.append(f"  {item.get('description')}")
+        lines.append("")
+
+    return lines
+
+
 def format_arxiv_section(
     arxiv_res: Dict[str, Any],
     arxiv_details: List[Dict],
@@ -368,6 +408,7 @@ def generate_report(
     target_repo: Optional[str],
     deep_code_res: List,
     brave_res: Dict[str, Any],
+    brave_questions_res: Dict[str, Any],
     brave_deep: List[Dict],
     arxiv_res: Dict[str, Any],
     arxiv_details: List[Dict],
@@ -394,11 +435,12 @@ def generate_report(
         code_explanation=code_explanation,
     ))
     md_lines.extend(_safe_section("Web Results (Brave)", format_brave_section, brave_res, brave_deep))
+    md_lines.extend(_safe_section("Concurrent Brave Questions", format_brave_questions_section, brave_questions_res))
     md_lines.extend(_safe_section("Academic Papers (ArXiv)", format_arxiv_section, arxiv_res, arxiv_details, arxiv_deep))
     md_lines.extend(_safe_section("Videos (YouTube)", format_youtube_section, youtube_res, youtube_transcripts))
 
     if synthesis and not synthesis.startswith("Error:"):
-        md_lines.append("## Codex Synthesis (gpt-5.2 High Reasoning)")
+        md_lines.append("## Evidence Synthesis")
         md_lines.append(synthesis)
         md_lines.append("")
 

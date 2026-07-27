@@ -3,13 +3,12 @@
 
 Orchestrates searches across:
 - Brave Search (Web)
-- Perplexity (Deep Research)
+- Concurrent Brave question lanes (retired Perplexity replacement)
 - GitHub (Repos & Issues)
 - ArXiv (Papers)
 - YouTube (Videos)
-- Discord (Security Servers)
-- Readarr (Books/Usenet)
-- Wayback Machine (Archives)
+- Readarr (Books/Usenet, opt-in)
+- Wayback Machine (Archives, opt-in)
 
 Resilience features (based on 2025-2026 best practices):
 - Tenacity retries with exponential backoff + jitter
@@ -60,8 +59,12 @@ from dogpile.codex import (
     tailor_queries_for_services,
     analyze_query,
 )
-from dogpile.brave import search_brave, run_stage2_brave
-from dogpile.perplexity import search_perplexity
+from dogpile.brave import (
+    build_brave_question_queries,
+    search_brave,
+    search_brave_questions,
+    run_stage2_brave,
+)
 from dogpile.arxiv_search import search_arxiv, run_stage2_arxiv
 from dogpile.github_search import search_github, search_github_via_skill
 from dogpile.github_deep import run_stage2_github
@@ -134,6 +137,12 @@ def _result_ok(result: Any) -> bool:
 
 def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
     """Create a compact summary for incremental progress events."""
+    if isinstance(result, dict) and result.get("skipped"):
+        return {
+            "ok": False,
+            "skipped": str(result.get("skipped", ""))[:240],
+            "replacement": result.get("replacement"),
+        }
     if not _result_ok(result):
         if isinstance(result, dict):
             return {"ok": False, "error": str(result.get("error", "Unknown error"))[:240]}
@@ -145,6 +154,10 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
         summary["result_count"] = len(web_results)
         if result.get("query"):
             summary["query"] = result["query"]
+    elif name == "brave_questions" and isinstance(result, dict):
+        summary["queries"] = len(result.get("queries", []) or [])
+        summary["succeeded"] = result.get("succeeded", 0)
+        summary["total"] = result.get("total", 0)
     elif name == "github" and isinstance(result, dict):
         summary["repos"] = len(result.get("repos", []) or [])
         summary["issues"] = len(result.get("issues", []) or [])
@@ -309,14 +322,104 @@ def _run_arxiv_stage2_bundle(arxiv_res: Dict[str, Any], query: str) -> Dict[str,
     }
 
 
+def _collect_evidence_digest(
+    query: str,
+    stage1_results: Dict[str, Any],
+    stage2_results: Dict[str, Any],
+    max_chars: int = 9000,
+) -> str:
+    """Collect compact, cited evidence for automatic synthesis."""
+    lines = [f"Query: {query}", ""]
+
+    def add_result(prefix: str, title: str, url: str = "", description: str = "") -> None:
+        chunk = f"- {prefix}: {title}"
+        if url:
+            chunk += f" ({url})"
+        if description:
+            chunk += f" -- {description[:280]}"
+        lines.append(chunk)
+
+    brave_res = stage1_results.get("brave", {})
+    if isinstance(brave_res, dict):
+        lines.append("Brave primary results:")
+        for item in (brave_res.get("web", {}).get("results", []) or brave_res.get("results", []))[:5]:
+            add_result("brave", item.get("title", "No title"), item.get("url", ""), item.get("description", ""))
+        lines.append("")
+
+    brave_questions = stage1_results.get("brave_questions", {})
+    if isinstance(brave_questions, dict):
+        lines.append("Concurrent Brave question results:")
+        for run in brave_questions.get("results", [])[:3]:
+            result = run.get("result", {})
+            lines.append(f"Question: {run.get('query', '')}")
+            if isinstance(result, dict):
+                for item in (result.get("web", {}).get("results", []) or result.get("results", []))[:3]:
+                    add_result("brave_question", item.get("title", "No title"), item.get("url", ""), item.get("description", ""))
+        lines.append("")
+
+    github_res = stage1_results.get("github", {})
+    if isinstance(github_res, dict):
+        lines.append("GitHub results:")
+        for repo in (github_res.get("repos", []) or [])[:5]:
+            add_result("github_repo", repo.get("fullName", "unknown"), repo.get("url") or repo.get("html_url", ""), repo.get("description", ""))
+        for issue in (github_res.get("issues", []) or [])[:3]:
+            add_result("github_issue", issue.get("title", "unknown"), issue.get("url") or issue.get("html_url", ""))
+        lines.append("")
+
+    arxiv_res = stage1_results.get("arxiv", {})
+    if isinstance(arxiv_res, dict):
+        lines.append("ArXiv results:")
+        for paper in (arxiv_res.get("items", []) or [])[:5]:
+            add_result("arxiv", paper.get("title", "unknown"), paper.get("abs_url", ""), paper.get("abstract", ""))
+        lines.append("")
+
+    youtube_res = stage1_results.get("youtube", [])
+    if isinstance(youtube_res, list):
+        lines.append("YouTube results:")
+        for video in youtube_res[:5]:
+            add_result("youtube", video.get("title", "unknown"), video.get("url", ""), video.get("description", ""))
+        lines.append("")
+
+    for stage_name, stage_result in stage2_results.items():
+        lines.append(f"{stage_name} deep results summary: {json.dumps(_summarize_result(stage_name, stage_result), ensure_ascii=False)}")
+
+    digest = "\n".join(lines)
+    return digest[:max_chars]
+
+
+def _generate_auto_synthesis(
+    query: str,
+    stage1_results: Dict[str, Any],
+    stage2_results: Dict[str, Any],
+) -> str:
+    """Generate a concise synthesis from retrieved evidence, degrading cleanly."""
+    digest = _collect_evidence_digest(query, stage1_results, stage2_results)
+    prompt = f"""Synthesize this Dogpile research evidence for the user query.
+
+Rules:
+- Ground every substantive claim in the evidence below.
+- Prefer Brave, ArXiv, YouTube, GitHub, and feed-style retrieved sources over model prior knowledge.
+- Mention important gaps, contradictions, or skipped sources.
+- Be concise: 5-8 bullets plus a short "Most useful sources" list.
+- Do not invent citations or URLs.
+
+Evidence:
+{digest}
+"""
+    return search_codex(prompt)
+
+
 def run_stage1_searches(
     tailored: Dict[str, str],
     query: str,
     use_github_skill: bool,
     is_code_related: bool,
     with_perplexity: bool = False,
+    with_readarr: bool = False,
+    with_wayback: bool = False,
     publisher: Optional[PartialResultsPublisher] = None,
     on_result=None,
+    monitor=None,
 ) -> Dict[str, Any]:
     """Stage 1: Run broad parallel searches across all providers.
 
@@ -327,7 +430,9 @@ def run_stage1_searches(
         query: Original search query
         use_github_skill: Whether to use /github-search skill
         is_code_related: Whether query is code-related
-        with_perplexity: Include Perplexity (paid API, off by default)
+        with_perplexity: Deprecated; Perplexity is retired and never called.
+        with_readarr: Include local Readarr/Usenet book search.
+        with_wayback: Include Wayback archive lookup.
 
     Returns:
         Dict with results from each provider
@@ -344,17 +449,18 @@ def run_stage1_searches(
 
     providers = {
         "brave": (search_brave, [tailored["brave"]]),
+        "brave_questions": (search_brave_questions, [build_brave_question_queries(query, tailored)]),
         "github": (github_search_func, [tailored["github"]]),
         "arxiv": (search_arxiv, [tailored["arxiv"]]),
         "youtube": (search_youtube, [tailored["youtube"]]),
-        "readarr": (search_readarr, [tailored.get("readarr", query)]),
-        "wayback": (search_wayback, [query]),
         "codex_knowledge": (search_codex_knowledge, [query]),
         # Discord removed: requires bot tokens + guild config that most users won't have
     }
 
-    if with_perplexity:
-        providers["perplexity"] = (search_perplexity, [tailored["perplexity"]])
+    if with_readarr:
+        providers["readarr"] = (search_readarr, [tailored.get("readarr", query)])
+    if with_wayback:
+        providers["wayback"] = (search_wayback, [query])
 
     # Provider status for Rich live display
     status: Dict[str, str] = {name: "[dim]waiting[/dim]" for name in providers}
@@ -373,6 +479,9 @@ def run_stage1_searches(
     use_live = console.is_terminal
 
     with ThreadPoolExecutor(max_workers=8) as executor:
+        if monitor:
+            for name in providers:
+                monitor.start_provider(name)
         future_to_name = {
             executor.submit(fn, *args): name
             for name, (fn, args) in providers.items()
@@ -390,6 +499,8 @@ def run_stage1_searches(
                 try:
                     results[name] = future.result(timeout=5)
                     status[name] = "[green]done[/green]"
+                    if monitor:
+                        monitor.complete_provider(name, success=True)
                 except Exception as e:
                     error_msg = str(e)
                     hint_info = get_error_hint(name, error_msg)
@@ -397,6 +508,8 @@ def run_stage1_searches(
                     log_status(f"{name} failed: {error_msg[:60]}{hint_suffix}", provider=name, status="ERROR")
                     results[name] = {"error": error_msg, "hint": hint_info["hint"] if hint_info else None}
                     status[name] = f"[red]error[/red]"
+                    if monitor:
+                        monitor.complete_provider(name, success=False, error_msg=error_msg)
                 if publisher:
                     publisher.publish_result("stage1", name, results[name])
                 if on_result:
@@ -409,6 +522,10 @@ def run_stage1_searches(
                 if not future.done():
                     future.cancel()
                     log_status(f"{name} cancelled after timeout", provider=name, status="ERROR")
+                    hint_info = get_error_hint(name, "timeout")
+                    results[name] = {"error": "Timed out after stage1 budget", "hint": hint_info["hint"] if hint_info else None}
+                    if monitor:
+                        monitor.complete_provider(name, success=False, error_msg="Timed out after stage1 budget")
         finally:
             if live_ctx:
                 live_ctx.__exit__(None, None, None)
@@ -421,10 +538,41 @@ def run_stage1_searches(
             hint_suffix = f" → {hint_info['hint']}" if hint_info else ""
             log_status(f"{name} {timeout_msg}{hint_suffix}", provider=name, status="ERROR")
             results[name] = {"error": timeout_msg, "hint": hint_info["hint"] if hint_info else None}
+            if monitor:
+                monitor.complete_provider(name, success=False, error_msg=timeout_msg)
             if publisher:
                 publisher.publish_result("stage1", name, results[name])
             if on_result:
                 on_result(name, results[name])
+
+    skipped = {
+        "perplexity": {
+            "skipped": "Perplexity is retired for Dogpile; API calls are disabled.",
+            "replacement": "brave_questions",
+            "hint": "Use Dogpile's concurrent Brave question lane for free web-backed research.",
+        }
+    }
+    if with_perplexity:
+        skipped["perplexity"]["requested"] = True
+        skipped["perplexity"]["hint"] = "The deprecated flag intentionally does not call the paid Perplexity API."
+    if not with_readarr:
+        skipped["readarr"] = {
+            "skipped": "Readarr/Usenet is disabled by default.",
+            "hint": "Pass --with-readarr when local Readarr/ingest-book search is intentionally required.",
+        }
+    if not with_wayback:
+        skipped["wayback"] = {
+            "skipped": "Wayback archive lookup is disabled by default.",
+            "hint": "Pass --with-wayback when historical snapshots are intentionally required.",
+        }
+
+    for name, result in skipped.items():
+        if name not in results:
+            results[name] = result
+            if publisher:
+                publisher.publish_result("stage1", name, result)
+            if monitor:
+                monitor.skip_provider(name)
 
     return results
 
@@ -437,7 +585,9 @@ def search(
     tailor: bool = typer.Option(True, "--tailor/--no-tailor", help="Tailor queries per service"),
     use_github_skill: bool = typer.Option(True, "--github-skill/--no-github-skill", help="Use /github-search skill"),
     auto_preset: bool = typer.Option(False, "--auto-preset", help="Auto-detect preset from query"),
-    with_perplexity: bool = typer.Option(False, "--with-perplexity", help="Include Perplexity (paid API, off by default)"),
+    with_perplexity: bool = typer.Option(False, "--with-perplexity", help="Deprecated: record Perplexity as skipped; never calls the paid API"),
+    with_readarr: bool = typer.Option(False, "--with-readarr", help="Include local Readarr/Usenet book search"),
+    with_wayback: bool = typer.Option(False, "--with-wayback", help="Include Wayback archive lookup"),
     html_report: bool = typer.Option(False, "--html-report", help="Write a self-contained HTML/CSS report"),
     open_report: bool = typer.Option(False, "--open-report", help="Open the HTML report in your browser"),
     report_file: Optional[Path] = typer.Option(None, "--report-file", help="Write the HTML report to a specific path"),
@@ -463,6 +613,8 @@ def search(
             auto_preset=auto_preset,
             monitor=monitor,
             with_perplexity=with_perplexity,
+            with_readarr=with_readarr,
+            with_wayback=with_wayback,
             html_report=html_report,
             open_report=open_report,
             report_file=report_file,
@@ -527,6 +679,8 @@ def _run_search(
     auto_preset: bool,
     monitor,
     with_perplexity: bool = False,
+    with_readarr: bool = False,
+    with_wayback: bool = False,
     html_report: bool = False,
     open_report: bool = False,
     report_file: Optional[Path] = None,
@@ -636,8 +790,11 @@ def _run_search(
             use_github_skill,
             is_code_related,
             with_perplexity=with_perplexity,
+            with_readarr=with_readarr,
+            with_wayback=with_wayback,
             publisher=publisher,
             on_result=schedule_stage2,
+            monitor=monitor,
         )
         monitor.complete_stage("stage1")
 
@@ -652,7 +809,7 @@ def _run_search(
 
     # Show partial success status after Stage 1
     succeeded = [name for name, res in stage1_results.items()
-                 if not (isinstance(res, dict) and "error" in res)]
+                 if not (isinstance(res, dict) and ("error" in res or "skipped" in res))]
     failed = [name for name, res in stage1_results.items()
               if isinstance(res, dict) and "error" in res]
 
@@ -669,7 +826,8 @@ def _run_search(
         console.print("[dim]Continuing with partial results...[/dim]\n")
 
     brave_res = stage1_results["brave"]
-    perp_res = stage1_results.get("perplexity", {"skipped": "opt-in only (use --with-perplexity)"})
+    brave_questions_res = stage1_results.get("brave_questions", {})
+    perp_res = stage1_results["perplexity"]
     github_res = stage1_results["github"]
     arxiv_res = stage1_results["arxiv"]
     youtube_res = stage1_results["youtube"]
@@ -702,11 +860,19 @@ def _run_search(
     # Flush stage2 execution metadata to memory
     _flush_execution_records("stage2")
 
-    # Generate report from collected results
-    # NOTE: Synthesis is deliberately omitted here — the calling agent has full
-    # conversation context and should synthesize the results itself, rather than
-    # paying for a second LLM call with zero context.
-    monitor.start_stage("report")
+    monitor.start_stage("synthesis")
+    auto_synthesis = _generate_auto_synthesis(query, stage1_results, stage2_results)
+    if auto_synthesis.startswith("Error:"):
+        stage2_results["synthesis"] = {"error": auto_synthesis}
+        synthesis_payload = {"error": auto_synthesis}
+    else:
+        stage2_results["synthesis"] = {"ok": True, "text": auto_synthesis}
+        synthesis_payload = {"text": auto_synthesis}
+    if publisher:
+        publisher.publish_result("synthesis", "evidence_synthesis", synthesis_payload)
+    monitor.complete_stage("synthesis")
+
+    # Generate report from collected results and the grounded synthesis.
     final_report = generate_report(
         query=query,
         wayback_res=wayback_res,
@@ -719,15 +885,18 @@ def _run_search(
         target_repo=target_repo,
         deep_code_res=deep_code_res,
         brave_res=brave_res,
+        brave_questions_res=brave_questions_res,
         brave_deep=brave_deep,
         arxiv_res=arxiv_res,
         arxiv_details=arxiv_details,
         arxiv_deep=arxiv_deep,
         youtube_res=youtube_res,
         youtube_transcripts=youtube_transcripts,
+        synthesis=auto_synthesis,
         code_explanation=code_explanation,
+        stage1_results=stage1_results,
+        stage2_results=stage2_results,
     )
-    monitor.complete_stage("report")
 
     report_path = None
     if html_report or open_report or report_file:
@@ -763,12 +932,12 @@ def _run_search(
             # Collect sources that were successfully searched
             sources_searched = []
             for name, res in [
-                ("brave", brave_res), ("perplexity", perp_res),
+                ("brave", brave_res), ("brave_questions", brave_questions_res), ("perplexity", perp_res),
                 ("github", github_res), ("arxiv", arxiv_res),
                 ("youtube", youtube_res), ("readarr", readarr_res),
                 ("wayback", wayback_res), ("codex", codex_src_res),
             ]:
-                if res and not (isinstance(res, dict) and "error" in res):
+                if res and not (isinstance(res, dict) and ("error" in res or "skipped" in res)):
                     sources_searched.append(name)
 
             # Collect key URLs from brave results
@@ -784,7 +953,7 @@ def _run_search(
                 query=query,
                 sources_searched=sources_searched,
                 findings=final_report[:2000] if final_report else None,
-                synthesis=None,  # Synthesis done by calling agent, not dogpile
+                synthesis=auto_synthesis if not auto_synthesis.startswith("Error:") else None,
                 key_urls=key_urls,
             )
             if _learned:

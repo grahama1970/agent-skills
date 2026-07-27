@@ -1,7 +1,7 @@
 [project]
 name = "dogpile"
 version = "0.1.0"
-description = "Deep research aggregator searching Web, AI, Code, Papers, and Videos simultaneously"
+description = "Deep research aggregator searching web, code, papers, videos, feeds, and optional archival sources"
 requires-python = ">=3.12,<3.13"
 
 dependencies = [
@@ -12,6 +12,7 @@ dependencies = [
     "types-PyYAML>=6.0",
     "httpx>=0.27.0",
     "loguru>=0.7.0,<0.7.3",
+    "yt-dlp",
     "typing_extensions>=4.0.0",
     "python-dotenv>=1.0.0",
     "textual>=0.40.0",

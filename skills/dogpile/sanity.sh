@@ -1,6 +1,11 @@
 #!/bin/bash
 set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if command -v uv &> /dev/null; then
+    PY=(uv run --project "$SCRIPT_DIR" python)
+else
+    PY=(python3)
+fi
 
 echo "=== Dogpile Skill Sanity ==="
 
@@ -18,6 +23,13 @@ if "$SCRIPT_DIR/run.sh" --help >/dev/null; then
 else
     echo "  [FAIL] run.sh --help failed"
     exit 1
+fi
+
+if [[ "$1" == "--live-e2e" ]]; then
+    echo ""
+    echo "=== Live E2E Sanity ==="
+    "${PY[@]}" "$SCRIPT_DIR/scripts/live_e2e_sanity.py"
+    exit $?
 fi
 
 # Check module structure
@@ -68,15 +80,14 @@ fi
 echo ""
 echo "=== Python Import Check ==="
 cd "$SCRIPT_DIR"
-if python3 -c "
+if "${PY[@]}" -c "
 import sys
 sys.path.insert(0, '$(dirname $SCRIPT_DIR)')
 
 # Test all module imports
 from dogpile.config import app, console, SKILLS_DIR, VERSION
 from dogpile.utils import run_command, log_status, with_semaphore
-from dogpile.brave import search_brave
-from dogpile.perplexity import search_perplexity
+from dogpile.brave import search_brave, search_brave_questions
 from dogpile.arxiv_search import search_arxiv
 from dogpile.github_search import search_github
 from dogpile.youtube_search import search_youtube
@@ -97,7 +108,7 @@ fi
 # Check circular imports
 echo ""
 echo "=== Circular Import Check ==="
-if python3 -c "
+if "${PY[@]}" -c "
 import sys
 sys.path.insert(0, '$(dirname $SCRIPT_DIR)')
 from dogpile.cli import app, search
@@ -124,7 +135,7 @@ done
 # Check sub-skills
 echo ""
 echo "=== Sub-skill Check ==="
-for skill in arxiv perplexity brave-search codex ingest-youtube; do
+for skill in arxiv brave-search github-search ingest-youtube fetcher extractor; do
     if [[ -d "$SCRIPT_DIR/../$skill" ]]; then
         echo "  [PASS] Sub-skill '$skill' found"
     else

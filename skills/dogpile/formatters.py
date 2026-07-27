@@ -14,7 +14,12 @@ from typing import Dict, Any, List
 def format_wayback_section(wayback_res: Dict[str, Any]) -> List[str]:
     """Format Wayback Machine results."""
     lines = []
-    if wayback_res.get("available"):
+    if wayback_res.get("skipped"):
+        lines.append(f"> **Wayback Machine**: Skipped: {wayback_res['skipped']}")
+        if wayback_res.get("hint"):
+            lines.append(f"> Hint: {wayback_res['hint']}")
+        lines.append("")
+    elif wayback_res.get("available"):
         lines.append(f"> **Wayback Machine**: [Snapshot available]({wayback_res['url']}) (Timestamp: {wayback_res.get('timestamp')})")
         lines.append("")
     elif "error" in wayback_res:
@@ -43,7 +48,13 @@ def format_codex_section(codex_res: str | Dict[str, Any]) -> List[str]:
 def format_perplexity_section(perp_res: Dict[str, Any]) -> List[str]:
     """Format Perplexity AI research results."""
     lines = ["## AI Research (Perplexity)"]
-    if "error" in perp_res:
+    if "skipped" in perp_res:
+        lines.append(f"> Skipped: {perp_res['skipped']}")
+        if perp_res.get("replacement"):
+            lines.append(f"> Replacement: {perp_res['replacement']}")
+        if perp_res.get("hint"):
+            lines.append(f"> Hint: {perp_res['hint']}")
+    elif "error" in perp_res:
         lines.append(f"> Error: {perp_res['error']}")
     else:
         lines.append(perp_res.get("answer", "No answer."))
@@ -55,10 +66,14 @@ def format_perplexity_section(perp_res: Dict[str, Any]) -> List[str]:
     return lines
 
 
-def format_readarr_section(readarr_res: List[Dict[str, Any]]) -> List[str]:
+def format_readarr_section(readarr_res: List[Dict[str, Any]] | Dict[str, Any]) -> List[str]:
     """Format Readarr search results."""
     lines = ["## Books & Usenet (Readarr)"]
-    if readarr_res and isinstance(readarr_res, list) and len(readarr_res) > 0:
+    if isinstance(readarr_res, dict) and readarr_res.get("skipped"):
+        lines.append(f"> Skipped: {readarr_res['skipped']}")
+        if readarr_res.get("hint"):
+            lines.append(f"> Hint: {readarr_res['hint']}")
+    elif readarr_res and isinstance(readarr_res, list) and len(readarr_res) > 0:
         if "error" in readarr_res[0]:
             lines.append(f"> Error: {readarr_res[0]['error']}")
         else:

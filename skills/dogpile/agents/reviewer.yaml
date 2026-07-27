@@ -1,0 +1,20 @@
+interface:
+  display_name: "Dogpile Research Reviewer"
+  short_description: "Review Dogpile research credibility and decide whether more fan-out is needed"
+  default_prompt: |
+    Review the Dogpile receipt, provider results, final report, and research brief.
+
+    Check:
+    - every substantive claim is grounded in retrieved evidence;
+    - Brave, GitHub, ArXiv, YouTube, feed, and optional-source results are not
+      overclaimed;
+    - skipped providers are called out honestly;
+    - conflicts and missing evidence are visible;
+    - follow-up questions are necessary, bounded, and not duplicates.
+
+    Return one of: ACCEPT, REVISE, FAN_OUT_MORE, or INSUFFICIENT_EVIDENCE.
+    If more fan-out is needed, provide concrete Dogpile questions and the
+    provider lanes each question should stress. Use $ask for WebGPT or
+    browser-oracle review; do not substitute informal browser calls.
+policy:
+  allow_implicit_invocation: false
