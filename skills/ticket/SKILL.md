@@ -95,9 +95,56 @@ commands such as `lease`, `comment`, `block`, `release`, `close`, and
 | `fleet FILE` | Split a list of requested changes into one ticket preview per item; `--apply` files them. |
 | `lookup` | Search, next, or show issues through the guarded helper. |
 | `lease`, `comment`, `block`, `release`, `close`, `close-duplicate` | Guarded issue lifecycle wrappers. |
+| `file-upstream FILE` | File a blocking ticket in another repo and cross-link it to the blocked one. |
 | `verify ISSUE --cmd CMD` | Run deterministic local commands and write a proof file. |
 | `attach-proof ISSUE --file proof.md` | Comment proof on the issue. |
 | `ci status`, `ci rerun`, `ci dispatch` | Explicit GitHub Actions status/rerun/dispatch helpers. |
+
+## Cross-repo dependencies
+
+When a ticket cannot proceed until another project ships something, record the
+dependency machine-readably so `project-watchdog` can clear it automatically.
+
+Link an upstream ticket that already exists:
+
+```bash
+skills/ticket/run.sh block 149 \
+  --reason reason.md \
+  --blocked-by grahama1970/graph-memory-operator#61 \
+  --release
+```
+
+File the upstream ticket and link it in one step:
+
+```bash
+skills/ticket/run.sh file-upstream "Memory /recall must return tool_chains" \
+  --downstream grahama1970/tau#149 \
+  --upstream-repo grahama1970/graph-memory-operator \
+  --type bug --target src/graph_memory/recall.py \
+  --current-state "recall(brief=true) omits tool_chains entirely" \
+  --requested-outcome "recall returns a populated tool_chains item" \
+  --proof "pytest tests/unit/test_recall_chain_contract.py plus a live read-back" \
+  --route backend_python_or_skill_runtime \
+  --apply
+```
+
+The upstream body is built through the same ticket contract as any other
+ticket; this only adds cross-links. Both commands validate the reference and
+refuse one that cannot be read, because the watchdog poll fails closed — a bad
+reference would stall the downstream ticket forever rather than erroring.
+
+Downstream gets `blocked:upstream` plus a `blocked-by: owner/repo#N` comment.
+Upstream gets `blocks-downstream` and a back-link. When every declared upstream
+closes, the watchdog removes the label and the ticket returns to the routable
+pool.
+
+## Agent routing
+
+Tickets are stamped `agent-work` at file time when they carry a concrete
+`--route` and their type is not `question` or `triage`. That label is what the
+`project-watchdog` router selects on; without it a ticket is invisible to
+automated dispatch. Human-first types and unknown routes are deliberately left
+unstamped.
 
 ## Rules
 

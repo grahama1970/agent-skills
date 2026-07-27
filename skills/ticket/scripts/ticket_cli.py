@@ -620,6 +620,136 @@ def comment(issue: int, body: Path = typer.Option(..., "--body"), repo: Optional
     _helper(["comment", str(issue), "--body", str(body)], repo=repo, dry_run=dry_run)
 
 
+@app.command("file-upstream")
+def file_upstream(
+    title: str,
+    downstream: str = typer.Option(
+        ..., "--downstream", help="Blocked ticket as owner/repo#N."
+    ),
+    upstream_repo: str = typer.Option(
+        ..., "--upstream-repo", help="Repository that owns the blocking work."
+    ),
+    ticket_type: str = typer.Option("bug", "--type", help="Upstream ticket type."),
+    target: str = typer.Option(..., "--target", help="Upstream target path or component."),
+    current_state: str = typer.Option(
+        ..., "--current-state", help="What is broken or missing upstream, concretely."
+    ),
+    requested_outcome: str = typer.Option(
+        ..., "--requested-outcome", help="What the upstream must provide to unblock."
+    ),
+    proof: str = typer.Option(..., "--proof", help="Deterministic proof the upstream owes."),
+    route: str = typer.Option("unknown", "--route"),
+    agent: str = typer.Option("", "--agent"),
+    non_goals: str = typer.Option("", "--non-goals"),
+    label: list[str] = typer.Option([], "--label"),
+    apply: bool = typer.Option(False, "--apply"),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """File a blocking ticket in another repo and link it to the blocked one.
+
+    One step for the cross-project case: build a contract-compliant ticket in
+    the upstream repository, create it, then record the dependency on the
+    downstream ticket so the project-watchdog unblock poll can clear it
+    automatically when the upstream closes.
+
+    The upstream body is built through the same ``_draft`` contract as every
+    other ticket, so ``best-practices-github-ticket`` still applies to it. This
+    command adds cross-links; it does not relax the ticket contract.
+    """
+    down_ref = _validate_upstream_ref(downstream, flag="--downstream")
+    down_repo, _, down_number = down_ref.partition("#")
+    if "/" not in upstream_repo:
+        _die(f"--upstream-repo must be owner/repo, got {upstream_repo!r}")
+    if upstream_repo == down_repo:
+        _die(
+            f"--upstream-repo {upstream_repo} is the same repository as the blocked "
+            "ticket. Use a plain dependency inside one repo instead of a cross-repo edge."
+        )
+
+    draft = _draft(
+        ticket_type=ticket_type,
+        title=title,
+        target=target,
+        current_state=(
+            f"{current_state}\n\n"
+            f"This blocks {down_ref}, which cannot proceed until this ticket closes."
+        ),
+        requested_outcome=requested_outcome,
+        proof=proof,
+        route=route,
+        agent=agent,
+        non_goals=non_goals,
+        extra_labels=[*label, "blocks-downstream"],
+    )
+
+    if not apply:
+        _emit_draft(draft, as_json=as_json)
+        typer.echo(f"\nWould create in: {upstream_repo}", err=True)
+        typer.echo(
+            f"Would then add '{UPSTREAM_BLOCKED_LABEL}' and a blocked-by edge to {down_ref}.",
+            err=True,
+        )
+        typer.echo("\nPreview only. Re-run with --apply.", err=True)
+        return
+
+    upstream_ref = _create_and_capture(draft, repo=upstream_repo)
+    typer.echo(f"Created upstream ticket: {upstream_ref}")
+
+    _record_upstream_edges(
+        int(down_number), [upstream_ref], repo=down_repo, dry_run=False
+    )
+    _run(
+        [
+            "gh",
+            "issue",
+            "comment",
+            upstream_ref.partition("#")[2],
+            "--repo",
+            upstream_repo,
+            "--body",
+            f"Filed to unblock `{down_ref}`, which is now labelled "
+            f"`{UPSTREAM_BLOCKED_LABEL}` and carries `blocked-by: {upstream_ref}`.\n\n"
+            "When this ticket closes, the project-watchdog unblock poll removes that "
+            "label and returns the downstream ticket to the routable pool.",
+        ],
+        check=False,
+    )
+    typer.echo(f"Linked {down_ref} <-> {upstream_ref}")
+
+
+def _create_and_capture(draft: TicketDraft, *, repo: str) -> str:
+    """Create an issue and return its ``owner/repo#N`` reference.
+
+    ``_create_or_preview`` streams ``gh`` output straight through, so it cannot
+    tell the caller which issue it made. Cross-linking needs the number, so this
+    captures the URL ``gh issue create`` prints and parses it.
+    """
+    cmd = ["gh", "issue", "create", "--repo", repo, "--title", draft.title]
+    for label_value in draft.labels:
+        cmd.extend(["--label", label_value])
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".md", delete=False) as tmp:
+        tmp.write(draft.body)
+        body_path = tmp.name
+    try:
+        cmd.extend(["--body-file", body_path])
+        result = _run(cmd, capture=True, check=False)
+    finally:
+        try:
+            os.unlink(body_path)
+        except OSError as exc:
+            logger.error("failed to remove temporary ticket body {}: {}", body_path, exc)
+    if result.returncode != 0:
+        _die(f"could not create upstream ticket in {repo}: {(result.stderr or '').strip()[:300]}")
+    match = re.search(r"/issues/(\d+)", result.stdout or "")
+    if not match:
+        _die(
+            f"created an issue in {repo} but could not parse its number from "
+            f"{(result.stdout or '').strip()[:200]!r}. Link the dependency manually with "
+            "'ticket block <downstream> --blocked-by <ref>'."
+        )
+    return f"{repo}#{match.group(1)}"
+
+
 @app.command()
 def block(
     issue: int,
@@ -647,12 +777,16 @@ def block(
         _record_upstream_edges(issue, refs, repo=repo, dry_run=dry_run)
 
 
-def _validate_upstream_ref(ref: str) -> str:
-    """Validate an ``owner/repo#N`` dependency reference."""
-    match = UPSTREAM_REF_PATTERN.fullmatch(ref.strip())
-    if not match:
+def _validate_upstream_ref(ref: str, *, flag: str = "--blocked-by") -> str:
+    """Validate an ``owner/repo#N`` issue reference.
+
+    ``flag`` names the option the value came from, so the error tells the caller
+    which of their arguments to fix rather than naming whichever flag happened
+    to be wired first.
+    """
+    if not UPSTREAM_REF_PATTERN.fullmatch(ref.strip()):
         _die(
-            f"invalid --blocked-by reference {ref!r}. "
+            f"invalid {flag} reference {ref!r}. "
             "Expected owner/repo#N, for example grahama1970/graph-memory-operator#61"
         )
     return ref.strip()

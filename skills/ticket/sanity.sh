@@ -125,5 +125,50 @@ fi
 grep -q 'Exit code: 7' "$TMPDIR/bad-proof.md"
 echo "PASS"
 
+# --- cross-repo dependency edges -------------------------------------------- #
+# Capture-then-grep, never `cmd | grep`: this script runs under `set -o pipefail`
+# and these paths exit 2 by design, which would fail the pipeline even on a match.
+
+echo -n "Check 11 - file-upstream refuses a same-repo edge: "
+OUT="$("$SCRIPT_DIR/run.sh" file-upstream "p" --downstream owner/a#1 --upstream-repo owner/a \
+  --target x --current-state c --requested-outcome r --proof p 2>&1 || true)"
+grep -q "same repository" <<<"$OUT" || { echo "FAIL"; echo "$OUT" | tail -3; exit 1; }
+echo "PASS"
+
+echo -n "Check 12 - file-upstream refuses a malformed downstream ref: "
+OUT="$("$SCRIPT_DIR/run.sh" file-upstream "p" --downstream "not-a-ref" --upstream-repo owner/b \
+  --target x --current-state c --requested-outcome r --proof p 2>&1 || true)"
+grep -q "invalid --downstream" <<<"$OUT" || { echo "FAIL"; echo "$OUT" | tail -3; exit 1; }
+echo "PASS"
+
+echo -n "Check 13 - block refuses a malformed --blocked-by ref: "
+echo "reason" > "$TMPDIR/reason.md"
+OUT="$("$SCRIPT_DIR/run.sh" block 1 --reason "$TMPDIR/reason.md" --blocked-by "bad" \
+  --repo owner/a 2>&1 || true)"
+grep -q "invalid --blocked-by" <<<"$OUT" || { echo "FAIL"; echo "$OUT" | tail -3; exit 1; }
+echo "PASS"
+
+echo -n "Check 14 - file-upstream preview links downstream and never writes: "
+OUT="$("$SCRIPT_DIR/run.sh" file-upstream "p" --downstream owner/a#7 --upstream-repo owner/b \
+  --target x.py --current-state broken --requested-outcome fixed --proof pytest \
+  --route backend_python_or_skill_runtime 2>&1 || true)"
+grep -q "This blocks owner/a#7" <<<"$OUT" || { echo "FAIL missing downstream link"; exit 1; }
+grep -q "blocks-downstream" <<<"$OUT" || { echo "FAIL missing blocks-downstream label"; exit 1; }
+grep -q "Preview only" <<<"$OUT" || { echo "FAIL preview did not stop before writing"; exit 1; }
+echo "PASS"
+
+echo -n "Check 15 - agent-work is stamped only on agent-routable tickets: "
+ROUTABLE="$("$SCRIPT_DIR/run.sh" bug "p" --target src/x.py --observed o --expected e --repro r \
+  --proof p --route backend_python_or_skill_runtime 2>&1 | grep '^Labels' || true)"
+UNROUTED="$("$SCRIPT_DIR/run.sh" bug "p" --target src/x.py --observed o --expected e --repro r \
+  --proof p 2>&1 | grep '^Labels' || true)"
+QUESTION="$("$SCRIPT_DIR/run.sh" question "p" --target src/x.py --question q \
+  --answer-format prose --source-scope src --proof p \
+  --route backend_python_or_skill_runtime 2>&1 | grep '^Labels' || true)"
+grep -q 'agent-work' <<<"$ROUTABLE" || { echo "FAIL routable ticket missing agent-work: $ROUTABLE"; exit 1; }
+grep -q 'agent-work' <<<"$UNROUTED" && { echo "FAIL unknown-route ticket got agent-work: $UNROUTED"; exit 1; }
+grep -q 'agent-work' <<<"$QUESTION" && { echo "FAIL question ticket got agent-work: $QUESTION"; exit 1; }
+echo "PASS"
+
 echo ""
 echo "Result: PASS"
