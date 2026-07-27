@@ -1,8 +1,9 @@
-"""Phase 5: External research via /dogpile and /arxiv.
+"""Phase 5: External research via /brave-search, /github-search, and /arxiv.
 
 Builds targeted research queries from Phase 1-4 findings, then executes
-them against dogpile (web search) and arxiv (academic papers) to inform
-gap analysis with competitive intelligence and state-of-the-art techniques.
+them against recent retrieval skills. Dogpile remains a legacy deep aggregator
+option, but current web and GitHub facts should prefer brave-search and
+github-search.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from typing import Any
 
 from loguru import logger
 
-from constants import ARXIV_SKILL, DOGPILE_SKILL
+from constants import ARXIV_SKILL, BRAVE_SEARCH_SKILL, DOGPILE_SKILL, GITHUB_SEARCH_SKILL
 
 
 def _build_research_queries(cascade: dict, daemons: dict,
@@ -24,7 +25,7 @@ def _build_research_queries(cascade: dict, daemons: dict,
 
     # Always: competitive landscape (core domain)
     queries.append({
-        "source": "dogpile",
+        "source": "brave-search",
         "query": "defense manufacturing compliance AI agentic 2026",
         "reason": "core competitive landscape",
     })
@@ -56,14 +57,19 @@ def _build_research_queries(cascade: dict, daemons: dict,
 
     if full:
         queries.append({
-            "source": "dogpile",
+            "source": "brave-search",
             "query": "MES digital twin manufacturing compliance drift detection",
             "reason": "adjacent technology landscape",
         })
         queries.append({
-            "source": "dogpile",
+            "source": "brave-search",
             "query": "OSCAL NIST compliance automation air-gapped deployment",
             "reason": "compliance tooling landscape",
+        })
+        queries.append({
+            "source": "github-search",
+            "query": "OSCAL compliance automation open issues",
+            "reason": "current GitHub implementation and issue landscape",
         })
         queries.append({
             "source": "arxiv",
@@ -93,7 +99,7 @@ def _parse_json_stdout(raw: str) -> dict | None:
 
 
 def _run_dogpile(query: str, timeout: int = 180) -> dict[str, Any]:
-    """Run a /dogpile search."""
+    """Run a legacy /dogpile search."""
     if not DOGPILE_SKILL.exists():
         return {"error": "dogpile skill not found"}
     try:
@@ -116,6 +122,61 @@ def _run_dogpile(query: str, timeout: int = 180) -> dict[str, Any]:
         return {"error": out.stderr[:200]}
     except subprocess.TimeoutExpired:
         return {"error": f"timeout ({timeout}s)"}
+    except Exception as e:
+        return {"error": str(e)[:100]}
+
+
+def _run_brave(query: str, max_results: int = 5) -> dict[str, Any]:
+    """Run a /brave-search web query."""
+    if not BRAVE_SEARCH_SKILL.exists():
+        return {"error": "brave-search skill not found"}
+    try:
+        out = subprocess.run(
+            ["bash", str(BRAVE_SEARCH_SKILL), "web", query, "--count", str(max_results), "--json"],
+            capture_output=True, text=True, timeout=45,
+        )
+        if out.returncode == 0:
+            parsed = _parse_json_stdout(out.stdout)
+            if parsed:
+                results = parsed.get("results", [])
+                summaries = [
+                    f"{item.get('title', 'Untitled')} - {item.get('url', '')}"
+                    for item in results[:max_results]
+                ]
+                return {"output": "\n".join(summaries), "count": len(results)}
+            clean = "\n".join(ln for ln in out.stdout.splitlines() if ln.strip())[:800]
+            return {"output": clean} if clean else {"error": "no results"}
+        return {"error": (out.stderr or out.stdout)[:200]}
+    except subprocess.TimeoutExpired:
+        return {"error": "timeout (45s)"}
+    except Exception as e:
+        return {"error": str(e)[:100]}
+
+
+def _run_github_issues(query: str, max_results: int = 5) -> dict[str, Any]:
+    """Run a /github-search issues query."""
+    if not GITHUB_SEARCH_SKILL.exists():
+        return {"error": "github-search skill not found"}
+    try:
+        out = subprocess.run(
+            ["bash", str(GITHUB_SEARCH_SKILL), "issues", query, "--limit", str(max_results), "--json"],
+            capture_output=True, text=True, timeout=45,
+        )
+        if out.returncode == 0:
+            parsed = _parse_json_stdout(out.stdout)
+            if parsed:
+                issues = parsed.get("issues", parsed if isinstance(parsed, list) else [])
+                if isinstance(issues, list):
+                    summaries = [
+                        f"{item.get('title', 'Untitled')} - {item.get('url', item.get('html_url', ''))}"
+                        for item in issues[:max_results]
+                    ]
+                    return {"output": "\n".join(summaries), "count": len(issues)}
+            clean = "\n".join(ln for ln in out.stdout.splitlines() if ln.strip())[:800]
+            return {"output": clean} if clean else {"error": "no results"}
+        return {"error": (out.stderr or out.stdout)[:200]}
+    except subprocess.TimeoutExpired:
+        return {"error": "timeout (45s)"}
     except Exception as e:
         return {"error": str(e)[:100]}
 
@@ -158,7 +219,7 @@ def _run_arxiv(query: str, categories: str = "", max_results: int = 5) -> dict[s
 def collect_competitive(skip: bool = False, full: bool = False,
                         cascade: dict | None = None, daemons: dict | None = None,
                         doc_drift: dict | None = None) -> dict[str, Any]:
-    """Query /dogpile + /arxiv based on detected gaps."""
+    """Query current external research skills based on detected gaps."""
     if skip:
         return {"skipped": True, "reason": "Use standard or --full mode"}
 
@@ -170,7 +231,11 @@ def collect_competitive(skip: bool = False, full: bool = False,
 
     for q in queries:
         entry = {"query": q["query"], "source": q["source"], "reason": q["reason"]}
-        if q["source"] == "dogpile":
+        if q["source"] == "brave-search":
+            entry.update(_run_brave(q["query"]))
+        elif q["source"] == "github-search":
+            entry.update(_run_github_issues(q["query"]))
+        elif q["source"] == "dogpile":
             entry.update(_run_dogpile(q["query"]))
         elif q["source"] == "arxiv":
             entry.update(_run_arxiv(q["query"], q.get("categories", "")))

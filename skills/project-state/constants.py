@@ -9,6 +9,10 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # ── Paths ────────────────────────────────────────────────────────────────────
 
 EMBRY_OS = Path(os.environ.get(
@@ -25,6 +29,8 @@ CLASSIFIERS_DIR = Path.home() / ".pi" / "models" / "classifiers"
 REGISTRY_PATH = PI_SKILLS / "assistant" / "model_registry.json"
 MEMORY_SKILL = PI_SKILLS / "memory" / "run.sh"
 DOGPILE_SKILL = PI_SKILLS / "dogpile" / "run.sh"
+BRAVE_SEARCH_SKILL = PI_SKILLS / "brave-search" / "run.sh"
+GITHUB_SEARCH_SKILL = PI_SKILLS / "github-search" / "run.sh"
 CREATE_FIGURE_SKILL = PI_SKILLS / "create-figure" / "run.sh"
 ARXIV_SKILL = PI_SKILLS / "arxiv" / "run.sh"
 EMBRY_YAML = EMBRY_OS / "embry.yaml"

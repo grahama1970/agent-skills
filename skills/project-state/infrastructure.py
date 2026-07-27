@@ -13,6 +13,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
+
 from constants import (
     CLASSIFIERS_DIR,
     DAEMON_SOCKETS,
@@ -22,6 +24,8 @@ from constants import (
     SHADOW_JSONL,
     TRAINING_DIR,
 )
+
+load_dotenv()
 
 
 def collect_daemons() -> dict[str, Any]:

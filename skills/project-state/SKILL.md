@@ -1,10 +1,11 @@
 ---
 name: project-state
 description: >
-  Comprehensive Embry OS project state in one command.
-  6-phase assessment: infrastructure metrics, /memory recall, doc-code drift,
-  best practices audit, competitive landscape (/dogpile), and gap analysis.
-  Like /assess but automated and repeatable.
+  Project state and readiness reporting in one command for Embry-style
+  project checkouts and cleanup tails. Runs infrastructure metrics, /memory
+  recall, doc-code drift, best-practices audit, current external research
+  via /brave-search and /github-search, gap analysis, and post-cleanup
+  readiness receipts.
 triggers:
   - "project state"
   - "project status"
@@ -12,6 +13,11 @@ triggers:
   - "full status"
   - "comprehensive status"
   - "embry status"
+  - "cleanup tail state"
+  - "post cleanup state"
+  - "project readiness report"
+metadata:
+  short-description: Project state and readiness reporting
 allowed-tools:
   - Bash
   - Read
@@ -19,26 +25,38 @@ allowed-tools:
   - Grep
 provides:
   - project-state-report
+  - readiness-report
+  - cleanup-tail-state
 composes:
   - service-status
   - data-audit
   - memory
   - assistant
-  - dogpile
+  - brave-search
+  - github-search
   - create-figure
   - task-monitor
   - checkpoint
+complies:
+  - best-practices-skills
+  - best-practices-python
+runtime_self_improvement: basic
 taxonomy:
   - assessment
   - monitoring
   - operations
+  - validation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
 # /project-state
 
-Comprehensive Embry OS project state — 6-phase assessment in one command.
+Project state and readiness reporting for Embry-style project checkouts.
+
+This skill is a reporter and readiness receipt generator. It does not delete
+files, move files, rewrite code, authorize cleanup removals, or turn skipped
+checks into success.
 
 ## Modes
 
@@ -46,9 +64,11 @@ Comprehensive Embry OS project state — 6-phase assessment in one command.
 |------|------|--------|------|
 | **Quick** | `--quick` | Phase 1 only | ~10s |
 | **Standard** | (default) | Phases 1-4 + 6 | ~30s |
-| **Full** | `--full` | All 6 phases | ~2min |
+| **Full** | `--full` | All 6 phases, including Brave/GitHub/ArXiv research | ~2min |
 | **Cached** | `--cached` | Return cached checkpoint if < 1 hour old, otherwise run live and save | ~1s (hit) / ~30s (miss) |
 | **Force** | `--force` | Always run live, save checkpoint after | ~30s |
+| **Cleanup Tail** | `report --cleanup-tail` | Load a cleanup receipt, run a bounded post-cleanup state snapshot, write readiness artifacts | ~30s |
+| **Config Doctor** | `config doctor` | Check non-secret config without prompting | ~1s |
 
 ## Usage
 
@@ -78,6 +98,62 @@ Comprehensive Embry OS project state — 6-phase assessment in one command.
 # Combine with other flags
 ./run.sh report --cached --json --output state.json
 ./run.sh report --force --quick
+
+# Post-cleanup readiness receipt; never deletes or moves files
+./run.sh report --cleanup-tail \
+  --cleanup-receipt artifacts/cleanup/<run-id>/receipt.json \
+  --json --output artifacts/cleanup/project_state_after.json
+
+# Write readiness artifacts to an explicit directory
+./run.sh cleanup-tail --cleanup-receipt artifacts/cleanup/<run-id>/receipt.json \
+  --output-dir artifacts/project-state/readiness/<run-id> --json
+
+# Non-interactive configuration check
+./run.sh config doctor --json
+```
+
+## Readiness Report Contract
+
+`cleanup-tail` writes a best-practices-skills-compatible readiness bundle:
+
+```text
+artifacts/project-state/readiness/<run-id>/
+  report.json
+  report.md
+  index.html
+```
+
+`report.json` is the source of truth. The HTML page is only a view. The report
+uses schema `skill.readiness_report.v1`, profile `cleanup-tail`, explicit
+feature rows, case rows, `needs_attention`, and source receipt paths.
+
+Release readiness is always `NOT_ESTABLISHED` for cleanup-tail because it is a
+state/gap receipt, not project acceptance. If the cleanup receipt shows
+moved/quarantined/manual-review items, the report marks `needs_attention` and
+the safe default is to keep `.cleanup` intact until usage evidence is reviewed.
+
+Cleanup-tail reports:
+
+- repo dirty state after cleanup from `git status --porcelain`
+- optional project-native sanity result from `--project-sanity-cmd`
+- moved/kept/deleted/review-required path counts from the cleanup receipt
+- best-practices commands recorded in the receipt or passed via
+  `--best-practices-check`
+- doc-code drift when the standard cleanup-tail profile runs
+- stale/deprecated document findings surfaced through doc-code drift
+- project knowledge presence and memory-sync status as explicit evidence gaps
+- potential new gaps introduced by cleanup
+- unresolved cleanup candidates
+
+## Configuration
+
+`./run.sh config doctor --json` is CI-safe and never prompts. Missing paths are
+reported as `needs_attention` with a safe default. Use environment variables,
+not hardcoded paths, when adapting this skill:
+
+```bash
+EMBRY_OS_ROOT=/path/to/project
+PI_SKILLS_ROOT=/path/to/skills
 ```
 
 ## What It Reports
@@ -112,11 +188,20 @@ Scans for anti-patterns:
 
 ### Phase 5: Competitive Landscape (--full only)
 
-Queries `/dogpile` for defense manufacturing compliance AI and MES/digital twin landscape.
+Uses current retrieval lanes first: `/brave-search` for web results and
+`/github-search` for repositories/issues. `/dogpile` is treated as a legacy
+deep aggregator and should be used only when explicitly requested or when a
+single broad multi-source research bundle is more important than freshness.
 
 ### Phase 6: Gap Analysis (always runs)
 
 Synthesizes all previous phases into prioritized, actionable gaps with severity (critical/high/medium/low) and recommended actions.
+
+## Project Knowledge
+
+Current-state notes for this skill live in `docs/PROJECT_KNOWLEDGE.md`. Treat
+that document as context, not proof. Readiness claims still require the
+machine-readable report and command receipts.
 
 ## Visualization
 
@@ -170,4 +255,16 @@ create-figure from-assess --input state.json --output-dir ./figures/
 ### RIGHT: Standard mode includes all critical phases
 ```bash
 ./run.sh report  # phases 1-4 + 6: infrastructure + memory + drift + practices + gaps
+```
+
+### WRONG: Treating cleanup-tail as cleanup authority
+```bash
+./run.sh report --cleanup-tail --cleanup-receipt artifacts/cleanup/run/receipt.json
+# then delete .cleanup because the command exited zero
+```
+
+### RIGHT: Treat cleanup-tail as a state receipt only
+```bash
+./run.sh report --cleanup-tail --cleanup-receipt artifacts/cleanup/run/receipt.json --json
+# inspect needs_attention and usage evidence before any cleanup deletion
 ```

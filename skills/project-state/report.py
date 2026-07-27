@@ -71,9 +71,10 @@ def generate_report(quick: bool = False, full: bool = False) -> dict[str, Any]:
         best_practices = collect_best_practices()
         report["phase_4_best_practices"] = best_practices
 
-        # Phase 5: External Research (standard = gap-driven, full = comprehensive)
+        # Phase 5 is intentionally full-only so standard/cleanup-tail remains
+        # bounded and does not spend web/API calls for every state snapshot.
         research = collect_competitive(
-            skip=False, full=full,
+            skip=not full, full=full,
             cascade=cascade_data, daemons=daemon_data, doc_drift=doc_drift,
         )
         report["phase_5_research"] = research
