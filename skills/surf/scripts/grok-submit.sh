@@ -18,6 +18,7 @@ Options:
   --submitted-output PATH   Submitted prompt with sentinel injection.
   --sentinel auto|MARKER    Completion marker. Default: auto.
   --timeout SECONDS         Browser wait timeout. Default: 300.
+  --lock-timeout SECONDS    Wait this long for the shared Surf browser lock.
   --model MODEL             Optional Grok model: auto, fast, expert, grok-4.20-beta.
   --deep-search             Enable Grok DeepSearch.
   --with-page               Include current page context using upstream surf grok.
@@ -72,6 +73,7 @@ while [[ $# -gt 0 ]]; do
     --submitted-output) submitted_output="${2:-}"; shift 2 ;;
     --sentinel) sentinel="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
+    --lock-timeout) surf_lock_wait_ms="$(( ${2:-0} * 1000 ))"; shift 2 ;;
     --stable-polls) shift 2 ;; # accepted for browser-handler command parity
     --model) model="${2:-}"; shift 2 ;;
     --deep-search) deep_search=1; shift ;;
@@ -232,6 +234,7 @@ fi
 
 stderr_log="$(mktemp /tmp/surf-grok-submit-stderr.XXXXXX.log)"
 raw_tmp="$(mktemp /tmp/surf-grok-submit-raw.XXXXXX.md)"
+export SURF_LOCK_TIMEOUT_MS="$surf_lock_wait_ms"
 fallback_summary_json=""
 provider_busy_cooldown_count=0
 generic_first_attempted=0

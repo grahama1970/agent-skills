@@ -19,6 +19,7 @@ Options:
   --sentinel auto|MARKER    Completion marker. Default: auto.
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
   --timeout SECONDS         Browser wait timeout. Default: 300.
+  --lock-timeout SECONDS    Wait this long for the shared Surf browser lock.
   --model MODEL             Kimi model selector label. Default: Instant.
   --reasoning LEVEL         Kimi reasoning selector label. Default: High.
   --tab-id ID               Use this exact Chrome tab as the controlled Kimi tab.
@@ -77,6 +78,7 @@ while [[ $# -gt 0 ]]; do
     --sentinel) sentinel="${2:-}"; shift 2 ;;
     --stable-polls) stable_polls="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
+    --lock-timeout) surf_lock_wait_ms="$(( ${2:-0} * 1000 ))"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
     --reasoning) reasoning="${2:-}"; shift 2 ;;
     --tab-id) tab_id="${2:-}"; shift 2 ;;
@@ -134,6 +136,7 @@ printf '%s\n' "$submitted_prompt" > "$submitted_output"
 
 stderr_log="$(mktemp /tmp/surf-kimi-submit-stderr.XXXXXX.log)"
 raw_tmp="$(mktemp /tmp/surf-kimi-submit-raw.XXXXXX.md)"
+export SURF_LOCK_TIMEOUT_MS="$surf_lock_wait_ms"
 args=(kimi_tab "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$timeout_s" --keep-tab)
 if [[ -n "$model" ]]; then
   args+=(--model "$model")

@@ -242,7 +242,7 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   API-backed model such as `gpt-5.5`, `claude-sonnet-4-6`, or another model
   routed by `$tau` through `$scillm`.
 - **Roundtable (deliberation panel)**: repeatable `--handler` values with
-  `--topology concurrent` — ALWAYS concurrent; see the Roundtable
+  `--topology concurrent` - ALWAYS concurrent; see the Roundtable
   Collaboration Protocol below. Equal context demands that every seat answers
   the same shared prompt; a sequential chain is a PIPELINE, not a roundtable.
   Compiles to `tau.dag_contract.v1` with handler nodes and a join node.
@@ -284,9 +284,14 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   is the local Codex CLI coder lane; it requires `--handler-workspace
   codex=/path/to/worktree` and must produce a real git diff.
 - **Browser transport**: browser handlers execute through `$surf` and
-  `$browser-oracle` from Tau command specs. Use `--handler-project
-  handler=project` when the browser-oracle project differs from the handler
-  name, for example `--handler-project webgpt=tau`.
+  `$browser-oracle` from Tau command specs. With `--execute`,
+  `--browser-tab-lifecycle auto` is the default. For roundtable and compete
+  browser handlers, auto creates one fresh run-scoped browser window, opens one
+  provider tab per browser handler, binds those tabs under run-scoped
+  browser-oracle projects, rewrites handler projects, and closes the owned
+  window after execution. Use `--handler-project handler=project` only when
+  deliberately reusing a pre-bound project; that is the fallback path, not the
+  normal path.
 - **Browser attachments**: project agents should not reason provider-by-provider
   for local bundles. Put readable local evidence in one bundle when possible
   and let `$ask` forward it to Surf as `--attach-file`; Surf browser wrappers
@@ -297,6 +302,16 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
 - **Evidence**: `--json` returns the Ask Tau bundle path, provider/handler gate,
   and Tau execution receipt when `--execute` is used. Preserve `dag.json`,
   command specs, node receipts, and join receipts.
+- **Browser lifecycle evidence**: preserve `browser-tab-lifecycle.json`. It
+  records the created window id, created provider tabs, run-scoped projects,
+  lock timeout, cleanup policy, and cleanup attempts. For browser roundtables
+  and competitions, validate this file together with Tau receipts and per-lane
+  node receipts; command exit status alone is not proof.
+- **Surf lock behavior**: Tau may launch browser handler workers concurrently,
+  but Surf browser operations share `/tmp/surf.sock` and must wait on the Surf
+  lock. Ask emits long `--browser-lock-timeout` / `--lock-timeout` envelopes so
+  concurrent browser lanes wait like database clients instead of failing after
+  a short fixed timeout. Do not add `--no-lock` to roundtable or compete lanes.
 - **Partial roundtable failures**: when at least one handler returns a usable
   response and the other handler seats have terminal receipts, Ask/Tau emits a
   `DEGRADED` join receipt instead of discarding the panel. Failed seats must be
@@ -308,6 +323,11 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   knows exactly when to file a `$ticket` to `$ask` at `agent-skills@main`.
   A provider-specific rate limit degrades only that provider; keep usable seats
   and select available participants instead of failing the whole panel.
+  If a provider returns raw sentinel-bearing text but the cleaned response still
+  contains the sentinel, classify the lane as
+  `browser_clean_output_contaminated`, surface `raw_contains_sentinel`,
+  `clean_contains_sentinel`, output paths, and tab ids in the recovery packet,
+  and do not collapse it into stale tab, repo access, or generic timeout.
   If no handler produces usable reviewer evidence, the join status is
   `NEEDS_ATTENTION`.
 
@@ -357,6 +377,7 @@ Project-agent responsibilities after a compete run:
 
 1. Read `dag.json`, command specs, each candidate `node-receipt.json`, each
    `response.md`, `join/compete-scorecard.json`, and
+   `join/winner-continuation-request.md` or legacy
    `join/winner-revision-request.md`.
 2. Check every candidate against the current codebase, relevant `SKILL.md`
    contracts, allowed files, and deterministic proof commands.
@@ -385,6 +406,7 @@ Compete is fail-closed by design:
 | All-browser execute preflight fails | Blocks before Tau launch and records terminal candidate/join statuses |
 | Missing candidate receipt | Join reports `NEEDS_ATTENTION` |
 | Candidate lane transport or provider error | Lane records `NEEDS_ATTENTION` and exits successfully so the join can emit the partial scorecard |
+| Any candidate lane is `NEEDS_ATTENTION` | Scorecard remains `NEEDS_ATTENTION`; no clean winner is named until that lane is resolved or explicitly excluded |
 | Degraded or blocked candidate set | `compete-scorecard.json` includes `degradation_analysis` with blockers, failed candidates, failure codes, and recovery commands |
 | Candidate claims a feature without local proof | Project agent must not promote it |
 | Tie or no clear winner | Report `NEEDS_ATTENTION`; do not fabricate a winner |
@@ -415,7 +437,7 @@ Roundtable handlers are COLLABORATORS, not competitors. The panel's value is
 model diversity: each seat contributes from different training and strengths.
 Rules for the calling agent:
 
-- **No blind rounds.** Every round — including the first — shares the full
+- **No blind rounds.** Every round, including the first, shares the full
   working context, all prior positions, and the calling agent's research brief
   with every seat identically. Prompts may invite a seat's strengths; they must
   never withhold context from any seat.
@@ -424,9 +446,9 @@ Rules for the calling agent:
   Sequential receipt-passing is asymmetric (the first seat sees nothing new)
   and is not a substitute for equal sharing.
 - **Iterate, never one-shot.** Between rounds the calling agent researches the
-  load-bearing claims from the responses — /dogpile (brave web + arxiv +
-  github + more) when available, else /brave-search (subcommand is `web`) —
-  and injects the fresh external evidence into the next round's shared prompt.
+  load-bearing claims from the responses: /dogpile (brave web + arxiv +
+  github + more) when available, else /brave-search (subcommand is `web`).
+  Then inject the fresh external evidence into the next round's shared prompt.
 - **Converge or surface dissent.** Iterate to convergence or a 3-round cap;
   dissent surviving the cap goes to the human as a genuine split, never
   papered over. Verify panel-cited external claims (repos, papers, standards)
@@ -453,7 +475,7 @@ Rules for the calling agent:
 5. **Round N+1** (concurrent again): request text = synthesis of ALL prior
    positions (attributed per seat) + the research brief + the open questions,
    identical for every seat. Repeat 3-5 until convergence or 3 rounds.
-6. **Close — executable slices, not prose**: a roundtable is INCOMPLETE
+6. **Close - executable slices, not prose**: a roundtable is INCOMPLETE
    until its converged plan is converted into an executable slice manifest
    committed to the project's evidence repo. Each slice states: owner
    (`codex-loop` | `project-agent-script` | `human`), the concrete artifact
@@ -476,13 +498,10 @@ skills/browser-oracle/run.sh bind <project> --backend <backend> --tab-id <id> --
 ```
 
 Known traps: prompt text containing `~<digits>` (e.g. "~20 pages") trips
-surf's path preflight (agent-skills#973) — write "about 20"; ChatGPT project
-tabs fork to a new conversation URL after a submit, so re-verify tab URLs
-between rounds; zsh does not word-split unquoted argument variables — spell
-out surf/ask args or use bash -c.
-
-For exact single-call, roundtable, Chutes, mixed web/API, and provider-call
-command examples, read `docs/ASK_COMMAND_AND_SANITY_REFERENCE.md`.
+surf's path preflight (agent-skills#973) - write "about 20"; browser providers
+may rate-limit or show capacity banners, which is lane-local
+`browser_provider_rate_limited` evidence; zsh does not word-split unquoted
+argument variables, so spell out surf/ask args or use bash -c.
 
 ## Mode Router
 
@@ -493,8 +512,8 @@ Use the narrowest mode that matches the user request.
 | Memory-backed question | `./run.sh ask "<question>" --json` | Include scope when relevant. |
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
 | Single named handler | `./run.sh tau-dag "<request>" --handler <handler-or-model> --json` | Browser handlers use `$surf`; non-browser handlers are `$scillm` model names routed by Tau. Add `--execute` for live transport. |
-| Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology concurrent --browser-tab-lifecycle fresh-temporary --execute --json` | Roundtable is prompt-to-Tau-DAG. For browser-heavy panels, prefer an Ask-owned fresh window. Preserve `dag.json`, command specs, handler receipts, and join receipts. |
-| Compete / bakeoff | `./run.sh compete "<task>" --handler webgpt --handler webclaude --handler gpt-5.5-high --criterion deterministic-proof --browser-tab-lifecycle fresh-temporary --execute --json` | Isolated candidates plus compete scorecard and winner revision request. Browser/API handlers are peers. Project agent must locally verify features before promotion. |
+| Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology concurrent --execute --json` | Roundtable is prompt-to-Tau-DAG. Browser handlers get an Ask-owned fresh window by default. Preserve `browser-tab-lifecycle.json`, `dag.json`, command specs, handler receipts, and join receipts. |
+| Compete / bakeoff | `./run.sh compete "<task>" --handler webgpt --handler webclaude --handler gpt-5.5-high --criterion deterministic-proof --execute --json` | Isolated candidates plus compete scorecard and winner continuation request. Browser/API handlers are peers. Project agent must locally verify features before promotion. |
 | Creator-reviewer loop | `./run.sh tau-dag "<request>" --handler <creator> --handler <reviewer> --topology sequential --json` | The reviewer receives prior handler receipts. Pass/fail requests require a verdict in the reviewer response. |
 | Supported direct browser oracle | documented browser mode such as `webgemini`, `webkimi`, `webperplexity`, or `cursor-browser` | Use only when the user asks for that direct mode; attach local target content when browser cannot read paths. |
 | Deep review | `./run.sh ask "<question>" --deep-review --deep-review-target <path> ... --json` | Pass complete target bundle; return `review.md` and `review.json`. |
@@ -624,8 +643,24 @@ When a reference file is selected, read it completely before running that mode.
 
 ## Command Reference
 
-For common commands and opt-in live sanity checks, read
-`docs/ASK_COMMAND_AND_SANITY_REFERENCE.md`.
+For common commands, use the examples above. For live browser workflow proof,
+validate the returned run directory instead of trusting command exit status:
+
+```bash
+scripts/validate_live_browser_workflow.py <run-dir> \
+  --workflow-mode roundtable \
+  --handler webgpt --handler webclaude --handler webkimi --handler webgemini \
+  --min-concurrency 4 \
+  --require-cleanup \
+  --json
+
+scripts/validate_live_browser_workflow.py <run-dir> \
+  --workflow-mode compete \
+  --handler webgpt --handler webclaude --handler webkimi --handler webgemini \
+  --min-concurrency 4 \
+  --require-cleanup \
+  --json
+```
 
 The release gate for mixed browser/API roundtable and competition transport is:
 

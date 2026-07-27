@@ -42,6 +42,7 @@ def main() -> int:
     parser.add_argument("--sentinel", default="auto")
     parser.add_argument("--stable-polls", type=int, default=3)
     parser.add_argument("--timeout", type=int, default=300)
+    parser.add_argument("--lock-timeout", type=int, default=0)
     parser.add_argument("--tab-id", default="")
     parser.add_argument("--url", default="")
     parser.add_argument(
@@ -62,6 +63,8 @@ def main() -> int:
         help="Comma-separated file paths to attach to the Claude message.",
     )
     args = parser.parse_args()
+    if args.lock_timeout > 0:
+        os.environ["SURF_LOCK_TIMEOUT_MS"] = str(args.lock_timeout * 1000)
 
     input_path = Path(args.input)
     output_path = Path(args.output)

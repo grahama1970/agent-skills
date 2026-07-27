@@ -29,6 +29,8 @@ DEFAULT_SCILLM_BASE_URL = "http://127.0.0.1:4001"
 DEFAULT_SCILLM_API_KEY = ""
 DEFAULT_TAU_PROJECT_ROOT = Path("/home/graham/workspace/experiments/tau")
 DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
+DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS = 900
+BROWSER_COMMAND_GRACE_SECONDS = 180
 COMPETE_WEBCLAUDE_MODEL = "Opus 5 High"
 TERMINAL_STATUSES = {"PASS", "DEGRADED", "NEEDS_ATTENTION", "BLOCKED", "FAILED", "ERROR"}
 ROUNDTABLE_TOPOLOGIES = {"concurrent", "sequential"}
@@ -1699,7 +1701,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         join_node["required_evidence"] = [
             "compete_scorecard",
             "verified_feature_packet",
-            "winner_revision_request",
+            "winner_continuation_request",
             "unresolved_gaps",
         ]
         join_node["join"] = {
@@ -1880,6 +1882,9 @@ def _write_roundtable_command_spec(
         command.extend(["--prior-node", prior_node])
     if handler in ROUNDTABLE_HANDLERS and handler != "codex":
         command.extend(["--browser-oracle-project", _handler_project(input, handler)])
+        lock_timeout_s = _browser_lock_timeout_seconds(input)
+        if lock_timeout_s:
+            command.extend(["--browser-lock-timeout", str(lock_timeout_s)])
     provider_hint = str(handler_policy.get("provider_hint") or "")
     if provider_hint:
         command.extend(["--provider-hint", provider_hint])
@@ -1912,7 +1917,11 @@ def _write_roundtable_command_spec(
     payload = {
         "command": command,
         "cwd": str(run_dir),
-        "timeout_s": _roundtable_command_timeout(handler, is_subagent_handler=is_subagent_handler),
+        "timeout_s": _roundtable_command_timeout(
+            handler,
+            is_subagent_handler=is_subagent_handler,
+            lock_timeout_s=_browser_lock_timeout_seconds(input) if _is_browser_handler(handler) else 0,
+        ),
         "requires_network": node_id != "join",
         "mutates": handler == "codex",
         "requires_clean_worktree": False,
@@ -1925,11 +1934,29 @@ def _write_roundtable_command_spec(
     _write_json(spec_path, payload)
 
 
-def _roundtable_command_timeout(handler: str, *, is_subagent_handler: bool) -> int:
+def _roundtable_command_timeout(
+    handler: str,
+    *,
+    is_subagent_handler: bool,
+    lock_timeout_s: int = 0,
+) -> int:
     if handler == "codex":
         return 6000
     if is_subagent_handler:
         return 1800
+    if _is_browser_handler(handler):
+        browser_envelope = (
+            DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS
+            + max(0, lock_timeout_s)
+            + BROWSER_COMMAND_GRACE_SECONDS
+        )
+        if handler == "webgpt":
+            return max(3900, browser_envelope)
+        if handler == "webgemini":
+            return max(4200, browser_envelope)
+        if handler in {"webclaude", "webkimi", "webgrok"}:
+            return max(3000, browser_envelope)
+        return browser_envelope
     if handler == "webgpt":
         return 3900
     if handler == "webgemini":
@@ -1937,6 +1964,19 @@ def _roundtable_command_timeout(handler: str, *, is_subagent_handler: bool) -> i
     if handler in {"webclaude", "webkimi", "webgrok"}:
         return 3000
     return 420
+
+
+def _browser_handler_count(input: TauDagCompileInput) -> int:
+    return sum(1 for handler in input.handlers if _is_browser_handler(handler))
+
+
+def _browser_lock_timeout_seconds(input: TauDagCompileInput) -> int:
+    browser_count = _browser_handler_count(input)
+    if browser_count == 0:
+        return 0
+    if input.topology == "concurrent":
+        return DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS * max(browser_count - 1, 1)
+    return DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS
 
 
 def _write_agent_stub(root: Path, *, node_id: str, role: str) -> None:
@@ -2197,12 +2237,12 @@ def _roundtable_join_prompt_contract(input: TauDagCompileInput) -> dict[str, Any
                 f"Immutable goal / acceptance bar: {input.immutable_goal}\n"
                 f"Competitors: {', '.join(input.handlers)}\n"
                 "Produce a scorecard, reject unverified features, name a winner only when receipts and "
-                "project-agent checks justify it, and emit a bounded winner revision request."
+                "project-agent checks justify it, and emit a bounded winner continuation request."
             ),
             "topology": input.topology,
             "immutable_goal": input.immutable_goal,
             "requires_scorecard": True,
-            "requires_winner_revision_request": True,
+            "requires_winner_continuation_request": True,
             "fail_closed_status": "NEEDS_ATTENTION",
         }
     return {

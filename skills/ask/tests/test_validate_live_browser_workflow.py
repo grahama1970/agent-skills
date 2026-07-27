@@ -1,0 +1,93 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+
+SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "validate_live_browser_workflow.py"
+SPEC = importlib.util.spec_from_file_location("validate_live_browser_workflow", SCRIPT_PATH)
+assert SPEC and SPEC.loader
+validate_live_browser_workflow = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = validate_live_browser_workflow
+SPEC.loader.exec_module(validate_live_browser_workflow)
+
+
+def test_validate_live_browser_workflow_accepts_complete_compete_lifecycle_receipts(tmp_path: Path) -> None:
+    run_dir = tmp_path / "ask-live-competition-fixture"
+    handlers = ["webgpt", "webclaude"]
+    created_tabs = [
+        {"handler": "webgpt", "tab_id": "111", "project": f"{run_dir.name}-webgpt"},
+        {"handler": "webclaude", "tab_id": "222", "project": f"{run_dir.name}-webclaude"},
+    ]
+    _write_json(
+        run_dir / "browser-tab-lifecycle.json",
+        {
+            "schema": "ask.browser_tab_lifecycle.v1",
+            "status": "READY",
+            "mode": "fresh-temporary",
+            "window_id": "999",
+            "created_tabs": created_tabs,
+            "cleanup_status": "attempted",
+            "cleanup": [{"returncode": 0}],
+        },
+    )
+    _write_json(
+        run_dir / "tau-receipts" / "dag-receipt.json",
+        {
+            "ok": True,
+            "status": "PASS",
+            "mocked": False,
+            "live": True,
+            "max_observed_concurrency": 2,
+        },
+    )
+    for tab in created_tabs:
+        handler = str(tab["handler"])
+        node_dir = run_dir / "node-artifacts" / f"handler-{handler}"
+        _write_json(
+            node_dir / "node-receipt.json",
+            {
+                "ok": True,
+                "status": "PASS",
+                "mocked": False,
+                "live": True,
+                "provider_live": True,
+            },
+        )
+        _write_json(
+            node_dir / "response.meta.json",
+            {
+                "requested_tab_id": tab["tab_id"],
+                "controlled_tab_id": tab["tab_id"],
+            },
+        )
+        (node_dir / "response.raw.md").write_text("PING_RESULT: 4\n<<<ASK_DONE:test>>>\n", encoding="utf-8")
+        (node_dir / "response.md").write_text(
+            "PING_RESULT: 4\nVERIFIED_FEATURE: fixture feature\n",
+            encoding="utf-8",
+        )
+    join_dir = run_dir / "node-artifacts" / "join"
+    _write_json(join_dir / "node-receipt.json", {"ok": True, "status": "PASS"})
+    _write_json(join_dir / "compete-scorecard.json", {"ok": True, "status": "PASS", "winner_handler": "webclaude"})
+    (join_dir / "winner-continuation-request.md").write_text("continue\n", encoding="utf-8")
+
+    report = validate_live_browser_workflow.validate(
+        run_dir,
+        workflow_mode="compete",
+        handlers=handlers,
+        expect_text=["PING_RESULT: 4"],
+        min_concurrency=2,
+        require_cleanup=True,
+    )
+
+    assert report["ok"] is True
+    assert report["mocked"] is False
+    assert report["live"] is True
+    assert not report["failed_checks"]
+
+
+def _write_json(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")

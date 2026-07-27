@@ -14,6 +14,8 @@ import typer
 
 from .env import load_dotenv_once
 from .tau_dag import (
+    BROWSER_COMMAND_GRACE_SECONDS,
+    DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS,
     DEFAULT_OUTPUT_ROOT,
     DEFAULT_SCILLM_API_KEY,
     DEFAULT_SCILLM_BASE_URL,
@@ -529,12 +531,26 @@ def _provision_browser_lifecycle(
     commands: list[dict[str, Any]] = []
     handler_projects: list[str] = list(input_payload.handler_projects)
     lifecycle_id = run_dir.name
+    lock_timeout_seconds = DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS * max(len(browser_handlers) - 1, 1)
+    command_timeout_seconds = (
+        DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS
+        + lock_timeout_seconds
+        + BROWSER_COMMAND_GRACE_SECONDS
+    )
     first = browser_handlers[0]
     first_project = f"{lifecycle_id}-{first}"
     window = _lifecycle_command(
-        [str(surf_run), "window.new", BROWSER_FRESH_URLS[first], "--json", "--unfocused"],
+        [
+            str(surf_run),
+            "window.new",
+            BROWSER_FRESH_URLS[first],
+            "--json",
+            "--unfocused",
+            "--lock-timeout",
+            str(lock_timeout_seconds),
+        ],
         cwd=surf_run.parent,
-        timeout_seconds=60,
+        timeout_seconds=command_timeout_seconds,
     )
     commands.append(window)
     if window["returncode"] != 0:
@@ -556,7 +572,8 @@ def _provision_browser_lifecycle(
         tab_command = [str(surf_run), "tab.new", BROWSER_FRESH_URLS[handler], "--json", "--background"]
         if window_id:
             tab_command.extend(["--window-id", window_id])
-        opened = _lifecycle_command(tab_command, cwd=surf_run.parent, timeout_seconds=60)
+        tab_command.extend(["--lock-timeout", str(lock_timeout_seconds)])
+        opened = _lifecycle_command(tab_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds)
         commands.append(opened)
         if opened["returncode"] != 0:
             lifecycle = _lifecycle_blocked(mode, run_dir, f"{handler}_tab_create_failed", commands, created_tabs, window_id=window_id)
@@ -603,6 +620,8 @@ def _provision_browser_lifecycle(
         "window_id": window_id,
         "created_tabs": created_tabs,
         "handler_projects": handler_projects,
+        "lock_timeout_seconds": lock_timeout_seconds,
+        "command_timeout_seconds": command_timeout_seconds,
         "cleanup_policy": "close_created_window_or_tabs_after_execution" if mode == "fresh-temporary" else "keep_created_tabs_for_inspection",
         "surf_run": str(surf_run),
         "browser_oracle_run": str(browser_oracle_run),
@@ -621,11 +640,25 @@ def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
     cleanup: list[dict[str, Any]] = []
     window_id = str(lifecycle.get("window_id") or "")
     if window_id:
-        cleanup.append(_lifecycle_command([str(surf_run), "window.close", window_id], cwd=surf_run.parent, timeout_seconds=45))
+        lock_timeout_seconds = int(lifecycle.get("lock_timeout_seconds") or DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS)
+        cleanup.append(
+            _lifecycle_command(
+                [str(surf_run), "window.close", window_id, "--lock-timeout", str(lock_timeout_seconds)],
+                cwd=surf_run.parent,
+                timeout_seconds=lock_timeout_seconds + BROWSER_COMMAND_GRACE_SECONDS,
+            )
+        )
     else:
+        lock_timeout_seconds = int(lifecycle.get("lock_timeout_seconds") or DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS)
         for tab in lifecycle.get("created_tabs", []):
             if isinstance(tab, dict) and tab.get("tab_id"):
-                cleanup.append(_lifecycle_command([str(surf_run), "tab.close", str(tab["tab_id"])], cwd=surf_run.parent, timeout_seconds=45))
+                cleanup.append(
+                    _lifecycle_command(
+                        [str(surf_run), "tab.close", str(tab["tab_id"]), "--lock-timeout", str(lock_timeout_seconds)],
+                        cwd=surf_run.parent,
+                        timeout_seconds=lock_timeout_seconds + BROWSER_COMMAND_GRACE_SECONDS,
+                    )
+                )
     lifecycle["cleanup"] = cleanup
     lifecycle["cleanup_status"] = "attempted"
     run_dir = Path(str(lifecycle.get("run_dir") or ""))

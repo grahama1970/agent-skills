@@ -52,6 +52,7 @@ BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 BROWSER_SUBMIT_NOT_ACCEPTED = "browser_submit_not_accepted"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
 BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
+BROWSER_CLEAN_OUTPUT_CONTAMINATED = "browser_clean_output_contaminated"
 BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
 WEBGPT_UNVERIFIED_CLEAN_OUTPUT = "missing_controlled_tab_id_or_contaminated_clean_output"
 BROWSER_HANDLER_TIMEOUT = "browser_handler_timeout"
@@ -67,6 +68,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_SUBMIT_NOT_ACCEPTED,
     BROWSER_TOOL_UNSUPPORTED,
     BROWSER_ATTACHMENT_UNAVAILABLE,
+    BROWSER_CLEAN_OUTPUT_CONTAMINATED,
     BROWSER_SENTINEL_TRAILING_CONTENT,
     WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
     BROWSER_HANDLER_TIMEOUT,
@@ -105,6 +107,7 @@ def main() -> int:
     parser.add_argument("--scillm-api-key", default="")
     parser.add_argument("--prior-node", action="append", default=[])
     parser.add_argument("--timeout", type=int, default=300)
+    parser.add_argument("--browser-lock-timeout", type=int, default=0)
     parser.add_argument("--stable-polls", type=int, default=2)
     parser.add_argument("--no-activate", action="store_true")
     parser.add_argument("--evidence", action="append", default=[])
@@ -116,7 +119,10 @@ def main() -> int:
     parser.add_argument("--subagent-requested-model", default="")
     args = parser.parse_args()
     if args.handler in HANDLER_SUBMIT_COMMANDS:
-        os.environ.setdefault("SURF_LOCK_TIMEOUT_MS", "1800000")
+        if args.browser_lock_timeout > 0:
+            os.environ["SURF_LOCK_TIMEOUT_MS"] = str(args.browser_lock_timeout * 1000)
+        else:
+            os.environ.setdefault("SURF_LOCK_TIMEOUT_MS", "1800000")
 
     start = _read_stdin_handoff()
     artifact_dir = Path(args.artifact_dir)
@@ -625,6 +631,7 @@ def _browser_submit_command(
         "--stable-polls",
         str(args.stable_polls),
     ]
+    _append_browser_lock_timeout(command, args)
     if tab_id:
         command.extend(["--tab-id", tab_id])
     if url:
@@ -643,6 +650,12 @@ def _browser_submit_command(
     if args.no_activate:
         command.append("--no-activate")
     return command
+
+
+def _append_browser_lock_timeout(command: list[str], args: argparse.Namespace) -> None:
+    browser_lock_timeout = int(getattr(args, "browser_lock_timeout", 0) or 0)
+    if browser_lock_timeout > 0:
+        command.extend(["--lock-timeout", str(browser_lock_timeout)])
 
 
 def _prepare_browser_submit_payload(
@@ -1502,6 +1515,8 @@ def _classify_browser_failure(
         return BROWSER_ATTACHMENT_UNAVAILABLE
     if _looks_webgpt_unverified_clean_output(handler, haystack, submit_meta):
         return WEBGPT_UNVERIFIED_CLEAN_OUTPUT
+    if _looks_clean_output_contaminated(haystack, submit_meta):
+        return BROWSER_CLEAN_OUTPUT_CONTAMINATED
     if _looks_sentinel_trailing_content(haystack, submit_meta):
         return BROWSER_SENTINEL_TRAILING_CONTENT
     if _looks_browser_tab_read_timeout(haystack):
@@ -1737,6 +1752,7 @@ def _browser_transport_failure_summary(
         "response_proof_status",
         "requested_tab_id",
         "controlled_tab_id",
+        "controlled_tab_id_mismatch",
         "requested_url",
         "controlled_url",
         "status",
@@ -1745,6 +1761,18 @@ def _browser_transport_failure_summary(
         "cdp_probe_stderr",
         "cdp_retry_stderr",
         "stderr_log",
+        "sentinel",
+        "output",
+        "raw_output",
+        "submitted_output",
+        "raw_contains_sentinel",
+        "clean_contains_sentinel",
+        "clean_contamination_markers",
+        "raw_chars",
+        "clean_chars",
+        "provider_busy_cooldown_count",
+        "provider_busy_retry_attempts",
+        "provider_busy_cooldown_seconds",
     ):
         if key in submit_meta:
             summary[key] = submit_meta.get(key)
@@ -1770,6 +1798,7 @@ def _transport_failure_kind(failure_code: str) -> str:
         BROWSER_SUBMIT_NOT_ACCEPTED: "browser_submit_not_accepted",
         SURF_BROWSER_CONNECTION_UNAVAILABLE: "surf_browser_connection_unavailable",
         BROWSER_TAB_IDENTITY_MISMATCH: "browser_tab_identity_mismatch",
+        BROWSER_CLEAN_OUTPUT_CONTAMINATED: "browser_clean_output_contaminated",
         WEBGPT_BINDING_STALE_BLOCKER: "browser_oracle_binding_stale",
     }.get(failure_code, failure_code)
 
@@ -1901,6 +1930,24 @@ def _looks_webgpt_unverified_clean_output(handler: str, text: str, meta: dict[st
         controlled_tab = str(meta.get("controlled_tab_id") or "").strip()
         return not controlled_tab
     return False
+
+
+def _looks_clean_output_contaminated(text: str, meta: dict[str, Any]) -> bool:
+    failure = str(meta.get("failure") or "").lower()
+    if BROWSER_CLEAN_OUTPUT_CONTAMINATED in text:
+        return True
+    if "contaminated_clean_output" in failure:
+        return True
+    if meta.get("raw_contains_sentinel") is True and meta.get("clean_contains_sentinel") is True:
+        return True
+    markers = (
+        "clean output contains sentinel",
+        "clean_contains_sentinel",
+        "clean response contains sentinel",
+        "contaminated clean output",
+        "sentinel remained in clean output",
+    )
+    return any(marker in text for marker in markers)
 
 
 def _looks_sentinel_trailing_content(text: str, meta: dict[str, Any]) -> bool:
@@ -2092,6 +2139,7 @@ def _recovery_next_command(
             str(args.stable_polls),
             "--create-tab",
         ]
+        _append_browser_lock_timeout(command, args)
         if args.browser_oracle_project:
             command.extend(["--project", str(args.browser_oracle_project)])
         if args.no_activate:
@@ -2152,6 +2200,7 @@ def _recovery_next_command(
             "--stable-polls",
             str(args.stable_polls),
         ]
+        _append_browser_lock_timeout(command, args)
         tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "").strip()
         url = str(browser_oracle.get("conversation_url") or "").strip()
         if tab_id:
@@ -2196,6 +2245,7 @@ def _recovery_next_command(
             "--attach-file",
             bundle_path,
         ]
+        _append_browser_lock_timeout(command, args)
         tab_id = ""
         if isinstance(browser_oracle, dict):
             tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "")
@@ -2222,6 +2272,9 @@ def _recovery_next_command(
         "--execute",
         "--json",
     ]
+    browser_lock_timeout = int(getattr(args, "browser_lock_timeout", 0) or 0)
+    if browser_lock_timeout > 0:
+        command.extend(["--browser-lock-timeout", str(browser_lock_timeout)])
     if str(args.browser_oracle_project or ""):
         command.extend(["--handler-project", f"{args.handler}={args.browser_oracle_project}"])
     return command
@@ -2244,6 +2297,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_SUBMIT_NOT_ACCEPTED: "Surf reached the browser composer, but the prompt was not accepted as a submitted message.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
         BROWSER_ATTACHMENT_UNAVAILABLE: "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
+        BROWSER_CLEAN_OUTPUT_CONTAMINATED: "The browser provider returned text, but Surf could not produce a clean response because the terminal sentinel remained in the cleaned output.",
         BROWSER_SENTINEL_TRAILING_CONTENT: "The browser provider output included text after the terminal sentinel, so the clean assistant turn is not attributable.",
         WEBGPT_UNVERIFIED_CLEAN_OUTPUT: "WebGPT returned plausible text, but Surf could not prove the controlled tab or clean output attribution.",
         BROWSER_HANDLER_TIMEOUT: "The browser handler did not produce a usable, receipt-backed response before the declared worker timeout.",
@@ -2277,6 +2331,8 @@ def _auto_retry_blocked_reason(
         return "surf_runtime_command_mismatch_requires_repair"
     if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
         return "attachment_transport_must_be_repaired"
+    if failure_code == BROWSER_CLEAN_OUTPUT_CONTAMINATED:
+        return "browser_clean_output_contains_terminal_sentinel"
     if failure_code == BROWSER_SENTINEL_TRAILING_CONTENT:
         return "browser_terminal_sentinel_parser_requires_repair_or_fresh_tab"
     if failure_code == WEBGPT_UNVERIFIED_CLEAN_OUTPUT:
@@ -2321,6 +2377,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return (
             "Do not retry the same attachment submission unchanged. Repair or replace this provider's "
             "attachment transport, then rerun a focused attachment check before using the lane."
+        )
+    if failure_code == BROWSER_CLEAN_OUTPUT_CONTAMINATED:
+        return (
+            "Quarantine the browser output. The raw response contains the sentinel but the cleaned response still "
+            "contains it, so repair the provider clean-output parser or rerun only this lane in a fresh tab."
         )
     if failure_code == BROWSER_SENTINEL_TRAILING_CONTENT:
         return (
@@ -2377,6 +2438,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_SUBMIT_NOT_ACCEPTED,
         BROWSER_TOOL_UNSUPPORTED,
         BROWSER_ATTACHMENT_UNAVAILABLE,
+        BROWSER_CLEAN_OUTPUT_CONTAMINATED,
         BROWSER_SENTINEL_TRAILING_CONTENT,
         WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
         BROWSER_HANDLER_TIMEOUT,
@@ -2850,7 +2912,7 @@ def _roundtable_degradation_analysis(
 def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
     receipt_path = artifact_dir / "node-receipt.json"
     scorecard_path = artifact_dir / "compete-scorecard.json"
-    revision_path = artifact_dir / "winner-revision-request.md"
+    continuation_path = artifact_dir / "winner-continuation-request.md"
     summary_path = artifact_dir / "compete-summary.md"
     node_artifacts_root = artifact_dir.parent
     handler_receipts = []
@@ -2921,7 +2983,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
     if transport_blockers:
         blockers.append("competition_transport_degraded")
     blockers.extend(fatal_blockers)
-    status = "PASS" if candidate_winner_handler and not fatal_blockers else "NEEDS_ATTENTION"
+    status = "PASS" if candidate_winner_handler and not blockers else "NEEDS_ATTENTION"
     ok = status == "PASS"
     winner_handler = candidate_winner_handler if ok else ""
     degradation_analysis = _compete_degradation_analysis(
@@ -2933,8 +2995,8 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         verified_features=all_verified_features,
     )
 
-    revision_lines = [
-        "# Winner Revision Request",
+    continuation_lines = [
+        "# Winner Continuation Request",
         "",
         f"Status: {status}",
         f"Winner handler: {winner_handler or 'NEEDS_ATTENTION'}",
@@ -2945,10 +3007,10 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         "Verified features to consider:",
     ]
     if all_verified_features:
-        revision_lines.extend(f"- {feature}" for feature in all_verified_features)
+        continuation_lines.extend(f"- {feature}" for feature in all_verified_features)
     else:
-        revision_lines.append("- NEEDS_ATTENTION: no candidate emitted explicit VERIFIED_FEATURE lines.")
-    revision_lines.extend(
+        continuation_lines.append("- NEEDS_ATTENTION: no candidate emitted explicit VERIFIED_FEATURE lines.")
+    continuation_lines.extend(
         [
             "",
             "Instructions to the winner:",
@@ -2958,7 +3020,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
             "- Return changed files, commands run, proof artifacts, and unresolved blockers.",
         ]
     )
-    revision_path.write_text("\n".join(str(line) for line in revision_lines).rstrip() + "\n", encoding="utf-8")
+    continuation_path.write_text("\n".join(str(line) for line in continuation_lines).rstrip() + "\n", encoding="utf-8")
 
     scorecard = {
         "schema": "ask.tau_dag_compete_scorecard.v1",
@@ -2981,7 +3043,8 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         "verified_features": all_verified_features,
         "blockers": blockers,
         "degradation_analysis": degradation_analysis,
-        "revision_request_path": str(revision_path),
+        "winner_continuation_request_path": str(continuation_path),
+        "revision_request_path": str(continuation_path),
         "proof_scope": {
             "proves": [
                 "Candidate node receipts were collected.",
@@ -3011,7 +3074,8 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         "live": scorecard["live"],
         "provider_live": scorecard["provider_live"],
         "scorecard_path": str(scorecard_path),
-        "revision_request_path": str(revision_path),
+        "winner_continuation_request_path": str(continuation_path),
+        "revision_request_path": str(continuation_path),
         "summary_path": str(summary_path),
         "handler_response_index": handler_receipts,
         "unresolved_gaps": blockers,
@@ -3034,12 +3098,12 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         start,
         status=status,
         summary=f"Compete join {status.lower()} over {len(handler_receipts)} candidate receipts.",
-        artifacts=[receipt_path, scorecard_path, revision_path, summary_path],
+        artifacts=[receipt_path, scorecard_path, continuation_path, summary_path],
         evidence=[
             {"kind": "compete_scorecard", "path": str(scorecard_path), "status": status},
             {"kind": "degradation_analysis", **degradation_analysis},
             {"kind": "verified_feature_packet", "count": len(all_verified_features), "items": all_verified_features},
-            {"kind": "winner_revision_request", "path": str(revision_path), "winner_handler": winner_handler},
+            {"kind": "winner_continuation_request", "path": str(continuation_path), "winner_handler": winner_handler},
             {"kind": "unresolved_gaps", "items": blockers},
         ],
     )
@@ -3106,7 +3170,8 @@ def _compete_degradation_analysis(
     elif failed_candidates:
         why = (
             f"{len(failed_candidates)} of {len(candidates)} candidate lane(s) failed or need attention; "
-            f"{len(verified_features)} explicit VERIFIED_FEATURE item(s) were available."
+            f"{len(verified_features)} explicit VERIFIED_FEATURE item(s) were available, but selection failed closed "
+            "until failed lanes are resolved or explicitly excluded by the project agent."
         )
     else:
         why = "Candidate receipts were collected, but selection failed closed because scorecard blockers remain."
@@ -3134,6 +3199,33 @@ def _extract_verified_features(text: str) -> list[str]:
             feature = match.group(1).strip()
             if feature and feature not in features:
                 features.append(feature)
+    if features:
+        return features
+
+    # Some browser providers expose visually separated Markdown as one long DOM
+    # text line. Recover explicit markers without treating prose like
+    # "VERIFIED_FEATURE: lines" as a promotable feature.
+    marker = re.compile(r"VERIFIED_FEATURE\s*:\s*", flags=re.IGNORECASE)
+    section_boundary = re.compile(
+        r"\s+(?:Position|Evidence|Uncertainties|Risks|Blockers|Proof Commands|PROOF_COMMANDS)\b",
+        flags=re.IGNORECASE,
+    )
+    matches = list(marker.finditer(text))
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        boundary = section_boundary.search(text, start, end)
+        if boundary:
+            end = boundary.start()
+        feature = " ".join(text[start:end].strip().split())
+        if not feature:
+            continue
+        if re.match(r"^(?:line|lines|marker|markers|occurrence|occurrences)\b", feature, flags=re.IGNORECASE):
+            continue
+        if re.match(r"^(?:and|or|that|which)\b", feature, flags=re.IGNORECASE):
+            continue
+        if feature not in features:
+            features.append(feature)
     return features
 
 

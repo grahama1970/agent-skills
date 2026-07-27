@@ -30,6 +30,7 @@ Options:
                             SURF_WEBGPT_STABLE_STALL_MS or 30000.
                             Set 0 to wait until --timeout.
   --timeout SECONDS         Browser wait timeout. Default: 2400 (40 minutes).
+  --lock-timeout SECONDS    Wait this long for the shared Surf browser lock.
   --advisory-after SECONDS  Soft wait before returning same-tab available text
                             without a sentinel. Default:
                             SURF_WEBGPT_ADVISORY_AFTER_SECONDS or 600.
@@ -105,6 +106,7 @@ sentinel="auto"
 stable_polls=3
 stable_stall_ms="${SURF_WEBGPT_STABLE_STALL_MS:-30000}"
 timeout_s="${SURF_WEBGPT_TIMEOUT:-2400}"
+surf_lock_wait_ms="${SURF_LOCK_TIMEOUT_MS:-60000}"
 advisory_after_s="${SURF_WEBGPT_ADVISORY_AFTER_SECONDS:-0}"
 rate_limit_wait_s="${SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS:-300}"
 rate_limit_retry_attempts="${SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS:-3}"
@@ -157,6 +159,7 @@ while [[ $# -gt 0 ]]; do
     --stable-polls) stable_polls="${2:-}"; shift 2 ;;
     --stable-stall-ms) stable_stall_ms="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
+    --lock-timeout) surf_lock_wait_ms="$(( ${2:-0} * 1000 ))"; shift 2 ;;
     --advisory-after) advisory_after_s="${2:-}"; shift 2 ;;
     --roundtrip-preflight) roundtrip_preflight=1; shift ;;
     --roundtrip-timeout) roundtrip_timeout_s="${2:-}"; shift 2 ;;
@@ -1385,9 +1388,10 @@ started_epoch="$(date -u +%s)"
 focus_mid_log="$(mktemp /tmp/surf-webgpt-focus-mid.XXXXXX.log)"
 focus_stolen_mid=0
 set +e
+export SURF_LOCK_TIMEOUT_MS="$surf_lock_wait_ms"
 run_submit() {
   if command -v timeout >/dev/null 2>&1; then
-    hard_timeout_s=$((timeout_s + 60))
+    hard_timeout_s=$((timeout_s + 60 + ((surf_lock_wait_ms + 999) / 1000)))
     if command -v setsid >/dev/null 2>&1; then
       setsid timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}"
     else

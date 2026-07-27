@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -24,6 +25,14 @@ from ask.tau_dag import (
 
 TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
 ASK_ROOT = Path(__file__).resolve().parents[1]
+WORKER_SPEC = importlib.util.spec_from_file_location(
+    "tau_roundtable_worker",
+    ASK_ROOT / "scripts" / "tau_roundtable_worker.py",
+)
+assert WORKER_SPEC and WORKER_SPEC.loader
+tau_roundtable_worker = importlib.util.module_from_spec(WORKER_SPEC)
+sys.modules[WORKER_SPEC.name] = tau_roundtable_worker
+WORKER_SPEC.loader.exec_module(tau_roundtable_worker)
 
 
 def test_default_scillm_api_key_prefers_ambient_proxy_key_over_deployment_env(
@@ -852,14 +861,15 @@ def test_browser_command_specs_use_long_provider_timeout_envelope(tmp_path: Path
             Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
         )
 
-    assert specs["handler-webgpt"]["timeout_s"] == 3900
-    assert specs["handler-webgemini"]["timeout_s"] == 4200
-    assert specs["handler-webclaude"]["timeout_s"] == 3000
-    assert specs["handler-webkimi"]["timeout_s"] == 3000
-    assert specs["handler-webgrok"]["timeout_s"] == 3000
+    assert specs["handler-webgpt"]["timeout_s"] == 4680
+    assert specs["handler-webgemini"]["timeout_s"] == 4680
+    assert specs["handler-webclaude"]["timeout_s"] == 4680
+    assert specs["handler-webkimi"]["timeout_s"] == 4680
+    assert specs["handler-webgrok"]["timeout_s"] == 4680
     for node in ("handler-webclaude", "handler-webkimi", "handler-webgrok", "handler-webgemini"):
         command = specs[node]["command"]
         assert command[command.index("--timeout") + 1] == "900"
+        assert command[command.index("--browser-lock-timeout") + 1] == "3600"
 
 
 def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_path: Path) -> None:
@@ -932,7 +942,7 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
     join = next(node for node in dag["nodes"] if node["id"] == "join")
     assert join["context"]["role"] == "compete_evaluator"
     assert "compete_scorecard" in join["required_evidence"]
-    assert "winner_revision_request" in join["required_evidence"]
+    assert "winner_continuation_request" in join["required_evidence"]
     assert join["join"]["fail_closed_on_tie"] is True
     command_spec = json.loads(
         Path(bundle["command_spec_root"], "handler-webgpt", "tau-dispatch-command.json").read_text(
@@ -2616,9 +2626,34 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
         "webkimi=fresh-browser-lifecycle-webkimi",
     ]
     logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
-    assert logged[0] == ["window.new", "https://chatgpt.com/", "--json", "--unfocused"]
-    assert ["tab.new", "https://claude.ai/new", "--json", "--background", "--window-id", "900"] in logged
-    assert ["tab.new", "https://www.kimi.com/", "--json", "--background", "--window-id", "900"] in logged
+    assert logged[0] == [
+        "window.new",
+        "https://chatgpt.com/",
+        "--json",
+        "--unfocused",
+        "--lock-timeout",
+        "1800",
+    ]
+    assert [
+        "tab.new",
+        "https://claude.ai/new",
+        "--json",
+        "--background",
+        "--window-id",
+        "900",
+        "--lock-timeout",
+        "1800",
+    ] in logged
+    assert [
+        "tab.new",
+        "https://www.kimi.com/",
+        "--json",
+        "--background",
+        "--window-id",
+        "900",
+        "--lock-timeout",
+        "1800",
+    ] in logged
     assert ["bind", "fresh-browser-lifecycle-webgpt", "--backend", "webgpt", "--tab-id", "101", "--url", "https://chatgpt.com/", "--auto", "--json"] in logged
     assert ["bind", "fresh-browser-lifecycle-webclaude", "--backend", "webclaude", "--tab-id", "102", "--url", "https://claude.ai/new", "--auto", "--json"] in logged
     assert ["bind", "fresh-browser-lifecycle-webkimi", "--backend", "webkimi", "--tab-id", "103", "--url", "https://www.kimi.com/", "--auto", "--json"] in logged
@@ -2680,7 +2715,7 @@ print(json.dumps({"ok": True}))
     tau_dag_cli._cleanup_browser_lifecycle(lifecycle)
 
     logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
-    assert logged == [["window.close", "900"]]
+    assert logged == [["window.close", "900", "--lock-timeout", "900"]]
     assert lifecycle["cleanup_status"] == "attempted"
     assert (tmp_path / "run" / "browser-tab-lifecycle.json").is_file()
 
@@ -3116,20 +3151,18 @@ def test_compete_join_selects_clear_winner_when_peer_transport_degraded(tmp_path
 
     assert completed.returncode == 0, completed.stderr
     scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
-    assert scorecard["status"] == "PASS"
-    assert scorecard["ok"] is True
-    assert scorecard["winner_handler"] == "gpt-5.5"
-    assert scorecard["winner_node_id"] == "handler-gpt-5-5"
+    assert scorecard["status"] == "NEEDS_ATTENTION"
+    assert scorecard["ok"] is False
+    assert scorecard["winner_handler"] == ""
+    assert scorecard["winner_node_id"] == ""
     assert "competition_transport_degraded" in scorecard["blockers"]
     assert "competition_transport_blocked" not in scorecard["blockers"]
-    assert scorecard["failure_kind"] == "degraded_transport"
-    assert scorecard["provider_live"] is True
+    assert scorecard["failure_kind"] == "transport"
+    assert scorecard["provider_live"] is False
     assert scorecard["transport_blockers"][0]["handler"] == "webkimi"
-    assert "Winner `gpt-5.5` was selected from available receipt-backed candidates" in scorecard[
-        "degradation_analysis"
-    ]["why"]
+    assert "selection failed closed" in scorecard["degradation_analysis"]["why"]
     summary = (join_dir / "compete-summary.md").read_text(encoding="utf-8")
-    assert "- winner: `gpt-5.5`" in summary
+    assert "- winner: `NEEDS_ATTENTION`" in summary
     assert "browser_provider_rate_limited" in summary
 
 
@@ -3201,7 +3234,7 @@ def test_compete_join_promotes_only_explicit_verified_features(tmp_path: Path) -
 
     assert completed.returncode == 0, completed.stderr
     scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
-    revision_request = (join_dir / "winner-revision-request.md").read_text(encoding="utf-8")
+    revision_request = (join_dir / "winner-continuation-request.md").read_text(encoding="utf-8")
     assert scorecard["status"] == "PASS"
     assert scorecard["winner_handler"] == "webclaude"
     assert scorecard["verified_features"] == [
@@ -3209,6 +3242,62 @@ def test_compete_join_promotes_only_explicit_verified_features(tmp_path: Path) -
         "emits a bounded winner revision request",
     ]
     assert "Do not import unverified candidate claims." in revision_request
+
+
+def test_extract_verified_features_recovers_collapsed_browser_markers() -> None:
+    text = (
+        "Position Competitor label is webclaude, so the public tiebreaker requires exactly four distinct "
+        "VERIFIED_FEATURE: lines, and the ping answer is 4. "
+        "VERIFIED_FEATURE: response.md contains exactly one line matching PING_RESULT. "
+        "VERIFIED_FEATURE: response.md contains exactly four lines beginning with VERIFIED_FEATURE: "
+        "and all four are byte-distinct. "
+        "VERIFIED_FEATURE: response.md contains the required headings. "
+        "VERIFIED_FEATURE: response.md states the competitor label. Evidence done."
+    )
+
+    assert tau_roundtable_worker._extract_verified_features(text) == [
+        "response.md contains exactly one line matching PING_RESULT.",
+        "response.md contains exactly four lines beginning with",
+        "response.md contains the required headings.",
+        "response.md states the competitor label.",
+    ]
+
+
+def test_kimi_clean_output_contamination_is_not_tab_identity_mismatch() -> None:
+    meta = {
+        "status": "failed",
+        "failure": "missing_controlled_tab_id_or_contaminated_clean_output",
+        "raw_contains_sentinel": True,
+        "clean_contains_sentinel": True,
+        "requested_tab_id": "837362804",
+        "controlled_tab_id": "837362804",
+        "controlled_tab_id_mismatch": False,
+        "output": "/tmp/response.md",
+        "raw_output": "/tmp/response.raw.md",
+        "stderr_log": "/tmp/surf-kimi-submit-stderr.log",
+    }
+
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webkimi",
+        failure=json.dumps(meta),
+        response_text="",
+        raw_text="PING_RESULT: 4\n<<<KIMI_DONE:test>>>",
+        prompt_text="PING_RESULT: 4",
+        submit_meta=meta,
+        commands=[],
+    )
+    summary = tau_roundtable_worker._browser_transport_failure_summary(
+        failure_code=failure_code,
+        submit_meta=meta,
+        commands=[],
+        surf_lock_blocker={},
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_CLEAN_OUTPUT_CONTAMINATED
+    assert summary["transport_failure_kind"] == "browser_clean_output_contaminated"
+    assert summary["raw_contains_sentinel"] is True
+    assert summary["clean_contains_sentinel"] is True
+    assert summary["controlled_tab_id_mismatch"] is False
 
 
 def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -> None:
