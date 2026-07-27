@@ -586,14 +586,14 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
 - If a WebGPT/Tau browser-handler receipt or Surf metadata reports
   `chatgpt_too_many_requests_detected` or `chatgpt_rate_limit`, treat it as
   Surf's provider-throttle cooldown path. Surf clicks **Got it** when possible,
-  waits `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS`, and makes up to three bounded
-  retries by default on the same controlled tab. Do not reclassify it as a reviewer failure,
-  browser-oracle mismatch, download failure, or sentinel parser defect. If Surf
-  succeeds after cooldown, preserve the throttle metadata and continue. If
-  `proof_status: rate_limited` or `chatgpt_rate_limit.exhausted: true`, mark
-  only that browser handler node `NEEDS_ATTENTION` or rate-limited and let the
-  outer scheduler back off; do not launch parallel WebGPT attempts to bypass
-  the throttle.
+  waits `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS`, and retries only when the caller
+  deliberately opts in with `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS>0`; default
+  Ask/SURF behavior is no automatic WebGPT resubmit after this modal. Do not
+  reclassify it as a reviewer failure, browser-oracle mismatch, download
+  failure, or sentinel parser defect. Mark only that browser handler node
+  `NEEDS_ATTENTION` or rate-limited, preserve the throttle metadata, continue
+  with other available participants, and let the outer scheduler back off. Do
+  not launch parallel WebGPT attempts to bypass the throttle.
 - If a WebKimi/Tau browser-handler receipt or Surf metadata reports
   `kimi_provider_capacity_busy`, `BLOCKED_KIMI_PROVIDER_CAPACITY`, or
   `proof_status: provider_capacity_limited`, classify only that browser handler

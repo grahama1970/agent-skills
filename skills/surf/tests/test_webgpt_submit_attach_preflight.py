@@ -19,6 +19,7 @@ def run_submit(
     fake_run_body: str | None = None,
     tab_id: str | None = "837352334",
     extra_args: list[str] | None = None,
+    env_overrides: dict[str, str] | None = None,
     no_activate: bool = True,
     request_text: str = "review the attached bundle\n",
 ) -> subprocess.CompletedProcess[str]:
@@ -39,6 +40,8 @@ def run_submit(
     env["SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS"] = "0"
     env["SURF_WEBGPT_HOST_LOG"] = str(tmp_path / "surf-host.log")
     env["TMPDIR"] = str(tmp_path)
+    if env_overrides:
+        env.update(env_overrides)
     command = [
         "bash",
         str(WEBGPT_SUBMIT),
@@ -893,7 +896,12 @@ case "${{1:-}}" in
 esac
 """
 
-    proc = run_submit(tmp_path, archive, fake_run)
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        env_overrides={"SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS": "1"},
+    )
 
     assert proc.returncode == 0, proc.stderr
     assert (tmp_path / "response.md").read_text(encoding="utf-8") == (
@@ -905,7 +913,7 @@ esac
     assert meta["controlled_tab_id"] == "837352334"
     assert meta["chatgpt_too_many_requests_detected"] is True
     assert meta["chatgpt_rate_limit"]["wait_seconds"] == 0
-    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 3
+    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 1
     assert meta["chatgpt_rate_limit"]["dismiss_attempted"] is True
     assert meta["chatgpt_rate_limit"]["dismissed"] is False
     assert meta["chatgpt_rate_limit"]["retry_attempted"] is True
@@ -947,7 +955,12 @@ case "${{1:-}}" in
 esac
 """
 
-    proc = run_submit(tmp_path, archive, fake_run)
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        env_overrides={"SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS": "1"},
+    )
 
     assert proc.returncode != 0
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
@@ -958,7 +971,7 @@ esac
     assert meta["proof_status"] == "rate_limited"
     assert meta["chatgpt_too_many_requests_detected"] is True
     assert meta["chatgpt_rate_limit"]["error"] == "retry_failed_exit_42"
-    assert chatgpt_count_file.read_text(encoding="utf-8") == "4"
+    assert chatgpt_count_file.read_text(encoding="utf-8") == "2"
 
 
 def test_webgpt_submit_clicks_start_new_chat_same_tab_on_conversation_max_length(tmp_path: Path) -> None:
@@ -1108,7 +1121,12 @@ case "${{1:-}}" in
 esac
 """
 
-    proc = run_submit(tmp_path, archive, fake_run)
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        env_overrides={"SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS": "1"},
+    )
 
     assert proc.returncode == 0, proc.stderr
     assert (tmp_path / "response.md").read_text(encoding="utf-8") == "same tab response after cooldown\n"
@@ -1118,7 +1136,7 @@ esac
     assert meta["controlled_tab_id"] == "837352334"
     assert meta["chatgpt_too_many_requests_detected"] is True
     assert meta["chatgpt_rate_limit"]["wait_seconds"] == 0
-    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 3
+    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 1
     assert meta["chatgpt_rate_limit"]["dismiss_attempted"] is True
     assert meta["chatgpt_rate_limit"]["dismissed"] is True
     assert meta["chatgpt_rate_limit"]["retry_attempted"] is True
@@ -1383,6 +1401,14 @@ if (client.detectsTooManyRequests("Please wait a few minutes before trying again
     )
 
     assert proc.returncode == 0, proc.stderr
+
+
+def test_webgpt_submit_rate_limit_retries_are_opt_in() -> None:
+    script = (REPO_ROOT / "skills/surf/scripts/webgpt-submit.sh").read_text(encoding="utf-8")
+
+    assert 'rate_limit_retry_attempts="${SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS:-0}"' in script
+    assert "ChatGPTTooManyRequestsDetected: true" in script
+    assert "ChatGPTRateLimitRetryAttempted: false" in script
 
 
 def test_chatgpt_client_ready_allows_historical_stopped_thinking(tmp_path: Path) -> None:

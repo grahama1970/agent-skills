@@ -507,12 +507,15 @@ Behavior:
   `You're making requests too quickly. We've temporarily limited access to your
   conversations to protect your data. Please wait a few minutes before trying
   again.`, Surf treats it as provider throttling, not a tab-routing, download,
-  sentinel, parser, or reviewer-content failure. `webgpt.submit` clicks the
+  sentinel, parser, or reviewer-content failure. By default, `webgpt.submit`
+  does **not** resubmit after this modal. It fails closed with lane-local
+  provider-throttle metadata so a roundtable or competition can continue with
+  other available participants and tell the project agent why WebGPT was not
+  usable. A deliberate manual recovery may set
+  `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS` above `0`; that opt-in path clicks the
   visible **Got it** control when present, waits
   `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`), then retries the same
-  prepared prompt once on the same controlled tab
-  (`SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS`, default `1`). If throttling remains
-  after the bounded retry, metadata reports
+  prepared prompt on the same controlled tab. Metadata reports
   `chatgpt_too_many_requests_detected: true`, `proof_status: rate_limited`, and
   `chatgpt_rate_limit` fields for `wait_seconds`, `retry_attempted`,
   `dismissed`, `exhausted`, and `error`. Project agents must not open parallel
