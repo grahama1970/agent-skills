@@ -144,6 +144,15 @@ Clones remain under `/tmp` by default. Use `--cleanup` to remove the workspace a
 # Search repositories
 ./run.sh search "AI agent memory systems" --limit 5
 
+# Search with current activity/star filters
+./run.sh search "satellite security" \
+  --updated ">=2026-07-20" \
+  --stars ">0" \
+  --sort updated \
+  --order desc \
+  --limit 10 \
+  --json
+
 # Existing deep GitHub metadata/code analysis
 ./run.sh search "langchain memory" --deep --json
 
@@ -162,6 +171,51 @@ Clones remain under `/tmp` by default. Use `--cleanup` to remove the workspace a
 # Fetch a file
 ./run.sh file owner/repo src/main.py
 ```
+
+### Sparse Security Domain Workflow
+
+For niche domains such as satellite, rocket, avionics, embedded, ICS, RF, or
+space-hardware penetration testing, do not rely on one GitHub query. Fan out
+multiple `$brave-search` `site:github.com` questions first, normalize the
+result URLs to `owner/repo`, then validate candidates with this skill.
+
+Recommended sequence:
+
+```bash
+../brave-search/run.sh web "site:github.com satellite security testbed penetration testing" --count 10
+../brave-search/run.sh web "site:github.com spacecraft cybersecurity penetration testing satellite" --count 10
+../brave-search/run.sh web "site:github.com cubesat security attack defense testbed" --count 10
+
+./run.sh search "satellite security" \
+  --updated ">=2026-07-20" \
+  --stars ">0" \
+  --sort updated \
+  --order desc \
+  --limit 20 \
+  --json
+
+./run.sh repo owner/repo --json
+./run.sh file owner/repo README.md --json
+./run.sh code "attack exploit testbed telemetry command" --repo owner/repo --json
+```
+
+Use GitHub filter flags such as `--updated`, `--stars`, `--sort`, and `--order`
+instead of embedding range qualifiers inside the query string. The GitHub CLI
+parses those flags more reliably than a single mixed query argument.
+
+Promotion criteria for security repositories:
+
+- Prefer non-archived, non-fork repositories with real stars, a recent
+  `pushedAt` or `updatedAt`, clear license, README, testbed/lab framing, and
+  relevant code paths or documentation.
+- Treat `updatedAt` as repository activity. Prefer `pushedAt` when the question
+  requires code changed this week.
+- Down-rank generic curated lists unless the user asked for resources rather
+  than a runnable repo.
+- Do not run untrusted penetration-testing, exploit, malware, red-team, or
+  dual-use code on the host. Use the executable evaluation workflow with
+  `--sandbox strict` where possible, or hand the selected repo to a disposable
+  Docker/container harness.
 
 ## Evaluation Guidance
 

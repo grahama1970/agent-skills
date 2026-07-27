@@ -486,6 +486,18 @@ snippets alone. Prefer repositories that pass explicit criteria:
 Recommended Dogpile use:
 
 ```bash
+../brave-search/run.sh web "site:github.com satellite security testbed penetration testing" --count 10
+../brave-search/run.sh web "site:github.com spacecraft cybersecurity penetration testing satellite" --count 10
+../brave-search/run.sh web "site:github.com cubesat security attack defense testbed" --count 10
+
+../github-search/run.sh search "satellite security" \
+  --updated ">=2026-07-20" \
+  --stars ">0" \
+  --sort updated \
+  --order desc \
+  --limit 20 \
+  --json
+
 ../github-search/run.sh evaluate "CVE-2026 example exploit PoC" \
   --criteria "specific CVE, lab reproduction, clear affected versions, mitigation notes, maintained, license" \
   --min-stars 25 \
@@ -505,6 +517,19 @@ reasons, score components, entrypoint result, and cited snippets before
 synthesis. A clean `--help` entrypoint proves only that the detected surface
 loads under constraints; it does not prove exploit validity, detection quality,
 or safe reuse.
+
+Brave `web` returns raw search results by default. For agent/RAG grounding,
+prefer `$brave-search context` when the plan allows Brave's LLM Context API; for
+Brave's own AI summary, use `$brave-search summarize` or `web --summary-key`.
+Those explicit summary/context lanes use `BRAVE_API_KEY_PAID`; default Brave
+`web` and `local` calls use the free key. A paid key is necessary for those
+explicit lanes in this skill, but it is not proof that Brave Summarizer, Answers,
+or LLM Context is enabled on the account. If Brave returns no `summarizer.key` or
+a plan error such as `OPTION_NOT_IN_PLAN`, record that AI-summary lane as
+unavailable and continue with raw Brave results plus Dogpile/Tau synthesis. Use
+concurrent Brave `site:github.com` queries to discover candidate repos and
+vocabulary, then use `$github-search` metadata, file, and code checks to
+validate candidates. Dogpile/Tau owns cross-provider synthesis after retrieval.
 
 Security repositories are untrusted code. When evaluating penetration-testing,
 exploit, malware, red-team, or dual-use repositories, run only through

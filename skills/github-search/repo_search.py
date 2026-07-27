@@ -20,7 +20,13 @@ from utils import run_command, parse_json_output
 def search_repos(
     query: str,
     limit: int = DEFAULT_REPO_LIMIT,
-    language: Optional[str] = None
+    language: Optional[str] = None,
+    updated: Optional[str] = None,
+    stars: Optional[str] = None,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    archived: Optional[bool] = None,
+    include_forks: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Search GitHub repositories.
 
@@ -39,6 +45,18 @@ def search_repos(
     ]
     if language:
         cmd.extend(["--language", language])
+    if updated:
+        cmd.extend(["--updated", updated])
+    if stars:
+        cmd.extend(["--stars", stars])
+    if sort:
+        cmd.extend(["--sort", sort])
+    if order:
+        cmd.extend(["--order", order])
+    if archived is not None:
+        cmd.extend(["--archived", "true" if archived else "false"])
+    if include_forks:
+        cmd.extend(["--include-forks", include_forks])
 
     output = run_command(cmd)
 
@@ -186,17 +204,17 @@ def fetch_file_content(
     Returns:
         Dict with content, size, truncated flag
     """
-    cmd = ["gh", "api", f"repos/{repo}/contents/{file_path}", "--jq", ".content,.size,.sha"]
+    cmd = ["gh", "api", f"repos/{repo}/contents/{file_path}", "--jq", "{content: .content, size: .size, sha: .sha}"]
     output = run_command(cmd)
 
     if output.startswith("Error:"):
         return {"error": output, "path": file_path}
 
     try:
-        lines = output.strip().split('\n')
-        if len(lines) >= 2:
-            content_b64 = lines[0]
-            size = int(lines[1]) if len(lines) > 1 else 0
+        payload = parse_json_output(output)
+        if isinstance(payload, dict):
+            content_b64 = str(payload.get("content") or "")
+            size = int(payload.get("size") or 0)
 
             content = base64.b64decode(content_b64).decode('utf-8', errors='ignore')
             truncated = len(content) > max_size
@@ -205,7 +223,8 @@ def fetch_file_content(
                 "path": file_path,
                 "content": content[:max_size] if truncated else content,
                 "size": size,
-                "truncated": truncated
+                "truncated": truncated,
+                "sha": payload.get("sha"),
             }
     except Exception as e:
         return {"error": str(e), "path": file_path}

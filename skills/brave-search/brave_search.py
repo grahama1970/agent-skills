@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Brave Search API client for web + local search.
+"""Brave Search API client for web, local, and LLM-oriented search.
 
 Usage:
     python brave_search.py web "query" --count 10 --offset 0
     python brave_search.py local "pizza near Boston" --count 5
+    python brave_search.py context "query" --max-tokens 4096
+    python brave_search.py summarize "query"
 """
 import json
 import os
@@ -39,6 +41,8 @@ except ImportError:
 app = typer.Typer(add_completion=False, help="Brave Search API - web + local search")
 
 WEB_ENDPOINT = "https://api.search.brave.com/res/v1/web/search"
+LLM_CONTEXT_ENDPOINT = "https://api.search.brave.com/res/v1/llm/context"
+SUMMARIZER_SEARCH_ENDPOINT = "https://api.search.brave.com/res/v1/summarizer/search"
 LOCAL_POIS_ENDPOINT = "https://api.search.brave.com/res/v1/local/pois"
 LOCAL_DESC_ENDPOINT = "https://api.search.brave.com/res/v1/local/descriptions"
 
@@ -67,16 +71,16 @@ def _load_env_keys_from_file(path: str) -> Dict[str, str]:
     return result
 
 
-def _resolve_all_keys() -> list[str]:
-    """Return all available API keys in priority order: free first, paid fallback."""
-    keys: list[str] = []
+def _resolve_all_keys() -> list[tuple[str, str]]:
+    """Return all available API keys with their environment source names."""
+    key_pairs: list[tuple[str, str]] = []
     seen: set[str] = set()
 
     # Check environment variables
     for key_name in (*ENV_KEYS, *ENV_KEYS_PAID):
         value = os.getenv(key_name)
         if value and value not in seen:
-            keys.append(value)
+            key_pairs.append((key_name, value))
             seen.add(value)
 
     # Check .env files
@@ -85,27 +89,28 @@ def _resolve_all_keys() -> list[str]:
         for key_name in (*ENV_KEYS, *ENV_KEYS_PAID):
             value = env_keys.get(key_name)
             if value and value not in seen:
-                keys.append(value)
+                key_pairs.append((key_name, value))
                 seen.add(value)
 
-    return keys
+    return key_pairs
 
 
-def get_api_key() -> str:
-    """Get the primary (free) API key."""
-    keys = _resolve_all_keys()
-    if keys:
-        return keys[0]
+def get_api_key(*, paid: bool = False) -> str:
+    """Get an API key. Paid keys are used only for explicit paid lanes."""
+    key_pairs = _resolve_all_keys()
+    if paid:
+        for key_name, value in key_pairs:
+            if key_name in ENV_KEYS_PAID:
+                return value
+    for key_name, value in key_pairs:
+        if key_name in ENV_KEYS:
+            return value
+    if key_pairs:
+        return key_pairs[0][1]
     raise ValueError("BRAVE_API_KEY or BRAVE_SEARCH_API_KEY not found in env or .env")
 
 
-def get_fallback_api_key() -> Optional[str]:
-    """Get the paid fallback API key, if available."""
-    keys = _resolve_all_keys()
-    return keys[1] if len(keys) > 1 else None
-
-
-def _request_json(url: str, api_key: str, _retried: bool = False) -> Dict[str, Any]:
+def _request_json(url: str, api_key: str) -> Dict[str, Any]:
     req = urllib.request.Request(
         url,
         headers={
@@ -119,11 +124,6 @@ def _request_json(url: str, api_key: str, _retried: bool = False) -> Dict[str, A
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8") if exc.fp else ""
-        # On 429 (rate limit), try the paid fallback key
-        if exc.code == 429 and not _retried:
-            fallback = get_fallback_api_key()
-            if fallback and fallback != api_key:
-                return _request_json(url, fallback, _retried=True)
         raise RuntimeError(f"HTTP {exc.code}: {exc.reason}\n{body}") from exc
 
 
@@ -131,26 +131,124 @@ def _build_url(base: str, params: Dict[str, Any]) -> str:
     return f"{base}?{urllib.parse.urlencode(params, doseq=True)}"
 
 
-def web_search(query: str, count: int = 10, offset: int = 0) -> Dict[str, Any]:
-    api_key = get_api_key()
+def web_search(
+    query: str,
+    count: int = 10,
+    offset: int = 0,
+    *,
+    freshness: Optional[str] = None,
+    extra_snippets: bool = False,
+    summary: bool = False,
+) -> Dict[str, Any]:
+    api_key = get_api_key(paid=summary)
     count = max(1, min(count, 20))
     offset = max(0, min(offset, 9))
-    url = _build_url(WEB_ENDPOINT, {"q": query, "count": count, "offset": offset})
+    params: Dict[str, Any] = {"q": query, "count": count, "offset": offset}
+    if freshness:
+        params["freshness"] = freshness
+    if extra_snippets:
+        params["extra_snippets"] = "true"
+    if summary:
+        params["summary"] = "1"
+    url = _build_url(WEB_ENDPOINT, params)
     data = _request_json(url, api_key)
 
     results = []
     for item in data.get("web", {}).get("results", []):
-        results.append({
+        result = {
             "title": item.get("title", ""),
             "description": item.get("description", ""),
             "url": item.get("url", ""),
-        })
+        }
+        if item.get("extra_snippets"):
+            result["extra_snippets"] = item.get("extra_snippets")
+        results.append(result)
 
-    return {
+    output: Dict[str, Any] = {
         "query": query,
         "count": count,
         "offset": offset,
         "results": results,
+    }
+    if data.get("summarizer"):
+        output["summarizer"] = data.get("summarizer")
+    return output
+
+
+def llm_context(
+    query: str,
+    count: int = 20,
+    max_urls: int = 10,
+    max_tokens: int = 8192,
+    max_snippets: int = 50,
+    threshold: str = "balanced",
+    freshness: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Get Brave LLM Context output for agent/RAG consumption."""
+    api_key = get_api_key(paid=True)
+    params: Dict[str, Any] = {
+        "q": query,
+        "count": max(1, min(count, 50)),
+        "maximum_number_of_urls": max(1, min(max_urls, 50)),
+        "maximum_number_of_tokens": max(1024, min(max_tokens, 32768)),
+        "maximum_number_of_snippets": max(1, min(max_snippets, 256)),
+        "context_threshold_mode": threshold,
+    }
+    if freshness:
+        params["freshness"] = freshness
+    url = _build_url(LLM_CONTEXT_ENDPOINT, params)
+    data = _request_json(url, api_key)
+    return {
+        "query": query,
+        "endpoint": "llm_context",
+        "params": params,
+        "response": data,
+    }
+
+
+def summarize_search(query: str, *, inline_references: bool = True, entity_info: bool = False) -> Dict[str, Any]:
+    """Run Brave's two-step summarizer flow."""
+    api_key = get_api_key(paid=True)
+    try:
+        web = web_search(query, count=10, summary=True)
+    except RuntimeError as exc:
+        return {
+            "query": query,
+            "endpoint": "summarizer",
+            "status": "unavailable_plan_or_request_error",
+            "step": "web_search_summary_key",
+            "error": str(exc),
+        }
+    key = (web.get("summarizer") or {}).get("key")
+    if not key:
+        return {
+            "query": query,
+            "endpoint": "summarizer",
+            "status": "skipped_no_summary_key",
+            "web": web,
+        }
+    params: Dict[str, Any] = {"key": key}
+    if inline_references:
+        params["inline_references"] = "true"
+    if entity_info:
+        params["entity_info"] = "1"
+    url = _build_url(SUMMARIZER_SEARCH_ENDPOINT, params)
+    try:
+        summary_data = _request_json(url, api_key)
+    except RuntimeError as exc:
+        return {
+            "query": query,
+            "endpoint": "summarizer",
+            "status": "unavailable_plan_or_request_error",
+            "step": "summarizer_search",
+            "error": str(exc),
+            "web": web,
+        }
+    return {
+        "query": query,
+        "endpoint": "summarizer",
+        "web": web,
+        "summary": summary_data,
     }
 
 
@@ -254,11 +352,21 @@ def web(
     query: str = typer.Argument(..., help="Search query"),
     count: int = typer.Option(10, "--count", "-n", help="Results per page (1-20)"),
     offset: int = typer.Option(0, "--offset", "-o", help="Pagination offset (0-9)"),
+    freshness: Optional[str] = typer.Option(None, "--freshness", help="Freshness filter: pd, pw, pm, py, or YYYY-MM-DDtoYYYY-MM-DD"),
+    extra_snippets: bool = typer.Option(False, "--extra-snippets", help="Request extra snippets when supported by the plan"),
+    summary_key: bool = typer.Option(False, "--summary-key", help="Request a summarizer key in the web response"),
     json_output: bool = typer.Option(True, "--json/--no-json", help="Output JSON"),
 ):
     """Web search via Brave Search API."""
     try:
-        results = web_search(query, count=count, offset=offset)
+        results = web_search(
+            query,
+            count=count,
+            offset=offset,
+            freshness=freshness,
+            extra_snippets=extra_snippets,
+            summary=summary_key,
+        )
     except Exception as exc:
         typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(code=1)
@@ -266,6 +374,48 @@ def web(
         print(json.dumps(results, indent=2))
     else:
         _print_web(results)
+
+
+@app.command()
+def context(
+    query: str = typer.Argument(..., help="Search query for Brave LLM Context"),
+    count: int = typer.Option(20, "--count", "-n", help="Search results considered (1-50)"),
+    max_urls: int = typer.Option(10, "--max-urls", help="Maximum URLs in context (1-50)"),
+    max_tokens: int = typer.Option(8192, "--max-tokens", help="Approximate maximum context tokens (1024-32768)"),
+    max_snippets: int = typer.Option(50, "--max-snippets", help="Maximum snippets across URLs (1-256)"),
+    threshold: str = typer.Option("balanced", "--threshold", help="Context threshold: strict, balanced, lenient, or disabled"),
+    freshness: Optional[str] = typer.Option(None, "--freshness", help="Freshness filter: pd, pw, pm, py, or YYYY-MM-DDtoYYYY-MM-DD"),
+):
+    """LLM Context API output for agent/RAG grounding."""
+    try:
+        results = llm_context(
+            query,
+            count=count,
+            max_urls=max_urls,
+            max_tokens=max_tokens,
+            max_snippets=max_snippets,
+            threshold=threshold,
+            freshness=freshness,
+        )
+    except Exception as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1)
+    print(json.dumps(results, indent=2))
+
+
+@app.command()
+def summarize(
+    query: str = typer.Argument(..., help="Search query to summarize"),
+    inline_references: bool = typer.Option(True, "--inline-references/--no-inline-references", help="Request inline citation markers"),
+    entity_info: bool = typer.Option(False, "--entity-info", help="Request entity info in the summary response"),
+):
+    """Brave Summarizer two-step search flow."""
+    try:
+        results = summarize_search(query, inline_references=inline_references, entity_info=entity_info)
+    except Exception as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1)
+    print(json.dumps(results, indent=2))
 
 
 @app.command()

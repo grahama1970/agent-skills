@@ -56,6 +56,12 @@ def search(
     query: str = typer.Argument(..., help="Search query"),
     limit: int = typer.Option(DEFAULT_REPO_LIMIT, "--limit", "-n", help="Max repositories to return"),
     language: str = typer.Option(None, "--language", "-l", help="Filter by language"),
+    updated: str = typer.Option(None, "--updated", help="Filter by last updated date/range, e.g. >=2026-07-20"),
+    stars: str = typer.Option(None, "--stars", help="Filter by stars, e.g. >0 or >=25"),
+    sort: str = typer.Option(None, "--sort", help="Sort by stars, forks, updated, or best-match"),
+    order: str = typer.Option(None, "--order", help="Sort order: asc or desc"),
+    archived: bool = typer.Option(False, "--archived/--no-archived", help="Include archived repositories only when true"),
+    include_forks: str = typer.Option(None, "--include-forks", help="Include forks: false, true, or only"),
     deep: bool = typer.Option(False, "--deep", "-d", help="Deep analysis of top repo"),
     treesitter: bool = typer.Option(False, "--treesitter", "-t", help="Parse files with treesitter"),
     taxonomy: bool = typer.Option(False, "--taxonomy", help="Classify repos with taxonomy"),
@@ -76,7 +82,17 @@ def search(
             use_taxonomy=taxonomy
         )
     else:
-        result = search_repos(query, limit, language)
+        result = search_repos(
+            query,
+            limit,
+            language,
+            updated=updated,
+            stars=stars,
+            sort=sort,
+            order=order,
+            archived=archived if archived else None,
+            include_forks=include_forks,
+        )
 
     if json_output:
         print(json.dumps(result, indent=2, default=str))

@@ -66,9 +66,13 @@ def run_eval() -> dict[str, Any]:
     github_skill = _read(SKILLS_DIR / "github-search" / "SKILL.md")
     github_meta = _front_matter(github_skill)
     github_compose = set(github_meta.get("composes") or [])
+    brave_skill = _read(SKILLS_DIR / "brave-search" / "SKILL.md")
+    brave_cli = _read(SKILLS_DIR / "brave-search" / "brave_search.py")
     battle_skill = _read(SKILLS_DIR / "battle" / "SKILL.md")
     github_candidate_search_path = SKILLS_DIR / "github-search" / "candidate_search.py"
-    github_repo_search = _read(github_candidate_search_path if github_candidate_search_path.exists() else SKILLS_DIR / "github-search" / "repo_search.py")
+    github_candidate_search = _read(github_candidate_search_path if github_candidate_search_path.exists() else SKILLS_DIR / "github-search" / "repo_search.py")
+    github_direct_repo_search = _read(SKILLS_DIR / "github-search" / "repo_search.py")
+    github_cli = _read(SKILLS_DIR / "github-search" / "github_search.py")
     github_evaluate_repos = _read(SKILLS_DIR / "github-search" / "evaluate_repos.py")
     dogpile_youtube = _read(SKILL_DIR / "youtube_search.py")
     ingest_youtube_skill = _read(SKILLS_DIR / "ingest-youtube" / "SKILL.md")
@@ -125,8 +129,8 @@ def run_eval() -> dict[str, Any]:
         "github_search",
         {"task-monitor", "brave-search"}.issubset(github_compose)
         and ("brave_discovery" in github_skill or "Brave discovery" in github_skill)
-        and "def brave_repository_candidates" in github_repo_search
-        and "BRAVE_SEARCH_SKILL" in github_repo_search
+        and "def brave_repository_candidates" in github_candidate_search
+        and "BRAVE_SEARCH_SKILL" in github_candidate_search
         and "discover_and_rank_repositories" in github_evaluate_repos,
         "GitHub Search composes Brave and uses Brave discovery before executable repository evaluation.",
         "Live GitHub auth or semantic repo ranking.",
@@ -147,12 +151,50 @@ def run_eval() -> dict[str, Any]:
         and "--sandbox strict" in skill_md
         and "Do not run repo-provided install scripts" in skill_md
         and "disposable Docker/container harness" in skill_md
+        and "../brave-search/run.sh web \"site:github.com satellite security testbed penetration testing\"" in skill_md
+        and "Brave `web` returns raw search results by default" in skill_md
+        and "$brave-search context" in skill_md
+        and "$brave-search summarize" in skill_md
+        and "BRAVE_API_KEY_PAID" in skill_md
+        and "not proof that Brave Summarizer, Answers,\nor LLM Context is enabled" in skill_md
+        and "unavailable_plan_or_request_error" in brave_skill
+        and "paid\n  key is necessary" in brave_skill
+        and "not sufficient proof" in brave_skill
+        and "default Brave\n`web` and `local` calls use the free key" in skill_md
+        and "Dogpile/Tau owns cross-provider synthesis" in skill_md
+        and "LLM Context API" in brave_skill
+        and "Summarizer Search" in brave_skill
+        and "must explicitly\n  request `context`, `summarize`, or `web --summary-key`" in brave_skill
+        and "Do not spend the paid key for default\n  raw web search" in brave_skill
+        and "def get_api_key(*, paid: bool = False)" in brave_cli
+        and "get_api_key(paid=summary)" in brave_cli
+        and "get_api_key(paid=True)" in brave_cli
+        and "def llm_context(" in brave_cli
+        and "def summarize_search(" in brave_cli
+        and "--updated \">=2026-07-20\"" in skill_md
+        and "--stars \">0\"" in skill_md
         and "--criteria TEXT" in github_skill
+        and "Sparse Security Domain Workflow" in github_skill
+        and "--updated \">=2026-07-20\"" in github_skill
+        and "Treat `updatedAt` as repository activity" in github_skill
         and "strict Bubblewrap-only execution" in github_skill
         and "scrubbed environment" in github_skill
         and "rejected candidates and filter reasons" in github_skill,
         "Dogpile documents security-specific GitHub repository promotion gates and requires isolated evaluation for untrusted security repos.",
         "Live GitHub auth, exploit validity, detection quality, or repository safety.",
+    ))
+
+    cases.append(_case(
+        "github_direct_search_supports_freshness_filters",
+        "github_search",
+        "updated: Optional[str] = None" in github_direct_repo_search
+        and "stars: Optional[str] = None" in github_direct_repo_search
+        and 'cmd.extend(["--updated", updated])' in github_direct_repo_search
+        and 'cmd.extend(["--stars", stars])' in github_direct_repo_search
+        and 'typer.Option(None, "--updated"' in github_cli
+        and 'typer.Option(None, "--stars"' in github_cli,
+        "GitHub Search exposes explicit freshness and star filters for current starred repository discovery.",
+        "Live GitHub result quality or whether any specific domain has matching repos this week.",
     ))
 
     cases.append(_case(
