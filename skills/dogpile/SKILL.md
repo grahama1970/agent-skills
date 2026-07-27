@@ -793,6 +793,16 @@ cat dogpile_task_state.json | jq '.provider_status'
 Dogpile integrates with the federated memory system to avoid redundant research
 and build institutional knowledge across sessions.
 
+Dogpile search results should be stored automatically as a structured JSON
+document in the dedicated `dogpile_research` Memory collection when `/memory` is
+reachable. This storage is separate from the human Markdown report: it is the
+durable retrieval surface for future agents and should include the query,
+successful sources, synthesis, key URLs, topic domain, tags, taxonomy bridges,
+timestamp, and enough local artifact references to recover the report or
+partial results. If Memory is unavailable, Dogpile must fail soft: preserve
+`dogpile_partial_results.json`, report that Memory storage returned zero entries
+or was skipped, and avoid claiming durable recall.
+
 ### Pre-hook: `recall_prior_research(query, k=5)`
 
 Called before starting expensive multi-source searches. Recalls prior research
@@ -805,6 +815,9 @@ Called after search completes. Learns:
 - **Research snapshot**: Query, sources searched, date, topic domain
 - **Synthesis**: The Codex high-reasoning conclusion (most valuable piece)
 - **Key URLs**: Discovered URLs for future reference without re-searching
+- **Structured JSON**: A single `dogpile_research` collection document, not just
+  a lessons-style prose note. Fallback lessons storage may be used only when the
+  direct Memory collection write is unavailable.
 
 ### Tags
 

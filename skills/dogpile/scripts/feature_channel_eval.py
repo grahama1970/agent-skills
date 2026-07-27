@@ -438,6 +438,22 @@ def run_eval() -> dict[str, Any]:
         "Actual synthesis quality for a live query.",
     ))
 
+    memory_integration = _read(SKILL_DIR / "memory_integration.py")
+    cases.append(_case(
+        "research_results_store_json_memory_doc",
+        "memory",
+        "structured JSON\ndocument in the dedicated `dogpile_research` Memory collection" in skill_md
+        and "_DOGPILE_COLLECTION = \"dogpile_research\"" in memory_integration
+        and "\"document\": doc" in memory_integration
+        and "\"collection\": _DOGPILE_COLLECTION" in memory_integration
+        and "\"query\": query" in memory_integration
+        and "\"sources_searched\": sources_searched or []" in memory_integration
+        and "\"key_urls\": (key_urls or [])[:20]" in memory_integration
+        and "Memory learn returned 0 entries" in cli_py,
+        "Dogpile documents and implements automatic structured JSON storage to the dogpile_research Memory collection when Memory is reachable.",
+        "Live Memory daemon reachability or successful storage for the current machine.",
+    ))
+
     passed = [case for case in cases if case["status"] == "passed"]
     failed = [case for case in cases if case["status"] == "failed"]
     return {
