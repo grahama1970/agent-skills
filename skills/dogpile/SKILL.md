@@ -182,6 +182,10 @@ Raw IoC feeds such as CISA KEV JSON, URLhaus, Spamhaus, OpenPhish, and
 AlienVault OTX are not part of the default readable RSS lane. Treat them as
 separate enrichment/TIP inputs that need freshness, confidence, relevance,
 allowlist, and corroboration checks before any alerting or blocking decision.
+The built-in `security_code` and `security_code_extended` RSS packs do not
+require API keys. Raw/vendor threat-intel feeds and TIP integrations may require
+API keys or access controls and must be reported as unproven when credentials
+are absent.
 
 ### Optional Archive And Book Lane Selection
 
@@ -337,6 +341,8 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh search "query" --with-feeds --feed-limit 3` | Include the compact `security_code` RSS feed pack dry-run |
 | `./run.sh search "query" --with-feeds --feed-pack security_code_extended --feed-limit 3` | Include the extended practitioner security RSS pack |
 | `./run.sh search "query" --with-perplexity` | Deprecated audit flag; records Perplexity as skipped and never calls the paid API |
+| `./sanity.sh --live-services` | Run the live service matrix for core providers, internal primitives, feed packs, optional lanes, and credential-aware skips |
+| `./sanity.sh --live-services --strict-optional` | Treat optional missing credentials, such as Readarr/NZB keys, as failures |
 | `./run.sh monitor` | Open the Real-time TUI Monitor |
 | `python cli.py presets` | List available presets |
 | `python cli.py resources` | List all resources |
@@ -370,6 +376,34 @@ The skill automatically analyzes queries for ambiguity.
 - If the query is clear (e.g., "python sort list"), it proceeds.
 - If ambiguous (e.g., "apple"), it returns a JSON object with clarifying questions.
   - The calling agent should interpret this JSON and ask the user the questions.
+
+## Live Sanity Evidence
+
+Dogpile requires non-mocked, receipt-backed sanity checks for the service
+surface it claims. Use the smallest check that matches the question:
+
+| Command | What it proves | What it does not prove |
+|---------|----------------|------------------------|
+| `./sanity.sh --quick` | Local imports, command wiring, dependency presence, and sub-skill layout | Live provider health or semantic search quality |
+| `./sanity.sh --live-e2e` | End-to-end Dogpile search with Brave, Brave question fan-out, GitHub, ArXiv, YouTube, synthesis, and default-off providers | Optional feed/Wayback/Readarr/website-ingestion lanes |
+| `./sanity.sh --live-services` | Service matrix for scillm, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS feed packs, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, Memory writes, or every possible source URL |
+
+The live service matrix writes
+`reports/live-service-matrix-*/receipt.json` with `mocked: false`,
+`live: true`, per-service `what_was_exercised`, `proves`, and
+`does_not_prove` fields. Status interpretation:
+
+- `passed`: all required live checks passed and no optional checks were skipped.
+- `passed_with_skips`: required checks passed, but at least one optional
+  credentialed service was not proven because credentials or local services were
+  absent.
+- `failed`: a required provider, no-key optional lane, retired-provider guard,
+  or strict optional check failed.
+
+Feeds in the built-in RSS packs should not require API keys. If a future feed
+pack uses CISA KEV JSON, URLhaus, Spamhaus, OpenPhish, AlienVault OTX, or a
+vendor API, the sanity receipt must state the credential/access requirement and
+must not count a missing key as a pass.
 
 ## Error Reporting & Debugging
 

@@ -1,0 +1,51 @@
+{
+  "command": "get",
+  "run_id": "20260727T164813Z_582a00",
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/reports/live-service-matrix-20260727T164805Z/fetcher-example",
+  "started_at": "2026-07-27T16:48:13Z",
+  "finished_at": "2026-07-27T16:48:13Z",
+  "duration_ms": 141,
+  "counts": {
+    "total": 1,
+    "downloaded": 1,
+    "ok": 0,
+    "failed": 0,
+    "used_playwright": 1,
+    "used_alternates": 0
+  },
+  "failure_summary": {
+    "status_counts": {
+      "200": 1
+    },
+    "content_verdict_counts": {
+      "thin": 1
+    },
+    "fallback_reason_counts": {
+      "none": 1
+    }
+  },
+  "items": [
+    {
+      "original_url": "https://example.com",
+      "requested_url": "https://example.com",
+      "final_downloaded_url": "https://example.com/",
+      "status": 200,
+      "content_type": "text/html",
+      "method": "playwright",
+      "alternate_provider": null,
+      "verdict": "junk",
+      "paywall_verdict": null,
+      "artifacts": {
+        "download_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/reports/live-service-matrix-20260727T164805Z/fetcher-example/downloads/7b6cd9a1d881c4a69bf70b9babb5a4a90e38aa6f9933785508a38f665d4d4aab.html",
+        "extracted_text_path": null,
+        "markdown_path": null,
+        "fit_markdown_path": null
+      },
+      "warnings": [
+        "text_not_materialized",
+        "markdown_not_materialized"
+      ],
+      "errors": []
+    }
+  ]
+}

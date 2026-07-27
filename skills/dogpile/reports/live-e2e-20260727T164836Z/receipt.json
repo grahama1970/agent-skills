@@ -1,0 +1,89 @@
+{
+  "schema": "dogpile.live_e2e_sanity.v1",
+  "mocked": false,
+  "live": true,
+  "query": "retrieval augmented generation large language models",
+  "command": [
+    "/home/graham/workspace/experiments/agent-skills/skills/dogpile/run.sh",
+    "search",
+    "retrieval augmented generation large language models",
+    "--no-interactive",
+    "--no-tailor"
+  ],
+  "duration_s": 97.6,
+  "stdout_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/reports/live-e2e-20260727T164836Z/stdout.md",
+  "stderr_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/reports/live-e2e-20260727T164836Z/stderr.log",
+  "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+  "checks": [
+    {
+      "name": "partial_results_json",
+      "status": "passed",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json"
+    },
+    {
+      "name": "command_returned",
+      "status": "passed",
+      "returncode": 0,
+      "timed_out": false
+    },
+    {
+      "name": "final_report_present",
+      "status": "passed"
+    },
+    {
+      "name": "evidence_synthesis_present",
+      "status": "passed"
+    },
+    {
+      "name": "provider_brave",
+      "status": "passed",
+      "positive_count": 5,
+      "error": null
+    },
+    {
+      "name": "provider_brave_questions",
+      "status": "passed",
+      "positive_count": 2,
+      "error": null
+    },
+    {
+      "name": "provider_github",
+      "status": "passed",
+      "positive_count": 12,
+      "error": null
+    },
+    {
+      "name": "provider_arxiv",
+      "status": "passed",
+      "positive_count": 10,
+      "error": null
+    },
+    {
+      "name": "provider_youtube",
+      "status": "passed",
+      "positive_count": 5,
+      "error": null
+    },
+    {
+      "name": "default_off_perplexity",
+      "status": "passed",
+      "skipped": "Perplexity is retired for Dogpile; API calls are disabled."
+    },
+    {
+      "name": "default_off_readarr",
+      "status": "passed",
+      "skipped": "Readarr/Usenet is disabled by default."
+    },
+    {
+      "name": "default_off_wayback",
+      "status": "passed",
+      "skipped": "Wayback archive lookup is disabled by default."
+    },
+    {
+      "name": "default_off_feeds",
+      "status": "passed",
+      "skipped": "Feed monitors are disabled by default."
+    }
+  ],
+  "status": "passed"
+}
