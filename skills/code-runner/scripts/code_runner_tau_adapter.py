@@ -56,16 +56,16 @@ SKILL_DIR = Path(__file__).resolve().parents[1]
 RUN_SH = SKILL_DIR / "run.sh"
 
 #: Ticket body headings, as emitted by `/ticket`.
-TARGET_PATHS_RE = re.compile(r"##\s*Target paths\s*\n(.*?)(?:\n##|\Z)", re.S | re.I)
-TARGET_RE = re.compile(r"##\s*Target\s*\n(.*?)(?:\n##|\Z)", re.S | re.I)
-CURRENT_STATE_RE = re.compile(r"##\s*Current state\s*\n(.*?)(?:\n##|\Z)", re.S | re.I)
-OUTCOME_RE = re.compile(r"##\s*Requested outcome\s*\n(.*?)(?:\n##|\Z)", re.S | re.I)
-PROOF_RE = re.compile(r"##\s*Required proof\s*\n(.*?)(?:\n##|\Z)", re.S | re.I)
+TARGET_PATHS_RE = re.compile(r"##\s*Target paths\s*\n(.*?)(?:\n##|\Z)", re.DOTALL | re.IGNORECASE)
+TARGET_RE = re.compile(r"##\s*Target\s*\n(.*?)(?:\n##|\Z)", re.DOTALL | re.IGNORECASE)
+CURRENT_STATE_RE = re.compile(r"##\s*Current state\s*\n(.*?)(?:\n##|\Z)", re.DOTALL | re.IGNORECASE)
+OUTCOME_RE = re.compile(r"##\s*Requested outcome\s*\n(.*?)(?:\n##|\Z)", re.DOTALL | re.IGNORECASE)
+PROOF_RE = re.compile(r"##\s*Required proof\s*\n(.*?)(?:\n##|\Z)", re.DOTALL | re.IGNORECASE)
 
 #: A proof section is prose; the runnable command is the fenced block or a line
 #: that starts with a known runner.
 COMMAND_LINE_RE = re.compile(
-    r"^\s*(?:uv run |python |pytest |npm |make |cargo |go )\S.*$", re.M
+    r"^\s*(?:uv run |python |pytest |npm |make |cargo |go )\S.*$", re.MULTILINE
 )
 
 
@@ -93,7 +93,7 @@ def parse_allowlist(body: str) -> list[str]:
 def parse_proof_command(body: str) -> str:
     """Extract the deterministic verification command. Empty means refuse."""
     proof = _section(PROOF_RE, body)
-    fenced = re.search(r"```(?:bash|sh|text)?\s*\n(.*?)```", proof, re.S)
+    fenced = re.search(r"```(?:bash|sh|text)?\s*\n(.*?)```", proof, re.DOTALL)
     haystack = fenced.group(1) if fenced else proof
     match = COMMAND_LINE_RE.search(haystack)
     return match.group(0).strip() if match else ""
