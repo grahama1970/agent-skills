@@ -1,0 +1,76 @@
+[dogpile-event] {"event": "search_started", "requested_query": "retrieval augmented generation large language models", "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169880.0984273}
+2026-07-27 12:31:20.808 | INFO     | dogpile.memory_integration:recall_prior_research:142 - Found 5 prior research entries for: retrieval augmented generation large language models
+2026-07-27 12:31:20.910 | INFO     | resources.resource_registry:load_all:165 - Loaded 110 resources, 15 presets
+[dogpile-event] {"event": "tailored_queries_ready", "services": ["arxiv", "brave", "feeds", "github", "perplexity", "readarr", "youtube"], "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169880.912247}
+[DOGPILE-STATUS] Starting Brave Search for 'retrieval augmented generation large language models'...
+[DOGPILE-STATUS] Starting 2 concurrent Brave question searches...
+[DOGPILE-STATUS] Starting GitHub Search (via skill) for 'retrieval augmented generation large language models'...
+[DOGPILE-STATUS] Starting ArXiv Search (Stage 1: Abstracts) for 'retrieval augmented generation large language models'...
+[DOGPILE-STATUS] Starting YouTube Search for 'retrieval augmented generation large language models'...
+[DOGPILE-STATUS] Querying LLM Knowledge for 'retrieval augmented generation large language models'...
+[DOGPILE-STATUS] Starting Brave Search for 'retrieval augmented generation large language models'...
+[DOGPILE-STATUS] Starting Brave Search for 'retrieval augmented generation large language models sources evidence'...
+[DOGPILE-STATUS] ArXiv Search (Stage 1) finished.
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "arxiv", "summary": {"ok": true, "papers": 10}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169881.3017836}
+[DOGPILE-STATUS] ArXiv Stage 2: Fetching details for 3 papers...
+[DOGPILE-STATUS] Fetching ArXiv Paper Details for 2607.22345v1...
+[DOGPILE-STATUS] Fetching ArXiv Paper Details for 2607.22319v1...
+[DOGPILE-STATUS] ArXiv Details for 2607.22345v1 finished.
+[DOGPILE-STATUS] Fetching ArXiv Paper Details for 2607.22067v1...
+[DOGPILE-STATUS] ArXiv Details for 2607.22319v1 finished.
+[DOGPILE-STATUS] Brave Search finished.
+[DOGPILE-STATUS] Brave Search finished.
+[DOGPILE-STATUS] Brave question searches finished: 2/2 succeeded
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "brave_questions", "summary": {"ok": true, "queries": 2, "succeeded": 2, "total": 2}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169881.8904705}
+[DOGPILE-STATUS] Brave Search finished.
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "brave", "summary": {"ok": true, "result_count": 5, "query": "retrieval augmented generation large language models"}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169881.9285665}
+[dogpile-event] {"event": "partial_result", "stage": "stage2", "provider": "stage2_brave", "summary": {"ok": true, "deep_extractions": 0}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169881.9302478}
+[DOGPILE-STATUS] ArXiv Details for 2607.22067v1 finished.
+[DOGPILE-STATUS] ArXiv Stage 2 finished.
+[DOGPILE-STATUS] Consulting /scillm model gpt-5.5...
+[DOGPILE-STATUS] YouTube Search finished.
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "youtube", "summary": {"ok": true, "result_count": 5}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169882.144701}
+[DOGPILE-STATUS] YouTube Stage 2: Fetching transcripts for 2 videos...
+[DOGPILE-STATUS] Fetching YouTube Transcript for T-D1OfcDW1M...
+[DOGPILE-STATUS] Fetching YouTube Transcript for KGDe1QvfKJ8...
+[DOGPILE-STATUS] scillm analysis finished
+[DOGPILE-STATUS] ArXiv Stage 3: Deep extracting 'Towards Trustworthy and Cost-Efficient Data Integr'...
+[DOGPILE-STATUS] Deep extracting ArXiv paper 2607.22319v1...
+[DOGPILE-STATUS] YouTube Transcript for KGDe1QvfKJ8 finished.
+[DOGPILE-STATUS] YouTube Transcript for T-D1OfcDW1M finished.
+[DOGPILE-STATUS] YouTube Stage 2 finished.
+[dogpile-event] {"event": "partial_result", "stage": "stage2", "provider": "stage2_youtube", "summary": {"ok": true, "transcripts": 2}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169885.1198614}
+[dogpile-event] {"event": "partial_result", "stage": "stage2", "provider": "stage2_arxiv", "summary": {"ok": true, "paper_details": 3, "deep_extractions": 0}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169885.6599605}
+[DOGPILE-STATUS] GitHub Search (via skill) finished.
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "github", "summary": {"ok": true, "repos": 7, "issues": 5}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169885.8312962}
+[DOGPILE-STATUS] No code snippets to explain
+[dogpile-event] {"event": "partial_result", "stage": "stage2", "provider": "stage2_github", "summary": {"ok": true, "repos_examined": 1, "target_repo": "sinanuozdemir/oreilly-retrieval-augmented-gen-ai", "code_matches": 0}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169885.8444657}
+[DOGPILE-STATUS] Knowledge query failed
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "codex_knowledge", "summary": {"ok": false, "error": "Error: scillm request failed: timed out"}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169956.028071}
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "perplexity", "summary": {"ok": false, "skipped": "Perplexity is retired for Dogpile; API calls are disabled.", "replacement": "brave_questions"}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169956.038596}
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "readarr", "summary": {"ok": false, "skipped": "Readarr/Usenet is disabled by default.", "replacement": null}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169956.0489044}
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "wayback", "summary": {"ok": false, "skipped": "Wayback archive lookup is disabled by default.", "replacement": null}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169956.0633843}
+[dogpile-event] {"event": "partial_result", "stage": "stage1", "provider": "feeds", "summary": {"ok": false, "skipped": "Feed monitors are disabled by default.", "replacement": null}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169956.0735881}
+2026-07-27 12:32:36.084 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: arxiv @ stage1 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:36.184 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: brave @ stage1 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:36.284 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: brave @ stage1 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:36.384 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: brave_questions @ stage1 (2026-07-27... (scope=operational)
+2026-07-27 12:32:37.670 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: brave @ stage1 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:37.939 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: youtube @ stage1 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:38.227 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: github @ stage1 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:38.478 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: codex_knowledge @ stage1 (2026-07-27... (scope=operational)
+2026-07-27 12:32:39.846 | INFO     | common.memory_client:batch_learn:755 - Batch learn: 0/8 succeeded (concurrency=4)
+2026-07-27 12:32:39.846 | INFO     | dogpile.memory_integration:learn_execution_batch:294 - Learned 0/8 execution records to memory
+2026-07-27 12:32:39.847 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: brave @ stage2 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:39.947 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: youtube @ stage2 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:40.047 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: arxiv @ stage2 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:40.147 | DEBUG    | common.memory_client:learn:590 - Learning: dogpile exec: github @ stage2 (2026-07-27)... (scope=operational)
+2026-07-27 12:32:41.814 | INFO     | common.memory_client:batch_learn:755 - Batch learn: 0/4 succeeded (concurrency=4)
+2026-07-27 12:32:41.814 | INFO     | dogpile.memory_integration:learn_execution_batch:294 - Learned 0/4 execution records to memory
+[DOGPILE-STATUS] Consulting /scillm model gpt-5.5...
+[DOGPILE-STATUS] scillm analysis finished
+[dogpile-event] {"event": "partial_result", "stage": "synthesis", "provider": "evidence_synthesis", "summary": {"ok": true, "type": "dict"}, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169976.692155}
+[dogpile-event] {"event": "report_ready", "stage": "report", "provider": "report", "summary": {"ok": true, "chars": 17840, "lines": 174}, "html_report_path": null, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169976.7053585}
+2026-07-27 12:32:58.272 | INFO     | dogpile.memory_integration:learn_research:232 - Learned research snapshot: 61ae63941d2366e7
+2026-07-27 12:32:58.273 | INFO     | dogpile.memory_integration:learn_research:252 - Research learn complete: 1 entries stored for 'retrieval augmented generation large language models'
+[dogpile-event] {"event": "search_finished", "status": "completed", "error": null, "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json", "ts": 1785169978.2735603}

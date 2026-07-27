@@ -88,6 +88,43 @@ def format_readarr_section(readarr_res: List[Dict[str, Any]] | Dict[str, Any]) -
     return lines
 
 
+def format_feeds_section(feeds_res: Dict[str, Any]) -> List[str]:
+    """Format optional consume-feed monitor results."""
+    lines = ["## Feed Monitors"]
+    if not isinstance(feeds_res, dict):
+        lines.append(f"> Error: unexpected result type {type(feeds_res).__name__}")
+    elif feeds_res.get("skipped"):
+        lines.append(f"> Skipped: {feeds_res['skipped']}")
+        if feeds_res.get("hint"):
+            lines.append(f"> Hint: {feeds_res['hint']}")
+    elif feeds_res.get("error"):
+        lines.append(f"> Error: {feeds_res['error']}")
+        if feeds_res.get("stderr"):
+            lines.append("```text")
+            lines.append(str(feeds_res["stderr"])[-1000:])
+            lines.append("```")
+    else:
+        if feeds_res.get("feed_pack"):
+            lines.append(f"Feed pack: `{feeds_res['feed_pack']}`")
+        if feeds_res.get("default_use"):
+            lines.append(f"Default use: `{feeds_res['default_use']}`")
+        if feeds_res.get("false_positive_policy"):
+            lines.append(f"> False-positive policy: {feeds_res['false_positive_policy']}")
+        lines.append(f"Dry-run limit per source: {feeds_res.get('limit', 'unknown')}")
+        lines.append(f"Sources checked: {feeds_res.get('source_count', 0)}")
+        lines.append(f"Parsed items: {feeds_res.get('parsed_total', 0)}")
+        if feeds_res.get("error_total"):
+            lines.append(f"Degraded sources/errors: {feeds_res.get('error_total')}")
+        for item in feeds_res.get("results", [])[:12]:
+            lines.append(
+                f"- **{item.get('source_key')}**: {item.get('status')} "
+                f"({item.get('parsed_count', 0)} parsed, {item.get('errors', 0)} errors) "
+                f"{item.get('rss_url', '')}"
+            )
+    lines.append("")
+    return lines
+
+
 def format_discord_section(discord_res: Dict[str, Any]) -> List[str]:
     """Format Discord search results."""
     lines = ["## Discord (Security Servers)"]

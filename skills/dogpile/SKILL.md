@@ -2,7 +2,7 @@
 name: dogpile
 description: >
   Deep research aggregator that searches Brave (Web), GitHub (Code/Issues),
-  ArXiv (Papers), YouTube (Videos), feed monitors, and optional archival/book
+  ArXiv (Papers), YouTube (Videos), and optional feed/archive/book
   sources. Provides a consolidated Markdown report with an ambiguity check,
   grounded synthesis, and Agentic Handoff.
 allowed-tools:
@@ -58,7 +58,7 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Stage 1**: Search repositories and issues
     - **Stage 2**: Fetch README.md and metadata for top repos, agent evaluates relevance
     - **Stage 3**: Deep code search inside the selected repository
-7.  **Feed monitors (📰)**: Fresh feed-derived source discovery when configured by the caller or surrounding project workflow.
+7.  **Feed monitors (📰, opt-in)**: Fresh RSS feed monitor dry-runs through `consume-feed`; this is source-health/freshness evidence, not query-specific web search.
 8.  **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
 9.  **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
 
@@ -103,10 +103,10 @@ Dogpile has exactly one active LLM integration: `/scillm`.
 - JSON tasks: send `response_format: {"type": "json_object"}` and ask for JSON in the prompt
 - Forbidden: `max_tokens` in dogpile's `/scillm` calls
 - Provider names in logs use logical lane names such as `scillm-gpt55`; scillm decides the concrete upstream provider and returns it in the response `model`
-- Retrieval sources: Brave Search, GitHub, ArXiv, YouTube, feed monitors, and opt-in Wayback/Readarr use their native retrieval APIs. `/scillm` is for query tailoring, ranking, summarization, ambiguity checks, and review of retrieved evidence.
+- Retrieval sources: Brave Search, GitHub, ArXiv, YouTube, and opt-in feed/Wayback/Readarr use their native retrieval APIs. `/scillm` is for query tailoring, ranking, summarization, ambiguity checks, and review of retrieved evidence.
 - Perplexity status: retired. Dogpile does not call Perplexity by default or by flag; it records a skipped/degraded source and uses concurrent Brave question searches instead.
 
-If `/scillm` fails, dogpile records the LLM lane as a degraded provider result and continues with Brave, GitHub, ArXiv, YouTube, feed, optional Readarr, and optional Wayback results.
+If `/scillm` fails, dogpile records the LLM lane as a degraded provider result and continues with Brave, GitHub, ArXiv, YouTube, optional feed, optional Readarr, and optional Wayback results.
 
 ## Orchestration Boundary
 
@@ -120,6 +120,11 @@ default path and should not call WebGPT/browser tools directly.
   Dogpile fan-outs when the synthesis reports weak coverage.
 - Dogpile itself must emit enough grounded synthesis that a project agent can
   use the result without guessing from raw provider dumps.
+
+Threat-intel and security feed hits are enrichment by default. Do not treat
+feed hits as automatic block decisions, alerts, or proof of compromise unless
+the project workflow adds high-confidence environmental corroboration. The
+default rule is: block on certainty, hunt on suspicion, enrich everything else.
 
 Optional `/agents` profiles are provided for higher-rigor workflows:
 
@@ -137,6 +142,8 @@ must:
 - Ground substantive claims in retrieved Brave, GitHub, ArXiv, YouTube, feed, or
   optional source evidence.
 - Name conflicts, weak coverage, skipped providers, and missing evidence.
+- Treat security/threat-intel feeds as enrichment-only unless multiple
+  high-confidence signals agree.
 - Include a short "Most useful sources" list.
 - Avoid inventing citations, URLs, or conclusions not supported by retrieved
   evidence.
@@ -235,6 +242,8 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh search "query" --preset NAME` | Search with a preset |
 | `./run.sh search "query" --with-readarr` | Include local Readarr/Usenet book search |
 | `./run.sh search "query" --with-wayback` | Include Wayback archive lookup |
+| `./run.sh search "query" --with-feeds --feed-limit 3` | Include the compact `security_code` RSS feed pack dry-run |
+| `./run.sh search "query" --with-feeds --feed-pack security_code_extended --feed-limit 3` | Include the extended practitioner security RSS pack |
 | `./run.sh search "query" --with-perplexity` | Deprecated audit flag; records Perplexity as skipped and never calls the paid API |
 | `./run.sh monitor` | Open the Real-time TUI Monitor |
 | `python cli.py presets` | List available presets |
@@ -449,6 +458,7 @@ curl http://localhost:8765/tasks/dogpile-search
     "perplexity": "skipped",
     "readarr": "skipped",
     "wayback": "skipped",
+    "feeds": "skipped",
     "github": "done",
     "codex_knowledge": "rate_limited"
   },

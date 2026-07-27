@@ -18,6 +18,7 @@ from dogpile.formatters import (
     format_codex_section,
     format_perplexity_section,
     format_readarr_section,
+    format_feeds_section,
 )
 
 
@@ -409,6 +410,7 @@ def generate_report(
     deep_code_res: List,
     brave_res: Dict[str, Any],
     brave_questions_res: Dict[str, Any],
+    feeds_res: Dict[str, Any],
     brave_deep: List[Dict],
     arxiv_res: Dict[str, Any],
     arxiv_details: List[Dict],
@@ -428,6 +430,7 @@ def generate_report(
     md_lines.extend(_safe_section("Codex Technical Overview", format_codex_section, codex_src_res))
     md_lines.extend(_safe_section("AI Research (Perplexity)", format_perplexity_section, perp_res))
     md_lines.extend(_safe_section("Books & Usenet (Readarr)", format_readarr_section, readarr_res))
+    md_lines.extend(_safe_section("Feed Monitors", format_feeds_section, feeds_res))
     md_lines.extend(_safe_section(
         "GitHub",
         format_github_section,

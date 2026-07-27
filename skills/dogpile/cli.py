@@ -72,6 +72,7 @@ from dogpile.youtube_search import search_youtube, run_stage2_youtube
 from dogpile.wayback import search_wayback
 from dogpile.discord import search_discord_messages
 from dogpile.readarr import search_readarr
+from dogpile.feeds import search_feeds
 from dogpile.html_report import write_html_report
 from dogpile.synthesis import generate_report
 
@@ -165,6 +166,11 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
         summary["papers"] = len(result.get("items", []) or [])
     elif name in {"youtube", "readarr"} and isinstance(result, list):
         summary["result_count"] = len(result)
+    elif name == "feeds" and isinstance(result, dict):
+        summary["returncode"] = result.get("returncode")
+        summary["limit"] = result.get("limit")
+        stdout = str(result.get("stdout", ""))
+        summary["output_chars"] = len(stdout)
     elif name == "wayback" and isinstance(result, dict):
         summary["has_snapshot"] = bool(result.get("closest") or result.get("snapshots"))
     elif name == "codex_knowledge":
@@ -380,6 +386,12 @@ def _collect_evidence_digest(
             add_result("youtube", video.get("title", "unknown"), video.get("url", ""), video.get("description", ""))
         lines.append("")
 
+    feeds_res = stage1_results.get("feeds", {})
+    if isinstance(feeds_res, dict) and feeds_res.get("stdout"):
+        lines.append("Feed monitor dry-run output:")
+        lines.append(str(feeds_res.get("stdout", ""))[-1200:])
+        lines.append("")
+
     for stage_name, stage_result in stage2_results.items():
         lines.append(f"{stage_name} deep results summary: {json.dumps(_summarize_result(stage_name, stage_result), ensure_ascii=False)}")
 
@@ -400,6 +412,7 @@ Rules:
 - Ground every substantive claim in the evidence below.
 - Prefer Brave, ArXiv, YouTube, GitHub, and feed-style retrieved sources over model prior knowledge.
 - Mention important gaps, contradictions, or skipped sources.
+- Treat threat-intel/feed hits as enrichment-only unless corroborated by multiple high-confidence signals.
 - Be concise: 5-8 bullets plus a short "Most useful sources" list.
 - Do not invent citations or URLs.
 
@@ -417,6 +430,9 @@ def run_stage1_searches(
     with_perplexity: bool = False,
     with_readarr: bool = False,
     with_wayback: bool = False,
+    with_feeds: bool = False,
+    feed_limit: int = 3,
+    feed_pack: str = "security_code",
     publisher: Optional[PartialResultsPublisher] = None,
     on_result=None,
     monitor=None,
@@ -433,6 +449,9 @@ def run_stage1_searches(
         with_perplexity: Deprecated; Perplexity is retired and never called.
         with_readarr: Include local Readarr/Usenet book search.
         with_wayback: Include Wayback archive lookup.
+        with_feeds: Include consume-feed RSS monitor dry-run.
+        feed_limit: Max items per configured feed source.
+        feed_pack: Dogpile feed pack name, or empty string for consume-feed config.
 
     Returns:
         Dict with results from each provider
@@ -461,6 +480,8 @@ def run_stage1_searches(
         providers["readarr"] = (search_readarr, [tailored.get("readarr", query)])
     if with_wayback:
         providers["wayback"] = (search_wayback, [query])
+    if with_feeds:
+        providers["feeds"] = (search_feeds, [query, feed_limit, None, feed_pack])
 
     # Provider status for Rich live display
     status: Dict[str, str] = {name: "[dim]waiting[/dim]" for name in providers}
@@ -565,6 +586,11 @@ def run_stage1_searches(
             "skipped": "Wayback archive lookup is disabled by default.",
             "hint": "Pass --with-wayback when historical snapshots are intentionally required.",
         }
+    if not with_feeds:
+        skipped["feeds"] = {
+            "skipped": "Feed monitors are disabled by default.",
+            "hint": "Pass --with-feeds to run configured consume-feed RSS monitors as a dry-run lane.",
+        }
 
     for name, result in skipped.items():
         if name not in results:
@@ -588,6 +614,9 @@ def search(
     with_perplexity: bool = typer.Option(False, "--with-perplexity", help="Deprecated: record Perplexity as skipped; never calls the paid API"),
     with_readarr: bool = typer.Option(False, "--with-readarr", help="Include local Readarr/Usenet book search"),
     with_wayback: bool = typer.Option(False, "--with-wayback", help="Include Wayback archive lookup"),
+    with_feeds: bool = typer.Option(False, "--with-feeds", help="Include configured consume-feed RSS monitor dry-run"),
+    feed_limit: int = typer.Option(3, "--feed-limit", min=1, max=25, help="Max feed items per source when --with-feeds is used"),
+    feed_pack: str = typer.Option("security_code", "--feed-pack", help="Dogpile feed pack to use with --with-feeds; empty string uses consume-feed config"),
     html_report: bool = typer.Option(False, "--html-report", help="Write a self-contained HTML/CSS report"),
     open_report: bool = typer.Option(False, "--open-report", help="Open the HTML report in your browser"),
     report_file: Optional[Path] = typer.Option(None, "--report-file", help="Write the HTML report to a specific path"),
@@ -615,6 +644,9 @@ def search(
             with_perplexity=with_perplexity,
             with_readarr=with_readarr,
             with_wayback=with_wayback,
+            with_feeds=with_feeds,
+            feed_limit=feed_limit,
+            feed_pack=feed_pack,
             html_report=html_report,
             open_report=open_report,
             report_file=report_file,
@@ -681,6 +713,9 @@ def _run_search(
     with_perplexity: bool = False,
     with_readarr: bool = False,
     with_wayback: bool = False,
+    with_feeds: bool = False,
+    feed_limit: int = 3,
+    feed_pack: str = "security_code",
     html_report: bool = False,
     open_report: bool = False,
     report_file: Optional[Path] = None,
@@ -739,7 +774,7 @@ def _run_search(
             console.print(f"  [cyan]{svc}:[/cyan] {q[:60]}...")
     else:
         # Use same query for all services
-        tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube", "readarr"]}
+        tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube", "readarr", "feeds"]}
 
     # Override Brave query with preset-filtered query if active
     if preset_brave_query:
@@ -792,6 +827,9 @@ def _run_search(
             with_perplexity=with_perplexity,
             with_readarr=with_readarr,
             with_wayback=with_wayback,
+            with_feeds=with_feeds,
+            feed_limit=feed_limit,
+            feed_pack=feed_pack,
             publisher=publisher,
             on_result=schedule_stage2,
             monitor=monitor,
@@ -833,6 +871,7 @@ def _run_search(
     youtube_res = stage1_results["youtube"]
     readarr_res = stage1_results["readarr"]
     wayback_res = stage1_results["wayback"]
+    feeds_res = stage1_results["feeds"]
     codex_src_res = stage1_results["codex_knowledge"]
 
     github_stage2 = stage2_results.get("github", {})
@@ -886,6 +925,7 @@ def _run_search(
         deep_code_res=deep_code_res,
         brave_res=brave_res,
         brave_questions_res=brave_questions_res,
+        feeds_res=feeds_res,
         brave_deep=brave_deep,
         arxiv_res=arxiv_res,
         arxiv_details=arxiv_details,
@@ -935,7 +975,7 @@ def _run_search(
                 ("brave", brave_res), ("brave_questions", brave_questions_res), ("perplexity", perp_res),
                 ("github", github_res), ("arxiv", arxiv_res),
                 ("youtube", youtube_res), ("readarr", readarr_res),
-                ("wayback", wayback_res), ("codex", codex_src_res),
+                ("wayback", wayback_res), ("feeds", feeds_res), ("codex", codex_src_res),
             ]:
                 if res and not (isinstance(res, dict) and ("error" in res or "skipped" in res)):
                     sources_searched.append(name)

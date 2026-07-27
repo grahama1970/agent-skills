@@ -1,0 +1,91 @@
+version: 1
+description: Optional Dogpile RSS pack for code, cybersecurity, threat intel, and ethical offensive-security research.
+default_use: enrichment_only
+false_positive_policy: Block on certainty, hunt on suspicion, enrich everything else. Feed hits are context signals, not automatic alerts or block decisions.
+excluded_candidates:
+  - name: Hack The Box
+    reason: The public URL currently serves HTML, not a clean RSS document; keep as a non-RSS web source unless an official feed endpoint is available.
+  - name: VMRay ThreatFeed
+    reason: Public RSS endpoint was not fetchable without access controls; treat VMRay as optional API/vendor enrichment, not a default RSS source.
+  - name: CISA Cybersecurity Advisories RSS
+    reason: The RSS endpoint is valuable but intermittently returns 403 in concurrent automated dry-runs; use CISA KEV JSON as raw enrichment unless the project specifically configures CISA RSS handling.
+  - name: Reddit r/netsec RSS
+    reason: Useful community curation, but repeated automated checks can return 429; use as manual/community enrichment or configure separately with longer polling intervals.
+raw_indicator_feeds:
+  - name: CISA Known Exploited Vulnerabilities catalog
+    url: https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+    use: raw_enrichment_not_rss
+    note: Structured JSON catalog; useful for enrichment and prioritization, not a human-readable RSS article feed.
+  - name: URLhaus
+    url: https://urlhaus.abuse.ch/
+    use: raw_ioc_enrichment_not_rss
+    note: Malware URL data belongs in SIEM/TIP enrichment pipelines, not this readable RSS lane.
+  - name: Spamhaus
+    url: https://www.spamhaus.org/
+    use: raw_ioc_enrichment_not_rss
+    note: Reputation data should be filtered and correlated before action.
+  - name: OpenPhish
+    url: https://openphish.com/
+    use: raw_ioc_enrichment_not_rss
+    note: Phishing indicators should be correlated before alerting or blocking.
+sources:
+  - key: bleepingcomputer
+    name: BleepingComputer
+    category: security_news
+    rss_url: https://www.bleepingcomputer.com/feed/
+    tags: [security, malware, incidents]
+  - key: krebs_on_security
+    name: Krebs on Security
+    category: security_news
+    rss_url: https://krebsonsecurity.com/feed/
+    tags: [security, investigations, breaches]
+  - key: sans_isc
+    name: SANS Internet Storm Center
+    category: threat_intel
+    rss_url: https://isc.sans.edu/rssfeed.xml
+    tags: [security, threat_intel, operations]
+  - key: help_net_security
+    name: Help Net Security
+    category: security_news
+    rss_url: https://www.helpnetsecurity.com/feed/
+    tags: [security, tools, trends]
+  - key: portswigger_research
+    name: PortSwigger Research
+    category: offensive_security_learning
+    rss_url: https://portswigger.net/research/rss
+    tags: [security, web_security, research]
+  - key: google_project_zero
+    name: Google Project Zero
+    category: vulnerability_research
+    rss_url: https://projectzero.google/feed.xml
+    tags: [security, vulnerability_research, exploitation]
+  - key: google_security_blog
+    name: Google Online Security Blog
+    category: code_security
+    rss_url: http://feeds.feedburner.com/GoogleOnlineSecurityBlog
+    tags: [security, code_security, platforms]
+  - key: github_security
+    name: GitHub Security Blog
+    category: devsecops
+    rss_url: https://github.blog/security/feed/
+    tags: [security, supply_chain, devsecops]
+  - key: github_security_lab
+    name: GitHub Security Lab
+    category: code_security
+    rss_url: https://github.blog/security/vulnerability-research/feed/
+    tags: [security, codeql, vulnerability_research]
+  - key: specterops
+    name: SpecterOps
+    category: red_team_tradecraft
+    rss_url: https://specterops.io/blog/feed/
+    tags: [security, red_team, active_directory]
+  - key: black_hills_infosec
+    name: Black Hills Information Security
+    category: red_team_tradecraft
+    rss_url: https://www.blackhillsinfosec.com/feed/
+    tags: [security, red_team, pentest]
+  - key: trustedsec
+    name: TrustedSec
+    category: red_team_tradecraft
+    rss_url: https://trustedsec.com/feed.rss
+    tags: [security, red_team, methodology]

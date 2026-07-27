@@ -17,7 +17,7 @@ from typing import Any
 SKILL_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_QUERY = "retrieval augmented generation large language models"
 CORE_PROVIDERS = ("brave", "brave_questions", "github", "arxiv", "youtube")
-DEFAULT_OFF_PROVIDERS = ("perplexity", "readarr", "wayback")
+DEFAULT_OFF_PROVIDERS = ("perplexity", "readarr", "wayback", "feeds")
 
 
 def _utc_stamp() -> str:
