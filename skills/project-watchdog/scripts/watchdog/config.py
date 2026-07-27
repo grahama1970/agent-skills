@@ -123,3 +123,43 @@ READY_LABEL = "agent-work"
 
 #: A lock older than this is treated as abandoned by a crashed or killed tick.
 LOCK_STALE_SECONDS = 900
+
+
+def _env_seconds(name: str, default: int) -> int:
+    raw = env_get(name)
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+#: How long a project may report "nothing routable" before that stops counting
+#: as a steady state. Silence is not success: before 2026-07-27 this skill
+#: logged 41,607 consecutive idle ticks over roughly a month, every one of them
+#: reported as ok, while a label mismatch made a match impossible.
+NOOP_ESCALATION_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS", 86_400)
+
+#: Once escalated, how long before the watchdog persists another escalation
+#: receipt. Without this, escalation would reintroduce one receipt directory per
+#: minute — the exact disk churn the retention policy removed.
+NOOP_RENOTIFY_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS", 86_400)
+
+
+#: How bounded dispatches execute.
+#:   "local"  — captured subprocess (default; invisible but self-contained)
+#:   "herdr"  — a named pane in a dedicated Herdr space, watchable while it runs
+#: Per-project override: set "dispatch_backend" on the registry entry.
+DISPATCH_BACKEND = env_get("PROJECT_WATCHDOG_DISPATCH_BACKEND", "local") or "local"
+
+#: Herdr space label used when DISPATCH_BACKEND is "herdr".
+DISPATCH_SPACE_LABEL = env_get("PROJECT_WATCHDOG_DISPATCH_SPACE", "autoupdate") or "autoupdate"
+
+
+def dispatch_backend_for(project: dict | None = None) -> str:
+    """Return the dispatch backend for a project, honouring its registry override."""
+    if project and project.get("dispatch_backend"):
+        return str(project["dispatch_backend"])
+    return DISPATCH_BACKEND

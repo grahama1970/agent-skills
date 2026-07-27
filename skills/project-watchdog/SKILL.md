@@ -141,6 +141,63 @@ Environment overrides, all optional: `PROJECT_WATCHDOG_STATE_ROOT`,
 `PROJECT_WATCHDOG_WORKSPACE`, `UV_BIN`. `sanity.sh` and the tests use the first
 to run against a temporary state root instead of the operator's real receipts.
 
+## Idle escalation — silence is not success
+
+A watchdog reporting `NOOP / ok: true` every minute forever is
+indistinguishable from a working one. Before 2026-07-27 this skill logged
+**41,607** consecutive `no_routable_issues` ticks over roughly a month while a
+label mismatch made a match impossible, and every tick reported success.
+
+Idle ticks are now counted per project in `<state-root>/streaks.json`. Once a
+project has been idle longer than `PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS`
+(default 24h), the tick reports `NEEDS_ATTENTION` with `stop_reason:
+idle_streak_exceeded` and an actionable diagnosis instead of `NOOP`. Escalation
+receipts persist at most once per `PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS`
+(default 24h), so escalating does not reintroduce a receipt directory per
+minute. Finding routable work clears the streak.
+
+`./run.sh status` reports `idle_streaks` and `idle_escalation_seconds`.
+
+## Dispatch backends — local or a visible Herdr pane
+
+| Backend | Behaviour |
+| --- | --- |
+| `local` (default) | Captured subprocess. Self-contained, but invisible while it runs. |
+| `herdr` | A named pane in a dedicated Herdr space, watchable in real time. |
+
+Select globally with `PROJECT_WATCHDOG_DISPATCH_BACKEND`, per project with a
+`dispatch_backend` field on the registry entry. The space label defaults to
+`autoupdate` (`PROJECT_WATCHDOG_DISPATCH_SPACE`).
+
+The pane is wrapped so it is observable and bounded:
+
+- reports `working` on start, then `idle` or `blocked` on exit, so the Herdr UI
+  and `$monitor-herdr` see a truthful state;
+- writes a sentinel JSON file, so completion is a deterministic file read
+  rather than an inference from a UI state — `herdr agent wait --status idle`
+  against a raw command times out even after the command succeeds, because
+  agent status comes from provider integrations an arbitrary command lacks;
+- self-limits with `timeout`, because `$monitor-herdr` treats `done`, `idle`,
+  `blocked`, and `unknown` as stopped and **not** `working`. A hung command
+  left in `working` would never be flagged; bounding it turns a hang into a
+  `blocked` pane the monitor does select;
+- holds a failed pane alive for 15 minutes so it does not vanish before the
+  monitor's next tick;
+- never steals focus.
+
+Observe dispatches with the exact command each receipt names:
+
+```bash
+skills/monitor-herdr/run.sh tick --space autoupdate --include-agent watchdog-dispatch
+```
+
+The `--include-agent` filter is why every pane reports the stable label
+`watchdog-dispatch` rather than its per-issue name.
+
+Dispatch is still synchronous: the tick blocks on a bounded wait so the existing
+lease and closure semantics are unchanged. Fire-and-forget dispatch would need a
+reconciliation path for leased-but-unfinished issues, which does not exist yet.
+
 ## Receipt retention
 
 Ticks with status `NOOP` or `SKIPPED` print and log their receipt but do not

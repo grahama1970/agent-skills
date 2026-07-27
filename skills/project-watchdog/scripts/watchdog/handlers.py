@@ -24,10 +24,11 @@ Failure modes
 
 from __future__ import annotations
 
+import shlex
 from pathlib import Path
 from typing import Any
 
-from . import config, github
+from . import config, github, herdr_space
 from .core import log_event, run_cmd, write_json
 from .issue_fields import (
     parse_bool,
@@ -37,6 +38,42 @@ from .issue_fields import (
     repo_relative_existing_path,
 )
 from .registry import project_repo, project_worktree
+
+
+def run_bounded(
+    command: list[str],
+    *,
+    worktree: Path,
+    project: dict[str, Any],
+    agent_name: str,
+    timeout_s: int = 120,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Run one bounded dispatch through the project's configured backend.
+
+    Returns ``(result_record, pane_block)``. ``result_record`` is always
+    ``run_cmd``-shaped so callers branch on ``exit_code`` regardless of backend.
+    ``pane_block`` is the Herdr receipt block, or ``None`` for local dispatch.
+    """
+    backend = config.dispatch_backend_for(project)
+    if backend != "herdr":
+        return run_cmd(command, cwd=worktree, timeout_s=timeout_s), None
+
+    pane = herdr_space.dispatch_in_pane(
+        agent_name=agent_name,
+        command=["bash", "-lc", f"cd {shlex.quote(str(worktree))} && {shlex.join(command)}"],
+        space_label=config.DISPATCH_SPACE_LABEL,
+        timeout_s=timeout_s,
+    )
+    record = {
+        "command": command,
+        "cwd": str(worktree),
+        "exit_code": 0 if pane.ok else (pane.exit_code if pane.exit_code is not None else 1),
+        "stdout": "",
+        "stderr": pane.error or "",
+        "backend": "herdr_pane",
+        "agent_name": pane.agent_name,
+    }
+    return record, pane.as_receipt_block()
 
 
 def handle_issue(
@@ -155,7 +192,7 @@ def handle_tau_handoff_dispatch(
     uv_bin = config.resolve_uv_bin()
     loop_dir = receipt_dir / "tau-command-loop"
     loop_receipt = loop_dir / "command-loop-receipt.json"
-    loop_result = run_cmd(
+    loop_result, pane_block = run_bounded(
         [
             uv_bin,
             "run",
@@ -174,10 +211,14 @@ def handle_tau_handoff_dispatch(
             "--max-steps",
             str(max_steps),
         ],
-        cwd=worktree,
+        worktree=worktree,
+        project=project,
+        agent_name=f"pw-{project.get('project_id')}-issue-{issue_number}",
         timeout_s=120,
     )
     result["commands"].append(loop_result)
+    if pane_block:
+        result["pane"] = pane_block
     result["artifacts"].append(str(loop_receipt))
 
     transport_path = receipt_dir / "tau-github-transport.json"
@@ -306,7 +347,7 @@ def handle_tau_coder_spec(
     result["artifacts"].append(str(start_path))
 
     loop_dir = receipt_dir / "tau-command-loop"
-    loop_result = run_cmd(
+    loop_result, pane_block = run_bounded(
         [
             uv_bin,
             "run",
@@ -325,10 +366,14 @@ def handle_tau_coder_spec(
             "--max-steps",
             "2",
         ],
-        cwd=worktree,
+        worktree=worktree,
+        project=project,
+        agent_name=f"pw-{project.get('project_id')}-coderspec-{issue_number}",
         timeout_s=120,
     )
     result["commands"].append(loop_result)
+    if pane_block:
+        result["pane"] = pane_block
     result["artifacts"].append(str(loop_dir / "command-loop-receipt.json"))
 
     targeted = run_cmd(
