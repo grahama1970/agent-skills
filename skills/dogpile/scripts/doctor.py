@@ -47,9 +47,9 @@ API_RESOURCES = {
     "hybrid_analysis": {
         "registry_name": "Hybrid Analysis",
         "env_var": "HYBRID_ANALYSIS_API_KEY",
-        "api_url": "https://www.hybrid-analysis.com/api/v2/",
+        "api_url": "https://hybrid-analysis.com/api/v2/",
         "docs": ["https://hybrid-analysis.com/docs/api/v2"],
-        "probe_url": "https://www.hybrid-analysis.com/api/v2/feed/latest",
+        "probe_url": "https://hybrid-analysis.com/api/v2/feed/latest",
         "headers": lambda key: {"api-key": key, "User-Agent": "Falcon Sandbox"},
         "plan_note": "Hybrid Analysis API uses an api-key header; authorization levels gate endpoint access.",
     },

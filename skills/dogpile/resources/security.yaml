@@ -337,7 +337,7 @@ resources:
 
   - name: Hybrid Analysis
     url: https://www.hybrid-analysis.com
-    api_url: https://www.hybrid-analysis.com/api/v2/
+    api_url: https://hybrid-analysis.com/api/v2/
     type: api
     method: GET
     tags: [blue_team, malware, sandbox, analysis, optional, credentialed_enrichment]
