@@ -52,11 +52,23 @@ def _load_feed_pack(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text()) or {}
 
 
+def _front_matter(markdown: str) -> dict[str, Any]:
+    if not markdown.startswith("---\n"):
+        return {}
+    _, body = markdown.split("---\n", 1)
+    front_matter, _ = body.split("\n---", 1)
+    return yaml.safe_load(front_matter) or {}
+
+
 def run_eval() -> dict[str, Any]:
     skill_md = _read(SKILL_DIR / "SKILL.md")
     cli_py = _read(SKILL_DIR / "cli.py")
     github_skill = _read(SKILLS_DIR / "github-search" / "SKILL.md")
-    github_repo_search = _read(SKILLS_DIR / "github-search" / "repo_search.py")
+    github_meta = _front_matter(github_skill)
+    github_compose = set(github_meta.get("composes") or [])
+    github_candidate_search_path = SKILLS_DIR / "github-search" / "candidate_search.py"
+    github_repo_search = _read(github_candidate_search_path if github_candidate_search_path.exists() else SKILLS_DIR / "github-search" / "repo_search.py")
+    github_evaluate_repos = _read(SKILLS_DIR / "github-search" / "evaluate_repos.py")
     dogpile_youtube = _read(SKILL_DIR / "youtube_search.py")
     ingest_youtube_skill = _read(SKILLS_DIR / "ingest-youtube" / "SKILL.md")
     ingest_youtube_cli = _read(SKILLS_DIR / "ingest-youtube" / "cli.py")
@@ -106,10 +118,12 @@ def run_eval() -> dict[str, Any]:
     cases.append(_case(
         "github_uses_brave_discovery",
         "github_search",
-        "composes: [task-monitor, brave-search]" in github_skill
-        and "brave_discovery" in github_skill
-        and "prefer_brave: bool = True" in github_repo_search,
-        "GitHub Search composes Brave and defaults to Brave discovery before relaxed gh search.",
+        {"task-monitor", "brave-search"}.issubset(github_compose)
+        and ("brave_discovery" in github_skill or "Brave discovery" in github_skill)
+        and "def brave_repository_candidates" in github_repo_search
+        and "BRAVE_SEARCH_SKILL" in github_repo_search
+        and "discover_and_rank_repositories" in github_evaluate_repos,
+        "GitHub Search composes Brave and uses Brave discovery before executable repository evaluation.",
         "Live GitHub auth or semantic repo ranking.",
     ))
 
