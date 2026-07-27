@@ -35,12 +35,28 @@ Covers hardware constraints, service architecture, and the widget lifecycle.
 
 ## Project Architecture
 
-- **streamdeck-ui**: Qt app reading `~/.streamdeck_ui.json`, rendering buttons
+- **Active stack**: customized Python Stream Deck project at `/home/graham/workspace/streamdeck`
+- **streamdeck-ui**: Python `streamdeck-linux-gui` Qt app reading `~/.streamdeck_ui.json`, rendering buttons
 - **Socket API**: `/tmp/streamdeck_ui.sock` for real-time updates (fast, no disk)
 - **Config file**: `~/.streamdeck_ui.json` for persistent state (slow, locked)
 - **Widget services**: background daemons rendering icons on schedule
 - **Context monitor**: polls environment every 2s, switches pages via templates
 - **ArangoDB**: memory graph for pages/buttons (optional, filesystem fallback)
+
+## Flatpak Conflict Rule
+
+On Graham's workstation, Flatpak StreamController is not the default Stream Deck stack. It may exist on the machine, but it has historically loaded an old page and hijacked the hardware from the customized Python stack.
+
+When the deck shows an old page or lacks the expected GPU/CPU/memory widgets and light controls:
+
+1. Treat `/home/graham/workspace/streamdeck` as the source of truth.
+2. Stop/kill `com.core447.StreamController`.
+3. Restart `streamdeck.service` and the Python satellite services.
+4. Run `/home/graham/workspace/streamdeck/scripts/health_check.sh`.
+
+The recovery is not proven until the health check reports `Passed: 15`, `/tmp/streamdeck_ui.sock` exists, `streamdeck.service` is running `.venv/bin/streamdeck`, and no `com.core447.StreamController` process is running.
+
+Do not edit `~/.streamdeck_ui.json` while `streamdeck.service` is running; the daemon overwrites config from memory roughly every 30 seconds.
 
 ## When to Apply
 

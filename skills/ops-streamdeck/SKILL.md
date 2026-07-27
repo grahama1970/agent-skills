@@ -32,10 +32,13 @@ management, button task execution, and status querying capabilities.
 
 ## Architecture
 
+The active Graham workstation setup is the customized Python stack in
+`/home/graham/workspace/streamdeck`. It is not Flatpak StreamController.
+
 The streamdeck project has two components:
 
-1. **CLI Tool** (`streamdeck` command) - Manual operations by users
-2. **Daemon** (this skill) - Persistent service for agent automation
+1. **Hardware UI daemon** (`/home/graham/workspace/streamdeck/.venv/bin/streamdeck`) - `streamdeck-linux-gui`, owns the hardware and `/tmp/streamdeck_ui.sock`
+2. **Project CLI** (`/home/graham/workspace/streamdeck/.venv/bin/streamdeck-cli`) - widgets, lights, page operations, and agent automation
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -64,6 +67,39 @@ The streamdeck project has two components:
 │  └────────────────────────────────────────────────────────┘     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+## Graham Workstation Recovery Path
+
+Use this path first when the Stream Deck shows an old page, misses GPU/CPU/memory widgets, misses light controls, or appears to be controlled by StreamController:
+
+```bash
+cd /home/graham/workspace/streamdeck
+
+# Flatpak StreamController conflicts with the customized Python stack.
+systemctl --user stop app-com.core447.StreamController@autostart.service \
+  app-StreamController@autostart.service \
+  app-streamcontroller.desktop.disabled@autostart.service 2>/dev/null || true
+flatpak kill com.core447.StreamController 2>/dev/null || true
+
+# Restart the Python hardware daemon and satellite widget services.
+systemctl --user restart streamdeck.service
+systemctl --user restart streamdeck-monitor.service \
+  streamdeck-clock.service \
+  streamdeck-weather.service \
+  streamdeck-plant-monitor.service \
+  streamdeck-living-room-monitor.service
+
+./scripts/health_check.sh
+```
+
+Expected proof:
+
+- `./scripts/health_check.sh` reports `Passed: 15` and `All critical checks passed.`
+- `systemctl --user status streamdeck.service` shows `ExecStart=/home/graham/workspace/streamdeck/.venv/bin/streamdeck`.
+- `/tmp/streamdeck_ui.sock` exists.
+- No `com.core447.StreamController` process is running.
+
+Do not restart Flatpak StreamController unless the human explicitly asks to test Flatpak. Historically it loaded an old page and hijacked the hardware from the customized Python version.
 
 ## Quick Start
 
