@@ -80,11 +80,32 @@ class RedAgent:
             self.round_actions.append("No prior strategies found")
             return {"found": False, "items": []}
 
+    def _research_query(self) -> str:
+        """Build a technique-focused query from findings, not the target path.
+
+        The old query interpolated ``self.target_path`` (a local filesystem
+        path) into a web search, so dogpile searched for a path that exists on
+        no public source. Prior finding types/severities are the real signal
+        for what attack families to scout next.
+        """
+        recent = self.state.all_findings[-3:] if self.state.all_findings else []
+        descriptors: list[str] = []
+        for f in recent:
+            vuln_type = getattr(f.type, "value", str(f.type))
+            descriptors.append(f"{f.severity} {vuln_type}")
+        focus = ", ".join(dict.fromkeys(descriptors))  # dedupe, keep order
+        if focus:
+            return f"exploit techniques and payloads for {focus} vulnerabilities"
+        # Round 1: no findings yet — scout for the threat profile's typical TTPs.
+        profile = getattr(self.state, "threat_profile", "hobbyist")
+        return f"common software exploit techniques and privilege escalation {profile} attacker"
+
     def research_phase(self, target_info: str = "") -> dict[str, Any]:
         """
         Phase 2: RESEARCH - Use dogpile to find new attack techniques.
 
-        Subject to per-round budget limits.
+        Subject to per-round budget limits. ``target_info`` is accepted for
+        backward compatibility but is no longer interpolated into the web query.
         """
         if self.memory.get_research_budget_remaining() <= 0:
             console.print("[yellow]Red Team: Research budget exhausted[/yellow]")
@@ -93,15 +114,19 @@ class RedAgent:
 
         console.print("[red]Red Team: RESEARCH phase - finding attack techniques[/red]")
 
-        query = f"exploit techniques vulnerability {target_info}"
+        query = self._research_query()
         result = self.memory.research(query)
 
         if result.get("success"):
-            self.round_actions.append(f"Researched: {query}")
+            productive = result.get("productive_providers") or []
+            note = f"Researched ({result.get('elapsed_s')}s, {len(productive)} providers"
+            if result.get("timed_out"):
+                note += ", partial"
+            self.round_actions.append(f"{note}): {query}")
             self.memory.learn(
                 problem=f"Research for round {self.current_round}: {query}",
                 solution=result.get("results", "")[:2000],
-                tags=["research", f"round_{self.current_round}"]
+                tags=["research", f"round_{self.current_round}"] + productive
             )
         else:
             self.round_actions.append(f"Research failed: {result.get('error')}")

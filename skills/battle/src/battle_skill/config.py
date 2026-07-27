@@ -55,6 +55,19 @@ OVERNIGHT_ROUNDS = 1000
 OVERNIGHT_CHECKPOINT_INTERVAL = 50
 DEFAULT_RESEARCH_BUDGET = 3
 
+# Research deadline (seconds). Knowledge attained per second decides rounds, so
+# research is deadline-bounded and harvests whatever landed rather than
+# discarding a whole run that did not finish.
+DEFAULT_RESEARCH_DEADLINE_S = 120
+
+# Dogpile curated source presets per team (see dogpile/resources/presets.yaml).
+# red_team -> GTFOBins, LOLBAS, HackTricks, PayloadsAllTheThings, Exploit-DB.
+# blue_team -> MITRE ATT&CK/D3FEND, Sigma, YARA, Atomic Red Team, DFIR Report.
+TEAM_DOGPILE_PRESETS = {
+    "red": "red_team",
+    "blue": "blue_team",
+}
+
 # Threat Profiles (ported from hack skill)
 THREAT_PROFILES = {
     "script-kiddie": {

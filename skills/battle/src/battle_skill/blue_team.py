@@ -94,19 +94,25 @@ class BlueAgent:
         console.print("[blue]Blue Team: RESEARCH phase - finding defense techniques[/blue]")
 
         if findings:
-            finding_desc = findings[0].description[:100]
-            query = f"patch fix mitigate {finding_desc}"
+            top = findings[0]
+            vuln_type = getattr(top.type, "value", str(top.type))
+            finding_desc = top.description[:100]
+            query = f"detection rule and mitigation for {vuln_type}: {finding_desc}"
         else:
-            query = "software hardening security best practices"
+            query = "software hardening and detection engineering best practices"
 
         result = self.memory.research(query)
 
         if result.get("success"):
-            self.round_actions.append(f"Researched: {query}")
+            productive = result.get("productive_providers") or []
+            note = f"Researched ({result.get('elapsed_s')}s, {len(productive)} providers"
+            if result.get("timed_out"):
+                note += ", partial"
+            self.round_actions.append(f"{note}): {query}")
             self.memory.learn(
                 problem=f"Defense research for round {self.current_round}",
                 solution=result.get("results", "")[:2000],
-                tags=["research", "defense", f"round_{self.current_round}"]
+                tags=["research", "defense", f"round_{self.current_round}"] + productive
             )
         else:
             self.round_actions.append(f"Research failed: {result.get('error')}")
