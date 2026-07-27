@@ -354,7 +354,8 @@ def main():
     }
     led2 = continuity_ledger.append_arc_delta(
         persona, delta, journal_id=persist.get("key"),
-        dream_id=f"auto_{meta['cycle']}")
+        dream_id=f"auto_{meta['cycle']}",
+        expected_epoch=ledger["epoch"])
     print(f"journal written ({len(entry['journal'].split())} words) | "
           f"memory-web hops entities={entry['memory_web_size']}")
     print("MOOD:", entry["session_mood"]["mood_label"], "|",

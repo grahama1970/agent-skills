@@ -1,0 +1,115 @@
+{
+  "schema": "persona_dream.continuity_ledger_hardening_receipt.v1",
+  "created_at": "2026-07-27T15:40:00Z",
+  "status": "PASS_DETERMINISTIC_LEDGER_HARDENING",
+  "mocked": false,
+  "live": false,
+  "proof_scope": "Deterministic local continuity-ledger authority gates only.",
+  "claims": {
+    "proves": [
+      "continuity ledgers are validated on read before update",
+      "Embry's legacy ledger schema normalizes to the persona continuity schema without losing provenance",
+      "arc-delta append requires an expected source epoch",
+      "stale source epochs block before write",
+      "duplicate dream-cycle replay blocks before appending a second delta",
+      "identity-core mutation is detected by recomputed canonical hash, not by assert",
+      "arc deltas cannot smuggle identity-core, epoch, arc_state, or core-amendment fields",
+      "accepted arc-delta writes use atomic temp-file write plus os.replace",
+      "write_dream_journal.py passes the ledger epoch it read into append_arc_delta"
+    ],
+    "does_not_prove": [
+      "live Memory persistence",
+      "Watch observation availability",
+      "session mood binding before first user turn",
+      "multi-turn session-mood stability",
+      "Chatterbox rendering",
+      "perceived Embry emotion",
+      "speaker similarity",
+      "adversarial Embry recognition",
+      "the full accepted-dream to recognizable-speech continuity chain"
+    ]
+  },
+  "changed_files": [
+    {
+      "path": "skills/persona-dream/scripts/continuity_ledger.py",
+      "sha256": "e984e949bb7eaaf2f97d47e531f085b5c22ab39d76d114ab21427e1267b191a2",
+      "changes": [
+        "added atomic JSON writes using tempfile plus os.replace",
+        "added read-time validate_ledger normalization and BLOCKED_* failures",
+        "added Embry legacy schema normalization to persona_dream.persona_continuity_state.v1",
+        "added expected_epoch compare-and-set requirement for append_arc_delta",
+        "added dream-cycle idempotency keys and duplicate replay rejection",
+        "replaced assert-based core check with recomputed identity_core_sha256 validation"
+      ]
+    },
+    {
+      "path": "skills/persona-dream/scripts/write_dream_journal.py",
+      "sha256": "d684c557f6095fea962914364744f92c470ab432ca08094e799da25bcd785354",
+      "changes": [
+        "passes expected_epoch=ledger['epoch'] to append_arc_delta"
+      ]
+    },
+    {
+      "path": "skills/persona-dream/tests/test_continuity_ledger_hardening.py",
+      "sha256": "590d50c94a83702d0584d801b937f7b68d5181a36425a9f64d34f619755372da",
+      "changes": [
+        "covers legacy Embry normalization",
+        "covers required expected epoch",
+        "covers stale epoch rejection",
+        "covers duplicate dream-cycle replay rejection without append",
+        "covers identity-core hash mismatch rejection",
+        "covers forbidden identity-core fields in arc deltas",
+        "covers one accepted delta per dream cycle with persisted idempotency key"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py -q",
+      "status": "PASS",
+      "result": "7 passed in 0.06s"
+    },
+    {
+      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
+      "status": "PASS",
+      "result": "14 passed in 0.75s"
+    },
+    {
+      "command": "./skills/persona-dream/sanity.sh",
+      "status": "PASS",
+      "result": "498 passed, 9 subtests passed in 32.30s"
+    },
+    {
+      "command": "python3 scripts/check_mock_evidence_claims.py",
+      "status": "NOT_RUN",
+      "result": "root-level scripts/check_mock_evidence_claims.py is absent in this worktree"
+    }
+  ],
+  "negative_controls": [
+    {
+      "name": "duplicate_cycle_replay",
+      "status": "BLOCKED_DUPLICATE_CYCLE_REPLAY",
+      "test": "test_duplicate_dream_cycle_replay_blocks_and_does_not_append"
+    },
+    {
+      "name": "stale_ledger_epoch",
+      "status": "BLOCKED_STALE_LEDGER_EPOCH",
+      "test": "test_stale_epoch_blocks_after_first_append"
+    },
+    {
+      "name": "identity_core_mutation",
+      "status": "BLOCKED_CORE_MUTATED",
+      "test": "test_identity_core_hash_mismatch_blocks_before_append"
+    },
+    {
+      "name": "delta_core_rewrite_attempt",
+      "status": "BLOCKED_ARC_DELTA_INVALID",
+      "test": "test_arc_delta_cannot_smuggle_identity_core_update"
+    }
+  ],
+  "next_step": {
+    "phase": "P2.2_SESSION_MOOD_BINDING_CONSUMER",
+    "target_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "summary": "Read the latest valid continuity ledger, bind one session_mood id before turn 1, assert the same mood across multiple turns, preserve answer propositions, derive dream_voice_weights, and route to Chatterbox for later live proof."
+  }
+}

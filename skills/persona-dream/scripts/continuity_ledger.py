@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import tempfile
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -36,6 +38,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CONTINUITY_DIR = ROOT / "reports/goal_v5/continuity"
 SCHEMA = "persona_dream.persona_continuity_state.v1"
+LEGACY_EMBRY_SCHEMA = "persona_dream.embry_continuity_state.v1"
 
 # Embry's roundtable-authored core, preserved as her canonical identity DATA.
 # Authored cores live here keyed by persona_id; a persona WITHOUT one is
@@ -84,6 +87,29 @@ ARC_DELTA_FIELDS = ("before", "now", "because", "still_true", "open_tension",
 
 def _sha(obj: Any) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def _atomic_write_json(path: Path, obj: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    tmp_path = Path(tmp)
+    try:
+        with os.fdopen(fd, "w") as fh:
+            fh.write(json.dumps(obj, indent=2) + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp_path, path)
+        try:
+            dir_fd = os.open(path.parent, os.O_DIRECTORY)
+            try:
+                os.fsync(dir_fd)
+            finally:
+                os.close(dir_fd)
+        except OSError:
+            pass
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
 
 
 def ledger_path(persona_id: str) -> Path:
@@ -157,16 +183,69 @@ def init_ledger(persona_id: str, docs: list[dict] | None = None,
         "core_amendment_log": [],
     }
     ledger["identity_core_sha256"] = _sha(ledger["identity_core"])
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(ledger, indent=2) + "\n")
+    _atomic_write_json(path, ledger)
     return ledger
+
+
+def _block(reason: str) -> ValueError:
+    return ValueError(reason)
+
+
+def validate_ledger(ledger: dict, persona_id: str) -> dict:
+    """Return a normalized ledger or raise a fail-closed BLOCKED_* error."""
+    if not isinstance(ledger, dict):
+        raise _block("BLOCKED_LEDGER_MALFORMED:not_object")
+    out = json.loads(json.dumps(ledger))
+    schema = out.get("schema")
+    if schema == LEGACY_EMBRY_SCHEMA and persona_id == "embry":
+        out["schema"] = SCHEMA
+        out["persona_id"] = "embry"
+        out.setdefault("provenance", {})["normalized_from_schema"] = LEGACY_EMBRY_SCHEMA
+    elif schema != SCHEMA:
+        raise _block(f"BLOCKED_LEDGER_SCHEMA_UNSUPPORTED:{schema}")
+    if out.get("persona_id") != persona_id:
+        raise _block(f"BLOCKED_LEDGER_PERSONA_MISMATCH:{out.get('persona_id')}!={persona_id}")
+    core = out.get("identity_core")
+    if not isinstance(core, dict):
+        raise _block("BLOCKED_LEDGER_MALFORMED:identity_core")
+    arc = out.get("arc_state")
+    if not isinstance(arc, dict):
+        raise _block("BLOCKED_LEDGER_MALFORMED:arc_state")
+    arc.setdefault("current_self_claims", [])
+    arc.setdefault("active_tensions", [])
+    arc.setdefault("earned_permissions", [])
+    arc.setdefault("contested_beliefs", [])
+    arc.setdefault("unresolved_questions", [])
+    arc.setdefault("recurring_avoidances", [])
+    arc.setdefault("recent_arc_deltas", [])
+    if not isinstance(arc["recent_arc_deltas"], list):
+        raise _block("BLOCKED_LEDGER_MALFORMED:recent_arc_deltas")
+    provenance = out.setdefault("provenance", {})
+    if not isinstance(provenance, dict):
+        raise _block("BLOCKED_LEDGER_MALFORMED:provenance")
+    provenance.setdefault("source_journal_ids", [])
+    provenance.setdefault("source_dream_ids", [])
+    provenance.setdefault("relevant_canon_event_ids", [])
+    provenance.setdefault("identity_core_version", core.get("identity_core_version"))
+    provenance.setdefault("arc_delta_idempotency_keys", [])
+    if not isinstance(provenance["arc_delta_idempotency_keys"], list):
+        raise _block("BLOCKED_LEDGER_MALFORMED:arc_delta_idempotency_keys")
+    if not isinstance(out.get("epoch"), int):
+        raise _block("BLOCKED_LEDGER_MALFORMED:epoch")
+    out.setdefault("core_amendment_log", [])
+    if not isinstance(out["core_amendment_log"], list):
+        raise _block("BLOCKED_LEDGER_MALFORMED:core_amendment_log")
+    expected_core_hash = _sha(core)
+    if out.get("identity_core_sha256") != expected_core_hash:
+        raise _block("BLOCKED_CORE_MUTATED:identity_core_sha256_mismatch")
+    return out
 
 
 def read_ledger(persona_id: str, docs: list[dict] | None = None) -> dict:
     path = ledger_path(persona_id)
     if not path.exists():
         return init_ledger(persona_id, docs)
-    return json.loads(path.read_text())
+    return validate_ledger(json.loads(path.read_text()), persona_id)
 
 
 def validate_arc_delta(delta: dict) -> list[str]:
@@ -174,20 +253,45 @@ def validate_arc_delta(delta: dict) -> list[str]:
     for f in ("before", "now", "because", "still_true"):
         if not str(delta.get(f) or "").strip():
             errs.append(f"missing_required_field:{f}")
+    for f in ("identity_core", "identity_core_sha256", "arc_state", "epoch",
+              "core_amendment_log"):
+        if f in delta:
+            errs.append(f"forbidden_field:{f}")
     return errs
 
 
+def _arc_delta_idempotency_key(persona_id: str, *, dream_id: str | None = None,
+                               journal_id: str | None = None) -> str:
+    if not dream_id:
+        raise _block("BLOCKED_ARC_DELTA_NO_DREAM_CYCLE_ID")
+    return "dream_cycle:" + _sha({"persona_id": persona_id, "dream_id": dream_id,
+                                  "journal_id": journal_id})[:24]
+
+
 def append_arc_delta(persona_id: str, delta: dict, *, journal_id: str | None = None,
-                     dream_id: str | None = None) -> dict:
+                     dream_id: str | None = None,
+                     expected_epoch: int | None = None) -> dict:
     """Journal's ONLY write path into arc_state. Additive: requires still_true.
     Cannot touch identity_core or canon. One delta per call."""
+    if expected_epoch is None:
+        raise ValueError("BLOCKED_STALE_LEDGER_EPOCH:expected_epoch_required")
     errs = validate_arc_delta(delta)
     if errs:
         raise ValueError(f"BLOCKED_ARC_DELTA_INVALID: {errs}")
     ledger = read_ledger(persona_id)
-    core_before = ledger.get("identity_core_sha256")
+    if ledger["epoch"] != expected_epoch:
+        raise ValueError(f"BLOCKED_STALE_LEDGER_EPOCH:{ledger['epoch']}!={expected_epoch}")
+    core_before = _sha(ledger["identity_core"])
+    if ledger.get("identity_core_sha256") != core_before:
+        raise ValueError("BLOCKED_CORE_MUTATED:pre_append_hash_mismatch")
+    idem_key = _arc_delta_idempotency_key(persona_id, dream_id=dream_id,
+                                          journal_id=journal_id)
+    if idem_key in ledger["provenance"].get("arc_delta_idempotency_keys", []):
+        raise ValueError(f"BLOCKED_DUPLICATE_CYCLE_REPLAY:{idem_key}")
     clean = {k: delta.get(k) for k in ARC_DELTA_FIELDS}
-    clean["arc_delta_id"] = f"arc_{ledger['epoch']}_{len(ledger['arc_state']['recent_arc_deltas'])}"
+    clean["arc_delta_id"] = f"arc_{ledger['epoch']}_{idem_key.rsplit(':', 1)[-1][:12]}"
+    clean["idempotency_key"] = idem_key
+    clean["source_epoch"] = ledger["epoch"]
     ledger["arc_state"]["recent_arc_deltas"].append(clean)
     # additive updates: the "now" becomes a current self-claim, the open_tension
     # joins active tensions; nothing is deleted.
@@ -200,9 +304,12 @@ def append_arc_delta(persona_id: str, delta: dict, *, journal_id: str | None = N
         ledger["provenance"]["source_journal_ids"].append(journal_id)
     if dream_id:
         ledger["provenance"]["source_dream_ids"].append(dream_id)
-    # invariant: the core did not change
-    assert ledger.get("identity_core_sha256") == core_before, "identity_core mutated"
-    ledger_path(persona_id).write_text(json.dumps(ledger, indent=2) + "\n")
+    ledger["provenance"].setdefault("arc_delta_idempotency_keys", []).append(idem_key)
+    if _sha(ledger["identity_core"]) != core_before:
+        raise ValueError("BLOCKED_CORE_MUTATED:post_append_hash_mismatch")
+    ledger["identity_core_sha256"] = core_before
+    ledger = validate_ledger(ledger, persona_id)
+    _atomic_write_json(ledger_path(persona_id), ledger)
     return ledger
 
 
@@ -227,7 +334,7 @@ def propose_core_amendment(persona_id: str, refinement: str, *,
     ledger["provenance"]["identity_core_version"] = ledger["identity_core"]["identity_core_version"]
     ledger["core_amendment_log"].append(
         {"epoch": ledger["epoch"], "refinement": refinement, "earned_by": earned_by})
-    ledger_path(persona_id).write_text(json.dumps(ledger, indent=2) + "\n")
+    _atomic_write_json(ledger_path(persona_id), validate_ledger(ledger, persona_id))
     return ledger
 
 

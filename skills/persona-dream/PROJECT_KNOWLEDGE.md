@@ -3,6 +3,51 @@
 **Last updated:** 2026-07-27 UTC (P2.1 ledger-hardening step synthesis) by Codex
 **Status:** Active development
 
+## 2026-07-27 — P2.1 continuity-ledger hardening receipt accepted
+
+The P2.1 deterministic ledger-hardening slice is now implemented and receipted:
+`reports/goal_v5/continuity/ledger_hardening/RECEIPT.json`.
+
+What exists now:
+
+- `scripts/continuity_ledger.py` validates ledgers on read and normalizes
+  Embry's legacy `persona_dream.embry_continuity_state.v1` shape to the canonical
+  `persona_dream.persona_continuity_state.v1` schema without dropping
+  provenance.
+- Arc-delta append uses atomic temp-file write plus `os.replace`.
+- Arc-delta append requires an expected source epoch and blocks stale epochs.
+- Dream-cycle idempotency keys are persisted, and replaying the same cycle
+  blocks instead of appending a second delta with a new id.
+- Identity-core integrity is recomputed from canonical `identity_core` content;
+  a mutated core blocks with `BLOCKED_CORE_MUTATED` instead of relying on
+  `assert`.
+- Deltas cannot smuggle `identity_core`, `identity_core_sha256`, `arc_state`,
+  `epoch`, or `core_amendment_log` fields.
+- `scripts/write_dream_journal.py` now passes the ledger epoch it read into
+  `append_arc_delta`.
+
+Focused proof:
+
+- `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py -q`
+  returned `7 passed in 0.06s`.
+- `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_tau_routing_boundary.py -q`
+  returned `14 passed in 0.75s`.
+- `./skills/persona-dream/sanity.sh` returned
+  `498 passed, 9 subtests passed in 32.30s`.
+
+Evidence boundary: this is deterministic local proof only (`mocked: false`,
+`live: false`). It proves the ledger authority gates needed before a live chain
+can be honest. It does not prove live Memory persistence, Watch availability,
+session mood binding before turn 1, multi-turn mood stability, Chatterbox
+rendering, perceived Embry emotion, speaker similarity, or adversarial Embry
+recognition.
+
+Next deterministic build: `P2.2_SESSION_MOOD_BINDING_CONSUMER`. Build the
+consumer that reads the latest valid ledger, binds one `session_mood` id before
+the first user turn, asserts the same id across turns, preserves answer
+propositions, derives `dream_voice_weights`, and prepares the larger
+`reports/goal_v5/continuity/live_chain/RECEIPT.json` proof.
+
 ## 2026-07-27 — CONTROLLING HIERARCHY aligned across GOAL/README/SKILL
 
 The 2026-07-27 reassessment was accepted as the operating direction. The

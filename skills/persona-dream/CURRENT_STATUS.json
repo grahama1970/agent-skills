@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-27T13:48:00Z",
+  "updated_at": "2026-07-27T15:45:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:193c1adf5bee5579e2c67bcb5e9d7f4f32491a561a29d5619a6f3e8e887fb58f",
@@ -22,8 +22,10 @@
     "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
     "mocked": false,
     "live": false,
-    "status": "ARTIFACT_PRESENT_NOT_RUNTIME_AUTHORITY_PROVEN",
-    "exercised": "identity_core, arc_state, recent_arc_deltas, provenance artifact shape",
+    "status": "LEDGER_HARDENED_NOT_RUNTIME_AUTHORITY_PROVEN",
+    "latest_authority_receipt": "skills/persona-dream/reports/goal_v5/continuity/ledger_hardening/RECEIPT.json",
+    "latest_authority_receipt_sha256": "sha256:02f866e0b208c531902129cff2cd385ba29b28d6170d3ea027993fea01f7502b",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard",
     "unverified": [
       "persisted as authoritative runtime state",
       "reread before first user turn",
@@ -85,7 +87,7 @@
     ],
     "full_sanity_command": "./skills/persona-dream/sanity.sh",
     "full_sanity_status": "PASS",
-    "full_sanity_result": "491 passed, 9 subtests passed",
+    "full_sanity_result": "498 passed, 9 subtests passed",
     "full_sanity_notes": [
       "static dream fixture produced 10 required artifacts and 6 frame prompts",
       "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
@@ -94,7 +96,6 @@
     ]
   },
   "active_blockers": [
-    "continuity_ledger.py is not yet hardened for atomic writes, epoch compare-and-set, duplicate-cycle idempotency, recomputed identity-core hash checks, and Embry schema normalization.",
     "Continuity ledger is not yet proven as the runtime authority across real sessions.",
     "Chatterbox proof is transport/content-preservation evidence, not perceptual emotion or identity evidence.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
@@ -102,11 +103,9 @@
     "Load-bearing PCTOM-R proof roots are still recorded from /tmp paths and need durable repository or evidence-store copies before reboot."
   ],
   "next_step": {
-    "default": "Harden the continuity ledger, then build and run the live Embry continuity-chain proof.",
+    "default": "Build the session-mood binding consumer, then run the live Embry continuity-chain proof.",
     "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "ordered_steps": [
-      "Patch continuity_ledger.py for atomic temp-file replace, epoch compare-and-set, cycle-derived idempotency, recomputed identity-core hash validation, read-time ledger validation, and Embry schema normalization.",
-      "Add focused tests proving duplicate cycle replay blocks, stale ledger epochs block, identity-core mutation blocks, and exactly one arc delta is accepted per dream cycle.",
       "Durably copy or bind the /tmp PCTOM-R proof roots cited by GOAL.md into a repository report path or explicit evidence store.",
       "Build the session mood consumer: read latest valid ledger, bind one session_mood id before turn 1, assert the same id across turns, preserve answer propositions, derive dream_voice_weights, and route to Chatterbox.",
       "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls."
