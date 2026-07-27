@@ -185,7 +185,8 @@ def programs(
     output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ):
     """List DARPA programs from RSS feed."""
-    console.print("[dim]Fetching DARPA programs...[/dim]")
+    if not output_json:
+        console.print("[dim]Fetching DARPA programs...[/dim]")
 
     try:
         xml_content = fetch_url(DARPA_RSS_URL)
@@ -248,7 +249,8 @@ def opportunities(
     output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ):
     """List DARPA opportunities (BAAs) from RSS feed."""
-    console.print("[dim]Fetching DARPA opportunities...[/dim]")
+    if not output_json:
+        console.print("[dim]Fetching DARPA opportunities...[/dim]")
 
     try:
         xml_content = fetch_url(DARPA_OPPORTUNITIES_RSS)
@@ -315,7 +317,8 @@ def grants(
     if "darpa" not in keyword.lower():
         search_keyword = f"DARPA {keyword}"
 
-    console.print(f"[dim]Searching Grants.gov for '{search_keyword}'...[/dim]")
+    if not output_json:
+        console.print(f"[dim]Searching Grants.gov for '{search_keyword}'...[/dim]")
 
     try:
         results = search_grants_gov(search_keyword, agency=agency, status=status, limit=limit)
@@ -422,7 +425,8 @@ def feed(
         console.print("Valid types: programs, opportunities")
         raise typer.Exit(1)
 
-    console.print(f"[dim]Fetching {feed_type} feed...[/dim]")
+    if not output_json:
+        console.print(f"[dim]Fetching {feed_type} feed...[/dim]")
 
     try:
         xml_content = fetch_url(url)
@@ -473,7 +477,8 @@ def analyze(
         console.print(f"[red]BAA file not found: {baa}[/red]")
         raise typer.Exit(1)
     
-    console.print(f"[dim]Analyzing BAA: {baa_path.name}...[/dim]")
+    if not output_json:
+        console.print(f"[dim]Analyzing BAA: {baa_path.name}...[/dim]")
     
     # Read file content
     if baa_path.suffix.lower() == ".pdf":

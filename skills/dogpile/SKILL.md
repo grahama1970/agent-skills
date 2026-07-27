@@ -27,6 +27,7 @@ composes:
   - arxiv
   - ingest-youtube
   - ingest-website
+  - ops-darpa
   - fetcher
   - extractor
   - ingest-book
@@ -61,9 +62,10 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Stage 3**: Deep code search inside the selected repository
 7.  **Fetcher (📥, internal primitive)**: Fetch selected web pages, PDFs, and documents after Brave/ArXiv/user URLs identify targets; this is not a standalone search provider.
 8.  **Feed monitors (📰, opt-in)**: Fresh RSS feed monitor dry-runs through `consume-feed`; this is source-health/freshness evidence, not query-specific web search.
-9.  **Website ingestion (🧠, opt-in handoff)**: Promote selected sites or documentation URLs into `/ingest-website` when durable RAG/memory is intentionally needed.
-10. **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
-11. **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
+9.  **DARPA operations (🛰️, opt-in specialized lane)**: DARPA programs, opportunities, BAAs, and Grants.gov searches belong to `ops-darpa` when defense R&D or funding context is explicitly relevant.
+10. **Website ingestion (🧠, opt-in handoff)**: Promote selected sites or documentation URLs into `/ingest-website` when durable RAG/memory is intentionally needed.
+11. **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
+12. **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
 
 ## Features
 
@@ -125,6 +127,38 @@ research workflows. Dogpile should not call WebGPT/browser tools directly.
 - Dogpile itself must emit enough grounded synthesis that a project agent can
   use the result without guessing from raw provider dumps.
 
+### Battle Consumer Boundary
+
+`$battle` is a major downstream consumer for Dogpile research. Red and Blue
+Battle agents may use Dogpile reports and receipts for technique scouting,
+candidate exploit families, blue-team hardening strategies, relevant GitHub
+tools/rules, DARPA/AIxCC context, papers, videos, and negative evidence.
+
+Dogpile research is design input only for Battle. It may populate a Battle
+research packet, candidate-method menu, or memory lesson, but it does not prove
+exploit success, patch effectiveness, or safe tool reuse. Battle must still run
+payloads, scanners, repo code, generated specimens, patch builds, regression
+tests, and Judge replay inside its Docker/QEMU/digital-twin evidence gates.
+
+For Battle use, prefer bounded Dogpile searches with clear team intent:
+
+```bash
+./run.sh search "Zip Slip exploit mitigations Java archive extraction" \
+  --persona battle-red \
+  --rationale "Battle research scout needs candidate exploit families and mitigations" \
+  --context "Treat sources as design input only; Docker/Judge replay is required for any exploit-success claim"
+```
+
+Useful Battle-oriented Dogpile lanes:
+
+| Battle need | Dogpile lane |
+|-------------|--------------|
+| Red exploit-family scouting | Brave questions, GitHub evaluated repos, ArXiv, YouTube transcripts, security feeds |
+| Blue mitigations and detection | Brave, GitHub evaluated detection/rule repos, security feeds, vendor docs via Fetcher |
+| DARPA/AIxCC context | `ops-darpa`, Brave `site:darpa.mil`, ArXiv |
+| Source-bearing child research | Dogpile report plus Tau reviewer/researcher receipt above Dogpile |
+| Untrusted tool validation | `$github-search` isolated evaluation first, then Battle Docker/Judge if adopted |
+
 Threat-intel and security feed hits are enrichment by default. Do not treat
 feed hits as automatic block decisions, alerts, or proof of compromise unless
 the project workflow adds high-confidence environmental corroboration. The
@@ -178,6 +212,24 @@ enrichment alongside Brave, GitHub, ArXiv, and YouTube evidence.
 | Corelan Team | Windows exploit development, mitigation bypass, stack/heap exploitation, and low-level training | The project needs exploit-dev mechanics or legacy-to-modern Windows exploitation concepts | The task is cloud, policy, news, or high-level incident triage |
 | Proofpoint Threat Insight | Email-borne threats, phishing, BEC, loaders, and initial-access tradecraft | Email security, phishing campaigns, or initial access matters | The task is web AppSec, AD tradecraft, or non-email infrastructure research |
 | EFF Deeplinks | Security-relevant privacy, CFAA/DMCA, policy, civil liberties, and legal context | Legal/policy constraints affect security research, disclosure, or tooling decisions | The task needs direct technical exploitation details or IOC enrichment |
+
+DARPA is a specialized government R&D lane, not a default security-news feed.
+When the question is about DARPA programs, BAAs, opportunities, technical
+offices, national-security R&D direction, or defense funding, route through
+`ops-darpa` first:
+
+```bash
+../ops-darpa/run.sh feed programs --json
+../ops-darpa/run.sh feed opportunities --json
+../ops-darpa/run.sh grants "cybersecurity" --limit 10 --json
+```
+
+Use DARPA feed hits as official program/opportunity context. They do not prove
+that a technology is deployed, available for use, secure, funded to your
+organization, or relevant to ordinary vulnerability triage. For normal CVE,
+malware, phishing, pentest tooling, or blue-team detection questions, prefer
+Brave, GitHub, ArXiv, YouTube, and the `security_code` feed packs before
+activating DARPA-specific scans.
 
 Raw IoC feeds such as CISA KEV JSON, URLhaus, Spamhaus, OpenPhish, and
 AlienVault OTX are not part of the default readable RSS lane. Treat them as
@@ -416,6 +468,60 @@ Stage 3: Deep Code Search
 ├── gh api repos/<repo>/contents (file tree)
 ├── gh search code --repo <repo> "query" (code matches)
 └── Returns: File structure + code locations with context
+```
+
+For code + cybersecurity research, `$github-search` is often the highest-value
+Dogpile lane after Brave because it can find real tools, detection content,
+exploit research, red-team tradecraft, blue-team rules, and implementation
+evidence. Do not promote a repository to "useful evidence" from stars or search
+snippets alone. Prefer repositories that pass explicit criteria:
+
+| Target | Prefer | Reject or down-rank |
+|--------|--------|---------------------|
+| Penetration testing / red team | Recent updates, clear license, reproducible install/help path, documented operator assumptions, tests or CI, scoped ethical-use framing, readable code, tagged releases, active issue handling | Abandoned exploit dumps, unclear license, credential harvesting, payloads with no lab framing, binaries without source, install scripts that require unsafe network execution |
+| Exploit research / PoC | Tied to a specific CVE/advisory/vendor writeup, clear affected versions, lab-only reproduction steps, minimal payload, no broad automation by default, references to fixes/mitigations | Weaponized mass scanners, unclear provenance, no version bounds, destructive defaults, no mitigation context |
+| Blue-team / detection engineering | Sigma/YARA/Suricata/Zeek/osquery/EDR rules, sample telemetry, ATT&CK mappings, test fixtures, false-positive notes, versioned rule packs, active maintenance | Unattributed IOC dumps, stale rules, no test data, rules with broad noisy matches, no license or source context |
+| AppSec / code review | Source-level vulnerable patterns, CodeQL/Semgrep rules, minimal vulnerable fixtures, patch references, tests that demonstrate detection | Blog-only repos with no runnable code, generic scanners with opaque output, stale dependencies, no examples |
+
+Recommended Dogpile use:
+
+```bash
+../github-search/run.sh evaluate "CVE-2026 example exploit PoC" \
+  --criteria "specific CVE, lab reproduction, clear affected versions, mitigation notes, maintained, license" \
+  --min-stars 25 \
+  --updated-after 2025-01-01 \
+  --top 3 \
+  --json
+
+../github-search/run.sh evaluate "Sigma rules Windows credential dumping" \
+  --criteria "blue-team detection, Sigma or YARA, tests, ATT&CK mapping, false-positive notes, maintained" \
+  --updated-after 2025-01-01 \
+  --top 3 \
+  --json
+```
+
+The project agent should read the `$github-search` JSON rejected-candidate
+reasons, score components, entrypoint result, and cited snippets before
+synthesis. A clean `--help` entrypoint proves only that the detected surface
+loads under constraints; it does not prove exploit validity, detection quality,
+or safe reuse.
+
+Security repositories are untrusted code. When evaluating penetration-testing,
+exploit, malware, red-team, or dual-use repositories, run only through
+`$github-search`'s isolated evaluation path. Prefer strict Bubblewrap where
+available; use a disposable Docker/container harness when dependencies require
+installation or when the repo's entrypoint cannot be checked safely with
+Bubblewrap alone. Do not run repo-provided install scripts, payloads, scanners,
+or PoCs directly on the host. Keep network disabled unless the human explicitly
+accepts that risk for a bounded lab target, and scrub inherited credentials in
+all execution environments.
+
+```bash
+../github-search/run.sh evaluate "red team tool query" \
+  --criteria "maintained, clear license, lab-safe, documented help path" \
+  --sandbox strict \
+  --top 3 \
+  --json
 ```
 
 ## Presets (For Security Research)

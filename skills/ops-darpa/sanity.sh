@@ -1,6 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Sanity check for ops-darpa skill
-set -e
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -42,7 +47,7 @@ fi
 
 # Check 4: Create dummy BAA and analyze it
 echo -n "Checking analyze command... "
-cat > /tmp/dummy_baa.txt << EOF
+cat > "$TMP_DIR/dummy_baa.txt" << EOF
 DARPA BAA TEST DOCUMENT
 Required Sections: Executive Summary, Goals and Impact
 Volume I: Technical and Management Proposal
@@ -50,13 +55,13 @@ Page Limit: Volume I is limited to 25 pages.
 Deadline: March 15, 2026
 EOF
 
-if ./run.sh analyze /tmp/dummy_baa.txt --json > /tmp/analysis.json; then
+if ./run.sh analyze "$TMP_DIR/dummy_baa.txt" --json > "$TMP_DIR/analysis.json"; then
     # Verify analysis extracted key info
-    if grep -q "25" /tmp/analysis.json && grep -q "March 15, 2026" /tmp/analysis.json; then
+    if grep -q "25" "$TMP_DIR/analysis.json" && grep -q "March 15, 2026" "$TMP_DIR/analysis.json"; then
         echo -e "${GREEN}PASS${NC}"
     else
         echo -e "${RED}FAIL (Content mismatch)${NC}"
-        cat /tmp/analysis.json
+        cat "$TMP_DIR/analysis.json"
         exit 1
     fi
 else
@@ -64,7 +69,56 @@ else
     exit 1
 fi
 
-rm /tmp/dummy_baa.txt /tmp/analysis.json
+echo -n "Checking DARPA programs RSS... "
+if ./run.sh feed programs --json > "$TMP_DIR/programs.json" && python3 - "$TMP_DIR/programs.json" <<'PY'
+import json
+import sys
+items = json.loads(open(sys.argv[1], encoding="utf-8").read())
+if not isinstance(items, list) or not items:
+    raise SystemExit("programs feed returned no items")
+for item in items[:3]:
+    if not item.get("title") or not item.get("link"):
+        raise SystemExit("programs feed item missing title/link")
+PY
+then
+    echo -e "${GREEN}PASS${NC}"
+else
+    echo -e "${RED}FAIL${NC}"
+    exit 1
+fi
+
+echo -n "Checking DARPA opportunities RSS... "
+if ./run.sh feed opportunities --json > "$TMP_DIR/opportunities.json" && python3 - "$TMP_DIR/opportunities.json" <<'PY'
+import json
+import sys
+items = json.loads(open(sys.argv[1], encoding="utf-8").read())
+if not isinstance(items, list) or not items:
+    raise SystemExit("opportunities feed returned no items")
+for item in items[:3]:
+    if not item.get("title") or not item.get("link"):
+        raise SystemExit("opportunities feed item missing title/link")
+PY
+then
+    echo -e "${GREEN}PASS${NC}"
+else
+    echo -e "${RED}FAIL${NC}"
+    exit 1
+fi
+
+echo -n "Checking Grants.gov API shape... "
+if ./run.sh grants cyber --limit 1 --json > "$TMP_DIR/grants.json" && python3 - "$TMP_DIR/grants.json" <<'PY'
+import json
+import sys
+items = json.loads(open(sys.argv[1], encoding="utf-8").read())
+if not isinstance(items, list):
+    raise SystemExit("grants API did not return a list")
+PY
+then
+    echo -e "${GREEN}PASS${NC}"
+else
+    echo -e "${RED}FAIL${NC}"
+    exit 1
+fi
 
 # Check 5: Verify create-paper dependency for generate
 echo -n "Checking dependencies... "

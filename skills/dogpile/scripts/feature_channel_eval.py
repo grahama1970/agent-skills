@@ -66,12 +66,15 @@ def run_eval() -> dict[str, Any]:
     github_skill = _read(SKILLS_DIR / "github-search" / "SKILL.md")
     github_meta = _front_matter(github_skill)
     github_compose = set(github_meta.get("composes") or [])
+    battle_skill = _read(SKILLS_DIR / "battle" / "SKILL.md")
     github_candidate_search_path = SKILLS_DIR / "github-search" / "candidate_search.py"
     github_repo_search = _read(github_candidate_search_path if github_candidate_search_path.exists() else SKILLS_DIR / "github-search" / "repo_search.py")
     github_evaluate_repos = _read(SKILLS_DIR / "github-search" / "evaluate_repos.py")
     dogpile_youtube = _read(SKILL_DIR / "youtube_search.py")
     ingest_youtube_skill = _read(SKILLS_DIR / "ingest-youtube" / "SKILL.md")
     ingest_youtube_cli = _read(SKILLS_DIR / "ingest-youtube" / "cli.py")
+    ops_darpa_skill = _read(SKILLS_DIR / "ops-darpa" / "SKILL.md")
+    ops_darpa_run = _read(SKILLS_DIR / "ops-darpa" / "run.sh")
     run_sh = _read(SKILL_DIR / "run.sh")
     security_resources = _load_feed_pack(SKILL_DIR / "resources" / "security.yaml")
 
@@ -127,6 +130,29 @@ def run_eval() -> dict[str, Any]:
         and "discover_and_rank_repositories" in github_evaluate_repos,
         "GitHub Search composes Brave and uses Brave discovery before executable repository evaluation.",
         "Live GitHub auth or semantic repo ranking.",
+    ))
+
+    cases.append(_case(
+        "github_security_repo_promotion_criteria",
+        "github_search",
+        "`$github-search` is often the highest-value" in skill_md
+        and "Do not promote a repository to \"useful evidence\"" in skill_md
+        and "Penetration testing / red team" in skill_md
+        and "Exploit research / PoC" in skill_md
+        and "Blue-team / detection engineering" in skill_md
+        and "AppSec / code review" in skill_md
+        and "entrypoint result" in skill_md
+        and "does not prove exploit validity" in skill_md
+        and "Security repositories are untrusted code" in skill_md
+        and "--sandbox strict" in skill_md
+        and "Do not run repo-provided install scripts" in skill_md
+        and "disposable Docker/container harness" in skill_md
+        and "--criteria TEXT" in github_skill
+        and "strict Bubblewrap-only execution" in github_skill
+        and "scrubbed environment" in github_skill
+        and "rejected candidates and filter reasons" in github_skill,
+        "Dogpile documents security-specific GitHub repository promotion gates and requires isolated evaluation for untrusted security repos.",
+        "Live GitHub auth, exploit validity, detection quality, or repository safety.",
     ))
 
     cases.append(_case(
@@ -197,6 +223,37 @@ def run_eval() -> dict[str, Any]:
         "Configured Dogpile RSS pack source definitions contain no API-key/token fields.",
         "Whether each public feed endpoint is reachable right now.",
         feed_pack_details,
+    ))
+
+    cases.append(_case(
+        "darpa_routes_to_ops_darpa",
+        "darpa",
+        "  - ops-darpa" in skill_md
+        and "DARPA operations" in skill_md
+        and "route through\n`ops-darpa` first" in skill_md
+        and "../ops-darpa/run.sh feed programs --json" in skill_md
+        and "https://www.darpa.mil/rss.xml" in ops_darpa_skill
+        and "https://www.darpa.mil/rss/opportunities.xml" in ops_darpa_skill
+        and "https://api.grants.gov/v1/api/search2" in ops_darpa_skill
+        and "No authentication required" in ops_darpa_skill
+        and "source \"$PROJECT_ROOT/.env\"" in ops_darpa_run,
+        "Dogpile documents DARPA as a specialized opt-in lane owned by ops-darpa, including public RSS and Grants.gov no-key sources.",
+        "Live DARPA RSS freshness or Grants.gov query usefulness.",
+    ))
+
+    cases.append(_case(
+        "battle_consumes_dogpile_as_design_input",
+        "battle",
+        "### Battle Consumer Boundary" in skill_md
+        and "`$battle` is a major downstream consumer" in skill_md
+        and "Dogpile research is design input only for Battle" in skill_md
+        and "Battle must still run" in skill_md
+        and "Docker/QEMU/digital-twin evidence gates" in skill_md
+        and "Dogpile research receipts are design input for Battle, not proof" in battle_skill
+        and "Security repositories found through Dogpile must flow through `$github-search`" in battle_skill
+        and "Judge replay" in battle_skill,
+        "Dogpile and Battle both document that Dogpile research feeds Battle strategy while Docker/QEMU/Judge gates own execution proof.",
+        "Live Battle orchestration, exploit success, patch effectiveness, or repository safety.",
     ))
 
     required_feed_names = [

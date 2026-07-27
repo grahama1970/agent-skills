@@ -41,6 +41,9 @@ Query DARPA (Defense Advanced Research Projects Agency) for:
 | DARPA Opportunities RSS | Feed | None | Real-time |
 | Grants.gov API | REST | None | Daily |
 
+No authentication required: the built-in DARPA RSS and Grants.gov Search2
+checks are public no-key sources.
+
 ## DARPA Technical Offices
 
 | Office | Code | Focus Area |

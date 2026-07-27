@@ -100,6 +100,16 @@ Required production invariants:
   multiple `brave-search` and `dogpile` calls, including 10x concurrent Brave
   search batches when needed, then store useful results and negative evidence in
   `$memory`.
+- Dogpile research receipts are design input for Battle, not proof. Use them to
+  seed Red exploit-family menus, Blue hardening/detection menus, GitHub
+  security-tool candidates, DARPA/AIxCC context, and follow-up research
+  questions. Exploit success, patch effectiveness, tool safety, and repository
+  adoption still require Battle-owned Docker/QEMU execution, hard runtime
+  signals, and Judge replay.
+- Security repositories found through Dogpile must flow through `$github-search`
+  evaluation criteria first. Any adopted repo code, PoC, scanner, or payload
+  still runs only inside Battle's isolated target/runtime gates; do not execute
+  untrusted repo-provided install scripts or payloads on the host.
 - Target containers default to no network. External research happens from the
   agent side through controlled skills unless a scenario explicitly grants
   target-container network access.
