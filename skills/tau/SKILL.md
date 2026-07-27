@@ -103,6 +103,7 @@ skills/tau/run.sh proof-status
 skills/tau/run.sh e2e
 skills/tau/run.sh watchdog-status
 skills/tau/run.sh latest-proofs
+skills/tau/run.sh runtime-handshake --output /tmp/tau-runtime-handshake.json
 skills/tau/run.sh workflows-list
 skills/tau/run.sh workflow-describe repository-readiness
 skills/tau/run.sh workflow-run repository-readiness \
@@ -127,10 +128,13 @@ skills/tau/run.sh dag-view-capabilities
 
 `doctor` checks whether this operator wrapper can resolve and invoke the local
 Tau checkout. `status` reports current repo, GitHub issue, watchdog cron, and
-latest receipt state. `sanity` runs bounded checks that do not mutate GitHub.
-`proof-status` runs the same bounded sanity check plus repo/proof inspection and
-states explicit non-claims. `e2e` is a compatibility alias for `proof-status`;
-it is not a claim of full browser/provider/GitHub production E2E coverage.
+latest receipt state. `runtime-handshake` delegates to Tau's own
+`uv run tau runtime-handshake` command and writes the version/capability
+receipt without duplicating Tau implementation. `sanity` runs bounded checks
+that do not mutate GitHub. `proof-status` runs the same bounded sanity check
+plus repo/proof inspection and states explicit non-claims. `e2e` is a
+compatibility alias for `proof-status`; it is not a claim of full
+browser/provider/GitHub production E2E coverage.
 
 Tau runtime lanes that may exist in the Tau repo, depending on checkout/version:
 
@@ -148,6 +152,7 @@ uv run tau dag-motif-validate
 uv run tau research-source-receipt
 uv run tau github-redact-projection
 uv run tau github-apply-policy-check
+uv run tau runtime-handshake --output /tmp/tau-runtime-handshake.json
 ```
 
 Planned or recommended next runtime lanes. Do not claim these from this skill

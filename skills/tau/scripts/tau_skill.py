@@ -17,9 +17,26 @@ from typing import Annotated, Any
 
 import typer
 
-TAU_ROOT = Path(
-    os.environ.get("TAU_ROOT", str(Path.home() / "workspace/experiments/tau"))
-).expanduser().resolve()
+def _looks_like_tau_checkout(path: Path) -> bool:
+    pyproject = path / "pyproject.toml"
+    return (
+        pyproject.exists()
+        and (path / "src/tau_coding/cli.py").exists()
+        and 'name = "tau"' in pyproject.read_text(encoding="utf-8", errors="replace")
+    )
+
+
+def _resolve_tau_root() -> Path:
+    env_root = os.environ.get("TAU_ROOT")
+    if env_root:
+        return Path(env_root).expanduser().resolve()
+    cwd = Path.cwd()
+    if _looks_like_tau_checkout(cwd):
+        return cwd.resolve()
+    return (Path.home() / "workspace/experiments/tau").resolve()
+
+
+TAU_ROOT = _resolve_tau_root()
 WATCHDOG_ROOT = Path.home() / ".local/state/project-watchdog"
 WATCHDOG_RECEIPTS = WATCHDOG_ROOT / "receipts"
 WATCHDOG_LOG = WATCHDOG_ROOT / "logs/project-watchdog.log"
@@ -253,7 +270,9 @@ def doctor_payload() -> dict[str, Any]:
 def status_payload() -> dict[str, Any]:
     git_status = run(["git", "status", "--short"])
     head = run(["git", "log", "-1", "--oneline", "--decorate"])
-    remote = run(["git", "ls-remote", "grahama1970", "refs/heads/main"])
+    remote = run(["git", "ls-remote", "origin", "refs/heads/main"])
+    if remote["exit_code"] != 0:
+        remote = run(["git", "ls-remote", "grahama1970", "refs/heads/main"])
     issues = run(
         [
             "gh",
@@ -545,6 +564,14 @@ def dag_view_command(run_dir: Path) -> None:
 def dag_view_capabilities_command() -> None:
     """Report Tau-owned DAG viewer capabilities as JSON."""
     relay_tau_command(tau_command("dag-view-capabilities", "--json"))
+
+
+@app.command("runtime-handshake")
+def runtime_handshake_command(
+    output: Path = typer.Option(..., "--output", help="Path for the runtime handshake receipt."),
+) -> None:
+    """Write Tau's runtime handshake receipt from the resolved checkout."""
+    relay_tau_command(tau_command("runtime-handshake", "--output", str(output)))
 
 
 @app.command("doctor")
