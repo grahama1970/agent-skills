@@ -126,6 +126,16 @@ CLEANUP_EVIDENCE_FILENAME = ".cleanup-evidence.json"
 CLEANUP_EVIDENCE_CONTRACT = "cleanup.evidence.v1"
 CLEANUP_RECEIPT_CONTRACT = "cleanup.phase_receipt.v1"
 DEFAULT_RECEIPT_PATH = "artifacts/cleanup/cleanup_receipt.json"
+PROJECT_WATCHDOG_READY_LABEL = "agent-work"
+PROJECT_WATCHDOG_HOLD_LABELS = [
+    "agent-active",
+    "agent-blocked",
+    "needs-human",
+    "maintainer-blocked",
+    "next:human",
+    "blocked:upstream",
+    "status:deferred",
+]
 
 # Paths this skill and its evidence producer create. Without this, a successful
 # run leaves artifacts that the next run reports as findings — cleanup
@@ -176,6 +186,197 @@ def run_command(cmd: List[str], check: bool = True) -> Tuple[bool, str]:
         return False, ""
 
 
+def _project_watchdog_registry_dir() -> Path:
+    """Return the sibling project-watchdog registry directory, if installed."""
+    return Path(__file__).resolve().parents[1] / "project-watchdog" / "registry"
+
+
+def _read_json_document(path: Path) -> Tuple[Optional[Any], Optional[str]]:
+    if not path.exists():
+        return None, "missing"
+    try:
+        return json.loads(path.read_text()), None
+    except Exception as exc:
+        return None, str(exc)
+
+
+def _normalize_repo_identifier(value: Any) -> str:
+    """Normalize GitHub repo strings and URLs to owner/repo where possible."""
+    if not value:
+        return ""
+    text = str(value).strip().removesuffix(".git")
+    ssh_match = re.match(r"git@([^:]+):(.+)$", text)
+    if ssh_match:
+        text = f"{ssh_match.group(1)}/{ssh_match.group(2)}"
+    github_match = re.search(r"github\.com[:/]+([^/\s]+/[^/\s]+)$", text)
+    if github_match:
+        text = github_match.group(1)
+    return text.strip("/").lower()
+
+
+def _current_repo_identifier() -> str:
+    success, output = run_command(["git", "remote", "get-url", "origin"], check=False)
+    if not success:
+        return ""
+    return _normalize_repo_identifier(output.strip())
+
+
+def _iter_watchdog_projects(projects_doc: Any) -> List[Dict[str, Any]]:
+    if not isinstance(projects_doc, dict):
+        return []
+    projects = projects_doc.get("projects", [])
+    if isinstance(projects, list):
+        return [p for p in projects if isinstance(p, dict)]
+    if isinstance(projects, dict):
+        entries = []
+        for key, value in projects.items():
+            if isinstance(value, dict):
+                entry = dict(value)
+                entry.setdefault("project_id", str(key))
+                entries.append(entry)
+        return entries
+    return []
+
+
+def _watchdog_project_id(project: Dict[str, Any]) -> str:
+    for key in ("project_id", "id", "name"):
+        if project.get(key):
+            return str(project[key])
+    return ""
+
+
+def _path_matches_current_repo(candidate: Any, cwd: Path) -> bool:
+    if not candidate:
+        return False
+    try:
+        return Path(str(candidate)).expanduser().resolve() == cwd
+    except Exception:
+        return False
+
+
+def scan_project_watchdog_context(registry_dir: Optional[Path] = None) -> Dict[str, Any]:
+    """Read project-watchdog registry/state as advisory cleanup context.
+
+    This is intentionally read-only: cleanup must not tick the watchdog, lease
+    GitHub issues, relabel issues, or infer issue completion.
+    """
+    registry = Path(registry_dir) if registry_dir else _project_watchdog_registry_dir()
+    projects_path = registry / "projects.json"
+    state_path = registry / "state.json"
+    base: Dict[str, Any] = {
+        "status": "registry_missing",
+        "registry_dir": str(registry),
+        "projects_path": str(projects_path),
+        "state_path": str(state_path),
+        "repository_path": str(Path.cwd().resolve()),
+        "repository_remote": _current_repo_identifier(),
+        "project_name": get_project_name(),
+        "ready_label": PROJECT_WATCHDOG_READY_LABEL,
+        "hold_labels": PROJECT_WATCHDOG_HOLD_LABELS,
+        "issue_mutation_allowed": False,
+        "cleanup_may_dispatch_watchdog": False,
+        "blocks_cleanup_execution": False,
+        "requires_coordination": False,
+        "warnings": [],
+        "matches": [],
+    }
+
+    projects_doc, projects_error = _read_json_document(projects_path)
+    state_doc, state_error = _read_json_document(state_path)
+    if projects_error == "missing":
+        base["warnings"].append("project-watchdog registry/projects.json is not installed")
+        return base
+    if projects_error:
+        base["status"] = "registry_corrupt"
+        base["warnings"].append(f"project-watchdog projects.json is unreadable: {projects_error}")
+        return base
+    if state_error == "missing":
+        state_doc = {}
+        base["warnings"].append("project-watchdog registry/state.json is not installed")
+    elif state_error:
+        base["status"] = "registry_corrupt"
+        base["warnings"].append(f"project-watchdog state.json is unreadable: {state_error}")
+        return base
+
+    defaults = projects_doc.get("defaults", {}) if isinstance(projects_doc, dict) else {}
+    default_labels = defaults.get("labels", {}) if isinstance(defaults, dict) else {}
+    if default_labels.get("ready"):
+        base["ready_label"] = default_labels["ready"]
+
+    global_state = "unknown"
+    project_states: Dict[str, Any] = {}
+    if isinstance(state_doc, dict):
+        global_state = str(state_doc.get("global", {}).get("state", "unknown"))
+        raw_project_states = state_doc.get("projects", {})
+        if isinstance(raw_project_states, dict):
+            project_states = raw_project_states
+    base["global_state"] = global_state
+
+    cwd = Path.cwd().resolve()
+    current_repo = base["repository_remote"]
+    current_name = base["project_name"]
+    matches: List[Dict[str, Any]] = []
+    for project in _iter_watchdog_projects(projects_doc):
+        project_id = _watchdog_project_id(project)
+        repo_id = _normalize_repo_identifier(
+            project.get("repo") or project.get("github_repo") or project.get("remote")
+        )
+        runner = project.get("runner", {}) if isinstance(project.get("runner", {}), dict) else {}
+        reasons = []
+        if _path_matches_current_repo(project.get("worktree") or runner.get("cwd"), cwd):
+            reasons.append("worktree")
+        if current_repo and repo_id and current_repo == repo_id:
+            reasons.append("remote")
+        if project_id and project_id == current_name and not reasons:
+            reasons.append("project_id")
+        if not reasons:
+            continue
+        state_record = project_states.get(project_id, {}) if project_id else {}
+        state = "unknown"
+        if isinstance(state_record, dict):
+            state = str(state_record.get("state", "unknown"))
+        if state == "unknown":
+            state_policy = project.get("state_policy", {})
+            if isinstance(state_policy, dict):
+                state = str(state_policy.get("default_state", "unknown"))
+        matches.append({
+            "project_id": project_id,
+            "display_name": project.get("display_name", project_id),
+            "repo": repo_id,
+            "worktree": project.get("worktree"),
+            "runner_kind": project.get("runner_kind"),
+            "dispatch_backend": project.get("dispatch_backend", "local"),
+            "state": state,
+            "match_reasons": reasons,
+        })
+
+    base["matches"] = matches
+    if not matches:
+        base["status"] = "not_registered"
+        base["coordination_risk"] = "none"
+        return base
+
+    active_matches = [
+        match for match in matches
+        if global_state == "active" and match.get("state") == "active"
+    ]
+    base["status"] = "registered"
+    base["project_ids"] = [m["project_id"] for m in matches if m.get("project_id")]
+    base["project_states"] = {m["project_id"]: m.get("state") for m in matches if m.get("project_id")}
+    base["dispatch_backends"] = {m["project_id"]: m.get("dispatch_backend") for m in matches if m.get("project_id")}
+    base["runner_kinds"] = {m["project_id"]: m.get("runner_kind") for m in matches if m.get("project_id")}
+    if active_matches:
+        base["requires_coordination"] = True
+        base["blocks_cleanup_execution"] = True
+        base["coordination_risk"] = "active_dispatch_possible"
+        base["warnings"].append(
+            "project-watchdog is active for this project; cleanup must not mutate until dispatch/routing state is coordinated"
+        )
+    else:
+        base["coordination_risk"] = "registered_not_active"
+    return base
+
+
 def get_expected_root_dirs() -> Set[str]:
     """Auto-detect expected root dirs from git-tracked top-level directories."""
     success, output = run_command(["git", "ls-files"], check=False)
@@ -195,7 +396,7 @@ def get_expected_root_dirs() -> Set[str]:
 def get_git_status() -> List[str]:
     success, output = run_command(["git", "status", "--porcelain=v1"], check=False)
     if success:
-        return output.strip().split("\n") if output.strip() else []
+        return [line for line in output.splitlines() if line]
     log_warning("Could not get git status - not in a git repository?")
     return []
 
@@ -355,9 +556,41 @@ def build_worktree_audit() -> Dict[str, Any]:
         "project": get_project_name(),
         "cwd": str(Path.cwd()),
         "summary": summary,
+        "project_watchdog": scan_project_watchdog_context(),
         "buckets": buckets,
         "entries": entries,
     }
+
+
+def _append_project_watchdog_markdown(lines: List[str], context: Dict[str, Any]) -> None:
+    lines.append("## Project Watchdog Coordination")
+    lines.append("")
+    lines.append(f"- Status: `{context.get('status', 'unknown')}`")
+    lines.append(f"- Registry: `{context.get('registry_dir', 'unknown')}`")
+    lines.append(f"- Global state: `{context.get('global_state', 'unknown')}`")
+    project_states = context.get("project_states") or {}
+    if project_states:
+        lines.append(
+            "- Project states: "
+            + ", ".join(f"`{project}`=`{state}`" for project, state in sorted(project_states.items()))
+        )
+    if context.get("matches"):
+        project_ids = ", ".join(
+            f"`{match.get('project_id', 'unknown')}`" for match in context["matches"]
+        )
+        lines.append(f"- Matched project entries: {project_ids}")
+    lines.append(f"- Coordination risk: `{context.get('coordination_risk', 'unknown')}`")
+    lines.append(f"- Blocks cleanup execution: `{context.get('blocks_cleanup_execution', False)}`")
+    lines.append("- Cleanup issue mutation: `disabled`")
+    lines.append("- Cleanup watchdog dispatch: `disabled`")
+    lines.append(f"- Routable label: `{context.get('ready_label', PROJECT_WATCHDOG_READY_LABEL)}`")
+    lines.append(
+        "- Hold labels: "
+        + ", ".join(f"`{label}`" for label in context.get("hold_labels", PROJECT_WATCHDOG_HOLD_LABELS))
+    )
+    for warning in context.get("warnings", []) or []:
+        lines.append(f"- Warning: {warning}")
+    lines.append("")
 
 
 def generate_worktree_audit_markdown(audit: Dict[str, Any]) -> str:
@@ -378,6 +611,7 @@ def generate_worktree_audit_markdown(audit: Dict[str, Any]) -> str:
     for bucket, count in summary.get("by_bucket", {}).items():
         lines.append(f"- {bucket}: {count}")
     lines.append("")
+    _append_project_watchdog_markdown(lines, audit.get("project_watchdog", {}))
     lines.append("## Buckets")
     lines.append("")
     for bucket, entries in sorted(audit.get("buckets", {}).items()):
@@ -1213,7 +1447,40 @@ def evaluate_mutation_readiness(
             "status": "review_only",
             "evidence_required": "human owner decision; artifacts may be runtime inputs",
         },
+        "project_watchdog_coordination": {
+            "status": "read_only",
+            "evidence_required": (
+                "read-only project-watchdog registry/state observation; cleanup "
+                "must not tick, lease, relabel, close, or dispatch GitHub issues"
+            ),
+        },
     }
+
+    watchdog_context = findings.get("project_watchdog", {})
+    if watchdog_context:
+        classes["project_watchdog_coordination"].update({
+            "watchdog_status": watchdog_context.get("status", "unknown"),
+            "global_state": watchdog_context.get("global_state", "unknown"),
+            "project_states": watchdog_context.get("project_states", {}),
+            "coordination_risk": watchdog_context.get("coordination_risk", "unknown"),
+            "blocks_cleanup_execution": watchdog_context.get("blocks_cleanup_execution", False),
+        })
+    if watchdog_context.get("blocks_cleanup_execution"):
+        classes["project_watchdog_coordination"]["status"] = "blocked"
+        classes["project_watchdog_coordination"]["reason"] = (
+            "project-watchdog may dispatch active issue work in this repo; "
+            "coordinate or pause watchdog state before cleanup mutates files"
+        )
+        if junk_allowed:
+            classes["junk_untracked_removal"]["status"] = "blocked"
+            classes["junk_untracked_removal"]["blocked_paths"] = sorted(
+                set(classes["junk_untracked_removal"]["blocked_paths"]) | set(junk_allowed)
+            )
+            classes["junk_untracked_removal"]["allowed_paths"] = []
+            classes["junk_untracked_removal"]["note"] += (
+                "; active project-watchdog coordination currently blocks execution"
+            )
+            junk_allowed = []
 
     tracked_reasons = classes["tracked_file_mutation"]["reasons"]
     if artifact_status != "complete":
@@ -1344,6 +1611,7 @@ def build_phase_receipt(
                 "status": evidence_artifact.get("status"),
                 "scan_failures": evidence_artifact.get("scan_failures", []),
             },
+            "project_watchdog": findings.get("project_watchdog", {}),
         },
         "counts": {
             "root_strays": len(findings.get("root_strays", [])),
@@ -1488,6 +1756,8 @@ def generate_cleanup_plan(findings: Dict) -> str:
         for limit in readiness["proof_limits"]:
             plan.append(f"- {limit}")
         plan.append("")
+
+    _append_project_watchdog_markdown(plan, findings.get("project_watchdog", {}))
 
     candidate_evidence = findings.get("candidate_dependency_evidence", [])
     if candidate_evidence:
@@ -1644,6 +1914,15 @@ def confirm_action(action: str) -> bool:
 
 def execute_cleanup(findings: Dict, force: bool = False) -> List[str]:
     actions_taken = []
+    watchdog_context = findings.get("project_watchdog", {})
+    if watchdog_context.get("blocks_cleanup_execution"):
+        log_warning(
+            "Project-watchdog coordination blocks cleanup execution; no files were removed"
+        )
+        log_warning(
+            "Cleanup only observes watchdog state and will not tick, lease, relabel, or close issues"
+        )
+        return actions_taken
 
     # ── 1. Root strays are assessment-only ──────────────────────────────
     strays = findings.get("root_strays", [])
@@ -1757,6 +2036,7 @@ def main(
         "outdated_docs": scan_for_outdated_docs(),
         "ingest_code_evidence": scan_ingest_code_evidence(),
         "cleanup_evidence_artifact": scan_cleanup_evidence_artifact(),
+        "project_watchdog": scan_project_watchdog_context(),
     }
 
     # Join each candidate against per-file dependency evidence. Assessment

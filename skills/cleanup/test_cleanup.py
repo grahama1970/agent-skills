@@ -153,6 +153,10 @@ class TestCleanup:
         
         status = cleanup.get_git_status()
         self.assert_true(len(status) > 0, "Modified file should show in status")
+        self.assert_true(
+            any(line.startswith(" M initial.txt") for line in status),
+            "Porcelain status must preserve the leading index/worktree columns",
+        )
     
     def test_get_untracked_files(self):
         """Test getting untracked files"""
@@ -207,6 +211,112 @@ class TestCleanup:
             "Plan should identify review-only reference candidates",
         )
         self.assert_in("junk.log", plan, "Plan should mention junk.log")
+
+    def _write_watchdog_registry(self, registry_dir, project_state="active", global_state="active"):
+        registry_dir.mkdir(parents=True, exist_ok=True)
+        (registry_dir / "projects.json").write_text(json.dumps({
+            "schema": "agent_skills.project_watchdog.registry.v1",
+            "defaults": {
+                "labels": {
+                    "ready": "agent-work",
+                    "active": "agent-active",
+                    "blocked": "agent-blocked",
+                    "human": "next:human",
+                }
+            },
+            "projects": [
+                {
+                    "project_id": "demo",
+                    "repo": "example/demo",
+                    "worktree": self.temp_dir,
+                    "runner_kind": "tau-command-loop",
+                    "dispatch_backend": "herdr",
+                }
+            ],
+        }))
+        (registry_dir / "state.json").write_text(json.dumps({
+            "schema": "agent_skills.project_watchdog.state.v1",
+            "global": {"state": global_state},
+            "projects": {"demo": {"state": project_state}},
+        }))
+
+    def test_project_watchdog_context_is_read_only_and_blocks_active_execution(self):
+        """Active watchdog dispatch risk must block cleanup mutation authority."""
+        print("\nTesting project-watchdog coordination gate...")
+
+        registry = Path("watchdog-registry")
+        self._write_watchdog_registry(registry)
+        context = cleanup.scan_project_watchdog_context(registry_dir=registry)
+
+        self.assert_equal(context["status"], "registered", "Current repo should match the watchdog registry")
+        self.assert_equal(context["blocks_cleanup_execution"], True, "Active watchdog state should block cleanup execution")
+        self.assert_equal(context["issue_mutation_allowed"], False, "Cleanup must not mutate GitHub issues")
+        self.assert_equal(context["cleanup_may_dispatch_watchdog"], False, "Cleanup must not dispatch watchdog ticks")
+        self.assert_in("demo", context["project_ids"], "Matched project id should be reported")
+
+        findings = {
+            "dead_files": [],
+            "candidate_dependency_evidence": [],
+            "project_watchdog": context,
+        }
+        readiness = cleanup.evaluate_mutation_readiness(
+            findings,
+            {"status": "missing"},
+            {"status": "missing"},
+            {"safe.log": {
+                "path": "safe.log",
+                "removal_allowed": True,
+                "reason": "untracked, matches a junk pattern, and no tracked file names it",
+            }},
+        )
+        junk_class = readiness["mutation_classes"]["junk_untracked_removal"]
+        self.assert_equal(junk_class["status"], "blocked", "Watchdog risk should block otherwise-cleared junk")
+        self.assert_equal(junk_class["allowed_paths"], [], "No paths should remain authorized under active watchdog risk")
+
+        Path("safe.log").write_text("noise\n")
+        actions = cleanup.execute_cleanup({
+            "root_strays": [],
+            "untracked_files": ["safe.log"],
+            "dead_files": [],
+            "junk_verdicts": {"safe.log": {
+                "path": "safe.log",
+                "removal_allowed": True,
+                "reason": "untracked, matches a junk pattern, and no tracked file names it",
+            }},
+            "project_watchdog": context,
+        }, force=True)
+        self.assert_equal(actions, [], "Execution should take no action while watchdog blocks")
+        self.assert_true(Path("safe.log").exists(), "Watchdog-blocked cleanup must not remove files")
+
+    def test_project_watchdog_context_renders_in_plan_and_audit(self):
+        """Plan and worktree audit must expose watchdog state and limits."""
+        print("\nTesting project-watchdog rendering...")
+
+        registry = Path("watchdog-registry-render")
+        self._write_watchdog_registry(registry, project_state="paused")
+        context = cleanup.scan_project_watchdog_context(registry_dir=registry)
+        plan = cleanup.generate_cleanup_plan({
+            "uncommitted_changes": [],
+            "untracked_files": [],
+            "dead_files": [],
+            "outdated_docs": [],
+            "project_watchdog": context,
+        })
+
+        self.assert_in("Project Watchdog Coordination", plan, "Plan should include watchdog section")
+        self.assert_in("Cleanup watchdog dispatch: `disabled`", plan, "Plan should say cleanup does not dispatch")
+        self.assert_in("Cleanup issue mutation: `disabled`", plan, "Plan should say cleanup does not mutate issues")
+
+        audit_markdown = cleanup.generate_worktree_audit_markdown({
+            "generated_at": "2026-07-27T00:00:00",
+            "project": "demo",
+            "cwd": self.temp_dir,
+            "summary": {"total": 0, "tracked": 0, "untracked": 0, "high_risk": 0, "by_bucket": {}},
+            "buckets": {},
+            "project_watchdog": context,
+        })
+        self.assert_in("Project Watchdog Coordination", audit_markdown, "Audit should include watchdog section")
+        self.assert_in("agent-work", audit_markdown, "Audit should report the routable watchdog label")
 
     def test_parse_porcelain_status(self):
         """Test git porcelain status parsing."""
@@ -953,6 +1063,8 @@ class TestCleanup:
             self.test_get_untracked_files()
             self.test_get_all_tracked_files()
             self.test_generate_cleanup_plan()
+            self.test_project_watchdog_context_is_read_only_and_blocks_active_execution()
+            self.test_project_watchdog_context_renders_in_plan_and_audit()
             self.test_parse_porcelain_status()
             self.test_classify_worktree_entry()
             self.test_find_file_references()

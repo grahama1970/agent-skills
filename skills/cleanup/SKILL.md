@@ -19,7 +19,7 @@ metadata:
 
 provides:
   - cleanup
-composes: [ingest-code, task-monitor]
+composes: [ingest-code, task-monitor, project-watchdog]
 complies:
   - best-practices-skills
   - best-practices-python
@@ -64,6 +64,11 @@ This skill performs a deep assessment of the codebase to identify technical debt
 - **Degraded marker honesty**: A `.ingest-code.json` that claims completion
   while scanning zero files, disabling the code index, or storing zero
   Tree-sitter symbols is degraded aggregate context, not complete indexing
+- **Project-watchdog coordination**: Reads `$project-watchdog`
+  `registry/projects.json` and `registry/state.json` as advisory state before
+  planning, auditing, or executing. Cleanup never ticks the watchdog, leases an
+  issue, relabels an issue, closes an issue, or treats open GitHub issues as
+  cleanup candidates.
 
 ## Evidence Model
 
@@ -157,18 +162,24 @@ never per-file safety evidence. Every run states these limits explicitly:
    isolation.
 5. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
    run the project's easy sanity command before moving source-like files.
-6. **Code evidence** (`$ingest-code`): Only required to unblock tracked-file
+6. **Project-watchdog coordination** (`$project-watchdog`): Read the shared
+   watchdog registry and state. If the current repo is registered and both the
+   global and project state are `active`, cleanup execution is blocked until
+   watchdog dispatch/routing state is coordinated or paused by an authorized
+   operator. This check is read-only; cleanup must not query or resolve GitHub
+   issues, acquire leases, or run watchdog ticks.
+7. **Code evidence** (`$ingest-code`): Only required to unblock tracked-file
    mutation, never to run assessment. Run
    `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
    If this leaves a completed marker with zero scanned files or a disabled code
    index, treat the marker as degraded and rely on `.cleanup-evidence.json` for
    local dependency analysis only.
-7. **Execution** (`--execute`): Perform authorized mutations with confirmation:
+8. **Execution** (`--execute`): Perform authorized mutations with confirmation:
    - Remove only untracked junk paths that cleared per-path provenance
      (`--force` skips the prompt, not the provenance check)
    - Keep root strays, artifacts, and tracked candidates review-only
    - Log all actions to `local/CLEANUP_LOG.md` and the phase receipt
-8. **Post-cleanup proof**: Rerun the same sanity command and relevant
+9. **Post-cleanup proof**: Rerun the same sanity command and relevant
    `best-practices-*` checks for changed files, then commit/push only the
    coherent cleanup slice.
 
@@ -250,6 +261,12 @@ cleanup does not edit `.gitignore`.
   active process, preserve request/receipt/lock-owner evidence and stop that
   reviewer lane. Do not kill, steal, bypass, or run `--no-lock` against another
   active reviewer process.
+- **Watchdog awareness is read-only**: Cleanup may report that a repository is
+  registered with `$project-watchdog`, name the routable `agent-work` label and
+  hold labels, and block cleanup execution when active dispatch may race with
+  file mutation. It must not scan open GitHub issues, resolve tickets, acquire
+  watchdog leases, or infer that watchdog idle/active state proves files are
+  unused.
 - **Expected maintenance is not an outage**: When cleanup observes a service
   rebuild, restart, migration, or dependency-gated compose window, record whether
   clients should expose a maintenance/rebuild state instead of generic degraded
