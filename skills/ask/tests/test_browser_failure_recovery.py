@@ -572,6 +572,37 @@ def test_kimi_composer_draft_is_submit_not_accepted_not_provider_rate_limited(tm
     assert "clean provider tab" in packet["fallback_instruction"]
 
 
+def test_kimi_model_selector_failure_is_provider_setup_not_prompt_size(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure='Kimi model option not confirmed: requested Instant; candidates={"buttons":["Scroll to explore"]}',
+        prompt_text="Answer PING_RESULT: 4",
+        submit_meta={
+            "status": "failed",
+            "requested_tab_id": "837363001",
+            "requested_url": "https://www.kimi.com/",
+        },
+        browser_oracle={
+            "project": "ask-run-webkimi",
+            "tab_id": "837363001",
+            "conversation_url": "https://www.kimi.com/",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_PROVIDER_SETUP_FAILED
+    assert packet["requires_local_readable_bundle"] is False
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "browser_provider_setup_requires_transport_repair_or_fresh_tab"
+    assert "model/reasoning selector failure" in packet["fallback_instruction"]
+    assert packet["next_command"][:2] == [
+        str(tmp_path / "skills" / "surf" / "run.sh"),
+        "kimi.submit",
+    ]
+    assert "--tab-id" in packet["next_command"]
+    assert packet["next_command"][packet["next_command"].index("--tab-id") + 1] == "837363001"
+
+
 def test_kimi_system_busy_still_classifies_as_provider_rate_limited(tmp_path: Path) -> None:
     packet = _packet(
         tmp_path,

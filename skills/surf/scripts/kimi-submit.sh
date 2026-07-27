@@ -20,8 +20,8 @@ Options:
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
   --timeout SECONDS         Browser wait timeout. Default: 300.
   --lock-timeout SECONDS    Wait this long for the shared Surf browser lock.
-  --model MODEL             Kimi model selector label. Default: Instant.
-  --reasoning LEVEL         Kimi reasoning selector label. Default: High.
+  --model MODEL             Kimi model selector label. Default: current Kimi UI setting.
+  --reasoning LEVEL         Kimi reasoning selector label. Default: current Kimi UI setting.
   --tab-id ID               Use this exact Chrome tab as the controlled Kimi tab.
   --url URL                 Resolve an already-open Kimi tab by exact URL.
   --no-activate             Background controlled-tab mode. Do not foreground
@@ -46,8 +46,8 @@ sentinel="auto"
 stable_polls=3
 timeout_s=300
 surf_lock_wait_ms="${SURF_LOCK_TIMEOUT_MS:-60000}"
-model="${SURF_KIMI_DEFAULT_MODEL:-Instant}"
-reasoning="${SURF_KIMI_DEFAULT_REASONING:-High}"
+model="${SURF_KIMI_DEFAULT_MODEL:-}"
+reasoning="${SURF_KIMI_DEFAULT_REASONING:-}"
 tab_id=""
 target_url=""
 no_activate=0

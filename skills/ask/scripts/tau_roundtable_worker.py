@@ -49,6 +49,7 @@ BROWSER_TAB_IDENTITY_MISMATCH = "browser_tab_identity_mismatch"
 BROWSER_TAB_READ_TIMEOUT = "browser_tab_read_timeout"
 BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
+BROWSER_PROVIDER_SETUP_FAILED = "browser_provider_setup_failed"
 BROWSER_SUBMIT_NOT_ACCEPTED = "browser_submit_not_accepted"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
 BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
@@ -65,6 +66,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_TAB_READ_TIMEOUT,
     BROWSER_ACCESS_BLOCKED,
     BROWSER_PROVIDER_RATE_LIMITED,
+    BROWSER_PROVIDER_SETUP_FAILED,
     BROWSER_SUBMIT_NOT_ACCEPTED,
     BROWSER_TOOL_UNSUPPORTED,
     BROWSER_ATTACHMENT_UNAVAILABLE,
@@ -1343,6 +1345,7 @@ def _browser_failure_recovery_packet(
             BROWSER_TAB_READ_TIMEOUT,
             BROWSER_ACCESS_BLOCKED,
             BROWSER_PROVIDER_RATE_LIMITED,
+            BROWSER_PROVIDER_SETUP_FAILED,
             BROWSER_SUBMIT_NOT_ACCEPTED,
             BROWSER_TOOL_UNSUPPORTED,
             BROWSER_ATTACHMENT_UNAVAILABLE,
@@ -1505,6 +1508,8 @@ def _classify_browser_failure(
         return SURF_BROWSER_CONNECTION_UNAVAILABLE
     if _looks_browser_provider_rate_limited(haystack, submit_meta):
         return BROWSER_PROVIDER_RATE_LIMITED
+    if _looks_browser_provider_setup_failed(haystack, submit_meta):
+        return BROWSER_PROVIDER_SETUP_FAILED
     if _looks_browser_submit_not_accepted(haystack, submit_meta):
         return BROWSER_SUBMIT_NOT_ACCEPTED
     if _looks_browser_access_blocked(haystack, submit_meta):
@@ -1665,6 +1670,22 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
     return any(marker in text for marker in markers)
 
 
+def _looks_browser_provider_setup_failed(text: str, meta: dict[str, Any]) -> bool:
+    failure = str(meta.get("failure") or "").lower()
+    blocker = str(meta.get("blocker") or "").lower()
+    if failure == BROWSER_PROVIDER_SETUP_FAILED or blocker == BROWSER_PROVIDER_SETUP_FAILED:
+        return True
+    markers = (
+        "model option not confirmed",
+        "reasoning option not confirmed",
+        "provider setup failed",
+        "provider selector not confirmed",
+        "model selector not confirmed",
+        "reasoning selector not confirmed",
+    )
+    return any(marker in text for marker in markers)
+
+
 def _looks_browser_submit_not_accepted(text: str, meta: dict[str, Any]) -> bool:
     failure = str(meta.get("failure") or "").lower()
     blocker = str(meta.get("blocker") or "").lower()
@@ -1795,6 +1816,7 @@ def _transport_failure_kind(failure_code: str) -> str:
         SURF_BROWSER_LOCK_TIMEOUT: "browser_cdp_lock_timeout",
         BROWSER_TAB_READ_TIMEOUT: "browser_tab_read_timeout",
         BROWSER_HANDLER_TIMEOUT: "browser_handler_timeout",
+        BROWSER_PROVIDER_SETUP_FAILED: "browser_provider_setup_failed",
         BROWSER_SUBMIT_NOT_ACCEPTED: "browser_submit_not_accepted",
         SURF_BROWSER_CONNECTION_UNAVAILABLE: "surf_browser_connection_unavailable",
         BROWSER_TAB_IDENTITY_MISMATCH: "browser_tab_identity_mismatch",
@@ -1942,7 +1964,6 @@ def _looks_clean_output_contaminated(text: str, meta: dict[str, Any]) -> bool:
         return True
     markers = (
         "clean output contains sentinel",
-        "clean_contains_sentinel",
         "clean response contains sentinel",
         "contaminated clean output",
         "sentinel remained in clean output",
@@ -2183,6 +2204,33 @@ def _recovery_next_command(
             command.extend(["--url", url])
         command.extend(["--manual", "--json"])
         return command
+    if failure_code == BROWSER_PROVIDER_SETUP_FAILED:
+        command = [
+            str(args.surf_run),
+            HANDLER_SUBMIT_COMMANDS[str(args.handler)],
+            "--input",
+            str(prompt_path),
+            "--output",
+            str(response_path.with_name("response.after-provider-setup.md")),
+            "--raw-output",
+            str(raw_path.with_name("response.after-provider-setup.raw.md")),
+            "--meta-output",
+            str(meta_path.with_name("response.after-provider-setup.meta.json")),
+            "--timeout",
+            str(args.timeout),
+            "--stable-polls",
+            str(args.stable_polls),
+        ]
+        _append_browser_lock_timeout(command, args)
+        tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "").strip()
+        url = str(browser_oracle.get("conversation_url") or submit_meta.get("requested_url") or "").strip()
+        if tab_id:
+            command.extend(["--tab-id", tab_id])
+        if url:
+            command.extend(["--expect-url" if str(args.handler) == "webgpt" else "--url", url])
+        if args.no_activate:
+            command.append("--no-activate")
+        return command
     if failure_code in {SURF_BROWSER_LOCK_TIMEOUT, SURF_BROWSER_CONNECTION_UNAVAILABLE}:
         command = [
             str(args.surf_run),
@@ -2294,6 +2342,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_TAB_READ_TIMEOUT: "The bound browser tab was reachable by identity but did not respond to Surf page reads.",
         BROWSER_ACCESS_BLOCKED: "The browser provider presented an access challenge before the request could be submitted.",
         BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
+        BROWSER_PROVIDER_SETUP_FAILED: "Surf reached the browser provider, but a provider UI setup step such as model or reasoning selection failed before prompt delivery.",
         BROWSER_SUBMIT_NOT_ACCEPTED: "Surf reached the browser composer, but the prompt was not accepted as a submitted message.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
         BROWSER_ATTACHMENT_UNAVAILABLE: "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
@@ -2325,6 +2374,8 @@ def _auto_retry_blocked_reason(
         return "browser_access_challenge_requires_human_browser_recovery"
     if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
         return "browser_provider_rate_limit_requires_backoff"
+    if failure_code == BROWSER_PROVIDER_SETUP_FAILED:
+        return "browser_provider_setup_requires_transport_repair_or_fresh_tab"
     if failure_code == BROWSER_SUBMIT_NOT_ACCEPTED:
         return "browser_submit_not_accepted_requires_composer_recovery_or_fresh_tab"
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
@@ -2366,6 +2417,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return "Complete the provider access challenge in the controlled browser tab, rerun Surf preflight, then rerun the Tau DAG node."
     if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
         return "Back off this browser provider until the limit clears; use a different handler or rerun later with the same verified tab."
+    if failure_code == BROWSER_PROVIDER_SETUP_FAILED:
+        return (
+            "Run the next_command after repairing or updating the provider setup path. "
+            "Do not treat model/reasoning selector failure as prompt size, repo access, or a completed response."
+        )
     if failure_code == BROWSER_SUBMIT_NOT_ACCEPTED:
         return (
             "Run the next_command to open and bind a clean provider tab, then rerun only this lane. "
@@ -2435,6 +2491,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_TAB_READ_TIMEOUT,
         BROWSER_ACCESS_BLOCKED,
         BROWSER_PROVIDER_RATE_LIMITED,
+        BROWSER_PROVIDER_SETUP_FAILED,
         BROWSER_SUBMIT_NOT_ACCEPTED,
         BROWSER_TOOL_UNSUPPORTED,
         BROWSER_ATTACHMENT_UNAVAILABLE,
