@@ -52,6 +52,7 @@ BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
 BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
 BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
 WEBGPT_UNVERIFIED_CLEAN_OUTPUT = "missing_controlled_tab_id_or_contaminated_clean_output"
+BROWSER_HANDLER_TIMEOUT = "browser_handler_timeout"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
 SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
 BROWSER_TRANSPORT_BLOCKERS = {
@@ -65,6 +66,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_ATTACHMENT_UNAVAILABLE,
     BROWSER_SENTINEL_TRAILING_CONTENT,
     WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
+    BROWSER_HANDLER_TIMEOUT,
     SURF_BROWSER_LOCK_TIMEOUT,
     SURF_BROWSER_CONNECTION_UNAVAILABLE,
     "repo_access_blocked",
@@ -1438,6 +1440,8 @@ def _classify_browser_failure(
         return WEBGPT_UNVERIFIED_CLEAN_OUTPUT
     if _looks_sentinel_trailing_content(haystack, submit_meta):
         return BROWSER_SENTINEL_TRAILING_CONTENT
+    if _looks_browser_handler_timeout(haystack, commands):
+        return BROWSER_HANDLER_TIMEOUT
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
     if _looks_tab_identity_mismatch(haystack, submit_meta):
@@ -1733,6 +1737,20 @@ def _looks_browser_tab_read_timeout(text: str) -> bool:
     return any(marker in text for marker in tab_read_markers)
 
 
+def _looks_browser_handler_timeout(text: str, commands: list[dict[str, Any]]) -> bool:
+    if "[tau-worker] command timed out after" in text:
+        return True
+    for command in commands:
+        if not isinstance(command, dict):
+            continue
+        if command.get("returncode") == 124:
+            return True
+        stderr = str(command.get("stderr_excerpt") or "").lower()
+        if "[tau-worker] command timed out after" in stderr:
+            return True
+    return False
+
+
 def _looks_prompt_too_large_or_stalled(text: str) -> bool:
     markers = (
         "timed out",
@@ -2012,6 +2030,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_ATTACHMENT_UNAVAILABLE: "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
         BROWSER_SENTINEL_TRAILING_CONTENT: "The browser provider output included text after the terminal sentinel, so the clean assistant turn is not attributable.",
         WEBGPT_UNVERIFIED_CLEAN_OUTPUT: "WebGPT returned plausible text, but Surf could not prove the controlled tab or clean output attribution.",
+        BROWSER_HANDLER_TIMEOUT: "The browser handler did not produce a usable, receipt-backed response before the declared worker timeout.",
         SURF_BROWSER_LOCK_TIMEOUT: "The Surf browser lock is held by another live command; the browser lane was not submitted.",
         SURF_BROWSER_CONNECTION_UNAVAILABLE: "The Surf native host or socket disconnected before the browser lane completed.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
@@ -2044,6 +2063,8 @@ def _auto_retry_blocked_reason(
         return "browser_terminal_sentinel_parser_requires_repair_or_fresh_tab"
     if failure_code == WEBGPT_UNVERIFIED_CLEAN_OUTPUT:
         return "webgpt_controlled_tab_or_clean_output_unproven"
+    if failure_code == BROWSER_HANDLER_TIMEOUT:
+        return "browser_handler_timeout_expired"
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return "surf_browser_lock_owner_still_running"
     if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
@@ -2088,6 +2109,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "Quarantine the WebGPT response. Rebind browser-oracle to a proven controlled ChatGPT tab "
             "or rerun through Surf's controlled-tab recovery; do not import the unverified response.md."
         )
+    if failure_code == BROWSER_HANDLER_TIMEOUT:
+        return (
+            "Treat only this browser lane as timed out. Preserve its submitted prompt and metadata, "
+            "let the join index usable peer seats, and rerun this handler later or with a fresh provider tab."
+        )
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return (
             "Do not use --no-lock. Wait for the lock owner named in evidence.surf_lock_blocker, "
@@ -2129,6 +2155,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_ATTACHMENT_UNAVAILABLE,
         BROWSER_SENTINEL_TRAILING_CONTENT,
         WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
+        BROWSER_HANDLER_TIMEOUT,
         SURF_BROWSER_LOCK_TIMEOUT,
         SURF_BROWSER_CONNECTION_UNAVAILABLE,
         "stale_raw_capture",
@@ -3049,7 +3076,11 @@ def _browser_submit_timeout(handler: str, provider_timeout: int) -> int:
         # gemini-submit permits two provider observations separated by its
         # default 120-second stalled-response cooldown.
         return max((2 * (provider_timeout + 60)) + 120 + lock_wait_seconds + 30, 180)
-    return max(provider_timeout + lock_wait_seconds + 90, 180)
+    # Claude, Kimi, and Grok do not have Surf-managed multi-cooldown submit
+    # loops. Their worker-owned submit timeout must match the declared
+    # --timeout so the worker can emit a terminal NEEDS_ATTENTION receipt
+    # before Tau's command-spec watchdog kills the whole node.
+    return max(provider_timeout, 1)
 
 
 def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:

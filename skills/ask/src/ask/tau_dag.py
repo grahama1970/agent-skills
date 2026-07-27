@@ -834,12 +834,16 @@ def _ensure_degraded_roundtable_join(bundle: dict[str, Any]) -> dict[str, Any] |
     }
     missing = [node_id for node_id, path in receipt_paths.items() if not path.is_file()]
     if missing:
-        return {
-            "schema": "ask.tau_dag_degraded_join_completion.v1",
-            "status": "skipped",
-            "reason": "handler_receipts_missing",
-            "missing_handler_receipts": missing,
-        }
+        synthesized = _synthesize_missing_browser_handler_receipts(dag, run_dir, missing)
+        missing = [node_id for node_id, path in receipt_paths.items() if not path.is_file()]
+        if missing:
+            return {
+                "schema": "ask.tau_dag_degraded_join_completion.v1",
+                "status": "skipped",
+                "reason": "handler_receipts_missing",
+                "missing_handler_receipts": missing,
+                "synthesized_handler_receipts": synthesized,
+            }
     nonterminal = []
     for node_id, path in receipt_paths.items():
         receipt = _read_json(path)
@@ -899,6 +903,166 @@ def _roundtable_handler_node_ids_from_dag(dag: dict[str, Any]) -> list[str]:
         if node_id:
             node_ids.append(node_id)
     return node_ids
+
+
+def _roundtable_handler_map_from_dag(dag: dict[str, Any]) -> dict[str, str]:
+    nodes = dag.get("nodes") if isinstance(dag.get("nodes"), list) else []
+    handlers: dict[str, str] = {}
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        context = node.get("context") if isinstance(node.get("context"), dict) else {}
+        if context.get("role") != "roundtable_handler":
+            continue
+        node_id = str(node.get("id") or "").strip()
+        policy = context.get("handler_policy") if isinstance(context.get("handler_policy"), dict) else {}
+        handler = str(policy.get("id") or node.get("agent") or node_id).strip()
+        if node_id and handler:
+            handlers[node_id] = handler
+    return handlers
+
+
+def _synthesize_missing_browser_handler_receipts(
+    dag: dict[str, Any],
+    run_dir: Path,
+    missing_node_ids: list[str],
+) -> list[dict[str, Any]]:
+    handlers = _roundtable_handler_map_from_dag(dag)
+    synthesized: list[dict[str, Any]] = []
+    for node_id in missing_node_ids:
+        handler = handlers.get(node_id, "")
+        policy = ROUNDTABLE_HANDLERS.get(handler)
+        if not isinstance(policy, dict) or policy.get("runtime") != "browser":
+            continue
+        artifact_dir = run_dir / "node-artifacts" / node_id
+        prompt_path = artifact_dir / "prompt.md"
+        submitted_path = artifact_dir / "response.md.submitted.md"
+        response_path = artifact_dir / "response.md"
+        raw_path = artifact_dir / "response.raw.md"
+        meta_path = artifact_dir / "response.meta.json"
+        evidence_paths = [prompt_path, submitted_path, response_path, raw_path, meta_path]
+        if not any(path.exists() for path in evidence_paths):
+            continue
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+        submit_meta = _read_json(meta_path) if meta_path.is_file() else {}
+        quarantined_response_path = response_path
+        quarantine_receipt: dict[str, Any] | None = None
+        response_chars = response_path.stat().st_size if response_path.is_file() else 0
+        if response_path.is_file():
+            quarantined_response_path = _next_available_path(response_path.with_name("response.unverified.md"))
+            response_path.rename(quarantined_response_path)
+            quarantine_path = artifact_dir / "response.quarantine.json"
+            quarantine_receipt = {
+                "schema": "ask.browser_failed_response_quarantine.v1",
+                "status": "QUARANTINED",
+                "ok": False,
+                "provider_live": False,
+                "failure_code": "browser_handler_timeout",
+                "original_response_path": str(response_path),
+                "quarantine_path": str(quarantined_response_path),
+                "response_chars": response_chars,
+                "caller_action": (
+                    "Do not treat this browser prose as a clean seat response because the "
+                    "browser worker did not emit a PASS receipt before timeout."
+                ),
+            }
+            _write_json(quarantine_path, quarantine_receipt)
+            quarantine_receipt["quarantine_receipt_path"] = str(quarantine_path)
+        recovery_path = artifact_dir / "browser-recovery-packet.json"
+        recovery_packet = {
+            "schema": "ask.browser_failure_recovery_packet.v1",
+            "status": "NEEDS_ATTENTION",
+            "mocked": False,
+            "live": True,
+            "failure_code": "browser_handler_timeout",
+            "handler": handler,
+            "node_id": node_id,
+            "reason": (
+                "The browser worker left submit artifacts but no node-receipt.json before Tau "
+                "reached a terminal command failure."
+            ),
+            "evidence": {
+                "prompt_path": str(prompt_path) if prompt_path.exists() else None,
+                "submitted_prompt_path": str(submitted_path) if submitted_path.exists() else None,
+                "raw_response_path": str(raw_path) if raw_path.exists() else None,
+                "meta_path": str(meta_path) if meta_path.exists() else None,
+                "submit_meta_status": submit_meta.get("status") if isinstance(submit_meta, dict) else None,
+                "response_chars": response_chars,
+            },
+            "response_path": str(quarantined_response_path),
+            "raw_response_path": str(raw_path),
+            "meta_path": str(meta_path),
+            "prompt_path": str(prompt_path),
+            "auto_retry_allowed": False,
+            "auto_retry_blocked_reason": "browser_handler_timeout_expired",
+            "next_command": [],
+            "fallback_instruction": (
+                "Treat only this browser lane as timed out. Let the join preserve usable peer seats, "
+                "then rerun this handler later or with a fresh provider tab."
+            ),
+        }
+        _write_json(recovery_path, recovery_packet)
+        receipt = {
+            "schema": "ask.tau_dag_handler_receipt.v1",
+            "created_at": _now_iso(),
+            "node_id": node_id,
+            "handler": handler,
+            "topology": str(dag.get("context", {}).get("roundtable_topology") or "concurrent"),
+            "status": "NEEDS_ATTENTION",
+            "ok": False,
+            "mocked": False,
+            "live": True,
+            "provider_live": False,
+            "response_path": str(quarantined_response_path),
+            "response_quarantine": quarantine_receipt,
+            "raw_response_path": str(raw_path),
+            "meta_path": str(meta_path),
+            "prompt_path": str(prompt_path),
+            "recovery_packet_path": str(recovery_path),
+            "response_chars": response_chars,
+            "submit_meta": submit_meta if isinstance(submit_meta, dict) else {},
+            "commands": [],
+            "failure": "browser_handler_timeout: missing node-receipt.json after browser submit artifacts existed",
+            "failure_code": "browser_handler_timeout",
+            "competition_lane_exit_ok": True,
+            "recovery_packet": recovery_packet,
+            "synthesized_missing_receipt": True,
+            "provider_receipt": {
+                "schema": "ask.tau_dag_provider_route_receipt.v1",
+                "status": "NEEDS_ATTENTION",
+                "ok": False,
+                "mocked": False,
+                "live": True,
+                "provider_live": False,
+                "route": "tau_roundtable_handler_adapter",
+                "execution_owner": "$tau",
+                "provider_transport": "$surf",
+                "handler": handler,
+                "transport": policy.get("transport"),
+            },
+        }
+        receipt_path = artifact_dir / "node-receipt.json"
+        _write_json(receipt_path, receipt)
+        synthesized.append(
+            {
+                "node_id": node_id,
+                "handler": handler,
+                "receipt_path": str(receipt_path),
+                "recovery_packet_path": str(recovery_path),
+                "response_quarantine": quarantine_receipt,
+            }
+        )
+    return synthesized
+
+
+def _next_available_path(path: Path) -> Path:
+    if not path.exists():
+        return path
+    for index in range(2, 100):
+        candidate = path.with_name(f"{path.stem}-{index}{path.suffix}")
+        if not candidate.exists():
+            return candidate
+    raise TauDagError(f"unable to allocate path near {path}")
 
 
 def _roundtable_join_receipt(run_dir: Path) -> dict[str, Any] | None:
@@ -1747,7 +1911,7 @@ def _write_roundtable_command_spec(
     payload = {
         "command": command,
         "cwd": str(run_dir),
-        "timeout_s": 6000 if handler == "codex" else (1800 if is_subagent_handler else (3900 if handler in ROUNDTABLE_HANDLERS and handler != "codex" else 420)),
+        "timeout_s": _roundtable_command_timeout(handler, is_subagent_handler=is_subagent_handler),
         "requires_network": node_id != "join",
         "mutates": handler == "codex",
         "requires_clean_worktree": False,
@@ -1758,6 +1922,20 @@ def _write_roundtable_command_spec(
     }
     spec_path = root / node_id / "tau-dispatch-command.json"
     _write_json(spec_path, payload)
+
+
+def _roundtable_command_timeout(handler: str, *, is_subagent_handler: bool) -> int:
+    if handler == "codex":
+        return 6000
+    if is_subagent_handler:
+        return 1800
+    if handler == "webgpt":
+        return 3900
+    if handler == "webgemini":
+        return 2820
+    if handler in {"webclaude", "webkimi", "webgrok"}:
+        return 420
+    return 420
 
 
 def _write_agent_stub(root: Path, *, node_id: str, role: str) -> None:

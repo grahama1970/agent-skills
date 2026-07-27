@@ -938,9 +938,28 @@ def test_gemini_worker_timeout_covers_stall_retry_envelope(
     monkeypatch.setenv("SURF_LOCK_TIMEOUT_MS", "1800000")
     assert tau_roundtable_worker._browser_submit_timeout("webgpt", 900) == 3750
     assert tau_roundtable_worker._browser_submit_timeout("webgemini", 300) == 2670
-    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 2190
+    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 300
     monkeypatch.setenv("SURF_LOCK_TIMEOUT_MS", "invalid")
-    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 450
+    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 300
+
+
+def test_browser_failure_classifier_marks_worker_command_timeout_distinct() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webclaude",
+        failure="[tau-worker] command timed out after 2s; killed process group rooted at pid 123",
+        response_text="",
+        raw_text="",
+        prompt_text="short prompt",
+        submit_meta={"status": "failed"},
+        commands=[
+            {
+                "returncode": 124,
+                "stderr_excerpt": "[tau-worker] command timed out after 2s; killed process group rooted at pid 123",
+            }
+        ],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_HANDLER_TIMEOUT
 
 
 def test_browser_failure_classifier_marks_unknown_tool_as_runtime_mismatch() -> None:

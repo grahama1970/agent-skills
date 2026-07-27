@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -834,6 +835,33 @@ def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_
     assert chutes_node["context"]["handler_policy"]["model_policy"]["provider"] == "chutes"
 
 
+def test_non_cooldown_browser_command_specs_do_not_expand_past_declared_timeout(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Roundtable webgpt, webclaude, webkimi, webgrok, and webgemini on timeout budgets.",
+        repo="local/ask",
+        target="browser-timeout-budgets",
+        immutable_goal="Browser command specs enforce handler-specific timeout budgets.",
+        handlers=["webgpt", "webclaude", "webkimi", "webgrok", "webgemini"],
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+    specs = {}
+    for node in ("handler-webgpt", "handler-webclaude", "handler-webkimi", "handler-webgrok", "handler-webgemini"):
+        specs[node] = json.loads(
+            Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
+        )
+
+    assert specs["handler-webgpt"]["timeout_s"] == 3900
+    assert specs["handler-webgemini"]["timeout_s"] == 2820
+    assert specs["handler-webclaude"]["timeout_s"] == 420
+    assert specs["handler-webkimi"]["timeout_s"] == 420
+    assert specs["handler-webgrok"]["timeout_s"] == 420
+    for node in ("handler-webclaude", "handler-webkimi", "handler-webgrok"):
+        command = specs[node]["command"]
+        assert command[command.index("--timeout") + 1] == "300"
+
+
 def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_path: Path) -> None:
     request = infer_compile_input(
         "Roundtable webgpt and webkimi.",
@@ -1585,6 +1613,101 @@ raise SystemExit(2)
     assert recovery["failure_code"] == "browser_tab_read_timeout"
 
 
+def test_roundtable_browser_worker_timeout_emits_terminal_receipt(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Roundtable the browser handlers."}) + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webclaude"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+import time
+
+args = sys.argv[1:]
+if args[:1] == ["tab.list"]:
+    print(json.dumps([{"id": 837361234, "url": "https://claude.ai/new"}]))
+    raise SystemExit(0)
+if args[:1] == ["claude.submit"]:
+    time.sleep(10)
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    print(json.dumps({
+        "backend": "webclaude",
+        "project": "webclaude",
+        "tab_id": "837361234",
+        "conversation_url": "https://claude.ai/new",
+        "status": "ok",
+    }))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    started = time.time()
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-webclaude",
+            "--handler",
+            "webclaude",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "roundtable",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            str(surf),
+            "--browser-oracle-run",
+            str(browser_oracle),
+            "--timeout",
+            "1",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    elapsed = time.time() - started
+
+    assert completed.returncode == 0, completed.stderr
+    assert elapsed < 5
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["ok"] is False
+    assert receipt["competition_lane_exit_ok"] is True
+    assert receipt["failure_code"] == "browser_handler_timeout"
+    assert receipt["commands"][-1]["returncode"] == 124
+    assert recovery["failure_code"] == "browser_handler_timeout"
+    assert recovery["auto_retry_blocked_reason"] == "browser_handler_timeout_expired"
+
+
 def test_roundtable_scillm_auth_error_records_recovery_packet_without_failed_process(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(
@@ -2041,6 +2164,85 @@ def test_run_tau_dag_bundle_synthesizes_degraded_join_when_tau_skips_join(monkey
     assert failed["failure_code"] == "scillm_auth_invalid_api_key"
     assert failed["recovery_packet_path"] == str(recovery_path)
     assert join["degradation_analysis"]["failure_codes"] == {"scillm_auth_invalid_api_key": 1}
+
+
+def test_run_tau_dag_bundle_synthesizes_missing_browser_timeout_receipt_and_join(
+    monkeypatch, tmp_path: Path
+) -> None:
+    request = infer_compile_input(
+        "Roundtable webgpt and webclaude about timeout recovery.",
+        repo="local/agent-skills",
+        target="issue-1027-fixture",
+        immutable_goal="Emit a degraded join when a browser lane times out after submit artifacts but before a receipt.",
+        handlers=["webgpt", "webclaude"],
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    artifacts = run_dir / "node-artifacts"
+
+    pass_dir = artifacts / "handler-webgpt"
+    pass_dir.mkdir(parents=True, exist_ok=True)
+    pass_response = pass_dir / "response.md"
+    pass_response.write_text("## Position\nUsable WebGPT response.\n", encoding="utf-8")
+    (pass_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-webgpt",
+                "handler": "webgpt",
+                "status": "PASS",
+                "ok": True,
+                "mocked": False,
+                "live": True,
+                "provider_live": True,
+                "response_path": str(pass_response),
+                "provider_receipt": {"schema": "ask.tau_dag_provider_route_receipt.v1", "status": "PASS", "ok": True, "live": True, "provider_live": True},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    missing_dir = artifacts / "handler-webclaude"
+    missing_dir.mkdir(parents=True, exist_ok=True)
+    (missing_dir / "prompt.md").write_text("Prompt submitted to Claude.\n", encoding="utf-8")
+    (missing_dir / "response.md.submitted.md").write_text("Prompt submitted to Claude.\n", encoding="utf-8")
+    (missing_dir / "response.md").write_text("DO NOT IMPORT: unreceipted Claude prose.\n", encoding="utf-8")
+    (missing_dir / "response.raw.md").write_text("raw Claude browser text\n", encoding="utf-8")
+    (missing_dir / "response.meta.json").write_text(
+        json.dumps({"status": "failed", "proof_status": "failed", "requested_tab_id": "837361234"}) + "\n",
+        encoding="utf-8",
+    )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "join skipped after missing browser receipt", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    execution = run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    synthesized_path = missing_dir / "node-receipt.json"
+    join_path = artifacts / "join" / "node-receipt.json"
+    assert execution["status"] == "DEGRADED"
+    assert execution["degraded_join"]["status"] == "emitted"
+    assert synthesized_path.is_file()
+    synthesized = json.loads(synthesized_path.read_text(encoding="utf-8"))
+    assert synthesized["status"] == "NEEDS_ATTENTION"
+    assert synthesized["failure_code"] == "browser_handler_timeout"
+    assert synthesized["synthesized_missing_receipt"] is True
+    assert not (missing_dir / "response.md").exists()
+    assert (missing_dir / "response.unverified.md").is_file()
+    join = json.loads(join_path.read_text(encoding="utf-8"))
+    assert join["status"] == "DEGRADED"
+    failed = next(item for item in join["handler_response_index"] if item["handler"] == "webclaude")
+    assert failed["failure_code"] == "browser_handler_timeout"
+    summary = (artifacts / "join" / "roundtable-summary.md").read_text(encoding="utf-8")
+    assert "DO NOT IMPORT" not in summary
 
 
 def test_run_tau_dag_bundle_synthesizes_compete_join_when_all_browser_lanes_need_attention(
