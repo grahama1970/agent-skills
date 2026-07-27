@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-27T15:45:00Z",
+  "updated_at": "2026-07-27T16:30:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:193c1adf5bee5579e2c67bcb5e9d7f4f32491a561a29d5619a6f3e8e887fb58f",
@@ -22,14 +22,16 @@
     "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
     "mocked": false,
     "live": false,
-    "status": "LEDGER_HARDENED_NOT_RUNTIME_AUTHORITY_PROVEN",
+    "status": "LEDGER_HARDENED_SESSION_MOOD_BINDING_DETERMINISTIC_NOT_LIVE_CHAIN",
     "latest_authority_receipt": "skills/persona-dream/reports/goal_v5/continuity/ledger_hardening/RECEIPT.json",
     "latest_authority_receipt_sha256": "sha256:02f866e0b208c531902129cff2cd385ba29b28d6170d3ea027993fea01f7502b",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard",
+    "latest_session_mood_binding_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
+    "latest_session_mood_binding_receipt_sha256": "sha256:05eef12e23d85cb06fecf37bb6539b3aa30abede7564566bd04599535a91014f",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, Chatterbox-base-ready voice_delivery envelope",
     "unverified": [
       "persisted as authoritative runtime state",
-      "reread before first user turn",
-      "stable session mood across a full session",
+      "live reread before first user turn in a running conversation service",
+      "stable session mood across a real multi-turn service session",
       "recognition check across moods"
     ]
   },
@@ -83,11 +85,15 @@
         "hard_violations": 0,
         "temporary_debt": 0,
         "stale_allow_entries": 0
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
+        "result": "21 passed"
       }
     ],
     "full_sanity_command": "./skills/persona-dream/sanity.sh",
     "full_sanity_status": "PASS",
-    "full_sanity_result": "498 passed, 9 subtests passed",
+    "full_sanity_result": "505 passed, 9 subtests passed",
     "full_sanity_notes": [
       "static dream fixture produced 10 required artifacts and 6 frame prompts",
       "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
@@ -103,11 +109,11 @@
     "Load-bearing PCTOM-R proof roots are still recorded from /tmp paths and need durable repository or evidence-store copies before reboot."
   ],
   "next_step": {
-    "default": "Build the session-mood binding consumer, then run the live Embry continuity-chain proof.",
+    "default": "Route the deterministic session-mood voice_delivery envelope into live Chatterbox and run the live Embry continuity-chain proof.",
     "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "ordered_steps": [
       "Durably copy or bind the /tmp PCTOM-R proof roots cited by GOAL.md into a repository report path or explicit evidence store.",
-      "Build the session mood consumer: read latest valid ledger, bind one session_mood id before turn 1, assert the same id across turns, preserve answer propositions, derive dream_voice_weights, and route to Chatterbox.",
+      "Connect the session_mood_binding.py voice_delivery envelope to the live Chatterbox base-engine route without changing answer text.",
       "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls."
     ]
   }

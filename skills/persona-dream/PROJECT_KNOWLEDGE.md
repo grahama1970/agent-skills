@@ -48,6 +48,54 @@ the first user turn, asserts the same id across turns, preserves answer
 propositions, derives `dream_voice_weights`, and prepares the larger
 `reports/goal_v5/continuity/live_chain/RECEIPT.json` proof.
 
+## 2026-07-27 — P2.2 deterministic session-mood binding consumer accepted
+
+The session-mood binding consumer now exists:
+`scripts/session_mood_binding.py`.
+
+It reads the latest valid continuity ledger through `continuity_ledger.read_ledger`,
+selects a deterministic `session_mood` from the latest arc delta before turn 1,
+and emits a Chatterbox-base-ready `voice_delivery` envelope for each turn while
+copying `answer_text` to `spoken_text` unchanged.
+
+Receipt:
+`reports/goal_v5/continuity/session_mood_binding/RECEIPT.json`.
+
+Current Embry deterministic receipt:
+
+- `mood_label`: `guarded_quietly_wanting`
+- `mood_id`: `session_mood:ac451f682b16c92af201b7dd`
+- `turn_count`: 3
+- all turns use the same `session_mood_id`
+- all turns keep `spoken_text == answer_text`
+- all turns require `chatterbox_base` when `use_base_emotion=true`
+
+Focused proof:
+
+- `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_mood_binding.py -q`
+  returned `7 passed in 0.06s`.
+- `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q`
+  returned `21 passed in 0.84s`.
+
+Negative controls now block deterministically:
+
+- mood selected after the first turn -> `BLOCKED_SESSION_MOOD_SELECTED_AFTER_FIRST_TURN`
+- silent mid-session mood id change -> `BLOCKED_SESSION_MOOD_CHANGED_MID_SESSION`
+- content changed under emotion -> `BLOCKED_CONTENT_CHANGED_UNDER_EMOTION`
+- Chatterbox fallback to a control-ignoring engine -> `BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS`
+- ledger with no arc delta -> `BLOCKED_SESSION_MOOD_NO_ARC_DELTA`
+
+Evidence boundary: this is still deterministic local proof only (`mocked: false`,
+`live: false`). It does not call live Memory, Watch, Tau, Chatterbox, browser, or
+microphone services. It proves the missing consumer shape and guards, not
+perceived emotion, speaker similarity, Embry recognition, or the full accepted
+dream -> recognizable speech chain.
+
+Next deterministic build: connect this `voice_delivery` envelope to the live
+Chatterbox base-engine route and write the larger
+`reports/goal_v5/continuity/live_chain/RECEIPT.json` with live/fixture labels
+for every leg.
+
 ## 2026-07-27 — CONTROLLING HIERARCHY aligned across GOAL/README/SKILL
 
 The 2026-07-27 reassessment was accepted as the operating direction. The

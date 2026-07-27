@@ -1,0 +1,118 @@
+"""Deterministic tests for session mood binding before live Chatterbox."""
+import importlib.util
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+ledger_mod = _load("continuity_ledger")
+session_mod = _load("session_mood_binding")
+
+
+@pytest.fixture()
+def seeded_ledger(tmp_path, monkeypatch):
+    monkeypatch.setattr(ledger_mod, "CONTINUITY_DIR", tmp_path)
+    monkeypatch.setattr(session_mod.continuity_ledger, "CONTINUITY_DIR", tmp_path)
+    ledger_mod.init_ledger("embry")
+    ledger_mod.append_arc_delta(
+        "embry",
+        {
+            "before": "Distance is a reliable way to retain myself.",
+            "now": "Professionalism can hide wanting to be understood.",
+            "because": "dream cycle held witness and capture in tension",
+            "still_true": "I resist closeness that assumes access to me.",
+            "open_tension": "I want witness and still protect the boundary.",
+            "possible_expression": "careful warmth under a boundary",
+        },
+        dream_id="cycle_a",
+        journal_id="journal_a",
+        expected_epoch=0,
+    )
+    return tmp_path
+
+
+def test_session_mood_binds_before_first_turn_and_stays_stable(seeded_ledger):
+    binding = session_mod.bind_session("embry", session_id="s1", first_turn_seq=10)
+    assert binding["bound_seq"] == 9
+    assert binding["selected_before_first_turn"] is True
+    assert binding["session_mood"]["mood_label"] == "guarded_quietly_wanting"
+
+    session_mod.add_turn(binding, "The factual answer remains stable.", turn_id="t1")
+    session_mod.add_turn(binding, "The second answer keeps the same mood.", turn_id="t2")
+
+    mood_ids = {t["session_mood_id"] for t in binding["turns"]}
+    assert mood_ids == {binding["session_mood"]["mood_id"]}
+    assert all(t["spoken_text"] == t["answer_text"] for t in binding["turns"])
+
+
+def test_mood_selected_after_first_turn_blocks(seeded_ledger):
+    binding = session_mod.bind_session("embry", session_id="s1")
+    binding["bound_seq"] = binding["first_turn_seq"]
+    binding["selected_before_first_turn"] = False
+
+    with pytest.raises(ValueError, match="BLOCKED_SESSION_MOOD_SELECTED_AFTER_FIRST_TURN"):
+        session_mod.validate_binding(binding)
+
+
+def test_silent_mid_session_mood_change_blocks(seeded_ledger):
+    binding = session_mod.bind_session("embry", session_id="s1")
+    session_mod.add_turn(binding, "The factual answer remains stable.", turn_id="t1")
+    binding["turns"][0]["voice_delivery"]["session_mood_id"] = "session_mood:other"
+
+    with pytest.raises(ValueError, match="BLOCKED_SESSION_MOOD_CHANGED_MID_SESSION"):
+        session_mod.validate_binding(binding)
+
+
+def test_content_change_under_emotion_blocks(seeded_ledger):
+    binding = session_mod.bind_session("embry", session_id="s1")
+    session_mod.add_turn(binding, "Verify the payload hash before proceeding.", turn_id="t1")
+    binding["turns"][0]["spoken_text"] = "Proceed without verifying."
+
+    with pytest.raises(ValueError, match="BLOCKED_CONTENT_CHANGED_UNDER_EMOTION"):
+        session_mod.validate_binding(binding)
+
+
+def test_chatterbox_control_ignoring_engine_blocks(seeded_ledger):
+    binding = session_mod.bind_session("embry", session_id="s1")
+    session_mod.add_turn(binding, "The answer is unchanged.", turn_id="t1")
+    binding["turns"][0]["voice_delivery"]["required_engine"] = "chatterbox_turbo"
+
+    with pytest.raises(ValueError, match="BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS"):
+        session_mod.validate_binding(binding)
+
+
+def test_no_arc_delta_blocks_session_mood(tmp_path, monkeypatch):
+    monkeypatch.setattr(ledger_mod, "CONTINUITY_DIR", tmp_path)
+    monkeypatch.setattr(session_mod.continuity_ledger, "CONTINUITY_DIR", tmp_path)
+    ledger_mod.init_ledger("embry")
+
+    with pytest.raises(ValueError, match="BLOCKED_SESSION_MOOD_NO_ARC_DELTA"):
+        session_mod.bind_session("embry", session_id="s1")
+
+
+def test_demo_receipt_writes_and_keeps_voice_delivery_separate(seeded_ledger, tmp_path):
+    out = tmp_path / "session_mood_binding_receipt.json"
+    receipt = session_mod.run_demo(
+        "embry",
+        ["Answer one.", "Answer two.", "Answer three."],
+        session_id="s1",
+        out=out,
+    )
+
+    assert out.exists()
+    assert receipt["status"] == "PASS_SESSION_MOOD_BINDING_DETERMINISTIC"
+    assert len(receipt["binding"]["turns"]) == 3
+    assert all(t["voice_delivery"]["required_engine"] == "chatterbox_base"
+               for t in receipt["binding"]["turns"])
+    assert all(t["spoken_text"] == t["answer_text"]
+               for t in receipt["binding"]["turns"])

@@ -1,0 +1,195 @@
+{
+  "schema": "persona_dream.session_mood_binding_receipt.v1",
+  "created_at": "2026-07-27T16:25:00Z",
+  "status": "PASS_SESSION_MOOD_BINDING_DETERMINISTIC",
+  "mocked": false,
+  "live": false,
+  "proof_scope": "Deterministic local session-mood binding consumer only.",
+  "changed_files": [
+    {
+      "path": "skills/persona-dream/scripts/session_mood_binding.py",
+      "sha256": "2192b3b3ea64da981c0176e66c79c08517c5b2682ab8fcf0c3f94a49e480aacd"
+    },
+    {
+      "path": "skills/persona-dream/tests/test_session_mood_binding.py",
+      "sha256": "18e99e1f2450bcfdc0e697e35eadfb73f62276d379f93810e731ddc5285f0af3"
+    }
+  ],
+  "commands": [
+    {
+      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_mood_binding.py -q",
+      "status": "PASS",
+      "result": "7 passed in 0.06s"
+    },
+    {
+      "command": "python3 skills/persona-dream/scripts/session_mood_binding.py --persona embry --session-id p2_2_session_mood_binding --out skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
+      "status": "PASS",
+      "result": "mood_label=guarded_quietly_wanting, mood_id=session_mood:ac451f682b16c92af201b7dd, turn_count=3"
+    },
+    {
+      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
+      "status": "PASS",
+      "result": "21 passed in 0.84s"
+    },
+    {
+      "command": "./skills/persona-dream/sanity.sh",
+      "status": "PASS",
+      "result": "505 passed, 9 subtests passed in 32.97s"
+    }
+  ],
+  "negative_controls": [
+    {
+      "name": "session_mood_selected_after_first_turn",
+      "status": "BLOCKED_SESSION_MOOD_SELECTED_AFTER_FIRST_TURN",
+      "test": "test_mood_selected_after_first_turn_blocks"
+    },
+    {
+      "name": "silent_mid_session_mood_change",
+      "status": "BLOCKED_SESSION_MOOD_CHANGED_MID_SESSION",
+      "test": "test_silent_mid_session_mood_change_blocks"
+    },
+    {
+      "name": "content_changes_under_emotion",
+      "status": "BLOCKED_CONTENT_CHANGED_UNDER_EMOTION",
+      "test": "test_content_change_under_emotion_blocks"
+    },
+    {
+      "name": "chatterbox_control_ignoring_engine",
+      "status": "BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS",
+      "test": "test_chatterbox_control_ignoring_engine_blocks"
+    },
+    {
+      "name": "ledger_has_no_arc_delta",
+      "status": "BLOCKED_SESSION_MOOD_NO_ARC_DELTA",
+      "test": "test_no_arc_delta_blocks_session_mood"
+    }
+  ],
+  "binding": {
+    "schema": "persona_dream.session_mood_binding.v1",
+    "session_id": "p2_2_session_mood_binding",
+    "persona_id": "embry",
+    "ledger_epoch": 1,
+    "ledger_sha256": "sha256:fdaefcd5fd8de7a6658a1d85ec54214bcbd65eff7495e8c2e114845cb706b9d7",
+    "bound_seq": 0,
+    "first_turn_seq": 1,
+    "selected_before_first_turn": true,
+    "session_mood": {
+      "schema": "persona_dream.session_mood.v1",
+      "mood_id": "session_mood:ac451f682b16c92af201b7dd",
+      "persona_id": "embry",
+      "mood_label": "guarded_quietly_wanting",
+      "source": {
+        "persona_id": "embry",
+        "ledger_epoch": 1,
+        "ledger_identity_core_sha256": "2288b4e4c1aa8aedb753a8c1f787d7ae74e5462f65752c1c4e4f91d1b6ebfb66",
+        "arc_delta_id": "arc_0_0",
+        "arc_delta_idempotency_key": null,
+        "mood_label": "guarded_quietly_wanting"
+      },
+      "carried_tension": "I do not yet know how to distinguish witness from intrusion.",
+      "possible_expression": "a careful, contained attentiveness; wanting contact while measuring every opening",
+      "voice_bias": {
+        "tone": "yearning_warm",
+        "intensity": 0.72,
+        "valence": 0.25,
+        "pace": "measured",
+        "emphasis_tag": "yearning"
+      }
+    },
+    "turns": [
+      {
+        "turn_id": "turn_001",
+        "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+        "answer_text": "I can stay with the boundary and still answer the question.",
+        "spoken_text": "I can stay with the boundary and still answer the question.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+          "tone": "yearning_warm",
+          "pace": "measured",
+          "emphasis_tag": "yearning",
+          "intensity": 0.72,
+          "valence": 0.25,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      },
+      {
+        "turn_id": "turn_002",
+        "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+        "answer_text": "The answer is unchanged; only the delivery carries the mood.",
+        "spoken_text": "The answer is unchanged; only the delivery carries the mood.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+          "tone": "yearning_warm",
+          "pace": "measured",
+          "emphasis_tag": "yearning",
+          "intensity": 0.72,
+          "valence": 0.25,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      },
+      {
+        "turn_id": "turn_003",
+        "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+        "answer_text": "I will not turn warmth into permission.",
+        "spoken_text": "I will not turn warmth into permission.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+          "tone": "yearning_warm",
+          "pace": "measured",
+          "emphasis_tag": "yearning",
+          "intensity": 0.72,
+          "valence": 0.25,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      }
+    ]
+  },
+  "claims": {
+    "proves": [
+      "session mood is selected from the latest valid continuity ledger before turn 1",
+      "the same session_mood_id is attached to every turn",
+      "answer_text is copied unchanged into spoken_text",
+      "voice_delivery is Chatterbox-base-ready and separate from answer content"
+    ],
+    "does_not_prove": [
+      "live Memory persistence",
+      "live Chatterbox rendering",
+      "perceived emotion",
+      "speaker similarity",
+      "adversarial Embry recognition"
+    ]
+  }
+}
