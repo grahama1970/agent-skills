@@ -3,7 +3,7 @@
 Curated current state. This is context, not proof. Claims here must be backed by
 `sanity.sh` gates, receipts, or logs before they count as evidence.
 
-Last synced: 2026-07-27
+Last synced: 2026-07-27 (second pass: escalation + Herdr pane dispatch)
 
 ## What this skill is
 
@@ -26,6 +26,9 @@ command, records a receipt, and stops.
 | Path resolution | READY | gate 9 AST guard + `test_config_paths_are_absolute_and_expanded` |
 | **Live dispatch** | **NOT_ESTABLISHED** | No dispatch has run since the path fix. See below. |
 | Readiness report (`report.json`) | NOT_ESTABLISHED | Not implemented |
+| Idle escalation | READY | `sanity.sh` gate 11 — real CLI, 2s threshold |
+| Herdr pane dispatch | READY | gate 12 — real panes, exit 0 and exit 7 |
+| monitor-herdr coverage of hung panes | READY | hung command → `timeout` exit 124 → pane reports `blocked` → monitor flags `w82:p9` `blocked_or_unknown_observe_only` |
 
 **Live dispatch is unproven.** Both handlers were repaired on 2026-07-27 but
 have not executed end to end since. The last verified live dispatch predates the
@@ -44,14 +47,19 @@ otherwise.
    scan; the two halves of the system speak different label vocabularies.
    Reconciling them is tracked separately and is not fixed by this skill alone.
 
-2. **No cross-repo dependency edge.** When a project is blocked on another
+2. **Dispatch is synchronous, in both backends.** The tick blocks on a
+   bounded wait so lease and closure semantics are unchanged. Fire-and-forget
+   pane dispatch needs a reconciliation path for leased-but-unfinished
+   issues, which does not exist.
+
+3. **No cross-repo dependency edge.** When a project is blocked on another
    project's work there is no machine-readable `blocked-by` field and no
    unblock poll. The dependency lives only in prose in the issue body.
 
-3. **No readiness report.** `best-practices-skills` recommends
+4. **No readiness report.** `best-practices-skills` recommends
    `report.json` + `index.html` for orchestrator skills. Not built.
 
-4. **`runtime_self_improvement: basic`.** Declared honestly: the skill has
+5. **`runtime_self_improvement: basic`.** Declared honestly: the skill has
    `sanity.sh` but no `./run.sh verify` command and no maintainer-ticket loop.
    Do not raise the tier without building those.
 
@@ -66,6 +74,42 @@ otherwise.
 | Uneventful receipts persisted | 41,682 dirs / 329 MB | `NOOP`/`SKIPPED` not persisted |
 | `git push grahama1970 main` hardcoded | Wrong remote and branch for any other project | `git push origin HEAD` |
 | No symlink containment on issue paths | A symlink inside the worktree could reach outside it; issue bodies are attacker-controlled | resolve-then-contain in `issue_fields` |
+
+## Second pass, 2026-07-27
+
+Three additions, each proven through the real path rather than unit tests alone.
+
+**Idle escalation.** `streaks.py` counts consecutive idle ticks per project.
+Past `NOOP_ESCALATION_SECONDS` (24h) a tick reports `NEEDS_ATTENTION` /
+`idle_streak_exceeded` with a diagnosis, and persists a receipt at most once per
+renotify window. The live tau streak began counting 2026-07-27; unless routing is
+fixed first, tau escalates roughly 24h later.
+
+**Herdr pane dispatch.** `herdr_space.py` runs a bounded dispatch as a named pane
+in the `autoupdate` space. Three findings came out of building it, all from live
+runs rather than from reading docs:
+
+1. `herdr agent wait --status done` is rejected by Herdr itself — *"done is a UI
+   attention state; use idle for CLI agent completion waits"*.
+2. Waiting on `--status idle` then **also** fails for an arbitrary command:
+   *"timed out waiting for agent status change"*, because agent status comes
+   from provider integrations that a plain command does not have. Completion is
+   therefore detected by a sentinel file, not by a UI state.
+3. `$monitor-herdr` treats `done`/`idle`/`blocked`/`unknown` as stopped —
+   **`working` is not in that set**. A hung pane would have sat in `working`
+   forever, unflagged. The wrapper self-limits with `timeout` so a hang becomes a
+   `blocked` pane, and holds a failed pane for 15 minutes so it does not vanish
+   before the monitor's next tick.
+
+End-to-end proof: a deliberately hung dispatch exited 124, the pane reported
+`blocked`, and `monitor-herdr tick --space autoupdate --include-agent
+watchdog-dispatch` flagged pane `w82:p9` as
+`blocked_or_unknown_observe_only`. No changes to `monitor-herdr` were needed for
+this; the composition works through its existing filter.
+
+**Default is still `local`.** Pane dispatch is opt-in per project or via
+`PROJECT_WATCHDOG_DISPATCH_BACKEND`, because the underlying dispatch handlers
+remain unproven against a real routable issue.
 
 ## Companion assumptions
 

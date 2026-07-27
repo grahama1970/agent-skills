@@ -1,6 +1,16 @@
 """Project watchdog runtime package. Re-exports only; logic lives in named modules."""
 
-from . import commands, config, core, github, handlers, issue_fields, registry
+from . import (
+    commands,
+    config,
+    core,
+    github,
+    handlers,
+    herdr_space,
+    issue_fields,
+    registry,
+    streaks,
+)
 
 __all__ = [
     "commands",
@@ -8,6 +18,8 @@ __all__ = [
     "core",
     "github",
     "handlers",
+    "herdr_space",
     "issue_fields",
     "registry",
+    "streaks",
 ]

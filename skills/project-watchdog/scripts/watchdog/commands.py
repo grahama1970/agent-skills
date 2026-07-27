@@ -32,7 +32,7 @@ from typing import Any
 
 from loguru import logger
 
-from . import config
+from . import config, streaks
 from .core import (
     acquire_lock,
     base_receipt,
@@ -111,10 +111,40 @@ def _tick_locked(
 
     receipt["scanned_issues"] = issues
     if not issues:
+        streak = streaks.record_idle(project_id)
+        receipt["idle_streak"] = streak.as_receipt_block()
+        if streak.escalated:
+            receipt.update(
+                {
+                    "ok": True,
+                    "status": "NEEDS_ATTENTION",
+                    "stop_reason": "idle_streak_exceeded",
+                    "summary": (
+                        f"{project_id} has had no routable issue for "
+                        f"{streak.idle_seconds / 3600:.1f}h across "
+                        f"{streak.consecutive_ticks} ticks. A scan that never "
+                        f"matches is a defect, not an idle queue."
+                    ),
+                }
+            )
+            log_event(
+                run_id,
+                "idle_streak_escalated",
+                project_id=project_id,
+                idle_seconds=streak.idle_seconds,
+                consecutive_ticks=streak.consecutive_ticks,
+            )
+            return finish(run_id, receipt_dir, receipt, 0, persist=streak.should_persist_receipt)
         receipt.update({"ok": True, "status": "NOOP", "stop_reason": "no_routable_issues"})
-        log_event(run_id, "no_routable_issues", project_id=project_id)
+        log_event(
+            run_id,
+            "no_routable_issues",
+            project_id=project_id,
+            consecutive_idle_ticks=streak.consecutive_ticks,
+        )
         return finish(run_id, receipt_dir, receipt, 0)
 
+    streaks.clear_idle(project_id)
     for issue in issues[:max_tickets]:
         receipt["handled_issues"].append(
             handle_issue(run_id, receipt_dir, project, issue, apply=apply)
@@ -206,6 +236,8 @@ def status_payload() -> dict[str, Any]:
         "receipt_root": str(receipts),
         "stored_receipt_dirs": stored,
         "lock_held": config.lock_dir().is_dir(),
+        "idle_streaks": streaks.all_streaks(),
+        "idle_escalation_seconds": config.NOOP_ESCALATION_SECONDS,
         "uv_bin": config.resolve_uv_bin(),
         "cron_entries": run_cmd(["crontab", "-l"])["stdout"],
     }

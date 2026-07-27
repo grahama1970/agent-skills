@@ -16,6 +16,8 @@
 #   8  ARTIFACT schema: eventful receipts persist with the declared schema
 #   9  REGRESSION guard: no unexpanded shell variables in Python path literals
 #  10  Unit tests pass
+#  11  IDLE ESCALATION: prolonged silence stops reporting as healthy
+#  12  HERDR PANE DISPATCH: real pane, real exit codes (skipped without Herdr)
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -62,6 +64,9 @@ STATE_BACKUP="$WORK/state.json.orig"
 cp "$REAL_STATE" "$STATE_BACKUP"
 restore_state() { cp "$STATE_BACKUP" "$REAL_STATE"; }
 trap 'restore_state; rm -rf "$WORK"' EXIT
+
+export SANITY_SKILL_DIR="$SCRIPT_DIR"
+export SANITY_STAMP="$(date -u +%H%M%S)"
 
 echo "project-watchdog sanity — state root: $PROJECT_WATCHDOG_STATE_ROOT"
 
@@ -218,6 +223,121 @@ print(",".join(bad))
 PY
 )"
 if [[ -z "$UNEXPANDED" ]]; then ok "all config paths resolve without shell variables"; else bad "unexpanded config paths: $UNEXPANDED"; fi
+
+# --------------------------------------------------------------------------- #
+gate 11 "IDLE ESCALATION — prolonged silence must stop reporting as healthy"
+# Real CLI, real ticks, 2s threshold. Not a unit test over our own helpers.
+export PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS=2
+export PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS=3600
+rm -f "$PROJECT_WATCHDOG_STATE_ROOT/streaks.json" 2>/dev/null || true
+FIRST="$(watchdog tick --project tau 2>/dev/null)"
+if jq -e '.status == "NOOP" and .idle_streak.escalated == false' <<<"$FIRST" >/dev/null 2>&1; then
+  ok "first idle tick reports NOOP, not escalated"
+else
+  bad "first idle tick should be an un-escalated NOOP"
+fi
+sleep 3
+ESC_BEFORE="$(find "$PROJECT_WATCHDOG_STATE_ROOT/receipts" -maxdepth 1 -type d -name 'project-watchdog-2*' 2>/dev/null | wc -l)"
+ESCALATED="$(watchdog tick --project tau 2>/dev/null)"
+if jq -e '.status == "NEEDS_ATTENTION" and .stop_reason == "idle_streak_exceeded"' <<<"$ESCALATED" >/dev/null 2>&1; then
+  ok "idle beyond threshold escalates to NEEDS_ATTENTION"
+else
+  bad "idle beyond threshold did not escalate: $(jq -rc '{status,stop_reason}' <<<"$ESCALATED" 2>/dev/null)"
+fi
+if jq -e '.idle_streak.diagnosis | length > 0' <<<"$ESCALATED" >/dev/null 2>&1; then
+  ok "escalation carries an actionable diagnosis"
+else
+  bad "escalation carries no diagnosis"
+fi
+if jq -e '.idle_streak.diagnosis | join(" ") | test("agent-work")' <<<"$ESCALATED" >/dev/null 2>&1; then
+  ok "diagnosis names the label-vocabulary check"
+else
+  bad "diagnosis does not name the label check"
+fi
+if jq -e '.receipt_path != null' <<<"$ESCALATED" >/dev/null 2>&1; then
+  ok "first escalation persists a receipt"
+else
+  bad "first escalation did not persist a receipt"
+fi
+watchdog tick --project tau >/dev/null 2>&1
+watchdog tick --project tau >/dev/null 2>&1
+REPEAT="$(watchdog tick --project tau 2>/dev/null)"
+ESC_AFTER="$(find "$PROJECT_WATCHDOG_STATE_ROOT/receipts" -maxdepth 1 -type d -name 'project-watchdog-2*' 2>/dev/null | wc -l)"
+if jq -e '.status == "NEEDS_ATTENTION" and .receipt_persisted == false' <<<"$REPEAT" >/dev/null 2>&1; then
+  ok "repeat escalations stay NEEDS_ATTENTION without re-persisting"
+else
+  bad "repeat escalation re-persisted a receipt"
+fi
+if [[ "$((ESC_AFTER - ESC_BEFORE))" -le 1 ]]; then
+  ok "escalation added at most one receipt dir across four ticks (delta $((ESC_AFTER - ESC_BEFORE)))"
+else
+  bad "escalation leaked receipt dirs (delta $((ESC_AFTER - ESC_BEFORE)))"
+fi
+if jq -e '.idle_streak.consecutive_idle_ticks >= 4' <<<"$REPEAT" >/dev/null 2>&1; then
+  ok "consecutive idle ticks are counted: $(jq -r .idle_streak.consecutive_idle_ticks <<<"$REPEAT")"
+else
+  bad "consecutive idle ticks not counted"
+fi
+unset PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS
+
+# --------------------------------------------------------------------------- #
+gate 12 "HERDR PANE DISPATCH — real pane, real exit codes (skipped without Herdr)"
+HERDR_SOCK="${HOME}/.config/herdr/herdr.sock"
+WS_CLI="${HOME}/workspace/experiments/agent-skills/skills/herdr-workstation/run.sh"
+if [[ ! -S "$HERDR_SOCK" || ! -x "$WS_CLI" ]]; then
+  printf '  SKIP  Herdr not reachable (socket=%s cli=%s) — pane dispatch unverified here\n' \
+    "$HERDR_SOCK" "$WS_CLI"
+else
+  PANE_JSON="$("$UV_BIN" run --project "$SCRIPT_DIR" python - <<'PY' 2>/dev/null
+import json
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.environ["SANITY_SKILL_DIR"], "scripts"))
+from watchdog import herdr_space
+
+stamp = os.environ["SANITY_STAMP"]
+good = herdr_space.dispatch_in_pane(
+    agent_name=f"pw-sanity-ok-{stamp}",
+    command=["bash", "-lc", "echo sanity-pane-ok"],
+    space_label="autoupdate",
+    timeout_s=120,
+)
+bad = herdr_space.dispatch_in_pane(
+    agent_name=f"pw-sanity-fail-{stamp}",
+    command=["bash", "-lc", "exit 7"],
+    space_label="autoupdate",
+    timeout_s=120,
+)
+print(json.dumps({"good": good.as_receipt_block(), "bad": bad.as_receipt_block()}))
+PY
+)"
+  if jq -e '.good.ok == true and .good.exit_code == 0' <<<"$PANE_JSON" >/dev/null 2>&1; then
+    ok "successful pane dispatch reports ok with exit_code 0"
+  else
+    bad "successful pane dispatch not reported ok: $(jq -rc '.good | {ok,exit_code,error}' <<<"$PANE_JSON" 2>/dev/null)"
+  fi
+  if jq -e '.bad.ok == false and .bad.exit_code == 7' <<<"$PANE_JSON" >/dev/null 2>&1; then
+    ok "failing pane dispatch surfaces its real exit code (7)"
+  else
+    bad "failing pane exit code not surfaced: $(jq -rc '.bad | {ok,exit_code,error}' <<<"$PANE_JSON" 2>/dev/null)"
+  fi
+  if jq -e '.good.workspace_id != null and .good.space_label == "autoupdate"' <<<"$PANE_JSON" >/dev/null 2>&1; then
+    ok "dispatch landed in the autoupdate space ($(jq -r .good.workspace_id <<<"$PANE_JSON"))"
+  else
+    bad "dispatch did not land in the autoupdate space"
+  fi
+  if jq -e '.good.pane_agent_label == "watchdog-dispatch"' <<<"$PANE_JSON" >/dev/null 2>&1; then
+    ok "pane reports a stable agent label monitor-herdr can filter on"
+  else
+    bad "pane agent label is not stable"
+  fi
+  if jq -e '.good.observable_via | test("monitor-herdr.*--space autoupdate.*--include-agent")' <<<"$PANE_JSON" >/dev/null 2>&1; then
+    ok "receipt names the exact monitor-herdr command that observes it"
+  else
+    bad "receipt does not name the monitor-herdr invocation"
+  fi
+fi
 
 # --------------------------------------------------------------------------- #
 gate 10 "unit tests"
