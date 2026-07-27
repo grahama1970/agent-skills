@@ -51,6 +51,16 @@
         "hard_violations": 0,
         "temporary_debt": 0
       }
+    },
+    {
+      "command": "~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:8877/skills/persona-dream/README.md --name persona-dream-readme-status --cwd /home/graham/workspace/experiments/agent-skills-persona-dream-next",
+      "result": "PASS",
+      "transport": "isolated_cdp",
+      "screenshot": "/tmp/codex-ui-verification/agent-skills-persona-dream-next/persona-dream-readme-status/20260727T121621Z.png",
+      "read_json": "/tmp/codex-ui-verification/agent-skills-persona-dream-next/persona-dream-readme-status/20260727T121621Z.read.json",
+      "latest_marker": ".codex/ui-verification/latest.json",
+      "surface_marker": ".codex/ui-verification/persona-dream-readme-status.latest.json",
+      "visual_scope": "README.md rendered as a local static documentation surface; not product UI proof"
     }
   ],
   "claims": {
