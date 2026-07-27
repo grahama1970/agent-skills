@@ -180,7 +180,7 @@ def _probe_provider(
         "checked_tabs": checked,
         "provider_limited": any(item.get("limited") is True for item in checked),
         "probe_degraded": any(item.get("returncode") != 0 for item in checked),
-        "probe_failed": bool(checked) and all(item.get("returncode") != 0 for item in checked),
+        "probe_failed": _provider_probe_failed(checked),
         "failure_code": _provider_probe_failure_code(checked),
         "read_only": True,
     }
@@ -212,6 +212,15 @@ def _provider_probe_failure_code(checked: list[dict[str, Any]]) -> str | None:
     if any(item.get("timed_out") is True for item in failures):
         return "browser_provider_probe_timeout"
     return "browser_provider_probe_failed"
+
+
+def _provider_probe_failed(checked: list[dict[str, Any]]) -> bool:
+    failures = [item for item in checked if item.get("returncode") != 0]
+    if not checked or not failures:
+        return False
+    if all(item.get("timed_out") is True for item in failures):
+        return False
+    return len(failures) == len(checked)
 
 
 def _candidate_tab_ids(provider_tabs: list[dict[str, Any]], explicit_tab_ids: list[str], max_tabs: int) -> list[str]:

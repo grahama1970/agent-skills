@@ -340,9 +340,10 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   "System is currently busy", or similar provider banner blocks the launch
   before any prompt is submitted. That provider is unavailable for this run;
   rerun the availability probe after the cooldown and continue with available
-  participants when the workflow allows it. Stale-tab read timeouts appear as
-  `probe_degraded`; they are diagnostic unless every checked tab for that
-  provider fails to read.
+  participants when the workflow allows it. Stale or background old-tab read
+  timeouts appear as `probe_degraded`; they are diagnostic, not proof of
+  provider cooldown. Surf tab-list failure or non-timeout probe failures remain
+  `ERROR`.
 - **Surf lock behavior**: Tau may launch browser handler workers concurrently,
   but Surf browser operations share `/tmp/surf.sock` and must wait on the Surf
   lock. Ask emits long `--browser-lock-timeout` / `--lock-timeout` envelopes so

@@ -133,7 +133,7 @@ def test_probe_degrades_but_does_not_block_when_one_provider_tab_reads_cleanly(m
     assert report["providers"]["webkimi"]["failure_code"] == "browser_provider_probe_timeout"
 
 
-def test_probe_reports_structured_error_when_tab_read_times_out(monkeypatch, tmp_path: Path) -> None:
+def test_probe_degrades_without_blocking_when_all_tab_reads_time_out(monkeypatch, tmp_path: Path) -> None:
     surf = tmp_path / "surf-run.sh"
     surf.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
     surf.chmod(0o755)
@@ -162,11 +162,47 @@ def test_probe_reports_structured_error_when_tab_read_times_out(monkeypatch, tmp
         explicit_tabs={},
     )
 
+    assert report["status"] == "AVAILABLE_PREFLIGHT"
+    assert "error" not in report
+    assert report["providers"]["webgpt"]["probe_degraded"] is True
+    assert report["providers"]["webgpt"]["probe_failed"] is False
+    assert report["providers"]["webgpt"]["failure_code"] == "browser_provider_probe_timeout"
+    assert report["providers"]["webgpt"]["checked_tabs"][0]["timed_out"] is True
+
+
+def test_probe_reports_error_when_all_tab_reads_fail_non_timeout(monkeypatch, tmp_path: Path) -> None:
+    surf = tmp_path / "surf-run.sh"
+    surf.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    surf.chmod(0o755)
+
+    def fake_run(command: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
+        if "tab.list" in command:
+            return subprocess.CompletedProcess(
+                args=command,
+                returncode=0,
+                stdout=json.dumps([{"id": 556, "windowId": 1, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True}]),
+                stderr="",
+            )
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=7,
+            stdout="",
+            stderr="surf js failed",
+        )
+
+    monkeypatch.setattr(probe_browser_provider_availability, "_run", fake_run)
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"],
+        surf_run=surf,
+        max_tabs_per_provider=1,
+        explicit_tabs={},
+    )
+
     assert report["status"] == "ERROR"
     assert report["error"] == "browser_provider_probe_failed"
     assert report["providers"]["webgpt"]["probe_failed"] is True
-    assert report["providers"]["webgpt"]["failure_code"] == "browser_provider_probe_timeout"
-    assert report["providers"]["webgpt"]["checked_tabs"][0]["timed_out"] is True
+    assert report["providers"]["webgpt"]["failure_code"] == "browser_provider_probe_failed"
 
 
 def _fake_surf(tmp_path: Path, *, tabs: list[dict[str, object]], tab_text: dict[str, str]) -> Path:
