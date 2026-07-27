@@ -59,10 +59,11 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Stage 1**: Search repositories and issues
     - **Stage 2**: Fetch README.md and metadata for top repos, agent evaluates relevance
     - **Stage 3**: Deep code search inside the selected repository
-7.  **Feed monitors (📰, opt-in)**: Fresh RSS feed monitor dry-runs through `consume-feed`; this is source-health/freshness evidence, not query-specific web search.
-8.  **Website ingestion (🧠, opt-in handoff)**: Promote selected sites or documentation URLs into `/ingest-website` when durable RAG/memory is intentionally needed.
-9.  **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
-10. **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
+7.  **Fetcher (📥, internal primitive)**: Fetch selected web pages, PDFs, and documents after Brave/ArXiv/user URLs identify targets; this is not a standalone search provider.
+8.  **Feed monitors (📰, opt-in)**: Fresh RSS feed monitor dry-runs through `consume-feed`; this is source-health/freshness evidence, not query-specific web search.
+9.  **Website ingestion (🧠, opt-in handoff)**: Promote selected sites or documentation URLs into `/ingest-website` when durable RAG/memory is intentionally needed.
+10. **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
+11. **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
 
 ## Features
 
@@ -127,6 +128,24 @@ Threat-intel and security feed hits are enrichment by default. Do not treat
 feed hits as automatic block decisions, alerts, or proof of compromise unless
 the project workflow adds high-confidence environmental corroboration. The
 default rule is: block on certainty, hunt on suspicion, enrich everything else.
+
+### Fetcher Boundary
+
+`fetcher` is part of Dogpile as a fetch/deep-extraction primitive, not as a
+separate broad discovery source. Use it after Dogpile has a concrete URL from
+Brave, ArXiv, user input, Wayback, a feed item, or another provider.
+
+| Fetcher use | Activate when | Do not use as |
+|-------------|---------------|---------------|
+| Single-page fetch | A selected result needs full text, markdown, PDF download, SPA rendering, content verdicts, or source receipts before synthesis | A replacement for Brave or GitHub search |
+| Manifest fetch | Dogpile has a bounded URL set and needs comparable extracted text across those exact sources | An arbitrary crawl of a whole site |
+| PDF/document fetch | ArXiv, Brave, or user input identifies a paper, standard, report, manual, or attachment that needs extraction | A way to infer paper/code relevance without provider metadata |
+
+Every Fetcher-backed result must preserve the URL, final URL, content verdict,
+and artifact path when available. If `content_verdict` is `empty`, `thin`,
+`paywall`, or `error`, Dogpile must report that degraded evidence instead of
+using the result as if content was extracted. For durable site-wide learning,
+handoff to `ingest-website`; for historical URL state, use Wayback.
 
 ### Optional Feed Pack Selection
 
