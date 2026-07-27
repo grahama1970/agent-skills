@@ -924,6 +924,26 @@ async function waitForResponse(cdp, timeoutMs = 300000, userPrompt = '', signal)
     }
 
     const bodyText = snapshot.bodyText;
+    const lowerBodyText = String(bodyText || "").toLowerCase();
+    if (
+      lowerBodyText.includes("limit is gone") ||
+      lowerBodyText.includes("upgrade to supergrok") ||
+      lowerBodyText.includes("rate limit") ||
+      lowerBodyText.includes("usage limit") ||
+      lowerBodyText.includes("message limit") ||
+      lowerBodyText.includes("too many requests")
+    ) {
+      throw new Error("Grok provider rate limited");
+    }
+    if (
+      lowerBodyText.includes("system is currently busy") ||
+      lowerBodyText.includes("temporarily busy") ||
+      lowerBodyText.includes("high demand") ||
+      lowerBodyText.includes("under heavy usage") ||
+      lowerBodyText.includes("capacity is busy")
+    ) {
+      throw new Error("Grok provider capacity busy");
+    }
     const bodyLength = snapshot.bodyLength;
     const sentinelOccurrences = sentinel ? bodyText.split(sentinel).length - 1 : 0;
     const assistantSentinelObserved = !sentinel || sentinelOccurrences >= 2;

@@ -258,6 +258,25 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             commands.append(submit.summary())
             if meta_path.is_file():
                 submit_meta = _read_json(meta_path)
+            if submit.returncode == 124 and handler in HANDLER_SUBMIT_COMMANDS:
+                timeout_diagnostics = _browser_timeout_diagnostics(
+                    surf_run=Path(args.surf_run),
+                    handler=handler,
+                    tab_id=tab_id,
+                    url=url,
+                    prompt_path=submit_prompt_path,
+                    artifact_dir=artifact_dir,
+                )
+                if timeout_diagnostics:
+                    submit_meta = {
+                        **submit_meta,
+                        "status": submit_meta.get("status") or "timeout",
+                        "ask_timeout_diagnostics": timeout_diagnostics,
+                    }
+                    meta_path.write_text(
+                        json.dumps(submit_meta, indent=2, sort_keys=True) + "\n",
+                        encoding="utf-8",
+                    )
             degraded_response_recovered = _normalize_degraded_webgpt_response(
                 handler=handler,
                 meta_path=meta_path,
@@ -456,6 +475,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "verdict": verdict,
         "failure": failure or None,
         "failure_code": recovery_packet.get("failure_code") if recovery_packet else None,
+        "browser_transport_failure_summary": recovery_packet.get("transport_failure_summary") if recovery_packet else None,
         "competition_lane_exit_ok": lane_exit_ok,
         "recovery_packet": recovery_packet,
         "provider_receipt": {
@@ -599,7 +619,7 @@ def _browser_submit_command(
         command.extend(["--tab-id", tab_id])
     if url:
         if handler == "webgpt":
-            if tab_id and not _is_chatgpt_home_url(url):
+            if tab_id:
                 command.extend(["--expect-url", url])
             elif not tab_id:
                 command.extend(["--url", url])
@@ -1311,6 +1331,12 @@ def _browser_failure_recovery_packet(
     )
     stale_binding = _webgpt_stale_binding_details(submit_meta)
     surf_lock_blocker = _surf_lock_blocker_details(failure=failure, commands=commands, submit_meta=submit_meta)
+    transport_failure_summary = _browser_transport_failure_summary(
+        failure_code=failure_code,
+        submit_meta=submit_meta,
+        commands=commands,
+        surf_lock_blocker=surf_lock_blocker,
+    )
     next_command = _recovery_next_command(
         args,
         request_payload=request_payload,
@@ -1340,9 +1366,12 @@ def _browser_failure_recovery_packet(
             "prompt_chars": len(prompt_text),
             "submit_meta_status": submit_meta.get("status") or submit_meta.get("status_code"),
             "last_command": commands[-1] if commands else None,
+            "timeout_diagnostics": submit_meta.get("ask_timeout_diagnostics"),
             "stale_binding": stale_binding,
             "surf_lock_blocker": surf_lock_blocker,
+            "submit_meta_summary": transport_failure_summary,
         },
+        "transport_failure_summary": transport_failure_summary,
         "local_readable_bundle_paths": bundle_paths,
         "requires_local_readable_bundle": _requires_local_readable_bundle(failure_code),
         "attach_file_supported": can_attach,
@@ -1460,6 +1489,8 @@ def _classify_browser_failure(
         return WEBGPT_UNVERIFIED_CLEAN_OUTPUT
     if _looks_sentinel_trailing_content(haystack, submit_meta):
         return BROWSER_SENTINEL_TRAILING_CONTENT
+    if _looks_browser_tab_read_timeout(haystack):
+        return BROWSER_TAB_READ_TIMEOUT
     if _looks_browser_handler_timeout(haystack, commands):
         return BROWSER_HANDLER_TIMEOUT
     if _looks_repo_access_blocked(haystack):
@@ -1468,8 +1499,6 @@ def _classify_browser_failure(
         return BROWSER_TAB_IDENTITY_MISMATCH
     if _looks_stale_raw_capture(haystack, submit_meta):
         return "stale_raw_capture"
-    if _looks_browser_tab_read_timeout(haystack):
-        return BROWSER_TAB_READ_TIMEOUT
     if _looks_prompt_too_large_or_stalled(haystack):
         return "prompt_too_large_or_stalled"
     if _looks_missing_sentinel(haystack, submit_meta):
@@ -1559,6 +1588,9 @@ def _response_denies_attachment_access(text: str) -> bool:
 def _looks_browser_access_blocked(text: str, meta: dict[str, Any]) -> bool:
     if meta.get("browser_access_blocked") is True or meta.get("cloudflare_challenge_detected") is True:
         return True
+    timeout_markers = _timeout_diagnostic_markers(meta)
+    if timeout_markers.get("access_blocked") is True:
+        return True
     markers = (
         "cloudflare challenge",
         "blocked_webgpt_cloudflare_challenge",
@@ -1582,6 +1614,9 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
     rate_limit = meta.get("chatgpt_rate_limit")
     if isinstance(rate_limit, dict) and rate_limit.get("exhausted") is True:
         return True
+    timeout_markers = _timeout_diagnostic_markers(meta)
+    if timeout_markers.get("provider_rate_limited") is True or timeout_markers.get("provider_busy") is True:
+        return True
     markers = (
         "too many requests",
         "you've hit your limit",
@@ -1591,8 +1626,11 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
         "capacity is busy",
         "provider_capacity_limited",
         "temporarily limited access",
-        "rate_limited",
         "browser_provider_rate_limited",
+        "grok_provider_rate_limited",
+        "blocked_grok_provider_rate_limit",
+        "limit is gone",
+        "upgrade to supergrok",
     )
     return any(marker in text for marker in markers)
 
@@ -1603,6 +1641,9 @@ def _looks_browser_submit_not_accepted(text: str, meta: dict[str, Any]) -> bool:
     if failure == BROWSER_SUBMIT_NOT_ACCEPTED or blocker == BROWSER_SUBMIT_NOT_ACCEPTED:
         return True
     if meta.get("submitted_to_chatgpt") is False or meta.get("submitted_to_kimi") is False:
+        return True
+    timeout_markers = _timeout_diagnostic_markers(meta)
+    if timeout_markers.get("prompt_still_in_composer") is True:
         return True
     markers = (
         "prompt submission was not accepted",
@@ -1618,6 +1659,14 @@ def _looks_browser_submit_not_accepted(text: str, meta: dict[str, Any]) -> bool:
         "input was not submitted",
     )
     return any(marker in text for marker in markers)
+
+
+def _timeout_diagnostic_markers(meta: dict[str, Any]) -> dict[str, Any]:
+    diagnostics = meta.get("ask_timeout_diagnostics")
+    if not isinstance(diagnostics, dict):
+        return {}
+    markers = diagnostics.get("markers")
+    return markers if isinstance(markers, dict) else {}
 
 
 def _looks_browser_tool_unsupported(text: str) -> bool:
@@ -1636,6 +1685,8 @@ def _looks_surf_browser_lock_timeout(text: str, commands: list[dict[str, Any]], 
         return True
     if "surf_browser_lock_timeout" in text or "surf_browser_lock_blocked" in text:
         return True
+    if _surf_lock_blocker_details(failure=text, commands=commands, submit_meta=meta):
+        return True
     return any(_surf_lock_blocker_details(failure="", commands=[command], submit_meta={}) for command in commands)
 
 
@@ -1650,10 +1701,88 @@ def _looks_surf_browser_connection_unavailable(text: str) -> bool:
     return any(marker in text for marker in markers)
 
 
+def _browser_transport_failure_summary(
+    *,
+    failure_code: str,
+    submit_meta: dict[str, Any],
+    commands: list[dict[str, Any]],
+    surf_lock_blocker: dict[str, Any],
+) -> dict[str, Any]:
+    summary: dict[str, Any] = {
+        "failure_code": failure_code,
+        "transport_failure_kind": _transport_failure_kind(failure_code),
+    }
+    for key in (
+        "submitted_to_chatgpt",
+        "submitted_to_kimi",
+        "submitted_to_claude",
+        "submitted_to_gemini",
+        "submitted_to_grok",
+        "proof_status",
+        "response_proof_status",
+        "requested_tab_id",
+        "controlled_tab_id",
+        "requested_url",
+        "controlled_url",
+        "status",
+        "failure",
+        "blocker",
+        "cdp_probe_stderr",
+        "cdp_retry_stderr",
+        "stderr_log",
+    ):
+        if key in submit_meta:
+            summary[key] = submit_meta.get(key)
+    identity = submit_meta.get("tab_identity_preflight")
+    if isinstance(identity, dict):
+        summary["tab_identity_preflight"] = identity
+    if surf_lock_blocker:
+        summary["surf_lock_blocker"] = surf_lock_blocker
+    command_stderr = _last_nonempty_command_field(commands, "stderr_excerpt")
+    if command_stderr:
+        summary["last_command_stderr_excerpt"] = command_stderr
+    command_stdout = _last_nonempty_command_field(commands, "stdout_excerpt")
+    if command_stdout:
+        summary["last_command_stdout_excerpt"] = command_stdout
+    return summary
+
+
+def _transport_failure_kind(failure_code: str) -> str:
+    return {
+        SURF_BROWSER_LOCK_TIMEOUT: "browser_cdp_lock_timeout",
+        BROWSER_TAB_READ_TIMEOUT: "browser_tab_read_timeout",
+        BROWSER_HANDLER_TIMEOUT: "browser_handler_timeout",
+        BROWSER_SUBMIT_NOT_ACCEPTED: "browser_submit_not_accepted",
+        SURF_BROWSER_CONNECTION_UNAVAILABLE: "surf_browser_connection_unavailable",
+        BROWSER_TAB_IDENTITY_MISMATCH: "browser_tab_identity_mismatch",
+        WEBGPT_BINDING_STALE_BLOCKER: "browser_oracle_binding_stale",
+    }.get(failure_code, failure_code)
+
+
+def _last_nonempty_command_field(commands: list[dict[str, Any]], key: str) -> str:
+    for command in reversed(commands):
+        if not isinstance(command, dict):
+            continue
+        value = str(command.get(key) or "").strip()
+        if value:
+            return value[:4000]
+    return ""
+
+
 def _surf_lock_blocker_details(
     *, failure: str, commands: list[dict[str, Any]], submit_meta: dict[str, Any]
 ) -> dict[str, Any]:
+    meta_text_fields = [
+        "cdp_probe_stderr",
+        "cdp_retry_stderr",
+        "stderr_log",
+        "error",
+        "failure",
+        "message",
+        "blocker",
+    ]
     candidates: list[str] = [failure, json.dumps(submit_meta, sort_keys=True, default=str)]
+    candidates.extend(str(submit_meta.get(key) or "") for key in meta_text_fields)
     for command in commands:
         if isinstance(command, dict):
             candidates.extend(
@@ -1675,21 +1804,30 @@ def _surf_lock_blocker_details(
     haystack = "\n".join(candidates)
     if "timed out waiting for browser lock" not in haystack.lower():
         return {}
+    owner = None
+    owner_pid = str(submit_meta.get("owner_pid") or "").strip()
+    owner_socket = str(submit_meta.get("owner_socket") or "").strip()
+    owner_created_at = str(submit_meta.get("owner_created_at") or "").strip()
+    lock_dir = str(submit_meta.get("lock_dir") or "").strip() or None
+    if owner_pid or owner_socket or owner_created_at:
+        owner = {
+            "pid": int(owner_pid) if owner_pid.isdigit() else owner_pid or None,
+            "created_at": owner_created_at or None,
+            "socket": owner_socket or None,
+        }
     owner_match = re.search(
         r"owner_pid=(?P<pid>\S+).*?owner_created_at=(?P<created_at>\S+).*?owner_socket=(?P<socket>\S+).*?lock_dir=(?P<lock_dir>\S+)",
         haystack,
         flags=re.IGNORECASE | re.DOTALL,
     )
-    owner: dict[str, Any] | None = None
-    lock_dir = None
     if owner_match:
-        pid_text = owner_match.group("pid")
+        pid_text = owner_match.group("pid").strip('",')
         owner = {
             "pid": int(pid_text) if pid_text.isdigit() else pid_text,
-            "created_at": owner_match.group("created_at"),
-            "socket": owner_match.group("socket"),
+            "created_at": owner_match.group("created_at").strip('",'),
+            "socket": owner_match.group("socket").strip('",'),
         }
-        lock_dir = owner_match.group("lock_dir")
+        lock_dir = owner_match.group("lock_dir").strip('",')
     return {
         "schema": "surf.browser_lock_blocker.v1",
         "status": "BLOCKED",
@@ -2500,6 +2638,7 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
             ),
             "recovery_packet_path": receipt.get("recovery_packet_path"),
             "response_quarantine": receipt.get("response_quarantine"),
+            "browser_transport_failure_summary": receipt.get("browser_transport_failure_summary"),
         }
         handler_receipts.append(indexed_receipt)
         if receipt.get("ok") is True and response_chars > 0:
@@ -2514,6 +2653,7 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
                     "failure_code": indexed_receipt.get("failure_code"),
                     "recovery_packet_path": indexed_receipt.get("recovery_packet_path"),
                     "response_quarantine": indexed_receipt.get("response_quarantine"),
+                    "browser_transport_failure_summary": indexed_receipt.get("browser_transport_failure_summary"),
                 }
             )
     lines = [
@@ -2648,6 +2788,8 @@ def _roundtable_degradation_analysis(
             "next_command": next_command or None,
             "auto_retry_allowed": recovery_packet.get("auto_retry_allowed"),
             "auto_retry_blocked_reason": recovery_packet.get("auto_retry_blocked_reason"),
+            "transport_failure_summary": recovery_packet.get("transport_failure_summary"),
+            "evidence": recovery_packet.get("evidence"),
         }
         failed_seats.append(failed)
         if next_command:
@@ -2915,6 +3057,8 @@ def _compete_degradation_analysis(
                 "next_command": next_command or None,
                 "auto_retry_allowed": recovery_packet.get("auto_retry_allowed"),
                 "auto_retry_blocked_reason": recovery_packet.get("auto_retry_blocked_reason"),
+                "transport_failure_summary": recovery_packet.get("transport_failure_summary"),
+                "evidence": recovery_packet.get("evidence"),
             }
         )
         if next_command:
@@ -3150,6 +3294,11 @@ def _browser_submit_timeout(handler: str, provider_timeout: int) -> int:
         )
     except ValueError:
         lock_wait_seconds = 60
+    if provider_timeout < 30:
+        # Forced-timeout tests and manual probes use tiny provider budgets.
+        # Those probes should exercise Ask's timeout receipt path immediately
+        # instead of inheriting the long production Surf lock envelope.
+        lock_wait_seconds = 0
     if handler == "webgpt":
         # webgpt-submit permits three default 300-second rate-limit cooldowns
         # before the final provider observation.
@@ -3158,11 +3307,131 @@ def _browser_submit_timeout(handler: str, provider_timeout: int) -> int:
         # gemini-submit permits two provider observations separated by its
         # default 120-second stalled-response cooldown.
         return max((2 * (provider_timeout + 60)) + 120 + lock_wait_seconds + 30, 180)
-    # Claude, Kimi, and Grok do not have Surf-managed multi-cooldown submit
-    # loops. Their worker-owned submit timeout must match the declared
-    # --timeout so the worker can emit a terminal NEEDS_ATTENTION receipt
-    # before Tau's command-spec watchdog kills the whole node.
-    return max(provider_timeout, 1)
+    # Claude, Kimi, and Grok receive the provider timeout as a Surf argument.
+    # The worker watchdog must be longer than that provider timeout, otherwise
+    # Ask kills Surf at the moment Surf should be writing its provider timeout
+    # metadata. Keep the grace proportional so tiny debug timeouts remain fast.
+    grace_seconds = min(45, max(2, int(provider_timeout * 0.15)))
+    return provider_timeout + lock_wait_seconds + grace_seconds
+
+
+def _browser_timeout_diagnostics(
+    *,
+    surf_run: Path,
+    handler: str,
+    tab_id: str,
+    url: str,
+    prompt_path: Path,
+    artifact_dir: Path,
+) -> dict[str, Any]:
+    if not tab_id:
+        return {}
+    prompt_text = prompt_path.read_text(encoding="utf-8", errors="replace") if prompt_path.is_file() else ""
+    prompt_probe = prompt_text[:500]
+    js = r"""
+const editable = Array.from(document.querySelectorAll('textarea,[contenteditable="true"],[role="textbox"]'));
+const composer = editable.map((el, index) => ({
+  index,
+  tag: el.tagName,
+  role: el.getAttribute('role') || '',
+  aria: el.getAttribute('aria-label') || '',
+  text: (el.innerText || el.textContent || el.value || '').slice(0, 1200),
+  visible: !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length)
+}));
+const buttons = Array.from(document.querySelectorAll('button,[role="button"]')).map((el, index) => ({
+  index,
+  text: (el.innerText || el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 120),
+  disabled: !!el.disabled || el.getAttribute('aria-disabled') === 'true',
+  visible: !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length)
+})).filter(x => x.text);
+return JSON.stringify({
+  url: location.href,
+  title: document.title,
+  visibility_state: document.visibilityState,
+  body_text: (document.body && document.body.innerText || '').slice(0, 5000),
+  composer,
+  buttons
+});
+"""
+    snapshot_path = artifact_dir / "browser-timeout-diagnostics.json"
+    js_result = _run_cmd(
+        [str(surf_run), "js", js, "--tab-id", str(tab_id)],
+        cwd=surf_run.parent,
+        timeout=20,
+    )
+    payload: dict[str, Any] = {}
+    if js_result.returncode == 0:
+        try:
+            payload = _parse_json_object(js_result.stdout)
+        except (json.JSONDecodeError, RuntimeError):
+            payload = {}
+    body_text = str(payload.get("body_text") or "")
+    composer_items = payload.get("composer") if isinstance(payload.get("composer"), list) else []
+    composer_text = "\n".join(str(item.get("text") or "") for item in composer_items if isinstance(item, dict))
+    lower = "\n".join([body_text, composer_text, js_result.stderr, js_result.stdout]).lower()
+    prompt_still_in_composer = bool(prompt_probe and prompt_probe[:120] in composer_text)
+    markers = {
+        "provider_busy": any(
+            marker in lower
+            for marker in (
+                "system is currently busy",
+                "currently busy",
+                "server is busy",
+                "high demand",
+                "try again later",
+            )
+        ),
+        "provider_rate_limited": any(
+            marker in lower
+            for marker in (
+                "rate limit",
+                "too many requests",
+                "usage limit",
+                "message limit",
+                "limit is gone",
+                "upgrade to supergrok",
+            )
+        ),
+        "access_blocked": any(
+            marker in lower
+            for marker in (
+                "log in",
+                "sign in",
+                "verify you are human",
+                "captcha",
+                "cloudflare",
+                "access denied",
+            )
+        ),
+        "possibly_generating": any(
+            marker in lower
+            for marker in (
+                "stop generating",
+                "stop responding",
+                "stop answer",
+                "stop generation",
+            )
+        ),
+        "prompt_still_in_composer": prompt_still_in_composer,
+        "composer_nonempty": bool(composer_text.strip()),
+    }
+    diagnostic = {
+        "schema": "ask.browser_timeout_diagnostics.v1",
+        "handler": handler,
+        "tab_id": str(tab_id),
+        "expected_url": url,
+        "status": "CAPTURED" if payload else "CAPTURE_FAILED",
+        "snapshot_path": str(snapshot_path),
+        "js_command": js_result.summary(),
+        "url": payload.get("url"),
+        "title": payload.get("title"),
+        "visibility_state": payload.get("visibility_state"),
+        "markers": markers,
+        "body_excerpt": body_text[:2000],
+        "composer_excerpt": composer_text[:2000],
+    }
+    snapshot_path.write_text(json.dumps(diagnostic, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return diagnostic
 
 
 def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:

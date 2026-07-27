@@ -1866,7 +1866,9 @@ def _write_roundtable_command_spec(
         # codex coder orders carry mandatory finish sequences (wheel build +
         # fixture suite + gate-document extractions + cargo test) that alone
         # take ~20 min; 3000s starved a real repair mid-flight (2026-07-22).
-        "5400" if handler == "codex" else ("1500" if is_subagent_handler else ("900" if handler == "webgpt" else "300")),
+        "5400"
+        if handler == "codex"
+        else ("1500" if is_subagent_handler else ("900" if _is_browser_handler(handler) else "300")),
         "--stable-polls",
         "2",
         "--no-activate",
@@ -1931,9 +1933,9 @@ def _roundtable_command_timeout(handler: str, *, is_subagent_handler: bool) -> i
     if handler == "webgpt":
         return 3900
     if handler == "webgemini":
-        return 2820
+        return 4200
     if handler in {"webclaude", "webkimi", "webgrok"}:
-        return 420
+        return 3000
     return 420
 
 

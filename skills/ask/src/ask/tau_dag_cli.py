@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import time
+from dataclasses import replace
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 
@@ -27,6 +30,21 @@ from .tau_dag import (
 load_dotenv_once()
 
 app = typer.Typer(help="Compile /ask requests into strict Tau DAGs.")
+
+BROWSER_FRESH_URLS = {
+    "webgpt": "https://chatgpt.com/",
+    "webclaude": "https://claude.ai/new",
+    "webkimi": "https://www.kimi.com/",
+    "webgemini": "https://gemini.google.com/app",
+    "webgrok": "https://grok.com/",
+}
+BROWSER_BACKENDS = {
+    "webgpt": "webgpt",
+    "webclaude": "webclaude",
+    "webkimi": "webkimi",
+    "webgemini": "webgemini",
+    "webgrok": "webgrok",
+}
 
 
 @app.command("run")
@@ -90,6 +108,13 @@ def run(
             help="Workspace binding for local-CLI handlers as handler=/path (e.g. codex=/path/to/worktree).",
         ),
     ] = None,
+    browser_tab_lifecycle: Annotated[
+        str,
+        typer.Option(
+            "--browser-tab-lifecycle",
+            help="Browser tab handling for Tau browser handlers: reuse-bound, fresh-temporary, or fresh-keep.",
+        ),
+    ] = "reuse-bound",
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Reviewer criterion. Repeat for multiple criteria."),
@@ -165,6 +190,21 @@ def run(
         tau_project_root=tau_project_root,
     )
     bundle = compile_tau_dag_bundle(input_payload)
+    lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
+    if bundle.get("status") != "NEEDS_INTERVIEW" and execute:
+        lifecycle = _provision_browser_lifecycle(
+            input_payload,
+            mode=browser_tab_lifecycle,
+            run_dir=Path(str(bundle["run_dir"])),
+        )
+        if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
+            input_payload = replace(
+                input_payload,
+                ask_id=Path(str(bundle["run_dir"])).name,
+                handler_projects=tuple(lifecycle["handler_projects"]),
+            )
+            bundle = compile_tau_dag_bundle(input_payload)
+            lifecycle["run_dir"] = str(bundle["run_dir"])
     provider_gate = None
     execution = None
     exit_code = 0
@@ -199,7 +239,10 @@ def run(
         if require_provider_calls and provider_gate.get("ok") is not True:
             exit_code = 3
         elif execute:
-            if input_payload.handlers and input_payload.workflow_mode == "compete":
+            if lifecycle.get("status") == "BLOCKED":
+                execution = browser_lifecycle_blocked_execution(lifecycle)
+                exit_code = 4
+            elif input_payload.handlers and input_payload.workflow_mode == "compete":
                 browser_gate = probe_browser_compete_handler_gate(input_payload)
                 if not browser_gate.get("skipped"):
                     provider_gate = browser_gate
@@ -223,16 +266,22 @@ def run(
                 }
                 exit_code = 3
             else:
-                execution = run_tau_dag_bundle(
-                    bundle,
-                    tau_project_root=tau_project_root,
-                    poll=poll,
-                    poll_interval_seconds=poll_interval_seconds,
-                    poll_timeout_seconds=poll_timeout_seconds,
-                    viewer_link=viewer_link,
-                )
+                try:
+                    execution = run_tau_dag_bundle(
+                        bundle,
+                        tau_project_root=tau_project_root,
+                        poll=poll,
+                        poll_interval_seconds=poll_interval_seconds,
+                        poll_timeout_seconds=poll_timeout_seconds,
+                        viewer_link=viewer_link,
+                    )
+                finally:
+                    _cleanup_browser_lifecycle(lifecycle)
                 if execution.get("ok") is not True:
                     exit_code = 4
+
+    if execute:
+        _cleanup_browser_lifecycle(lifecycle)
 
     output_live = bool(
         (isinstance(execution, dict) and execution.get("live") is True)
@@ -250,6 +299,7 @@ def run(
         or bool(isinstance(execution, dict) and execution.get("provider_live") is True),
         "bundle": bundle,
         "provider_gate": provider_gate,
+        "browser_tab_lifecycle": lifecycle,
         "execution": execution,
         "join_artifact_path": execution.get("join_artifact_path") if isinstance(execution, dict) else None,
     }
@@ -287,6 +337,13 @@ def compete(
         list[str] | None,
         typer.Option("--handler-workspace", help="Workspace binding for local-CLI handlers as handler=/path."),
     ] = None,
+    browser_tab_lifecycle: Annotated[
+        str,
+        typer.Option(
+            "--browser-tab-lifecycle",
+            help="Browser tab handling for Tau browser handlers: reuse-bound, fresh-temporary, or fresh-keep.",
+        ),
+    ] = "reuse-bound",
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Evaluation criterion. Repeat for multiple criteria."),
@@ -345,6 +402,21 @@ def compete(
         tau_project_root=tau_project_root,
     )
     bundle = compile_tau_dag_bundle(input_payload)
+    lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
+    if bundle.get("status") != "NEEDS_INTERVIEW" and execute:
+        lifecycle = _provision_browser_lifecycle(
+            input_payload,
+            mode=browser_tab_lifecycle,
+            run_dir=Path(str(bundle["run_dir"])),
+        )
+        if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
+            input_payload = replace(
+                input_payload,
+                ask_id=Path(str(bundle["run_dir"])).name,
+                handler_projects=tuple(lifecycle["handler_projects"]),
+            )
+            bundle = compile_tau_dag_bundle(input_payload)
+            lifecycle["run_dir"] = str(bundle["run_dir"])
     provider_gate = None
     execution = None
     exit_code = 0
@@ -368,25 +440,35 @@ def compete(
         gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         provider_gate["path"] = str(gate_path)
         if execute:
-            browser_gate = probe_browser_compete_handler_gate(input_payload)
-            if not browser_gate.get("skipped"):
-                provider_gate = browser_gate
-                gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-                provider_gate["path"] = str(gate_path)
-            if browser_gate.get("ok") is not True and not browser_gate.get("skipped"):
-                execution = browser_compete_blocked_execution(browser_gate)
+            if lifecycle.get("status") == "BLOCKED":
+                execution = browser_lifecycle_blocked_execution(lifecycle)
                 exit_code = 4
             else:
-                execution = run_tau_dag_bundle(
-                    bundle,
-                    tau_project_root=tau_project_root,
-                    poll=poll,
-                    poll_interval_seconds=poll_interval_seconds,
-                    poll_timeout_seconds=poll_timeout_seconds,
-                    viewer_link=viewer_link,
-                )
-                if execution.get("ok") is not True:
+                browser_gate = probe_browser_compete_handler_gate(input_payload)
+                if not browser_gate.get("skipped"):
+                    provider_gate = browser_gate
+                    gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                    provider_gate["path"] = str(gate_path)
+                if browser_gate.get("ok") is not True and not browser_gate.get("skipped"):
+                    execution = browser_compete_blocked_execution(browser_gate)
                     exit_code = 4
+                else:
+                    try:
+                        execution = run_tau_dag_bundle(
+                            bundle,
+                            tau_project_root=tau_project_root,
+                            poll=poll,
+                            poll_interval_seconds=poll_interval_seconds,
+                            poll_timeout_seconds=poll_timeout_seconds,
+                            viewer_link=viewer_link,
+                        )
+                    finally:
+                        _cleanup_browser_lifecycle(lifecycle)
+                    if execution.get("ok") is not True:
+                        exit_code = 4
+
+    if execute:
+        _cleanup_browser_lifecycle(lifecycle)
     output = {
         "schema": "ask.tau_dag_cli_result.v1",
         "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),
@@ -397,12 +479,287 @@ def compete(
         "bundle": bundle,
         "provider_gate": provider_gate,
         "execution": execution,
+        "browser_tab_lifecycle": lifecycle,
     }
     if json_output:
         typer.echo(json.dumps(output, indent=2, sort_keys=True))
     else:
         _print_text(output)
     raise typer.Exit(exit_code)
+
+
+def _provision_browser_lifecycle(
+    input_payload: Any,
+    *,
+    mode: str,
+    run_dir: Path,
+    surf_run: Path | None = None,
+    browser_oracle_run: Path | None = None,
+) -> dict[str, Any]:
+    mode = (mode or "reuse-bound").strip()
+    if mode == "reuse-bound":
+        lifecycle = {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": mode}
+        _write_lifecycle(run_dir, lifecycle)
+        return lifecycle
+    if mode not in {"fresh-temporary", "fresh-keep"}:
+        lifecycle = {
+            "schema": "ask.browser_tab_lifecycle.v1",
+            "status": "BLOCKED",
+            "mode": mode,
+            "failure_code": "unsupported_browser_tab_lifecycle",
+            "supported_modes": ["reuse-bound", "fresh-temporary", "fresh-keep"],
+        }
+        _write_lifecycle(run_dir, lifecycle)
+        raise typer.BadParameter("browser_tab_lifecycle must be reuse-bound, fresh-temporary, or fresh-keep")
+
+    browser_handlers = [handler for handler in input_payload.handlers if handler in BROWSER_FRESH_URLS]
+    if not browser_handlers:
+        lifecycle = {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": mode, "reason": "no_browser_handlers"}
+        _write_lifecycle(run_dir, lifecycle)
+        return lifecycle
+
+    surf_run = surf_run or (Path(__file__).resolve().parents[2].parent / "surf" / "run.sh")
+    browser_oracle_run = browser_oracle_run or (Path(__file__).resolve().parents[2].parent / "browser-oracle" / "run.sh")
+    created_tabs: list[dict[str, Any]] = []
+    commands: list[dict[str, Any]] = []
+    handler_projects: list[str] = list(input_payload.handler_projects)
+    lifecycle_id = run_dir.name
+    first = browser_handlers[0]
+    first_project = f"{lifecycle_id}-{first}"
+    window = _lifecycle_command(
+        [str(surf_run), "window.new", BROWSER_FRESH_URLS[first], "--json", "--unfocused"],
+        cwd=surf_run.parent,
+        timeout_seconds=60,
+    )
+    commands.append(window)
+    if window["returncode"] != 0:
+        lifecycle = _lifecycle_blocked(mode, run_dir, "browser_window_create_failed", commands, created_tabs)
+        _write_lifecycle(run_dir, lifecycle)
+        return lifecycle
+    window_payload = _json_or_text(window["stdout"])
+    window_id = _extract_window_id(window_payload)
+    first_tab = _extract_tab_id(window_payload)
+    if not first_tab:
+        lifecycle = _lifecycle_blocked(mode, run_dir, "browser_window_missing_tab_id", commands, created_tabs)
+        _write_lifecycle(run_dir, lifecycle)
+        return lifecycle
+    created_tabs.append({"handler": first, "project": first_project, "tab_id": first_tab, "url": BROWSER_FRESH_URLS[first], "window_id": window_id})
+    _replace_handler_project(handler_projects, first, first_project)
+
+    for handler in browser_handlers[1:]:
+        project = f"{lifecycle_id}-{handler}"
+        tab_command = [str(surf_run), "tab.new", BROWSER_FRESH_URLS[handler], "--json", "--background"]
+        if window_id:
+            tab_command.extend(["--window-id", window_id])
+        opened = _lifecycle_command(tab_command, cwd=surf_run.parent, timeout_seconds=60)
+        commands.append(opened)
+        if opened["returncode"] != 0:
+            lifecycle = _lifecycle_blocked(mode, run_dir, f"{handler}_tab_create_failed", commands, created_tabs, window_id=window_id)
+            _write_lifecycle(run_dir, lifecycle)
+            return lifecycle
+        tab_id = _extract_tab_id(_json_or_text(opened["stdout"]))
+        if not tab_id:
+            lifecycle = _lifecycle_blocked(mode, run_dir, f"{handler}_tab_missing_tab_id", commands, created_tabs, window_id=window_id)
+            _write_lifecycle(run_dir, lifecycle)
+            return lifecycle
+        created_tabs.append({"handler": handler, "project": project, "tab_id": tab_id, "url": BROWSER_FRESH_URLS[handler], "window_id": window_id})
+        _replace_handler_project(handler_projects, handler, project)
+
+    for tab in created_tabs:
+        bound = _lifecycle_command(
+            [
+                str(browser_oracle_run),
+                "bind",
+                str(tab["project"]),
+                "--backend",
+                BROWSER_BACKENDS[str(tab["handler"])],
+                "--tab-id",
+                str(tab["tab_id"]),
+                "--url",
+                str(tab["url"]),
+                "--auto",
+                "--json",
+            ],
+            cwd=browser_oracle_run.parent,
+            timeout_seconds=45,
+        )
+        commands.append(bound)
+        tab["bind_returncode"] = bound["returncode"]
+        if bound["returncode"] != 0:
+            lifecycle = _lifecycle_blocked(mode, run_dir, f"{tab['handler']}_browser_oracle_bind_failed", commands, created_tabs, window_id=window_id)
+            _write_lifecycle(run_dir, lifecycle)
+            return lifecycle
+
+    lifecycle = {
+        "schema": "ask.browser_tab_lifecycle.v1",
+        "status": "READY",
+        "mode": mode,
+        "run_dir": str(run_dir),
+        "window_id": window_id,
+        "created_tabs": created_tabs,
+        "handler_projects": handler_projects,
+        "cleanup_policy": "close_created_window_or_tabs_after_execution" if mode == "fresh-temporary" else "keep_created_tabs_for_inspection",
+        "surf_run": str(surf_run),
+        "browser_oracle_run": str(browser_oracle_run),
+        "commands": commands,
+    }
+    _write_lifecycle(run_dir, lifecycle)
+    return lifecycle
+
+
+def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
+    if lifecycle.get("cleanup_status") == "attempted":
+        return
+    if lifecycle.get("status") not in {"READY", "BLOCKED"} or lifecycle.get("mode") != "fresh-temporary":
+        return
+    surf_run = Path(str(lifecycle.get("surf_run") or (Path(__file__).resolve().parents[2].parent / "surf" / "run.sh")))
+    cleanup: list[dict[str, Any]] = []
+    window_id = str(lifecycle.get("window_id") or "")
+    if window_id:
+        cleanup.append(_lifecycle_command([str(surf_run), "window.close", window_id], cwd=surf_run.parent, timeout_seconds=45))
+    else:
+        for tab in lifecycle.get("created_tabs", []):
+            if isinstance(tab, dict) and tab.get("tab_id"):
+                cleanup.append(_lifecycle_command([str(surf_run), "tab.close", str(tab["tab_id"])], cwd=surf_run.parent, timeout_seconds=45))
+    lifecycle["cleanup"] = cleanup
+    lifecycle["cleanup_status"] = "attempted"
+    run_dir = Path(str(lifecycle.get("run_dir") or ""))
+    if run_dir:
+        _write_lifecycle(run_dir, lifecycle)
+
+
+def browser_lifecycle_blocked_execution(lifecycle: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": "ask.tau_dag_execution.v1",
+        "status": "BLOCKED",
+        "ok": False,
+        "mocked": False,
+        "live": False,
+        "provider_live": False,
+        "blocked_reason": "browser_tab_lifecycle_failed",
+        "message": "Ask did not launch Tau because requested browser tab provisioning failed.",
+        "no_tau_execution": True,
+        "browser_tab_lifecycle": lifecycle,
+    }
+
+
+def _replace_handler_project(items: list[str], handler: str, project: str) -> None:
+    prefix = f"{handler}="
+    for index, item in enumerate(items):
+        if item.startswith(prefix):
+            items[index] = f"{handler}={project}"
+            return
+    items.append(f"{handler}={project}")
+
+
+def _write_lifecycle(run_dir: Path, lifecycle: dict[str, Any]) -> None:
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "browser-tab-lifecycle.json").write_text(json.dumps(lifecycle, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _lifecycle_blocked(
+    mode: str,
+    run_dir: Path,
+    failure_code: str,
+    commands: list[dict[str, Any]],
+    created_tabs: list[dict[str, Any]],
+    *,
+    window_id: str = "",
+) -> dict[str, Any]:
+    return {
+        "schema": "ask.browser_tab_lifecycle.v1",
+        "status": "BLOCKED",
+        "mode": mode,
+        "run_dir": str(run_dir),
+        "failure_code": failure_code,
+        "window_id": window_id or None,
+        "created_tabs": created_tabs,
+        "commands": commands,
+    }
+
+
+def _lifecycle_command(command: list[str], *, cwd: Path, timeout_seconds: float) -> dict[str, Any]:
+    started = time.time()
+    try:
+        completed = subprocess.run(command, cwd=str(cwd), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout_seconds, check=False)
+        return {
+            "command": command,
+            "returncode": completed.returncode,
+            "stdout": completed.stdout[:20000],
+            "stderr": completed.stderr[:8000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": False,
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "command": command,
+            "returncode": 124,
+            "stdout": str(exc.stdout or "")[:20000],
+            "stderr": str(exc.stderr or "command timed out")[:8000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": True,
+        }
+    except OSError as exc:
+        return {
+            "command": command,
+            "returncode": 127,
+            "stdout": "",
+            "stderr": str(exc)[:4000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": False,
+        }
+
+
+def _json_or_text(text: str) -> Any:
+    stripped = (text or "").strip()
+    if not stripped:
+        return {}
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        return stripped
+
+
+def _extract_tab_id(payload: Any) -> str:
+    if isinstance(payload, str):
+        import re
+        match = re.search(r"\b(?:tab|id)\D+(\d+)\b", payload, re.I)
+        return match.group(1) if match else ""
+    if isinstance(payload, dict):
+        for key in ("tabId", "tab_id"):
+            if payload.get(key):
+                return str(payload[key])
+        tabs = payload.get("tabs")
+        if isinstance(tabs, list) and tabs:
+            return _extract_tab_id(tabs[0])
+        tab = payload.get("tab")
+        if isinstance(tab, dict):
+            return _extract_tab_id(tab)
+        if payload.get("id") and not isinstance(payload.get("tabs"), list):
+            return str(payload["id"])
+    return ""
+
+
+def _extract_window_id(payload: Any) -> str:
+    if isinstance(payload, str):
+        import re
+        match = re.search(r"\bWindow\s+(\d+)\b", payload, re.I)
+        return match.group(1) if match else ""
+    if isinstance(payload, dict):
+        for key in ("windowId", "window_id"):
+            if payload.get(key):
+                return str(payload[key])
+        window = payload.get("window")
+        if isinstance(window, dict):
+            return _extract_window_id(window) or str(window.get("id") or "")
+        tabs = payload.get("tabs")
+        if isinstance(tabs, list) and tabs and isinstance(tabs[0], dict):
+            for key in ("windowId", "window_id"):
+                if tabs[0].get(key):
+                    return str(tabs[0][key])
+        if payload.get("id") and isinstance(payload.get("tabs"), list):
+            return str(payload["id"])
+    return ""
 
 
 @app.command("probe-scillm")

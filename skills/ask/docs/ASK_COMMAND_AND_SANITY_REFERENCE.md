@@ -48,6 +48,17 @@ shape or sanity command is needed.
   --handler-project webgpt=tau \
   --topology concurrent --json
 
+# Execute a browser-heavy roundtable in an Ask-owned fresh Chrome window. Ask
+# creates one window, one tab per browser handler, binds temporary projects,
+# and closes only the Ask-created window after Tau returns.
+./run.sh tau-dag "Roundtable these handlers concurrently, then join." \
+  --repo local/ask --target roundtable-web-fresh \
+  --immutable-goal "Every handler answers from identical context and the join preserves dissent." \
+  --handler webclaude --handler webkimi --handler webgemini --handler webgpt \
+  --topology concurrent \
+  --browser-tab-lifecycle fresh-temporary \
+  --execute --json
+
 # Execute a sequential handler PIPELINE. A sequential chain is not a roundtable.
 ./run.sh tau-dag "Ask webclaude, pass its answer to webkimi, then have webgpt review." \
   --repo local/ask --target sequential-pipeline \
@@ -104,7 +115,18 @@ shape or sanity command is needed.
 ./run.sh compete "Compare two implementation approaches." \
   --repo local/ask --target browser-compete-preflight \
   --immutable-goal "Choose a winner only from locally verified features." \
-  --handler webgpt --handler webclaude --execute --json
+  --handler webgpt --handler webclaude \
+  --browser-tab-lifecycle fresh-temporary \
+  --execute --json
+
+# Use fresh-keep instead when the browser tabs need human inspection after the
+# run. Existing user tabs are never closed by Ask's fresh lifecycle cleanup.
+./run.sh compete "Compare two implementation approaches." \
+  --repo local/ask --target browser-compete-inspect \
+  --immutable-goal "Choose a winner only from locally verified features." \
+  --handler webgpt --handler webclaude --handler webkimi \
+  --browser-tab-lifecycle fresh-keep \
+  --execute --json
 
 # API/model DAG with real provider calls requires explicit provider consent.
 ./run.sh tau-dag "Solve X with two solvers, then review." \

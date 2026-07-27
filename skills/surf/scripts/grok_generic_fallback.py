@@ -305,6 +305,21 @@ def _wait_for_sentinel(
                 "Grok provider capacity busy: high demand",
                 evidence={"poll_count": poll_count, "provider_busy": True},
             )
+        if any(
+            marker in lower_page
+            for marker in (
+                "rate limit",
+                "usage limit",
+                "message limit",
+                "too many requests",
+                "limit is gone",
+                "upgrade to supergrok",
+            )
+        ):
+            raise FallbackError(
+                "Grok provider rate limited",
+                evidence={"poll_count": poll_count, "provider_rate_limited": True},
+            )
         last_text = _latest_sentinel_text(surf_run, tab_id, sentinel)
         if sentinel in last_text:
             sentinel_seen_at = sentinel_seen_at or poll_count

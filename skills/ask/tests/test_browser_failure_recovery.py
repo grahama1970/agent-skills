@@ -332,6 +332,136 @@ def test_surf_browser_lock_timeout_is_transport_blocker_with_owner_metadata(tmp_
     assert "--expect-url" in packet["next_command"]
 
 
+def test_surf_browser_lock_timeout_from_meta_is_not_repo_access_blocked(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure="prompt references unreadable local filesystem paths",
+        submit_meta={
+            "status": "failed",
+            "submitted_to_chatgpt": False,
+            "proof_status": "submit_not_attempted",
+            "requested_tab_id": "837362411",
+            "controlled_tab_id": "837362411",
+            "tab_identity_preflight": {
+                "ok": True,
+                "expected_tab_id": "837362411",
+                "expected_url": "https://chatgpt.com/",
+                "tab": {"id": 837362411, "url": "https://chatgpt.com/"},
+            },
+            "cdp_probe_stderr": (
+                "Timed out waiting for browser lock after 60s "
+                "owner_pid=721016 owner_created_at=2026-07-27T14:00:00Z "
+                "owner_socket=unix:/tmp/surf.sock lock_dir=/tmp/surf-lock-199a427adfd8d6cd"
+            ),
+            "stderr_log": "Timed out waiting for browser lock after 60s",
+        },
+        browser_oracle={
+            "project": "tau",
+            "tab_id": "837362411",
+            "conversation_url": "https://chatgpt.com/",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.SURF_BROWSER_LOCK_TIMEOUT
+    summary = packet["transport_failure_summary"]
+    assert summary["transport_failure_kind"] == "browser_cdp_lock_timeout"
+    assert summary["submitted_to_chatgpt"] is False
+    assert summary["proof_status"] == "submit_not_attempted"
+    assert summary["requested_tab_id"] == "837362411"
+    assert summary["controlled_tab_id"] == "837362411"
+    assert summary["tab_identity_preflight"]["ok"] is True
+    assert "Timed out waiting for browser lock" in summary["cdp_probe_stderr"]
+    assert summary["surf_lock_blocker"]["owner"]["pid"] == 721016
+    assert summary["surf_lock_blocker"]["owner"]["socket"] == "unix:/tmp/surf.sock"
+    assert summary["surf_lock_blocker"]["lock_dir"] == "/tmp/surf-lock-199a427adfd8d6cd"
+
+
+def test_browser_tab_read_timeout_wins_over_repo_access_markers(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webclaude",
+        failure=(
+            "prompt references unreadable local filesystem paths\n"
+            "Command '['/home/graham/workspace/experiments/agent-skills/skills/surf/run.sh', "
+            "'read', '--tab-id', '837362434']' timed out after 60 seconds"
+        ),
+        submit_meta={
+            "status": "failed",
+            "requested_tab_id": "837362434",
+            "controlled_tab_id": "837362434",
+            "requested_url": "https://claude.ai/chat/example",
+            "tab_identity_preflight": {
+                "ok": True,
+                "expected_tab_id": "837362434",
+                "expected_url": "https://claude.ai/chat/example",
+                "tab": {"id": 837362434, "url": "https://claude.ai/chat/example"},
+            },
+            "stderr_log": "surf/run.sh read --tab-id 837362434 timed out after 60 seconds",
+        },
+        browser_oracle={
+            "project": "webclaude",
+            "tab_id": "837362434",
+            "conversation_url": "https://claude.ai/chat/example",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_TAB_READ_TIMEOUT
+    summary = packet["transport_failure_summary"]
+    assert summary["transport_failure_kind"] == "browser_tab_read_timeout"
+    assert summary["requested_tab_id"] == "837362434"
+    assert summary["controlled_tab_id"] == "837362434"
+    assert summary["tab_identity_preflight"]["ok"] is True
+    assert "read --tab-id 837362434 timed out" in summary["stderr_log"]
+
+
+def test_roundtable_degradation_promotes_transport_failure_summary(tmp_path: Path) -> None:
+    recovery_packet_path = tmp_path / "browser-recovery-packet.json"
+    recovery_packet_path.write_text(
+        json.dumps(
+            {
+                "auto_retry_allowed": False,
+                "auto_retry_blocked_reason": "surf_browser_lock_owner_still_running",
+                "next_command": ["skills/surf/run.sh", "webgpt.submit"],
+                "transport_failure_summary": {
+                    "failure_code": tau_roundtable_worker.SURF_BROWSER_LOCK_TIMEOUT,
+                    "transport_failure_kind": "browser_cdp_lock_timeout",
+                    "requested_tab_id": "837362411",
+                },
+                "evidence": {
+                    "surf_lock_blocker": {
+                        "owner": {"pid": 721016, "socket": "unix:/tmp/surf.sock"},
+                        "lock_dir": "/tmp/surf-lock-199a427adfd8d6cd",
+                    }
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    analysis = tau_roundtable_worker._roundtable_degradation_analysis(
+        status="NEEDS_ATTENTION",
+        handler_receipts=[{"node_id": "handler-webgpt"}],
+        usable_responses=[],
+        failures=[
+            {
+                "node_id": "handler-webgpt",
+                "handler": "webgpt",
+                "status": "NEEDS_ATTENTION",
+                "failure": "Timed out waiting for browser lock after 60s",
+                "failure_code": tau_roundtable_worker.SURF_BROWSER_LOCK_TIMEOUT,
+                "recovery_packet_path": str(recovery_packet_path),
+            }
+        ],
+    )
+
+    failed = analysis["failed_seats"][0]
+    assert failed["transport_failure_summary"]["transport_failure_kind"] == "browser_cdp_lock_timeout"
+    assert failed["transport_failure_summary"]["requested_tab_id"] == "837362411"
+    assert failed["evidence"]["surf_lock_blocker"]["owner"]["pid"] == 721016
+
+
 def test_webgpt_unverified_clean_output_is_quarantined_not_tab_identity_retry(tmp_path: Path) -> None:
     sentinel = "<<<ASK_DONE:20260727T1151Z:WEBGPT>>>"
     packet = _packet(
@@ -458,7 +588,67 @@ def test_kimi_system_busy_still_classifies_as_provider_rate_limited(tmp_path: Pa
     assert packet["auto_retry_blocked_reason"] == "browser_provider_rate_limit_requires_backoff"
 
 
-def test_webgpt_submit_command_does_not_expect_home_url_when_tab_id_is_bound(tmp_path: Path) -> None:
+def test_timeout_diagnostics_rate_limit_reclassifies_handler_timeout(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgrok",
+        failure="[tau-worker] command timed out after 300s; killed process group rooted at pid 123",
+        prompt_text="Answer PING_RESULT: 4",
+        submit_meta={
+            "status": "timeout",
+            "ask_timeout_diagnostics": {
+                "schema": "ask.browser_timeout_diagnostics.v1",
+                "status": "CAPTURED",
+                "handler": "webgrok",
+                "tab_id": "837361333",
+                "markers": {
+                    "provider_rate_limited": True,
+                    "provider_busy": False,
+                    "access_blocked": False,
+                    "prompt_still_in_composer": False,
+                },
+                "body_excerpt": "17 hours 40 minutes before limit is gone. Upgrade to SuperGrok.",
+            },
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "browser_provider_rate_limit_requires_backoff"
+    assert packet["evidence"]["timeout_diagnostics"]["markers"]["provider_rate_limited"] is True
+
+
+def test_timeout_diagnostics_stuck_composer_reclassifies_submit_not_accepted(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure="[tau-worker] command timed out after 300s; killed process group rooted at pid 456",
+        prompt_text="Answer PING_RESULT: 4",
+        submit_meta={
+            "status": "timeout",
+            "ask_timeout_diagnostics": {
+                "schema": "ask.browser_timeout_diagnostics.v1",
+                "status": "CAPTURED",
+                "handler": "webkimi",
+                "tab_id": "837362419",
+                "markers": {
+                    "provider_rate_limited": False,
+                    "provider_busy": False,
+                    "access_blocked": False,
+                    "prompt_still_in_composer": True,
+                },
+                "composer_excerpt": "Answer PING_RESULT: 4",
+            },
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_SUBMIT_NOT_ACCEPTED
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "browser_submit_not_accepted_requires_composer_recovery_or_fresh_tab"
+    assert packet["evidence"]["timeout_diagnostics"]["markers"]["prompt_still_in_composer"] is True
+
+
+def test_webgpt_submit_command_expects_home_url_when_tab_id_is_bound(tmp_path: Path) -> None:
     args = _args(tmp_path, handler="webgpt")
     command = tau_roundtable_worker._browser_submit_command(
         args,
@@ -474,7 +664,8 @@ def test_webgpt_submit_command_does_not_expect_home_url_when_tab_id_is_bound(tmp
 
     assert "--tab-id" in command
     assert command[command.index("--tab-id") + 1] == "837362426"
-    assert "--expect-url" not in command
+    assert "--expect-url" in command
+    assert command[command.index("--expect-url") + 1] == "https://chatgpt.com/"
     assert "--url" not in command
 
 

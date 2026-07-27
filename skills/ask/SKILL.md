@@ -424,8 +424,8 @@ Use the narrowest mode that matches the user request.
 | Memory-backed question | `./run.sh ask "<question>" --json` | Include scope when relevant. |
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
 | Single named handler | `./run.sh tau-dag "<request>" --handler <handler-or-model> --json` | Browser handlers use `$surf`; non-browser handlers are `$scillm` model names routed by Tau. Add `--execute` for live transport. |
-| Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology <concurrent|sequential> --json` | Roundtable is prompt-to-Tau-DAG. Preserve `dag.json`, command specs, handler receipts, and join receipts. |
-| Compete / bakeoff | `./run.sh compete "<task>" --handler webgpt --handler webclaude --handler gpt-5.5-high --criterion deterministic-proof --json` | Isolated candidates plus compete scorecard and winner revision request. Browser/API handlers are peers. Project agent must locally verify features before promotion. |
+| Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology concurrent --browser-tab-lifecycle fresh-temporary --execute --json` | Roundtable is prompt-to-Tau-DAG. For browser-heavy panels, prefer an Ask-owned fresh window. Preserve `dag.json`, command specs, handler receipts, and join receipts. |
+| Compete / bakeoff | `./run.sh compete "<task>" --handler webgpt --handler webclaude --handler gpt-5.5-high --criterion deterministic-proof --browser-tab-lifecycle fresh-temporary --execute --json` | Isolated candidates plus compete scorecard and winner revision request. Browser/API handlers are peers. Project agent must locally verify features before promotion. |
 | Creator-reviewer loop | `./run.sh tau-dag "<request>" --handler <creator> --handler <reviewer> --topology sequential --json` | The reviewer receives prior handler receipts. Pass/fail requests require a verdict in the reviewer response. |
 | Supported direct browser oracle | documented browser mode such as `webgemini`, `webkimi`, `webperplexity`, or `cursor-browser` | Use only when the user asks for that direct mode; attach local target content when browser cannot read paths. |
 | Deep review | `./run.sh ask "<question>" --deep-review --deep-review-target <path> ... --json` | Pass complete target bundle; return `review.md` and `review.json`. |
@@ -465,39 +465,28 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   `<handler>_stale_binding_submit_existing_tab`. If no candidate succeeds, the
   lane stays `NEEDS_ATTENTION` with a recovery packet.
 - **Browser tab lifecycle for browser handlers**:
-  1. Create or reuse a provider tab with `$surf`: `skills/surf/run.sh tab.new
-     "https://chatgpt.com/"`, `... tab.new "https://claude.ai/"`, `... tab.new
-     "https://www.kimi.com/"`, `... tab.new "https://gemini.google.com/app"`,
-     or `... tab.new "https://grok.com/"`.
-  2. List and verify the live URL with `skills/surf/run.sh tab.list --json`.
-     Treat the URL and tab id together as the tab identity; never rely on tab
-     order.
-  3. Bind that identity with `$browser-oracle`:
-     `skills/browser-oracle/run.sh bind <project> --backend
-     webgpt|webclaude|webkimi|webgemini|webgrok --tab-id <id> --url "<live-url>"
-     --manual --json`.
-  4. Resolve before each live Ask run:
-     `skills/browser-oracle/run.sh resolve --backend <backend> --project
-     <project> --json`; pass non-default mappings with
-     `--handler-project <handler>=<project>`.
-  5. Execute through `$ask`/Tau, not raw Surf:
-     `./run.sh tau-dag "<request>" --handler <handler> --execute --json`.
-  6. To clear old roundtable or competition context before a new run, start a
-     fresh chat on the exact bound tab before executing Ask. Use guarded Surf
-     navigation so the wrong tab is not overwritten:
-     `skills/surf/run.sh go "<fresh-url>" --tab-id <id> --expect-url "<current-url>"`.
-     Fresh URLs are `https://chatgpt.com/` for `webgpt`,
-     `https://claude.ai/new` for `webclaude`, `https://www.kimi.com/` for
-     `webkimi`, `https://gemini.google.com/app` for `webgemini`, and
-     `https://grok.com/` for `webgrok`. Then run `tab.list --json`, bind the
-     tab's current URL with `$browser-oracle`, and execute `$ask`. For WebGPT,
-     `skills/surf/run.sh webgpt.submit --create-tab ...` is also supported when
-     a separate fresh reviewer tab is preferable to reusing the existing tab id.
-  7. Close temporary tabs only after their receipts are no longer needed:
-     `skills/surf/run.sh tab.close <id>` when supported by the installed Surf
-     version, otherwise use the provider-specific close command documented by
-     `$surf`. Do not close a tab bound to an active browser-oracle project
-     unless the binding is being replaced.
+  - Default mode is `--browser-tab-lifecycle reuse-bound`. It uses existing
+    browser-oracle projects and lets Ask's stale-binding recovery scan already
+    open same-provider tabs when a bound tab is wrong.
+  - For live roundtables and competitions with browser seats, prefer
+    `--browser-tab-lifecycle fresh-temporary`. Ask asks `$surf` to create one
+    Chrome window, records the returned `windowId`, creates one provider tab in
+    that window with `tab.new --window-id`, binds temporary browser-oracle
+    projects for each handler, runs Tau, then closes only the Ask-created
+    window. Existing user tabs and pre-existing browser-oracle bindings are not
+    closed by this lifecycle.
+  - Use `--browser-tab-lifecycle fresh-keep` when the human or project agent
+    needs to inspect the provider tabs after the run. It creates and binds the
+    same fresh window/tabs but leaves them open.
+  - Ask writes `<run_dir>/browser-tab-lifecycle.json` with `window_id`,
+    `created_tabs`, temporary `handler_projects`, command receipts, and cleanup
+    attempts. If fresh provisioning or binding fails, Ask records
+    `browser_tab_lifecycle_failed`, does not launch Tau, and exits with a
+    recovery packet.
+  - Manual tab binding remains a fallback only: create/list/bind with `$surf`
+    and `$browser-oracle`, then pass `--handler-project <handler>=<project>`.
+    Do not make project agents manually rebind stale tabs when the Ask lifecycle
+    can own the window.
 - If a WebGPT/Tau browser-handler receipt or Surf metadata reports
   `conversation_max_length_detected` or `conversation_max_length_rollover`, treat
   it as Surf's controlled-tab conversation rollover path. Do not reclassify it

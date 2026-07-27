@@ -835,7 +835,7 @@ def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_
     assert chutes_node["context"]["handler_policy"]["model_policy"]["provider"] == "chutes"
 
 
-def test_non_cooldown_browser_command_specs_do_not_expand_past_declared_timeout(tmp_path: Path) -> None:
+def test_browser_command_specs_use_long_provider_timeout_envelope(tmp_path: Path) -> None:
     request = infer_compile_input(
         "Roundtable webgpt, webclaude, webkimi, webgrok, and webgemini on timeout budgets.",
         repo="local/ask",
@@ -853,13 +853,13 @@ def test_non_cooldown_browser_command_specs_do_not_expand_past_declared_timeout(
         )
 
     assert specs["handler-webgpt"]["timeout_s"] == 3900
-    assert specs["handler-webgemini"]["timeout_s"] == 2820
-    assert specs["handler-webclaude"]["timeout_s"] == 420
-    assert specs["handler-webkimi"]["timeout_s"] == 420
-    assert specs["handler-webgrok"]["timeout_s"] == 420
-    for node in ("handler-webclaude", "handler-webkimi", "handler-webgrok"):
+    assert specs["handler-webgemini"]["timeout_s"] == 4200
+    assert specs["handler-webclaude"]["timeout_s"] == 3000
+    assert specs["handler-webkimi"]["timeout_s"] == 3000
+    assert specs["handler-webgrok"]["timeout_s"] == 3000
+    for node in ("handler-webclaude", "handler-webkimi", "handler-webgrok", "handler-webgemini"):
         command = specs[node]["command"]
-        assert command[command.index("--timeout") + 1] == "300"
+        assert command[command.index("--timeout") + 1] == "900"
 
 
 def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_path: Path) -> None:
@@ -2533,6 +2533,180 @@ def test_tau_dag_cli_json_reports_degraded_join_path(monkeypatch, tmp_path: Path
     payload = json.loads(result.stdout)
     assert payload["status"] == "DEGRADED"
     assert payload["join_artifact_path"] == str(join_path)
+
+
+def test_browser_tab_lifecycle_creates_one_owned_window_and_provider_tabs(tmp_path: Path) -> None:
+    log_path = tmp_path / "commands.jsonl"
+    tab_counter = tmp_path / "tab-counter.txt"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+log = Path(sys.argv[0]).with_name("commands.jsonl")
+counter = Path(sys.argv[0]).with_name("tab-counter.txt")
+args = sys.argv[1:]
+with log.open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(args) + "\\n")
+if args[:1] == ["window.new"]:
+    print(json.dumps({"id": 900, "tabs": [{"id": 101, "windowId": 900, "url": args[1]}]}))
+elif args[:1] == ["tab.new"]:
+    value = int(counter.read_text(encoding="utf-8").strip() or "101") + 1 if counter.exists() else 102
+    counter.write_text(str(value), encoding="utf-8")
+    print(json.dumps({"id": value, "windowId": int(args[args.index("--window-id") + 1]) if "--window-id" in args else None}))
+else:
+    print(json.dumps({"ok": True}))
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+log = Path(sys.argv[0]).with_name("commands.jsonl")
+with log.open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(sys.argv[1:]) + "\\n")
+print(json.dumps({"ok": True, "args": sys.argv[1:]}))
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+    request = infer_compile_input(
+        "Roundtable webgpt, webclaude, and webkimi.",
+        repo="local/agent-skills",
+        target="fresh-browser-lifecycle",
+        immutable_goal="Each browser handler gets an owned fresh tab.",
+        handlers=["webgpt", "webclaude", "webkimi"],
+        output_root=tmp_path / "runs",
+        ask_id="fresh-browser-lifecycle",
+    )
+    bundle = compile_tau_dag_bundle(request)
+
+    lifecycle = tau_dag_cli._provision_browser_lifecycle(
+        request,
+        mode="fresh-keep",
+        run_dir=Path(str(bundle["run_dir"])),
+        surf_run=surf,
+        browser_oracle_run=browser_oracle,
+    )
+
+    assert lifecycle["status"] == "READY"
+    assert lifecycle["window_id"] == "900"
+    assert [tab["handler"] for tab in lifecycle["created_tabs"]] == ["webgpt", "webclaude", "webkimi"]
+    assert [tab["tab_id"] for tab in lifecycle["created_tabs"]] == ["101", "102", "103"]
+    assert lifecycle["handler_projects"] == [
+        "webgpt=fresh-browser-lifecycle-webgpt",
+        "webclaude=fresh-browser-lifecycle-webclaude",
+        "webkimi=fresh-browser-lifecycle-webkimi",
+    ]
+    logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    assert logged[0] == ["window.new", "https://chatgpt.com/", "--json", "--unfocused"]
+    assert ["tab.new", "https://claude.ai/new", "--json", "--background", "--window-id", "900"] in logged
+    assert ["tab.new", "https://www.kimi.com/", "--json", "--background", "--window-id", "900"] in logged
+    assert ["bind", "fresh-browser-lifecycle-webgpt", "--backend", "webgpt", "--tab-id", "101", "--url", "https://chatgpt.com/", "--auto", "--json"] in logged
+    assert ["bind", "fresh-browser-lifecycle-webclaude", "--backend", "webclaude", "--tab-id", "102", "--url", "https://claude.ai/new", "--auto", "--json"] in logged
+    assert ["bind", "fresh-browser-lifecycle-webkimi", "--backend", "webkimi", "--tab-id", "103", "--url", "https://www.kimi.com/", "--auto", "--json"] in logged
+    assert (Path(str(bundle["run_dir"])) / "browser-tab-lifecycle.json").is_file()
+
+
+def test_browser_tab_lifecycle_fresh_temporary_closes_only_owned_window(tmp_path: Path) -> None:
+    log_path = tmp_path / "commands.jsonl"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+log = Path(sys.argv[0]).with_name("commands.jsonl")
+args = sys.argv[1:]
+with log.open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(args) + "\\n")
+print(json.dumps({"ok": True}))
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    lifecycle = {
+        "schema": "ask.browser_tab_lifecycle.v1",
+        "status": "READY",
+        "mode": "fresh-temporary",
+        "run_dir": str(tmp_path / "run"),
+        "window_id": "900",
+        "created_tabs": [{"tab_id": "101"}, {"tab_id": "102"}],
+        "surf_run": str(surf),
+    }
+
+    tau_dag_cli._cleanup_browser_lifecycle(lifecycle)
+    tau_dag_cli._cleanup_browser_lifecycle(lifecycle)
+
+    logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    assert logged == [["window.close", "900"]]
+    assert lifecycle["cleanup_status"] == "attempted"
+    assert (tmp_path / "run" / "browser-tab-lifecycle.json").is_file()
+
+
+def test_browser_tab_lifecycle_extracts_surf_window_text_output() -> None:
+    output = "Window 837362456 (tab 837362457)\nUse --window-id 837362456 to target this window"
+
+    assert tau_dag_cli._extract_window_id(output) == "837362456"
+    assert tau_dag_cli._extract_tab_id(output) == "837362457"
+
+
+def test_browser_tab_lifecycle_failure_blocks_tau_execution(monkeypatch, tmp_path: Path) -> None:
+    def fake_provision(*args, **kwargs):
+        return {
+            "schema": "ask.browser_tab_lifecycle.v1",
+            "status": "BLOCKED",
+            "mode": "fresh-temporary",
+            "run_dir": str(tmp_path / "runs" / "blocked-lifecycle"),
+            "failure_code": "browser_window_create_failed",
+            "commands": [],
+            "created_tabs": [],
+        }
+
+    def unexpected_tau_execution(*args, **kwargs):
+        raise AssertionError("Tau execution should not start when fresh browser lifecycle is blocked")
+
+    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", fake_provision)
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", unexpected_tau_execution)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "run",
+            "Roundtable webgpt and webclaude.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "blocked-browser-lifecycle",
+            "--immutable-goal",
+            "Do not run Tau when fresh browser tabs cannot be created.",
+            "--handler",
+            "webgpt",
+            "--handler",
+            "webclaude",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--browser-tab-lifecycle",
+            "fresh-temporary",
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 4
+    payload = json.loads(result.stdout)
+    assert payload["execution"]["status"] == "BLOCKED"
+    assert payload["execution"]["blocked_reason"] == "browser_tab_lifecycle_failed"
+    assert payload["execution"]["no_tau_execution"] is True
 
 
 def test_roundtable_webgrok_stale_binding_retries_existing_provider_tab_before_blocking(tmp_path: Path) -> None:

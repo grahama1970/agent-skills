@@ -235,6 +235,57 @@ raw_tmp="$(mktemp /tmp/surf-grok-submit-raw.XXXXXX.md)"
 fallback_summary_json=""
 provider_busy_cooldown_count=0
 generic_first_attempted=0
+focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
+started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+provider_state_text=""
+if [[ -n "$requested_tab_id" ]]; then
+  set +e
+  provider_state_text="$("$RUN_SH" js "return document.body.innerText || ''" --tab-id "$requested_tab_id" 2>/dev/null)"
+  provider_state_status=$?
+  set -e
+  if [[ "$provider_state_status" -eq 0 ]]; then
+    provider_state_haystack="$(printf '%s' "$provider_state_text" | tr '[:upper:]' '[:lower:]')"
+    if [[ "$provider_state_haystack" == *"limit is gone"* || "$provider_state_haystack" == *"upgrade to supergrok"* || "$provider_state_haystack" == *"rate limit"* || "$provider_state_haystack" == *"usage limit"* || "$provider_state_haystack" == *"message limit"* || "$provider_state_haystack" == *"too many requests"* ]]; then
+      printf '%s\n' "$provider_state_text" > "$raw_output"
+      finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
+      python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$sentinel" "$started_at" "$finished_at" "$requested_tab_id" "$target_url" "$resolved_url" "$tab_preflight_json" "$focus_before_json" "$focus_after_json" "$no_activate" "$provider_state_text" "$(printf '%s\n' "${attach_file_abs[@]}" | python3 -c 'import json,sys; print(json.dumps([line.strip() for line in sys.stdin if line.strip()]))')" <<'PY'
+import json, pathlib, re, sys
+meta, inp, submitted, out, raw, sentinel, started, finished, requested_tab_id, target_url, resolved_url, preflight, focus_before, focus_after, no_activate, provider_text, attach_files_s = sys.argv[1:]
+match = re.search(r"\b\d+\s+hours?\s+\d+\s+minutes?\s+before\s+limit\s+is\s+gone\b", provider_text, re.I)
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "exit_code": 4,
+    "failure": "grok_provider_rate_limited",
+    "blocker": "BLOCKED_GROK_PROVIDER_RATE_LIMIT",
+    "proof_status": "provider_blocked",
+    "browser_provider_rate_limited": True,
+    "provider_unavailable": True,
+    "rate_limit_text": match.group(0) if match else None,
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "resolved_url": resolved_url or None,
+    "tab_identity_preflight": json.loads(preflight or "{}"),
+    "no_activate": no_activate == "1",
+    "attach_files": json.loads(attach_files_s or "[]"),
+    "focus_before": json.loads(focus_before or "{}") if focus_before else None,
+    "focus_after": json.loads(focus_after or "{}") if focus_after else None,
+    "started_at": started,
+    "finished_at": finished,
+}, indent=2, sort_keys=True) + "\n")
+PY
+      echo "Grok provider rate limited: $(printf '%s' "$provider_state_text" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g' | cut -c1-240)" >&2
+      exit 4
+    fi
+  fi
+fi
+
 args=(grok "$submitted_prompt" --timeout "$timeout_s")
 if [[ -n "$requested_tab_id" ]]; then
   args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
@@ -253,8 +304,6 @@ if [[ "${#attach_file_abs[@]}" -gt 0 ]]; then
   args+=(--files "$attach_files_csv")
 fi
 
-focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
-started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 attempt=0
 if [[ -n "$requested_tab_id" && "${SURF_GROK_NATIVE_EXACT_TAB_FIRST:-1}" != "1" ]]; then
   fallback_args=(
@@ -371,7 +420,7 @@ elif "premium" in haystack or "subscribe" in haystack:
 elif "system is currently busy" in haystack or "temporarily busy" in haystack or "high demand" in haystack or "capacity is busy" in haystack:
     failure = "grok_provider_capacity_busy"
     blocker = "BLOCKED_GROK_PROVIDER_CAPACITY"
-elif "rate limit" in haystack or "quota" in haystack or "too many" in haystack:
+elif "rate limit" in haystack or "quota" in haystack or "too many" in haystack or "limit is gone" in haystack or "upgrade to supergrok" in haystack or "usage limit" in haystack or "message limit" in haystack:
     failure = "grok_provider_rate_limited"
     blocker = "BLOCKED_GROK_PROVIDER_RATE_LIMIT"
 elif "timed out after" in haystack and ("'js'" in haystack or " surf/run.sh" in haystack or "run.sh" in haystack):
@@ -392,6 +441,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "failure": failure,
     "blocker": blocker,
     "proof_status": proof_status,
+    "browser_provider_rate_limited": failure == "grok_provider_rate_limited",
+    "provider_unavailable": failure in {"grok_provider_rate_limited", "grok_provider_capacity_busy"},
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -423,12 +474,16 @@ if ! grep -Fq "$sentinel" "$raw_output"; then
 import json, pathlib, sys
 meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, resolved_url, preflight, focus_before, focus_after, no_activate, cooldown_s, cooldown_count, retry_attempts, fallback_summary, attach_files_s = sys.argv[1:]
 text = pathlib.Path(raw).read_text(errors="replace") if pathlib.Path(raw).exists() else ""
-busy = any(needle in text.lower() for needle in ["system is currently busy", "temporarily busy", "high demand", "capacity is busy"])
+lower = text.lower()
+busy = any(needle in lower for needle in ["system is currently busy", "temporarily busy", "high demand", "capacity is busy"])
+limited = any(needle in lower for needle in ["rate limit", "usage limit", "message limit", "too many requests", "limit is gone", "upgrade to supergrok"])
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
-    "failure": "grok_provider_capacity_busy" if busy else "missing_sentinel",
-    "blocker": "BLOCKED_GROK_PROVIDER_CAPACITY" if busy else None,
-    "proof_status": "provider_capacity_limited" if busy else "submitted_no_response_proof",
+    "failure": "grok_provider_rate_limited" if limited else ("grok_provider_capacity_busy" if busy else "missing_sentinel"),
+    "blocker": "BLOCKED_GROK_PROVIDER_RATE_LIMIT" if limited else ("BLOCKED_GROK_PROVIDER_CAPACITY" if busy else None),
+    "proof_status": "provider_blocked" if limited else ("provider_capacity_limited" if busy else "submitted_no_response_proof"),
+    "browser_provider_rate_limited": limited,
+    "provider_unavailable": limited or busy,
     "input": inp,
     "submitted_output": submitted,
     "output": out,

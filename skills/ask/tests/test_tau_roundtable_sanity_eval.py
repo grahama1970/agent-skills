@@ -938,9 +938,13 @@ def test_gemini_worker_timeout_covers_stall_retry_envelope(
     monkeypatch.setenv("SURF_LOCK_TIMEOUT_MS", "1800000")
     assert tau_roundtable_worker._browser_submit_timeout("webgpt", 900) == 3750
     assert tau_roundtable_worker._browser_submit_timeout("webgemini", 300) == 2670
-    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 300
+    assert tau_roundtable_worker._browser_submit_timeout("webgemini", 900) == 3870
+    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 2145
+    assert tau_roundtable_worker._browser_submit_timeout("webclaude", 300) == 2145
+    assert tau_roundtable_worker._browser_submit_timeout("webgrok", 300) == 2145
+    assert tau_roundtable_worker._browser_submit_timeout("webclaude", 1) == 3
     monkeypatch.setenv("SURF_LOCK_TIMEOUT_MS", "invalid")
-    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 300
+    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 300) == 405
 
 
 def test_browser_failure_classifier_marks_worker_command_timeout_distinct() -> None:

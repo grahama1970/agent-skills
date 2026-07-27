@@ -333,6 +333,145 @@ printf '%s\n' '"High Demand: Grok is under heavy usage right now."'
         raise AssertionError("provider capacity should fail fast")
 
 
+def test_grok_fallback_detects_rate_limit_without_waiting(tmp_path: Path) -> None:
+    fake_surf = tmp_path / "surf"
+    fake_surf.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' '"3 hours 19 minutes before limit is gone\nWait or upgrade to SuperGrok for much higher limits."'
+""",
+        encoding="utf-8",
+    )
+    fake_surf.chmod(0o755)
+    fallback = load_grok_fallback()
+
+    try:
+        fallback._wait_for_sentinel(
+            str(fake_surf),
+            "123",
+            "<<<GROK_DONE:TEST>>>",
+            timeout_s=30,
+            stable_polls=1,
+        )
+    except fallback.FallbackError as exc:
+        assert "rate limited" in str(exc)
+        assert exc.evidence["provider_rate_limited"] is True
+    else:
+        raise AssertionError("provider rate limit should fail fast")
+
+
+def test_grok_submit_preflight_classifies_visible_rate_limit(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    request.write_text("Say pong.", encoding="utf-8")
+    output = tmp_path / "response.md"
+    fake_surf = tmp_path / "surf"
+    invocation_log = tmp_path / "surf-invocations.log"
+    fake_surf.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> {str(invocation_log)!r}
+case "${{1:-}}" in
+  tab.list)
+    printf '%s\n' '[{{"id":123,"title":"Grok","url":"https://grok.com/"}}]'
+    ;;
+  focus.state)
+    printf '%s\n' '{{"activeTabId":999,"activeTabUrl":"https://example.test/"}}'
+    ;;
+  js)
+    printf '%s\n' '"3 hours 19 minutes before limit is gone\nWait or upgrade to SuperGrok for much higher limits and premium features."'
+    ;;
+  grok)
+    echo "grok should not be called when visible rate limit is present" >&2
+    exit 88
+    ;;
+  *)
+    echo "unexpected fake surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_surf.chmod(0o755)
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_surf)
+    env["SURF_GROK_NATIVE_EXACT_TAB_FIRST"] = "1"
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(GROK_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(output),
+            "--sentinel",
+            "<<<GROK_DONE:TEST>>>",
+            "--tab-id",
+            "123",
+            "--url",
+            "https://grok.com/",
+            "--no-activate",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 4
+    assert "grok should not be called" not in proc.stderr
+    payload = json.loads((tmp_path / "response.md.meta.json").read_text(encoding="utf-8"))
+    assert payload["failure"] == "grok_provider_rate_limited"
+    assert payload["browser_provider_rate_limited"] is True
+    assert payload["provider_unavailable"] is True
+    assert payload["rate_limit_text"] == "3 hours 19 minutes before limit is gone"
+    assert "limit is gone" in (tmp_path / "response.md.raw.md").read_text(encoding="utf-8")
+    assert "grok " not in invocation_log.read_text(encoding="utf-8")
+
+
+def test_grok_native_client_detects_rate_limit_snapshot() -> None:
+    script = r"""
+const client = require(process.argv[1]);
+const cdp = async () => ({
+  result: {value: {
+    bodyText: "3 hours 19 minutes before limit is gone\nWait or upgrade to SuperGrok for much higher limits.",
+    responseText: "",
+    bodyLength: 99,
+    hasStopBtn: false,
+    thinkingDone: false,
+    thinkingSecs: null,
+    isThinking: false,
+    chipTexts: [],
+    url: "https://grok.com/"
+  }}
+});
+client.waitForResponse(cdp, 2000, "prompt").then(result => {
+  process.stdout.write(JSON.stringify(result));
+  process.exit(2);
+}).catch(error => {
+  process.stdout.write(error.message);
+});
+"""
+    proc = subprocess.run(
+        [
+            "node",
+            "-e",
+            script,
+            str(REPO_ROOT / "skills/surf/vendor/surf-cli/native/grok-client.cjs"),
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert "Grok provider rate limited" in proc.stdout
+
+
 def test_grok_submit_cleans_terminal_sentinel_and_writes_meta(tmp_path: Path) -> None:
     fake_surf = tmp_path / "surf"
     write_fake_surf(fake_surf, tab_url="https://grok.com/", response="pong\n<<<GROK_DONE:TEST>>>")
