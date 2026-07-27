@@ -94,7 +94,7 @@ commands such as `lease`, `comment`, `block`, `release`, `close`, and
 | `bug`, `feature`, `optimization`, `maintenance`, `question`, `triage` | Build and optionally create one compliant GitHub issue. |
 | `fleet FILE` | Split a list of requested changes into one ticket preview per item; `--apply` files them. |
 | `lookup` | Search, next, or show issues through the guarded helper. |
-| `lease`, `comment`, `block`, `release`, `close`, `close-duplicate` | Guarded issue lifecycle wrappers. |
+| `lease`, `comment`, `block`, `release`, `close`, `close-duplicate` | Guarded issue lifecycle wrappers. `close` requires `--results`. |
 | `file-upstream FILE` | File a blocking ticket in another repo and cross-link it to the blocked one. |
 | `verify ISSUE --cmd CMD` | Run deterministic local commands and write a proof file. |
 | `attach-proof ISSUE --file proof.md` | Comment proof on the issue. |
@@ -145,6 +145,43 @@ Tickets are stamped `agent-work` at file time when they carry a concrete
 `project-watchdog` router selects on; without it a ticket is invisible to
 automated dispatch. Human-first types and unknown routes are deliberately left
 unstamped.
+
+## Proof contract
+
+**Filing.** `--proof` must name a live end-to-end command. A deterministic test
+alone is refused, because a fixed expectation can be satisfied by a change that
+targets the expectation rather than the behaviour. Observed 2026-07-27: a ticket
+proved by `pytest test_calc.py -q` was satisfied by a patch that subclassed
+`int` and overrode `__eq__` so the result compared equal to two different
+numbers. The test passed; an independent reviewer re-ran it and it passed too.
+
+A path is not an entrypoint: `pytest tests/test_e2e.py` is still a deterministic
+runner and is refused.
+
+**Closing.** `close` requires `--results`, an
+`agent_skills.ticket_closure_evidence.v1` document:
+
+```json
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 123,
+  "unit": {"command": "uv run pytest -q", "exit_code": 0, "passed": 56},
+  "e2e": {
+    "command": "./run.sh sanity-live.sh --allow-live",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/abs/path/receipt.json"
+  }
+}
+```
+
+Closure is refused unless both suites exit 0, `e2e.mocked` is false, `e2e.live`
+is true, `e2e.command` is not a deterministic runner, and `e2e.artifact` exists
+and is non-empty — read back from disk here, because a tool's own success
+response is not proof that it wrote anything.
+
+See `best-practices-github-ticket`, Verification Contract.
 
 ## Rules
 
