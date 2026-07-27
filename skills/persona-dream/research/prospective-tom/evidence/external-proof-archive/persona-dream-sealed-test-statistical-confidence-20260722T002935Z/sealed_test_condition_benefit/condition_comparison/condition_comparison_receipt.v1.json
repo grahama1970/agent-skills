@@ -1,0 +1,108 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "case_index_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/condition_case_index.json",
+  "claims": {
+    "does_not_prove": [
+      "live model prediction benefit",
+      "paid provider execution",
+      "external service fault injection",
+      "production retry machinery",
+      "longitudinal recall after revision",
+      "complete live Phase 01-16 runtime execution",
+      "semantic dream quality"
+    ],
+    "proves": [
+      "the requested social episode corpus was generated and accepted by the Gate 1 checker",
+      "M, R, D, and CD condition commitments were sealed before deterministic outcome reveal",
+      "each condition has at least one deterministic Gate 5 score",
+      "Brier and log-loss metrics were aggregated by condition",
+      "no Memory write, provider call, Tau call, canonical memory write, identity write, source-memory write, or human content judgment was required"
+    ]
+  },
+  "corpus_build_receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/receipts/social_episode_corpus_build_receipt.json",
+  "corpus_check_receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/receipts/social_episode_corpus_check_receipt.json",
+  "corpus_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "cases": 256,
+    "conditions": 4,
+    "deterministic_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "episodes_consumed": 64,
+    "episodes_in_corpus": 64,
+    "families_consumed": 4,
+    "sealed_commitments_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "status_counts": {
+      "PASS_COUNTERFACTUAL_BRANCHES": 256,
+      "PASS_TOM_BELIEF_DISTRIBUTIONS": 256,
+      "PASS_TOM_PREDICTION_COMMITMENTS": 256,
+      "PASS_TOM_SCORING_RECEIPT": 256
+    }
+  },
+  "created_at": "2026-07-22T00:29:37Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "generated_at": "2026-07-21T00:00:00Z",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "CD": {
+      "cases": 64,
+      "mean_action_brier": 0.73,
+      "mean_action_log_loss": 1.1963892124396256,
+      "mean_belief_brier": 0.14000000000000004,
+      "mean_belief_log_loss": 0.35667494393873245
+    },
+    "D": {
+      "cases": 64,
+      "mean_action_brier": 0.71875,
+      "mean_action_log_loss": 1.1696858671949077,
+      "mean_belief_brier": 0.2198,
+      "mean_belief_log_loss": 0.4780358009429998
+    },
+    "M": {
+      "cases": 64,
+      "mean_action_brier": 0.6666666666666667,
+      "mean_action_log_loss": 1.0986122886681098,
+      "mean_belief_brier": 0.45500000000000007,
+      "mean_belief_log_loss": 0.7985076962177716
+    },
+    "R": {
+      "cases": 64,
+      "mean_action_brier": 0.6925,
+      "mean_action_log_loss": 1.1391210416974908,
+      "mean_belief_brier": 0.30499999999999994,
+      "mean_belief_log_loss": 0.5978370007556204
+    },
+    "comparison": {
+      "cd_mean_action_brier": 0.73,
+      "cd_minus_strongest_baseline": 0.06333333333333324,
+      "lower_is_better": true,
+      "primary_metric": "mean_action_brier",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_mean_action_brier": 0.6666666666666667
+    }
+  },
+  "metrics_summary_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/condition_metrics_summary.json",
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison",
+  "processing_time_s": 1.664,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/condition_comparison_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.condition_comparison_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "PASS_PCTOM_CONDITION_COMPARISON",
+  "tau_call_attempts": 0
+}

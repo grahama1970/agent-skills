@@ -1,0 +1,72 @@
+{
+  "action_linked_revision_receipt": "/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json",
+  "action_linked_revision_receipt_recomputed_sha256": "sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93",
+  "action_selection_receipt": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "action_selection_receipt_recomputed_sha256": "sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df",
+  "audit_rows": "/tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z/artifacts/stage_hash_lineage_audit_rows.json",
+  "audit_rows_sha256": "sha256:e81be8d14825c82cd04918be734272000dc0a7f94d180171c4771787397d6519",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "accepted_source_refs_present": true,
+    "action_rows_match_case_rows": true,
+    "all_conditions_represented": true,
+    "commitment_hashes_recomputed": true,
+    "condition_case_count_matches_expected": true,
+    "gate6_links_checked": true,
+    "gate7_links_checked": true,
+    "human_content_judgment_absent": true,
+    "revision_rows_match_case_rows": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "new live Tau execution",
+      "new live Memory recall",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "live-originated PCTOM-R Gate 2-7 artifacts are re-walked through one cross-stage hash and lineage audit",
+      "Gate 4 prediction payload, model receipt, and evidence-bundle hashes are recomputed for every commitment",
+      "Gate 0 accepted source attribution fields are present in commitment evidence refs",
+      "Gate 6 action-selection and Gate 7 revision rows resolve back to the same case, outcome, scoring, and distribution artifacts",
+      "no Memory write, provider call, Tau call, canonical write, identity write, source-memory write, LLM judge, or human content judgment was used by the audit"
+    ]
+  },
+  "condition_case_index": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/live_condition_case_index.json",
+  "condition_case_index_sha256": "sha256:92756a8c197526c13a3d732383acbd133f17b56d82cd6841e62d287ff4a5181f",
+  "counts": {
+    "accepted_source_refs_checked": 384,
+    "action_cases_seen": 128,
+    "cases_audited": 128,
+    "commitment_hashes_recomputed": 384,
+    "condition_cases_seen": 128,
+    "conditions_represented": 4,
+    "gate6_links_checked": 128,
+    "gate7_links_checked": 128,
+    "revision_cases_seen": 128,
+    "stage_artifacts_loaded": 896,
+    "stage_json_hashes_recomputed": 768,
+    "write_violations": 0
+  },
+  "created_at": "2026-07-22T04:45:33Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z",
+  "processing_time_s": 0.095039,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z/live_stage_hash_lineage_audit_receipt.v1.json",
+  "receipt_sha256": "sha256:ed8002a321cf58b0d884d4b7723305325b5334a8e3fa17ed8200c28d55b264be",
+  "schema": "persona_dream.research.prospective_tom.live_stage_hash_lineage_audit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT",
+  "tau_call_attempts": 0
+}

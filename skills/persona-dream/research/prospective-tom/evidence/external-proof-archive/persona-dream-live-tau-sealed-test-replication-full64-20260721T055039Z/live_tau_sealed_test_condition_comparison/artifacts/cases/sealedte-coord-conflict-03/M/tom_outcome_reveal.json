@@ -1,0 +1,27 @@
+{
+  "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+  "canonical_memory_write": false,
+  "episode_id": "sealedte-coord-conflict-03",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "live-tau-condition-m-eq-action",
+      "expected_top_action": "KAI_ASKS_TO_WAIT",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "live-tau-m-sealedte-coord-conflict-03-prediction"
+    }
+  ],
+  "factual_branch_id": "live-tau-m-sealedte-coord-conflict-03-factual",
+  "hidden_state_labels": {
+    "live-tau-m-sealedte-coord-conflict-03-tom1-factual": "TRUE",
+    "live-tau-m-sealedte-coord-conflict-03-tom2-factual": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "live-tau-m-sealedte-coord-conflict-03-factual"
+  ],
+  "outcome_id": "live-tau-condition-outcome-sealedte-coord-conflict-03-m",
+  "outcome_visible": true,
+  "prediction_id": "live-tau-m-sealedte-coord-conflict-03-prediction",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T08:32:24Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

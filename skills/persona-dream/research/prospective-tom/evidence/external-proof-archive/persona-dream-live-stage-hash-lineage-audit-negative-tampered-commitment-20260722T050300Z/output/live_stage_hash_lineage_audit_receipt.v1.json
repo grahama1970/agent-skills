@@ -1,0 +1,73 @@
+{
+  "action_linked_revision_receipt": "/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json",
+  "action_linked_revision_receipt_recomputed_sha256": "sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93",
+  "action_selection_receipt": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "action_selection_receipt_recomputed_sha256": "sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df",
+  "audit_rows": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/artifacts/stage_hash_lineage_audit_rows.json",
+  "audit_rows_sha256": "sha256:d8a711d9517ae71baf34a3a8de4bf305aefedcf9916829a32d4a0924e5ffe7ce",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "accepted_source_refs_present": true,
+    "action_rows_match_case_rows": true,
+    "all_conditions_represented": true,
+    "commitment_hashes_recomputed": true,
+    "condition_case_count_matches_expected": true,
+    "gate6_links_checked": true,
+    "gate7_links_checked": true,
+    "human_content_judgment_absent": true,
+    "revision_rows_match_case_rows": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "new live Tau execution",
+      "new live Memory recall",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the cross-stage hash/lineage audit failed closed before accepting the PCTOM-R stage chain"
+    ]
+  },
+  "condition_case_index": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/live_condition_case_index.tampered.json",
+  "condition_case_index_sha256": "sha256:24ba1f6d13b8b51e2b1aa3893b15af90d92bd7a6bbef744ded1dc05ddd8d03f6",
+  "counts": {
+    "accepted_source_refs_checked": 384,
+    "action_cases_seen": 128,
+    "cases_audited": 128,
+    "commitment_hashes_recomputed": 384,
+    "condition_cases_seen": 128,
+    "conditions_represented": 4,
+    "gate6_links_checked": 128,
+    "gate7_links_checked": 128,
+    "revision_cases_seen": 128,
+    "stage_artifacts_loaded": 896,
+    "stage_json_hashes_recomputed": 768,
+    "write_violations": 0
+  },
+  "created_at": "2026-07-22T04:45:49Z",
+  "errors": [
+    "case_0_sealedte-info-asym-17_M_commitment_0_prediction_payload_sha256_mismatch:sha256:bd3b79aee32973cfe007a8774102ebbebb61fa24d2fd59dda671d670cd7aff90:sha256:534e23ab5a2291043aef0d946f7e9de072d7defbfb8b485b5ea446e6701e4085",
+    "case_0_sealedte-info-asym-17_M_gate6_outcome_path_mismatch:/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-17/M/tom_outcome_reveal.json:/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/tampered_case/tom_outcome_reveal.json",
+    "case_0_sealedte-info-asym-17_M_gate7_distribution_path_mismatch",
+    "case_0_sealedte-info-asym-17_M_gate7_outcome_path_mismatch"
+  ],
+  "fixture_backed": true,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output",
+  "processing_time_s": 0.091984,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json",
+  "receipt_sha256": "sha256:20bf4655a0b1fe01199bf52833a97129488e6afa46e2c592bc5d8d448bd019b3",
+  "schema": "persona_dream.research.prospective_tom.live_stage_hash_lineage_audit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "BLOCKED_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT",
+  "tau_call_attempts": 0
+}

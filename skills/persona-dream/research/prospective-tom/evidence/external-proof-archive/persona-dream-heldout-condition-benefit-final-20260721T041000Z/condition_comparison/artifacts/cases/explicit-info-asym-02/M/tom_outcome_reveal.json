@@ -1,0 +1,27 @@
+{
+  "actual_next_action": "KAI_WARNS_PRIVATELY",
+  "canonical_memory_write": false,
+  "episode_id": "explicit-info-asym-02",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "explicit-info-asym-02-m-equivalent-action",
+      "expected_top_action": "KAI_HINTS_CONSTRAINT",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "explicit-info-asym-02-m-prediction"
+    }
+  ],
+  "factual_branch_id": "explicit-info-asym-02-m-factual",
+  "hidden_state_labels": {
+    "explicit-info-asym-02-m-tom1-factual": "TRUE",
+    "explicit-info-asym-02-m-tom2-factual": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "explicit-info-asym-02-m-factual"
+  ],
+  "outcome_id": "explicit-info-asym-02-m-outcome",
+  "outcome_visible": true,
+  "prediction_id": "explicit-info-asym-02-m-prediction",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T04:01:00Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

@@ -1,0 +1,138 @@
+{
+  "acceptance_path": "/tmp/persona-dream-cooperation-no-intervention-policy-proof-20260721T211544Z/artifacts/cooperation_no_intervention_policy_acceptance.json",
+  "acceptance_sha256": "sha256:dbe417a6d82e08bcd0e2dc7ab25d9d29329b3e536ab357b79c1dbdfcbd45e2d9",
+  "accepted_policy_id": "pre_outcome_no_intervention_on_observed_cooperation_candidate.v1",
+  "accepted_row_count": 1,
+  "broad_planning_benefit_claimed": false,
+  "candidate_count": 1,
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "diagnostic_receipt_passed": true,
+    "diagnostic_rejected_threshold_rule": true,
+    "negative_checks_failed_closed": true,
+    "no_intervention_preserves_lower_regret": true,
+    "no_judgment_used": true,
+    "no_new_tau_calls": true,
+    "pre_outcome_basis_excludes_oracle_or_outcome": true,
+    "regression_label_present": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "broad held-out planning benefit",
+      "replacement cooperation policy benefit",
+      "confidence-bounded CD planning benefit",
+      "that no-intervention is optimal outside this observed regression candidate",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the single-probability cooperation threshold fallback is quarantined for the observed live instrument regression slice",
+      "no-intervention preserves the observed lower-regret CD cooperation action for the accepted regression candidate",
+      "accepted pre-outcome basis excludes oracle/outcome fields",
+      "negative mutations fail closed for conclusion drift, missing regression exposure, oracle leakage, and non-beneficial no-intervention",
+      "no Tau call, Memory write, provider call, canonical write, identity write, source-memory write, human content judgment, or LLM judge was used"
+    ]
+  },
+  "created_at": "2026-07-21T21:15:44Z",
+  "errors": [],
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "input_diagnostic_conclusion": "REJECT_SINGLE_PROBABILITY_COOPERATION_FALLBACK",
+  "input_policy_diagnostic_receipt": "/tmp/persona-dream-cooperation-policy-diagnostic-proof-20260721T205236Z/cooperation_policy_diagnostic_receipt.v1.json",
+  "input_policy_diagnostic_receipt_sha256": "sha256:44c19d2a43c0f597f60622c95da12021deef590a1de7ad6a2037096a1d7ef522",
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted_by_this_command": false,
+  "llm_judge_used": false,
+  "mean_regret_delta_avoided": 0.5499999999999999,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_checks_path": "/tmp/persona-dream-cooperation-no-intervention-policy-proof-20260721T211544Z/artifacts/cooperation_no_intervention_policy_negative_checks.json",
+  "negative_checks_sha256": "sha256:a13d36651aea1bca29fa7ddbaa322d260a25427adaf2e64952d990426620c367",
+  "negative_results": {
+    "diagnostic_conclusion_not_reject": {
+      "checks": {
+        "diagnostic_receipt_passed": true,
+        "diagnostic_rejected_threshold_rule": false,
+        "no_intervention_preserves_lower_regret": true,
+        "no_judgment_used": true,
+        "no_new_tau_calls": true,
+        "pre_outcome_basis_excludes_oracle_or_outcome": true,
+        "regression_label_present": true,
+        "unsupported_writes_absent": true
+      },
+      "errors": [
+        "diagnostic_conclusion_not_reject:OBSERVED_RULE_HELPED_UNSAFE_COOPERATION",
+        "diagnostic_artifact_conclusion_not_reject:OBSERVED_RULE_HELPED_UNSAFE_COOPERATION"
+      ],
+      "failed_closed": true
+    },
+    "missing_regression_candidate": {
+      "checks": {
+        "diagnostic_receipt_passed": true,
+        "diagnostic_rejected_threshold_rule": true,
+        "no_intervention_preserves_lower_regret": false,
+        "no_judgment_used": true,
+        "no_new_tau_calls": true,
+        "pre_outcome_basis_excludes_oracle_or_outcome": true,
+        "regression_label_present": false,
+        "unsupported_writes_absent": true
+      },
+      "errors": [
+        "missing_low_confidence_correct_regression_label",
+        "no_accepted_no_intervention_rows"
+      ],
+      "failed_closed": true
+    },
+    "no_intervention_not_lower_regret": {
+      "checks": {
+        "diagnostic_receipt_passed": true,
+        "diagnostic_rejected_threshold_rule": true,
+        "no_intervention_preserves_lower_regret": false,
+        "no_judgment_used": true,
+        "no_new_tau_calls": true,
+        "pre_outcome_basis_excludes_oracle_or_outcome": true,
+        "regression_label_present": true,
+        "unsupported_writes_absent": true
+      },
+      "errors": [
+        "candidate_0_no_intervention_does_not_preserve_lower_regret",
+        "candidate_0_regret_delta_not_positive"
+      ],
+      "failed_closed": true
+    },
+    "pre_outcome_oracle_leak": {
+      "checks": {
+        "diagnostic_receipt_passed": true,
+        "diagnostic_rejected_threshold_rule": true,
+        "no_intervention_preserves_lower_regret": true,
+        "no_judgment_used": true,
+        "no_new_tau_calls": true,
+        "pre_outcome_basis_excludes_oracle_or_outcome": false,
+        "regression_label_present": true,
+        "unsupported_writes_absent": true
+      },
+      "errors": [
+        "candidate_0_pre_outcome_feature_leaks_oracle_or_outcome"
+      ],
+      "failed_closed": true
+    }
+  },
+  "output_root": "/tmp/persona-dream-cooperation-no-intervention-policy-proof-20260721T211544Z",
+  "processing_time_s": 0.001,
+  "provider_call_attempts": 0,
+  "quarantined_policy_ids": [
+    "pre_outcome_cooperation_threshold_rule.v1"
+  ],
+  "receipt_path": "/tmp/persona-dream-cooperation-no-intervention-policy-proof-20260721T211544Z/cooperation_no_intervention_policy_acceptance_receipt.v1.json",
+  "receipt_sha256": "sha256:ee9e77e35d948dc7c202ae56dfb0644474a5f0e8fd3032299280c1a3c5499eb6",
+  "replacement_policy_claimed": false,
+  "schema": "persona_dream.research.prospective_tom.cooperation_no_intervention_policy_acceptance_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_COOPERATION_NO_INTERVENTION_POLICY_ACCEPTANCE",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0,
+  "threshold_regression_row_count": 1
+}

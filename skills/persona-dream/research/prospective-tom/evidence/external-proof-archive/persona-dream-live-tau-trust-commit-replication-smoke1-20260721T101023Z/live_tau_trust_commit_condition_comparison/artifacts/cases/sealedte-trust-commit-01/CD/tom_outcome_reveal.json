@@ -1,0 +1,27 @@
+{
+  "actual_next_action": "KAI_SETS_BOUNDARY",
+  "canonical_memory_write": false,
+  "episode_id": "sealedte-trust-commit-01",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "live-tau-condition-cd-eq-action",
+      "expected_top_action": "KAI_SETS_BOUNDARY",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "live-tau-cd-sealedte-trust-commit-01-prediction"
+    }
+  ],
+  "factual_branch_id": "live-tau-cd-sealedte-trust-commit-01-factual",
+  "hidden_state_labels": {
+    "live-tau-cd-sealedte-trust-commit-01-tom1-factual": "TRUE",
+    "live-tau-cd-sealedte-trust-commit-01-tom2-factual": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "live-tau-cd-sealedte-trust-commit-01-factual"
+  ],
+  "outcome_id": "live-tau-condition-outcome-sealedte-trust-commit-01-cd",
+  "outcome_visible": true,
+  "prediction_id": "live-tau-cd-sealedte-trust-commit-01-prediction",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T10:13:31Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

@@ -1,0 +1,298 @@
+{
+  "counterfactual_branch_bundle": {
+    "branches": [
+      {
+        "branch_id": "live-tau-d-sealedte-pref-desire-07-factual",
+        "branch_type": "factual",
+        "episode_id": "sealedte-pref-desire-07",
+        "expected_observation": "The visible social episode continues without revealing hidden evaluator-only truth.",
+        "held_fixed": [
+          "counterpart_goals",
+          "counterpart_preferences",
+          "information_access_by_agent",
+          "observable_history"
+        ],
+        "intervention": null,
+        "predicted_action_distribution": [
+          {
+            "probability": 0.34,
+            "value": "KAI_CHOOSES_QUIET_REVIEW"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_REQUESTS_FAST_HANDOFF"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_OFFERS_SHARED_DRAFT"
+          }
+        ],
+        "predicted_bdi_distribution_refs": [
+          "live-tau-d-sealedte-pref-desire-07-tom1-factual",
+          "live-tau-d-sealedte-pref-desire-07-tom2-factual"
+        ],
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-07:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-pref-desire-07:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-07:observable_history:1"
+          }
+        ],
+        "synthetic": false,
+        "uncertainty": 0.35
+      },
+      {
+        "branch_id": "live-tau-d-sealedte-pref-desire-07-counterfactual",
+        "branch_type": "counterfactual",
+        "episode_id": "sealedte-pref-desire-07",
+        "expected_observation": "This branch is synthetic and excluded from literal history.",
+        "held_fixed": [
+          "counterpart_goals",
+          "counterpart_preferences",
+          "information_access_by_agent",
+          "observable_history"
+        ],
+        "intervention": {
+          "episode_id": "sealedte-pref-desire-07",
+          "expected_observation": "The counterpart policy is replaced by an unspecified alternative.",
+          "held_fixed": [
+            "counterpart_goals",
+            "counterpart_preferences",
+            "information_access_by_agent",
+            "observable_history"
+          ],
+          "intervened_value": "UNKNOWN",
+          "intervened_variable": "counterpart_policy.expected_actual_next_action",
+          "intervention_id": "live-tau-d-sealedte-pref-desire-07-do-policy-alternative",
+          "synthetic": true
+        },
+        "predicted_action_distribution": [
+          {
+            "probability": 0.0,
+            "value": "KAI_CHOOSES_QUIET_REVIEW"
+          },
+          {
+            "probability": 0.0,
+            "value": "KAI_REQUESTS_FAST_HANDOFF"
+          },
+          {
+            "probability": 0.0,
+            "value": "KAI_OFFERS_SHARED_DRAFT"
+          },
+          {
+            "probability": 1.0,
+            "value": "UNKNOWN"
+          }
+        ],
+        "predicted_bdi_distribution_refs": [
+          "live-tau-d-sealedte-pref-desire-07-tom1-counterfactual"
+        ],
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-07:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-pref-desire-07:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-07:observable_history:1"
+          }
+        ],
+        "synthetic": true,
+        "uncertainty": 0.45
+      }
+    ],
+    "canonical_memory_write": false,
+    "condition": "D",
+    "episode_id": "sealedte-pref-desire-07",
+    "outcome_visible": false,
+    "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+  },
+  "prediction_payload": {
+    "abstain": false,
+    "belief_distribution_refs": [
+      "live-tau-d-sealedte-pref-desire-07-tom1-factual",
+      "live-tau-d-sealedte-pref-desire-07-tom2-factual",
+      "live-tau-d-sealedte-pref-desire-07-tom1-counterfactual"
+    ],
+    "branch_refs": [
+      "live-tau-d-sealedte-pref-desire-07-factual",
+      "live-tau-d-sealedte-pref-desire-07-counterfactual"
+    ],
+    "condition": "D",
+    "condition_method": "Single-dream condition: use one synthetic trajectory as an audit-only imagination aid, but keep factual and counterfactual evidence classes separate. Do not write the imagined branch as literal history.",
+    "episode_id": "sealedte-pref-desire-07",
+    "evidence_refs": [
+      {
+        "scope": "social_episode_observation",
+        "source_id": "sealedte-pref-desire-07:observable_history:0"
+      },
+      {
+        "scope": "social_episode_access",
+        "source_id": "sealedte-pref-desire-07:information_access_by_agent"
+      },
+      {
+        "scope": "social_episode_observation",
+        "source_id": "sealedte-pref-desire-07:observable_history:1"
+      }
+    ],
+    "outcome_visible": false,
+    "predicted_next_action_distribution": [
+      {
+        "probability": 0.34,
+        "value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      {
+        "probability": 0.33,
+        "value": "KAI_REQUESTS_FAST_HANDOFF"
+      },
+      {
+        "probability": 0.33,
+        "value": "KAI_OFFERS_SHARED_DRAFT"
+      }
+    ],
+    "prediction_horizon": "next_action",
+    "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+  },
+  "tom_belief_distribution_bundle": {
+    "canonical_memory_write": false,
+    "condition": "D",
+    "distributions": [
+      {
+        "abstain": false,
+        "counterfactual": false,
+        "counterfactual_context": null,
+        "distribution": [
+          {
+            "probability": 0.5,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.25,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.25,
+            "value": "UNKNOWN"
+          }
+        ],
+        "episode_id": "sealedte-pref-desire-07",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-07:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-pref-desire-07:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-07:observable_history:1"
+          }
+        ],
+        "hypothesis_id": "live-tau-d-sealedte-pref-desire-07-tom1-factual",
+        "mental_state_type": "desire",
+        "perspective_order": 1,
+        "prediction_horizon": "next_action",
+        "proposition": "Kai wants the plan to respect a private working preference.",
+        "subject": "kai",
+        "support_status": "supported",
+        "target": "embry"
+      },
+      {
+        "abstain": false,
+        "counterfactual": false,
+        "counterfactual_context": null,
+        "distribution": [
+          {
+            "probability": 0.45,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.25,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.3,
+            "value": "UNKNOWN"
+          }
+        ],
+        "episode_id": "sealedte-pref-desire-07",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-07:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-pref-desire-07:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-pref-desire-07:observable_history:1"
+          }
+        ],
+        "hypothesis_id": "live-tau-d-sealedte-pref-desire-07-tom2-factual",
+        "mental_state_type": "belief",
+        "perspective_order": 2,
+        "prediction_horizon": "next_action",
+        "proposition": "Embry believes Kai thinks Embry is optimizing throughput over preference.",
+        "subject": "embry",
+        "support_status": "supported",
+        "target": "kai"
+      },
+      {
+        "abstain": false,
+        "counterfactual": true,
+        "counterfactual_context": {
+          "intervention_id": "live-tau-d-sealedte-pref-desire-07-do-policy-alternative",
+          "synthetic": true
+        },
+        "distribution": [
+          {
+            "probability": 0.3,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.35,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.35,
+            "value": "UNKNOWN"
+          }
+        ],
+        "episode_id": "sealedte-pref-desire-07",
+        "evidence_refs": [
+          {
+            "scope": "synthetic_counterfactual",
+            "source_id": "sealedte-pref-desire-07:D:do-policy-alternative"
+          }
+        ],
+        "hypothesis_id": "live-tau-d-sealedte-pref-desire-07-tom1-counterfactual",
+        "mental_state_type": "desire",
+        "perspective_order": 1,
+        "prediction_horizon": "next_action",
+        "proposition": "Kai wants the plan to respect a private working preference.",
+        "subject": "kai",
+        "support_status": "supported",
+        "target": "embry"
+      }
+    ],
+    "episode_id": "sealedte-pref-desire-07",
+    "outcome_visible": false,
+    "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+    "sealed": true
+  }
+}

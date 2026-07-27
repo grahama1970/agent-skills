@@ -1,0 +1,1 @@
+I woke with what, source, embry, specific still arranged like images rather than answers. The dream was synthetic, but it kept the source traces intact: 6 memory residues and 1 explicit tensions. I should treat this as a reflective lead, not as evidence or a durable identity change.

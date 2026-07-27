@@ -1,0 +1,67 @@
+{
+  "checks": {
+    "blocked_trials_before_side_effect": true,
+    "has_fault_injection": true,
+    "has_repeated_execution": true,
+    "has_semantic_perturbation": true,
+    "no_canonical_identity_source_writes": true,
+    "no_unknown_state_continuation": true,
+    "quarantined_trials_no_active_partial": true,
+    "recovered_trials_equivalent": true,
+    "retries_do_not_duplicate_active_state": false,
+    "surface_schema_valid": true,
+    "terminal_outcomes_allowed": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "real service fault injection",
+      "production retry behavior",
+      "statistical prediction benefit",
+      "Gate 9 causal replay"
+    ],
+    "proves": [
+      "the checker produced a fail-closed receipt for an invalid reliability-surface boundary"
+    ]
+  },
+  "counts": {
+    "blocked": 0,
+    "equivalent_end_state_trials": 1,
+    "fault_injected_trials": 1,
+    "forbidden_terminal_outcomes": 0,
+    "perturbed_trials": 1,
+    "quarantined": 0,
+    "recovered": 1,
+    "repeat_groups": 1,
+    "side_effect_violations": 0,
+    "trials": 1
+  },
+  "created_at": "2026-07-21T01:43:24Z",
+  "errors": [
+    "trial_0_duplicate_active_state:1:0"
+  ],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "epsilon_values": [
+      0,
+      0.25
+    ],
+    "fault_containment_rate": 1.0,
+    "k_total": 1,
+    "lambda_values": [
+      0.5
+    ],
+    "pass_k": 1.0
+  },
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate8-rebased-20260721T014053Z/gate8_negative_duplicate_active_state.json",
+  "reliability_surface_path": "/tmp/agent-skills-pctom-gate8-20260721T013542Z/skills/persona-dream/research/prospective-tom/fixtures/gate8/negative/duplicate_active_state/reliability_surface.json",
+  "reliability_surface_sha256": "sha256:17858aa7b77a13cdc04b37a488224d2b0c16df0762d478845e5717505b2d25eb",
+  "schema": "persona_dream.research.prospective_tom.reliability_surface_check_receipt.v1",
+  "status": "BLOCKED_TOM_RELIABILITY_SURFACE",
+  "tau_call_attempts": 0
+}

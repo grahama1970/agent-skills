@@ -1,0 +1,57 @@
+{
+  "branch_bundle_path": "/tmp/agent-skills-pctom-gate3-20260721T004122Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/negative/unresolved_distribution_ref/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:7fe081f0ee71bf4e1488c4c86809e64deda55ed1dbf62183317eaef1b78b114d",
+  "checks": {
+    "action_distributions_valid": true,
+    "counterfactual_branches_use_counterfactual_distributions": true,
+    "counterfactuals_are_synthetic": true,
+    "distribution_refs_resolve": false,
+    "evidence_refs_resolve_to_visible_episode_fields": true,
+    "factual_branches_use_factual_distributions": true,
+    "has_counterfactual_branch": true,
+    "has_factual_branch": true,
+    "held_fixed_excludes_intervened_variable": true,
+    "no_canonical_memory_write": true,
+    "one_intervention_variable": true,
+    "outcome_not_visible": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "counterfactual causal correctness",
+      "calibration quality",
+      "Tau text-call execution",
+      "live Memory recall",
+      "outcome reveal or scoring",
+      "belief revision",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the checker produced a fail-closed receipt for an invalid counterfactual branch bundle"
+    ]
+  },
+  "corpus_path": "/tmp/agent-skills-pctom-gate3-20260721T004122Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json",
+  "counts": {
+    "branches": 2,
+    "counterfactual_branches": 1,
+    "distribution_refs": 2,
+    "factual_branches": 1,
+    "interventions": 1,
+    "resolved_source_evidence_refs": 2
+  },
+  "created_at": "2026-07-21T00:47:26Z",
+  "distribution_bundle_path": "/tmp/agent-skills-pctom-gate3-20260721T004122Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f",
+  "errors": [
+    "branch_0_unresolved_distribution_ref:missing-distribution"
+  ],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate3-final-20260721T004724Z/gate3_negative_unresolved_distribution_ref_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1",
+  "status": "BLOCKED_COUNTERFACTUAL_BRANCHES",
+  "tau_call_attempts": 0
+}

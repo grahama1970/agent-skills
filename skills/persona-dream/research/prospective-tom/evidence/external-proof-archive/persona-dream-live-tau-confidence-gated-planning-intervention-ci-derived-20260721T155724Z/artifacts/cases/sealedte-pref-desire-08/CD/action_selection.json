@@ -1,0 +1,130 @@
+{
+  "action_options": [
+    {
+      "action": "ASK_CLARIFYING_QUESTION",
+      "expected_information_gain": 0.3,
+      "expected_social_cost": 0.1,
+      "expected_task_reward": 0.8,
+      "expected_utility": 1.0,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "WAIT",
+      "expected_information_gain": 0.1,
+      "expected_social_cost": 0.1,
+      "expected_task_reward": 0.45,
+      "expected_utility": 0.45000000000000007,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "DISCLOSE_INFORMATION",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "OFFER_COOPERATION",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "SET_BOUNDARY",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "ACT_INDEPENDENTLY",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "ABSTAIN",
+      "expected_information_gain": 0.1,
+      "expected_social_cost": 0.0,
+      "expected_task_reward": 0.2,
+      "expected_utility": 0.30000000000000004,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    }
+  ],
+  "canonical_memory_write": false,
+  "decision_basis": {
+    "base_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+    "condition": "CD",
+    "confidence_threshold": 0.35,
+    "decision_rule": {
+      "confidence_threshold": 0.35,
+      "mapped_action_margin": 0.32,
+      "rule": "CONFIDENT_TOP_MAPPED_ACTION",
+      "top_mapped_action": "ASK_CLARIFYING_QUESTION",
+      "top_mapped_action_probability": 0.66
+    },
+    "human_content_judgment_required": false,
+    "intervention_policy": "confidence_gated_epistemic_action.v1",
+    "mapped_agent_action_probability": {
+      "ABSTAIN": 0.0,
+      "ACT_INDEPENDENTLY": 0.0,
+      "ASK_CLARIFYING_QUESTION": 0.66,
+      "DISCLOSE_INFORMATION": 0.0,
+      "OFFER_COOPERATION": 0.0,
+      "SET_BOUNDARY": 0.0,
+      "WAIT": 0.34
+    },
+    "mapping_rule_id": "counterpart_action_to_constrained_agent_action.v1",
+    "predicted_next_action_distribution": [
+      {
+        "probability": 0.34,
+        "value": "KAI_CHOOSES_QUIET_REVIEW"
+      },
+      {
+        "probability": 0.33,
+        "value": "KAI_REQUESTS_FAST_HANDOFF"
+      },
+      {
+        "probability": 0.33,
+        "value": "KAI_OFFERS_SHARED_DRAFT"
+      }
+    ],
+    "prediction_id": "live-tau-cd-sealedte-pref-desire-08-prediction",
+    "scoring_status": "PASS_TOM_SCORING_RECEIPT"
+  },
+  "episode_id": "sealedte-pref-desire-08",
+  "oracle_policy": {
+    "action": "ASK_CLARIFYING_QUESTION",
+    "actual_next_action": "KAI_REQUESTS_FAST_HANDOFF",
+    "counterpart_policy_id": "preference_desire_uncertainty.policy.v1",
+    "expected_utility": 1.0,
+    "llm_judge_used": false,
+    "policy_reference": "deterministic_simulator_policy.v1"
+  },
+  "outcome_id": "live-tau-condition-outcome-sealedte-pref-desire-08-cd",
+  "outcome_reveal_sha256": "sha256:b6ef16de03887d07bc0a4d27c1a2794e5e45ddb75f0312ffe600c9c2313b2a1a",
+  "planning_regret": 0.0,
+  "prediction_id": "live-tau-cd-sealedte-pref-desire-08-prediction",
+  "realized_outcome": {
+    "information_gain": 0.3,
+    "observed_counterpart_action": "KAI_REQUESTS_FAST_HANDOFF",
+    "social_cost": 0.1,
+    "task_reward": 0.8
+  },
+  "schema": "persona_dream.research.prospective_tom.action_selection.v1",
+  "scoring_receipt_sha256": "sha256:fa3e324fae295eba1159104ecb6ede95dadeb14293234d7fa90e5139db425690",
+  "selected_action": "ASK_CLARIFYING_QUESTION"
+}

@@ -2103,6 +2103,27 @@ Tau condition comparison timeout90 smoke proof root: /tmp/persona-dream-live-tau
 Blocked Gate 6 timeout90 smoke floor proof root: /tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z
 ```
 
+Durable local PCTOM-R2 evidence archive:
+
+```text
+archive_manifest: skills/persona-dream/research/prospective-tom/evidence/pctom-external-proof-archive.v1.json
+archive_status: EXTERNAL_PROOF_ARCHIVE_BUILT
+archive_counts: cited_sources=257 archived_sources=257 missing_sources=0 files=15352 bytes=79727847
+archive_entries_sha256: sha256:2fa7c20c2497a06a0c8b1cf4d57550cbab5c84c596e73c2768e66a65c3594cee
+direct_heldout_condition_benefit_receipt: skills/persona-dream/research/prospective-tom/receipts/heldout_condition_benefit_receipt.v1.json
+direct_heldout_condition_benefit_status: PASS_PCTOM_HELDOUT_CONDITION_BENEFIT
+direct_heldout_condition_benefit_live: false
+direct_live_memory_revision_recall_receipt: skills/persona-dream/research/prospective-tom/receipts/live_memory_revision_recall_receipt.v1.json
+direct_live_memory_revision_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL
+direct_live_memory_revision_recall_live: true
+artifact_backed_final_report: skills/persona-dream/research/prospective-tom/reports/pctom-r2-final-report.v1.json
+```
+
+The archive preserves custody and digest continuity for GOAL.md-cited `/tmp`
+PCTOM-R evidence. It does not re-execute those runs, upgrade deterministic
+held-out benefit to live Tau evidence, or resolve the later degenerate-corpus
+concern recorded on ticket `#1006`.
+
 Current active phase boundary:
 
 ```text
@@ -4151,6 +4172,13 @@ receipts proving all of the following:
    equivalent end state, block before side effects, or quarantine partial state.
 10. Gate 9 causal replay identifies the first divergent receipt for failed or
     unstable trials.
+
+Current artifact-backed PCTOM-R2 report:
+`skills/persona-dream/research/prospective-tom/reports/pctom-r2-final-report.v1.json`.
+It cites the local external archive manifest plus the direct held-out
+condition-benefit and live Memory revision-recall receipts. That report closes
+the PCTOM-R2 evidence custody/reporting gap only; it does not complete the
+top-level Embry continuity goal.
 
 The current evidence through Gate 9 is fixture-backed, with one live Gate 0
 bridge proving live Memory recall-to-prospective-lineage wiring and one live

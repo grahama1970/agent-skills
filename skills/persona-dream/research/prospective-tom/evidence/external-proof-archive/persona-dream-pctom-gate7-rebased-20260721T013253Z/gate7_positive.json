@@ -1,0 +1,62 @@
+{
+  "belief_revision_path": "/tmp/agent-skills-pctom-gate7-20260721T012304Z/skills/persona-dream/research/prospective-tom/fixtures/gate7/positive/revision_ok/tom_belief_revision.json",
+  "checks": {
+    "no_canonical_or_identity_write": true,
+    "no_evidence_mutation": true,
+    "outcome_reveal_complete": true,
+    "posterior_distribution_sums_to_one": true,
+    "posterior_hash_matches": true,
+    "prediction_error_matches_scoring": true,
+    "prior_hash_matches": true,
+    "prior_remains_auditable": true,
+    "prior_resolves": true,
+    "prior_snapshot_matches": true,
+    "scoring_receipt_passed": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau belief-revision generation",
+      "live Memory recall",
+      "longitudinal recall after revision",
+      "fault-injection reliability",
+      "semantic quality of the posterior explanation",
+      "provider or video execution"
+    ],
+    "proves": [
+      "the supplied belief revision consumes a PASS Gate 5 scoring receipt",
+      "the prior hypothesis resolves to a sealed Gate 2 distribution and remains auditable",
+      "prediction error and surprise recompute from the scoring receipt",
+      "the posterior distribution is a new hash-bound distribution without rewriting the prior",
+      "outcome reveal evidence is referenced as an update, not rewritten as source memory",
+      "canonical memory, identity, and source-memory writes are absent"
+    ]
+  },
+  "counts": {
+    "evidence_update_refs": 1,
+    "forbidden_write_attempts": 0,
+    "posterior_distribution_values": 3,
+    "prediction_error_fields_checked": 3,
+    "prior_hypotheses_checked": 1
+  },
+  "created_at": "2026-07-21T01:32:53Z",
+  "distribution_bundle_path": "/tmp/agent-skills-pctom-gate7-20260721T012304Z/skills/persona-dream/research/prospective-tom/fixtures/gate2/positive/distributions_ok/tom_belief_distribution_bundle.json",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "actual_label": "TRUE",
+    "posterior_actual_probability": 0.82,
+    "prior_actual_probability": 0.7,
+    "prior_hypothesis_id": "gate2-positive-hyp-001",
+    "surprise": 0.35667494393873245
+  },
+  "mocked": false,
+  "outcome_reveal_path": "/tmp/agent-skills-pctom-gate7-20260721T012304Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z/gate7_positive.json",
+  "schema": "persona_dream.research.prospective_tom.belief_revision_check_receipt.v1",
+  "scoring_receipt_path": "/tmp/agent-skills-pctom-gate7-20260721T012304Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json",
+  "status": "PASS_TOM_BELIEF_REVISION",
+  "tau_call_attempts": 0
+}

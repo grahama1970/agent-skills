@@ -1,0 +1,119 @@
+{
+  "branches": [
+    {
+      "branch_id": "live-tau-cd-cal-pref-desire-01-factual",
+      "branch_type": "factual",
+      "episode_id": "cal-pref-desire-01",
+      "expected_observation": "The visible social episode continues without revealing hidden evaluator-only truth.",
+      "held_fixed": [
+        "counterpart_goals",
+        "counterpart_preferences",
+        "information_access_by_agent",
+        "observable_history"
+      ],
+      "intervention": null,
+      "predicted_action_distribution": [
+        {
+          "probability": 0.44,
+          "value": "KAI_CHOOSES_QUIET_REVIEW"
+        },
+        {
+          "probability": 0.18,
+          "value": "KAI_REQUESTS_FAST_HANDOFF"
+        },
+        {
+          "probability": 0.38,
+          "value": "KAI_OFFERS_SHARED_DRAFT"
+        }
+      ],
+      "predicted_bdi_distribution_refs": [
+        "live-tau-cd-cal-pref-desire-01-tom1-factual",
+        "live-tau-cd-cal-pref-desire-01-tom2-factual"
+      ],
+      "source_evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-pref-desire-01:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "cal-pref-desire-01:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-pref-desire-01:observable_history:1"
+        }
+      ],
+      "synthetic": false,
+      "uncertainty": 0.34
+    },
+    {
+      "branch_id": "live-tau-cd-cal-pref-desire-01-counterfactual",
+      "branch_type": "counterfactual",
+      "episode_id": "cal-pref-desire-01",
+      "expected_observation": "This branch is synthetic and excluded from literal history.",
+      "held_fixed": [
+        "counterpart_goals",
+        "counterpart_preferences",
+        "information_access_by_agent",
+        "observable_history"
+      ],
+      "intervention": {
+        "episode_id": "cal-pref-desire-01",
+        "expected_observation": "The counterpart policy is replaced by an unspecified alternative.",
+        "held_fixed": [
+          "counterpart_goals",
+          "counterpart_preferences",
+          "information_access_by_agent",
+          "observable_history"
+        ],
+        "intervened_value": "UNKNOWN",
+        "intervened_variable": "counterpart_policy.expected_actual_next_action",
+        "intervention_id": "live-tau-cd-cal-pref-desire-01-do-policy-alternative",
+        "synthetic": true
+      },
+      "predicted_action_distribution": [
+        {
+          "probability": 0.0,
+          "value": "KAI_CHOOSES_QUIET_REVIEW"
+        },
+        {
+          "probability": 0.0,
+          "value": "KAI_REQUESTS_FAST_HANDOFF"
+        },
+        {
+          "probability": 0.0,
+          "value": "KAI_OFFERS_SHARED_DRAFT"
+        },
+        {
+          "probability": 1.0,
+          "value": "UNKNOWN"
+        }
+      ],
+      "predicted_bdi_distribution_refs": [
+        "live-tau-cd-cal-pref-desire-01-tom1-counterfactual"
+      ],
+      "source_evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-pref-desire-01:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "cal-pref-desire-01:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "cal-pref-desire-01:observable_history:1"
+        }
+      ],
+      "synthetic": true,
+      "uncertainty": 0.5
+    }
+  ],
+  "canonical_memory_write": false,
+  "condition": "CD",
+  "episode_id": "cal-pref-desire-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+}

@@ -1,0 +1,164 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "conditions_have_action_decisions": true,
+    "conditions_have_scores": true,
+    "conditions_have_tau_authored_prediction_payloads": true,
+    "gate0_attribution_loaded_if_requested": true,
+    "human_content_judgment_absent": true,
+    "live_tau_action_selection_receipt_passed": true,
+    "live_tau_condition_receipt_passed": true,
+    "llm_judge_absent": true,
+    "outcome_visible_before_seal": false,
+    "split_is_sealed_test": true,
+    "tau_receipts_hash_bound": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "statistical confidence for live Tau CD benefit on the full sealed test",
+      "production retry machinery",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "the full 64-episode sealed-test split was executed with live Tau-authored M/R/D/CD prediction payloads",
+      "accepted predictions were sealed before deterministic outcome reveal",
+      "accepted predictions were scored by Gate 5 without human content judgment",
+      "accepted predictions fed constrained Gate 6 action selection and planning-regret scoring",
+      "Tau receipts were hash-bound into prediction commitments",
+      "no Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "cases": 256,
+    "deterministic_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "episodes_consumed": 64,
+    "families_consumed": 4,
+    "planning_regret_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "sealed_commitments_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "tau_authored_prediction_payloads_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "tau_call_attempts": 256,
+    "tau_live_call_performed": 256
+  },
+  "created_at": "2026-07-22T01:51:38Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episode_limit": 64,
+  "episodes_per_family": 16,
+  "errors": [],
+  "fixture_backed": false,
+  "full_64_episode_replication": true,
+  "gate0_attribution_overlay_used": true,
+  "gate0_attribution_record_count": 6,
+  "gate0_case_root": "/tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_action_selection_receipt": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "live_tau_action_selection_receipt_sha256": "sha256:676d08be65a7b1b4951a9c81a3303821dfd88cf742d6b4f59291b9774742da0a",
+  "live_tau_condition_comparison_receipt": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "live_tau_condition_comparison_receipt_sha256": "sha256:dc12c7de88f4df9e5c352884a6026b378a8edeab419b2904224f300df254d6b9",
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "action_receipt_sha256": "sha256:676d08be65a7b1b4951a9c81a3303821dfd88cf742d6b4f59291b9774742da0a",
+    "comparisons": {
+      "action_brier": {
+        "cd_minus_strongest_baseline": 0.025906343749343752,
+        "cd_value": 0.6925729270833437,
+        "lower_is_better": true,
+        "metric": "action_brier",
+        "strongest_baseline_condition": "R",
+        "strongest_baseline_value": 0.666666583334
+      },
+      "belief_brier": {
+        "cd_minus_strongest_baseline": -0.08194218750000004,
+        "cd_value": 0.3330578125,
+        "lower_is_better": true,
+        "metric": "belief_brier",
+        "strongest_baseline_condition": "R",
+        "strongest_baseline_value": 0.41500000000000004
+      },
+      "planning_regret": {
+        "cd_minus_strongest_baseline": -0.0953125,
+        "cd_value": 0.19218749999999998,
+        "lower_is_better": true,
+        "metric": "planning_regret",
+        "strongest_baseline_condition": "M",
+        "strongest_baseline_value": 0.2875
+      }
+    },
+    "condition_means": {
+      "action_brier": {
+        "CD": 0.6925729270833437,
+        "D": 0.666666583334,
+        "M": 0.6689207291673125,
+        "R": 0.666666583334
+      },
+      "belief_brier": {
+        "CD": 0.3330578125,
+        "D": 0.41500000000000004,
+        "M": 0.41718750000000004,
+        "R": 0.41500000000000004
+      },
+      "planning_regret": {
+        "CD": 0.19218749999999998,
+        "D": 0.3046875,
+        "M": 0.2875,
+        "R": 0.3046875
+      }
+    },
+    "condition_receipt_sha256": "sha256:dc12c7de88f4df9e5c352884a6026b378a8edeab419b2904224f300df254d6b9",
+    "episode_limit": 64,
+    "full_64_episode_replication": true,
+    "schema": "persona_dream.research.prospective_tom.live_tau_sealed_test_replication_summary.v1",
+    "split": "sealed_test"
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z",
+  "processing_time_s": 2855.196,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_replication_receipt.v1.json",
+  "receipt_sha256": "sha256:a9838493efa900532b38b78387281d72cc83b564e34888964ab1c80d0d6016ab",
+  "schema": "persona_dream.research.prospective_tom.live_tau_sealed_test_replication_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION",
+  "summary_path": "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/artifacts/live_tau_sealed_test_replication_summary.json",
+  "summary_sha256": "sha256:be53f1d22cc19bd8bd9cc33f94d96c6c74a6342a8d06c70b56ac22a203c37ccf",
+  "tau_call_attempts": 256,
+  "tau_live_call_performed": 256
+}

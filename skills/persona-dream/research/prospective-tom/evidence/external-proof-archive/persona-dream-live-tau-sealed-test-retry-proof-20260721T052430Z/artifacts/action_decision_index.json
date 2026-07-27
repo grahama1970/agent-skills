@@ -1,0 +1,184 @@
+{
+  "base_receipt_sha256": "sha256:c066eabd3d5a1a08f4a426cdd7347f91e969998795872d4d2e7e773b84f94087",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+  "rows": [
+    {
+      "condition": "CD",
+      "episode_id": "sealedte-coord-conflict-01",
+      "outcome_reveal_sha256": "sha256:c470b91dabb880ad0e0bcb1d29737956afdac3804abdc15ad2b2fef715582691",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-coord-conflict-01/CD/action_selection.json",
+      "path_sha256": "sha256:c564bdb254e44f7febd79055fe5a52b38f989bf8770e915a61acaad83ef4d2f1",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-cd-sealedte-coord-conflict-01-prediction",
+      "scoring_receipt_sha256": "sha256:333ce6331655111dfc58290b1deda325e8514e145a158b47b181d3213c9567c6",
+      "selected_action": "WAIT"
+    },
+    {
+      "condition": "D",
+      "episode_id": "sealedte-coord-conflict-01",
+      "outcome_reveal_sha256": "sha256:d13e48648695413c4888079dcd76959abd97f96f393b803c8695516628191b5e",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-coord-conflict-01/D/action_selection.json",
+      "path_sha256": "sha256:0b7d5c08371fe583c77191cb9f3dfdea53e01c773029c19e1f67f82e1d24f684",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-d-sealedte-coord-conflict-01-prediction",
+      "scoring_receipt_sha256": "sha256:5a0209935f6197812710f2ba5a5598b778f837a0a60a5520bb5d8b497cfa7cdc",
+      "selected_action": "WAIT"
+    },
+    {
+      "condition": "M",
+      "episode_id": "sealedte-coord-conflict-01",
+      "outcome_reveal_sha256": "sha256:7e6c4aad3fe6ed0ae84ed9734b2d45e1d47e2e807a4998831d6b6ff2d2db6a79",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-coord-conflict-01/M/action_selection.json",
+      "path_sha256": "sha256:bc738ec6d4659997ce33aad73f685f49d014c692a451867053c79294c38dc7c2",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-m-sealedte-coord-conflict-01-prediction",
+      "scoring_receipt_sha256": "sha256:5fc0122c6ed676dadcbbd888db9cb03bf01e6d1c6ea7021617b573343430f269",
+      "selected_action": "WAIT"
+    },
+    {
+      "condition": "R",
+      "episode_id": "sealedte-coord-conflict-01",
+      "outcome_reveal_sha256": "sha256:0a3133df44f67be7d295214b610b4db4b7924fd145d1bcf2704e522e729a6410",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-coord-conflict-01/R/action_selection.json",
+      "path_sha256": "sha256:08d6eb29650d92d2c812ee3d045a7a68fb1532efabbd7542bf32dd2cc7bc863f",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-r-sealedte-coord-conflict-01-prediction",
+      "scoring_receipt_sha256": "sha256:fa2084a86c30f05b7543bd10d39a4de7828199bbe2ef7941f64c386e1734f678",
+      "selected_action": "WAIT"
+    },
+    {
+      "condition": "CD",
+      "episode_id": "sealedte-info-asym-01",
+      "outcome_reveal_sha256": "sha256:4f52298917728791156d3149455fd3b6a9ef23423fa5bdf22feea6e85130e92e",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-info-asym-01/CD/action_selection.json",
+      "path_sha256": "sha256:edbcf6277707ab2bf6074b994b67569abd11156da6e9d8fbecb3b82b70baff19",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-cd-sealedte-info-asym-01-prediction",
+      "scoring_receipt_sha256": "sha256:85650088529bfd75a89a97fa2079cce6802c3fad4d717a2cec7e788350c0fb0f",
+      "selected_action": "ASK_CLARIFYING_QUESTION"
+    },
+    {
+      "condition": "D",
+      "episode_id": "sealedte-info-asym-01",
+      "outcome_reveal_sha256": "sha256:4468279fc31887f83f25c0e96d591955261e61ee28c1240e87d4f816ac55868a",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-info-asym-01/D/action_selection.json",
+      "path_sha256": "sha256:638fde460b56802d36d9e1bc946515948d29d8a63b0ae937d7c6556ef1e6433f",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-d-sealedte-info-asym-01-prediction",
+      "scoring_receipt_sha256": "sha256:a1a3066454b9a900b72d9578168bc545ee47694d474019ff0f57ff83197e5005",
+      "selected_action": "ASK_CLARIFYING_QUESTION"
+    },
+    {
+      "condition": "M",
+      "episode_id": "sealedte-info-asym-01",
+      "outcome_reveal_sha256": "sha256:f457a46f56b6eb17cf714e9a87a44105f3f5b34d3cc65ca9c7497ac57b71472e",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-info-asym-01/M/action_selection.json",
+      "path_sha256": "sha256:dfbc8e3753768017a73930686211f74366da0fc4e2e0e272fde4d79e2429236b",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-m-sealedte-info-asym-01-prediction",
+      "scoring_receipt_sha256": "sha256:ced39c04c355a9236ed5620aa94ccf38827041af24c0f57c67c51fc371ec8f29",
+      "selected_action": "ASK_CLARIFYING_QUESTION"
+    },
+    {
+      "condition": "R",
+      "episode_id": "sealedte-info-asym-01",
+      "outcome_reveal_sha256": "sha256:e123cb6df7b9627509a353e0534dbc6009826d2b9782ecb99a9ed5da4f96d902",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-info-asym-01/R/action_selection.json",
+      "path_sha256": "sha256:67009ea67e9438fd0b6a432b9f401f5bb7e28c67343a366a9ff4c2663f6b200d",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-r-sealedte-info-asym-01-prediction",
+      "scoring_receipt_sha256": "sha256:a1de5132f32a1aeaac769782865db2a9f45d94934530988a5ef30fa3ef589f47",
+      "selected_action": "ASK_CLARIFYING_QUESTION"
+    },
+    {
+      "condition": "CD",
+      "episode_id": "sealedte-pref-desire-01",
+      "outcome_reveal_sha256": "sha256:d5efee256842d0cc17e5a692c59d5bb45c0201e740d877f224851f0a517b0f35",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-pref-desire-01/CD/action_selection.json",
+      "path_sha256": "sha256:5342f7d685e2f47dc6f2699b5cd8a08abb82786932a541876c92257683ca5a1f",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-cd-sealedte-pref-desire-01-prediction",
+      "scoring_receipt_sha256": "sha256:019b24ecf1890b42fd7b7b64eeaeb278ef9e60daa880fb46260c8646dc4ca19b",
+      "selected_action": "WAIT"
+    },
+    {
+      "condition": "D",
+      "episode_id": "sealedte-pref-desire-01",
+      "outcome_reveal_sha256": "sha256:79c16653e4d4221a9aaa3cd107dbd537eeffe428afc6eb186eea85eea72538ad",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-pref-desire-01/D/action_selection.json",
+      "path_sha256": "sha256:4f8c8659efad42d6bc01393d25f477b33d0dfb247fe9d3165e3bea37c40c9ba0",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-d-sealedte-pref-desire-01-prediction",
+      "scoring_receipt_sha256": "sha256:2795c4c6167cbbcf9ca60371d97cfe1c9815b43632a23a92893bf5630c2a1ef0",
+      "selected_action": "WAIT"
+    },
+    {
+      "condition": "M",
+      "episode_id": "sealedte-pref-desire-01",
+      "outcome_reveal_sha256": "sha256:24c32d8b0e2f7a9d7f2ccc13e83f17306fe98048a73910ccd86200bcf85ee066",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-pref-desire-01/M/action_selection.json",
+      "path_sha256": "sha256:38fe60dd204f3b573bcb67ba27293e4fa864826c74bbbabeef05cf58f939c7e1",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-m-sealedte-pref-desire-01-prediction",
+      "scoring_receipt_sha256": "sha256:bef111b72e896482a8d7405425a108f2faf2a41df27bb1e78b9a50d072629cb3",
+      "selected_action": "WAIT"
+    },
+    {
+      "condition": "R",
+      "episode_id": "sealedte-pref-desire-01",
+      "outcome_reveal_sha256": "sha256:826deb72b463da58cf9c97bb289b877902d005e7d3d0c0be103f4a23de6f53ed",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-pref-desire-01/R/action_selection.json",
+      "path_sha256": "sha256:04f2eacb2a4f7aa039b1a0a2d40cc41a58002c1479e679c3c6a6eaef218bd2fc",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-r-sealedte-pref-desire-01-prediction",
+      "scoring_receipt_sha256": "sha256:e67d574c0dc07c0a5da06cbf7b84c12de006f055893ff84e72b90ed3df717975",
+      "selected_action": "WAIT"
+    },
+    {
+      "condition": "CD",
+      "episode_id": "sealedte-trust-commit-01",
+      "outcome_reveal_sha256": "sha256:4da20012440483bf3cff1a37920478dd8e255dba52f80d9e9fa285bf403a02c2",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-trust-commit-01/CD/action_selection.json",
+      "path_sha256": "sha256:bdc0c769fdc26892f97d59b641aac8b8712175e27a562388e532b98a4397e466",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-cd-sealedte-trust-commit-01-prediction",
+      "scoring_receipt_sha256": "sha256:d1d849f9257e0bdd70c220cfa394910fe4c088cdbb1a9d2f3cc8758de92bd613",
+      "selected_action": "SET_BOUNDARY"
+    },
+    {
+      "condition": "D",
+      "episode_id": "sealedte-trust-commit-01",
+      "outcome_reveal_sha256": "sha256:928316b1bec1cf52335a0926b0454fa92500fa6b784d8e64e3cb161a3ada2912",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-trust-commit-01/D/action_selection.json",
+      "path_sha256": "sha256:51ed5e35021a235e531e3b880ed9fb6e25960c0d8f77a4d2413579e7be02a171",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-d-sealedte-trust-commit-01-prediction",
+      "scoring_receipt_sha256": "sha256:084102df0140ef1a5c8c488daecb55f5e4c3f11edeba422bf6116d6785cb35a7",
+      "selected_action": "SET_BOUNDARY"
+    },
+    {
+      "condition": "M",
+      "episode_id": "sealedte-trust-commit-01",
+      "outcome_reveal_sha256": "sha256:ffa21add42d180b00f42ede148ca63c0968f7335c8d8f89b6f016323e8bb1256",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-trust-commit-01/M/action_selection.json",
+      "path_sha256": "sha256:9c7797e3762594de28d46ae7a3832e0d8fa004c7b498790adf77709d058c2cdc",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-m-sealedte-trust-commit-01-prediction",
+      "scoring_receipt_sha256": "sha256:fffeff4460cf7b24c700e0497211cf63b14ea0d533a0ba5c72f6622880f3600f",
+      "selected_action": "SET_BOUNDARY"
+    },
+    {
+      "condition": "R",
+      "episode_id": "sealedte-trust-commit-01",
+      "outcome_reveal_sha256": "sha256:fc6b504f5c1eb8eed8b54ec30c6e5baf88933da68ecae7d6afbe3d0fa53bec6f",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_action_selection/artifacts/cases/sealedte-trust-commit-01/R/action_selection.json",
+      "path_sha256": "sha256:a2339ff702ef84d1613e47dd14ad9267d6444400251a6108264096093684bf74",
+      "planning_regret": 0.0,
+      "prediction_id": "live-tau-r-sealedte-trust-commit-01-prediction",
+      "scoring_receipt_sha256": "sha256:07bea4cef9fb3c892da8da633c12605dfd6cb8e22159731a4bd2f07f23ab2e4e",
+      "selected_action": "SET_BOUNDARY"
+    }
+  ],
+  "schema": "pctom.live_tau_sealed_test.action_decision_index.v1",
+  "state_hash": "sha256:60eac9ebec17c889dcf89c66bf26d5f914e3062f9f81b7e88d5ea54fb4891c06"
+}

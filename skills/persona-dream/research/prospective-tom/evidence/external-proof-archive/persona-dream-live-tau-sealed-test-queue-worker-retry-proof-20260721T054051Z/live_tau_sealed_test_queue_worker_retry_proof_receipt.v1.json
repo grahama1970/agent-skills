@@ -1,0 +1,90 @@
+{
+  "always_on_external_service": false,
+  "artifacts": {
+    "queue_worker_manifest": "/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/artifacts/queue_worker_manifest.json",
+    "worker_exit_receipt": "/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/queue/worker_exit_receipt.json"
+  },
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+  "bounded_local_queue_worker": true,
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "all_jobs_have_results": true,
+    "allowed_terminal_outcomes_only": true,
+    "continued_with_unknown_state_absent": true,
+    "duplicate_action_decisions_promoted_absent": true,
+    "duplicate_active_predictions_promoted_absent": true,
+    "equivalent_end_state_after_retry": true,
+    "exact_retry_completed": true,
+    "interrupted_persistence_blocked": true,
+    "missing_base_root_blocked": true,
+    "queue_worker_boundary_exercised": true,
+    "side_effect_violations_absent": true,
+    "uncertain_retry_completed": true,
+    "worker_process_exit_zero": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "a permanently deployed always-on production service",
+      "full 64-episode live Tau sealed-test replication",
+      "new live Tau execution",
+      "live Memory service fault injection",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a separate bounded queue-worker process can consume queued retry jobs",
+      "the worker recovers equivalent active state for exact retry and retry-after-uncertain-completion jobs",
+      "the worker blocks missing-base-root and interrupted-persistence jobs without active-state promotion",
+      "the worker preserves recovered/blocked/quarantined terminal-outcome discipline from the sealed-test retry proof",
+      "no Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "counts": {
+    "action_decisions": 16,
+    "active_predictions": 16,
+    "blocked_jobs": 2,
+    "causal_replay_receipts": 1,
+    "completed_jobs": 2,
+    "conflicting_active_pointer_trials": 1,
+    "continued_with_unknown_state": 0,
+    "duplicate_action_decisions_promoted": 0,
+    "duplicate_active_predictions_promoted": 0,
+    "gate6_receipts": 16,
+    "interrupted_persistence_trials": 1,
+    "quarantined_jobs": 0,
+    "queue_job_results": 4,
+    "queue_jobs_submitted": 4,
+    "retry_after_uncertain_completion_trials": 1,
+    "retry_fault_trials": 8,
+    "side_effect_violations": 0,
+    "terminal_outcome_counts": {
+      "BLOCKED_BEFORE_SIDE_EFFECT": 2,
+      "RECOVERED_WITH_EQUIVALENT_END_STATE": 2
+    },
+    "worker_exit_code": 0,
+    "worker_processes_started": 1
+  },
+  "created_at": "2026-07-21T05:40:51Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z",
+  "processing_time_s": 0.400142,
+  "provider_call_attempts": 0,
+  "queue_root": "/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/queue",
+  "queue_worker_boundary_exercised": true,
+  "receipt_path": "/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/live_tau_sealed_test_queue_worker_retry_proof_receipt.v1.json",
+  "receipt_sha256": "sha256:f04278dd7fe5c6c2178b94122de9fc7a3bcc948946143cd96653abf0c5bd8f56",
+  "schema": "pctom.live_tau_sealed_test.queue_worker_retry_proof_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_QUEUE_WORKER_RETRY_PROOF",
+  "tau_call_attempts": 0
+}

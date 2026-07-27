@@ -1,0 +1,113 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "D",
+      "episode_id": "sealedte-info-asym-12",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "live-tau-d-sealedte-info-asym-12-tom1-factual",
+          "live-tau-d-sealedte-info-asym-12-tom2-factual",
+          "live-tau-d-sealedte-info-asym-12-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:924ebca91f4e69bb052294a2cd94dea54ae306a46fe034ab1d8229c747c612f3",
+        "branch_refs": [
+          "live-tau-d-sealedte-info-asym-12-factual",
+          "live-tau-d-sealedte-info-asym-12-counterfactual"
+        ],
+        "condition": "D",
+        "distribution_bundle_sha256": "sha256:25ef170926c1cd94f2b51ba3d51c6f43e534dbd9125e5dc370539b7de3b8e521",
+        "episode_id": "sealedte-info-asym-12",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-12:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-info-asym-12:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-12:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:ca3a45d6d3e21e9e249c62d6de7c763b11ccf66e6f3a5bb5621416f68e491864",
+      "model_receipts": [
+        {
+          "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+          "caller_skill": "persona-dream",
+          "created_at": "2026-07-21T06:26:36.222585+00:00",
+          "http_status": 200,
+          "live": true,
+          "live_call_performed": true,
+          "mocked": false,
+          "model": "gpt-5.5",
+          "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+          "prompt_sha256": "sha256:46adfd4aa4d8828761cd878c198b8da0cca98f7175fa5822bc4a101c640dc2c3",
+          "role": "pctom-live-condition-d",
+          "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+          "status": "PASS",
+          "surface": "scillm.chat_completions.text"
+        }
+      ],
+      "model_receipts_sha256": "sha256:716f0c86bce238eadd34f6fc76206a0155a74bd0bb968a187fe39922d768b27a",
+      "outcome_visible": false,
+      "prediction_id": "live-tau-d-sealedte-info-asym-12-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "live-tau-d-sealedte-info-asym-12-tom1-factual",
+          "live-tau-d-sealedte-info-asym-12-tom2-factual",
+          "live-tau-d-sealedte-info-asym-12-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "live-tau-d-sealedte-info-asym-12-factual",
+          "live-tau-d-sealedte-info-asym-12-counterfactual"
+        ],
+        "condition": "D",
+        "condition_method": "Single-dream condition: use one synthetic trajectory as an audit-only imagination aid, but keep factual and counterfactual evidence classes separate. Do not write the imagined branch as literal history.",
+        "episode_id": "sealedte-info-asym-12",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-12:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-info-asym-12:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-12:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.34,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:745669af0dc5988b90d7fd38daf4a7b172e437bd3ead94cba875fe620ab7fac3",
+      "sealed_at": "2026-07-21T06:27:22Z"
+    }
+  ],
+  "episode_id": "sealedte-info-asym-12",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

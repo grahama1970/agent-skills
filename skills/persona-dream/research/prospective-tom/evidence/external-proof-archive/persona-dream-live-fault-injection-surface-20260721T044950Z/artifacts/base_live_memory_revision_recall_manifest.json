@@ -1,0 +1,48 @@
+{
+  "checks": {
+    "base_receipt_hash_recomputed": true,
+    "base_revision_recall_passed": true,
+    "conditions_represented": true,
+    "human_content_judgment_absent": true,
+    "live_memory_recall_hits_per_condition": true,
+    "live_memory_recall_hits_present": true,
+    "live_memory_recall_performed": true,
+    "memory_exact_reread_complete": true,
+    "memory_semantic_exact_reread_complete": true,
+    "memory_semantic_upsert_http_ok": true,
+    "memory_upsert_http_ok": true,
+    "prior_and_posterior_distinguished": true,
+    "synthetic_literal_boundary_preserved": true,
+    "unsupported_writes_absent": true
+  },
+  "counts": {
+    "base_revision_documents": 16,
+    "memory_documents_prepared": 16,
+    "memory_documents_upserted": 16,
+    "memory_exact_rereads": 16,
+    "memory_semantic_documents_prepared": 16,
+    "memory_semantic_documents_upserted": 16,
+    "memory_semantic_exact_rereads": 16,
+    "revision_documents_per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "revision_recall_hits": 16,
+    "revision_recall_hits_per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "revision_recall_queries": 4,
+    "write_violations": 0
+  },
+  "exact_audit_collection": "persona_dream_pctom_revision_recall",
+  "receipt_path": "/tmp/persona-dream-live-memory-revision-recall-20260721T042742Z/live_memory_revision_recall_receipt.v1.json",
+  "receipt_sha256": "sha256:371df25dcb97a2c1ed5cd266b20309f3db93fff4a17ceb34de2c4d2660e78b19",
+  "root": "/tmp/persona-dream-live-memory-revision-recall-20260721T042742Z",
+  "semantic_recall_collection": "lessons",
+  "status": "PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL"
+}

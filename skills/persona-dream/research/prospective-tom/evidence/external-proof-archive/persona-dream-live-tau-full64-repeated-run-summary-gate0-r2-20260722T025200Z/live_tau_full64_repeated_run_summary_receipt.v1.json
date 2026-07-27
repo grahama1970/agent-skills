@@ -1,0 +1,120 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "all_source_runs_gate0_attributed": true,
+    "all_source_runs_have_64_metric_rows": true,
+    "all_source_runs_passed": true,
+    "at_least_two_full64_roots": true,
+    "episode_metric_rows_cover_all_runs": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "new live Tau execution inside this aggregate command",
+      "independent scenario-corpus generalization beyond the sealed-test split",
+      "planning benefit if the planning confidence interval crosses zero",
+      "production retry machinery",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "multiple full64 Gate 0-attributed live Tau sealed-test replication roots were hash-bound and aggregated",
+      "CD-minus-strongest-baseline belief, action, and planning deltas were recomputed from case/action indices across repeated full64 runs",
+      "the aggregate command consumed existing live Tau receipts without reexecuting Tau or using an LLM judge",
+      "no Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "counts": {
+    "accepted_source_runs": 2,
+    "episode_metric_rows": 128,
+    "source_roots": 2,
+    "tau_call_attempts_consumed": 512,
+    "tau_live_calls_consumed": 512
+  },
+  "created_at": "2026-07-22T02:51:09Z",
+  "episode_metric_rows_path": "/tmp/persona-dream-live-tau-full64-repeated-run-summary-gate0-r2-20260722T025200Z/artifacts/full64_repeated_run_episode_metric_rows.json",
+  "episode_metric_rows_sha256": "sha256:79bffc07630a6a13a733269c8c0f2735c7dc01a16c8f130141286c191d55ed55",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_receipts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "action_brier": {
+      "benefit_with_confidence": false,
+      "cd_minus_strongest_baseline_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:876700785dc91997982b922cba687b4e738970f25110f7628f3ce13ca512ddb4",
+        "lower": 0.0035813281243750193,
+        "mean": 0.03796882812435939,
+        "samples": 10000,
+        "seed": 20260723,
+        "upper": 0.07271834895771875
+      },
+      "direction_counts": {
+        "BENEFIT": 68,
+        "HARM": 59,
+        "TIE": 1
+      },
+      "paired_rows": 128
+    },
+    "belief_brier": {
+      "benefit_with_confidence": true,
+      "cd_minus_strongest_baseline_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:b94842239adf43aceea569885256394ae0cee5c5315b6fb8f8b33df294de8ec3",
+        "lower": -0.10389453125000003,
+        "mean": -0.09116718750000002,
+        "samples": 10000,
+        "seed": 20260722,
+        "upper": -0.07867421875000002
+      },
+      "direction_counts": {
+        "BENEFIT": 97,
+        "HARM": 3,
+        "TIE": 28
+      },
+      "paired_rows": 128
+    },
+    "planning_regret": {
+      "benefit_with_confidence": true,
+      "cd_minus_strongest_baseline_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:d187fe274abb64a5ed1c612c270ed68966e872b499090ff071dc8a09fb9a081b",
+        "lower": -0.1640625,
+        "mean": -0.094921875,
+        "samples": 10000,
+        "seed": 20260724,
+        "upper": -0.027734374999999995
+      },
+      "direction_counts": {
+        "BENEFIT": 28,
+        "HARM": 23,
+        "TIE": 77
+      },
+      "paired_rows": 128
+    }
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-full64-repeated-run-summary-gate0-r2-20260722T025200Z",
+  "processing_time_s": 1.104,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-full64-repeated-run-summary-gate0-r2-20260722T025200Z/live_tau_full64_repeated_run_summary_receipt.v1.json",
+  "receipt_sha256": "sha256:0549f0698ec055561f736ce5b88a6f6394af377bc82e784d75f52b6d9f39c407",
+  "schema": "persona_dream.research.prospective_tom.live_tau_full64_repeated_run_summary_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "source_roots": [
+    "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z",
+    "/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z"
+  ],
+  "status": "PASS_LIVE_TAU_PCTOM_FULL64_REPEATED_RUN_SUMMARY",
+  "summary_path": "/tmp/persona-dream-live-tau-full64-repeated-run-summary-gate0-r2-20260722T025200Z/artifacts/full64_repeated_run_summary.json",
+  "summary_sha256": "sha256:4e580399a9c3b4fb3d9afa487ea63c48701d62dd18cde4368f3944f2ac3955b9"
+}

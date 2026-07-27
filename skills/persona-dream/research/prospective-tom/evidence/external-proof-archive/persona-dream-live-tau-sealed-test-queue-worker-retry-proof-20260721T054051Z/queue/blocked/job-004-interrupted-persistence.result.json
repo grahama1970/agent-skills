@@ -1,0 +1,40 @@
+{
+  "active_partial_state": false,
+  "canonical_memory_write": false,
+  "child": {
+    "child_receipt": null,
+    "command": [
+      "/tmp/persona-dream-worker-main-GcA2Zc/skills/persona-dream/run.sh",
+      "run-live-tau-sealed-test-retry-proof",
+      "--base-root",
+      "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+      "--output-root",
+      "/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/faults/output-root-file",
+      "--json"
+    ],
+    "cwd": "/tmp/persona-dream-worker-main-GcA2Zc/skills/persona-dream",
+    "duration_s": 0.079266,
+    "exit_code": 1,
+    "job_id": "job-004-interrupted-persistence",
+    "job_type": "interrupted_persistence",
+    "parse_error": "json_object_not_found",
+    "stderr_excerpt": "Traceback (most recent call last):\n  File \"/tmp/persona-dream-worker-main-GcA2Zc/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 629, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/tmp/persona-dream-worker-main-GcA2Zc/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 620, in main\n    receipt = run(args.base_root, args.output_root)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/persona-dream-worker-main-GcA2Zc/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 526, in run\n    _write_json(artifacts / \"active_prediction_index.json\", active_prediction_index)\n  File \"/tmp/persona-dream-worker-main-GcA2Zc/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 37, in _write_json\n    path.parent.mkdir(parents=True, exist_ok=True)\n  File \"/home/graham/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/pathlib.py\", line 1311, in mkdir\n    os.mkdir(self, mode)\nNotADirectoryError: [Errno 20] Not a directory: '/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/faults/output-root-file/artifacts'\n",
+    "stderr_sha256": "sha256:17f70d46a12d12f0b1ad73a918a4c82ee37e970bdcc9c6a04cd65e1f2dedc8ba",
+    "stdout_excerpt": "",
+    "stdout_sha256": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+  },
+  "errors": [],
+  "expected_terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+  "identity_write": false,
+  "job_id": "job-004-interrupted-persistence",
+  "job_type": "interrupted_persistence",
+  "memory_write": false,
+  "provider_call": false,
+  "result_status": "BLOCKED",
+  "schema": "pctom.queue_worker.job_result.v1",
+  "side_effect_count": 0,
+  "source_memory_write": false,
+  "tau_call": false,
+  "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+  "unknown_state_continued": false
+}

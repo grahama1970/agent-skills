@@ -1,0 +1,101 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "episode_id": "dev-info-asym-01",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "live-tau-gate2-factual-bdi-001",
+          "live-tau-gate2-counterfactual-bdi-001"
+        ],
+        "branch_bundle_sha256": "sha256:410f0aa26a024e5fab06a0a05e450c90f6398bd780a95efaa88fecd67e8ddb0a",
+        "branch_refs": [
+          "live-tau-gate3-factual-observed",
+          "live-tau-gate3-cf-kai-gives-no-warning"
+        ],
+        "distribution_bundle_sha256": "sha256:a3f0aa8c4cd748c8ae43c686894e78c4bd8d142354e44815d1d762e8229255d1",
+        "episode_id": "dev-info-asym-01",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "dev-info-asym-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "dev-info-asym-01:information_access_by_agent"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:6241a52222d9111934abb041628e5cc826ffbaa53d1b483d4a7c16e9ca41d408",
+      "model_receipts": [
+        {
+          "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+          "caller_skill": "persona-dream",
+          "created_at": "2026-07-21T02:16:21.625349+00:00",
+          "http_status": 200,
+          "live": true,
+          "live_call_performed": true,
+          "mocked": false,
+          "model": "gpt-5.5",
+          "output_contract_sha256": "sha256:fec21d437109e4a5db8a472863e75b186184c96faa4c97acd289a9a6c3ca09a5",
+          "prompt_sha256": "sha256:bf3e6b17f470970482448e292bc12356b28891ac77e1f99f38add1ccfa3dc2e5",
+          "role": "pctom-live-gate2-4",
+          "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+          "status": "PASS",
+          "surface": "scillm.chat_completions.text"
+        }
+      ],
+      "model_receipts_sha256": "sha256:a8e0c2d881be8e14bd01f31d46fc323ab20e3b18ddabfa30050db83f5c3f2e6a",
+      "outcome_visible": false,
+      "prediction_id": "live-tau-gate4-commitment-cd-001",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "live-tau-gate2-factual-bdi-001",
+          "live-tau-gate2-counterfactual-bdi-001"
+        ],
+        "branch_refs": [
+          "live-tau-gate3-factual-observed",
+          "live-tau-gate3-cf-kai-gives-no-warning"
+        ],
+        "condition": "CD",
+        "episode_id": "dev-info-asym-01",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "dev-info-asym-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "dev-info-asym-01:information_access_by_agent"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.6,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.3,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.1,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:5c57e6700a1d02984718f5cad9f3d817d3811094e16879d84921bcc418d95466",
+      "sealed_at": "2026-07-21T02:16:59Z"
+    }
+  ],
+  "episode_id": "dev-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

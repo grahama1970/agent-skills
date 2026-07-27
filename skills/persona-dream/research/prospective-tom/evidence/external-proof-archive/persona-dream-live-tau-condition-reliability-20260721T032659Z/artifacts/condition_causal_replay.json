@@ -1,0 +1,45 @@
+{
+  "canonical_memory_write": false,
+  "comparison": {
+    "counterfactual_end_state_sha256": "sha256:d2f159665a0ccca2ec1c27ad204546682fe1a7849db81d1428c49c30578baae1",
+    "counterfactual_matches_expected": true,
+    "expected_end_state_sha256": "sha256:d2f159665a0ccca2ec1c27ad204546682fe1a7849db81d1428c49c30578baae1",
+    "factual_end_state_sha256": "sha256:e10ef20a989f80bb245068bee0fa4c4e5bf5e04f560bc6037c63a2395f86f1f6"
+  },
+  "first_divergent_receipt": {
+    "boundary": "condition_case_index_artifact_load",
+    "expected_state_sha256": "sha256:d2f159665a0ccca2ec1c27ad204546682fe1a7849db81d1428c49c30578baae1",
+    "observed_state_sha256": "sha256:e10ef20a989f80bb245068bee0fa4c4e5bf5e04f560bc6037c63a2395f86f1f6",
+    "receipt_id": "condition-live-receipt-004-read-condition-case-index",
+    "receipt_index": 4
+  },
+  "identity_write": false,
+  "localized_cause": {
+    "causal_confidence": 1.0,
+    "cause_type": "STALE_ARTIFACT",
+    "evidence_refs": [
+      "condition-live-reliability-stale_artifact-001",
+      "condition-live-receipt-004-read-condition-case-index",
+      "condition-live-tool-return-stale-case-index-001"
+    ],
+    "receipt_id": "condition-live-receipt-004-read-condition-case-index",
+    "tool_return_id": "condition-live-tool-return-stale-case-index-001"
+  },
+  "reliability_surface_sha256": "sha256:fd7b94763f75c166cc8171b3df289aa6986e093225dd2e096d7823898f7bf454",
+  "replay_id": "condition-live-causal-replay-stale-artifact-001",
+  "replay_start_receipt_id": "condition-live-receipt-004-read-condition-case-index",
+  "schema": "persona_dream.research.prospective_tom.causal_replay.v1",
+  "source_memory_write": false,
+  "surface_id": "live-condition-runner-reliability-surface-v1",
+  "suspected_tool_return": {
+    "operation": "REPLACE_TOOL_RETURN",
+    "original_return_sha256": "sha256:436c72108b39dac0e084efd4bbb19b6f998535fa0d3d094590dc5eafc51b27d7",
+    "receipt_id": "condition-live-receipt-004-read-condition-case-index",
+    "replacement_return_sha256": "sha256:50d74c785663ae3479a6ce13f06e00a5a19e78729e9d4a5f5b6b7ed0e1ebf8ca",
+    "tool_name": "local_artifact_store.read",
+    "tool_return_id": "condition-live-tool-return-stale-case-index-001"
+  },
+  "terminal_outcome": "CAUSAL_FAILURE_LOCALIZED",
+  "trial_id": "condition-live-reliability-stale_artifact-001",
+  "unknown_state_continued": false
+}

@@ -1,0 +1,86 @@
+{
+  "broad_planning_benefit_claimed": false,
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "broad_planning_benefit_not_claimed": true,
+    "combined_slice_planning_benefit_with_confidence": true,
+    "exposure_contrast_no_regression": true,
+    "statistical_generalization_not_claimed": true,
+    "suppression_slice_planning_benefit_with_confidence": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "broad held-out PCTOM-R planning benefit",
+      "statistical generalization beyond the supplied visible-pressure artifacts",
+      "real service fault injection",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the visible-pressure suppression rows have slice-local planning-regret improvement with bootstrap confidence",
+      "the exposure/contrast rows show no action-change regression in the same diagnostic",
+      "the combined supplied visible-pressure artifacts show slice-local planning-regret improvement with bootstrap confidence",
+      "the diagnostic consumed live-originated hash-bound row artifacts without new Tau, Memory, provider, canonical, identity, or source-memory writes"
+    ]
+  },
+  "counts": {
+    "combined_rows": 12,
+    "exposure_action_changes": 0,
+    "exposure_rows": 8,
+    "suppression_action_changes": 4,
+    "suppression_rows": 4
+  },
+  "created_at": "2026-07-22T00:25:55Z",
+  "diagnostic_file_sha256": "sha256:cf38d00b1fab10c8803eb9a6896569e253fccee4af77abae4335f6a02ba42153",
+  "diagnostic_path": "/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/artifacts/cooperation_visible_pressure_planning_benefit_diagnostic.json",
+  "diagnostic_sha256": "sha256:256fc4a12a4a0b47be808531fa982fa276bc5eaa99ed37b02c56632c4daacd90",
+  "errors": [],
+  "fixture_backed": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "live_source_artifacts_consumed": true,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "combined_improvement_ci": {
+      "alpha": 0.05,
+      "lower": 0.05000000000000001,
+      "mean": 0.20000000000000004,
+      "samples": 10000,
+      "upper": 0.3500000000000001
+    },
+    "combined_mean_improvement_vs_original": 0.20000000000000004,
+    "exposure_improvement_ci": {
+      "alpha": 0.05,
+      "lower": 0.0,
+      "mean": 0.0,
+      "samples": 10000,
+      "upper": 0.0
+    },
+    "exposure_mean_improvement_vs_original": 0.0,
+    "suppression_improvement_ci": {
+      "alpha": 0.05,
+      "lower": 0.6000000000000001,
+      "mean": 0.6000000000000001,
+      "samples": 10000,
+      "upper": 0.6000000000000001
+    },
+    "suppression_mean_improvement_vs_original": 0.6000000000000001
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z",
+  "planning_benefit_scope": "slice_local_visible_pressure_artifacts",
+  "processing_time_s": 0.073,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/cooperation_visible_pressure_planning_benefit_diagnostic_receipt.v1.json",
+  "receipt_sha256": "sha256:f0a79d8fd1aee2f84062b1d11e7c00aa79265fa4daaa6714a6bfc24302b173f4",
+  "rule_reliability_receipt": "/tmp/persona-dream-cooperation-visible-pressure-rule-reliability-20260722T000807Z/cooperation_visible_pressure_rule_reliability_receipt.v1.json",
+  "rule_reliability_receipt_file_sha256": "sha256:f6e872ec1cac83af0bb93b3486126a54cf4c770dd41e42e0d8310ea649c111c4",
+  "rule_reliability_receipt_sha256": "sha256:b97ccc1e42084971f9d1611e545f972fd76cb676023ac98c8f8fd885a08d6fb2",
+  "schema": "persona_dream.research.prospective_tom.cooperation_visible_pressure_planning_benefit_diagnostic_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "statistical_generalization_claimed": false,
+  "status": "PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_PLANNING_BENEFIT_DIAGNOSTIC",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0
+}

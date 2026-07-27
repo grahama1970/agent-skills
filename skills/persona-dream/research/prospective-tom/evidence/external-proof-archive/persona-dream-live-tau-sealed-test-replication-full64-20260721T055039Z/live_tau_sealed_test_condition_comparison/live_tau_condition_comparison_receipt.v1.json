@@ -1,0 +1,108 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "case_index_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/artifacts/live_condition_case_index.json",
+  "claims": {
+    "does_not_prove": [
+      "held-out test-set prediction benefit",
+      "action-selection regret improvement",
+      "external service fault injection",
+      "production retry machinery",
+      "longitudinal recall after revision",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution or video quality"
+    ],
+    "proves": [
+      "Tau-authored M, R, D, and CD condition outputs were attempted through the sanctioned persona-dream Tau adapter",
+      "accepted cases were sealed before deterministic outcome reveal",
+      "accepted cases were scored by Gate 5 without human content judgment",
+      "Tau model receipts were hash-bound into prediction commitments",
+      "no Memory write, provider call, canonical memory write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "corpus_check_receipt_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/receipts/social_episode_corpus_check_receipt.json",
+  "corpus_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "cases": 256,
+    "conditions": 4,
+    "deterministic_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "episodes_consumed": 64,
+    "episodes_in_corpus": 64,
+    "families_consumed": 4,
+    "sealed_commitments_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "status_counts": {
+      "PASS_COUNTERFACTUAL_BRANCHES": 256,
+      "PASS_TOM_BELIEF_DISTRIBUTIONS": 256,
+      "PASS_TOM_PREDICTION_COMMITMENTS": 256,
+      "PASS_TOM_SCORING_RECEIPT": 256
+    }
+  },
+  "created_at": "2026-07-21T09:15:31Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "CD": {
+      "cases": 64,
+      "mean_action_brier": 0.6650468749999999,
+      "mean_action_log_loss": 1.0960932634766214,
+      "mean_belief_brier": 0.39669843750000006,
+      "mean_belief_log_loss": 0.7202685780765802
+    },
+    "D": {
+      "cases": 64,
+      "mean_action_brier": 0.6658999999999999,
+      "mean_action_log_loss": 1.0974677633404806,
+      "mean_belief_brier": 0.41500000000000004,
+      "mean_belief_log_loss": 0.7458274383888585
+    },
+    "M": {
+      "cases": 64,
+      "mean_action_brier": 0.6658999999999999,
+      "mean_action_log_loss": 1.0974677633404806,
+      "mean_belief_brier": 0.41500000000000004,
+      "mean_belief_log_loss": 0.7458274383888585
+    },
+    "R": {
+      "cases": 64,
+      "mean_action_brier": 0.6658999999999999,
+      "mean_action_log_loss": 1.0974677633404806,
+      "mean_belief_brier": 0.41500000000000004,
+      "mean_belief_log_loss": 0.7458274383888585
+    },
+    "comparison": {
+      "cd_mean_action_brier": 0.6650468749999999,
+      "cd_minus_strongest_baseline": -0.0008531250000000101,
+      "lower_is_better": true,
+      "primary_metric": "mean_action_brier",
+      "strongest_baseline_condition": "M",
+      "strongest_baseline_mean_action_brier": 0.6658999999999999
+    }
+  },
+  "metrics_summary_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/artifacts/live_condition_metrics_summary.json",
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison",
+  "processing_time_s": 12292.289,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_condition_comparison_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+  "tau_call_attempts": 256,
+  "tau_live_call_performed": 256,
+  "tau_receipts_hash_bound": true
+}

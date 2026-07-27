@@ -1,0 +1,16 @@
+{
+  "canonical_memory_write": false,
+  "causal_replay_id": "causal-replay-memory-collection-visibility-001",
+  "first_divergent_receipt": "blocked_live_memory_revision_recall_attempt:custom_collection_recall_zero_hits",
+  "human_content_judgment_required": false,
+  "identity_write": false,
+  "provider_call": false,
+  "replacement_tool_return": "searchable lesson mirror /recall response",
+  "replay_start_boundary": "Memory /recall collection selection",
+  "resulting_state_sha256": "sha256:ff5ff33dd30e406ed0f9bcfd951f9f33adee014cd4dedae9881b9950cbdbb343",
+  "resulting_terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+  "schema": "persona_dream.research.prospective_tom.live_fault_causal_replay.v1",
+  "source_memory_write": false,
+  "suspected_tool_return_removed_or_replaced": "collection-scoped /recall response",
+  "target_trial_id": "fault-live-memory-collection-visibility-001"
+}

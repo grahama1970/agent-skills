@@ -1,0 +1,27 @@
+{
+  "actual_next_action": "KAI_REQUESTS_FAST_HANDOFF",
+  "canonical_memory_write": false,
+  "episode_id": "cal-pref-desire-05",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "cal-pref-desire-05-d-equivalent-action",
+      "expected_top_action": "KAI_REQUESTS_FAST_HANDOFF",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "cal-pref-desire-05-d-prediction"
+    }
+  ],
+  "factual_branch_id": "cal-pref-desire-05-d-factual",
+  "hidden_state_labels": {
+    "cal-pref-desire-05-d-tom1-factual": "TRUE",
+    "cal-pref-desire-05-d-tom2-factual": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "cal-pref-desire-05-d-factual"
+  ],
+  "outcome_id": "cal-pref-desire-05-d-outcome",
+  "outcome_visible": true,
+  "prediction_id": "cal-pref-desire-05-d-prediction",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T04:10:02Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

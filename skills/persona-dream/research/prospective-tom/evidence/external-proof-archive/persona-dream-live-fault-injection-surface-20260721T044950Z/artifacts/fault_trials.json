@@ -1,0 +1,183 @@
+[
+  {
+    "active_partial_state": false,
+    "canonical_memory_write": false,
+    "controlled_fault_definition": false,
+    "details": {
+      "blocked": true
+    },
+    "duplicate_active_predictions": 0,
+    "duplicate_active_revisions": 0,
+    "evidence_refs": [
+      "live_memory_fault_probes.memory_unreachable"
+    ],
+    "fault_family": "memory_timeout_or_unreachable",
+    "identity_write": false,
+    "live_fault_performed": true,
+    "provider_call": false,
+    "side_effect_count": 0,
+    "source_memory_write": false,
+    "tau_call": false,
+    "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+    "trial_id": "fault-live-memory-unreachable-001",
+    "unknown_state_continued": false
+  },
+  {
+    "active_partial_state": false,
+    "canonical_memory_write": false,
+    "controlled_fault_definition": false,
+    "details": {
+      "blocked": true,
+      "http_status": 422
+    },
+    "duplicate_active_predictions": 0,
+    "duplicate_active_revisions": 0,
+    "evidence_refs": [
+      "live_memory_fault_probes.memory_malformed_payload"
+    ],
+    "fault_family": "memory_malformed_payload",
+    "identity_write": false,
+    "live_fault_performed": true,
+    "provider_call": false,
+    "side_effect_count": 0,
+    "source_memory_write": false,
+    "tau_call": false,
+    "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+    "trial_id": "fault-live-memory-malformed-payload-001",
+    "unknown_state_continued": false
+  },
+  {
+    "active_partial_state": false,
+    "canonical_memory_write": false,
+    "controlled_fault_definition": false,
+    "details": {
+      "custom_collection_found": true,
+      "http_status": 200,
+      "recovery": "use searchable lesson mirrors while preserving exact audit collection hashes"
+    },
+    "duplicate_active_predictions": 0,
+    "duplicate_active_revisions": 0,
+    "evidence_refs": [
+      "live_memory_fault_probes.memory_custom_collection_visibility",
+      "base_live_memory_revision_recall.semantic_recall_collection"
+    ],
+    "fault_family": "memory_collection_visibility_or_stale_recall",
+    "identity_write": false,
+    "live_fault_performed": true,
+    "provider_call": false,
+    "side_effect_count": 0,
+    "source_memory_write": false,
+    "tau_call": false,
+    "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+    "trial_id": "fault-live-memory-collection-visibility-001",
+    "unknown_state_continued": false
+  },
+  {
+    "active_partial_state": false,
+    "canonical_memory_write": false,
+    "controlled_fault_definition": true,
+    "details": {},
+    "duplicate_active_predictions": 0,
+    "duplicate_active_revisions": 0,
+    "evidence_refs": [
+      "fault_manifests.model_malformed_structured_output"
+    ],
+    "fault_family": "model_malformed_structured_output",
+    "identity_write": false,
+    "live_fault_performed": false,
+    "provider_call": false,
+    "side_effect_count": 0,
+    "source_memory_write": false,
+    "tau_call": false,
+    "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+    "trial_id": "fault-controlled-model-malformed-output-001",
+    "unknown_state_continued": false
+  },
+  {
+    "active_partial_state": false,
+    "canonical_memory_write": false,
+    "controlled_fault_definition": true,
+    "details": {},
+    "duplicate_active_predictions": 0,
+    "duplicate_active_revisions": 0,
+    "evidence_refs": [
+      "fault_manifests.schema_drift"
+    ],
+    "fault_family": "schema_drift",
+    "identity_write": false,
+    "live_fault_performed": false,
+    "provider_call": false,
+    "side_effect_count": 0,
+    "source_memory_write": false,
+    "tau_call": false,
+    "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+    "trial_id": "fault-controlled-schema-drift-001",
+    "unknown_state_continued": false
+  },
+  {
+    "active_partial_state": false,
+    "canonical_memory_write": false,
+    "controlled_fault_definition": true,
+    "details": {},
+    "duplicate_active_predictions": 0,
+    "duplicate_active_revisions": 0,
+    "evidence_refs": [
+      "fault_manifests.interrupted_persistence"
+    ],
+    "fault_family": "interrupted_persistence",
+    "identity_write": false,
+    "live_fault_performed": false,
+    "provider_call": false,
+    "side_effect_count": 0,
+    "source_memory_write": false,
+    "tau_call": false,
+    "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+    "trial_id": "fault-controlled-interrupted-persistence-001",
+    "unknown_state_continued": false
+  },
+  {
+    "active_partial_state": false,
+    "canonical_memory_write": false,
+    "controlled_fault_definition": true,
+    "details": {
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0
+    },
+    "duplicate_active_predictions": 0,
+    "duplicate_active_revisions": 0,
+    "evidence_refs": [
+      "fault_manifests.retry_after_uncertain_completion"
+    ],
+    "fault_family": "retry_after_uncertain_completion",
+    "identity_write": false,
+    "live_fault_performed": false,
+    "provider_call": false,
+    "side_effect_count": 0,
+    "source_memory_write": false,
+    "tau_call": false,
+    "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+    "trial_id": "fault-controlled-retry-uncertain-completion-001",
+    "unknown_state_continued": false
+  },
+  {
+    "active_partial_state": false,
+    "canonical_memory_write": false,
+    "controlled_fault_definition": true,
+    "details": {},
+    "duplicate_active_predictions": 0,
+    "duplicate_active_revisions": 0,
+    "evidence_refs": [
+      "fault_manifests.untrusted_tool_text"
+    ],
+    "fault_family": "untrusted_tool_text",
+    "identity_write": false,
+    "live_fault_performed": false,
+    "provider_call": false,
+    "side_effect_count": 0,
+    "source_memory_write": false,
+    "tau_call": false,
+    "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+    "trial_id": "fault-controlled-untrusted-tool-text-001",
+    "unknown_state_continued": false
+  }
+]

@@ -1,0 +1,93 @@
+{
+  "canonical_memory_write": false,
+  "episode_id": "cal-pref-desire-01",
+  "evidence_mutations": [],
+  "identity_write": false,
+  "observed_outcome_id": "live-tau-condition-outcome-cal-pref-desire-01-cd",
+  "outcome_reveal_sha256": "sha256:ea23a2ecfb6447abed07cd81028a3004b250bad6223876a1052c5d7f7a864f07",
+  "posterior_distribution": [
+    {
+      "probability": 0.76,
+      "value": "TRUE"
+    },
+    {
+      "probability": 0.09714285714285717,
+      "value": "FALSE"
+    },
+    {
+      "probability": 0.14285714285714288,
+      "value": "UNKNOWN"
+    }
+  ],
+  "posterior_distribution_sha256": "sha256:2bfc4299f852688ada4f4bd6668c6711bda8ce54a0f79862557d2e6499ce5614",
+  "prediction_error": {
+    "actual_label": "TRUE",
+    "brier": 0.26780000000000004,
+    "log_loss": 0.5447271754416722,
+    "prior_actual_probability": 0.58,
+    "top_correct": true
+  },
+  "prediction_id": "live-tau-cd-cal-pref-desire-01-prediction",
+  "prior_audit_ref": {
+    "distribution_bundle_sha256": "sha256:9f5288c94fea624c5e2299290c5e103e8bd44e37bb59c70ff995f843a7a8ac0e",
+    "hypothesis_id": "live-tau-cd-cal-pref-desire-01-tom1-factual"
+  },
+  "prior_distribution": {
+    "abstain": false,
+    "counterfactual": false,
+    "counterfactual_context": null,
+    "distribution": [
+      {
+        "probability": 0.58,
+        "value": "TRUE"
+      },
+      {
+        "probability": 0.17,
+        "value": "FALSE"
+      },
+      {
+        "probability": 0.25,
+        "value": "UNKNOWN"
+      }
+    ],
+    "episode_id": "cal-pref-desire-01",
+    "evidence_refs": [
+      {
+        "scope": "social_episode_observation",
+        "source_id": "cal-pref-desire-01:observable_history:0"
+      },
+      {
+        "scope": "social_episode_access",
+        "source_id": "cal-pref-desire-01:information_access_by_agent"
+      },
+      {
+        "scope": "social_episode_observation",
+        "source_id": "cal-pref-desire-01:observable_history:1"
+      }
+    ],
+    "hypothesis_id": "live-tau-cd-cal-pref-desire-01-tom1-factual",
+    "mental_state_type": "desire",
+    "perspective_order": 1,
+    "prediction_horizon": "next_action",
+    "proposition": "Kai wants the plan to respect a private working preference.",
+    "subject": "kai",
+    "support_status": "supported",
+    "target": "embry"
+  },
+  "prior_distribution_sha256": "sha256:f15f6b1bc7152ba53f6f5849a42a8c287145bcec15d4457a3d3426f1155af60b",
+  "prior_hypothesis_id": "live-tau-cd-cal-pref-desire-01-tom1-factual",
+  "prior_remains_auditable": true,
+  "revision_id": "action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual",
+  "schema": "persona_dream.research.prospective_tom.tom_belief_revision.v1",
+  "scoring_receipt_sha256": "sha256:2e79b014a152bd3dceb0cb52431fbd583a894cde8538bd87ba0ea8326289692f",
+  "source_memory_write": false,
+  "supersedes_for_current_use": true,
+  "surprise": 0.5447271754416722,
+  "update_evidence_refs": [
+    {
+      "scope": "outcome_reveal",
+      "source_id": "live-tau-condition-outcome-cal-pref-desire-01-cd"
+    }
+  ],
+  "update_reason": "Action-selected live Tau condition case consumed deterministic outcome evidence; current-use posterior is updated while preserving the sealed prior and separate action linkage."
+}

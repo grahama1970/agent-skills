@@ -1,0 +1,52 @@
+{
+  "bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-14/CD/tom_belief_distribution_bundle.json",
+  "bundle_sha256": "sha256:367319c39c0b43b775ffdbdc4a036339d2d4cc182bd4aca78296657b830fa844",
+  "checks": {
+    "bundle_sealed_before_reveal": true,
+    "counterfactual_not_literal_history": true,
+    "counterfactuals_explicitly_marked": true,
+    "evidence_refs_resolve": true,
+    "no_canonical_memory_write": true,
+    "perspectives_match_episode_labels": true,
+    "probabilities_sum_to_one": true,
+    "unsupported_abstains_or_pending": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "calibration quality",
+      "Tau text-call execution",
+      "live Memory recall",
+      "outcome reveal or scoring",
+      "belief revision",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied ToM belief distribution bundle is sealed before reveal",
+      "supported hypotheses resolve visible evidence and match Gate 1 episode labels",
+      "probability distributions sum to one",
+      "unsupported hypotheses abstain or remain pending with UNKNOWN certainty",
+      "canonical memory writes are absent"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "abstained_or_pending": 0,
+    "counterfactual_distributions": 1,
+    "distributions": 3,
+    "label_matched_distributions": 3,
+    "resolved_evidence_refs": 6,
+    "supported": 3
+  },
+  "created_at": "2026-07-22T00:29:36Z",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/receipts/cases/sealedte-pref-desire-14/CD/gate2_distribution_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate2_distribution_check_receipt.v1",
+  "status": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+  "tau_call_attempts": 0
+}

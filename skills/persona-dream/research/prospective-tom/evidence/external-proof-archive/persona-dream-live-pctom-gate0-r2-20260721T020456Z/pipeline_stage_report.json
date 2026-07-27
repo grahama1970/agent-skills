@@ -1,0 +1,240 @@
+{
+  "artifacts": [
+    "contact_sheet.png",
+    "contradiction_report.json",
+    "dream_packet.json",
+    "dream_prompt.txt",
+    "dream_reflection.md",
+    "dream_request.json",
+    "frame_prompts.json",
+    "manifest.json",
+    "memory_write_receipt.json",
+    "pipeline_stage_report.json",
+    "pipeline_stage_report.md",
+    "residue_links.json",
+    "response.json"
+  ],
+  "mode": "static_dream",
+  "non_claims": [
+    "This report does not prove Chutes keyframe generation has run.",
+    "This report does not prove Wan I2V clips exist.",
+    "This report does not prove FFmpeg assembly exists.",
+    "This report does not prove the final 30-second video has passed visual continuity checks."
+  ],
+  "overall_status": "ok",
+  "run_id": "persona-dream-live-pctom-gate0-r2",
+  "schema": "persona_dream.pipeline_stage_report.v1",
+  "stages": [
+    {
+      "did": "Normalized the user request into a persona-dream run request.",
+      "evidence": {
+        "about": "pipeline robustness autonomous dream residue",
+        "mode": "static_dream",
+        "persona": {
+          "display_name": "Embry",
+          "id": "embry"
+        },
+        "scene": null,
+        "secondary_persona": null
+      },
+      "failure_or_gap": null,
+      "stage_id": "stage_01_intake",
+      "status": "ok",
+      "text_outputs": [
+        "dream_request.json"
+      ],
+      "visual_outputs": []
+    },
+    {
+      "did": "Collected residue from fixture or memory recall and preserved source ids.",
+      "evidence": {
+        "recall_receipts": [
+          {
+            "accepted_count": 24,
+            "accepted_normalized_count": 24,
+            "accepted_persona_ids": [
+              "embry",
+              "embry_lawson"
+            ],
+            "accepted_source_ids": [
+              "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+              "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+              "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+              "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+              "embry_gap_unresolved_thread_instagram_after_kai_001",
+              "embry_gap_preference_chess_pie_home_recipe_001",
+              "embry_gap_knowledge_gap_brandon_interview_unknowns_001",
+              "embry_age19_23_b01_memory_010",
+              "embry_age19_23_b01_memory_036",
+              "embry_age23_current_b01_memory_024",
+              "embry_gap_preference_bachelor_monday_opinions_001",
+              "embry_age23_current_b01_memory_008",
+              "embry_age15_19_b03_memory_048",
+              "embry_age19_23_b01_memory_002",
+              "embry_age15_19_b01_memory_012",
+              "embry_gap_preference_rocket_launch_commentators_001",
+              "embry_age15_19_b03_memory_044",
+              "embry_age15_19_b02_memory_047",
+              "embry_age15_19_b02_memory_022",
+              "embry_age10_15_b01_memory_001",
+              "embry_age10_15_b01_memory_009",
+              "embry_age15_19_b01_memory_004",
+              "embry_age15_19_b02_memory_026",
+              "embry_age15_19_b02_memory_014"
+            ],
+            "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+            "collections": [
+              "persona_memory"
+            ],
+            "confidence": 0.769,
+            "count": 32,
+            "discarded_persona_mismatch_count": 8,
+            "dropped_empty_text_count": 0,
+            "found": true,
+            "k": 32,
+            "persona_id": "embry",
+            "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+            "scope": "persona-dream",
+            "should_scan": false,
+            "status": "ok"
+          },
+          {
+            "accepted_count": 1,
+            "accepted_normalized_count": 1,
+            "accepted_persona_ids": [
+              "embry",
+              "embry_lawson"
+            ],
+            "accepted_source_ids": [
+              "47452948"
+            ],
+            "accepted_source_ids_sha256": "sha256:99954c1caacb01215ad6b79192da869e1f3a464c5be17931c625e0bcb20c1b63",
+            "collections": null,
+            "confidence": 1.0,
+            "count": 1,
+            "discarded_persona_mismatch_count": 0,
+            "dropped_empty_text_count": 0,
+            "found": true,
+            "k": 1,
+            "persona_id": "embry",
+            "query": "recent unresolved themes persona memory SPARTA NIST MITRE evidence pipeline robustness autonomous dream residue",
+            "scope": "embry-memories",
+            "should_scan": false,
+            "status": "ok"
+          },
+          {
+            "accepted_count": 1,
+            "accepted_normalized_count": 1,
+            "accepted_persona_ids": [
+              "embry",
+              "embry_lawson"
+            ],
+            "accepted_source_ids": [
+              "308496696438"
+            ],
+            "accepted_source_ids_sha256": "sha256:13e6ff2b2e67f7f14289cb48c21de768449f2a0431652a123f9354c9b998269a",
+            "collections": null,
+            "confidence": 1.0,
+            "count": 1,
+            "discarded_persona_mismatch_count": 0,
+            "dropped_empty_text_count": 0,
+            "found": true,
+            "k": 1,
+            "persona_id": "embry",
+            "query": "recent dream motif visual surreal recurring image pipeline robustness autonomous dream residue",
+            "scope": "embry-dreams",
+            "should_scan": false,
+            "status": "ok"
+          },
+          {
+            "accepted_count": 1,
+            "accepted_normalized_count": 1,
+            "accepted_persona_ids": [
+              "embry",
+              "embry_lawson"
+            ],
+            "accepted_source_ids": [
+              "persona-dream:pipeline:phase:01"
+            ],
+            "accepted_source_ids_sha256": "sha256:447cac45fe1a0aaf8fd961d032babe1a0ed64caa32efd02996a8c08dad7e174e",
+            "collections": null,
+            "confidence": 17.272,
+            "count": 1,
+            "discarded_persona_mismatch_count": 0,
+            "dropped_empty_text_count": 0,
+            "found": true,
+            "k": 1,
+            "persona_id": "embry",
+            "query": "dream reflection mood unresolved image feeling pipeline robustness autonomous dream residue",
+            "scope": "embry-dream-journals",
+            "should_scan": false,
+            "status": "ok"
+          },
+          {
+            "accepted_count": 1,
+            "accepted_normalized_count": 1,
+            "accepted_persona_ids": [
+              "embry",
+              "embry_lawson"
+            ],
+            "accepted_source_ids": [
+              "47808408"
+            ],
+            "accepted_source_ids_sha256": "sha256:bb8fcdb6ed9582bc4ec92b40b1806bb41d2f8c7aa26adb2c7a6b093721860f40",
+            "collections": null,
+            "confidence": 1.0,
+            "count": 1,
+            "discarded_persona_mismatch_count": 0,
+            "dropped_empty_text_count": 0,
+            "found": true,
+            "k": 1,
+            "persona_id": "embry",
+            "query": "embry recent task failure contradiction insight pipeline robustness autonomous dream residue",
+            "scope": "operational",
+            "should_scan": false,
+            "status": "ok"
+          }
+        ],
+        "residue_count": 6
+      },
+      "failure_or_gap": null,
+      "stage_id": "stage_02_memory_recall",
+      "status": "ok",
+      "text_outputs": [
+        "residue_links.json"
+      ],
+      "visual_outputs": []
+    },
+    {
+      "did": "Detected simple bridge tensions across residue items.",
+      "evidence": {
+        "contradiction_count": 1
+      },
+      "failure_or_gap": null,
+      "stage_id": "stage_03_tension_detection",
+      "status": "ok",
+      "text_outputs": [
+        "contradiction_report.json"
+      ],
+      "visual_outputs": []
+    },
+    {
+      "did": "Created dream prompt, frame prompts, contact sheet, packet, and reflection.",
+      "evidence": {
+        "frame_prompt_count": 6
+      },
+      "failure_or_gap": "Contact sheet is deterministic planning art, not final generated model output.",
+      "stage_id": "stage_04_static_dream_packet",
+      "status": "ok",
+      "text_outputs": [
+        "dream_packet.json",
+        "dream_prompt.txt",
+        "frame_prompts.json",
+        "dream_reflection.md"
+      ],
+      "visual_outputs": [
+        "contact_sheet.png"
+      ]
+    }
+  ]
+}

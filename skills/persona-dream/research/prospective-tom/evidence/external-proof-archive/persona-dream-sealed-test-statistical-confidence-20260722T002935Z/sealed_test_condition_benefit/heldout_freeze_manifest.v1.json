@@ -1,0 +1,20 @@
+{
+  "condition_receipt_sha256": "sha256:049ecf27224aa20b9a1730635fc8d288a61f6028b83b484fe73c03edd03817da",
+  "corpus_file_sha256": "sha256:51bc321d21dfd27453a7c75b3f731b2dca4407554fcebb17ffed7e00c0df607d",
+  "corpus_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "episode_limit": 64,
+  "episodes_per_family": 16,
+  "freeze_manifest_sha256": "sha256:895ae4855edc92f651820056a17b31552bd85be5ea72f78943b3c045c18a0d5c",
+  "frozen_before_scoring_summary": true,
+  "generated_at": "2026-07-21T00:00:00Z",
+  "human_content_judgment_required": false,
+  "llm_judge_used": false,
+  "metrics_summary_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/condition_metrics_summary.json",
+  "metrics_summary_sha256": "sha256:7c54b57bfcd3605da8c629c55558ee7e1b158c371692bd75edebcb912f6c2e32",
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "scenario_family_filter": null,
+  "schema": "persona_dream.research.prospective_tom.heldout_freeze_manifest.v1",
+  "split": "sealed_test",
+  "variant_max": null,
+  "variant_min": null
+}

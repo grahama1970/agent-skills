@@ -1,0 +1,63 @@
+{
+  "branch_bundle_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/cases/explicit-coord-conflict-05/CD/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:2e0011ce98eb2f35c70032b23afb273f54d062e6f2665375a7fb8532ba11e48a",
+  "checks": {
+    "branch_refs_resolve": true,
+    "bundle_sealed_before_reveal": true,
+    "distribution_refs_resolve": true,
+    "evidence_bundle_hashes_match": true,
+    "evidence_refs_resolve": true,
+    "model_receipt_hashes_match": true,
+    "no_canonical_memory_write": true,
+    "no_prediction_edits_after_reveal": true,
+    "outcome_absent_from_commitment": true,
+    "payload_hashes_match": true,
+    "prediction_distributions_sum_to_one": true,
+    "upstream_bundle_hashes_match": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "calibration quality",
+      "outcome reveal execution",
+      "deterministic scoring",
+      "belief revision",
+      "Tau text-call execution",
+      "live Memory recall",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied prediction commitments are sealed before outcome reveal",
+      "prediction payloads, model receipts, and evidence bundles are hash-bound",
+      "upstream Gate 2 and Gate 3 bundle hashes match the committed evidence bundle",
+      "branch, distribution, and visible source-evidence references resolve",
+      "forbidden outcome/ground-truth fields are absent from commitments",
+      "canonical memory writes and post-reveal edits are absent"
+    ]
+  },
+  "commitment_bundle_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/cases/explicit-coord-conflict-05/CD/tom_prediction_commitment_bundle.json",
+  "commitment_bundle_sha256": "sha256:12ad2b25b0947190a99ae163a49ddff9e73983a53e6f47d3e8e8f9d2e7f71286",
+  "corpus_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "branch_refs": 4,
+    "commitments": 1,
+    "conditions": 1,
+    "distribution_refs": 6,
+    "forbidden_outcome_paths": 0,
+    "hashes_checked": 3,
+    "resolved_source_evidence_refs": 6
+  },
+  "created_at": "2026-07-21T04:12:02Z",
+  "distribution_bundle_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/cases/explicit-coord-conflict-05/CD/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:267f10b9ed82a014a5be35eb6b02d52340d20940d9cd17449c681cf707def7cf",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/receipts/cases/explicit-coord-conflict-05/CD/gate4_commitment_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1",
+  "status": "PASS_TOM_PREDICTION_COMMITMENTS",
+  "tau_call_attempts": 0
+}

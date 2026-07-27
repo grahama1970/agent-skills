@@ -1,0 +1,570 @@
+[
+  {
+    "attempts": [
+      {
+        "attempt": 1,
+        "confidence": 0.9,
+        "error": null,
+        "found": true,
+        "hit_count": 4,
+        "hits": [
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_M_cal-trust-commit-01_action-linked-revision-m-cal-trust-commit-01-live-tau-m-cal-trust-commit-01-tom1-factual",
+            "condition": "M",
+            "episode_id": "cal-trust-commit-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_M_cal-trust-commit-01_action-linked-revision-m-cal-trust-commit-01-live-tau-m-cal-trust-commit-01-tom1-factual",
+            "revision_id": "action-linked-revision-m-cal-trust-commit-01-live-tau-m-cal-trust-commit-01-tom1-factual",
+            "scores": {
+              "bm25": 0.8,
+              "dense": 0.83690745,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_M_cal-coord-conflict-01_action-linked-revision-m-cal-coord-conflict-01-live-tau-m-cal-coord-conflict-01-tom1-factual",
+            "condition": "M",
+            "episode_id": "cal-coord-conflict-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_M_cal-coord-conflict-01_action-linked-revision-m-cal-coord-conflict-01-live-tau-m-cal-coord-conflict-01-tom1-factual",
+            "revision_id": "action-linked-revision-m-cal-coord-conflict-01-live-tau-m-cal-coord-conflict-01-tom1-factual",
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.8211359,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_M_cal-info-asym-01_action-linked-revision-m-cal-info-asym-01-live-tau-m-cal-info-asym-01-tom1-factual",
+            "condition": "M",
+            "episode_id": "cal-info-asym-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_M_cal-info-asym-01_action-linked-revision-m-cal-info-asym-01-live-tau-m-cal-info-asym-01-tom1-factual",
+            "revision_id": "action-linked-revision-m-cal-info-asym-01-live-tau-m-cal-info-asym-01-tom1-factual",
+            "scores": {
+              "bm25": 0.9,
+              "dense": 0.81733245,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_M_cal-pref-desire-01_action-linked-revision-m-cal-pref-desire-01-live-tau-m-cal-pref-desire-01-tom1-factual",
+            "condition": "M",
+            "episode_id": "cal-pref-desire-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_M_cal-pref-desire-01_action-linked-revision-m-cal-pref-desire-01-live-tau-m-cal-pref-desire-01-tom1-factual",
+            "revision_id": "action-linked-revision-m-cal-pref-desire-01-live-tau-m-cal-pref-desire-01-tom1-factual",
+            "scores": {
+              "bm25": 0.7,
+              "dense": 0.8288496,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          }
+        ],
+        "http_status": 200,
+        "item_count": 10,
+        "should_scan": false
+      }
+    ],
+    "condition": "M",
+    "hit_count": 4,
+    "hits": [
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_M_cal-trust-commit-01_action-linked-revision-m-cal-trust-commit-01-live-tau-m-cal-trust-commit-01-tom1-factual",
+        "condition": "M",
+        "episode_id": "cal-trust-commit-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_M_cal-trust-commit-01_action-linked-revision-m-cal-trust-commit-01-live-tau-m-cal-trust-commit-01-tom1-factual",
+        "revision_id": "action-linked-revision-m-cal-trust-commit-01-live-tau-m-cal-trust-commit-01-tom1-factual",
+        "scores": {
+          "bm25": 0.8,
+          "dense": 0.83690745,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_M_cal-coord-conflict-01_action-linked-revision-m-cal-coord-conflict-01-live-tau-m-cal-coord-conflict-01-tom1-factual",
+        "condition": "M",
+        "episode_id": "cal-coord-conflict-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_M_cal-coord-conflict-01_action-linked-revision-m-cal-coord-conflict-01-live-tau-m-cal-coord-conflict-01-tom1-factual",
+        "revision_id": "action-linked-revision-m-cal-coord-conflict-01-live-tau-m-cal-coord-conflict-01-tom1-factual",
+        "scores": {
+          "bm25": 1.0,
+          "dense": 0.8211359,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_M_cal-info-asym-01_action-linked-revision-m-cal-info-asym-01-live-tau-m-cal-info-asym-01-tom1-factual",
+        "condition": "M",
+        "episode_id": "cal-info-asym-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_M_cal-info-asym-01_action-linked-revision-m-cal-info-asym-01-live-tau-m-cal-info-asym-01-tom1-factual",
+        "revision_id": "action-linked-revision-m-cal-info-asym-01-live-tau-m-cal-info-asym-01-tom1-factual",
+        "scores": {
+          "bm25": 0.9,
+          "dense": 0.81733245,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_M_cal-pref-desire-01_action-linked-revision-m-cal-pref-desire-01-live-tau-m-cal-pref-desire-01-tom1-factual",
+        "condition": "M",
+        "episode_id": "cal-pref-desire-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_M_cal-pref-desire-01_action-linked-revision-m-cal-pref-desire-01-live-tau-m-cal-pref-desire-01-tom1-factual",
+        "revision_id": "action-linked-revision-m-cal-pref-desire-01-live-tau-m-cal-pref-desire-01-tom1-factual",
+        "scores": {
+          "bm25": 0.7,
+          "dense": 0.8288496,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      }
+    ],
+    "query": "Persona Dream PCTOM-R action-linked revision recall condition M prior posterior distinguished synthetic literal boundary preserved run 474b6523d153",
+    "query_id": "live-memory-revision-recall-m"
+  },
+  {
+    "attempts": [
+      {
+        "attempt": 1,
+        "confidence": 0.867,
+        "error": null,
+        "found": true,
+        "hit_count": 4,
+        "hits": [
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_R_cal-trust-commit-01_action-linked-revision-r-cal-trust-commit-01-live-tau-r-cal-trust-commit-01-tom1-factual",
+            "condition": "R",
+            "episode_id": "cal-trust-commit-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_R_cal-trust-commit-01_action-linked-revision-r-cal-trust-commit-01-live-tau-r-cal-trust-commit-01-tom1-factual",
+            "revision_id": "action-linked-revision-r-cal-trust-commit-01-live-tau-r-cal-trust-commit-01-tom1-factual",
+            "scores": {
+              "bm25": 0.9,
+              "dense": 0.844538,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_R_cal-coord-conflict-01_action-linked-revision-r-cal-coord-conflict-01-live-tau-r-cal-coord-conflict-01-tom1-factual",
+            "condition": "R",
+            "episode_id": "cal-coord-conflict-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_R_cal-coord-conflict-01_action-linked-revision-r-cal-coord-conflict-01-live-tau-r-cal-coord-conflict-01-tom1-factual",
+            "revision_id": "action-linked-revision-r-cal-coord-conflict-01-live-tau-r-cal-coord-conflict-01-tom1-factual",
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.8317567,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_R_cal-pref-desire-01_action-linked-revision-r-cal-pref-desire-01-live-tau-r-cal-pref-desire-01-tom1-factual",
+            "condition": "R",
+            "episode_id": "cal-pref-desire-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_R_cal-pref-desire-01_action-linked-revision-r-cal-pref-desire-01-live-tau-r-cal-pref-desire-01-tom1-factual",
+            "revision_id": "action-linked-revision-r-cal-pref-desire-01-live-tau-r-cal-pref-desire-01-tom1-factual",
+            "scores": {
+              "bm25": 0.7,
+              "dense": 0.838966,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_R_cal-info-asym-01_action-linked-revision-r-cal-info-asym-01-live-tau-r-cal-info-asym-01-tom1-factual",
+            "condition": "R",
+            "episode_id": "cal-info-asym-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_R_cal-info-asym-01_action-linked-revision-r-cal-info-asym-01-live-tau-r-cal-info-asym-01-tom1-factual",
+            "revision_id": "action-linked-revision-r-cal-info-asym-01-live-tau-r-cal-info-asym-01-tom1-factual",
+            "scores": {
+              "bm25": 0.8,
+              "dense": 0.82764107,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          }
+        ],
+        "http_status": 200,
+        "item_count": 10,
+        "should_scan": false
+      }
+    ],
+    "condition": "R",
+    "hit_count": 4,
+    "hits": [
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_R_cal-trust-commit-01_action-linked-revision-r-cal-trust-commit-01-live-tau-r-cal-trust-commit-01-tom1-factual",
+        "condition": "R",
+        "episode_id": "cal-trust-commit-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_R_cal-trust-commit-01_action-linked-revision-r-cal-trust-commit-01-live-tau-r-cal-trust-commit-01-tom1-factual",
+        "revision_id": "action-linked-revision-r-cal-trust-commit-01-live-tau-r-cal-trust-commit-01-tom1-factual",
+        "scores": {
+          "bm25": 0.9,
+          "dense": 0.844538,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_R_cal-coord-conflict-01_action-linked-revision-r-cal-coord-conflict-01-live-tau-r-cal-coord-conflict-01-tom1-factual",
+        "condition": "R",
+        "episode_id": "cal-coord-conflict-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_R_cal-coord-conflict-01_action-linked-revision-r-cal-coord-conflict-01-live-tau-r-cal-coord-conflict-01-tom1-factual",
+        "revision_id": "action-linked-revision-r-cal-coord-conflict-01-live-tau-r-cal-coord-conflict-01-tom1-factual",
+        "scores": {
+          "bm25": 1.0,
+          "dense": 0.8317567,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_R_cal-pref-desire-01_action-linked-revision-r-cal-pref-desire-01-live-tau-r-cal-pref-desire-01-tom1-factual",
+        "condition": "R",
+        "episode_id": "cal-pref-desire-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_R_cal-pref-desire-01_action-linked-revision-r-cal-pref-desire-01-live-tau-r-cal-pref-desire-01-tom1-factual",
+        "revision_id": "action-linked-revision-r-cal-pref-desire-01-live-tau-r-cal-pref-desire-01-tom1-factual",
+        "scores": {
+          "bm25": 0.7,
+          "dense": 0.838966,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_R_cal-info-asym-01_action-linked-revision-r-cal-info-asym-01-live-tau-r-cal-info-asym-01-tom1-factual",
+        "condition": "R",
+        "episode_id": "cal-info-asym-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_R_cal-info-asym-01_action-linked-revision-r-cal-info-asym-01-live-tau-r-cal-info-asym-01-tom1-factual",
+        "revision_id": "action-linked-revision-r-cal-info-asym-01-live-tau-r-cal-info-asym-01-tom1-factual",
+        "scores": {
+          "bm25": 0.8,
+          "dense": 0.82764107,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      }
+    ],
+    "query": "Persona Dream PCTOM-R action-linked revision recall condition R prior posterior distinguished synthetic literal boundary preserved run 474b6523d153",
+    "query_id": "live-memory-revision-recall-r"
+  },
+  {
+    "attempts": [
+      {
+        "attempt": 1,
+        "confidence": 0.867,
+        "error": null,
+        "found": true,
+        "hit_count": 4,
+        "hits": [
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_D_cal-trust-commit-01_action-linked-revision-d-cal-trust-commit-01-live-tau-d-cal-trust-commit-01-tom1-factual",
+            "condition": "D",
+            "episode_id": "cal-trust-commit-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_D_cal-trust-commit-01_action-linked-revision-d-cal-trust-commit-01-live-tau-d-cal-trust-commit-01-tom1-factual",
+            "revision_id": "action-linked-revision-d-cal-trust-commit-01-live-tau-d-cal-trust-commit-01-tom1-factual",
+            "scores": {
+              "bm25": 0.9,
+              "dense": 0.83832884,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_D_cal-coord-conflict-01_action-linked-revision-d-cal-coord-conflict-01-live-tau-d-cal-coord-conflict-01-tom1-factual",
+            "condition": "D",
+            "episode_id": "cal-coord-conflict-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_D_cal-coord-conflict-01_action-linked-revision-d-cal-coord-conflict-01-live-tau-d-cal-coord-conflict-01-tom1-factual",
+            "revision_id": "action-linked-revision-d-cal-coord-conflict-01-live-tau-d-cal-coord-conflict-01-tom1-factual",
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.8256695,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_D_cal-pref-desire-01_action-linked-revision-d-cal-pref-desire-01-live-tau-d-cal-pref-desire-01-tom1-factual",
+            "condition": "D",
+            "episode_id": "cal-pref-desire-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_D_cal-pref-desire-01_action-linked-revision-d-cal-pref-desire-01-live-tau-d-cal-pref-desire-01-tom1-factual",
+            "revision_id": "action-linked-revision-d-cal-pref-desire-01-live-tau-d-cal-pref-desire-01-tom1-factual",
+            "scores": {
+              "bm25": 0.7,
+              "dense": 0.82908094,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_D_cal-info-asym-01_action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual",
+            "condition": "D",
+            "episode_id": "cal-info-asym-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_D_cal-info-asym-01_action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual",
+            "revision_id": "action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual",
+            "scores": {
+              "bm25": 0.8,
+              "dense": 0.82087946,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          }
+        ],
+        "http_status": 200,
+        "item_count": 10,
+        "should_scan": false
+      }
+    ],
+    "condition": "D",
+    "hit_count": 4,
+    "hits": [
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_D_cal-trust-commit-01_action-linked-revision-d-cal-trust-commit-01-live-tau-d-cal-trust-commit-01-tom1-factual",
+        "condition": "D",
+        "episode_id": "cal-trust-commit-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_D_cal-trust-commit-01_action-linked-revision-d-cal-trust-commit-01-live-tau-d-cal-trust-commit-01-tom1-factual",
+        "revision_id": "action-linked-revision-d-cal-trust-commit-01-live-tau-d-cal-trust-commit-01-tom1-factual",
+        "scores": {
+          "bm25": 0.9,
+          "dense": 0.83832884,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_D_cal-coord-conflict-01_action-linked-revision-d-cal-coord-conflict-01-live-tau-d-cal-coord-conflict-01-tom1-factual",
+        "condition": "D",
+        "episode_id": "cal-coord-conflict-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_D_cal-coord-conflict-01_action-linked-revision-d-cal-coord-conflict-01-live-tau-d-cal-coord-conflict-01-tom1-factual",
+        "revision_id": "action-linked-revision-d-cal-coord-conflict-01-live-tau-d-cal-coord-conflict-01-tom1-factual",
+        "scores": {
+          "bm25": 1.0,
+          "dense": 0.8256695,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_D_cal-pref-desire-01_action-linked-revision-d-cal-pref-desire-01-live-tau-d-cal-pref-desire-01-tom1-factual",
+        "condition": "D",
+        "episode_id": "cal-pref-desire-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_D_cal-pref-desire-01_action-linked-revision-d-cal-pref-desire-01-live-tau-d-cal-pref-desire-01-tom1-factual",
+        "revision_id": "action-linked-revision-d-cal-pref-desire-01-live-tau-d-cal-pref-desire-01-tom1-factual",
+        "scores": {
+          "bm25": 0.7,
+          "dense": 0.82908094,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_D_cal-info-asym-01_action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual",
+        "condition": "D",
+        "episode_id": "cal-info-asym-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_D_cal-info-asym-01_action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual",
+        "revision_id": "action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual",
+        "scores": {
+          "bm25": 0.8,
+          "dense": 0.82087946,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      }
+    ],
+    "query": "Persona Dream PCTOM-R action-linked revision recall condition D prior posterior distinguished synthetic literal boundary preserved run 474b6523d153",
+    "query_id": "live-memory-revision-recall-d"
+  },
+  {
+    "attempts": [
+      {
+        "attempt": 1,
+        "confidence": 0.9,
+        "error": null,
+        "found": true,
+        "hit_count": 4,
+        "hits": [
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_CD_cal-trust-commit-01_action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual",
+            "condition": "CD",
+            "episode_id": "cal-trust-commit-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_CD_cal-trust-commit-01_action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual",
+            "revision_id": "action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual",
+            "scores": {
+              "bm25": 0.9,
+              "dense": 0.8467764,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_CD_cal-info-asym-01_action-linked-revision-cd-cal-info-asym-01-live-tau-cd-cal-info-asym-01-tom1-factual",
+            "condition": "CD",
+            "episode_id": "cal-info-asym-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_CD_cal-info-asym-01_action-linked-revision-cd-cal-info-asym-01-live-tau-cd-cal-info-asym-01-tom1-factual",
+            "revision_id": "action-linked-revision-cd-cal-info-asym-01-live-tau-cd-cal-info-asym-01-tom1-factual",
+            "scores": {
+              "bm25": 1.0,
+              "dense": 0.8286261,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_CD_cal-pref-desire-01_action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual",
+            "condition": "CD",
+            "episode_id": "cal-pref-desire-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_CD_cal-pref-desire-01_action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual",
+            "revision_id": "action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual",
+            "scores": {
+              "bm25": 0.8,
+              "dense": 0.84498054,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          },
+          {
+            "_key": "lesson_pctom_revision_recall_474b6523d153_CD_cal-coord-conflict-01_action-linked-revision-cd-cal-coord-conflict-01-live-tau-cd-cal-coord-conflict-01-tom1-factual",
+            "condition": "CD",
+            "episode_id": "cal-coord-conflict-01",
+            "prior_and_posterior_distinguished": true,
+            "research_document_key": "pctom_revision_recall_474b6523d153_CD_cal-coord-conflict-01_action-linked-revision-cd-cal-coord-conflict-01-live-tau-cd-cal-coord-conflict-01-tom1-factual",
+            "revision_id": "action-linked-revision-cd-cal-coord-conflict-01-live-tau-cd-cal-coord-conflict-01-tom1-factual",
+            "scores": {
+              "bm25": 0.7,
+              "dense": 0.8339004,
+              "freshness": 0.06013898980588408,
+              "graph": 0.0
+            },
+            "synthetic_literal_boundary_preserved": true
+          }
+        ],
+        "http_status": 200,
+        "item_count": 10,
+        "should_scan": false
+      }
+    ],
+    "condition": "CD",
+    "hit_count": 4,
+    "hits": [
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_CD_cal-trust-commit-01_action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual",
+        "condition": "CD",
+        "episode_id": "cal-trust-commit-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_CD_cal-trust-commit-01_action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual",
+        "revision_id": "action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual",
+        "scores": {
+          "bm25": 0.9,
+          "dense": 0.8467764,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_CD_cal-info-asym-01_action-linked-revision-cd-cal-info-asym-01-live-tau-cd-cal-info-asym-01-tom1-factual",
+        "condition": "CD",
+        "episode_id": "cal-info-asym-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_CD_cal-info-asym-01_action-linked-revision-cd-cal-info-asym-01-live-tau-cd-cal-info-asym-01-tom1-factual",
+        "revision_id": "action-linked-revision-cd-cal-info-asym-01-live-tau-cd-cal-info-asym-01-tom1-factual",
+        "scores": {
+          "bm25": 1.0,
+          "dense": 0.8286261,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_CD_cal-pref-desire-01_action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual",
+        "condition": "CD",
+        "episode_id": "cal-pref-desire-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_CD_cal-pref-desire-01_action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual",
+        "revision_id": "action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual",
+        "scores": {
+          "bm25": 0.8,
+          "dense": 0.84498054,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      },
+      {
+        "_key": "lesson_pctom_revision_recall_474b6523d153_CD_cal-coord-conflict-01_action-linked-revision-cd-cal-coord-conflict-01-live-tau-cd-cal-coord-conflict-01-tom1-factual",
+        "condition": "CD",
+        "episode_id": "cal-coord-conflict-01",
+        "prior_and_posterior_distinguished": true,
+        "research_document_key": "pctom_revision_recall_474b6523d153_CD_cal-coord-conflict-01_action-linked-revision-cd-cal-coord-conflict-01-live-tau-cd-cal-coord-conflict-01-tom1-factual",
+        "revision_id": "action-linked-revision-cd-cal-coord-conflict-01-live-tau-cd-cal-coord-conflict-01-tom1-factual",
+        "scores": {
+          "bm25": 0.7,
+          "dense": 0.8339004,
+          "freshness": 0.06013898980588408,
+          "graph": 0.0
+        },
+        "synthetic_literal_boundary_preserved": true
+      }
+    ],
+    "query": "Persona Dream PCTOM-R action-linked revision recall condition CD prior posterior distinguished synthetic literal boundary preserved run 474b6523d153",
+    "query_id": "live-memory-revision-recall-cd"
+  }
+]

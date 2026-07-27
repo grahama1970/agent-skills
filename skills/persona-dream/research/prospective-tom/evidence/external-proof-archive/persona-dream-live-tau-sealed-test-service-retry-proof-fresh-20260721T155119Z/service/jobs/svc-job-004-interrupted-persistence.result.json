@@ -1,0 +1,42 @@
+{
+  "active_partial_state": false,
+  "canonical_memory_write": false,
+  "child": {
+    "child_receipt": null,
+    "command": [
+      "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/run.sh",
+      "run-live-tau-sealed-test-retry-proof",
+      "--base-root",
+      "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z",
+      "--output-root",
+      "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z/faults/output-root-file",
+      "--json"
+    ],
+    "cwd": "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream",
+    "duration_s": 0.212915,
+    "exit_code": 1,
+    "job_id": "svc-job-004-interrupted-persistence",
+    "job_type": "interrupted_persistence",
+    "parse_error": "json_object_not_found",
+    "stderr_excerpt": "Traceback (most recent call last):\n  File \"/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 685, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 676, in main\n    receipt = run(args.base_root, args.output_root)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 581, in run\n    _write_json(artifacts / \"active_prediction_index.json\", active_prediction_index)\n  File \"/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py\", line 37, in _write_json\n    path.parent.mkdir(parents=True, exist_ok=True)\n  File \"/home/graham/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/pathlib.py\", line 1311, in mkdir\n    os.mkdir(self, mode)\nNotADirectoryError: [Errno 20] Not a directory: '/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z/faults/output-root-file/artifacts'\n",
+    "stderr_sha256": "sha256:3f1f5b88d2253dfa5a4c49f2caf04ee9f27d207b6b8ae1c7bebfed70a97bc4df",
+    "stdout_excerpt": "",
+    "stdout_sha256": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+  },
+  "errors": [],
+  "expected_terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+  "identity_write": false,
+  "job_id": "svc-job-004-interrupted-persistence",
+  "job_type": "interrupted_persistence",
+  "memory_write": false,
+  "provider_call": false,
+  "result_status": "BLOCKED",
+  "schema": "pctom.queue_worker.job_result.v1",
+  "service_completed_at": "2026-07-21T15:51:19Z",
+  "service_request_sha256": "sha256:617c948e65083e341d9e7fb5415c8b24c02ae8767ee405b4b2cebdcbf5983f5c",
+  "side_effect_count": 0,
+  "source_memory_write": false,
+  "tau_call": false,
+  "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+  "unknown_state_continued": false
+}

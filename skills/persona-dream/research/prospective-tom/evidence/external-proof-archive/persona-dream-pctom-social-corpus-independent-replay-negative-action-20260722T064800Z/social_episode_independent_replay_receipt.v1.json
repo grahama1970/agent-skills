@@ -1,0 +1,64 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "actions_replayed_independently": false,
+    "all_expected_families_present": true,
+    "episodes_hash_recomputed": false,
+    "hidden_state_replayed_independently": true,
+    "labels_replayed_independently": true,
+    "no_llm_judge": true,
+    "variants_contiguous_per_family": true,
+    "withheld_fields_replayed_independently": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "Memory recall",
+      "paid provider execution",
+      "semantic dream quality",
+      "a separately deployed external simulator service",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the independent replay checker failed closed before accepting the social episode corpus"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_corpus_mutated_action.v1.json",
+  "corpus_sha256": "sha256:47b4b6583e245d14d588c9b712ffc30c09fdbb76ff021c6325c27d11c31492d9",
+  "counts": {
+    "action_matches": 63,
+    "episodes": 64,
+    "families": 4,
+    "family_counts": {
+      "coordination_conflict": 16,
+      "information_asymmetry_false_belief": 16,
+      "preference_desire_uncertainty": 16,
+      "trust_commitment_relationship": 16
+    },
+    "hidden_state_matches": 64,
+    "label_matches": 64,
+    "withheld_fields_matches": 64
+  },
+  "created_at": "2026-07-22T04:12:01Z",
+  "errors": [
+    "episodes_sha256_mismatch",
+    "episode_action_replay_mismatch:sealedte-info-asym-01:KAI_INTERRUPTS_WITH_CORRECTION:KAI_HINTS_CONSTRAINT"
+  ],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "independent_of_generator_imports": true,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json",
+  "receipt_sha256": "sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd",
+  "replay_rows": "/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/independent_replay_rows.v1.json",
+  "replay_rows_sha256": "sha256:4a3e45634b3aaf4db239c898ad78417d6d88f905868d3ef75e9a3b4e8e68e797",
+  "schema": "persona_dream.research.prospective_tom.social_episode_independent_replay_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY",
+  "tau_call_attempts": 0
+}

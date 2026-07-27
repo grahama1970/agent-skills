@@ -1,0 +1,9 @@
+{
+  "base_manifest_sha256": "sha256:4c7a845ddf87940edfbb40a36430dc3e0c94f5d507872e11081f1cd8cbc0b4f8",
+  "duplicate_active_predictions": 0,
+  "duplicate_active_revisions": 0,
+  "expected_terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+  "fault_family": "retry_after_uncertain_completion",
+  "mutation": "replay_same_receipt_hash_without_new_active_prediction_or_revision",
+  "schema": "persona_dream.research.prospective_tom.controlled_fault_manifest.v1"
+}

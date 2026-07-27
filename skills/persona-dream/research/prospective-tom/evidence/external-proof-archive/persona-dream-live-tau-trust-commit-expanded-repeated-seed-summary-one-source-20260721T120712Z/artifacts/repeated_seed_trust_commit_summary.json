@@ -1,0 +1,92 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "counts": {
+    "action_switch_count": 1,
+    "direction_counts": {
+      "BENEFIT": 1,
+      "TIE": 7
+    },
+    "nonzero_action_switch_count": 1,
+    "nonzero_delta_count": 1,
+    "oracle_match_transitions": {
+      "GAIN": 1,
+      "UNCHANGED": 7
+    },
+    "passed_seed_receipts": 1,
+    "seed_receipts": 1,
+    "total_cases": 32,
+    "total_planning_rows": 8,
+    "total_tau_call_attempts": 32
+  },
+  "expected_episodes_per_family": 24,
+  "expected_trust_episode_limit": 8,
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_receipts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "planning": {
+    "mean_cd_minus_baseline": -0.10625000000000001,
+    "planning_benefit_with_confidence": false,
+    "planning_regret_ci": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:2389421d2944531b5497185100ac0c2ccebc449ca2a0d6aeaf23b5864e7841d6",
+      "lower": -0.31875000000000003,
+      "mean": -0.10625000000000001,
+      "samples": 10000,
+      "seed": 20260725,
+      "upper": 0.0
+    }
+  },
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.live_tau_trust_commit_repeated_seed_summary.v1",
+  "source_memory_write_attempts": 0,
+  "source_receipt_hashes_sha256": "sha256:b546a761e89c0afe6ff88de9482f2b8b629c16171b6c2c297270f47216858150",
+  "source_receipts": [
+    {
+      "action_switch_count": 1,
+      "cases": 32,
+      "declared_receipt_sha256": "sha256:9323b4523f5b0e492bbe5b920c85bf22e82c268cc731ee5fc511ec6ceadf1a8d",
+      "episodes": 8,
+      "nonzero_delta_count": 1,
+      "oracle_match_transitions": {
+        "GAIN": 1,
+        "UNCHANGED": 7
+      },
+      "output_root": "/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z",
+      "planning_benefit_with_confidence": false,
+      "planning_mean_cd_minus_baseline": -0.10625000000000001,
+      "planning_regret_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:deed8e67dcec93d44b96b95e547d2ceb5b8eb7775aa84b163629786ddfc0b1aa",
+        "lower": -0.31875000000000003,
+        "mean": -0.10625000000000001,
+        "samples": 10000,
+        "seed": 20260724,
+        "upper": 0.0
+      },
+      "receipt_path": "/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/live_tau_trust_commit_replication_receipt.v1.json",
+      "receipt_sha256": "sha256:495085b05781896c0118d6ad99d7b9218cc7721ca3c36f6d7ed18cf84ffee92b",
+      "seed_index": 1,
+      "selected_episode_ids": [
+        "sealedte-trust-commit-17",
+        "sealedte-trust-commit-18",
+        "sealedte-trust-commit-19",
+        "sealedte-trust-commit-20",
+        "sealedte-trust-commit-21",
+        "sealedte-trust-commit-22",
+        "sealedte-trust-commit-23",
+        "sealedte-trust-commit-24"
+      ],
+      "source_errors": [],
+      "status": "PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION",
+      "tau_call_attempts": 32
+    }
+  ],
+  "variant_max": 24,
+  "variant_min": 17
+}

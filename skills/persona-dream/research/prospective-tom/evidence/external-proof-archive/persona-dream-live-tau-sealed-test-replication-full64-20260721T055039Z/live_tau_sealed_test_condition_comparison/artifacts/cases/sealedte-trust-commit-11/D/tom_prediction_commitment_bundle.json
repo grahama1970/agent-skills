@@ -1,0 +1,113 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "D",
+      "episode_id": "sealedte-trust-commit-11",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "live-tau-d-sealedte-trust-commit-11-tom1-factual",
+          "live-tau-d-sealedte-trust-commit-11-tom2-factual",
+          "live-tau-d-sealedte-trust-commit-11-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:4a5788d8959b1ed19db997298ddb0bbcc062479940f585c9ab754f40ae2fe343",
+        "branch_refs": [
+          "live-tau-d-sealedte-trust-commit-11-factual",
+          "live-tau-d-sealedte-trust-commit-11-counterfactual"
+        ],
+        "condition": "D",
+        "distribution_bundle_sha256": "sha256:ad778e5eaa47a9d8bb8e3bb70f1484b83451392ac0a238c386b56698bc251b55",
+        "episode_id": "sealedte-trust-commit-11",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-trust-commit-11:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-trust-commit-11:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-trust-commit-11:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:5b72ed546ef5d87414ade1b02d6653ab2fe06207d61d293c1bb187cdcf414a3b",
+      "model_receipts": [
+        {
+          "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+          "caller_skill": "persona-dream",
+          "created_at": "2026-07-21T08:07:24.243952+00:00",
+          "http_status": 200,
+          "live": true,
+          "live_call_performed": true,
+          "mocked": false,
+          "model": "gpt-5.5",
+          "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+          "prompt_sha256": "sha256:f435e8c22470b8a74014686cae4ee4106801dc969d2344a1fb3c9d7154509032",
+          "role": "pctom-live-condition-d",
+          "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+          "status": "PASS",
+          "surface": "scillm.chat_completions.text"
+        }
+      ],
+      "model_receipts_sha256": "sha256:1dd61eeebbf05632bf66cfee66b31910743c91d45fe76554988221e184c0ede2",
+      "outcome_visible": false,
+      "prediction_id": "live-tau-d-sealedte-trust-commit-11-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "live-tau-d-sealedte-trust-commit-11-tom1-factual",
+          "live-tau-d-sealedte-trust-commit-11-tom2-factual",
+          "live-tau-d-sealedte-trust-commit-11-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "live-tau-d-sealedte-trust-commit-11-factual",
+          "live-tau-d-sealedte-trust-commit-11-counterfactual"
+        ],
+        "condition": "D",
+        "condition_method": "Single-dream condition: use one synthetic trajectory as an audit-only imagination aid, but keep factual and counterfactual evidence classes separate. Do not write the imagined branch as literal history.",
+        "episode_id": "sealedte-trust-commit-11",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-trust-commit-11:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-trust-commit-11:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-trust-commit-11:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.34,
+            "value": "KAI_SETS_BOUNDARY"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_RESTATES_COMMITMENT"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_DELEGATES_TRUST"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:c961efe817901db3199261acceb4e7bd8a89cb1629623b6445bb9f81e198b7eb",
+      "sealed_at": "2026-07-21T08:08:14Z"
+    }
+  ],
+  "episode_id": "sealedte-trust-commit-11",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

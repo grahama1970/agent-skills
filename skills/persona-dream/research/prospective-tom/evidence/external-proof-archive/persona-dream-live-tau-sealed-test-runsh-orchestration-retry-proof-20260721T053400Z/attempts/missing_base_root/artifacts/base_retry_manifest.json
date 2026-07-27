@@ -1,0 +1,43 @@
+{
+  "action_summary": {
+    "action_decision_count": 0,
+    "per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "unique_episode_prediction_pairs": 0
+  },
+  "base_receipt_sha256": null,
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/missing-base-root",
+  "base_status": null,
+  "commitment_summary": {
+    "commitment_count": 0,
+    "per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "unique_episode_condition_pairs": 0,
+    "unique_prediction_ids": 0
+  },
+  "gate6_summary": {
+    "gate6_receipt_count": 0,
+    "per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "statuses": {}
+  },
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": false,
+  "missing_actions": [],
+  "orphan_actions": [],
+  "schema": "pctom.live_tau_sealed_test.retry_manifest.v1",
+  "state_hash": "sha256:04cfbd7ff4bab51d2fdbf1097d22daa1a1a783fd511b3c0b75db05252a1fba3b",
+  "tau_call_attempts": 0
+}

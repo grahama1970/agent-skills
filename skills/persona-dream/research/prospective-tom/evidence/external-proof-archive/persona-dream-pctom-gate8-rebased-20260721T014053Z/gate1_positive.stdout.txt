@@ -1,0 +1,50 @@
+{
+  "checks": {
+    "actual_actions_allowed": true,
+    "all_expected_families_present": true,
+    "episodes_hash_recomputed": true,
+    "first_and_second_order_labels_present": true,
+    "labels_from_simulator_config": true,
+    "no_llm_judge": true,
+    "policies_deterministic": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "Tau text-call execution",
+      "sealed prediction scoring",
+      "belief revision",
+      "fault-injection reliability",
+      "live Memory recall"
+    ],
+    "proves": [
+      "the supplied corpus has deterministic hidden-state social episodes",
+      "each episode has explicit counterpart policy and actual next action",
+      "each episode has first-order and second-order ToM labels from simulator_config"
+    ]
+  },
+  "corpus_path": "/tmp/agent-skills-pctom-gate8-20260721T013542Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json",
+  "counts": {
+    "episodes": 12,
+    "families": 4,
+    "family_counts": {
+      "coordination_conflict": 3,
+      "information_asymmetry_false_belief": 3,
+      "preference_desire_uncertainty": 3,
+      "trust_commitment_relationship": 3
+    },
+    "first_order_labels": 12,
+    "second_order_labels": 12
+  },
+  "created_at": "2026-07-21T01:43:21Z",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate8-rebased-20260721T014053Z/gate1_positive.json",
+  "schema": "persona_dream.research.prospective_tom.social_episode_corpus_check_receipt.v1",
+  "status": "PASS_SOCIAL_EPISODE_CORPUS",
+  "tau_call_attempts": 0
+}

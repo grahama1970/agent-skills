@@ -1,0 +1,92 @@
+{
+  "artifact_sha256": {
+    "delayed_exact_rereads": "sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e",
+    "delayed_recall_results": "sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde",
+    "delayed_semantic_exact_rereads": "sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0"
+  },
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "delayed_exact_reread_complete": true,
+    "delayed_live_memory_recall_hits_per_condition": true,
+    "delayed_live_memory_recall_performed": true,
+    "delayed_semantic_exact_reread_complete": true,
+    "fresh_process_no_write_path": true,
+    "human_content_judgment_absent": true,
+    "prior_and_posterior_distinguished": true,
+    "source_live_memory_revision_recall_passed": true,
+    "source_receipt_hash_recomputed": true,
+    "synthetic_literal_boundary_preserved": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "Memory service restart",
+      "long-duration wall-clock retention beyond the source artifact interval",
+      "new live Tau execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a fresh no-write process can exact-reread previously persisted noncanonical PCTOM-R revision documents",
+      "a fresh no-write process can exact-reread the searchable semantic mirrors",
+      "a fresh no-write process can retrieve delayed condition-scoped revision context through live Memory /recall",
+      "prior/posterior distinction and synthetic/literal separation survive delayed recall",
+      "no Memory write, provider call, Tau call, canonical write, identity write, source-memory write, LLM judge, or human content judgment was used"
+    ]
+  },
+  "collection": "persona_dream_pctom_revision_recall",
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "delayed_exact_rereads": 128,
+    "delayed_recall_hits": 40,
+    "delayed_recall_hits_per_condition": {
+      "CD": 10,
+      "D": 10,
+      "M": 10,
+      "R": 10
+    },
+    "delayed_recall_queries": 4,
+    "delayed_semantic_exact_rereads": 128,
+    "source_memory_documents": 128,
+    "source_semantic_documents": 128,
+    "write_violations": 0
+  },
+  "created_at": "2026-07-22T03:53:42Z",
+  "delayed_exact_rereads": "/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/artifacts/delayed_exact_rereads.json",
+  "delayed_recall_results": "/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/artifacts/delayed_recall_results.json",
+  "delayed_semantic_exact_rereads": "/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/artifacts/delayed_semantic_exact_rereads.json",
+  "errors": [],
+  "fixture_backed": false,
+  "fresh_process_delayed_recall": true,
+  "fresh_process_pid": 3968189,
+  "fresh_process_started_after_source_receipt": true,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "llm_judge_used": false,
+  "memory_base_url": "http://127.0.0.1:8601",
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z",
+  "processing_time_s": 13.958922,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json",
+  "receipt_sha256": "sha256:db582b1fd3737d2162e1745fdb13bd08345b4dcb9ed57706b797b0acad8e984e",
+  "schema": "persona_dream.research.prospective_tom.live_memory_revision_delayed_recall_receipt.v1",
+  "semantic_recall_collection": "lessons",
+  "source_created_at": "2026-07-22T03:33:18Z",
+  "source_document_index": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/artifacts/live_memory_revision_documents.json",
+  "source_memory_write_attempts": 0,
+  "source_receipt": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json",
+  "source_receipt_sha256": "sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a",
+  "source_root": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z",
+  "source_semantic_document_index": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/artifacts/live_memory_semantic_documents.json",
+  "status": "PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL",
+  "tau_call_attempts": 0
+}

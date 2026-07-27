@@ -1,0 +1,22 @@
+{
+  "corpus_sha256": "sha256:68762a7446ec78ac04f3271439a53590df18c853a1373455de9e936a8c482985",
+  "created_at": "2026-07-22T07:21:12Z",
+  "episode_count": 128,
+  "episodes_sha256": "sha256:51718d91f30f81eb8e19e65733cff9d241d31dda0f954c5eca707245d331e16b",
+  "family_counts": {
+    "coordination_conflict": 32,
+    "information_asymmetry_false_belief": 32,
+    "preference_desire_uncertainty": 32,
+    "trust_commitment_relationship": 32
+  },
+  "fixture_backed": false,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus.v1.json",
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.social_episode_corpus_build_receipt.v1",
+  "split": "sealed_test",
+  "status": "PASS_SOCIAL_EPISODE_CORPUS_BUILT",
+  "tau_call_attempts": 0
+}

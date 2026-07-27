@@ -1,0 +1,147 @@
+{
+  "action_receipt": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/live_tau_condition_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "action_receipt_sha256": "sha256:2956f3fc97f66d78a1c62d8d52dec574d72ec403e9716d0611e10413a4d763e2",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_receipt_passed": true,
+    "all_rows_expose_offer_cooperation_affordance": true,
+    "condition_receipt_passed": true,
+    "condition_used_external_contrast_corpus": true,
+    "contrast_avoid_rows_present": true,
+    "contrast_keep_rows_present": true,
+    "derivation_receipt_passed": true,
+    "expected_action_count": true,
+    "expected_case_count": true,
+    "expected_row_count": true,
+    "expected_variants": true,
+    "exposure_contrast_receipt_passed": true,
+    "live_tau_cases_complete": true,
+    "no_oracle_or_outcome_inputs_in_rule": true,
+    "tau_receipts_hash_bound": true,
+    "zero_unsupported_writes": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "a replacement cooperation feature split is valid",
+      "broad held-out planning benefit",
+      "confidence-bounded CD planning benefit",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution",
+      "that the cooperation threshold is optimal"
+    ],
+    "proves": [
+      "the deterministic cooperation exposure/contrast corpus was consumed by the live Tau M/R/D/CD condition runner",
+      "all visible cases exposed OFFER_COOPERATION before deterministic outcome reveal and then passed through Gate 6 action scoring",
+      "the pre-outcome cooperation threshold rule used sealed prediction/action fields and did not use outcome or oracle fields as rule inputs",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "condition_receipt": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/live_tau_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "condition_receipt_sha256": "sha256:b6fa394a09b3ecca71bdfd90b36ee78c7166a94c4f11d54ba0299f5dbbb3f160",
+  "contrast_summary": {
+    "cd_action_changes_by_contrast_class": {
+      "KEEP_COOPERATION_POSITIVE": 2
+    },
+    "cd_intervened_actions_by_contrast_class": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": {
+        "DISCLOSE_INFORMATION": 4
+      },
+      "KEEP_COOPERATION_POSITIVE": {
+        "OFFER_COOPERATION": 2,
+        "WAIT": 2
+      }
+    },
+    "cd_offer_candidates_by_contrast_class": {
+      "KEEP_COOPERATION_POSITIVE": 4
+    },
+    "cd_original_actions_by_contrast_class": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": {
+        "DISCLOSE_INFORMATION": 4
+      },
+      "KEEP_COOPERATION_POSITIVE": {
+        "OFFER_COOPERATION": 4
+      }
+    },
+    "rows_by_contrast_class": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": 4,
+      "KEEP_COOPERATION_POSITIVE": 4
+    }
+  },
+  "cooperation_probability_threshold": 0.5,
+  "counts": {
+    "action_cases": 32,
+    "avoid_or_unsafe_cooperation_contrast_rows": 4,
+    "cases": 32,
+    "cd_action_change_count": 2,
+    "cd_low_confidence_cooperation_interventions": 2,
+    "cd_offer_avoid_or_unsafe_candidates": 0,
+    "cd_offer_cooperation_candidates": 4,
+    "cd_offer_keep_candidates": 4,
+    "exposure_contrast_episodes": 8,
+    "keep_cooperation_positive_rows": 4,
+    "offer_cooperation_affordance_rows": 8,
+    "rows": 8
+  },
+  "created_at": "2026-07-22T07:14:20Z",
+  "derivation_receipt": "/tmp/persona-dream-live-tau-balanced-threshold-intervention-proof-20260721T194504Z/live_tau_balanced_threshold_intervention_receipt.v1.json",
+  "derivation_receipt_sha256": "sha256:9497243d09c911593afaedcee072e08ec6195ed205d7e16fe8f69cc2744068bd",
+  "deterministic_simulator_corpus": true,
+  "errors": [],
+  "exposure_contrast_receipt": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/cooperation_exposure_contrast_instrument/cooperation_exposure_contrast_instrument_receipt.v1.json",
+  "exposure_contrast_receipt_sha256": "sha256:fac0488457b4e0581bf3c370eabd160ff9480d8c889d670a5a63f5423bc4e665",
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted_by_this_command": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "improvement_ci": {
+      "alpha": 0.05,
+      "lower": -0.34374999999999994,
+      "mean": -0.13749999999999998,
+      "samples": 10000,
+      "upper": 0.0
+    },
+    "intervened_direction_counts": {
+      "BENEFIT": 4,
+      "HARM": 2,
+      "TIE": 2
+    },
+    "intervened_mean_cd_minus_baseline_planning_regret": -0.062499999999999944,
+    "intervened_planning_regret_ci": {
+      "alpha": 0.05,
+      "lower": -0.4125,
+      "mean": -0.062499999999999944,
+      "samples": 10000,
+      "upper": 0.35625000000000007
+    },
+    "mean_improvement_vs_original": -0.13749999999999998,
+    "original_direction_counts": {
+      "BENEFIT": 6,
+      "HARM": 2
+    },
+    "original_mean_cd_minus_baseline_planning_regret": -0.19999999999999993
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z",
+  "planning_benefit_with_confidence": false,
+  "policy_id": "pre_outcome_cooperation_threshold_rule.v1",
+  "processing_time_s": 360.329,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/live_tau_cooperation_exposure_contrast_receipt.v1.json",
+  "receipt_sha256": "sha256:df43dc64ae3dcb318b14720f8df83e59957207c39b47bb6009ca5b38c5b7e408",
+  "rows_path": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/artifacts/cooperation_exposure_contrast_slice_rows.json",
+  "rows_sha256": "sha256:dc80e2d944270562e6ccc8383928a9213dfec6302bcfb3289459b0316df2a93e",
+  "schema": "persona_dream.research.prospective_tom.live_tau_cooperation_exposure_contrast_slice_receipt.v1",
+  "slice_conclusion": "EXPOSURE_CONTRAST_SLICE_PARTIAL_CD_OFFER_EXPOSURE",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE",
+  "summary_path": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/artifacts/cooperation_exposure_contrast_slice_summary.json",
+  "summary_sha256": "sha256:1562e8336125ea3aa3af14e86acdd2927c92fb81e89584c14f3b541ad1c1c8af",
+  "tau_call_attempts": 32,
+  "tau_live_call_performed": 32
+}

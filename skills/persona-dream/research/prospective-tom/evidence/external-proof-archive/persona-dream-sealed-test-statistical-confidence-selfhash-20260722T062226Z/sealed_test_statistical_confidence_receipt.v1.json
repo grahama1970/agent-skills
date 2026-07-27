@@ -1,0 +1,182 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "all_conditions_have_64_action_decisions": true,
+    "all_conditions_have_64_scores": true,
+    "all_conditions_have_64_sealed_commitments": true,
+    "episode_count_is_64": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "planning_confidence_interval_upper_below_zero": false,
+    "primary_confidence_interval_upper_below_zero": true,
+    "primary_metric_is_preregistered": true,
+    "split_is_sealed_test": true,
+    "strongest_baseline_is_allowed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau sealed-test execution",
+      "live Memory recall in the sealed-test loop",
+      "planning-regret benefit when regret is tied across conditions",
+      "real external service fault injection",
+      "production retry machinery",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video quality",
+      "semantic dream quality"
+    ],
+    "proves": [
+      "a sealed 64-episode deterministic test split was generated",
+      "M, R, D, and CD each produced 64 sealed commitments before reveal",
+      "M, R, D, and CD each produced 64 deterministic Gate 5 scores",
+      "M, R, D, and CD each produced 64 constrained Gate 6 action decisions",
+      "the preregistered belief Brier CD-minus-strongest-baseline paired bootstrap confidence interval is below zero",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "bootstrap_samples": 2000,
+    "cases": 256,
+    "deterministic_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "episodes_consumed": 64,
+    "families_consumed": 4,
+    "paired_delta_counts": {
+      "action_brier": 64,
+      "belief_brier": 64,
+      "planning_regret": 64
+    },
+    "sealed_commitments_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    }
+  },
+  "created_at": "2026-07-22T06:22:28Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episode_limit": 64,
+  "episodes_per_family": 16,
+  "errors": [],
+  "fixture_backed": false,
+  "generated_at": "2026-07-21T00:00:00Z",
+  "heldout_condition_benefit_receipt": "/tmp/persona-dream-sealed-test-statistical-confidence-selfhash-20260722T062226Z/sealed_test_condition_benefit/heldout_condition_benefit_receipt.v1.json",
+  "heldout_condition_benefit_receipt_sha256": "sha256:99a12d15943b5bbd42293606c30c4e50eab1685bfdbe742ec4969a95daef6a04",
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "alpha": 0.05,
+    "baseline_conditions": {
+      "action_brier": "M",
+      "belief_brier": "D",
+      "planning_regret": "D"
+    },
+    "bootstrap_samples": 2000,
+    "bootstrap_seed": 20260721,
+    "condition_means": {
+      "action_brier": {
+        "CD": 0.73,
+        "D": 0.71875,
+        "M": 0.6666666666666667,
+        "R": 0.6925
+      },
+      "belief_brier": {
+        "CD": 0.14000000000000004,
+        "D": 0.2198,
+        "M": 0.45500000000000007,
+        "R": 0.30499999999999994
+      }
+    },
+    "paired_delta_confidence_intervals": {
+      "action_brier": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:1ce7754fe7aa40149166a575e5d7ee1d05e43cfc2e30af24abf36cf055f97cbd",
+        "lower": 0.003958333333333258,
+        "mean": 0.06333333333333327,
+        "samples": 2000,
+        "seed": 20260722,
+        "upper": 0.12270833333333328
+      },
+      "belief_brier": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:7f45c02ba5a7def3e02c013ae80a585196855c3f75b7171e0e45c8bc4e13601c",
+        "lower": -0.07979999999999995,
+        "mean": -0.07979999999999995,
+        "samples": 2000,
+        "seed": 20260721,
+        "upper": -0.07979999999999995
+      },
+      "planning_regret": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:7aa5d16946f3ce762de07dd3eb0a905502196593f73d940178f49c28a466062e",
+        "lower": -0.07968750000000001,
+        "mean": 0.0,
+        "samples": 2000,
+        "seed": 20260723,
+        "upper": 0.07968750000000001
+      }
+    },
+    "paired_delta_counts": {
+      "action_brier": 64,
+      "belief_brier": 64,
+      "planning_regret": 64
+    },
+    "planning_regret_means": {
+      "CD": 0.19296875000000002,
+      "D": 0.19296875000000002,
+      "M": 0.3046875,
+      "R": 0.3046875
+    },
+    "primary_baseline_condition": "D",
+    "primary_metric": "belief_brier"
+  },
+  "mocked": false,
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "oracle_policy_source": "deterministic simulator labels and counterpart policy rules",
+  "output_root": "/tmp/persona-dream-sealed-test-statistical-confidence-selfhash-20260722T062226Z",
+  "paired_delta_path": "/tmp/persona-dream-sealed-test-statistical-confidence-selfhash-20260722T062226Z/artifacts/sealed_test_paired_deltas.json",
+  "paired_delta_sha256": "sha256:3597e79bc3fda1cfc735e1636822cf16c71b9894fe57b729cddc9e53bb75e854",
+  "planning_benefit_with_confidence": false,
+  "primary_baseline_condition": "D",
+  "primary_benefit_with_confidence": true,
+  "primary_cd_minus_baseline_ci": {
+    "alpha": 0.05,
+    "bootstrap_samples": 2000,
+    "bootstrap_seed": 20260721,
+    "lower": -0.07979999999999995,
+    "upper": -0.07979999999999995
+  },
+  "primary_cd_minus_baseline_mean": -0.07979999999999995,
+  "primary_metric": "belief_brier",
+  "processing_time_s": 2.478,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-selfhash-20260722T062226Z/sealed_test_statistical_confidence_receipt.v1.json",
+  "receipt_sha256": "sha256:77be045143d64f49c51155f18a95a5308bd6472fc905ac390db79c89e0205029",
+  "schema": "persona_dream.research.prospective_tom.sealed_test_statistical_confidence_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "statistical_summary_path": "/tmp/persona-dream-sealed-test-statistical-confidence-selfhash-20260722T062226Z/artifacts/sealed_test_statistical_summary.json",
+  "statistical_summary_sha256": "sha256:41cddbdae7514a80273b50ebee8c5f650950fb47e4e391726428ef66903e917f",
+  "status": "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE",
+  "tau_call_attempts": 0
+}

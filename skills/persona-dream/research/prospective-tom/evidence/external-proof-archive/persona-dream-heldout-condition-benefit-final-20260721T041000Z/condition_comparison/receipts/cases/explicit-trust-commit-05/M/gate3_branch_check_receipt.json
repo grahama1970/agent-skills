@@ -1,0 +1,60 @@
+{
+  "branch_bundle_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/cases/explicit-trust-commit-05/M/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:f0859840a6d7fa9168c0016c60dd1b426e6548809d7edf7c78f55a1d523c48da",
+  "checks": {
+    "action_distributions_valid": true,
+    "counterfactual_branches_use_counterfactual_distributions": true,
+    "counterfactuals_are_synthetic": true,
+    "distribution_refs_resolve": true,
+    "evidence_refs_resolve_to_visible_episode_fields": true,
+    "factual_branches_use_factual_distributions": true,
+    "has_counterfactual_branch": true,
+    "has_factual_branch": true,
+    "held_fixed_excludes_intervened_variable": true,
+    "no_canonical_memory_write": true,
+    "one_intervention_variable": true,
+    "outcome_not_visible": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "counterfactual causal correctness",
+      "calibration quality",
+      "Tau text-call execution",
+      "live Memory recall",
+      "outcome reveal or scoring",
+      "belief revision",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied branch bundle has factual and counterfactual branches",
+      "counterfactual branches are marked synthetic and have one intervention variable",
+      "held-fixed variables exclude the intervened variable",
+      "branch evidence resolves to agent-visible episode fields",
+      "branch BDI refs resolve to matching factual/counterfactual ToM distributions",
+      "predicted action distributions sum to one over allowed actions"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "branches": 2,
+    "counterfactual_branches": 1,
+    "distribution_refs": 3,
+    "factual_branches": 1,
+    "interventions": 1,
+    "resolved_source_evidence_refs": 6
+  },
+  "created_at": "2026-07-21T04:12:02Z",
+  "distribution_bundle_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/cases/explicit-trust-commit-05/M/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:70b2ad98bf8319ee0d2c2021bea9e2ad42afa77bd1ce7d7f54c9ea24d93fa63c",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/receipts/cases/explicit-trust-commit-05/M/gate3_branch_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate3_counterfactual_branch_check_receipt.v1",
+  "status": "PASS_COUNTERFACTUAL_BRANCHES",
+  "tau_call_attempts": 0
+}

@@ -1,0 +1,63 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "actions_replayed_independently": true,
+    "all_expected_families_present": true,
+    "episodes_hash_recomputed": true,
+    "hidden_state_replayed_independently": true,
+    "labels_replayed_independently": true,
+    "no_llm_judge": true,
+    "variants_contiguous_per_family": true,
+    "withheld_fields_replayed_independently": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "Memory recall",
+      "paid provider execution",
+      "semantic dream quality",
+      "a separately deployed external simulator service",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "a generator-independent replay table recomputed deterministic actual_next_action for every sealed social episode",
+      "a generator-independent replay table recomputed first-order and second-order ToM labels for every sealed social episode",
+      "hidden-state and withheld-field family invariants match the deterministic simulator contract"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus.v1.json",
+  "corpus_sha256": "sha256:3fa1254afdd1055ac2c5443c70bcbc00aa0e69713106d55ccf362de36c2f7622",
+  "counts": {
+    "action_matches": 128,
+    "episodes": 128,
+    "families": 4,
+    "family_counts": {
+      "coordination_conflict": 32,
+      "information_asymmetry_false_belief": 32,
+      "preference_desire_uncertainty": 32,
+      "trust_commitment_relationship": 32
+    },
+    "hidden_state_matches": 128,
+    "label_matches": 128,
+    "withheld_fields_matches": 128
+  },
+  "created_at": "2026-07-22T07:21:28Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "independent_of_generator_imports": true,
+  "live": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_independent_replay_receipt.v1.json",
+  "receipt_sha256": "sha256:ee57dbdfb09f200e9734def1a5806c015f5d41b039855a231a1e81f1f02c89c1",
+  "replay_rows": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/independent_replay_rows.v1.json",
+  "replay_rows_sha256": "sha256:6e9cd3e01f482b26879c4eb46dfe05d424d2dced9073c3dd391b130aec0290f0",
+  "schema": "persona_dream.research.prospective_tom.social_episode_independent_replay_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY",
+  "tau_call_attempts": 0
+}

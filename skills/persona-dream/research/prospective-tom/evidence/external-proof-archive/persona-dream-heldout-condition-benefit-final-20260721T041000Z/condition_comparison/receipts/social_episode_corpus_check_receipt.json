@@ -1,0 +1,50 @@
+{
+  "checks": {
+    "actual_actions_allowed": true,
+    "all_expected_families_present": true,
+    "episodes_hash_recomputed": true,
+    "first_and_second_order_labels_present": true,
+    "labels_from_simulator_config": true,
+    "no_llm_judge": true,
+    "policies_deterministic": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "Tau text-call execution",
+      "sealed prediction scoring",
+      "belief revision",
+      "fault-injection reliability",
+      "live Memory recall"
+    ],
+    "proves": [
+      "the supplied corpus has deterministic hidden-state social episodes",
+      "each episode has explicit counterpart policy and actual next action",
+      "each episode has first-order and second-order ToM labels from simulator_config"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "episodes": 24,
+    "families": 4,
+    "family_counts": {
+      "coordination_conflict": 6,
+      "information_asymmetry_false_belief": 6,
+      "preference_desire_uncertainty": 6,
+      "trust_commitment_relationship": 6
+    },
+    "first_order_labels": 24,
+    "second_order_labels": 24
+  },
+  "created_at": "2026-07-21T04:12:02Z",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/condition_comparison/receipts/social_episode_corpus_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.social_episode_corpus_check_receipt.v1",
+  "status": "PASS_SOCIAL_EPISODE_CORPUS",
+  "tau_call_attempts": 0
+}

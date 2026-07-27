@@ -1,0 +1,78 @@
+{
+  "belief_prediction_benefit_supported": true,
+  "conclusion": "PLANNING_SIGNAL_SPARSE_FAMILY_CONCENTRATED_NOT_GENERALIZED",
+  "expanded_repeated": {
+    "counts": {
+      "action_switch_count": 2,
+      "direction_counts": {
+        "BENEFIT": 2,
+        "TIE": 14
+      },
+      "nonzero_action_switch_count": 2,
+      "nonzero_delta_count": 2,
+      "oracle_match_transitions": {
+        "GAIN": 2,
+        "UNCHANGED": 14
+      },
+      "passed_seed_receipts": 2,
+      "seed_receipts": 2,
+      "total_cases": 64,
+      "total_planning_rows": 16,
+      "total_tau_call_attempts": 64
+    },
+    "nonidentical_seed_patterns": false,
+    "planning_ci_upper": 0.0,
+    "seed_pattern_hashes": {
+      "1": "sha256:ecf3bc5794b4bbae592b8fc703183ee7be7355b40a443eb7db623a39106e8df4",
+      "2": "sha256:ecf3bc5794b4bbae592b8fc703183ee7be7355b40a443eb7db623a39106e8df4"
+    }
+  },
+  "full64": {
+    "action_policy_counts": {
+      "action_switch_count": 4,
+      "episodes": 64,
+      "net_oracle_match_gain": 2,
+      "nonzero_action_switch_count": 4,
+      "nonzero_delta_count": 4,
+      "nonzero_families": [
+        "trust-commit"
+      ],
+      "oracle_match_gain_count": 3,
+      "oracle_match_loss_count": 1
+    },
+    "belief_brier_ci_upper": -0.008604609375000004,
+    "planning_counts": {
+      "benefit_count": 3,
+      "episodes": 64,
+      "harm_count": 1,
+      "nonzero_count": 4,
+      "nonzero_families": [
+        "trust-commit"
+      ],
+      "tie_count": 60
+    },
+    "planning_regret_ci_upper": 0.00390625
+  },
+  "input_receipt_sha256": {
+    "expanded_repeated_seed_summary": "sha256:7757e06fcb88c985ad74a0fdc21d7f8c5f074871c6c8b2c64d677125d5da67f3",
+    "full64_action_policy_sensitivity": "sha256:141a75da8dbe054150b2a6da279c738c9d67f24949ef48bd5f1665b216f2daef",
+    "full64_planning_diagnostic": "sha256:da419d8100de60248ccedacdfe84158273bc007b44ec3dad2b2f625453507021",
+    "full64_statistical_confidence": "sha256:299f499b59b4cbf37bbde42df7a293fe2d064658724fa53d63dd677fc40a5574"
+  },
+  "input_receipts": {
+    "expanded_repeated_seed_summary": "/tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z/live_tau_trust_commit_repeated_seed_receipt.v1.json",
+    "full64_action_policy_sensitivity": "/tmp/persona-dream-live-tau-full64-action-policy-sensitivity-20260721T094805Z/live_tau_full64_action_policy_sensitivity_receipt.v1.json",
+    "full64_planning_diagnostic": "/tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/live_tau_full64_planning_diagnostic_receipt.v1.json",
+    "full64_statistical_confidence": "/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json"
+  },
+  "next_planning_evidence_needed": "Introduce a broader or different planning intervention that changes action policy on more than the current trust-commit subset, or run non-identical repeated live Tau behavior over a larger/balanced planning corpus.",
+  "planning_benefit_supported": false,
+  "planning_non_generalization_reasons": [
+    "full64 planning-regret confidence interval crosses zero",
+    "full64 planning deltas are 60 ties, 3 benefits, and 1 harm",
+    "all full64 nonzero planning deltas are trust-commit action switches",
+    "expanded repeated trust/commitment evidence has CI upper 0.0",
+    "expanded repeated trust/commitment seeds reproduced the same action-row pattern"
+  ],
+  "schema": "persona_dream.research.prospective_tom.planning_non_generalization_audit_summary.v1"
+}

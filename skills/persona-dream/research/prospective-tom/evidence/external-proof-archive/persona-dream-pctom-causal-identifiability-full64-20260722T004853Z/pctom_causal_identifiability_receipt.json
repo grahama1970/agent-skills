@@ -1,0 +1,2159 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_receipt_passed": true,
+    "condition_receipt_passed": true,
+    "fixed_action_policy_recomputed": true,
+    "human_content_judgment_absent": true,
+    "lineage_100_percent_complete": false,
+    "llm_judge_absent": true,
+    "post_reveal_inputs_not_used_for_commitment": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "the full causal-identifiability gate",
+      "that counterfactual dreaming improves prediction or planning",
+      "that every historical PCTOM-R artifact already has complete raw Memory recall attribution",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the causal-identifiability gate failed closed before accepting the full gate",
+      "oracle-aligned and anti-oracle policy projections were still written for diagnosis when available",
+      "lineage receipt failed closed unless evidence references include accepted raw source ids and content hashes",
+      "no new Tau, Memory, provider, canonical-memory, identity, or source-memory write was attempted"
+    ]
+  },
+  "counts": {
+    "action_index_rows": 256,
+    "actual_to_anti_oracle_action_switch_count": 114,
+    "actual_to_oracle_action_switch_count": 118,
+    "lineage_complete_rows": 0,
+    "lineage_rows": 256,
+    "sensitivity_rows": 256
+  },
+  "created_at": "2026-07-22T00:48:53Z",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "lineage_receipt_path": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_end_to_end_lineage_receipt.json",
+  "lineage_receipt_sha256": "sha256:e74018ccf5b3c6ae884a2f5d4dd56b898da6dd14e236b89e1a8b9cdec06620f5",
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "manifest_path": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_causal_identifiability_manifest.json",
+  "manifest_sha256": "sha256:3132a2c61cb29d9e3682f3be5e9d9c03efbd24fb9a7e49cc3dcbe3669cdeee36",
+  "memory_write_attempts": 0,
+  "metrics": {
+    "lineage": {
+      "complete_rows": 0,
+      "evidence_refs_with_accepted_raw_source_id": 0,
+      "evidence_refs_with_raw_source_digest": 0,
+      "incomplete_rows": [
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-info-asym-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-info-asym-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-info-asym-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-info-asym-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-pref-desire-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-pref-desire-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-pref-desire-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-pref-desire-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-trust-commit-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-trust-commit-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-trust-commit-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-trust-commit-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-01",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-02",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-03",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-04",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-05",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-06",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-07",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-08",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-09",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-10",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-11",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-12",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-13",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-14",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-15",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "M",
+          "episode_id": "sealedte-coord-conflict-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "R",
+          "episode_id": "sealedte-coord-conflict-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "D",
+          "episode_id": "sealedte-coord-conflict-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        },
+        {
+          "all_evidence_refs_have_raw_source_id_and_digest": false,
+          "all_required_artifacts_hash_bound": true,
+          "condition": "CD",
+          "episode_id": "sealedte-coord-conflict-16",
+          "evidence_ref_count": 3,
+          "outcome_visible_at_commitment": false
+        }
+      ],
+      "lineage_completeness": 0.0,
+      "rows": 256,
+      "total_evidence_refs": 768
+    },
+    "policy_sensitivity": {
+      "actual_selected_actions": {
+        "ASK_CLARIFYING_QUESTION": 68,
+        "SET_BOUNDARY": 60,
+        "WAIT": 128
+      },
+      "actual_to_anti_oracle_action_switch_count": 114,
+      "actual_to_oracle_action_switch_count": 118,
+      "actual_to_oracle_regret_delta_mean": -0.295703125,
+      "anti_oracle_minus_actual_regret_delta_mean": 0.18242187500000004,
+      "anti_oracle_selected_actions": {
+        "ASK_CLARIFYING_QUESTION": 112,
+        "DISCLOSE_INFORMATION": 44,
+        "OFFER_COOPERATION": 20,
+        "SET_BOUNDARY": 40,
+        "WAIT": 40
+      },
+      "anti_oracle_worsens_regret_count": 114,
+      "conditions": {
+        "CD": 64,
+        "D": 64,
+        "M": 64,
+        "R": 64
+      },
+      "oracle_improves_regret_count": 118,
+      "oracle_selected_actions": {
+        "ASK_CLARIFYING_QUESTION": 144,
+        "DISCLOSE_INFORMATION": 20,
+        "OFFER_COOPERATION": 20,
+        "SET_BOUNDARY": 24,
+        "WAIT": 48
+      },
+      "rows": 256
+    }
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z",
+  "processing_time_s": 0.168,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_causal_identifiability_receipt.json",
+  "receipt_sha256": "sha256:e8814fbe89e5d2386cc7389bbed5feb29c76a2c8daa8d8c4dce61480902fe972",
+  "schema": "persona_dream.research.prospective_tom.causal_identifiability_gate_receipt.v1",
+  "sensitivity_receipt_path": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_oracle_policy_sensitivity_receipt.json",
+  "sensitivity_receipt_sha256": "sha256:fdc51a0e37ae31a33ef67f858e228d439bc9fd4ccd402a76fa3f47f1d8f38839",
+  "sensitivity_rows_path": "/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_oracle_policy_sensitivity.jsonl",
+  "sensitivity_rows_sha256": "sha256:c8f9f38865bad93505259b7d8240b4de409e95edd6f8a8803e5d91b32ecba57c",
+  "source_memory_write_attempts": 0,
+  "status": "BLOCKED_PCTOM_CAUSAL_IDENTIFIABILITY_GATE",
+  "tau_call_attempts": 0
+}

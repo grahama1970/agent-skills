@@ -1,0 +1,139 @@
+{
+  "action_receipt": "/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/live_tau_condition_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "action_receipt_sha256": "sha256:3238c7c310a2ba3259d6a060f7fb5ad8ba871bfc9f37abd4a4ca6657de6d71d5",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_receipt_passed": true,
+    "actual_avoid_or_disclose_rows_complete": true,
+    "condition_receipt_passed": true,
+    "condition_used_external_unsafe_offer_pressure_corpus": true,
+    "derivation_receipt_passed": true,
+    "expected_action_count": true,
+    "expected_case_count": true,
+    "expected_row_count": true,
+    "expected_variants": true,
+    "instrument_avoid_or_disclose_actual_rows_complete": true,
+    "instrument_receipt_passed": true,
+    "instrument_unsafe_rows_complete": true,
+    "instrument_visible_offer_affordance_complete": true,
+    "instrument_visible_offer_pressure_complete": true,
+    "live_tau_cases_complete": true,
+    "no_oracle_or_outcome_inputs_in_rule": true,
+    "tau_receipts_hash_bound": true,
+    "unsafe_summary_rows_complete": true,
+    "visible_offer_affordance_rows_complete": true,
+    "zero_unsupported_writes": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "a replacement cooperation feature split is valid",
+      "broad held-out planning benefit",
+      "confidence-bounded CD planning benefit",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution",
+      "that the cooperation threshold is optimal"
+    ],
+    "proves": [
+      "the deterministic unsafe-offer-pressure corpus was consumed by the live Tau M/R/D/CD condition runner",
+      "all visible cases exposed OFFER_COOPERATION and visible cooperation pressure before deterministic outcome reveal",
+      "unsafe-offer rows were sealed before outcome reveal and passed through Gate 6 action scoring",
+      "the pre-outcome cooperation threshold rule used sealed prediction/action fields and did not use outcome or oracle fields as rule inputs",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "condition_receipt": "/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/live_tau_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "condition_receipt_sha256": "sha256:4e00442d623385463375f87e50cf95344e9ffad0745399c463c0a30c1f9b8774",
+  "cooperation_probability_threshold": 0.5,
+  "counts": {
+    "action_cases": 16,
+    "actual_avoid_or_disclose_rows": 4,
+    "cases": 16,
+    "cd_action_change_count": 0,
+    "cd_low_confidence_cooperation_interventions": 0,
+    "cd_unsafe_offer_candidates": 0,
+    "cd_unsafe_offer_suppression_rows": 0,
+    "rows": 4,
+    "unsafe_offer_pressure_episodes": 4,
+    "unsafe_offer_pressure_rows": 4,
+    "visible_offer_affordance_rows": 4
+  },
+  "created_at": "2026-07-21T23:27:35Z",
+  "derivation_receipt": "/tmp/persona-dream-live-tau-balanced-threshold-intervention-20260721T194434Z/live_tau_balanced_threshold_intervention_receipt.v1.json",
+  "derivation_receipt_sha256": "sha256:9293c54dd1a349b283a25f62b9006f754c8ff521aba579346f176aba54a9f70c",
+  "deterministic_simulator_corpus": true,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "instrument_receipt": "/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/cooperation_unsafe_offer_pressure_instrument/cooperation_unsafe_offer_pressure_instrument_receipt.v1.json",
+  "instrument_receipt_sha256": "sha256:9b51286f66cb55848e5e153fab8a0c049aac3b8aa833a8f573bc585eb43774ba",
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted_by_this_command": true,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "improvement_ci": {
+      "alpha": 0.05,
+      "lower": 0.0,
+      "mean": 0.0,
+      "samples": 10000,
+      "upper": 0.0
+    },
+    "intervened_direction_counts": {
+      "BENEFIT": 2,
+      "TIE": 2
+    },
+    "intervened_mean_cd_minus_baseline_planning_regret": -0.27499999999999997,
+    "intervened_planning_regret_ci": {
+      "alpha": 0.05,
+      "lower": -0.5499999999999999,
+      "mean": -0.27499999999999997,
+      "samples": 10000,
+      "upper": 0.0
+    },
+    "mean_improvement_vs_original": 0.0,
+    "original_direction_counts": {
+      "BENEFIT": 2,
+      "TIE": 2
+    },
+    "original_mean_cd_minus_baseline_planning_regret": -0.27499999999999997
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z",
+  "planning_benefit_with_confidence": false,
+  "policy_id": "pre_outcome_cooperation_threshold_rule.v1",
+  "processing_time_s": 191.506,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/live_tau_cooperation_unsafe_offer_pressure_slice_receipt.v1.json",
+  "receipt_sha256": "sha256:aeb0b689973bed7a6a0fd4f55d853958d5152e718c60e2a8205d9f7bfe54ba3d",
+  "rows_path": "/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/artifacts/cooperation_unsafe_offer_pressure_slice_rows.json",
+  "rows_sha256": "sha256:f5ce4f4fa529d7a87cca66999aa540112fa4afac8e2892bb5dd4499783fe0589",
+  "schema": "persona_dream.research.prospective_tom.live_tau_cooperation_unsafe_offer_pressure_slice_receipt.v1",
+  "slice_conclusion": "UNSAFE_OFFER_PRESSURE_SLICE_NO_CD_OFFER_EXPOSURE",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE",
+  "summary_path": "/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/artifacts/cooperation_unsafe_offer_pressure_slice_summary.json",
+  "summary_sha256": "sha256:2b6bd5d08de21ab0499d2fc7a43ff8e20b7e27bc538d34a56fcb2c9985dc60f7",
+  "tau_call_attempts": 16,
+  "tau_live_call_performed": 16,
+  "unsafe_offer_pressure_summary": {
+    "actual_avoid_or_disclose_rows": 4,
+    "cd_intervened_actions": {
+      "DISCLOSE_INFORMATION": 2,
+      "WAIT": 2
+    },
+    "cd_original_actions": {
+      "DISCLOSE_INFORMATION": 2,
+      "WAIT": 2
+    },
+    "cd_original_offer_episode_ids": [],
+    "cd_suppressed_offer_episode_ids": [],
+    "cd_unsafe_offer_candidates": 0,
+    "cd_unsafe_offer_suppression_rows": 0,
+    "rows": 4,
+    "unsafe_offer_pressure_rows": 4,
+    "visible_offer_affordance_rows": 4
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "alpha": 0.05,
+  "baseline_conditions": {
+    "action_brier": "M",
+    "belief_brier": "D",
+    "planning_regret": "D"
+  },
+  "bootstrap_samples": 2000,
+  "bootstrap_seed": 20260721,
+  "condition_means": {
+    "action_brier": {
+      "CD": 0.73,
+      "D": 0.71875,
+      "M": 0.6666666666666667,
+      "R": 0.6925
+    },
+    "belief_brier": {
+      "CD": 0.14000000000000004,
+      "D": 0.2198,
+      "M": 0.45500000000000007,
+      "R": 0.30499999999999994
+    }
+  },
+  "paired_delta_confidence_intervals": {
+    "action_brier": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:1ce7754fe7aa40149166a575e5d7ee1d05e43cfc2e30af24abf36cf055f97cbd",
+      "lower": 0.003958333333333258,
+      "mean": 0.06333333333333327,
+      "samples": 2000,
+      "seed": 20260722,
+      "upper": 0.12270833333333328
+    },
+    "belief_brier": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:7f45c02ba5a7def3e02c013ae80a585196855c3f75b7171e0e45c8bc4e13601c",
+      "lower": -0.07979999999999995,
+      "mean": -0.07979999999999995,
+      "samples": 2000,
+      "seed": 20260721,
+      "upper": -0.07979999999999995
+    },
+    "planning_regret": {
+      "alpha": 0.05,
+      "bootstrap_distribution_sha256": "sha256:7aa5d16946f3ce762de07dd3eb0a905502196593f73d940178f49c28a466062e",
+      "lower": -0.07968750000000001,
+      "mean": 0.0,
+      "samples": 2000,
+      "seed": 20260723,
+      "upper": 0.07968750000000001
+    }
+  },
+  "paired_delta_counts": {
+    "action_brier": 64,
+    "belief_brier": 64,
+    "planning_regret": 64
+  },
+  "planning_regret_means": {
+    "CD": 0.19296875000000002,
+    "D": 0.19296875000000002,
+    "M": 0.3046875,
+    "R": 0.3046875
+  },
+  "primary_baseline_condition": "D",
+  "primary_metric": "belief_brier"
+}

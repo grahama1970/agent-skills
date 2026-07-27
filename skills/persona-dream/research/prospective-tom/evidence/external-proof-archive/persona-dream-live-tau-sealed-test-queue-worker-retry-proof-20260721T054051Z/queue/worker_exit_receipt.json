@@ -1,0 +1,6 @@
+{
+  "exited_at": "2026-07-21T05:40:51Z",
+  "processed_jobs": 4,
+  "schema": "pctom.queue_worker.exit_receipt.v1",
+  "status": "EXITED"
+}

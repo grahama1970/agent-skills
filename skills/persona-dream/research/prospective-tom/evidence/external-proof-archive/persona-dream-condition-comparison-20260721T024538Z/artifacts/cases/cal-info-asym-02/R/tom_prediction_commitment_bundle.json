@@ -1,0 +1,101 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "R",
+      "episode_id": "cal-info-asym-02",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "cal-info-asym-02-r-tom1-factual",
+          "cal-info-asym-02-r-tom2-factual",
+          "cal-info-asym-02-r-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:044a7edc4c6c66feb62a53d65e96fd22fed738ed3892dea6ede6c26cb978529d",
+        "branch_refs": [
+          "cal-info-asym-02-r-factual",
+          "cal-info-asym-02-r-counterfactual"
+        ],
+        "distribution_bundle_sha256": "sha256:62589a23df2380abc6fce10af4cee951571d9baa697b8ef9357e1f3e967b80e7",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-info-asym-02:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "cal-info-asym-02:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-info-asym-02:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:9963fcf68824a58a30554a68b3749473d4340cf0012f5fbb55621ba6a7cf0570",
+      "model_receipts": [
+        {
+          "condition": "R",
+          "live_call_performed": false,
+          "mocked": false,
+          "model": "deterministic_pctom_condition_prior.v1",
+          "notes": "No LLM judge or provider call; deterministic protocol instrumentation.",
+          "receipt_id": "cal-info-asym-02-r-deterministic-condition-prior"
+        }
+      ],
+      "model_receipts_sha256": "sha256:625914f25cddd7e89746cd8d6c52924ac4179d60aa200eface7480b31e298cf5",
+      "outcome_visible": false,
+      "prediction_id": "cal-info-asym-02-r-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "cal-info-asym-02-r-tom1-factual",
+          "cal-info-asym-02-r-tom2-factual",
+          "cal-info-asym-02-r-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "cal-info-asym-02-r-factual",
+          "cal-info-asym-02-r-counterfactual"
+        ],
+        "condition": "R",
+        "condition_method": "textual_reflection_prior",
+        "episode_id": "cal-info-asym-02",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-info-asym-02:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "cal-info-asym-02:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-info-asym-02:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.5,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.3,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.2,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          }
+        ]
+      },
+      "prediction_payload_sha256": "sha256:4dbc97b35693b0955a44541f7af91e8d1ed53dee4816db3fd6b283f76d6553a1",
+      "sealed_at": "2026-07-21T03:01:01Z"
+    }
+  ],
+  "episode_id": "cal-info-asym-02",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

@@ -1,0 +1,38 @@
+{
+  "CD": {
+    "cases": 0,
+    "mean_action_brier": null,
+    "mean_action_log_loss": null,
+    "mean_belief_brier": null,
+    "mean_belief_log_loss": null
+  },
+  "D": {
+    "cases": 0,
+    "mean_action_brier": null,
+    "mean_action_log_loss": null,
+    "mean_belief_brier": null,
+    "mean_belief_log_loss": null
+  },
+  "M": {
+    "cases": 0,
+    "mean_action_brier": null,
+    "mean_action_log_loss": null,
+    "mean_belief_brier": null,
+    "mean_belief_log_loss": null
+  },
+  "R": {
+    "cases": 0,
+    "mean_action_brier": null,
+    "mean_action_log_loss": null,
+    "mean_belief_brier": null,
+    "mean_belief_log_loss": null
+  },
+  "comparison": {
+    "cd_mean_action_brier": null,
+    "cd_minus_strongest_baseline": null,
+    "lower_is_better": true,
+    "primary_metric": "mean_action_brier",
+    "strongest_baseline_condition": null,
+    "strongest_baseline_mean_action_brier": null
+  }
+}

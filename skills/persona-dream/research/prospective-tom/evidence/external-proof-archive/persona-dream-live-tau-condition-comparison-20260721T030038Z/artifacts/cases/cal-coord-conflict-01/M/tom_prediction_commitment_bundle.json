@@ -1,0 +1,113 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "M",
+      "episode_id": "cal-coord-conflict-01",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "live-tau-m-cal-coord-conflict-01-tom1-factual",
+          "live-tau-m-cal-coord-conflict-01-tom2-factual",
+          "live-tau-m-cal-coord-conflict-01-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:30d7b4eee30de1533c5c9043fff46440fb6398bbfa5bd4940be1b1de82f7e334",
+        "branch_refs": [
+          "live-tau-m-cal-coord-conflict-01-factual",
+          "live-tau-m-cal-coord-conflict-01-counterfactual"
+        ],
+        "condition": "M",
+        "distribution_bundle_sha256": "sha256:1158daade4432a225f10d34f1f12fb561b9a8d0461e304c7f6787fce097a6889",
+        "episode_id": "cal-coord-conflict-01",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-coord-conflict-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "cal-coord-conflict-01:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-coord-conflict-01:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:f5053ead6f6a68ca79d5189d3d135e0aa4a5d0eaa36801ccd6d5015e2173607e",
+      "model_receipts": [
+        {
+          "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+          "caller_skill": "persona-dream",
+          "created_at": "2026-07-21T03:00:38.588189+00:00",
+          "http_status": 200,
+          "live": true,
+          "live_call_performed": true,
+          "mocked": false,
+          "model": "gpt-5.5",
+          "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+          "prompt_sha256": "sha256:4f9ad17a6b5eab46f3dccd8c5a4c005fa04fc66e929cd1e4354cbe7fb8cafd91",
+          "role": "pctom-live-condition-m",
+          "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+          "status": "PASS",
+          "surface": "scillm.chat_completions.text"
+        }
+      ],
+      "model_receipts_sha256": "sha256:5dcbffedf1d1293fd27f4d372a7863e9238883d60fe07b4a98e3657326a67fcf",
+      "outcome_visible": false,
+      "prediction_id": "live-tau-m-cal-coord-conflict-01-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "live-tau-m-cal-coord-conflict-01-tom1-factual",
+          "live-tau-m-cal-coord-conflict-01-tom2-factual",
+          "live-tau-m-cal-coord-conflict-01-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "live-tau-m-cal-coord-conflict-01-factual",
+          "live-tau-m-cal-coord-conflict-01-counterfactual"
+        ],
+        "condition": "M",
+        "condition_method": "Memory-only condition: use the visible episode evidence as recalled facts. Do not add reflective narrative or dream-like simulation. Keep uncertainty high when the visible evidence does not settle the prediction.",
+        "episode_id": "cal-coord-conflict-01",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-coord-conflict-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "cal-coord-conflict-01:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-coord-conflict-01:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.34,
+            "value": "KAI_ASKS_TO_WAIT"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_OFFERS_COOPERATION"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:6919a57ec56673c3aca1f20d048799993ed3f47f6f70bea483d309bf8a951e16",
+      "sealed_at": "2026-07-21T03:01:27Z"
+    }
+  ],
+  "episode_id": "cal-coord-conflict-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

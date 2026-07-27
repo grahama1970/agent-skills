@@ -1,0 +1,346 @@
+{
+  "about": "pipeline robustness autonomous dream residue",
+  "accepted_source_id_pair_count": 28,
+  "accepted_source_ids_by_query": [
+    {
+      "accepted_source_ids": [
+        "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+        "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+        "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+        "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+        "embry_gap_unresolved_thread_instagram_after_kai_001",
+        "embry_gap_preference_chess_pie_home_recipe_001",
+        "embry_gap_knowledge_gap_brandon_interview_unknowns_001",
+        "embry_age19_23_b01_memory_010",
+        "embry_age19_23_b01_memory_036",
+        "embry_age23_current_b01_memory_024",
+        "embry_gap_preference_bachelor_monday_opinions_001",
+        "embry_age23_current_b01_memory_008",
+        "embry_age15_19_b03_memory_048",
+        "embry_age19_23_b01_memory_002",
+        "embry_age15_19_b01_memory_012",
+        "embry_gap_preference_rocket_launch_commentators_001",
+        "embry_age15_19_b03_memory_044",
+        "embry_age15_19_b02_memory_047",
+        "embry_age15_19_b02_memory_022",
+        "embry_age10_15_b01_memory_001",
+        "embry_age10_15_b01_memory_009",
+        "embry_age15_19_b01_memory_004",
+        "embry_age15_19_b02_memory_026",
+        "embry_age15_19_b02_memory_014"
+      ],
+      "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+      "query_index": 0,
+      "scope": "persona-dream"
+    },
+    {
+      "accepted_source_ids": [
+        "47452948"
+      ],
+      "accepted_source_ids_sha256": "sha256:99954c1caacb01215ad6b79192da869e1f3a464c5be17931c625e0bcb20c1b63",
+      "query": "recent unresolved themes persona memory SPARTA NIST MITRE evidence pipeline robustness autonomous dream residue",
+      "query_index": 1,
+      "scope": "embry-memories"
+    },
+    {
+      "accepted_source_ids": [
+        "308496696438"
+      ],
+      "accepted_source_ids_sha256": "sha256:13e6ff2b2e67f7f14289cb48c21de768449f2a0431652a123f9354c9b998269a",
+      "query": "recent dream motif visual surreal recurring image pipeline robustness autonomous dream residue",
+      "query_index": 2,
+      "scope": "embry-dreams"
+    },
+    {
+      "accepted_source_ids": [
+        "persona-dream:pipeline:phase:01"
+      ],
+      "accepted_source_ids_sha256": "sha256:447cac45fe1a0aaf8fd961d032babe1a0ed64caa32efd02996a8c08dad7e174e",
+      "query": "dream reflection mood unresolved image feeling pipeline robustness autonomous dream residue",
+      "query_index": 3,
+      "scope": "embry-dream-journals"
+    },
+    {
+      "accepted_source_ids": [
+        "47808408"
+      ],
+      "accepted_source_ids_sha256": "sha256:bb8fcdb6ed9582bc4ec92b40b1806bb41d2f8c7aa26adb2c7a6b093721860f40",
+      "query": "embry recent task failure contradiction insight pipeline robustness autonomous dream residue",
+      "query_index": 4,
+      "scope": "operational"
+    }
+  ],
+  "actual_provider_call_attempts": 0,
+  "artifact_descriptors": {
+    "contradiction_report": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/contradiction_report.json",
+      "sha256": "0729d541abf6356188c8e8da22e22467150627626297ed862e4f4ed4a1bc3666",
+      "size_bytes": 599,
+      "under_output_root": true
+    },
+    "dream_packet": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/dream_packet.json",
+      "sha256": "b571253d6e116cef471d98e7ee62f8e544e8502f8e5ccbd78fa6deb63dd17a9d",
+      "size_bytes": 15231,
+      "under_output_root": true
+    },
+    "dream_request": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/dream_request.json",
+      "sha256": "ce4e353685cc72d892b255b0aaac6760e7168a1ae97aac870a9290c3f274046a",
+      "size_bytes": 429,
+      "under_output_root": true
+    },
+    "frame_prompts": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/frame_prompts.json",
+      "sha256": "36f5965ef9f1c4d8ea4be7bd15d6cf6a936a890f96dbd2c8ef035816b3eebe1f",
+      "size_bytes": 3797,
+      "under_output_root": true
+    },
+    "manifest": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/manifest.json",
+      "sha256": "9718e684119d72ca2e1a1bad122b98f69329230258d2993bc5fc3f5d17e09037",
+      "size_bytes": 1953,
+      "under_output_root": true
+    },
+    "memory_write_receipt": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/memory_write_receipt.json",
+      "sha256": "331c1beb77d3322a130a931133e69dab09fe58a36da5cc5487e320edf9097448",
+      "size_bytes": 95,
+      "under_output_root": true
+    },
+    "pipeline_stage_report": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/pipeline_stage_report.json",
+      "sha256": "4818925286676d4f566900ac4d70f42d1fe535c787245053146d48a018c15682",
+      "size_bytes": 8562,
+      "under_output_root": true
+    },
+    "residue_links": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/residue_links.json",
+      "sha256": "dd76cb3632984aa9c3bf281b4406402fdf38c6eb1c08379c11e3bea65cc5b77f",
+      "size_bytes": 14186,
+      "under_output_root": true
+    },
+    "response": {
+      "exists": true,
+      "is_symlink": false,
+      "path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/response.json",
+      "sha256": "1d4b247878d34aca64f081f275b3226ab43259d8c8bad0ec98749f99fc2505df",
+      "size_bytes": 454,
+      "under_output_root": true
+    }
+  },
+  "child_duration_s": 4.624,
+  "child_exit_code": 0,
+  "claims": {
+    "does_not_prove": [
+      "semantic or psychological quality of the dream",
+      "that the recalled memories were the best memories",
+      "human preference or acceptance",
+      "provider-ready storyboard generation",
+      "image, video, voice, or lip-sync generation",
+      "paid-provider execution",
+      "Memory writeback durability",
+      "complete live Phase 01-16 execution",
+      "repeatability against an unchanged Memory index",
+      "independence from backend mocks not visible to this client",
+      "full raw /recall payload byte provenance beyond accepted source ids"
+    ],
+    "proves": [
+      "the Persona Dream generator exercised the live Memory /recall client path without fixtures",
+      "each live recall query receipt included accepted normalized source ids and a canonical source-id digest",
+      "each emitted residue item mapped back to an accepted source id in its live query receipt",
+      "live recalled residue was normalized into residue_links and preserved into dream_packet lineage",
+      "frame prompts and contradiction references resolved to recalled residue source ids",
+      "the generator's writeback contract remained skipped under --no-write-memory"
+    ]
+  },
+  "command": [
+    "/tmp/agent-skills-pctom-live-20260721T020213Z/skills/persona-dream/.venv/bin/python3",
+    "/tmp/agent-skills-pctom-live-20260721T020213Z/skills/persona-dream/scripts/persona_dream.py",
+    "generate",
+    "--mode",
+    "static_dream",
+    "--persona",
+    "embry",
+    "--limit",
+    "6",
+    "--output-dir",
+    "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z",
+    "--run-id",
+    "persona-dream-live-pctom-gate0-r2",
+    "--no-write-memory",
+    "--about",
+    "pipeline robustness autonomous dream residue"
+  ],
+  "created_at": "2026-07-21T02:05:01Z",
+  "cwd": "/tmp/agent-skills-pctom-live-20260721T020213Z/skills/persona-dream",
+  "dream_packet_sha256": "b571253d6e116cef471d98e7ee62f8e544e8502f8e5ccbd78fa6deb63dd17a9d",
+  "duplicate_source_ids": [],
+  "errors": [],
+  "expected_query_count": 5,
+  "failed_query_count": 0,
+  "fixture_backed": false,
+  "fixture_markers_found": [],
+  "human_content_judgment_required": false,
+  "limit": 6,
+  "lineage_checks": {
+    "contradiction_sources_resolve": true,
+    "frame_sources_resolve": true,
+    "manifest_artifacts_exist": true,
+    "packet_items_equal_residue_items": true,
+    "packet_mode": true,
+    "packet_persona": true,
+    "packet_run_id": true,
+    "request_about": true,
+    "request_limit": true,
+    "request_no_write_memory": true,
+    "request_non_fixture": true,
+    "request_persona": true,
+    "request_run_id": true,
+    "request_static_mode": true,
+    "residue_pairs_match_receipt_prefix": true,
+    "residue_run_id": true,
+    "residue_source_ids_in_query_receipts": true,
+    "response_artifact_paths_under_root": true,
+    "response_ok": true,
+    "response_run_id": true,
+    "stage02_recall_receipts_agree": true
+  },
+  "live": true,
+  "manifest_sha256": "9718e684119d72ca2e1a1bad122b98f69329230258d2993bc5fc3f5d17e09037",
+  "memory_endpoint": "/recall",
+  "memory_socket": "/run/user/1000/embry/memory.sock",
+  "memory_transport": "unix_socket",
+  "memory_write_receipt_sha256": "331c1beb77d3322a130a931133e69dab09fe58a36da5cc5487e320edf9097448",
+  "memory_write_status": "skipped",
+  "missing_receipt_pairs": [],
+  "mocked": false,
+  "observed_blockers": [],
+  "observed_query_count": 5,
+  "output_root": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z",
+  "paid_call_authorized": false,
+  "persona_dream_py_sha256": "7e242f3afe2c371fbc98e79c9f1f2dafc21324188f66e625c936e3ad20ec3775",
+  "persona_id": "embry",
+  "persona_mismatches": [],
+  "processing_time_s": 4.627,
+  "provider_live": false,
+  "python_executable": "/tmp/agent-skills-pctom-live-20260721T020213Z/skills/persona-dream/.venv/bin/python3",
+  "receipt_path": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/live_memory_recall_receipt.v1.json",
+  "request_sha256": "ce4e353685cc72d892b255b0aaac6760e7168a1ae97aac870a9290c3f274046a",
+  "residue_count": 6,
+  "residue_links_sha256": "dd76cb3632984aa9c3bf281b4406402fdf38c6eb1c08379c11e3bea65cc5b77f",
+  "residue_pairs": [
+    "persona-dream:embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+    "persona-dream:embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+    "persona-dream:embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+    "persona-dream:embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+    "persona-dream:embry_gap_unresolved_thread_instagram_after_kai_001",
+    "persona-dream:embry_gap_preference_chess_pie_home_recipe_001"
+  ],
+  "residue_to_query_receipt_links": [
+    {
+      "accepted_order": 0,
+      "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+      "query_index": 0,
+      "residue_index": 0,
+      "scope": "persona-dream",
+      "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+    },
+    {
+      "accepted_order": 1,
+      "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+      "query_index": 0,
+      "residue_index": 1,
+      "scope": "persona-dream",
+      "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+    },
+    {
+      "accepted_order": 2,
+      "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+      "query_index": 0,
+      "residue_index": 2,
+      "scope": "persona-dream",
+      "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+    },
+    {
+      "accepted_order": 3,
+      "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+      "query_index": 0,
+      "residue_index": 3,
+      "scope": "persona-dream",
+      "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+    },
+    {
+      "accepted_order": 4,
+      "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+      "query_index": 0,
+      "residue_index": 4,
+      "scope": "persona-dream",
+      "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001"
+    },
+    {
+      "accepted_order": 5,
+      "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+      "query_index": 0,
+      "residue_index": 5,
+      "scope": "persona-dream",
+      "source_id": "embry_gap_preference_chess_pie_home_recipe_001"
+    }
+  ],
+  "response_sha256": "1d4b247878d34aca64f081f275b3226ab43259d8c8bad0ec98749f99fc2505df",
+  "run_id": "persona-dream-live-pctom-gate0-r2",
+  "run_sh_sha256": "0dd6c852ac5e98dfe4be811bef3059832d711a0997d6ec5ceca3710e1e370b31",
+  "schema": "persona_dream.live_memory_recall_check.v1",
+  "scopes": [
+    "persona-dream"
+  ],
+  "script_sha256": "f9132a81ab0f206d4a04ee6a1c10a679c894debea5f5d8efbd3ed3e46cac60be",
+  "source_ids": [
+    "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+    "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+    "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+    "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+    "embry_gap_unresolved_thread_instagram_after_kai_001",
+    "embry_gap_preference_chess_pie_home_recipe_001"
+  ],
+  "status": "PASS_LIVE_MEMORY_RECALL",
+  "stderr_tail": "",
+  "stdout_tail": "{\n  \"schema\": \"persona_dream.response.v1\",\n  \"status\": \"ok\",\n  \"mode\": \"static_dream\",\n  \"run_id\": \"persona-dream-live-pctom-gate0-r2\",\n  \"output_dir\": \"/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z\",\n  \"artifact_count\": 13,\n  \"memory_write_status\": \"skipped\",\n  \"dream_packet\": \"/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/dream_packet.json\",\n  \"manifest\": \"/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/manifest.json\"\n}",
+  "successful_query_count": 5,
+  "timeout_s": 120,
+  "total_accepted_count": 28,
+  "total_accepted_normalized_count": 28,
+  "total_accepted_source_id_count": 28,
+  "total_returned_count": 36,
+  "unique_source_count": 6,
+  "writeback_checks": {
+    "no_document_key": true,
+    "no_store_http_status": true,
+    "reason_write_memory_false": true,
+    "scope_matches": true,
+    "status_skipped": true
+  }
+}

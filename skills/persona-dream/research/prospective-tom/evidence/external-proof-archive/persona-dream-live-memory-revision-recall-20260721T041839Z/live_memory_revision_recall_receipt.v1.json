@@ -1,0 +1,95 @@
+{
+  "base_receipt": "/tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/live_tau_revision_recall_receipt.v1.json",
+  "base_receipt_sha256": "sha256:ae5e9d671e1e7e15bf65cd407475f8479fcdf399d9196d14348fb85c2840353e",
+  "base_root": "/tmp/persona-dream-live-tau-revision-recall-20260721T035640Z",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_receipt_hash_recomputed": true,
+    "base_revision_recall_passed": true,
+    "conditions_represented": true,
+    "human_content_judgment_absent": true,
+    "live_memory_recall_hits_per_condition": false,
+    "live_memory_recall_hits_present": false,
+    "live_memory_recall_performed": true,
+    "memory_exact_reread_complete": true,
+    "memory_upsert_http_ok": true,
+    "prior_and_posterior_distinguished": true,
+    "synthetic_literal_boundary_preserved": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "held-out live Tau execution",
+      "64-episode statistical confidence intervals",
+      "planning benefit over the strongest baseline",
+      "real external service fault injection",
+      "production retry machinery",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video or semantic dream quality"
+    ],
+    "proves": [
+      "the live Memory revision-recall bridge failed closed before claiming live recall-after-revision evidence"
+    ]
+  },
+  "collection": "persona_dream_pctom_revision_recall",
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "base_revision_documents": 16,
+    "memory_documents_prepared": 16,
+    "memory_documents_upserted": 16,
+    "memory_exact_rereads": 16,
+    "revision_documents_per_condition": {
+      "CD": 4,
+      "D": 4,
+      "M": 4,
+      "R": 4
+    },
+    "revision_recall_hits": 0,
+    "revision_recall_hits_per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "revision_recall_queries": 4,
+    "write_violations": 0
+  },
+  "created_at": "2026-07-21T04:18:52Z",
+  "deterministic_artifact_recall": false,
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "document_index": "/tmp/persona-dream-live-memory-revision-recall-20260721T041839Z/artifacts/live_memory_revision_documents.json",
+  "errors": [
+    "live_memory_recall_hits_per_condition_insufficient:M:0",
+    "live_memory_recall_hits_per_condition_insufficient:R:0",
+    "live_memory_recall_hits_per_condition_insufficient:D:0",
+    "live_memory_recall_hits_per_condition_insufficient:CD:0",
+    "revision_recall_hits_insufficient:0"
+  ],
+  "exact_rereads": "/tmp/persona-dream-live-memory-revision-recall-20260721T041839Z/artifacts/live_memory_exact_rereads.json",
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_memory_recall_performed": true,
+  "live_tau_originated_revision_artifacts_consumed": true,
+  "memory_base_url": "http://127.0.0.1:8601",
+  "memory_recall_attempts": 12,
+  "memory_upsert_http_status": 200,
+  "memory_write_attempts": 1,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-memory-revision-recall-20260721T041839Z",
+  "provider_call_attempts": 0,
+  "recall_results": "/tmp/persona-dream-live-memory-revision-recall-20260721T041839Z/artifacts/live_memory_recall_results.json",
+  "receipt_path": "/tmp/persona-dream-live-memory-revision-recall-20260721T041839Z/live_memory_revision_recall_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_memory_revision_recall_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "BLOCKED_PCTOM_LIVE_MEMORY_REVISION_RECALL",
+  "tau_call_attempts": 0,
+  "upsert_response": "/tmp/persona-dream-live-memory-revision-recall-20260721T041839Z/artifacts/live_memory_upsert_response.json"
+}

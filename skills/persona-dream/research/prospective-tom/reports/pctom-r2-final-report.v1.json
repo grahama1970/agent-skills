@@ -1,0 +1,93 @@
+{
+  "schema": "persona_dream.research.prospective_tom.pctom_r2_final_report.v1",
+  "created_at": "2026-07-27T16:45:00Z",
+  "status": "PCTOM_R2_STOP_CONDITION_REPORTED_WITH_DURABLE_LOCAL_EVIDENCE",
+  "mocked": false,
+  "live": false,
+  "fixture_backed": false,
+  "artifact_backed": true,
+  "local_receipts": {
+    "external_proof_archive_manifest": {
+      "path": "skills/persona-dream/research/prospective-tom/evidence/pctom-external-proof-archive.v1.json",
+      "sha256": "sha256:a3a9081dd2f86cd07007b1cd796ff222de6c30d885a5e5871f98a5cd6eb76d05",
+      "status": "EXTERNAL_PROOF_ARCHIVE_BUILT",
+      "counts": {
+        "cited_sources": 257,
+        "archived_sources": 257,
+        "missing_sources": 0,
+        "files": 15352,
+        "bytes": 79727847
+      },
+      "entries_sha256": "sha256:2fa7c20c2497a06a0c8b1cf4d57550cbab5c84c596e73c2768e66a65c3594cee"
+    },
+    "pctom_r2_replication_readiness": {
+      "path": "skills/persona-dream/research/prospective-tom/receipts/pctom-r2-replication-readiness-audit.v1.json",
+      "status": "PASS_PCTOM_R2_REPLICATION_READINESS",
+      "mocked": false,
+      "live": false,
+      "fixture_backed": true,
+      "required_receipts": 12,
+      "required_receipts_passed": 12,
+      "negative_fixtures": 48,
+      "negative_fixtures_blocked": 48,
+      "readiness_negative_fixtures": 5,
+      "readiness_negative_fixtures_blocked": 5
+    },
+    "heldout_condition_benefit": {
+      "path": "skills/persona-dream/research/prospective-tom/receipts/heldout_condition_benefit_receipt.v1.json",
+      "sha256": "sha256:edc1f3ce016169aa0c9e60d7e333a0f443d16017e4f09593ec34ce5eb3581e6c",
+      "status": "PASS_PCTOM_HELDOUT_CONDITION_BENEFIT",
+      "mocked": false,
+      "live": false,
+      "fixture_backed": false,
+      "boundary": "deterministic simulator held-out receipt; not live Tau held-out execution and not live Memory recall"
+    },
+    "live_memory_revision_recall": {
+      "path": "skills/persona-dream/research/prospective-tom/receipts/live_memory_revision_recall_receipt.v1.json",
+      "sha256": "sha256:371df25dcb97a2c1ed5cd266b20309f3db93fff4a17ceb34de2c4d2660e78b19",
+      "status": "PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL",
+      "mocked": false,
+      "live": true,
+      "fixture_backed": false,
+      "counts": {
+        "memory_documents_upserted": 16,
+        "memory_exact_rereads": 16,
+        "memory_semantic_exact_rereads": 16,
+        "revision_recall_hits": 16,
+        "write_violations": 0
+      }
+    }
+  },
+  "completion_rule_mapping": {
+    "gate_0": "covered by pctom_r2_replication_readiness required receipts and archived Gate 0 roots",
+    "gate_1": "covered by pctom_r2_replication_readiness required receipts and archived social episode roots",
+    "gate_2": "covered by pctom_r2_replication_readiness required receipts and archived ToM distribution roots",
+    "gate_3": "covered by pctom_r2_replication_readiness required receipts and archived counterfactual branch roots",
+    "gate_4": "covered by pctom_r2_replication_readiness required receipts and archived sealed prediction roots",
+    "gate_5": "covered by pctom_r2_replication_readiness required receipts and heldout/scoring receipts",
+    "gate_6": "covered by pctom_r2_replication_readiness required receipts and heldout action-selection receipts",
+    "gate_7": "covered by pctom_r2_replication_readiness required receipts and live Memory revision-recall receipt",
+    "gate_8": "covered by pctom_r2_replication_readiness required receipts and archived reliability/fault receipts",
+    "gate_9": "covered by pctom_r2_replication_readiness required receipts and archived causal replay/localization receipts"
+  },
+  "known_weaknesses": [
+    "The held-out condition-benefit receipt is live:false and does not prove live Tau held-out execution.",
+    "The held-out condition-benefit metric is mean_belief_brier, while earlier calibration/planning discussions also used mean_action_brier and planning regret.",
+    "A later issue comment reports a degenerate all-TRUE sealed_test corpus/estimator problem; this report therefore treats held-out benefit as archived stop-condition evidence, not as a reliable headline benefit claim.",
+    "PCTOM-R2 readiness is a research workstream receipt, not proof of Embry's persistent persona, dream-to-session continuity, Chatterbox perceived emotion, or full Phase 01-16 media reliability."
+  ],
+  "claims": {
+    "proves": [
+      "the PCTOM-R2 stop-condition evidence is now locally artifact-backed instead of depending only on /tmp",
+      "the two ticket-required stop-condition receipts exist under skills/persona-dream/research/prospective-tom/receipts with expected PASS statuses",
+      "the durable archive manifest records zero missing GOAL.md-cited /tmp sources and re-readable digests for 15352 files"
+    ],
+    "does_not_prove": [
+      "counterfactual dreaming improves prospective planning",
+      "live Tau held-out condition-benefit execution",
+      "Embry's persistent dream-derived continuity",
+      "recognizable or perceptually correct Chatterbox emotion",
+      "repeatable full dream/video pipeline reliability"
+    ]
+  }
+}

@@ -1,0 +1,492 @@
+{
+  "coverage": [
+    {
+      "coverage_id": "gate0_provenance_bound_recall_residue",
+      "description": "accepted raw source IDs and source digests reach live PCTOM predictions",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:0ac24f56252a1bbe59180e04d32ffb78b9702373b29d5e51a4aef32e418b5220",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:82fb21cabda6d2f06ab3a880f30f5db9165a19e6cc27c742486b110bc8f2dae6",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:28cbf9afddfafedd783f489e16677b7237ed9deafb353f4ec5b9a0d695f0e3ac",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z/live_stage_hash_lineage_audit_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "accepted_source_refs_checked": 384
+          }
+        },
+        {
+          "expected_file_sha256": "sha256:5952d59caa628819ea902466a420d15b002b4222d9a4b7fc321c9ce9488522d5",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z/live_pctom_gate0_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_counts": {},
+          "required_error_needles": []
+        },
+        {
+          "expected_file_sha256": "sha256:25ca92ce828bf295f66244af08480100c45756141d1a1e4e01eb4bec2201fe04",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant25-26-20260722T152000Z/live_tau_balanced_planning_replication_receipt.v1.json",
+          "require_mocked_false": true,
+          "require_no_human_content_judgment_true": true,
+          "require_no_llm_judge_true": true,
+          "require_no_provider_or_canonical_writes": true,
+          "require_receipt_sha256": true
+        }
+      ],
+      "require_live_positive": true
+    },
+    {
+      "coverage_id": "gate1_deterministic_hidden_state_social_episodes",
+      "description": "deterministic social episodes replay hidden policies and labels without generator imports",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:d9ce7e14e570081997fe0d29708d4cde258418f068dd6484d880f01e7a6e306e",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-social-simulator-service-proof-20260722T082000Z/social_simulator_service_proof_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:7d225e3dff14eb1ca267466f97eadd16ed1d61d14532703bc023080c46feb997",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-pctom-social-corpus-independent-replay-sealed64-20260722T064500Z/social_episode_independent_replay_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:d2d44953ac9cfd1d083ca368da2121f99ef3a7653cbb18c7236ba61d6bab6f73",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "episode_action_replay_mismatch"
+          ]
+        },
+        {
+          "expected_file_sha256": "sha256:26a864cd56e639bac8574c032030a15a57516031ee8a60c68ca551daffbad03e",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_independent_replay_receipt.v1.json",
+          "require_mocked_false": true,
+          "require_no_human_content_judgment_true": true,
+          "require_no_llm_judge_true": true,
+          "require_no_provider_or_canonical_writes": true,
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "action_matches": 128,
+            "episodes": 128,
+            "hidden_state_matches": 128,
+            "label_matches": 128,
+            "withheld_fields_matches": 128
+          }
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:4e4761eda9e2afb3bd2331e951d4f171687503a55935c13377fa3f9e2fede3dd",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-negative-action-20260722T150000Z/social_episode_independent_replay_receipt.v1.json",
+          "require_mocked_false": true,
+          "require_no_human_content_judgment_true": true,
+          "require_no_llm_judge_true": true,
+          "require_no_provider_or_canonical_writes": true,
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "action_matches": 127,
+            "episodes": 128
+          }
+        }
+      ],
+      "require_live_positive": true,
+      "require_negative": true
+    },
+    {
+      "coverage_id": "gate2_valid_tom_distributions",
+      "description": "ToM distributions are validated and bad probability sums fail closed",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:4520d043aae50ca0c687264dbcd0da430774f5ea573c9bda7490cbd4b96b5946",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json",
+          "require_receipt_sha256": true
+        }
+      ],
+      "require_negative": false
+    },
+    {
+      "coverage_id": "gate3_counterfactual_branches_synthetic",
+      "description": "counterfactual branches remain synthetic and stripped markers fail closed",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:4520d043aae50ca0c687264dbcd0da430774f5ea573c9bda7490cbd4b96b5946",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json",
+          "require_receipt_sha256": true
+        }
+      ]
+    },
+    {
+      "coverage_id": "gate4_sealed_prediction_commitments",
+      "description": "sealed prediction payload hashes are checked and post-seal tamper fails closed",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:4520d043aae50ca0c687264dbcd0da430774f5ea573c9bda7490cbd4b96b5946",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:56404d334bccd8b6ab82ddf2bd3c01f93bb5b8b1d1d5c1742c200e2edd59bc07",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "prediction_payload_sha256_mismatch"
+          ]
+        }
+      ],
+      "require_negative": true
+    },
+    {
+      "coverage_id": "gate5_deterministic_scoring",
+      "description": "outcome reveal and scoring validators reject invalid deterministic actions",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:8809d0ce4acfafd55938a2c8362dd3d54b92b7d0cf3db02f1b5a25e25e1f25bf",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json",
+          "require_receipt_sha256": true
+        }
+      ]
+    },
+    {
+      "coverage_id": "gate6_action_selection_planning",
+      "description": "action selections are constrained and planning regret evidence is live",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:0ac24f56252a1bbe59180e04d32ffb78b9702373b29d5e51a4aef32e418b5220",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:8809d0ce4acfafd55938a2c8362dd3d54b92b7d0cf3db02f1b5a25e25e1f25bf",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:25ca92ce828bf295f66244af08480100c45756141d1a1e4e01eb4bec2201fe04",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant25-26-20260722T152000Z/live_tau_balanced_planning_replication_receipt.v1.json",
+          "require_mocked_false": true,
+          "require_no_human_content_judgment_true": true,
+          "require_no_llm_judge_true": true,
+          "require_no_provider_or_canonical_writes": true,
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "cases": 32,
+            "episodes": 8
+          }
+        }
+      ],
+      "require_live_positive": true
+    },
+    {
+      "coverage_id": "gate7_non_destructive_belief_revision",
+      "description": "belief revisions preserve priors and reject evidence mutation",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:8809d0ce4acfafd55938a2c8362dd3d54b92b7d0cf3db02f1b5a25e25e1f25bf",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json",
+          "require_receipt_sha256": true
+        }
+      ],
+      "require_live_positive": true
+    },
+    {
+      "coverage_id": "gate8_fault_containment",
+      "description": "fault families terminate recovered, blocked, or quarantined, not unknown",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:0fd7d4c4747d1d3eaa54c47d7d9ab7b93a61cbcd01c4e727b0450c9d4a850c86",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:0178c7993aa3b9a65bf549dc73d3f98b8566802d45d6673865a217464a81b0bf",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:e1bce6e0691430bbd923df267220151773c429e0ccf2fb293f74010de46be782",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json",
+          "require_receipt_sha256": true
+        }
+      ],
+      "require_live_positive": true
+    },
+    {
+      "coverage_id": "gate9_causal_replay",
+      "description": "causal replay localizes divergence to a receipt/tool-return boundary",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:0fd7d4c4747d1d3eaa54c47d7d9ab7b93a61cbcd01c4e727b0450c9d4a850c86",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:0178c7993aa3b9a65bf549dc73d3f98b8566802d45d6673865a217464a81b0bf",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json",
+          "require_receipt_sha256": true
+        }
+      ],
+      "require_live_positive": true
+    },
+    {
+      "coverage_id": "cross_stage_hash_lineage",
+      "description": "Gate 2-7 hashes and Gate 0 source refs are recomputed across stage boundaries",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:28cbf9afddfafedd783f489e16677b7237ed9deafb353f4ec5b9a0d695f0e3ac",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z/live_stage_hash_lineage_audit_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "accepted_source_refs_checked": 384,
+            "cases_audited": 128,
+            "commitment_hashes_recomputed": 384
+          }
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:56404d334bccd8b6ab82ddf2bd3c01f93bb5b8b1d1d5c1742c200e2edd59bc07",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "prediction_payload_sha256_mismatch"
+          ]
+        }
+      ],
+      "require_live_positive": true,
+      "require_negative": true
+    },
+    {
+      "coverage_id": "autonomous_no_human_judgment",
+      "description": "selected evidence surface requires no human content judgment and no LLM judge",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:8c3e8e0e1526322a0e5b7490134b2f172daf83eb298071e1ba0d48fb49e78835",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-autonomous-no-human-judgment-surface-20260722T090000Z/autonomous_no_human_judgment_surface_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "explicit_human_content_judgment_false": 15,
+            "llm_judge_true": 0,
+            "mocked_true": 0,
+            "receipts_seen": 15
+          }
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:5006a4f534918bacccd6877c556a9513fdbc88b02beaf46cc0ca7446328bcbe4",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-autonomous-no-human-judgment-surface-negative-human-required-20260722T090100Z/output/autonomous_no_human_judgment_surface_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "receipt_human_content_judgment_required_true"
+          ]
+        }
+      ],
+      "require_negative": true
+    },
+    {
+      "coverage_id": "memory_retention_and_recall",
+      "description": "noncanonical PCTOM revisions survive delayed recall, restart, and minimum-age checks",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:407bc6471541f5ed0e83766e59db13b9048f8857c51d14d3149e0c3bf350934a",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:1af7cca4f0070d9890245f382c12393a1a51a9b84806bb3c0bf661015e613792",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/live_memory_restart_delayed_recall_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:d0a93f0d94f511050d5d6049602ff4959888b0e9f03fc3b633f22cf7b73b4d38",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/live_memory_aged_retention_recall_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:ca0ef5923a228e34d247973624b21da8d1111c66e06fe5f0ec1a6212bf1630da",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-live-memory-aged-retention-negative-too-young-20260722T044100Z/live_memory_aged_retention_recall_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "minimum_age_not_satisfied"
+          ]
+        }
+      ],
+      "require_live_positive": true,
+      "require_negative": true
+    },
+    {
+      "coverage_id": "negative_fixtures_fail_closed",
+      "description": "representative negative fixtures across corpus replay, Gates 2-7, stage hash, Memory age, and autonomous judgment fail closed",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:4520d043aae50ca0c687264dbcd0da430774f5ea573c9bda7490cbd4b96b5946",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "expected_file_sha256": "sha256:8809d0ce4acfafd55938a2c8362dd3d54b92b7d0cf3db02f1b5a25e25e1f25bf",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json",
+          "require_receipt_sha256": true
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:d2d44953ac9cfd1d083ca368da2121f99ef3a7653cbb18c7236ba61d6bab6f73",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "episode_action_replay_mismatch"
+          ]
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:56404d334bccd8b6ab82ddf2bd3c01f93bb5b8b1d1d5c1742c200e2edd59bc07",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "prediction_payload_sha256_mismatch"
+          ]
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:ca0ef5923a228e34d247973624b21da8d1111c66e06fe5f0ec1a6212bf1630da",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-live-memory-aged-retention-negative-too-young-20260722T044100Z/live_memory_aged_retention_recall_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "minimum_age_not_satisfied"
+          ]
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:5006a4f534918bacccd6877c556a9513fdbc88b02beaf46cc0ca7446328bcbe4",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-autonomous-no-human-judgment-surface-negative-human-required-20260722T090100Z/output/autonomous_no_human_judgment_surface_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_error_needles": [
+            "receipt_human_content_judgment_required_true"
+          ]
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:4e4761eda9e2afb3bd2331e951d4f171687503a55935c13377fa3f9e2fede3dd",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-negative-action-20260722T150000Z/social_episode_independent_replay_receipt.v1.json",
+          "require_mocked_false": true,
+          "require_no_human_content_judgment_true": true,
+          "require_no_llm_judge_true": true,
+          "require_no_provider_or_canonical_writes": true,
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "action_matches": 127,
+            "episodes": 128
+          }
+        }
+      ],
+      "require_negative": true
+    },
+    {
+      "coverage_id": "unsupported_evidence_abstention",
+      "description": "unsupported factual ToM hypotheses abstain or remain pending and fail closed when marked supported",
+      "evidence": [
+        {
+          "expected_file_sha256": "sha256:e6b9f832ee4c040444883e504bd4496694aa7a23501c9eb05eea3449a7608ca0",
+          "kind": "positive",
+          "path": "/tmp/persona-dream-pctom-unsupported-evidence-abstention-20260722T112000Z/pctom_unsupported_evidence_abstention_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "abstained_rows": 4,
+            "case_rows": 4,
+            "families": 4,
+            "gate2_pass": 4,
+            "gate5_pass": 4,
+            "risk_coverage_rows": 4,
+            "unsupported_distribution_rows": 8
+          }
+        },
+        {
+          "allow_fixture_backed": true,
+          "expected_file_sha256": "sha256:c238ffd75dbb9cb7cd25c8ffee4cead6389df4aa53b2033456b9aa182220adea",
+          "kind": "negative",
+          "path": "/tmp/persona-dream-pctom-unsupported-evidence-abstention-negative-supported-20260722T112100Z/pctom_unsupported_evidence_abstention_receipt.v1.json",
+          "require_receipt_sha256": true,
+          "required_counts": {
+            "abstained_rows": 0,
+            "case_rows": 4,
+            "families": 4,
+            "gate2_blocked": 4,
+            "gate2_pass": 0,
+            "gate5_pass": 0,
+            "risk_coverage_rows": 0,
+            "unsupported_distribution_rows": 8
+          },
+          "required_error_needles": [
+            "negative_mode_triggered_fail_closed:marked_supported"
+          ]
+        }
+      ],
+      "require_negative": true
+    }
+  ],
+  "generated_at": "2026-07-22T09:30:00Z",
+  "note": "Strict 15-id manifest refreshed with v25-26 cross-family live Tau generalization and sealed128 deterministic replay evidence.",
+  "schema": "persona_dream.research.prospective_tom.goal_coverage_manifest.v1",
+  "strict_identity_boundary": {
+    "added_live_gate0_receipt": "/tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z/live_pctom_gate0_receipt.v1.json",
+    "created_from": "/tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_manifest.v1.json",
+    "rule": "each evidence receipt must be bound by matching receipt_sha256 or expected_file_sha256"
+  }
+}

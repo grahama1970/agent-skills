@@ -1,0 +1,159 @@
+{
+  "action_set": [
+    "ASK_CLARIFYING_QUESTION",
+    "WAIT",
+    "DISCLOSE_INFORMATION",
+    "OFFER_COOPERATION",
+    "SET_BOUNDARY",
+    "ACT_INDEPENDENTLY",
+    "ABSTAIN"
+  ],
+  "base_receipt": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json",
+  "base_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "base_is_full64_live_tau": true,
+    "base_receipt_hash_recomputed": true,
+    "belief_prediction_benefit_kept_separate_from_planning_benefit": true,
+    "conditions_represented": true,
+    "human_content_judgment_absent": true,
+    "intervention_changes_action_policy": true,
+    "intervention_changes_beyond_trust_commit_subset": true,
+    "intervention_policy_named": "distributional_expected_utility_over_predicted_next_action.v1",
+    "llm_judge_absent": true,
+    "planning_benefit_not_claimed_when_tied": true,
+    "reward_or_regret_scores_recomputed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "confidence-bounded planning-regret benefit",
+      "non-identical repeated live Tau planning behavior",
+      "planning benefit under a larger or differently balanced corpus",
+      "new live Tau execution inside this aggregate command",
+      "production retry machinery",
+      "live Memory recall in the sealed-test loop",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "a deterministic distributional expected-utility planning intervention consumed full64 live Tau M/R/D/CD artifacts",
+      "the intervention changed selected actions beyond the current trust/commitment subset",
+      "all intervention decisions were rescored by Gate 6 against deterministic simulator oracle policy",
+      "planning benefit was kept separate from belief-prediction benefit and was not claimed when deltas tied",
+      "no Tau, Memory, provider, canonical memory, identity, source-memory, LLM judge, or human content-judgment action was attempted"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_cases_written": 256,
+    "action_decisions_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "action_policy_change_count": 188,
+    "action_policy_change_count_by_condition": {
+      "CD": 44,
+      "D": 48,
+      "M": 48,
+      "R": 48
+    },
+    "action_policy_change_count_by_family": {
+      "coordination_conflict": 64,
+      "preference_desire_uncertainty": 64,
+      "trust_commitment_relationship": 60
+    },
+    "base_cases": 256,
+    "base_episodes_consumed": 64,
+    "base_tau_call_attempts": 256,
+    "cases_seen": 256,
+    "cd_action_policy_change_count_by_family": {
+      "coordination_conflict": 16,
+      "preference_desire_uncertainty": 16,
+      "trust_commitment_relationship": 12
+    },
+    "individual_status_counts": {
+      "PASS_TOM_ACTION_SELECTION": 256
+    },
+    "planning_direction_counts": {
+      "TIE": 64
+    },
+    "planning_regret_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    }
+  },
+  "created_at": "2026-07-21T15:57:25Z",
+  "decision_index": "/tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z/artifacts/distributional_action_decisions.json",
+  "decision_index_sha256": "sha256:be41e3a6cc24c8e684aea88b5f29f9185600b00ae2f216527b2de56c568b6599",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "intervention_policy": "distributional_expected_utility_over_predicted_next_action.v1",
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "belief_prediction_benefit_kept_separate_from_planning_benefit": true,
+    "changes_beyond_trust_commit_subset": true,
+    "mean_planning_regret_by_condition": {
+      "CD": 0.109375,
+      "D": 0.109375,
+      "M": 0.109375,
+      "R": 0.109375
+    },
+    "non_trust_commit_changed_families": [
+      "coordination_conflict",
+      "preference_desire_uncertainty"
+    ],
+    "nonzero_action_policy_change_families": [
+      "coordination_conflict",
+      "preference_desire_uncertainty",
+      "trust_commitment_relationship"
+    ],
+    "nonzero_planning_delta_families": [],
+    "planning_benefit_with_confidence": false,
+    "planning_regret_delta_vs_strongest_baseline": {
+      "confidence_interval": {
+        "alpha": 0.05,
+        "lower": 0.0,
+        "mean": 0.0,
+        "samples": 10000,
+        "upper": 0.0
+      },
+      "direction_counts": {
+        "TIE": 64
+      },
+      "mean_cd_minus_baseline": 0.0
+    }
+  },
+  "mocked": false,
+  "oracle_policy_reference": "deterministic_simulator_policy.v1",
+  "output_root": "/tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z",
+  "planning_rows_path": "/tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z/artifacts/distributional_planning_rows.json",
+  "planning_rows_sha256": "sha256:51a2157c52791196732441e4bf237f1b86c2d1a8704625bf3527675a526d0f16",
+  "processing_time_s": 0.623598,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z/distributional_planning_intervention_receipt.v1.json",
+  "schema": "pctom.live_tau_distributional_planning_intervention_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_DISTRIBUTIONAL_PLANNING_INTERVENTION",
+  "summary_path": "/tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z/artifacts/distributional_planning_summary.json",
+  "summary_sha256": "sha256:80c479e1db92a2a7d5a20a1687d704f980a5897a3a97eec4db89e927f1fa4c7a",
+  "tau_call_attempts": 0
+}

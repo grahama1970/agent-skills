@@ -1,0 +1,7 @@
+{
+  "base_receipt_sha256": null,
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/missing-base-root",
+  "rows": [],
+  "schema": "pctom.live_tau_sealed_test.active_prediction_index.v1",
+  "state_hash": "sha256:04cfbd7ff4bab51d2fdbf1097d22daa1a1a783fd511b3c0b75db05252a1fba3b"
+}

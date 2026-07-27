@@ -1,0 +1,62 @@
+{
+  "action_selection_path": "/tmp/agent-skills-pctom-gate8-20260721T013542Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/negative/invalid_action/action_selection.json",
+  "checks": {
+    "episode_prediction_outcome_align": true,
+    "hashes_match": true,
+    "no_canonical_memory_write": true,
+    "oracle_policy_matches_max_utility": true,
+    "planning_regret_recomputed": false,
+    "reward_social_information_scored": true,
+    "scoring_receipt_passed": true,
+    "selected_action_in_options": false,
+    "selected_action_in_vocabulary": false
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction benefit over baselines",
+      "live Tau action generation",
+      "live Memory recall",
+      "belief revision",
+      "fault-injection reliability",
+      "human social appropriateness beyond deterministic simulator rules"
+    ],
+    "proves": [
+      "the checker produced a fail-closed receipt for an invalid action-selection boundary"
+    ]
+  },
+  "corpus_path": "/tmp/agent-skills-pctom-gate8-20260721T013542Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json",
+  "counts": {
+    "actions_considered": 1,
+    "oracle_actions": 1,
+    "policy_compliant_actions": 1,
+    "regret_checks": 0,
+    "reward_components_checked": 3,
+    "selected_actions": 0
+  },
+  "created_at": "2026-07-21T01:43:23Z",
+  "errors": [
+    "selected_action_not_in_vocabulary:MAGIC_ACTION",
+    "selected_action_missing_from_options:MAGIC_ACTION"
+  ],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "oracle_action": "ASK_CLARIFYING_QUESTION",
+    "oracle_expected_utility": 1.1,
+    "planning_regret": null,
+    "realized_information_gain": 0.4,
+    "realized_social_cost": 0.1,
+    "realized_task_reward": 0.8,
+    "selected_action": "MAGIC_ACTION",
+    "selected_expected_utility": null
+  },
+  "mocked": false,
+  "outcome_reveal_path": "/tmp/agent-skills-pctom-gate8-20260721T013542Z/skills/persona-dream/research/prospective-tom/fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate8-rebased-20260721T014053Z/gate6_negative_invalid_action.json",
+  "schema": "persona_dream.research.prospective_tom.action_selection_receipt.v1",
+  "scoring_receipt_path": "/tmp/agent-skills-pctom-gate8-20260721T013542Z/skills/persona-dream/research/prospective-tom/fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json",
+  "status": "BLOCKED_TOM_ACTION_SELECTION",
+  "tau_call_attempts": 0
+}

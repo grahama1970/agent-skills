@@ -1,0 +1,298 @@
+{
+  "counterfactual_branch_bundle": {
+    "branches": [
+      {
+        "branch_id": "live-tau-m-sealedte-info-asym-16-factual",
+        "branch_type": "factual",
+        "episode_id": "sealedte-info-asym-16",
+        "expected_observation": "The visible social episode continues without revealing hidden evaluator-only truth.",
+        "held_fixed": [
+          "counterpart_goals",
+          "counterpart_preferences",
+          "information_access_by_agent",
+          "observable_history"
+        ],
+        "intervention": null,
+        "predicted_action_distribution": [
+          {
+            "probability": 0.34,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          }
+        ],
+        "predicted_bdi_distribution_refs": [
+          "live-tau-m-sealedte-info-asym-16-tom1-factual",
+          "live-tau-m-sealedte-info-asym-16-tom2-factual"
+        ],
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-16:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-info-asym-16:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-16:observable_history:1"
+          }
+        ],
+        "synthetic": false,
+        "uncertainty": 0.35
+      },
+      {
+        "branch_id": "live-tau-m-sealedte-info-asym-16-counterfactual",
+        "branch_type": "counterfactual",
+        "episode_id": "sealedte-info-asym-16",
+        "expected_observation": "This branch is synthetic and excluded from literal history.",
+        "held_fixed": [
+          "counterpart_goals",
+          "counterpart_preferences",
+          "information_access_by_agent",
+          "observable_history"
+        ],
+        "intervention": {
+          "episode_id": "sealedte-info-asym-16",
+          "expected_observation": "The counterpart policy is replaced by an unspecified alternative.",
+          "held_fixed": [
+            "counterpart_goals",
+            "counterpart_preferences",
+            "information_access_by_agent",
+            "observable_history"
+          ],
+          "intervened_value": "UNKNOWN",
+          "intervened_variable": "counterpart_policy.expected_actual_next_action",
+          "intervention_id": "live-tau-m-sealedte-info-asym-16-do-policy-alternative",
+          "synthetic": true
+        },
+        "predicted_action_distribution": [
+          {
+            "probability": 0.0,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.0,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.0,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          },
+          {
+            "probability": 1.0,
+            "value": "UNKNOWN"
+          }
+        ],
+        "predicted_bdi_distribution_refs": [
+          "live-tau-m-sealedte-info-asym-16-tom1-counterfactual"
+        ],
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-16:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-info-asym-16:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-16:observable_history:1"
+          }
+        ],
+        "synthetic": true,
+        "uncertainty": 0.45
+      }
+    ],
+    "canonical_memory_write": false,
+    "condition": "M",
+    "episode_id": "sealedte-info-asym-16",
+    "outcome_visible": false,
+    "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+  },
+  "prediction_payload": {
+    "abstain": false,
+    "belief_distribution_refs": [
+      "live-tau-m-sealedte-info-asym-16-tom1-factual",
+      "live-tau-m-sealedte-info-asym-16-tom2-factual",
+      "live-tau-m-sealedte-info-asym-16-tom1-counterfactual"
+    ],
+    "branch_refs": [
+      "live-tau-m-sealedte-info-asym-16-factual",
+      "live-tau-m-sealedte-info-asym-16-counterfactual"
+    ],
+    "condition": "M",
+    "condition_method": "Memory-only condition: use the visible episode evidence as recalled facts. Do not add reflective narrative or dream-like simulation. Keep uncertainty high when the visible evidence does not settle the prediction.",
+    "episode_id": "sealedte-info-asym-16",
+    "evidence_refs": [
+      {
+        "scope": "social_episode_observation",
+        "source_id": "sealedte-info-asym-16:observable_history:0"
+      },
+      {
+        "scope": "social_episode_access",
+        "source_id": "sealedte-info-asym-16:information_access_by_agent"
+      },
+      {
+        "scope": "social_episode_observation",
+        "source_id": "sealedte-info-asym-16:observable_history:1"
+      }
+    ],
+    "outcome_visible": false,
+    "predicted_next_action_distribution": [
+      {
+        "probability": 0.34,
+        "value": "KAI_HINTS_CONSTRAINT"
+      },
+      {
+        "probability": 0.33,
+        "value": "KAI_WARNS_PRIVATELY"
+      },
+      {
+        "probability": 0.33,
+        "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+      }
+    ],
+    "prediction_horizon": "next_action",
+    "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+  },
+  "tom_belief_distribution_bundle": {
+    "canonical_memory_write": false,
+    "condition": "M",
+    "distributions": [
+      {
+        "abstain": false,
+        "counterfactual": false,
+        "counterfactual_context": null,
+        "distribution": [
+          {
+            "probability": 0.5,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.25,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.25,
+            "value": "UNKNOWN"
+          }
+        ],
+        "episode_id": "sealedte-info-asym-16",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-16:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-info-asym-16:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-16:observable_history:1"
+          }
+        ],
+        "hypothesis_id": "live-tau-m-sealedte-info-asym-16-tom1-factual",
+        "mental_state_type": "belief",
+        "perspective_order": 1,
+        "prediction_horizon": "next_action",
+        "proposition": "Kai believes Embry has stale constraint information.",
+        "subject": "kai",
+        "support_status": "supported",
+        "target": "embry"
+      },
+      {
+        "abstain": false,
+        "counterfactual": false,
+        "counterfactual_context": null,
+        "distribution": [
+          {
+            "probability": 0.45,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.25,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.3,
+            "value": "UNKNOWN"
+          }
+        ],
+        "episode_id": "sealedte-info-asym-16",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-16:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "sealedte-info-asym-16:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "sealedte-info-asym-16:observable_history:1"
+          }
+        ],
+        "hypothesis_id": "live-tau-m-sealedte-info-asym-16-tom2-factual",
+        "mental_state_type": "belief",
+        "perspective_order": 2,
+        "prediction_horizon": "next_action",
+        "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+        "subject": "embry",
+        "support_status": "supported",
+        "target": "kai"
+      },
+      {
+        "abstain": false,
+        "counterfactual": true,
+        "counterfactual_context": {
+          "intervention_id": "live-tau-m-sealedte-info-asym-16-do-policy-alternative",
+          "synthetic": true
+        },
+        "distribution": [
+          {
+            "probability": 0.3,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.35,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.35,
+            "value": "UNKNOWN"
+          }
+        ],
+        "episode_id": "sealedte-info-asym-16",
+        "evidence_refs": [
+          {
+            "scope": "synthetic_counterfactual",
+            "source_id": "sealedte-info-asym-16:M:do-policy-alternative"
+          }
+        ],
+        "hypothesis_id": "live-tau-m-sealedte-info-asym-16-tom1-counterfactual",
+        "mental_state_type": "belief",
+        "perspective_order": 1,
+        "prediction_horizon": "next_action",
+        "proposition": "Kai believes Embry has stale constraint information.",
+        "subject": "kai",
+        "support_status": "supported",
+        "target": "embry"
+      }
+    ],
+    "episode_id": "sealedte-info-asym-16",
+    "outcome_visible": false,
+    "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+    "sealed": true
+  }
+}

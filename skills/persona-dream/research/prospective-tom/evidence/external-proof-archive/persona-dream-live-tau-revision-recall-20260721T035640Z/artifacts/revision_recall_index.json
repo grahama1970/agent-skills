@@ -1,0 +1,434 @@
+[
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "M",
+    "document_id": "revision-recall:cal-coord-conflict-01:M",
+    "episode_id": "cal-coord-conflict-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-m-cal-coord-conflict-01-factual"
+    ],
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:92f0c5c706c826e9b980a8611b848464430bfa085c826823edaedc8d55371761",
+    "prior_hypothesis_id": "live-tau-m-cal-coord-conflict-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-m-cal-coord-conflict-01-live-tau-m-cal-coord-conflict-01-tom1-factual",
+    "selected_action": "WAIT",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-m-cal-coord-conflict-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "R",
+    "document_id": "revision-recall:cal-coord-conflict-01:R",
+    "episode_id": "cal-coord-conflict-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-r-cal-coord-conflict-01-factual"
+    ],
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:7903ba2ddd931e5dd7e1c092c6cc6f04a5f16f19f58d6b91481d45123cd8ee51",
+    "prior_hypothesis_id": "live-tau-r-cal-coord-conflict-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-r-cal-coord-conflict-01-live-tau-r-cal-coord-conflict-01-tom1-factual",
+    "selected_action": "WAIT",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-r-cal-coord-conflict-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "D",
+    "document_id": "revision-recall:cal-coord-conflict-01:D",
+    "episode_id": "cal-coord-conflict-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-d-cal-coord-conflict-01-factual"
+    ],
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:e1622917c0109ca62a3f320823641b5c8b62ce444b91814922ae6e3eb5603fb5",
+    "prior_hypothesis_id": "live-tau-d-cal-coord-conflict-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-d-cal-coord-conflict-01-live-tau-d-cal-coord-conflict-01-tom1-factual",
+    "selected_action": "WAIT",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-d-cal-coord-conflict-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "CD",
+    "document_id": "revision-recall:cal-coord-conflict-01:CD",
+    "episode_id": "cal-coord-conflict-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-cd-cal-coord-conflict-01-factual"
+    ],
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:2840d3e7cfef523a338c3685a0a148a1cd461592f1426652966848bf251eeeeb",
+    "prior_hypothesis_id": "live-tau-cd-cal-coord-conflict-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-cd-cal-coord-conflict-01-live-tau-cd-cal-coord-conflict-01-tom1-factual",
+    "selected_action": "WAIT",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-cd-cal-coord-conflict-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "M",
+    "document_id": "revision-recall:cal-info-asym-01:M",
+    "episode_id": "cal-info-asym-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-m-cal-info-asym-01-factual"
+    ],
+    "oracle_action": "ASK_CLARIFYING_QUESTION",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:717bea1c6ac722ce75c2bb5b860806040187e69dcc3a5ac31853ccf50fd5018e",
+    "prior_hypothesis_id": "live-tau-m-cal-info-asym-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-m-cal-info-asym-01-live-tau-m-cal-info-asym-01-tom1-factual",
+    "selected_action": "ASK_CLARIFYING_QUESTION",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-m-cal-info-asym-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "R",
+    "document_id": "revision-recall:cal-info-asym-01:R",
+    "episode_id": "cal-info-asym-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-r-cal-info-asym-01-factual"
+    ],
+    "oracle_action": "ASK_CLARIFYING_QUESTION",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:3801276ff884134cab98ed19caf2a5bb565158055d286cab8d0c1429d7e59a93",
+    "prior_hypothesis_id": "live-tau-r-cal-info-asym-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-r-cal-info-asym-01-live-tau-r-cal-info-asym-01-tom1-factual",
+    "selected_action": "ASK_CLARIFYING_QUESTION",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-r-cal-info-asym-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "D",
+    "document_id": "revision-recall:cal-info-asym-01:D",
+    "episode_id": "cal-info-asym-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-d-cal-info-asym-01-factual"
+    ],
+    "oracle_action": "ASK_CLARIFYING_QUESTION",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:b9ff1a0864c76da5d6c567532734bb21c5cd0e6802f51513ea175c612c0e4613",
+    "prior_hypothesis_id": "live-tau-d-cal-info-asym-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-d-cal-info-asym-01-live-tau-d-cal-info-asym-01-tom1-factual",
+    "selected_action": "ASK_CLARIFYING_QUESTION",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-d-cal-info-asym-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "CD",
+    "document_id": "revision-recall:cal-info-asym-01:CD",
+    "episode_id": "cal-info-asym-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-cd-cal-info-asym-01-factual"
+    ],
+    "oracle_action": "ASK_CLARIFYING_QUESTION",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:e586e5225960207735eed67138c6bbb212867f6ac9705a643042d0fd8908ac2a",
+    "prior_hypothesis_id": "live-tau-cd-cal-info-asym-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-cd-cal-info-asym-01-live-tau-cd-cal-info-asym-01-tom1-factual",
+    "selected_action": "ASK_CLARIFYING_QUESTION",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-cd-cal-info-asym-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "M",
+    "document_id": "revision-recall:cal-pref-desire-01:M",
+    "episode_id": "cal-pref-desire-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-m-cal-pref-desire-01-factual"
+    ],
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:452f0c7cc406b10b67c1c488c60ae7e3ee121b4ea297bc3270a8fbd59487b376",
+    "prior_hypothesis_id": "live-tau-m-cal-pref-desire-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-m-cal-pref-desire-01-live-tau-m-cal-pref-desire-01-tom1-factual",
+    "selected_action": "WAIT",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-m-cal-pref-desire-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "R",
+    "document_id": "revision-recall:cal-pref-desire-01:R",
+    "episode_id": "cal-pref-desire-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-r-cal-pref-desire-01-factual"
+    ],
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:598604b8f9d5c5d050ba3caebcee076eae557efc48848a147acc6200f787ba16",
+    "prior_hypothesis_id": "live-tau-r-cal-pref-desire-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-r-cal-pref-desire-01-live-tau-r-cal-pref-desire-01-tom1-factual",
+    "selected_action": "WAIT",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-r-cal-pref-desire-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "D",
+    "document_id": "revision-recall:cal-pref-desire-01:D",
+    "episode_id": "cal-pref-desire-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-d-cal-pref-desire-01-factual"
+    ],
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:07f3447d30ae579d023cc180749fbd8d466661fed55ae5e3c9e0acca131cafab",
+    "prior_hypothesis_id": "live-tau-d-cal-pref-desire-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-d-cal-pref-desire-01-live-tau-d-cal-pref-desire-01-tom1-factual",
+    "selected_action": "WAIT",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-d-cal-pref-desire-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "CD",
+    "document_id": "revision-recall:cal-pref-desire-01:CD",
+    "episode_id": "cal-pref-desire-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-cd-cal-pref-desire-01-factual"
+    ],
+    "oracle_action": "WAIT",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.76,
+    "posterior_distribution_sha256": "sha256:2bfc4299f852688ada4f4bd6668c6711bda8ce54a0f79862557d2e6499ce5614",
+    "prior_actual_probability": 0.58,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:f15f6b1bc7152ba53f6f5849a42a8c287145bcec15d4457a3d3426f1155af60b",
+    "prior_hypothesis_id": "live-tau-cd-cal-pref-desire-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-cd-cal-pref-desire-01-live-tau-cd-cal-pref-desire-01-tom1-factual",
+    "selected_action": "WAIT",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-cd-cal-pref-desire-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "M",
+    "document_id": "revision-recall:cal-trust-commit-01:M",
+    "episode_id": "cal-trust-commit-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-m-cal-trust-commit-01-factual"
+    ],
+    "oracle_action": "SET_BOUNDARY",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:f6b6b635a0ba9e8b7644c99a7a66c82cb53a84d058a355b7175345564c7d5af2",
+    "prior_hypothesis_id": "live-tau-m-cal-trust-commit-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-m-cal-trust-commit-01-live-tau-m-cal-trust-commit-01-tom1-factual",
+    "selected_action": "SET_BOUNDARY",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-m-cal-trust-commit-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "R",
+    "document_id": "revision-recall:cal-trust-commit-01:R",
+    "episode_id": "cal-trust-commit-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-r-cal-trust-commit-01-factual"
+    ],
+    "oracle_action": "SET_BOUNDARY",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:ef43326d49bdbec3399789d881247255efb421e123df675f18e54b9e76e1c535",
+    "prior_hypothesis_id": "live-tau-r-cal-trust-commit-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-r-cal-trust-commit-01-live-tau-r-cal-trust-commit-01-tom1-factual",
+    "selected_action": "SET_BOUNDARY",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-r-cal-trust-commit-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "D",
+    "document_id": "revision-recall:cal-trust-commit-01:D",
+    "episode_id": "cal-trust-commit-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-d-cal-trust-commit-01-factual"
+    ],
+    "oracle_action": "SET_BOUNDARY",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:f721c8b18c58d3f927d4002c0750d7c1a0e5041fe87adcbabbda2bfe3bbae5b3",
+    "prior_hypothesis_id": "live-tau-d-cal-trust-commit-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-d-cal-trust-commit-01-live-tau-d-cal-trust-commit-01-tom1-factual",
+    "selected_action": "SET_BOUNDARY",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-d-cal-trust-commit-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  },
+  {
+    "actual_label": "TRUE",
+    "canonical_memory_write": false,
+    "condition": "CD",
+    "document_id": "revision-recall:cal-trust-commit-01:CD",
+    "episode_id": "cal-trust-commit-01",
+    "identity_write": false,
+    "literal_history_branch_ids": [
+      "live-tau-cd-cal-trust-commit-01-factual"
+    ],
+    "oracle_action": "SET_BOUNDARY",
+    "planning_regret": 0.0,
+    "posterior_actual_probability": 0.6799999999999999,
+    "posterior_distribution_sha256": "sha256:d181d05ef2c6c7402d88bc8598dc2e66360f4fd9589f647e0ad7688919ee7919",
+    "prior_actual_probability": 0.5,
+    "prior_and_posterior_distinguished": true,
+    "prior_distribution_sha256": "sha256:34f1caea90847eb5ac97178e27f9547526ba42fc583c94080488b91ee8ef782a",
+    "prior_hypothesis_id": "live-tau-cd-cal-trust-commit-01-tom1-factual",
+    "prior_remains_auditable": true,
+    "revision_id": "action-linked-revision-cd-cal-trust-commit-01-live-tau-cd-cal-trust-commit-01-tom1-factual",
+    "selected_action": "SET_BOUNDARY",
+    "source_memory_write": false,
+    "synthetic_branch_ids": [
+      "live-tau-cd-cal-trust-commit-01-counterfactual"
+    ],
+    "synthetic_literal_boundary_preserved": true
+  }
+]

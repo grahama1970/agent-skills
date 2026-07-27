@@ -1,0 +1,92 @@
+{
+  "artifacts": {
+    "action_decision_index": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/action_decision_index.json",
+    "active_prediction_index": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/active_prediction_index.json",
+    "base_retry_manifest": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/base_retry_manifest.json",
+    "causal_retry_replay": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/causal_retry_replay.json",
+    "retry_fault_trials": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/artifacts/retry_fault_trials.json"
+  },
+  "base_receipt": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json",
+  "base_receipt_sha256": "sha256:c066eabd3d5a1a08f4a426cdd7347f91e969998795872d4d2e7e773b84f94087",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "action_decisions_unique": true,
+    "active_predictions_unique": true,
+    "allowed_terminal_outcomes_only": true,
+    "base_receipt_passed": true,
+    "causal_replay_written": true,
+    "commitment_hashes_recomputed": true,
+    "continued_with_unknown_state_absent": true,
+    "predictions_have_actions": true,
+    "side_effect_violations_absent": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "deployed production orchestrator retry machinery",
+      "full 64-episode live Tau sealed-test replication",
+      "new live Tau execution",
+      "live Memory service fault injection",
+      "paid provider execution",
+      "video, audio, or semantic dream quality",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "bounded retry/idempotence checks can consume live Tau-originated sealed-test artifacts",
+      "prediction commitment hashes and model/evidence bundle hashes are recomputed before active-state indexing",
+      "exact retry and retry-after-uncertain-completion recover to the equivalent active state",
+      "partial Tau output, stale scoring, interrupted action selection, and conflicting pointers fail closed",
+      "causal replay localizes one conflicting active-prediction pointer boundary",
+      "no Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "controlled_retry_faults_used": true,
+  "counts": {
+    "action_decisions": 16,
+    "active_predictions": 16,
+    "base_cases": 16,
+    "continued_with_unknown_state": 0,
+    "duplicate_action_decisions_detected_and_rejected": 0,
+    "duplicate_active_predictions_detected_and_rejected": 2,
+    "fault_family_counts": {
+      "conflicting_active_prediction_pointer": 1,
+      "duplicate_commitment_replay_different_hash": 1,
+      "duplicate_commitment_replay_same_hash": 1,
+      "exact_retry": 1,
+      "interrupted_action_selection": 1,
+      "partial_tau_output_before_gate4": 1,
+      "retry_after_uncertain_completion": 1,
+      "stale_gate5_score": 1
+    },
+    "gate6_receipts": 16,
+    "retry_fault_trials": 8,
+    "side_effect_violations": 0,
+    "terminal_outcome_counts": {
+      "BLOCKED_BEFORE_SIDE_EFFECT": 3,
+      "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE": 2,
+      "RECOVERED_WITH_EQUIVALENT_END_STATE": 3
+    }
+  },
+  "created_at": "2026-07-21T05:34:00Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry",
+  "processing_time_s": 0.012439,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/attempts/exact_retry/live_tau_sealed_test_retry_proof_receipt.v1.json",
+  "receipt_sha256": "sha256:b00fc6965fcfc5b3057a01f4685147038ebe570e9eb5899ec709e41e3cdc230d",
+  "schema": "pctom.live_tau_sealed_test.retry_proof_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF",
+  "tau_call_attempts": 0
+}

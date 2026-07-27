@@ -1,0 +1,213 @@
+{
+  "audit_path": "/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/artifacts/cooperation_class_separated_exposure_audit.json",
+  "audit_sha256": "sha256:2b9666382e1feeba8bb72ec89254b4b575b5c77314ec17b8ff1ace4cf6dac8e7",
+  "broad_planning_benefit_claimed": false,
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "avoid_rows_no_offer_cooperation": true,
+    "avoid_rows_no_selected_counterpart_offer": true,
+    "class_separated_cd_discrimination_observed": true,
+    "feature_split_acceptance_allowed": false,
+    "feature_split_blocked_without_unsafe_offer_suppression": true,
+    "keep_rows_all_offer_cooperation": true,
+    "keep_rows_all_selected_counterpart_offer": true,
+    "live_not_mocked": true,
+    "live_slice_receipt_passed": true,
+    "negative_checks_failed_closed": true,
+    "no_judgment_used": true,
+    "pre_outcome_inputs_exclude_oracle_or_outcome": true,
+    "row_counts_match_receipt_and_summary": true,
+    "threshold_rule_made_no_action_changes": true,
+    "zero_unsupported_writes": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "a replacement cooperation feature split is valid",
+      "confidence-bounded CD planning benefit",
+      "broad held-out planning benefit",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the live Tau exposure/contrast slice contains class-separated CD cooperation behavior",
+      "CD selected OFFER_COOPERATION on keep-cooperation rows and avoided OFFER_COOPERATION on avoid/unsafe rows",
+      "the audit used sealed pre-outcome rule inputs and detected no oracle/outcome input leakage",
+      "replacement feature-split acceptance remains blocked because no unsafe OFFER_COOPERATION suppression candidate was exercised"
+    ]
+  },
+  "class_separated_cd_discrimination_observed": true,
+  "conclusion": "CD_CLASS_SEPARATED_COOPERATION_OBSERVED_FEATURE_SPLIT_STILL_BLOCKED",
+  "created_at": "2026-07-21T23:07:09Z",
+  "deterministic_simulator_corpus": true,
+  "errors": [],
+  "feature_split_acceptance_allowed": false,
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "input_live_slice_receipt": "/tmp/persona-dream-live-tau-cooperation-exposure-contrast-slice-20260721T225448Z/live_tau_cooperation_exposure_contrast_slice_receipt.v1.json",
+  "input_live_slice_receipt_sha256": "sha256:4370d916057d6b097f056847e3ca30b0f1abee197ff902823636c0f14508453f",
+  "live": true,
+  "live_tau_originated_artifacts_consumed": true,
+  "live_tau_reexecuted_by_this_command": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "missing_prerequisites": [
+    "missing_unsafe_offer_suppression_candidate"
+  ],
+  "mocked": false,
+  "negative_checks_path": "/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/artifacts/cooperation_class_separated_exposure_negative_checks.json",
+  "negative_checks_sha256": "sha256:be41c852c2956fdf258f60d34cd9b1f99d8f530e4da65ffab2d74641fba96a67",
+  "negative_results": {
+    "avoid_row_offer_cooperation": {
+      "checks": {
+        "avoid_rows_no_offer_cooperation": false,
+        "avoid_rows_no_selected_counterpart_offer": true,
+        "class_separated_cd_discrimination_observed": false,
+        "feature_split_acceptance_allowed": false,
+        "feature_split_blocked_without_unsafe_offer_suppression": false,
+        "keep_rows_all_offer_cooperation": true,
+        "keep_rows_all_selected_counterpart_offer": true,
+        "live_not_mocked": true,
+        "live_slice_receipt_passed": true,
+        "no_judgment_used": true,
+        "pre_outcome_inputs_exclude_oracle_or_outcome": true,
+        "row_counts_match_receipt_and_summary": true,
+        "threshold_rule_made_no_action_changes": true,
+        "zero_unsupported_writes": true
+      },
+      "errors": [
+        "avoid_rows_offer_cooperation:1"
+      ],
+      "failed_closed": true
+    },
+    "live_slice_status_not_pass": {
+      "checks": {
+        "avoid_rows_no_offer_cooperation": true,
+        "avoid_rows_no_selected_counterpart_offer": true,
+        "class_separated_cd_discrimination_observed": true,
+        "feature_split_acceptance_allowed": false,
+        "feature_split_blocked_without_unsafe_offer_suppression": true,
+        "keep_rows_all_offer_cooperation": true,
+        "keep_rows_all_selected_counterpart_offer": true,
+        "live_not_mocked": true,
+        "live_slice_receipt_passed": false,
+        "no_judgment_used": true,
+        "pre_outcome_inputs_exclude_oracle_or_outcome": true,
+        "row_counts_match_receipt_and_summary": true,
+        "threshold_rule_made_no_action_changes": true,
+        "zero_unsupported_writes": true
+      },
+      "errors": [
+        "live_slice_status_not_pass:BLOCKED_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE"
+      ],
+      "failed_closed": true
+    },
+    "missing_keep_offer_cooperation": {
+      "checks": {
+        "avoid_rows_no_offer_cooperation": true,
+        "avoid_rows_no_selected_counterpart_offer": true,
+        "class_separated_cd_discrimination_observed": false,
+        "feature_split_acceptance_allowed": false,
+        "feature_split_blocked_without_unsafe_offer_suppression": false,
+        "keep_rows_all_offer_cooperation": false,
+        "keep_rows_all_selected_counterpart_offer": true,
+        "live_not_mocked": true,
+        "live_slice_receipt_passed": true,
+        "no_judgment_used": true,
+        "pre_outcome_inputs_exclude_oracle_or_outcome": true,
+        "row_counts_match_receipt_and_summary": true,
+        "threshold_rule_made_no_action_changes": true,
+        "zero_unsupported_writes": true
+      },
+      "errors": [
+        "keep_rows_not_all_offer_cooperation:3:4"
+      ],
+      "failed_closed": true
+    },
+    "planning_benefit_claim_injected": {
+      "checks": {
+        "avoid_rows_no_offer_cooperation": true,
+        "avoid_rows_no_selected_counterpart_offer": true,
+        "class_separated_cd_discrimination_observed": true,
+        "feature_split_acceptance_allowed": false,
+        "feature_split_blocked_without_unsafe_offer_suppression": true,
+        "keep_rows_all_offer_cooperation": true,
+        "keep_rows_all_selected_counterpart_offer": true,
+        "live_not_mocked": true,
+        "live_slice_receipt_passed": true,
+        "no_judgment_used": true,
+        "pre_outcome_inputs_exclude_oracle_or_outcome": true,
+        "row_counts_match_receipt_and_summary": true,
+        "threshold_rule_made_no_action_changes": true,
+        "zero_unsupported_writes": true
+      },
+      "errors": [
+        "planning_benefit_with_confidence_claimed"
+      ],
+      "failed_closed": true
+    },
+    "pre_outcome_oracle_leak": {
+      "checks": {
+        "avoid_rows_no_offer_cooperation": true,
+        "avoid_rows_no_selected_counterpart_offer": true,
+        "class_separated_cd_discrimination_observed": false,
+        "feature_split_acceptance_allowed": false,
+        "feature_split_blocked_without_unsafe_offer_suppression": false,
+        "keep_rows_all_offer_cooperation": true,
+        "keep_rows_all_selected_counterpart_offer": true,
+        "live_not_mocked": true,
+        "live_slice_receipt_passed": true,
+        "no_judgment_used": true,
+        "pre_outcome_inputs_exclude_oracle_or_outcome": false,
+        "row_counts_match_receipt_and_summary": true,
+        "threshold_rule_made_no_action_changes": true,
+        "zero_unsupported_writes": true
+      },
+      "errors": [
+        "pre_outcome_rule_inputs_leak:['instr-coord-exposure-contrast-37-keep']"
+      ],
+      "failed_closed": true
+    }
+  },
+  "observed": {
+    "avoid_counterpart_offer_rows": 0,
+    "avoid_offer_rows": 0,
+    "avoid_or_unsafe_rows": 4,
+    "cd_intervened_actions_by_class": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": {
+        "DISCLOSE_INFORMATION": 3,
+        "WAIT": 1
+      },
+      "KEEP_COOPERATION_POSITIVE": {
+        "OFFER_COOPERATION": 4
+      }
+    },
+    "cd_original_actions_by_class": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": {
+        "DISCLOSE_INFORMATION": 3,
+        "WAIT": 1
+      },
+      "KEEP_COOPERATION_POSITIVE": {
+        "OFFER_COOPERATION": 4
+      }
+    },
+    "keep_counterpart_offer_rows": 4,
+    "keep_offer_rows": 4,
+    "keep_rows": 4,
+    "rows": 8,
+    "threshold_action_change_rows": 0
+  },
+  "output_root": "/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z",
+  "processing_time_s": 0.004,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/cooperation_class_separated_exposure_audit_receipt.v1.json",
+  "receipt_sha256": "sha256:e2db88050fe44f518b483be27c87c879d7c5ddf7b9158c9cd31e681af32d8785",
+  "replacement_policy_claimed": false,
+  "schema": "persona_dream.research.prospective_tom.cooperation_class_separated_exposure_audit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_COOPERATION_CLASS_SEPARATED_EXPOSURE_AUDIT",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0,
+  "unsafe_offer_suppression_exercised": false
+}

@@ -1,0 +1,79 @@
+{
+  "artifact_paths": {
+    "counterfactual_branch_bundle": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/artifacts/counterfactual_branch_bundle.json",
+    "tau_parsed_json": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/artifacts/tau_parsed_json.json",
+    "tom_belief_distribution_bundle": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/artifacts/tom_belief_distribution_bundle.json",
+    "tom_prediction_commitment_bundle": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/artifacts/tom_prediction_commitment_bundle.json"
+  },
+  "checker_counts": {
+    "gate2": {
+      "abstained_or_pending": 0,
+      "counterfactual_distributions": 1,
+      "distributions": 2,
+      "label_matched_distributions": 2,
+      "resolved_evidence_refs": 1,
+      "supported": 2
+    },
+    "gate3": {
+      "branches": 2,
+      "counterfactual_branches": 1,
+      "distribution_refs": 2,
+      "factual_branches": 1,
+      "interventions": 1,
+      "resolved_source_evidence_refs": 4
+    },
+    "gate4": {
+      "branch_refs": 4,
+      "commitments": 1,
+      "conditions": 1,
+      "distribution_refs": 4,
+      "forbidden_outcome_paths": 0,
+      "hashes_checked": 3,
+      "resolved_source_evidence_refs": 4
+    }
+  },
+  "claims": {
+    "does_not_prove": [
+      "held-out prediction benefit",
+      "calibration quality beyond local distribution invariants",
+      "outcome reveal, scoring, or belief revision",
+      "live Memory recall for this Gate 2-4 run",
+      "real service fault injection",
+      "complete Phase 01-16 runtime execution",
+      "paid provider execution or video quality"
+    ],
+    "proves": [
+      "one live Tau text call was attempted through the sanctioned persona-dream Tau adapter",
+      "Tau-authored Gate 2 ToM distributions passed deterministic invariant checks before outcome reveal",
+      "Tau-authored Gate 3 factual/counterfactual branches passed deterministic invariant checks before outcome reveal",
+      "a sealed Gate 4 prediction commitment was hash-bound to the Tau model receipt plus Gate 2 and Gate 3 bundles",
+      "no Memory write, provider call, or human content judgment was required"
+    ]
+  },
+  "corpus_path": "/tmp/persona-dream-goal-align-main-neb3VW/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json",
+  "created_at": "2026-07-21T02:16:59Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episode_id": "dev-info-asym-01",
+  "errors": [],
+  "fixture_backed": false,
+  "gate2_receipt_path": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/receipts/gate2_distribution_check_receipt.json",
+  "gate2_status": "PASS_TOM_BELIEF_DISTRIBUTIONS",
+  "gate3_receipt_path": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/receipts/gate3_counterfactual_branch_check_receipt.json",
+  "gate3_status": "PASS_COUNTERFACTUAL_BRANCHES",
+  "gate4_receipt_path": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/receipts/gate4_prediction_commitment_check_receipt.json",
+  "gate4_status": "PASS_TOM_PREDICTION_COMMITMENTS",
+  "human_content_judgment_required": false,
+  "live": true,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z",
+  "processing_time_s": 38.275,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/live_tau_gate2_4_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_gate2_4_receipt.v1",
+  "status": "PASS_LIVE_TAU_PCTOM_GATE2_4",
+  "tau_call_attempts": 1,
+  "tau_live_call_performed": true,
+  "tau_text_receipt_path": "/tmp/persona-dream-live-tau-gate2-4-20260721T021621Z/receipts/tau_text_reasoning_receipt.json",
+  "tau_text_status": "PASS"
+}

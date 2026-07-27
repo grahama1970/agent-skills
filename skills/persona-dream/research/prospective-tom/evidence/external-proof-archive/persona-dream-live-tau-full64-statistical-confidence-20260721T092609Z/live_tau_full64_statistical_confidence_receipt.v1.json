@@ -1,0 +1,207 @@
+{
+  "action_benefit_with_confidence": false,
+  "action_index_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_action_selection/artifacts/live_condition_action_decisions.json",
+  "action_index_sha256": "sha256:da5e4d2d4cbbffcf46e059849b9fecb56fb7477d928bcce6ff77371b65453c0d",
+  "action_receipt": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_action_selection/live_tau_condition_action_selection_receipt.v1.json",
+  "action_receipt_sha256": "sha256:c7d372099eaed70b1a49c2103a92fb6d27c9bf8e77e101e1d9a6691088e2279f",
+  "base_live_tau_replication_receipt": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json",
+  "base_live_tau_replication_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z",
+  "canonical_memory_write_attempts": 0,
+  "case_index_path": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/artifacts/live_condition_case_index.json",
+  "case_index_sha256": "sha256:76b68948c37758c7e827adcca5379536d215cf7301e4be13213f586b62ea1173",
+  "checks": {
+    "action_confidence_interval_upper_below_zero": false,
+    "all_conditions_have_64_action_decisions": true,
+    "all_conditions_have_64_scores": true,
+    "all_conditions_have_64_sealed_commitments": true,
+    "all_metrics_have_64_paired_deltas": true,
+    "base_is_full64_live_tau": true,
+    "base_receipt_passed": true,
+    "base_tau_receipts_hash_bound": true,
+    "case_count_is_256": true,
+    "episode_count_is_64": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "planning_confidence_interval_upper_below_zero": false,
+    "primary_confidence_interval_upper_below_zero": true,
+    "primary_metric_is_preregistered": true,
+    "split_is_sealed_test": true,
+    "strongest_baseline_is_allowed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "planning-regret benefit unless planning_benefit_with_confidence is true",
+      "action Brier benefit unless action_benefit_with_confidence is true",
+      "production retry machinery over the full64 root",
+      "live Memory recall in the sealed-test loop",
+      "full external service fault injection",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution",
+      "video, audio, or semantic dream quality"
+    ],
+    "proves": [
+      "the accepted full64 live Tau sealed-test replication root was consumed without reexecuting Tau",
+      "64 paired live Tau episodes were compared for the preregistered belief Brier metric",
+      "the preregistered belief Brier CD-minus-strongest-baseline paired bootstrap confidence interval is below zero",
+      "action Brier and planning-regret confidence intervals were computed and reported without upgrading them to proven benefits",
+      "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted"
+    ]
+  },
+  "condition_receipt": "/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "condition_receipt_sha256": "sha256:b0fadfdb6ae2797f6d5611ee0fb4edd38f034c04e95b00815df211359ff9dbbe",
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "counts": {
+    "action_decisions_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "bootstrap_samples": 10000,
+    "cases": 256,
+    "deterministic_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "episodes_consumed": 64,
+    "families_consumed": 4,
+    "paired_delta_counts": {
+      "action_brier": 64,
+      "belief_brier": 64,
+      "planning_regret": 64
+    },
+    "planning_regret_scores_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "sealed_commitments_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    },
+    "tau_authored_prediction_payloads_per_condition": {
+      "CD": 64,
+      "D": 64,
+      "M": 64,
+      "R": 64
+    }
+  },
+  "created_at": "2026-07-21T09:26:10Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episode_limit": 64,
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "alpha": 0.05,
+    "base_live_tau_replication_receipt_sha256": "sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053",
+    "baseline_conditions": {
+      "action_brier": "M",
+      "belief_brier": "M",
+      "planning_regret": "M"
+    },
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260721,
+    "condition_means": {
+      "action_brier": {
+        "CD": 0.6650468749999999,
+        "D": 0.6658999999999999,
+        "M": 0.6658999999999999,
+        "R": 0.6658999999999999
+      },
+      "belief_brier": {
+        "CD": 0.39669843750000006,
+        "D": 0.41500000000000004,
+        "M": 0.41500000000000004,
+        "R": 0.41500000000000004
+      }
+    },
+    "paired_delta_confidence_intervals": {
+      "action_brier": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:e2bb16f153b415a3fe038e4c5a33f3371c0032df38809c0eded1287d47db7974",
+        "lower": -0.017147578124999976,
+        "mean": -0.0008531249999999832,
+        "samples": 10000,
+        "seed": 20260722,
+        "upper": 0.017281250000000012
+      },
+      "belief_brier": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:2970543afba639c7964a67755dfe9aa7b54c34ecdee7af503c07ba469db00738",
+        "lower": -0.029314882812500002,
+        "mean": -0.018301562500000004,
+        "samples": 10000,
+        "seed": 20260721,
+        "upper": -0.008604609375000004
+      },
+      "planning_regret": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:cc6733fb62520f67703c9f2b0313300dd74e03d8c1ed74463f4e900db16eb6de",
+        "lower": -0.08515625000000002,
+        "mean": -0.035937500000000004,
+        "samples": 10000,
+        "seed": 20260723,
+        "upper": 0.00390625
+      }
+    },
+    "paired_delta_counts": {
+      "action_brier": 64,
+      "belief_brier": 64,
+      "planning_regret": 64
+    },
+    "planning_regret_means": {
+      "CD": 0.26875,
+      "D": 0.3046875,
+      "M": 0.3046875,
+      "R": 0.3046875
+    },
+    "primary_metric": "belief_brier",
+    "schema": "persona_dream.research.prospective_tom.live_tau_full64_statistical_summary.v1"
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z",
+  "paired_delta_path": "/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/artifacts/live_tau_full64_paired_deltas.json",
+  "paired_delta_sha256": "sha256:f6d7bc01fdde5708a7306753287a691ab6aafcfa0b90036246ee687947393d9a",
+  "planning_benefit_with_confidence": false,
+  "primary_baseline_condition": "M",
+  "primary_benefit_with_confidence": true,
+  "primary_cd_minus_baseline_ci": {
+    "alpha": 0.05,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260721,
+    "lower": -0.029314882812500002,
+    "upper": -0.008604609375000004
+  },
+  "primary_cd_minus_baseline_mean": -0.018301562500000004,
+  "primary_metric": "belief_brier",
+  "processing_time_s": 0.628,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json",
+  "receipt_sha256": "sha256:5cfcb30dc208001d90dd42f6513fcf8e52db7a63a0334f747b4f597d96c05379",
+  "schema": "persona_dream.research.prospective_tom.live_tau_full64_statistical_confidence_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "statistical_summary_path": "/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/artifacts/live_tau_full64_statistical_summary.json",
+  "statistical_summary_sha256": "sha256:9795d493970581d013d5ee639f3ba1b55027c8efb3450a3f9e4b7562c8ac45d8",
+  "status": "PASS_LIVE_TAU_PCTOM_FULL64_STATISTICAL_CONFIDENCE",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0
+}

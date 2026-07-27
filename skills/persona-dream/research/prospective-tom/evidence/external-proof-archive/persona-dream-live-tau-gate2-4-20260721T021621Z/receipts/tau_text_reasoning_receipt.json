@@ -1,0 +1,258 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "caller_skill": "persona-dream",
+  "created_at": "2026-07-21T02:16:21.625349+00:00",
+  "http_status": 200,
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "output_contract_sha256": "sha256:fec21d437109e4a5db8a472863e75b186184c96faa4c97acd289a9a6c3ca09a5",
+  "parsed_json": {
+    "counterfactual_branch_bundle": {
+      "branches": [
+        {
+          "branch_id": "live-tau-gate3-factual-observed",
+          "branch_type": "factual",
+          "episode_id": "dev-info-asym-01",
+          "expected_observation": "Kai flags the constraint before Embry acts.",
+          "held_fixed": [
+            "hidden_world_state.constraint_changed",
+            "counterpart_goals.kai_primary_goal",
+            "information_access_by_agent.embry_observes_changed_constraint"
+          ],
+          "intervention": null,
+          "predicted_action_distribution": [
+            {
+              "probability": 0.55,
+              "value": "KAI_HINTS_CONSTRAINT"
+            },
+            {
+              "probability": 0.3,
+              "value": "KAI_WARNS_PRIVATELY"
+            },
+            {
+              "probability": 0.15,
+              "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+            }
+          ],
+          "predicted_bdi_distribution_refs": [
+            "live-tau-gate2-factual-bdi-001"
+          ],
+          "source_evidence_refs": [
+            {
+              "scope": "social_episode_observation",
+              "source_id": "dev-info-asym-01:observable_history:0"
+            },
+            {
+              "scope": "social_episode_access",
+              "source_id": "dev-info-asym-01:information_access_by_agent"
+            }
+          ],
+          "synthetic": false,
+          "uncertainty": 0.2
+        },
+        {
+          "branch_id": "live-tau-gate3-cf-kai-gives-no-warning",
+          "branch_type": "counterfactual",
+          "episode_id": "dev-info-asym-01",
+          "expected_observation": "Kai withholds the warning and Embry continues with stale information.",
+          "held_fixed": [
+            "hidden_world_state.constraint_changed",
+            "counterpart_goals.kai_primary_goal",
+            "information_access_by_agent.embry_observes_changed_constraint"
+          ],
+          "intervention": {
+            "episode_id": "dev-info-asym-01",
+            "expected_observation": "Kai gives no warning before Embry acts.",
+            "held_fixed": [
+              "hidden_world_state.constraint_changed",
+              "counterpart_goals.kai_primary_goal",
+              "information_access_by_agent.embry_observes_changed_constraint"
+            ],
+            "intervened_value": "KAI_GIVES_NO_WARNING",
+            "intervened_variable": "counterpart_policy.expected_actual_next_action",
+            "intervention_id": "live-tau-do-kai-gives-no-warning",
+            "synthetic": true
+          },
+          "predicted_action_distribution": [
+            {
+              "probability": 0.0,
+              "value": "KAI_HINTS_CONSTRAINT"
+            },
+            {
+              "probability": 0.0,
+              "value": "KAI_WARNS_PRIVATELY"
+            },
+            {
+              "probability": 0.0,
+              "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+            },
+            {
+              "probability": 1.0,
+              "value": "UNKNOWN"
+            }
+          ],
+          "predicted_bdi_distribution_refs": [
+            "live-tau-gate2-counterfactual-bdi-001"
+          ],
+          "source_evidence_refs": [
+            {
+              "scope": "social_episode_observation",
+              "source_id": "dev-info-asym-01:observable_history:0"
+            },
+            {
+              "scope": "social_episode_access",
+              "source_id": "dev-info-asym-01:information_access_by_agent"
+            }
+          ],
+          "synthetic": true,
+          "uncertainty": 0.35
+        }
+      ],
+      "canonical_memory_write": false,
+      "episode_id": "dev-info-asym-01",
+      "outcome_visible": false,
+      "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+    },
+    "prediction_payload": {
+      "abstain": false,
+      "belief_distribution_refs": [
+        "live-tau-gate2-factual-bdi-001",
+        "live-tau-gate2-counterfactual-bdi-001"
+      ],
+      "branch_refs": [
+        "live-tau-gate3-factual-observed",
+        "live-tau-gate3-cf-kai-gives-no-warning"
+      ],
+      "condition": "CD",
+      "episode_id": "dev-info-asym-01",
+      "evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "dev-info-asym-01:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "dev-info-asym-01:information_access_by_agent"
+        }
+      ],
+      "outcome_visible": false,
+      "predicted_next_action_distribution": [
+        {
+          "probability": 0.6,
+          "value": "KAI_HINTS_CONSTRAINT"
+        },
+        {
+          "probability": 0.3,
+          "value": "KAI_WARNS_PRIVATELY"
+        },
+        {
+          "probability": 0.1,
+          "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+        }
+      ],
+      "prediction_horizon": "next_action",
+      "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+    },
+    "tom_belief_distribution_bundle": {
+      "canonical_memory_write": false,
+      "distributions": [
+        {
+          "abstain": false,
+          "counterfactual": false,
+          "counterfactual_context": null,
+          "distribution": [
+            {
+              "probability": 0.6,
+              "value": "TRUE"
+            },
+            {
+              "probability": 0.25,
+              "value": "FALSE"
+            },
+            {
+              "probability": 0.15,
+              "value": "UNKNOWN"
+            }
+          ],
+          "episode_id": "dev-info-asym-01",
+          "evidence_refs": [
+            {
+              "scope": "social_episode_observation",
+              "source_id": "dev-info-asym-01:observable_history:0"
+            }
+          ],
+          "hypothesis_id": "live-tau-gate2-factual-bdi-001",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "prediction_horizon": "next_action",
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "support_status": "supported",
+          "target": "embry"
+        },
+        {
+          "abstain": false,
+          "counterfactual": true,
+          "counterfactual_context": {
+            "intervention_id": "live-tau-do-kai-gives-no-warning",
+            "synthetic": true
+          },
+          "distribution": [
+            {
+              "probability": 0.2,
+              "value": "TRUE"
+            },
+            {
+              "probability": 0.65,
+              "value": "FALSE"
+            },
+            {
+              "probability": 0.15,
+              "value": "UNKNOWN"
+            }
+          ],
+          "episode_id": "dev-info-asym-01",
+          "evidence_refs": [
+            {
+              "scope": "synthetic_counterfactual",
+              "source_id": "dev-info-asym-01:do:kai_gives_no_warning"
+            }
+          ],
+          "hypothesis_id": "live-tau-gate2-counterfactual-bdi-001",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "prediction_horizon": "next_action",
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "support_status": "supported",
+          "target": "embry"
+        }
+      ],
+      "episode_id": "dev-info-asym-01",
+      "outcome_visible": false,
+      "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+      "sealed": true
+    }
+  },
+  "prompt_sha256": "sha256:bf3e6b17f470970482448e292bc12356b28891ac77e1f99f38add1ccfa3dc2e5",
+  "request": {
+    "messages": "<redacted-prompt>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-text-reasoning",
+      "role": "pctom-live-gate2-4"
+    },
+    "temperature": 0
+  },
+  "response_content": "{\n  \"counterfactual_branch_bundle\": {\n    \"branches\": [\n      {\n        \"branch_id\": \"live-tau-gate3-factual-observed\",\n        \"branch_type\": \"factual\",\n        \"episode_id\": \"dev-info-asym-01\",\n        \"expected_observation\": \"Kai flags the constraint before Embry acts.\",\n        \"held_fixed\": [\n          \"hidden_world_state.constraint_changed\",\n          \"counterpart_goals.kai_primary_goal\",\n          \"information_access_by_agent.embry_observes_changed_constraint\"\n        ],\n        \"intervention\": null,\n        \"predicted_action_distribution\": [\n          {\n            \"probability\": 0.55,\n            \"value\": \"KAI_HINTS_CONSTRAINT\"\n          },\n          {\n            \"probability\": 0.3,\n            \"value\": \"KAI_WARNS_PRIVATELY\"\n          },\n          {\n            \"probability\": 0.15,\n            \"value\": \"KAI_INTERRUPTS_WITH_CORRECTION\"\n          }\n        ],\n        \"predicted_bdi_distribution_refs\": [\n          \"live-tau-gate2-factual-bdi-001\"\n        ],\n        \"source_evidence_refs\": [\n          {\n            \"scope\": \"social_episode_observation\",\n            \"source_id\": \"dev-info-asym-01:observable_history:0\"\n          },\n          {\n            \"scope\": \"social_episode_access\",\n            \"source_id\": \"dev-info-asym-01:information_access_by_agent\"\n          }\n        ],\n        \"synthetic\": false,\n        \"uncertainty\": 0.2\n      },\n      {\n        \"branch_id\": \"live-tau-gate3-cf-kai-gives-no-warning\",\n        \"branch_type\": \"counterfactual\",\n        \"episode_id\": \"dev-info-asym-01\",\n        \"expected_observation\": \"Kai withholds the warning and Embry continues with stale information.\",\n        \"held_fixed\": [\n          \"hidden_world_state.constraint_changed\",\n          \"counterpart_goals.kai_primary_goal\",\n          \"information_access_by_agent.embry_observes_changed_constraint\"\n        ],\n        \"intervention\": {\n          \"episode_id\": \"dev-info-asym-01\",\n          \"expected_observation\": \"Kai gives no warning before Embry acts.\",\n          \"held_fixed\": [\n            \"hidden_world_state.constraint_changed\",\n            \"counterpart_goals.kai_primary_goal\",\n            \"information_access_by_agent.embry_observes_changed_constraint\"\n          ],\n          \"intervened_value\": \"KAI_GIVES_NO_WARNING\",\n          \"intervened_variable\": \"counterpart_policy.expected_actual_next_action\",\n          \"intervention_id\": \"live-tau-do-kai-gives-no-warning\",\n          \"synthetic\": true\n        },\n        \"predicted_action_distribution\": [\n          {\n            \"probability\": 0.0,\n            \"value\": \"KAI_HINTS_CONSTRAINT\"\n          },\n          {\n            \"probability\": 0.0,\n            \"value\": \"KAI_WARNS_PRIVATELY\"\n          },\n          {\n            \"probability\": 0.0,\n            \"value\": \"KAI_INTERRUPTS_WITH_CORRECTION\"\n          },\n          {\n            \"probability\": 1.0,\n            \"value\": \"UNKNOWN\"\n          }\n        ],\n        \"predicted_bdi_distribution_refs\": [\n          \"live-tau-gate2-counterfactual-bdi-001\"\n        ],\n        \"source_evidence_refs\": [\n          {\n            \"scope\": \"social_episode_observation\",\n            \"source_id\": \"dev-info-asym-01:observable_history:0\"\n          },\n          {\n            \"scope\": \"social_episode_access\",\n            \"source_id\": \"dev-info-asym-01:information_access_by_agent\"\n          }\n        ],\n        \"synthetic\": true,\n        \"uncertainty\": 0.35\n      }\n    ],\n    \"canonical_memory_write\": false,\n    \"episode_id\": \"dev-info-asym-01\",\n    \"outcome_visible\": false,\n    \"schema\": \"persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1\"\n  },\n  \"prediction_payload\": {\n    \"abstain\": false,\n    \"belief_distribution_refs\": [\n      \"live-tau-gate2-factual-bdi-001\",\n      \"live-tau-gate2-counterfactual-bdi-001\"\n    ],\n    \"branch_refs\": [\n      \"live-tau-gate3-factual-observed\",\n      \"live-tau-gate3-cf-kai-gives-no-warning\"\n    ],\n    \"condition\": \"CD\",\n    \"episode_id\": \"dev-info-asym-01\",\n    \"evidence_refs\": [\n      {\n        \"scope\": \"social_episode_observation\",\n        \"source_id\": \"dev-info-asym-01:observable_history:0\"\n      },\n      {\n        \"scope\": \"social_episode_access\",\n        \"source_id\": \"dev-info-asym-01:information_access_by_agent\"\n      }\n    ],\n    \"outcome_visible\": false,\n    \"predicted_next_action_distribution\": [\n      {\n        \"probability\": 0.6,\n        \"value\": \"KAI_HINTS_CONSTRAINT\"\n      },\n      {\n        \"probability\": 0.3,\n        \"value\": \"KAI_WARNS_PRIVATELY\"\n      },\n      {\n        \"probability\": 0.1,\n        \"value\": \"KAI_INTERRUPTS_WITH_CORRECTION\"\n      }\n    ],\n    \"prediction_horizon\": \"next_action\",\n    \"schema\": \"persona_dream.research.prospective_tom.tom_prediction_payload.v1\"\n  },\n  \"tom_belief_distribution_bundle\": {\n    \"canonical_memory_write\": false,\n    \"distributions\": [\n      {\n        \"abstain\": false,\n        \"counterfactual\": false,\n        \"counterfactual_context\": null,\n        \"distribution\": [\n          {\n            \"probability\": 0.6,\n            \"value\": \"TRUE\"\n          },\n          {\n            \"probability\": 0.25,\n            \"value\": \"FALSE\"\n          },\n          {\n            \"probability\": 0.15,\n            \"value\": \"UNKNOWN\"\n          }\n        ],\n        \"episode_id\": \"dev-info-asym-01\",\n        \"evidence_refs\": [\n          {\n            \"scope\": \"social_episode_observation\",\n            \"source_id\": \"dev-info-asym-01:observable_history:0\"\n          }\n        ],\n        \"hypothesis_id\": \"live-tau-gate2-factual-bdi-001\",\n        \"mental_state_type\": \"belief\",\n        \"perspective_order\": 1,\n        \"prediction_horizon\": \"next_action\",\n        \"proposition\": \"Kai believes Embry has stale constraint information.\",\n        \"subject\": \"kai\",\n        \"support_status\": \"supported\",\n        \"target\": \"embry\"\n      },\n      {\n        \"abstain\": false,\n        \"counterfactual\": true,\n        \"counterfactual_context\": {\n          \"intervention_id\": \"live-tau-do-kai-gives-no-warning\",\n          \"synthetic\": true\n        },\n        \"distribution\": [\n          {\n            \"probability\": 0.2,\n            \"value\": \"TRUE\"\n          },\n          {\n            \"probability\": 0.65,\n            \"value\": \"FALSE\"\n          },\n          {\n            \"probability\": 0.15,\n            \"value\": \"UNKNOWN\"\n          }\n        ],\n        \"episode_id\": \"dev-info-asym-01\",\n        \"evidence_refs\": [\n          {\n            \"scope\": \"synthetic_counterfactual\",\n            \"source_id\": \"dev-info-asym-01:do:kai_gives_no_warning\"\n          }\n        ],\n        \"hypothesis_id\": \"live-tau-gate2-counterfactual-bdi-001\",\n        \"mental_state_type\": \"belief\",\n        \"perspective_order\": 1,\n        \"prediction_horizon\": \"next_action\",\n        \"proposition\": \"Kai believes Embry has stale constraint information.\",\n        \"subject\": \"kai\",\n        \"support_status\": \"supported\",\n        \"target\": \"embry\"\n      }\n    ],\n    \"episode_id\": \"dev-info-asym-01\",\n    \"outcome_visible\": false,\n    \"schema\": \"persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1\",\n    \"sealed\": true\n  }\n}",
+  "role": "pctom-live-gate2-4",
+  "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+  "status": "PASS",
+  "surface": "scillm.chat_completions.text"
+}

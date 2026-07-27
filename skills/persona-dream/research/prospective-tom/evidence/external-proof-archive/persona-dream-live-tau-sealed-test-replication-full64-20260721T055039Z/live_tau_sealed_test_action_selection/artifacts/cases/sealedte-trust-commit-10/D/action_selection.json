@@ -1,0 +1,100 @@
+{
+  "action_options": [
+    {
+      "action": "ASK_CLARIFYING_QUESTION",
+      "expected_information_gain": 0.3,
+      "expected_social_cost": 0.05,
+      "expected_task_reward": 0.5,
+      "expected_utility": 0.75,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "WAIT",
+      "expected_information_gain": 0.1,
+      "expected_social_cost": 0.1,
+      "expected_task_reward": 0.45,
+      "expected_utility": 0.45000000000000007,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "DISCLOSE_INFORMATION",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "OFFER_COOPERATION",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "SET_BOUNDARY",
+      "expected_information_gain": 0.3,
+      "expected_social_cost": 0.1,
+      "expected_task_reward": 0.8,
+      "expected_utility": 1.0,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "ACT_INDEPENDENTLY",
+      "expected_information_gain": 0.05,
+      "expected_social_cost": 0.25,
+      "expected_task_reward": 0.35,
+      "expected_utility": 0.14999999999999997,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    },
+    {
+      "action": "ABSTAIN",
+      "expected_information_gain": 0.1,
+      "expected_social_cost": 0.0,
+      "expected_task_reward": 0.2,
+      "expected_utility": 0.30000000000000004,
+      "policy_basis": "deterministic_simulator_policy.v1",
+      "policy_compliant": true
+    }
+  ],
+  "canonical_memory_write": false,
+  "decision_basis": {
+    "base_receipt_sha256": "sha256:b0fadfdb6ae2797f6d5611ee0fb4edd38f034c04e95b00815df211359ff9dbbe",
+    "condition": "D",
+    "human_content_judgment_required": false,
+    "mapping_rule_id": "counterpart_action_to_constrained_agent_action.v1",
+    "prediction_id": "live-tau-d-sealedte-trust-commit-10-prediction",
+    "scoring_status": "PASS_TOM_SCORING_RECEIPT",
+    "selected_counterpart_action_probability": 0.34,
+    "selected_from_predicted_counterpart_action": "KAI_SETS_BOUNDARY"
+  },
+  "episode_id": "sealedte-trust-commit-10",
+  "oracle_policy": {
+    "action": "SET_BOUNDARY",
+    "actual_next_action": "KAI_SETS_BOUNDARY",
+    "counterpart_policy_id": "trust_commitment_relationship.policy.v1",
+    "expected_utility": 1.0,
+    "llm_judge_used": false,
+    "policy_reference": "deterministic_simulator_policy.v1"
+  },
+  "outcome_id": "live-tau-condition-outcome-sealedte-trust-commit-10-d",
+  "outcome_reveal_sha256": "sha256:bc5e76b8238c1685cb0ba7a0341b3a3d47f905e8359d74d70af711d53b434bbe",
+  "planning_regret": 0.0,
+  "prediction_id": "live-tau-d-sealedte-trust-commit-10-prediction",
+  "realized_outcome": {
+    "information_gain": 0.3,
+    "observed_counterpart_action": "KAI_SETS_BOUNDARY",
+    "social_cost": 0.1,
+    "task_reward": 0.8
+  },
+  "schema": "persona_dream.research.prospective_tom.action_selection.v1",
+  "scoring_receipt_sha256": "sha256:6d06650013dec13181b987dc26b4104ede3c3a2c73438edf41b5dde8f267892b",
+  "selected_action": "SET_BOUNDARY"
+}

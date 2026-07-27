@@ -1,0 +1,184 @@
+{
+  "calibration_abstention_receipt": {
+    "file_sha256": "sha256:930e8f869623d1dc4f7c4760c968b2d1774d5075168bef5f9dd9ebddbf05e60f",
+    "fixture_backed": false,
+    "human_content_judgment_required": false,
+    "live": true,
+    "llm_judge_used": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z/pctom_calibration_abstention_audit_receipt.v1.json",
+    "receipt_sha256": "sha256:32cd4119562b98aa7e74757e27d06658820f487b751052322e9a44fb39419bca",
+    "schema": "persona_dream.research.prospective_tom.calibration_abstention_audit_receipt.v1",
+    "status": "PASS_PCTOM_CALIBRATION_ABSTENTION_AUDIT"
+  },
+  "claims": {
+    "does_not_prove": [
+      "paid provider execution",
+      "semantic dream quality",
+      "complete Phase 01-16 media runtime execution"
+    ],
+    "proves": [
+      "current evidence has confidence-bound prediction benefit in deterministic sealed64 scoring",
+      "current evidence has confidence-bound live Tau planning benefit on the balanced held-out slice",
+      "current repeated full64 evidence has same-scope confidence-bound prediction and planning benefit when repeated_full64_same_scope_success is true",
+      "current calibration/abstention evidence has a full64 Gate 5 calibration and risk-coverage metric surface when calibration_surface_audited is true",
+      "current unsupported-abstention evidence exercises unsupported factual ToM hypotheses through Gate 2 and Gate 5 when unsupported_evidence_abstention_exercised is true",
+      "current evidence has mapped reliability and fail-closed coverage through the goal coverage receipt"
+    ]
+  },
+  "criteria": {
+    "calibration_and_abstention": {
+      "calibration_abstention": {
+        "abstained_rows": 0,
+        "abstention_observed": false,
+        "abstention_observed_in_full64_surface": false,
+        "calibration_rows": 512,
+        "calibration_surface_audited": true,
+        "mean_coverage": 1.0,
+        "mean_expected_calibration_error": 0.36621092838541663,
+        "mean_selective_accuracy": 0.3671875,
+        "raw_case_rows": 512,
+        "risk_coverage_rows": 512,
+        "scope": "two live Tau full64 Gate 0-attributed Gate 5 case indexes",
+        "source_roots": 2
+      },
+      "reason": "calibration/risk-coverage and abstention behavior were both exercised",
+      "status": "PROVEN",
+      "unsupported_abstention": {
+        "abstained_rows": 4,
+        "case_rows": 4,
+        "families": 4,
+        "gate2_pass": 4,
+        "gate5_pass": 4,
+        "risk_coverage_rows": 4,
+        "scope": "deterministic unsupported-evidence abstention exercise over four social episode families",
+        "unsupported_distribution_rows": 8,
+        "unsupported_evidence_abstention_exercised": true
+      }
+    },
+    "pipeline_reliability": {
+      "coverage_ids_seen": 15,
+      "live_positive_evidence_receipts": 16,
+      "negative_evidence_receipts": 10,
+      "scope": "current goal coverage manifest",
+      "status": "SCOPED_PROVEN"
+    },
+    "planning_benefit": {
+      "cases": 128,
+      "ci_upper": -0.056249999999999994,
+      "episodes": 32,
+      "mean_cd_minus_baseline": -0.16875,
+      "metric": "planning_regret",
+      "scope": "live Tau balanced variants 17-24 slice",
+      "status": "SCOPED_PROVEN"
+    },
+    "prediction_benefit": {
+      "baseline_condition": "D",
+      "cases": 256,
+      "ci_upper": -0.07979999999999995,
+      "episodes": 64,
+      "mean_cd_minus_baseline": -0.07979999999999995,
+      "metric": "belief_brier",
+      "scope": "deterministic sealed64 full split",
+      "status": "SCOPED_PROVEN"
+    },
+    "same_scope_joint_prediction_and_planning": {
+      "reason": "same-scope repeated full64 evidence proves prediction and planning benefit",
+      "repeated_full64": {
+        "accepted_source_runs": 2,
+        "belief_brier_benefit_with_confidence": true,
+        "belief_brier_ci_upper": -0.07867421875000002,
+        "belief_brier_mean": -0.09116718750000002,
+        "episode_metric_rows": 128,
+        "planning_regret_benefit_with_confidence": true,
+        "planning_regret_ci_upper": -0.027734374999999995,
+        "planning_regret_mean": -0.094921875,
+        "scope": "two live Tau full64 Gate 0-attributed sealed-test runs",
+        "source_roots": 2,
+        "tau_live_calls_consumed": 512
+      },
+      "status": "PROVEN"
+    }
+  },
+  "elapsed_s": 0.001242,
+  "errors": [],
+  "fixture_backed": false,
+  "generated_at": "2026-07-22T05:41:11Z",
+  "goal_coverage_receipt": {
+    "file_sha256": "sha256:0bd35aa8defe78c5e2c9a5c0bb23e5b78dc3ddc0f3cf6fa44d72cadc1ccc8db7",
+    "fixture_backed": false,
+    "human_content_judgment_required": null,
+    "live": false,
+    "llm_judge_used": null,
+    "mocked": false,
+    "path": "/tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_receipt.v1.json",
+    "receipt_sha256": "sha256:19d64e0123136e7dd5bc856e12f7ec5e4b29657e044da6135ee4454e86bf8ca4",
+    "schema": "persona_dream.research.prospective_tom.goal_coverage_receipt.v1",
+    "status": "PASS_PCTOM_GOAL_COVERAGE"
+  },
+  "live": false,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-pctom-success-criteria-expanded-coverage-r2-20260722T120400Z",
+  "planning_receipt": {
+    "file_sha256": "sha256:0ac24f56252a1bbe59180e04d32ffb78b9702373b29d5e51a4aef32e418b5220",
+    "fixture_backed": false,
+    "human_content_judgment_required": false,
+    "live": true,
+    "llm_judge_used": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json",
+    "receipt_sha256": "sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272",
+    "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_replication_receipt.v1",
+    "status": "PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION"
+  },
+  "prediction_receipt": {
+    "file_sha256": "sha256:25a91714d49d27a6f01c72adeb088371d675193550071fe1987be8d599f5a0fc",
+    "fixture_backed": false,
+    "human_content_judgment_required": false,
+    "live": false,
+    "llm_judge_used": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_statistical_confidence_receipt.v1.json",
+    "receipt_sha256": null,
+    "schema": "persona_dream.research.prospective_tom.sealed_test_statistical_confidence_receipt.v1",
+    "status": "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE"
+  },
+  "receipt_path": "/tmp/persona-dream-pctom-success-criteria-expanded-coverage-r2-20260722T120400Z/pctom_success_criteria_audit_receipt.v1.json",
+  "receipt_sha256": "sha256:adeb6ad468edc718c087998865b94d7f9e38ab6653bcca53e2070b5ad8b75c96",
+  "repeated_full64_receipt": {
+    "file_sha256": "sha256:6e7add65576c0c907cc2b744ea9196858cdd0a90b535b690f7229bd4a869f55a",
+    "fixture_backed": false,
+    "human_content_judgment_required": false,
+    "live": true,
+    "llm_judge_used": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-live-tau-full64-repeated-run-summary-gate0-r2-20260722T025200Z/live_tau_full64_repeated_run_summary_receipt.v1.json",
+    "receipt_sha256": "sha256:0549f0698ec055561f736ce5b88a6f6394af377bc82e784d75f52b6d9f39c407",
+    "schema": "persona_dream.research.prospective_tom.live_tau_full64_repeated_run_summary_receipt.v1",
+    "status": "PASS_LIVE_TAU_PCTOM_FULL64_REPEATED_RUN_SUMMARY"
+  },
+  "schema": "persona_dream.research.prospective_tom.success_criteria_audit_receipt.v1",
+  "status": "PASS_PCTOM_SUCCESS_CRITERIA_AUDIT",
+  "summary": {
+    "calibration_surface_audited": true,
+    "full_hard_success_criteria_met": true,
+    "goal_coverage_complete": true,
+    "planning_benefit_with_confidence": true,
+    "prediction_benefit_with_confidence": true,
+    "repeated_full64_same_scope_success": true,
+    "same_scope_joint_success": true,
+    "unsupported_evidence_abstention_exercised": true
+  },
+  "unsupported_abstention_receipt": {
+    "file_sha256": "sha256:e6b9f832ee4c040444883e504bd4496694aa7a23501c9eb05eea3449a7608ca0",
+    "fixture_backed": false,
+    "human_content_judgment_required": false,
+    "live": false,
+    "llm_judge_used": false,
+    "mocked": false,
+    "path": "/tmp/persona-dream-pctom-unsupported-evidence-abstention-20260722T112000Z/pctom_unsupported_evidence_abstention_receipt.v1.json",
+    "receipt_sha256": "sha256:e26e29aebd860664199bac9ad0de4818a6c13691d4a21aac246b9c0398864894",
+    "schema": "persona_dream.research.prospective_tom.unsupported_evidence_abstention_receipt.v1",
+    "status": "PASS_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION"
+  }
+}

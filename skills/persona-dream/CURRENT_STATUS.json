@@ -1,10 +1,10 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-27T17:00:00Z",
+  "updated_at": "2026-07-27T17:05:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
-    "sha256": "sha256:193c1adf5bee5579e2c67bcb5e9d7f4f32491a561a29d5619a6f3e8e887fb58f",
+    "sha256": "sha256:a67eeca95951f1a0e2d514ea57093b2ece9510c853780afc1a6d24dcbf8d9b8a",
     "summary": "Build and verify Embry as a persistent persona whose synthetic dreams produce bounded, provenance-linked changes in self-narrative, arc state, session mood, and voice while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries."
   },
   "current_phase": "P2_LIVE_CONTINUITY_CHAIN",
@@ -113,13 +113,12 @@
     "Chatterbox proof is transport/content-preservation evidence, not perceptual emotion or identity evidence.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
     "Repeated full dream-pipeline reliability is not proven.",
-    "Load-bearing PCTOM-R proof roots are still recorded from /tmp paths and need durable repository or evidence-store copies before reboot."
+    "PCTOM-R archived evidence now has durable local custody, but PCTOM-R still does not prove confidence-bounded planning advantage."
   ],
   "next_step": {
     "default": "Add speaker-similarity and adversarial Embry recognition checks, then run the full accepted-dream to live-chain proof.",
     "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "ordered_steps": [
-      "Durably copy or bind the /tmp PCTOM-R proof roots cited by GOAL.md into a repository report path or explicit evidence store.",
       "Add speaker-similarity and adversarial Embry recognition checks for the live session-mood Chatterbox outputs.",
       "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls."
     ]

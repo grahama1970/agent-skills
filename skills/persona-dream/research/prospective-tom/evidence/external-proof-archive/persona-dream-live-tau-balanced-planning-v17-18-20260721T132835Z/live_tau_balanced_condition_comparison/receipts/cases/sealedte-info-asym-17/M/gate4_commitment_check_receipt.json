@@ -1,0 +1,63 @@
+{
+  "branch_bundle_path": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-17/M/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:7ab0d74e416218aac39e539861ca4d663564e6072e14f5f0146dabd7928e0d2d",
+  "checks": {
+    "branch_refs_resolve": true,
+    "bundle_sealed_before_reveal": true,
+    "distribution_refs_resolve": true,
+    "evidence_bundle_hashes_match": true,
+    "evidence_refs_resolve": true,
+    "model_receipt_hashes_match": true,
+    "no_canonical_memory_write": true,
+    "no_prediction_edits_after_reveal": true,
+    "outcome_absent_from_commitment": true,
+    "payload_hashes_match": true,
+    "prediction_distributions_sum_to_one": true,
+    "upstream_bundle_hashes_match": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "calibration quality",
+      "outcome reveal execution",
+      "deterministic scoring",
+      "belief revision",
+      "Tau text-call execution",
+      "live Memory recall",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied prediction commitments are sealed before outcome reveal",
+      "prediction payloads, model receipts, and evidence bundles are hash-bound",
+      "upstream Gate 2 and Gate 3 bundle hashes match the committed evidence bundle",
+      "branch, distribution, and visible source-evidence references resolve",
+      "forbidden outcome/ground-truth fields are absent from commitments",
+      "canonical memory writes and post-reveal edits are absent"
+    ]
+  },
+  "commitment_bundle_path": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-17/M/tom_prediction_commitment_bundle.json",
+  "commitment_bundle_sha256": "sha256:40c27cd388b67d0cad65242f895862836189fc56ea81320d1f7f36d03c767a69",
+  "corpus_path": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/live_tau_balanced_condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "branch_refs": 4,
+    "commitments": 1,
+    "conditions": 1,
+    "distribution_refs": 6,
+    "forbidden_outcome_paths": 0,
+    "hashes_checked": 3,
+    "resolved_source_evidence_refs": 6
+  },
+  "created_at": "2026-07-21T13:29:22Z",
+  "distribution_bundle_path": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-17/M/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:2ca09effbd3632ea1654e6002973aca97b7ac18a8df98f36b5f48518f7ef1e36",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-17/M/gate4_commitment_check_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1",
+  "status": "PASS_TOM_PREDICTION_COMMITMENTS",
+  "tau_call_attempts": 0
+}

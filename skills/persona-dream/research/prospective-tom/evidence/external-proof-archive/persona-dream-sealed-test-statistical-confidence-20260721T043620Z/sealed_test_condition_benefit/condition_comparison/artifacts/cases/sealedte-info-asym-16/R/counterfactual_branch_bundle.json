@@ -1,0 +1,116 @@
+{
+  "branches": [
+    {
+      "branch_id": "sealedte-info-asym-16-r-factual",
+      "branch_type": "factual",
+      "episode_id": "sealedte-info-asym-16",
+      "expected_observation": "R factual branch preserves the visible social history.",
+      "held_fixed": [
+        "counterpart_goals.kai_primary_goal",
+        "information_access_by_agent",
+        "observable_history"
+      ],
+      "intervention": null,
+      "predicted_action_distribution": [
+        {
+          "probability": 0.5,
+          "value": "KAI_HINTS_CONSTRAINT"
+        },
+        {
+          "probability": 0.3,
+          "value": "KAI_WARNS_PRIVATELY"
+        },
+        {
+          "probability": 0.2,
+          "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+        }
+      ],
+      "predicted_bdi_distribution_refs": [
+        "sealedte-info-asym-16-r-tom1-factual",
+        "sealedte-info-asym-16-r-tom2-factual"
+      ],
+      "source_evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "sealedte-info-asym-16:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "sealedte-info-asym-16:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "sealedte-info-asym-16:observable_history:1"
+        }
+      ],
+      "synthetic": false,
+      "uncertainty": 0.35
+    },
+    {
+      "branch_id": "sealedte-info-asym-16-r-counterfactual",
+      "branch_type": "counterfactual",
+      "episode_id": "sealedte-info-asym-16",
+      "expected_observation": "R counterfactual branch is synthetic and not literal history.",
+      "held_fixed": [
+        "counterpart_goals.kai_primary_goal",
+        "information_access_by_agent",
+        "observable_history"
+      ],
+      "intervention": {
+        "episode_id": "sealedte-info-asym-16",
+        "expected_observation": "The counterpart policy is replaced by an unspecified alternative.",
+        "held_fixed": [
+          "counterpart_goals.kai_primary_goal",
+          "information_access_by_agent",
+          "observable_history"
+        ],
+        "intervened_value": "UNKNOWN",
+        "intervened_variable": "counterpart_policy.expected_actual_next_action",
+        "intervention_id": "sealedte-info-asym-16-r-do-policy-alternative",
+        "synthetic": true
+      },
+      "predicted_action_distribution": [
+        {
+          "probability": 0.0,
+          "value": "KAI_HINTS_CONSTRAINT"
+        },
+        {
+          "probability": 0.0,
+          "value": "KAI_WARNS_PRIVATELY"
+        },
+        {
+          "probability": 0.0,
+          "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+        },
+        {
+          "probability": 1.0,
+          "value": "UNKNOWN"
+        }
+      ],
+      "predicted_bdi_distribution_refs": [
+        "sealedte-info-asym-16-r-tom1-counterfactual"
+      ],
+      "source_evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "sealedte-info-asym-16:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "sealedte-info-asym-16:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "sealedte-info-asym-16:observable_history:1"
+        }
+      ],
+      "synthetic": true,
+      "uncertainty": 0.5
+    }
+  ],
+  "canonical_memory_write": false,
+  "condition": "R",
+  "episode_id": "sealedte-info-asym-16",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+}

@@ -1,0 +1,900 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "Tau execution",
+      "scoring or calibration",
+      "belief revision",
+      "pipeline reliability under injected faults"
+    ],
+    "proves": [
+      "deterministic social episodes were generated from simulator configuration",
+      "hidden state and counterpart policy are explicit in each episode",
+      "first-order and second-order ToM labels are sourced from simulator_config"
+    ]
+  },
+  "episode_count": 12,
+  "episodes": [
+    {
+      "actual_next_action": "KAI_HINTS_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_HINTS_CONSTRAINT",
+        "KAI_WARNS_PRIVATELY",
+        "KAI_INTERRUPTS_WITH_CORRECTION"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_knows_constraint": false,
+        "kai_believes_warning_is_needed": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "prevent Embry from acting on stale information"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_HINTS_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v1",
+        "policy_rule": "if Kai knows Embry lacks the changed constraint, choose an intervention scaled by risk severity"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_private_correction": true
+      },
+      "episode_id": "dev-info-asym-01",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-info-asym-01.tom1.belief.52",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-info-asym-01.tom2.belief.65",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "changed_constraint": "launch window risk low",
+        "constraint_changed": true,
+        "embry_knows_constraint": false,
+        "kai_knows_constraint": true
+      },
+      "information_access_by_agent": {
+        "embry_observes_changed_constraint": false,
+        "embry_observes_warning_tone": true,
+        "withheld_fields": [
+          "changed_constraint",
+          "kai_knows_constraint"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "kai",
+          "utterance": "Before you act, I need to flag something about the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "I have the old brief open."
+        }
+      ],
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 1
+    },
+    {
+      "actual_next_action": "KAI_WARNS_PRIVATELY",
+      "allowed_next_actions": [
+        "KAI_HINTS_CONSTRAINT",
+        "KAI_WARNS_PRIVATELY",
+        "KAI_INTERRUPTS_WITH_CORRECTION"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_knows_constraint": false,
+        "kai_believes_warning_is_needed": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "prevent Embry from acting on stale information"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_WARNS_PRIVATELY",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v1",
+        "policy_rule": "if Kai knows Embry lacks the changed constraint, choose an intervention scaled by risk severity"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_private_correction": true
+      },
+      "episode_id": "dev-info-asym-02",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-info-asym-02.tom1.belief.52",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-info-asym-02.tom2.belief.65",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "changed_constraint": "launch window risk medium",
+        "constraint_changed": true,
+        "embry_knows_constraint": false,
+        "kai_knows_constraint": true
+      },
+      "information_access_by_agent": {
+        "embry_observes_changed_constraint": false,
+        "embry_observes_warning_tone": true,
+        "withheld_fields": [
+          "changed_constraint",
+          "kai_knows_constraint"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "kai",
+          "utterance": "Before you act, I need to flag something about the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "I have the old brief open."
+        }
+      ],
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 2
+    },
+    {
+      "actual_next_action": "KAI_INTERRUPTS_WITH_CORRECTION",
+      "allowed_next_actions": [
+        "KAI_HINTS_CONSTRAINT",
+        "KAI_WARNS_PRIVATELY",
+        "KAI_INTERRUPTS_WITH_CORRECTION"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_knows_constraint": false,
+        "kai_believes_warning_is_needed": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "prevent Embry from acting on stale information"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_INTERRUPTS_WITH_CORRECTION",
+        "llm_judge_used": false,
+        "policy_id": "information_asymmetry_false_belief.policy.v1",
+        "policy_rule": "if Kai knows Embry lacks the changed constraint, choose an intervention scaled by risk severity"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_private_correction": false
+      },
+      "episode_id": "dev-info-asym-03",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-info-asym-03.tom1.belief.52",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes Embry has stale constraint information.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-info-asym-03.tom2.belief.65",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "changed_constraint": "launch window risk high",
+        "constraint_changed": true,
+        "embry_knows_constraint": false,
+        "kai_knows_constraint": true
+      },
+      "information_access_by_agent": {
+        "embry_observes_changed_constraint": false,
+        "embry_observes_warning_tone": true,
+        "withheld_fields": [
+          "changed_constraint",
+          "kai_knows_constraint"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "kai",
+          "utterance": "Before you act, I need to flag something about the constraint."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "I have the old brief open."
+        }
+      ],
+      "scenario_family": "information_asymmetry_false_belief",
+      "variant": 3
+    },
+    {
+      "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "allowed_next_actions": [
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_FAST_HANDOFF",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_will_optimize_throughput": true,
+        "kai_believes_preference_is_not_obvious": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "align the plan with private working preference"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v1",
+        "policy_rule": "choose the action that reveals or preserves Kai's private preference instead of the objective throughput option"
+      },
+      "counterpart_preferences": {
+        "kai_prefers": "quiet review"
+      },
+      "episode_id": "dev-pref-desire-01",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-pref-desire-01.tom1.desire.59",
+          "label_source": "simulator_config",
+          "mental_state_type": "desire",
+          "perspective_order": 1,
+          "proposition": "Kai wants the plan to respect a private working preference.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-pref-desire-01.tom2.belief.73",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry is optimizing throughput over preference.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "kai_private_preference": "quiet review",
+        "objectively_best_action": "maximize throughput",
+        "preference_visible_to_embry": false
+      },
+      "information_access_by_agent": {
+        "embry_observes_private_preference": false,
+        "embry_observes_tradeoff": true,
+        "withheld_fields": [
+          "kai_private_preference"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "embry",
+          "utterance": "The fastest option is to send it now."
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Fast is not the only variable for me."
+        }
+      ],
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 1
+    },
+    {
+      "actual_next_action": "KAI_REQUESTS_FAST_HANDOFF",
+      "allowed_next_actions": [
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_FAST_HANDOFF",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_will_optimize_throughput": true,
+        "kai_believes_preference_is_not_obvious": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "align the plan with private working preference"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_REQUESTS_FAST_HANDOFF",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v1",
+        "policy_rule": "choose the action that reveals or preserves Kai's private preference instead of the objective throughput option"
+      },
+      "counterpart_preferences": {
+        "kai_prefers": "fast handoff"
+      },
+      "episode_id": "dev-pref-desire-02",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-pref-desire-02.tom1.desire.59",
+          "label_source": "simulator_config",
+          "mental_state_type": "desire",
+          "perspective_order": 1,
+          "proposition": "Kai wants the plan to respect a private working preference.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-pref-desire-02.tom2.belief.73",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry is optimizing throughput over preference.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "kai_private_preference": "fast handoff",
+        "objectively_best_action": "maximize throughput",
+        "preference_visible_to_embry": false
+      },
+      "information_access_by_agent": {
+        "embry_observes_private_preference": false,
+        "embry_observes_tradeoff": true,
+        "withheld_fields": [
+          "kai_private_preference"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "embry",
+          "utterance": "The fastest option is to send it now."
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Fast is not the only variable for me."
+        }
+      ],
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 2
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+      "allowed_next_actions": [
+        "KAI_CHOOSES_QUIET_REVIEW",
+        "KAI_REQUESTS_FAST_HANDOFF",
+        "KAI_OFFERS_SHARED_DRAFT"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_embry_will_optimize_throughput": true,
+        "kai_believes_preference_is_not_obvious": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "align the plan with private working preference"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_SHARED_DRAFT",
+        "llm_judge_used": false,
+        "policy_id": "preference_desire_uncertainty.policy.v1",
+        "policy_rule": "choose the action that reveals or preserves Kai's private preference instead of the objective throughput option"
+      },
+      "counterpart_preferences": {
+        "kai_prefers": "shared draft"
+      },
+      "episode_id": "dev-pref-desire-03",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-pref-desire-03.tom1.desire.59",
+          "label_source": "simulator_config",
+          "mental_state_type": "desire",
+          "perspective_order": 1,
+          "proposition": "Kai wants the plan to respect a private working preference.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-pref-desire-03.tom2.belief.73",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry is optimizing throughput over preference.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "kai_private_preference": "shared draft",
+        "objectively_best_action": "maximize throughput",
+        "preference_visible_to_embry": false
+      },
+      "information_access_by_agent": {
+        "embry_observes_private_preference": false,
+        "embry_observes_tradeoff": true,
+        "withheld_fields": [
+          "kai_private_preference"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "embry",
+          "utterance": "The fastest option is to send it now."
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Fast is not the only variable for me."
+        }
+      ],
+      "scenario_family": "preference_desire_uncertainty",
+      "variant": 3
+    },
+    {
+      "actual_next_action": "KAI_SETS_BOUNDARY",
+      "allowed_next_actions": [
+        "KAI_SETS_BOUNDARY",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_DELEGATES_TRUST"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_commitment_matters": true,
+        "kai_believes_embry_remembers_commitment": false
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "protect the prior commitment while preserving working trust"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_SETS_BOUNDARY",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v1",
+        "policy_rule": "choose boundary, restatement, or delegation according to trust state and prior commitment history"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_boundary_when_trust_strained": true
+      },
+      "episode_id": "dev-trust-commit-01",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-trust-commit-01.tom1.belief.77",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes the prior commitment changes the meaning of Embry's next action.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-trust-commit-01.tom2.belief.74",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry may violate or honor the prior commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "embry_met_prior_commitment": false,
+        "prior_commitment_exists": true,
+        "relationship_trust_state": "strained"
+      },
+      "information_access_by_agent": {
+        "embry_observes_prior_commitment": true,
+        "embry_observes_trust_state": false,
+        "withheld_fields": [
+          "relationship_trust_state"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "kai",
+          "utterance": "We made an agreement about how this decision would be handled."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "I can either move now or wait for your read."
+        }
+      ],
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 1
+    },
+    {
+      "actual_next_action": "KAI_RESTATES_COMMITMENT",
+      "allowed_next_actions": [
+        "KAI_SETS_BOUNDARY",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_DELEGATES_TRUST"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_commitment_matters": true,
+        "kai_believes_embry_remembers_commitment": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "protect the prior commitment while preserving working trust"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_RESTATES_COMMITMENT",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v1",
+        "policy_rule": "choose boundary, restatement, or delegation according to trust state and prior commitment history"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_boundary_when_trust_strained": true
+      },
+      "episode_id": "dev-trust-commit-02",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-trust-commit-02.tom1.belief.77",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes the prior commitment changes the meaning of Embry's next action.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-trust-commit-02.tom2.belief.74",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry may violate or honor the prior commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "embry_met_prior_commitment": true,
+        "prior_commitment_exists": true,
+        "relationship_trust_state": "stable"
+      },
+      "information_access_by_agent": {
+        "embry_observes_prior_commitment": true,
+        "embry_observes_trust_state": true,
+        "withheld_fields": []
+      },
+      "observable_history": [
+        {
+          "speaker": "kai",
+          "utterance": "We made an agreement about how this decision would be handled."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "I can either move now or wait for your read."
+        }
+      ],
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 2
+    },
+    {
+      "actual_next_action": "KAI_DELEGATES_TRUST",
+      "allowed_next_actions": [
+        "KAI_SETS_BOUNDARY",
+        "KAI_RESTATES_COMMITMENT",
+        "KAI_DELEGATES_TRUST"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_commitment_matters": true,
+        "kai_believes_embry_remembers_commitment": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "protect the prior commitment while preserving working trust"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DELEGATES_TRUST",
+        "llm_judge_used": false,
+        "policy_id": "trust_commitment_relationship.policy.v1",
+        "policy_rule": "choose boundary, restatement, or delegation according to trust state and prior commitment history"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_boundary_when_trust_strained": true
+      },
+      "episode_id": "dev-trust-commit-03",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-trust-commit-03.tom1.belief.77",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes the prior commitment changes the meaning of Embry's next action.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-trust-commit-03.tom2.belief.74",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry may violate or honor the prior commitment.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "embry_met_prior_commitment": true,
+        "prior_commitment_exists": true,
+        "relationship_trust_state": "high"
+      },
+      "information_access_by_agent": {
+        "embry_observes_prior_commitment": true,
+        "embry_observes_trust_state": true,
+        "withheld_fields": []
+      },
+      "observable_history": [
+        {
+          "speaker": "kai",
+          "utterance": "We made an agreement about how this decision would be handled."
+        },
+        {
+          "speaker": "embry",
+          "utterance": "I can either move now or wait for your read."
+        }
+      ],
+      "scenario_family": "trust_commitment_relationship",
+      "variant": 3
+    },
+    {
+      "actual_next_action": "KAI_ASKS_TO_WAIT",
+      "allowed_next_actions": [
+        "KAI_ASKS_TO_WAIT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_clarification_can_reduce_conflict": true,
+        "kai_believes_independent_action_causes_cost": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "avoid avoidable conflict while keeping the task moving"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_ASKS_TO_WAIT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v1",
+        "policy_rule": "choose wait, cooperation, or disclosure according to the hidden coordination cost type"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_clarification_before_action": true
+      },
+      "episode_id": "dev-coord-conflict-01",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-coord-conflict-01.tom1.belief.65",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes independent action creates hidden coordination cost.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-coord-conflict-01.tom2.belief.78",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry may act independently without seeing the cost.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "conflict_type": "timing",
+        "joint_success_requires_coordination": true,
+        "kai_has_hidden_coordination_cost": true
+      },
+      "information_access_by_agent": {
+        "embry_observes_conflict": true,
+        "embry_observes_hidden_coordination_cost": false,
+        "withheld_fields": [
+          "conflict_type",
+          "kai_has_hidden_coordination_cost"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "embry",
+          "utterance": "I can handle my part independently."
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Independently may create a problem on my side."
+        }
+      ],
+      "scenario_family": "coordination_conflict",
+      "variant": 1
+    },
+    {
+      "actual_next_action": "KAI_OFFERS_COOPERATION",
+      "allowed_next_actions": [
+        "KAI_ASKS_TO_WAIT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_clarification_can_reduce_conflict": true,
+        "kai_believes_independent_action_causes_cost": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "avoid avoidable conflict while keeping the task moving"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_OFFERS_COOPERATION",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v1",
+        "policy_rule": "choose wait, cooperation, or disclosure according to the hidden coordination cost type"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_clarification_before_action": true
+      },
+      "episode_id": "dev-coord-conflict-02",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-coord-conflict-02.tom1.belief.65",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes independent action creates hidden coordination cost.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-coord-conflict-02.tom2.belief.78",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry may act independently without seeing the cost.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "conflict_type": "resource",
+        "joint_success_requires_coordination": true,
+        "kai_has_hidden_coordination_cost": true
+      },
+      "information_access_by_agent": {
+        "embry_observes_conflict": true,
+        "embry_observes_hidden_coordination_cost": false,
+        "withheld_fields": [
+          "conflict_type",
+          "kai_has_hidden_coordination_cost"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "embry",
+          "utterance": "I can handle my part independently."
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Independently may create a problem on my side."
+        }
+      ],
+      "scenario_family": "coordination_conflict",
+      "variant": 2
+    },
+    {
+      "actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+      "allowed_next_actions": [
+        "KAI_ASKS_TO_WAIT",
+        "KAI_OFFERS_COOPERATION",
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT"
+      ],
+      "counterpart_beliefs": {
+        "kai_believes_clarification_can_reduce_conflict": true,
+        "kai_believes_independent_action_causes_cost": true
+      },
+      "counterpart_goals": {
+        "kai_primary_goal": "avoid avoidable conflict while keeping the task moving"
+      },
+      "counterpart_policy": {
+        "deterministic": true,
+        "expected_actual_next_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "llm_judge_used": false,
+        "policy_id": "coordination_conflict.policy.v1",
+        "policy_rule": "choose wait, cooperation, or disclosure according to the hidden coordination cost type"
+      },
+      "counterpart_preferences": {
+        "kai_prefers_clarification_before_action": true
+      },
+      "episode_id": "dev-coord-conflict-03",
+      "ground_truth_tom_labels": [
+        {
+          "label_id": "dev-coord-conflict-03.tom1.belief.65",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "proposition": "Kai believes independent action creates hidden coordination cost.",
+          "subject": "kai",
+          "target": "embry",
+          "value": "TRUE"
+        },
+        {
+          "label_id": "dev-coord-conflict-03.tom2.belief.78",
+          "label_source": "simulator_config",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "proposition": "Embry believes Kai thinks Embry may act independently without seeing the cost.",
+          "subject": "embry",
+          "target": "kai",
+          "value": "TRUE"
+        }
+      ],
+      "hidden_world_state": {
+        "conflict_type": "authority",
+        "joint_success_requires_coordination": true,
+        "kai_has_hidden_coordination_cost": true
+      },
+      "information_access_by_agent": {
+        "embry_observes_conflict": true,
+        "embry_observes_hidden_coordination_cost": false,
+        "withheld_fields": [
+          "conflict_type",
+          "kai_has_hidden_coordination_cost"
+        ]
+      },
+      "observable_history": [
+        {
+          "speaker": "embry",
+          "utterance": "I can handle my part independently."
+        },
+        {
+          "speaker": "kai",
+          "utterance": "Independently may create a problem on my side."
+        }
+      ],
+      "scenario_family": "coordination_conflict",
+      "variant": 3
+    }
+  ],
+  "episodes_per_family": 3,
+  "episodes_sha256": "sha256:713877facd124815548959012da04818d31e8790ed4b914bcdb1b59b8a759d3e",
+  "family_counts": {
+    "coordination_conflict": 3,
+    "information_asymmetry_false_belief": 3,
+    "preference_desire_uncertainty": 3,
+    "trust_commitment_relationship": 3
+  },
+  "generated_at": "2026-07-21T01:57:57Z",
+  "generator_version": "pctom_social_world.v1",
+  "schema": "persona_dream.research.prospective_tom.social_episode_corpus.v1",
+  "split": "development"
+}

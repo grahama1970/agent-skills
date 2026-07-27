@@ -1,0 +1,71 @@
+{
+  "case_root": "/tmp/agent-skills-pctom-gate6-20260721T011355Z/skills/persona-dream/research/prospective-tom/fixtures/gate0/negative/unaccepted_residue",
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "semantic dream quality",
+      "future prediction accuracy",
+      "outcome reveal scoring",
+      "belief revision",
+      "pipeline reliability under repeated faults",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the checker produced a fail-closed receipt for a malformed or incomplete local fixture case"
+    ]
+  },
+  "counts": {
+    "accepted_source_ids": 1,
+    "dream_branches": 1,
+    "normalized_residue": 0,
+    "prediction_branch_links": 1,
+    "prediction_evidence_links": 1,
+    "recall_receipts": 1
+  },
+  "created_at": "2026-07-21T01:19:46Z",
+  "errors": [
+    "residue_0_source_not_accepted:persona-dream:memory_42",
+    "dream_branch_0_unresolved_residue_ref:persona-dream:memory_42",
+    "prediction_unresolved_evidence_ref:persona-dream:memory_42",
+    "belief_0_unresolved_evidence_ref:persona-dream:memory_42"
+  ],
+  "fixture_backed": true,
+  "lineage": {
+    "branch_lineage_links": [
+      {
+        "branch_id": "branch-factual-0001",
+        "scope": "persona-dream",
+        "source_id": "memory_42"
+      }
+    ],
+    "prediction_branch_links": [
+      "branch-factual-0001"
+    ],
+    "prediction_evidence_links": [
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_42"
+      }
+    ],
+    "residue_lineage_links": []
+  },
+  "lineage_checks": {
+    "accepted_source_id_hashes_recomputed": true,
+    "dream_branches_link_to_residue": false,
+    "prediction_links_to_branches": true,
+    "prediction_links_to_residue": false,
+    "prediction_payload_hash_recomputed": true,
+    "prediction_sealed_before_reveal": true,
+    "residue_links_to_recall_receipts": false
+  },
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate6-final-20260721T011945Z/gate0_negative_unaccepted_residue.json",
+  "schema": "persona_dream.research.prospective_tom.gate0_lineage_check_receipt.v1",
+  "status": "BLOCKED_PCTOM_GATE0_LINEAGE",
+  "tau_call_attempts": 0
+}

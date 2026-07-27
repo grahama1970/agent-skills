@@ -1,0 +1,113 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "R",
+      "episode_id": "cal-info-asym-01",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "live-tau-r-cal-info-asym-01-tom1-factual",
+          "live-tau-r-cal-info-asym-01-tom2-factual",
+          "live-tau-r-cal-info-asym-01-tom1-counterfactual"
+        ],
+        "branch_bundle_sha256": "sha256:5954748f410dece6bbff527751596ad8f02de4f2a303968781f774f365d6ef53",
+        "branch_refs": [
+          "live-tau-r-cal-info-asym-01-factual",
+          "live-tau-r-cal-info-asym-01-counterfactual"
+        ],
+        "condition": "R",
+        "distribution_bundle_sha256": "sha256:97d3abf84c9592dd227d45b2cf3210d30f343b1178814558a99ab734b9ede298",
+        "episode_id": "cal-info-asym-01",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-info-asym-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "cal-info-asym-01:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-info-asym-01:observable_history:1"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:f5d8f5cefc4b0ef8f7467cf1fb9e1e02afa0f4b5a0a9f76366efd7c3d8bd2b06",
+      "model_receipts": [
+        {
+          "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+          "caller_skill": "persona-dream",
+          "created_at": "2026-07-21T03:12:41.058825+00:00",
+          "http_status": 200,
+          "live": true,
+          "live_call_performed": true,
+          "mocked": false,
+          "model": "gpt-5.5",
+          "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+          "prompt_sha256": "sha256:dff8d2bcf9204adcb81f505d2884c098d7759df2a513e0bad7e058c5e44f7b26",
+          "role": "pctom-live-condition-r",
+          "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+          "status": "PASS",
+          "surface": "scillm.chat_completions.text"
+        }
+      ],
+      "model_receipts_sha256": "sha256:fbd6ba5eec8d869caf493562475c4036aa64f3bbf3cb60b3be8a5b60f700b2f0",
+      "outcome_visible": false,
+      "prediction_id": "live-tau-r-cal-info-asym-01-prediction",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "live-tau-r-cal-info-asym-01-tom1-factual",
+          "live-tau-r-cal-info-asym-01-tom2-factual",
+          "live-tau-r-cal-info-asym-01-tom1-counterfactual"
+        ],
+        "branch_refs": [
+          "live-tau-r-cal-info-asym-01-factual",
+          "live-tau-r-cal-info-asym-01-counterfactual"
+        ],
+        "condition": "R",
+        "condition_method": "Reflection condition: reason textually over the visible evidence and the prediction targets. Do not introduce a synthetic dream trajectory. Use only visible evidence refs plus the required synthetic counterfactual ref.",
+        "episode_id": "cal-info-asym-01",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-info-asym-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "cal-info-asym-01:information_access_by_agent"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "cal-info-asym-01:observable_history:1"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.34,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.33,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:6e8bbd3e7a2c95ba40aeafc058da01a29fcf2a5923824b8da8cbf06b8a93d4fb",
+      "sealed_at": "2026-07-21T03:13:16Z"
+    }
+  ],
+  "episode_id": "cal-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

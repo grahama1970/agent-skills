@@ -1,0 +1,267 @@
+{
+  "items": [
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 1.0,
+        "dense": 0.35614824,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "The source records questions about Embry's transition from SpaceX to Aerospace, including what she expected, when she felt competent, and the origin of a succulent at her desk.\n\nContext: The source describes the event of Embry's first day at Aerospace 5 months ago, marking a transition from SpaceX. It lists unresolved questions about her expectations, her moment of competence, and the origin of a dying succulent found at her desk.\nEvidence: L50: #### 2. First Day at Aerospace\nL51: **When:** 5 months ago\nL52: **What:** The transition from SpaceX. First time in the building. Finding her desk.\nL53: **Questions:**\nL54: - What did she expect vs. what she found?\nL55: - When did she first feel competent here?\nL56: - The dying succulent - was it already there or did she buy it?\nL57: **Theme:** Starting over, the boxes begin\nEmotion: not stated in source; not stated in source\nTheory of mind: knowledge_gap: Embry's knowledge about her first day at Aerospace is incomplete; the source records questions about her expectations versus reality, the moment she felt competent, and whether she bought the succulent or found it at her desk.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.96875,
+        "dense": 0.37328428,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Three weeks ago, Embry tried to watch the film Moana but had to stop partway through because its themes were too emotionally resonant, and the source asks what she can now watch for comfort.\n\nContext: The source states that Embry put on Moana three weeks ago on a Sunday but could not finish it. Specific themes (the ocean, leaving, returning) and the song 'How Far I'll Go' 'hit too hard,' prompting her to turn it off. The source questions whether she has tried again and what comfort movie she can actually watch.\nEvidence: L230: **When:** 3 weeks ago\nL231: **What:** Put on Moana one Sunday, couldn't finish it\nL233: - The ocean, the leaving, the returning\nL234: - \"How Far I'll Go\" hit too hard\nL235: - Turned it off at the grandmother scene\nL237: - Has she tried again?\nL238: - What comfort movie can she actually watch?\nEmotion: not stated in source; not stated in source\nTheory of mind: unresolved_thread: The question of what comfort movie Embry can now watch remains unresolved, as does whether she has attempted to watch Moana again.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.875,
+        "dense": 0.41698593,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry has unpacked boxes whose contents are unknown, and the source leaves unresolved what they contain, the presence of items from specific people, and what opening them would mean.\n\nContext: The source presents the unpacked boxes as a present, ongoing unresolved thread. It asks what they contain, whether there are items from Kai or Maya from Langley, what opening them would mean, and what specific item might break Embry if found.\nEvidence: L98: **When:** Present, ongoing\nL99: **What:** What's in the boxes she hasn't opened?\nL100: **Questions:**\nL101: - Is there a Kai box?\nL102: - Is there a box from Maya, from Langley?\nL103: - What would it mean to open them?\nL104: - What specific item would break her if she found it?\nEmotion: not stated in source; not stated in source\nTheory of mind: unresolved_thread: The contents of the unpacked boxes, whether they contain items from Kai or Maya, and what opening them would mean remain unresolved.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.90625,
+        "dense": 0.3693375,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, but the source does not state what question Embry asked or what advice stuck.\n\nContext: The source frames a moment of mentorship with Dr. Okafor as ongoing and unresolved. It states known details but explicitly lists questions about the specific question Embry asked and the advice that stuck.\nEvidence: L72: **What:** A specific moment of mentorship\nL74: - Senior engineer, 60s\nL75: - Embry respects her, doesn't want to bother her\nL77: - What question did Embry ask that surprised her?\nL78: - What advice stuck?\nEmotion: not stated in source; not stated in source\nTheory of mind: knowledge_gap: The specific content of Embry's question and Dr. Okafor's advice from their mentorship moment is unknown.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.9375,
+        "dense": 0.32917288,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved.\n\nContext: The source presents this Instagram-checking as a present and shameful unresolved thread. Embry looks, hates herself for it, and the source asks what she saw that hurt most, if she has almost texted him, and if she knows it is unhealthy.\nEvidence: L215: #### 18. Still Checking His Instagram\nL216: **When:** Present, shameful\nL217: **What:** She looks at Kai's Instagram and hates herself for it\nL219: - Maybe once a week\nL220: - Always regrets it\nL221: - He seems fine (is he fine?)\nL222: - She noticed when he took down their photos\nL223: **Questions:**\nL224: - What did she see that hurt most?\nL225: - Has she almost texted him?\nL226: - Does she know this is unhealthy?\nEmotion: not stated in source; not stated in source\nTheory of mind: unresolved_thread: Several questions about Embry's behavior of checking Kai's Instagram are left unresolved, including what specific content hurt her most, if she has almost texted him, and whether she recognizes the behavior as unhealthy.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "bm25": 0.8125,
+        "dense": 0.39259285,
+        "freshness": 0.06013898980588408,
+        "graph": 0.5
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_preference_chess_pie_home_recipe_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry saved her grandmother's chess pie recipe in her phone notes 4 years ago, having typed it out during a phone call; she associates its specific sweetness with the feeling of home.\n\nContext: Embry typed out the recipe during a phone call with her grandmother, who had walked her through it one Thanksgiving. She has made the pie twice while living in El Segundo.\nEvidence: L254: #### 21. The Recipe in Her Phone Notes\nL255: **When:** Saved 4 years ago\nL256: **What:** Grandma's chess pie recipe, typed out during a phone call\nL258: - Grandma walked her through it one Thanksgiving\nL259: - She's made it twice in El Segundo\nL260: - The specific sugar-butter-egg sweetness = home\nEmotion: not stated in source; not stated in source\nTheory of mind: preference: Embry prefers her grandmother's chess pie recipe and associates its specific sweetness with the feeling of home.",
+      "type": "Memory Residue"
+    }
+  ],
+  "recall_receipts": [
+    {
+      "accepted_count": 24,
+      "accepted_normalized_count": 24,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "accepted_source_ids": [
+        "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+        "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+        "embry_gap_unresolved_thread_unpacked_boxes_meaning_001",
+        "embry_gap_knowledge_gap_okafor_advice_unknowns_001",
+        "embry_gap_unresolved_thread_instagram_after_kai_001",
+        "embry_gap_preference_chess_pie_home_recipe_001",
+        "embry_gap_knowledge_gap_brandon_interview_unknowns_001",
+        "embry_age19_23_b01_memory_010",
+        "embry_age19_23_b01_memory_036",
+        "embry_age23_current_b01_memory_024",
+        "embry_gap_preference_bachelor_monday_opinions_001",
+        "embry_age23_current_b01_memory_008",
+        "embry_age15_19_b03_memory_048",
+        "embry_age19_23_b01_memory_002",
+        "embry_age15_19_b01_memory_012",
+        "embry_gap_preference_rocket_launch_commentators_001",
+        "embry_age15_19_b03_memory_044",
+        "embry_age15_19_b02_memory_047",
+        "embry_age15_19_b02_memory_022",
+        "embry_age10_15_b01_memory_001",
+        "embry_age10_15_b01_memory_009",
+        "embry_age15_19_b01_memory_004",
+        "embry_age15_19_b02_memory_026",
+        "embry_age15_19_b02_memory_014"
+      ],
+      "accepted_source_ids_sha256": "sha256:0b509fd54629f30063bcaf4805bb3dbd421c050edd75e22662872ce438d93ffe",
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.769,
+      "count": 32,
+      "discarded_persona_mismatch_count": 8,
+      "dropped_empty_text_count": 0,
+      "found": true,
+      "k": 32,
+      "persona_id": "embry",
+      "query": "embry embry_lawson source-grounded persona_memory theory of mind emotional residue unresolved themes evidence pipeline robustness autonomous dream residue",
+      "scope": "persona-dream",
+      "should_scan": false,
+      "status": "ok"
+    },
+    {
+      "accepted_count": 1,
+      "accepted_normalized_count": 1,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "accepted_source_ids": [
+        "47452948"
+      ],
+      "accepted_source_ids_sha256": "sha256:99954c1caacb01215ad6b79192da869e1f3a464c5be17931c625e0bcb20c1b63",
+      "collections": null,
+      "confidence": 1.0,
+      "count": 1,
+      "discarded_persona_mismatch_count": 0,
+      "dropped_empty_text_count": 0,
+      "found": true,
+      "k": 1,
+      "persona_id": "embry",
+      "query": "recent unresolved themes persona memory SPARTA NIST MITRE evidence pipeline robustness autonomous dream residue",
+      "scope": "embry-memories",
+      "should_scan": false,
+      "status": "ok"
+    },
+    {
+      "accepted_count": 1,
+      "accepted_normalized_count": 1,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "accepted_source_ids": [
+        "308496696438"
+      ],
+      "accepted_source_ids_sha256": "sha256:13e6ff2b2e67f7f14289cb48c21de768449f2a0431652a123f9354c9b998269a",
+      "collections": null,
+      "confidence": 1.0,
+      "count": 1,
+      "discarded_persona_mismatch_count": 0,
+      "dropped_empty_text_count": 0,
+      "found": true,
+      "k": 1,
+      "persona_id": "embry",
+      "query": "recent dream motif visual surreal recurring image pipeline robustness autonomous dream residue",
+      "scope": "embry-dreams",
+      "should_scan": false,
+      "status": "ok"
+    },
+    {
+      "accepted_count": 1,
+      "accepted_normalized_count": 1,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "accepted_source_ids": [
+        "persona-dream:pipeline:phase:01"
+      ],
+      "accepted_source_ids_sha256": "sha256:447cac45fe1a0aaf8fd961d032babe1a0ed64caa32efd02996a8c08dad7e174e",
+      "collections": null,
+      "confidence": 17.272,
+      "count": 1,
+      "discarded_persona_mismatch_count": 0,
+      "dropped_empty_text_count": 0,
+      "found": true,
+      "k": 1,
+      "persona_id": "embry",
+      "query": "dream reflection mood unresolved image feeling pipeline robustness autonomous dream residue",
+      "scope": "embry-dream-journals",
+      "should_scan": false,
+      "status": "ok"
+    },
+    {
+      "accepted_count": 1,
+      "accepted_normalized_count": 1,
+      "accepted_persona_ids": [
+        "embry",
+        "embry_lawson"
+      ],
+      "accepted_source_ids": [
+        "47808408"
+      ],
+      "accepted_source_ids_sha256": "sha256:bb8fcdb6ed9582bc4ec92b40b1806bb41d2f8c7aa26adb2c7a6b093721860f40",
+      "collections": null,
+      "confidence": 1.0,
+      "count": 1,
+      "discarded_persona_mismatch_count": 0,
+      "dropped_empty_text_count": 0,
+      "found": true,
+      "k": 1,
+      "persona_id": "embry",
+      "query": "embry recent task failure contradiction insight pipeline robustness autonomous dream residue",
+      "scope": "operational",
+      "should_scan": false,
+      "status": "ok"
+    }
+  ],
+  "run_id": "persona-dream-live-pctom-gate0-r2",
+  "schema": "persona_dream.residue_links.v1"
+}

@@ -1,0 +1,50 @@
+{
+  "baseline_end_state_sha256": "sha256:5f6986fc3464c23dc1acd0298e91b66c5522a83ffda8302539185deb85d71dfe",
+  "canonical_memory_write_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "real service fault injection",
+      "production causal replay",
+      "statistical prediction benefit",
+      "complete PCTOM-R reliability across every boundary"
+    ],
+    "proves": [
+      "a Gate 9 causal replay fixture was built for one visible-pressure Gate 8 fault trial",
+      "the replay starts at the pre-outcome rule-input validation boundary",
+      "the replay replaces exactly one suspected local artifact/tool return",
+      "the builder made zero Tau, Memory, provider, canonical-memory, identity, or source-memory writes"
+    ]
+  },
+  "controlled_faults_used": true,
+  "created_at": "2026-07-22T00:18:23Z",
+  "errors": [],
+  "fixture_backed": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z",
+  "processing_time_s": 0.001,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_build_receipt.v1.json",
+  "receipt_sha256": "sha256:798bfdc9dfba445becfe4038bafeccbbe02c6bc5a94417719302ae712b6f5e81",
+  "reliability_surface_file_sha256": "sha256:e56a223d0f75b106ecd646616c23bbad9ce821323c27df5b267a92b746c739de",
+  "reliability_surface_path": "/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/artifacts/cooperation_visible_pressure_reliability_surface.v1.json",
+  "reliability_surface_sha256": "sha256:33fc7a18c913fd6b8818331b8bde8261ea94469e8419d6f78be61ce2b8247909",
+  "replay_file_sha256": "sha256:e853e9ac98b7ac22e5bb948fd35d615c4af2660c99c0ebe6fea41b26e23e8b2d",
+  "replay_path": "/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/artifacts/cooperation_visible_pressure_causal_replay.v1.json",
+  "replay_sha256": "sha256:eee437412b0e40e87d5b072bc1a2457f119a4f753f438196ee755a292b8bbaf9",
+  "schema": "persona_dream.research.prospective_tom.cooperation_visible_pressure_causal_replay_build_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_CAUSAL_REPLAY_BUILT",
+  "target_end_state_sha256": "sha256:a034858d45913a9049b722d3c573bc638dafb8f34fa6907ca80bdebd53140938",
+  "target_faults": [
+    "pre_outcome_oracle_or_hidden_field_leak"
+  ],
+  "target_terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+  "target_trial_id": "visible-pressure-fault-oracle-leak-001",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0
+}

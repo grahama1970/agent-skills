@@ -146,6 +146,8 @@ Commands:
   check-pctom-goal-coverage  Check active PCTOM-R goal clauses against receipt evidence
   check-pctom-success-criteria  Audit PCTOM-R success criteria and scope gaps
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
+  build-pctom-external-proof-archive  Copy GOAL.md-cited /tmp receipts into the durable in-repo archive
+  verify-pctom-external-proof-archive  Re-read the durable proof archive and confirm every digest still matches
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
   check-tom-belief-distributions  Validate PCTOM-R Gate 2 ToM distribution invariants
@@ -665,6 +667,12 @@ case "$COMMAND" in
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"
+    ;;
+  build-pctom-external-proof-archive)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_pctom_external_proof_archive.py" "$@"
+    ;;
+  verify-pctom-external-proof-archive)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_pctom_external_proof_archive.py" --verify "$@"
     ;;
   build-social-episode-corpus)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_social_episode_corpus.py" "$@"

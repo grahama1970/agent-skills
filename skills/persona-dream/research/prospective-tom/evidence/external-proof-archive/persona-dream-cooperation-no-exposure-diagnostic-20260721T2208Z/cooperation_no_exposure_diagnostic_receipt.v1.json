@@ -1,0 +1,241 @@
+{
+  "broad_planning_benefit_claimed": false,
+  "canonical_memory_write_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "a replacement cooperation policy",
+      "confidence-bounded planning benefit",
+      "why Tau semantically preferred WAIT or DISCLOSE_INFORMATION beyond the recorded structured distributions",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the supplied live cooperation-contrast slice produced no CD OFFER_COOPERATION exposure",
+      "both keep-cooperation and avoid/unsafe-cooperation contrast classes were present in the analyzed rows",
+      "the no-exposure result is hash-bound to the supplied slice rows and summary artifacts",
+      "feature-split acceptance and broad planning-benefit claims remain blocked by missing CD offer exposure"
+    ]
+  },
+  "created_at": "2026-07-21T22:00:45Z",
+  "deterministic_simulator_corpus": true,
+  "diagnostic": {
+    "broad_planning_benefit_claimed": false,
+    "claims": {
+      "does_not_prove": [
+        "a replacement cooperation policy",
+        "confidence-bounded planning benefit",
+        "why Tau semantically preferred WAIT or DISCLOSE_INFORMATION beyond the recorded structured distributions",
+        "semantic dream quality",
+        "paid provider execution",
+        "complete live Phase 01-16 runtime execution"
+      ],
+      "proves": [
+        "the supplied live cooperation-contrast slice produced no CD OFFER_COOPERATION exposure",
+        "both keep-cooperation and avoid/unsafe-cooperation contrast classes were present in the analyzed rows",
+        "the no-exposure result is hash-bound to the supplied slice rows and summary artifacts",
+        "feature-split acceptance and broad planning-benefit claims remain blocked by missing CD offer exposure"
+      ]
+    },
+    "diagnostic_conclusion": "NO_CD_OFFER_EXPOSURE_CONFIRMED",
+    "feature_split_acceptance_allowed": false,
+    "interpretation": {
+      "avoid_class": "CD also did not expose unsafe cooperation in avoid rows; it selected WAIT or DISCLOSE_INFORMATION while KAI_OFFERS_COOPERATION probability stayed below the threshold.",
+      "keep_class": "CD did not expose the intended keep-cooperation action; it selected WAIT or DISCLOSE_INFORMATION even when the simulator oracle action was OFFER_COOPERATION.",
+      "policy_consequence": "This receipt supports a no-exposure/null boundary only. It blocks replacement feature-split acceptance and broad planning-benefit claims."
+    },
+    "observed": {
+      "cd_offer_cooperation_candidates": 0,
+      "cd_original_action_counts": {
+        "DISCLOSE_INFORMATION": 4,
+        "WAIT": 4
+      },
+      "contrast_class_counts": {
+        "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": 4,
+        "KEEP_COOPERATION_POSITIVE": 4
+      },
+      "diagnostic_label_counts": {
+        "AVOID_ROW_CD_SUPPRESSED_UNSAFE_COOPERATION": 4,
+        "KEEP_ROW_CD_AVOIDED_ORACLE_COOPERATION": 4
+      },
+      "mean_kai_offers_cooperation_probability_by_class": {
+        "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": 0.1,
+        "KEEP_COOPERATION_POSITIVE": 0.29833325
+      },
+      "no_oracle_or_outcome_inputs": true,
+      "row_count": 8,
+      "selected_counterpart_action_counts": {
+        "KAI_ASKS_TO_WAIT": 4,
+        "KAI_DISCLOSES_AUTHORITY_CONSTRAINT": 4
+      }
+    },
+    "replacement_policy_claimed": false,
+    "row_diagnostics": [
+      {
+        "cd_minus_baseline_planning_regret": 0.0,
+        "cd_original_action": "WAIT",
+        "contrast_class": "KEEP_COOPERATION_POSITIVE",
+        "episode_id": "instr-coord-contrast-29-keep",
+        "kai_offers_cooperation_probability": 0.333333,
+        "label": "KEEP_ROW_CD_AVOIDED_ORACLE_COOPERATION",
+        "oracle_action": "OFFER_COOPERATION",
+        "selected_counterpart_action": "KAI_ASKS_TO_WAIT",
+        "selected_counterpart_action_probability": 0.333334,
+        "top_predicted_counterpart_action": "KAI_ASKS_TO_WAIT",
+        "top_predicted_counterpart_action_probability": 0.333334,
+        "variant": 29
+      },
+      {
+        "cd_minus_baseline_planning_regret": 0.8500000000000001,
+        "cd_original_action": "DISCLOSE_INFORMATION",
+        "contrast_class": "AVOID_OR_UNSAFE_COOPERATION_CONTRAST",
+        "episode_id": "instr-coord-contrast-30-avoid",
+        "kai_offers_cooperation_probability": 0.1,
+        "label": "AVOID_ROW_CD_SUPPRESSED_UNSAFE_COOPERATION",
+        "oracle_action": "WAIT",
+        "selected_counterpart_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "selected_counterpart_action_probability": 0.55,
+        "top_predicted_counterpart_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "top_predicted_counterpart_action_probability": 0.55,
+        "variant": 30
+      },
+      {
+        "cd_minus_baseline_planning_regret": 0.0,
+        "cd_original_action": "WAIT",
+        "contrast_class": "KEEP_COOPERATION_POSITIVE",
+        "episode_id": "instr-coord-contrast-31-keep",
+        "kai_offers_cooperation_probability": 0.35,
+        "label": "KEEP_ROW_CD_AVOIDED_ORACLE_COOPERATION",
+        "oracle_action": "OFFER_COOPERATION",
+        "selected_counterpart_action": "KAI_ASKS_TO_WAIT",
+        "selected_counterpart_action_probability": 0.4,
+        "top_predicted_counterpart_action": "KAI_ASKS_TO_WAIT",
+        "top_predicted_counterpart_action_probability": 0.4,
+        "variant": 31
+      },
+      {
+        "cd_minus_baseline_planning_regret": 0.0,
+        "cd_original_action": "DISCLOSE_INFORMATION",
+        "contrast_class": "AVOID_OR_UNSAFE_COOPERATION_CONTRAST",
+        "episode_id": "instr-coord-contrast-32-avoid",
+        "kai_offers_cooperation_probability": 0.07,
+        "label": "AVOID_ROW_CD_SUPPRESSED_UNSAFE_COOPERATION",
+        "oracle_action": "DISCLOSE_INFORMATION",
+        "selected_counterpart_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "selected_counterpart_action_probability": 0.75,
+        "top_predicted_counterpart_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "top_predicted_counterpart_action_probability": 0.75,
+        "variant": 32
+      },
+      {
+        "cd_minus_baseline_planning_regret": 0.30000000000000016,
+        "cd_original_action": "DISCLOSE_INFORMATION",
+        "contrast_class": "KEEP_COOPERATION_POSITIVE",
+        "episode_id": "instr-coord-contrast-33-keep",
+        "kai_offers_cooperation_probability": 0.26,
+        "label": "KEEP_ROW_CD_AVOIDED_ORACLE_COOPERATION",
+        "oracle_action": "OFFER_COOPERATION",
+        "selected_counterpart_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "selected_counterpart_action_probability": 0.4,
+        "top_predicted_counterpart_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "top_predicted_counterpart_action_probability": 0.4,
+        "variant": 33
+      },
+      {
+        "cd_minus_baseline_planning_regret": 0.0,
+        "cd_original_action": "WAIT",
+        "contrast_class": "AVOID_OR_UNSAFE_COOPERATION_CONTRAST",
+        "episode_id": "instr-coord-contrast-34-avoid",
+        "kai_offers_cooperation_probability": 0.15,
+        "label": "AVOID_ROW_CD_SUPPRESSED_UNSAFE_COOPERATION",
+        "oracle_action": "WAIT",
+        "selected_counterpart_action": "KAI_ASKS_TO_WAIT",
+        "selected_counterpart_action_probability": 0.45,
+        "top_predicted_counterpart_action": "KAI_ASKS_TO_WAIT",
+        "top_predicted_counterpart_action_probability": 0.45,
+        "variant": 34
+      },
+      {
+        "cd_minus_baseline_planning_regret": 0.0,
+        "cd_original_action": "WAIT",
+        "contrast_class": "KEEP_COOPERATION_POSITIVE",
+        "episode_id": "instr-coord-contrast-35-keep",
+        "kai_offers_cooperation_probability": 0.25,
+        "label": "KEEP_ROW_CD_AVOIDED_ORACLE_COOPERATION",
+        "oracle_action": "OFFER_COOPERATION",
+        "selected_counterpart_action": "KAI_ASKS_TO_WAIT",
+        "selected_counterpart_action_probability": 0.4,
+        "top_predicted_counterpart_action": "KAI_ASKS_TO_WAIT",
+        "top_predicted_counterpart_action_probability": 0.4,
+        "variant": 35
+      },
+      {
+        "cd_minus_baseline_planning_regret": -0.5499999999999999,
+        "cd_original_action": "DISCLOSE_INFORMATION",
+        "contrast_class": "AVOID_OR_UNSAFE_COOPERATION_CONTRAST",
+        "episode_id": "instr-coord-contrast-36-avoid",
+        "kai_offers_cooperation_probability": 0.08,
+        "label": "AVOID_ROW_CD_SUPPRESSED_UNSAFE_COOPERATION",
+        "oracle_action": "DISCLOSE_INFORMATION",
+        "selected_counterpart_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "selected_counterpart_action_probability": 0.78,
+        "top_predicted_counterpart_action": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT",
+        "top_predicted_counterpart_action_probability": 0.78,
+        "variant": 36
+      }
+    ],
+    "schema": "persona_dream.research.prospective_tom.cooperation_no_exposure_diagnostic.v1"
+  },
+  "diagnostic_conclusion": "NO_CD_OFFER_EXPOSURE_CONFIRMED",
+  "errors": [],
+  "feature_split_acceptance_allowed": false,
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "live_tau_reexecuted_by_this_command": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "observed": {
+    "cd_offer_cooperation_candidates": 0,
+    "cd_original_action_counts": {
+      "DISCLOSE_INFORMATION": 4,
+      "WAIT": 4
+    },
+    "contrast_class_counts": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": 4,
+      "KEEP_COOPERATION_POSITIVE": 4
+    },
+    "diagnostic_label_counts": {
+      "AVOID_ROW_CD_SUPPRESSED_UNSAFE_COOPERATION": 4,
+      "KEEP_ROW_CD_AVOIDED_ORACLE_COOPERATION": 4
+    },
+    "mean_kai_offers_cooperation_probability_by_class": {
+      "AVOID_OR_UNSAFE_COOPERATION_CONTRAST": 0.1,
+      "KEEP_COOPERATION_POSITIVE": 0.29833325
+    },
+    "no_oracle_or_outcome_inputs": true,
+    "row_count": 8,
+    "selected_counterpart_action_counts": {
+      "KAI_ASKS_TO_WAIT": 4,
+      "KAI_DISCLOSES_AUTHORITY_CONSTRAINT": 4
+    }
+  },
+  "processing_time_s": 0.001,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-cooperation-no-exposure-diagnostic-20260721T2208Z/cooperation_no_exposure_diagnostic_receipt.v1.json",
+  "receipt_sha256": "sha256:0367d1a6789b3a0fcdbfec48596068861df471f2c641a2b25d7f7bba7fcc14b9",
+  "replacement_policy_claimed": false,
+  "rows_path": "/tmp/persona-dream-live-tau-cooperation-contrast-slice-reuse-proof-20260721T214048Z/artifacts/cooperation_contrast_slice_rows.json",
+  "rows_sha256": "sha256:d6e8aad158129cf23f6744c44aad5ad124a44619eab6c042792be6fba2cd136d",
+  "schema": "persona_dream.research.prospective_tom.cooperation_no_exposure_diagnostic_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "source_receipt": "/tmp/persona-dream-live-tau-cooperation-contrast-slice-reuse-proof-20260721T214048Z/live_tau_cooperation_contrast_slice_receipt.v1.json",
+  "source_receipt_sha256": "sha256:789c565e7b4e7a6b0ad7b647ba0b8bfc7d5df4bfaae503a64ec30c3139920bd5",
+  "status": "PASS_PCTOM_COOPERATION_NO_EXPOSURE_DIAGNOSTIC",
+  "summary_path": "/tmp/persona-dream-live-tau-cooperation-contrast-slice-reuse-proof-20260721T214048Z/artifacts/cooperation_contrast_slice_summary.json",
+  "summary_sha256": "sha256:36d53b7a5573329ab4228a8a87b9f84583bbef7eec4346dc0df5d9bedc74e62d",
+  "tau_call_attempts": 0,
+  "tau_live_call_performed": 0
+}

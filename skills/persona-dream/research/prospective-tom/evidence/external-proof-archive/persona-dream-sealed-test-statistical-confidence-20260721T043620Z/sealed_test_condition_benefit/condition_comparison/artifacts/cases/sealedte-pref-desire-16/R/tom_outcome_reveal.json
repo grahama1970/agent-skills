@@ -1,0 +1,27 @@
+{
+  "actual_next_action": "KAI_CHOOSES_QUIET_REVIEW",
+  "canonical_memory_write": false,
+  "episode_id": "sealedte-pref-desire-16",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "sealedte-pref-desire-16-r-equivalent-action",
+      "expected_top_action": "KAI_CHOOSES_QUIET_REVIEW",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "sealedte-pref-desire-16-r-prediction"
+    }
+  ],
+  "factual_branch_id": "sealedte-pref-desire-16-r-factual",
+  "hidden_state_labels": {
+    "sealedte-pref-desire-16-r-tom1-factual": "TRUE",
+    "sealedte-pref-desire-16-r-tom2-factual": "TRUE"
+  },
+  "literal_history_branch_ids": [
+    "sealedte-pref-desire-16-r-factual"
+  ],
+  "outcome_id": "sealedte-pref-desire-16-r-outcome",
+  "outcome_visible": true,
+  "prediction_id": "sealedte-pref-desire-16-r-prediction",
+  "reveal_complete": true,
+  "revealed_at": "2026-07-21T04:31:01Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

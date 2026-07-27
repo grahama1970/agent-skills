@@ -1,0 +1,8 @@
+{
+  "collection": "lessons",
+  "errors": [],
+  "inserted": 16,
+  "total": 16,
+  "updated": 0,
+  "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_lessons_20260721T042743695654Z_13_129680474638016.jsonl"
+}

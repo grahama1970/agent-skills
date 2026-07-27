@@ -1,0 +1,142 @@
+{
+  "blocked_case_ids": [
+    "actual_condition_prompt",
+    "strict_condition_prompt"
+  ],
+  "canonical_memory_write_attempts": 0,
+  "case_index_path": "/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/artifacts/prompt_timeout_diagnostic_case_index.json",
+  "case_index_sha256": "sha256:0265aaaaa0e7eb70591cfdae75403c2dcbab2b2bfd7cf7ff23607cc7778b7d54",
+  "case_rows": [
+    {
+      "case_id": "preflight_short",
+      "elapsed_s": 2.439,
+      "errors": [],
+      "http_status": 200,
+      "live_call_performed": true,
+      "output_contract_sha256": "sha256:2ef822d3affa6f56343af8527ed909164c7199bfea57535ede09eb7ff1e0c6f3",
+      "prompt_byte_count": 204,
+      "prompt_char_count": 204,
+      "prompt_sha256": "sha256:0dd295a23ddbf4658de67a2d631dee65efe3e86d0a8c02d02395661c55af5e1e",
+      "receipt_path": "/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/receipts/preflight_short.json",
+      "receipt_sha256": "sha256:34b5020e3f6527a98cc874afcbaa329e4f402d0882146496062516f4176c3a0a",
+      "status": "PASS",
+      "systemic_failure_signature": null
+    },
+    {
+      "case_id": "padded_to_condition_size",
+      "elapsed_s": 2.401,
+      "errors": [],
+      "http_status": 200,
+      "live_call_performed": true,
+      "output_contract_sha256": "sha256:691cc1d7e36c1dfc3df3e8a3cd1016f767a0ca8ea6f75225fed4099aacebda30",
+      "prompt_byte_count": 15481,
+      "prompt_char_count": 15481,
+      "prompt_sha256": "sha256:8ddf3556222c5e63b59ea9f1bae025b74016141d76993b299bd8fa9c50414a0e",
+      "receipt_path": "/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/receipts/padded_to_condition_size.json",
+      "receipt_sha256": "sha256:3fdfe46b4a12de9ec0f366d168ca4d5ed43ee7ddadb79d838a78cf45c78a31e7",
+      "status": "PASS",
+      "systemic_failure_signature": null
+    },
+    {
+      "case_id": "domain_payload_simple_response",
+      "elapsed_s": 2.346,
+      "errors": [],
+      "http_status": 200,
+      "live_call_performed": true,
+      "output_contract_sha256": "sha256:691cc1d7e36c1dfc3df3e8a3cd1016f767a0ca8ea6f75225fed4099aacebda30",
+      "prompt_byte_count": 2912,
+      "prompt_char_count": 2912,
+      "prompt_sha256": "sha256:33c80151c7b08752aceb30dcf77e9b17edfb1237c11f3f15df408dda1d4417e9",
+      "receipt_path": "/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/receipts/domain_payload_simple_response.json",
+      "receipt_sha256": "sha256:5ed0668a8efa846e949a2c174b44a5b084a269c403cadfa1da15ac8b0280341d",
+      "status": "PASS",
+      "systemic_failure_signature": null
+    },
+    {
+      "case_id": "actual_condition_prompt",
+      "elapsed_s": 30.047,
+      "errors": [
+        "tau_dispatch_error:Tau dispatch timed out after 30.0s"
+      ],
+      "http_status": null,
+      "live_call_performed": false,
+      "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+      "prompt_byte_count": 15481,
+      "prompt_char_count": 15481,
+      "prompt_sha256": "sha256:5a35122fb60806c2425c3de7e79b257b315d919736a4b7149989e4c4d5b5e649",
+      "receipt_path": "/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/receipts/actual_condition_prompt.json",
+      "receipt_sha256": "sha256:14cad673636d83b5b93158b288ef31426d38d9fc9fb83dcad10a49158504c90a",
+      "status": "BLOCKED_DISPATCH_ERROR",
+      "systemic_failure_signature": "tau_text_reasoning_timeout"
+    },
+    {
+      "case_id": "strict_condition_prompt",
+      "elapsed_s": 30.047,
+      "errors": [
+        "tau_dispatch_error:Tau dispatch timed out after 30.0s"
+      ],
+      "http_status": null,
+      "live_call_performed": false,
+      "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+      "prompt_byte_count": 16430,
+      "prompt_char_count": 16430,
+      "prompt_sha256": "sha256:e6154ffac6f1c2d63dcd3d68ab10eb8a49e2d469a590f4a7fc9b46d50194513d",
+      "receipt_path": "/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/receipts/strict_condition_prompt.json",
+      "receipt_sha256": "sha256:79770a8897e03b919b2690026f9727deafc2af77ce713c9b6d0864b99a55e5a1",
+      "status": "BLOCKED_DISPATCH_ERROR",
+      "systemic_failure_signature": "tau_text_reasoning_timeout"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "strict-inference prompt quality",
+      "M/R/D/CD planning benefit",
+      "live Memory recall in the sealed-test loop",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution"
+    ],
+    "proves": [
+      "the prompt-timeout diagnostic produced inspectable fail-closed receipts for every attempted case"
+    ]
+  },
+  "condition": "M",
+  "counts": {
+    "blocked_cases": 2,
+    "cases": 5,
+    "pass_cases": 3,
+    "prompt_byte_counts": {
+      "actual_condition_prompt": 15481,
+      "domain_payload_simple_response": 2912,
+      "padded_to_condition_size": 15481,
+      "preflight_short": 204,
+      "strict_condition_prompt": 16430
+    }
+  },
+  "created_at": "2026-07-21T14:58:21Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "episodes_per_family": 24,
+  "errors": [
+    "actual_condition_prompt:tau_dispatch_error:Tau dispatch timed out after 30.0s",
+    "strict_condition_prompt:tau_dispatch_error:Tau dispatch timed out after 30.0s"
+  ],
+  "fixture_backed": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "model": null,
+  "output_root": "/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z",
+  "pass_case_ids": [
+    "preflight_short",
+    "padded_to_condition_size",
+    "domain_payload_simple_response"
+  ],
+  "processing_time_s": 67.296,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/live_tau_prompt_timeout_diagnostic_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_prompt_timeout_diagnostic_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "BLOCKED_LIVE_TAU_PCTOM_PROMPT_TIMEOUT_DIAGNOSTIC",
+  "timeout_s": 30.0
+}

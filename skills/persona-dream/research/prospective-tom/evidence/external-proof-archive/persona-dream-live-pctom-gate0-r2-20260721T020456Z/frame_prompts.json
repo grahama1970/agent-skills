@@ -1,0 +1,59 @@
+{
+  "frames": [
+    {
+      "frame_id": "frame_01",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, The source records questions about Embry's transition from SpaceX to Aerospace, including what she expected, when she felt competent, and the origin of a succulent at her desk.\n\nCo, symbolic, cinematic still, contact sheet frame, bridge tone: Fragility, Resilience, Loyalty",
+      "source_ids": [
+        "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_02",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Three weeks ago, Embry tried to watch the film Moana but had to stop partway through because its themes were too emotionally resonant, and the source asks what she can now watch fo, symbolic, cinematic still, contact sheet frame, bridge tone: Loyalty",
+      "source_ids": [
+        "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_03",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Embry has unpacked boxes whose contents are unknown, and the source leaves unresolved what they contain, the presence of items from specific people, and what opening them would mea, symbolic, cinematic still, contact sheet frame, bridge tone: Loyalty",
+      "source_ids": [
+        "embry_gap_unresolved_thread_unpacked_boxes_meaning_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_04",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Embry had a specific moment of mentorship from the senior engineer Dr. Okafor, but the source does not state what question Embry asked or what advice stuck.\n\nContext: The source fr, symbolic, cinematic still, contact sheet frame, bridge tone: Fragility, Loyalty",
+      "source_ids": [
+        "embry_gap_knowledge_gap_okafor_advice_unknowns_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_05",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved.\n\nContext: The source presents this Instag, symbolic, cinematic still, contact sheet frame, bridge tone: Loyalty",
+      "source_ids": [
+        "embry_gap_unresolved_thread_instagram_after_kai_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_06",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, topic: pipeline robustness autonomous dream residue, Embry saved her grandmother's chess pie recipe in her phone notes 4 years ago, having typed it out during a phone call; she associates its specific sweetness with the feeling of ho, symbolic, cinematic still, contact sheet frame, bridge tone: Loyalty",
+      "source_ids": [
+        "embry_gap_preference_chess_pie_home_recipe_001"
+      ],
+      "synthetic": true
+    }
+  ],
+  "schema": "persona_dream.frame_prompts.v1"
+}

@@ -1,0 +1,41 @@
+{
+  "confidence_threshold": 0.35,
+  "intervention_policy": "confidence_gated_epistemic_action.v1",
+  "schema": "pctom.confidence_gated_planning_intervention_summary.v1",
+  "summary": {
+    "action_policy_change_count": 187,
+    "action_policy_change_count_by_condition": {
+      "CD": 43,
+      "D": 48,
+      "M": 48,
+      "R": 48
+    },
+    "action_policy_change_count_by_family": {
+      "coordination_conflict": 63,
+      "preference_desire_uncertainty": 64,
+      "trust_commitment_relationship": 60
+    },
+    "decision_rule_counts": {
+      "CONFIDENT_TOP_MAPPED_ACTION": 193,
+      "LOW_CONFIDENCE_EPISTEMIC_ACTION": 63
+    },
+    "direction_counts": {
+      "HARM": 1,
+      "TIE": 63
+    },
+    "mean_cd_minus_baseline_planning_regret": 0.004687499999999999,
+    "nonzero_planning_delta_count": 1,
+    "nonzero_planning_delta_families": [
+      "coordination_conflict"
+    ],
+    "planning_benefit_with_confidence": false,
+    "planning_regret_ci": {
+      "alpha": 0.05,
+      "lower": 0.0,
+      "mean": 0.004687499999999999,
+      "samples": 2000,
+      "upper": 0.014062499999999997
+    },
+    "planning_rows": 64
+  }
+}

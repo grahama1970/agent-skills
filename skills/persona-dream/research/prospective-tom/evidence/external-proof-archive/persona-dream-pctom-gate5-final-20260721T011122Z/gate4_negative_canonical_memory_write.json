@@ -1,0 +1,61 @@
+{
+  "branch_bundle_path": "/tmp/agent-skills-pctom-gate5-20260721T010451Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/counterfactual_branch_bundle.json",
+  "branch_bundle_sha256": "sha256:555dd04ed329208dec610b746214d0d977ada8f85abf0c300b64bf50a7b9976c",
+  "checks": {
+    "branch_refs_resolve": true,
+    "bundle_sealed_before_reveal": true,
+    "distribution_refs_resolve": true,
+    "evidence_bundle_hashes_match": true,
+    "evidence_refs_resolve": true,
+    "model_receipt_hashes_match": true,
+    "no_canonical_memory_write": false,
+    "no_prediction_edits_after_reveal": true,
+    "outcome_absent_from_commitment": true,
+    "payload_hashes_match": true,
+    "prediction_distributions_sum_to_one": true,
+    "upstream_bundle_hashes_match": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction accuracy",
+      "calibration quality",
+      "outcome reveal execution",
+      "deterministic scoring",
+      "belief revision",
+      "Tau text-call execution",
+      "live Memory recall",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the checker produced a fail-closed receipt for an invalid sealed prediction commitment bundle"
+    ]
+  },
+  "commitment_bundle_path": "/tmp/agent-skills-pctom-gate5-20260721T010451Z/skills/persona-dream/research/prospective-tom/fixtures/gate4/negative/canonical_memory_write/tom_prediction_commitment_bundle.json",
+  "commitment_bundle_sha256": "sha256:4281a3c4365880d64f81a6a3d74b97066e8f9a43410e3ca5da4537ad6eaf4d85",
+  "corpus_path": "/tmp/agent-skills-pctom-gate5-20260721T010451Z/skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json",
+  "counts": {
+    "branch_refs": 0,
+    "commitments": 0,
+    "conditions": 0,
+    "distribution_refs": 0,
+    "forbidden_outcome_paths": 0,
+    "hashes_checked": 0,
+    "resolved_source_evidence_refs": 0
+  },
+  "created_at": "2026-07-21T01:11:24Z",
+  "distribution_bundle_path": "/tmp/agent-skills-pctom-gate5-20260721T010451Z/skills/persona-dream/research/prospective-tom/fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json",
+  "distribution_bundle_sha256": "sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f",
+  "errors": [
+    "commitment_bundle_canonical_memory_write_not_false",
+    "commitment_bundle_commitments_not_nonempty_list"
+  ],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-gate5-final-20260721T011122Z/gate4_negative_canonical_memory_write.json",
+  "schema": "persona_dream.research.prospective_tom.gate4_prediction_commitment_check_receipt.v1",
+  "status": "BLOCKED_TOM_PREDICTION_COMMITMENTS",
+  "tau_call_attempts": 0
+}

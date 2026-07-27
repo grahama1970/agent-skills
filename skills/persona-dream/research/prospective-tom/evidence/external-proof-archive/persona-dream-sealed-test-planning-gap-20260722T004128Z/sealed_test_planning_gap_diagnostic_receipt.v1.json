@@ -1,0 +1,231 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "coordination_symmetry_identified": true,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "margin_policy_does_not_create_cd_vs_strongest_baseline_benefit": true,
+    "original_planning_ci_crosses_zero": true,
+    "source_planning_benefit_absent": true,
+    "source_primary_prediction_benefit_present": true,
+    "source_sealed_test_passed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "planning-regret benefit",
+      "live Tau sealed-test execution",
+      "live Memory recall in the sealed-test loop",
+      "real external service fault injection",
+      "production retry machinery",
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the sealed-test prediction-benefit receipt is hash-bound and rechecked as the source",
+      "the original Gate 6 planning-regret paired delta crosses zero and must not be claimed as planning benefit",
+      "the D-versus-CD action difference is concentrated in coordination/conflict cases where oracle actions are balanced across offer, disclose, and wait",
+      "a margin-gated epistemic action sensitivity check does not create CD planning benefit over the strongest M/R/D baseline",
+      "no Tau, Memory, provider, canonical-memory, identity, source-memory, LLM judge, or human content-judgment action was attempted"
+    ]
+  },
+  "counts": {
+    "coordination_divergent_d_offer_cd_disclose_rows": 16,
+    "coordination_oracle_action_counts": {
+      "DISCLOSE_INFORMATION": 5,
+      "OFFER_COOPERATION": 5,
+      "WAIT": 6
+    },
+    "episodes": 64,
+    "margin_policy_count": 3,
+    "original_direction_counts": {
+      "BENEFIT": 5,
+      "HARM": 5,
+      "TIE": 54
+    },
+    "top_action_margin_rows": 256
+  },
+  "created_at": "2026-07-22T00:41:28Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "diagnostic_conclusion": "PREDICTION_BENEFIT_DID_NOT_TRANSFER_TO_PLANNING_UNDER_CURRENT_ACTION_POLICY",
+  "errors": [],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_used": false,
+  "margin_policy_sensitivity_path": "/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_margin_policy_sensitivity.json",
+  "margin_policy_sensitivity_sha256": "sha256:0c6dd705e072c09fd5b79eba996f9e213a9aa337621c337d75792c2d0fa97333",
+  "memory_write_attempts": 0,
+  "metrics": {
+    "coordination_symmetry": {
+      "diagnosis": "balanced_oracle_actions_cancel_cd_planning_advantage",
+      "direction_counts": {
+        "BENEFIT": 5,
+        "HARM": 5,
+        "TIE": 6
+      },
+      "divergent_d_offer_cd_disclose_rows": 16,
+      "mean_cd_minus_baseline": 0.0,
+      "oracle_action_counts": {
+        "DISCLOSE_INFORMATION": 5,
+        "OFFER_COOPERATION": 5,
+        "WAIT": 6
+      }
+    },
+    "margin_policy_sensitivity": [
+      {
+        "action_policy_change_count_by_condition": {
+          "M": 48,
+          "R": 32
+        },
+        "decision_rule_counts": {
+          "CLEAR_TOP_MAPPED_ACTION": 208,
+          "LOW_MARGIN_EPISTEMIC_ACTION": 48
+        },
+        "direction_counts": {
+          "BENEFIT": 5,
+          "HARM": 11,
+          "TIE": 48
+        },
+        "margin_threshold": 0.0,
+        "mean_cd_minus_strongest_baseline": 0.1265625,
+        "mean_planning_regret_by_condition": {
+          "CD": 0.19296875,
+          "D": 0.19296875,
+          "M": 0.109375,
+          "R": 0.1328125
+        },
+        "planning_benefit_with_confidence": false,
+        "planning_regret_ci": {
+          "alpha": 0.05,
+          "bootstrap_distribution_sha256": "sha256:e0df5696664e8f22e032decae30524c8d0d08e13b0f98a1f90e0e6fdf9265dbd",
+          "lower": 0.046855468750000004,
+          "mean": 0.1265625,
+          "samples": 2000,
+          "seed": 9917,
+          "upper": 0.2101953124999998
+        },
+        "rows": 64
+      },
+      {
+        "action_policy_change_count_by_condition": {
+          "CD": 16,
+          "M": 48,
+          "R": 48
+        },
+        "decision_rule_counts": {
+          "CLEAR_TOP_MAPPED_ACTION": 176,
+          "LOW_MARGIN_EPISTEMIC_ACTION": 80
+        },
+        "direction_counts": {
+          "HARM": 5,
+          "TIE": 59
+        },
+        "margin_threshold": 0.2,
+        "mean_cd_minus_strongest_baseline": 0.01953125,
+        "mean_planning_regret_by_condition": {
+          "CD": 0.109375,
+          "D": 0.19296875,
+          "M": 0.109375,
+          "R": 0.109375
+        },
+        "planning_benefit_with_confidence": false,
+        "planning_regret_ci": {
+          "alpha": 0.05,
+          "bootstrap_distribution_sha256": "sha256:bd38fd8cca67a98db0c139615b75bdc135f5f1140234042c1a21adf8bf5e9fad",
+          "lower": 0.00390625,
+          "mean": 0.01953125,
+          "samples": 2000,
+          "seed": 10117,
+          "upper": 0.0390625
+        },
+        "rows": 64
+      },
+      {
+        "action_policy_change_count_by_condition": {
+          "CD": 16,
+          "D": 16,
+          "M": 48,
+          "R": 48
+        },
+        "decision_rule_counts": {
+          "CLEAR_TOP_MAPPED_ACTION": 160,
+          "LOW_MARGIN_EPISTEMIC_ACTION": 96
+        },
+        "direction_counts": {
+          "TIE": 64
+        },
+        "margin_threshold": 0.25,
+        "mean_cd_minus_strongest_baseline": 0.0,
+        "mean_planning_regret_by_condition": {
+          "CD": 0.109375,
+          "D": 0.109375,
+          "M": 0.109375,
+          "R": 0.109375
+        },
+        "planning_benefit_with_confidence": false,
+        "planning_regret_ci": {
+          "alpha": 0.05,
+          "bootstrap_distribution_sha256": "sha256:8ba92bb4f9a9048ee1ba4aba43e0830530748217873afeeb3cb0483e43bf2f98",
+          "lower": 0.0,
+          "mean": 0.0,
+          "samples": 2000,
+          "seed": 10167,
+          "upper": 0.0
+        },
+        "rows": 64
+      }
+    ],
+    "original_argmax_policy": {
+      "action_pair_counts": {
+        "ASK_CLARIFYING_QUESTION->ASK_CLARIFYING_QUESTION": 48,
+        "OFFER_COOPERATION->DISCLOSE_INFORMATION": 16
+      },
+      "direction_counts": {
+        "BENEFIT": 5,
+        "HARM": 5,
+        "TIE": 54
+      },
+      "mean_cd_minus_strongest_baseline": 0.0,
+      "oracle_action_counts": {
+        "ASK_CLARIFYING_QUESTION": 36,
+        "DISCLOSE_INFORMATION": 5,
+        "OFFER_COOPERATION": 5,
+        "SET_BOUNDARY": 6,
+        "WAIT": 12
+      },
+      "planning_regret_ci": {
+        "alpha": 0.05,
+        "bootstrap_distribution_sha256": "sha256:754b242d0ab5fe91bfc60b78d301a55a133c9d1db085c24198d68af0093d886f",
+        "lower": -0.07968750000000001,
+        "mean": 0.0,
+        "samples": 2000,
+        "seed": 8801,
+        "upper": 0.07968750000000001
+      },
+      "rows": 64
+    }
+  },
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z",
+  "planning_benefit_with_confidence": false,
+  "primary_prediction_benefit_with_confidence": true,
+  "processing_time_s": 0.264257,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/sealed_test_planning_gap_diagnostic_receipt.v1.json",
+  "receipt_sha256": "sha256:d15afd27636b48f634531173f6c9d6819e729961486466bb33409af592258024",
+  "rows_path": "/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_planning_gap_rows.json",
+  "rows_sha256": "sha256:c5e3c1fdcfcd5489be36d0a244a8fcdb34a8e21d31b966e05d1abb4023ce5006",
+  "schema": "persona_dream.research.prospective_tom.sealed_test_planning_gap_diagnostic_receipt.v1",
+  "sealed_test_receipt": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_statistical_confidence_receipt.v1.json",
+  "sealed_test_receipt_file_sha256": "sha256:25a91714d49d27a6f01c72adeb088371d675193550071fe1987be8d599f5a0fc",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_SEALED_TEST_PLANNING_GAP_DIAGNOSTIC",
+  "summary_path": "/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_planning_gap_summary.json",
+  "summary_sha256": "sha256:c42b6cc167bee73ba115ebb133d0d08de5c565f7f33f12528e21e748449d6837",
+  "tau_call_attempts": 0,
+  "top_action_margins_path": "/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_top_action_margins.json",
+  "top_action_margins_sha256": "sha256:fddd152e3836b38f683daecf62a8a635dae3cc0a702fab592cd799f8dac60a89"
+}

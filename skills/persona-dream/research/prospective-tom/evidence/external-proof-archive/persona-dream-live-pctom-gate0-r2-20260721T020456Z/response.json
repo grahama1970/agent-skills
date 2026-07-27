@@ -1,0 +1,11 @@
+{
+  "artifact_count": 13,
+  "dream_packet": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/dream_packet.json",
+  "manifest": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z/manifest.json",
+  "memory_write_status": "skipped",
+  "mode": "static_dream",
+  "output_dir": "/tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z",
+  "run_id": "persona-dream-live-pctom-gate0-r2",
+  "schema": "persona_dream.response.v1",
+  "status": "ok"
+}

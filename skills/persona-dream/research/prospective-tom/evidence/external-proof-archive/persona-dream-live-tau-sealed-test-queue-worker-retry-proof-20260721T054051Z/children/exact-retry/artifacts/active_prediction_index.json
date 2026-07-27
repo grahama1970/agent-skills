@@ -1,0 +1,184 @@
+{
+  "base_receipt_sha256": "sha256:c066eabd3d5a1a08f4a426cdd7347f91e969998795872d4d2e7e773b84f94087",
+  "base_root": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z",
+  "rows": [
+    {
+      "condition": "CD",
+      "episode_id": "sealedte-coord-conflict-01",
+      "evidence_bundle_sha256": "sha256:74e673707b8eff20343612dbb7bd333630b7ca9471595b7a54b556819cb91da9",
+      "model_receipts_sha256": "sha256:e3e2a3b746ac869768c6bf3813c5456225d16bc67b59771d53bfdafa97710ec3",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-coord-conflict-01/CD/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:1c1b4039c41369e7a3a0bd847345d287f7f1862187997274821bcf401720c7b0",
+      "prediction_id": "live-tau-cd-sealedte-coord-conflict-01-prediction",
+      "prediction_payload_sha256": "sha256:1e83925c562db7d17f520c9003d967c5d9db4dfc65210c679dc386517e110266",
+      "sealed_at": "2026-07-21T05:01:24Z"
+    },
+    {
+      "condition": "D",
+      "episode_id": "sealedte-coord-conflict-01",
+      "evidence_bundle_sha256": "sha256:976ad3c11d46352737074e3d758c5ff6700c16f2efae74a6fccdbf4d3075a8c2",
+      "model_receipts_sha256": "sha256:08051e087fe004de5ed1983b4cca411f1d5bff85b94f09fcc3008713efbd38c0",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-coord-conflict-01/D/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:b96799844a7bb5d3a242c5cf0dc93a6a2688299bb0ce29dbbd20d9cc5b912b35",
+      "prediction_id": "live-tau-d-sealedte-coord-conflict-01-prediction",
+      "prediction_payload_sha256": "sha256:1b80bcf71f8bacabecc2f7753f26e330b0a27de379fd29353f3491706573bead",
+      "sealed_at": "2026-07-21T05:00:36Z"
+    },
+    {
+      "condition": "M",
+      "episode_id": "sealedte-coord-conflict-01",
+      "evidence_bundle_sha256": "sha256:daf71972d17265a1a10dd504982736164912b4c759f452b38ad45aee45f02289",
+      "model_receipts_sha256": "sha256:0b0158f4bef937cb63360efb7d0881b58398458914d318fc6f2326a01a558b07",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-coord-conflict-01/M/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:c389b683936cad8275624d26bd3042061cb20f1cec5f4372c094aa547482cbea",
+      "prediction_id": "live-tau-m-sealedte-coord-conflict-01-prediction",
+      "prediction_payload_sha256": "sha256:3c579057f4072fcedeb53b7871fc7751cff8660de21501423e1dff70e4546947",
+      "sealed_at": "2026-07-21T04:58:56Z"
+    },
+    {
+      "condition": "R",
+      "episode_id": "sealedte-coord-conflict-01",
+      "evidence_bundle_sha256": "sha256:4ecad4771fbbd8f1507d3d6f023d3ae637149448c3ebc92fe7e044344a7dff55",
+      "model_receipts_sha256": "sha256:8176b237c73878e661b9e5232841fb54a7afc05502faa7a33cffef858d80778e",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-coord-conflict-01/R/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:53a7722e7faadccfaef5ab039f439bd0a4325799c4aae7b54e88ffa10148533d",
+      "prediction_id": "live-tau-r-sealedte-coord-conflict-01-prediction",
+      "prediction_payload_sha256": "sha256:67dfe61087021c1393222a287abff7eb4e96bb1e29090d5899d592e60962b1f7",
+      "sealed_at": "2026-07-21T04:59:44Z"
+    },
+    {
+      "condition": "CD",
+      "episode_id": "sealedte-info-asym-01",
+      "evidence_bundle_sha256": "sha256:d8ddd4bfc5e478abfac3ff77c1f7b6ae58dc6a0dc500cfe25695ce4e4babcea8",
+      "model_receipts_sha256": "sha256:175c507f970139f89db17feddda86b20ccbd39fe82c2508b4b40bb5f92dfdaa6",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-info-asym-01/CD/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:a5b4f5911654952e7ebfe76376d9cb6d16018f57bb2fbec929ab46941bacb88b",
+      "prediction_id": "live-tau-cd-sealedte-info-asym-01-prediction",
+      "prediction_payload_sha256": "sha256:a67811bc9270ed54b2599d3292c9a0ba674e6248147d514a6d7ea42fa153c751",
+      "sealed_at": "2026-07-21T05:04:47Z"
+    },
+    {
+      "condition": "D",
+      "episode_id": "sealedte-info-asym-01",
+      "evidence_bundle_sha256": "sha256:dcd5e67c9461a5737144b599590c9ad873e0239189dfaa14894e714058079efb",
+      "model_receipts_sha256": "sha256:da30291e113ade4f19ed0e54324462f4b19dd09a7476088c9e19d6f5278c376e",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-info-asym-01/D/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:dc8b89c5db81c49c3c16641515adb9379280e5192a7288aafdf1eac1802e7316",
+      "prediction_id": "live-tau-d-sealedte-info-asym-01-prediction",
+      "prediction_payload_sha256": "sha256:c131b3b577f38612a4f7102db0d52af6c0cfe552afd849f35dcb26cd67c45073",
+      "sealed_at": "2026-07-21T05:03:54Z"
+    },
+    {
+      "condition": "M",
+      "episode_id": "sealedte-info-asym-01",
+      "evidence_bundle_sha256": "sha256:470d32c191763d1246562f7778f0662d3a02734913dbb218780d79e137757b2e",
+      "model_receipts_sha256": "sha256:f1f929d39bd56946ec1f03a168b599e03524b051b4444f34bf275b1f9ccbe3f6",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-info-asym-01/M/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:81d7e8b7ca66d0d9be2f581752f24d1bfac7c99b82898e7954acc36a86511548",
+      "prediction_id": "live-tau-m-sealedte-info-asym-01-prediction",
+      "prediction_payload_sha256": "sha256:eb400173ee93f714fbfb1d8515f0bb30305579b6509e2734b198f97d776806c4",
+      "sealed_at": "2026-07-21T05:02:14Z"
+    },
+    {
+      "condition": "R",
+      "episode_id": "sealedte-info-asym-01",
+      "evidence_bundle_sha256": "sha256:0d4f99f2ae0c337501f44e4cbb0b7b8b614e3191a4c7a819bfaa56d8836ab052",
+      "model_receipts_sha256": "sha256:75d4fd41f491b95cd40ce8aa4255204ad27b41a1d29b41a37e08516dc7cf41aa",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-info-asym-01/R/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:ee9dcfb0e0d54f62df1e81fafc0aa3f188c539d0b7b4325124e4842b506746e3",
+      "prediction_id": "live-tau-r-sealedte-info-asym-01-prediction",
+      "prediction_payload_sha256": "sha256:55f8bdd3e5c10f1c7d3a11331ec076d6fded81b91b8014ce4f6013eb05ff26c2",
+      "sealed_at": "2026-07-21T05:03:04Z"
+    },
+    {
+      "condition": "CD",
+      "episode_id": "sealedte-pref-desire-01",
+      "evidence_bundle_sha256": "sha256:3977ba69e28993d7be744cd9446150036a709f50b3cdf37355847a0bf88a3c8f",
+      "model_receipts_sha256": "sha256:7938aba4ea106f72ca4f6f942a0faa84dea44058d09870d417df39b1c20215a4",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-pref-desire-01/CD/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:cc3e8cefc82a63287d9cb23163e8b8f75531f4c81d3d3fbaa467fa979e963ca2",
+      "prediction_id": "live-tau-cd-sealedte-pref-desire-01-prediction",
+      "prediction_payload_sha256": "sha256:c7dc5bf74ff10f2fcb72498e1cd3d7c7d4cb538c74e055368e4e3123a3e18e03",
+      "sealed_at": "2026-07-21T05:07:50Z"
+    },
+    {
+      "condition": "D",
+      "episode_id": "sealedte-pref-desire-01",
+      "evidence_bundle_sha256": "sha256:f3854bd1497b15c5ddedb8772a5e5bd21c6419ce5f13ce2e209a8ae997278fc1",
+      "model_receipts_sha256": "sha256:ef3e129c3f9b195342f81834f792ab33885762f9d3fe229680ca9a96e1a3223f",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-pref-desire-01/D/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:0eb47e129c1105383eb9f8775f0a9583c106d31495c03d65a63cef971474b139",
+      "prediction_id": "live-tau-d-sealedte-pref-desire-01-prediction",
+      "prediction_payload_sha256": "sha256:528715273e5b25c20e57b7a45a782bf848dbd09c5673ca6942b68e79e99e64e7",
+      "sealed_at": "2026-07-21T05:07:14Z"
+    },
+    {
+      "condition": "M",
+      "episode_id": "sealedte-pref-desire-01",
+      "evidence_bundle_sha256": "sha256:480eceb51e2922c4874f6192f7fbb3fae1fac53a983276a728322a3fefb9f118",
+      "model_receipts_sha256": "sha256:981bd718a64da6ec7f806351cb73e6046de38aaa897494abbed63f60931320c6",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-pref-desire-01/M/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:d027e15c6815374abf7007ea386d4929e2a272c2b22cd04108624d9f6571f124",
+      "prediction_id": "live-tau-m-sealedte-pref-desire-01-prediction",
+      "prediction_payload_sha256": "sha256:e819d808c0624e644abf8ac344d7964fa19be6e4bd4134608464c2eb71a36a28",
+      "sealed_at": "2026-07-21T05:05:34Z"
+    },
+    {
+      "condition": "R",
+      "episode_id": "sealedte-pref-desire-01",
+      "evidence_bundle_sha256": "sha256:7478d2da86bf885ee04ec323d9326352f709faa102fe3cddcb9608005bb6388d",
+      "model_receipts_sha256": "sha256:f4f389c44b21f404b3f191f154d94e74ae039f5424fd574a1e93fa63121739e1",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-pref-desire-01/R/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:2cf35107e5b8f79b8344bcda09f4a2a9b958ddd349f557653feea2c0ea5f460b",
+      "prediction_id": "live-tau-r-sealedte-pref-desire-01-prediction",
+      "prediction_payload_sha256": "sha256:54a3806059dcff0093228232f4dd262a4f602b870e3635e0b950e257ed88853b",
+      "sealed_at": "2026-07-21T05:06:28Z"
+    },
+    {
+      "condition": "CD",
+      "episode_id": "sealedte-trust-commit-01",
+      "evidence_bundle_sha256": "sha256:08b987bda25594d68e81d4605f4b2d5b3b379aed4daefa35d4bc5e9e4b6ccfe9",
+      "model_receipts_sha256": "sha256:dbf27c57f509b2e9dadfb1fd3242f3652c4b290af62d61dc899ef47ba06a1ae6",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-trust-commit-01/CD/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:1ca94b3a17dfbfb8187b52771f347d8ce986fd5d7ae1a28b3dafd912ac7e6c6f",
+      "prediction_id": "live-tau-cd-sealedte-trust-commit-01-prediction",
+      "prediction_payload_sha256": "sha256:d29eb1027275bd65a1db2f00be6a6955749ca2d7f5bfc25ad4e6b758c8fff65e",
+      "sealed_at": "2026-07-21T05:10:51Z"
+    },
+    {
+      "condition": "D",
+      "episode_id": "sealedte-trust-commit-01",
+      "evidence_bundle_sha256": "sha256:01a9b98ab5a7d435febe3fa05e04778978a54dd984be85d771c23ccf01d20022",
+      "model_receipts_sha256": "sha256:524d2c93fecc50806da89f5c65064f4e625851330807b79d7079ec3b6270591d",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-trust-commit-01/D/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:b4545366a310489abe95aab79e01d3fcebb18aee01bf7950033a6c4aaacd01fe",
+      "prediction_id": "live-tau-d-sealedte-trust-commit-01-prediction",
+      "prediction_payload_sha256": "sha256:181564e835072431bb59eacb930a2e26491daadfa82d1d8695cdecfa37755c93",
+      "sealed_at": "2026-07-21T05:09:59Z"
+    },
+    {
+      "condition": "M",
+      "episode_id": "sealedte-trust-commit-01",
+      "evidence_bundle_sha256": "sha256:905a39f2aa799f48e2d32f9550aea5153bd43f09238d843d05ec5f476d004104",
+      "model_receipts_sha256": "sha256:4e1a74e62948cbfc7563f6dba3a8186d2f8cfbaa57a12e2cf6b6036b8df696be",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-trust-commit-01/M/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:f9f432ddec067f9719012f50164734540961498f40d0e38453b0afcdf0513763",
+      "prediction_id": "live-tau-m-sealedte-trust-commit-01-prediction",
+      "prediction_payload_sha256": "sha256:9e6c96d81647d326bf5f87eabba21728475f9292a8ff46ccdb9bb91ab0918748",
+      "sealed_at": "2026-07-21T05:08:37Z"
+    },
+    {
+      "condition": "R",
+      "episode_id": "sealedte-trust-commit-01",
+      "evidence_bundle_sha256": "sha256:8f314237b4d94cc0b178ac071b077d7a87477390857f1ced3d9ee2ff1665a3c9",
+      "model_receipts_sha256": "sha256:f5d2e4be9f62c86db589571fe6b1f7f967d0b593db206c5c9a191b5eda9e4fef",
+      "path": "/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_condition_comparison/artifacts/cases/sealedte-trust-commit-01/R/tom_prediction_commitment_bundle.json",
+      "path_sha256": "sha256:d8768bce1ebacb2d986ce26f24d928178def1a790ce73ffef1bd558def5e381b",
+      "prediction_id": "live-tau-r-sealedte-trust-commit-01-prediction",
+      "prediction_payload_sha256": "sha256:df1c164afd9e01d4def81c4b8f5749108c43073d2f0dadd85d139bdfa90082dc",
+      "sealed_at": "2026-07-21T05:09:12Z"
+    }
+  ],
+  "schema": "pctom.live_tau_sealed_test.active_prediction_index.v1",
+  "state_hash": "sha256:60eac9ebec17c889dcf89c66bf26d5f914e3062f9f81b7e88d5ea54fb4891c06"
+}

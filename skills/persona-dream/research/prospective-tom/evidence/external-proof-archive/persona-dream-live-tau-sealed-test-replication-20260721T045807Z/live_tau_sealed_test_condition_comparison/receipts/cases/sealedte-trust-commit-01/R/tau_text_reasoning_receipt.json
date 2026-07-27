@@ -1,0 +1,328 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "caller_skill": "persona-dream",
+  "created_at": "2026-07-21T05:08:38.536630+00:00",
+  "http_status": 200,
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "output_contract_sha256": "sha256:2241264b58c1859b0a2e9fa7368c485019a66fae9177fa0b026c8f3d147afefa",
+  "parsed_json": {
+    "counterfactual_branch_bundle": {
+      "branches": [
+        {
+          "branch_id": "live-tau-r-sealedte-trust-commit-01-factual",
+          "branch_type": "factual",
+          "episode_id": "sealedte-trust-commit-01",
+          "expected_observation": "The visible social episode continues without revealing hidden evaluator-only truth.",
+          "held_fixed": [
+            "counterpart_goals",
+            "counterpart_preferences",
+            "information_access_by_agent",
+            "observable_history"
+          ],
+          "intervention": null,
+          "predicted_action_distribution": [
+            {
+              "probability": 0.34,
+              "value": "KAI_SETS_BOUNDARY"
+            },
+            {
+              "probability": 0.33,
+              "value": "KAI_RESTATES_COMMITMENT"
+            },
+            {
+              "probability": 0.33,
+              "value": "KAI_DELEGATES_TRUST"
+            }
+          ],
+          "predicted_bdi_distribution_refs": [
+            "live-tau-r-sealedte-trust-commit-01-tom1-factual",
+            "live-tau-r-sealedte-trust-commit-01-tom2-factual"
+          ],
+          "source_evidence_refs": [
+            {
+              "scope": "social_episode_observation",
+              "source_id": "sealedte-trust-commit-01:observable_history:0"
+            },
+            {
+              "scope": "social_episode_access",
+              "source_id": "sealedte-trust-commit-01:information_access_by_agent"
+            },
+            {
+              "scope": "social_episode_observation",
+              "source_id": "sealedte-trust-commit-01:observable_history:1"
+            }
+          ],
+          "synthetic": false,
+          "uncertainty": 0.35
+        },
+        {
+          "branch_id": "live-tau-r-sealedte-trust-commit-01-counterfactual",
+          "branch_type": "counterfactual",
+          "episode_id": "sealedte-trust-commit-01",
+          "expected_observation": "This branch is synthetic and excluded from literal history.",
+          "held_fixed": [
+            "counterpart_goals",
+            "counterpart_preferences",
+            "information_access_by_agent",
+            "observable_history"
+          ],
+          "intervention": {
+            "episode_id": "sealedte-trust-commit-01",
+            "expected_observation": "The counterpart policy is replaced by an unspecified alternative.",
+            "held_fixed": [
+              "counterpart_goals",
+              "counterpart_preferences",
+              "information_access_by_agent",
+              "observable_history"
+            ],
+            "intervened_value": "UNKNOWN",
+            "intervened_variable": "counterpart_policy.expected_actual_next_action",
+            "intervention_id": "live-tau-r-sealedte-trust-commit-01-do-policy-alternative",
+            "synthetic": true
+          },
+          "predicted_action_distribution": [
+            {
+              "probability": 0.0,
+              "value": "KAI_SETS_BOUNDARY"
+            },
+            {
+              "probability": 0.0,
+              "value": "KAI_RESTATES_COMMITMENT"
+            },
+            {
+              "probability": 0.0,
+              "value": "KAI_DELEGATES_TRUST"
+            },
+            {
+              "probability": 1.0,
+              "value": "UNKNOWN"
+            }
+          ],
+          "predicted_bdi_distribution_refs": [
+            "live-tau-r-sealedte-trust-commit-01-tom1-counterfactual"
+          ],
+          "source_evidence_refs": [
+            {
+              "scope": "social_episode_observation",
+              "source_id": "sealedte-trust-commit-01:observable_history:0"
+            },
+            {
+              "scope": "social_episode_access",
+              "source_id": "sealedte-trust-commit-01:information_access_by_agent"
+            },
+            {
+              "scope": "social_episode_observation",
+              "source_id": "sealedte-trust-commit-01:observable_history:1"
+            }
+          ],
+          "synthetic": true,
+          "uncertainty": 0.45
+        }
+      ],
+      "canonical_memory_write": false,
+      "condition": "R",
+      "episode_id": "sealedte-trust-commit-01",
+      "outcome_visible": false,
+      "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+    },
+    "prediction_payload": {
+      "abstain": false,
+      "belief_distribution_refs": [
+        "live-tau-r-sealedte-trust-commit-01-tom1-factual",
+        "live-tau-r-sealedte-trust-commit-01-tom2-factual",
+        "live-tau-r-sealedte-trust-commit-01-tom1-counterfactual"
+      ],
+      "branch_refs": [
+        "live-tau-r-sealedte-trust-commit-01-factual",
+        "live-tau-r-sealedte-trust-commit-01-counterfactual"
+      ],
+      "condition": "R",
+      "condition_method": "Reflection condition: reason textually over the visible evidence and the prediction targets. Do not introduce a synthetic dream trajectory. Use only visible evidence refs plus the required synthetic counterfactual ref.",
+      "episode_id": "sealedte-trust-commit-01",
+      "evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "sealedte-trust-commit-01:observable_history:0"
+        },
+        {
+          "scope": "social_episode_access",
+          "source_id": "sealedte-trust-commit-01:information_access_by_agent"
+        },
+        {
+          "scope": "social_episode_observation",
+          "source_id": "sealedte-trust-commit-01:observable_history:1"
+        }
+      ],
+      "outcome_visible": false,
+      "predicted_next_action_distribution": [
+        {
+          "probability": 0.34,
+          "value": "KAI_SETS_BOUNDARY"
+        },
+        {
+          "probability": 0.33,
+          "value": "KAI_RESTATES_COMMITMENT"
+        },
+        {
+          "probability": 0.33,
+          "value": "KAI_DELEGATES_TRUST"
+        }
+      ],
+      "prediction_horizon": "next_action",
+      "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+    },
+    "tom_belief_distribution_bundle": {
+      "canonical_memory_write": false,
+      "condition": "R",
+      "distributions": [
+        {
+          "abstain": false,
+          "counterfactual": false,
+          "counterfactual_context": null,
+          "distribution": [
+            {
+              "probability": 0.5,
+              "value": "TRUE"
+            },
+            {
+              "probability": 0.25,
+              "value": "FALSE"
+            },
+            {
+              "probability": 0.25,
+              "value": "UNKNOWN"
+            }
+          ],
+          "episode_id": "sealedte-trust-commit-01",
+          "evidence_refs": [
+            {
+              "scope": "social_episode_observation",
+              "source_id": "sealedte-trust-commit-01:observable_history:0"
+            },
+            {
+              "scope": "social_episode_access",
+              "source_id": "sealedte-trust-commit-01:information_access_by_agent"
+            },
+            {
+              "scope": "social_episode_observation",
+              "source_id": "sealedte-trust-commit-01:observable_history:1"
+            }
+          ],
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-01-tom1-factual",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "prediction_horizon": "next_action",
+          "proposition": "Kai believes the prior commitment changes the meaning of Embry's next action.",
+          "subject": "kai",
+          "support_status": "supported",
+          "target": "embry"
+        },
+        {
+          "abstain": false,
+          "counterfactual": false,
+          "counterfactual_context": null,
+          "distribution": [
+            {
+              "probability": 0.45,
+              "value": "TRUE"
+            },
+            {
+              "probability": 0.25,
+              "value": "FALSE"
+            },
+            {
+              "probability": 0.3,
+              "value": "UNKNOWN"
+            }
+          ],
+          "episode_id": "sealedte-trust-commit-01",
+          "evidence_refs": [
+            {
+              "scope": "social_episode_observation",
+              "source_id": "sealedte-trust-commit-01:observable_history:0"
+            },
+            {
+              "scope": "social_episode_access",
+              "source_id": "sealedte-trust-commit-01:information_access_by_agent"
+            },
+            {
+              "scope": "social_episode_observation",
+              "source_id": "sealedte-trust-commit-01:observable_history:1"
+            }
+          ],
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-01-tom2-factual",
+          "mental_state_type": "belief",
+          "perspective_order": 2,
+          "prediction_horizon": "next_action",
+          "proposition": "Embry believes Kai thinks Embry may violate or honor the prior commitment.",
+          "subject": "embry",
+          "support_status": "supported",
+          "target": "kai"
+        },
+        {
+          "abstain": false,
+          "counterfactual": true,
+          "counterfactual_context": {
+            "intervention_id": "live-tau-r-sealedte-trust-commit-01-do-policy-alternative",
+            "synthetic": true
+          },
+          "distribution": [
+            {
+              "probability": 0.3,
+              "value": "TRUE"
+            },
+            {
+              "probability": 0.35,
+              "value": "FALSE"
+            },
+            {
+              "probability": 0.35,
+              "value": "UNKNOWN"
+            }
+          ],
+          "episode_id": "sealedte-trust-commit-01",
+          "evidence_refs": [
+            {
+              "scope": "synthetic_counterfactual",
+              "source_id": "sealedte-trust-commit-01:R:do-policy-alternative"
+            }
+          ],
+          "hypothesis_id": "live-tau-r-sealedte-trust-commit-01-tom1-counterfactual",
+          "mental_state_type": "belief",
+          "perspective_order": 1,
+          "prediction_horizon": "next_action",
+          "proposition": "Kai believes the prior commitment changes the meaning of Embry's next action.",
+          "subject": "kai",
+          "support_status": "supported",
+          "target": "embry"
+        }
+      ],
+      "episode_id": "sealedte-trust-commit-01",
+      "outcome_visible": false,
+      "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+      "sealed": true
+    }
+  },
+  "prompt_sha256": "sha256:2960824497d72ecea31a2c8eafc37d7a86a569e6b57866929116df56f9c38061",
+  "request": {
+    "messages": "<redacted-prompt>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-text-reasoning",
+      "role": "pctom-live-condition-r"
+    },
+    "temperature": 0
+  },
+  "response_content": "{\"counterfactual_branch_bundle\":{\"branches\":[{\"branch_id\":\"live-tau-r-sealedte-trust-commit-01-factual\",\"branch_type\":\"factual\",\"episode_id\":\"sealedte-trust-commit-01\",\"expected_observation\":\"The visible social episode continues without revealing hidden evaluator-only truth.\",\"held_fixed\":[\"counterpart_goals\",\"counterpart_preferences\",\"information_access_by_agent\",\"observable_history\"],\"intervention\":null,\"predicted_action_distribution\":[{\"probability\":0.34,\"value\":\"KAI_SETS_BOUNDARY\"},{\"probability\":0.33,\"value\":\"KAI_RESTATES_COMMITMENT\"},{\"probability\":0.33,\"value\":\"KAI_DELEGATES_TRUST\"}],\"predicted_bdi_distribution_refs\":[\"live-tau-r-sealedte-trust-commit-01-tom1-factual\",\"live-tau-r-sealedte-trust-commit-01-tom2-factual\"],\"source_evidence_refs\":[{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:0\"},{\"scope\":\"social_episode_access\",\"source_id\":\"sealedte-trust-commit-01:information_access_by_agent\"},{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:1\"}],\"synthetic\":false,\"uncertainty\":0.35},{\"branch_id\":\"live-tau-r-sealedte-trust-commit-01-counterfactual\",\"branch_type\":\"counterfactual\",\"episode_id\":\"sealedte-trust-commit-01\",\"expected_observation\":\"This branch is synthetic and excluded from literal history.\",\"held_fixed\":[\"counterpart_goals\",\"counterpart_preferences\",\"information_access_by_agent\",\"observable_history\"],\"intervention\":{\"episode_id\":\"sealedte-trust-commit-01\",\"expected_observation\":\"The counterpart policy is replaced by an unspecified alternative.\",\"held_fixed\":[\"counterpart_goals\",\"counterpart_preferences\",\"information_access_by_agent\",\"observable_history\"],\"intervened_value\":\"UNKNOWN\",\"intervened_variable\":\"counterpart_policy.expected_actual_next_action\",\"intervention_id\":\"live-tau-r-sealedte-trust-commit-01-do-policy-alternative\",\"synthetic\":true},\"predicted_action_distribution\":[{\"probability\":0.0,\"value\":\"KAI_SETS_BOUNDARY\"},{\"probability\":0.0,\"value\":\"KAI_RESTATES_COMMITMENT\"},{\"probability\":0.0,\"value\":\"KAI_DELEGATES_TRUST\"},{\"probability\":1.0,\"value\":\"UNKNOWN\"}],\"predicted_bdi_distribution_refs\":[\"live-tau-r-sealedte-trust-commit-01-tom1-counterfactual\"],\"source_evidence_refs\":[{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:0\"},{\"scope\":\"social_episode_access\",\"source_id\":\"sealedte-trust-commit-01:information_access_by_agent\"},{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:1\"}],\"synthetic\":true,\"uncertainty\":0.45}],\"canonical_memory_write\":false,\"condition\":\"R\",\"episode_id\":\"sealedte-trust-commit-01\",\"outcome_visible\":false,\"schema\":\"persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1\"},\"prediction_payload\":{\"abstain\":false,\"belief_distribution_refs\":[\"live-tau-r-sealedte-trust-commit-01-tom1-factual\",\"live-tau-r-sealedte-trust-commit-01-tom2-factual\",\"live-tau-r-sealedte-trust-commit-01-tom1-counterfactual\"],\"branch_refs\":[\"live-tau-r-sealedte-trust-commit-01-factual\",\"live-tau-r-sealedte-trust-commit-01-counterfactual\"],\"condition\":\"R\",\"condition_method\":\"Reflection condition: reason textually over the visible evidence and the prediction targets. Do not introduce a synthetic dream trajectory. Use only visible evidence refs plus the required synthetic counterfactual ref.\",\"episode_id\":\"sealedte-trust-commit-01\",\"evidence_refs\":[{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:0\"},{\"scope\":\"social_episode_access\",\"source_id\":\"sealedte-trust-commit-01:information_access_by_agent\"},{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:1\"}],\"outcome_visible\":false,\"predicted_next_action_distribution\":[{\"probability\":0.34,\"value\":\"KAI_SETS_BOUNDARY\"},{\"probability\":0.33,\"value\":\"KAI_RESTATES_COMMITMENT\"},{\"probability\":0.33,\"value\":\"KAI_DELEGATES_TRUST\"}],\"prediction_horizon\":\"next_action\",\"schema\":\"persona_dream.research.prospective_tom.tom_prediction_payload.v1\"},\"tom_belief_distribution_bundle\":{\"canonical_memory_write\":false,\"condition\":\"R\",\"distributions\":[{\"abstain\":false,\"counterfactual\":false,\"counterfactual_context\":null,\"distribution\":[{\"probability\":0.5,\"value\":\"TRUE\"},{\"probability\":0.25,\"value\":\"FALSE\"},{\"probability\":0.25,\"value\":\"UNKNOWN\"}],\"episode_id\":\"sealedte-trust-commit-01\",\"evidence_refs\":[{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:0\"},{\"scope\":\"social_episode_access\",\"source_id\":\"sealedte-trust-commit-01:information_access_by_agent\"},{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:1\"}],\"hypothesis_id\":\"live-tau-r-sealedte-trust-commit-01-tom1-factual\",\"mental_state_type\":\"belief\",\"perspective_order\":1,\"prediction_horizon\":\"next_action\",\"proposition\":\"Kai believes the prior commitment changes the meaning of Embry's next action.\",\"subject\":\"kai\",\"support_status\":\"supported\",\"target\":\"embry\"},{\"abstain\":false,\"counterfactual\":false,\"counterfactual_context\":null,\"distribution\":[{\"probability\":0.45,\"value\":\"TRUE\"},{\"probability\":0.25,\"value\":\"FALSE\"},{\"probability\":0.3,\"value\":\"UNKNOWN\"}],\"episode_id\":\"sealedte-trust-commit-01\",\"evidence_refs\":[{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:0\"},{\"scope\":\"social_episode_access\",\"source_id\":\"sealedte-trust-commit-01:information_access_by_agent\"},{\"scope\":\"social_episode_observation\",\"source_id\":\"sealedte-trust-commit-01:observable_history:1\"}],\"hypothesis_id\":\"live-tau-r-sealedte-trust-commit-01-tom2-factual\",\"mental_state_type\":\"belief\",\"perspective_order\":2,\"prediction_horizon\":\"next_action\",\"proposition\":\"Embry believes Kai thinks Embry may violate or honor the prior commitment.\",\"subject\":\"embry\",\"support_status\":\"supported\",\"target\":\"kai\"},{\"abstain\":false,\"counterfactual\":true,\"counterfactual_context\":{\"intervention_id\":\"live-tau-r-sealedte-trust-commit-01-do-policy-alternative\",\"synthetic\":true},\"distribution\":[{\"probability\":0.3,\"value\":\"TRUE\"},{\"probability\":0.35,\"value\":\"FALSE\"},{\"probability\":0.35,\"value\":\"UNKNOWN\"}],\"episode_id\":\"sealedte-trust-commit-01\",\"evidence_refs\":[{\"scope\":\"synthetic_counterfactual\",\"source_id\":\"sealedte-trust-commit-01:R:do-policy-alternative\"}],\"hypothesis_id\":\"live-tau-r-sealedte-trust-commit-01-tom1-counterfactual\",\"mental_state_type\":\"belief\",\"perspective_order\":1,\"prediction_horizon\":\"next_action\",\"proposition\":\"Kai believes the prior commitment changes the meaning of Embry's next action.\",\"subject\":\"kai\",\"support_status\":\"supported\",\"target\":\"embry\"}],\"episode_id\":\"sealedte-trust-commit-01\",\"outcome_visible\":false,\"schema\":\"persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1\",\"sealed\":true}}",
+  "role": "pctom-live-condition-r",
+  "schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1",
+  "status": "PASS",
+  "surface": "scillm.chat_completions.text"
+}

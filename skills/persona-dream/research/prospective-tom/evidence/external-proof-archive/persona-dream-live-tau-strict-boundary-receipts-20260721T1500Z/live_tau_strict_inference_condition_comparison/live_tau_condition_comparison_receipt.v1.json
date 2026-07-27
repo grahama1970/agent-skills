@@ -1,0 +1,155 @@
+{
+  "blocked_by_systemic_failure": 13,
+  "canonical_memory_write_attempts": 0,
+  "case_index_path": "/tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_condition_comparison/artifacts/live_condition_case_index.json",
+  "checks": {
+    "case_fanout_blocked_until_preflight_passes": true,
+    "corpus_check_passed": true,
+    "human_content_judgment_absent": true,
+    "remaining_cases_marked_blocked_by_systemic_failure": true,
+    "systemic_failure_breaker_tripped": true,
+    "systemic_failure_threshold_respected": true,
+    "tau_boundary_receipts_written_for_all_rows": true,
+    "tau_preflight_passed": true,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "held-out test-set prediction benefit",
+      "action-selection regret improvement",
+      "external service fault injection",
+      "production retry machinery",
+      "longitudinal recall after revision",
+      "complete live Phase 01-16 runtime execution",
+      "paid provider execution or video quality"
+    ],
+    "proves": [
+      "the live Tau condition comparison runner produced an inspectable fail-closed receipt",
+      "case fan-out is blocked until the Tau text-reasoning preflight passes",
+      "repeated Tau case failures are circuit-broken after the configured systemic failure threshold"
+    ]
+  },
+  "corpus_check_receipt_path": "/tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_condition_comparison/receipts/social_episode_corpus_check_receipt.json",
+  "corpus_path": "/tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "blocked_by_systemic_failure": 13,
+    "cases": 16,
+    "conditions": 4,
+    "deterministic_scores_per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "episodes_consumed": 4,
+    "episodes_in_corpus": 96,
+    "executed_cases": 3,
+    "families_consumed": 4,
+    "sealed_commitments_per_condition": {
+      "CD": 0,
+      "D": 0,
+      "M": 0,
+      "R": 0
+    },
+    "status_counts": {},
+    "tau_boundary_receipts_written": 16
+  },
+  "created_at": "2026-07-21T14:52:39Z",
+  "deterministic_simulator_corpus_fixture_backed": true,
+  "errors": [
+    "sealedte-info-asym-17:M:tau_text_reasoning_failed:Tau dispatch timed out after 5.0s",
+    "sealedte-info-asym-17:R:tau_text_reasoning_failed:Tau dispatch timed out after 5.0s",
+    "sealedte-info-asym-17:D:tau_text_reasoning_failed:Tau dispatch timed out after 5.0s",
+    "systemic_failure_threshold_reached:tau_text_reasoning_timeout:3",
+    "sealedte-info-asym-17:CD:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-pref-desire-17:M:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-pref-desire-17:R:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-pref-desire-17:D:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-pref-desire-17:CD:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-trust-commit-17:M:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-trust-commit-17:R:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-trust-commit-17:D:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-trust-commit-17:CD:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-coord-conflict-17:M:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-coord-conflict-17:R:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-coord-conflict-17:D:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealedte-coord-conflict-17:CD:blocked_by_systemic_failure:tau_text_reasoning_timeout",
+    "sealed_commitments_per_condition_insufficient:M:0",
+    "deterministic_scores_per_condition_insufficient:M:0",
+    "sealed_commitments_per_condition_insufficient:R:0",
+    "deterministic_scores_per_condition_insufficient:R:0",
+    "sealed_commitments_per_condition_insufficient:D:0",
+    "deterministic_scores_per_condition_insufficient:D:0",
+    "sealed_commitments_per_condition_insufficient:CD:0",
+    "deterministic_scores_per_condition_insufficient:CD:0"
+  ],
+  "fixture_backed": false,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": true,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "CD": {
+      "cases": 4,
+      "mean_action_brier": null,
+      "mean_action_log_loss": null,
+      "mean_belief_brier": null,
+      "mean_belief_log_loss": null
+    },
+    "D": {
+      "cases": 4,
+      "mean_action_brier": null,
+      "mean_action_log_loss": null,
+      "mean_belief_brier": null,
+      "mean_belief_log_loss": null
+    },
+    "M": {
+      "cases": 4,
+      "mean_action_brier": null,
+      "mean_action_log_loss": null,
+      "mean_belief_brier": null,
+      "mean_belief_log_loss": null
+    },
+    "R": {
+      "cases": 4,
+      "mean_action_brier": null,
+      "mean_action_log_loss": null,
+      "mean_belief_brier": null,
+      "mean_belief_log_loss": null
+    },
+    "comparison": {
+      "cd_mean_action_brier": null,
+      "cd_minus_strongest_baseline": null,
+      "lower_is_better": true,
+      "primary_metric": "mean_action_brier",
+      "strongest_baseline_condition": null,
+      "strongest_baseline_mean_action_brier": null
+    }
+  },
+  "metrics_summary_path": "/tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_condition_comparison/artifacts/live_condition_metrics_summary.json",
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_condition_comparison",
+  "processing_time_s": 18.004,
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_condition_comparison/live_tau_condition_comparison_receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.live_tau_condition_comparison_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "split": "sealed_test",
+  "status": "BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+  "systemic_failure_counts": {
+    "tau_text_reasoning_timeout": 3
+  },
+  "systemic_failure_signature": "tau_text_reasoning_timeout",
+  "systemic_failure_threshold": 3,
+  "tau_boundary_receipts_missing": [],
+  "tau_boundary_receipts_written": 16,
+  "tau_call_attempts": 3,
+  "tau_live_call_performed": 0,
+  "tau_preflight_attempted": true,
+  "tau_preflight_live_call_performed": true,
+  "tau_preflight_passed": true,
+  "tau_preflight_receipt_path": "/tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_condition_comparison/receipts/tau_text_reasoning_preflight_receipt.json",
+  "tau_preflight_receipt_sha256": "sha256:dc3006e71adaeb963994618f4c8e18e96fb68127546b50d7d3f287611829d62d",
+  "tau_preflight_status": "PASS",
+  "tau_receipts_hash_bound": true
+}

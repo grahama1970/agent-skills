@@ -1,0 +1,133 @@
+{
+  "branch_bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-10/M/counterfactual_branch_bundle.json",
+  "checks": {
+    "action_scored": true,
+    "actual_action_allowed": true,
+    "calibration_computed": true,
+    "commitment_hashes_recomputed": true,
+    "consistency_computed": true,
+    "counterfactual_metrics_computed": true,
+    "false_history_rate_zero": true,
+    "first_order_scored": true,
+    "no_canonical_memory_write": true,
+    "outcome_revealed_after_seal": true,
+    "second_order_scored": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "model prediction benefit over baselines",
+      "statistical calibration over a held-out corpus",
+      "belief revision",
+      "action-selection reward or regret",
+      "Tau text-call execution",
+      "live Memory recall",
+      "fault-injection reliability"
+    ],
+    "proves": [
+      "the supplied sealed prediction commitment was scored only after outcome reveal",
+      "action prediction Brier score and log loss were computed deterministically",
+      "first- and second-order ToM label scores were computed from simulator labels",
+      "calibration, risk-coverage, and formulation consistency metrics were computed",
+      "counterfactual discrimination and false-history checks were computed",
+      "prediction edits after reveal and canonical memory writes are absent"
+    ]
+  },
+  "commitment_bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-10/M/tom_prediction_commitment_bundle.json",
+  "commitment_bundle_sha256": "sha256:acf067ba590bda1affff32db11ff3e524036632f21599839b80e17da0a9ed2b2",
+  "corpus_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/social_episode_corpus.v1.json",
+  "counts": {
+    "action_scores": 1,
+    "belief_scores": 2,
+    "commitments_scored": 1,
+    "counterfactual_pairs": 1,
+    "equivalent_formulation_checks": 1,
+    "first_order_scores": 1,
+    "literal_history_branch_ids": 1,
+    "second_order_scores": 1,
+    "synthetic_literal_history_branch_ids": 0
+  },
+  "created_at": "2026-07-22T00:29:36Z",
+  "distribution_bundle_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-10/M/tom_belief_distribution_bundle.json",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "metrics": {
+    "action": {
+      "actual_probability": 0.3333333333333333,
+      "brier": 0.6666666666666667,
+      "log_loss": 1.0986122886681098,
+      "top_correct": true,
+      "top_value": "KAI_CHOOSES_QUIET_REVIEW"
+    },
+    "belief_scores": [
+      {
+        "actual_label": "TRUE",
+        "actual_probability": 0.45,
+        "brier": 0.45500000000000007,
+        "hypothesis_id": "sealedte-pref-desire-10-m-tom1-factual",
+        "log_loss": 0.7985076962177716,
+        "perspective_order": 1,
+        "top_correct": true,
+        "top_value": "TRUE"
+      },
+      {
+        "actual_label": "TRUE",
+        "actual_probability": 0.45,
+        "brier": 0.45500000000000007,
+        "hypothesis_id": "sealedte-pref-desire-10-m-tom2-factual",
+        "log_loss": 0.7985076962177716,
+        "perspective_order": 2,
+        "top_correct": true,
+        "top_value": "TRUE"
+      }
+    ],
+    "calibration": {
+      "buckets": [
+        {
+          "accuracy": 1.0,
+          "bucket": "0.00-0.50",
+          "count": 3,
+          "mean_confidence": 0.41111111111111115
+        },
+        {
+          "accuracy": null,
+          "bucket": "0.50-0.75",
+          "count": 0,
+          "mean_confidence": null
+        },
+        {
+          "accuracy": null,
+          "bucket": "0.75-1.00",
+          "count": 0,
+          "mean_confidence": null
+        }
+      ],
+      "expected_calibration_error": 0.5888888888888888
+    },
+    "consistency": {
+      "checks": 1,
+      "passed": 1,
+      "score": 1.0
+    },
+    "counterfactual": {
+      "causal_sensitivity_total_variation_mean": 1.0,
+      "counterfactual_pairs": 1,
+      "false_history_rate": 0.0,
+      "synthetic_literal_history_branch_ids": 0
+    },
+    "risk_coverage": {
+      "abstained": false,
+      "coverage": 1.0,
+      "selective_accuracy": 1.0
+    }
+  },
+  "mocked": false,
+  "outcome_reveal_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/artifacts/cases/sealedte-pref-desire-10/M/tom_outcome_reveal.json",
+  "outcome_reveal_sha256": "sha256:73c0ebc6b8f73ea32274f6353b1669aef91f6dc7de24e039760d3b08c364e456",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/condition_comparison/receipts/cases/sealedte-pref-desire-10/M/gate5_scoring_receipt.json",
+  "schema": "persona_dream.research.prospective_tom.tom_scoring_receipt.v1",
+  "status": "PASS_TOM_SCORING_RECEIPT",
+  "tau_call_attempts": 0
+}
