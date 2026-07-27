@@ -289,10 +289,10 @@
         "graph-traversal"
       ],
       "notes": [
-        "Upstream owner of blockers for tau#140/#149; graph-memory-operator#61 is the open Memory-side ticket for Tau skill/tool chain recall.",
-        "Two independent clones of this repo exist on disk. The live checkout is experiments/memory (HEAD 2026-07-27). experiments/graph-memory-operator is a stale clone (HEAD 2025-09-19, 76 dirty files) and must NOT be used as the worktree.",
+        "Upstream owner of Tau and Chatterbox blockers. graph-memory-operator#61 (skill_chains/tool_chains recall contract) blocked tau#140 and tau#149; it closed 2026-07-27 and both Tau tickets closed the same day. #59 (recall/answer exceed the real-time voice budget) is still open and is the live Chatterbox-side blocker.",
+        "Two independent clones of this repo existed on disk. The live checkout is experiments/memory. The stale clone (HEAD 2025-09-19) was moved to experiments/_deprecated/graph-memory-operator-stale-clone-20260727 on 2026-07-27 because its directory name shadowed the live checkout.",
         "Paused until a bounded one-issue runner exists. The Makefile exposes recall, multihop, propose, and prune targets but none is a bounded issue tick, and 'uv run pytest -q' is a placeholder verification command, not a repair runner.",
-        "Third routing vocabulary in the fleet: this repo labels issues 'ready-for-agent' + 'area:*', while routing expects 'agent-work' + 'executor:local' and /ticket emits 'type:*' + 'route:*'. 0 of 10 open issues carry agent-work, so it would NOOP even if resumed."
+        "Third routing vocabulary in the fleet: this repo labels issues 'ready-for-agent' + 'area:*', while routing expects 'agent-work' + 'executor:local' and /ticket emits 'type:*' + 'route:*'."
       ]
     }
   ]
