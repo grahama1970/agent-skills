@@ -33,13 +33,16 @@ Ticket state folded into current truth:
 
 Next implementation order:
 
-1. Add speaker-similarity and adversarial Embry-recognition checks for the
+1. Resolve the speaker-recognition backend blocker with an approved real
+   backend such as `resemblyzer` or `speechbrain_ecapa`, or route the artifacts
+   to a dedicated voice/audio evaluation lane that already has one.
+2. Add speaker-similarity and adversarial Embry-recognition checks for the
    three live session-mood Chatterbox renders. This is the missing bridge
    between "emotion controls reached Chatterbox" and "speech remains
    recognizably Embry."
-2. Use those gates in the target receipt
+3. Use those gates in the target receipt
    `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
-3. The live-chain receipt must still prove or explicitly mark every leg:
+4. The live-chain receipt must still prove or explicitly mark every leg:
    accepted dream -> Watch observations -> first-person synthetic journal ->
    bounded arc delta -> hardened ledger append/reread -> session mood selected
    before turn 1 -> same mood across multiple turns -> Chatterbox outputs ->
@@ -50,6 +53,35 @@ for transport, base-engine selection, strict ASR WER 0.0, and durable
 report-local WAV snapshots. It does not prove perceived target emotion,
 naturalness, speaker similarity, adversarial recognition, production
 conversation-service binding, or repeated full-pipeline reliability.
+
+## 2026-07-27 — P2.4 voice-recognition preflight blocks on missing backend
+
+The P2.4 preflight receipt exists:
+`reports/goal_v5/continuity/session_mood_voice_recognition_preflight/RECEIPT.json`.
+
+What it proves:
+
+- The three P2.3 live Chatterbox WAV snapshots are durable report-local files
+  and their SHA-256 values match the refreshed live receipt.
+- The authorized Embry reference WAV exists at
+  `/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav`
+  with SHA-256
+  `sha256:f9dc30305e04c3963cfb100d8a4438b2d1fb219bcabf8861f25407ff01c760fd`.
+- The preflight fails closed before claiming speaker similarity.
+
+Current blocker:
+
+- `resemblyzer` is not importable in the Persona Dream environment.
+- `speechbrain` is not importable in the Persona Dream environment.
+- A Chatterbox `uv run` attempt did not provide a usable fallback because the
+  current Chatterbox dependency set is unsatisfiable across its declared Python
+  version split.
+
+Required next move: either approve adding a real speaker-recognition dependency
+to the Persona Dream/voice-eval lane, or route these WAV artifacts to an
+existing dedicated voice/audio evaluation runtime that already has a real
+speaker backend. Do not use waveform hashes, loudness, MFCC fallback, or
+spectral similarity as Embry recognition proof.
 
 ## 2026-07-27 — P2.1 continuity-ledger hardening receipt accepted
 

@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-27T18:03:47Z",
+  "updated_at": "2026-07-27T18:10:19Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:a67eeca95951f1a0e2d514ea57093b2ece9510c853780afc1a6d24dcbf8d9b8a",
@@ -29,7 +29,9 @@
     "latest_session_mood_binding_receipt_sha256": "sha256:5ad61984b0f77022b8d62a57d2791d11eb800bf5509320dbb82b42f51f218edc",
     "latest_session_mood_chatterbox_live_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
     "latest_session_mood_chatterbox_live_receipt_sha256": "sha256:4827cb0ff7ebeb74363ff0ee9d6d3d62fe487caecf3c3802c15eb8f4e6e97260",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, and durable WAV snapshots copied into the report directory",
+    "latest_voice_recognition_preflight_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_preflight/RECEIPT.json",
+    "latest_voice_recognition_preflight_receipt_sha256": "sha256:2437aeec8cce787a1b5ba9b4a914eb222879e8049d75fc54a601b2eac4da0d84",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the report directory, and fail-closed speaker-recognition backend preflight",
     "unverified": [
       "persisted as authoritative runtime state",
       "live Memory and Watch reread in a full accepted-dream chain",
@@ -101,11 +103,15 @@
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
         "result": "21 passed"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_mood_voice_recognition_preflight.py skills/persona-dream/tests/test_session_mood_chatterbox_live.py skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
+        "result": "29 passed"
       }
     ],
     "full_sanity_command": "./skills/persona-dream/sanity.sh",
     "full_sanity_status": "PASS",
-    "full_sanity_result": "505 passed, 9 subtests passed",
+    "full_sanity_result": "513 passed, 9 subtests passed",
     "full_sanity_notes": [
       "static dream fixture produced 10 required artifacts and 6 frame prompts",
       "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
@@ -116,14 +122,16 @@
   "active_blockers": [
     "Continuity ledger is not yet proven as the runtime authority across real sessions.",
     "Chatterbox proof is transport/content-preservation evidence, not perceptual emotion or identity evidence.",
+    "P2.4 speaker-recognition preflight is blocked because no real speaker-recognition backend is importable in the Persona Dream or Chatterbox runtime checked here: resemblyzer=false and speechbrain_ecapa=false.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
     "Repeated full dream-pipeline reliability is not proven.",
     "PCTOM-R archived evidence now has durable local custody, but PCTOM-R still does not prove confidence-bounded planning advantage."
   ],
   "next_step": {
-    "default": "Add speaker-similarity and adversarial Embry recognition checks, then run the full accepted-dream to live-chain proof.",
+    "default": "Install or route to a real speaker-recognition backend for the durable session-mood WAV snapshots, then run speaker-similarity and adversarial Embry-recognition checks before the full accepted-dream to live-chain proof.",
     "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "ordered_steps": [
+      "Resolve the P2.4 speaker-recognition backend blocker with an approved real backend such as resemblyzer or speechbrain ECAPA, or route the artifacts to a dedicated voice/audio evaluation lane.",
       "Add speaker-similarity and adversarial Embry recognition checks for the live session-mood Chatterbox outputs.",
       "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls."
     ]
