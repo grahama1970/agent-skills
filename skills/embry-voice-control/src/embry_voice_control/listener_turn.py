@@ -91,6 +91,43 @@ def strip_wake_word(transcript: str) -> str:
     return re.sub(rf"^\s*(?:hey[\s,.:;-]+)?(?:{wake_aliases})[\s,.:;-]+", "", stripped, flags=re.IGNORECASE).strip()
 
 
+def listener_events_from_receipt(listener_receipt: dict[str, Any]) -> dict[str, Any]:
+    """Return normalized listener events across accepted acoustic receipt shapes."""
+    events = listener_receipt.get("listener_events")
+    if isinstance(events, dict) and str(events.get("final_transcript") or "").strip():
+        return events
+    transcript = listener_receipt.get("transcript")
+    transcript_record = transcript if isinstance(transcript, dict) else {}
+    final_transcript = str(
+        transcript_record.get("final")
+        or transcript_record.get("final_transcript")
+        or listener_receipt.get("final_transcript")
+        or ""
+    )
+    normalized_final = str(
+        transcript_record.get("normalized_final")
+        or transcript_record.get("normalized_final_transcript")
+        or normalize_text(final_transcript)
+    )
+    wake_alias_seen = any(
+        re.search(rf"\b{re.escape(alias)}\b", normalized_final)
+        for alias in WAKE_WORD_TRANSCRIPT_ALIASES
+    )
+    wake_detected = bool(listener_receipt.get("wake_detected")) or wake_alias_seen
+    return {
+        "final_transcript": final_transcript,
+        "normalized_final_transcript": normalized_final,
+        "wake_detected": wake_detected,
+        "wake_word": WAKE_WORD if wake_detected else None,
+        "events_path": listener_receipt.get("realtimestt", {}).get("events_path")
+        if isinstance(listener_receipt.get("realtimestt"), dict)
+        else listener_receipt.get("events_path"),
+        "realtime_event_count": listener_receipt.get("realtimestt", {}).get("event_count")
+        if isinstance(listener_receipt.get("realtimestt"), dict)
+        else listener_receipt.get("realtime_event_count"),
+    }
+
+
 def event_time(base_created_at: str, offset_ms: int) -> str:
     """Return stable event times derived from a receipt timestamp."""
     try:
@@ -159,7 +196,7 @@ def publish_listener_turn_journal(
     if not session_id or not turn_id:
         raise ValueError("journal_session_or_turn_missing")
 
-    listener_events = listener_receipt.get("listener_events", {})
+    listener_events = listener_events_from_receipt(listener_receipt)
     final_transcript = str(listener_events.get("final_transcript") or "")
     response_audio = response.get("audioAuthority") if isinstance(response.get("audioAuthority"), dict) else {}
     response_envelope = response.get("voiceEnvelope") if isinstance(response.get("voiceEnvelope"), dict) else response_audio.get("envelope")
@@ -350,13 +387,18 @@ def build_turn_payload(
     listener_receipt_path: Path,
     listener_receipt: dict[str, Any],
     turn_text: str,
+    session_id: str | None = None,
+    turn_id: str | None = None,
+    conversation_context: str = "",
 ) -> dict[str, Any]:
     """Build the live-turn payload from a listener receipt."""
-    listener_events = listener_receipt.get("listener_events", {})
+    listener_events = listener_events_from_receipt(listener_receipt)
     final_transcript = str(listener_events.get("final_transcript") or "")
-    return {
-        "sessionId": f"embry-listener-turn-{run_id}",
-        "turnId": f"embry-listener-turn-{run_id}",
+    resolved_session_id = session_id or f"embry-listener-turn-{run_id}"
+    resolved_turn_id = turn_id or f"embry-listener-turn-{run_id}"
+    payload = {
+        "sessionId": resolved_session_id,
+        "turnId": resolved_turn_id,
         "text": turn_text,
         "inputMode": "voice",
         "voiceEnabled": True,
@@ -386,6 +428,15 @@ def build_turn_payload(
         "requireMemoryIntentVoicePolicy": True,
         "requireInterruptPolicy": True,
     }
+    if conversation_context.strip():
+        payload["conversationContext"] = conversation_context.strip()
+        payload["contextEvidence"] = {
+            "source": "listener_turn_live_cli",
+            "schema": "embry_voice_control.listener_turn_context_evidence.v1",
+            "context_chars": len(conversation_context.strip()),
+            "context_sha256": "sha256:" + sha256_text(conversation_context.strip()),
+        }
+    return payload
 
 
 def post_live_turn(base_url: str, payload: dict[str, Any], timeout: float) -> tuple[int | None, dict[str, Any], str | None]:
@@ -457,7 +508,7 @@ def evaluate_acceptance(
     reasoning = response.get("reasoningSteps") if isinstance(response.get("reasoningSteps"), list) else []
     audio_path = response.get("audioPath") or nested_value(response, "audioAuthority.path")
     receipt_path = response.get("receiptPath") or nested_value(response, "turnAuthority.receiptPath")
-    listener_events = listener_receipt.get("listener_events", {})
+    listener_events = listener_events_from_receipt(listener_receipt)
     underlying_acceptance = listener_receipt.get("acceptance", {})
     checks = {
         "listener_receipt_passed": bool(underlying_acceptance.get("pass")),
@@ -509,6 +560,9 @@ def run_listener_turn_live(
     local_playback_target: str = "64",
     local_playback_timeout: float = 30.0,
     journal_db: Path | None = DEFAULT_JOURNAL_DB,
+    session_id: str | None = None,
+    turn_id: str | None = None,
+    conversation_context: str = "",
 ) -> dict[str, Any]:
     """Run listener transcript -> live-turn -> Chatterbox artifact sanity."""
     run_id = new_run_id()
@@ -516,13 +570,16 @@ def run_listener_turn_live(
     receipt_path = output_dir / "receipt.json"
     listener_path = listener_receipt_path or latest_unix_listener_receipt(unix_listener_root)
     listener_receipt = read_json(listener_path)
-    final_transcript = str(listener_receipt.get("listener_events", {}).get("final_transcript") or "")
+    final_transcript = str(listener_events_from_receipt(listener_receipt).get("final_transcript") or "")
     turn_text = strip_wake_word(final_transcript)
     payload = build_turn_payload(
         run_id=run_id,
         listener_receipt_path=listener_path,
         listener_receipt=listener_receipt,
         turn_text=turn_text,
+        session_id=session_id,
+        turn_id=turn_id,
+        conversation_context=conversation_context,
     )
     response_status_code, response, error = post_live_turn(base_url, payload, timeout)
     audio_path = str(response.get("audioPath") or nested_value(response, "audioAuthority.path") or "")

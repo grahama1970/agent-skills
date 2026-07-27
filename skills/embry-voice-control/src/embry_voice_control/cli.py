@@ -29,6 +29,10 @@ from embry_voice_control.embry_chat import DEFAULT_CHATTERBOX_URL as EMBRY_CHAT_
 from embry_voice_control.embry_chat import DEFAULT_EMBRY_REF_AUDIO
 from embry_voice_control.embry_chat import DEFAULT_EXPECTED_ANSWER as EMBRY_CHAT_EXPECTED_ANSWER
 from embry_voice_control.embry_chat import run_embry_chat_static_query_live
+from embry_voice_control.conversation_round import DEFAULT_CHATTERBOX_REPO as CONVERSATION_CHATTERBOX_REPO
+from embry_voice_control.conversation_round import DEFAULT_CHATTERBOX_RUNNER as CONVERSATION_CHATTERBOX_RUNNER
+from embry_voice_control.conversation_round import DEFAULT_OUTPUT_ROOT as CONVERSATION_OUTPUT_ROOT
+from embry_voice_control.conversation_round import run_conversation_round_live
 from embry_voice_control.live_wake import run_wake_capital_france
 from embry_voice_control.listener_turn import DEFAULT_BASE_URL as LISTENER_TURN_BASE_URL
 from embry_voice_control.listener_turn import DEFAULT_EXPECTED_ANSWER
@@ -832,6 +836,9 @@ def listener_turn_live(
     local_playback_target: str = typer.Option("64", help="PipeWire playback target for --play-local"),
     local_playback_timeout: float = typer.Option(30.0, help="Local playback timeout in seconds"),
     journal_db: Path | None = typer.Option(DEFAULT_JOURNAL_DB, help="Embry voice event journal to publish accepted turns; pass none only for isolated tests"),
+    session_id: str | None = typer.Option(None, help="Stable live-turn session id for multi-turn conversation proofs"),
+    turn_id: str | None = typer.Option(None, help="Stable live-turn turn id for deterministic proof receipts"),
+    conversation_context: str = typer.Option("", help="Prior conversation context to send to /live-turn"),
 ) -> None:
     """Route the latest Unix listener transcript into /live-turn and require Chatterbox audio."""
     receipt = run_listener_turn_live(
@@ -845,6 +852,9 @@ def listener_turn_live(
         local_playback_target=local_playback_target,
         local_playback_timeout=local_playback_timeout,
         journal_db=journal_db,
+        session_id=session_id,
+        turn_id=turn_id,
+        conversation_context=conversation_context,
     )
     acceptance = receipt["acceptance"]
     typer.echo(json.dumps({
@@ -863,6 +873,39 @@ def listener_turn_live(
         "not_proven": receipt["claims"]["does_not_prove"],
     }, indent=2))
     if not acceptance["pass"]:
+        raise typer.Exit(code=1)
+
+
+@app.command("conversation-round-live")
+def conversation_round_live(
+    output_root: Path = typer.Option(CONVERSATION_OUTPUT_ROOT, help="12TB output root for production-owned conversation receipts"),
+    chatterbox_repo: Path = typer.Option(CONVERSATION_CHATTERBOX_REPO, help="Chatterbox repository used for the transport adapter"),
+    runner: Path = typer.Option(CONVERSATION_CHATTERBOX_RUNNER, help="Low-level Chatterbox/PipeWire/Realtimestt transport adapter"),
+    base_url: str = typer.Option(LISTENER_TURN_BASE_URL, help="Embry voice live-turn base URL"),
+    journal_db: Path = typer.Option(DEFAULT_JOURNAL_DB, help="Embry voice event journal to publish accepted turns"),
+    question: list[str] | None = typer.Option(None, help="Conversation question; repeat for multiple turns"),
+    timeout: float = typer.Option(420.0, help="Transport timeout in seconds"),
+) -> None:
+    """Run a production-owned multi-turn Embry voice conversation proof."""
+    receipt = run_conversation_round_live(
+        output_root=output_root,
+        chatterbox_repo=chatterbox_repo,
+        runner=runner,
+        sparta_api=base_url,
+        journal_db=journal_db,
+        questions=question,
+        timeout=timeout,
+    )
+    typer.echo(json.dumps({
+        "run_id": receipt["run_id"],
+        "pass": receipt["pass"],
+        "receipt_path": receipt["receipt_path"],
+        "transport": receipt["transport"],
+        "journal": receipt["journal"],
+        "failed_gates": receipt["failed_gates"],
+        "not_proven": receipt["claims"]["does_not_prove"],
+    }, indent=2))
+    if not receipt["pass"]:
         raise typer.Exit(code=1)
 
 
