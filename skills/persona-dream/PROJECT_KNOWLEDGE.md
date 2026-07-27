@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-27 UTC (P2 live continuity-chain next-step synthesis) by Codex
+**Last updated:** 2026-07-27 UTC (P2.1 ledger-hardening step synthesis) by Codex
 **Status:** Active development
 
 ## 2026-07-27 — CONTROLLING HIERARCHY aligned across GOAL/README/SKILL
@@ -92,6 +92,42 @@ deterministic local proof; the final continuity-chain receipt must separately
 label which legs are live, fixture-backed, or unverified. Existing Chatterbox
 evidence proves transport/content preservation only; it does not prove
 perceived Embry emotion or session-level recognition.
+
+## 2026-07-27 — P2.1 immediate step: continuity-ledger hardening receipt
+
+The single next step before any session mood, Chatterbox, Watch, Kling, or
+PCTOM-R expansion is a deterministic ledger-hardening slice. Target receipt:
+`reports/goal_v5/continuity/ledger_hardening/RECEIPT.json`.
+
+Why this is first: the live continuity-chain receipt would otherwise be able to
+pass dishonestly. The current ledger path has known risk around non-atomic file
+writes, replayed dream cycles, stale epochs, and identity-core mutation checks.
+Those are persistence and authority defects, not product polish.
+
+P2.1 artifact contract:
+
+1. `scripts/continuity_ledger.py` must validate ledgers on read and reject
+   malformed or mixed Embry schema before update.
+2. Appending an arc delta must use atomic temp-file write plus `os.replace`.
+3. Appending must require an expected source epoch and fail closed on stale
+   epoch mismatch.
+4. Appending must derive and persist a dream-cycle idempotency key so replaying
+   the same cycle cannot append a second delta with a new id.
+5. Identity-core integrity must be recomputed from canonical identity-core
+   content and must not rely on `assert`; a core mutation returns an explicit
+   blocked status such as `BLOCKED_CORE_MUTATED`.
+6. Focused tests must prove: duplicate replay blocks, stale epoch blocks,
+   identity-core mutation blocks, exactly one arc delta is accepted per cycle,
+   and Embry's current ledger normalizes without losing provenance.
+7. The receipt must label this as deterministic local proof only: `mocked: no`,
+   `live: no`, exercised = local ledger read/write/update gates, unverified =
+   Memory persistence, session binding, Chatterbox, Watch, recognition.
+
+Stop condition for P2.1: do not start the mood-binding consumer until the
+ledger-hardening receipt exists, the focused ledger tests pass, and
+`CURRENT_STATUS.json` points to that receipt as the latest continuity-authority
+proof. After that, the next step becomes the session-mood consumer feeding the
+larger `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
 
 ## 2026-07-24 — RE-GROUNDED persona roundtable (3 seats) + Continuity Ledger design
 
