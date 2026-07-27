@@ -79,7 +79,7 @@ first matching route:
 | --- | --- | --- |
 | `add_tau_coder_command_spec` | `next:coder` + `executor:local` + repair marker in body | `tau handoff-command-loop` |
 | `tau_handoff_dispatch` | `executor:local` + handoff marker in body | `tau handoff-command-loop` |
-| `ticket_repair` | anything else carrying `agent-work` | `tau self-fix tick --repo R --issue N` |
+| `ticket_repair` | anything else carrying `agent-work` | `tau dag-run` on a compiled `tau.dag_contract.v1` |
 
 `ticket_repair` is the route ordinary `/ticket`-filed tickets take. `/ticket`
 stamps `agent-work` at file time for any ticket with a concrete `route:` whose
@@ -252,3 +252,30 @@ rendered dry-run.
 Issues with `agent-active` or `agent-blocked` are skipped until a human/operator
 clears the state label. This prevents cron from retrying a failed ticket every
 minute without an explicit retry decision.
+
+## Repair lane: Tau DAG contract
+
+`ticket_repair` compiles a `tau.dag_contract.v1` (`coder` -> `reviewer` ->
+`human`) and calls `tau dag-run`. The watchdog does not drive the loop, count
+attempts, or decide when work is done — Tau owns dispatch, receipt validation,
+resume, timeouts, immutable-goal enforcement, and fail-closed drift detection,
+and its DAG receipt is the verdict.
+
+The graph is acyclic: retry lives in `coder.max_attempts`, not in a
+`reviewer -> coder` edge. Tau's compiler rejects that edge with
+`cycle_detected` and `unsupported_ready_queue_condition`, and it duplicates a
+policy Tau already owns. Verified against Tau at `origin/main`:
+`tau dag-plan` exits 0 and emits `tau.dag_plan.v1` with nodes
+`coder, human, reviewer`.
+
+`coder` gates on `required_evidence: [changed_files, focused_tests]`. That
+matters because the shipped coder command spec is a **transport stub** that
+returns `--result-status COMPLETED` unconditionally; the evidence gate makes it
+fail closed rather than report a repair it never performed.
+
+Command specs resolve from Tau's own root
+(`experiments/goal-locked-subagents/agent-command-specs/`), not
+`agent-skills/agents/`, which holds specs for only 3 of 92 agents. Missing specs
+block before any GitHub write.
+
+See `PROJECT_KNOWLEDGE.md` for current readiness and open questions.

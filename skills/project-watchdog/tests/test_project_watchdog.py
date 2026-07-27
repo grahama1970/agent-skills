@@ -438,11 +438,20 @@ def test_ticket_repair_refuses_a_project_with_no_bounded_runner(tmp_path) -> Non
     assert "tau-command-loop" in result["summary"]
 
 
+def _worktree_with_specs(tmp_path: Path) -> Path:
+    """Create the Tau command-spec layout the repair DAG requires."""
+    root = tmp_path / "experiments/goal-locked-subagents/agent-command-specs"
+    for node in ("coder", "reviewer"):
+        (root / node).mkdir(parents=True)
+        (root / node / "tau-dispatch-command.json").write_text("{}", encoding="utf-8")
+    return tmp_path
+
+
 def test_ticket_repair_dry_run_makes_no_github_call(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(tmp_path),
+        "worktree": str(_worktree_with_specs(tmp_path)),
         "runner_kind": "tau-command-loop",
     }
     issue = _issue(8, labels=["agent-work"])
@@ -453,11 +462,11 @@ def test_ticket_repair_dry_run_makes_no_github_call(tmp_path) -> None:
     assert not comment.called
 
 
-def test_ticket_repair_dispatches_tau_self_fix(tmp_path) -> None:
+def test_ticket_repair_compiles_a_dag_contract_and_runs_dag_run(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(tmp_path),
+        "worktree": str(_worktree_with_specs(tmp_path)),
         "runner_kind": "tau-command-loop",
     }
     issue = _issue(9, labels=["agent-work"])
@@ -472,8 +481,15 @@ def test_ticket_repair_dispatches_tau_self_fix(tmp_path) -> None:
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["ok"] is True and result["status"] == "COMPLETED"
     argv = bounded.call_args.args[0]
-    assert argv[1:5] == ["run", "tau", "self-fix", "tick"]
-    assert "--issue" in argv and "9" in argv
+    assert argv[1:4] == ["run", "tau", "dag-run"], "repair must go through Tau's DAG lane"
+    assert "--command-spec-root" in argv
+
+    contract = json.loads((tmp_path / "repair-dag.json").read_text(encoding="utf-8"))
+    assert contract["schema"] == "tau.dag_contract.v1"
+    assert contract["entry_node"] == "coder"
+    assert contract["terminal_nodes"] == ["human"]
+    node_ids = [n["id"] for n in contract["nodes"]]
+    assert node_ids == ["coder", "reviewer", "human"]
 
 
 def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
@@ -481,7 +497,7 @@ def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(tmp_path),
+        "worktree": str(_worktree_with_specs(tmp_path)),
         "runner_kind": "tau-command-loop",
     }
     issue = _issue(10, labels=["agent-work"])
@@ -499,3 +515,42 @@ def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "NEEDS_ATTENTION"
     assert any(e.get("add") == [config.BLOCKED_LABEL] for e in edits)
+
+
+def test_repair_contract_gates_on_real_repair_evidence() -> None:
+    """A transport-only stub must not be able to report a repair it never did."""
+    contract = handlers.build_repair_contract(
+        repo=TAU_REPO,
+        issue_number=7,
+        issue_title="t",
+        goal_hash="sha256:" + "0" * 64,
+        spec_root="/specs",
+    )
+    coder = next(n for n in contract["nodes"] if n["id"] == "coder")
+    assert coder["required_evidence"] == ["changed_files", "focused_tests"]
+    assert "missing_required_evidence" in contract["fail_closed_on"]
+    assert "goal_hash_mismatch" in contract["fail_closed_on"]
+
+
+def test_goal_hash_is_stable_across_reruns() -> None:
+    """Tau requires one goal_hash across every node, receipt, and rerun."""
+    a = handlers.issue_goal_hash(TAU_REPO, 149)
+    b = handlers.issue_goal_hash(TAU_REPO, 149)
+    assert a == b and a.startswith("sha256:")
+    assert a != handlers.issue_goal_hash(TAU_REPO, 150)
+
+
+def test_missing_command_specs_block_before_any_github_write(tmp_path) -> None:
+    project = {
+        "project_id": "tau",
+        "repo": TAU_REPO,
+        "worktree": str(tmp_path),
+        "runner_kind": "tau-command-loop",
+    }
+    issue = _issue(11, labels=["agent-work"])
+    issue["watchdog_action"] = "ticket_repair"
+    with mock.patch.object(handlers.github, "issue_comment") as comment:
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert "missing Tau command specs" in result["summary"]
+    assert not comment.called
