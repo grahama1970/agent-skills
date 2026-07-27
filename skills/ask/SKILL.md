@@ -148,6 +148,26 @@ project's deterministic proof command or artifact validation. Treat `DEGRADED`,
 peer receipts, read the recovery packet, and rerun only the affected lane or
 launch a new round when appropriate.
 
+Before launching a costly live browser panel, project agents may run a
+read-only provider availability probe. It inspects existing provider tabs for
+visible rate-limit or capacity banners and writes a JSON report; it does not
+submit prompts:
+
+```bash
+./run.sh browser-availability \
+  --provider webgpt \
+  --provider webclaude \
+  --provider webkimi \
+  --provider webgemini \
+  --output /tmp/ask-provider-availability.json \
+  --json
+```
+
+If the report is `NEEDS_ATTENTION`, treat the named provider as currently
+unavailable for new roundtable or competition lanes unless the human explicitly
+asks to try it anyway. This preflight is not completion proof; it only prevents
+obvious provider-throttle loops before a live DAG starts.
+
 Failures must be non-silent. A failed browser/API/subagent lane must expose
 `failure_code`, `recovery_packet_path`, `next_command` or an explicit
 fail-closed reason, and `ticket_instruction`. If a recovery packet is missing,

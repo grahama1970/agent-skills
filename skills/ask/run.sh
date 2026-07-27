@@ -54,6 +54,7 @@ Commands:
   nightly           Run scheduled persona update (incremental learning)
   tau-dag <request> Compile a human request into a strict Tau DAG
   compete <request> Compile isolated competitors into a Tau compete DAG
+  browser-availability Probe provider tabs for visible rate/capacity blockers
   os learn          Crawl and index embry-os internals (skills, packages, config)
   os ask <question> Query OS knowledge from memory (scope=os)
   os health <question> Query runtime health of an OS subsystem
@@ -321,6 +322,10 @@ case "${1:-help}" in
     compete)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.tau_dag_cli compete "$@"
+        ;;
+    browser-availability)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/probe_browser_provider_availability.py" "$@"
         ;;
     webgpt-project)
         shift
