@@ -10,6 +10,8 @@ interface:
       overclaimed;
     - skipped providers are called out honestly;
     - conflicts and missing evidence are visible;
+    - threat-intel/feed hits are treated as enrichment-only unless corroborated
+      by multiple high-confidence signals or environment-specific telemetry;
     - follow-up questions are necessary, bounded, and not duplicates.
 
     Return one of: ACCEPT, REVISE, FAN_OUT_MORE, or INSUFFICIENT_EVIDENCE.

@@ -38,7 +38,7 @@ class DogpileMonitor:
     # state.
     PROVIDERS = [
         "brave", "brave_questions", "github", "arxiv",
-        "youtube", "codex_knowledge", "perplexity", "readarr", "wayback"
+        "youtube", "codex_knowledge", "perplexity", "readarr", "wayback", "feeds"
     ]
     STAGES = ["tailoring", "stage1", "stage2_github", "stage2_arxiv",
               "stage2_youtube", "stage2_brave", "synthesis"]

@@ -1,0 +1,37 @@
+{
+  "schema": "dogpile.feed_pack_sanity.v1",
+  "mocked": false,
+  "live": true,
+  "packs": [
+    "security_code",
+    "security_code_extended"
+  ],
+  "limit": 1,
+  "checks": [
+    {
+      "pack": "security_code",
+      "status": "passed",
+      "source_count": 12,
+      "parsed_total": 11,
+      "error_total": 0,
+      "default_use": "enrichment_only",
+      "inherited_packs": [],
+      "error": null,
+      "degraded": []
+    },
+    {
+      "pack": "security_code_extended",
+      "status": "passed",
+      "source_count": 20,
+      "parsed_total": 19,
+      "error_total": 0,
+      "default_use": "enrichment_only",
+      "inherited_packs": [
+        "security_code"
+      ],
+      "error": null,
+      "degraded": []
+    }
+  ],
+  "status": "passed"
+}

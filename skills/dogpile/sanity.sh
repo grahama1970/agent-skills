@@ -135,7 +135,7 @@ done
 # Check sub-skills
 echo ""
 echo "=== Sub-skill Check ==="
-for skill in arxiv brave-search github-search ingest-youtube fetcher extractor; do
+for skill in arxiv brave-search github-search ingest-youtube consume-feed fetcher extractor; do
     if [[ -d "$SCRIPT_DIR/../$skill" ]]; then
         echo "  [PASS] Sub-skill '$skill' found"
     else

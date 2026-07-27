@@ -1,0 +1,75 @@
+version: 1
+description: Extended optional Dogpile RSS pack for practitioner-grade code security, malware analysis, cloud security, red-team tradecraft, and policy context.
+extends: security_code
+default_use: enrichment_only
+false_positive_policy: Block on certainty, hunt on suspicion, enrich everything else. Feed hits are context signals, not automatic alerts or block decisions.
+high_priority_additions:
+  - sentinelone_labs
+  - wiz_blog
+  - unit42
+non_runnable_candidates:
+  - name: Dragos Blog
+    focus: ICS/OT security
+    reason: No clean public RSS endpoint was verified; use as a direct web source or project-specific configured feed if an endpoint is available.
+  - name: Nozomi Networks Labs
+    focus: ICS/OT security
+    reason: No clean public RSS endpoint was verified.
+  - name: Claroty Team82
+    focus: OT/IoT security
+    reason: Tested public feed endpoints returned gone/not-found responses.
+  - name: LimitedResults
+    focus: hardware and IoT exploitation
+    reason: No clean public RSS endpoint was verified; high signal but sporadic, better as direct web monitoring.
+  - name: Lawfare Cyber
+    focus: policy/legal context
+    reason: Public feed endpoint returned access controls during verification.
+  - name: Sysdig Blog
+    focus: cloud and Kubernetes runtime security
+    reason: Public feed endpoint redirects inconsistently without redirect-following support in the consume-feed helper.
+  - name: VX-Underground Papers
+    focus: malware papers and samples
+    reason: Not a standard RSS article feed; treat as manual/direct-web enrichment.
+  - name: AlienVault OTX Pulses
+    focus: raw/community threat pulses
+    reason: Better as API/TIP enrichment than human-readable RSS.
+sources:
+  - key: sentinelone_labs
+    name: SentinelOne Labs
+    category: malware_reverse_engineering
+    rss_url: https://www.sentinelone.com/labs/feed/
+    tags: [security, malware, reverse_engineering]
+  - key: malwarebytes_labs
+    name: Malwarebytes Labs
+    category: malware_analysis
+    rss_url: https://www.malwarebytes.com/blog/feed/index.xml
+    tags: [security, malware, threat_landscape]
+  - key: wiz_blog
+    name: Wiz Blog
+    category: cloud_security
+    rss_url: https://www.wiz.io/feed/rss.xml
+    tags: [security, cloud, kubernetes]
+  - key: unit42
+    name: Unit 42
+    category: threat_research
+    rss_url: https://unit42.paloaltonetworks.com/feed/
+    tags: [security, threat_intel, cloud]
+  - key: offensive_security
+    name: Offensive Security
+    category: exploit_development
+    rss_url: https://www.offsec.com/feed/
+    tags: [security, offensive_security, exploitation]
+  - key: corelan
+    name: Corelan Team
+    category: exploit_development
+    rss_url: https://www.corelan.be/index.php/feed/
+    tags: [security, exploit_development, windows]
+  - key: proofpoint_threat_insight
+    name: Proofpoint Threat Insight
+    category: email_threats
+    rss_url: https://www.proofpoint.com/us/rss.xml
+    tags: [security, email, initial_access]
+  - key: eff_deeplinks
+    name: EFF Deeplinks
+    category: policy_privacy_legal
+    rss_url: https://www.eff.org/rss/updates.xml
+    tags: [security, privacy, policy]
