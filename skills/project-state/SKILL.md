@@ -79,7 +79,7 @@ checks into success.
 # Quick infrastructure-only report
 ./run.sh report --quick
 
-# Full report including competitive landscape via /dogpile
+# Full report including current Brave/GitHub/ArXiv landscape
 ./run.sh report --full
 
 # JSON for automation / piping to /create-figure
@@ -227,7 +227,7 @@ create-figure from-assess --input state.json --output-dir ./figures/
 
 ### WRONG: Running --full mode for a quick health check
 ```bash
-./run.sh report --full  # takes ~2min, includes /dogpile competitive landscape
+./run.sh report --full  # takes ~2min, includes Brave/GitHub/ArXiv external research
 ```
 
 ### RIGHT: Use --quick for fast checks, --cached for repeated queries
