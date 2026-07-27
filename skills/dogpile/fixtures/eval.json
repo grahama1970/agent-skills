@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "skill": "dogpile",
+  "defaults": {
+    "latency_budget_ms": 30000
+  },
+  "cases": [
+    {
+      "name": "feature-channel-contracts",
+      "command": ["feature-eval"],
+      "expected_exit_code": 0,
+      "expected_stdout_contains": [
+        "\"status\": \"passed\"",
+        "\"receipt_path\"",
+        "feature-channel-eval",
+        "\"failed\": 0"
+      ],
+      "tags": ["dogpile", "feature-channels", "contracts"]
+    }
+  ]
+}

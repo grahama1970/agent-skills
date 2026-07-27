@@ -21,7 +21,7 @@ provides:
   - web-search
 composes:
   - memory
-  - scillm
+  - tau
   - brave-search
   - github-search
   - arxiv
@@ -50,11 +50,11 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 
 ## Analyzed Sources
 
-1.  **scillm LLM lanes (🤖)**: Query ambiguity checks, query tailoring, technical overview, and code/paper relevance evaluation. Dogpile calls `POST http://localhost:4001/v1/chat/completions` with `Authorization: Bearer sk-dev-proxy-123` and `X-Caller-Skill: dogpile`; it does not call OpenAI, Claude, Gemini, or Codex provider APIs directly.
+1.  **Tau-owned LLM lanes (🤖)**: Query ambiguity checks, query tailoring, technical overview, synthesis, and code/paper relevance evaluation belong behind Tau. Tau may call SciLLM internally; project agents should consume Tau receipts and Dogpile reports, not raw SciLLM responses.
 2.  **Concurrent Brave question lanes (🌐)**: Perplexity replacement. Dogpile fans out multiple bounded Brave web queries and records each result set separately.
 3.  **Brave Search (🌐)**: **Three-Stage Search** (Search → Evaluate → Deep Extract via /fetcher).
 4.  **ArXiv (📄)**: **Three-Stage Search** (Abstracts → Details → Full Paper via /fetcher + /extractor).
-5.  **YouTube (📺)**: **Two-Stage Search** (Metadata → Detailed Transcripts via Whisper/Direct).
+5.  **YouTube (📺)**: **Two-Stage Search** (Brave-first video discovery with yt-dlp fallback → Detailed transcripts via `ingest-youtube` Direct/Proxy/Whisper).
 6.  **GitHub (🐙)**: **Three-Stage Search**:
     - **Stage 1**: Search repositories and issues
     - **Stage 2**: Fetch README.md and metadata for top repos, agent evaluates relevance
@@ -67,14 +67,14 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 
 ## Features
 
-1.  **Query Tailoring**: Uses `/scillm` to generate service-specific queries optimized for each source:
+1.  **Query Tailoring**: Uses Tau-owned model orchestration to generate service-specific queries optimized for each source:
     - **ArXiv**: Academic/technical terms
     - **Brave Questions**: Natural-language research questions formerly sent to Perplexity
     - **Brave**: Documentation-style keyword queries that must fit Brave's hard limits (`<=400` chars, `<=50` words)
     - **GitHub**: Code patterns, library names
     - **YouTube**: Tutorial-style phrases
 
-2.  **Ambiguity Guard**: Uses `/scillm` to analyze the query first. If ambiguous, it asks you for clarification before wasting resources.
+2.  **Ambiguity Guard**: Uses Tau-owned model orchestration to analyze the query first. If ambiguous, it asks you for clarification before wasting resources.
 
 3.  **Three-Stage Deep Dive**:
     - **ArXiv**: Fetches detailed metadata → Agent evaluates → Full PDF extraction via /fetcher + /extractor
@@ -94,33 +94,34 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Brave query budgeting**: Compresses overlong Brave queries before dispatch instead of sending invalid 422 requests
     - **Incremental result publishing**: Writes structured partial results as providers finish so the caller does not need to wait for the final report
 
-## LLM Contract
+## Tau Provider Boundary
 
-Dogpile has exactly one active LLM integration: `/scillm`.
+Dogpile should have exactly one model-orchestration boundary: Tau.
 
-- Endpoint: `POST http://localhost:4001/v1/chat/completions`
-- Required headers: `Authorization: Bearer sk-dev-proxy-123` and `X-Caller-Skill: dogpile`
-- Primary reasoning lane: `model: "gpt-5.5"` through `httpx`
-- No routine LLM fallback lane: if `gpt-5.5` is unavailable, the LLM source is logged as degraded and Dogpile still returns successful retrieval results
-- Vision/high-reasoning adjudication lane: `model: "gpt-5.5"` with image content sent through `/scillm`; do not spend Claude/Gemini quota unless explicitly requested
-- JSON tasks: send `response_format: {"type": "json_object"}` and ask for JSON in the prompt
-- Forbidden: `max_tokens` in dogpile's `/scillm` calls
-- Provider names in logs use logical lane names such as `scillm-gpt55`; scillm decides the concrete upstream provider and returns it in the response `model`
-- Retrieval sources: Brave Search, GitHub, ArXiv, YouTube, and opt-in feed/Wayback/Readarr use their native retrieval APIs. `/scillm` is for query tailoring, ranking, summarization, ambiguity checks, and review of retrieved evidence.
+- Tau owns provider/model routing. Tau may call SciLLM internally, but Dogpile project-agent workflows must not call `$scillm`, `/scillm`, `http://localhost:4001`, `/v1/chat/completions`, or `/v1/scillm/*` directly.
+- Dogpile model work should be expressed as a Tau `tau.dag_contract.v1` node, Tau skill node, or Tau-executed local `command_spec` that returns receipts.
+- Dogpile retrieval sources remain native: Brave Search, GitHub, ArXiv, YouTube, and opt-in feed/Wayback/Readarr use their provider APIs or skill CLIs.
+- Tau/model tasks are for query tailoring, ranking, summarization, ambiguity checks, and review of retrieved evidence.
+- If Tau/model synthesis fails, Dogpile records the model lane as degraded and continues with Brave, GitHub, ArXiv, YouTube, optional feed, optional Readarr, and optional Wayback results.
 - Perplexity status: retired. Dogpile does not call Perplexity by default or by flag; it records a skipped/degraded source and uses concurrent Brave question searches instead.
 
-If `/scillm` fails, dogpile records the LLM lane as a degraded provider result and continues with Brave, GitHub, ArXiv, YouTube, optional feed, optional Readarr, and optional Wayback results.
+Implementation note: older Dogpile modules still contain a direct SciLLM adapter
+for query tailoring and synthesis. Treat that adapter as legacy migration work,
+not as the desired project-agent contract. Do not extend direct SciLLM usage;
+move model-backed Dogpile steps behind Tau when a stable Tau adapter is
+available for the target workflow.
 
 ## Orchestration Boundary
 
-Dogpile is the retrieval and synthesis engine. It should not require Tau for the
-default path and should not call WebGPT/browser tools directly.
+Dogpile is the retrieval engine and report emitter. Tau is the orchestration
+boundary for model-backed synthesis, reviewer loops, and creator/reviewer
+research workflows. Dogpile should not call WebGPT/browser tools directly.
 
 - Use `$ask` for WebGPT, browser-oracle, oracle, deep-review, parallel-review, or
   credibility review workflows.
-- A Tau researcher can sit above Dogpile as an optional caller that runs
-  creator/reviewer loops, consumes Dogpile receipts, and requests follow-up
-  Dogpile fan-outs when the synthesis reports weak coverage.
+- A Tau researcher should sit above Dogpile when creator/reviewer loops are
+  needed, consuming Dogpile receipts and requesting follow-up Dogpile fan-outs
+  when the synthesis reports weak coverage.
 - Dogpile itself must emit enough grounded synthesis that a project agent can
   use the result without guessing from raw provider dumps.
 
@@ -187,6 +188,42 @@ require API keys. Raw/vendor threat-intel feeds and TIP integrations may require
 API keys or access controls and must be reported as unproven when credentials
 are absent.
 
+### Feed Credential Requirements
+
+The configured Dogpile RSS feed packs are public readable RSS sources and should
+run without API keys:
+
+| Pack | Configured sources | API key requirement |
+|------|--------------------|---------------------|
+| `security_code` | BleepingComputer, Krebs, SANS ISC, Help Net Security, PortSwigger, Google Project Zero, Google Online Security Blog, GitHub Security Blog, GitHub Security Lab, SpecterOps, BHIS, TrustedSec | None |
+| `security_code_extended` | Extends `security_code` plus SentinelOne Labs, Malwarebytes Labs, Wiz, Unit 42, Offensive Security, Corelan, Proofpoint Threat Insight, EFF Deeplinks | None |
+
+Do not mix these public RSS packs with optional raw/TIP/API sources:
+
+| Source class | Examples | Credential/access status |
+|--------------|----------|--------------------------|
+| Public raw enrichment | CISA KEV JSON, URLhaus, Spamhaus, OpenPhish | Not part of the readable RSS lane; many public endpoints need custom parsers, TTL/confidence handling, and false-positive controls |
+| Vendor/TIP APIs | VirusTotal, ANY.RUN, Hybrid Analysis, GreyNoise, Malpedia, PhishTank | API key or account required in the resource registry |
+| Internet/OSINT APIs | Shodan, Censys, ZoomEye, Hunter.io, SecurityTrails | API key or account required in the resource registry |
+| Community feeds | BHIS Discord, TrustedSec Discord, OffSec Discord, Red Team Village, Hack The Box Discord, BloodHound Gang, and similar Discord/Slack communities | User account/invite/bot token required; not RSS |
+
+To check the current credential classification, run:
+
+```bash
+uv run --project skills/dogpile python - <<'PY'
+from pathlib import Path
+import yaml
+root = Path("skills/dogpile")
+for path in sorted((root / "config/feed_packs").glob("*.yaml")):
+    data = yaml.safe_load(path.read_text()) or {}
+    print(path.name, "rss_sources=", len(data.get("sources", []) or []), "requires_api_key=false")
+security = yaml.safe_load((root / "resources/security.yaml").read_text()) or {}
+for item in security.get("resources", []):
+    if item.get("auth_required"):
+        print("auth_required:", item.get("name"), item.get("type"), item.get("api_url") or item.get("url"))
+PY
+```
+
 ### Optional Archive And Book Lane Selection
 
 Wayback and Readarr are disabled by default because they are specialized,
@@ -232,8 +269,8 @@ Optional `/agents` profiles are provided for higher-rigor workflows:
 ## Automatic Synthesis Contract
 
 Every normal search should produce a compact evidence synthesis in the final
-report and partial-results stream when `/scillm` is available. The synthesis
-must:
+report and partial-results stream when Tau/model synthesis is available. The
+synthesis must:
 
 - Ground substantive claims in retrieved Brave, GitHub, ArXiv, YouTube, feed, or
   optional source evidence.
@@ -266,7 +303,7 @@ Supported fields:
 
 Dogpile stores these fields in `dogpile_partial_results.json` under
 `request_context`, emits them in the initial `[dogpile-event] search_started`
-event, includes them in scillm-powered ambiguity/tailoring/knowledge prompts,
+event, includes them in Tau/model-powered ambiguity/tailoring/knowledge prompts,
 and prepends them to the final report. Retrieval providers still receive
 search-engine-suitable queries; the context is used to generate and interpret
 those queries rather than silently broadening every native search call.
@@ -341,6 +378,8 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh search "query" --with-feeds --feed-limit 3` | Include the compact `security_code` RSS feed pack dry-run |
 | `./run.sh search "query" --with-feeds --feed-pack security_code_extended --feed-limit 3` | Include the extended practitioner security RSS pack |
 | `./run.sh search "query" --with-perplexity` | Deprecated audit flag; records Perplexity as skipped and never calls the paid API |
+| `./run.sh feature-eval` | Run deterministic feature-channel contract eval and write a receipt |
+| `./sanity.sh --feature-eval` | Same feature-channel eval through the sanity entrypoint |
 | `./sanity.sh --live-services` | Run the live service matrix for core providers, internal primitives, feed packs, optional lanes, and credential-aware skips |
 | `./sanity.sh --live-services --strict-optional` | Treat optional missing credentials, such as Readarr/NZB keys, as failures |
 | `./run.sh monitor` | Open the Real-time TUI Monitor |
@@ -377,6 +416,38 @@ The skill automatically analyzes queries for ambiguity.
 - If ambiguous (e.g., "apple"), it returns a JSON object with clarifying questions.
   - The calling agent should interpret this JSON and ask the user the questions.
 
+## How To Check Dogpile Is Working
+
+Use this sequence when changing Dogpile or assessing whether the skill is
+healthy. Each command writes or points to a concrete artifact; do not replace
+these checks with prose.
+
+| Layer | Command | Required artifact | What it proves | What it does not prove |
+|-------|---------|-------------------|----------------|------------------------|
+| Static/import smoke | `./skills/dogpile/sanity.sh --quick` | Terminal output `Result: PASS (quick)` | Local module imports, dependency discovery, sub-skill layout, and CLI help work | Live provider health or behavior |
+| Feature-channel eval | `./skills/dogpile/sanity.sh --feature-eval` or `./skills/dogpile/run.sh feature-eval` | `skills/dogpile/reports/feature-channel-eval-*/receipt.json` | Every feature channel has an explicit contract: Tau/model boundary, Brave, Brave questions, Perplexity retired, GitHub via Brave, ArXiv, YouTube via Brave plus transcript-only handoff, Fetcher, feeds, Wayback, Readarr, website ingestion, and synthesis | Live provider availability or semantic quality |
+| Skill fixture eval | `./skills/eval-skills/run.sh eval --skill dogpile --report-json /tmp/dogpile-eval.json --report-md /tmp/dogpile-eval.md` | `/tmp/dogpile-eval.json` and `/tmp/dogpile-eval.md` | Dogpile opts into the standard skill eval runner and its feature-channel contract eval passes through `run.sh` | Live provider health |
+| Live service matrix | `./skills/dogpile/sanity.sh --live-services` | `skills/dogpile/reports/live-service-matrix-*/receipt.json` | Current live status of required services and optional lanes: Tau boundary preflight, legacy SciLLM migration health, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS packs, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, full Tau provider DAG execution, Memory writes, or every source URL |
+| Live E2E | `./skills/dogpile/sanity.sh --live-e2e` | `skills/dogpile/reports/live-e2e-*/receipt.json` | A real Dogpile search can produce partial results, final report, synthesis, and default-off provider evidence | Optional feed/Wayback/Readarr/website-ingestion lanes |
+
+For feed credential auditing, use the feature-channel eval plus the local source
+audit:
+
+```bash
+uv run --project skills/dogpile python - <<'PY'
+from pathlib import Path
+import yaml
+root = Path("skills/dogpile")
+for path in sorted((root / "config/feed_packs").glob("*.yaml")):
+    data = yaml.safe_load(path.read_text()) or {}
+    print(path.name, "rss_sources=", len(data.get("sources", []) or []), "requires_api_key=false")
+security = yaml.safe_load((root / "resources/security.yaml").read_text()) or {}
+for item in security.get("resources", []):
+    if item.get("auth_required"):
+        print("auth_required:", item.get("name"), item.get("type"), item.get("api_url") or item.get("url"))
+PY
+```
+
 ## Live Sanity Evidence
 
 Dogpile requires non-mocked, receipt-backed sanity checks for the service
@@ -386,7 +457,7 @@ surface it claims. Use the smallest check that matches the question:
 |---------|----------------|------------------------|
 | `./sanity.sh --quick` | Local imports, command wiring, dependency presence, and sub-skill layout | Live provider health or semantic search quality |
 | `./sanity.sh --live-e2e` | End-to-end Dogpile search with Brave, Brave question fan-out, GitHub, ArXiv, YouTube, synthesis, and default-off providers | Optional feed/Wayback/Readarr/website-ingestion lanes |
-| `./sanity.sh --live-services` | Service matrix for scillm, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS feed packs, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, Memory writes, or every possible source URL |
+| `./sanity.sh --live-services` | Service matrix for the Tau provider boundary, legacy SciLLM migration health, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS feed packs, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, Memory writes, full Tau provider DAG execution, or every possible source URL |
 
 The live service matrix writes
 `reports/live-service-matrix-*/receipt.json` with `mocked: false`,

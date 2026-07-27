@@ -87,7 +87,7 @@ def search_youtube_transcript(video_id: str) -> Dict[str, Any]:
     """
     log_status(f"Fetching YouTube Transcript for {video_id}...")
     skill_dir = SKILLS_DIR / "ingest-youtube"
-    cmd = [str(skill_dir / "run.sh"), "get", "-i", video_id]
+    cmd = [str(skill_dir / "run.sh"), "get", "-i", video_id, "--no-enrich"]
 
     try:
         output = run_command(cmd)

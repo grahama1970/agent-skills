@@ -112,6 +112,10 @@ case "$1" in
         python3 "$SCRIPT_DIR/monitor.py"
     fi
     ;;
+  feature-eval)
+    shift
+    "${EXEC[@]}" "$SCRIPT_DIR/scripts/feature_channel_eval.py" "$@"
+    ;;
   *)
     # Run dogpile search
     # We use process substitution to tee stderr to the logfile AND back to stderr,

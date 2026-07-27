@@ -1,0 +1,235 @@
+{
+  "schema": "dogpile.live_service_matrix_sanity.v1",
+  "mocked": false,
+  "live": true,
+  "query": "retrieval augmented generation",
+  "strict_optional": false,
+  "duration_s": 34.61,
+  "summary": {
+    "passed": 14,
+    "failed": 0,
+    "blocked_by_systemic_failure": 0,
+    "not_run": 0,
+    "skipped": 0,
+    "active_family": null,
+    "latest_failure_signature": null
+  },
+  "credential_notes": {
+    "rss_feed_packs_require_api_keys": false,
+    "raw_or_vendor_threat_intel_feeds_may_require_api_keys": true,
+    "readarr_nzb_search_requires_one_of": [
+      "NZBGEEK_API_KEY",
+      "NZBD_GEEK_API_KEY"
+    ]
+  },
+  "checks": [
+    {
+      "name": "perplexity_retired_disabled",
+      "family": "retired_paid_provider",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Deterministic source check that Dogpile records Perplexity as skipped instead of adding a provider call.",
+      "proves": "The retired paid Perplexity lane is not wired into stage-1 provider execution.",
+      "does_not_prove": "Historical Perplexity API behavior."
+    },
+    {
+      "name": "tau_provider_boundary",
+      "family": "llm_orchestration",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Tau skill wrapper doctor and Tau runtime doctor.",
+      "proves": "Dogpile's required model-orchestration boundary is discoverable and Tau's runtime doctor can execute.",
+      "does_not_prove": "Full Dogpile synthesis through a Tau provider DAG or the quality of model ranking/summarization.",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/tau/run.sh",
+        "doctor"
+      ],
+      "metadata": {
+        "wrapper_returncode": 1,
+        "wrapper_ok": false,
+        "provider_live": false,
+        "runtime_status": "PASS"
+      }
+    },
+    {
+      "name": "legacy_scillm_fast_lane",
+      "family": "llm_orchestration",
+      "required": false,
+      "status": "passed",
+      "what_was_exercised": "Legacy Dogpile direct SciLLM fast analysis lane via search_codex_fast().",
+      "proves": "The current legacy adapter can reach local SciLLM and receive text.",
+      "does_not_prove": "The desired Tau provider boundary, full Dogpile synthesis through Tau, or provider-specific ranking quality."
+    },
+    {
+      "name": "brave_search",
+      "family": "web_search",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Dogpile Brave stage-1 web search through brave-search.",
+      "proves": "Brave API credentials, query normalization, subprocess call, and result parsing work.",
+      "does_not_prove": "Deep extraction quality for every Brave result.",
+      "metadata": {
+        "positive_count": 5,
+        "credential_present": true
+      }
+    },
+    {
+      "name": "brave_question_fanout",
+      "family": "web_search",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Concurrent Brave question fan-out that replaces retired Perplexity.",
+      "proves": "Dogpile can ask multiple Brave questions concurrently and receive at least one result set.",
+      "does_not_prove": "That every generated question is semantically optimal.",
+      "metadata": {
+        "succeeded": 2,
+        "credential_present": true
+      }
+    },
+    {
+      "name": "github_search",
+      "family": "code_search",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Dogpile GitHub repo/issues search through gh.",
+      "proves": "GitHub CLI auth, API access, search commands, and JSON parsing work.",
+      "does_not_prove": "Deep code search correctness for a selected repository.",
+      "metadata": {
+        "repos": 5,
+        "issues": 5
+      }
+    },
+    {
+      "name": "arxiv_search",
+      "family": "papers",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Dogpile ArXiv stage-1 paper search through the arxiv skill.",
+      "proves": "ArXiv skill invocation and result parsing work.",
+      "does_not_prove": "Full PDF extraction for every paper.",
+      "metadata": {
+        "positive_count": 10
+      }
+    },
+    {
+      "name": "youtube_search",
+      "family": "video",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Dogpile YouTube metadata search through ingest-youtube search_videos().",
+      "proves": "Brave-first YouTube discovery, yt-dlp fallback wiring, and result normalization can return current video IDs.",
+      "does_not_prove": "Transcript availability for every video, legacy enrichment, or Whisper fallback quality.",
+      "metadata": {
+        "positive_count": 5
+      }
+    },
+    {
+      "name": "fetcher_single_url",
+      "family": "fetch_extract",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Fetcher single-URL retrieval against https://example.com.",
+      "proves": "Dogpile's fetch/deep-extraction primitive can fetch a concrete URL and emit artifacts.",
+      "does_not_prove": "Whole-site crawling or Memory ingestion.",
+      "command": [
+        "bash",
+        "run.sh",
+        "get",
+        "https://example.com",
+        "--out",
+        "/home/graham/workspace/experiments/agent-skills/skills/dogpile/reports/live-service-matrix-20260727T170933Z/fetcher-example"
+      ],
+      "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/reports/live-service-matrix-20260727T170933Z/fetcher-example",
+      "metadata": {
+        "returncode": 0,
+        "summary_exists": true,
+        "text_artifact_count": 1
+      }
+    },
+    {
+      "name": "feed_pack_security_code",
+      "family": "feeds",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Dogpile optional RSS feed pack security_code.",
+      "proves": "Readable RSS feed monitors work without API keys and parse live items.",
+      "does_not_prove": "Raw IoC/TIP enrichment feeds or paid/vendor feeds.",
+      "metadata": {
+        "parsed_total": 11,
+        "error_total": 0,
+        "requires_api_key": false
+      }
+    },
+    {
+      "name": "feed_pack_security_code_extended",
+      "family": "feeds",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Dogpile optional RSS feed pack security_code_extended.",
+      "proves": "Readable RSS feed monitors work without API keys and parse live items.",
+      "does_not_prove": "Raw IoC/TIP enrichment feeds or paid/vendor feeds.",
+      "metadata": {
+        "parsed_total": 19,
+        "error_total": 0,
+        "requires_api_key": false
+      }
+    },
+    {
+      "name": "wayback_url_snapshot",
+      "family": "archive",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "Wayback availability API for http://example.com.",
+      "proves": "Dogpile can query the public archive lookup for a concrete URL.",
+      "does_not_prove": "Historical truth of arbitrary pages or snapshot content extraction.",
+      "metadata": {
+        "available": true,
+        "timestamp": "20260727140111"
+      }
+    },
+    {
+      "name": "readarr_nzb_search",
+      "family": "books",
+      "required": false,
+      "status": "passed",
+      "what_was_exercised": "Optional Readarr/NZB book search through ingest-book.",
+      "proves": "Configured Readarr/NZB search command can return a parsed result list.",
+      "does_not_prove": "Local library completeness or book quality.",
+      "metadata": {
+        "credential_present": true,
+        "result_count": 4
+      }
+    },
+    {
+      "name": "ingest_website_dry_run_handoff",
+      "family": "website_ingestion",
+      "required": true,
+      "status": "passed",
+      "what_was_exercised": "ingest-website dry-run handoff against https://example.com with one-page limit.",
+      "proves": "Dogpile can hand selected URLs to ingest-website without Memory writes.",
+      "does_not_prove": "Memory storage, QRA quality, or large crawl behavior.",
+      "command": [
+        "bash",
+        "run.sh",
+        "ingest",
+        "https://example.com",
+        "--dry-run",
+        "--output-dir",
+        "/home/graham/workspace/experiments/agent-skills/skills/dogpile/reports/live-service-matrix-20260727T170933Z/ingest-website-example",
+        "--max-pages",
+        "1",
+        "--depth",
+        "0",
+        "--delay",
+        "0"
+      ],
+      "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/reports/live-service-matrix-20260727T170933Z/ingest-website-example",
+      "metadata": {
+        "returncode": 0,
+        "artifact_count": 1,
+        "memory_write": false
+      }
+    }
+  ],
+  "status": "passed"
+}

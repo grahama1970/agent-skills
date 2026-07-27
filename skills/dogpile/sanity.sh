@@ -40,6 +40,14 @@ if [[ "$1" == "--live-services" ]]; then
     exit $?
 fi
 
+if [[ "$1" == "--feature-eval" ]]; then
+    shift
+    echo ""
+    echo "=== Feature Channel Eval ==="
+    "${PY[@]}" "$SCRIPT_DIR/scripts/feature_channel_eval.py" "$@"
+    exit $?
+fi
+
 # Check module structure
 echo ""
 echo "=== Module Structure Check ==="

@@ -22,6 +22,7 @@ provides:
   - ingest-youtube
 composes:
   - memory
+  - brave-search
   - extractor
   - taxonomy
   - task-monitor
@@ -32,7 +33,15 @@ composes:
 
 # YouTube Transcripts Skill
 
-Extract transcripts from YouTube videos with **three-tier fallback**:
+Extract transcripts from YouTube videos with **Brave-first video discovery** and
+**three-tier transcript fallback**:
+
+Discovery:
+
+1. **Brave Search** - preferred for finding relevant public YouTube videos from natural-language questions
+2. **yt-dlp `ytsearch`** - fallback when Brave is unavailable, uncredentialed, or returns no video URLs
+
+Transcript extraction:
 
 1. **Direct** - youtube-transcript-api (fastest)
 2. **Proxy** - Webshare residential proxy rotation (native integration, handles rate limits)
@@ -76,7 +85,8 @@ uv run python youtube_transcript.py get \
 | `--lang` | `-l` | Language code (default: en) |
 | `--no-proxy` | | Skip proxy tier |
 | `--no-whisper` | | Skip Whisper fallback tier |
-| `--no-enrich` | | Skip enrichment (summary + QRA) |
+| `--enrich` | | Opt into legacy transcript enrichment (summary + QRA) |
+| `--no-enrich` | | Keep enrichment disabled; this is the default |
 | `--learn` | | Store result to ArangoDB memory (off by default) |
 | `--scope` | `-s` | Memory scope for --learn (default: research) |
 | `--retries` | `-r` | Max retries per tier (default: 3) |
@@ -131,7 +141,9 @@ Tests IPRoyal proxy connectivity and IP rotation.
 
 **Method values:** `direct`, `proxy`, `whisper-local`, `whisper-api`, or `null` (if all failed)
 
-The `summary` and `qra` fields are populated by `/doc2qra` enrichment. Use `--no-enrich` to skip.
+The `summary` and `qra` fields stay empty by default. Legacy enrichment can be
+requested with `--enrich`, but model-backed enrichment should move behind Tau;
+do not extend direct SciLLM enrichment from this skill.
 
 ## Three-Tier Fallback
 
@@ -165,7 +177,7 @@ pip install youtube-transcript-api httpx yt-dlp openai faster-whisper rich
 ```
 
 - `youtube-transcript-api` - Tier 1 & 2
-- `httpx` - HTTP client (scillm enrichment, proxy IP checks)
+- `httpx` - HTTP client (proxy IP checks and legacy enrichment transport)
 - `yt-dlp` - Tier 3 audio download
 - `faster-whisper` - Tier 3 local transcription (CTranslate2, 4-8x faster than openai-whisper)
 - `openai` - Tier 3 API transcription (fallback if local fails)
