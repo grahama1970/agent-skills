@@ -50,6 +50,8 @@ BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
 BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
+BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
+WEBGPT_UNVERIFIED_CLEAN_OUTPUT = "missing_controlled_tab_id_or_contaminated_clean_output"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
 SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
 BROWSER_TRANSPORT_BLOCKERS = {
@@ -61,6 +63,8 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_PROVIDER_RATE_LIMITED,
     BROWSER_TOOL_UNSUPPORTED,
     BROWSER_ATTACHMENT_UNAVAILABLE,
+    BROWSER_SENTINEL_TRAILING_CONTENT,
+    WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
     SURF_BROWSER_LOCK_TIMEOUT,
     SURF_BROWSER_CONNECTION_UNAVAILABLE,
     "repo_access_blocked",
@@ -154,6 +158,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     browser_local_path_preflight: dict[str, Any] | None = None
     failure = ""
     recovery_packet: dict[str, Any] | None = None
+    response_quarantine: dict[str, Any] | None = None
     started = _now()
     try:
         prior_failures = [
@@ -372,6 +377,13 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         )
         if recovery_packet.get("failure_code") in BROWSER_TRANSPORT_BLOCKERS:
             status = "BLOCKED"
+        response_quarantine = _quarantine_failed_browser_response(
+            response_path=response_path,
+            recovery_packet=recovery_packet,
+            response_text=response_text,
+        )
+        if response_quarantine.get("quarantine_path"):
+            response_path = Path(str(response_quarantine["quarantine_path"]))
     if not ok and recovery_packet is None:
         recovery_packet = _handler_failure_recovery_packet(
             args,
@@ -418,6 +430,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "live": bool(commands),
         "provider_live": provider_live,
         "response_path": str(response_path),
+        "response_quarantine": response_quarantine,
         "raw_response_path": str(raw_path),
         "meta_path": str(meta_path),
         "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
@@ -477,6 +490,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "handler": handler,
             "response_path": str(response_path),
             "response_chars": len(response_text),
+            "response_quarantine": response_quarantine,
         },
         {
             "kind": "transport_metadata",
@@ -1248,6 +1262,7 @@ def _browser_failure_recovery_packet(
 ) -> dict[str, Any]:
     handler = str(args.handler)
     failure_code = _classify_browser_failure(
+        handler=handler,
         failure=failure,
         response_text=response_text,
         raw_text=raw_text,
@@ -1268,6 +1283,8 @@ def _browser_failure_recovery_packet(
             BROWSER_PROVIDER_RATE_LIMITED,
             BROWSER_TOOL_UNSUPPORTED,
             BROWSER_ATTACHMENT_UNAVAILABLE,
+            BROWSER_SENTINEL_TRAILING_CONTENT,
+            WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
         }
         and bool(bundle_paths)
         and can_attach
@@ -1327,8 +1344,60 @@ def _browser_failure_recovery_packet(
     }
 
 
+def _quarantine_failed_browser_response(
+    *,
+    response_path: Path,
+    recovery_packet: dict[str, Any],
+    response_text: str,
+) -> dict[str, Any]:
+    failure_code = str(recovery_packet.get("failure_code") or "browser_handler_failed")
+    quarantine_path: Path | None = None
+    if response_path.is_file():
+        label = (
+            "contaminated"
+            if failure_code
+            in {
+                WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
+                BROWSER_SENTINEL_TRAILING_CONTENT,
+                "stale_raw_capture",
+            }
+            else "unverified"
+        )
+        quarantine_path = _unique_quarantine_path(response_path.with_name(f"response.{label}.md"))
+        response_path.rename(quarantine_path)
+    quarantine = {
+        "schema": "ask.browser_failed_response_quarantine.v1",
+        "status": "QUARANTINED" if quarantine_path else "NO_RESPONSE_FILE",
+        "ok": False,
+        "provider_live": False,
+        "failure_code": failure_code,
+        "original_response_path": str(response_path),
+        "quarantine_path": str(quarantine_path) if quarantine_path else None,
+        "response_chars": len(response_text),
+        "caller_action": (
+            "Do not treat this browser prose as a clean seat response unless a later PASS receipt "
+            "replaces this quarantine artifact."
+        ),
+    }
+    quarantine_path_for_json = response_path.with_name("response.quarantine.json")
+    quarantine["quarantine_receipt_path"] = str(quarantine_path_for_json)
+    quarantine_path_for_json.write_text(json.dumps(quarantine, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return quarantine
+
+
+def _unique_quarantine_path(path: Path) -> Path:
+    if not path.exists():
+        return path
+    for index in range(2, 100):
+        candidate = path.with_name(f"{path.stem}-{index}{path.suffix}")
+        if not candidate.exists():
+            return candidate
+    raise RuntimeError(f"unable to allocate quarantine path near {path}")
+
+
 def _classify_browser_failure(
     *,
+    handler: str,
     failure: str,
     response_text: str,
     raw_text: str,
@@ -1365,6 +1434,10 @@ def _classify_browser_failure(
         return BROWSER_TOOL_UNSUPPORTED
     if BROWSER_ATTACHMENT_UNAVAILABLE in haystack or _response_denies_attachment_access(response_text):
         return BROWSER_ATTACHMENT_UNAVAILABLE
+    if _looks_webgpt_unverified_clean_output(handler, haystack, submit_meta):
+        return WEBGPT_UNVERIFIED_CLEAN_OUTPUT
+    if _looks_sentinel_trailing_content(haystack, submit_meta):
+        return BROWSER_SENTINEL_TRAILING_CONTENT
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
     if _looks_tab_identity_mismatch(haystack, submit_meta):
@@ -1617,6 +1690,31 @@ def _looks_stale_raw_capture(text: str, meta: dict[str, Any]) -> bool:
     return any(marker in text for marker in markers)
 
 
+def _looks_webgpt_unverified_clean_output(handler: str, text: str, meta: dict[str, Any]) -> bool:
+    if handler != "webgpt":
+        return False
+    if WEBGPT_UNVERIFIED_CLEAN_OUTPUT in text:
+        return True
+    if str(meta.get("failure") or "") == WEBGPT_UNVERIFIED_CLEAN_OUTPUT:
+        return True
+    if meta.get("response_proof_status") == "response_unproven" and meta.get("raw_contains_sentinel") is True:
+        controlled_tab = str(meta.get("controlled_tab_id") or "").strip()
+        return not controlled_tab
+    return False
+
+
+def _looks_sentinel_trailing_content(text: str, meta: dict[str, Any]) -> bool:
+    if str(meta.get("failure") or "") == BROWSER_SENTINEL_TRAILING_CONTENT:
+        return True
+    markers = (
+        "assistant response contains text after terminal sentinel",
+        "text after terminal sentinel",
+        "trailing text after terminal sentinel",
+        "content after terminal sentinel",
+    )
+    return any(marker in text for marker in markers)
+
+
 def _looks_browser_tab_read_timeout(text: str) -> bool:
     if BROWSER_TAB_READ_TIMEOUT in text:
         return True
@@ -1738,7 +1836,11 @@ def _recovery_next_command(
     meta_path: Path,
     prompt_path: Path,
 ) -> list[str]:
-    if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
+    if failure_code in {
+        BROWSER_ATTACHMENT_UNAVAILABLE,
+        BROWSER_SENTINEL_TRAILING_CONTENT,
+        WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
+    }:
         return []
     if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
         stale = _webgpt_stale_binding_details(submit_meta)
@@ -1908,6 +2010,8 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
         BROWSER_ATTACHMENT_UNAVAILABLE: "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
+        BROWSER_SENTINEL_TRAILING_CONTENT: "The browser provider output included text after the terminal sentinel, so the clean assistant turn is not attributable.",
+        WEBGPT_UNVERIFIED_CLEAN_OUTPUT: "WebGPT returned plausible text, but Surf could not prove the controlled tab or clean output attribution.",
         SURF_BROWSER_LOCK_TIMEOUT: "The Surf browser lock is held by another live command; the browser lane was not submitted.",
         SURF_BROWSER_CONNECTION_UNAVAILABLE: "The Surf native host or socket disconnected before the browser lane completed.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
@@ -1936,6 +2040,10 @@ def _auto_retry_blocked_reason(
         return "surf_runtime_command_mismatch_requires_repair"
     if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
         return "attachment_transport_must_be_repaired"
+    if failure_code == BROWSER_SENTINEL_TRAILING_CONTENT:
+        return "browser_terminal_sentinel_parser_requires_repair_or_fresh_tab"
+    if failure_code == WEBGPT_UNVERIFIED_CLEAN_OUTPUT:
+        return "webgpt_controlled_tab_or_clean_output_unproven"
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return "surf_browser_lock_owner_still_running"
     if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
@@ -1969,6 +2077,16 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return (
             "Do not retry the same attachment submission unchanged. Repair or replace this provider's "
             "attachment transport, then rerun a focused attachment check before using the lane."
+        )
+    if failure_code == BROWSER_SENTINEL_TRAILING_CONTENT:
+        return (
+            "Quarantine the browser output and rerun this lane in a fresh provider tab, or repair the "
+            "provider parser so only pre-sentinel attributable content is accepted."
+        )
+    if failure_code == WEBGPT_UNVERIFIED_CLEAN_OUTPUT:
+        return (
+            "Quarantine the WebGPT response. Rebind browser-oracle to a proven controlled ChatGPT tab "
+            "or rerun through Surf's controlled-tab recovery; do not import the unverified response.md."
         )
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return (
@@ -2009,6 +2127,8 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_PROVIDER_RATE_LIMITED,
         BROWSER_TOOL_UNSUPPORTED,
         BROWSER_ATTACHMENT_UNAVAILABLE,
+        BROWSER_SENTINEL_TRAILING_CONTENT,
+        WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
         SURF_BROWSER_LOCK_TIMEOUT,
         SURF_BROWSER_CONNECTION_UNAVAILABLE,
         "stale_raw_capture",
@@ -2281,6 +2401,7 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
                 submit_meta=receipt.get("submit_meta") if isinstance(receipt.get("submit_meta"), dict) else {},
             ),
             "recovery_packet_path": receipt.get("recovery_packet_path"),
+            "response_quarantine": receipt.get("response_quarantine"),
         }
         handler_receipts.append(indexed_receipt)
         if receipt.get("ok") is True and response_chars > 0:
@@ -2294,6 +2415,7 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
                     "failure": receipt.get("failure") or receipt.get("status"),
                     "failure_code": indexed_receipt.get("failure_code"),
                     "recovery_packet_path": indexed_receipt.get("recovery_packet_path"),
+                    "response_quarantine": indexed_receipt.get("response_quarantine"),
                 }
             )
     lines = [
@@ -2314,9 +2436,14 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
             ]
         )
         response_path = Path(str(receipt.get("response_path") or ""))
-        if response_path.is_file():
+        if receipt.get("ok") is True and response_path.is_file():
             text = response_path.read_text(encoding="utf-8").strip()
             lines.append(text[:2000])
+            lines.append("")
+        elif receipt.get("ok") is not True:
+            quarantine = receipt.get("response_quarantine") if isinstance(receipt.get("response_quarantine"), dict) else {}
+            quarantine_path = quarantine.get("quarantine_path") if isinstance(quarantine, dict) else None
+            lines.append(f"Failed seat output is not quoted. quarantine: `{quarantine_path or 'none'}`")
             lines.append("")
     summary_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     if handler_receipts and not failures and len(usable_responses) == len(handler_receipts):
@@ -2419,6 +2546,7 @@ def _roundtable_degradation_analysis(
             "failure_code": code,
             "failure": failure.get("failure"),
             "recovery_packet_path": recovery_packet_path or None,
+            "response_quarantine": failure.get("response_quarantine"),
             "next_command": next_command or None,
             "auto_retry_allowed": recovery_packet.get("auto_retry_allowed"),
             "auto_retry_blocked_reason": recovery_packet.get("auto_retry_blocked_reason"),

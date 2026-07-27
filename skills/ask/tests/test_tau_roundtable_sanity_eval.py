@@ -332,6 +332,7 @@ def test_worker_webclaude_refreshes_binding_after_new_url_materializes(tmp_path:
 
 def test_worker_classifies_kimi_capacity_busy_as_provider_limited() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webkimi",
         failure="Kimi provider capacity busy: System is currently busy / Capacity is busy. Please try again later.",
         response_text="",
         raw_text="System is currently busy. Please try again later.",
@@ -350,6 +351,7 @@ def test_worker_classifies_kimi_capacity_busy_as_provider_limited() -> None:
 
 def test_worker_does_not_treat_false_busy_metadata_as_provider_limited() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webkimi",
         failure="Error: Response timeout",
         response_text="",
         raw_text="",
@@ -376,6 +378,7 @@ def test_worker_does_not_treat_false_busy_metadata_as_provider_limited() -> None
 def test_worker_rejects_explicit_attachment_access_denials(response_text: str) -> None:
     assert tau_roundtable_worker._response_denies_attachment_access(response_text) is True
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
         failure="",
         response_text=response_text,
         raw_text=response_text,
@@ -669,8 +672,102 @@ def test_worker_preserves_degraded_webgpt_sentinel_response_after_focus_drift(tm
     assert receipt["recovery_packet"] is None
 
 
+def test_worker_quarantines_unverified_webgpt_response_md(tmp_path: Path) -> None:
+    request_file = tmp_path / "request.json"
+    request_file.write_text(json.dumps({"request": "Ask webgpt to review the bundle."}), encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    artifact_dir.mkdir(parents=True)
+    args = SimpleNamespace(
+        node_id="handler-webgpt",
+        handler="webgpt",
+        topology="concurrent",
+        workflow_mode="roundtable",
+        request_file=str(request_file),
+        browser_oracle_project="tau",
+        next_agent="join",
+        artifact_dir=str(artifact_dir),
+        surf_run=str(tmp_path / "surf-run.sh"),
+        browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
+        scillm_base_url="http://127.0.0.1:4001",
+        scillm_api_key="",
+        prior_node=[],
+        timeout=300,
+        stable_polls=2,
+        no_activate=True,
+        evidence=[],
+        codex_workspace="",
+        browser_model_preference="",
+    )
+    sentinel = "<<<WEBGPT_DONE:20260727T011747Z:6363a59e>>>"
+
+    def fake_run_cmd(command: list[str], *, cwd: Path, timeout: int) -> tau_roundtable_worker.CmdResult:
+        if "resolve" in command:
+            return tau_roundtable_worker.CmdResult(
+                command,
+                0,
+                json.dumps({"tab_id": "837362190", "conversation_url": "https://chatgpt.com/"}),
+                "",
+                0.01,
+            )
+        if "webgpt.submit" in command:
+            response_path = Path(command[command.index("--output") + 1])
+            raw_path = Path(command[command.index("--raw-output") + 1])
+            meta_path = Path(command[command.index("--meta-output") + 1])
+            response_path.write_text("Plausible but unverified WebGPT response.\n", encoding="utf-8")
+            raw_path.write_text(f"Plausible but unverified WebGPT response.\n{sentinel}\n", encoding="utf-8")
+            meta_path.write_text(
+                json.dumps(
+                    {
+                        "status": "failed",
+                        "failure": "missing_controlled_tab_id_or_contaminated_clean_output",
+                        "proof_status": "unknown_failure",
+                        "response_proof_status": "response_unproven",
+                        "sentinel": sentinel,
+                        "requested_tab_id": "837362190",
+                        "controlled_tab_id": None,
+                        "raw_contains_sentinel": True,
+                        "clean_contains_sentinel": False,
+                        "clean_contamination_markers": [],
+                        "tab_identity_preflight": {
+                            "ok": True,
+                            "tab_id": "837362190",
+                            "tab": {"id": "837362190", "url": "https://chatgpt.com/", "title": "ChatGPT"},
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            return tau_roundtable_worker.CmdResult(command, 1, "", "Terminated", 0.01)
+        return tau_roundtable_worker.CmdResult(command, 99, "", "unexpected command", 0.01)
+
+    original_run_cmd = tau_roundtable_worker._run_cmd
+    tau_roundtable_worker._run_cmd = fake_run_cmd
+    try:
+        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+    finally:
+        tau_roundtable_worker._run_cmd = original_run_cmd
+
+    assert result["exit_code"] == 0
+    assert not (artifact_dir / "response.md").exists()
+    quarantined = artifact_dir / "response.contaminated.md"
+    assert quarantined.read_text(encoding="utf-8") == "Plausible but unverified WebGPT response.\n"
+    quarantine_receipt = json.loads((artifact_dir / "response.quarantine.json").read_text(encoding="utf-8"))
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["ok"] is False
+    assert receipt["provider_live"] is False
+    assert receipt["failure_code"] == tau_roundtable_worker.WEBGPT_UNVERIFIED_CLEAN_OUTPUT
+    assert receipt["response_path"] == str(quarantined)
+    assert receipt["response_quarantine"]["quarantine_path"] == str(quarantined)
+    assert quarantine_receipt["failure_code"] == tau_roundtable_worker.WEBGPT_UNVERIFIED_CLEAN_OUTPUT
+    assert recovery["failure_code"] == tau_roundtable_worker.WEBGPT_UNVERIFIED_CLEAN_OUTPUT
+    assert recovery["next_command"] == []
+
+
 def test_browser_failure_classifier_keeps_tab_url_mismatch_distinct() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webclaude",
         failure="tab 837360921 URL mismatch: expected https://claude.ai/new, saw https://claude.ai/chat/live-url",
         response_text="",
         raw_text="",
@@ -692,6 +789,7 @@ def test_browser_failure_classifier_keeps_tab_url_mismatch_distinct() -> None:
 
 def test_browser_failure_classifier_marks_cloudflare_as_access_blocked() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
         failure="cloudflare_challenge",
         response_text="",
         raw_text="",
@@ -724,6 +822,7 @@ def test_browser_failure_classifier_marks_cloudflare_as_access_blocked() -> None
 
 def test_browser_failure_classifier_marks_provider_limit_distinct() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
         failure="ChatGPT is rate limited: too many requests; wait before retrying",
         response_text="",
         raw_text="You've hit your limit. Please try again later.",
@@ -753,8 +852,32 @@ def test_browser_failure_classifier_marks_provider_limit_distinct() -> None:
     )
 
 
+def test_browser_failure_classifier_marks_terminal_sentinel_trailing_content_distinct() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgemini",
+        failure="assistant response contains text after terminal sentinel",
+        response_text="",
+        raw_text="stale unrelated content after the terminal sentinel",
+        prompt_text="short prompt",
+        submit_meta={"status": "failed"},
+        commands=[{"returncode": 1, "stderr_excerpt": "assistant response contains text after terminal sentinel"}],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_SENTINEL_TRAILING_CONTENT
+    assert tau_roundtable_worker._requires_local_readable_bundle(failure_code) is False
+    assert (
+        tau_roundtable_worker._auto_retry_blocked_reason(
+            failure_code=failure_code,
+            bundle_paths=["/tmp/review-bundle.md"],
+            can_attach=True,
+        )
+        == "browser_terminal_sentinel_parser_requires_repair_or_fresh_tab"
+    )
+
+
 def test_browser_failure_classifier_ignores_failure_names_in_prompt() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
         failure="submit_failed",
         response_text="",
         raw_text="",
@@ -788,6 +911,7 @@ def test_browser_failure_classifier_keeps_socket_loss_distinct_from_provider_lim
     failure: str,
 ) -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
         failure=failure,
         response_text="",
         raw_text="",
@@ -821,6 +945,7 @@ def test_gemini_worker_timeout_covers_stall_retry_envelope(
 
 def test_browser_failure_classifier_marks_unknown_tool_as_runtime_mismatch() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
         failure="Error: Unknown tool: text",
         response_text="",
         raw_text="",
@@ -850,6 +975,7 @@ def test_browser_failure_classifier_marks_unknown_tool_as_runtime_mismatch() -> 
 
 def test_browser_failure_classifier_marks_invalid_tab_id_as_identity_failure() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgemini",
         failure="Error: Invalid tab ID: 837359725. Use 'surf tab.list' to see available tabs.",
         response_text="",
         raw_text="",

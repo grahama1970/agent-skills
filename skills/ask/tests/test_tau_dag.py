@@ -1866,7 +1866,7 @@ def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet
     fail_dir = artifacts / "handler-gpt-5-5"
     fail_dir.mkdir(parents=True)
     fail_response = fail_dir / "response.md"
-    fail_response.write_text("", encoding="utf-8")
+    fail_response.write_text("DO NOT IMPORT: failed lane prose.\n", encoding="utf-8")
     recovery_path = fail_dir / "handler-recovery-packet.json"
     recovery_path.write_text(
         json.dumps(
@@ -1950,6 +1950,7 @@ def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet
     summary = (join_dir / "roundtable-summary.md").read_text(encoding="utf-8")
     assert "## Degradation Analysis" in summary
     assert "scillm_auth_invalid_api_key" in summary
+    assert "DO NOT IMPORT" not in summary
 
 
 def test_run_tau_dag_bundle_synthesizes_degraded_join_when_tau_skips_join(monkeypatch, tmp_path: Path) -> None:
