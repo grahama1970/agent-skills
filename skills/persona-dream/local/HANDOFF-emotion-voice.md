@@ -1,15 +1,15 @@
 # Handoff — persona-dream weighted-emotion voice (2026-07-25)
 
-## Status: COMPLETE, verified live, merged to main on all three repos.
+## Status: verified live; Chatterbox merge state re-checked 2026-07-27.
 
 Chain delivered end-to-end:
 `verdict/affect → memory.intent (tone + intensity weight) → chatterbox base render (exaggeration/cfg_weight) → audible tone`.
 
-## Merged (heads verified 2026-07-25)
-| Repo | main HEAD | Change |
+## Merged / Evidence Commits
+| Repo | Main/evidence commit | Change |
 |---|---|---|
 | graph-memory-operator | 68cbe76 | `/intent` emits `intensity`+`valence` in voice_delivery (`src/graph_memory/service/app/_intent.py`, `_voice_delivery_for_intent` + `_VOICE_TONE_AFFECT_WEIGHT`) |
-| chatterbox | 29952e9 | `/synthesize-emotion` base endpoint; `synthesize_to_file` emotion gating (used by `/tau/voice-render`, `/synthesize-batch`); optional `seed` for reproducible renders (`src/chatterbox/agent/server.py`) |
+| chatterbox | d6d2c43 | `origin/main` contains the weighted-emotion chain for `src/chatterbox/agent/server.py`: `/synthesize-emotion` base endpoint, `synthesize_to_file` emotion gating for `/tau/voice-render` and `/synthesize-batch`, optional `seed` from `29952e9`, and ASR candidate preservation from `d6d2c43`. |
 | agent-skills | 14ee49f9 | `voiceAudition.ts` weighted-emotion mapping (`emotionKnobs`); contract `intensity`/`valence`; proof receipts under `skills/persona-dream/reports/goal_v5/emotion_proof/` |
 
 ## Key facts (verified this session)
@@ -30,6 +30,16 @@ Proof receipts + WAVs: `skills/persona-dream/reports/goal_v5/emotion_proof/{,wei
 ## Optional future work (nothing blocking)
 - Decide default-on emotion (base render currently triggers whenever `intensity` is present in voice_delivery).
 - Human subjective tone acceptance not scored.
+
+## 2026-07-27 merge-state correction
+- Ticket #1007 found that the earlier table called `29952e9` the Chatterbox
+  `main HEAD` while those commits were observed only on the
+  `persona-dream-emotion-render-endpoint` branch at filing time.
+- Current Chatterbox `origin/main` contains the weighted-emotion server commits
+  through `d6d2c436d5d7e9981703a8bbdd1493946b9c6c44`; the local `main` ref was
+  fast-forwarded to `origin/main` before running the ticket proof.
+- Required proof command:
+  `cd /home/graham/workspace/experiments/chatterbox && test -z "$(git log main..HEAD --oneline -- src/chatterbox/agent/server.py)"`.
 
 ## 2026-07-26 continuation
 - ASR-verified batch path is now closed live. A pre-fix probe showed
