@@ -18,6 +18,8 @@
 #  10  Unit tests pass
 #  11  IDLE ESCALATION: prolonged silence stops reporting as healthy
 #  12  HERDR PANE DISPATCH: real pane, real exit codes (skipped without Herdr)
+#  13  TICKET ROUTE: ordinary /ticket-filed issues reach the router
+#  14  BLOCKED-BY: cross-repo dependency edges fail closed
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -337,6 +339,120 @@ PY
   else
     bad "receipt does not name the monitor-herdr invocation"
   fi
+fi
+
+# --------------------------------------------------------------------------- #
+gate 13 "TICKET ROUTE — ordinary /ticket-filed issues reach the router"
+ROUTE_JSON="$("$UV_BIN" run --project "$SCRIPT_DIR" python - <<'PY' 2>/dev/null
+import json
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.environ["SANITY_SKILL_DIR"], "scripts"))
+from watchdog import config, registry
+
+
+def issue(labels, body=""):
+    return {"number": 1, "title": "t", "body": body, "labels": [{"name": n} for n in labels], "url": "u"}
+
+
+print(json.dumps({
+    "ticket": registry.classify_issue(issue(["agent-work", "type:bug", "route:backend_python_or_skill_runtime"])),
+    "no_ready_label": registry.classify_issue(issue(["type:bug", "route:backend_python_or_skill_runtime"])),
+    "needs_human": registry.classify_issue(issue(["agent-work", "needs-human"])),
+    "maintainer_blocked": registry.classify_issue(issue(["agent-work", "maintainer-blocked"])),
+    "upstream_blocked": registry.classify_issue(issue(["agent-work", "blocked:upstream"])),
+    "leased": registry.classify_issue(issue(["agent-work", "agent-active"])),
+    "marker_wins": registry.classify_issue(issue(["agent-work", "executor:local"], "project-watchdog-action:tau-handoff-dispatch start=x.json")),
+}))
+PY
+)"
+if jq -e '.ticket == "ticket_repair"' <<<"$ROUTE_JSON" >/dev/null 2>&1; then
+  ok "a /ticket-filed issue routes to ticket_repair"
+else
+  bad "a /ticket-filed issue is still unroutable: $(jq -rc . <<<"$ROUTE_JSON" 2>/dev/null)"
+fi
+if jq -e '.no_ready_label == null' <<<"$ROUTE_JSON" >/dev/null 2>&1; then
+  ok "an issue without agent-work is not routable"
+else
+  bad "issue without agent-work was routed"
+fi
+for key in needs_human maintainer_blocked upstream_blocked leased; do
+  if jq -e ".$key == null" <<<"$ROUTE_JSON" >/dev/null 2>&1; then
+    ok "hold label honoured: $key"
+  else
+    bad "hold label ignored: $key"
+  fi
+done
+if jq -e '.marker_wins == "tau_handoff_dispatch"' <<<"$ROUTE_JSON" >/dev/null 2>&1; then
+  ok "explicit body markers still take precedence"
+else
+  bad "body marker route regressed"
+fi
+
+# --------------------------------------------------------------------------- #
+gate 14 "BLOCKED-BY — cross-repo edges fail closed"
+BLOCK_JSON="$("$UV_BIN" run --project "$SCRIPT_DIR" python - <<'PY' 2>/dev/null
+import json
+import os
+import sys
+from unittest import mock
+
+sys.path.insert(0, os.path.join(os.environ["SANITY_SKILL_DIR"], "scripts"))
+from watchdog import blocked_by
+
+UP = "owner/upstream"
+
+
+def probe(states, apply=True):
+    text = "\n".join(f"blocked-by: {UP}#{n}" for n in states)
+    objs = {
+        n: blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, n), s, "t", s != "UNREADABLE")
+        for n, s in states.items()
+    }
+    issue = {"number": 9, "title": "t", "body": text, "labels": [], "url": "u"}
+    with (
+        mock.patch.object(blocked_by, "issue_dependency_text", return_value=text),
+        mock.patch.object(blocked_by, "read_upstream", side_effect=lambda r: objs[r.number]),
+        mock.patch.object(blocked_by.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(blocked_by.github, "issue_edit", return_value={"exit_code": 0, "stderr": ""}),
+    ):
+        return blocked_by.resolve_issue("s", issue, repo="owner/down", apply=apply).as_receipt_block()
+
+
+print(json.dumps({
+    "all_closed": probe({1: "CLOSED"}),
+    "one_open": probe({1: "CLOSED", 2: "OPEN"}),
+    "unreadable": probe({1: "UNREADABLE"}),
+    "dry_run": probe({1: "CLOSED"}, apply=False),
+    "parsed": [str(r) for r in blocked_by.parse_blocked_by(f"blocked-by: {UP}#1\nsee {UP}#2 for context")],
+}))
+PY
+)"
+if jq -e '.all_closed.released == true' <<<"$BLOCK_JSON" >/dev/null 2>&1; then
+  ok "all upstreams closed -> issue released"
+else
+  bad "resolved dependency did not release the issue"
+fi
+if jq -e '.one_open.released == false and (.one_open.still_blocking | length == 1)' <<<"$BLOCK_JSON" >/dev/null 2>&1; then
+  ok "any open upstream keeps the issue blocked"
+else
+  bad "issue released while an upstream was still open"
+fi
+if jq -e '.unreadable.released == false' <<<"$BLOCK_JSON" >/dev/null 2>&1; then
+  ok "unreadable upstream counts as still blocking (fail closed)"
+else
+  bad "unreadable upstream was treated as resolved"
+fi
+if jq -e '.dry_run.released == false' <<<"$BLOCK_JSON" >/dev/null 2>&1; then
+  ok "dry run never releases"
+else
+  bad "dry run mutated"
+fi
+if jq -e '.parsed == ["owner/upstream#1"]' <<<"$BLOCK_JSON" >/dev/null 2>&1; then
+  ok "bare issue mentions do not create dependency edges"
+else
+  bad "a prose mention created a dependency edge: $(jq -rc .parsed <<<"$BLOCK_JSON")"
 fi
 
 # --------------------------------------------------------------------------- #

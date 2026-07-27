@@ -68,20 +68,62 @@ subagents so individual projects do not each invent their own cron loop.
 Exit codes: `0` success or deliberate refusal, `1` operational failure,
 `2` caller error (unknown project id, invalid state name).
 
+## Routing: which issues are eligible
+
+An issue must carry `agent-work` and none of the hold labels
+(`agent-active`, `agent-blocked`, `needs-human`, `maintainer-blocked`,
+`next:human`, `blocked:upstream`, `status:deferred`). Eligible issues take the
+first matching route:
+
+| Route | Condition | Dispatch |
+| --- | --- | --- |
+| `add_tau_coder_command_spec` | `next:coder` + `executor:local` + repair marker in body | `tau handoff-command-loop` |
+| `tau_handoff_dispatch` | `executor:local` + handoff marker in body | `tau handoff-command-loop` |
+| `ticket_repair` | anything else carrying `agent-work` | `tau self-fix tick --repo R --issue N` |
+
+`ticket_repair` is the route ordinary `/ticket`-filed tickets take. `/ticket`
+stamps `agent-work` at file time for any ticket with a concrete `route:` whose
+type is not `question` or `triage`; those two are human-first by definition and
+an unknown route has nowhere to be sent.
+
+Projects whose `runner_kind` is not `tau-command-loop` are refused by name
+rather than handed to a runner that cannot accept an issue number.
+
+## Cross-repo dependencies
+
+A ticket blocked on another project declares the edge machine-readably:
+
+```bash
+skills/ticket/run.sh block 149 \
+  --reason reason.md \
+  --blocked-by grahama1970/graph-memory-operator#61 \
+  --release
+```
+
+That validates the reference, refuses one that cannot be read, adds
+`blocked:upstream`, and comments `blocked-by: owner/repo#N`.
+
+Every tick then polls blocked issues **before** routing. When all declared
+upstreams are closed it comments the resolution, removes `blocked:upstream`,
+and the issue returns to the routable pool on the next tick. Any upstream that
+is open — or unreadable — keeps it blocked. Unreadable never means resolved:
+releasing a ticket whose dependency could not be checked is worse than waiting.
+
+Refs are only recognised in the exact `blocked-by: owner/repo#N` form, so prose
+mentioning an issue does not silently create a dependency.
+
 ## Troubleshooting: the watchdog runs but never dispatches
 
 `status: NOOP, stop_reason: no_routable_issues` on every tick means the scan
 succeeded and matched nothing. Check, in order:
 
-1. **Label vocabulary.** Routing requires `agent-work` *plus* either
-   (`next:coder` + `executor:local` + repair marker) or
-   (`executor:local` + handoff marker). Tickets filed by `/ticket` carry
-   `type:*` / `route:*` labels instead and will never match.
-   `gh issue list --repo <repo> --label agent-work` returning `0` confirms it.
-2. **State gates.** `./run.sh status` — both `global.state` and the project's
+1. **`agent-work` label.** `gh issue list --repo <repo> --label agent-work`.
+   Tickets filed before 2026-07-27 predate the stamping and will not carry it.
+2. **Hold labels.** Any of the hold labels above parks a ticket deliberately.
+3. **State gates.** `./run.sh status` — both `global.state` and the project's
    state must be `active`.
-3. **Lease labels.** Issues carrying `agent-active` or `agent-blocked` are
-   skipped by design until a human clears them.
+4. **Upstream blocks.** `gh issue list --label blocked:upstream` shows what is
+   waiting on another repo; the receipt's `unblocked` block shows why.
 
 A failed scan is *never* reported as `NOOP`. If `gh` cannot reach GitHub the
 tick fails with `status: BLOCKED` and a non-zero exit.

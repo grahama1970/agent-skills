@@ -121,6 +121,12 @@ BLOCKED_LABEL = "agent-blocked"
 DONE_LABEL = "agent-done"
 READY_LABEL = "agent-work"
 
+#: Labels that mean a human owns the next decision. Routable work must carry
+#: none of these, so a maintainer parking a ticket is always honoured.
+HUMAN_HOLD_LABELS = frozenset(
+    {"needs-human", "maintainer-blocked", "next:human", "blocked:upstream", "status:deferred"}
+)
+
 #: A lock older than this is treated as abandoned by a crashed or killed tick.
 LOCK_STALE_SECONDS = 900
 
