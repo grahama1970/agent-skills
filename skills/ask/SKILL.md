@@ -148,10 +148,16 @@ project's deterministic proof command or artifact validation. Treat `DEGRADED`,
 peer receipts, read the recovery packet, and rerun only the affected lane or
 launch a new round when appropriate.
 
-Before launching a costly live browser panel, project agents may run a
-read-only provider availability probe. It inspects existing provider tabs for
-visible rate-limit or capacity banners and writes a JSON report; it does not
-submit prompts:
+Before launching a costly live browser panel, Ask now runs a standard read-only
+provider availability probe automatically. It inspects existing provider tabs
+for visible rate-limit or capacity banners and writes
+`<run_dir>/browser-provider-availability.json`; it does not submit prompts. If
+the report is `NEEDS_ATTENTION` or `ERROR`, Ask exits before creating fresh
+browser tabs or dispatching Tau, with `blocked_reason:
+browser_provider_unavailable_preflight`, `failure_code`, `limited_providers`,
+and `next_command` in the top-level execution receipt.
+
+Project agents can also run the same probe manually before a planned panel:
 
 ```bash
 ./run.sh browser-availability \
@@ -327,6 +333,16 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   lock timeout, cleanup policy, and cleanup attempts. For browser roundtables
   and competitions, validate this file together with Tau receipts and per-lane
   node receipts; command exit status alone is not proof.
+- **Browser cooldown evidence**: preserve
+  `browser-provider-availability.json`. Ask writes this before browser tab
+  lifecycle provisioning for executed browser roundtables and competitions. A
+  visible WebGPT "Too many requests", WebGrok limit countdown, Kimi/Grok
+  "System is currently busy", or similar provider banner blocks the launch
+  before any prompt is submitted. That provider is unavailable for this run;
+  rerun the availability probe after the cooldown and continue with available
+  participants when the workflow allows it. Stale-tab read timeouts appear as
+  `probe_degraded`; they are diagnostic unless every checked tab for that
+  provider fails to read.
 - **Surf lock behavior**: Tau may launch browser handler workers concurrently,
   but Surf browser operations share `/tmp/surf.sock` and must wait on the Surf
   lock. Ask emits long `--browser-lock-timeout` / `--lock-timeout` envelopes so

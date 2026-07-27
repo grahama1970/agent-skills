@@ -2524,6 +2524,23 @@ def test_tau_dag_cli_json_reports_degraded_join_path(monkeypatch, tmp_path: Path
             "join_artifact_path": str(join_path),
         }
 
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "_probe_browser_provider_availability",
+        lambda *args, **kwargs: {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "AVAILABLE_PREFLIGHT",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "providers": {},
+        },
+    )
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "_provision_browser_lifecycle",
+        lambda *args, **kwargs: {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"},
+    )
     monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_run_tau_dag_bundle)
     result = CliRunner().invoke(
         tau_dag_cli.app,
@@ -2742,6 +2759,18 @@ def test_browser_tab_lifecycle_failure_blocks_tau_execution(monkeypatch, tmp_pat
     def unexpected_tau_execution(*args, **kwargs):
         raise AssertionError("Tau execution should not start when fresh browser lifecycle is blocked")
 
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "_probe_browser_provider_availability",
+        lambda *args, **kwargs: {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "AVAILABLE_PREFLIGHT",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "providers": {},
+        },
+    )
     monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", fake_provision)
     monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", unexpected_tau_execution)
 
@@ -2774,6 +2803,126 @@ def test_browser_tab_lifecycle_failure_blocks_tau_execution(monkeypatch, tmp_pat
     payload = json.loads(result.stdout)
     assert payload["execution"]["status"] == "BLOCKED"
     assert payload["execution"]["blocked_reason"] == "browser_tab_lifecycle_failed"
+    assert payload["execution"]["no_tau_execution"] is True
+
+
+def test_roundtable_browser_availability_blocks_before_lifecycle_and_tau(monkeypatch, tmp_path: Path) -> None:
+    def fake_availability(*args, **kwargs):
+        return {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "NEEDS_ATTENTION",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "requested_providers": ["webgpt", "webclaude"],
+            "providers": {
+                "webgpt": {"provider_limited": True, "checked_tabs": [{"tab_id": "837362610"}]},
+                "webclaude": {"provider_limited": False, "checked_tabs": []},
+            },
+            "path": str(tmp_path / "runs" / "browser-provider-availability.json"),
+        }
+
+    def unexpected_lifecycle(*args, **kwargs):
+        raise AssertionError("Browser lifecycle should not start when provider availability blocks")
+
+    def unexpected_tau_execution(*args, **kwargs):
+        raise AssertionError("Tau execution should not start when provider availability blocks")
+
+    monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
+    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", unexpected_lifecycle)
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", unexpected_tau_execution)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "run",
+            "Roundtable webgpt and webclaude.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "blocked-browser-availability",
+            "--immutable-goal",
+            "Do not submit browser prompts while a requested provider is rate limited.",
+            "--handler",
+            "webgpt",
+            "--handler",
+            "webclaude",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 4
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "NEEDS_ATTENTION"
+    assert payload["live"] is True
+    assert payload["browser_tab_lifecycle"] == {"status": "skipped", "mode": "auto"}
+    assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
+    assert payload["execution"]["blocked_reason"] == "browser_provider_unavailable_preflight"
+    assert payload["execution"]["failure_code"] == "browser_provider_rate_limited"
+    assert payload["execution"]["limited_providers"] == ["webgpt"]
+    assert payload["execution"]["no_tau_execution"] is True
+    assert "browser-availability" in payload["execution"]["next_command"]
+
+
+def test_compete_browser_availability_blocks_before_lifecycle_and_tau(monkeypatch, tmp_path: Path) -> None:
+    def fake_availability(*args, **kwargs):
+        return {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "NEEDS_ATTENTION",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "requested_providers": ["webgpt", "webkimi"],
+            "providers": {
+                "webgpt": {"provider_limited": True, "checked_tabs": [{"tab_id": "837362610"}]},
+                "webkimi": {"provider_limited": False, "checked_tabs": []},
+            },
+        }
+
+    def unexpected_lifecycle(*args, **kwargs):
+        raise AssertionError("Browser lifecycle should not start when provider availability blocks")
+
+    def unexpected_tau_execution(*args, **kwargs):
+        raise AssertionError("Tau execution should not start when provider availability blocks")
+
+    monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
+    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", unexpected_lifecycle)
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", unexpected_tau_execution)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "compete",
+            "Each candidate must answer PING_RESULT: 4.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "blocked-compete-browser-availability",
+            "--immutable-goal",
+            "Do not submit competition browser prompts while a requested provider is rate limited.",
+            "--handler",
+            "webgpt",
+            "--handler",
+            "webkimi",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 4
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "NEEDS_ATTENTION"
+    assert payload["browser_tab_lifecycle"] == {"status": "skipped", "mode": "auto"}
+    assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
+    assert payload["execution"]["blocked_reason"] == "browser_provider_unavailable_preflight"
+    assert payload["execution"]["limited_providers"] == ["webgpt"]
     assert payload["execution"]["no_tau_execution"] is True
 
 

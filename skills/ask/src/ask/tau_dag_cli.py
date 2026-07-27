@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -32,6 +33,9 @@ from .tau_dag import (
 load_dotenv_once()
 
 app = typer.Typer(help="Compile /ask requests into strict Tau DAGs.")
+
+ASK_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_BROWSER_AVAILABILITY_SCRIPT = ASK_ROOT / "scripts" / "probe_browser_provider_availability.py"
 
 BROWSER_FRESH_URLS = {
     "webgpt": "https://chatgpt.com/",
@@ -193,20 +197,26 @@ def run(
     )
     bundle = compile_tau_dag_bundle(input_payload)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
+    browser_availability = _skipped_browser_availability("not_executing" if not execute else "not_checked")
     if bundle.get("status") != "NEEDS_INTERVIEW" and execute:
-        lifecycle = _provision_browser_lifecycle(
+        browser_availability = _probe_browser_provider_availability(
             input_payload,
-            mode=browser_tab_lifecycle,
             run_dir=Path(str(bundle["run_dir"])),
         )
-        if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
-            input_payload = replace(
+        if not _browser_availability_blocks(browser_availability):
+            lifecycle = _provision_browser_lifecycle(
                 input_payload,
-                ask_id=Path(str(bundle["run_dir"])).name,
-                handler_projects=tuple(lifecycle["handler_projects"]),
+                mode=browser_tab_lifecycle,
+                run_dir=Path(str(bundle["run_dir"])),
             )
-            bundle = compile_tau_dag_bundle(input_payload)
-            lifecycle["run_dir"] = str(bundle["run_dir"])
+            if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
+                input_payload = replace(
+                    input_payload,
+                    ask_id=Path(str(bundle["run_dir"])).name,
+                    handler_projects=tuple(lifecycle["handler_projects"]),
+                )
+                bundle = compile_tau_dag_bundle(input_payload)
+                lifecycle["run_dir"] = str(bundle["run_dir"])
     provider_gate = None
     execution = None
     exit_code = 0
@@ -241,7 +251,10 @@ def run(
         if require_provider_calls and provider_gate.get("ok") is not True:
             exit_code = 3
         elif execute:
-            if lifecycle.get("status") == "BLOCKED":
+            if _browser_availability_blocks(browser_availability):
+                execution = browser_availability_blocked_execution(browser_availability)
+                exit_code = 4
+            elif lifecycle.get("status") == "BLOCKED":
                 execution = browser_lifecycle_blocked_execution(lifecycle)
                 exit_code = 4
             elif input_payload.handlers and input_payload.workflow_mode == "compete":
@@ -288,6 +301,7 @@ def run(
     output_live = bool(
         (isinstance(execution, dict) and execution.get("live") is True)
         or (isinstance(provider_gate, dict) and provider_gate.get("live") is True)
+        or (isinstance(browser_availability, dict) and browser_availability.get("live") is True)
     )
     output = {
         "schema": "ask.tau_dag_cli_result.v1",
@@ -301,6 +315,7 @@ def run(
         or bool(isinstance(execution, dict) and execution.get("provider_live") is True),
         "bundle": bundle,
         "provider_gate": provider_gate,
+        "browser_provider_availability": browser_availability,
         "browser_tab_lifecycle": lifecycle,
         "execution": execution,
         "join_artifact_path": execution.get("join_artifact_path") if isinstance(execution, dict) else None,
@@ -405,20 +420,26 @@ def compete(
     )
     bundle = compile_tau_dag_bundle(input_payload)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
+    browser_availability = _skipped_browser_availability("not_executing" if not execute else "not_checked")
     if bundle.get("status") != "NEEDS_INTERVIEW" and execute:
-        lifecycle = _provision_browser_lifecycle(
+        browser_availability = _probe_browser_provider_availability(
             input_payload,
-            mode=browser_tab_lifecycle,
             run_dir=Path(str(bundle["run_dir"])),
         )
-        if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
-            input_payload = replace(
+        if not _browser_availability_blocks(browser_availability):
+            lifecycle = _provision_browser_lifecycle(
                 input_payload,
-                ask_id=Path(str(bundle["run_dir"])).name,
-                handler_projects=tuple(lifecycle["handler_projects"]),
+                mode=browser_tab_lifecycle,
+                run_dir=Path(str(bundle["run_dir"])),
             )
-            bundle = compile_tau_dag_bundle(input_payload)
-            lifecycle["run_dir"] = str(bundle["run_dir"])
+            if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
+                input_payload = replace(
+                    input_payload,
+                    ask_id=Path(str(bundle["run_dir"])).name,
+                    handler_projects=tuple(lifecycle["handler_projects"]),
+                )
+                bundle = compile_tau_dag_bundle(input_payload)
+                lifecycle["run_dir"] = str(bundle["run_dir"])
     provider_gate = None
     execution = None
     exit_code = 0
@@ -442,7 +463,10 @@ def compete(
         gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         provider_gate["path"] = str(gate_path)
         if execute:
-            if lifecycle.get("status") == "BLOCKED":
+            if _browser_availability_blocks(browser_availability):
+                execution = browser_availability_blocked_execution(browser_availability)
+                exit_code = 4
+            elif lifecycle.get("status") == "BLOCKED":
                 execution = browser_lifecycle_blocked_execution(lifecycle)
                 exit_code = 4
             else:
@@ -476,11 +500,13 @@ def compete(
         "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),
         "ok": exit_code == 0,
         "mocked": False,
-        "live": bool(isinstance(execution, dict) and execution.get("live") is True),
+        "live": bool(isinstance(execution, dict) and execution.get("live") is True)
+        or bool(isinstance(browser_availability, dict) and browser_availability.get("live") is True),
         "provider_live": bool(isinstance(execution, dict) and execution.get("provider_live") is True),
         "bundle": bundle,
         "provider_gate": provider_gate,
         "execution": execution,
+        "browser_provider_availability": browser_availability,
         "browser_tab_lifecycle": lifecycle,
     }
     if json_output:
@@ -488,6 +514,171 @@ def compete(
     else:
         _print_text(output)
     raise typer.Exit(exit_code)
+
+
+def _browser_handlers(input_payload: Any) -> list[str]:
+    seen: set[str] = set()
+    handlers: list[str] = []
+    for handler in getattr(input_payload, "handlers", ()) or ():
+        if handler in BROWSER_FRESH_URLS and handler not in seen:
+            seen.add(handler)
+            handlers.append(handler)
+    return handlers
+
+
+def _skipped_browser_availability(reason: str) -> dict[str, Any]:
+    return {
+        "schema": "ask.browser_provider_availability.v1",
+        "status": "skipped",
+        "mocked": False,
+        "live": False,
+        "read_only": True,
+        "reason": reason,
+    }
+
+
+def _probe_browser_provider_availability(
+    input_payload: Any,
+    *,
+    run_dir: Path,
+    timeout_seconds: float = 180.0,
+) -> dict[str, Any]:
+    handlers = _browser_handlers(input_payload)
+    if not handlers:
+        report = _skipped_browser_availability("no_browser_handlers")
+        _write_browser_availability(run_dir, report)
+        return report
+
+    script = Path(os.environ.get("ASK_BROWSER_AVAILABILITY_SCRIPT", str(DEFAULT_BROWSER_AVAILABILITY_SCRIPT)))
+    output_path = run_dir / "browser-provider-availability.json"
+    command = [sys.executable, str(script)]
+    for handler in handlers:
+        command.extend(["--provider", handler])
+    command.extend(["--output", str(output_path), "--max-tabs-per-provider", "2", "--json"])
+
+    started = time.time()
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=str(ASK_ROOT),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout_seconds,
+            check=False,
+        )
+        command_receipt = {
+            "command": command,
+            "returncode": completed.returncode,
+            "stdout": completed.stdout[:20000],
+            "stderr": completed.stderr[:8000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": False,
+        }
+    except subprocess.TimeoutExpired as exc:
+        command_receipt = {
+            "command": command,
+            "returncode": 124,
+            "stdout": str(exc.stdout or "")[:20000],
+            "stderr": str(exc.stderr or "browser availability probe timed out")[:8000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": True,
+        }
+    except OSError as exc:
+        command_receipt = {
+            "command": command,
+            "returncode": 127,
+            "stdout": "",
+            "stderr": str(exc)[:4000],
+            "duration_seconds": round(time.time() - started, 3),
+            "timed_out": False,
+        }
+
+    report: dict[str, Any]
+    if output_path.is_file():
+        try:
+            report = json.loads(output_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            report = {
+                "schema": "ask.browser_provider_availability.v1",
+                "status": "ERROR",
+                "mocked": False,
+                "live": True,
+                "read_only": True,
+                "error": f"browser_availability_report_invalid_json: {exc}",
+            }
+    else:
+        report = {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "ERROR",
+            "mocked": False,
+            "live": False,
+            "read_only": True,
+            "error": "browser_availability_report_missing",
+        }
+
+    report["path"] = str(output_path)
+    report["requested_providers"] = handlers
+    report["command_receipt"] = command_receipt
+    if command_receipt["returncode"] != 0 and report.get("status") != "NEEDS_ATTENTION":
+        report["status"] = "ERROR"
+        report.setdefault("error", "browser_availability_probe_failed")
+    _write_browser_availability(run_dir, report)
+    return report
+
+
+def _browser_availability_blocks(report: dict[str, Any]) -> bool:
+    if report.get("status") in {"NEEDS_ATTENTION", "ERROR"}:
+        return True
+    providers = report.get("providers")
+    if isinstance(providers, dict):
+        return any(isinstance(payload, dict) and payload.get("provider_limited") is True for payload in providers.values())
+    return False
+
+
+def browser_availability_blocked_execution(report: dict[str, Any]) -> dict[str, Any]:
+    limited: list[str] = []
+    providers = report.get("providers")
+    if isinstance(providers, dict):
+        limited = [
+            name
+            for name, payload in providers.items()
+            if isinstance(payload, dict) and payload.get("provider_limited") is True
+        ]
+    failure_code = "browser_provider_rate_limited" if limited else "browser_provider_availability_probe_failed"
+    return {
+        "schema": "ask.tau_dag_execution.v1",
+        "status": "NEEDS_ATTENTION",
+        "ok": False,
+        "mocked": False,
+        "live": bool(report.get("live") is True),
+        "provider_live": False,
+        "blocked_reason": "browser_provider_unavailable_preflight",
+        "failure_code": failure_code,
+        "limited_providers": limited,
+        "no_tau_execution": True,
+        "message": (
+            "Ask did not launch Tau or submit browser prompts because the read-only browser provider "
+            "availability preflight found a visible cooldown/throttle state or could not complete."
+        ),
+        "browser_provider_availability": report,
+        "next_command": (
+            "Wait for the named provider cooldown to clear, rerun `skills/ask/run.sh browser-availability "
+            "--provider <provider> --json`, then rerun the Ask DAG with the same immutable goal."
+        ),
+        "ticket_instruction": (
+            "If this report is missing the provider, tab id, visible text excerpt, failure_code, or next_command, "
+            "file a $ticket to $ask at agent-skills@main with the Ask run_dir and browser-provider-availability.json."
+        ),
+    }
+
+
+def _write_browser_availability(run_dir: Path, report: dict[str, Any]) -> None:
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "browser-provider-availability.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _provision_browser_lifecycle(
@@ -847,6 +1038,9 @@ def _print_text(output: dict[str, object]) -> None:
     provider_gate = output.get("provider_gate")
     if isinstance(provider_gate, dict):
         typer.echo(f"provider_gate: {provider_gate.get('status')}")
+    browser_availability = output.get("browser_provider_availability")
+    if isinstance(browser_availability, dict):
+        typer.echo(f"browser_provider_availability: {browser_availability.get('status')}")
     execution = output.get("execution")
     if isinstance(execution, dict):
         typer.echo(f"execution_status: {execution.get('status')}")

@@ -31,15 +31,15 @@ PROVIDERS: dict[str, ProviderProbe] = {
     ),
     "webclaude": ProviderProbe(
         hosts=("claude.ai",),
-        limited_pattern=r"rate limit|capacity|try again later|too many requests",
+        limited_pattern=r"claude is at capacity|rate limit(?:ed)?|too many requests|you'?ve reached.*limit",
     ),
     "webkimi": ProviderProbe(
         hosts=("kimi.com",),
-        limited_pattern=r"system is currently busy|capacity is busy|try again later|too many requests",
+        limited_pattern=r"system is currently busy|capacity is busy|too many requests",
     ),
     "webgemini": ProviderProbe(
         hosts=("gemini.google.com",),
-        limited_pattern=r"rate limit|try again later|too many requests|temporarily unavailable",
+        limited_pattern=r"rate limit(?:ed)?|too many requests|temporarily unavailable|you'?ve reached.*limit",
     ),
     "webgrok": ProviderProbe(
         hosts=("grok.com", "x.com"),
@@ -150,8 +150,12 @@ def probe(
     report["status"] = (
         "NEEDS_ATTENTION"
         if any(payload.get("provider_limited") for payload in report["providers"].values())
+        else "ERROR"
+        if any(payload.get("probe_failed") for payload in report["providers"].values())
         else "AVAILABLE_PREFLIGHT"
     )
+    if report["status"] == "ERROR":
+        report["error"] = "browser_provider_probe_failed"
     report["finished_at_unix"] = int(time.time())
     return report
 
@@ -175,6 +179,9 @@ def _probe_provider(
         "tabs": provider_tabs[:25],
         "checked_tabs": checked,
         "provider_limited": any(item.get("limited") is True for item in checked),
+        "probe_degraded": any(item.get("returncode") != 0 for item in checked),
+        "probe_failed": bool(checked) and all(item.get("returncode") != 0 for item in checked),
+        "failure_code": _provider_probe_failure_code(checked),
         "read_only": True,
     }
 
@@ -189,13 +196,22 @@ def _check_tab(*, surf_run: Path, tab_id: str, pattern: str) -> dict[str, Any]:
         f"limited: /{pattern}/i.test(text)"
         "});"
     )
-    proc = _run([str(surf_run), "js", js, "--tab-id", tab_id, "--no-activate"], timeout=45)
+    proc = _run([str(surf_run), "js", js, "--tab-id", tab_id, "--no-activate"], timeout=20)
     payload: dict[str, Any] = {"tab_id": tab_id, **_proc_summary(proc)}
     if proc.returncode == 0:
         decoded = _decode_surf_js_stdout(proc.stdout)
         if isinstance(decoded, dict):
             payload.update(decoded)
     return payload
+
+
+def _provider_probe_failure_code(checked: list[dict[str, Any]]) -> str | None:
+    failures = [item for item in checked if item.get("returncode") != 0]
+    if not failures:
+        return None
+    if any(item.get("timed_out") is True for item in failures):
+        return "browser_provider_probe_timeout"
+    return "browser_provider_probe_failed"
 
 
 def _candidate_tab_ids(provider_tabs: list[dict[str, Any]], explicit_tab_ids: list[str], max_tabs: int) -> list[str]:
@@ -264,7 +280,17 @@ def _decode_surf_js_stdout(stdout: str) -> Any:
 
 
 def _run(command: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=timeout)
+    try:
+        return subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=124,
+            stdout=str(exc.stdout or ""),
+            stderr=str(exc.stderr or f"command timed out after {timeout}s"),
+        )
+    except OSError as exc:
+        return subprocess.CompletedProcess(args=command, returncode=127, stdout="", stderr=str(exc))
 
 
 def _proc_summary(proc: subprocess.CompletedProcess[str]) -> dict[str, Any]:
@@ -272,6 +298,7 @@ def _proc_summary(proc: subprocess.CompletedProcess[str]) -> dict[str, Any]:
         "returncode": proc.returncode,
         "stderr_tail": proc.stderr[-1000:],
         "stdout_tail": proc.stdout[-1000:],
+        "timed_out": proc.returncode == 124,
     }
 
 

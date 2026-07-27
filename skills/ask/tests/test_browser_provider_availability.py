@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -65,6 +66,107 @@ def test_probe_reports_available_when_checked_tabs_have_no_limit_text(tmp_path: 
     assert report["status"] == "AVAILABLE_PREFLIGHT"
     assert not report["providers"]["webclaude"]["provider_limited"]
     assert not report["providers"]["webgemini"]["provider_limited"]
+
+
+def test_probe_does_not_flag_generic_try_again_later_text_as_gemini_limit(tmp_path: Path) -> None:
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[
+            {"id": 445, "windowId": 2, "title": "Gemini", "url": "https://gemini.google.com/app", "active": True},
+        ],
+        tab_text={
+            "445": "A project note says the user may try again later after checking local tests.",
+        },
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgemini"],
+        surf_run=surf,
+        max_tabs_per_provider=1,
+        explicit_tabs={},
+    )
+
+    assert report["status"] == "AVAILABLE_PREFLIGHT"
+    assert report["providers"]["webgemini"]["provider_limited"] is False
+
+
+def test_probe_degrades_but_does_not_block_when_one_provider_tab_reads_cleanly(monkeypatch, tmp_path: Path) -> None:
+    surf = tmp_path / "surf-run.sh"
+    surf.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    surf.chmod(0o755)
+
+    def fake_run(command: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
+        if "tab.list" in command:
+            return subprocess.CompletedProcess(
+                args=command,
+                returncode=0,
+                stdout=json.dumps(
+                    [
+                        {"id": 777, "windowId": 1, "title": "Kimi ready", "url": "https://www.kimi.com/", "active": True},
+                        {"id": 666, "windowId": 1, "title": "Kimi stale", "url": "https://www.kimi.com/chat/old", "active": False},
+                    ]
+                ),
+                stderr="",
+            )
+        if "--tab-id" in command and command[command.index("--tab-id") + 1] == "777":
+            payload = {
+                "href": "https://www.kimi.com/",
+                "title": "Kimi ready",
+                "text_excerpt": "Kimi prompt ready",
+                "limited": False,
+            }
+            return subprocess.CompletedProcess(args=command, returncode=0, stdout=json.dumps(json.dumps(payload)), stderr="")
+        return subprocess.CompletedProcess(args=command, returncode=124, stdout="", stderr="command timed out after 20s")
+
+    monkeypatch.setattr(probe_browser_provider_availability, "_run", fake_run)
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webkimi"],
+        surf_run=surf,
+        max_tabs_per_provider=2,
+        explicit_tabs={},
+    )
+
+    assert report["status"] == "AVAILABLE_PREFLIGHT"
+    assert report["providers"]["webkimi"]["probe_degraded"] is True
+    assert report["providers"]["webkimi"]["probe_failed"] is False
+    assert report["providers"]["webkimi"]["failure_code"] == "browser_provider_probe_timeout"
+
+
+def test_probe_reports_structured_error_when_tab_read_times_out(monkeypatch, tmp_path: Path) -> None:
+    surf = tmp_path / "surf-run.sh"
+    surf.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    surf.chmod(0o755)
+
+    def fake_run(command: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
+        if "tab.list" in command:
+            return subprocess.CompletedProcess(
+                args=command,
+                returncode=0,
+                stdout=json.dumps([{"id": 555, "windowId": 1, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True}]),
+                stderr="",
+            )
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=124,
+            stdout="",
+            stderr="command timed out after 20s",
+        )
+
+    monkeypatch.setattr(probe_browser_provider_availability, "_run", fake_run)
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"],
+        surf_run=surf,
+        max_tabs_per_provider=1,
+        explicit_tabs={},
+    )
+
+    assert report["status"] == "ERROR"
+    assert report["error"] == "browser_provider_probe_failed"
+    assert report["providers"]["webgpt"]["probe_failed"] is True
+    assert report["providers"]["webgpt"]["failure_code"] == "browser_provider_probe_timeout"
+    assert report["providers"]["webgpt"]["checked_tabs"][0]["timed_out"] is True
 
 
 def _fake_surf(tmp_path: Path, *, tabs: list[dict[str, object]], tab_text: dict[str, str]) -> Path:
