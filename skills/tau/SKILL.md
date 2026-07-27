@@ -47,6 +47,50 @@ ${HOME}/workspace/experiments/tau
 Do not duplicate Tau implementation in this skill. Use the scripts here to
 locate the repo, run known proof commands, inspect receipts, and summarize gaps.
 
+## Current Operating Priority
+
+Read the Tau repo's `GOAL.md` before claiming product status. The active product
+target is not just Pi TUI parity and not just a pile of receipts. Tau must let a
+human choose and run five canonical real DAG workflows, preserve the
+human-owned goal through every node and attempt, and show truthful dynamic
+progress, accepted evidence, blockers, required human decisions, resume, and
+completion in one shared React Flow viewer.
+
+Pi TUI parity work is a usability slice for replacing Codex/Claude Code as a
+daily harness. Port useful Pi terminal capabilities without overwriting
+Tau-specific control-plane behavior: Memory-first routing, SciLLM as the
+internal provider boundary, `tau.dag_contract.v1`, typed receipts, fail-closed
+evidence gates, Herdr/monitor surfaces, `$ask` DAG compilation, and human-owned
+goal boundaries.
+
+When a human asks for model or reviewer collaboration through `$ask`, the
+preferred path is:
+
+```text
+human request -> $ask -> final tau.dag_contract.v1 -> Tau execution -> live Tau viewer/results
+```
+
+`$ask` should interview the human when the DAG is incomplete, emit the final DAG
+before execution, and let Tau dispatch handler nodes. Browser handlers route
+through Surf/browser-oracle command specs. API/model handlers route through
+Tau-owned SciLLM adapters, not direct project-agent SciLLM calls.
+
+## Provider Boundary: SciLLM Is Internal
+
+Tau owns provider/model orchestration. Project agents must not call `$scillm`,
+`/scillm`, `http://localhost:4001`, `/v1/chat/completions`, or
+`/v1/scillm/*` directly unless the human explicitly asks to operate SciLLM or
+the task is Tau/SciLLM maintenance.
+
+When a workflow needs provider/model work, express it as a `tau.dag_contract.v1`
+node, Tau skill node, or local `command_spec` that Tau executes and receipts.
+The Tau adapter may call SciLLM internally; the project agent consumes Tau
+receipts, node outputs, and proof artifacts, not raw SciLLM responses.
+
+If another skill's `SKILL.md` recommends direct SciLLM chat, exec, OpenCode,
+batch, or standing-agent calls from a project-agent workflow, treat that as a
+contract bug and amend that skill to route through Tau.
+
 ## Commands
 
 Currently implemented in this skill wrapper:
@@ -59,6 +103,7 @@ skills/tau/run.sh proof-status
 skills/tau/run.sh e2e
 skills/tau/run.sh watchdog-status
 skills/tau/run.sh latest-proofs
+skills/tau/run.sh runtime-handshake --output /tmp/tau-runtime-handshake.json
 skills/tau/run.sh workflows-list
 skills/tau/run.sh workflow-describe repository-readiness
 skills/tau/run.sh workflow-run repository-readiness \
@@ -83,10 +128,13 @@ skills/tau/run.sh dag-view-capabilities
 
 `doctor` checks whether this operator wrapper can resolve and invoke the local
 Tau checkout. `status` reports current repo, GitHub issue, watchdog cron, and
-latest receipt state. `sanity` runs bounded checks that do not mutate GitHub.
-`proof-status` runs the same bounded sanity check plus repo/proof inspection and
-states explicit non-claims. `e2e` is a compatibility alias for `proof-status`;
-it is not a claim of full browser/provider/GitHub production E2E coverage.
+latest receipt state. `runtime-handshake` delegates to Tau's own
+`uv run tau runtime-handshake` command and writes the version/capability
+receipt without duplicating Tau implementation. `sanity` runs bounded checks
+that do not mutate GitHub. `proof-status` runs the same bounded sanity check
+plus repo/proof inspection and states explicit non-claims. `e2e` is a
+compatibility alias for `proof-status`; it is not a claim of full
+browser/provider/GitHub production E2E coverage.
 
 Tau runtime lanes that may exist in the Tau repo, depending on checkout/version:
 
@@ -104,6 +152,7 @@ uv run tau dag-motif-validate
 uv run tau research-source-receipt
 uv run tau github-redact-projection
 uv run tau github-apply-policy-check
+uv run tau runtime-handshake --output /tmp/tau-runtime-handshake.json
 ```
 
 Planned or recommended next runtime lanes. Do not claim these from this skill
@@ -395,8 +444,10 @@ Authoring rules for project subagents:
 - Use `executor: local` for local command-spec nodes, including local adapter
   nodes that invoke provider machinery. Use provider-specific executors such as
   `codex`, `opencode`, or `scillm` only when the active Tau runner explicitly
-  supports that route. Do not use `executor: provider`; it is not a valid
-  `tau.agent_handoff.v1` executor.
+  supports that route and the node is inside a Tau-authored DAG/provider
+  adapter. Do not use `executor: scillm` as a project-agent shortcut, and do
+  not use `executor: provider`; it is not a valid `tau.agent_handoff.v1`
+  executor.
 - Include `command_spec` for executable local nodes unless the node is an
   explicit virtual/control node such as `start` or `human`. Relative
   `command_spec` paths resolve relative to the DAG contract file; use absolute
