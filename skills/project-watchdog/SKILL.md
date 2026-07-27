@@ -1,9 +1,13 @@
 ---
 name: project-watchdog
 description: >
-  Global cross-project watchdog registry and dispatcher contract for scanning
-  GitHub issues, selecting bounded subagents, and invoking each project's Tau
-  or project-local harness one ticket at a time.
+  Global cross-project watchdog registry and cron dispatcher that scans
+  registered GitHub repos for routable issues, takes one lease at a time, runs
+  one bounded tick through each project's Tau or project-local harness, and
+  requires a receipt before it mutates anything. Use when asked about the
+  project watchdog, the GitHub issue cron, why the watchdog is idle or not
+  picking up tickets, pausing or resuming automated issue dispatch, or
+  registering a new project with the shared cron.
 allowed-tools:
   - Bash
   - Read
@@ -14,8 +18,14 @@ triggers:
   - github issue cron
   - cross-project cron
   - project registry
+  - watchdog status
+  - pause the watchdog
+  - resume the watchdog
+  - why is the watchdog idle
+  - register a project with the watchdog
 metadata:
-  short-description: Cross-project GitHub issue watchdog registry
+  short-description: Cross-project GitHub issue watchdog registry and cron dispatcher
+runtime_self_improvement: basic
 provides:
   - task-orchestration
   - progress-tracking
@@ -29,16 +39,54 @@ complies:
   - best-practices-python
   - best-practices-subagent
   - best-practices-github-ticket
+taxonomy:
+  - resilience
+  - precision
+  - orchestration
+  - github
+  - cron
 ---
 
 # Project Watchdog
 
-`project-watchdog` is the shared control-plane location for a future global
-GitHub issue watchdog. It keeps the cross-project registry next to the shared
-skills and subagents so individual projects do not each invent their own cron
-loop.
+`project-watchdog` is the shared control plane for the global GitHub issue
+watchdog. It keeps the cross-project registry next to the shared skills and
+subagents so individual projects do not each invent their own cron loop.
 
-The intended runtime is deliberately narrow:
+## Commands
+
+```bash
+./run.sh status                                    # registry, state, lock, cron
+./run.sh tick --project tau                        # dry-run scan, no mutation
+./run.sh tick --apply --project tau --max-tickets 1  # one bounded dispatch
+./run.sh set-state global paused --reason "..."    # fail-closed kill switch
+./run.sh set-state project active --project tau --reason "..."
+./run.sh install-cron --apply                      # install the crontab line
+./sanity.sh                                        # behavioural acceptance gates
+```
+
+Exit codes: `0` success or deliberate refusal, `1` operational failure,
+`2` caller error (unknown project id, invalid state name).
+
+## Troubleshooting: the watchdog runs but never dispatches
+
+`status: NOOP, stop_reason: no_routable_issues` on every tick means the scan
+succeeded and matched nothing. Check, in order:
+
+1. **Label vocabulary.** Routing requires `agent-work` *plus* either
+   (`next:coder` + `executor:local` + repair marker) or
+   (`executor:local` + handoff marker). Tickets filed by `/ticket` carry
+   `type:*` / `route:*` labels instead and will never match.
+   `gh issue list --repo <repo> --label agent-work` returning `0` confirms it.
+2. **State gates.** `./run.sh status` — both `global.state` and the project's
+   state must be `active`.
+3. **Lease labels.** Issues carrying `agent-active` or `agent-blocked` are
+   skipped by design until a human clears them.
+
+A failed scan is *never* reported as `NOOP`. If `gh` cannot reach GitHub the
+tick fails with `status: BLOCKED` and a non-zero exit.
+
+The runtime is deliberately narrow:
 
 1. Load `registry/projects.json`.
 2. Scan registered GitHub repos for routable issues.
@@ -67,8 +115,47 @@ root, and the project-local command that should perform one bounded tick.
 `projects.json` is relatively static configuration. `state.json` is the
 operator-controlled runtime gate for pause, stop, and resume decisions.
 
-The registry is a contract artifact only until a runtime dispatcher is added. Do
-not treat a registry entry as proof that the project is currently monitored.
+A registry entry is not proof that the project is currently monitored. Only
+`state.json` says whether a project is `active`, and only the cron log says
+whether ticks are actually firing.
+
+Every GitHub mutation is addressed to the repo of the project being dispatched.
+Handlers take `repo` explicitly and have no default, so a dispatch for one
+project cannot comment on, relabel, or close an issue in another.
+
+## Layout
+
+```text
+scripts/project_watchdog.py    Typer CLI only; no business logic
+scripts/check_path_literals.py AST guard against Path("${VAR}/...") literals
+scripts/watchdog/config.py     paths, markers, environment resolution
+scripts/watchdog/core.py       logging, subprocess, JSON IO, locking, receipts
+scripts/watchdog/registry.py   project lookup and routable-issue selection
+scripts/watchdog/github.py     repo-parameterised gh wrappers
+scripts/watchdog/issue_fields.py  untrusted issue-body parsing and containment
+scripts/watchdog/handlers.py   bounded per-issue dispatch
+scripts/watchdog/commands.py   tick, install-cron, set-state, status
+```
+
+Environment overrides, all optional: `PROJECT_WATCHDOG_STATE_ROOT`,
+`PROJECT_WATCHDOG_WORKSPACE`, `UV_BIN`. `sanity.sh` and the tests use the first
+to run against a temporary state root instead of the operator's real receipts.
+
+## Receipt retention
+
+Ticks with status `NOOP` or `SKIPPED` print and log their receipt but do not
+persist a directory. Only eventful runs — `COMPLETED`, `NEEDS_ATTENTION`,
+`BLOCKED`, state changes, cron installs — leave a `receipt.json` behind. A
+per-minute cron that persisted uneventful receipts accumulated 41,682
+directories and 329 MB before 2026-07-27.
+
+## Locking
+
+One tick at a time, enforced by a lock directory under the state root. A lock
+whose owner record is older than `LOCK_STALE_SECONDS` (900s) is treated as
+abandoned by a killed process and reclaimed, with the takeover logged at
+WARNING. Without this, a single SIGKILL would leave the watchdog permanently
+`BLOCKED`.
 
 ## Pause, Stop, Resume
 

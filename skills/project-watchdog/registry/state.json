@@ -1,6 +1,6 @@
 {
   "global": {
-    "reason": "human requested live cron issue-fix proof for Tau",
+    "reason": "maintenance complete: best-practices alignment 2026-07-27",
     "resume_allowed_by": [
       "human"
     ],
@@ -55,5 +55,5 @@
     }
   },
   "schema": "agent_skills.project_watchdog.state.v1",
-  "updated_at": "2026-06-28"
+  "updated_at": "2026-07-27"
 }
