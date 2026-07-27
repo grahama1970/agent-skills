@@ -85,8 +85,43 @@ def _helper(args: list[str], *, repo: Optional[str] = None, dry_run: bool = Fals
     _run(cmd)
 
 
+#: Ticket types that always need a human decision before an agent may act.
+HUMAN_ONLY_TYPES = {"question", "triage"}
+
+#: Label the project-watchdog router selects on. A ticket that does not carry it
+#: is invisible to automated dispatch.
+#:
+#: Before 2026-07-27 nothing here emitted it: /ticket wrote type:* and route:*
+#: while the watchdog routed on agent-work, so ordinary tickets were never
+#: picked up and the cron logged 41,607 consecutive no-work ticks over roughly a
+#: month. Stamping it at file time is what joins the two halves.
+AGENT_WORK_LABEL = "agent-work"
+
+#: Label marking a ticket as waiting on another repository. The
+#: project-watchdog unblock poll selects on this and removes it when every
+#: declared upstream has closed.
+UPSTREAM_BLOCKED_LABEL = "blocked:upstream"
+
+#: owner/repo#N
+UPSTREAM_REF_PATTERN = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#\d+")
+
+
+def _is_agent_routable(ticket_type: str, route: str) -> bool:
+    """Return whether a ticket is safe to hand to an automated repair loop.
+
+    Requires a concrete maintainer route and a type that is actually actionable.
+    Questions and triage tickets are human-first by definition, and a ticket with
+    an unknown route has nowhere to be sent.
+    """
+    if ticket_type in HUMAN_ONLY_TYPES:
+        return False
+    return bool(route) and route != "unknown"
+
+
 def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[str] | None = None) -> list[str]:
     labels = [f"type:{ticket_type}"]
+    if _is_agent_routable(ticket_type, route):
+        labels.append(AGENT_WORK_LABEL)
     if target.startswith("skills/"):
         if ticket_type == "bug":
             labels.append("skill-bug")
@@ -676,12 +711,96 @@ def comment(issue: int, body: Path = typer.Option(..., "--body"), repo: Optional
 
 
 @app.command()
-def block(issue: int, reason: Path = typer.Option(..., "--reason"), release_lease: bool = typer.Option(False, "--release"), repo: Optional[str] = typer.Option(None, "--repo", "-R"), dry_run: bool = False) -> None:
-    """Mark an issue blocked and optionally release the lease."""
-    args = ["block", str(issue), "--reason", str(reason)]
-    if release_lease:
-        args.append("--release")
-    _helper(args, repo=repo, dry_run=dry_run)
+def block(
+    issue: int,
+    reason: Path = typer.Option(..., "--reason"),
+    release_lease: bool = typer.Option(False, "--release"),
+    blocked_by: Optional[list[str]] = typer.Option(
+        None,
+        "--blocked-by",
+        help="Upstream dependency as owner/repo#N. Repeatable. Creates a machine-readable "
+        "edge the project-watchdog unblock poll can clear automatically.",
+    ),
+    repo: Optional[str] = typer.Option(None, "--repo", "-R"),
+    dry_run: bool = False,
+) -> None:
+    """Mark an issue blocked, optionally on a named upstream ticket in another repo."""
+    refs = [_validate_upstream_ref(ref) for ref in (blocked_by or [])]
+    if refs:
+        _assert_upstreams_exist(refs, dry_run=dry_run)
+    _helper(
+        ["block", str(issue), "--reason", str(reason)] + (["--release"] if release_lease else []),
+        repo=repo,
+        dry_run=dry_run,
+    )
+    if refs:
+        _record_upstream_edges(issue, refs, repo=repo, dry_run=dry_run)
+
+
+def _validate_upstream_ref(ref: str) -> str:
+    """Validate an ``owner/repo#N`` dependency reference."""
+    match = UPSTREAM_REF_PATTERN.fullmatch(ref.strip())
+    if not match:
+        _die(
+            f"invalid --blocked-by reference {ref!r}. "
+            "Expected owner/repo#N, for example grahama1970/graph-memory-operator#61"
+        )
+    return ref.strip()
+
+
+def _assert_upstreams_exist(refs: list[str], *, dry_run: bool) -> None:
+    """Refuse to record an edge that points at nothing.
+
+    A typo'd reference would leave the downstream ticket blocked forever: the
+    watchdog fails closed on an unreadable upstream, so a bad ref is a permanent
+    stall rather than a loud error. Catch it here, at write time.
+    """
+    for ref in refs:
+        repo_slug, _, number = ref.partition("#")
+        cmd = ["gh", "issue", "view", number, "--repo", repo_slug, "--json", "state"]
+        if dry_run:
+            _print_command(cmd)
+            continue
+        result = _run(cmd, capture=True, check=False)
+        if result.returncode != 0:
+            _die(
+                f"upstream {ref} could not be read: "
+                f"{(result.stderr or '').strip()[:200]}. "
+                "Fix the reference before recording the dependency."
+            )
+
+
+def _record_upstream_edges(
+    issue: int, refs: list[str], *, repo: Optional[str], dry_run: bool
+) -> None:
+    """Label the issue blocked-upstream and comment the machine-readable edge."""
+    lines = "\n".join(f"blocked-by: {ref}" for ref in refs)
+    body = (
+        "## Blocked on another project\n\n"
+        "This ticket is waiting on work owned by a different repository. The "
+        "`project-watchdog` unblock poll reads the references below and removes "
+        f"the `{UPSTREAM_BLOCKED_LABEL}` label once **every** one of them is "
+        "closed, returning this ticket to the routable pool.\n\n"
+        "```text\n"
+        f"{lines}\n"
+        "```\n\n"
+        "An upstream that cannot be read counts as still blocking, so a wrong "
+        "reference stalls this ticket rather than releasing it early.\n"
+    )
+    label_cmd = ["gh", "issue", "edit", str(issue), "--add-label", UPSTREAM_BLOCKED_LABEL]
+    comment_cmd = ["gh", "issue", "comment", str(issue), "--body", body]
+    if repo:
+        label_cmd += ["--repo", repo]
+        comment_cmd += ["--repo", repo]
+    if dry_run:
+        _print_command(label_cmd)
+        _print_command(comment_cmd)
+        return
+    _run(label_cmd, check=False)
+    _run(comment_cmd, check=False)
+    typer.echo(f"Recorded {len(refs)} upstream dependency edge(s) on issue #{issue}:")
+    for ref in refs:
+        typer.echo(f"  blocked-by: {ref}")
 
 
 @app.command()

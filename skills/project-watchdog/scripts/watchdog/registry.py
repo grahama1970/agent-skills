@@ -98,13 +98,32 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
 
 
 def classify_issue(issue: dict[str, Any]) -> str | None:
-    """Return the handler name that claims this issue, or ``None`` to skip it."""
+    """Return the handler name that claims this issue, or ``None`` to skip it.
+
+    Three routes, checked most-specific first:
+
+    1. ``add_tau_coder_command_spec`` — legacy, needs an explicit body marker.
+    2. ``tau_handoff_dispatch`` — legacy, needs an explicit body marker.
+    3. ``ticket_repair`` — any ``agent-work`` issue with no marker. This is the
+       route ordinary ``/ticket``-filed tickets take.
+
+    Before route 3 existed, an issue had to be hand-authored with a
+    ``project-watchdog-action:`` body marker to be routable at all, while
+    ``/ticket`` emitted only ``type:*`` and ``route:*``. The two halves of the
+    system shared no vocabulary, and the cron logged 41,607 consecutive
+    ``no_routable_issues`` ticks over roughly a month as a result.
+    """
     labels = {label.get("name") for label in issue.get("labels", [])}
-    if config.LEASE_LABEL in labels or config.BLOCKED_LABEL in labels:
+
+    # Lease, human-blocked, and upstream-blocked issues are never routable.
+    if labels & {config.LEASE_LABEL, config.BLOCKED_LABEL, *config.HUMAN_HOLD_LABELS}:
         return None
+    if config.READY_LABEL not in labels:
+        return None
+
     body = issue.get("body") or ""
     if "next:coder" in labels and "executor:local" in labels and config.TAU_REPAIR_MARKER in body:
         return "add_tau_coder_command_spec"
     if "executor:local" in labels and config.TAU_HANDOFF_DISPATCH_MARKER in body:
         return "tau_handoff_dispatch"
-    return None
+    return "ticket_repair"

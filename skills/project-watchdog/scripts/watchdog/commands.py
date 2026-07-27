@@ -32,7 +32,7 @@ from typing import Any
 
 from loguru import logger
 
-from . import config, streaks
+from . import blocked_by, config, streaks
 from .core import (
     acquire_lock,
     base_receipt,
@@ -101,6 +101,18 @@ def _tick_locked(
         )
         log_event(run_id, "project_skipped", reason=receipt["stop_reason"])
         return finish(run_id, receipt_dir, receipt, 0)
+
+    # Release anything whose cross-repo dependency has closed. Runs before
+    # routing so a freshly released issue becomes eligible on the NEXT tick
+    # rather than being dispatched in the same pass that unblocked it.
+    try:
+        receipt["unblocked"] = blocked_by.poll(run_id, project, apply=apply)
+    except (RuntimeError, ValueError) as exc:
+        # A failed unblock scan must not silently swallow the whole tick, but it
+        # also must not look like success: record it and keep going, because
+        # routing is still safe with stale blocked labels.
+        receipt["errors"].append(f"unblock poll failed: {exc}")
+        logger.error("unblock poll failed for project {}: {}", project_id, exc)
 
     try:
         issues = list_routable_issues(run_id, project)

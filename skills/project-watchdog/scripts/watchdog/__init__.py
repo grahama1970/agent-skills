@@ -1,6 +1,7 @@
 """Project watchdog runtime package. Re-exports only; logic lives in named modules."""
 
 from . import (
+    blocked_by,
     commands,
     config,
     core,
@@ -13,6 +14,7 @@ from . import (
 )
 
 __all__ = [
+    "blocked_by",
     "commands",
     "config",
     "core",

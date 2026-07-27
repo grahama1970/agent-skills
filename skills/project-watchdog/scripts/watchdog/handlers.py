@@ -90,6 +90,8 @@ def handle_issue(
         return handle_tau_handoff_dispatch(run_id, receipt_dir, project, issue, apply=apply)
     if action == "add_tau_coder_command_spec":
         return handle_tau_coder_spec(run_id, receipt_dir, project, issue, apply=apply)
+    if action == "ticket_repair":
+        return handle_ticket_repair(run_id, receipt_dir, project, issue, apply=apply)
     return {
         "project_id": project.get("project_id"),
         "issue_number": int(issue["number"]),
@@ -546,3 +548,159 @@ def tau_coder_start_handoff(
         ],
         "stop_condition": "Coder routes to reviewer or Tau fails closed.",
     }
+
+
+#: runner_kind values this generic handler knows how to drive.
+TICKET_REPAIR_RUNNERS = {"tau-command-loop"}
+
+
+def handle_ticket_repair(
+    run_id: str,
+    receipt_dir: Path,
+    project: dict[str, Any],
+    issue: dict[str, Any],
+    *,
+    apply: bool,
+) -> dict[str, Any]:
+    """Repair one ordinary ``/ticket``-filed issue through the project's harness.
+
+    This is the route for tickets filed the normal way: labelled ``agent-work``
+    with a ``type:``/``route:`` vocabulary and no hand-authored body marker.
+    Dispatch is delegated to the project's own repair surface rather than
+    reimplemented here — for ``tau-command-loop`` projects that is
+    ``tau self-fix tick --repo <repo> --issue <n>``, which owns subagent
+    selection, receipt validation, and closure.
+
+    Projects whose ``runner_kind`` has no bounded per-issue repair surface are
+    refused with a named reason instead of being handed to a runner that cannot
+    accept an issue number.
+    """
+    repo = project_repo(project)
+    worktree = project_worktree(project)
+    issue_number = int(issue["number"])
+    runner_kind = str(project.get("runner_kind", ""))
+    log_event(run_id, "handle_ticket_repair_start", issue=issue_number, repo=repo)
+    result = _new_result(project, issue, "ticket_repair")
+    result["selected_agent"] = "tau-self-fix"
+    result["runner_kind"] = runner_kind
+
+    if runner_kind not in TICKET_REPAIR_RUNNERS:
+        result.update(
+            {
+                "ok": False,
+                "status": "BLOCKED",
+                "summary": (
+                    f"project {project.get('project_id')!r} has runner_kind "
+                    f"{runner_kind!r}, which exposes no bounded per-issue repair "
+                    f"command. Supported: {sorted(TICKET_REPAIR_RUNNERS)}. Register a "
+                    "bounded runner before enabling ticket_repair for this project."
+                ),
+            }
+        )
+        log_event(run_id, "handle_ticket_repair_unsupported", issue=issue_number, kind=runner_kind)
+        return result
+
+    if not apply:
+        result.update(
+            {
+                "ok": True,
+                "status": "DRY_RUN",
+                "summary": f"would run tau self-fix tick for {repo}#{issue_number}",
+            }
+        )
+        return result
+
+    result["commands"].append(
+        github.issue_comment(
+            repo,
+            issue_number,
+            github.watchdog_comment(
+                "Lease acquired",
+                {
+                    "schema": "agent_skills.project_watchdog.lease.v1",
+                    "run_id": run_id,
+                    "issue": f"issue#{issue_number}",
+                    "repo": repo,
+                    "selected_agent": "tau-self-fix",
+                    "action": "ticket_repair",
+                },
+            ),
+        )
+    )
+    result["commands"].append(github.issue_edit(repo, issue_number, add=[config.LEASE_LABEL]))
+
+    repair_dir = receipt_dir / "self-fix"
+    repair_result, pane_block = run_bounded(
+        [
+            config.resolve_uv_bin(),
+            "run",
+            "tau",
+            "self-fix",
+            "tick",
+            "--repo",
+            repo,
+            "--issue",
+            str(issue_number),
+            "--receipt-dir",
+            str(repair_dir),
+        ],
+        worktree=worktree,
+        project=project,
+        agent_name=f"pw-{project.get('project_id')}-ticket-{issue_number}",
+        timeout_s=int(project.get("ticket_repair_timeout_s", 900)),
+    )
+    result["commands"].append(repair_result)
+    result["artifacts"].append(str(repair_dir))
+    if pane_block:
+        result["pane"] = pane_block
+
+    if repair_result["exit_code"] != 0:
+        result.update(
+            {
+                "ok": False,
+                "status": "NEEDS_ATTENTION",
+                "summary": f"tau self-fix tick failed for {repo}#{issue_number}",
+            }
+        )
+        result["commands"].append(
+            github.issue_edit(
+                repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
+            )
+        )
+        log_event(run_id, "handle_ticket_repair_failed", issue=issue_number)
+        return result
+
+    result["commands"].append(
+        github.issue_comment(
+            repo,
+            issue_number,
+            github.watchdog_comment(
+                "Ticket repair evidence",
+                {
+                    "schema": "agent_skills.project_watchdog.ticket_repair_receipt.v1",
+                    "run_id": run_id,
+                    "issue": f"issue#{issue_number}",
+                    "repo": repo,
+                    "self_fix_exit_code": repair_result["exit_code"],
+                    "receipt_dir": str(repair_dir),
+                    "mocked": False,
+                    "live": True,
+                    "scope": (
+                        "Runs one bounded Tau self-fix tick against a /ticket-filed "
+                        "GitHub issue. Closure is owned by Tau's self-fix receipt, "
+                        "not by this watchdog."
+                    ),
+                },
+            ),
+        )
+    )
+    result["commands"].append(github.issue_edit(repo, issue_number, remove=[config.LEASE_LABEL]))
+    result.update(
+        {
+            "ok": True,
+            "status": "COMPLETED",
+            "summary": f"tau self-fix tick completed for {repo}#{issue_number}",
+        }
+    )
+    log_event(run_id, "handle_ticket_repair_finish", issue=issue_number, ok=True)
+    return result

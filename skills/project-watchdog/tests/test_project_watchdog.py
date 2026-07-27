@@ -20,6 +20,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from watchdog import (  # noqa: E402
+    blocked_by,
     config,
     core,
     github,
@@ -145,11 +146,39 @@ def test_routing_skips_leased_or_blocked_issue(state_label: str) -> None:
         assert registry.list_routable_issues("run-test", {"repo": TAU_REPO}) == []
 
 
-def test_routing_skips_issue_without_marker() -> None:
-    issue = _issue(44, labels=["agent-work", "executor:local"], body="no directive here")
+def test_ordinary_ticket_without_marker_is_now_routable() -> None:
+    """The 41,607-NOOP fix: /ticket-filed issues must reach the router."""
+    issue = _issue(
+        44,
+        labels=["agent-work", "type:bug", "route:backend_python_or_skill_runtime"],
+        body="## Type\n\nbug\n\n## Target\n\nsrc/thing.py",
+    )
     gh_result = {"exit_code": 0, "stdout": json.dumps([issue]), "stderr": ""}
     with mock.patch.object(registry, "run_cmd", return_value=gh_result):
-        assert registry.list_routable_issues("run-test", {"repo": TAU_REPO}) == []
+        selected = registry.list_routable_issues("run-test", {"repo": TAU_REPO})
+    assert len(selected) == 1
+    assert selected[0]["watchdog_action"] == "ticket_repair"
+
+
+def test_issue_without_ready_label_is_not_routable() -> None:
+    issue = _issue(45, labels=["type:bug", "route:backend_python_or_skill_runtime"])
+    assert registry.classify_issue(issue) is None
+
+
+@pytest.mark.parametrize("hold", sorted(config.HUMAN_HOLD_LABELS))
+def test_human_hold_labels_always_win(hold: str) -> None:
+    """A maintainer parking a ticket must never be overridden by the router."""
+    issue = _issue(46, labels=["agent-work", hold])
+    assert registry.classify_issue(issue) is None
+
+
+def test_body_markers_still_take_precedence_over_the_generic_route() -> None:
+    issue = _issue(
+        47,
+        labels=["agent-work", "executor:local"],
+        body="project-watchdog-action:tau-handoff-dispatch start=experiments/foo.json",
+    )
+    assert registry.classify_issue(issue) == "tau_handoff_dispatch"
 
 
 def test_failed_scan_raises_and_is_never_reported_as_empty() -> None:
@@ -385,8 +414,8 @@ def _backdate_first_idle(project_id: str, *, seconds: float) -> None:
     path = config.state_root() / "streaks.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
     moment = datetime.now(UTC) - timedelta(seconds=seconds)
-    payload["projects"][project_id]["first_idle_at"] = (
-        moment.isoformat(timespec="seconds").replace("+00:00", "Z")
+    payload["projects"][project_id]["first_idle_at"] = moment.isoformat(timespec="seconds").replace(
+        "+00:00", "Z"
     )
     path.write_text(json.dumps(payload), encoding="utf-8")
 
@@ -402,7 +431,9 @@ def test_dispatch_backend_defaults_to_local() -> None:
 
 
 def test_registry_entry_can_override_dispatch_backend() -> None:
-    assert config.dispatch_backend_for({"project_id": "tau", "dispatch_backend": "herdr"}) == "herdr"
+    assert (
+        config.dispatch_backend_for({"project_id": "tau", "dispatch_backend": "herdr"}) == "herdr"
+    )
 
 
 def test_local_backend_uses_a_captured_subprocess(tmp_path) -> None:
@@ -492,7 +523,216 @@ def test_pane_script_records_exit_code_and_reports_terminal_state(tmp_path) -> N
 
 
 def test_observable_via_names_the_monitor_herdr_invocation() -> None:
-    block = herdr_space.PaneDispatch(workspace_id="w82", space_label="autoupdate").as_receipt_block()
+    block = herdr_space.PaneDispatch(
+        workspace_id="w82", space_label="autoupdate"
+    ).as_receipt_block()
     assert "monitor-herdr" in block["observable_via"]
     assert "--space autoupdate" in block["observable_via"]
     assert f"--include-agent {herdr_space.PANE_AGENT_LABEL}" in block["observable_via"]
+
+
+# --------------------------------------------------------------------------- #
+# Cross-repo dependency edges
+# --------------------------------------------------------------------------- #
+
+UP = "grahama1970/graph-memory-operator"
+
+
+def test_parse_blocked_by_extracts_refs() -> None:
+    refs = blocked_by.parse_blocked_by(
+        f"Waiting on Memory.\n\nblocked-by: {UP}#61\nblocked-by: {UP}#59\n"
+    )
+    assert [str(r) for r in refs] == [f"{UP}#61", f"{UP}#59"]
+
+
+def test_parse_blocked_by_is_case_insensitive_and_dedupes() -> None:
+    refs = blocked_by.parse_blocked_by(
+        f"Blocked-By: {UP}#61\nblocked-by:{UP}#61\nBLOCKED-BY:  {UP}#61"
+    )
+    assert [str(r) for r in refs] == [f"{UP}#61"]
+
+
+def test_parse_blocked_by_ignores_bare_issue_mentions() -> None:
+    """Prose mentioning an issue must not silently create a dependency edge."""
+    assert blocked_by.parse_blocked_by(f"see {UP}#61 for background") == []
+    assert blocked_by.parse_blocked_by("this is blocked by other work") == []
+
+
+def test_closed_upstream_resolves() -> None:
+    payload = {
+        "exit_code": 0,
+        "stdout": json.dumps({"state": "CLOSED", "title": "t"}),
+        "stderr": "",
+    }
+    with mock.patch.object(blocked_by, "run_cmd", return_value=payload):
+        state = blocked_by.read_upstream(blocked_by.UpstreamRef(UP, 61))
+    assert state.resolved is True
+
+
+def test_open_upstream_does_not_resolve() -> None:
+    payload = {"exit_code": 0, "stdout": json.dumps({"state": "OPEN", "title": "t"}), "stderr": ""}
+    with mock.patch.object(blocked_by, "run_cmd", return_value=payload):
+        state = blocked_by.read_upstream(blocked_by.UpstreamRef(UP, 59))
+    assert state.resolved is False
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"exit_code": 1, "stdout": "", "stderr": "could not resolve to an Issue"},
+        {"exit_code": 0, "stdout": "not json", "stderr": ""},
+    ],
+)
+def test_unreadable_upstream_counts_as_still_blocking(payload) -> None:
+    """Fail closed: releasing on an unreadable dependency is worse than waiting."""
+    with mock.patch.object(blocked_by, "run_cmd", return_value=payload):
+        state = blocked_by.read_upstream(blocked_by.UpstreamRef(UP, 999))
+    assert state.readable is False
+    assert state.resolved is False
+
+
+def _blocked_issue(body: str) -> dict:
+    return {"number": 149, "title": "tool chains", "body": body, "labels": [], "url": "u"}
+
+
+def _patch_dependency_text(text: str):
+    return mock.patch.object(blocked_by, "issue_dependency_text", return_value=text)
+
+
+def test_issue_is_released_when_every_upstream_is_closed() -> None:
+    closed = blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, 61), "CLOSED", "t", True)
+    edits: list[dict] = []
+    with (
+        _patch_dependency_text(f"blocked-by: {UP}#61"),
+        mock.patch.object(blocked_by, "read_upstream", return_value=closed),
+        mock.patch.object(blocked_by.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            blocked_by.github,
+            "issue_edit",
+            side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0, "stderr": ""},
+        ),
+    ):
+        outcome = blocked_by.resolve_issue("run", _blocked_issue(""), repo=TAU_REPO, apply=True)
+    assert outcome.released is True
+    assert edits and edits[0]["remove"] == [blocked_by.BLOCKED_LABEL]
+
+
+def test_issue_stays_blocked_when_any_upstream_is_open() -> None:
+    states = {
+        61: blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, 61), "CLOSED", "t", True),
+        59: blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, 59), "OPEN", "t", True),
+    }
+    with (
+        _patch_dependency_text(f"blocked-by: {UP}#61\nblocked-by: {UP}#59"),
+        mock.patch.object(blocked_by, "read_upstream", side_effect=lambda r: states[r.number]),
+        mock.patch.object(blocked_by.github, "issue_edit") as edit,
+    ):
+        outcome = blocked_by.resolve_issue("run", _blocked_issue(""), repo=TAU_REPO, apply=True)
+    assert outcome.released is False
+    assert edit.called is False, "must not touch labels while any upstream is open"
+    assert outcome.as_receipt_block()["still_blocking"] == [f"{UP}#59"]
+
+
+def test_dry_run_never_mutates_even_when_resolved() -> None:
+    closed = blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, 61), "CLOSED", "t", True)
+    with (
+        _patch_dependency_text(f"blocked-by: {UP}#61"),
+        mock.patch.object(blocked_by, "read_upstream", return_value=closed),
+        mock.patch.object(blocked_by.github, "issue_edit") as edit,
+        mock.patch.object(blocked_by.github, "issue_comment") as comment,
+    ):
+        outcome = blocked_by.resolve_issue("run", _blocked_issue(""), repo=TAU_REPO, apply=False)
+    assert outcome.released is False
+    assert not edit.called and not comment.called
+
+
+def test_blocked_label_without_a_ref_is_reported_not_released() -> None:
+    with _patch_dependency_text("no dependency declared here"):
+        outcome = blocked_by.resolve_issue("run", _blocked_issue(""), repo=TAU_REPO, apply=True)
+    assert outcome.released is False
+    assert "declares no" in (outcome.error or "")
+
+
+# --------------------------------------------------------------------------- #
+# Generic ticket_repair handler
+# --------------------------------------------------------------------------- #
+
+
+def test_ticket_repair_refuses_a_project_with_no_bounded_runner(tmp_path) -> None:
+    project = {
+        "project_id": "memory",
+        "repo": UP,
+        "worktree": str(tmp_path),
+        "runner_kind": "project-local",
+    }
+    issue = _issue(7, labels=["agent-work"])
+    issue["watchdog_action"] = "ticket_repair"
+    result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert "runner_kind" in result["summary"]
+    assert "tau-command-loop" in result["summary"]
+
+
+def test_ticket_repair_dry_run_makes_no_github_call(tmp_path) -> None:
+    project = {
+        "project_id": "tau",
+        "repo": TAU_REPO,
+        "worktree": str(tmp_path),
+        "runner_kind": "tau-command-loop",
+    }
+    issue = _issue(8, labels=["agent-work"])
+    issue["watchdog_action"] = "ticket_repair"
+    with mock.patch.object(handlers.github, "issue_comment") as comment:
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=False)
+    assert result["status"] == "DRY_RUN"
+    assert not comment.called
+
+
+def test_ticket_repair_dispatches_tau_self_fix(tmp_path) -> None:
+    project = {
+        "project_id": "tau",
+        "repo": TAU_REPO,
+        "worktree": str(tmp_path),
+        "runner_kind": "tau-command-loop",
+    }
+    issue = _issue(9, labels=["agent-work"])
+    issue["watchdog_action"] = "ticket_repair"
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers, "run_bounded", return_value=({"exit_code": 0, "stderr": ""}, None)
+        ) as bounded,
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["ok"] is True and result["status"] == "COMPLETED"
+    argv = bounded.call_args.args[0]
+    assert argv[1:5] == ["run", "tau", "self-fix", "tick"]
+    assert "--issue" in argv and "9" in argv
+
+
+def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
+    """A failed repair must stop cron retrying it every minute."""
+    project = {
+        "project_id": "tau",
+        "repo": TAU_REPO,
+        "worktree": str(tmp_path),
+        "runner_kind": "tau-command-loop",
+    }
+    issue = _issue(10, labels=["agent-work"])
+    issue["watchdog_action"] = "ticket_repair"
+    edits: list[dict] = []
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github,
+            "issue_edit",
+            side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
+        ),
+        mock.patch.object(
+            handlers, "run_bounded", return_value=({"exit_code": 1, "stderr": "x"}, None)
+        ),
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert any(e.get("add") == [config.BLOCKED_LABEL] for e in edits)
