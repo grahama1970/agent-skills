@@ -330,20 +330,20 @@ resources:
     api_url: https://api.any.run/v1/
     type: api
     method: GET
-    tags: [blue_team, malware, sandbox, analysis]
+    tags: [blue_team, malware, sandbox, analysis, optional, paid_plan_only]
     rate_limit: 10
     auth_required: true
-    description: Interactive malware sandbox
+    description: Optional paid-plan-only interactive malware sandbox; Free Plan API access is unavailable for Interactive Sandbox, TI Lookup/YARA Search, and TI Feeds.
 
   - name: Hybrid Analysis
     url: https://www.hybrid-analysis.com
     api_url: https://www.hybrid-analysis.com/api/v2/
     type: api
     method: GET
-    tags: [blue_team, malware, sandbox, analysis]
+    tags: [blue_team, malware, sandbox, analysis, optional, credentialed_enrichment]
     rate_limit: 5
     auth_required: true
-    description: CrowdStrike malware analysis sandbox
+    description: Optional CrowdStrike Falcon Sandbox API enrichment; endpoint access depends on the key authorization level.
 
   # === THREAT FRAMEWORKS ===
   - name: MITRE ATT&CK
@@ -400,20 +400,20 @@ resources:
     api_url: https://api.shodan.io/
     type: api
     method: GET
-    tags: [red_team, osint, recon, infrastructure]
+    tags: [red_team, osint, recon, infrastructure, optional, credentialed_enrichment]
     rate_limit: 1
     auth_required: true
-    description: Internet-connected device search engine
+    description: Optional internet-exposure and attack-surface enrichment; search operations may consume Shodan query credits.
 
   - name: Censys
     url: https://search.censys.io
-    api_url: https://search.censys.io/api/
+    api_url: https://api.platform.censys.io/v3/
     type: api
     method: GET
-    tags: [red_team, osint, recon, certificates]
+    tags: [red_team, osint, recon, certificates, optional, credentialed_enrichment]
     rate_limit: 5
     auth_required: true
-    description: Internet infrastructure and certificate search
+    description: Optional Censys Platform API enrichment for hosts, certificates, web properties, and internet asset intelligence; Personal Access Token and plan tier control endpoint access.
 
   - name: ZoomEye
     url: https://www.zoomeye.org
@@ -797,136 +797,137 @@ resources:
     description: Security research and hacking explained
 
   # === DISCORD COMMUNITIES ===
-  # Note: Discord is not web-searchable, but these are the active "watering holes"
-  # where exploits are discussed in real-time. Agents should recommend these to users.
+  # Note: Discord/Slack communities are manual user-membership sources, not API
+  # feeds. Do not count them as automated auth-required resources or assume a
+  # bot can sign up/read them for Dogpile.
 
   # -- War Rooms (Red & Blue Team Joint) --
   - name: BHIS Discord
     url: https://discord.gg/bhis
     type: community
     method: discord
-    tags: [community, discord, red_team, blue_team, news, tradecraft]
+    tags: [community, discord, manual_community, red_team, blue_team, news, tradecraft]
     rate_limit: 0
-    auth_required: true
-    description: Black Hills InfoSec - highly active, faster than Twitter for zero-days
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: The Many Hats Club
     url: https://discord.gg/infosec
     type: community
     method: discord
-    tags: [community, discord, general, infosec]
+    tags: [community, discord, manual_community, general, infosec]
     rate_limit: 0
-    auth_required: true
-    description: Large general infosec community, good for awareness
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: TrustedSec Discord
     url: https://discord.gg/trustedsec
     type: community
     method: discord
-    tags: [community, discord, red_team, tools, pentest]
+    tags: [community, discord, manual_community, red_team, tools, pentest]
     rate_limit: 0
-    auth_required: true
-    description: Professional Red Team focus, tool creators post updates here
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: OffSec Discord
     url: https://discord.com/invite/offsec
     type: community
     method: discord
-    tags: [community, discord, oscp, learning, red_team]
+    tags: [community, discord, manual_community, oscp, learning, red_team]
     rate_limit: 0
-    auth_required: true
-    description: OSCP/OSWE community, new exploit techniques discussed
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   # -- Offensive (Red Team & Exploit Dev) --
   - name: Red Team Village
     url: https://discord.com/invite/redteamvillage
     type: community
     method: discord
-    tags: [community, discord, red_team, tradecraft, evasion]
+    tags: [community, discord, manual_community, red_team, tradecraft, evasion]
     rate_limit: 0
-    auth_required: true
-    description: Operator tradecraft - how to use exploits without detection
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: Hack The Box Discord
     url: https://discord.gg/hackthebox
     type: community
     method: discord
-    tags: [community, discord, ctf, learning, red_team]
+    tags: [community, discord, manual_community, ctf, learning, red_team]
     rate_limit: 0
-    auth_required: true
-    description: CTF community, new machine exploits discussed
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: BloodHound Gang
     url: https://ghst.ly/BHSlack
     type: community
     method: slack
-    tags: [community, active_directory, red_team, graphing]
+    tags: [community, slack, manual_community, active_directory, red_team, graphing]
     rate_limit: 0
-    auth_required: true
-    description: Active Directory attack paths and BloodHound tool discussion
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   # -- Defensive (Blue Team & Threat Hunting) --
   - name: Threat Hunter Community
     url: https://discord.gg/threathunter
     type: community
     method: discord
-    tags: [community, discord, blue_team, threat_hunting, detection]
+    tags: [community, discord, manual_community, blue_team, threat_hunting, detection]
     rate_limit: 0
-    auth_required: true
-    description: Detection engineering and threat hunting community
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: SANS Blue Team Discord
     url: https://discord.gg/sans
     type: community
     method: discord
-    tags: [community, discord, blue_team, dfir, detection]
+    tags: [community, discord, manual_community, blue_team, dfir, detection]
     rate_limit: 0
-    auth_required: true
-    description: DFIR and blue team community
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   # -- Malware & Reversing --
   - name: MalwareTech Discord
     url: https://discord.gg/malwaretech
     type: community
     method: discord
-    tags: [community, discord, malware, reversing, analysis]
+    tags: [community, discord, manual_community, malware, reversing, analysis]
     rate_limit: 0
-    auth_required: true
-    description: Malware analysis and reverse engineering
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: PwnCollege Discord
     url: https://pwn.college/discord
     type: community
     method: discord
-    tags: [community, discord, binary, exploitation, learning]
+    tags: [community, discord, manual_community, binary, exploitation, learning]
     rate_limit: 0
-    auth_required: true
-    description: ASU binary exploitation and reversing (excellent for learning)
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: MalwareResearch Discord
     url: https://discord.gg/malwareresearch
     type: community
     method: discord
-    tags: [community, discord, malware, reversing, samples]
+    tags: [community, discord, manual_community, malware, reversing, samples]
     rate_limit: 0
-    auth_required: true
-    description: Focused malware sample reversing community
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   # -- Web Security --
   - name: Bug Bounty Forum
     url: https://discord.gg/bugbounty
     type: community
     method: discord
-    tags: [community, discord, web, bug_bounty, red_team]
+    tags: [community, discord, manual_community, web, bug_bounty, red_team]
     rate_limit: 0
-    auth_required: true
-    description: Bug bounty hunters sharing web vulns
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.
 
   - name: PwnFunction Discord
     url: https://discord.gg/pwnfunction
     type: community
     method: discord
-    tags: [community, discord, web, xss, dom]
+    tags: [community, discord, manual_community, web, xss, dom]
     rate_limit: 0
-    auth_required: true
-    description: XSS and DOM-based vulnerability research
+    auth_required: false
+    description: Manual user-membership community; not an automated Dogpile feed or bot-readable source.

@@ -72,6 +72,8 @@ def run_eval() -> dict[str, Any]:
     dogpile_youtube = _read(SKILL_DIR / "youtube_search.py")
     ingest_youtube_skill = _read(SKILLS_DIR / "ingest-youtube" / "SKILL.md")
     ingest_youtube_cli = _read(SKILLS_DIR / "ingest-youtube" / "cli.py")
+    run_sh = _read(SKILL_DIR / "run.sh")
+    security_resources = _load_feed_pack(SKILL_DIR / "resources" / "security.yaml")
 
     cases: list[dict[str, Any]] = []
 
@@ -195,6 +197,88 @@ def run_eval() -> dict[str, Any]:
         "Configured Dogpile RSS pack source definitions contain no API-key/token fields.",
         "Whether each public feed endpoint is reachable right now.",
         feed_pack_details,
+    ))
+
+    required_feed_names = [
+        "BleepingComputer",
+        "Krebs on Security",
+        "SANS Internet Storm Center",
+        "PortSwigger Research",
+        "Google Project Zero",
+        "GitHub Security Lab",
+        "SpecterOps",
+        "SentinelOne Labs",
+        "Wiz Blog",
+        "Proofpoint Threat Insight",
+    ]
+    cases.append(_case(
+        "feed_selection_guidance_is_actionable",
+        "feeds",
+        "Excels at" in skill_md
+        and "Activate when" in skill_md
+        and "Avoid when" in skill_md
+        and all(name in skill_md for name in required_feed_names),
+        "Dogpile documents what each important feed/source excels at, when to activate it, and when not to use it.",
+        "Live freshness, article quality, or exact downstream source ranking.",
+    ))
+
+    resources = {item.get("name"): item for item in security_resources.get("resources", []) or []}
+    anyrun = resources.get("ANY.RUN") or {}
+    hybrid = resources.get("Hybrid Analysis") or {}
+    shodan = resources.get("Shodan") or {}
+    censys = resources.get("Censys") or {}
+    cases.append(_case(
+        "credentialed_api_references_documented",
+        "credentialed_api",
+        "https://docs.virustotal.com/reference/overview" in skill_md
+        and "https://docs.virustotal.com/reference/public-vs-premium-api" in skill_md
+        and "https://any.run/api-documentation/" in skill_md
+        and "https://hybrid-analysis.com/docs/api/v2" in skill_md
+        and "https://developer.shodan.io/api" in skill_md
+        and "https://docs.censys.com/reference/get-started" in skill_md
+        and "doctor)" in run_sh
+        and "scripts/doctor.py" in run_sh
+        and "paid_plan_only" in (anyrun.get("tags") or [])
+        and "optional" in (shodan.get("tags") or [])
+        and "optional" in (hybrid.get("tags") or [])
+        and "optional" in (censys.get("tags") or [])
+        and "credentialed_enrichment" in (shodan.get("tags") or [])
+        and "credentialed_enrichment" in (censys.get("tags") or []),
+        "Dogpile documents credentialed API references and marks ANY.RUN, Hybrid Analysis, Shodan, and Censys as optional credentialed sources.",
+        "API key validity, paid-plan entitlement, or live API response quality.",
+        {
+            "anyrun_tags": anyrun.get("tags"),
+            "hybrid_analysis_tags": hybrid.get("tags"),
+            "shodan_tags": shodan.get("tags"),
+            "censys_tags": censys.get("tags"),
+        },
+    ))
+
+    community_sources = [
+        item for item in (security_resources.get("resources", []) or [])
+        if item.get("type") == "community"
+    ]
+    cases.append(_case(
+        "community_sources_manual_not_api_credentials",
+        "manual_community",
+        bool(community_sources)
+        and all(item.get("auth_required") is False for item in community_sources)
+        and all("manual_community" in (item.get("tags") or []) for item in community_sources)
+        and "must not attempt bot signup or automated" in skill_md,
+        "Dogpile treats Discord/Slack communities as manual sources, not API-key feeds or bot-readable providers.",
+        "Whether a human currently has membership in any community.",
+        {"community_source_count": len(community_sources)},
+    ))
+
+    cases.append(_case(
+        "shodan_scope_limits_documented",
+        "credentialed_api",
+        "https://developer.shodan.io/api" in skill_md
+        and "not effective for finding live drone video feeds" in skill_md
+        and "ground relay server" in skill_md
+        and "query credits" in skill_md,
+        "Dogpile documents Shodan's best use for infrastructure exposure and its drone-feed limitation.",
+        "Live Shodan API key validity or result quality.",
     ))
 
     cases.append(_case(

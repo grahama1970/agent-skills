@@ -148,36 +148,36 @@ and artifact path when available. If `content_verdict` is `empty`, `thin`,
 using the result as if content was extracted. For durable site-wide learning,
 handoff to `ingest-website`; for historical URL state, use Wayback.
 
-### Optional Feed Pack Selection
+### Optional Feed And API Source Selection
 
 Feeds are disabled by default. Enable them only when fresh security/code
 monitoring is relevant to the research question, and use them as contextual
 enrichment alongside Brave, GitHub, ArXiv, and YouTube evidence.
 
-| Feed pack/source | Activate when the project agent needs |
-|------------------|----------------------------------------|
-| `security_code` | Compact code, AppSec, vulnerability, red-team, and operational security monitoring with low default noise |
-| `security_code_extended` | Practitioner-grade malware, cloud, exploit-development, email-threat, and policy context in addition to `security_code` |
-| BleepingComputer | Daily incident, malware, ransomware, and active-exploitation coverage |
-| Krebs on Security | Investigative cybercrime, breach, fraud, and infrastructure reporting |
-| SANS Internet Storm Center | Operational threat-handler notes and near-term defender awareness |
-| Help Net Security | Security tooling, trends, and general industry updates |
-| PortSwigger Research | Web application security, HTTP/browser attack research, and payload techniques |
-| Google Project Zero | Deep vulnerability research, exploit chains, memory safety, and root-cause analysis |
-| Google Online Security Blog | Platform, browser, ecosystem, and secure engineering context |
-| GitHub Security Blog | Supply-chain, dependency, DevSecOps, and open-source security updates |
-| GitHub Security Lab | CodeQL, vulnerability research, and code-level bug analysis |
-| SpecterOps | Active Directory, Windows internals, and enterprise red-team tradecraft |
-| Black Hills Information Security | Practical pentest methodology, tooling, and defensive/offensive operations |
-| TrustedSec | Red-team methodology, tool releases, and practitioner tradecraft |
-| SentinelOne Labs | Malware reverse engineering, APT reporting, and technical campaign analysis |
-| Malwarebytes Labs | Commodity malware, malvertising, and broad malware landscape monitoring |
-| Wiz Blog | Cloud, Kubernetes, identity, and infrastructure security research |
-| Unit 42 | Threat research, cloud campaigns, network security, and adversary reporting |
-| Offensive Security | Exploit-development education, offensive security, and Kali ecosystem updates |
-| Corelan Team | Windows exploit development, mitigation bypass, and low-level exploitation |
-| Proofpoint Threat Insight | Email-borne threats, phishing, BEC, and initial-access tradecraft |
-| EFF Deeplinks | Security-relevant privacy, policy, legal, DMCA/CFAA, and civil-liberties context |
+| Feed pack/source | Excels at | Activate when | Avoid when |
+|------------------|-----------|---------------|------------|
+| `security_code` | Low-noise default mix for code, AppSec, vulnerability, red-team, and operational security news | The project needs compact fresh security/code context without overwhelming the report | The task is not security/code-related or only needs a direct answer from Brave/GitHub/ArXiv |
+| `security_code_extended` | Adds practitioner-grade malware, cloud, exploit-development, email-threat, and policy context | The compact pack is too narrow or the question spans malware/cloud/policy tradeoffs | The task is time-constrained, broad, or likely to drown in enrichment |
+| BleepingComputer | Daily incidents, ransomware, malware, breach reporting, and active exploitation | The agent needs current operational security news or incident context | Deep exploit root cause, code-level AppSec, or academic rigor is the primary need |
+| Krebs on Security | Investigative cybercrime, fraud, breach infrastructure, and underground economy reporting | Attribution, criminal infrastructure, or breach-background context matters | The task needs fast CVE mechanics, tool usage, or code examples |
+| SANS Internet Storm Center | Handler diaries, near-term defender awareness, and operational observations | Blue-team triage, current scanning, exploit attempts, or defender context matters | The task needs polished tutorials, broad news, or detailed exploit-development internals |
+| Help Net Security | Security tooling, industry trends, and general security updates | The agent needs tool/trend awareness around a topic | The task needs high-confidence threat intel, code-level vulnerability research, or exploit mechanics |
+| PortSwigger Research | Web application security, HTTP/browser attacks, payload research, and Burp ecosystem findings | Web/AppSec exploitation, testing methodology, or request/response attack classes are relevant | The topic is infrastructure, malware, cloud, or policy rather than web security |
+| Google Project Zero | Deep vulnerability research, exploit chains, memory safety, root cause, and platform internals | The agent needs rigorous technical depth and vulnerability mechanics | The task needs daily news, tooling updates, or quick operational triage |
+| Google Online Security Blog | Platform security, browser/ecosystem defenses, secure engineering, and policy-relevant technical context | The project needs Google/platform security direction or secure-engineering context | The question is about exploit PoCs, red-team tradecraft, or specific IOC enrichment |
+| GitHub Security Blog | Supply chain, dependencies, open-source security, GitHub platform defenses, and DevSecOps | The task involves package ecosystems, CI/CD, dependency risk, or GitHub-native workflows | The task needs malware detonation, network indicators, or non-code threat reporting |
+| GitHub Security Lab | CodeQL, variant analysis, code-level bug research, and open-source vulnerability writeups | The agent needs source-code vulnerability patterns or CodeQL/security-lab research | The task is not code-centric or needs operational incident news |
+| SpecterOps | Active Directory, Windows internals, identity attack paths, and enterprise red-team tradecraft | AD/Windows/identity abuse or red-team methodology is in scope | The task is web AppSec, malware triage, or general news |
+| Black Hills Information Security | Practical pentest methods, tooling, defensive/offensive operations, and approachable tradecraft | The agent needs practitioner technique context or operator-oriented explanation | The task needs academic depth, exact CVE status, or primary vendor documentation |
+| TrustedSec | Red-team methodology, tooling, attack simulations, and practitioner writeups | The project needs offensive workflow, tool-release, or enterprise pentest context | The task requires vendor-neutral standards, legal/policy analysis, or low-noise news only |
+| SentinelOne Labs | Malware reverse engineering, APT/campaign analysis, and technical malware behavior | Malware families, loader behavior, campaign infrastructure, or reversing detail matters | The task is general AppSec, dependency security, or non-malware code review |
+| Malwarebytes Labs | Commodity malware, malvertising, consumer/enterprise threat landscape, and practical malware news | Broad malware awareness or user-facing threat explanation is useful | The task needs deep reverse engineering or source-code-level vulnerability analysis |
+| Wiz Blog | Cloud, Kubernetes, identity, and infrastructure security research | Cloud posture, cross-tenant bugs, Kubernetes/runtime, or IAM risk is central | The topic is endpoint malware, web payload research, or on-prem AD tradecraft |
+| Unit 42 | Threat research, cloud campaigns, network security, adversary reporting, and incident context | The agent needs broad vendor threat research with campaign and infrastructure detail | The task needs neutral academic literature or small, low-noise code sources |
+| Offensive Security | Exploit-development education, offensive security training, Kali ecosystem, and technique walkthroughs | Learning/offensive methodology or exploit-development education is relevant | The task needs current breach reporting, official advisories, or defensive-only policy |
+| Corelan Team | Windows exploit development, mitigation bypass, stack/heap exploitation, and low-level training | The project needs exploit-dev mechanics or legacy-to-modern Windows exploitation concepts | The task is cloud, policy, news, or high-level incident triage |
+| Proofpoint Threat Insight | Email-borne threats, phishing, BEC, loaders, and initial-access tradecraft | Email security, phishing campaigns, or initial access matters | The task is web AppSec, AD tradecraft, or non-email infrastructure research |
+| EFF Deeplinks | Security-relevant privacy, CFAA/DMCA, policy, civil liberties, and legal context | Legal/policy constraints affect security research, disclosure, or tooling decisions | The task needs direct technical exploitation details or IOC enrichment |
 
 Raw IoC feeds such as CISA KEV JSON, URLhaus, Spamhaus, OpenPhish, and
 AlienVault OTX are not part of the default readable RSS lane. Treat them as
@@ -205,7 +205,52 @@ Do not mix these public RSS packs with optional raw/TIP/API sources:
 | Public raw enrichment | CISA KEV JSON, URLhaus, Spamhaus, OpenPhish | Not part of the readable RSS lane; many public endpoints need custom parsers, TTL/confidence handling, and false-positive controls |
 | Vendor/TIP APIs | VirusTotal, ANY.RUN, Hybrid Analysis, GreyNoise, Malpedia, PhishTank | API key or account required in the resource registry |
 | Internet/OSINT APIs | Shodan, Censys, ZoomEye, Hunter.io, SecurityTrails | API key or account required in the resource registry |
-| Community feeds | BHIS Discord, TrustedSec Discord, OffSec Discord, Red Team Village, Hack The Box Discord, BloodHound Gang, and similar Discord/Slack communities | User account/invite/bot token required; not RSS |
+| Manual communities | BHIS Discord, TrustedSec Discord, OffSec Discord, Red Team Village, Hack The Box Discord, BloodHound Gang, and similar Discord/Slack communities | Manual user membership/invite only; not RSS, not an API-key feed, and not assumed bot-readable |
+
+### Credentialed API References
+
+Credentialed APIs are optional enrichment lanes. They are never part of the
+default readable RSS feed packs and must not be treated as required Dogpile
+health unless the project explicitly enables that paid/account-backed provider.
+
+| API source | Documentation | Dogpile default | Activate when | Required environment |
+|------------|---------------|-----------------|---------------|----------------------|
+| VirusTotal | <https://docs.virustotal.com/reference/overview> and <https://docs.virustotal.com/reference/public-vs-premium-api> | Optional enrichment | Lightweight hash, URL, domain, or IP reputation is useful and public/premium terms fit the task | `VIRUSTOTAL_API_KEY` |
+| ANY.RUN | <https://any.run/api-documentation/> | Optional paid-plan-only enrichment | The account has Interactive Sandbox API, TI Lookup/YARA Search, or TI Feeds API access and the task needs malware/phishing behavior or TI enrichment | `ANYRUN_API_KEY` |
+| Hybrid Analysis | <https://hybrid-analysis.com/docs/api/v2> | Optional enrichment | Falcon Sandbox report/feed/search evidence is useful and the key's authorization level covers the endpoint | `HYBRID_ANALYSIS_API_KEY` |
+| Shodan | <https://developer.shodan.io/api> | Optional enrichment | Internet-exposed service, banner, port, device, vulnerability-exposure, or attack-surface context matters | `SHODAN_API_KEY` |
+| Censys | <https://docs.censys.com/reference/get-started> | Optional enrichment | Host, certificate, web-property, service, and structured internet asset intelligence is useful | `CENSYS_API_KEY` |
+
+ANY.RUN Free Plan API access is unavailable for Interactive Sandbox, TI
+Lookup/YARA Search, and TI Feeds. Dogpile must report ANY.RUN as
+`skipped_plan_unavailable` unless a paid/API-enabled plan is confirmed.
+VirusTotal Public API is available with a key but has strict rate/usage
+constraints; do not spend quota in default sanity checks. Hybrid Analysis API
+keys have authorization levels; a visible key does not prove access to every
+endpoint. Shodan is best for infrastructure exposure and reconnaissance; do
+not use it for malware behavior, article/news freshness, code search, or broad
+web research. Shodan is also not effective for finding live drone video feeds:
+most drone links are point-to-point RF, behind cellular NAT, or too transient
+for internet-wide scanning. At most, Shodan may find a misconfigured public
+ground relay server such as RTMP/RTSP; it is not discovering the drone itself.
+Some Shodan API search operations consume query credits, so default doctor
+checks must not spend them.
+
+Discord/Slack communities are manual awareness sources only. Dogpile must not
+count them as API-key-required feeds, must not attempt bot signup or automated
+scraping, and must not include them in provider health or doctor checks. A
+project agent may mention them only as places a human member could monitor
+manually when community context is relevant.
+
+Censys overlaps with Shodan, but it is usually stronger when the project needs
+structured host/certificate/web-property data or internet asset intelligence
+rather than broad banner search. Use it for attack-surface management,
+shadow-IT discovery, exposed-service inventories, threat-infrastructure
+mapping, SSL/TLS certificate analysis, and research-grade internet metadata.
+Censys Platform API uses Personal Access Tokens, endpoint access varies by plan
+tier, and calls consume credits. Do not use it for malware behavior,
+news/article freshness, source-code discovery, live drone feeds, or general web
+research.
 
 To check the current credential classification, run:
 
@@ -379,6 +424,11 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh search "query" --with-feeds --feed-pack security_code_extended --feed-limit 3` | Include the extended practitioner security RSS pack |
 | `./run.sh search "query" --with-perplexity` | Deprecated audit flag; records Perplexity as skipped and never calls the paid API |
 | `./run.sh feature-eval` | Run deterministic feature-channel contract eval and write a receipt |
+| `./run.sh doctor` | Run credential/API-reference doctor without spending VirusTotal, Hybrid Analysis, or Shodan quota |
+| `./run.sh doctor --with-virustotal` | Opt in to one bounded VirusTotal public API probe |
+| `./run.sh doctor --with-hybrid-analysis` | Opt in to one bounded Hybrid Analysis API probe |
+| `./run.sh doctor --with-shodan` | Opt in to one bounded Shodan API info probe |
+| `./run.sh doctor --with-censys` | Opt in to one bounded Censys Platform API host lookup |
 | `./sanity.sh --feature-eval` | Same feature-channel eval through the sanity entrypoint |
 | `./sanity.sh --live-services` | Run the live service matrix for core providers, internal primitives, feed packs, optional lanes, and credential-aware skips |
 | `./sanity.sh --live-services --strict-optional` | Treat optional missing credentials, such as Readarr/NZB keys, as failures |
@@ -427,6 +477,7 @@ these checks with prose.
 | Static/import smoke | `./skills/dogpile/sanity.sh --quick` | Terminal output `Result: PASS (quick)` | Local module imports, dependency discovery, sub-skill layout, and CLI help work | Live provider health or behavior |
 | Feature-channel eval | `./skills/dogpile/sanity.sh --feature-eval` or `./skills/dogpile/run.sh feature-eval` | `skills/dogpile/reports/feature-channel-eval-*/receipt.json` | Every feature channel has an explicit contract: Tau/model boundary, Brave, Brave questions, Perplexity retired, GitHub via Brave, ArXiv, YouTube via Brave plus transcript-only handoff, Fetcher, feeds, Wayback, Readarr, website ingestion, and synthesis | Live provider availability or semantic quality |
 | Skill fixture eval | `./skills/eval-skills/run.sh eval --skill dogpile --report-json /tmp/dogpile-eval.json --report-md /tmp/dogpile-eval.md` | `/tmp/dogpile-eval.json` and `/tmp/dogpile-eval.md` | Dogpile opts into the standard skill eval runner and its feature-channel contract eval passes through `run.sh` | Live provider health |
+| Credential/API doctor | `./skills/dogpile/run.sh doctor` | `skills/dogpile/reports/doctor-*/receipt.json` | Credentialed API references, resource-registry classifications, current-process env visibility, interactive-zsh env visibility, and default quota guards for VirusTotal, ANY.RUN, and Hybrid Analysis | API key validity unless an opt-in live probe is requested |
 | Live service matrix | `./skills/dogpile/sanity.sh --live-services` | `skills/dogpile/reports/live-service-matrix-*/receipt.json` | Current live status of required services and optional lanes: Tau boundary preflight, legacy SciLLM migration health, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS packs, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, full Tau provider DAG execution, Memory writes, or every source URL |
 | Live E2E | `./skills/dogpile/sanity.sh --live-e2e` | `skills/dogpile/reports/live-e2e-*/receipt.json` | A real Dogpile search can produce partial results, final report, synthesis, and default-off provider evidence | Optional feed/Wayback/Readarr/website-ingestion lanes |
 

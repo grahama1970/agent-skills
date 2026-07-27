@@ -1,0 +1,283 @@
+{
+  "schema": "dogpile.doctor.v1",
+  "mocked": false,
+  "live": false,
+  "duration_s": 4.15,
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "blocked_by_systemic_failure": 0,
+    "not_run": 0,
+    "skipped": 11,
+    "active_family": null,
+    "latest_failure_signature": null
+  },
+  "api_references": {
+    "virustotal_overview": "https://docs.virustotal.com/reference/overview",
+    "virustotal_public_vs_premium": "https://docs.virustotal.com/reference/public-vs-premium-api",
+    "anyrun_api_documentation": "https://any.run/api-documentation/",
+    "hybrid_analysis_api_v2": "https://hybrid-analysis.com/docs/api/v2",
+    "shodan_rest_api": "https://developer.shodan.io/api",
+    "censys_platform_api": "https://docs.censys.com/reference/get-started"
+  },
+  "checks": [
+    {
+      "name": "env_virustotal_api_key",
+      "family": "credentials",
+      "status": "skipped_missing_credentials",
+      "what_was_exercised": "Current process environment lookup for VIRUSTOTAL_API_KEY.",
+      "proves": "VIRUSTOTAL_API_KEY is not visible to Dogpile's current process.",
+      "does_not_prove": "Credential validity or quota.",
+      "metadata": {
+        "env_var": "VIRUSTOTAL_API_KEY",
+        "current_process_present": false
+      }
+    },
+    {
+      "name": "interactive_zsh_virustotal_api_key",
+      "family": "credentials",
+      "status": "passed",
+      "what_was_exercised": "Interactive zsh environment lookup for VIRUSTOTAL_API_KEY.",
+      "proves": "VIRUSTOTAL_API_KEY is exported by interactive zsh startup files.",
+      "does_not_prove": "The variable is inherited by non-interactive Dogpile subprocesses or that the key is valid.",
+      "metadata": {
+        "env_var": "VIRUSTOTAL_API_KEY",
+        "interactive_zsh_present": true,
+        "returncode": 0
+      }
+    },
+    {
+      "name": "virustotal_registry",
+      "family": "api_reference",
+      "status": "passed",
+      "what_was_exercised": "Dogpile security resource registry entry for VirusTotal.",
+      "proves": "VirusTotal is classified as a credentialed API resource.",
+      "does_not_prove": "API key validity, entitlement, quota, or plan availability.",
+      "metadata": {
+        "name": "VirusTotal",
+        "api_url": "https://www.virustotal.com/api/v3/",
+        "auth_required": true,
+        "rate_limit": 4,
+        "plan_note": "Public API exists but is rate-limited and restricted; premium surfaces require a paid plan."
+      }
+    },
+    {
+      "name": "env_anyrun_api_key",
+      "family": "credentials",
+      "status": "skipped_missing_credentials",
+      "what_was_exercised": "Current process environment lookup for ANYRUN_API_KEY.",
+      "proves": "ANYRUN_API_KEY is not visible to Dogpile's current process.",
+      "does_not_prove": "Credential validity or quota.",
+      "metadata": {
+        "env_var": "ANYRUN_API_KEY",
+        "current_process_present": false
+      }
+    },
+    {
+      "name": "interactive_zsh_anyrun_api_key",
+      "family": "credentials",
+      "status": "skipped_missing_credentials",
+      "what_was_exercised": "Interactive zsh environment lookup for ANYRUN_API_KEY.",
+      "proves": "ANYRUN_API_KEY was not visible through interactive zsh.",
+      "does_not_prove": "The variable is inherited by non-interactive Dogpile subprocesses or that the key is valid.",
+      "metadata": {
+        "env_var": "ANYRUN_API_KEY",
+        "interactive_zsh_present": false,
+        "returncode": 0
+      }
+    },
+    {
+      "name": "anyrun_registry",
+      "family": "api_reference",
+      "status": "passed",
+      "what_was_exercised": "Dogpile security resource registry entry for ANY.RUN.",
+      "proves": "ANY.RUN is classified as a credentialed API resource.",
+      "does_not_prove": "API key validity, entitlement, quota, or plan availability.",
+      "metadata": {
+        "name": "ANY.RUN",
+        "api_url": "https://api.any.run/v1/",
+        "auth_required": true,
+        "rate_limit": 10,
+        "plan_note": "ANY.RUN Free Plan does not provide Interactive Sandbox API, TI Lookup/YARA Search, or TI Feeds API access; keep it optional paid-plan-only."
+      }
+    },
+    {
+      "name": "env_hybrid_analysis_api_key",
+      "family": "credentials",
+      "status": "skipped_missing_credentials",
+      "what_was_exercised": "Current process environment lookup for HYBRID_ANALYSIS_API_KEY.",
+      "proves": "HYBRID_ANALYSIS_API_KEY is not visible to Dogpile's current process.",
+      "does_not_prove": "Credential validity or quota.",
+      "metadata": {
+        "env_var": "HYBRID_ANALYSIS_API_KEY",
+        "current_process_present": false
+      }
+    },
+    {
+      "name": "interactive_zsh_hybrid_analysis_api_key",
+      "family": "credentials",
+      "status": "passed",
+      "what_was_exercised": "Interactive zsh environment lookup for HYBRID_ANALYSIS_API_KEY.",
+      "proves": "HYBRID_ANALYSIS_API_KEY is exported by interactive zsh startup files.",
+      "does_not_prove": "The variable is inherited by non-interactive Dogpile subprocesses or that the key is valid.",
+      "metadata": {
+        "env_var": "HYBRID_ANALYSIS_API_KEY",
+        "interactive_zsh_present": true,
+        "returncode": 0
+      }
+    },
+    {
+      "name": "hybrid_analysis_registry",
+      "family": "api_reference",
+      "status": "passed",
+      "what_was_exercised": "Dogpile security resource registry entry for Hybrid Analysis.",
+      "proves": "Hybrid Analysis is classified as a credentialed API resource.",
+      "does_not_prove": "API key validity, entitlement, quota, or plan availability.",
+      "metadata": {
+        "name": "Hybrid Analysis",
+        "api_url": "https://www.hybrid-analysis.com/api/v2/",
+        "auth_required": true,
+        "rate_limit": 5,
+        "plan_note": "Hybrid Analysis API uses an api-key header; authorization levels gate endpoint access."
+      }
+    },
+    {
+      "name": "env_shodan_api_key",
+      "family": "credentials",
+      "status": "skipped_missing_credentials",
+      "what_was_exercised": "Current process environment lookup for SHODAN_API_KEY.",
+      "proves": "SHODAN_API_KEY is not visible to Dogpile's current process.",
+      "does_not_prove": "Credential validity or quota.",
+      "metadata": {
+        "env_var": "SHODAN_API_KEY",
+        "current_process_present": false
+      }
+    },
+    {
+      "name": "interactive_zsh_shodan_api_key",
+      "family": "credentials",
+      "status": "passed",
+      "what_was_exercised": "Interactive zsh environment lookup for SHODAN_API_KEY.",
+      "proves": "SHODAN_API_KEY is exported by interactive zsh startup files.",
+      "does_not_prove": "The variable is inherited by non-interactive Dogpile subprocesses or that the key is valid.",
+      "metadata": {
+        "env_var": "SHODAN_API_KEY",
+        "interactive_zsh_present": true,
+        "returncode": 0
+      }
+    },
+    {
+      "name": "shodan_registry",
+      "family": "api_reference",
+      "status": "passed",
+      "what_was_exercised": "Dogpile security resource registry entry for Shodan.",
+      "proves": "Shodan is classified as a credentialed API resource.",
+      "does_not_prove": "API key validity, entitlement, quota, or plan availability.",
+      "metadata": {
+        "name": "Shodan",
+        "api_url": "https://api.shodan.io/",
+        "auth_required": true,
+        "rate_limit": 1,
+        "plan_note": "Shodan API access is optional OSINT/recon enrichment; some search operations consume query credits."
+      }
+    },
+    {
+      "name": "env_censys_api_key",
+      "family": "credentials",
+      "status": "skipped_missing_credentials",
+      "what_was_exercised": "Current process environment lookup for CENSYS_API_KEY.",
+      "proves": "CENSYS_API_KEY is not visible to Dogpile's current process.",
+      "does_not_prove": "Credential validity or quota.",
+      "metadata": {
+        "env_var": "CENSYS_API_KEY",
+        "current_process_present": false
+      }
+    },
+    {
+      "name": "interactive_zsh_censys_api_key",
+      "family": "credentials",
+      "status": "passed",
+      "what_was_exercised": "Interactive zsh environment lookup for CENSYS_API_KEY.",
+      "proves": "CENSYS_API_KEY is exported by interactive zsh startup files.",
+      "does_not_prove": "The variable is inherited by non-interactive Dogpile subprocesses or that the key is valid.",
+      "metadata": {
+        "env_var": "CENSYS_API_KEY",
+        "interactive_zsh_present": true,
+        "returncode": 0
+      }
+    },
+    {
+      "name": "censys_registry",
+      "family": "api_reference",
+      "status": "passed",
+      "what_was_exercised": "Dogpile security resource registry entry for Censys.",
+      "proves": "Censys is classified as a credentialed API resource.",
+      "does_not_prove": "API key validity, entitlement, quota, or plan availability.",
+      "metadata": {
+        "name": "Censys",
+        "api_url": "https://api.platform.censys.io/v3/",
+        "auth_required": true,
+        "rate_limit": 5,
+        "plan_note": "Censys Platform API uses Personal Access Tokens; plan tier controls endpoint access and API calls consume credits."
+      }
+    },
+    {
+      "name": "virustotal_public_api_probe",
+      "family": "credentialed_api",
+      "status": "skipped_not_requested",
+      "what_was_exercised": "VirusTotal live probe opt-in guard.",
+      "proves": "No VirusTotal quota was spent by the default doctor run.",
+      "does_not_prove": "VIRUSTOTAL_API_KEY validity or quota.",
+      "metadata": {
+        "run_with": "./run.sh doctor --with-virustotal"
+      }
+    },
+    {
+      "name": "anyrun_api_probe",
+      "family": "credentialed_api",
+      "status": "skipped_missing_credentials",
+      "what_was_exercised": "Credential preflight for ANYRUN_API_KEY.",
+      "proves": "No ANY.RUN API call was made because the key is not visible to this process.",
+      "does_not_prove": "Whether shell startup files contain a key or whether the key would work in an interactive shell.",
+      "metadata": {
+        "env_var": "ANYRUN_API_KEY",
+        "current_process_present": false,
+        "plan_note": "ANY.RUN Free Plan does not provide Interactive Sandbox API, TI Lookup/YARA Search, or TI Feeds API access; keep it optional paid-plan-only."
+      }
+    },
+    {
+      "name": "hybrid_analysis_api_probe",
+      "family": "credentialed_api",
+      "status": "skipped_not_requested",
+      "what_was_exercised": "Hybrid Analysis live probe opt-in guard.",
+      "proves": "No Hybrid Analysis quota was spent by the default doctor run.",
+      "does_not_prove": "HYBRID_ANALYSIS_API_KEY validity, authorization level, or quota.",
+      "metadata": {
+        "run_with": "./run.sh doctor --with-hybrid-analysis"
+      }
+    },
+    {
+      "name": "shodan_api_probe",
+      "family": "credentialed_api",
+      "status": "skipped_not_requested",
+      "what_was_exercised": "Shodan live probe opt-in guard.",
+      "proves": "No Shodan API request or query credit was spent by the default doctor run.",
+      "does_not_prove": "SHODAN_API_KEY validity, account plan, query credits, or endpoint health.",
+      "metadata": {
+        "run_with": "./run.sh doctor --with-shodan"
+      }
+    },
+    {
+      "name": "censys_api_probe",
+      "family": "credentialed_api",
+      "status": "skipped_not_requested",
+      "what_was_exercised": "Censys live probe opt-in guard.",
+      "proves": "No Censys API request or credit was spent by the default doctor run.",
+      "does_not_prove": "CENSYS_API_KEY validity, plan tier, endpoint access, credits, or endpoint health.",
+      "metadata": {
+        "run_with": "./run.sh doctor --with-censys"
+      }
+    }
+  ],
+  "status": "passed_with_skips"
+}

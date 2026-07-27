@@ -116,6 +116,10 @@ case "$1" in
     shift
     "${EXEC[@]}" "$SCRIPT_DIR/scripts/feature_channel_eval.py" "$@"
     ;;
+  doctor)
+    shift
+    "${EXEC[@]}" "$SCRIPT_DIR/scripts/doctor.py" "$@"
+    ;;
   *)
     # Run dogpile search
     # We use process substitution to tee stderr to the logfile AND back to stderr,

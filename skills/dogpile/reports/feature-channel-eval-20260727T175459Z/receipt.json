@@ -1,0 +1,249 @@
+{
+  "schema": "dogpile.feature_channel_eval.v1",
+  "mocked": false,
+  "live": false,
+  "generated_at": "2026-07-27T17:54:59Z",
+  "summary": {
+    "passed": 20,
+    "failed": 0,
+    "blocked_by_systemic_failure": 0,
+    "not_run": 0,
+    "active_family": null,
+    "latest_failure_signature": null
+  },
+  "cases": [
+    {
+      "name": "tau_provider_boundary_documented",
+      "channel": "tau_model_orchestration",
+      "status": "passed",
+      "proves": "Dogpile's skill contract names Tau, not direct SciLLM, as the model orchestration boundary.",
+      "does_not_prove": "Actual Dogpile synthesis execution through a Tau provider DAG.",
+      "details": {}
+    },
+    {
+      "name": "legacy_scillm_marked_migration",
+      "channel": "tau_model_orchestration",
+      "status": "passed",
+      "proves": "Existing direct SciLLM code is explicitly labeled as legacy migration work.",
+      "does_not_prove": "Removal of every legacy direct SciLLM call from implementation.",
+      "details": {}
+    },
+    {
+      "name": "brave_search_channel_documented",
+      "channel": "brave_search",
+      "status": "passed",
+      "proves": "Brave is a first-class Dogpile web-search channel with query-budget rules.",
+      "does_not_prove": "Live Brave API credentials or result relevance.",
+      "details": {}
+    },
+    {
+      "name": "brave_questions_replace_perplexity",
+      "channel": "brave_questions",
+      "status": "passed",
+      "proves": "Perplexity replacement uses concurrent Brave question fan-out.",
+      "does_not_prove": "Live Brave search result quality.",
+      "details": {}
+    },
+    {
+      "name": "perplexity_retired_default_off",
+      "channel": "perplexity",
+      "status": "passed",
+      "proves": "Perplexity is default-off and the deprecated flag is documented as skip-only.",
+      "does_not_prove": "Historical Perplexity API behavior.",
+      "details": {}
+    },
+    {
+      "name": "github_uses_brave_discovery",
+      "channel": "github_search",
+      "status": "passed",
+      "proves": "GitHub Search composes Brave and uses Brave discovery before executable repository evaluation.",
+      "does_not_prove": "Live GitHub auth or semantic repo ranking.",
+      "details": {}
+    },
+    {
+      "name": "arxiv_channel_documented",
+      "channel": "arxiv",
+      "status": "passed",
+      "proves": "ArXiv has a documented Dogpile channel and stage-2 hook.",
+      "does_not_prove": "Live ArXiv availability or full PDF extraction.",
+      "details": {}
+    },
+    {
+      "name": "youtube_brave_first_discovery",
+      "channel": "youtube",
+      "status": "passed",
+      "proves": "YouTube discovery defaults to Brave-first search with yt-dlp fallback and can extract video IDs from web results.",
+      "does_not_prove": "Live YouTube search availability, transcript availability, or Whisper quality.",
+      "details": {
+        "search_videos_signature": "(query: 'str', max_results: 'int' = 5, prefer_brave: 'bool' = True) -> 'list[dict]'",
+        "sample_ids": [
+          "dQw4w9WgXcQ",
+          "abcDEF12345"
+        ]
+      }
+    },
+    {
+      "name": "youtube_transcript_enrichment_default_off",
+      "channel": "youtube",
+      "status": "passed",
+      "proves": "Transcript enrichment is opt-in and Dogpile transcript fetches request transcript text without legacy enrichment.",
+      "does_not_prove": "A Tau-backed transcript enrichment adapter.",
+      "details": {}
+    },
+    {
+      "name": "fetcher_internal_primitive_documented",
+      "channel": "fetcher",
+      "status": "passed",
+      "proves": "Fetcher is documented as a deep-fetch primitive after a concrete URL is selected.",
+      "does_not_prove": "Live fetch quality for every URL.",
+      "details": {}
+    },
+    {
+      "name": "feeds_default_off_and_no_key_packs",
+      "channel": "feeds",
+      "status": "passed",
+      "proves": "Feeds are default-off and Dogpile documents credential requirements.",
+      "does_not_prove": "Live RSS freshness or parsing for every source.",
+      "details": {}
+    },
+    {
+      "name": "configured_rss_packs_require_no_api_keys",
+      "channel": "feeds",
+      "status": "passed",
+      "proves": "Configured Dogpile RSS pack source definitions contain no API-key/token fields.",
+      "does_not_prove": "Whether each public feed endpoint is reachable right now.",
+      "details": {
+        "security_code": {
+          "source_count": 12,
+          "sources": [
+            "bleepingcomputer",
+            "krebs_on_security",
+            "sans_isc",
+            "help_net_security",
+            "portswigger_research",
+            "google_project_zero",
+            "google_security_blog",
+            "github_security",
+            "github_security_lab",
+            "specterops",
+            "black_hills_infosec",
+            "trustedsec"
+          ]
+        },
+        "security_code_extended": {
+          "source_count": 8,
+          "sources": [
+            "sentinelone_labs",
+            "malwarebytes_labs",
+            "wiz_blog",
+            "unit42",
+            "offensive_security",
+            "corelan",
+            "proofpoint_threat_insight",
+            "eff_deeplinks"
+          ]
+        }
+      }
+    },
+    {
+      "name": "feed_selection_guidance_is_actionable",
+      "channel": "feeds",
+      "status": "passed",
+      "proves": "Dogpile documents what each important feed/source excels at, when to activate it, and when not to use it.",
+      "does_not_prove": "Live freshness, article quality, or exact downstream source ranking.",
+      "details": {}
+    },
+    {
+      "name": "credentialed_api_references_documented",
+      "channel": "credentialed_api",
+      "status": "passed",
+      "proves": "Dogpile documents credentialed API references and marks ANY.RUN, Hybrid Analysis, Shodan, and Censys as optional credentialed sources.",
+      "does_not_prove": "API key validity, paid-plan entitlement, or live API response quality.",
+      "details": {
+        "anyrun_tags": [
+          "blue_team",
+          "malware",
+          "sandbox",
+          "analysis",
+          "optional",
+          "paid_plan_only"
+        ],
+        "hybrid_analysis_tags": [
+          "blue_team",
+          "malware",
+          "sandbox",
+          "analysis",
+          "optional",
+          "credentialed_enrichment"
+        ],
+        "shodan_tags": [
+          "red_team",
+          "osint",
+          "recon",
+          "infrastructure",
+          "optional",
+          "credentialed_enrichment"
+        ],
+        "censys_tags": [
+          "red_team",
+          "osint",
+          "recon",
+          "certificates",
+          "optional",
+          "credentialed_enrichment"
+        ]
+      }
+    },
+    {
+      "name": "community_sources_manual_not_api_credentials",
+      "channel": "manual_community",
+      "status": "passed",
+      "proves": "Dogpile treats Discord/Slack communities as manual sources, not API-key feeds or bot-readable providers.",
+      "does_not_prove": "Whether a human currently has membership in any community.",
+      "details": {
+        "community_source_count": 14
+      }
+    },
+    {
+      "name": "shodan_scope_limits_documented",
+      "channel": "credentialed_api",
+      "status": "passed",
+      "proves": "Dogpile documents Shodan's best use for infrastructure exposure and its drone-feed limitation.",
+      "does_not_prove": "Live Shodan API key validity or result quality.",
+      "details": {}
+    },
+    {
+      "name": "wayback_default_off",
+      "channel": "wayback",
+      "status": "passed",
+      "proves": "Wayback is default-off and documented as an optional archive lane.",
+      "does_not_prove": "Live Wayback availability for a target URL.",
+      "details": {}
+    },
+    {
+      "name": "readarr_default_off",
+      "channel": "readarr",
+      "status": "passed",
+      "proves": "Readarr is default-off and documented as an optional book/Usenet lane.",
+      "does_not_prove": "Readarr/NZB credential validity.",
+      "details": {}
+    },
+    {
+      "name": "ingest_website_optional_handoff",
+      "channel": "ingest_website",
+      "status": "passed",
+      "proves": "Website ingestion is documented as an opt-in post-search handoff.",
+      "does_not_prove": "Live crawl quality or Memory writes.",
+      "details": {}
+    },
+    {
+      "name": "automatic_synthesis_contract_documented",
+      "channel": "synthesis",
+      "status": "passed",
+      "proves": "Dogpile requires synthesized, source-grounded reports instead of raw dumps only.",
+      "does_not_prove": "Actual synthesis quality for a live query.",
+      "details": {}
+    }
+  ],
+  "status": "passed"
+}
