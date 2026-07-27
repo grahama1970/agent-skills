@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-27T17:05:00Z",
+  "updated_at": "2026-07-27T18:03:47Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:a67eeca95951f1a0e2d514ea57093b2ece9510c853780afc1a6d24dcbf8d9b8a",
@@ -28,8 +28,8 @@
     "latest_session_mood_binding_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
     "latest_session_mood_binding_receipt_sha256": "sha256:5ad61984b0f77022b8d62a57d2791d11eb800bf5509320dbb82b42f51f218edc",
     "latest_session_mood_chatterbox_live_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
-    "latest_session_mood_chatterbox_live_receipt_sha256": "sha256:7865cd59614d046a92d7225f2b810834ee8b157c18973dbadf9357eb77efa432",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with ASR WER 0.0 on all three turns",
+    "latest_session_mood_chatterbox_live_receipt_sha256": "sha256:4827cb0ff7ebeb74363ff0ee9d6d3d62fe487caecf3c3802c15eb8f4e6e97260",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, and durable WAV snapshots copied into the report directory",
     "unverified": [
       "persisted as authoritative runtime state",
       "live Memory and Watch reread in a full accepted-dream chain",
@@ -51,8 +51,13 @@
       0.0,
       0.0
     ],
+    "audio_snapshots": [
+      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_finished_response.wav",
+      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_finished_response.wav",
+      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_finished_response.wav"
+    ],
     "source": "continuity_session_mood",
-    "exercised": "session-derived voice_delivery survived ASR batch rendering for three turns and used chatterbox_base",
+    "exercised": "session-derived voice_delivery survived ASR batch rendering for three turns, used chatterbox_base, passed strict WER 0.0 ASR checks, and preserved durable report-local WAV snapshots",
     "unverified": [
       "perceived target emotion",
       "naturalness",

@@ -4,7 +4,8 @@
   "use_blessed_qra_cache": false,
   "asr_verify": true,
   "asr_cache": false,
-  "asr_max_candidates": 1,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.0,
   "voice_delivery": {
     "schema": "persona_dream.voice_delivery.v1",
     "source": "continuity_session_mood",

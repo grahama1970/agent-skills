@@ -4,35 +4,7 @@
   "status": "PASS_SESSION_MOOD_CHATTERBOX_LIVE",
   "mocked": false,
   "live": true,
-  "proof_scope": "Live Chatterbox rendering of deterministic session-mood voice_delivery; not live Memory/Watch/recognition.",
   "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
-  "changed_files": [
-    {
-      "path": "skills/persona-dream/scripts/session_mood_binding.py",
-      "sha256": "3b2cb78dbaf34722f12a2377ed54759a457bf61cabff1b9f942204702f00d232"
-    },
-    {
-      "path": "skills/persona-dream/scripts/session_mood_chatterbox_live.py",
-      "sha256": "032f270e9549b409a02cdca6440d994269ddb9cda4d11cc9ec9257ecab61ca36"
-    }
-  ],
-  "commands": [
-    {
-      "command": "python3 skills/persona-dream/scripts/session_mood_chatterbox_live.py --persona embry --session-id p2_3_session_mood_chatterbox --out-dir skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live",
-      "status": "PASS",
-      "result": "turn_count=3, engines=[chatterbox_base, chatterbox_base, chatterbox_base], wers=[0.0, 0.0, 0.0]"
-    },
-    {
-      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
-      "status": "PASS",
-      "result": "21 passed in 1.25s"
-    },
-    {
-      "command": "./skills/persona-dream/sanity.sh",
-      "status": "PASS",
-      "result": "505 passed, 9 subtests passed in 32.40s"
-    }
-  ],
   "binding": {
     "schema": "persona_dream.session_mood_binding.v1",
     "session_id": "p2_3_session_mood_chatterbox",
@@ -151,10 +123,10 @@
       "turn_id": "turn_001",
       "label": "persona-dream-p2_3_session_mood_chatterbox-turn_001",
       "request_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_request.json",
-      "request_sha256": "sha256:4b437cf8edfa52fe09e0f85d07eed8e8f16c651d15ef75230a1ebb8f54336261",
+      "request_sha256": "sha256:9c37cd4780b5ddd31b696b59bcb7b99b8e2eacc440c6f46003aee463befd9b17",
       "response_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_response.json",
-      "response_sha256": "sha256:7255003c90652d4c10e990f339fd9a3a202e238c9f7f15e60039a3ec70d7c278",
-      "elapsed_seconds": 2.231,
+      "response_sha256": "sha256:20cc9f2858eed9dbce1a1c5944f6d3f511104650d75df5ccb14ed2a95816b716",
+      "elapsed_seconds": 1.901,
       "engine": "chatterbox_base",
       "cache_material_engine": null,
       "chunk_engine": null,
@@ -177,17 +149,22 @@
         "failed_gates": []
       },
       "finished_response_audio": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_001/finished_response.wav",
-      "finished_wav_sha256": "d17b50eba4292dbb34d963395a30415538771f3940ff2ec5f5ed9eb3fa35150b",
-      "finished_wav_duration_seconds": 2.72
+      "audio_snapshot_status": "PASS_AUDIO_SNAPSHOT_DURABLE",
+      "finished_response_audio_source": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_001/finished_response.wav",
+      "finished_response_audio_resolved_source": "/home/graham/workspace/experiments/chatterbox/logs/persona-dream-p2_3_session_mood_chatterbox-turn_001/finished_response.wav",
+      "finished_response_audio_snapshot": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_finished_response.wav",
+      "finished_response_audio_snapshot_sha256": "sha256:ec3a987d6e164398b7502fca1ab6b6951f1d9360536e5fba2283b03e24229d12",
+      "finished_wav_sha256": "ec3a987d6e164398b7502fca1ab6b6951f1d9360536e5fba2283b03e24229d12",
+      "finished_wav_duration_seconds": 2.04
     },
     {
       "turn_id": "turn_002",
       "label": "persona-dream-p2_3_session_mood_chatterbox-turn_002",
       "request_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_request.json",
-      "request_sha256": "sha256:d55d7717576d7b512c171ab496e013ac26cc36f105c602f62d6481010c4538ba",
+      "request_sha256": "sha256:5f5d12512af6f706ea208de72b8a8e5440a9523cbd8ec342546ab5a19547a4f5",
       "response_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_response.json",
-      "response_sha256": "sha256:55da71bd516b7d736ae389ae32eefdc005e0b0e0df27d475dcba784ca5a38796",
-      "elapsed_seconds": 1.855,
+      "response_sha256": "sha256:e47464f18c4ed24d99a6bbb5d650d268494088ac4fed5c8c4730865b17a89eb3",
+      "elapsed_seconds": 1.971,
       "engine": "chatterbox_base",
       "cache_material_engine": null,
       "chunk_engine": null,
@@ -210,17 +187,22 @@
         "failed_gates": []
       },
       "finished_response_audio": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/finished_response.wav",
-      "finished_wav_sha256": "65cfb5c42af813c6e8f8824929580ff3d421c2f73b8d2b1c42ab7b189f7db841",
-      "finished_wav_duration_seconds": 2.08
+      "audio_snapshot_status": "PASS_AUDIO_SNAPSHOT_DURABLE",
+      "finished_response_audio_source": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/finished_response.wav",
+      "finished_response_audio_resolved_source": "/home/graham/workspace/experiments/chatterbox/logs/persona-dream-p2_3_session_mood_chatterbox-turn_002/finished_response.wav",
+      "finished_response_audio_snapshot": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_finished_response.wav",
+      "finished_response_audio_snapshot_sha256": "sha256:881be52fa0d8f9bef02b35570dd04620eda8647b7143efb85f28f7901ec1fc32",
+      "finished_wav_sha256": "881be52fa0d8f9bef02b35570dd04620eda8647b7143efb85f28f7901ec1fc32",
+      "finished_wav_duration_seconds": 2.16
     },
     {
       "turn_id": "turn_003",
       "label": "persona-dream-p2_3_session_mood_chatterbox-turn_003",
       "request_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_request.json",
-      "request_sha256": "sha256:7f58857f130334347f60e02123b665a54ca16a93dfad1e1bc958b2425b33df47",
+      "request_sha256": "sha256:2b8276be8dd5a335bb103eb4f4c5cade9d02f476d59ec79e57e7967aac053624",
       "response_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_response.json",
-      "response_sha256": "sha256:c33612cdb1226ccdfde021a436dbaf48a260997447a164b8a7f569bd90e93da5",
-      "elapsed_seconds": 2.739,
+      "response_sha256": "sha256:70cadc31d01bb2ab93ade0203f84d691663149d11319987834e1b714d31be552",
+      "elapsed_seconds": 1.724,
       "engine": "chatterbox_base",
       "cache_material_engine": null,
       "chunk_engine": null,
@@ -243,8 +225,13 @@
         "failed_gates": []
       },
       "finished_response_audio": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_003/finished_response.wav",
-      "finished_wav_sha256": "ce4027355f4ced90bbf04885187d23c9bf0fb7fc7747162bfa7c865785671c72",
-      "finished_wav_duration_seconds": 3.68
+      "audio_snapshot_status": "PASS_AUDIO_SNAPSHOT_DURABLE",
+      "finished_response_audio_source": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_003/finished_response.wav",
+      "finished_response_audio_resolved_source": "/home/graham/workspace/experiments/chatterbox/logs/persona-dream-p2_3_session_mood_chatterbox-turn_003/finished_response.wav",
+      "finished_response_audio_snapshot": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_finished_response.wav",
+      "finished_response_audio_snapshot_sha256": "sha256:a5d002a3b63178a0589e078153d1ffca294a4e62987eae59fb82f076cf418301",
+      "finished_wav_sha256": "a5d002a3b63178a0589e078153d1ffca294a4e62987eae59fb82f076cf418301",
+      "finished_wav_duration_seconds": 1.76
     }
   ],
   "claims": {

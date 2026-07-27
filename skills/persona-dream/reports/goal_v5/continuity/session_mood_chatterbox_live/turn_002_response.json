@@ -293,7 +293,7 @@
         "exaggeration",
         "min_p"
       ],
-      "generation_seconds": 1.637,
+      "generation_seconds": 1.718,
       "latency_events": [
         {
           "name": "request_received",
@@ -301,36 +301,36 @@
         },
         {
           "name": "generation_params_ready",
-          "elapsed_ms": 0.248
+          "elapsed_ms": 0.244
         },
         {
           "name": "voice_conditioning_ready",
-          "elapsed_ms": 0.255,
+          "elapsed_ms": 0.251,
           "engine": "chatterbox_base",
           "render_lock": "held"
         },
         {
           "name": "first_audio_ready",
-          "elapsed_ms": 1636.785,
-          "generation_seconds": 1.637
+          "elapsed_ms": 1718.259,
+          "generation_seconds": 1.718
         },
         {
           "name": "audio_saved",
-          "elapsed_ms": 1638.614
+          "elapsed_ms": 1720.37
         },
         {
           "name": "audio_metrics_ready",
-          "elapsed_ms": 1685.989
+          "elapsed_ms": 1783.991
         }
       ],
-      "total_elapsed_ms": 1686.005,
-      "duration_seconds": 2.08,
-      "realtime_factor": 0.787,
+      "total_elapsed_ms": 1784.015,
+      "duration_seconds": 2.16,
+      "realtime_factor": 0.795,
       "metrics": {
         "path": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/chunk_01_satisfied_candidate_01_stage_default.wav",
         "exists": true,
-        "bytes": 99918,
-        "sha256": "65cfb5c42af813c6e8f8824929580ff3d421c2f73b8d2b1c42ab7b189f7db841",
+        "bytes": 103758,
+        "sha256": "881be52fa0d8f9bef02b35570dd04620eda8647b7143efb85f28f7901ec1fc32",
         "ffprobe": {
           "cmd": [
             "ffprobe",
@@ -346,14 +346,14 @@
             "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/chunk_01_satisfied_candidate_01_stage_default.wav"
           ],
           "returncode": 0,
-          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"2.080000\",\n        \"size\": \"99918\"\n    }\n}\n",
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"2.160000\",\n        \"size\": \"103758\"\n    }\n}\n",
           "stderr": ""
         },
         "codec_name": "pcm_s16le",
         "sample_rate": 24000,
         "channels": 1,
-        "duration_seconds": 2.08,
-        "ffprobe_size": 99918
+        "duration_seconds": 2.16,
+        "ffprobe_size": 103758
       },
       "failed_gates": [],
       "asr_verification": {
@@ -368,7 +368,7 @@
           "repeated_ngram_hits": [],
           "failed_gates": []
         },
-        "max_wer": 0.35,
+        "max_wer": 0.0,
         "max_duration_ratio": 2.5,
         "candidates": [
           {
@@ -473,7 +473,7 @@
                 "exaggeration",
                 "min_p"
               ],
-              "generation_seconds": 1.637,
+              "generation_seconds": 1.718,
               "latency_events": [
                 {
                   "name": "request_received",
@@ -481,36 +481,36 @@
                 },
                 {
                   "name": "generation_params_ready",
-                  "elapsed_ms": 0.248
+                  "elapsed_ms": 0.244
                 },
                 {
                   "name": "voice_conditioning_ready",
-                  "elapsed_ms": 0.255,
+                  "elapsed_ms": 0.251,
                   "engine": "chatterbox_base",
                   "render_lock": "held"
                 },
                 {
                   "name": "first_audio_ready",
-                  "elapsed_ms": 1636.785,
-                  "generation_seconds": 1.637
+                  "elapsed_ms": 1718.259,
+                  "generation_seconds": 1.718
                 },
                 {
                   "name": "audio_saved",
-                  "elapsed_ms": 1638.614
+                  "elapsed_ms": 1720.37
                 },
                 {
                   "name": "audio_metrics_ready",
-                  "elapsed_ms": 1685.989
+                  "elapsed_ms": 1783.991
                 }
               ],
-              "total_elapsed_ms": 1686.005,
-              "duration_seconds": 2.08,
-              "realtime_factor": 0.787,
+              "total_elapsed_ms": 1784.015,
+              "duration_seconds": 2.16,
+              "realtime_factor": 0.795,
               "metrics": {
                 "path": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/chunk_01_satisfied_candidate_01_stage_default.wav",
                 "exists": true,
-                "bytes": 99918,
-                "sha256": "65cfb5c42af813c6e8f8824929580ff3d421c2f73b8d2b1c42ab7b189f7db841",
+                "bytes": 103758,
+                "sha256": "881be52fa0d8f9bef02b35570dd04620eda8647b7143efb85f28f7901ec1fc32",
                 "ffprobe": {
                   "cmd": [
                     "ffprobe",
@@ -526,14 +526,14 @@
                     "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/chunk_01_satisfied_candidate_01_stage_default.wav"
                   ],
                   "returncode": 0,
-                  "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"2.080000\",\n        \"size\": \"99918\"\n    }\n}\n",
+                  "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"2.160000\",\n        \"size\": \"103758\"\n    }\n}\n",
                   "stderr": ""
                 },
                 "codec_name": "pcm_s16le",
                 "sample_rate": 24000,
                 "channels": 1,
-                "duration_seconds": 2.08,
-                "ffprobe_size": 99918
+                "duration_seconds": 2.16,
+                "ffprobe_size": 103758
               },
               "failed_gates": []
             },
@@ -560,7 +560,7 @@
       "cache": {
         "hit": false,
         "disabled": true,
-        "cache_key": "5572e3b23713e719b52e4ce0cd6d71032fce2aacd3785221f376015367cf4903"
+        "cache_key": "c9783aa99584e31ba81ab3189df2d33b17cdacd55a381a124a364c5bdc7f297d"
       },
       "phase": "answer_chunk",
       "chunk_index": 1,
@@ -599,8 +599,8 @@
   "finished_response_metrics": {
     "path": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/finished_response.wav",
     "exists": true,
-    "bytes": 99918,
-    "sha256": "65cfb5c42af813c6e8f8824929580ff3d421c2f73b8d2b1c42ab7b189f7db841",
+    "bytes": 103758,
+    "sha256": "881be52fa0d8f9bef02b35570dd04620eda8647b7143efb85f28f7901ec1fc32",
     "ffprobe": {
       "cmd": [
         "ffprobe",
@@ -616,14 +616,14 @@
         "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/finished_response.wav"
       ],
       "returncode": 0,
-      "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"2.080000\",\n        \"size\": \"99918\"\n    }\n}\n",
+      "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"2.160000\",\n        \"size\": \"103758\"\n    }\n}\n",
       "stderr": ""
     },
     "codec_name": "pcm_s16le",
     "sample_rate": 24000,
     "channels": 1,
-    "duration_seconds": 2.08,
-    "ffprobe_size": 99918
+    "duration_seconds": 2.16,
+    "ffprobe_size": 103758
   },
   "crossfade_ms": 20,
   "asr_verification": {
@@ -632,9 +632,9 @@
     "api_key_env": "WHISPER_API_KEY",
     "request_overrides_allowed": false,
     "api_key_available": true,
-    "max_wer": 0.35,
+    "max_wer": 0.0,
     "max_duration_ratio": 2.5,
-    "max_candidates": 1,
+    "max_candidates": 3,
     "cache_enabled": false,
     "failed_gates": []
   },
@@ -652,33 +652,33 @@
     },
     {
       "name": "batch_dir_ready",
-      "elapsed_ms": 0.166
+      "elapsed_ms": 0.156
     },
     {
       "name": "blessed_qra_lookup_done",
-      "elapsed_ms": 0.174,
+      "elapsed_ms": 0.162,
       "enabled": false,
       "hit": false,
       "reason": "request_disabled"
     },
     {
       "name": "render_plan_ready",
-      "elapsed_ms": 0.227,
+      "elapsed_ms": 0.214,
       "chunk_count": 1
     },
     {
       "name": "chunk_done",
-      "elapsed_ms": 1779.121,
+      "elapsed_ms": 1909.716,
       "chunk_index": 1,
       "ok": true,
       "asr_verified": true
     },
     {
       "name": "finished_audio_ready",
-      "elapsed_ms": 1852.043,
-      "bytes": 99918
+      "elapsed_ms": 1968.295,
+      "bytes": 103758
     }
   ],
-  "total_elapsed_ms": 1852.056,
+  "total_elapsed_ms": 1968.307,
   "failed_gates": []
 }

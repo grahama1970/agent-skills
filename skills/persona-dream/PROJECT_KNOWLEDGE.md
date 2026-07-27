@@ -46,10 +46,10 @@ Next implementation order:
    Embry recognition result.
 
 Evidence boundary: current Chatterbox evidence is `mocked: false`, `live: true`
-for transport, base-engine selection, content preservation, and ASR WER 0.0. It
-does not prove perceived target emotion, naturalness, speaker similarity,
-adversarial recognition, production conversation-service binding, or repeated
-full-pipeline reliability.
+for transport, base-engine selection, strict ASR WER 0.0, and durable
+report-local WAV snapshots. It does not prove perceived target emotion,
+naturalness, speaker similarity, adversarial recognition, production
+conversation-service binding, or repeated full-pipeline reliability.
 
 ## 2026-07-27 — P2.1 continuity-ledger hardening receipt accepted
 
@@ -165,17 +165,26 @@ Current live result:
   `temperature=0.7`, `intensity=0.72`, `valence=-0.25`
 - ASR WER on the accepted run: `0.0`, `0.0`, `0.0`
 - raw request/response JSON is stored beside the receipt for each turn.
+- durable WAV snapshots are stored beside the receipt:
+  `turn_001_finished_response.wav`, `turn_002_finished_response.wav`, and
+  `turn_003_finished_response.wav`.
 
-Important live-debug lesson: the first attempted live path used
+Important live-debug lessons: the first attempted live path used
 `yearning_warm`, which Chatterbox normalized to `neutral_warm`; one stochastic
-render appended extra text. The session mood map now emits the supported
-`firm_boundary` tone for `guarded_quietly_wanting`, with negative valence, so the
-requested tone is not normalized away.
+render appended extra text. A later rerun exposed that Chatterbox's default
+`asr_max_wer=0.35` can accept extra speech, so
+`scripts/session_mood_chatterbox_live.py` now requests `asr_max_wer=0.0`,
+permits up to three ASR candidates, independently rejects normalized transcript
+drift, and copies the returned `/out` WAVs into the Persona Dream report
+directory. The session mood map still emits the supported `firm_boundary` tone
+for `guarded_quietly_wanting`, with negative valence, so the requested tone is
+not normalized away.
 
 Evidence boundary: this is live Chatterbox proof (`mocked: false`, `live: true`)
-for the voice actuator leg fed by session mood. It does not prove perceived
-emotion, speaker similarity, adversarial Embry recognition, live Memory/Watch
-availability, browser/microphone behavior, or the full accepted-dream chain.
+for the voice actuator leg fed by session mood, with report-local audio custody.
+It does not prove perceived emotion, speaker similarity, adversarial Embry
+recognition, live Memory/Watch availability, browser/microphone behavior, or
+the full accepted-dream chain.
 
 Next deterministic build: add speaker-similarity plus adversarial Embry
 recognition checks for the live Chatterbox outputs, then assemble the larger

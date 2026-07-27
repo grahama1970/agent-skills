@@ -6,6 +6,8 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
+import shutil
 import time
 import urllib.request
 from pathlib import Path
@@ -13,6 +15,9 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CHATTERBOX = "http://127.0.0.1:8018"
+CHATTERBOX_OUT_HOST_ROOT = Path(
+    os.environ.get("CHATTERBOX_OUT_HOST_ROOT", "/home/graham/workspace/experiments/chatterbox/logs")
+)
 
 
 def _load(name: str):
@@ -29,11 +34,62 @@ def _sha(obj: Any) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, default=str).encode()).hexdigest()
 
 
+def _sha_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _normalize_text(text: str | None) -> str:
+    return " ".join("".join(ch.lower() if ch.isalnum() else " " for ch in (text or "")).split())
+
+
 def post_json(url: str, payload: dict, timeout: float = 240.0) -> dict:
     req = urllib.request.Request(url, data=json.dumps(payload).encode(),
                                  headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read())
+
+
+def snapshot_finished_audio(turn_id: str, response: dict, *, out_dir: Path) -> dict:
+    source = response.get("finished_response_audio")
+    if not source:
+        raise RuntimeError("BLOCKED_CHATTERBOX_AUDIO_ARTIFACT_MISSING:no_finished_response_audio")
+    source_path = resolve_audio_path(source)
+    if source_path is None:
+        raise RuntimeError(f"BLOCKED_CHATTERBOX_AUDIO_ARTIFACT_MISSING:{source}")
+    snapshot_path = out_dir / f"{turn_id}_finished_response.wav"
+    shutil.copy2(source_path, snapshot_path)
+    snapshot_sha = _sha_file(snapshot_path)
+    reported_sha = (response.get("finished_wav_sha256")
+                    or (response.get("finished_response_metrics") or {}).get("sha256"))
+    if reported_sha:
+        normalized = str(reported_sha).removeprefix("sha256:")
+        if normalized != snapshot_sha:
+            raise RuntimeError(
+                "BLOCKED_CHATTERBOX_AUDIO_HASH_MISMATCH:"
+                f"reported={reported_sha}:snapshot=sha256:{snapshot_sha}"
+            )
+    return {
+        "audio_snapshot_status": "PASS_AUDIO_SNAPSHOT_DURABLE",
+        "finished_response_audio_source": source,
+        "finished_response_audio_resolved_source": str(source_path),
+        "finished_response_audio_snapshot": str(snapshot_path),
+        "finished_response_audio_snapshot_sha256": "sha256:" + snapshot_sha,
+    }
+
+
+def resolve_audio_path(source: str) -> Path | None:
+    source_path = Path(source)
+    if source_path.is_file():
+        return source_path
+    if source_path.is_absolute() and len(source_path.parts) > 2 and source_path.parts[1] == "out":
+        host_path = CHATTERBOX_OUT_HOST_ROOT.joinpath(*source_path.parts[2:])
+        if host_path.is_file():
+            return host_path
+    return None
 
 
 def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
@@ -43,7 +99,8 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
         "use_blessed_qra_cache": False,
         "asr_verify": True,
         "asr_cache": False,
-        "asr_max_candidates": 1,
+        "asr_max_candidates": 3,
+        "asr_max_wer": 0.0,
         "voice_delivery": turn["voice_delivery"],
     }
     request_path = out_dir / f"{turn['turn_id']}_request.json"
@@ -68,6 +125,12 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
         raise RuntimeError(f"BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS:{engine}")
     if asr_gate.get("ok") is not True:
         raise RuntimeError(f"BLOCKED_CHATTERBOX_ASR_GATE:{asr_gate}")
+    if _normalize_text(asr_transcript) != _normalize_text(turn["answer_text"]):
+        raise RuntimeError(
+            "BLOCKED_CHATTERBOX_ASR_TEXT_DRIFT:"
+            f"expected={turn['answer_text']!r}:actual={asr_transcript!r}"
+        )
+    audio_snapshot = snapshot_finished_audio(turn["turn_id"], response, out_dir=out_dir)
     return {
         "turn_id": turn["turn_id"],
         "label": label,
@@ -89,6 +152,7 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
         "asr_transcript": asr_transcript,
         "asr_gate": asr_gate,
         "finished_response_audio": response.get("finished_response_audio"),
+        **audio_snapshot,
         "finished_wav_sha256": response.get("finished_wav_sha256") or finished_metrics.get("sha256"),
         "finished_wav_duration_seconds": (response.get("finished_wav_duration_seconds")
                                           or finished_metrics.get("duration_seconds")),
