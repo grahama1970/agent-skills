@@ -1,0 +1,24 @@
+{
+  "answer_text": "I can hold the boundary clearly.",
+  "label": "persona-dream-p2_3_session_mood_chatterbox-turn_001",
+  "use_blessed_qra_cache": false,
+  "asr_verify": true,
+  "asr_cache": false,
+  "asr_max_candidates": 1,
+  "voice_delivery": {
+    "schema": "persona_dream.voice_delivery.v1",
+    "source": "continuity_session_mood",
+    "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+    "tone": "firm_boundary",
+    "pace": "measured",
+    "emphasis_tag": "guarded_yearning",
+    "intensity": 0.72,
+    "valence": -0.25,
+    "use_base_emotion": true,
+    "required_engine": "chatterbox_base",
+    "local_modulation": {
+      "local_tone": null,
+      "applied": false
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-27T16:30:00Z",
+  "updated_at": "2026-07-27T17:00:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:193c1adf5bee5579e2c67bcb5e9d7f4f32491a561a29d5619a6f3e8e887fb58f",
@@ -22,30 +22,37 @@
     "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
     "mocked": false,
     "live": false,
-    "status": "LEDGER_HARDENED_SESSION_MOOD_BINDING_DETERMINISTIC_NOT_LIVE_CHAIN",
+    "status": "LEDGER_HARDENED_SESSION_MOOD_BOUND_LIVE_CHATTERBOX_RENDERED_NOT_RECOGNITION",
     "latest_authority_receipt": "skills/persona-dream/reports/goal_v5/continuity/ledger_hardening/RECEIPT.json",
     "latest_authority_receipt_sha256": "sha256:02f866e0b208c531902129cff2cd385ba29b28d6170d3ea027993fea01f7502b",
     "latest_session_mood_binding_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
-    "latest_session_mood_binding_receipt_sha256": "sha256:05eef12e23d85cb06fecf37bb6539b3aa30abede7564566bd04599535a91014f",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, Chatterbox-base-ready voice_delivery envelope",
+    "latest_session_mood_binding_receipt_sha256": "sha256:5ad61984b0f77022b8d62a57d2791d11eb800bf5509320dbb82b42f51f218edc",
+    "latest_session_mood_chatterbox_live_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
+    "latest_session_mood_chatterbox_live_receipt_sha256": "sha256:7865cd59614d046a92d7225f2b810834ee8b157c18973dbadf9357eb77efa432",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with ASR WER 0.0 on all three turns",
     "unverified": [
       "persisted as authoritative runtime state",
-      "live reread before first user turn in a running conversation service",
-      "stable session mood across a real multi-turn service session",
+      "live Memory and Watch reread in a full accepted-dream chain",
+      "stable session mood inside the production conversation service rather than the deterministic receipt runner",
       "recognition check across moods"
     ]
   },
   "latest_voice_proof": {
-    "path": "skills/persona-dream/reports/goal_v5/emotion_proof/asr_batch/RECEIPT.json",
+    "path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
     "mocked": false,
     "live": true,
     "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
     "engine": "chatterbox_base",
     "tone": "firm_boundary",
-    "intensity": 0.9,
-    "valence": -0.7,
-    "wer": 0.0,
-    "exercised": "weighted voice_delivery survived ASR batch candidate rendering and preserved content",
+    "intensity": 0.72,
+    "valence": -0.25,
+    "wer": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "continuity_session_mood",
+    "exercised": "session-derived voice_delivery survived ASR batch rendering for three turns and used chatterbox_base",
     "unverified": [
       "perceived target emotion",
       "naturalness",
@@ -109,11 +116,11 @@
     "Load-bearing PCTOM-R proof roots are still recorded from /tmp paths and need durable repository or evidence-store copies before reboot."
   ],
   "next_step": {
-    "default": "Route the deterministic session-mood voice_delivery envelope into live Chatterbox and run the live Embry continuity-chain proof.",
+    "default": "Add speaker-similarity and adversarial Embry recognition checks, then run the full accepted-dream to live-chain proof.",
     "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "ordered_steps": [
       "Durably copy or bind the /tmp PCTOM-R proof roots cited by GOAL.md into a repository report path or explicit evidence store.",
-      "Connect the session_mood_binding.py voice_delivery envelope to the live Chatterbox base-engine route without changing answer text.",
+      "Add speaker-similarity and adversarial Embry recognition checks for the live session-mood Chatterbox outputs.",
       "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls."
     ]
   }

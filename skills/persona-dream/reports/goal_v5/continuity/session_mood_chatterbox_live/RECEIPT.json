@@ -1,0 +1,266 @@
+{
+  "schema": "persona_dream.session_mood_chatterbox_live_receipt.v1",
+  "created_at": "2026-07-27T16:50:00Z",
+  "status": "PASS_SESSION_MOOD_CHATTERBOX_LIVE",
+  "mocked": false,
+  "live": true,
+  "proof_scope": "Live Chatterbox rendering of deterministic session-mood voice_delivery; not live Memory/Watch/recognition.",
+  "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+  "changed_files": [
+    {
+      "path": "skills/persona-dream/scripts/session_mood_binding.py",
+      "sha256": "3b2cb78dbaf34722f12a2377ed54759a457bf61cabff1b9f942204702f00d232"
+    },
+    {
+      "path": "skills/persona-dream/scripts/session_mood_chatterbox_live.py",
+      "sha256": "032f270e9549b409a02cdca6440d994269ddb9cda4d11cc9ec9257ecab61ca36"
+    }
+  ],
+  "commands": [
+    {
+      "command": "python3 skills/persona-dream/scripts/session_mood_chatterbox_live.py --persona embry --session-id p2_3_session_mood_chatterbox --out-dir skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live",
+      "status": "PASS",
+      "result": "turn_count=3, engines=[chatterbox_base, chatterbox_base, chatterbox_base], wers=[0.0, 0.0, 0.0]"
+    },
+    {
+      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
+      "status": "PASS",
+      "result": "21 passed in 1.25s"
+    },
+    {
+      "command": "./skills/persona-dream/sanity.sh",
+      "status": "PASS",
+      "result": "505 passed, 9 subtests passed in 32.40s"
+    }
+  ],
+  "binding": {
+    "schema": "persona_dream.session_mood_binding.v1",
+    "session_id": "p2_3_session_mood_chatterbox",
+    "persona_id": "embry",
+    "ledger_epoch": 1,
+    "ledger_sha256": "sha256:fdaefcd5fd8de7a6658a1d85ec54214bcbd65eff7495e8c2e114845cb706b9d7",
+    "bound_seq": 0,
+    "first_turn_seq": 1,
+    "selected_before_first_turn": true,
+    "session_mood": {
+      "schema": "persona_dream.session_mood.v1",
+      "mood_id": "session_mood:ac451f682b16c92af201b7dd",
+      "persona_id": "embry",
+      "mood_label": "guarded_quietly_wanting",
+      "source": {
+        "persona_id": "embry",
+        "ledger_epoch": 1,
+        "ledger_identity_core_sha256": "2288b4e4c1aa8aedb753a8c1f787d7ae74e5462f65752c1c4e4f91d1b6ebfb66",
+        "arc_delta_id": "arc_0_0",
+        "arc_delta_idempotency_key": null,
+        "mood_label": "guarded_quietly_wanting"
+      },
+      "carried_tension": "I do not yet know how to distinguish witness from intrusion.",
+      "possible_expression": "a careful, contained attentiveness; wanting contact while measuring every opening",
+      "voice_bias": {
+        "tone": "firm_boundary",
+        "intensity": 0.72,
+        "valence": -0.25,
+        "pace": "measured",
+        "emphasis_tag": "guarded_yearning"
+      }
+    },
+    "turns": [
+      {
+        "turn_id": "turn_001",
+        "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+        "answer_text": "I can hold the boundary clearly.",
+        "spoken_text": "I can hold the boundary clearly.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+          "tone": "firm_boundary",
+          "pace": "measured",
+          "emphasis_tag": "guarded_yearning",
+          "intensity": 0.72,
+          "valence": -0.25,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      },
+      {
+        "turn_id": "turn_002",
+        "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+        "answer_text": "The answer is unchanged.",
+        "spoken_text": "The answer is unchanged.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+          "tone": "firm_boundary",
+          "pace": "measured",
+          "emphasis_tag": "guarded_yearning",
+          "intensity": 0.72,
+          "valence": -0.25,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      },
+      {
+        "turn_id": "turn_003",
+        "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+        "answer_text": "The boundary remains clear.",
+        "spoken_text": "The boundary remains clear.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
+          "tone": "firm_boundary",
+          "pace": "measured",
+          "emphasis_tag": "guarded_yearning",
+          "intensity": 0.72,
+          "valence": -0.25,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      }
+    ]
+  },
+  "render_results": [
+    {
+      "turn_id": "turn_001",
+      "label": "persona-dream-p2_3_session_mood_chatterbox-turn_001",
+      "request_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_request.json",
+      "request_sha256": "sha256:4b437cf8edfa52fe09e0f85d07eed8e8f16c651d15ef75230a1ebb8f54336261",
+      "response_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_response.json",
+      "response_sha256": "sha256:7255003c90652d4c10e990f339fd9a3a202e238c9f7f15e60039a3ec70d7c278",
+      "elapsed_seconds": 2.231,
+      "engine": "chatterbox_base",
+      "cache_material_engine": null,
+      "chunk_engine": null,
+      "asr_engine": null,
+      "requested_tone": "firm_boundary",
+      "normalized_tone": "firm_boundary",
+      "tone_was_normalized": false,
+      "emotion_knobs": {
+        "exaggeration": 0.948,
+        "cfg_weight": 0.45,
+        "temperature": 0.7,
+        "intensity": 0.72,
+        "valence": -0.25
+      },
+      "asr_transcript": "I can hold the boundary clearly.",
+      "asr_gate": {
+        "ok": true,
+        "wer": 0.0,
+        "repeated_ngram_hits": [],
+        "failed_gates": []
+      },
+      "finished_response_audio": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_001/finished_response.wav",
+      "finished_wav_sha256": "d17b50eba4292dbb34d963395a30415538771f3940ff2ec5f5ed9eb3fa35150b",
+      "finished_wav_duration_seconds": 2.72
+    },
+    {
+      "turn_id": "turn_002",
+      "label": "persona-dream-p2_3_session_mood_chatterbox-turn_002",
+      "request_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_request.json",
+      "request_sha256": "sha256:d55d7717576d7b512c171ab496e013ac26cc36f105c602f62d6481010c4538ba",
+      "response_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_response.json",
+      "response_sha256": "sha256:55da71bd516b7d736ae389ae32eefdc005e0b0e0df27d475dcba784ca5a38796",
+      "elapsed_seconds": 1.855,
+      "engine": "chatterbox_base",
+      "cache_material_engine": null,
+      "chunk_engine": null,
+      "asr_engine": null,
+      "requested_tone": "firm_boundary",
+      "normalized_tone": "firm_boundary",
+      "tone_was_normalized": false,
+      "emotion_knobs": {
+        "exaggeration": 0.948,
+        "cfg_weight": 0.45,
+        "temperature": 0.7,
+        "intensity": 0.72,
+        "valence": -0.25
+      },
+      "asr_transcript": "The answer is unchanged.",
+      "asr_gate": {
+        "ok": true,
+        "wer": 0.0,
+        "repeated_ngram_hits": [],
+        "failed_gates": []
+      },
+      "finished_response_audio": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_002/finished_response.wav",
+      "finished_wav_sha256": "65cfb5c42af813c6e8f8824929580ff3d421c2f73b8d2b1c42ab7b189f7db841",
+      "finished_wav_duration_seconds": 2.08
+    },
+    {
+      "turn_id": "turn_003",
+      "label": "persona-dream-p2_3_session_mood_chatterbox-turn_003",
+      "request_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_request.json",
+      "request_sha256": "sha256:7f58857f130334347f60e02123b665a54ca16a93dfad1e1bc958b2425b33df47",
+      "response_path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_response.json",
+      "response_sha256": "sha256:c33612cdb1226ccdfde021a436dbaf48a260997447a164b8a7f569bd90e93da5",
+      "elapsed_seconds": 2.739,
+      "engine": "chatterbox_base",
+      "cache_material_engine": null,
+      "chunk_engine": null,
+      "asr_engine": null,
+      "requested_tone": "firm_boundary",
+      "normalized_tone": "firm_boundary",
+      "tone_was_normalized": false,
+      "emotion_knobs": {
+        "exaggeration": 0.948,
+        "cfg_weight": 0.45,
+        "temperature": 0.7,
+        "intensity": 0.72,
+        "valence": -0.25
+      },
+      "asr_transcript": "The boundary remains clear.",
+      "asr_gate": {
+        "ok": true,
+        "wer": 0.0,
+        "repeated_ngram_hits": [],
+        "failed_gates": []
+      },
+      "finished_response_audio": "/out/persona-dream-p2_3_session_mood_chatterbox-turn_003/finished_response.wav",
+      "finished_wav_sha256": "ce4027355f4ced90bbf04885187d23c9bf0fb7fc7747162bfa7c865785671c72",
+      "finished_wav_duration_seconds": 3.68
+    }
+  ],
+  "claims": {
+    "proves": [
+      "deterministic session_mood voice_delivery reached live Chatterbox /synthesize-batch",
+      "all rendered turns used chatterbox_base",
+      "ASR accepted all rendered turns under the Chatterbox gate",
+      "answer_text stayed unchanged before render"
+    ],
+    "does_not_prove": [
+      "exact WER 0.0 for every stochastic render",
+      "perceived target emotion",
+      "speaker similarity",
+      "adversarial Embry recognition",
+      "live Memory or Watch availability",
+      "browser or microphone path"
+    ]
+  }
+}

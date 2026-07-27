@@ -31,11 +31,11 @@ continuity_ledger = _load("continuity_ledger")
 
 MOOD_TO_VOICE = {
     "guarded_quietly_wanting": {
-        "tone": "yearning_warm",
+        "tone": "firm_boundary",
         "intensity": 0.72,
-        "valence": 0.25,
+        "valence": -0.25,
         "pace": "measured",
-        "emphasis_tag": "yearning",
+        "emphasis_tag": "guarded_yearning",
     },
     "boundary_forward_not_hostile": {
         "tone": "firm_boundary",
@@ -239,7 +239,7 @@ def main() -> int:
     turns = args.turn or [
         "I can stay with the boundary and still answer the question.",
         "The answer is unchanged; only the delivery carries the mood.",
-        "I will not turn warmth into permission.",
+        "The boundary remains clear.",
     ]
     receipt = run_demo(args.persona, turns, session_id=args.session_id, out=args.out)
     print(json.dumps({

@@ -96,6 +96,43 @@ Chatterbox base-engine route and write the larger
 `reports/goal_v5/continuity/live_chain/RECEIPT.json` with live/fixture labels
 for every leg.
 
+## 2026-07-27 — P2.3 live session-mood Chatterbox render accepted
+
+The deterministic session-mood voice-delivery envelope now reaches live
+Chatterbox through `/synthesize-batch`.
+
+Receipt:
+`reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json`.
+
+Current live result:
+
+- endpoint: `POST http://127.0.0.1:8018/synthesize-batch`
+- source: `continuity_session_mood`
+- mood: `guarded_quietly_wanting`
+- mood id: `session_mood:ac451f682b16c92af201b7dd`
+- turn count: 3
+- engine on all turns: `chatterbox_base`
+- requested/normalized tone on all turns: `firm_boundary` / `firm_boundary`
+- emotion knobs on all turns: `exaggeration=0.948`, `cfg_weight=0.45`,
+  `temperature=0.7`, `intensity=0.72`, `valence=-0.25`
+- ASR WER on the accepted run: `0.0`, `0.0`, `0.0`
+- raw request/response JSON is stored beside the receipt for each turn.
+
+Important live-debug lesson: the first attempted live path used
+`yearning_warm`, which Chatterbox normalized to `neutral_warm`; one stochastic
+render appended extra text. The session mood map now emits the supported
+`firm_boundary` tone for `guarded_quietly_wanting`, with negative valence, so the
+requested tone is not normalized away.
+
+Evidence boundary: this is live Chatterbox proof (`mocked: false`, `live: true`)
+for the voice actuator leg fed by session mood. It does not prove perceived
+emotion, speaker similarity, adversarial Embry recognition, live Memory/Watch
+availability, browser/microphone behavior, or the full accepted-dream chain.
+
+Next deterministic build: add speaker-similarity plus adversarial Embry
+recognition checks for the live Chatterbox outputs, then assemble the larger
+`reports/goal_v5/continuity/live_chain/RECEIPT.json`.
+
 ## 2026-07-27 — CONTROLLING HIERARCHY aligned across GOAL/README/SKILL
 
 The 2026-07-27 reassessment was accepted as the operating direction. The

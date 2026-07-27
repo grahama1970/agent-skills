@@ -5,36 +5,26 @@
   "mocked": false,
   "live": false,
   "proof_scope": "Deterministic local session-mood binding consumer only.",
-  "changed_files": [
-    {
-      "path": "skills/persona-dream/scripts/session_mood_binding.py",
-      "sha256": "2192b3b3ea64da981c0176e66c79c08517c5b2682ab8fcf0c3f94a49e480aacd"
-    },
-    {
-      "path": "skills/persona-dream/tests/test_session_mood_binding.py",
-      "sha256": "18e99e1f2450bcfdc0e697e35eadfb73f62276d379f93810e731ddc5285f0af3"
-    }
-  ],
   "commands": [
-    {
-      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_mood_binding.py -q",
-      "status": "PASS",
-      "result": "7 passed in 0.06s"
-    },
     {
       "command": "python3 skills/persona-dream/scripts/session_mood_binding.py --persona embry --session-id p2_2_session_mood_binding --out skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
       "status": "PASS",
       "result": "mood_label=guarded_quietly_wanting, mood_id=session_mood:ac451f682b16c92af201b7dd, turn_count=3"
     },
     {
+      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_mood_binding.py -q",
+      "status": "PASS",
+      "result": "7 passed in 0.05s"
+    },
+    {
       "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
       "status": "PASS",
-      "result": "21 passed in 0.84s"
+      "result": "21 passed in 1.25s"
     },
     {
       "command": "./skills/persona-dream/sanity.sh",
       "status": "PASS",
-      "result": "505 passed, 9 subtests passed in 32.97s"
+      "result": "505 passed, 9 subtests passed in 32.40s"
     }
   ],
   "negative_controls": [
@@ -89,11 +79,11 @@
       "carried_tension": "I do not yet know how to distinguish witness from intrusion.",
       "possible_expression": "a careful, contained attentiveness; wanting contact while measuring every opening",
       "voice_bias": {
-        "tone": "yearning_warm",
+        "tone": "firm_boundary",
         "intensity": 0.72,
-        "valence": 0.25,
+        "valence": -0.25,
         "pace": "measured",
-        "emphasis_tag": "yearning"
+        "emphasis_tag": "guarded_yearning"
       }
     },
     "turns": [
@@ -110,11 +100,11 @@
           "schema": "persona_dream.voice_delivery.v1",
           "source": "continuity_session_mood",
           "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
-          "tone": "yearning_warm",
+          "tone": "firm_boundary",
           "pace": "measured",
-          "emphasis_tag": "yearning",
+          "emphasis_tag": "guarded_yearning",
           "intensity": 0.72,
-          "valence": 0.25,
+          "valence": -0.25,
           "use_base_emotion": true,
           "required_engine": "chatterbox_base",
           "local_modulation": {
@@ -136,11 +126,11 @@
           "schema": "persona_dream.voice_delivery.v1",
           "source": "continuity_session_mood",
           "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
-          "tone": "yearning_warm",
+          "tone": "firm_boundary",
           "pace": "measured",
-          "emphasis_tag": "yearning",
+          "emphasis_tag": "guarded_yearning",
           "intensity": 0.72,
-          "valence": 0.25,
+          "valence": -0.25,
           "use_base_emotion": true,
           "required_engine": "chatterbox_base",
           "local_modulation": {
@@ -152,8 +142,8 @@
       {
         "turn_id": "turn_003",
         "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
-        "answer_text": "I will not turn warmth into permission.",
-        "spoken_text": "I will not turn warmth into permission.",
+        "answer_text": "The boundary remains clear.",
+        "spoken_text": "The boundary remains clear.",
         "answer_invariance": {
           "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
           "propositions_changed": false
@@ -162,11 +152,11 @@
           "schema": "persona_dream.voice_delivery.v1",
           "source": "continuity_session_mood",
           "session_mood_id": "session_mood:ac451f682b16c92af201b7dd",
-          "tone": "yearning_warm",
+          "tone": "firm_boundary",
           "pace": "measured",
-          "emphasis_tag": "yearning",
+          "emphasis_tag": "guarded_yearning",
           "intensity": 0.72,
-          "valence": 0.25,
+          "valence": -0.25,
           "use_base_emotion": true,
           "required_engine": "chatterbox_base",
           "local_modulation": {
