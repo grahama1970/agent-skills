@@ -1,0 +1,73 @@
+{
+  "schema": "persona_dream.alignment_repair_receipt.v1",
+  "created_at": "2026-07-27T12:07:30Z",
+  "status": "PASS",
+  "objective": "Proceed with the reassessment next steps by aligning Persona Dream's controlling hierarchy, restoring repository sanity truth, and preserving bounded evidence for the next Embry continuity build.",
+  "mocked": true,
+  "live": false,
+  "mocked_scope": [
+    "pytest contract suite includes fake-memory transaction tests",
+    "fixture-backed static dream and video_plan sanity runs use local sample residue"
+  ],
+  "live_scope": [
+    "no live provider, Memory daemon, browser, microphone, or Chatterbox service was called in this repair slice"
+  ],
+  "changed_files": [
+    "scripts/check_tau_routing_boundary.py",
+    "skills/persona-dream/CURRENT_STATUS.json",
+    "skills/persona-dream/GOAL.md",
+    "skills/persona-dream/PROJECT_KNOWLEDGE.md",
+    "skills/persona-dream/README.md",
+    "skills/persona-dream/SKILL.md",
+    "skills/persona-dream/local/HANDOFF.md",
+    "skills/persona-dream/pyproject.toml",
+    "skills/persona-dream/scripts/phase15_dream_persistence.py",
+    "skills/persona-dream/tests/test_phase15_transactional.py",
+    "skills/persona-dream/tests/test_tau_routing_boundary.py",
+    "skills/persona-dream/uv.lock"
+  ],
+  "proof_commands": [
+    {
+      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_tau_routing_boundary.py -q",
+      "result": "7 passed"
+    },
+    {
+      "command": "./skills/persona-dream/run.sh check-tau-routing-boundary --strict --json",
+      "result": "PASS",
+      "hard_violations": 0,
+      "temporary_debt": 0,
+      "stale_allow_entries": 0
+    },
+    {
+      "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_phase15_transactional.py -q",
+      "result": "12 passed"
+    },
+    {
+      "command": "./skills/persona-dream/sanity.sh",
+      "result": "PASS",
+      "pytest_result": "491 passed, 9 subtests passed",
+      "routing_gate": {
+        "status": "PASS",
+        "hard_violations": 0,
+        "temporary_debt": 0
+      }
+    }
+  ],
+  "claims": {
+    "proves": [
+      "GOAL.md, README.md, PROJECT_KNOWLEDGE.md, SKILL.md, local/HANDOFF.md, and CURRENT_STATUS.json now state the Embry continuity hierarchy with PCTOM-R as a research workstream.",
+      "Historical generated Ask artifacts under local/webgpt_reviews/**/ask-artifacts/** are quarantined from the Tau-only runtime-source scan.",
+      "A fresh direct SciLLM caller remains a hard failure in the routing poison fixture.",
+      "Persona Dream full sanity is green after declaring pytest and fixing the phase15 fake-memory edge-closure test contract."
+    ],
+    "does_not_prove": [
+      "live Embry continuity-chain execution",
+      "continuity ledger as authoritative runtime state across a real session",
+      "perceived Chatterbox emotion or stable Embry voice identity",
+      "confidence-bounded PCTOM-R planning advantage",
+      "repeated full dream-pipeline reliability",
+      "paid provider or browser/microphone behavior"
+    ]
+  },
+  "next_receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json"
+}

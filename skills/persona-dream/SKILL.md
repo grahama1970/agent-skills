@@ -49,6 +49,23 @@ reports, paths, and stored artifacts, but the conceptual scope is automated
 dream-sequence planning for any persona or persona set, not a Horus-specific or
 Embry-specific workflow.
 
+Current operating hierarchy:
+
+```text
+persistent persona continuity goal
+-> PCTOM-R prospective Theory-of-Mind research workstream
+-> supporting media, Watch, Memory, Chatterbox, and Tau lanes
+```
+
+For Embry, the top-level success criterion is not a benchmark score or a single
+Kling return. The goal is that explicitly synthetic dreams produce bounded,
+provenance-linked changes in self-narrative, arc state, session mood, and voice
+while preserving identity, factual competence, answer content, and the
+synthetic-versus-literal boundary. PCTOM-R remains load-bearing research
+evidence under that goal; Chatterbox and video receipts are supporting
+integration evidence unless a run explicitly proves the continuity chain they
+serve.
+
 Generate a narrow persona dream work product:
 
 ```text
@@ -98,6 +115,11 @@ timed transcript -> voice_handoff_plan.json -> create-movie/audio-lane
 
 Own:
 
+- Maintain continuity artifacts such as
+  `reports/goal_v5/continuity/embry.continuity_state.v1.json` as persona-state
+  authorities when the run is Embry-focused.
+- Emit or consume bounded `arc_delta` and `session_mood` records only when they
+  preserve identity core, provenance, and synthetic-self-reflection boundaries.
 - Persist the initiating explicit human idea as an immutable, revision-scoped
   Phase 01 artifact and bind every Phase 01-10 record to its deterministic ID
   and canonical SHA-256.
@@ -139,6 +161,11 @@ Do not own:
   when Brave receipts are insufficient.
 - Persona identity rewrites. One dream may add a dated reflection, not mutate
   durable identity unless a separate `create-persona` workflow accepts it.
+- Subjective proof that a Chatterbox render sounds like Embry or like the
+  intended emotion. Persona Dream may provide the `voice_delivery` envelope and
+  content-preservation receipt; perceptual listening, speaker similarity,
+  naturalness, and long-session voice acceptance require a dedicated voice/audio
+  evaluation lane.
 - Unreceipted memory writes.
 
 ## Runtime

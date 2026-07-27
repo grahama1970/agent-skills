@@ -54,6 +54,12 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCAN_ROOTS = ["skills/persona-dream", "skills/watch"]
 SKIP_DIRS = {".venv", ".pytest_cache", "__pycache__", "node_modules", ".ruff_cache", ".git"}
+ARCHIVED_ARTIFACT_PREFIXES = (
+    "skills/persona-dream/local/webgpt_reviews/",
+)
+ARCHIVED_ARTIFACT_PARTS = (
+    "/ask-artifacts/",
+)
 
 # Line-level signals that a line reaches the scillm proxy transport directly.
 _PATTERNS: list[tuple[re.Pattern[str], str]] = [
@@ -91,12 +97,8 @@ _INLINE_ALLOW = re.compile(r"#\s*tau-routing:allow")
 ALLOWLIST: dict[str, str] = {
     "scripts/check_tau_routing_boundary.py":
         "this static checker itself references scillm tokens as detection patterns",
-    "skills/persona-dream/scripts/tau_text_reasoning_adapter.py":
-        "sanctioned persona-dream -> Tau text-reasoning dispatch adapter (routes THROUGH Tau)",
     "skills/persona-dream/scripts/sanity_scillm_subagent_loop.py":
         "boundary-guard sanity: asserts SCILLM_BASE_URL is local; does not itself bypass Tau for inference",
-    "skills/persona-dream/scripts/sanity_scillm_loop_negative_tests.py":
-        "negative-test harness for the scillm loop guard (uses example.invalid); no live inference",
     # --- DIAGNOSTICS (category 2 above): probe the service, not model routing ---
     "skills/persona-dream/scripts/persona_dream.py":
         "DIAGNOSTIC: CLI backend-readiness probe hits /v1/scillm/health + /v1/scillm/models for an ops "
@@ -140,6 +142,13 @@ def _iter_py_files(root: Path) -> list[Path]:
     return files
 
 
+def _is_archived_artifact(rel: str) -> bool:
+    """Generated local review artifacts are retained evidence, not live source."""
+    return any(rel.startswith(prefix) for prefix in ARCHIVED_ARTIFACT_PREFIXES) and any(
+        marker in rel for marker in ARCHIVED_ARTIFACT_PARTS
+    )
+
+
 def scan(repo_root: Path) -> dict[str, list[dict[str, Any]]]:
     """Return {relpath: [ {line, kind, snippet}, ... ]} for direct-scillm lines."""
     hits: dict[str, list[dict[str, Any]]] = {}
@@ -149,6 +158,8 @@ def scan(repo_root: Path) -> dict[str, list[dict[str, Any]]]:
             continue
         for path in _iter_py_files(root):
             rel = str(path.relative_to(repo_root))
+            if _is_archived_artifact(rel):
+                continue
             try:
                 lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
             except OSError:

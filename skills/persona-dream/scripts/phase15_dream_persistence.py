@@ -1020,6 +1020,8 @@ def persist_canonical(
             "status": "BLOCKED_EDGE_ENDPOINT_UNRESOLVED",
             "all_exact_reread_match": False,
             "commit_manifest": None,
+            "records_written": 0,
+            "expected_record_count": len(write_set),
             "unresolved_endpoints": unresolved_endpoints[:20],
             "detail": "write set would create dangling citation edges; "
                       "supply the missing vertices (e.g. build_watch_evidence_vertices)",

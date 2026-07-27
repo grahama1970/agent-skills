@@ -1,25 +1,67 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-26T12:17:44-04:00 / 20260726T161744Z
+**Timestamp:** 2026-07-27T08:03:06-04:00 / 20260727T120306Z
 **Active agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target branch:** `main`
-**Worktree used:** `/home/graham/workspace/experiments/agent-skills-persona-dream-asr-main`
+**Worktree used:** `/home/graham/workspace/experiments/agent-skills-persona-dream-next`
 **Skill root:** `skills/persona-dream`
-**Current local commit before this handoff:** `39beeec1060f1f0c380fd863263acca399e41387`
+**Current local commit before this handoff:** `9c800aac157ad709ec3fe30d4ed479b173fab255`
+
+## 2026-07-27 Superseding Operating Snapshot
+
+The accepted reassessment changed the top-level hierarchy. `GOAL.md`,
+`README.md`, `PROJECT_KNOWLEDGE.md`, and `SKILL.md` now align on:
+
+1. Build Embry as a persistent persona whose explicitly synthetic dreams produce
+   bounded, provenance-linked changes in self-narrative, arc state, session
+   mood, and voice while preserving identity, factual competence, answer
+   content, and synthetic-versus-literal boundaries.
+2. Keep PCTOM-R as a research workstream under that goal, not the whole project
+   identity.
+3. Treat Kling, Watch, Memory persistence, Chatterbox voice expression, and Tau
+   orchestration as supporting technology lanes with their own receipts and
+   proof boundaries.
+
+Machine-readable status was added:
+
+```text
+skills/persona-dream/CURRENT_STATUS.json
+```
+
+Fresh focused proof for the old sanity blocker:
+
+```text
+uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_tau_routing_boundary.py -q
+result: 7 passed
+
+./skills/persona-dream/run.sh check-tau-routing-boundary --strict --json
+result: PASS, hard_violations=0, temporary_debt=0, stale_allow_entries=0
+```
+
+The source repair quarantines generated archived Ask artifacts under
+`skills/persona-dream/local/webgpt_reviews/**/ask-artifacts/**` from the
+Tau-only runtime-source scan. It preserves the historical worker as evidence
+but no longer counts it as live source. The poison fixture still proves that a
+fresh direct SciLLM caller under normal source paths fails.
+
+Full `skills/persona-dream/sanity.sh` was rerun after these documentation/status
+edits and returned PASS:
+
+```text
+491 passed, 9 subtests passed
+```
 
 ## Operating Model
 
 `GOAL.md` is the active immutable-goal source for current work. The controlling
-objective is PCTOM-R: a text-first prospective Theory-of-Mind reliability lane
-with provenance-bound recall residue, deterministic hidden-state social
-episodes, valid ToM distributions, sealed prediction commitments, deterministic
-scoring, non-destructive belief revision, and fail-closed checks.
+objective is Embry persistent-persona continuity. PCTOM-R remains critical
+research infrastructure, but it is a workstream under the continuity goal.
 
 Provider video, media-spine delivery, Chatterbox voice expression, subjective
 dream quality, dashboards, and human-facing dream-content review are historical
-or supporting lanes unless the operator explicitly reactivates them. Do not
-promote voice or provider work to the critical path from README context alone.
+or supporting lanes unless they are receipt-bound to the continuity chain. Do
+not promote a voice, video, or PCTOM-R slice to completion of the full goal.
 
 The current `persona-dream/SKILL.md` contract still covers the broader dream
 packet and media planning skill. It explicitly treats voiced dream videos as an
@@ -40,8 +82,9 @@ Recent commits relevant to this handoff:
 
 The latest issue-oriented work closed GitHub issue `#1009` by recording the
 weighted-emotion Chatterbox ASR batch work as a supporting voice lane in
-`GOAL.md`. That did not change the active immutable goal: PCTOM-R remains the
-controlling research objective.
+`GOAL.md`. The 2026-07-27 reassessment then changed the top-level active
+immutable goal from PCTOM-R-only to Embry persistent-persona continuity, with
+PCTOM-R retained as a research workstream.
 
 The previous `local/HANDOFF.md` was stale. It described the 2026-07-20 live
 Memory recall rung and said the handoff helper was unavailable. On this run,
@@ -129,59 +172,60 @@ and is not proof of project status.
 
 ## Current Broken / Brittle State
 
-`skills/persona-dream/sanity.sh` was rerun for this handoff and exits 1:
+The 2026-07-26 terminal sanity blocker was repaired in source. The historical
+local WebGPT Ask worker remains on disk as evidence, but the Tau-only checker
+now quarantines generated archived Ask artifact paths:
 
 ```text
-/tmp/persona-dream-handoff-20260726T161744Z/persona-dream-sanity.txt
+skills/persona-dream/local/webgpt_reviews/**/ask-artifacts/**
 ```
 
-The failing hard gate is the Tau-only model-routing boundary:
+Focused proof after the repair:
 
 ```text
-Tau-only routing boundary check [FAIL]
-hard_violations=1
-skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/workers/ask_tau_roundtable_worker.py:46
-  parser.add_argument("--scillm-base-url", default="http://127.0.0.1:4001")
-skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/workers/ask_tau_roundtable_worker.py:876
-  f"{base_url}/v1/chat/completions"
+uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_tau_routing_boundary.py -q
+7 passed
+
+./skills/persona-dream/run.sh check-tau-routing-boundary --strict --json
+PASS; hard_violations=0; temporary_debt=0; stale_allow_entries=0
 ```
 
-The sanity log also includes expected negative-control fixture failures for
-provider eligibility and contact-sheet sidecars before the final strict routing
-failure. The terminal blocker for full green is the unsanctioned direct Scillm
-route in a historical local WebGPT review artifact.
+Full `skills/persona-dream/sanity.sh` was rerun after the 2026-07-27
+documentation/status edits and returned `491 passed, 9 subtests passed`.
 
 Other known gaps:
 
-- The repo main worktree does not contain `scripts/check_mock_evidence_claims.py`,
-  so that CI-style evidence wording checker could not be run here.
-- `README.md` has internal status drift: early/current-state prose says Phase 16
-  is live-proven for a machine-decidable slice, while the later pipeline table
-  still says Phase 16 is not implemented as a closed proof.
-- README and project knowledge include media, Chatterbox, journal, personality,
-  and provider narratives that are useful context but can easily be mistaken for
-  the active immutable critical path. `GOAL.md` should control when claims
-  conflict.
+- The continuity ledger exists as
+  `reports/goal_v5/continuity/embry.continuity_state.v1.json`, but is not yet
+  proven as authoritative live runtime state across a real conversation.
+- The Chatterbox ASR batch receipt proves emotion transport and content
+  preservation for one path, not perceived emotion, naturalness, speaker
+  similarity, browser/microphone behavior, or stable Embry recognition.
+- PCTOM-R machinery is strong, but the small live Tau planning slice does not
+  show confidence-bounded counterfactual-dreaming advantage.
+- Repeated full dream-pipeline reliability is not proven.
 - The current qualified revision in `SKILL.md` is
   `rev_successor_943b01ecd9a3`; earlier revisions and provider returns are
   historical unless explicitly used as evidence with their receipt boundaries.
 
 ## What Is Working
 
-- The PCTOM-R objective is explicitly written in `GOAL.md` and narrows the
-  current critical path away from provider/video/dashboard work.
-- `GOAL.md` now records the weighted-emotion Chatterbox ASR batch lane as
-  supporting evidence without reactivating the media runtime as the controlling
-  goal.
+- `GOAL.md`, `README.md`, `PROJECT_KNOWLEDGE.md`, and `SKILL.md` now agree on
+  the Embry continuity hierarchy with PCTOM-R as a research workstream.
+- `CURRENT_STATUS.json` records the controlling goal hash, current phase, latest
+  voice proof, continuity artifact boundary, PCTOM-R counts, and active
+  blockers.
 - The ASR batch receipt is valid JSON and records live, non-mocked endpoint
   evidence for weighted `voice_delivery` surviving accepted ASR candidate
   generation.
-- `skills/handoff/run.sh` is available in this checkout and exits 0.
-- Issue `#1009` is closed with a committed `GOAL.md` supporting-lane record.
+- The Tau-only routing boundary focused proof is green with a poison fixture
+  showing fresh direct SciLLM callers still fail.
 
 ## Not Proven
 
-- End-to-end completion of Persona Dream across all research ambitions.
+- End-to-end completion of the Embry continuity goal.
+- Continuity ledger as the authoritative runtime state used across live
+  conversations.
 - Paid provider video execution as current critical path.
 - Full Phase 01-16 live media runtime execution under current artifacts.
 - Human subjective acceptance of the dream video.
@@ -189,30 +233,24 @@ Other known gaps:
   scopes recorded in `GOAL.md` and `PROJECT_KNOWLEDGE.md`.
 - Browser/Jabra microphone behavior or production Chatterbox voice readiness.
 - Successful four-seat Ask consensus review.
-- Full `persona-dream/sanity.sh` green status on main.
+- The full Embry continuity chain has not been proven live.
 
 ## Recommended Next Steps
 
-1. Repair or quarantine the historical local WebGPT review artifact that directly
-   references `http://127.0.0.1:4001`, then rerun `skills/persona-dream/sanity.sh`
-   and preserve the new log/receipt.
+1. Build the live continuity-chain receipt:
+   `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
 
-2. Reconcile README status drift. The minimum repair is to update the Phase 16
-   table row and current-state proof boundary so it agrees with `GOAL.md`:
-   PCTOM-R controls, Phase 16/media-spine claims are bounded, and voice/provider
-   lanes remain supporting unless reactivated.
-
-3. If continuing PCTOM-R hardening, rerun or refresh the exact `GOAL.md`
+2. If continuing PCTOM-R hardening, rerun or refresh the exact `GOAL.md`
    coverage/success/objective audit receipts into a durable, non-`/tmp` report
    directory, then update `PROJECT_KNOWLEDGE.md` only with command outputs and
    receipt hashes.
 
-4. If continuing Chatterbox integration, run a broader live matrix that includes
+3. If continuing Chatterbox integration, run a broader live matrix that includes
    no-emotion regression, emotion-on cache/idempotence behavior, browser route
    evidence, and microphone/Jabra input only when the user-facing claim requires
    it. Keep those as supporting voice-lane receipts.
 
-5. Treat `$ask` browser review as degraded until the transport issues are fixed.
+4. Treat `$ask` browser review as degraded until the transport issues are fixed.
    Do not use partial Kimi review or stale WebGPT artifacts as proof authority.
 
 ## Key Files
@@ -222,6 +260,7 @@ skills/persona-dream/GOAL.md
 skills/persona-dream/SKILL.md
 skills/persona-dream/README.md
 skills/persona-dream/PROJECT_KNOWLEDGE.md
+skills/persona-dream/CURRENT_STATUS.json
 skills/persona-dream/sanity.sh
 skills/persona-dream/local/HANDOFF-emotion-voice.md
 skills/persona-dream/reports/goal_v5/emotion_proof/asr_batch/RECEIPT.json
@@ -233,12 +272,13 @@ skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artif
 Use this phrasing:
 
 ```text
-PCTOM-R remains the active immutable Persona Dream objective. The 2026-07-26
+Embry persistent-persona continuity is the active immutable Persona Dream
+objective. PCTOM-R is a research workstream under that goal. The 2026-07-26
 voice work is supporting Chatterbox integration evidence: a live, non-mocked
 ASR batch receipt proves weighted voice_delivery reaches the accepted
-chatterbox_base ASR candidate with WER 0.0. Full persona-dream sanity is not
-green because a historical local WebGPT review artifact violates the Tau-only
-Scillm routing boundary.
+chatterbox_base ASR candidate with WER 0.0. The historical local WebGPT Ask
+worker is quarantined as archived evidence for Tau-routing scans; fresh direct
+SciLLM callers still fail the poison fixture.
 ```
 
 Do not say:

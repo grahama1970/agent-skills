@@ -1,7 +1,60 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-24 UTC (re-grounded persona roundtable + Continuity Ledger design) by agent
+**Last updated:** 2026-07-27 UTC (goal hierarchy alignment + sanity repair) by Codex
 **Status:** Active development
+
+## 2026-07-27 — CONTROLLING HIERARCHY aligned across GOAL/README/SKILL
+
+The 2026-07-27 reassessment was accepted as the operating direction. The
+PCTOM-R-only immutable-goal framing is now superseded as the top-level project
+identity. The active hierarchy is:
+
+1. Build Embry as a persistent persona whose explicitly synthetic dreams produce
+   bounded, provenance-linked changes in self-narrative, arc state, session
+   mood, and voice while preserving identity, factual competence, answer
+   content, and synthetic-vs-literal boundaries.
+2. Keep PCTOM-R as a research workstream under that goal: it must still prove
+   prospective ToM/planning value with provenance, sealed predictions,
+   deterministic scoring, non-destructive belief revision, and fail-closed
+   negative controls.
+3. Treat Kling, Watch, Memory persistence, Chatterbox voice expression, and Tau
+   orchestration as supporting technology lanes unless a receipt proves their
+   contribution to the continuity chain.
+
+Current state after this alignment:
+
+- `reports/goal_v5/continuity/embry.continuity_state.v1.json` is the first
+  continuity-ledger artifact and has the right shape: identity core, arc state,
+  one recent arc delta, and provenance. It is not yet proven as the live runtime
+  authority across real conversations.
+- `reports/goal_v5/emotion_proof/asr_batch/RECEIPT.json` is live, non-mocked
+  Chatterbox ASR-batch evidence that weighted `voice_delivery` reaches
+  `chatterbox_base` and preserves content with WER 0.0. It proves transport and
+  content preservation for that path only, not perceived emotion or durable
+  Embry recognition.
+- PCTOM-R receipts recorded in `GOAL.md` prove strong deterministic experiment
+  machinery, not the headline benefit that counterfactual dreaming improves
+  planning with confidence-bounded advantage.
+- Historical Kling/Watch/Memory success remains meaningful but is not a
+  reliability study or a routinely rerunnable product pipeline.
+
+Repository truthfulness repair in the same slice: the Tau-only routing boundary
+now quarantines generated archived Ask artifacts under
+`skills/persona-dream/local/webgpt_reviews/**/ask-artifacts/**` so historical
+workers can be retained as evidence without counting as runtime source. The
+poison fixture in `tests/test_tau_routing_boundary.py` proves a fresh direct
+SciLLM caller still fails. Focused proof:
+`uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_tau_routing_boundary.py -q`
+returned 7 passed, and
+`./skills/persona-dream/run.sh check-tau-routing-boundary --strict --json`
+returned PASS with 0 hard violations, 0 temporary debt, 0 stale allow entries.
+
+Next deterministic build after this doc/sanity slice: prove the exact
+continuity chain live for Embry:
+accepted dream -> Watch observations -> first-person journal -> bounded
+arc_delta -> persisted continuity ledger -> session_mood selected before the
+first user message -> same mood reread throughout session -> Chatterbox
+multi-utterance voice delivery -> adversarial Embry recognition check.
 
 ## 2026-07-24 — RE-GROUNDED persona roundtable (3 seats) + Continuity Ledger design
 

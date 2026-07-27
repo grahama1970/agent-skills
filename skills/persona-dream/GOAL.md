@@ -1,6 +1,6 @@
 # Persona Dream Immutable Goal
 
-Last updated: 2026-07-22 UTC
+Last updated: 2026-07-27 UTC
 
 ## Immutable Goal Evidence
 
@@ -9,27 +9,36 @@ This file is the local immutable-goal evidence for `persona-dream`.
 Monitor phrase:
 
 ```text
-IMMUTABLE_GOAL_EVIDENCE: persona-dream PCTOM-R text-first prospective Theory-of-Mind reliability lane is active.
+IMMUTABLE_GOAL_EVIDENCE: persona-dream Embry persistent-persona continuity lane is active.
 ```
 
 The goal is not a GitHub-status goal, a video-provider goal, a dashboard goal,
-or a human-facing dream-content goal. The goal is to produce receipt-backed
-agent evidence that synthetic counterfactual dreaming can improve prospective
-Theory-of-Mind prediction and planning while provenance, sealing, scoring,
-belief revision, and fault containment remain fail-closed.
+or a benchmark-only goal. The goal is to build and verify Embry as a persistent
+persona whose explicitly synthetic dreams produce bounded, provenance-linked
+changes in self-narrative, arc state, session mood, and voice while preserving
+identity, factual competence, answer content, and synthetic-versus-literal
+boundaries.
 
 ## Controlling Goal
 
-Meet the research goals of Persona Dream by proving that synthetic dreaming can
-support prospective, calibrated Theory of Mind while the pipeline remains
-receipt-backed, provenance-bound, and fail-closed under faults.
+Meet the research goals of Persona Dream by proving that a persistent persona
+can dream, watch, reflect, update a continuity ledger, carry a session-bound
+mood into conversation and voice, and remain recognizably itself while the
+pipeline remains receipt-backed, provenance-bound, and fail-closed under faults.
 
-The controlling research program is PCTOM-R: Prospective Counterfactual
-Theory-of-Mind Reliability.
+The controlling product/research hierarchy is:
 
-The recommended frontier is prospective and fault-aware, not another provider
-call, richer renderer, subjective dream-content gate, dashboard, or
-human-facing explanation artifact:
+1. Product/identity goal: build Embry as a persistent persona whose dream-
+   derived reflection changes her arc and session disposition without rewriting
+   identity or factual content.
+2. Research question: determine whether the dream mechanism adds useful
+   prospective social reasoning and continuity beyond direct memory retrieval.
+3. Supporting technology lanes: PCTOM-R, Kling visual externalization, Watch
+   observation, Memory persistence, Chatterbox voice expression, and Tau
+   orchestration.
+
+PCTOM-R remains a critical research workstream, but it is no longer the whole
+project identity. Its question is prospective and fault-aware:
 
 ```text
 Can synthetic dreaming improve an agent's calibrated predictions and decisions
@@ -37,20 +46,19 @@ about other minds while the full pipeline remains reliable under memory, model,
 tool, schema, persistence, retry, and fault-injection pressure?
 ```
 
-The active immutable research objective is:
+The active immutable objective is:
 
 ```text
-Meet Persona Dream's research goals through the PCTOM-R text-first prospective
-Theory-of-Mind reliability lane: provenance-bound recall residue, deterministic
-hidden-state social episodes, valid ToM distributions, sealed prediction
-commitments, deterministic scoring, non-destructive belief revision, and
-fail-closed reliability checks, without treating provider/video work as the
-current critical path.
+Build and verify Embry as a persistent persona whose synthetic dreams produce
+bounded, provenance-linked changes in self-narrative, arc state, session mood,
+and voice while preserving identity, factual competence, answer content, and
+synthetic-versus-literal boundaries.
 ```
 
-This supersedes the prior media-spine and Kling-video goals for current work.
-Those goals remain historical evidence in Git and in `GOAL_V2.md`, but they are
-not the active critical path unless the human explicitly reactivates them.
+This supersedes the PCTOM-R-only framing as the top-level project identity.
+PCTOM-R evidence remains load-bearing for the research workstream; media-spine
+and Kling-video goals remain historical or supporting unless the human
+explicitly reactivates paid provider execution.
 
 ## Supporting Voice Lane Record
 
@@ -66,7 +74,8 @@ The lane decision is:
 ```text
 voice lane: weighted-emotion Chatterbox integration may advance as supporting
 infrastructure evidence when it is tied to local deterministic or live
-receipts; PCTOM-R remains the controlling immutable research objective.
+receipts; it supports the Embry continuity goal but does not by itself prove
+recognizable persona continuity.
 ```
 
 Current voice-lane evidence:
@@ -89,17 +98,24 @@ provider execution, semantic dream quality, or full product readiness.
 For this active goal, "aligned" has a narrow operational meaning:
 
 ```text
-Persona Dream is for the agent's internal counterfactual experience.
-The human does not need to care what the agent dreams about.
-The human needs proof that the agent can dream, seal forecasts before outcomes,
-score those forecasts deterministically, revise beliefs without rewriting
-evidence, and fail closed between pipeline steps.
+Persona Dream is for Embry's internal synthetic experience and its bounded
+effect on later continuity.
+The human does not need polished dream prose or dashboard theater.
+The human needs proof that Embry can dream, watch, journal, update one bounded
+arc delta, bind a session mood before the first user turn, express that mood
+through voice without changing answer content, remain recognizably herself, and
+fail closed between pipeline steps.
 ```
 
 Therefore, every next-step proposal and status update must point to one of
-these research-control objects:
+these control objects:
 
 - accepted-source recall lineage;
+- continuity ledger state and append-only arc deltas;
+- first-person journal receipts that stay synthetic self-narrative;
+- session mood selection and reread receipts;
+- Chatterbox voice delivery receipts that preserve content;
+- recognition checks across moods;
 - deterministic hidden-state social episodes;
 - probabilistic first- or second-order ToM distributions;
 - counterfactual dream branches marked as synthetic;
@@ -113,11 +129,11 @@ Anything else is historical, supporting, or out of scope for the active goal
 unless it directly unblocks one of those objects. Git commits and pushes are
 durability steps only. They are not progress evidence by themselves. Progress
 evidence is a named local artifact, receipt status, command result, count,
-hash, or fail-closed blocker tied to the PCTOM-R gate model.
+hash, or fail-closed blocker tied to the continuity-and-research gate model.
 
 When an agent is asked to align this goal with the README, the default action is
-not to create a new immutable goal. The default action is to keep this
-PCTOM-R objective active and amend this file only when the README, receipts, or
+to keep the Embry continuity objective active, treat PCTOM-R as a research
+workstream under it, and amend this file only when the README, receipts, or
 human instruction expose a concrete mismatch in the active gate model, evidence
 boundary, or next artifact order.
 
@@ -129,30 +145,29 @@ observe it, interpret it, persist only supported ToM state, and later use that
 memory without confusing imagination with literal history or mutating identity.
 
 For the active goal, the README is source context, not a scope expansion. Its
-media-spine history, Kling returns, Chatterbox notes, and human subjective
-review language explain earlier proof boundaries. They do not make provider
-video, voice, dashboard, or human content judgment the next critical path.
+media-spine history, Kling returns, Chatterbox notes, and PCTOM-R receipts
+explain proof boundaries. They do not by themselves prove persistent persona
+continuity.
 
-This `GOAL.md` narrows the active work to the next falsifiable research question
-inside that broader program: whether counterfactual dreaming improves
-prospective, calibrated Theory of Mind and planning decisions under robust
-pipeline checks. The point is not that the human inspects or values the dream
-content directly. The point is that the agent can use explicitly synthetic
-counterfactual experience without corrupting memory, identity, evidence class,
-or pipeline state.
+This `GOAL.md` aligns the README's broader purpose with the current build:
+Embry should remain recognizably herself while dream-derived reflection changes
+arc state, session disposition, and voice. The point is not that the human
+inspects or values the dream content directly. The point is that the agent can
+use explicitly synthetic experience without corrupting memory, identity,
+evidence class, factual content, or pipeline state.
 
 The human-facing output is evidence, not dream prose. The agent-facing output is
-the dream/counterfactual simulation plus sealed prediction and action artifacts.
-Agents must not substitute subjective dream quality, polished narrative,
-human-readable status dashboards, or vague commit summaries for the actual
-research proof.
+the dream/counterfactual simulation, journal, continuity ledger update, session
+mood, voice-delivery envelope, sealed prediction/action artifacts where relevant,
+and recognition evidence. Agents must not substitute subjective dream quality,
+polished narrative, human-readable status dashboards, or vague commit summaries
+for the actual proof.
 
-Therefore the current critical path is not provider/video generation, dream
-aesthetic quality, dashboard presentation, or human-facing narrative polish. The
-human does not need vague GitHub commit status or prose reassurance about
-progress. The useful status is operational: which gate is active, which exact
-file/command/artifact is being touched, which receipts or counts exist, what is
-mocked versus live, and what concrete stop condition remains.
+Therefore the current critical path is not provider/video generation, dashboard
+presentation, or PCTOM-R benchmark expansion alone. The useful status is
+operational: which gate is active, which exact file/command/artifact is being
+touched, which receipts or counts exist, what is mocked versus live, and what
+concrete stop condition remains.
 
 All status for this goal must be stated as an operational snapshot:
 

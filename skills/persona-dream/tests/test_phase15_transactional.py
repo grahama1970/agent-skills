@@ -45,6 +45,15 @@ class FakeMemory:
     def __init__(self, corrupt_key=None):
         self.store: dict[tuple[str, str], dict] = {}
         self.corrupt_key = corrupt_key
+        interp = p13.read_json(INTERP)
+        for binding in interp.get("source_memory_bindings", []):
+            key = binding.get("source_id")
+            if key:
+                self.store[(p15.CANONICAL_DREAM_COLLECTION, key)] = {
+                    "_key": key,
+                    "visibility_state": "active",
+                    "statement": f"source memory fixture {key}",
+                }
 
     def post(self, url, payload, timeout=15.0):
         if url.endswith("/store"):

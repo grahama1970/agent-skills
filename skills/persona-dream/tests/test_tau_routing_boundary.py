@@ -84,6 +84,33 @@ def test_new_direct_scillm_call_is_a_hard_violation(tmp_path):
     assert "skills/watch/scripts/brand_new_caller.py" in result["hard_violations"]
 
 
+def test_archived_local_ask_artifacts_are_quarantined(tmp_path):
+    """Archived Ask worker snapshots are evidence bundles, not runtime source."""
+    check = _load_check()
+    archived = (
+        tmp_path
+        / "skills"
+        / "persona-dream"
+        / "local"
+        / "webgpt_reviews"
+        / "20260721T-pctom-state-review"
+        / "ask-artifacts"
+        / "persona-dream-pctom-state-review-20260721"
+        / "workers"
+        / "ask_tau_roundtable_worker.py"
+    )
+    archived.parent.mkdir(parents=True, exist_ok=True)
+    archived.write_text(
+        'import httpx\n'
+        'httpx.post("http://127.0.0.1:4001/v1/chat/completions", json={})\n',  # tau-routing:allow=test-fixture
+        encoding="utf-8",
+    )
+    hits = check.scan(tmp_path)
+    result = check.evaluate(hits, strict=True)
+    assert result["status"] == "PASS"
+    assert not result["hard_violations"]
+
+
 def test_inline_allow_suppresses_a_line(tmp_path):
     check = _load_check()
     offender = tmp_path / "skills" / "watch" / "scripts" / "suppressed.py"

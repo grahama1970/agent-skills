@@ -1,52 +1,49 @@
 # Persona Dream
 
-## Current state (2026-07-24)
+## Current state (2026-07-27)
 
-The loop is real end-to-end: Embry dreams autonomously from her own memories
-(13 dreams now; provenance-gated: GOAL_V3.md + reports/goal_v3/), and as of
-GOAL_V4 her dreams COLOR HER LIVE VOICE through `persona_affect_composer.v1`
-(memory /intent -> composer -> /tau/voice-render), under the frozen rule: color
-the tone, never change a right answer, never touch safety/interruption, never
-dream about dream-colored words. Proof: `python3
-scripts/check_goal_v4_boundary.py --json` (re-drives live, PASS).
+Persona Dream is controlled by one hierarchy:
 
-GOAL_V3 Amendment 2 (dreaming is variation, not one-shot): a used memory
-cluster is now re-dreamable as a distinct VARIATION — seeded from a
-valence-conflicted memory, graph-traversed within the counterpart, with the
-valence emphasis (positive/negative) that dominates recorded as lineage. The
-old NO_UNUSED_CLUSTERS ceiling is lifted; proven by a re-dream cycle that
-passed all gates (reports/goal_v3/cycles/cycle_20260723T234851Z). Cross-persona
-dreams connected by theory-of-mind are designed (GOAL_V3_AMENDMENT_2.md) and
-routed to a tau creator/reviewer DAG, not cowboy-edited.
+1. Build Embry as a persistent persona whose synthetic dreams produce bounded,
+   provenance-linked changes in self-narrative, arc state, session mood, and
+   voice while she remains recognizably herself.
+2. Keep PCTOM-R as the research workstream that asks whether counterfactual
+   dreaming improves prospective social prediction and planning beyond direct
+   memory under fail-closed controls.
+3. Treat Kling, Watch, Memory persistence, Chatterbox, and Tau as supporting
+   technology lanes with their own receipts and boundaries.
 
-Research question — does the dream matter vs plain memory, judged by the AGENT
-that consumes the affect (persona-dream is for agents, not humans)? The fair
-test is now run and the result is split:
+Current evidence is mixed. The deterministic research and provenance machinery
+is strong: the PCTOM-R evidence recorded in `GOAL.md` reports 15/15 coverage
+ids, 43 child evidence receipts, 19 live positive rows, 12 negative rows, 128
+deterministic social episodes, and a 32/32 live Tau planning slice. That proves
+the reliability of the experiment machinery within its text-first scope. It
+does not yet prove a confidence-bounded planning advantage or that Embry has
+durable lived continuity.
 
-- PERCEPTION (fair): against an LLM-compute-matched, extractive direct-memory
-  arm (`build_memory_arm_llm.py`; novel-content audit, regen 0.0), a 2-seat
-  blinded position-swapped panel on FRESH seats found dream vs memory
-  DISTINGUISHABLE 10/13 (both agree), both APPROPRIATE 13/13, but dream MORE
-  experience-grounded only 6/13 (~chance). The earlier 8/13 "grounding
-  advantage" was largely the deterministic template's flatness. On grounding,
-  D ≈ M — the dream does not beat a fair memory-reading. Per prereg #977 this
-  demotes the dream intermediate for the voice-affect claim absent an operator
-  declaration of non-voice value. See reports/goal_v5/agent_perception_v2/.
-- BEHAVIOR (terminal proof, panel-preferred): same identical content delivered
-  under dream-tone vs memory-tone, consumer agent picks proceed/verify/escalate.
-  Action DIFFERED 7/20, confidence shifted 10/20, self-reported shift 13/20 —
-  dream affect DOES move downstream behavior where perception could not detect
-  it. BUT seat-dependent (kimi shifted action, gpt shifted confidence) and a
-  SAFETY FLAG: dream-warmth pushed the consumer toward PROCEED where the
-  memory-tone said VERIFY — possible caution erosion, not a clean win. Identical
-  words, different behavior. See reports/goal_v5/behavioral/. n=20, 2 seats.
+The persona lane has a first continuity-ledger artifact:
+`reports/goal_v5/continuity/embry.continuity_state.v1.json`. It records an
+identity core, arc state, one recent arc delta, and provenance links. That is
+the right authority object, but the full live chain is still unproven:
+accepted dream -> Watch observations -> first-person journal -> bounded arc
+delta -> persisted continuity ledger -> session mood before first user turn ->
+same mood reread throughout a session -> Chatterbox voice delivery -> recognition
+check.
 
-Net: dreams produce distinguishable, appropriate affect that does not beat a
-fair memory-reading on grounding but does shift consumer behavior — sometimes
-toward less caution. Whether that behavioral nuance is valuable or a risk is
-open and safety-relevant. Open items: the #977 operator declaration; scale the
-behavioral probe with a caution-appropriateness measure; the cross-persona-ToM
-tau DAG (blocked on the shared browser tab).
+The Chatterbox actuator path is now practical evidence, not aspiration:
+`reports/goal_v5/emotion_proof/asr_batch/RECEIPT.json` is live and non-mocked,
+uses `POST http://127.0.0.1:8018/synthesize-batch`, selects
+`chatterbox_base`, preserves weighted `voice_delivery`, and passes ASR with
+WER 0.0. This proves transport/content preservation for that ASR batch path. It
+does not prove perceived emotion, stable Embry identity, naturalness, browser or
+microphone behavior, or durable dream-derived session mood.
+
+The historical media loop produced meaningful receipts, including one accepted
+canonical dream persistence path. It is not currently a routinely rerunnable
+product pipeline. Provider/video continuation and previous-video attachment
+remain historical or experimental until a fresh paired receipt proves them.
+
+Machine-readable current state lives in `CURRENT_STATUS.json`.
 
 
 ![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)

@@ -1,0 +1,105 @@
+{
+  "schema": "persona_dream.current_status.v1",
+  "created_at": "2026-07-27T12:07:30Z",
+  "controlling_goal": {
+    "source": "skills/persona-dream/GOAL.md",
+    "sha256": "sha256:193c1adf5bee5579e2c67bcb5e9d7f4f32491a561a29d5619a6f3e8e887fb58f",
+    "summary": "Build and verify Embry as a persistent persona whose synthetic dreams produce bounded, provenance-linked changes in self-narrative, arc state, session mood, and voice while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries."
+  },
+  "current_phase": "P1_REPOSITORY_TRUTHFULNESS_AND_P0_GOAL_ALIGNMENT",
+  "latest_alignment_repair_receipt": "skills/persona-dream/reports/goal_v5/alignment_repair/RECEIPT.json",
+  "latest_accepted_dream_cycle": {
+    "status": "HISTORICAL_ACCEPTED_SINGLE_LOOP",
+    "evidence_boundary": "One accepted canonical dream persistence path is meaningful history, not repeated pipeline reliability.",
+    "unverified": [
+      "fresh Phase 01-16 rerun",
+      "five-cycle reliability study",
+      "previous-video attachment A/B proof"
+    ]
+  },
+  "continuity_state": {
+    "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
+    "mocked": false,
+    "live": false,
+    "status": "ARTIFACT_PRESENT_NOT_RUNTIME_AUTHORITY_PROVEN",
+    "exercised": "identity_core, arc_state, recent_arc_deltas, provenance artifact shape",
+    "unverified": [
+      "persisted as authoritative runtime state",
+      "reread before first user turn",
+      "stable session mood across a full session",
+      "recognition check across moods"
+    ]
+  },
+  "latest_voice_proof": {
+    "path": "skills/persona-dream/reports/goal_v5/emotion_proof/asr_batch/RECEIPT.json",
+    "mocked": false,
+    "live": true,
+    "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+    "engine": "chatterbox_base",
+    "tone": "firm_boundary",
+    "intensity": 0.9,
+    "valence": -0.7,
+    "wer": 0.0,
+    "exercised": "weighted voice_delivery survived ASR batch candidate rendering and preserved content",
+    "unverified": [
+      "perceived target emotion",
+      "naturalness",
+      "speaker similarity",
+      "stable Embry identity",
+      "browser and microphone path",
+      "durable dream-derived session mood"
+    ]
+  },
+  "pctom_r_workstream": {
+    "status": "MACHINERY_STRONG_HEADLINE_BENEFIT_UNPROVEN",
+    "recorded_evidence_source": "skills/persona-dream/GOAL.md",
+    "recorded_counts": {
+      "coverage_ids_seen": "15/15",
+      "child_evidence_receipts": 43,
+      "live_positive_rows": 19,
+      "negative_rows": 12,
+      "deterministic_social_episodes": 128,
+      "live_tau_planning_calls": "32/32"
+    },
+    "unverified": [
+      "confidence-bounded counterfactual-dreaming planning advantage",
+      "scaled held-out replication",
+      "connection to Embry continuity ledger and relationship state"
+    ]
+  },
+  "sanity": {
+    "status": "PASS",
+    "focused_checks": [
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_tau_routing_boundary.py -q",
+        "result": "7 passed"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh check-tau-routing-boundary --strict --json",
+        "result": "PASS",
+        "hard_violations": 0,
+        "temporary_debt": 0,
+        "stale_allow_entries": 0
+      }
+    ],
+    "full_sanity_command": "./skills/persona-dream/sanity.sh",
+    "full_sanity_status": "PASS",
+    "full_sanity_result": "491 passed, 9 subtests passed",
+    "full_sanity_notes": [
+      "static dream fixture produced 10 required artifacts and 6 frame prompts",
+      "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
+      "panel and contact-sheet negative fixtures failed closed as expected",
+      "Tau-only routing boundary returned PASS with 0 hard violations and 0 temporary debt"
+    ]
+  },
+  "active_blockers": [
+    "Continuity ledger is not yet proven as the runtime authority across real sessions.",
+    "Chatterbox proof is transport/content-preservation evidence, not perceptual emotion or identity evidence.",
+    "PCTOM-R does not yet prove confidence-bounded planning advantage.",
+    "Repeated full dream-pipeline reliability is not proven."
+  ],
+  "next_step": {
+    "default": "Run full persona-dream sanity, then build the live Embry continuity chain proof.",
+    "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json"
+  }
+}
