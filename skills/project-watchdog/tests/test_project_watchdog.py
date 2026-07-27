@@ -20,12 +20,10 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from watchdog import (  # noqa: E402
-    blocked_by,
     config,
     core,
     github,
     handlers,
-    herdr_space,
     issue_fields,
     registry,
     streaks,
@@ -421,239 +419,6 @@ def _backdate_first_idle(project_id: str, *, seconds: float) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Dispatch backend selection and Herdr pane wrapping
-# --------------------------------------------------------------------------- #
-
-
-def test_dispatch_backend_defaults_to_local() -> None:
-    assert config.dispatch_backend_for(None) == "local"
-    assert config.dispatch_backend_for({"project_id": "tau"}) == "local"
-
-
-def test_registry_entry_can_override_dispatch_backend() -> None:
-    assert (
-        config.dispatch_backend_for({"project_id": "tau", "dispatch_backend": "herdr"}) == "herdr"
-    )
-
-
-def test_local_backend_uses_a_captured_subprocess(tmp_path) -> None:
-    seen = {}
-
-    def fake_run(command, **kwargs):
-        seen["command"] = command
-        seen["cwd"] = kwargs.get("cwd")
-        return {"exit_code": 0, "stdout": "", "stderr": ""}
-
-    with mock.patch.object(handlers, "run_cmd", side_effect=fake_run):
-        record, pane = handlers.run_bounded(
-            ["echo", "hi"],
-            worktree=tmp_path,
-            project={"project_id": "tau"},
-            agent_name="pw-tau-issue-1",
-        )
-    assert pane is None
-    assert record["exit_code"] == 0
-    assert seen["command"] == ["echo", "hi"]
-    assert seen["cwd"] == tmp_path
-
-
-def test_herdr_backend_spawns_a_pane_and_normalises_the_record(tmp_path) -> None:
-    fake = herdr_space.PaneDispatch(
-        ok=True, agent_name="pw-tau-issue-9", workspace_id="w82", exit_code=0
-    )
-    with mock.patch.object(handlers.herdr_space, "dispatch_in_pane", return_value=fake) as spawn:
-        record, pane = handlers.run_bounded(
-            ["echo", "hi"],
-            worktree=tmp_path,
-            project={"project_id": "tau", "dispatch_backend": "herdr"},
-            agent_name="pw-tau-issue-9",
-        )
-    assert spawn.called
-    assert record["exit_code"] == 0
-    assert record["backend"] == "herdr_pane"
-    assert pane is not None and pane["workspace_id"] == "w82"
-
-
-def test_herdr_backend_surfaces_a_failing_pane_as_nonzero(tmp_path) -> None:
-    fake = herdr_space.PaneDispatch(ok=False, exit_code=7, error="pane command exited 7")
-    with mock.patch.object(handlers.herdr_space, "dispatch_in_pane", return_value=fake):
-        record, _pane = handlers.run_bounded(
-            ["false"],
-            worktree=tmp_path,
-            project={"project_id": "tau", "dispatch_backend": "herdr"},
-            agent_name="pw-tau-issue-9",
-        )
-    assert record["exit_code"] == 7
-
-
-def test_herdr_timeout_is_never_reported_as_success(tmp_path) -> None:
-    """A pane that never finished must not look like a clean dispatch."""
-    fake = herdr_space.PaneDispatch(ok=False, timed_out=True, exit_code=None, error="no sentinel")
-    with mock.patch.object(handlers.herdr_space, "dispatch_in_pane", return_value=fake):
-        record, _pane = handlers.run_bounded(
-            ["sleep", "999"],
-            worktree=tmp_path,
-            project={"project_id": "tau", "dispatch_backend": "herdr"},
-            agent_name="pw-tau-issue-9",
-        )
-    assert record["exit_code"] != 0
-
-
-def test_pane_agent_label_is_stable_across_issues(tmp_path) -> None:
-    """monitor-herdr filters with --include-agent, so the label cannot vary."""
-    scripts = [
-        herdr_space.build_pane_script(
-            ["echo", "x"], agent_name=f"pw-tau-issue-{n}", sentinel=tmp_path / f"{n}.json"
-        )
-        for n in (1, 2)
-    ]
-    for script in scripts:
-        assert f"--agent {herdr_space.PANE_AGENT_LABEL}" in script
-    assert scripts[0] != scripts[1], "sentinel path should still be per-issue"
-
-
-def test_pane_script_records_exit_code_and_reports_terminal_state(tmp_path) -> None:
-    script = herdr_space.build_pane_script(
-        ["false"], agent_name="pw-tau-issue-3", sentinel=tmp_path / "s.json"
-    )
-    assert "__rc=$?" in script
-    assert "exit_code" in script
-    assert "--state working" in script
-    assert "idle" in script and "blocked" in script
-
-
-def test_observable_via_names_the_monitor_herdr_invocation() -> None:
-    block = herdr_space.PaneDispatch(
-        workspace_id="w82", space_label="autoupdate"
-    ).as_receipt_block()
-    assert "monitor-herdr" in block["observable_via"]
-    assert "--space autoupdate" in block["observable_via"]
-    assert f"--include-agent {herdr_space.PANE_AGENT_LABEL}" in block["observable_via"]
-
-
-# --------------------------------------------------------------------------- #
-# Cross-repo dependency edges
-# --------------------------------------------------------------------------- #
-
-UP = "grahama1970/graph-memory-operator"
-
-
-def test_parse_blocked_by_extracts_refs() -> None:
-    refs = blocked_by.parse_blocked_by(
-        f"Waiting on Memory.\n\nblocked-by: {UP}#61\nblocked-by: {UP}#59\n"
-    )
-    assert [str(r) for r in refs] == [f"{UP}#61", f"{UP}#59"]
-
-
-def test_parse_blocked_by_is_case_insensitive_and_dedupes() -> None:
-    refs = blocked_by.parse_blocked_by(
-        f"Blocked-By: {UP}#61\nblocked-by:{UP}#61\nBLOCKED-BY:  {UP}#61"
-    )
-    assert [str(r) for r in refs] == [f"{UP}#61"]
-
-
-def test_parse_blocked_by_ignores_bare_issue_mentions() -> None:
-    """Prose mentioning an issue must not silently create a dependency edge."""
-    assert blocked_by.parse_blocked_by(f"see {UP}#61 for background") == []
-    assert blocked_by.parse_blocked_by("this is blocked by other work") == []
-
-
-def test_closed_upstream_resolves() -> None:
-    payload = {
-        "exit_code": 0,
-        "stdout": json.dumps({"state": "CLOSED", "title": "t"}),
-        "stderr": "",
-    }
-    with mock.patch.object(blocked_by, "run_cmd", return_value=payload):
-        state = blocked_by.read_upstream(blocked_by.UpstreamRef(UP, 61))
-    assert state.resolved is True
-
-
-def test_open_upstream_does_not_resolve() -> None:
-    payload = {"exit_code": 0, "stdout": json.dumps({"state": "OPEN", "title": "t"}), "stderr": ""}
-    with mock.patch.object(blocked_by, "run_cmd", return_value=payload):
-        state = blocked_by.read_upstream(blocked_by.UpstreamRef(UP, 59))
-    assert state.resolved is False
-
-
-@pytest.mark.parametrize(
-    "payload",
-    [
-        {"exit_code": 1, "stdout": "", "stderr": "could not resolve to an Issue"},
-        {"exit_code": 0, "stdout": "not json", "stderr": ""},
-    ],
-)
-def test_unreadable_upstream_counts_as_still_blocking(payload) -> None:
-    """Fail closed: releasing on an unreadable dependency is worse than waiting."""
-    with mock.patch.object(blocked_by, "run_cmd", return_value=payload):
-        state = blocked_by.read_upstream(blocked_by.UpstreamRef(UP, 999))
-    assert state.readable is False
-    assert state.resolved is False
-
-
-def _blocked_issue(body: str) -> dict:
-    return {"number": 149, "title": "tool chains", "body": body, "labels": [], "url": "u"}
-
-
-def _patch_dependency_text(text: str):
-    return mock.patch.object(blocked_by, "issue_dependency_text", return_value=text)
-
-
-def test_issue_is_released_when_every_upstream_is_closed() -> None:
-    closed = blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, 61), "CLOSED", "t", True)
-    edits: list[dict] = []
-    with (
-        _patch_dependency_text(f"blocked-by: {UP}#61"),
-        mock.patch.object(blocked_by, "read_upstream", return_value=closed),
-        mock.patch.object(blocked_by.github, "issue_comment", return_value={"exit_code": 0}),
-        mock.patch.object(
-            blocked_by.github,
-            "issue_edit",
-            side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0, "stderr": ""},
-        ),
-    ):
-        outcome = blocked_by.resolve_issue("run", _blocked_issue(""), repo=TAU_REPO, apply=True)
-    assert outcome.released is True
-    assert edits and edits[0]["remove"] == [blocked_by.BLOCKED_LABEL]
-
-
-def test_issue_stays_blocked_when_any_upstream_is_open() -> None:
-    states = {
-        61: blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, 61), "CLOSED", "t", True),
-        59: blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, 59), "OPEN", "t", True),
-    }
-    with (
-        _patch_dependency_text(f"blocked-by: {UP}#61\nblocked-by: {UP}#59"),
-        mock.patch.object(blocked_by, "read_upstream", side_effect=lambda r: states[r.number]),
-        mock.patch.object(blocked_by.github, "issue_edit") as edit,
-    ):
-        outcome = blocked_by.resolve_issue("run", _blocked_issue(""), repo=TAU_REPO, apply=True)
-    assert outcome.released is False
-    assert edit.called is False, "must not touch labels while any upstream is open"
-    assert outcome.as_receipt_block()["still_blocking"] == [f"{UP}#59"]
-
-
-def test_dry_run_never_mutates_even_when_resolved() -> None:
-    closed = blocked_by.UpstreamState(blocked_by.UpstreamRef(UP, 61), "CLOSED", "t", True)
-    with (
-        _patch_dependency_text(f"blocked-by: {UP}#61"),
-        mock.patch.object(blocked_by, "read_upstream", return_value=closed),
-        mock.patch.object(blocked_by.github, "issue_edit") as edit,
-        mock.patch.object(blocked_by.github, "issue_comment") as comment,
-    ):
-        outcome = blocked_by.resolve_issue("run", _blocked_issue(""), repo=TAU_REPO, apply=False)
-    assert outcome.released is False
-    assert not edit.called and not comment.called
-
-
-def test_blocked_label_without_a_ref_is_reported_not_released() -> None:
-    with _patch_dependency_text("no dependency declared here"):
-        outcome = blocked_by.resolve_issue("run", _blocked_issue(""), repo=TAU_REPO, apply=True)
-    assert outcome.released is False
-    assert "declares no" in (outcome.error or "")
-
-
-# --------------------------------------------------------------------------- #
 # Generic ticket_repair handler
 # --------------------------------------------------------------------------- #
 
@@ -661,7 +426,7 @@ def test_blocked_label_without_a_ref_is_reported_not_released() -> None:
 def test_ticket_repair_refuses_a_project_with_no_bounded_runner(tmp_path) -> None:
     project = {
         "project_id": "memory",
-        "repo": UP,
+        "repo": "grahama1970/graph-memory-operator",
         "worktree": str(tmp_path),
         "runner_kind": "project-local",
     }
@@ -701,7 +466,7 @@ def test_ticket_repair_dispatches_tau_self_fix(tmp_path) -> None:
         mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
         mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
         mock.patch.object(
-            handlers, "run_bounded", return_value=({"exit_code": 0, "stderr": ""}, None)
+            handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}
         ) as bounded,
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
@@ -729,9 +494,7 @@ def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
             "issue_edit",
             side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
         ),
-        mock.patch.object(
-            handlers, "run_bounded", return_value=({"exit_code": 1, "stderr": "x"}, None)
-        ),
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 1, "stderr": "x"}),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "NEEDS_ATTENTION"
