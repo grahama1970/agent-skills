@@ -126,6 +126,42 @@ feed hits as automatic block decisions, alerts, or proof of compromise unless
 the project workflow adds high-confidence environmental corroboration. The
 default rule is: block on certainty, hunt on suspicion, enrich everything else.
 
+### Optional Feed Pack Selection
+
+Feeds are disabled by default. Enable them only when fresh security/code
+monitoring is relevant to the research question, and use them as contextual
+enrichment alongside Brave, GitHub, ArXiv, and YouTube evidence.
+
+| Feed pack/source | Activate when the project agent needs |
+|------------------|----------------------------------------|
+| `security_code` | Compact code, AppSec, vulnerability, red-team, and operational security monitoring with low default noise |
+| `security_code_extended` | Practitioner-grade malware, cloud, exploit-development, email-threat, and policy context in addition to `security_code` |
+| BleepingComputer | Daily incident, malware, ransomware, and active-exploitation coverage |
+| Krebs on Security | Investigative cybercrime, breach, fraud, and infrastructure reporting |
+| SANS Internet Storm Center | Operational threat-handler notes and near-term defender awareness |
+| Help Net Security | Security tooling, trends, and general industry updates |
+| PortSwigger Research | Web application security, HTTP/browser attack research, and payload techniques |
+| Google Project Zero | Deep vulnerability research, exploit chains, memory safety, and root-cause analysis |
+| Google Online Security Blog | Platform, browser, ecosystem, and secure engineering context |
+| GitHub Security Blog | Supply-chain, dependency, DevSecOps, and open-source security updates |
+| GitHub Security Lab | CodeQL, vulnerability research, and code-level bug analysis |
+| SpecterOps | Active Directory, Windows internals, and enterprise red-team tradecraft |
+| Black Hills Information Security | Practical pentest methodology, tooling, and defensive/offensive operations |
+| TrustedSec | Red-team methodology, tool releases, and practitioner tradecraft |
+| SentinelOne Labs | Malware reverse engineering, APT reporting, and technical campaign analysis |
+| Malwarebytes Labs | Commodity malware, malvertising, and broad malware landscape monitoring |
+| Wiz Blog | Cloud, Kubernetes, identity, and infrastructure security research |
+| Unit 42 | Threat research, cloud campaigns, network security, and adversary reporting |
+| Offensive Security | Exploit-development education, offensive security, and Kali ecosystem updates |
+| Corelan Team | Windows exploit development, mitigation bypass, and low-level exploitation |
+| Proofpoint Threat Insight | Email-borne threats, phishing, BEC, and initial-access tradecraft |
+| EFF Deeplinks | Security-relevant privacy, policy, legal, DMCA/CFAA, and civil-liberties context |
+
+Raw IoC feeds such as CISA KEV JSON, URLhaus, Spamhaus, OpenPhish, and
+AlienVault OTX are not part of the default readable RSS lane. Treat them as
+separate enrichment/TIP inputs that need freshness, confidence, relevance,
+allowlist, and corroboration checks before any alerting or blocking decision.
+
 Optional `/agents` profiles are provided for higher-rigor workflows:
 
 - `agents/researcher.yaml`: converts Dogpile receipts into a bounded research
