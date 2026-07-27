@@ -90,6 +90,8 @@ def test_repo_access_blocked_fails_closed_without_local_readable_bundle(tmp_path
     assert packet["next_command"][:2][-1] == "tau-dag"
     assert "--execute" in packet["next_command"]
     assert "local readable review bundle" in packet["fallback_instruction"]
+    assert packet["ticket_target"] == "$ask at agent-skills@main"
+    assert "$ticket to $ask at agent-skills@main" in packet["ticket_instruction"]
 
 
 def test_prompt_too_large_or_stalled_allows_retry_only_with_attachable_bundle(tmp_path: Path) -> None:

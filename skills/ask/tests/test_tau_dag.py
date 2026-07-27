@@ -2088,6 +2088,8 @@ def test_roundtable_scillm_valid_api_key_message_classifies_as_auth_failure(tmp_
     assert recovery["provider_diagnosis"]["routed_model"] == "gemini-flash"
     assert recovery["provider_diagnosis"]["provider_chain"] == ["gemini-flash", "gemini-flash-free2"]
     assert recovery["auto_retry_blocked_reason"] == "auth_requires_configured_scillm_proxy_key"
+    assert recovery["ticket_target"] == "$ask at agent-skills@main"
+    assert "$ticket to $ask at agent-skills@main" in recovery["ticket_instruction"]
 
 
 def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet(tmp_path: Path) -> None:
@@ -2133,6 +2135,8 @@ def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet
                 "node_id": "handler-gpt-5-5",
                 "failure_code": "scillm_auth_invalid_api_key",
                 "next_command": "export SCILLM_PROXY_KEY=<configured proxy key>; cd skills/ask && ./run.sh tau-dag ...",
+                "ticket_target": "$ask at agent-skills@main",
+                "ticket_instruction": "If this handler-recovery-packet is still blocking, file a $ticket to $ask at agent-skills@main.",
             }
         )
         + "\n",
@@ -2203,9 +2207,12 @@ def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet
     assert "1 of 2 handler seat(s) produced usable responses" in analysis["why"]
     assert analysis["failure_codes"] == {"scillm_auth_invalid_api_key": 1}
     assert analysis["failed_seats"][0]["next_command"].startswith("export SCILLM_PROXY_KEY")
+    assert analysis["failed_seats"][0]["ticket_target"] == "$ask at agent-skills@main"
+    assert "$ticket to $ask at agent-skills@main" in analysis["failed_seats"][0]["ticket_instruction"]
     summary = (join_dir / "roundtable-summary.md").read_text(encoding="utf-8")
     assert "## Degradation Analysis" in summary
     assert "scillm_auth_invalid_api_key" in summary
+    assert "$ticket to $ask at agent-skills@main" in summary
     assert "DO NOT IMPORT" not in summary
 
 
@@ -2425,6 +2432,8 @@ def test_run_tau_dag_bundle_synthesizes_compete_join_when_all_browser_lanes_need
                     "next_command": next_command,
                     "auto_retry_allowed": False,
                     "auto_retry_blocked_reason": "fixture_blocker",
+                    "ticket_target": "$ask at agent-skills@main",
+                    "ticket_instruction": "If this browser-recovery-packet is still blocking, file a $ticket to $ask at agent-skills@main.",
                 }
             )
             + "\n",
@@ -2535,7 +2544,7 @@ def test_tau_dag_cli_json_reports_degraded_join_path(monkeypatch, tmp_path: Path
     assert payload["join_artifact_path"] == str(join_path)
 
 
-def test_browser_tab_lifecycle_creates_one_owned_window_and_provider_tabs(tmp_path: Path) -> None:
+def test_browser_tab_lifecycle_auto_creates_one_owned_window_and_provider_tabs(tmp_path: Path) -> None:
     log_path = tmp_path / "commands.jsonl"
     tab_counter = tmp_path / "tab-counter.txt"
     surf = tmp_path / "surf"
@@ -2590,13 +2599,14 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
 
     lifecycle = tau_dag_cli._provision_browser_lifecycle(
         request,
-        mode="fresh-keep",
+        mode="auto",
         run_dir=Path(str(bundle["run_dir"])),
         surf_run=surf,
         browser_oracle_run=browser_oracle,
     )
 
     assert lifecycle["status"] == "READY"
+    assert lifecycle["mode"] == "fresh-temporary"
     assert lifecycle["window_id"] == "900"
     assert [tab["handler"] for tab in lifecycle["created_tabs"]] == ["webgpt", "webclaude", "webkimi"]
     assert [tab["tab_id"] for tab in lifecycle["created_tabs"]] == ["101", "102", "103"]
@@ -2613,6 +2623,29 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
     assert ["bind", "fresh-browser-lifecycle-webclaude", "--backend", "webclaude", "--tab-id", "102", "--url", "https://claude.ai/new", "--auto", "--json"] in logged
     assert ["bind", "fresh-browser-lifecycle-webkimi", "--backend", "webkimi", "--tab-id", "103", "--url", "https://www.kimi.com/", "--auto", "--json"] in logged
     assert (Path(str(bundle["run_dir"])) / "browser-tab-lifecycle.json").is_file()
+
+
+def test_browser_tab_lifecycle_auto_skips_non_browser_dag(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Ask gpt-5.5-high to answer.",
+        repo="local/agent-skills",
+        target="api-only-lifecycle",
+        immutable_goal="API-only handlers do not need browser tabs.",
+        handlers=["gpt-5.5-high"],
+        output_root=tmp_path / "runs",
+        ask_id="api-only-lifecycle",
+    )
+    bundle = compile_tau_dag_bundle(request)
+
+    lifecycle = tau_dag_cli._provision_browser_lifecycle(
+        request,
+        mode="auto",
+        run_dir=Path(str(bundle["run_dir"])),
+        surf_run=tmp_path / "missing-surf",
+        browser_oracle_run=tmp_path / "missing-browser-oracle",
+    )
+
+    assert lifecycle == {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "reuse-bound"}
 
 
 def test_browser_tab_lifecycle_fresh_temporary_closes_only_owned_window(tmp_path: Path) -> None:
@@ -2909,6 +2942,8 @@ def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp
             "auto_retry_allowed": False,
             "auto_retry_blocked_reason": "fixture_blocker",
             "evidence": {"failure_excerpt": failure_code},
+            "ticket_target": "$ask at agent-skills@main",
+            "ticket_instruction": "If this browser-recovery-packet is still blocking, file a $ticket to $ask at agent-skills@main.",
         }
         recovery_path.write_text(json.dumps(recovery_packet) + "\n", encoding="utf-8")
         (node_dir / "node-receipt.json").write_text(
@@ -2983,12 +3018,15 @@ def test_compete_join_preserves_partial_results_and_browser_recovery_packets(tmp
         "prompt_too_large_or_stalled": 1,
     }
     assert {item["handler"] for item in analysis["failed_candidates"]} == {"webgpt", "webclaude"}
+    assert all(item["ticket_target"] == "$ask at agent-skills@main" for item in analysis["failed_candidates"])
+    assert all("$ticket to $ask at agent-skills@main" in item["ticket_instruction"] for item in analysis["failed_candidates"])
     assert any("webgpt.submit" in item["next_command"] for item in analysis["recovery_commands"])
     receipt = json.loads((join_dir / "node-receipt.json").read_text(encoding="utf-8"))
     assert receipt["degradation_analysis"]["transport_blocker_count"] == 2
     summary = (join_dir / "compete-summary.md").read_text(encoding="utf-8")
     assert "## Degradation Analysis" in summary
     assert "prompt_too_large_or_stalled" in summary
+    assert "$ticket to $ask at agent-skills@main" in summary
 
 
 def test_compete_join_selects_clear_winner_when_peer_transport_degraded(tmp_path: Path) -> None:

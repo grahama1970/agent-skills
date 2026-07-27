@@ -48,7 +48,7 @@ shape or sanity command is needed.
   --handler-project webgpt=tau \
   --topology concurrent --json
 
-# Execute a browser-heavy roundtable in an Ask-owned fresh Chrome window. Ask
+# Execute a browser-heavy roundtable. Ask's default lifecycle is auto: it
 # creates one window, one tab per browser handler, binds temporary projects,
 # and closes only the Ask-created window after Tau returns.
 ./run.sh tau-dag "Roundtable these handlers concurrently, then join." \
@@ -56,7 +56,6 @@ shape or sanity command is needed.
   --immutable-goal "Every handler answers from identical context and the join preserves dissent." \
   --handler webclaude --handler webkimi --handler webgemini --handler webgpt \
   --topology concurrent \
-  --browser-tab-lifecycle fresh-temporary \
   --execute --json
 
 # Execute a sequential handler PIPELINE. A sequential chain is not a roundtable.
@@ -116,7 +115,6 @@ shape or sanity command is needed.
   --repo local/ask --target browser-compete-preflight \
   --immutable-goal "Choose a winner only from locally verified features." \
   --handler webgpt --handler webclaude \
-  --browser-tab-lifecycle fresh-temporary \
   --execute --json
 
 # Use fresh-keep instead when the browser tabs need human inspection after the
@@ -135,6 +133,24 @@ shape or sanity command is needed.
   --reviewer-model claude-fable --criterion correctness \
   --allow-provider-calls --execute --json
 ```
+
+## Failure Contract
+
+Ask failures are expected to be actionable, not silent. For each failed
+browser/API/subagent lane, inspect the node receipt and recovery packet:
+
+- `failure_code` names the failure class.
+- `recovery_packet_path` points to the packet for that lane.
+- `next_command` gives the focused retry when a retry is safe.
+- `auto_retry_blocked_reason` or `fallback_instruction` explains fail-closed
+  cases.
+- `ticket_instruction` tells the project agent when to file a `$ticket` to
+  `$ask` at `agent-skills@main`.
+
+If a failure is misclassified, lacks useful Surf/CDP/SciLLM stderr, has no
+actionable recovery, or still blocks the project after following the recovery
+instruction, file the ticket with the Ask `run_dir`, `dag.json`, node receipt,
+recovery packet, `response.meta.json`, raw response, and exact command stderr.
 
 ## Common Commands
 

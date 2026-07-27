@@ -112,9 +112,9 @@ def run(
         str,
         typer.Option(
             "--browser-tab-lifecycle",
-            help="Browser tab handling for Tau browser handlers: reuse-bound, fresh-temporary, or fresh-keep.",
+            help="Browser tab handling for Tau browser handlers: auto, reuse-bound, fresh-temporary, or fresh-keep.",
         ),
-    ] = "reuse-bound",
+    ] = "auto",
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Reviewer criterion. Repeat for multiple criteria."),
@@ -341,9 +341,9 @@ def compete(
         str,
         typer.Option(
             "--browser-tab-lifecycle",
-            help="Browser tab handling for Tau browser handlers: reuse-bound, fresh-temporary, or fresh-keep.",
+            help="Browser tab handling for Tau browser handlers: auto, reuse-bound, fresh-temporary, or fresh-keep.",
         ),
-    ] = "reuse-bound",
+    ] = "auto",
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Evaluation criterion. Repeat for multiple criteria."),
@@ -496,7 +496,13 @@ def _provision_browser_lifecycle(
     surf_run: Path | None = None,
     browser_oracle_run: Path | None = None,
 ) -> dict[str, Any]:
-    mode = (mode or "reuse-bound").strip()
+    mode = (mode or "auto").strip()
+    browser_handlers = [handler for handler in input_payload.handlers if handler in BROWSER_FRESH_URLS]
+    if mode == "auto":
+        if browser_handlers and str(input_payload.workflow_mode or "") in {"roundtable", "compete"}:
+            mode = "fresh-temporary"
+        else:
+            mode = "reuse-bound"
     if mode == "reuse-bound":
         lifecycle = {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": mode}
         _write_lifecycle(run_dir, lifecycle)
@@ -507,12 +513,11 @@ def _provision_browser_lifecycle(
             "status": "BLOCKED",
             "mode": mode,
             "failure_code": "unsupported_browser_tab_lifecycle",
-            "supported_modes": ["reuse-bound", "fresh-temporary", "fresh-keep"],
+            "supported_modes": ["auto", "reuse-bound", "fresh-temporary", "fresh-keep"],
         }
         _write_lifecycle(run_dir, lifecycle)
-        raise typer.BadParameter("browser_tab_lifecycle must be reuse-bound, fresh-temporary, or fresh-keep")
+        raise typer.BadParameter("browser_tab_lifecycle must be auto, reuse-bound, fresh-temporary, or fresh-keep")
 
-    browser_handlers = [handler for handler in input_payload.handlers if handler in BROWSER_FRESH_URLS]
     if not browser_handlers:
         lifecycle = {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": mode, "reason": "no_browser_handlers"}
         _write_lifecycle(run_dir, lifecycle)

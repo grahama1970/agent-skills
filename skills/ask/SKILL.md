@@ -102,6 +102,61 @@ Runtime artifacts default under `.ask_artifacts/runs/<ask_id>` or the provided
 root such as `/mnt/storage12tb/skills/ask/outputs/...`. Do not commit generated
 ask artifacts.
 
+## Project-Agent Quickstart
+
+Start here when the user asks for a single model call, roundtable, competition,
+or creator-reviewer loop. Use one of these shapes; do not invent a custom
+orchestration path.
+
+| User intent | Command shape |
+| --- | --- |
+| One handler answers | `./run.sh tau-dag "<task>" --repo <repo> --target <target> --immutable-goal "<goal>" --handler <handler-or-model> --execute --json` |
+| Roundtable | `./run.sh tau-dag "<shared task>" --repo <repo> --target <target> --immutable-goal "<goal>" --dag-template roundtable --handler <a> --handler <b> --topology concurrent --execute --json` |
+| Competition | `./run.sh compete "<isolated task>" --repo <repo> --target <target> --immutable-goal "<goal>" --handler <a> --handler <b> --criterion <criterion> --execute --json` |
+| Creator then reviewer | `./run.sh tau-dag "<creator task then reviewer verdict>" --repo <repo> --target <target> --immutable-goal "<goal>" --dag-template creator-reviewer --handler <creator> --handler <reviewer> --topology sequential --execute --json` |
+
+Handlers are peers even when their transports differ. Browser handlers
+(`webgpt`, `webclaude`, `webkimi`, `webgemini`, `webgrok`) run through `$surf`
+and `$browser-oracle`. API/model handlers such as `gpt-5.5-high`,
+`gpt-5.5-xhigh`, or `chutes deepseek-ai/DeepSeek-V3.2-TEE` are routed by Tau.
+Project agents should not care which side is browser or API beyond naming the
+handler.
+
+For executed roundtables and competitions with browser handlers, Ask defaults to
+`--browser-tab-lifecycle auto`. Auto creates one Chrome window, creates one tab
+per requested browser handler, binds temporary browser-oracle projects, runs
+Tau, and closes only that Ask-created window. The project agent does not need to
+pre-create tabs or pass `--handler-project` for normal web seats. Use
+`--browser-tab-lifecycle fresh-keep` only when a human needs to inspect the tabs
+after the run. Use `--browser-tab-lifecycle reuse-bound` only for an
+intentionally known-good existing browser-oracle project.
+
+After execution, read the returned `run_dir` and inspect:
+
+- `dag.json`
+- `command-specs/<node>/tau-dispatch-command.json`
+- `node-artifacts/handler-*/node-receipt.json`
+- `node-artifacts/handler-*/response.md`
+- `node-artifacts/handler-*/browser-recovery-packet.json` when present
+- `node-artifacts/handler-*/handler-recovery-packet.json` when present
+- `node-artifacts/join/node-receipt.json` for roundtable
+- `node-artifacts/join/compete-scorecard.json` for competition
+
+Treat `PASS` as model/reviewer evidence only. Local closure still requires the
+project's deterministic proof command or artifact validation. Treat `DEGRADED`,
+`NEEDS_ATTENTION`, and provider rate limits as lane-local states: keep usable
+peer receipts, read the recovery packet, and rerun only the affected lane or
+launch a new round when appropriate.
+
+Failures must be non-silent. A failed browser/API/subagent lane must expose
+`failure_code`, `recovery_packet_path`, `next_command` or an explicit
+fail-closed reason, and `ticket_instruction`. If a recovery packet is missing,
+misclassified, hides Surf/CDP/SciLLM stderr, gives no actionable recovery, or
+still blocks the project after its recovery instruction is followed, file a
+`$ticket` to `$ask` at `agent-skills@main`. Include the Ask `run_dir`,
+`dag.json`, the failing node receipt, recovery packet, `response.meta.json`,
+raw response, and exact command stderr.
+
 ## Required Behavior
 
 - Build a concrete bundle before review or oracle escalation: objective, target
@@ -249,6 +304,10 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `recovery_packet_path`. The join receipt and Markdown summary must include
   `degradation_analysis` explaining why the aggregate degraded, grouped failure
   codes, failed seats, and exact recovery commands when recovery packets exist.
+  Each failed seat must also include `ticket_instruction` so the project agent
+  knows exactly when to file a `$ticket` to `$ask` at `agent-skills@main`.
+  A provider-specific rate limit degrades only that provider; keep usable seats
+  and select available participants instead of failing the whole panel.
   If no handler produces usable reviewer evidence, the join status is
   `NEEDS_ATTENTION`.
 
@@ -375,18 +434,18 @@ Rules for the calling agent:
 
 ### Roundtable Runbook (exact steps)
 
-1. **Bind each seat's tab** (once per panel; verify tab URLs first with
-   `skills/surf/run.sh tab.list --json` — the URL, not the listing order, is
-   the identity truth):
-   `skills/browser-oracle/run.sh bind <project-name> --backend webgpt|webclaude|webkimi|webgrok --tab-id <id> --url "<conversation-url>"`
-   Verify with `... resolve --backend <b> --project <name> --json` (expect the
-   tab_id back).
-2. **Round 1** (concurrent; the request text carries the FULL context —
-   problem state, constraints, evidence, and the questions):
-   `./run.sh tau-dag "<full-context request>" --repo <r> --target <t>-r1 --handler webgpt --handler webclaude --handler webkimi --handler-project webgpt=<p1> --handler-project webclaude=<p2> --handler-project webkimi=<p3> --topology concurrent --execute --poll-timeout-seconds 3600 --json`
-3. **Read responses** from the run dir printed in the bundle:
-   `<run_dir>/node-artifacts/handler-<seat>/response.md`. Verify transport per
-   seat: node-receipt.json browser_oracle.tab_id matches the bound tab.
+1. **Round 1**: put the full shared context, evidence, constraints, and open
+   questions in one prompt. Run all seats concurrently. If any handler is a
+   browser handler, Ask automatically creates a fresh browser window:
+   `./run.sh tau-dag "<full-context request>" --repo <r> --target <t>-r1 --immutable-goal "<goal>" --dag-template roundtable --handler webgpt --handler webclaude --handler webkimi --topology concurrent --execute --poll-timeout-seconds 3600 --json`
+2. **Read responses** from the printed `run_dir`:
+   `<run_dir>/node-artifacts/handler-<seat>/response.md`. Verify each seat's
+   `node-receipt.json` status, `failure_code`, `browser_oracle`, and
+   `browser_transport_failure_summary` when present.
+3. **Read the join**:
+   `<run_dir>/node-artifacts/join/node-receipt.json`. If `status` is
+   `DEGRADED` or `NEEDS_ATTENTION`, keep the usable responses and follow only
+   the failed seats' recovery packets. Do not discard the whole panel.
 4. **Research between rounds (mandatory, before the next round is launched)**:
    `skills/dogpile/run.sh "<load-bearing claim>"` (falls back:
    `skills/brave-search/run.sh web "<query>" --count 5`). Read the output back;
@@ -405,6 +464,16 @@ Rules for the calling agent:
    artifacts and report the slice manifest plus any surviving dissent
    (attributed) to the human. Prose-only convergence is a protocol
    violation (operator, 2026-07-23).
+
+Manual browser-oracle binding is a fallback, not the normal roundtable path.
+Use it only when the human explicitly names an existing tab or when
+`fresh-temporary` is unavailable. In that case, verify the URL with
+`skills/surf/run.sh tab.list --json`, bind with the command below, and pass
+`--handler-project <handler>=<project>`.
+
+```bash
+skills/browser-oracle/run.sh bind <project> --backend <backend> --tab-id <id> --url "<live-url>" --manual --json
+```
 
 Known traps: prompt text containing `~<digits>` (e.g. "~20 pages") trips
 surf's path preflight (agent-skills#973) — write "about 20"; ChatGPT project
@@ -465,16 +534,15 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   `<handler>_stale_binding_submit_existing_tab`. If no candidate succeeds, the
   lane stays `NEEDS_ATTENTION` with a recovery packet.
 - **Browser tab lifecycle for browser handlers**:
-  - Default mode is `--browser-tab-lifecycle reuse-bound`. It uses existing
-    browser-oracle projects and lets Ask's stale-binding recovery scan already
-    open same-provider tabs when a bound tab is wrong.
-  - For live roundtables and competitions with browser seats, prefer
-    `--browser-tab-lifecycle fresh-temporary`. Ask asks `$surf` to create one
-    Chrome window, records the returned `windowId`, creates one provider tab in
-    that window with `tab.new --window-id`, binds temporary browser-oracle
-    projects for each handler, runs Tau, then closes only the Ask-created
-    window. Existing user tabs and pre-existing browser-oracle bindings are not
-    closed by this lifecycle.
+  - Default mode is `--browser-tab-lifecycle auto`. For executed roundtables
+    and competitions with browser seats, auto behaves as `fresh-temporary`.
+    For non-browser DAGs, it behaves as `reuse-bound`/skipped.
+  - `fresh-temporary` asks `$surf` to create one Chrome window, records the
+    returned `windowId`, creates one provider tab in that window with
+    `tab.new --window-id`, binds temporary browser-oracle projects for each
+    handler, runs Tau, then closes only the Ask-created window. Existing user
+    tabs and pre-existing browser-oracle bindings are not closed by this
+    lifecycle.
   - Use `--browser-tab-lifecycle fresh-keep` when the human or project agent
     needs to inspect the provider tabs after the run. It creates and binds the
     same fresh window/tabs but leaves them open.

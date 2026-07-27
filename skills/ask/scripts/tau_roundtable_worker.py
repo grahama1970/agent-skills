@@ -42,6 +42,7 @@ HANDLER_SUBMIT_COMMANDS = {
 ATTACH_FILE_HANDLERS = {"webgpt", "webclaude", "webkimi", "webgemini", "webgrok"}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
 HANDLER_RECOVERY_PACKET_SCHEMA = "ask.handler_failure_recovery_packet.v1"
+ASK_TICKET_TARGET = "$ask at agent-skills@main"
 WEBGPT_CONVERSATION_FULL_BLOCKER = "BLOCKED_WEBGPT_CONVERSATION_FULL"
 WEBGPT_BINDING_STALE_BLOCKER = "BLOCKED_WEBGPT_BINDING_STALE"
 BROWSER_TAB_IDENTITY_MISMATCH = "browser_tab_identity_mismatch"
@@ -76,6 +77,15 @@ BROWSER_TRANSPORT_BLOCKERS = {
     "prompt_too_large_or_stalled",
     "stale_raw_capture",
 }
+
+
+def _ask_ticket_instruction(*, failure_code: str, packet_kind: str) -> str:
+    return (
+        f"If failure_code={failure_code} in this {packet_kind} is misclassified, missing an actionable next_command, "
+        f"or still blocks the project after following the recovery instruction, file a $ticket to "
+        f"{ASK_TICKET_TARGET}. Include the Ask run directory, dag.json, node-receipt.json, "
+        f"{packet_kind}.json, response.meta.json, response.raw.md, and the exact command stderr."
+    )
 
 
 def main() -> int:
@@ -1390,6 +1400,11 @@ def _browser_failure_recovery_packet(
             can_attach=can_attach,
             handler=handler,
         ),
+        "ticket_target": ASK_TICKET_TARGET,
+        "ticket_instruction": _ask_ticket_instruction(
+            failure_code=failure_code,
+            packet_kind="browser-recovery-packet",
+        ),
     }
 
 
@@ -2416,6 +2431,11 @@ def _handler_failure_recovery_packet(
         "auto_retry_blocked_reason": _handler_auto_retry_blocked_reason(failure_code),
         "next_command": _handler_recovery_next_command(args, request_payload, failure_code),
         "fallback_instruction": _handler_fallback_instruction(failure_code),
+        "ticket_target": ASK_TICKET_TARGET,
+        "ticket_instruction": _ask_ticket_instruction(
+            failure_code=failure_code,
+            packet_kind="handler-recovery-packet",
+        ),
     }
 
 
@@ -2702,12 +2722,10 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
         lines.append(degradation_analysis["why"])
         lines.append("")
         for item in degradation_analysis["failed_seats"]:
-            lines.extend(
-                [
-                    f"- `{item.get('node_id')}` / `{item.get('handler')}`: `{item.get('failure_code')}`",
-                    f"  recovery: `{item.get('recovery_packet_path') or 'missing'}`",
-                ]
-            )
+            lines.append(f"- `{item.get('node_id')}` / `{item.get('handler')}`: `{item.get('failure_code')}`")
+            lines.append(f"  recovery: `{item.get('recovery_packet_path') or 'missing'}`")
+            if item.get("ticket_instruction"):
+                lines.append(f"  ticket: {item.get('ticket_instruction')}")
         lines.append("")
         summary_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     receipt = {
@@ -2790,6 +2808,8 @@ def _roundtable_degradation_analysis(
             "auto_retry_blocked_reason": recovery_packet.get("auto_retry_blocked_reason"),
             "transport_failure_summary": recovery_packet.get("transport_failure_summary"),
             "evidence": recovery_packet.get("evidence"),
+            "ticket_target": recovery_packet.get("ticket_target"),
+            "ticket_instruction": recovery_packet.get("ticket_instruction"),
         }
         failed_seats.append(failed)
         if next_command:
@@ -2799,6 +2819,7 @@ def _roundtable_degradation_analysis(
                     "handler": failure.get("handler"),
                     "failure_code": code,
                     "next_command": next_command,
+                    "ticket_target": recovery_packet.get("ticket_target"),
                 }
             )
     if status == "PASS":
@@ -3059,6 +3080,8 @@ def _compete_degradation_analysis(
                 "auto_retry_blocked_reason": recovery_packet.get("auto_retry_blocked_reason"),
                 "transport_failure_summary": recovery_packet.get("transport_failure_summary"),
                 "evidence": recovery_packet.get("evidence"),
+                "ticket_target": recovery_packet.get("ticket_target"),
+                "ticket_instruction": recovery_packet.get("ticket_instruction"),
             }
         )
         if next_command:
@@ -3068,6 +3091,7 @@ def _compete_degradation_analysis(
                     "handler": candidate.get("handler"),
                     "failure_code": code,
                     "next_command": next_command,
+                    "ticket_target": recovery_packet.get("ticket_target"),
                 }
             )
     if status == "PASS" and failed_candidates:
@@ -3126,12 +3150,10 @@ def _compete_summary(scorecard: dict[str, Any]) -> str:
     if degradation.get("why"):
         lines.extend(["## Degradation Analysis", "", str(degradation.get("why")), ""])
         for item in degradation.get("failed_candidates") or []:
-            lines.extend(
-                [
-                    f"- `{item.get('node_id')}` / `{item.get('handler')}`: `{item.get('failure_code')}`",
-                    f"  recovery: `{item.get('recovery_packet_path') or 'missing'}`",
-                ]
-            )
+            lines.append(f"- `{item.get('node_id')}` / `{item.get('handler')}`: `{item.get('failure_code')}`")
+            lines.append(f"  recovery: `{item.get('recovery_packet_path') or 'missing'}`")
+            if item.get("ticket_instruction"):
+                lines.append(f"  ticket: {item.get('ticket_instruction')}")
         lines.append("")
     lines.extend(["## Candidates", ""])
     for candidate in scorecard.get("candidates") or []:
