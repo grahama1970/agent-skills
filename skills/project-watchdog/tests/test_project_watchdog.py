@@ -156,31 +156,48 @@ def test_ordinary_ticket_without_marker_is_now_routable() -> None:
     gh_result = {"exit_code": 0, "stdout": json.dumps([issue]), "stderr": ""}
     with mock.patch.object(registry, "run_cmd", return_value=gh_result):
         selected = registry.list_routable_issues(
-            "run-test", {"repo": TAU_REPO, "runner_kind": "tau-command-loop"}
+            "run-test", {"repo": TAU_REPO, "worktree": "/tmp/x"}
         )
     assert len(selected) == 1
     assert selected[0]["watchdog_action"] == "ticket_repair"
 
 
-def test_ticket_repair_is_not_routable_without_a_repair_lane() -> None:
-    """A project with no Tau DAG lane must not claim ticket_repair (#1044).
+def test_a_non_tau_project_is_routable(monkeypatch) -> None:
+    """runner_kind no longer decides routability (#1044 revisited).
 
-    Claiming it only to block it leases and blocks a different ticket every
-    tick and exits 1 every minute, which reads as many broken tickets rather
-    than one unconfigured project.
+    The lane required `tau-command-loop` because it hand-authored a contract
+    against Tau's own command-spec tree. $ask compiles the DAG for any repo, so
+    the only structural requirement is a worktree to author in.
     """
     issue = _issue(
         45,
         labels=["agent-work", "type:bug", "route:backend_python_or_skill_runtime"],
-        body="## Type\n\nbug\n\n## Target\n\nsrc/thing.py",
+        body="type: bug\ntarget: skills/x\n",
     )
     gh_result = {"exit_code": 0, "stdout": json.dumps([issue]), "stderr": ""}
     with mock.patch.object(registry, "run_cmd", return_value=gh_result):
         selected = registry.list_routable_issues(
             "run-test",
-            {"repo": TAU_REPO, "project_id": "agent-skills", "runner_kind": "project-local"},
+            {"repo": TAU_REPO, "project_id": "agent-skills",
+             "runner_kind": "project-local", "worktree": "/tmp/x"},
         )
 
+    assert [i["number"] for i in selected] == [45]
+    assert registry.LAST_SCAN["unroutable_no_repair_lane"] == 0
+
+
+def test_a_project_with_no_worktree_is_not_routable() -> None:
+    """Nowhere to author the repair; claiming it only to block it is worse."""
+    issue = _issue(
+        47,
+        labels=["agent-work", "type:bug", "route:backend_python_or_skill_runtime"],
+        body="type: bug\ntarget: skills/x\n",
+    )
+    gh_result = {"exit_code": 0, "stdout": json.dumps([issue]), "stderr": ""}
+    with mock.patch.object(registry, "run_cmd", return_value=gh_result):
+        selected = registry.list_routable_issues(
+            "run-test", {"repo": TAU_REPO, "project_id": "nowhere"}
+        )
     assert selected == []
     assert registry.LAST_SCAN["unroutable_no_repair_lane"] == 1
 
@@ -467,38 +484,42 @@ def _backdate_first_idle(project_id: str, *, seconds: float) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_ticket_repair_refuses_a_project_with_no_bounded_runner(tmp_path) -> None:
+def test_ticket_repair_serves_a_project_that_is_not_tau(tmp_path) -> None:
+    """runner_kind no longer gates the repair lane.
+
+    It required `tau-command-loop`, and the spec paths it then demanded exist
+    only in the tau checkout, so every other registered project was refused
+    before it could dispatch anything. $ask compiles the DAG for any repo.
+    """
     project = {
-        "project_id": "memory",
-        "repo": "grahama1970/graph-memory-operator",
-        "worktree": str(tmp_path),
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "worktree": str(_clean_worktree(tmp_path)),
         "runner_kind": "project-local",
     }
     issue = _issue(7, labels=["agent-work"])
     issue["watchdog_action"] = "ticket_repair"
-    result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
-    assert result["status"] == "BLOCKED"
-    assert "runner_kind" in result["summary"]
-    assert "tau-command-loop" in result["summary"]
+    with mock.patch.object(handlers.github, "issue_comment") as comment:
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=False)
+    assert result["status"] == "DRY_RUN", result.get("summary")
+    assert not comment.called
 
 
-def _worktree_with_specs(tmp_path: Path) -> Path:
-    """Create the Tau command-spec layout the repair DAG requires.
+def _clean_worktree(tmp_path: Path) -> Path:
+    """A real git worktree on a clean ``main``.
 
-    Committed on a clean ``main``: dispatch fails closed on a worktree that is
-    on a feature branch or has dirty tracked files (#1045), so a fixture that is
-    not a real, clean git worktree no longer represents a dispatchable project.
+    Dispatch fails closed on a worktree that is on a feature branch or whose
+    target paths are dirty (#1045), so a fixture that is not a real, clean git
+    worktree does not represent a dispatchable project.
     """
-    root = tmp_path / "experiments/goal-locked-subagents/agent-command-specs"
-    for node in ("coder", "reviewer"):
-        (root / node).mkdir(parents=True)
-        (root / node / "tau-dispatch-command.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "skills" / "x").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "skills" / "x" / "SKILL.md").write_text("x\n", encoding="utf-8")
     env = {
         "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
         "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
         "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
     }
-    for args in (("init", "-q", "-b", "main", "."), ("add", "-A"), ("commit", "-q", "-m", "specs")):
+    for args in (("init", "-q", "-b", "main", "."), ("add", "-A"), ("commit", "-q", "-m", "init")):
         subprocess.run(["git", "-C", str(tmp_path), *args], check=True,
                        capture_output=True, env=env)
     return tmp_path
@@ -508,7 +529,7 @@ def test_ticket_repair_dry_run_makes_no_github_call(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(_worktree_with_specs(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path)),
         "runner_kind": "tau-command-loop",
     }
     issue = _issue(8, labels=["agent-work"])
@@ -519,11 +540,11 @@ def test_ticket_repair_dry_run_makes_no_github_call(tmp_path) -> None:
     assert not comment.called
 
 
-def test_ticket_repair_compiles_a_dag_contract_and_runs_dag_run(tmp_path) -> None:
+def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(_worktree_with_specs(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path)),
         "runner_kind": "tau-command-loop",
     }
     issue = _issue(9, labels=["agent-work"])
@@ -538,15 +559,20 @@ def test_ticket_repair_compiles_a_dag_contract_and_runs_dag_run(tmp_path) -> Non
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["ok"] is True and result["status"] == "COMPLETED"
     argv = bounded.call_args.args[0]
-    assert argv[1:4] == ["run", "tau", "dag-run"], "repair must go through Tau's DAG lane"
-    assert "--command-spec-root" in argv
+    assert argv[0].endswith("ask/run.sh"), "repair must go through $ask"
+    assert argv[1] == "tau-dag"
+    assert "--dag-template" in argv and argv[argv.index("--dag-template") + 1] == "creator-reviewer"
+    assert "--topology" in argv and argv[argv.index("--topology") + 1] == "sequential"
+    assert "--execute" in argv and "--allow-provider-calls" in argv
+    # The creator seat mutates and needs a workspace; the reviewer seat does not.
+    assert f"codex={tmp_path}" in argv
+    assert handlers.REPAIR_REVIEWER_HANDLER in argv
+    # $ask fails preflight without an immutable goal, before any handler runs.
+    goal = argv[argv.index("--immutable-goal") + 1]
+    assert "#9" in goal and "Do not weaken or delete a test" in goal
 
-    contract = json.loads((tmp_path / "repair-dag.json").read_text(encoding="utf-8"))
-    assert contract["schema"] == "tau.dag_contract.v1"
-    assert contract["entry_node"] == "coder"
-    assert contract["terminal_nodes"] == ["human"]
-    node_ids = [n["id"] for n in contract["nodes"]]
-    assert node_ids == ["coder", "reviewer", "human"]
+    task = (tmp_path / "repair-task.md").read_text(encoding="utf-8")
+    assert "VERDICT: PASS" in task, "the reviewer seat must be asked for a verdict"
 
 
 def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
@@ -554,7 +580,7 @@ def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(_worktree_with_specs(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path)),
         "runner_kind": "tau-command-loop",
     }
     issue = _issue(10, labels=["agent-work"])
@@ -574,19 +600,20 @@ def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
     assert any(e.get("add") == [config.BLOCKED_LABEL] for e in edits)
 
 
-def test_repair_contract_gates_on_real_repair_evidence() -> None:
+def test_the_repair_task_names_the_bar_the_reviewer_applies() -> None:
     """A transport-only stub must not be able to report a repair it never did."""
-    contract = handlers.build_repair_contract(
-        repo=TAU_REPO,
-        issue_number=7,
-        issue_title="t",
-        goal_hash="sha256:" + "0" * 64,
-        spec_root="/specs",
+    goal = handlers.repair_immutable_goal(TAU_REPO, 7)
+    assert "#7" in goal
+    assert "proven by the proof command the ticket names" in goal
+    assert "Do not weaken or delete a test" in goal
+
+    task = handlers.build_repair_task(
+        repo=TAU_REPO, issue_number=7, issue_title="t",
+        issue_body="type: bug\ntarget: skills/x\n", targets=["skills/x"],
     )
-    coder = next(n for n in contract["nodes"] if n["id"] == "coder")
-    assert coder["required_evidence"] == ["changed_files", "focused_tests"]
-    assert "missing_required_evidence" in contract["fail_closed_on"]
-    assert "goal_hash_mismatch" in contract["fail_closed_on"]
+    assert "VERDICT: PASS" in task and "VERDICT: FAIL" in task
+    assert "Allowed paths: skills/x" in task
+    assert "type: bug" in task, "the ticket body carries the orientation a cron agent needs"
 
 
 def test_goal_hash_is_stable_across_reruns() -> None:
@@ -597,20 +624,45 @@ def test_goal_hash_is_stable_across_reruns() -> None:
     assert a != handlers.issue_goal_hash(TAU_REPO, 150)
 
 
-def test_missing_command_specs_block_before_any_github_write(tmp_path) -> None:
+def test_a_dirty_target_blocks_before_any_github_write(tmp_path) -> None:
+    """Readiness is judged per target, and refusal happens before leasing.
+
+    agent-skills has 111 dirty skills out of 364. Requiring the whole
+    repository to be clean withheld the 253 that are not; requiring nothing
+    would author a repair on top of another lane's uncommitted edits.
+    """
+    worktree = _clean_worktree(tmp_path)
+    (worktree / "skills" / "x" / "SKILL.md").write_text("locally edited\n", encoding="utf-8")
     project = {
-        "project_id": "tau",
-        "repo": TAU_REPO,
-        "worktree": str(tmp_path),
-        "runner_kind": "tau-command-loop",
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "worktree": str(worktree),
+        "runner_kind": "project-local",
     }
-    issue = _issue(11, labels=["agent-work"])
+    issue = _issue(11, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
     issue["watchdog_action"] = "ticket_repair"
     with mock.patch.object(handlers.github, "issue_comment") as comment:
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "BLOCKED"
-    assert "missing Tau command specs" in result["summary"]
-    assert not comment.called
+    assert "tracked_files_dirty" in " ".join(result["worktree_readiness"]["reasons"])
+    assert not comment.called, "must refuse before leasing"
+
+
+def test_a_clean_target_dispatches_despite_an_unrelated_dirty_skill(tmp_path) -> None:
+    worktree = _clean_worktree(tmp_path)
+    (worktree / "skills" / "other").mkdir(parents=True, exist_ok=True)
+    (worktree / "skills" / "other" / "SKILL.md").write_text("untracked mess\n", encoding="utf-8")
+    project = {
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "worktree": str(worktree),
+        "runner_kind": "project-local",
+    }
+    issue = _issue(12, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    result = handlers.handle_issue("run", tmp_path, project, issue, apply=False)
+    assert result["status"] == "DRY_RUN", result.get("summary")
+    assert result["targets"] == ["skills/x"]
 
 
 # --------------------------------------------------------------------------- #

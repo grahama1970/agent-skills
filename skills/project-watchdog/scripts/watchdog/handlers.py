@@ -28,7 +28,7 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-from . import config, github
+from . import config, github, registry
 from .core import log_event, run_cmd, write_json
 from .issue_fields import (
     parse_bool,
@@ -507,104 +507,46 @@ def tau_coder_start_handoff(
 
 
 #: runner_kind values this generic handler knows how to drive.
-TICKET_REPAIR_RUNNERS = {"tau-command-loop"}
-
-#: Nodes the repair DAG uses. Both specs ship in Tau's canonical command-spec
-#: root; ``agent-skills/agents/`` holds specs for only 3 of 92 agents and is not
-#: the standard location for this lane.
-REPAIR_NODES = ("coder", "reviewer")
+#: Reviewer seat for the repair DAG. A non-mutating answer/review subagent, so
+#: it needs no workspace binding; the creator seat (codex) is the one that
+#: writes.
+REPAIR_REVIEWER_HANDLER = "gpt-5.5-xhigh"
 
 
-def build_repair_contract(
+def repair_immutable_goal(repo: str, issue_number: int) -> str:
+    """The bar every seat in the repair DAG is held to.
+
+    $ask fails preflight without one, before any handler is contacted.
+    """
+    return (
+        f"Resolve {repo}#{issue_number} so its stated acceptance criterion holds, "
+        f"proven by the proof command the ticket names. Change only the paths the "
+        f"ticket targets. Do not weaken or delete a test to make it pass."
+    )
+
+
+def build_repair_task(
     *,
     repo: str,
     issue_number: int,
     issue_title: str,
-    goal_hash: str,
-    spec_root: str,
-    issue_body: str = "",
-    repo_path: str = "",
-) -> dict[str, Any]:
-    """Compile a ``tau.dag_contract.v1`` coder/reviewer repair loop for one issue.
+    issue_body: str,
+    targets: list[str],
+) -> str:
+    """The prose task $ask compiles into the creator-reviewer DAG.
 
-    The `/tau` skill is explicit that repair and creator/reviewer loops are
-    expressed as DAG contracts, not as ad hoc per-issue commands: Tau owns
-    dispatch, receipt validation, route continuity, resume, timeout and
-    max-attempt handling, immutable-goal enforcement, and fail-closed drift
-    detection. Encoding any of that here would duplicate it, and duplicated
-    orchestration policy drifts.
-
-    Retry lives in ``max_attempts`` and ``limits``; allowed transitions live in
-    ``edges``; proof requirements live in ``required_evidence``. None of it is
-    prose.
-
-    The graph is acyclic on purpose. A first draft carried a
-    ``reviewer -> coder`` retry edge with string conditions, copied from the
-    skill's illustrative example; Tau's compiler rejected it at origin/main with
-    ``cycle_detected`` and ``unsupported_ready_queue_condition``. Retry belongs
-    in ``coder.max_attempts`` regardless, so the edge was duplicating a policy
-    Tau already owns. Keeping the contract acyclic means it compiles under both
-    schedulers instead of only the permissive one.
+    The whole ticket body goes in: it carries the orientation block, required
+    context files and proof command that a cron-dispatched agent with no prior
+    session needs.
     """
-    return {
-        "schema": "tau.dag_contract.v1",
-        "dag_id": f"project-watchdog-{repo.replace('/', '-')}-issue-{issue_number}",
-        "goal": {
-            "goal_id": f"ticket-repair-{issue_number}",
-            "goal_version": 1,
-            "goal_hash": goal_hash,
-        },
-        "target": {"repo": repo, "target": f"issue#{issue_number}", "title": issue_title},
-        "entry_node": "coder",
-        "terminal_nodes": ["human"],
-        "limits": {
-            "resume": True,
-            "default_timeout_seconds": 600,
-            "max_total_attempts": 4,
-        },
-        "nodes": [
-            {
-                "id": "coder",
-                "agent": "coder",
-                "executor": "local",
-                "max_attempts": 2,
-                "command_spec": f"{spec_root}/coder/tau-dispatch-command.json",
-                # Tau forwards node context to the adapter as
-                # context.tau_dag_node.context. The coder needs the ticket body
-                # (allowlist + definition of done) and the checkout to work in;
-                # Tau's start handoff carries neither.
-                "context": {"issue_body": issue_body, "repo_path": repo_path},
-                # The evidence gate that stops a transport-only stub from
-                # reporting a repair it never performed.
-                "required_evidence": ["changed_files", "focused_tests"],
-                "emits": ["tau.agent_handoff.v1", "tau.subagent_receipt.v1"],
-            },
-            {
-                "id": "reviewer",
-                "agent": "reviewer",
-                "executor": "local",
-                "max_attempts": 1,
-                "command_spec": f"{spec_root}/reviewer/tau-dispatch-command.json",
-                "required_evidence": ["review_verdict"],
-                "emits": ["tau.agent_handoff.v1", "tau.subagent_receipt.v1"],
-            },
-            {"id": "human", "agent": "human", "executor": "human"},
-        ],
-        "edges": [
-            {"from": "coder", "to": "reviewer"},
-            {"from": "reviewer", "to": "human"},
-        ],
-        "required_evidence": ["coder receipt", "review_verdict"],
-        "fail_closed_on": [
-            "goal_hash_mismatch",
-            "target_changed",
-            "unexpected_node",
-            "unexpected_edge",
-            "missing_required_evidence",
-            "max_attempts_exceeded",
-            "malformed_handoff",
-        ],
-    }
+    return (
+        f"Repair {repo}#{issue_number}: {issue_title}\n\n"
+        f"Allowed paths: {', '.join(targets) or '(as stated in the ticket)'}\n\n"
+        f"The creator seat implements the fix and commits it. The reviewer seat "
+        f"checks it against the ticket's acceptance criterion and required proof, "
+        f"and answers VERDICT: PASS, VERDICT: FAIL, or VERDICT: NEEDS_ATTENTION.\n\n"
+        f"--- ticket body ---\n{issue_body}"
+    )
 
 
 def issue_goal_hash(repo: str, issue_number: int) -> str:
@@ -644,46 +586,24 @@ def handle_ticket_repair(
     result["selected_agent"] = "coder"
     result["runner_kind"] = runner_kind
 
-    if runner_kind not in TICKET_REPAIR_RUNNERS:
+    ask_run = config.ask_run_sh()
+    if not ask_run.is_file():
         result.update(
             {
                 "ok": False,
                 "status": "BLOCKED",
-                "summary": (
-                    f"project {project.get('project_id')!r} has runner_kind "
-                    f"{runner_kind!r}, which exposes no Tau DAG repair lane. "
-                    f"Supported: {sorted(TICKET_REPAIR_RUNNERS)}."
-                ),
+                "summary": f"$ask runner not found at {ask_run}; the repair lane needs it.",
             }
         )
-        log_event(run_id, "handle_ticket_repair_unsupported", issue=issue_number, kind=runner_kind)
-        return result
-
-
-    spec_root = worktree / "experiments/goal-locked-subagents/agent-command-specs"
-    missing = [
-        node
-        for node in REPAIR_NODES
-        if not (spec_root / node / "tau-dispatch-command.json").is_file()
-    ]
-    if missing:
-        result.update(
-            {
-                "ok": False,
-                "status": "BLOCKED",
-                "summary": (
-                    f"missing Tau command specs for {missing} under {spec_root}. "
-                    "The repair DAG cannot dispatch a node without its command spec."
-                ),
-            }
-        )
-        log_event(run_id, "handle_ticket_repair_missing_specs", issue=issue_number, missing=missing)
+        log_event(run_id, "handle_ticket_repair_no_ask", issue=issue_number, ask_run=str(ask_run))
         return result
 
     # Fail closed on an unusable checkout BEFORE leasing the issue or calling
     # Tau. A repair authored on a feature branch never reaches main, and one
     # authored on top of another lane's uncommitted edits is unattributable.
-    readiness = worktree_readiness(worktree)
+    targets = registry.issue_targets(issue)
+    result["targets"] = sorted(targets)
+    readiness = worktree_readiness(worktree, targets)
     result["worktree_readiness"] = readiness
     if not readiness.get("ready"):
         result.update(
@@ -707,18 +627,19 @@ def handle_ticket_repair(
         )
         return result
 
-    contract = build_repair_contract(
+    goal_hash = issue_goal_hash(repo, issue_number)
+    result["goal_hash"] = goal_hash
+    ask_run_dir = receipt_dir / "ask"
+    task = build_repair_task(
         repo=repo,
         issue_number=issue_number,
         issue_title=str(issue.get("title", "")),
-        goal_hash=issue_goal_hash(repo, issue_number),
-        spec_root=str(spec_root),
         issue_body=str(issue.get("body", "")),
-        repo_path=str(worktree),
+        targets=sorted(targets),
     )
-    contract_path = receipt_dir / "repair-dag.json"
-    write_json(contract_path, contract)
-    result["artifacts"].append(str(contract_path))
+    task_path = receipt_dir / "repair-task.md"
+    task_path.write_text(task, encoding="utf-8")
+    result["artifacts"].append(str(task_path))
 
     if not apply:
         result.update(
@@ -743,41 +664,48 @@ def handle_ticket_repair(
                     "repo": repo,
                     "selected_agent": "coder",
                     "action": "ticket_repair",
-                    "dag_id": contract["dag_id"],
-                    "goal_hash": contract["goal"]["goal_hash"],
+                    "targets": sorted(targets),
+                    "goal_hash": goal_hash,
                 },
             ),
         )
     )
     result["commands"].append(github.issue_edit(repo, issue_number, add=[config.LEASE_LABEL]))
 
-    dag_receipt_dir = receipt_dir / "dag"
+    # $ask compiles the creator/reviewer DAG and Tau executes it. The watchdog
+    # does not hand-author a tau.dag_contract.v1: doing so bound this lane to
+    # Tau's own command-spec tree, which only the tau checkout has, so every
+    # other project was refused before it could dispatch anything.
     dag_result = run_cmd(
         [
-            config.resolve_uv_bin(),
-            "run",
-            "tau",
-            "dag-run",
-            str(contract_path),
-            "--receipt-dir",
-            str(dag_receipt_dir),
-            "--agents-root",
-            str(config.agents_root()),
-            "--command-spec-root",
-            str(spec_root),
+            str(config.ask_run_sh()),
+            "tau-dag",
+            task,
+            "--repo", repo,
+            "--target", ",".join(sorted(targets)),
+            "--immutable-goal", repair_immutable_goal(repo, issue_number),
+            "--dag-template", "creator-reviewer",
+            "--handler", "codex",
+            "--handler-workspace", f"codex={worktree}",
+            "--handler", REPAIR_REVIEWER_HANDLER,
+            "--topology", "sequential",
+            "--run-output-root", str(ask_run_dir),
+            "--execute",
+            "--allow-provider-calls",
+            "--json",
         ],
-        cwd=worktree,
-        timeout_s=int(project.get("ticket_repair_timeout_s", 900)),
+        cwd=config.ask_run_sh().parent,
+        timeout_s=int(project.get("ticket_repair_timeout_s", 1800)),
     )
     result["commands"].append(dag_result)
-    result["artifacts"].append(str(dag_receipt_dir))
+    result["artifacts"].append(str(ask_run_dir))
 
     if dag_result["exit_code"] != 0:
         result.update(
             {
                 "ok": False,
                 "status": "NEEDS_ATTENTION",
-                "summary": f"tau dag-run failed for {repo}#{issue_number}",
+                "summary": f"$ask tau-dag failed for {repo}#{issue_number}",
             }
         )
         result["commands"].append(
@@ -799,16 +727,16 @@ def handle_ticket_repair(
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "repo": repo,
-                    "dag_id": contract["dag_id"],
-                    "goal_hash": contract["goal"]["goal_hash"],
+                    "targets": sorted(targets),
+                    "goal_hash": goal_hash,
                     "dag_exit_code": dag_result["exit_code"],
-                    "dag_receipt_dir": str(dag_receipt_dir),
+                    "ask_run_dir": str(ask_run_dir),
                     "mocked": False,
                     "live": True,
                     "scope": (
-                        "Runs one Tau tau.dag_contract.v1 coder/reviewer repair loop for a "
-                        "/ticket-filed issue. Closure and evidence acceptance are owned by "
-                        "Tau's DAG receipt, not by this watchdog."
+                        "Runs one $ask creator-reviewer Tau DAG for a /ticket-filed issue. "
+                        "Closure and evidence acceptance are owned by Tau's DAG receipt, "
+                        "not by this watchdog."
                     ),
                 },
             ),

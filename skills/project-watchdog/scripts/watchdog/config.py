@@ -49,6 +49,15 @@ load_env()
 SKILL_DIR = Path(__file__).resolve().parents[2]
 REGISTRY_DIR = SKILL_DIR / "registry"
 PROJECTS_PATH = REGISTRY_DIR / "projects.json"
+
+#: $ask compiles the repair DAG and Tau executes it. Sibling skill, resolved
+#: from this skill's own location so it follows the checkout it runs from.
+ASK_RUN_SH = SKILL_DIR.parent / "ask" / "run.sh"
+
+
+def ask_run_sh() -> Path:
+    """Path to the $ask runner used by the ticket-repair lane."""
+    return ASK_RUN_SH
 STATE_PATH = REGISTRY_DIR / "state.json"
 
 

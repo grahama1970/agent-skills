@@ -71,7 +71,7 @@ def project_worktree(project: dict[str, Any]) -> Path:
 DEFAULT_BRANCHES = ("main", "master")
 
 
-def worktree_readiness(worktree: Path) -> dict[str, Any]:
+def worktree_readiness(worktree: Path, targets: set[str] | None = None) -> dict[str, Any]:
     """Report whether a worktree is safe to author a repair in.
 
     Observed 2026-07-28: the registry pointed ``agent-skills`` at a worktree
@@ -79,6 +79,15 @@ def worktree_readiness(worktree: Path) -> dict[str, Any]:
     modified tracked files, while a cron lane wrote tracked files into it every
     few seconds. Dispatching there would author a repair on the wrong branch, on
     top of foreign uncommitted edits, and could corrupt a running job.
+
+    Dirtiness is judged against ``targets`` when given, not the whole tree. In
+    agent-skills 111 of 364 skills are dirty; requiring the repository to be
+    clean withheld the 253 that are not. A repair confined to a clean skill is
+    not endangered by unrelated edits elsewhere -- and a skill a cron lane is
+    actively writing shows up dirty, so this still refuses exactly that case.
+
+    The branch check stays global: a repair authored on a feature branch never
+    reaches main regardless of which paths it touches.
 
     Read-only. Returns the facts; the caller decides.
     """
@@ -99,15 +108,20 @@ def worktree_readiness(worktree: Path) -> dict[str, Any]:
         row["ready"] = False
         return row
 
-    _, dirty_out = git("status", "--porcelain", "--untracked-files=no")
+    scope = sorted(t for t in (targets or set()) if t and t != UNKNOWN_TARGET)
+    row["scope"] = scope or ["<whole worktree>"]
+
+    # `git status -- <path>...` restricts the report to those paths. With no
+    # scope this is the previous whole-tree behaviour.
+    _, dirty_out = git("status", "--porcelain", "--untracked-files=no", "--", *scope)
     dirty = [line for line in dirty_out.splitlines() if line.strip()]
     row["dirty_tracked"] = len(dirty)
     # porcelain is "XY<space>PATH", but the status field width varies with
     # staged-vs-worktree combinations; a fixed slice truncated the filename.
     row["dirty_paths"] = [line[2:].strip() for line in dirty[:10]]
 
-    _, untracked_out = git("status", "--porcelain")
-    row["untracked"] = len([l for l in untracked_out.splitlines() if l.startswith("??")])
+    _, untracked_out = git("status", "--porcelain", "--", *scope)
+    row["untracked"] = len([ln for ln in untracked_out.splitlines() if ln.startswith("??")])
 
     reasons: list[str] = []
     if row["branch"] not in DEFAULT_BRANCHES:
@@ -335,14 +349,16 @@ LAST_SCAN: dict[str, int] = {}
 
 
 def project_has_repair_lane(project: dict[str, Any]) -> bool:
-    """Whether this project can actually run a Tau DAG ticket repair.
+    """Whether this project can actually run a ticket repair.
 
-    Imported lazily: ``handlers`` imports this module, so a module-level import
-    of ``handlers`` here would be circular.
+    Every registered project can: $ask compiles the creator-reviewer DAG for any
+    repo and Tau executes it. This used to require ``runner_kind`` to be
+    ``tau-command-loop`` because the lane hand-authored a contract pointing at
+    Tau's own command-spec tree, which only the tau checkout has -- so all five
+    other registered projects were refused before dispatch. A project needs a
+    worktree; readiness of that worktree is checked per target at dispatch.
     """
-    from .handlers import TICKET_REPAIR_RUNNERS  # noqa: PLC0415
-
-    return str(project.get("runner_kind", "")) in TICKET_REPAIR_RUNNERS
+    return bool(project.get("worktree"))
 
 
 def classify_issue(issue: dict[str, Any]) -> str | None:
