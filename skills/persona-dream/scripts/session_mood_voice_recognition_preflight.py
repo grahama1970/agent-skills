@@ -16,10 +16,21 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LIVE_RECEIPT = (
     ROOT / "reports" / "goal_v5" / "continuity" / "session_mood_chatterbox_live" / "RECEIPT.json"
 )
-DEFAULT_REFERENCE_AUDIO = Path(
-    "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/"
-    "embry_authorized_ref_30s_8s.wav"
-)
+# Single source of truth; see embry_voice_reference for why the clone candidate
+# is the authorized clip and why historical receipts still name the old one.
+try:
+    from embry_voice_reference import AUTHORIZED_EMBRY_REFERENCE
+except ImportError:  # loaded by path in some test harnesses
+    import importlib.util as _ilu
+
+    _spec = _ilu.spec_from_file_location(
+        "embry_voice_reference", Path(__file__).resolve().parent / "embry_voice_reference.py"
+    )
+    _mod = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_mod)
+    AUTHORIZED_EMBRY_REFERENCE = _mod.AUTHORIZED_EMBRY_REFERENCE
+
+DEFAULT_REFERENCE_AUDIO = AUTHORIZED_EMBRY_REFERENCE
 
 #: Interpreters known to carry a speaker-recognition backend. Backend
 #: availability is a property of the interpreter, not the machine: run under

@@ -3,7 +3,12 @@
 # Proves the persona-dream weighting model produces measurably different tone.
 import json, torch, torchaudio, torchaudio.functional as AF
 from chatterbox.tts import ChatterboxTTS
-REF="/work/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav"
+# Authorized Embry voice, promoted 2026-07-28 (#1070/#1080). Was
+# persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav; that clip is not the
+# one live Chatterbox renders were ever conditioned on. See
+# skills/persona-dream/scripts/embry_voice_reference.py. Receipts already written
+# still name the old clip and are deliberately not rewritten.
+REF="/data/embry_ref.wav"
 TEXT="I already told you where I stand. Do not ask me again."
 
 def weighted_emotion_to_knobs(valence, intensity):

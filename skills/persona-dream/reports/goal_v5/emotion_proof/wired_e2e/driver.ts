@@ -7,7 +7,10 @@ const port = createChatterboxVoiceAuditionPort({
   hostReferenceRoot: '/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs',
   containerReferenceRoot: '/work/persona_dream_voice_refs',
 })
-const REF='/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav'
+// Authorized Embry voice, promoted 2026-07-28 (#1070/#1080). See
+// skills/persona-dream/scripts/embry_voice_reference.py for why the clone
+// candidate is authoritative and why old receipts still name the previous clip.
+const REF='/home/graham/workspace/experiments/agent-skills/skills/persona-dream/voice_clone_candidates/embry_kling_clone_candidate.wav'
 const TEXT='I already told you where I stand. Do not ask me again.'
 const cases = [
   {name:'wait_w02', tone:'wait_presence',  intensity:0.2},
