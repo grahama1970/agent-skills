@@ -1,0 +1,66 @@
+{
+  "author": {
+    "authority": "tau_parent",
+    "lane_id": "payload-857-receipt",
+    "persona": "battle-red-public-auditor",
+    "team": "red",
+    "worker_id": "red-0"
+  },
+  "battle_id": "battle-004",
+  "decision": "strategic_pre_kill",
+  "errors": [],
+  "inherited_evidence_refs": [
+    {
+      "kind": "parent_pressure",
+      "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/prekill-pressure-receipt.json",
+      "receipt_id": "prekill-pressure:red-0__blue-0",
+      "sha256": "91418ef4ca9ce748b7171ec733690c9a7671c92060127d0e06cdbb678b40e43b"
+    },
+    {
+      "kind": "parent_tau_subagent",
+      "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/tau-subagent-receipt.json",
+      "receipt_id": "tau-parent-subagent:red-0",
+      "sha256": "a8bfa73ae0ebaebc8e426c8878aa1e5dde02edc8e1ce027eda242ea226631eff"
+    },
+    {
+      "kind": "parent_materialized_artifact",
+      "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/materialized-artifact-receipt.json",
+      "receipt_id": "tau-parent-materialized-artifact",
+      "sha256": "57a50734ea875eee9924c4c70f4e135d57acbd9304d4586db71ed94789dfc999"
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "model_output": {
+    "decision": "strategic_pre_kill",
+    "inherited_evidence_receipt_ids": [
+      "prekill-pressure:red-0__blue-0",
+      "tau-parent-subagent:red-0",
+      "tau-parent-materialized-artifact"
+    ],
+    "reason_codes": [
+      "defender_pressure_observed",
+      "exploit_blocked_after_patch",
+      "parent_not_terminal",
+      "preserve_red_continuity"
+    ]
+  },
+  "pressure_receipt": {
+    "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/prekill-pressure-receipt.json",
+    "receipt_id": "prekill-pressure:red-0__blue-0",
+    "sha256": "91418ef4ca9ce748b7171ec733690c9a7671c92060127d0e06cdbb678b40e43b"
+  },
+  "reason_codes": [
+    "defender_pressure_observed",
+    "exploit_blocked_after_patch",
+    "parent_not_terminal",
+    "preserve_red_continuity"
+  ],
+  "receipt_id": "tau-parent-spawn-decision:red-0",
+  "run_id": "arena-prekill-survival-20260728T170820Z",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_parent_spawn_decision_receipt.v1",
+  "scillm_call_receipt": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/parent-spawn-decision-scillm-call-receipt.json",
+  "scillm_call_receipt_sha256": "9972bc3397ba88b3068cc307689fb270c1ba92567448af25c1dd54f803778393",
+  "status": "PASS"
+}

@@ -1,0 +1,80 @@
+{
+  "battle_id": "battle-004",
+  "errors": [],
+  "lineage_mode": "prekill_survival_parent_decision",
+  "proof_mode": "live_tau",
+  "run_id": "arena-prekill-survival-20260728T170820Z",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "battle.lineage_receipts_bundle.v1",
+  "spawns": [
+    {
+      "battle_id": "battle-004",
+      "child_attempt_receipt": "judge/replays/red-1__blue-0/attempt-receipt.json",
+      "child_attempt_receipt_sha256": "a10f53747f2347322635e552f6784c708b957041c5de720c4968bae090bb4e66",
+      "child_attempt_started_elapsed_seconds": 93.902971,
+      "child_lane_id": "payload-857-red-1",
+      "child_materialized_elapsed_seconds": 92.532171,
+      "child_payload_id": "payload-857-red-1",
+      "child_start_elapsed_seconds": 92.532171,
+      "child_subagent_receipt": "tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "child_subagent_receipt_sha256": "d7b4d34f263fb33a6ab58ca5dd7c0d24651d376131bec0aee78dec52367e51fa",
+      "child_tau_subagent_id": "red-1",
+      "child_worker_id": "red-1",
+      "decision_recorded_elapsed_seconds": 75.235812,
+      "decision_started_elapsed_seconds": 71.097636,
+      "generation": 1,
+      "goal": "Materialize one receipt-backed Red child from the parent decision.",
+      "inherited_context": [
+        "receipt_id=prekill-pressure:red-0__blue-0;sha256=91418ef4ca9ce748b7171ec733690c9a7671c92060127d0e06cdbb678b40e43b",
+        "receipt_id=tau-parent-subagent:red-0;sha256=a8bfa73ae0ebaebc8e426c8878aa1e5dde02edc8e1ce027eda242ea226631eff",
+        "receipt_id=tau-parent-materialized-artifact;sha256=57a50734ea875eee9924c4c70f4e135d57acbd9304d4586db71ed94789dfc999"
+      ],
+      "inherited_evidence_refs": [
+        {
+          "kind": "parent_pressure",
+          "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/prekill-pressure-receipt.json",
+          "receipt_id": "prekill-pressure:red-0__blue-0",
+          "sha256": "91418ef4ca9ce748b7171ec733690c9a7671c92060127d0e06cdbb678b40e43b"
+        },
+        {
+          "kind": "parent_tau_subagent",
+          "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/tau-subagent-receipt.json",
+          "receipt_id": "tau-parent-subagent:red-0",
+          "sha256": "a8bfa73ae0ebaebc8e426c8878aa1e5dde02edc8e1ce027eda242ea226631eff"
+        },
+        {
+          "kind": "parent_materialized_artifact",
+          "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/materialized-artifact-receipt.json",
+          "receipt_id": "tau-parent-materialized-artifact",
+          "sha256": "57a50734ea875eee9924c4c70f4e135d57acbd9304d4586db71ed94789dfc999"
+        }
+      ],
+      "leased_task": "Continue the authorized Zip Slip proof using inherited receipt-backed parent evidence.",
+      "parent_lane_id": "payload-857-receipt",
+      "parent_subagent_receipt": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/tau-subagent-receipt.json",
+      "parent_tau_subagent_id": "red-0",
+      "parent_terminal_elapsed_seconds": 92.856425,
+      "parent_terminal_receipt": "judge/replays/red-0__blue-0/attempt-receipt.json",
+      "parent_terminal_receipt_sha256": "3ce305f9c89d0ba4e5842040d5b1f02a824db788b056cc2b970a7be177a75545",
+      "parent_worker_id": "red-0",
+      "post_parent_terminal_receipt_elapsed_seconds": 93.902971,
+      "pressure_observed_elapsed_seconds": 71.097327,
+      "pressure_receipt_id": "prekill-pressure:red-0__blue-0",
+      "pressure_receipt_path": "prekill-pressure-receipt.json",
+      "pressure_receipt_sha256": "91418ef4ca9ce748b7171ec733690c9a7671c92060127d0e06cdbb678b40e43b",
+      "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
+      "run_id": "arena-prekill-survival-20260728T170820Z",
+      "schema": "battle.lineage_spawn_receipt.v1",
+      "spawn_decision_receipt_id": "tau-parent-spawn-decision:red-0",
+      "spawn_decision_receipt_path": "tau-live/spawn-decision-receipt.json",
+      "spawn_decision_receipt_sha256": "11f2676f196ab91e9c80b3119fd5b811ae68bbff7e7242743e692c5ecc228d75",
+      "spawn_elapsed_seconds": 75.23649,
+      "spawn_status": "PASS",
+      "spawn_type": "strategic_pre_kill",
+      "status": "PASS",
+      "timing_source": "battle_control_plane_perf_counter"
+    }
+  ],
+  "status": "PASS"
+}
