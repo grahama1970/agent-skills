@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-27T18:10:19Z",
+  "updated_at": "2026-07-28T11:01:49Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:a67eeca95951f1a0e2d514ea57093b2ece9510c853780afc1a6d24dcbf8d9b8a",
@@ -30,8 +30,9 @@
     "latest_session_mood_chatterbox_live_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
     "latest_session_mood_chatterbox_live_receipt_sha256": "sha256:4827cb0ff7ebeb74363ff0ee9d6d3d62fe487caecf3c3802c15eb8f4e6e97260",
     "latest_voice_recognition_preflight_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_preflight/RECEIPT.json",
-    "latest_voice_recognition_preflight_receipt_sha256": "sha256:2437aeec8cce787a1b5ba9b4a914eb222879e8049d75fc54a601b2eac4da0d84",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the report directory, and fail-closed speaker-recognition backend preflight",
+    "latest_voice_recognition_preflight_receipt_sha256": "sha256:145a05417a8756f5dd756f6015a9016a4b4e49c59b9f48df831dc69d80f41561",
+    "latest_voice_recognition_preflight_runtime": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the report directory, and a passing speaker-recognition backend preflight resolved by running under the chatterbox voice lane interpreter, which supplies resemblyzer",
     "unverified": [
       "persisted as authoritative runtime state",
       "live Memory and Watch reread in a full accepted-dream chain",

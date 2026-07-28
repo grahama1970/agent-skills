@@ -42,12 +42,13 @@
       "naturalness",
       "production conversation-service binding"
     ],
-    "proves": []
+    "proves": [
+      "session_mood_audio_snapshots_are_durable",
+      "speaker_recognition_backend_is_available"
+    ]
   },
-  "created_at": "2026-07-27T18:10:19Z",
-  "failed_gates": [
-    "speaker_recognition_backend_available"
-  ],
+  "created_at": "2026-07-28T11:01:49Z",
+  "failed_gates": [],
   "inputs": {
     "engines_checked": [
       "resemblyzer",
@@ -64,14 +65,18 @@
     "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
     "sha256": "sha256:f9dc30305e04c3963cfb100d8a4438b2d1fb219bcabf8861f25407ff01c760fd"
   },
+  "runtime": {
+    "executable": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
+    "python_version": "3.14.3"
+  },
   "schema": "persona_dream.session_mood_voice_recognition_preflight.v1",
   "speaker_backend_candidates": [
     {
-      "available": false,
+      "available": true,
       "engine": "resemblyzer",
       "modules": {
         "numpy": true,
-        "resemblyzer": false
+        "resemblyzer": true
       },
       "required_modules": [
         "resemblyzer",
@@ -91,5 +96,5 @@
       ]
     }
   ],
-  "status": "BLOCKED_SPEAKER_RECOGNITION_PREFLIGHT"
+  "status": "PASS_SPEAKER_RECOGNITION_PREFLIGHT"
 }

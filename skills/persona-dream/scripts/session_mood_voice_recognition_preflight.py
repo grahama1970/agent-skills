@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -116,6 +117,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         else "BLOCKED_SPEAKER_RECOGNITION_PREFLIGHT",
         "mocked": False,
         "live": False,
+        # Backend availability is a property of the interpreter that ran this
+        # preflight, not of the machine. Record it so a BLOCKED receipt can be
+        # told apart from "ran under an interpreter without the backend".
+        "runtime": {
+            "executable": sys.executable,
+            "python_version": sys.version.split()[0],
+        },
         "inputs": {
             "live_session_mood_receipt": str(live_receipt),
             "reference_audio": str(reference_audio),
