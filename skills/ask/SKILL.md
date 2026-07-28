@@ -637,8 +637,10 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   `Start new chat`/fresh-tab recovery contract.
 - If a WebGPT/Tau browser-handler receipt or Surf metadata reports
   `chatgpt_too_many_requests_detected` or `chatgpt_rate_limit`, treat it as
-  Surf's provider-throttle cooldown path. Surf clicks **Got it** when possible,
-  waits `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS`, and retries only when the caller
+  Surf's provider-throttle cooldown path. Surf waits
+  `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`) before it clicks
+  **Got it**, because dismissing the modal during the throttle restarts the
+  limit window, and retries only when the caller
   deliberately opts in with `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS>0`; default
   Ask/SURF behavior is no automatic WebGPT resubmit after this modal. Do not
   reclassify it as a reviewer failure, browser-oracle mismatch, download
