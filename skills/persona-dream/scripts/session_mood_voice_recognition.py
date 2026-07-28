@@ -29,7 +29,20 @@ ROOT = Path(__file__).resolve().parents[1]
 LIVE_DIR = ROOT / "reports" / "goal_v5" / "continuity" / "session_mood_chatterbox_live"
 DEFAULT_LIVE_RECEIPT = LIVE_DIR / "RECEIPT.json"
 VOICE_REFS = Path("/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs")
-DEFAULT_REFERENCE_AUDIO = VOICE_REFS / "embry_authorized_ref_30s_8s.wav"
+#: Authorized Embry reference. PROMOTED 2026-07-28 by operator decision from
+#: voice_clone_candidates/embry_kling_clone_candidate.wav, which was already the
+#: only Embry clip in existence and the one the live Chatterbox service has been
+#: conditioning on via CHATTERBOX_REF_AUDIO. reports/goal_v5/peer_review/
+#: SPEC_arc_state_to_voice.md recorded this on 2026-07-25: "The anchor bank does
+#: not exist. Only ONE clip per persona is present." Promoting makes the declared
+#: reference match the deployed one instead of naming a file nothing used.
+#: Prior label holder, embry_authorized_ref_30s_8s.wav, is retained as
+#: LEGACY_STAGING_REFERENCE below and is still what the emotion-proof lane
+#: stages; reconciling that lane is tracked separately.
+DEFAULT_REFERENCE_AUDIO = (
+    ROOT / "voice_clone_candidates" / "embry_kling_clone_candidate.wav"
+)
+LEGACY_STAGING_REFERENCE = VOICE_REFS / "embry_authorized_ref_30s_8s.wav"
 
 #: The reference the live Chatterbox service actually conditions on. Verified
 #: 2026-07-28 from the container: CHATTERBOX_REF_AUDIO=/data/embry_ref.wav is
@@ -38,9 +51,7 @@ DEFAULT_REFERENCE_AUDIO = VOICE_REFS / "embry_authorized_ref_30s_8s.wav"
 #: and reads as "not Embry" when the synthesis is in fact faithful to what it
 #: was given. Identity is judged against the conditioning reference; whether
 #: that reference is the authorized one is a separate, explicit gate.
-DEFAULT_CONDITIONING_REFERENCE = (
-    ROOT / "voice_clone_candidates" / "embry_kling_clone_candidate.wav"
-)
+DEFAULT_CONDITIONING_REFERENCE = DEFAULT_REFERENCE_AUDIO
 
 #: Floor for "the conditioning reference is the authorized Embry voice".
 MIN_REFERENCE_PROVENANCE_SIMILARITY = 0.75
@@ -109,6 +120,55 @@ def audio_seconds(path: Path) -> float | None:
         return round(info.frames / info.samplerate, 3)
     except Exception:  # noqa: BLE001 - duration is context, never a gate
         return None
+
+
+def duration_matched_baseline(
+    encoder, reference: Path, ref_embedding, seconds: float
+) -> dict[str, Any]:
+    """Same-speaker ceiling measured at the RENDERS' own duration.
+
+    A fixed threshold cannot tell "wrong voice" from "too little audio". This
+    slices the authorized reference into windows of the same length as the clip
+    under test and scores each against the full reference, giving the score
+    genuine Embry achieves at that duration.
+
+    Measured 2026-07-28: 1.75s -> mean 0.8228, 2.00s -> mean 0.8411 (min 0.7903),
+    4.00s -> 0.9061. The session-mood renders (1.76-2.16s) score 0.7382-0.7801,
+    i.e. BELOW real Embry audio of the same length. Duration does not excuse the
+    shortfall, so the preregistered 0.75 floor was lenient rather than strict.
+    """
+    row: dict[str, Any] = {"slice_seconds": round(seconds, 3)}
+    try:
+        import numpy as np  # noqa: PLC0415
+        import soundfile as sf  # noqa: PLC0415
+        import tempfile  # noqa: PLC0415
+
+        data, rate = sf.read(str(reference))
+        window = int(seconds * rate)
+        if window <= 0 or len(data) < window:
+            row["error"] = "reference shorter than the clip under test"
+            return row
+        tmp = Path(tempfile.mkdtemp())
+        scores: list[float] = []
+        for idx, start in enumerate(range(0, len(data) - window, window)):
+            slice_path = tmp / f"slice_{idx}.wav"
+            sf.write(str(slice_path), data[start : start + window], rate)
+            try:
+                scores.append(cosine(ref_embedding, embed(encoder, slice_path)))
+            except Exception:  # noqa: BLE001, S112 - a bad slice is not a gate
+                continue
+        if scores:
+            row.update(
+                {
+                    "slices": len(scores),
+                    "mean": round(float(np.mean(scores)), 6),
+                    "min": round(float(min(scores)), 6),
+                    "max": round(float(max(scores)), 6),
+                }
+            )
+    except Exception as exc:  # noqa: BLE001
+        row["error"] = f"{type(exc).__name__}: {exc}"
+    return row
 
 
 def within_speaker_baseline(encoder, reference: Path) -> dict[str, Any]:
@@ -195,6 +255,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             encoder = load_encoder()
             ref_embedding = embed(encoder, reference)
             baseline = within_speaker_baseline(encoder, reference)
+            shortest = min(
+                (audio_seconds(r) or 0.0 for r in renders), default=0.0
+            )
+            if shortest > 0:
+                baseline["duration_matched"] = duration_matched_baseline(
+                    encoder, reference, ref_embedding, shortest
+                )
             cond_path = args.conditioning_reference
             if cond_path.is_file():
                 cond_embedding = embed(encoder, cond_path)
