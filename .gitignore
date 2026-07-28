@@ -54,6 +54,8 @@ create-architecture/
 .env_temp
 skills/assistant/checkpoints/
 skills/dogpile/run/fetch_cache/
+skills/fetcher/run/artifacts/
+skills/fetcher/run/fetch_cache/
 skills/ask/.ask_artifacts/
 skills/ask/ask_task_state.json
 skills/ask/src/ask/ask_task_state.json
