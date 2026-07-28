@@ -809,3 +809,69 @@ def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
     assert result["status"] == "BLOCKED"
     assert "not review" in result["summary"]
     assert not dispatched.called
+
+
+def test_a_repair_that_moved_main_is_flagged_and_blocked(tmp_path) -> None:
+    """The creator seat pushed a850e22a6 to origin/main while its own DAG node
+    reported NEEDS_ATTENTION and the ticket stayed agent-blocked. Unreviewed work
+    reached main anyway -- the exact thing two seats exist to prevent."""
+    project = {
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "worktree": str(_clean_worktree(tmp_path)),
+    }
+    issue = _issue(41, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    edits: list[dict] = []
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github, "issue_edit",
+            side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
+        ),
+        mock.patch.object(
+            handlers.registry, "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-41",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["aaa111", "bbb222"]),
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert "origin/main moved" in result["summary"]
+    assert any(e.get("add") == [config.BLOCKED_LABEL] for e in edits)
+
+
+def test_an_untouched_main_completes_normally(tmp_path) -> None:
+    project = {
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "worktree": str(_clean_worktree(tmp_path)),
+    }
+    issue = _issue(42, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.registry, "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-42",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["aaa111", "aaa111"]),
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "COMPLETED", result.get("summary")
+
+
+def test_the_creator_is_told_not_to_push() -> None:
+    goal = handlers.repair_immutable_goal("o/r", 7)
+    assert "do not push" in goal and "do not merge" in goal
+    task = handlers.build_repair_task(
+        repo="o/r", issue_number=7, issue_title="t", issue_body="", targets=["skills/x"],
+    )
+    assert "Do not push" in task
+    assert "reviewer's decision" in task

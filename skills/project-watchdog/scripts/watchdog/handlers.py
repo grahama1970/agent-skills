@@ -525,7 +525,9 @@ def repair_immutable_goal(repo: str, issue_number: int) -> str:
     return (
         f"Resolve {repo}#{issue_number} so its stated acceptance criterion holds, "
         f"proven by the proof command the ticket names. Change only the paths the "
-        f"ticket targets. Do not weaken or delete a test to make it pass."
+        f"ticket targets. Do not weaken or delete a test to make it pass. "
+        f"Commit to the current branch only: do not push, do not merge, and do not "
+        f"modify any other branch. The reviewer seat decides whether this lands."
     )
 
 
@@ -546,6 +548,9 @@ def build_repair_task(
     return (
         f"Repair {repo}#{issue_number}: {issue_title}\n\n"
         f"Allowed paths: {', '.join(targets) or '(as stated in the ticket)'}\n\n"
+        f"Commit to the current branch only. Do not push, do not merge, do not "
+        f"switch branches. Whether this reaches main is the reviewer's decision "
+        f"and a human's, not the creator's.\n\n"
         f"The creator seat implements the fix and commits it. The reviewer seat "
         f"checks it against the ticket's acceptance criterion and required proof, "
         f"and answers VERDICT: PASS, VERDICT: FAIL, or VERDICT: NEEDS_ATTENTION.\n\n"
@@ -729,6 +734,13 @@ def handle_ticket_repair(
         return result
     result["artifacts"].append(str(repair_worktree))
 
+    # The creator commits on its own branch; only the reviewer's verdict should
+    # move main. Observed 2026-07-28: the codex seat pushed a850e22a6 straight to
+    # origin/main while its own DAG node reported NEEDS_ATTENTION and the ticket
+    # stayed agent-blocked -- unreviewed work landed anyway.
+    main_before = registry.remote_main_sha(worktree)
+    result["origin_main_before"] = main_before
+
     result["commands"].append(
         github.issue_comment(
             repo,
@@ -822,6 +834,29 @@ def handle_ticket_repair(
             ),
         )
     )
+    main_after = registry.remote_main_sha(worktree)
+    result["origin_main_after"] = main_after
+    if main_before and main_after and main_before != main_after:
+        result.update(
+            {
+                "ok": False,
+                "status": "NEEDS_ATTENTION",
+                "summary": (
+                    f"origin/main moved during this repair ({main_before[:9]} -> "
+                    f"{main_after[:9]}). The creator seat must commit to its own branch "
+                    f"and let the reviewer decide what lands; unreviewed work on main is "
+                    f"exactly what the two-seat loop exists to prevent."
+                ),
+            }
+        )
+        log_event(run_id, "origin_main_moved_during_repair", issue=issue_number,
+                  before=main_before, after=main_after)
+        result["commands"].append(
+            github.issue_edit(repo, issue_number, add=[config.BLOCKED_LABEL],
+                              remove=[config.LEASE_LABEL])
+        )
+        return result
+
     result["commands"].append(github.issue_edit(repo, issue_number, remove=[config.LEASE_LABEL]))
     result.update(
         {

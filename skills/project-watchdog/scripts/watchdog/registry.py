@@ -76,6 +76,20 @@ DEFAULT_BRANCHES = ("main", "master")
 REPAIR_BRANCH_PREFIX = "watchdog/issue-"
 
 
+def remote_main_sha(repo_dir: Path) -> str:
+    """The SHA ``origin/main`` currently points at, or "" if it cannot be read.
+
+    Used to detect a repair seat pushing straight to main instead of leaving the
+    decision to the reviewer.
+    """
+    result = run_cmd(["git", "-C", str(repo_dir), "ls-remote", "origin", "refs/heads/main"],
+                     timeout_s=60)
+    if result.get("exit_code") != 0:
+        return ""
+    out = str(result.get("stdout", "")).split()
+    return out[0] if out else ""
+
+
 def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -> dict[str, Any]:
     """Create a clean worktree from ``origin/main`` to author one repair in.
 
