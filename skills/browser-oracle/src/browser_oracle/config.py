@@ -15,6 +15,7 @@ SUPPORTED_BACKENDS = (
     "webkimi",
     "webclaude",
     "webgrok",
+    "webdeepseek",
 )
 
 BACKEND_PROJECT_ROOT_ENV = {
@@ -24,6 +25,7 @@ BACKEND_PROJECT_ROOT_ENV = {
     "webkimi": "BROWSER_ORACLE_WEBKIMI_PROJECT_ROOT",
     "webclaude": "BROWSER_ORACLE_WEBCLAUDE_PROJECT_ROOT",
     "webgrok": "BROWSER_ORACLE_WEBGROK_PROJECT_ROOT",
+    "webdeepseek": "BROWSER_ORACLE_WEBDEEPSEEK_PROJECT_ROOT",
 }
 
 DEFAULT_PROJECT_ROOTS = {
@@ -33,6 +35,7 @@ DEFAULT_PROJECT_ROOTS = {
     "webkimi": Path.home() / ".pi" / "webkimi-projects",
     "webclaude": Path.home() / ".pi" / "webclaude-projects",
     "webgrok": Path.home() / ".pi" / "webgrok-projects",
+    "webdeepseek": Path.home() / ".pi" / "webdeepseek-projects",
 }
 
 

@@ -43,6 +43,7 @@ BROWSER_FRESH_URLS = {
     "webkimi": "https://www.kimi.com/",
     "webgemini": "https://gemini.google.com/app",
     "webgrok": "https://grok.com/",
+    "webdeepseek": "https://chat.deepseek.com/",
 }
 BROWSER_BACKENDS = {
     "webgpt": "webgpt",
@@ -50,6 +51,7 @@ BROWSER_BACKENDS = {
     "webkimi": "webkimi",
     "webgemini": "webgemini",
     "webgrok": "webgrok",
+    "webdeepseek": "webdeepseek",
 }
 
 
