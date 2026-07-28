@@ -39,6 +39,8 @@ import os
 import shutil
 from pathlib import Path
 
+from loguru import logger
+
 from .dotenv_helper import get as env_get
 from .dotenv_helper import load_env
 
@@ -124,7 +126,7 @@ READY_LABEL = "agent-work"
 #: Labels that mean a human owns the next decision. Routable work must carry
 #: none of these, so a maintainer parking a ticket is always honoured.
 HUMAN_HOLD_LABELS = frozenset(
-    {"needs-human", "maintainer-blocked", "next:human", "blocked:upstream", "status:deferred"}
+    {"needs-human", "maintainer-blocked", "next:human", "status:deferred"}
 )
 
 #: A lock older than this is treated as abandoned by a crashed or killed tick.
@@ -138,6 +140,7 @@ def _env_seconds(name: str, default: int) -> int:
     try:
         value = int(raw)
     except ValueError:
+        logger.error("{} is not an integer: {!r}; using default {}", name, raw, default)
         return default
     return value if value > 0 else default
 
@@ -152,20 +155,3 @@ NOOP_ESCALATION_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS
 #: receipt. Without this, escalation would reintroduce one receipt directory per
 #: minute — the exact disk churn the retention policy removed.
 NOOP_RENOTIFY_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS", 86_400)
-
-
-#: How bounded dispatches execute.
-#:   "local"  — captured subprocess (default; invisible but self-contained)
-#:   "herdr"  — a named pane in a dedicated Herdr space, watchable while it runs
-#: Per-project override: set "dispatch_backend" on the registry entry.
-DISPATCH_BACKEND = env_get("PROJECT_WATCHDOG_DISPATCH_BACKEND", "local") or "local"
-
-#: Herdr space label used when DISPATCH_BACKEND is "herdr".
-DISPATCH_SPACE_LABEL = env_get("PROJECT_WATCHDOG_DISPATCH_SPACE", "autoupdate") or "autoupdate"
-
-
-def dispatch_backend_for(project: dict | None = None) -> str:
-    """Return the dispatch backend for a project, honouring its registry override."""
-    if project and project.get("dispatch_backend"):
-        return str(project["dispatch_backend"])
-    return DISPATCH_BACKEND

@@ -46,6 +46,9 @@ def load_env() -> bool:
     try:
         from dotenv import load_dotenv
     except ImportError:  # pragma: no cover - dependency is declared in pyproject
+        from loguru import logger
+
+        logger.warning("python-dotenv unavailable; {} will not be applied", path)
         return False
     try:
         # override=False: the real environment always beats the file.

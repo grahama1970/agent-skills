@@ -24,11 +24,11 @@ Failure modes
 
 from __future__ import annotations
 
-import shlex
+import hashlib
 from pathlib import Path
 from typing import Any
 
-from . import config, github, herdr_space
+from . import config, github
 from .core import log_event, run_cmd, write_json
 from .issue_fields import (
     parse_bool,
@@ -38,42 +38,6 @@ from .issue_fields import (
     repo_relative_existing_path,
 )
 from .registry import project_repo, project_worktree
-
-
-def run_bounded(
-    command: list[str],
-    *,
-    worktree: Path,
-    project: dict[str, Any],
-    agent_name: str,
-    timeout_s: int = 120,
-) -> tuple[dict[str, Any], dict[str, Any] | None]:
-    """Run one bounded dispatch through the project's configured backend.
-
-    Returns ``(result_record, pane_block)``. ``result_record`` is always
-    ``run_cmd``-shaped so callers branch on ``exit_code`` regardless of backend.
-    ``pane_block`` is the Herdr receipt block, or ``None`` for local dispatch.
-    """
-    backend = config.dispatch_backend_for(project)
-    if backend != "herdr":
-        return run_cmd(command, cwd=worktree, timeout_s=timeout_s), None
-
-    pane = herdr_space.dispatch_in_pane(
-        agent_name=agent_name,
-        command=["bash", "-lc", f"cd {shlex.quote(str(worktree))} && {shlex.join(command)}"],
-        space_label=config.DISPATCH_SPACE_LABEL,
-        timeout_s=timeout_s,
-    )
-    record = {
-        "command": command,
-        "cwd": str(worktree),
-        "exit_code": 0 if pane.ok else (pane.exit_code if pane.exit_code is not None else 1),
-        "stdout": "",
-        "stderr": pane.error or "",
-        "backend": "herdr_pane",
-        "agent_name": pane.agent_name,
-    }
-    return record, pane.as_receipt_block()
 
 
 def handle_issue(
@@ -194,7 +158,7 @@ def handle_tau_handoff_dispatch(
     uv_bin = config.resolve_uv_bin()
     loop_dir = receipt_dir / "tau-command-loop"
     loop_receipt = loop_dir / "command-loop-receipt.json"
-    loop_result, pane_block = run_bounded(
+    loop_result = run_cmd(
         [
             uv_bin,
             "run",
@@ -213,14 +177,10 @@ def handle_tau_handoff_dispatch(
             "--max-steps",
             str(max_steps),
         ],
-        worktree=worktree,
-        project=project,
-        agent_name=f"pw-{project.get('project_id')}-issue-{issue_number}",
+        cwd=worktree,
         timeout_s=120,
     )
     result["commands"].append(loop_result)
-    if pane_block:
-        result["pane"] = pane_block
     result["artifacts"].append(str(loop_receipt))
 
     transport_path = receipt_dir / "tau-github-transport.json"
@@ -349,7 +309,7 @@ def handle_tau_coder_spec(
     result["artifacts"].append(str(start_path))
 
     loop_dir = receipt_dir / "tau-command-loop"
-    loop_result, pane_block = run_bounded(
+    loop_result = run_cmd(
         [
             uv_bin,
             "run",
@@ -368,14 +328,10 @@ def handle_tau_coder_spec(
             "--max-steps",
             "2",
         ],
-        worktree=worktree,
-        project=project,
-        agent_name=f"pw-{project.get('project_id')}-coderspec-{issue_number}",
+        cwd=worktree,
         timeout_s=120,
     )
     result["commands"].append(loop_result)
-    if pane_block:
-        result["pane"] = pane_block
     result["artifacts"].append(str(loop_dir / "command-loop-receipt.json"))
 
     targeted = run_cmd(
@@ -553,6 +509,107 @@ def tau_coder_start_handoff(
 #: runner_kind values this generic handler knows how to drive.
 TICKET_REPAIR_RUNNERS = {"tau-command-loop"}
 
+#: Nodes the repair DAG uses. Both specs ship in Tau's canonical command-spec
+#: root; ``agent-skills/agents/`` holds specs for only 3 of 92 agents and is not
+#: the standard location for this lane.
+REPAIR_NODES = ("coder", "reviewer")
+
+
+def build_repair_contract(
+    *,
+    repo: str,
+    issue_number: int,
+    issue_title: str,
+    goal_hash: str,
+    spec_root: str,
+) -> dict[str, Any]:
+    """Compile a ``tau.dag_contract.v1`` coder/reviewer repair loop for one issue.
+
+    The `/tau` skill is explicit that repair and creator/reviewer loops are
+    expressed as DAG contracts, not as ad hoc per-issue commands: Tau owns
+    dispatch, receipt validation, route continuity, resume, timeout and
+    max-attempt handling, immutable-goal enforcement, and fail-closed drift
+    detection. Encoding any of that here would duplicate it, and duplicated
+    orchestration policy drifts.
+
+    Retry lives in ``max_attempts`` and ``limits``; allowed transitions live in
+    ``edges``; proof requirements live in ``required_evidence``. None of it is
+    prose.
+
+    The graph is acyclic on purpose. A first draft carried a
+    ``reviewer -> coder`` retry edge with string conditions, copied from the
+    skill's illustrative example; Tau's compiler rejected it at origin/main with
+    ``cycle_detected`` and ``unsupported_ready_queue_condition``. Retry belongs
+    in ``coder.max_attempts`` regardless, so the edge was duplicating a policy
+    Tau already owns. Keeping the contract acyclic means it compiles under both
+    schedulers instead of only the permissive one.
+    """
+    return {
+        "schema": "tau.dag_contract.v1",
+        "dag_id": f"project-watchdog-{repo.replace('/', '-')}-issue-{issue_number}",
+        "goal": {
+            "goal_id": f"ticket-repair-{issue_number}",
+            "goal_version": 1,
+            "goal_hash": goal_hash,
+        },
+        "target": {"repo": repo, "target": f"issue#{issue_number}", "title": issue_title},
+        "entry_node": "coder",
+        "terminal_nodes": ["human"],
+        "limits": {
+            "resume": True,
+            "default_timeout_seconds": 600,
+            "max_total_attempts": 4,
+        },
+        "nodes": [
+            {
+                "id": "coder",
+                "agent": "coder",
+                "executor": "local",
+                "max_attempts": 2,
+                "command_spec": f"{spec_root}/coder/tau-dispatch-command.json",
+                # The evidence gate that stops a transport-only stub from
+                # reporting a repair it never performed.
+                "required_evidence": ["changed_files", "focused_tests"],
+                "emits": ["tau.agent_handoff.v1", "tau.subagent_receipt.v1"],
+            },
+            {
+                "id": "reviewer",
+                "agent": "reviewer",
+                "executor": "local",
+                "max_attempts": 1,
+                "command_spec": f"{spec_root}/reviewer/tau-dispatch-command.json",
+                "required_evidence": ["review_verdict"],
+                "emits": ["tau.agent_handoff.v1", "tau.subagent_receipt.v1"],
+            },
+            {"id": "human", "agent": "human", "executor": "human"},
+        ],
+        "edges": [
+            {"from": "coder", "to": "reviewer"},
+            {"from": "reviewer", "to": "human"},
+        ],
+        "required_evidence": ["coder receipt", "review_verdict"],
+        "fail_closed_on": [
+            "goal_hash_mismatch",
+            "target_changed",
+            "unexpected_node",
+            "unexpected_edge",
+            "missing_required_evidence",
+            "max_attempts_exceeded",
+            "malformed_handoff",
+        ],
+    }
+
+
+def issue_goal_hash(repo: str, issue_number: int) -> str:
+    """Derive a stable per-issue goal hash.
+
+    Tau requires ``goal.goal_hash`` to be identical across every node, receipt,
+    and rerun for one workflow. Deriving it from repo and issue number makes it
+    reproducible on resume without storing extra state.
+    """
+    digest = hashlib.sha256(f"{repo}#{issue_number}".encode()).hexdigest()
+    return f"sha256:{digest}"
+
 
 def handle_ticket_repair(
     run_id: str,
@@ -562,18 +619,14 @@ def handle_ticket_repair(
     *,
     apply: bool,
 ) -> dict[str, Any]:
-    """Repair one ordinary ``/ticket``-filed issue through the project's harness.
+    """Repair one ordinary ``/ticket``-filed issue through a Tau DAG contract.
 
     This is the route for tickets filed the normal way: labelled ``agent-work``
     with a ``type:``/``route:`` vocabulary and no hand-authored body marker.
-    Dispatch is delegated to the project's own repair surface rather than
-    reimplemented here — for ``tau-command-loop`` projects that is
-    ``tau self-fix tick --repo <repo> --issue <n>``, which owns subagent
-    selection, receipt validation, and closure.
 
-    Projects whose ``runner_kind`` has no bounded per-issue repair surface are
-    refused with a named reason instead of being handed to a runner that cannot
-    accept an issue number.
+    The watchdog compiles the contract and calls ``tau dag-run``. It does not
+    drive the loop, count attempts, or decide when the work is done — Tau does,
+    and its receipt is the verdict.
     """
     repo = project_repo(project)
     worktree = project_worktree(project)
@@ -581,7 +634,7 @@ def handle_ticket_repair(
     runner_kind = str(project.get("runner_kind", ""))
     log_event(run_id, "handle_ticket_repair_start", issue=issue_number, repo=repo)
     result = _new_result(project, issue, "ticket_repair")
-    result["selected_agent"] = "tau-self-fix"
+    result["selected_agent"] = "coder"
     result["runner_kind"] = runner_kind
 
     if runner_kind not in TICKET_REPAIR_RUNNERS:
@@ -591,21 +644,51 @@ def handle_ticket_repair(
                 "status": "BLOCKED",
                 "summary": (
                     f"project {project.get('project_id')!r} has runner_kind "
-                    f"{runner_kind!r}, which exposes no bounded per-issue repair "
-                    f"command. Supported: {sorted(TICKET_REPAIR_RUNNERS)}. Register a "
-                    "bounded runner before enabling ticket_repair for this project."
+                    f"{runner_kind!r}, which exposes no Tau DAG repair lane. "
+                    f"Supported: {sorted(TICKET_REPAIR_RUNNERS)}."
                 ),
             }
         )
         log_event(run_id, "handle_ticket_repair_unsupported", issue=issue_number, kind=runner_kind)
         return result
 
+    spec_root = worktree / "experiments/goal-locked-subagents/agent-command-specs"
+    missing = [
+        node
+        for node in REPAIR_NODES
+        if not (spec_root / node / "tau-dispatch-command.json").is_file()
+    ]
+    if missing:
+        result.update(
+            {
+                "ok": False,
+                "status": "BLOCKED",
+                "summary": (
+                    f"missing Tau command specs for {missing} under {spec_root}. "
+                    "The repair DAG cannot dispatch a node without its command spec."
+                ),
+            }
+        )
+        log_event(run_id, "handle_ticket_repair_missing_specs", issue=issue_number, missing=missing)
+        return result
+
+    contract = build_repair_contract(
+        repo=repo,
+        issue_number=issue_number,
+        issue_title=str(issue.get("title", "")),
+        goal_hash=issue_goal_hash(repo, issue_number),
+        spec_root=str(spec_root),
+    )
+    contract_path = receipt_dir / "repair-dag.json"
+    write_json(contract_path, contract)
+    result["artifacts"].append(str(contract_path))
+
     if not apply:
         result.update(
             {
                 "ok": True,
                 "status": "DRY_RUN",
-                "summary": f"would run tau self-fix tick for {repo}#{issue_number}",
+                "summary": f"would run tau dag-run for {repo}#{issue_number}",
             }
         )
         return result
@@ -621,45 +704,43 @@ def handle_ticket_repair(
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "repo": repo,
-                    "selected_agent": "tau-self-fix",
+                    "selected_agent": "coder",
                     "action": "ticket_repair",
+                    "dag_id": contract["dag_id"],
+                    "goal_hash": contract["goal"]["goal_hash"],
                 },
             ),
         )
     )
     result["commands"].append(github.issue_edit(repo, issue_number, add=[config.LEASE_LABEL]))
 
-    repair_dir = receipt_dir / "self-fix"
-    repair_result, pane_block = run_bounded(
+    dag_receipt_dir = receipt_dir / "dag"
+    dag_result = run_cmd(
         [
             config.resolve_uv_bin(),
             "run",
             "tau",
-            "self-fix",
-            "tick",
-            "--repo",
-            repo,
-            "--issue",
-            str(issue_number),
+            "dag-run",
+            str(contract_path),
             "--receipt-dir",
-            str(repair_dir),
+            str(dag_receipt_dir),
+            "--agents-root",
+            str(config.agents_root()),
+            "--command-spec-root",
+            str(spec_root),
         ],
-        worktree=worktree,
-        project=project,
-        agent_name=f"pw-{project.get('project_id')}-ticket-{issue_number}",
+        cwd=worktree,
         timeout_s=int(project.get("ticket_repair_timeout_s", 900)),
     )
-    result["commands"].append(repair_result)
-    result["artifacts"].append(str(repair_dir))
-    if pane_block:
-        result["pane"] = pane_block
+    result["commands"].append(dag_result)
+    result["artifacts"].append(str(dag_receipt_dir))
 
-    if repair_result["exit_code"] != 0:
+    if dag_result["exit_code"] != 0:
         result.update(
             {
                 "ok": False,
                 "status": "NEEDS_ATTENTION",
-                "summary": f"tau self-fix tick failed for {repo}#{issue_number}",
+                "summary": f"tau dag-run failed for {repo}#{issue_number}",
             }
         )
         result["commands"].append(
@@ -681,14 +762,16 @@ def handle_ticket_repair(
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "repo": repo,
-                    "self_fix_exit_code": repair_result["exit_code"],
-                    "receipt_dir": str(repair_dir),
+                    "dag_id": contract["dag_id"],
+                    "goal_hash": contract["goal"]["goal_hash"],
+                    "dag_exit_code": dag_result["exit_code"],
+                    "dag_receipt_dir": str(dag_receipt_dir),
                     "mocked": False,
                     "live": True,
                     "scope": (
-                        "Runs one bounded Tau self-fix tick against a /ticket-filed "
-                        "GitHub issue. Closure is owned by Tau's self-fix receipt, "
-                        "not by this watchdog."
+                        "Runs one Tau tau.dag_contract.v1 coder/reviewer repair loop for a "
+                        "/ticket-filed issue. Closure and evidence acceptance are owned by "
+                        "Tau's DAG receipt, not by this watchdog."
                     ),
                 },
             ),
@@ -699,7 +782,7 @@ def handle_ticket_repair(
         {
             "ok": True,
             "status": "COMPLETED",
-            "summary": f"tau self-fix tick completed for {repo}#{issue_number}",
+            "summary": f"tau dag-run completed for {repo}#{issue_number}",
         }
     )
     log_event(run_id, "handle_ticket_repair_finish", issue=issue_number, ok=True)

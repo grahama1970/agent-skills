@@ -125,6 +125,7 @@ def _parse(value: str | None) -> datetime | None:
     try:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
+        logger.error("unparseable streak timestamp {!r}; treating as absent", value)
         return None
 
 

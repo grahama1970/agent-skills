@@ -72,14 +72,14 @@ Exit codes: `0` success or deliberate refusal, `1` operational failure,
 
 An issue must carry `agent-work` and none of the hold labels
 (`agent-active`, `agent-blocked`, `needs-human`, `maintainer-blocked`,
-`next:human`, `blocked:upstream`, `status:deferred`). Eligible issues take the
+`next:human`, `status:deferred`). Eligible issues take the
 first matching route:
 
 | Route | Condition | Dispatch |
 | --- | --- | --- |
 | `add_tau_coder_command_spec` | `next:coder` + `executor:local` + repair marker in body | `tau handoff-command-loop` |
 | `tau_handoff_dispatch` | `executor:local` + handoff marker in body | `tau handoff-command-loop` |
-| `ticket_repair` | anything else carrying `agent-work` | `tau self-fix tick --repo R --issue N` |
+| `ticket_repair` | anything else carrying `agent-work` | `tau dag-run` on a compiled `tau.dag_contract.v1` |
 
 `ticket_repair` is the route ordinary `/ticket`-filed tickets take. `/ticket`
 stamps `agent-work` at file time for any ticket with a concrete `route:` whose
@@ -88,29 +88,6 @@ an unknown route has nowhere to be sent.
 
 Projects whose `runner_kind` is not `tau-command-loop` are refused by name
 rather than handed to a runner that cannot accept an issue number.
-
-## Cross-repo dependencies
-
-A ticket blocked on another project declares the edge machine-readably:
-
-```bash
-skills/ticket/run.sh block 149 \
-  --reason reason.md \
-  --blocked-by grahama1970/graph-memory-operator#61 \
-  --release
-```
-
-That validates the reference, refuses one that cannot be read, adds
-`blocked:upstream`, and comments `blocked-by: owner/repo#N`.
-
-Every tick then polls blocked issues **before** routing. When all declared
-upstreams are closed it comments the resolution, removes `blocked:upstream`,
-and the issue returns to the routable pool on the next tick. Any upstream that
-is open — or unreadable — keeps it blocked. Unreadable never means resolved:
-releasing a ticket whose dependency could not be checked is worse than waiting.
-
-Refs are only recognised in the exact `blocked-by: owner/repo#N` form, so prose
-mentioning an issue does not silently create a dependency.
 
 ## Troubleshooting: the watchdog runs but never dispatches
 
@@ -122,8 +99,7 @@ succeeded and matched nothing. Check, in order:
 2. **Hold labels.** Any of the hold labels above parks a ticket deliberately.
 3. **State gates.** `./run.sh status` — both `global.state` and the project's
    state must be `active`.
-4. **Upstream blocks.** `gh issue list --label blocked:upstream` shows what is
-   waiting on another repo; the receipt's `unblocked` block shows why.
+
 
 A failed scan is *never* reported as `NOOP`. If `gh` cannot reach GitHub the
 tick fails with `status: BLOCKED` and a non-zero exit.
@@ -199,46 +175,6 @@ receipts persist at most once per `PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS`
 minute. Finding routable work clears the streak.
 
 `./run.sh status` reports `idle_streaks` and `idle_escalation_seconds`.
-
-## Dispatch backends — local or a visible Herdr pane
-
-| Backend | Behaviour |
-| --- | --- |
-| `local` (default) | Captured subprocess. Self-contained, but invisible while it runs. |
-| `herdr` | A named pane in a dedicated Herdr space, watchable in real time. |
-
-Select globally with `PROJECT_WATCHDOG_DISPATCH_BACKEND`, per project with a
-`dispatch_backend` field on the registry entry. The space label defaults to
-`autoupdate` (`PROJECT_WATCHDOG_DISPATCH_SPACE`).
-
-The pane is wrapped so it is observable and bounded:
-
-- reports `working` on start, then `idle` or `blocked` on exit, so the Herdr UI
-  and `$monitor-herdr` see a truthful state;
-- writes a sentinel JSON file, so completion is a deterministic file read
-  rather than an inference from a UI state — `herdr agent wait --status idle`
-  against a raw command times out even after the command succeeds, because
-  agent status comes from provider integrations an arbitrary command lacks;
-- self-limits with `timeout`, because `$monitor-herdr` treats `done`, `idle`,
-  `blocked`, and `unknown` as stopped and **not** `working`. A hung command
-  left in `working` would never be flagged; bounding it turns a hang into a
-  `blocked` pane the monitor does select;
-- holds a failed pane alive for 15 minutes so it does not vanish before the
-  monitor's next tick;
-- never steals focus.
-
-Observe dispatches with the exact command each receipt names:
-
-```bash
-skills/monitor-herdr/run.sh tick --space autoupdate --include-agent watchdog-dispatch
-```
-
-The `--include-agent` filter is why every pane reports the stable label
-`watchdog-dispatch` rather than its per-issue name.
-
-Dispatch is still synchronous: the tick blocks on a bounded wait so the existing
-lease and closure semantics are unchanged. Fire-and-forget dispatch would need a
-reconciliation path for leased-but-unfinished issues, which does not exist yet.
 
 ## Receipt retention
 
@@ -316,3 +252,30 @@ rendered dry-run.
 Issues with `agent-active` or `agent-blocked` are skipped until a human/operator
 clears the state label. This prevents cron from retrying a failed ticket every
 minute without an explicit retry decision.
+
+## Repair lane: Tau DAG contract
+
+`ticket_repair` compiles a `tau.dag_contract.v1` (`coder` -> `reviewer` ->
+`human`) and calls `tau dag-run`. The watchdog does not drive the loop, count
+attempts, or decide when work is done — Tau owns dispatch, receipt validation,
+resume, timeouts, immutable-goal enforcement, and fail-closed drift detection,
+and its DAG receipt is the verdict.
+
+The graph is acyclic: retry lives in `coder.max_attempts`, not in a
+`reviewer -> coder` edge. Tau's compiler rejects that edge with
+`cycle_detected` and `unsupported_ready_queue_condition`, and it duplicates a
+policy Tau already owns. Verified against Tau at `origin/main`:
+`tau dag-plan` exits 0 and emits `tau.dag_plan.v1` with nodes
+`coder, human, reviewer`.
+
+`coder` gates on `required_evidence: [changed_files, focused_tests]`. That
+matters because the shipped coder command spec is a **transport stub** that
+returns `--result-status COMPLETED` unconditionally; the evidence gate makes it
+fail closed rather than report a repair it never performed.
+
+Command specs resolve from Tau's own root
+(`experiments/goal-locked-subagents/agent-command-specs/`), not
+`agent-skills/agents/`, which holds specs for only 3 of 92 agents. Missing specs
+block before any GitHub write.
+
+See `PROJECT_KNOWLEDGE.md` for current readiness and open questions.
