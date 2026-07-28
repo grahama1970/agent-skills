@@ -412,7 +412,7 @@ def list_recently_closed(run_id: str, project: dict[str, Any]) -> list[dict[str,
         [
             "gh", "issue", "list", "--repo", repo, "--state", "closed",
             "--label", config.READY_LABEL, "--limit", "40",
-            "--json", "number,title,closedAt,stateReason",
+            "--json", "number,title,labels,closedAt,stateReason",
         ],
         timeout_s=60,
     )
