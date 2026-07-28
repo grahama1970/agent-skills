@@ -65,13 +65,31 @@ def search(
     html_report: bool = typer.Option(False, "--html-report", help="Write a self-contained HTML/CSS report"),
     open_report: bool = typer.Option(False, "--open-report", help="Open the HTML report in your browser"),
     report_file: Optional[Path] = typer.Option(None, "--report-file", help="Write the HTML report to a specific path"),
+    persona: Optional[str] = typer.Option(None, "--persona", help="Review/research persona whose priorities shape LLM analysis and query tailoring"),
+    rationale: Optional[str] = typer.Option(None, "--rationale", help="Why the dogpile is being run now, including blocker context"),
+    context: Optional[str] = typer.Option(None, "--context", help="Concrete problem context and constraints"),
+    context_file: Optional[Path] = typer.Option(None, "--context-file", help="Additional context read from a local file"),
 ):
     """Aggregate search results from multiple sources."""
+
+    # Build request-context metadata (persona/rationale/context) as first-class fields.
+    request_context: Dict[str, Any] = {}
+    if persona:
+        request_context["persona"] = persona
+    if rationale:
+        request_context["rationale"] = rationale
+    if context:
+        request_context["context"] = context
+    if context_file:
+        try:
+            request_context["context_file"] = Path(context_file).read_text()[:4000]
+        except Exception as e:
+            logger.error("could not read --context-file {}: {}", context_file, e)
 
     # Initialize error tracking, task-monitor, and execution collector
     session_id = start_error_session(query)
     monitor = start_monitor(query, name=f"dogpile-{session_id[-8:]}")
-    publisher = PartialResultsPublisher(query)
+    publisher = PartialResultsPublisher(query, request_context=request_context)
 
     from dogpile.utils import init_execution_collector
     init_execution_collector(session_id)
@@ -96,6 +114,7 @@ def search(
             open_report=open_report,
             report_file=report_file,
             publisher=publisher,
+            request_context=request_context,
         )
         search_success = True
     except Exception as e:

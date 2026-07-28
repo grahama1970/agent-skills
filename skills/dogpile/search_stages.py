@@ -160,14 +160,16 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
 class PartialResultsPublisher:
     """Persist partial Dogpile results and emit machine-readable progress events."""
 
-    def __init__(self, requested_query: str):
+    def __init__(self, requested_query: str, request_context: Optional[Dict[str, Any]] = None):
         self.path = PARTIAL_RESULTS_PATH
+        request_context = request_context or {}
         self.state: Dict[str, Any] = {
             "requested_query": requested_query,
             "effective_query": requested_query,
             "status": "starting",
             "updated_at": time.time(),
             "partial_results_path": str(self.path),
+            "request_context": request_context,
             "tailored_queries": {},
             "results": {
                 "stage1": {},
@@ -180,6 +182,7 @@ class PartialResultsPublisher:
             {
                 "event": "search_started",
                 "requested_query": requested_query,
+                "request_context": request_context,
             }
         )
 
@@ -360,16 +363,33 @@ def _collect_evidence_digest(
     return digest[:max_chars]
 
 
+def _format_request_context(request_context: Optional[Dict[str, Any]]) -> str:
+    """Render persona/rationale/context request metadata for prompts and reports."""
+    if not request_context:
+        return ""
+    labels = [
+        ("persona", "Review persona"),
+        ("rationale", "Rationale"),
+        ("context", "Problem context"),
+        ("context_file", "Context file"),
+    ]
+    lines = [f"{label}: {request_context[key]}" for key, label in labels if request_context.get(key)]
+    return "\n".join(lines)
+
+
 def _generate_auto_synthesis(
     query: str,
     stage1_results: Dict[str, Any],
     stage2_results: Dict[str, Any],
+    request_context: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Generate a concise synthesis from retrieved evidence, degrading cleanly."""
     digest = _collect_evidence_digest(query, stage1_results, stage2_results)
+    context_block = _format_request_context(request_context)
+    context_preface = f"Request context (shapes interpretation, not the search queries):\n{context_block}\n\n" if context_block else ""
     prompt = f"""Synthesize this Dogpile research evidence for the user query.
 
-Rules:
+{context_preface}Rules:
 - Ground every substantive claim in the evidence below.
 - Prefer Brave, ArXiv, YouTube, GitHub, and feed-style retrieved sources over model prior knowledge.
 - Mention important gaps, contradictions, or skipped sources.

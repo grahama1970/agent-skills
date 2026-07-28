@@ -38,6 +38,7 @@ from dogpile.search_stages import (
     _timed_stage2,
     _flush_execution_records,
     _generate_auto_synthesis,
+    _format_request_context,
 )
 
 # Memory integration (graceful degradation)
@@ -66,6 +67,7 @@ def _run_search(
     open_report: bool = False,
     report_file: Optional[Path] = None,
     publisher: Optional[PartialResultsPublisher] = None,
+    request_context: Optional[Dict[str, Any]] = None,
 ):
     """Internal search implementation."""
     # Pre-hook: Recall prior research on this topic to avoid redundant API calls
@@ -248,7 +250,7 @@ def _run_search(
     _flush_execution_records("stage2")
 
     monitor.start_stage("synthesis")
-    auto_synthesis = _generate_auto_synthesis(query, stage1_results, stage2_results)
+    auto_synthesis = _generate_auto_synthesis(query, stage1_results, stage2_results, request_context=request_context)
     if auto_synthesis.startswith("Error:"):
         stage2_results["synthesis"] = {"error": auto_synthesis}
         synthesis_payload = {"error": auto_synthesis}
@@ -285,6 +287,11 @@ def _run_search(
         stage1_results=stage1_results,
         stage2_results=stage2_results,
     )
+
+    # Prepend request-context metadata (persona/rationale/context) to the report.
+    _context_block = _format_request_context(request_context)
+    if _context_block:
+        final_report = f"## Request Context\n\n{_context_block}\n\n{final_report}"
 
     report_path = None
     if html_report or open_report or report_file:
