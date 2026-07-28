@@ -55,6 +55,16 @@ and `$test-interactions` remain the implementation proof gates.
    - webkimi: browser composer interaction failed, raw response chars 0.
    - Join receipt: `/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/battle-arena-front-back-roundtable-r1c-recovery-20260728/node-artifacts/join/node-receipt.json`
 
+4. `ask-tau-recovery-round-for-the-missing-w-b812ba02719d`
+   - Status: PASS.
+   - `mocked: false`
+   - `live: true`
+   - `provider_live: true`
+   - Recovery method: reran only the WebGPT lane with `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS=1` and `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS=300`.
+   - WebGPT response chars: 6328.
+   - Response path: `/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/ask-tau-recovery-round-for-the-missing-w-b812ba02719d/node-artifacts/handler-webgpt/response.md`
+   - Node receipt: `/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/ask-tau-recovery-round-for-the-missing-w-b812ba02719d/node-artifacts/handler-webgpt/node-receipt.json`
+
 ## Seat Positions
 
 1. webclaude: close provenance and transport gaps before features.
@@ -74,9 +84,12 @@ and `$test-interactions` remain the implementation proof gates.
    - Proposed transport/state protocol and frontend state-hash mirror.
    - This is useful as a determinism guard, but it is less grounded in the current Battle receipt/Pixi split than the other seats.
 
-4. webgpt: no usable content.
-   - Recovery reason: browser provider rate limited.
-   - Evidence path: `/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/battle-arena-front-back-roundtable-r1c-recovery-20260728/node-artifacts/handler-webgpt/node-receipt.json`
+4. webgpt: recovered usable content after cooldown-enabled retry.
+   - Rank 1: canonical local launch and route with Battle-specific identity proof.
+   - Rank 2: close `fixture_valid::battle-004-kill-shot-pixi-replay`.
+   - Rank 3: fresh-receipt vertical arena campaign through backend, live transport, adapter, DOM, and Pixi.
+   - Additional slices: DOM/Pixi parity audit, transport reconnect/replay safety, packaged deployment smoke.
+   - Evidence path: `/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/ask-tau-recovery-round-for-the-missing-w-b812ba02719d/node-artifacts/handler-webgpt/response.md`
 
 5. webkimi: no usable content.
    - Recovery reason: controlled Kimi composer refused focus/typing.
@@ -92,6 +105,7 @@ and `$test-interactions` remain the implementation proof gates.
 6. Intended but missing: backend eval `fixture_valid::battle-004-kill-shot-pixi-replay` either passes or has an explicit live ticket/expiry.
 7. Intended but missing: live backend/SSE to normalized adapter to DOM/Pixi proof under fresh receipts.
 8. Intended but missing: deterministic negative fixtures for missing/invalid receipts disabling Pixi effects while DOM mirrors remain accessible.
+9. Intended but missing: transport fault coverage for reconnect, duplicate delivery, ordering, stale receipts, malformed events, and backend restart.
 
 ## Selected Next Slice Order
 
@@ -111,3 +125,5 @@ and `$test-interactions` remain the implementation proof gates.
 5. Fail-closed receipt and DOM mirror inventory.
    - Reason: missing receipt behavior and selectable Pixi-to-DOM parity are high-risk false-green areas for the frontend.
 
+6. Transport safety and packaged deployment smoke.
+   - Reason: WebGPT specifically called out the risk of claiming readiness from ad hoc static serving, stale receipts, duplicate event delivery, or existing developer processes.

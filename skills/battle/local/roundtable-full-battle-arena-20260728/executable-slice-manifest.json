@@ -9,6 +9,7 @@
     "issue_1040_remote_commit": "166cb20f320085b715e00c171ec89dfe171eb085",
     "ask_roundtable_primary": "/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/battle-arena-front-back-roundtable-r1b-20260728",
     "ask_roundtable_recovery": "/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/battle-arena-front-back-roundtable-r1c-recovery-20260728",
+    "ask_webgpt_cooldown_recovery": "/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/ask-tau-recovery-round-for-the-missing-w-b812ba02719d",
     "test_interactions_results": "skills/battle/local/test-interactions-20260728-roundtable-battle3015/captures/results.json",
     "test_interactions_screenshot": "skills/battle/local/test-interactions-20260728-roundtable-battle3015/captures/battle-receipt-controls/0012_pane-controls_screenshot.png"
   },
@@ -33,10 +34,15 @@
     },
     {
       "seat": "webgpt",
-      "status": "NEEDS_ATTENTION",
-      "usable": false,
-      "failure_code": "browser_provider_rate_limited",
-      "receipt": "/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/battle-arena-front-back-roundtable-r1c-recovery-20260728/node-artifacts/handler-webgpt/node-receipt.json"
+      "status": "PASS",
+      "usable": true,
+      "recovered_after": "browser_provider_rate_limited",
+      "recovery_env": {
+        "SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS": "1",
+        "SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS": "300"
+      },
+      "response": "/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/ask-tau-recovery-round-for-the-missing-w-b812ba02719d/node-artifacts/handler-webgpt/response.md",
+      "receipt": "/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/ask-tau-recovery-round-for-the-missing-w-b812ba02719d/node-artifacts/handler-webgpt/node-receipt.json"
     },
     {
       "seat": "webkimi",
@@ -127,6 +133,35 @@
       ],
       "acceptance_check": "Every selectable adapter item has exactly one DOM mirror with data-qid, data-qs-action, title, aria-label, and keyboard focus behavior.",
       "proof_boundary": "Proves coverage parity, not semantic click correctness."
+    },
+    {
+      "rank": 7,
+      "id": "transport-reconnect-replay-safety",
+      "owner": "codex-loop",
+      "target": "Exercise SSE/live-client behavior for reconnect, duplicate delivery, ordering, stale receipts, malformed events, and backend restart.",
+      "commands": [
+        "deterministic injected transport fault harness",
+        "adapter replay output diff",
+        "$test-interactions where visual state is affected"
+      ],
+      "acceptance_check": "Accepted effects occur once; duplicate or stale events do not replay terminal effects; malformed semantic payloads fail closed with recorded receipts.",
+      "proof_boundary": "Proves the injected transport fault cases only, not real-provider uptime."
+    },
+    {
+      "rank": 8,
+      "id": "packaged-deployment-smoke",
+      "owner": "project-agent-script",
+      "target": "Package a clean-checkout Battle frontend/backend smoke that does not rely on existing developer processes.",
+      "commands": [
+        "clean checkout or clean worktree package command",
+        "declared frontend/backend launch command",
+        "backend health",
+        "fresh bounded campaign",
+        "$test-interactions",
+        "browser screenshot capture"
+      ],
+      "acceptance_check": "Battle frontend loads through the declared route; backend health identifies Battle; fresh campaign, interaction suite, and screenshot capture pass without relying on a pre-existing developer server.",
+      "proof_boundary": "Proves reproducible local packaging only; not always-on production service or SLO."
     }
   ],
   "human_questions": [
