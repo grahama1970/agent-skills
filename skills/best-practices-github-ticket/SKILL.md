@@ -164,6 +164,33 @@ If issue metadata is contradictory, record the conflict and choose the narrowest
 route that can verify the reported failure. Escalate to `needs-human` only when
 repository evidence cannot resolve the conflict.
 
+## Orientation For A Cron-Dispatched Agent
+
+`project-watchdog` forwards the issue body to a repair agent that has no prior
+session, no memory of the project, and no knowledge of which skills exist. The
+body is the only context it gets, so every agent-routable ticket carries a fixed
+orientation block naming how to acquire context fast.
+
+The order is not arbitrary — `/memory`'s own contract is "query memory BEFORE
+scanning any codebase":
+
+1. `skills/memory/run.sh recall` — prior work on this exact problem
+2. `skills/project-state/run.sh --json` — readiness, drift, known gaps
+3. `PROJECT_KNOWLEDGE.md` in the target — open blockers and decisions the code
+   does not record
+
+Then the narrowest tool for the actual question: `/treesitter` to locate code,
+`/github-search` for prior art, `/dogpile` or `/brave-search` for external
+claims, `debugger` for a failing test, `/test` to run suites.
+
+Two rules the block states explicitly, because a cold agent violates both by
+default: do not begin by grepping the repository, and a tool's success response
+is not proof — read back the artifact it claims to have produced.
+
+This is the FIXED part. The variable per-ticket context is `--context-file`,
+`--required-skill`, and `--depends-on`. Human-first ticket types do not carry
+the orientation block; nothing dispatches them.
+
 ## Concurrency Lanes
 
 Every agent-routable ticket carries a `lane:<id>` label. The lane is a

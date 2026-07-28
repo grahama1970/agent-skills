@@ -227,5 +227,41 @@ if "$SCRIPT_DIR/run.sh" block 1 --reason "$TMPDIR/reason.md" \
 fi
 echo "PASS"
 
+# --- orientation + lanes ------------------------------------------------------ #
+
+echo -n "Check 19 - agent-routable tickets carry the orientation block: "
+OUT="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e --repro r \
+  --proof "./run.sh sanity-live.sh --allow-live; read back receipt.json" \
+  --route backend_python_or_skill_runtime 2>&1 || true)"
+grep -q "Orientation for a stateless agent" <<<"$OUT" || { echo "FAIL"; exit 1; }
+grep -q "skills/memory/run.sh recall" <<<"$OUT" || { echo "FAIL missing memory-first step"; exit 1; }
+grep -q "skills/project-state/run.sh" <<<"$OUT" || { echo "FAIL missing project-state"; exit 1; }
+echo "PASS"
+
+echo -n "Check 20 - human-first tickets do not carry it: "
+OUT="$("$SCRIPT_DIR/run.sh" question "p" --target skills/x --question q --answer-format prose \
+  --source-scope src --proof "./run.sh sanity-live.sh --allow-live" \
+  --route backend_python_or_skill_runtime 2>&1 || true)"
+grep -q "Orientation for a stateless agent" <<<"$OUT" && { echo "FAIL question got orientation"; exit 1; }
+echo "PASS"
+
+echo -n "Check 21 - every command the orientation names exists: "
+for cmd in memory project-state treesitter github-search dogpile brave-search test; do
+  [[ -f "$SCRIPT_DIR/../$cmd/run.sh" ]] || { echo "FAIL $cmd/run.sh missing"; exit 1; }
+done
+echo "PASS"
+
+echo -n "Check 22 - lane is derived from route and overridable: "
+FE="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e --repro r \
+  --proof "./run.sh sanity-live.sh --allow-live" --route frontend_code 2>&1 | grep '^Labels' || true)"
+OV="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e --repro r \
+  --proof "./run.sh sanity-live.sh --allow-live" --route backend_python_or_skill_runtime --lane data 2>&1 | grep '^Labels' || true)"
+BAD="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e --repro r \
+  --proof "./run.sh sanity-live.sh --allow-live" --route backend_python_or_skill_runtime --lane nope 2>&1 || true)"
+grep -q 'lane:fe' <<<"$FE" || { echo "FAIL frontend_code did not derive lane:fe"; exit 1; }
+grep -q 'lane:data' <<<"$OV" || { echo "FAIL --lane override ignored"; exit 1; }
+grep -q "unknown --lane" <<<"$BAD" || { echo "FAIL bad lane not refused"; exit 1; }
+echo "PASS"
+
 echo ""
 echo "Result: PASS"

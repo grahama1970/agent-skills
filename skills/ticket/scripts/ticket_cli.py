@@ -105,6 +105,39 @@ AGENT_WORK_LABEL = "agent-work"
 #: parallel, so the lane is a scheduling fact, not documentation.
 VALID_LANES = ("fe", "be", "data", "docs", "ops", "sec")
 
+#: Emitted into every agent-routable ticket body. project-watchdog forwards the
+#: body to a cron-dispatched agent that has no prior session, no memory of this
+#: project, and no idea which skills exist. Without this it starts by grepping.
+#:
+#: Every command below is verified present in agent-skills. Order matters:
+#: /memory's own contract is "query memory BEFORE scanning any codebase".
+ORIENTATION_BLOCK = """You are running from cron with no prior context. Build context in this order
+before changing anything. Do not start by grepping the repository.
+
+1. **Recall first.** `skills/memory/run.sh recall --q "<target or symptom>"`
+   Prior work on this exact problem may already exist. This is cheapest and
+   most often decisive.
+2. **Project state.** `skills/project-state/run.sh --json`
+   Readiness, infrastructure health, doc-code drift, and known gaps in one
+   command.
+3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or
+   repo when present. It records open blockers and decisions that the code does
+   not.
+
+Then use the narrowest tool for the actual question:
+
+| Need | Use |
+| --- | --- |
+| Locate code by symbol or structure | `skills/treesitter/run.sh` |
+| Find prior art in other repos | `skills/github-search/run.sh` |
+| External research on a load-bearing claim | `skills/dogpile/run.sh "<claim>"`, else `skills/brave-search/run.sh web "<query>"` |
+| Diagnose a failing test or traceback | load the `debugger` skill |
+| Run the target's suites | `skills/test/run.sh` |
+
+Load the skill's own `SKILL.md` before using it; do not infer its interface.
+Record what you actually ran. A tool's success response is not proof — read
+back the artifact it claims to have produced."""
+
 #: Every route maps to exactly one lane, so existing tickets get a lane without
 #: the filer having to think about it. `--lane` overrides when the route is a
 #: poor fit.
@@ -332,6 +365,13 @@ def _body(
     # files and skills here beats making it rediscover them on every tick, and
     # only the VARIABLE part goes in the body: universal execution policy stays
     # in best-practices-github-ticket rather than being copied into every issue.
+    # Always-on orientation. The per-ticket blocks below are the VARIABLE
+    # context; this is the fixed part a cold agent needs to find anything at
+    # all. It is a pointer, not policy: a cron-dispatched agent receives only
+    # this issue body, so it cannot be told to "read best-practices-*" unless
+    # the body says so and names how.
+    if _is_agent_routable(ticket_type, route):
+        lines.append(_section("Orientation for a stateless agent", ORIENTATION_BLOCK))
     if context_files:
         lines.append(
             _section(
