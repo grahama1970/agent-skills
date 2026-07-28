@@ -258,8 +258,17 @@ def _attest_completion(
         cid = str(candidate.get("project_id"))
         if state.get("projects", {}).get(cid, {}).get("state") != "active":
             continue
-        last = float(attested.get(cid) or 0)
-        if now - last < config.COMPLETION_ATTEST_INTERVAL_SECONDS:
+        record = attested.get(cid)
+        if isinstance(record, dict):
+            last, answered = float(record.get("at") or 0), bool(record.get("answered"))
+        else:  # pre-existing state wrote a bare timestamp
+            last, answered = float(record or 0), True
+        window = (
+            config.COMPLETION_ATTEST_INTERVAL_SECONDS
+            if answered
+            else config.COMPLETION_ATTEST_RETRY_SECONDS
+        )
+        if now - last < window:
             continue
         try:
             recent = registry.list_recently_closed(run_id, candidate)
@@ -268,12 +277,19 @@ def _attest_completion(
             continue
         if not recent:
             continue
-        attested[cid] = now
-        write_json(config.state_path(), state)
         receipt["completion_attestation"] = {"project_id": cid, "closed_seen": len(recent)}
-        return handle_completion_attestation(
+        result = handle_completion_attestation(
             run_id, receipt_dir, candidate, recent, apply=apply
         )
+        # Stamp AFTER the run, recording whether it actually answered. Stamping
+        # first meant a run that died mid-flight lost its verdict AND blocked
+        # the retry for a full day: observed when a webgpt attestation reached
+        # PASS on its handler node, and the wrapper was killed before it could
+        # reopen the seven tickets it had named.
+        if apply:
+            attested[cid] = {"at": now, "answered": bool(result.get("verdict"))}
+            write_json(config.state_path(), state)
+        return result
     return None
 
 

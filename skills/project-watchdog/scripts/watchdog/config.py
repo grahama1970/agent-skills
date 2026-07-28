@@ -323,6 +323,14 @@ COMPLETION_ATTEST_INTERVAL_SECONDS = _env_seconds(
 )
 
 
+#: Retry window after an attestation that produced no verdict. Shorter than the
+#: success interval: a crashed or unanswered run has told us nothing, so waiting
+#: a full day before asking again wastes a day.
+COMPLETION_ATTEST_RETRY_SECONDS = _env_seconds(
+    "PROJECT_WATCHDOG_COMPLETION_ATTEST_RETRY_SECONDS", 3_600
+)
+
+
 def completion_attestor(project: dict[str, Any] | None = None) -> str:
     """Handler that attests a project is genuinely finished."""
     configured = str((project or {}).get("completion_attestor") or "").strip()

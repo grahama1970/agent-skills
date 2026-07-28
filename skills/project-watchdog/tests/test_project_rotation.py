@@ -463,3 +463,61 @@ def test_an_answered_audit_is_not_held_back(tmp_path, monkeypatch):
     )
     commands._audit_one_closure("r1", tmp_path, state, {}, apply=True)
     assert state["closure_audit_attempts"] == {}, "an answered audit leaves no cooldown"
+
+
+# --- an attestation that never answered must be retried sooner ---------------
+
+
+def _attest_state(tmp_path, monkeypatch, result, state):
+    from watchdog import commands, config  # noqa: PLC0415
+
+    project = {"project_id": "p", "repo": "o/r", "worktree": "/tmp/x"}
+    monkeypatch.setattr(config, "state_path", lambda: tmp_path / "state.json")
+    monkeypatch.setattr(commands, "load_json", lambda p: {"projects": [project]})
+    monkeypatch.setattr(commands.registry, "rotation_order", lambda p, s, **k: [project])
+    monkeypatch.setattr(
+        commands.registry, "list_recently_closed",
+        lambda r, p: [{"number": 1, "title": "t", "stateReason": "COMPLETED"}],
+    )
+    monkeypatch.setattr(commands, "handle_completion_attestation", lambda *a, **k: result)
+    return commands._attest_completion("r", tmp_path, state, {}, apply=True)
+
+
+def test_an_attestation_that_died_is_retried_within_the_hour(tmp_path, monkeypatch):
+    """A webgpt attestation reached PASS on its handler node and the wrapper was
+    killed before it could reopen the seven tickets it had named. Stamping the
+    rate limit before the run lost the verdict AND blocked retry for a day."""
+    from watchdog import config  # noqa: PLC0415
+
+    state = {"projects": {"p": {"state": "active"}}}
+    _attest_state(tmp_path, monkeypatch, {"verdict": None, "ok": False}, state)
+
+    record = state["completion_attested_at"]["p"]
+    assert record["answered"] is False
+    # Just under the retry window it is still held back; just over, it runs again.
+    state["completion_attested_at"]["p"]["at"] = (
+        record["at"] - config.COMPLETION_ATTEST_RETRY_SECONDS + 60
+    )
+    assert _attest_state(tmp_path, monkeypatch, {"verdict": None}, state) is None
+    state["completion_attested_at"]["p"]["at"] = (
+        record["at"] - config.COMPLETION_ATTEST_RETRY_SECONDS - 60
+    )
+    assert _attest_state(tmp_path, monkeypatch, {"verdict": "PASS"}, state) is not None
+
+
+def test_an_answered_attestation_holds_for_the_full_interval(tmp_path, monkeypatch):
+    from watchdog import config  # noqa: PLC0415
+
+    state = {"projects": {"p": {"state": "active"}}}
+    _attest_state(tmp_path, monkeypatch, {"verdict": "PASS", "ok": True}, state)
+    record = state["completion_attested_at"]["p"]
+    assert record["answered"] is True
+
+    record["at"] = record["at"] - config.COMPLETION_ATTEST_RETRY_SECONDS - 60
+    assert _attest_state(tmp_path, monkeypatch, {"verdict": "PASS"}, state) is None, \
+        "an answered attestation is not re-asked an hour later"
+
+
+def test_a_bare_timestamp_from_older_state_still_works(tmp_path, monkeypatch):
+    state = {"projects": {"p": {"state": "active"}}, "completion_attested_at": {"p": 0.0}}
+    assert _attest_state(tmp_path, monkeypatch, {"verdict": "PASS"}, state) is not None
