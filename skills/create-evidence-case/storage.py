@@ -136,6 +136,34 @@ def _run_memory_recall(q: str, scope: str = "", tags: list[str] | None = None) -
         return {"results": [], "error": str(exc)}
 
 
+def _direct_case_lookup(case_id: str, scope: str = "evidence_cases") -> dict[str, Any] | None:
+    """Exact evidence-case lookup via the daemon /query (AQL) endpoint.
+
+    Matches either the claim identifier (``claim.id``) or the storage key
+    (``_key``), so a case is retrievable regardless of which identifier the
+    caller holds. Deterministic and immediate — unlike semantic recall it finds
+    a case the moment it is upserted. Returns None on any miss or daemon error
+    (callers fall back to semantic recall).
+    """
+    try:
+        client = _get_memory_http()
+        resp = client.post("/query", json={
+            "aql": (
+                f"FOR d IN {scope} "
+                "FILTER d.claim.id == @id OR d._key == @id "
+                "LIMIT 1 RETURN d"
+            ),
+            "bind_vars": {"id": case_id},
+        })
+        if resp.status_code != 200:
+            return None
+        documents = resp.json().get("documents", [])
+        return documents[0] if documents else None
+    except Exception as exc:
+        logger.debug("direct case lookup failed: {}", exc)
+        return None
+
+
 class EvidenceCaseStore:
     """CRUD for evidence case trees via /memory."""
 
@@ -202,7 +230,20 @@ class EvidenceCaseStore:
 
     @staticmethod
     def recall_case(case_id: str, scope: str = "evidence_cases") -> dict | None:
-        """Recall a full evidence case by claim ID."""
+        """Recall a full evidence case by claim ID (or storage _key).
+
+        A stored case is keyed by ``_key = sha256(control_ids + question)`` and
+        carries the claim identifier at ``claim.id`` (there is no top-level
+        ``id`` field). Semantic recall alone cannot retrieve a just-upserted
+        case (embedding-index lag) and matched the wrong field, so a persisted
+        case was never returned. Do a deterministic exact lookup first via the
+        daemon ``/query`` (AQL) endpoint, matching either the claim id or the
+        storage key, then fall back to semantic recall only if that misses.
+        """
+        direct = _direct_case_lookup(case_id, scope=scope)
+        if direct is not None:
+            return direct
+
         resp = _run_memory_recall(
             q=f"evidence_case claim id:{case_id}",
             scope=scope,
@@ -214,7 +255,11 @@ class EvidenceCaseStore:
             text = item.get("solution", item.get("problem", item.get("text", item.get("content", ""))))
             try:
                 parsed = json.loads(text) if isinstance(text, str) else text
-                if isinstance(parsed, dict) and parsed.get("id") == case_id:
+                if isinstance(parsed, dict) and (
+                    parsed.get("id") == case_id
+                    or (parsed.get("claim") or {}).get("id") == case_id
+                    or parsed.get("_key") == case_id
+                ):
                     return parsed
             except (json.JSONDecodeError, TypeError):
                 continue
