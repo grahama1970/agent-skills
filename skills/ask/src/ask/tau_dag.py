@@ -214,6 +214,7 @@ class TauDagCompileInput:
     scillm_api_key: str = DEFAULT_SCILLM_API_KEY
     tau_project_root: Path = DEFAULT_TAU_PROJECT_ROOT
     browser_lock_timeout: int = 0
+    attachments: tuple[str, ...] = ()
 
 
 def infer_compile_input(
@@ -239,6 +240,7 @@ def infer_compile_input(
     scillm_api_key: str = DEFAULT_SCILLM_API_KEY,
     tau_project_root: Path = DEFAULT_TAU_PROJECT_ROOT,
     browser_lock_timeout: int = 0,
+    attachments: list[str] | None = None,
 ) -> TauDagCompileInput:
     """Merge explicit CLI fields with conservative request-text inference."""
 
@@ -300,6 +302,7 @@ def infer_compile_input(
         scillm_api_key=scillm_api_key or default_scillm_api_key(),
         tau_project_root=tau_project_root,
         browser_lock_timeout=max(0, int(browser_lock_timeout or 0)),
+        attachments=tuple(str(item) for item in (attachments or [])),
     )
 
 
@@ -1888,6 +1891,9 @@ def _write_roundtable_command_spec(
         lock_timeout_s = _browser_lock_timeout_seconds(input)
         if lock_timeout_s:
             command.extend(["--browser-lock-timeout", str(lock_timeout_s)])
+        # Local evidence a browser seat must actually see (agent-skills#1062).
+        for attachment in getattr(input, "attachments", ()):
+            command.extend(["--attach-file", str(attachment)])
     provider_hint = str(handler_policy.get("provider_hint") or "")
     if provider_hint:
         command.extend(["--provider-hint", provider_hint])

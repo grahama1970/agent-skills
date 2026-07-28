@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import pytest
 import sys
 from pathlib import Path
 
@@ -961,3 +962,35 @@ def test_dependency_install_packet_points_at_environment_repair(tmp_path: Path) 
     details = packet["evidence"]["environment_dependency"]
     assert details["package"] == "httpx-0.28.1-py3-none-any.whl"
     assert details["target_directory"] == "/usr/local/lib/python3.12/dist-packages/httpx"
+
+
+# agent-skills#1062: tau-dag exposed no way to hand a browser seat local
+# evidence, so a handler asked to review a rendered page answered from prose.
+def test_requested_attachments_resolve_for_a_browser_handler(tmp_path: Path) -> None:
+    evidence = tmp_path / "page.png"
+    evidence.write_bytes(b"\x89PNG\r\n\x1a\n")
+
+    resolved = tau_roundtable_worker.resolve_requested_attachments([str(evidence)], handler="webgpt")
+
+    assert resolved == [str(evidence.resolve())]
+
+
+def test_missing_attachment_fails_closed_instead_of_answering_from_prose(tmp_path: Path) -> None:
+    with pytest.raises(RuntimeError) as excinfo:
+        tau_roundtable_worker.resolve_requested_attachments([str(tmp_path / "absent.png")], handler="webgpt")
+
+    assert "browser_attachment_missing" in str(excinfo.value)
+
+
+def test_attachment_on_a_non_attaching_handler_fails_closed(tmp_path: Path) -> None:
+    evidence = tmp_path / "page.png"
+    evidence.write_bytes(b"\x89PNG\r\n\x1a\n")
+
+    with pytest.raises(RuntimeError) as excinfo:
+        tau_roundtable_worker.resolve_requested_attachments([str(evidence)], handler="gpt-5.5")
+
+    assert "browser_attachment_unsupported" in str(excinfo.value)
+
+
+def test_no_attachments_requested_is_not_an_error() -> None:
+    assert tau_roundtable_worker.resolve_requested_attachments([], handler="webgpt") == []

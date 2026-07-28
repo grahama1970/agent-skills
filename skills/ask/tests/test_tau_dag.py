@@ -3574,3 +3574,32 @@ def test_browser_lock_timeout_default_is_kept_without_an_override(tmp_path: Path
     assert derived_timeout != ""
     assert derived_timeout != "0"
     assert _handler_lock_timeout(zeroed, "handler-webgpt") == derived_timeout
+
+
+def test_attachments_reach_every_browser_handler_dispatch_command(tmp_path: Path) -> None:
+    evidence = tmp_path / "rendered-page.png"
+    evidence.write_bytes(b"\x89PNG\r\n\x1a\n")
+    request = infer_compile_input(
+        "Review the attached rendered page.",
+        repo="local/agent-skills",
+        target="attachment-forwarding",
+        immutable_goal="The browser seat receives the attached evidence.",
+        handlers=["webgpt", "webclaude"],
+        topology="concurrent",
+        output_root=tmp_path / "runs",
+        attachments=[str(evidence)],
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    for node in ("handler-webgpt", "handler-webclaude"):
+        command = json.loads(
+            Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
+        )["command"]
+        assert "--attach-file" in command
+        assert command[command.index("--attach-file") + 1] == str(evidence)
+    join_command = json.loads(
+        Path(bundle["command_spec_root"], "join", "tau-dispatch-command.json").read_text(encoding="utf-8")
+    )["command"]
+    assert "--attach-file" not in join_command
