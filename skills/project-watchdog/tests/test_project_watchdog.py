@@ -999,3 +999,30 @@ def test_repeated_audit_failures_stop_reopening_and_ask_for_a_person(tmp_path) -
     assert calls["reopened"] == [], "must stop reopening once the budget is spent"
     assert any(e.get("add") == ["needs-human"] for e in calls["edits"])
     assert result["status"] == "NEEDS_ATTENTION"
+
+
+def test_the_reviewer_excerpt_is_clean_text_not_the_provider_envelope(tmp_path) -> None:
+    """`response.raw.md` is the whole chat-completion envelope.
+
+    Globbing `response*.md` matched it alongside `response.md`, so the excerpt
+    posted to GitHub was raw JSON with the reasoning buried inside it.
+    """
+    node = tmp_path / "run" / "node-artifacts" / "handler-x"
+    node.mkdir(parents=True)
+    (node / "response.md").write_text("## Position\n\nVERDICT: FAIL\n\nThe proof never ran.\n")
+    (node / "response.raw.md").write_text(
+        '{"choices":[{"message":{"content":"VERDICT: FAIL"}}],"_hidden_params":{"x":1}}'
+    )
+
+    text = handlers._read_ask_response(tmp_path)
+
+    assert "_hidden_params" not in text
+    assert "The proof never ran." in text
+    assert handlers._extract_verdict(text) == "FAIL"
+
+
+def test_a_lane_with_only_a_raw_response_still_yields_a_verdict(tmp_path) -> None:
+    node = tmp_path / "run" / "node-artifacts" / "handler-y"
+    node.mkdir(parents=True)
+    (node / "response.raw.md").write_text('{"content":"VERDICT: PASS"}')
+    assert handlers._extract_verdict(handlers._read_ask_response(tmp_path)) == "PASS"

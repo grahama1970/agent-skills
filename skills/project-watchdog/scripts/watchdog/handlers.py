@@ -922,9 +922,20 @@ def _extract_verdict(text: str) -> str | None:
 
 
 def _read_ask_response(run_root: Path) -> str:
-    """Concatenate handler responses from an $ask run directory."""
+    """The handler's cleaned answer from an $ask run directory.
+
+    `response.md` is the cleaned text; `response.raw.md` is the provider's whole
+    chat-completion envelope. Globbing `response*.md` matched both, so the
+    reviewer excerpt posted to GitHub was raw JSON with the reasoning buried in
+    it. Only fall back to raw when a lane produced no cleaned response at all.
+    """
     chunks: list[str] = []
-    for path in sorted(run_root.glob("*/node-artifacts/*/response*.md")):
+    for node_dir in sorted(run_root.glob("*/node-artifacts/*")):
+        clean = node_dir / "response.md"
+        raw = node_dir / "response.raw.md"
+        path = clean if clean.is_file() else raw
+        if not path.is_file():
+            continue
         try:
             chunks.append(path.read_text(encoding="utf-8"))
         except OSError as exc:
@@ -1069,7 +1080,9 @@ def handle_closure_audit(
 
     # FAIL or NEEDS_ATTENTION: the closure did not survive review.
     exhausted = reopens >= config.CLOSURE_AUDIT_MAX_REOPENS
-    excerpt = response.strip()[-1500:]
+    # Lead of the reviewer's reasoning, not the tail: taking the last N characters
+    # started the excerpt mid-word and cut off the argument that justified it.
+    excerpt = response.strip()[:2000]
     outcome = "reopen_budget_exhausted" if exhausted else "REOPENED"
     result["commands"].append(
         github.issue_comment(
