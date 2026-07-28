@@ -1,0 +1,13 @@
+[project]
+name = "cursor-agents-skill"
+version = "0.1.0"
+description = "Cursor Cloud Agents API wrapper for agent-skills"
+requires-python = ">=3.11"
+dependencies = [
+  "python-dotenv",
+  "requests",
+  "typer",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
