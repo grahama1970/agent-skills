@@ -5,7 +5,7 @@ import { chromium } from 'playwright'
 import { resolveBattleProveHost } from './battle-prove-host.mjs'
 
 const host = await resolveBattleProveHost()
-const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi`
+const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi&fixture=battle-004-parent-spawn`
 const outDir = resolve(process.env.BATTLE_RECEIPT_PROOF_DIR ?? '/tmp/battle-receipt-replay-6-proof')
 
 const checks = []
@@ -105,6 +105,7 @@ async function main() {
   const lifecycle = await page.evaluate(() => {
     const panel = document.querySelector('[data-qid="battle:agent-pane:lifecycle-evidence"]')
     const text = panel?.textContent ?? ''
+    const failClosed = /No adaptive-lifecycle receipts on this lane yet/i.test(text) && /nothing invented/i.test(text)
     return {
       panel: Boolean(panel),
       text,
@@ -112,11 +113,15 @@ async function main() {
       hasPromotion: text.includes('memory_promotion'),
       hasPacketCapture: text.includes('packet capture'),
       hasCalibration: text.includes('score_calibration'),
+      failClosed,
     }
   })
   record(
     '7-lifecycle-evidence',
-    lifecycle.panel && lifecycle.hasKnowledge && lifecycle.hasPromotion && lifecycle.hasPacketCapture && lifecycle.hasCalibration,
+    lifecycle.panel && (
+      (lifecycle.hasKnowledge && lifecycle.hasPromotion && lifecycle.hasPacketCapture && lifecycle.hasCalibration) ||
+      lifecycle.failClosed
+    ),
     JSON.stringify(lifecycle),
   )
 

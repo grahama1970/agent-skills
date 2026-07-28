@@ -1,0 +1,229 @@
+{
+  "schema": "battle.adaptive_lineage_panel_source_proof.v1",
+  "pass": true,
+  "mocked": false,
+  "live": true,
+  "source_commit": "85af50be85ed6cd7960d3e5114fae3dfbf0ef18b",
+  "host": "http://127.0.0.1:3005",
+  "checks": [
+    {
+      "id": "v13-race-panel-source-match",
+      "pass": true,
+      "detail": {
+        "panel": {
+          "mode": "canonical-dual-team",
+          "battleId": "battle-004",
+          "runId": "battle-004-adaptive-red-blue-lineage-v13",
+          "proofId": "battle-004-adaptive-red-blue-lineage-v13",
+          "fixtureId": "battle-004-adaptive-lineage-v13",
+          "sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+          "provesLive": "false"
+        },
+        "race": {
+          "battleId": "battle-004",
+          "runId": "battle-004-adaptive-red-blue-lineage-v13",
+          "proofId": "battle-004-adaptive-red-blue-lineage-v13",
+          "fixtureId": "battle-004-adaptive-lineage-v13",
+          "sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba"
+        }
+      }
+    },
+    {
+      "id": "v13-source-hash-matches-public-fixture",
+      "pass": true,
+      "detail": {
+        "panel": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+        "publicFixture": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba"
+      }
+    },
+    {
+      "id": "v13-canonical-dual-team-mechanics",
+      "pass": true,
+      "detail": {
+        "mode": "canonical-dual-team",
+        "nodes": [
+          "blue-g1",
+          "blue-g2",
+          "red-g1",
+          "red-g2"
+        ]
+      }
+    },
+    {
+      "id": "v13-no-static-live-fixture-leak",
+      "pass": true,
+      "detail": {
+        "text": "RECEIPT SOURCE",
+        "dataSource": "battle-004-adaptive-lineage-v13",
+        "provesLive": "false"
+      }
+    },
+    {
+      "id": "v14-race-panel-source-match",
+      "pass": true,
+      "detail": {
+        "panel": {
+          "mode": "proof-unavailable",
+          "battleId": "battle-004",
+          "runId": "battle-004-adaptive-memory-v14-r6",
+          "proofId": "battle-004-adaptive-memory-v14",
+          "fixtureId": "battle-004-adaptive-memory-v14",
+          "sha256": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524",
+          "provesLive": "false"
+        },
+        "race": {
+          "battleId": "battle-004",
+          "runId": "battle-004-adaptive-memory-v14-r6",
+          "proofId": "battle-004-adaptive-memory-v14",
+          "fixtureId": "battle-004-adaptive-memory-v14",
+          "sha256": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524"
+        }
+      }
+    },
+    {
+      "id": "v14-source-hash-matches-public-fixture",
+      "pass": true,
+      "detail": {
+        "panel": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524",
+        "publicFixture": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524"
+      }
+    },
+    {
+      "id": "v14-switches-away-from-v13-source",
+      "pass": true,
+      "detail": {
+        "v13": {
+          "mode": "canonical-dual-team",
+          "battleId": "battle-004",
+          "runId": "battle-004-adaptive-red-blue-lineage-v13",
+          "proofId": "battle-004-adaptive-red-blue-lineage-v13",
+          "fixtureId": "battle-004-adaptive-lineage-v13",
+          "sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+          "provesLive": "false"
+        },
+        "v14": {
+          "mode": "proof-unavailable",
+          "battleId": "battle-004",
+          "runId": "battle-004-adaptive-memory-v14-r6",
+          "proofId": "battle-004-adaptive-memory-v14",
+          "fixtureId": "battle-004-adaptive-memory-v14",
+          "sha256": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524",
+          "provesLive": "false"
+        }
+      }
+    },
+    {
+      "id": "v14-fails-closed-with-visible-unavailable-state",
+      "pass": true,
+      "detail": {
+        "mode": "proof-unavailable",
+        "reason": "Loaded adaptive fixture does not emit canonical dual-team mechanics_trees."
+      }
+    },
+    {
+      "id": "v14-no-static-live-fixture-leak",
+      "pass": true,
+      "detail": {
+        "text": "NO MECHANICS SOURCE",
+        "dataSource": "battle-004-adaptive-memory-v14",
+        "provesLive": "false"
+      }
+    },
+    {
+      "id": "no-browser-errors",
+      "pass": true,
+      "detail": []
+    }
+  ],
+  "failed": [],
+  "states": {
+    "v13": {
+      "panel": {
+        "mode": "canonical-dual-team",
+        "battleId": "battle-004",
+        "runId": "battle-004-adaptive-red-blue-lineage-v13",
+        "proofId": "battle-004-adaptive-red-blue-lineage-v13",
+        "fixtureId": "battle-004-adaptive-lineage-v13",
+        "sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+        "provesLive": "false"
+      },
+      "race": {
+        "battleId": "battle-004",
+        "runId": "battle-004-adaptive-red-blue-lineage-v13",
+        "proofId": "battle-004-adaptive-red-blue-lineage-v13",
+        "fixtureId": "battle-004-adaptive-lineage-v13",
+        "sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba"
+      },
+      "badge": {
+        "text": "RECEIPT SOURCE",
+        "dataSource": "battle-004-adaptive-lineage-v13",
+        "provesLive": "false"
+      },
+      "canonicalNodes": [
+        "blue-g1",
+        "blue-g2",
+        "red-g1",
+        "red-g2"
+      ],
+      "unavailableReason": null,
+      "bodyHasStaticLiveFixtureText": false,
+      "bodyHasLiveBadge": false,
+      "screenshot": "screenshots/01-v13-source-bound-panel.png"
+    },
+    "v14": {
+      "panel": {
+        "mode": "proof-unavailable",
+        "battleId": "battle-004",
+        "runId": "battle-004-adaptive-memory-v14-r6",
+        "proofId": "battle-004-adaptive-memory-v14",
+        "fixtureId": "battle-004-adaptive-memory-v14",
+        "sha256": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524",
+        "provesLive": "false"
+      },
+      "race": {
+        "battleId": "battle-004",
+        "runId": "battle-004-adaptive-memory-v14-r6",
+        "proofId": "battle-004-adaptive-memory-v14",
+        "fixtureId": "battle-004-adaptive-memory-v14",
+        "sha256": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524"
+      },
+      "badge": {
+        "text": "NO MECHANICS SOURCE",
+        "dataSource": "battle-004-adaptive-memory-v14",
+        "provesLive": "false"
+      },
+      "canonicalNodes": [],
+      "unavailableReason": "Loaded adaptive fixture does not emit canonical dual-team mechanics_trees.",
+      "bodyHasStaticLiveFixtureText": false,
+      "bodyHasLiveBadge": false,
+      "screenshot": "screenshots/02-v14-proof-unavailable-panel.png"
+    }
+  },
+  "source_artifacts": [
+    {
+      "id": "battle-004-adaptive-lineage-v13:public_fixture",
+      "path": "skills/battle/spectator/public/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",
+      "sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+      "bytes": 41270
+    },
+    {
+      "id": "battle-004-adaptive-memory-v14:public_fixture",
+      "path": "skills/battle/spectator/public/battle-fixtures/battle-004-adaptive-memory-v14/battle.normalized_ux_fixture.json",
+      "sha256": "0cc4a9c0e11a41bea751fa2b90876fc6256c718816855807080893c7fece3524",
+      "bytes": 26582
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-v13-source-bound-panel.png",
+    "screenshots/02-v14-proof-unavailable-panel.png"
+  ],
+  "claims": {
+    "proves": [
+      "The receipt-route adaptive mechanics panel is derived from the currently loaded fixture source metadata.",
+      "V13 exposes canonical dual-team mechanics from its public fixture and V14 fails closed without retaining V13 or adaptive-lineage-live.json data."
+    ],
+    "does_not_prove": [
+      "Live execution, Memory service correctness, or backend scoring changes."
+    ]
+  }
+}

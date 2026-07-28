@@ -1,0 +1,74 @@
+{
+  "requests": [
+    {
+      "url": "http://127.0.0.1:3005/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/battle-sprite-assets.manifest.json",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/crimson_chainsaw_demon.json?v=4",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/slug_demon.json?v=4",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/battle-race-atlas.png.json",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/battle-race-atlas.png",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/crimson_chainsaw_demon.png?v=4",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/slug_demon.png?v=4",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/typhus.json?v=4",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/plague_nurgling.json?v=4",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/typhus.png?v=4",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-sprites/pixijs/plague_nurgling.png?v=4",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-audio/score/v1/motifs/typhus.ogg",
+      "resource_type": "fetch",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:3005/battle-audio/score/v1/motifs/plague_nurgling.ogg",
+      "resource_type": "fetch",
+      "method": "GET"
+    }
+  ]
+}

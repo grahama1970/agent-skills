@@ -1,8 +1,12 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { buildAdaptiveLineageViewModel } from "../lib/battle-adaptive-lineage";
+import { adaptiveLineageToRaceFixture } from "../lib/battle-adaptive-lineage-view-model";
+import type { BattleNormalizedAdaptiveLineageFixtureV1 } from "../lib/battle-adaptive-lineage-types";
 import type { BattleAdaptiveLineageMechanicsFixtureV1 } from "../lib/battle-types";
 import { BattleLineageComparisonPanel } from "./BattleLineageComparisonPanel";
 import recordedFixtureJson from "./__fixtures__/adaptive-lineage-recorded.json";
@@ -10,6 +14,11 @@ import liveFixtureJson from "./__fixtures__/adaptive-lineage-live.json";
 
 const recordedFixture = recordedFixtureJson as BattleAdaptiveLineageMechanicsFixtureV1;
 const liveRunFixture = liveFixtureJson as BattleAdaptiveLineageMechanicsFixtureV1;
+
+async function loadAdaptivePublicFixture(id: string): Promise<BattleNormalizedAdaptiveLineageFixtureV1> {
+	const path = resolve(import.meta.dirname, "../../public/battle-fixtures", id, "battle.normalized_ux_fixture.json");
+	return JSON.parse(await readFile(path, "utf8")) as BattleNormalizedAdaptiveLineageFixtureV1;
+}
 
 describe("buildAdaptiveLineageViewModel", () => {
 	it("builds the G0 -> {G1-A, G1-B} -> G2 tree from receipt-sourced data", () => {
@@ -113,5 +122,36 @@ describe("BattleLineageComparisonPanel (adaptive)", () => {
 	it("does not render the live badge or claim proven-live for recorded data", () => {
 		expect(markup).not.toContain('data-proves-live="true"');
 		expect(markup).not.toContain(">LIVE<");
+	});
+
+	it("binds the receipt panel to the active adaptive fixture across V13 then V14", async () => {
+		const v13 = await loadAdaptivePublicFixture("battle-004-adaptive-lineage-v13");
+		const v14 = await loadAdaptivePublicFixture("battle-004-adaptive-memory-v14");
+		const v13Race = adaptiveLineageToRaceFixture(v13, { sourceSha256: "v13hash", sourceUrl: "/v13.json" });
+		const v14Race = adaptiveLineageToRaceFixture(v14, { sourceSha256: "v14hash", sourceUrl: "/v14.json" });
+
+		const v13Markup = renderToStaticMarkup(
+			createElement(BattleLineageComparisonPanel, { fixture: v13Race, sourceBound: true }),
+		);
+		const v14Markup = renderToStaticMarkup(
+			createElement(BattleLineageComparisonPanel, { fixture: v14Race, sourceBound: true }),
+		);
+
+		expect(v13Markup).toContain('data-mode="canonical-dual-team"');
+		expect(v13Markup).toContain('data-run-id="battle-004-adaptive-red-blue-lineage-v13"');
+		expect(v13Markup).toContain('data-source-fixture-sha256="v13hash"');
+		expect(v13Markup).toContain('data-qid="battle:adaptive-lineage:canonical-node:red-g1"');
+		expect(v13Markup).toContain('data-qid="battle:adaptive-lineage:canonical-node:blue-g2"');
+		expect(v13Markup).not.toContain("G1-A");
+		expect(v13Markup).not.toContain("failure_guided_crossover");
+		expect(v13Markup).not.toContain(">LIVE<");
+
+		expect(v14Markup).toContain('data-mode="proof-unavailable"');
+		expect(v14Markup).toContain('data-run-id="battle-004-adaptive-memory-v14-r6"');
+		expect(v14Markup).toContain('data-source-fixture-sha256="v14hash"');
+		expect(v14Markup).toContain("NO MECHANICS SOURCE");
+		expect(v14Markup).not.toContain('data-qid="battle:adaptive-lineage:canonical-node:red-g1"');
+		expect(v14Markup).not.toContain("G1-A");
+		expect(v14Markup).not.toContain(">LIVE<");
 	});
 });

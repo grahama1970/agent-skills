@@ -31,8 +31,6 @@ import { BattleMusicRoute } from "./music/BattleMusicRoute";
 import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
 import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
 import { BattleLineageComparisonPanel } from "./lineage/BattleLineageComparisonPanel";
-import adaptiveLineageLiveFixtureJson from "./lineage/__fixtures__/adaptive-lineage-live.json";
-import type { BattleAdaptiveLineageMechanicsFixtureV1 } from "./lib/battle-types";
 import { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
 import { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
 import { battleCampaignPresentationFromUrl, isBattleCampaignView } from "./lib/battle-campaign-registry";
@@ -52,6 +50,7 @@ import { hungerGamesDeathCard, type HungerGamesDeathCard } from "./lib/battle-hu
 import { RaceViewport } from "./RaceViewport";
 import { SpectatorRail } from "./SpectatorRail";
 import { AgentDetailPane } from "./AgentDetailPane";
+import { BattleComponentIsolationHarness, isBattleComponentIsolationTest } from "./BattleComponentIsolationHarness";
 import { Icons } from "./battle-icons";
 import type { BattleEvent, BattleNormalizedUxFixture } from "./lib/battle-types";
 import "./battle-race.css";
@@ -60,12 +59,24 @@ import "./battle-mockup-elements.css";
 type BattleFilter = "all" | "red" | "blue" | "useful" | "receipt";
 
 export function BattleSpectatorArena() {
-  if (isBattleMusicView()) return <BattleMusicRoute />;
-  if (isBattlePopulationView()) return <BattlePopulationRoute />;
-  if (isBattleRuntimeView()) return <BattleRuntimeRoute />;
-  if (isBattleCompileView()) return <BattleCompileRoute />;
-  if (isBattleSynthesisView()) return <BattleSynthesisRoute />;
-  if (isBattleProofCardView()) return <BattleProofCardRoute />;
+  const [routeKey, setRouteKey] = useState(() => (typeof window !== "undefined" ? window.location.hash : ""));
+  useEffect(() => {
+    const onHashChange = () => setRouteKey(window.location.hash);
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  return <BattleSpectatorArenaRoute key={routeKey} routeKey={routeKey} />;
+}
+
+function BattleSpectatorArenaRoute({ routeKey }: { routeKey: string }) {
+  if (isBattleComponentIsolationTest()) return <BattleComponentIsolationHarness />;
+  if (isBattleMusicView(routeKey)) return <BattleMusicRoute />;
+  if (isBattlePopulationView(routeKey)) return <BattlePopulationRoute />;
+  if (isBattleRuntimeView(routeKey)) return <BattleRuntimeRoute />;
+  if (isBattleCompileView(routeKey)) return <BattleCompileRoute />;
+  if (isBattleSynthesisView(routeKey)) return <BattleSynthesisRoute />;
+  if (isBattleProofCardView(routeKey)) return <BattleProofCardRoute />;
   const [routeEpoch, setRouteEpoch] = useState(0);
   useEffect(() => {
     const onHashChange = () => setRouteEpoch((value) => value + 1);
@@ -331,7 +342,8 @@ export function BattleSpectatorArena() {
       {receiptReplay ? (
         <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }} data-qid="battle:adaptive-lineage:panel">
           <BattleLineageComparisonPanel
-            adaptiveLineage={adaptiveLineageLiveFixtureJson as unknown as BattleAdaptiveLineageMechanicsFixtureV1}
+            fixture={typedReceiptFixture ?? undefined}
+            sourceBound
           />
         </div>
       ) : null}

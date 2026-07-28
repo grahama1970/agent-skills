@@ -145,7 +145,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
       <div className="flex min-w-0 items-start justify-end gap-2">
         <div className={cn("battle-live-events", deathAnnouncement && "has-death-announcement")}>
           <div className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
-            <span className="h-2 w-2 rounded-full bg-battle-red shadow-redGlow" /> LIVE EVENTS
+            <span className="h-2 w-2 rounded-full bg-battle-red shadow-redGlow" /> RECEIPT EVENTS
           </div>
           <BattleHungerGamesDeathAnnouncement card={deathAnnouncement} onDismiss={onDismissDeathAnnouncement ?? (() => undefined)} />
           {events.slice(-3).reverse().map((event, index) => (

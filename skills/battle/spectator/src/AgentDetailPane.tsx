@@ -115,6 +115,8 @@ function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof la
           type="button"
           className="rounded border border-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 hover:border-white/20 hover:text-slate-200"
           data-qid="battle:agent-pane:lifecycle-toggle"
+          data-qs-action="BATTLE_AGENT_PANE_LIFECYCLE_TOGGLE"
+          title={expanded ? "Hide lifecycle evidence" : "Show lifecycle evidence"}
           onClick={() => setExpanded((value) => !value)}
         >
           {expanded ? "Hide" : "Show"}

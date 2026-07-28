@@ -8,7 +8,7 @@ SPECTATOR_DIR="$BATTLE_DIR/spectator"
 HOST="${BATTLE_HOST:-http://127.0.0.1:3002}"
 export BATTLE_HOST="$HOST"
 export BATTLE_PIXI_URL="${BATTLE_PIXI_URL:-$HOST/#battle?engine=pixi}"
-export BATTLE_RECEIPT_URL="${BATTLE_RECEIPT_URL:-$HOST/#battle/receipt?engine=pixi}"
+export BATTLE_RECEIPT_URL="${BATTLE_RECEIPT_URL:-$HOST/#battle/receipt?engine=pixi&fixture=battle-004-parent-spawn}"
 
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-${BATTLE_STORAGE_ROOT:-/mnt/storage12tb/skills/battle}/.venv}"
 export PYTHONPATH="$BATTLE_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
@@ -93,5 +93,8 @@ echo "XX/XX PR8 live transport proof"
 
 echo "XX/XX V13 adaptive lineage Pixi proof"
 (cd "$SPECTATOR_DIR" && npm run prove:adaptive-lineage-v13)
+
+echo "XX/XX Adaptive lineage panel source-binding proof"
+(cd "$SPECTATOR_DIR" && npm run prove:adaptive-lineage-panel-source)
 
 echo "BATTLE_PROVE_SPECTATOR_PASS"

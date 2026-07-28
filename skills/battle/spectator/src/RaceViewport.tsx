@@ -471,6 +471,8 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
           <div
             className="playheadTrack"
             data-qid="battle:timeline:scrub"
+            data-qs-action="BATTLE_TIMELINE_SCRUB"
+            title="Scrub receipt-backed Battle timeline"
             onClick={onOverlayScrubPointer}
             onKeyDown={(event) => {
               if (event.key === "ArrowLeft") setPlayheadSeconds((value) => Math.max(0, value - 1));
@@ -585,7 +587,19 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     return <div className={shellClass}>{providerBody}</div>;
   }
 
-  return <Card className={shellClass}>{providerBody}</Card>;
+  return (
+    <Card
+      className={shellClass}
+      data-qid="battle:race:source"
+      data-battle-id={fixture.battle_id}
+      data-run-id={fixture.run_id ?? ""}
+      data-source-proof-id={fixture.source_proof_id ?? ""}
+      data-source-fixture-id={fixture.fixture_id ?? ""}
+      data-source-fixture-sha256={fixture.source_fixture_sha256 ?? ""}
+    >
+      {providerBody}
+    </Card>
+  );
 }
 
 function BattleTimelineCanvas({ contentWidth, children, designView = false }: { contentWidth: number; children: ReactNode; designView?: boolean }) {
