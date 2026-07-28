@@ -242,3 +242,66 @@ esac
     assert "go https://gemini.google.com/app --tab-id 837361258 --json" in invocations.read_text(
         encoding="utf-8"
     )
+
+
+def test_gemini_submit_truncates_trailing_content_after_the_sentinel(tmp_path: Path) -> None:
+    """agent-skills#1025: Gemini appends an echo after the marker.
+
+    The attributable answer sits before the sentinel, so the lane must truncate
+    there and keep the discarded tail as evidence, not fail the whole seat.
+    """
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    fake_run = tmp_path / "surf-run.sh"
+
+    request.write_text("Reply with exactly: gemini smoke\n", encoding="utf-8")
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  focus.state)
+    printf '{"focusedWindowId":1,"activeTabId":837361258}\\n'
+    ;;
+  gemini_tab)
+    printf 'gemini smoke<<<GEMINI_DONE:test>>>\\ntrailing echo the model appended\\n'
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "bash", str(GEMINI_SUBMIT),
+            "--input", str(request),
+            "--output", str(response),
+            "--meta-output", str(meta),
+            "--sentinel", "<<<GEMINI_DONE:test>>>",
+            "--tab-id", "837361258",
+            "--no-activate",
+            "--stable-polls", "0",
+            "--timeout", "5",
+        ],
+        cwd=tmp_path, env=env, text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    clean = response.read_text(encoding="utf-8")
+    assert clean.strip() == "gemini smoke"
+    assert "<<<GEMINI_DONE:test>>>" not in clean
+    assert "trailing echo" not in clean
+    trailing = response.with_name(response.name + ".trailing.txt")
+    assert trailing.is_file()
+    assert "trailing echo the model appended" in trailing.read_text(encoding="utf-8")
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "completed"
+    assert payload["proof_status"] == "response_proven"
