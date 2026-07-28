@@ -270,7 +270,16 @@ grep -q 'lane:data' <<<"$OV" || { echo "FAIL --lane override ignored"; exit 1; }
 grep -q "unknown --lane" <<<"$BAD" || { echo "FAIL bad lane not refused"; exit 1; }
 echo "PASS"
 
-echo -n "Check 23 - every ticket type builds a draft without crashing: "
+echo -n "Check 23 - only dispatchable tickets carry a lane: "
+Q="$("$SCRIPT_DIR/run.sh" question "p" --target skills/x --question q --answer-format prose \
+  --source-scope src --proof "$SCRIPT_DIR/sanity.sh" 2>&1 | grep '^Labels' || true)"
+T="$("$SCRIPT_DIR/run.sh" triage "p" --target skills/x --clues c --missing-data m 2>&1 | grep '^Labels' || true)"
+grep -q 'lane:' <<<"$Q" && { echo "FAIL question carries a lane it can never be scheduled by"; exit 1; }
+grep -q 'lane:' <<<"$T" && { echo "FAIL triage carries a lane before its route is known"; exit 1; }
+grep -q 'agent-work' <<<"$Q" && { echo "FAIL question is not agent-routable"; exit 1; }
+echo "PASS"
+
+echo -n "Check 24 - every ticket type builds a draft without crashing: "
 # `question` and `triage` both raised NameError on main while sanity stayed
 # green, because no check required any command to actually succeed. Every ticket
 # type is exercised here, and each must exit zero and emit a Labels line.

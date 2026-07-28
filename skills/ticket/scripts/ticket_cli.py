@@ -287,9 +287,14 @@ def _is_agent_routable(ticket_type: str, route: str) -> bool:
 
 def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[str] | None = None, lane: str = "") -> list[str]:
     labels = [f"type:{ticket_type}"]
-    if _is_agent_routable(ticket_type, route):
+    routable = _is_agent_routable(ticket_type, route)
+    if routable:
         labels.append(AGENT_WORK_LABEL)
-    resolved_lane = _lane_for(route, lane)
+    # A lane is what project-watchdog reads to decide whether this ticket may be
+    # dispatched alongside another. It only means anything on a ticket the
+    # watchdog can dispatch at all, so a human-first ticket carries none rather
+    # than an inert label that reads like a scheduling commitment.
+    resolved_lane = _lane_for(route, lane) if routable else ""
     if resolved_lane:
         labels.append(f"lane:{resolved_lane}")
     if target.startswith("skills/"):
