@@ -807,11 +807,22 @@ def comment(issue: int, body: Path = typer.Option(..., "--body"), repo: Optional
 
 
 @app.command()
-def block(issue: int, reason: Path = typer.Option(..., "--reason"), release_lease: bool = typer.Option(False, "--release"), repo: Optional[str] = typer.Option(None, "--repo", "-R"), dry_run: bool = False) -> None:
-    """Mark an issue blocked and optionally release the lease."""
+def block(
+    issue: int,
+    reason: Path = typer.Option(..., "--reason"),
+    release_lease: bool = typer.Option(False, "--release"),
+    blocked_by: list[str] = typer.Option(
+        [], "--blocked-by", help="owner/repo#N this issue is blocked by. Repeatable."
+    ),
+    repo: Optional[str] = typer.Option(None, "--repo", "-R"),
+    dry_run: bool = False,
+) -> None:
+    """Mark an issue blocked, optionally recording cross-repo upstream blockers."""
     args = ["block", str(issue), "--reason", str(reason)]
     if release_lease:
         args.append("--release")
+    for ref in blocked_by:
+        args.extend(["--blocked-by", ref])
     _helper(args, repo=repo, dry_run=dry_run)
 
 
