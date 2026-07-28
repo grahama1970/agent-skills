@@ -253,6 +253,51 @@ LEASE_STALE_SECONDS = _env_seconds("PROJECT_WATCHDOG_LEASE_STALE_SECONDS", 86_40
 #: reported as ok, while a label mismatch made a match impossible.
 NOOP_ESCALATION_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS", 86_400)
 
+#: The closure-audit panel. Two seats, different model families, judging the
+#: same closure independently.
+#:
+#: One seat is not enough and it is not the same problem as the repair reviewer:
+#: a single model that systematically over-accepts would both pass bad repairs
+#: and uphold bad closures, and nothing downstream would catch it. Two seats
+#: make that require two models to fail the same way at once.
+DEFAULT_CLOSURE_AUDITORS = ("claude-opus-4-8", "gpt-5.5-xhigh")
+
+
+def closure_auditors(project: dict[str, Any] | None = None) -> list[str]:
+    """Handlers that judge a closure, per project then env then default."""
+    configured = (project or {}).get("closure_auditors")
+    if isinstance(configured, list) and configured:
+        seats = [str(s).strip() for s in configured if str(s).strip()]
+    else:
+        raw = os.environ.get("PROJECT_WATCHDOG_CLOSURE_AUDITORS", "").strip()
+        seats = [s.strip() for s in raw.split(",") if s.strip()] or list(DEFAULT_CLOSURE_AUDITORS)
+    return seats
+
+
+#: Independent seat for the completion attestation. Deliberately a browser
+#: handler: when every ticket is closed and every closure has been upheld, the
+#: whole judgement so far has come from the same API-routed models that did and
+#: reviewed the work. WebGPT is a different transport and a different vantage
+#: point, so "everything is done" is not self-certified.
+DEFAULT_COMPLETION_ATTESTOR = "webgpt"
+
+#: How often a project may be attested. Every ticket being closed is a durable
+#: state, so without this the cron would re-ask the same question every minute.
+COMPLETION_ATTEST_INTERVAL_SECONDS = _env_seconds(
+    "PROJECT_WATCHDOG_COMPLETION_ATTEST_INTERVAL_SECONDS", 86_400
+)
+
+
+def completion_attestor(project: dict[str, Any] | None = None) -> str:
+    """Handler that attests a project is genuinely finished."""
+    configured = str((project or {}).get("completion_attestor") or "").strip()
+    if configured:
+        return configured
+    return os.environ.get("PROJECT_WATCHDOG_COMPLETION_ATTESTOR", "").strip() or (
+        DEFAULT_COMPLETION_ATTESTOR
+    )
+
+
 #: Applied to a closed ticket whose closure a reviewer checked and accepted.
 #: Its presence keeps the audit from re-reading the same closure every minute.
 CLOSURE_VERIFIED_LABEL = "closure-verified"
