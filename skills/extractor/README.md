@@ -16,6 +16,9 @@ canonical `extractor.result.v1` payload.
 Use `EXTRACTOR_ROOT=/path/to/extractor` when the checkout is not at
 `${HOME}/workspace/experiments/extractor`.
 
+Use `EXTRACTOR_COMMAND=/tmp/extractor-clean/bin/extractor` to force the wrapper
+through a clean installed executable in CI.
+
 ## Maintainer Checks
 
 ```bash

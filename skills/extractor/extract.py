@@ -9,6 +9,7 @@ process return code and stderr/stdout passthrough.
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -43,6 +44,15 @@ def find_extractor_root(script_dir: Path) -> Path:
     )
 
 
+def extractor_invocation(script_dir: Path) -> tuple[list[str], Path]:
+    """Return the command prefix and cwd for invoking Extractor."""
+
+    if os.environ.get("EXTRACTOR_COMMAND"):
+        return shlex.split(os.environ["EXTRACTOR_COMMAND"]), Path.cwd()
+    extractor_root = find_extractor_root(script_dir)
+    return ["uv", "run", "--project", str(extractor_root), "extractor"], extractor_root
+
+
 def _run_passthrough(command: list[str], *, cwd: Path) -> int:
     env = os.environ.copy()
     env.pop("VIRTUAL_ENV", None)
@@ -58,14 +68,10 @@ def _extract(
     output_format: str,
 ) -> None:
     script_dir = Path(__file__).resolve().parent
-    extractor_root = find_extractor_root(script_dir)
+    prefix, cwd = extractor_invocation(script_dir)
 
     command = [
-        "uv",
-        "run",
-        "--project",
-        str(extractor_root),
-        "extractor",
+        *prefix,
         "extract",
         str(input_file),
     ]
@@ -75,7 +81,7 @@ def _extract(
         command.append("--offline")
     command.extend(["--format", output_format])
 
-    raise typer.Exit(code=_run_passthrough(command, cwd=extractor_root))
+    raise typer.Exit(code=_run_passthrough(command, cwd=cwd))
 
 
 def main(
@@ -125,13 +131,13 @@ def main(
 
 def _doctor() -> int:
     script_dir = Path(__file__).resolve().parent
-    extractor_root = find_extractor_root(script_dir)
-    command = ["uv", "run", "--project", str(extractor_root), "extractor", "version"]
+    prefix, cwd = extractor_invocation(script_dir)
+    command = [*prefix, "version"]
     env = os.environ.copy()
     env.pop("VIRTUAL_ENV", None)
     result = subprocess.run(
         command,
-        cwd=str(extractor_root),
+        cwd=str(cwd),
         env=env,
         text=True,
         capture_output=True,
@@ -154,19 +160,15 @@ def _debug_routing(
     input_file: Path | None,
 ) -> int:
     script_dir = Path(__file__).resolve().parent
-    extractor_root = find_extractor_root(script_dir)
+    prefix, cwd = extractor_invocation(script_dir)
     if input_file is not None:
         typer.echo(f"input={input_file}", err=True)
     command = [
-        "uv",
-        "run",
-        "--project",
-        str(extractor_root),
-        "extractor",
+        *prefix,
         "extract",
         "--help",
     ]
-    return _run_passthrough(command, cwd=extractor_root)
+    return _run_passthrough(command, cwd=cwd)
 
 
 def debug_routing(

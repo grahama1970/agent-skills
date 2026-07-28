@@ -86,4 +86,6 @@ facade.
 arguments; it does not perform extraction.
 
 Set `EXTRACTOR_ROOT` only when the Extractor checkout is not at
-`${HOME}/workspace/experiments/extractor`.
+`${HOME}/workspace/experiments/extractor`. Set `EXTRACTOR_COMMAND` to an
+installed executable path when testing a clean wheel install, for example
+`EXTRACTOR_COMMAND=/tmp/extractor-clean/bin/extractor`.
