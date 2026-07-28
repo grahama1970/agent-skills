@@ -1,3 +1,4 @@
+const { insertPromptText } = require("./prompt-insert.cjs");
 /**
  * AI Studio Web Client for surf-cli
  *
@@ -255,7 +256,7 @@ async function typePrompt(cdp, inputCdp, prompt) {
 
   await delay(300);
 
-  await inputCdp("Input.insertText", { text: prompt });
+  await insertPromptText(inputCdp, prompt);
   await delay(300);
 }
 

@@ -7,6 +7,7 @@
 
 const { loadConfig, getConfigPath, clearCache } = require("./config.cjs");
 const { abortableDelay, raceAbort, throwIfAborted } = require("./abort.cjs");
+const { insertPromptText } = require("./prompt-insert.cjs");
 
 const GROK_URL = "https://x.com/i/grok";
 const DEFAULT_MODEL = "fast";
@@ -517,7 +518,7 @@ async function typePrompt(cdp, inputCdp, prompt) {
   })()`);
 
   // Type using CDP Input API so app state receives real text insertion events.
-  await inputCdp("Input.insertText", { text: prompt });
+  await insertPromptText(inputCdp, prompt);
   await delay(200);
 
   const typed = await evaluate(cdp, `(() => {

@@ -976,10 +976,11 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
           "cdp_evaluate",
           { type: isKimi ? "KIMI_EVALUATE" : "CHATGPT_EVALUATE", tabId, expression },
         ),
-        cdpCommand: (tabId, method, params) => requestCallExtension(
+        cdpCommand: (tabId, method, params, timeoutMs) => requestCallExtension(
           requestContext,
           "cdp_command",
           { type: isKimi ? "KIMI_CDP_COMMAND" : "CHATGPT_CDP_COMMAND", tabId, method, params },
+          Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined,
         ),
         log: (msg) => log(`[${tag}] ${msg}`),
       });
@@ -1051,10 +1052,11 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
           "cdp_evaluate",
           { type: "PERPLEXITY_EVALUATE", tabId, expression },
         ),
-        cdpCommand: (tabId, method, params) => requestCallExtension(
+        cdpCommand: (tabId, method, params, timeoutMs) => requestCallExtension(
           requestContext,
           "cdp_command",
           { type: "PERPLEXITY_CDP_COMMAND", tabId, method, params },
+          Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined,
         ),
         log: (msg) => log(`[perplexity] ${msg}`)
       });
@@ -1166,20 +1168,21 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
     const { query, files, model, deepSearch, withPage, timeout } = extensionMsg;
 
     queueAiRequest(async () => {
-      const requestGrokCdp = async (operation, message, compatibilityMessage) => {
+      const requestGrokCdp = async (operation, message, compatibilityMessage, timeoutMs) => {
+        const callTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined;
         try {
-          const result = await requestCallExtension(requestContext, operation, message);
+          const result = await requestCallExtension(requestContext, operation, message, callTimeoutMs);
           if (!/Unknown message type: GROK_(?:EVALUATE|CDP_COMMAND)/i.test(result?.error || "")) {
             return result;
           }
           log(`[grok] loaded extension lacks ${message.type}; retrying compatible exact-tab CDP alias`);
-          return requestCallExtension(requestContext, `${operation}_compat`, compatibilityMessage);
+          return requestCallExtension(requestContext, `${operation}_compat`, compatibilityMessage, callTimeoutMs);
         } catch (error) {
           if (!/Unknown message type: GROK_(?:EVALUATE|CDP_COMMAND)/i.test(error?.message || "")) {
             throw error;
           }
           log(`[grok] loaded extension lacks ${message.type}; retrying compatible exact-tab CDP alias`);
-          return requestCallExtension(requestContext, `${operation}_compat`, compatibilityMessage);
+          return requestCallExtension(requestContext, `${operation}_compat`, compatibilityMessage, callTimeoutMs);
         }
       };
 
@@ -1231,10 +1234,11 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
           { type: "GROK_EVALUATE", tabId, expression },
           { type: "KIMI_EVALUATE", tabId, expression },
         ),
-        cdpCommand: (tabId, method, params) => requestGrokCdp(
+        cdpCommand: (tabId, method, params, timeoutMs) => requestGrokCdp(
           "cdp_command",
           { type: "GROK_CDP_COMMAND", tabId, method, params },
           { type: "KIMI_CDP_COMMAND", tabId, method, params },
+          timeoutMs,
         ),
         log: (msg) => log(`[grok] ${msg}`)
       });
@@ -1413,9 +1417,10 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
           "cdp_evaluate",
           { type: "AISTUDIO_EVALUATE", tabId, expression }
         ),
-        cdpCommand: (tabId, method, params) => callExtension(
+        cdpCommand: (tabId, method, params, timeoutMs) => callExtension(
           "cdp_command",
-          { type: "AISTUDIO_CDP_COMMAND", tabId, method, params }
+          { type: "AISTUDIO_CDP_COMMAND", tabId, method, params },
+          Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined
         ),
         readNetworkEntries: (tabIdToRead) => callExtension(
           "read_network_entries",
@@ -1483,9 +1488,10 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
           "cdp_evaluate",
           { type: "AISTUDIO_EVALUATE", tabId, expression }
         ),
-        cdpCommand: (tabId, method, params) => callExtension(
+        cdpCommand: (tabId, method, params, timeoutMs) => callExtension(
           "cdp_command",
-          { type: "AISTUDIO_CDP_COMMAND", tabId, method, params }
+          { type: "AISTUDIO_CDP_COMMAND", tabId, method, params },
+          Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined
         ),
         searchDownloads: async (params) => {
           const result = await callExtension(

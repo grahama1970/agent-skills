@@ -6,6 +6,7 @@
  */
 
 const { abortableDelay, raceAbort, throwIfAborted } = require("./abort.cjs");
+const { insertPromptText } = require("./prompt-insert.cjs");
 
 const PERPLEXITY_URL = "https://www.perplexity.ai/";
 
@@ -301,7 +302,7 @@ async function typePrompt(cdp, inputCdp, prompt) {
   await delay(500);
 
   // Type using CDP Input API (this works regardless of element type)
-  await inputCdp("Input.insertText", { text: prompt });
+  await insertPromptText(inputCdp, prompt);
   await delay(300);
 
   // Backspace then re-add last char to reveal submit button

@@ -1,3 +1,4 @@
+const { insertPromptText } = require("./prompt-insert.cjs");
 const GEMINI_TAB_URL = "https://gemini.google.com/";
 
 const SELECTORS = {
@@ -394,7 +395,7 @@ async function typePrompt(cdp, inputCdp, prompt) {
   if (!focused) {
     throw new Error("Failed to focus prompt textarea");
   }
-  await inputCdp("Input.insertText", { text: prompt });
+  await insertPromptText(inputCdp, prompt);
   await delay(300);
   const verified = await evaluate(
     cdp,
