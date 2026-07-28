@@ -1,195 +1,119 @@
 # Persona Dream
 
-## Current state (2026-07-27)
-
-Persona Dream is controlled by one hierarchy:
-
-1. Build Embry as a persistent persona whose synthetic dreams produce bounded,
-   provenance-linked changes in self-narrative, arc state, session mood, and
-   voice while she remains recognizably herself.
-2. Keep PCTOM-R as the research workstream that asks whether counterfactual
-   dreaming improves prospective social prediction and planning beyond direct
-   memory under fail-closed controls.
-3. Treat Kling, Watch, Memory persistence, Chatterbox, and Tau as supporting
-   technology lanes with their own receipts and boundaries.
-
-Current evidence is mixed. The deterministic research and provenance machinery
-is strong: the PCTOM-R evidence recorded in `GOAL.md` reports 15/15 coverage
-ids, 43 child evidence receipts, 19 live positive rows, 12 negative rows, 128
-deterministic social episodes, and a 32/32 live Tau planning slice. That proves
-the reliability of the experiment machinery within its text-first scope. It
-does not yet prove a confidence-bounded planning advantage or that Embry has
-durable lived continuity.
-
-The persona lane has a first continuity-ledger artifact:
-`reports/goal_v5/continuity/embry.continuity_state.v1.json`. It records an
-identity core, arc state, one recent arc delta, and provenance links. That is
-the right authority object, but the full live chain is still unproven:
-accepted dream -> Watch observations -> first-person journal -> bounded arc
-delta -> persisted continuity ledger -> session mood before first user turn ->
-same mood reread throughout a session -> Chatterbox voice delivery -> recognition
-check.
-
-The Chatterbox actuator path is now practical evidence, not aspiration:
-`reports/goal_v5/emotion_proof/asr_batch/RECEIPT.json` is live and non-mocked,
-uses `POST http://127.0.0.1:8018/synthesize-batch`, selects
-`chatterbox_base`, preserves weighted `voice_delivery`, and passes ASR with
-WER 0.0. This proves transport/content preservation for that ASR batch path. It
-does not prove perceived emotion, stable Embry identity, naturalness, browser or
-microphone behavior, or durable dream-derived session mood.
-
-The historical media loop produced meaningful receipts, including one accepted
-canonical dream persistence path. It is not currently a routinely rerunnable
-product pipeline. Provider/video continuation and previous-video attachment
-remain historical or experimental until a fresh paired receipt proves them.
-
-Machine-readable current state lives in `CURRENT_STATUS.json`.
-
-**Operational next step (P2):** build
-`reports/goal_v5/continuity/live_chain/RECEIPT.json`. The stages it depends on
-are receipted already: P2.1 ledger hardening (`scripts/continuity_ledger.py` has
-atomic write/replace, epoch compare-and-set, cycle-derived idempotency,
-recomputed identity-core hash validation, read-time validation, and Embry schema
-normalization), P2.2 deterministic session-mood binding, P2.3 live Chatterbox
-rendering, and P2.4 speaker-recognition backend preflight. What remains is
-scoring speaker similarity and adversarial Embry recognition on the durable
-session-mood renders, then joining one fresh accepted dream through the whole
-chain. Do not expand PCTOM-R, generate a new Kling clip, or run another broad
-assessment before this receipt.
-
-| Lane | Current proof | Boundary |
-|---|---|---|
-| Historical Kling loop | One accepted successor return and canonical persistence path | Not repeatability or prior-video attachment causality |
-| Watch | Restored Tau-routed adjudication for the accepted successor | Not routine availability across fresh cycles |
-| Dream persistence | One canonical write and exact reread path | Not multi-cycle reliability |
-| Continuity ledger | Initial Embry state artifact | Not runtime authority until P2 live-chain receipt |
-| Chatterbox | Live weighted render path with WER 0.0 | Not perceived emotion or stable Embry identity |
-| PCTOM-R | Strong deterministic receipt machinery | No confidence-bounded planning advantage yet |
-
-
 ![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)
 
 > **Can an AI persona dream about what has happened to it, watch the dream it
 > made, learn from it, and still remain recognizably itself?**
 
-Persona Dream gives a persistent multimodal voice persona, a long-lived agent
+Persona Dream gives a persistent multimodal voice persona — a long-lived agent
 with durable memory, a stable character, and access to text, images, audio, and
-video, a controlled way to turn experience into a synthetic dream and examine
+video — a controlled way to turn experience into a synthetic dream and examine
 what comes back.
 
-We are not building a movie generator. We are testing whether a bounded
-synthetic experience can become useful memory and enrich later Theory of Mind
-(ToM): the persona's structured beliefs, desires, emotions, stances, and
-relationships.
+This is not a movie generator. The dream is an **inspectable intermediate
+representation**: synthetic cinematic conflict is a form the persona can observe,
+interpret, and be measured against, in a way a prose summary cannot be. The
+durable output is an explicitly synthetic dream memory whose every conclusion
+stays linked to the memories, media, relationships, and observed scenes that
+support it. A dream may influence later reasoning; it may never silently become
+literal history or rewrite identity.
 
-The intended durable output is an explicitly synthetic dream memory. Every
-conclusion must remain linked to the memories, media, relationships, and
-observed scenes that support it. A dream can influence later reasoning, but it
-cannot silently become literal history or rewrite the persona's identity.
+## Where to look for what
 
-> [`SKILL.md`](SKILL.md) is the current runtime contract. This README explains
-> the research purpose, wider architecture, current proof boundary, and intended
-> closed loop. The implemented runtime remains narrower than the complete system
-> described here.
+This README is the durable entry point: purpose, architecture, ownership, and
+the current evidence boundary. It is deliberately **not** a status log.
 
-**Current proof boundary (2026-07-18):** the active revision is the
-identity-source successor `rev_successor_943b01ecd9a3`, derived from the frozen
-`rev_upstream_bf3b05d47fb8` and bound to the qualified `embry_contact_sheet_v3`
-identity source. A live Kling return exists **historically** (on
-`rev_upstream_bf3b05d47fb8`, request
-`sha256:ca90ba9f…`) but is **superseded**: it failed post-provider Embry
-identity continuity and visible-speaker lip sync, and it was generated from the
-rejected character-sheet montage. The successor now stands at its **acceptance
-rung**: the revision is `PASS_ACTIVE_CONSISTENT`, Memory prepare/verify and the
-42-step bundle exactly reread (`PASS_EXACT_REREAD_42_OF_42`), and all eight Phase
-07 storyboard frames PASS actual-pixel identity review (8/8, first attempt each;
-7/7 continuity pairs). Evidence:
-`.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json`.
-The next step is a compiled successor provider request, provider media
-publication for the regenerated frames, and a new hash-bound paid authorization
-— all human-gated. This is **not** green or complete: no new provider return,
-lip sync, Watch-based self-analysis, synthetic dream persistence, or changed
-later behavior is proven.
+| You want | Read |
+|---|---|
+| The executable runtime contract | [`SKILL.md`](SKILL.md) |
+| Current machine state, blockers, next step | [`CURRENT_STATUS.json`](CURRENT_STATUS.json) |
+| Forensic chronology and superseded findings | [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md) |
+| Operational continuation point | [`local/HANDOFF.md`](local/HANDOFF.md) |
+| The immutable goal and gate sequence | [`GOAL.md`](GOAL.md) |
+| Per-run evidence | revision-scoped receipts under `reports/` |
 
-**Stage B update (2026-07-18, supersedes the paragraph above):** the successor
-provider call has since been made and its return received (commit a47fc595) —
-the live successor Kling return `provider_return.mp4` (`sha256:59b9ff31…`,
-10.041667s, one submit, request `sha256:97688ec5…`, silent/`generate_audio=false`).
-The post-return gauntlet was run on THIS return with results **fail-closed and
-blocked**, not accepted: Step 35 frame contact sheet **PASS** (12 frames);
-Watch gauntlet **DEGRADED** (single-shot, no scene cuts; per-frame VLM entities
-and transcript unavailable — scillm gpt-5.5 chat auth rotated); Step 36
-post-Kling continuity **FAIL** — a live deterministic ArcFace read
-(InsightFace buffalo_l, CPU, threshold 0.421) vs `embry_contact_sheet_v3` shows
-the identity-source fix matching strongly in the opening identity window (cos
-0.60-0.61) but clearing only 7/12 frames overall (mean 0.378), with the final
-third at cos 0.02-0.15; ArcFace alone cannot separate drift from pose and the
-VLM adjudication layer is down, so identity is **not certifiable**; Steps 37-38
-audio + final assembly **BLOCKED** (the exact Kai line was never rendered, no
-chatterbox engine, no paid authorization, VLM lip-sync unavailable). **Acceptance
-is BLOCKED**; the canonical cognitive loop was **NOT run** — dry-run only,
-`canonical_dream_memory_written: false`; no failed/unaccepted dream was written
-to canonical memory. Human subjective acceptance remains the human's and is not
-claimed.
+## The controlling hierarchy
 
-**Stage B update 2 (2026-07-19, supersedes the paragraph above):** the missing
-VLM layer was restored by routing every VLM call through the **Tau** panel-reviewer
-node (Tau owns scillm access; commit `416edc5a`) — no direct scillm from Stage B
-drivers. On re-run: Step 36 post-Kling continuity **PASS** — the ArcFace whole-clip
-metric still fails, but VLM adjudication (via Tau) explains all 5 sub-threshold
-frames as `POSE_OCCLUSION` consistent with storyboard beat intent, with no
-different-looking person substituted in any frame; scene/wardrobe/action continuity
-PASS; Kai (recovered face-bearing reference `02-kai_character_sheet.png`) not
-contradicted. Steps 37-38 audio + final assembly **PASS** — the exact canonical
-Kai line + ocean bed were hash-bound-reused from the frozen predecessor (re-mixed
-bit-identically, `sha256:33edae9a…`) and muxed onto the silent return; whisper
-`large-v3-turbo` forced alignment recognizes the line in-window; lip-sync is
-`INAPPLICABLE_BY_COMPOSITION` (wide lineup, no readable mouth); no paid call, no new
-voice engine. **Acceptance is ACCEPTED at agent level** (both fail-closed gates
-pass); human subjective acceptance still remains the human's. The canonical
-cognitive loop is still **dry-run only** with **no canonical write** (fail-closed):
-phases 13/14 text reasoning cannot route through an existing Tau node at 416edc5a,
-and direct scillm is forbidden, so canonical persistence is deferred. **Proof
-boundary:** the identity PASS is a no-drift/no-substitution + composition verdict,
-NOT an embedding-certified whole-clip identity; the audio deliverable is muxed +
-forced-aligned, NOT frame-accurate lip-sync; no canonical dream memory was written.
+1. **Build Embry as a persistent persona** whose synthetic dreams produce
+   bounded, provenance-linked changes in self-narrative, arc state, session
+   mood, and voice while she remains recognizably herself.
+2. **PCTOM-R** is the research workstream asking whether counterfactual dreaming
+   improves prospective social prediction and planning beyond direct memory,
+   under fail-closed controls.
+3. **Kling, Watch, Memory, Chatterbox, and Tau** are supporting lanes with their
+   own receipts and boundaries.
 
-**Stage B update 3 (2026-07-19, supersedes the deferral above): phases 13-15 now
-route through Tau and the FIRST canonical dream memory was written.** A minimal
-text-only Tau node was added (tau commit `09e64a44`,
-`tau_coding.persona_dream_text_reasoning_agent`) that carries a caller
-hash-recorded prompt + caller-defined JSON contract and emits a receipt
-(`api_key_source docker:scillm-proxy`). Persona-dream's
-`scripts/tau_text_reasoning_adapter.py` dispatches phase 13/14 prompts to it (no
-direct scillm); the deterministic citation gates are unchanged. Live on the
-accepted return: Phase 13 **PASS** (4 interpretations, all citing Watch
-observation ids + source-memory ids, live `$memory` recall confirmed), Phase 14
-**PASS** (4 ToM candidates accepted, subset-grounded), Phase 15
-**LIVE_CANONICAL_PERSISTENCE** — 19 records written through the `$memory` API with
-exact reread-by-key (synthetic dream node
-`dream_dream_successor_943b01ecd9a3`, 4 ToM nodes, 14 edges), plus governance +
-step records. Loop receipt `PASS_COGNITIVE_LOOP`,
-`canonical_dream_memory_written: true`. Canonical write is permitted only by a
-binding agent-level acceptance receipt overriding the DEGRADED status; the
-superseded historical return stays BLOCKED (verified live). **Phase 16
-(recall + behavior evaluation) is LIVE-PROVEN for its machine-decidable slice**
-(`scripts/phase16_behavior_evaluation.py`, `overall_status: PASS`): semantic
-recall of the dream from 3 differently-worded queries + a negative control,
-multi-hop traversal persona→dream→source/Watch/ToM across all 14 canonical
-edges, grounded persona use of the dream, synthetic-vs-literal distinction with
-exact flag reread, and identity stability. All LLM probes route through the Tau
-text node (no direct scillm). **What remains is the human's: watching the dream
-video and giving subjective acceptance, plus Chatterbox voice expression
-(item 10, out of scope this slice).**
+## Architecture: the bounded loop
 
-**Jump to:**
-[Quick Start](#quick-start) -
-[Research](#research) -
-[Pipeline](#pipeline-01-16) -
-[Working Example](#embry-and-kai-the-working-example) -
-[Interface Walkthrough](#interface-walkthrough) -
-[Technical Architecture](#technical-architecture) -
-[Acceptance and Proof](#acceptance-and-proof)
+```
+accepted dream
+  -> Watch observations          (what the persona saw, adjudicated)
+  -> first-person journal        (grounded, explicitly synthetic)
+  -> bounded arc delta           (what may change, and by how much)
+  -> continuity ledger           (the authority object; atomic, epoch-checked)
+  -> session mood before turn 1  (deterministic, bound before the user speaks)
+  -> Chatterbox voice delivery   (the mood made audible)
+  -> recognition check           (is it still recognizably Embry?)
+```
+
+Each arrow is a gate with its own receipt. The loop is only as strong as the
+weakest joined leg, and joining every leg in one run is what P2 is for.
+
+## Current state
+
+Phase **P2_LIVE_CONTINUITY_CHAIN**. Machine-readable state, including the
+authoritative blocker list and next step, lives in `CURRENT_STATUS.json`; the
+table below is checked against it by
+`./run.sh check-current-state-consistency --strict`.
+
+| Lane | Implemented and receipted | Not proven |
+|---|---|---|
+| Continuity ledger | Atomic writes, epoch compare-and-set, cycle idempotency, identity-core hash guard, read-time validation | Runtime authority across real sessions |
+| Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Binding inside the production conversation service |
+| Chatterbox voice | Live `/synthesize-batch` render of the mood envelope, strict ASR WER 0.0, durable WAV snapshots | Perceived emotion, naturalness, human acceptance |
+| Speaker recognition | Backend preflight passes; renders score above real non-Embry voices with margin | Renders do not yet reach same-speaker fidelity against their own reference |
+| Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
+| PCTOM-R | Strong deterministic receipt machinery, live Tau slices | Confidence-bounded planning advantage |
+
+**The active gate** is joining one fresh accepted dream through the whole loop
+into `reports/goal_v5/continuity/live_chain/RECEIPT.json`. Do not expand
+PCTOM-R, generate a new Kling clip, or run another broad assessment before it.
+
+## PCTOM-R, and why its numbers are not a result
+
+PCTOM-R asks whether counterfactual dreaming improves *prospective* Theory of
+Mind — predicting what another agent will do — beyond what direct memory gives.
+
+The machinery is strong and the receipt counts are large. Neither fact is a
+finding. Receipt volume measures the reliability of the experiment apparatus
+within its text-first scope; it does not measure benefit. Until a preregistered
+proper-scoring or planning-regret metric separates CD from the strongest M/R/D
+baseline on a held-out slice, PCTOM-R has no result to report.
+
+## Ownership boundaries
+
+Persona Dream owns the dream packet, continuity ledger, session-mood binding,
+and the receipts that join them. It does **not** own: Graph Memory (persistence
+and recall), Watch (observation and adjudication), Tau (model routing and
+creator/reviewer loops), Kling and other providers (media generation),
+Chatterbox (speech synthesis), or the voice-evaluation lane (speaker backends).
+Each has its own proof boundary; Persona Dream may cite their receipts but may
+not restate their guarantees. See [Technical Architecture](#technical-architecture).
+
+## What this project does not claim
+
+None of the following is proven, and no commit, single historical run, ASR word
+error rate, speaker-embedding score, or volume of receipts establishes any of
+them:
+
+- end-to-end pipeline reliability across repeated cycles;
+- dream-derived mood binding inside the production conversation service;
+- perceived emotion, naturalness, or human acceptance of synthesized speech;
+- that a human listener recognizes Embry;
+- a confidence-bounded PCTOM-R planning advantage;
+- that attaching a previous video causally improves continuity.
+
+Claims here are retired only by a named receipt read back from disk.
 
 ---
 
