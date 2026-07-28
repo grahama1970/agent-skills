@@ -11,6 +11,8 @@ import json
 import sys
 import time
 from datetime import UTC, datetime, timedelta
+import os
+import subprocess
 from pathlib import Path
 from unittest import mock
 
@@ -439,11 +441,24 @@ def test_ticket_repair_refuses_a_project_with_no_bounded_runner(tmp_path) -> Non
 
 
 def _worktree_with_specs(tmp_path: Path) -> Path:
-    """Create the Tau command-spec layout the repair DAG requires."""
+    """Create the Tau command-spec layout the repair DAG requires.
+
+    Committed on a clean ``main``: dispatch fails closed on a worktree that is
+    on a feature branch or has dirty tracked files (#1045), so a fixture that is
+    not a real, clean git worktree no longer represents a dispatchable project.
+    """
     root = tmp_path / "experiments/goal-locked-subagents/agent-command-specs"
     for node in ("coder", "reviewer"):
         (root / node).mkdir(parents=True)
         (root / node / "tau-dispatch-command.json").write_text("{}", encoding="utf-8")
+    env = {
+        "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
+        "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
+        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+    }
+    for args in (("init", "-q", "-b", "main", "."), ("add", "-A"), ("commit", "-q", "-m", "specs")):
+        subprocess.run(["git", "-C", str(tmp_path), *args], check=True,
+                       capture_output=True, env=env)
     return tmp_path
 
 

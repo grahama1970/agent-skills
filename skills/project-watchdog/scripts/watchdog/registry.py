@@ -64,6 +64,60 @@ def project_worktree(project: dict[str, Any]) -> Path:
     return Path(str(raw)).expanduser()
 
 
+#: Branches a repair may be authored on. A repair committed onto whatever
+#: branch a worktree happens to hold is unattributable, and on a feature branch
+#: it never reaches main.
+DEFAULT_BRANCHES = ("main", "master")
+
+
+def worktree_readiness(worktree: Path) -> dict[str, Any]:
+    """Report whether a worktree is safe to author a repair in.
+
+    Observed 2026-07-28: the registry pointed ``agent-skills`` at a worktree
+    sitting on an unrelated feature branch, 686 commits behind main, with 543
+    modified tracked files, while a cron lane wrote tracked files into it every
+    few seconds. Dispatching there would author a repair on the wrong branch, on
+    top of foreign uncommitted edits, and could corrupt a running job.
+
+    Read-only. Returns the facts; the caller decides.
+    """
+    row: dict[str, Any] = {"worktree": str(worktree), "exists": worktree.is_dir()}
+    if not row["exists"]:
+        row["reasons"] = ["worktree_missing"]
+        row["ready"] = False
+        return row
+
+    def git(*args: str) -> tuple[int, str]:
+        result = run_cmd(["git", "-C", str(worktree), *args], timeout_s=30)
+        return int(result.get("exit_code", 1)), str(result.get("stdout", "")).strip()
+
+    code, branch = git("branch", "--show-current")
+    row["branch"] = branch or "(detached HEAD)"
+    if code != 0:
+        row["reasons"] = ["not_a_git_worktree"]
+        row["ready"] = False
+        return row
+
+    _, dirty_out = git("status", "--porcelain", "--untracked-files=no")
+    dirty = [line for line in dirty_out.splitlines() if line.strip()]
+    row["dirty_tracked"] = len(dirty)
+    # porcelain is "XY<space>PATH", but the status field width varies with
+    # staged-vs-worktree combinations; a fixed slice truncated the filename.
+    row["dirty_paths"] = [line[2:].strip() for line in dirty[:10]]
+
+    _, untracked_out = git("status", "--porcelain")
+    row["untracked"] = len([l for l in untracked_out.splitlines() if l.startswith("??")])
+
+    reasons: list[str] = []
+    if row["branch"] not in DEFAULT_BRANCHES:
+        reasons.append(f"branch_is_not_default:{row['branch']}")
+    if dirty:
+        reasons.append(f"tracked_files_dirty:{len(dirty)}")
+    row["reasons"] = reasons
+    row["ready"] = not reasons
+    return row
+
+
 def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:
     """Return open issues this watchdog is permitted to route, in listing order."""
     repo = project_repo(project)

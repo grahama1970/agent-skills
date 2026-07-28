@@ -37,7 +37,7 @@ from .issue_fields import (
     parse_positive_int,
     repo_relative_existing_path,
 )
-from .registry import project_repo, project_worktree
+from .registry import project_repo, project_worktree, worktree_readiness
 
 
 def handle_issue(
@@ -659,6 +659,7 @@ def handle_ticket_repair(
         log_event(run_id, "handle_ticket_repair_unsupported", issue=issue_number, kind=runner_kind)
         return result
 
+
     spec_root = worktree / "experiments/goal-locked-subagents/agent-command-specs"
     missing = [
         node
@@ -677,6 +678,33 @@ def handle_ticket_repair(
             }
         )
         log_event(run_id, "handle_ticket_repair_missing_specs", issue=issue_number, missing=missing)
+        return result
+
+    # Fail closed on an unusable checkout BEFORE leasing the issue or calling
+    # Tau. A repair authored on a feature branch never reaches main, and one
+    # authored on top of another lane's uncommitted edits is unattributable.
+    readiness = worktree_readiness(worktree)
+    result["worktree_readiness"] = readiness
+    if not readiness.get("ready"):
+        result.update(
+            {
+                "ok": False,
+                "status": "BLOCKED",
+                "summary": (
+                    f"worktree {worktree} is not safe to author a repair in: "
+                    f"{', '.join(readiness.get('reasons') or ['unknown'])}. "
+                    f"branch={readiness.get('branch')} "
+                    f"dirty_tracked={readiness.get('dirty_tracked')} "
+                    f"untracked={readiness.get('untracked')}."
+                ),
+            }
+        )
+        log_event(
+            run_id,
+            "handle_ticket_repair_worktree_unready",
+            issue=issue_number,
+            reasons=readiness.get("reasons"),
+        )
         return result
 
     contract = build_repair_contract(
