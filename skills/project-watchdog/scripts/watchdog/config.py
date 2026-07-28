@@ -253,6 +253,19 @@ LEASE_STALE_SECONDS = _env_seconds("PROJECT_WATCHDOG_LEASE_STALE_SECONDS", 86_40
 #: reported as ok, while a label mismatch made a match impossible.
 NOOP_ESCALATION_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS", 86_400)
 
+#: Applied to a closed ticket whose closure a reviewer checked and accepted.
+#: Its presence keeps the audit from re-reading the same closure every minute.
+CLOSURE_VERIFIED_LABEL = "closure-verified"
+
+#: How far back the closure audit looks. A closure from months ago is history,
+#: not something to reopen.
+CLOSURE_AUDIT_WINDOW_SECONDS = _env_seconds("PROJECT_WATCHDOG_CLOSURE_AUDIT_WINDOW_SECONDS", 604_800)
+
+#: How many times one ticket may be reopened by the audit before it stops being
+#: reopened and asks for a person. Without a bound, a reviewer that always fails
+#: reopens the same ticket forever.
+CLOSURE_AUDIT_MAX_REOPENS = int(os.environ.get("PROJECT_WATCHDOG_CLOSURE_MAX_REOPENS", "2"))
+
 #: Once escalated, how long before the watchdog persists another escalation
 #: receipt. Without this, escalation would reintroduce one receipt directory per
 #: minute — the exact disk churn the retention policy removed.

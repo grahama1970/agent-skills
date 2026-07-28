@@ -44,7 +44,7 @@ from .core import (
     timestamp,
     write_json,
 )
-from .handlers import handle_issue
+from .handlers import handle_closure_audit, handle_issue
 from .registry import find_project, list_routable_issues
 
 #: Skip reasons a later tick can clear without anyone intervening. A lease ends
@@ -136,6 +136,48 @@ def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
         )
     finally:
         release_lock()
+
+
+def _audit_one_closure(
+    run_id: str,
+    receipt_dir: Path,
+    state: dict[str, Any],
+    receipt: dict[str, Any],
+    *,
+    apply: bool,
+) -> dict[str, Any] | None:
+    """Review the oldest unchecked closure across active projects, if any.
+
+    One per tick, and only when no project had repair work, so the audit lane
+    can never starve the repair lane.
+    """
+    pending_by_project: list[dict[str, Any]] = []
+    for candidate in registry.rotation_order(load_json(config.projects_path()), state):
+        cid = str(candidate.get("project_id"))
+        if state.get("projects", {}).get(cid, {}).get("state") != "active":
+            continue
+        try:
+            pending = registry.list_closed_for_audit(run_id, candidate)
+        except RuntimeError as exc:
+            logger.error("closure audit scan failed for {}: {}", cid, exc)
+            continue
+        if pending:
+            pending_by_project.append({"project": candidate, "pending": pending})
+
+    receipt["closure_audit"] = {
+        "pending_counts": {
+            str(e["project"].get("project_id")): len(e["pending"]) for e in pending_by_project
+        }
+    }
+    if not pending_by_project:
+        return None
+
+    chosen = pending_by_project[0]
+    # Oldest closure first: the longest-unverified claim is the one most worth
+    # checking, and it makes progress through a backlog deterministic.
+    issue = sorted(chosen["pending"], key=lambda i: str(i.get("closedAt") or ""))[0]
+    receipt["closure_audit"]["selected"] = int(issue["number"])
+    return handle_closure_audit(run_id, receipt_dir, chosen["project"], issue, apply=apply)
 
 
 def _tick_locked(
@@ -260,6 +302,20 @@ def _tick_locked(
         "selected": None if project is None else str(project.get("project_id")),
         "skipped": skipped,
     }
+
+    # No repair work anywhere. Before calling the tick idle, check whether any
+    # recent closure needs reviewing: closing a ticket is a claim that the work
+    # is done, and until now nothing verified that claim. Repairs come first --
+    # an audit must never delay a ticket that is actually waiting.
+    if project is None:
+        audited = _audit_one_closure(run_id, receipt_dir, state, receipt, apply=apply)
+        if audited is not None:
+            receipt["handled_issues"].append(audited)
+            receipt["handled_count"] = 1
+            receipt["ok"] = bool(audited.get("ok"))
+            receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"
+            streaks.clear_idle(str(audited.get("project_id") or project_id))
+            return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
 
     if project is None:
         streak = streaks.record_idle(project_id)
