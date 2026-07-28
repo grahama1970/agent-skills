@@ -1241,3 +1241,57 @@ def test_the_cron_line_sources_a_shell_init_file(tmp_path, monkeypatch) -> None:
 def test_a_missing_rc_file_is_not_sourced(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PROJECT_WATCHDOG_SHELL_INIT", str(tmp_path / "nope"))
     assert config.shell_init_file() is None
+
+
+# --------------------------------------------------------------------------- #
+# Lock contention is not failure
+# --------------------------------------------------------------------------- #
+
+
+def test_a_tick_stepping_aside_for_a_live_tick_is_not_a_failure(tmp_path, monkeypatch) -> None:
+    """An audit takes minutes. Treating contention as failure logged BLOCKED and
+    exit 1 every minute of it, so a healthy long lane read as a broken one."""
+    from watchdog import commands  # noqa: PLC0415
+
+    captured: dict = {}
+    monkeypatch.setattr(commands, "acquire_lock", lambda run_id: False)
+    monkeypatch.setattr(commands, "lock_holder_alive", lambda: True)
+    monkeypatch.setattr(
+        commands, "finish",
+        lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code) or code,
+    )
+    commands.tick(apply=True, project_id="tau", max_tickets=1)
+
+    assert captured["code"] == 0
+    assert captured["receipt"]["status"] == "SKIPPED"
+    assert captured["receipt"]["ok"] is True
+    assert captured["receipt"]["stop_reason"] == "tick_already_running"
+
+
+def test_a_lock_held_by_nothing_is_still_a_fault(tmp_path, monkeypatch) -> None:
+    from watchdog import commands  # noqa: PLC0415
+
+    captured: dict = {}
+    monkeypatch.setattr(commands, "acquire_lock", lambda run_id: False)
+    monkeypatch.setattr(commands, "lock_holder_alive", lambda: False)
+    monkeypatch.setattr(
+        commands, "finish",
+        lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code) or code,
+    )
+    commands.tick(apply=True, project_id="tau", max_tickets=1)
+
+    assert captured["code"] == 1
+    assert captured["receipt"]["status"] == "BLOCKED"
+
+
+def test_a_dead_pid_does_not_count_as_a_live_holder(tmp_path, monkeypatch) -> None:
+    from watchdog import config, core  # noqa: PLC0415
+
+    lock = tmp_path / "lock"
+    lock.mkdir()
+    (lock / "owner.json").write_text(json.dumps({"pid": 2**31 - 1, "run_id": "x"}))
+    monkeypatch.setattr(config, "lock_dir", lambda: lock)
+    assert core.lock_holder_alive() is False
+
+    (lock / "owner.json").write_text(json.dumps({"pid": os.getpid(), "run_id": "x"}))
+    assert core.lock_holder_alive() is True

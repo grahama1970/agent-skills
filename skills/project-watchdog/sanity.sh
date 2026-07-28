@@ -174,10 +174,13 @@ cat > "$WORK/idle-projects.json" <<'JSON'
 {"schema": "agent_skills.project_watchdog.registry.v1",
  "projects": [{"project_id": "tau", "repo": "grahama1970/tau", "worktree": "/nonexistent"}]}
 JSON
+# Pause GLOBALLY, not per project. A fleet where every project is paused is
+# correctly NEEDS_ATTENTION -- it never clears without a human -- and that is
+# eventful, so it persists. The uneventful case is the kill switch being off.
 cat > "$PROJECT_WATCHDOG_STATE_ROOT/state.json" <<'JSON'
 {"schema": "agent_skills.project_watchdog.state.v1",
- "global": {"state": "active"},
- "projects": {"tau": {"state": "paused"}}}
+ "global": {"state": "paused"},
+ "projects": {"tau": {"state": "active"}}}
 JSON
 PROJECT_WATCHDOG_PROJECTS_PATH="$WORK/idle-projects.json"
 export PROJECT_WATCHDOG_PROJECTS_PATH
