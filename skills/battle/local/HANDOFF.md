@@ -1,14 +1,25 @@
 # Handoff: Battle Adaptive Lineage — GOAL MET (backend + UX live)
 
+## Main Branch Rule (2026-07-28)
+
+Battle project state is canonical only on:
+
+`/home/graham/workspace/experiments/agent-skills` on branch `main`
+
+Do not continue Battle work from `battle-adaptive-lineage-goal`, a task branch,
+or an issue-specific worktree. Those names may exist in old receipts or cleanup
+tickets, but current Battle work and proof receipts must be committed to
+`agent-skills@main`.
+
 ## Ticket Closure Addendum (2026-07-28 17:15 UTC)
 
-Active worktree:
+Canonical branch:
 
-`/home/graham/workspace/experiments/agent-skills-issue1049-20260728`
+`agent-skills@main`
 
-Remote proof tip:
+Remote proof ref:
 
-`origin/main ba0e4fc75733e7bd0ce49fa52e11b69d8378a663`
+`origin/main`
 
 ### Battle-directory ticket state
 
@@ -95,8 +106,8 @@ Result: exit `0`; backend eval `13/13`; `Result: PASS`.
 
 ### Current cautions for the next agent
 
-- Do not use the contaminated primary worktree at `/home/graham/workspace/experiments/agent-skills` as a source of truth for Battle closure; it is the subject of #1040 and contains extensive unrelated dirty state.
-- Continue Battle work from a clean lane-named worktree and committed proof receipts.
+- Do not use `battle-adaptive-lineage-goal` or issue-specific branches as Battle source of truth. If a local checkout is dirty, resolve the dirty checkout as a maintenance task; do not move Battle to another project branch.
+- Continue Battle work on `agent-skills@main` only, using committed proof receipts on `origin/main`.
 - UI work still requires `$pixijs`, `$best-practices-battle-pixi`, relevant React best practices, and `$test-interactions`; the #1065/#1066/#46 closure work above was backend/proof only.
 
 ## Current State Addendum (2026-07-28)
@@ -120,8 +131,9 @@ in `GOAL_ADAPTIVE_LINEAGE.md#current-state-addendum-2026-07-28`:
 **Timestamp**: 2026-07-18
 **Status**: `ADAPTIVE_LINEAGE_UX_LIVE_COMPLETE` — the immutable goal
 `GOAL_ADAPTIVE_LINEAGE.md` is met end to end: live backend qualification + finished
-UX (LIVE comparison panel + four distinct validated PixiJS sprites), all on branch
-`battle-adaptive-lineage-goal`.
+UX (LIVE comparison panel + four distinct validated PixiJS sprites). Historical
+receipts may mention `battle-adaptive-lineage-goal`; current canonical Battle
+state belongs on `agent-skills@main`.
 
 > Supersedes `ADAPTIVE_LINEAGE_LIVE_QUALIFIED`. The migration is landed, the
 > qualification reproduced live, and the spectator now renders it.
