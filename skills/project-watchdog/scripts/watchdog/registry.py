@@ -66,9 +66,48 @@ def project_worktree(project: dict[str, Any]) -> Path:
 
 
 #: Branches a repair may be authored on. A repair committed onto whatever
-#: branch a worktree happens to hold is unattributable, and on a feature branch
-#: it never reaches main.
+#: branch a worktree happens to hold is unattributable.
 DEFAULT_BRANCHES = ("main", "master")
+
+#: Branch prefix for per-ticket repair worktrees. The lane creates one from
+#: origin/main per dispatch, so its branch is not a default branch and is still
+#: a legitimate place to author.
+REPAIR_BRANCH_PREFIX = "watchdog/issue-"
+
+
+def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -> dict[str, Any]:
+    """Create a clean worktree from ``origin/main`` to author one repair in.
+
+    Isolation, not convenience. The registered checkout is a human's working
+    tree; authoring there builds on whatever it happens to hold and risks
+    clobbering uncommitted work. A fresh worktree off the fetched origin/main is
+    clean by construction and current by construction.
+
+    Returns the git commands run and the resolved branch, or an ``error``.
+    """
+    branch = f"{REPAIR_BRANCH_PREFIX}{issue_number}"
+    steps: list[dict[str, Any]] = []
+
+    def git(*args: str, cwd: Path) -> dict[str, Any]:
+        result = run_cmd(["git", "-C", str(cwd), *args], timeout_s=120)
+        steps.append({"argv": ["git", *args], "exit_code": result.get("exit_code")})
+        return result
+
+    # Remove a leftover worktree from an earlier attempt at the same issue,
+    # so a retry is not refused by a path that already exists.
+    if worktree.exists():
+        git("worktree", "remove", "--force", str(worktree), cwd=repo_dir)
+    git("worktree", "prune", cwd=repo_dir)
+
+    fetched = git("fetch", "origin", "main", cwd=repo_dir)
+    if fetched.get("exit_code") != 0:
+        return {"ok": False, "error": f"fetch failed: {fetched.get('stderr')}", "steps": steps}
+
+    worktree.parent.mkdir(parents=True, exist_ok=True)
+    added = git("worktree", "add", "-B", branch, str(worktree), "origin/main", cwd=repo_dir)
+    if added.get("exit_code") != 0:
+        return {"ok": False, "error": f"worktree add failed: {added.get('stderr')}", "steps": steps}
+    return {"ok": True, "branch": branch, "worktree": str(worktree), "steps": steps}
 
 
 def worktree_readiness(worktree: Path, targets: set[str] | None = None) -> dict[str, Any]:
@@ -124,7 +163,9 @@ def worktree_readiness(worktree: Path, targets: set[str] | None = None) -> dict[
     row["untracked"] = len([ln for ln in untracked_out.splitlines() if ln.startswith("??")])
 
     reasons: list[str] = []
-    if row["branch"] not in DEFAULT_BRANCHES:
+    if row["branch"] not in DEFAULT_BRANCHES and not row["branch"].startswith(
+        REPAIR_BRANCH_PREFIX
+    ):
         reasons.append(f"branch_is_not_default:{row['branch']}")
     if dirty:
         reasons.append(f"tracked_files_dirty:{len(dirty)}")

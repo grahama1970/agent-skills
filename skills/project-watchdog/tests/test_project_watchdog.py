@@ -555,17 +555,28 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
         mock.patch.object(
             handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}
         ) as bounded,
+        mock.patch.object(
+            handlers.registry,
+            "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-9",
+                          "worktree": str(tmp_path / "repair-worktrees" / "tau-9")},
+        ),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
-    assert result["ok"] is True and result["status"] == "COMPLETED"
+    assert result["ok"] is True and result["status"] == "COMPLETED", result.get("summary")
     argv = bounded.call_args.args[0]
     assert argv[0].endswith("ask/run.sh"), "repair must go through $ask"
+    # Authored in a worktree of the lane's own making, never the registered
+    # checkout: that one is a human's working tree.
+    workspace = argv[argv.index("--handler-workspace") + 1]
+    assert workspace.startswith("codex=")
+    assert str(tmp_path) != workspace.split("=", 1)[1]
+    assert "repair-worktrees" in workspace
     assert argv[1] == "tau-dag"
     assert "--dag-template" in argv and argv[argv.index("--dag-template") + 1] == "creator-reviewer"
     assert "--topology" in argv and argv[argv.index("--topology") + 1] == "sequential"
     assert "--execute" in argv and "--allow-provider-calls" in argv
     # The creator seat mutates and needs a workspace; the reviewer seat does not.
-    assert f"codex={tmp_path}" in argv
     assert handlers.REPAIR_REVIEWER_HANDLER in argv
     # $ask fails preflight without an immutable goal, before any handler runs.
     goal = argv[argv.index("--immutable-goal") + 1]
@@ -594,6 +605,12 @@ def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
             side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
         ),
         mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 1, "stderr": "x"}),
+        mock.patch.object(
+            handlers.registry,
+            "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-10",
+                          "worktree": str(tmp_path / "repair-worktrees" / "tau-10")},
+        ),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "NEEDS_ATTENTION"

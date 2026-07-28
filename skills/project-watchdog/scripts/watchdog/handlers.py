@@ -603,6 +603,10 @@ def handle_ticket_repair(
     # authored on top of another lane's uncommitted edits is unattributable.
     targets = registry.issue_targets(issue)
     result["targets"] = sorted(targets)
+
+    # Check the registered checkout only for whether this ticket's targets are
+    # settled. A target another lane is mid-edit on is not safe to repair, even
+    # though the repair itself is authored elsewhere.
     readiness = worktree_readiness(worktree, targets)
     result["worktree_readiness"] = readiness
     if not readiness.get("ready"):
@@ -646,10 +650,29 @@ def handle_ticket_repair(
             {
                 "ok": True,
                 "status": "DRY_RUN",
-                "summary": f"would run tau dag-run for {repo}#{issue_number}",
+                "summary": (
+                    f"would author {repo}#{issue_number} in a fresh worktree off origin/main "
+                    f"and run $ask tau-dag over {sorted(targets)}"
+                ),
             }
         )
         return result
+
+    # Author in a worktree of our own, created from origin/main per dispatch.
+    repair_worktree = config.repair_worktrees_dir() / f"{project.get('project_id')}-{issue_number}"
+    prepared = registry.prepare_repair_worktree(worktree, repair_worktree, issue_number)
+    result["repair_worktree"] = prepared
+    if not prepared.get("ok"):
+        result.update(
+            {
+                "ok": False,
+                "status": "BLOCKED",
+                "summary": f"could not prepare a repair worktree: {prepared.get('error')}",
+            }
+        )
+        log_event(run_id, "repair_worktree_failed", issue=issue_number, error=prepared.get("error"))
+        return result
+    result["artifacts"].append(str(repair_worktree))
 
     result["commands"].append(
         github.issue_comment(
@@ -686,7 +709,7 @@ def handle_ticket_repair(
             "--immutable-goal", repair_immutable_goal(repo, issue_number),
             "--dag-template", "creator-reviewer",
             "--handler", "codex",
-            "--handler-workspace", f"codex={worktree}",
+            "--handler-workspace", f"codex={repair_worktree}",
             "--handler", REPAIR_REVIEWER_HANDLER,
             "--topology", "sequential",
             "--run-output-root", str(ask_run_dir),

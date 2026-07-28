@@ -88,6 +88,18 @@ def lock_dir() -> Path:
     return state_root() / "lock"
 
 
+def repair_worktrees_dir() -> Path:
+    """Where per-ticket repair worktrees are created.
+
+    A repair is authored in its own worktree, never in the registered checkout.
+    That checkout is where a human works: agent-skills had 1,911 dirty entries
+    and cron lanes writing tracked files mid-run, and it sat 60 commits behind
+    origin/main, so a repair authored there would build on stale code and
+    collide with uncommitted work that is not the watchdog's to touch.
+    """
+    return state_root() / "repair-worktrees"
+
+
 def event_log_path() -> Path:
     return log_dir() / "project-watchdog.log"
 
