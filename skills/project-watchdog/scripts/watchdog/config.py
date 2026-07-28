@@ -14,6 +14,10 @@ Inputs
         Overrides the project registry file. Sanity checks point this at a
         fixture so a gate about idle behaviour is not rewritten every time a
         real project gains a ticket.
+    ``PROJECT_WATCHDOG_REPAIR_CREATOR`` / ``PROJECT_WATCHDOG_REPAIR_REVIEWER``
+        Override the two repair seats. Defaults are set so the reviewer is a
+        different model family from the creator; a reviewer that shares the
+        creator's blind spots is not a second opinion.
     ``PROJECT_WATCHDOG_WORKSPACE``
         Overrides the workspace root that holds project worktrees
         (default ``~/workspace/experiments``).
@@ -42,6 +46,7 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+from typing import Any
 
 from loguru import logger
 
@@ -117,6 +122,36 @@ def state_path() -> Path:
 def projects_path() -> Path:
     """Return the project registry, honouring ``PROJECT_WATCHDOG_PROJECTS_PATH``."""
     return _env_path("PROJECT_WATCHDOG_PROJECTS_PATH", PROJECTS_PATH)
+
+
+#: The creator seat. Must be able to mutate a workspace and produce a real git
+#: diff, which is the local Codex CLI lane -- an answer-only subagent cannot.
+DEFAULT_REPAIR_CREATOR = "codex"
+
+#: The reviewer seat. Deliberately a different model family from the creator:
+#: `gpt-5.5-xhigh` resolves to `codex exec --model ...`, the same family the
+#: creator runs, so it shared the creator's blind spots and was a second pass
+#: rather than a second opinion.
+DEFAULT_REPAIR_REVIEWER = "claude-opus-4-8"
+
+
+def repair_creator(project: dict[str, Any] | None = None) -> str:
+    """Handler that writes the fix, per project then env then default."""
+    return _repair_seat(project, "repair_creator", "PROJECT_WATCHDOG_REPAIR_CREATOR",
+                        DEFAULT_REPAIR_CREATOR)
+
+
+def repair_reviewer(project: dict[str, Any] | None = None) -> str:
+    """Handler that judges the fix, per project then env then default."""
+    return _repair_seat(project, "repair_reviewer", "PROJECT_WATCHDOG_REPAIR_REVIEWER",
+                        DEFAULT_REPAIR_REVIEWER)
+
+
+def _repair_seat(project: dict[str, Any] | None, key: str, env: str, default: str) -> str:
+    configured = str((project or {}).get(key) or "").strip()
+    if configured:
+        return configured
+    return os.environ.get(env, "").strip() or default
 
 
 def repair_worktrees_dir() -> Path:

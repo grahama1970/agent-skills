@@ -511,10 +511,10 @@ def tau_coder_start_handoff(
 
 
 #: runner_kind values this generic handler knows how to drive.
-#: Reviewer seat for the repair DAG. A non-mutating answer/review subagent, so
-#: it needs no workspace binding; the creator seat (codex) is the one that
-#: writes.
-REPAIR_REVIEWER_HANDLER = "gpt-5.5-xhigh"
+#: Kept as the module-level default for tests; the live values come from
+#: ``config.repair_creator``/``config.repair_reviewer`` so a project can name its
+#: own seats (agent-skills#1086).
+REPAIR_REVIEWER_HANDLER = config.DEFAULT_REPAIR_REVIEWER
 
 
 def repair_immutable_goal(repo: str, issue_number: int) -> str:
@@ -621,6 +621,25 @@ def handle_ticket_repair(
     result = _new_result(project, issue, "ticket_repair")
     result["selected_agent"] = "coder"
     result["runner_kind"] = runner_kind
+
+    # Two seats, deliberately different model families: a reviewer that shares
+    # the creator's blind spots is a second pass, not a second opinion.
+    creator = config.repair_creator(project)
+    reviewer = config.repair_reviewer(project)
+    result["seats"] = {"creator": creator, "reviewer": reviewer}
+    if creator == reviewer:
+        result.update(
+            {
+                "ok": False,
+                "status": "BLOCKED",
+                "summary": (
+                    f"creator and reviewer are both {creator!r}. A model reviewing its own "
+                    f"work is not review; configure repair_reviewer to a different family."
+                ),
+            }
+        )
+        log_event(run_id, "repair_seats_identical", issue=issue_number, seat=creator)
+        return result
 
     ask_run = config.ask_run_sh()
     if not ask_run.is_file():
@@ -746,9 +765,9 @@ def handle_ticket_repair(
             "--target", ",".join(sorted(targets)),
             "--immutable-goal", repair_immutable_goal(repo, issue_number),
             "--dag-template", "creator-reviewer",
-            "--handler", "codex",
-            "--handler-workspace", f"codex={repair_worktree}",
-            "--handler", REPAIR_REVIEWER_HANDLER,
+            "--handler", creator,
+            "--handler-workspace", f"{creator}={repair_worktree}",
+            "--handler", reviewer,
             "--topology", "sequential",
             "--run-output-root", str(ask_run_dir),
             "--execute",

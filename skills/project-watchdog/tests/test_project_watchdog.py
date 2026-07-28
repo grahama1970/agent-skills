@@ -771,3 +771,41 @@ def test_a_lease_that_takes_proceeds(tmp_path) -> None:
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "COMPLETED", result.get("summary")
+
+
+# --------------------------------------------------------------------------- #
+# Two seats, two model families (agent-skills#1086)
+# --------------------------------------------------------------------------- #
+
+
+def test_the_two_repair_seats_are_different_model_families() -> None:
+    """gpt-5.5-xhigh resolves to `codex exec --model ...` -- the creator's own
+    family. A reviewer sharing the creator's blind spots is a second pass, not a
+    second opinion."""
+    creator = config.repair_creator({})
+    reviewer = config.repair_reviewer({})
+    assert creator != reviewer
+    assert "codex" not in reviewer and "gpt" not in reviewer
+
+
+def test_a_project_may_name_its_own_seats() -> None:
+    project = {"repair_creator": "codex", "repair_reviewer": "webclaude"}
+    assert config.repair_creator(project) == "codex"
+    assert config.repair_reviewer(project) == "webclaude"
+
+
+def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
+    project = {
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "worktree": str(_clean_worktree(tmp_path)),
+        "repair_creator": "codex",
+        "repair_reviewer": "codex",
+    }
+    issue = _issue(31, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    with mock.patch.object(handlers, "run_cmd") as dispatched:
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert "not review" in result["summary"]
+    assert not dispatched.called
