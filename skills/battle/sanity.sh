@@ -136,8 +136,27 @@ if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/backend_eval.py" \
     --out-dir "$TMP_ROOT/backend-eval" >/tmp/battle-sanity-backend-eval.out 2>&1; then
   echo "BATTLE_BACKEND_EVAL_ALL_PASS"
 else
-  echo "BATTLE_BACKEND_EVAL_HAS_FAILURES (informational; see receipt)"
+  echo "BATTLE_BACKEND_EVAL_HAS_FAILURES (checking against known-defect list)"
 fi
 tail -20 /tmp/battle-sanity-backend-eval.out || true
+# Fatal on UNEXPECTED failures. Failures already owned by an open ticket are
+# listed here explicitly so sanity stays green while the ticketed repair lands,
+# but any NEW fixture regression fails the gate immediately (#1035).
+python3 - <<'PYEOF'
+import json, os, sys
+known = {
+    "fixture_valid::battle-004-kill-shot-pixi-replay",  # tracked in #1063
+}
+receipt = json.load(open(os.path.join(os.environ.get("TMPDIR", "/tmp"), "battle-sanity", "backend-eval", "receipt.json")))
+failed = set(receipt["summary"].get("failed_cases") or [])
+unexpected = sorted(failed - known)
+resolved = sorted(known - failed)
+if resolved:
+    print(f"   NOTE: known-defect entries now pass, remove from sanity.sh: {resolved}")
+if unexpected:
+    print(f"   UNEXPECTED backend-eval failures: {unexpected}", file=sys.stderr)
+    sys.exit(1)
+print(f"   backend-eval: {receipt['summary']['passed']}/{receipt['summary']['total']} pass; known ticketed failures: {sorted(failed & known)}")
+PYEOF
 
 echo "Result: PASS"
