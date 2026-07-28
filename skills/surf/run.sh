@@ -741,17 +741,19 @@ if surf_cli_available; then
             shift
             exec node "$LOCAL_CLI" page.text "$@"
         fi
-        # Extension builds disagree on whether user code is wrapped in a
-        # function: older ones require a top-level `return`, newer ones evaluate
-        # a bare expression and reject `return` outright. Send as written, and
-        # only if the runtime rejects the `return` do we resend it wrapped, so
-        # callers keep one form across builds (agent-skills#1062).
-        if [[ "$1" == "js" && "${2:-}" == *return* ]]; then
+        # Extension builds disagree on how EXECUTE_JAVASCRIPT evaluates caller
+        # code: the wrapper build accepts statements and needs a top-level
+        # `return`, while 2.6.0 evaluates a single bare expression and rejects
+        # `return`, `const`, and every other statement with a SyntaxError. Send
+        # the code as written and, only if the runtime raises a SyntaxError,
+        # resend it wrapped in an IIFE so one caller form works on both
+        # (agent-skills#1062).
+        if [[ "$1" == "js" && -n "${2:-}" ]]; then
             _js_rc=0
             _js_out="$(node "$LOCAL_CLI" "$@" 2>&1)" || _js_rc=$?
             # The CLI exits 0 even when the page evaluation throws, so key on
             # the message rather than the status.
-            if [[ "$_js_out" == *"Unexpected token 'return'"* ]]; then
+            if [[ "$_js_out" == *"SyntaxError"* ]]; then
                 _js_code="$2"
                 shift 2
                 exec node "$LOCAL_CLI" js "(() => { ${_js_code}
