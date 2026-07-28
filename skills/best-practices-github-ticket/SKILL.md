@@ -164,6 +164,40 @@ If issue metadata is contradictory, record the conflict and choose the narrowest
 route that can verify the reported failure. Escalate to `needs-human` only when
 repository evidence cannot resolve the conflict.
 
+## Concurrency Lanes
+
+Every agent-routable ticket carries a `lane:<id>` label. The lane is a
+**scheduling fact, not documentation**: `project-watchdog` uses it to decide
+what may be dispatched in parallel.
+
+| Lane | Surface |
+| --- | --- |
+| `lane:fe` | frontend code, design, UX |
+| `lane:be` | backend, Python, skill runtime, Rust/binary |
+| `lane:data` | datasets, migrations, corpora, ingest |
+| `lane:docs` | documentation and reports |
+| `lane:ops` | scheduler, cron, deployment |
+| `lane:sec` | security and compliance |
+
+The rule the lane encodes:
+
+- Two open tickets in **different** lanes on one project may be worked at the
+  same time. A frontend change and a backend change do not collide.
+- Two open tickets in the **same** lane on one project may not. The second
+  stacks on the first's unmerged changes and the result is an error cascade on
+  one skill, which is exactly what a cron-driven dispatcher will do unless the
+  lane stops it.
+
+`/ticket` derives the lane from `--route` so existing filings get one for free;
+`--lane` overrides when the route is a poor fit (a backend-routed ticket that is
+really a migration is `--lane data`). An unknown route yields no lane, and a
+ticket with no lane is not safe to dispatch concurrently with anything.
+
+A lease label is not a lane. `agent-active` (project-watchdog's own) and
+`maintainer-active` (written by `ticket lease`) both mean *taken*; the lane
+means *what surface it touches*. A dispatcher must honour both: skip any leased
+ticket regardless of lane, and skip any lane already in flight.
+
 ## Verification Contract
 
 Every ticket must name a **live end-to-end proof** that exercises the real path.

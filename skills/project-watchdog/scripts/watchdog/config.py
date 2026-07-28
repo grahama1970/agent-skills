@@ -129,6 +129,16 @@ HUMAN_HOLD_LABELS = frozenset(
     {"needs-human", "maintainer-blocked", "next:human", "status:deferred"}
 )
 
+#: Labels that mean some agent already holds this ticket. Distinct from a human
+#: hold: nobody is asking for a decision, the work is simply taken.
+#:
+#: ``agent-active`` is this watchdog's own lease. ``maintainer-active`` is what
+#: ``ticket lease`` writes (gh-ticket-tools.sh), so it is the label any other
+#: project agent holds a ticket with. Omitting it meant the watchdog would
+#: dispatch a second agent onto a skill someone was already editing, and both
+#: would write the same files.
+LEASE_LABELS = frozenset({"agent-active", "maintainer-active"})
+
 #: A lock older than this is treated as abandoned by a crashed or killed tick.
 LOCK_STALE_SECONDS = 900
 

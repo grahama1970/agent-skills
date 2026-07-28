@@ -97,6 +97,41 @@ HUMAN_ONLY_TYPES = {"question", "triage"}
 #: month. Stamping it at file time is what joins the two halves.
 AGENT_WORK_LABEL = "agent-work"
 
+#: Concurrency lanes. Two tickets in DIFFERENT lanes on one project can be
+#: worked at the same time; two in the SAME lane cannot, because they edit the
+#: same surface and the second stacks on the first's unmerged changes.
+#:
+#: project-watchdog uses `lane:<id>` to decide what is safe to dispatch in
+#: parallel, so the lane is a scheduling fact, not documentation.
+VALID_LANES = ("fe", "be", "data", "docs", "ops", "sec")
+
+#: Every route maps to exactly one lane, so existing tickets get a lane without
+#: the filer having to think about it. `--lane` overrides when the route is a
+#: poor fit.
+ROUTE_LANE = {
+    "frontend_code": "fe",
+    "design_or_ux": "fe",
+    "backend_python_or_skill_runtime": "be",
+    "rust_or_binary": "be",
+    "ops_or_scheduler": "ops",
+    "documentation_or_report": "docs",
+    "security_or_compliance": "sec",
+    "unknown": "",
+}
+
+
+def _lane_for(route: str, lane: str) -> str:
+    """Return the concurrency lane for a ticket, or empty when undecidable."""
+    if lane:
+        if lane not in VALID_LANES:
+            _die(
+                f"unknown --lane {lane!r}. Valid lanes: {', '.join(VALID_LANES)}. "
+                "The lane decides what project-watchdog may dispatch concurrently: "
+                "different lanes on one project run in parallel, the same lane does not."
+            )
+        return lane
+    return ROUTE_LANE.get(route, "")
+
 #: Commands that only ever exercise a deterministic gate. A proof made of these
 #: alone is refused: a fixed expectation can be satisfied by a change that
 #: targets the expectation rather than the behaviour.
@@ -213,10 +248,13 @@ def _is_agent_routable(ticket_type: str, route: str) -> bool:
     return bool(route) and route != "unknown"
 
 
-def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[str] | None = None) -> list[str]:
+def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[str] | None = None, lane: str = "") -> list[str]:
     labels = [f"type:{ticket_type}"]
     if _is_agent_routable(ticket_type, route):
         labels.append(AGENT_WORK_LABEL)
+    resolved_lane = _lane_for(route, lane)
+    if resolved_lane:
+        labels.append(f"lane:{resolved_lane}")
     if target.startswith("skills/"):
         if ticket_type == "bug":
             labels.append("skill-bug")
@@ -352,6 +390,7 @@ def _draft(
     context_files: list[str] | None = None,
     required_skills: list[str] | None = None,
     depends_on: list[str] | None = None,
+    lane: str = "",
 ) -> TicketDraft:
     _validate_common(ticket_type, target, proof, route)
     body = _body(
@@ -373,7 +412,7 @@ def _draft(
         title=title,
         target=target,
         body=body,
-        labels=_labels(ticket_type, target, route, agent, extra_labels),
+        labels=_labels(ticket_type, target, route, agent, extra_labels, lane),
         route=route,
         agent=agent,
     )
@@ -452,6 +491,7 @@ def bug(
     repro: str = typer.Option(..., "--repro"),
     proof: str = typer.Option(..., "--proof"),
     route: str = typer.Option("unknown", "--route"),
+    lane: str = typer.Option("", "--lane", help="Concurrency lane: fe, be, data, docs, ops, sec. Derived from --route when omitted."),
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
@@ -478,6 +518,7 @@ def bug(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Observed failure": observed,
@@ -502,6 +543,7 @@ def feature(
     acceptance: str = typer.Option(..., "--acceptance"),
     proof: str = typer.Option(..., "--proof"),
     route: str = typer.Option("unknown", "--route"),
+    lane: str = typer.Option("", "--lane", help="Concurrency lane: fe, be, data, docs, ops, sec. Derived from --route when omitted."),
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
@@ -528,6 +570,7 @@ def feature(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Current limitation": limitation,
@@ -552,6 +595,7 @@ def optimization(
     measurable_target: str = typer.Option(..., "--measurable-target"),
     proof: str = typer.Option(..., "--proof"),
     route: str = typer.Option("unknown", "--route"),
+    lane: str = typer.Option("", "--lane", help="Concurrency lane: fe, be, data, docs, ops, sec. Derived from --route when omitted."),
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
@@ -577,6 +621,7 @@ def optimization(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Current cost or friction": friction,
@@ -599,6 +644,7 @@ def maintenance(
     scoped_files: str = typer.Option(..., "--scoped-files"),
     proof: str = typer.Option(..., "--proof"),
     route: str = typer.Option("unknown", "--route"),
+    lane: str = typer.Option("", "--lane", help="Concurrency lane: fe, be, data, docs, ops, sec. Derived from --route when omitted."),
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
@@ -625,6 +671,7 @@ def maintenance(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Invariant to preserve": invariant,
@@ -664,6 +711,7 @@ def question(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Concrete question": question_text,
@@ -696,6 +744,7 @@ def triage(
         proof="Route/type decision or needs-human with exact missing information.",
         route=route,
         agent=agent,
+        lane=lane,
         details={
             "Available clues": clues,
             "Missing data": missing_data,

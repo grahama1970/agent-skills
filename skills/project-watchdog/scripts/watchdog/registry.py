@@ -203,8 +203,8 @@ def classify_issue(issue: dict[str, Any]) -> str | None:
     """
     labels = {label.get("name") for label in issue.get("labels", [])}
 
-    # Lease, human-blocked, and upstream-blocked issues are never routable.
-    if labels & {config.LEASE_LABEL, config.BLOCKED_LABEL, *config.HUMAN_HOLD_LABELS}:
+    # Never routable: already leased by any agent, human-blocked, or parked.
+    if labels & {config.BLOCKED_LABEL, *config.LEASE_LABELS, *config.HUMAN_HOLD_LABELS}:
         return None
     if config.READY_LABEL not in labels:
         return None

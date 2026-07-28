@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
+import subprocess
 import sys
 import time
 from datetime import UTC, datetime, timedelta
-import os
-import subprocess
 from pathlib import Path
 from unittest import mock
 
@@ -611,3 +611,28 @@ def test_missing_command_specs_block_before_any_github_write(tmp_path) -> None:
     assert result["status"] == "BLOCKED"
     assert "missing Tau command specs" in result["summary"]
     assert not comment.called
+
+
+# --------------------------------------------------------------------------- #
+# Lease exclusion — agent-skills#1082
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("lease", sorted(config.LEASE_LABELS))
+def test_any_agent_lease_blocks_routing(lease: str) -> None:
+    """A ticket held by ANY agent is untouchable, not just this watchdog's own.
+
+    maintainer-active is what `ticket lease` writes, so omitting it meant the
+    watchdog dispatched a second agent onto a skill someone was already editing.
+    """
+    assert registry.classify_issue(_issue(1, labels=["agent-work", lease])) is None
+
+
+def test_maintainer_active_is_in_the_lease_set() -> None:
+    assert "maintainer-active" in config.LEASE_LABELS
+    assert "agent-active" in config.LEASE_LABELS
+
+
+def test_lease_and_human_hold_are_distinct_concepts() -> None:
+    """A lease means taken; a human hold means a decision is owed. Not the same."""
+    assert not (config.LEASE_LABELS & config.HUMAN_HOLD_LABELS)
