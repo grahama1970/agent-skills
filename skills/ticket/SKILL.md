@@ -99,6 +99,37 @@ commands such as `lease`, `comment`, `block`, `release`, `close`, and
 | `attach-proof ISSUE --file proof.md` | Comment proof on the issue. |
 | `ci status`, `ci rerun`, `ci dispatch` | Explicit GitHub Actions status/rerun/dispatch helpers. |
 
+## Per-ticket bootstrap context
+
+`project-watchdog` forwards the whole issue body to the repair node, so the body
+is the only project context a stateless, cron-dispatched agent receives. Name the
+load-bearing files and skills at file time instead of making it rediscover them
+on every tick:
+
+```bash
+skills/ticket/run.sh bug "Fix the thing" \
+  --target skills/example \
+  --observed "..." --expected "..." --repro "..." \
+  --proof "live run against the real service, read back from the receipt" \
+  --context-file GOAL.md \
+  --context-file skills/example/src/thing.py \
+  --required-skill best-practices-python \
+  --required-skill review-code \
+  --depends-on grahama1970/agent-skills#1040
+```
+
+All three are optional and repeatable, and available on `bug`, `feature`,
+`optimization`, and `maintenance` — the agent-routable types. Omitting them
+leaves the body byte-identical to before. They are mirrored into the
+`ticket-skill` marker block for machine reads, and `--depends-on` renders
+`blocked-by: owner/repo#N`.
+
+Only the VARIABLE context belongs here. Universal execution policy — read
+project knowledge, lease one issue, fail closed, retain proof — lives in
+`best-practices-github-ticket` and is referenced, not copied into every issue:
+identical boilerplate in every body dilutes the ticket-specific signal and costs
+context on every dispatch.
+
 ## Rules
 
 - Do not file vague tickets. Missing target or proof becomes `triage`.
