@@ -69,6 +69,7 @@ def search(
     rationale: Optional[str] = typer.Option(None, "--rationale", help="Why the dogpile is being run now, including blocker context"),
     context: Optional[str] = typer.Option(None, "--context", help="Concrete problem context and constraints"),
     context_file: Optional[Path] = typer.Option(None, "--context-file", help="Additional context read from a local file"),
+    read_n: int = typer.Option(1, "--read-n", min=1, max=15, help="Deep-read the top-N domain-diverse Brave sources into synthesis (Deep-Research style); 1 keeps the single best-of-top-3 pick"),
 ):
     """Aggregate search results from multiple sources."""
 
@@ -115,6 +116,7 @@ def search(
             report_file=report_file,
             publisher=publisher,
             request_context=request_context,
+            read_n=read_n,
         )
         search_success = True
     except Exception as e:

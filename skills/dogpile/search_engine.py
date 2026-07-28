@@ -68,6 +68,7 @@ def _run_search(
     report_file: Optional[Path] = None,
     publisher: Optional[PartialResultsPublisher] = None,
     request_context: Optional[Dict[str, Any]] = None,
+    read_n: int = 1,
 ):
     """Internal search implementation."""
     # Pre-hook: Recall prior research on this topic to avoid redundant API calls
@@ -141,7 +142,7 @@ def _run_search(
             "github": ("stage2_github", lambda: _run_github_stage2_bundle(stage1_result, query, is_code_related)),
             "arxiv": ("stage2_arxiv", lambda: _run_arxiv_stage2_bundle(stage1_result, query)),
             "youtube": ("stage2_youtube", lambda: _timed_stage2("youtube", run_stage2_youtube, stage1_result)),
-            "brave": ("stage2_brave", lambda: _timed_stage2("brave", run_stage2_brave, stage1_result, query, search_codex)),
+            "brave": ("stage2_brave", lambda: _timed_stage2("brave", run_stage2_brave, stage1_result, query, search_codex, read_n)),
         }
         if name not in stage_map:
             return
