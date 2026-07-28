@@ -921,6 +921,28 @@ def _extract_verdict(text: str) -> str | None:
     return None
 
 
+def _read_ask_responses_by_node(run_root: Path) -> dict[str, str]:
+    """Each handler seat's cleaned answer, keyed by node id.
+
+    A panel needs per-seat verdicts: concatenating them would let one seat's
+    "VERDICT: PASS" be read as the panel's answer.
+    """
+    responses: dict[str, str] = {}
+    for node_dir in sorted(run_root.glob("*/node-artifacts/*")):
+        if node_dir.name == "join":
+            continue
+        clean = node_dir / "response.md"
+        raw = node_dir / "response.raw.md"
+        path = clean if clean.is_file() else raw
+        if not path.is_file():
+            continue
+        try:
+            responses[node_dir.name] = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            logger.error("could not read $ask response {}: {}", path, exc)
+    return responses
+
+
 def _read_ask_response(run_root: Path) -> str:
     """The handler's cleaned answer from an $ask run directory.
 
@@ -959,10 +981,25 @@ def handle_closure_audit(
     """
     repo = project_repo(project)
     issue_number = int(issue["number"])
-    reviewer = config.repair_reviewer(project)
+    auditors = config.closure_auditors(project)
     result = _new_result(project, issue, "closure_audit")
-    result["selected_agent"] = reviewer
-    log_event(run_id, "closure_audit_start", issue=issue_number, repo=repo, reviewer=reviewer)
+    result["selected_agent"] = ",".join(auditors)
+    result["auditors"] = auditors
+    log_event(run_id, "closure_audit_start", issue=issue_number, repo=repo, auditors=auditors)
+
+    if len(auditors) < 2 or len(set(auditors)) != len(auditors):
+        result.update(
+            {
+                "ok": False,
+                "status": "BLOCKED",
+                "summary": (
+                    f"closure audit needs at least two distinct seats, got {auditors}. "
+                    f"One model that over-accepts would uphold its own bad closures."
+                ),
+            }
+        )
+        log_event(run_id, "closure_audit_panel_invalid", issue=issue_number, auditors=auditors)
+        return result
 
     comments = github.issue_comments(repo, issue_number)
     reopens = sum(
@@ -994,7 +1031,9 @@ def handle_closure_audit(
             {
                 "ok": True,
                 "status": "DRY_RUN",
-                "summary": f"would audit the closure of {repo}#{issue_number} with {reviewer}",
+                "summary": (
+                    f"would audit the closure of {repo}#{issue_number} with {auditors}"
+                ),
             }
         )
         return result
@@ -1012,8 +1051,9 @@ def handle_closure_audit(
                 f"evidence for the acceptance criterion and proof the ticket names. "
                 f"Do not accept an assertion of success as evidence that a proof ran."
             ),
-            "--dag-template", "single-call",
-            "--handler", reviewer,
+            "--dag-template", "roundtable",
+            "--topology", "concurrent",
+            *[arg for seat in auditors for arg in ("--handler", seat)],
             "--run-output-root", str(ask_run_dir),
             "--execute",
             "--allow-provider-calls",
@@ -1025,9 +1065,27 @@ def handle_closure_audit(
     result["commands"].append(audit)
     result["artifacts"].append(str(ask_run_dir))
 
-    response = _read_ask_response(ask_run_dir)
-    verdict = _extract_verdict(response)
+    by_node = _read_ask_responses_by_node(ask_run_dir)
+    seat_verdicts = {node: _extract_verdict(text) for node, text in by_node.items()}
+    result["seat_verdicts"] = seat_verdicts
+    answered = [v for v in seat_verdicts.values() if v]
+
+    # A closure is upheld only if every seat that answered says so, and only if
+    # the whole panel answered. Any FAIL reopens: one competent reviewer showing
+    # the named proof was never run is decisive, and a closure is a claim that
+    # has to be established rather than a default to fall back on.
+    if any(v == "FAIL" for v in answered):
+        verdict = "FAIL"
+    elif answered and len(answered) == len(auditors) and all(v == "PASS" for v in answered):
+        verdict = "PASS"
+    elif any(v == "NEEDS_ATTENTION" for v in answered):
+        verdict = "NEEDS_ATTENTION"
+    else:
+        verdict = None
     result["verdict"] = verdict
+    response = "\n\n".join(
+        f"### {node}\n{text.strip()}" for node, text in sorted(by_node.items())
+    )
 
     if audit.get("exit_code") != 0 or verdict is None:
         # No verdict is not a pass. Leave the ticket closed and say so, rather
@@ -1037,8 +1095,9 @@ def handle_closure_audit(
                 "ok": False,
                 "status": "NEEDS_ATTENTION",
                 "summary": (
-                    f"closure audit of {repo}#{issue_number} produced no verdict "
-                    f"(exit {audit.get('exit_code')}). The closure is unreviewed, not accepted."
+                    f"closure audit of {repo}#{issue_number} produced no usable panel verdict "
+                    f"(exit {audit.get('exit_code')}, seats {seat_verdicts}). The closure is "
+                    f"unreviewed, not accepted."
                 ),
             }
         )
@@ -1058,7 +1117,8 @@ def handle_closure_audit(
                         "run_id": run_id,
                         "issue": f"issue#{issue_number}",
                         "repo": repo,
-                        "reviewer": reviewer,
+                        "auditors": auditors,
+                        "seat_verdicts": seat_verdicts,
                         "verdict": verdict,
                         "outcome": "closure_upheld",
                     },
@@ -1072,7 +1132,9 @@ def handle_closure_audit(
             {
                 "ok": True,
                 "status": "COMPLETED",
-                "summary": f"closure of {repo}#{issue_number} upheld by {reviewer}",
+                "summary": (
+                    f"closure of {repo}#{issue_number} upheld unanimously by {auditors}"
+                ),
             }
         )
         log_event(run_id, "closure_audit_pass", issue=issue_number)
@@ -1096,7 +1158,8 @@ def handle_closure_audit(
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "repo": repo,
-                    "reviewer": reviewer,
+                    "auditors": auditors,
+                    "seat_verdicts": seat_verdicts,
                     "verdict": verdict,
                     "outcome": outcome,
                     "prior_reopens": reopens,
@@ -1139,4 +1202,133 @@ def handle_closure_audit(
         }
     )
     log_event(run_id, "closure_audit_reopened", issue=issue_number, verdict=verdict)
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# Completion attestation — "everything is closed" is also a claim
+# --------------------------------------------------------------------------- #
+
+
+def build_completion_attestation_task(*, repo: str, recent: list[dict[str, Any]]) -> str:
+    """Ask an independent seat whether this project is genuinely finished."""
+    listing = "\n".join(
+        f"- #{i['number']} [{i.get('stateReason') or 'CLOSED'}] {str(i.get('title', ''))[:110]}"
+        for i in recent[:40]
+    ) or "(no recently closed tickets)"
+    return (
+        f"Every agent-routable ticket in {repo} is closed, and each closure was "
+        f"reviewed and upheld. Decide whether that actually means the work is done.\n\n"
+        f"Answer VERDICT: PASS only if this set of closed tickets plausibly "
+        f"represents finished work. Answer VERDICT: FAIL if the titles suggest an "
+        f"obvious gap: a ticket closed as done whose stated outcome contradicts "
+        f"another, work that clearly implies a follow-up nobody filed, or a pattern "
+        f"of closures that looks like scope was quietly abandoned rather than "
+        f"completed. Answer VERDICT: NEEDS_ATTENTION if you cannot tell.\n\n"
+        f"Name the specific missing work if you find any. An empty queue is not "
+        f"evidence of a finished project -- it is equally consistent with nobody "
+        f"filing the remaining tickets.\n\n"
+        f"--- recently closed ---\n{listing}"
+    )
+
+
+def handle_completion_attestation(
+    run_id: str,
+    receipt_dir: Path,
+    project: dict[str, Any],
+    recent: list[dict[str, Any]],
+    *,
+    apply: bool,
+) -> dict[str, Any]:
+    """Independent check that a project with nothing open is genuinely done.
+
+    Every judgement up to here came from the API-routed models that did and
+    reviewed the work. This asks a different transport entirely, so "everything
+    is done" is not self-certified by the system that did it.
+    """
+    repo = project_repo(project)
+    attestor = config.completion_attestor(project)
+    result = {
+        "project_id": project.get("project_id"),
+        "repo": repo,
+        "action": "completion_attestation",
+        "selected_agent": attestor,
+        "ok": False,
+        "commands": [],
+        "artifacts": [],
+    }
+    log_event(run_id, "completion_attestation_start", repo=repo, attestor=attestor)
+
+    task = build_completion_attestation_task(repo=repo, recent=recent)
+    task_path = receipt_dir / "completion-attestation.md"
+    task_path.write_text(task, encoding="utf-8")
+    result["artifacts"].append(str(task_path))
+
+    if not apply:
+        result.update(
+            {
+                "ok": True,
+                "status": "DRY_RUN",
+                "summary": f"would ask {attestor} whether {repo} is genuinely finished",
+            }
+        )
+        return result
+
+    run_dir = receipt_dir / "completion-attestation"
+    attest = run_cmd(
+        [
+            str(config.ask_run_sh()),
+            "tau-dag",
+            task,
+            "--repo", repo,
+            "--target", "project-completion",
+            "--immutable-goal", (
+                f"Decide whether {repo} is genuinely finished, or whether an empty "
+                f"ticket queue is hiding unfiled work. Name the specific gap if there is one."
+            ),
+            "--dag-template", "single-call",
+            "--handler", attestor,
+            "--run-output-root", str(run_dir),
+            "--execute",
+            "--allow-provider-calls",
+            "--json",
+        ],
+        cwd=config.ask_run_sh().parent,
+        timeout_s=int(project.get("completion_attest_timeout_s", 1200)),
+    )
+    result["commands"].append(attest)
+    result["artifacts"].append(str(run_dir))
+
+    response = _read_ask_response(run_dir)
+    verdict = _extract_verdict(response)
+    result["verdict"] = verdict
+    result["excerpt"] = response.strip()[:2000]
+
+    if attest.get("exit_code") != 0 or verdict is None:
+        result.update(
+            {
+                "ok": False,
+                "status": "NEEDS_ATTENTION",
+                "summary": (
+                    f"completion attestation for {repo} produced no verdict "
+                    f"(exit {attest.get('exit_code')}). Not attested."
+                ),
+            }
+        )
+        log_event(run_id, "completion_attestation_no_verdict", repo=repo)
+        return result
+
+    result.update(
+        {
+            "ok": verdict == "PASS",
+            "status": "COMPLETED" if verdict == "PASS" else "NEEDS_ATTENTION",
+            "summary": (
+                f"{attestor} attests {repo} is finished"
+                if verdict == "PASS"
+                else f"{attestor} does not attest {repo} is finished ({verdict}); "
+                f"see excerpt for the named gap"
+            ),
+        }
+    )
+    log_event(run_id, "completion_attestation_verdict", repo=repo, verdict=verdict)
     return result

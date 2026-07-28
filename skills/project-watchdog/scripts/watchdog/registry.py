@@ -397,6 +397,23 @@ def list_closed_for_audit(
     return pending
 
 
+def list_recently_closed(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:
+    """Closed agent-work tickets, newest first, for the completion attestation."""
+    repo = project_repo(project)
+    result = run_cmd(
+        [
+            "gh", "issue", "list", "--repo", repo, "--state", "closed",
+            "--label", config.READY_LABEL, "--limit", "40",
+            "--json", "number,title,closedAt,stateReason",
+        ],
+        timeout_s=60,
+    )
+    if result.get("exit_code") != 0:
+        raise RuntimeError(f"closed-issue scan failed for {repo}: {result.get('stderr')}")
+    issues = json.loads(result.get("stdout") or "[]")
+    return sorted(issues, key=lambda i: str(i.get("closedAt") or ""), reverse=True)
+
+
 def _parse_iso(value: Any) -> float | None:
     """Epoch seconds for a GitHub timestamp, or None when unreadable."""
     if not value:

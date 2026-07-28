@@ -934,7 +934,8 @@ def test_audit_ignores_closures_older_than_the_window() -> None:
     assert [i["number"] for i in pending] == [5], "an old closure is history, not a reopen"
 
 
-def _run_audit(tmp_path, response: str, *, exit_code: int = 0, comments=None):
+def _run_audit(tmp_path, response, *, exit_code: int = 0, comments=None):
+    """`response` is either one string (both seats agree) or {node: text}."""
     project = {"project_id": "p", "repo": TAU_REPO, "worktree": str(tmp_path)}
     issue = _closed(9, labels=["agent-work"], closed_at="2026-07-28T00:00:00Z")
     calls: dict = {"edits": [], "reopened": [], "comments": []}
@@ -953,7 +954,15 @@ def _run_audit(tmp_path, response: str, *, exit_code: int = 0, comments=None):
             side_effect=lambda r, n: calls["reopened"].append(n) or {"exit_code": 0},
         ),
         mock.patch.object(handlers, "run_cmd", return_value={"exit_code": exit_code, "stderr": ""}),
-        mock.patch.object(handlers, "_read_ask_response", return_value=response),
+        mock.patch.object(
+            handlers,
+            "_read_ask_responses_by_node",
+            return_value=(
+                response
+                if isinstance(response, dict)
+                else {"handler-a": response, "handler-b": response}
+            ),
+        ),
     ):
         result = handlers.handle_closure_audit("run", tmp_path, project, issue, apply=True)
     return result, calls
@@ -1026,3 +1035,138 @@ def test_a_lane_with_only_a_raw_response_still_yields_a_verdict(tmp_path) -> Non
     node.mkdir(parents=True)
     (node / "response.raw.md").write_text('{"content":"VERDICT: PASS"}')
     assert handlers._extract_verdict(handlers._read_ask_response(tmp_path)) == "PASS"
+
+
+# --- the audit panel: two seats, not one ------------------------------------
+
+
+def test_a_split_panel_reopens(tmp_path) -> None:
+    """One seat showing the named proof was never run is decisive.
+
+    A closure is a claim that has to be established, not a default to fall back
+    on when reviewers disagree.
+    """
+    result, calls = _run_audit(
+        tmp_path,
+        {"handler-a": "Looks fine to me.\nVERDICT: PASS",
+         "handler-b": "The named proof was never run.\nVERDICT: FAIL"},
+    )
+    assert result["verdict"] == "FAIL"
+    assert calls["reopened"] == [9]
+
+
+def test_a_closure_is_upheld_only_when_every_seat_answers_pass(tmp_path) -> None:
+    result, calls = _run_audit(
+        tmp_path,
+        {"handler-a": "VERDICT: PASS", "handler-b": "I could not tell from this."},
+    )
+    assert result["verdict"] is None, "a silent seat is not a passing seat"
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert calls["reopened"] == []
+    assert not any(e.get("add") == [config.CLOSURE_VERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_a_unanimous_pass_upholds_the_closure(tmp_path) -> None:
+    result, calls = _run_audit(
+        tmp_path, {"handler-a": "VERDICT: PASS", "handler-b": "VERDICT: PASS"}
+    )
+    assert result["verdict"] == "PASS" and result["status"] == "COMPLETED"
+    assert any(e.get("add") == [config.CLOSURE_VERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_the_panel_records_every_seat_verdict(tmp_path) -> None:
+    result, _ = _run_audit(
+        tmp_path, {"handler-a": "VERDICT: PASS", "handler-b": "VERDICT: FAIL"}
+    )
+    assert result["seat_verdicts"] == {"handler-a": "PASS", "handler-b": "FAIL"}
+
+
+def test_a_single_seat_panel_is_refused(tmp_path) -> None:
+    """One model that over-accepts would uphold its own bad closures."""
+    project = {
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(tmp_path),
+        "closure_auditors": ["claude-opus-4-8"],
+    }
+    issue = _closed(9, labels=["agent-work"], closed_at="2026-07-28T00:00:00Z")
+    with mock.patch.object(handlers, "run_cmd") as dispatched:
+        result = handlers.handle_closure_audit("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert "two distinct seats" in result["summary"]
+    assert not dispatched.called
+
+
+def test_duplicate_seats_are_refused(tmp_path) -> None:
+    project = {
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(tmp_path),
+        "closure_auditors": ["claude-opus-4-8", "claude-opus-4-8"],
+    }
+    issue = _closed(9, labels=["agent-work"], closed_at="2026-07-28T00:00:00Z")
+    with mock.patch.object(handlers, "run_cmd") as dispatched:
+        result = handlers.handle_closure_audit("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert not dispatched.called
+
+
+def test_the_two_default_seats_are_different_families() -> None:
+    seats = config.closure_auditors()
+    assert len(seats) == 2 and len(set(seats)) == 2
+    assert not (all("gpt" in s for s in seats) or all("claude" in s for s in seats))
+
+
+# --------------------------------------------------------------------------- #
+# Completion attestation — an empty queue is not proof of a finished project
+# --------------------------------------------------------------------------- #
+
+
+def _run_attestation(tmp_path, response: str, *, exit_code: int = 0, project=None):
+    project = project or {"project_id": "p", "repo": TAU_REPO}
+    recent = [{"number": 1, "title": "did a thing", "stateReason": "COMPLETED"}]
+    with (
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": exit_code, "stderr": ""}),
+        mock.patch.object(handlers, "_read_ask_response", return_value=response),
+    ):
+        return handlers.handle_completion_attestation(
+            "run", tmp_path, project, recent, apply=True
+        )
+
+
+def test_the_attestor_is_a_different_transport_from_the_working_models() -> None:
+    """Every judgement before this came from API-routed models that did and
+    reviewed the work; the attestation must not be self-certified."""
+    attestor = config.completion_attestor()
+    assert attestor not in config.closure_auditors()
+    assert attestor != config.repair_creator() and attestor != config.repair_reviewer()
+
+
+def test_an_attested_project_passes(tmp_path) -> None:
+    result = _run_attestation(tmp_path, "Nothing obviously missing.\nVERDICT: PASS")
+    assert result["verdict"] == "PASS" and result["ok"] is True
+    assert result["status"] == "COMPLETED"
+
+
+def test_a_refused_attestation_is_not_a_finished_project(tmp_path) -> None:
+    result = _run_attestation(
+        tmp_path, "#12 implies a follow-up nobody filed.\nVERDICT: FAIL"
+    )
+    assert result["verdict"] == "FAIL" and result["ok"] is False
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert "named gap" in result["summary"]
+
+
+def test_a_failed_attestor_run_does_not_attest(tmp_path) -> None:
+    """A browser seat that could not run is not agreement that work is done."""
+    result = _run_attestation(tmp_path, "VERDICT: PASS", exit_code=1)
+    assert result["ok"] is False and result["status"] == "NEEDS_ATTENTION"
+
+
+def test_the_attestation_task_names_the_empty_queue_trap(tmp_path) -> None:
+    task = handlers.build_completion_attestation_task(
+        repo=TAU_REPO, recent=[{"number": 7, "title": "t", "stateReason": "COMPLETED"}]
+    )
+    assert "empty queue is not evidence" in task
+    assert "VERDICT: PASS" in task and "VERDICT: FAIL" in task
+    assert "#7" in task
+
+
+def test_a_project_may_name_its_own_attestor() -> None:
+    assert config.completion_attestor({"completion_attestor": "webkimi"}) == "webkimi"

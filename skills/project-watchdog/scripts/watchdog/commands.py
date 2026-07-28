@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import shlex
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -44,7 +45,11 @@ from .core import (
     timestamp,
     write_json,
 )
-from .handlers import handle_closure_audit, handle_issue
+from .handlers import (
+    handle_closure_audit,
+    handle_completion_attestation,
+    handle_issue,
+)
 from .registry import find_project, list_routable_issues
 
 #: Skip reasons a later tick can clear without anyone intervening. A lease ends
@@ -178,6 +183,49 @@ def _audit_one_closure(
     issue = sorted(chosen["pending"], key=lambda i: str(i.get("closedAt") or ""))[0]
     receipt["closure_audit"]["selected"] = int(issue["number"])
     return handle_closure_audit(run_id, receipt_dir, chosen["project"], issue, apply=apply)
+
+
+def _attest_completion(
+    run_id: str,
+    receipt_dir: Path,
+    state: dict[str, Any],
+    receipt: dict[str, Any],
+    *,
+    apply: bool,
+) -> dict[str, Any] | None:
+    """Ask an independent seat whether a finished-looking project is finished.
+
+    Fires only when a project has no open routable ticket AND no closure left to
+    audit -- the point where the system would otherwise declare itself done. An
+    empty queue is equally consistent with nobody filing the remaining work, and
+    every judgement up to here came from the models that did and reviewed it.
+
+    Rate-limited per project: every ticket being closed is a durable state, so
+    without that the cron would re-ask the same question every minute.
+    """
+    now = time.time()
+    attested = state.setdefault("completion_attested_at", {})
+    for candidate in registry.rotation_order(load_json(config.projects_path()), state):
+        cid = str(candidate.get("project_id"))
+        if state.get("projects", {}).get(cid, {}).get("state") != "active":
+            continue
+        last = float(attested.get(cid) or 0)
+        if now - last < config.COMPLETION_ATTEST_INTERVAL_SECONDS:
+            continue
+        try:
+            recent = registry.list_recently_closed(run_id, candidate)
+        except RuntimeError as exc:
+            logger.error("completion scan failed for {}: {}", cid, exc)
+            continue
+        if not recent:
+            continue
+        attested[cid] = now
+        write_json(config.state_path(), state)
+        receipt["completion_attestation"] = {"project_id": cid, "closed_seen": len(recent)}
+        return handle_completion_attestation(
+            run_id, receipt_dir, candidate, recent, apply=apply
+        )
+    return None
 
 
 def _tick_locked(
@@ -315,6 +363,17 @@ def _tick_locked(
             receipt["ok"] = bool(audited.get("ok"))
             receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"
             streaks.clear_idle(str(audited.get("project_id") or project_id))
+            return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
+
+    # Nothing to repair and nothing to audit: the point where the system would
+    # otherwise call itself done. Ask an independent seat whether it actually is.
+    if project is None:
+        attested = _attest_completion(run_id, receipt_dir, state, receipt, apply=apply)
+        if attested is not None:
+            receipt["handled_issues"].append(attested)
+            receipt["handled_count"] = 1
+            receipt["ok"] = bool(attested.get("ok"))
+            receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"
             return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
 
     if project is None:
