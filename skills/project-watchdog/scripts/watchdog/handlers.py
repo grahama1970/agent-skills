@@ -153,7 +153,8 @@ def handle_tau_handoff_dispatch(
             ),
         )
     )
-    result["commands"].append(github.issue_edit(repo, issue_number, add=[config.LEASE_LABEL]))
+    if not acquire_lease(run_id, result, repo, issue_number):
+        return result
 
     uv_bin = config.resolve_uv_bin()
     loop_dir = receipt_dir / "tau-command-loop"
@@ -294,7 +295,8 @@ def handle_tau_coder_spec(
             ),
         )
     )
-    result["commands"].append(github.issue_edit(repo, issue_number, add=[config.LEASE_LABEL]))
+    if not acquire_lease(run_id, result, repo, issue_number):
+        return result
 
     uv_bin = config.resolve_uv_bin()
     coder_spec = tau_coder_spec_path(worktree)
@@ -549,6 +551,38 @@ def build_repair_task(
     )
 
 
+def acquire_lease(run_id: str, result: dict[str, Any], repo: str, issue_number: int) -> bool:
+    """Apply the lease label, and report whether it actually took.
+
+    The lease is the ONLY thing stopping a later tick from dispatching a second
+    repair on the same ticket, so a lease that silently failed is worse than no
+    lease attempt at all -- the guard reads the ticket as free.
+
+    Observed 2026-07-28: neither ``agent-active`` nor ``agent-blocked`` existed
+    as a label in grahama1970/agent-skills, so every ``gh issue edit
+    --add-label`` exited nonzero, the lease comment posted regardless, and the
+    dispatch went ahead unleased. Nothing checked the exit code.
+    """
+    lease = github.issue_edit(repo, issue_number, add=[config.LEASE_LABEL])
+    result["commands"].append(lease)
+    if lease.get("exit_code") == 0:
+        return True
+    result.update(
+        {
+            "ok": False,
+            "status": "BLOCKED",
+            "summary": (
+                f"could not apply {config.LEASE_LABEL!r} to {repo}#{issue_number}: "
+                f"{str(lease.get('stderr'))[:200]}. Not dispatching unleased -- nothing "
+                f"would stop the next tick starting a second repair on the same ticket. "
+                f"Run: skills/ticket/run.sh ensure-labels --repo {repo}"
+            ),
+        }
+    )
+    log_event(run_id, "lease_failed", issue=issue_number, stderr=lease.get("stderr"))
+    return False
+
+
 def issue_goal_hash(repo: str, issue_number: int) -> str:
     """Derive a stable per-issue goal hash.
 
@@ -693,7 +727,8 @@ def handle_ticket_repair(
             ),
         )
     )
-    result["commands"].append(github.issue_edit(repo, issue_number, add=[config.LEASE_LABEL]))
+    if not acquire_lease(run_id, result, repo, issue_number):
+        return result
 
     # $ask compiles the creator/reviewer DAG and Tau executes it. The watchdog
     # does not hand-author a tau.dag_contract.v1: doing so bound this lane to

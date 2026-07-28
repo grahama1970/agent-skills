@@ -519,6 +519,12 @@ cmd_ensure_labels() {
         "needs-human|d93f0b|Human input or authority required"
         "external-owner|6f42c1|Owner is outside this repository"
         "agent-work|0052cc|Ticket is routable to a cron-dispatched repair agent"
+        # project-watchdog's own routing vocabulary. Without these, `gh issue
+        # edit --add-label` fails and the lease silently does not happen, so the
+        # in-flight guard sees nothing and the watchdog works ahead.
+        "agent-active|0052cc|A repair agent holds this ticket"
+        "agent-blocked|b60205|A repair attempt failed; needs a decision before retry"
+        "agent-done|0e8a16|A repair agent finished this ticket"
         "route:backend_python_or_skill_runtime|1d76db|Maintainer route: backend Python or skill runtime"
         "route:design_or_ux|1d76db|Maintainer route: design or UX"
         "route:frontend_code|1d76db|Maintainer route: frontend code"

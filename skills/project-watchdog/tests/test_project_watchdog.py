@@ -705,3 +705,69 @@ def test_maintainer_active_is_in_the_lease_set() -> None:
 def test_lease_and_human_hold_are_distinct_concepts() -> None:
     """A lease means taken; a human hold means a decision is owed. Not the same."""
     assert not (config.LEASE_LABELS & config.HUMAN_HOLD_LABELS)
+
+
+# --------------------------------------------------------------------------- #
+# A lease that did not take must stop the dispatch
+# --------------------------------------------------------------------------- #
+
+
+def test_a_failed_lease_stops_the_dispatch(tmp_path) -> None:
+    """Neither agent-active nor agent-blocked existed in agent-skills.
+
+    Every `gh issue edit --add-label` exited nonzero, the lease comment posted
+    regardless, and the repair dispatched unleased -- so the in-flight guard read
+    the ticket as free and nothing stopped the next tick starting a second one.
+    """
+    project = {
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "worktree": str(_clean_worktree(tmp_path)),
+        "runner_kind": "project-local",
+    }
+    issue = _issue(21, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github,
+            "issue_edit",
+            return_value={"exit_code": 1, "stderr": "could not add label: 'agent-active' not found"},
+        ),
+        mock.patch.object(
+            handlers.registry,
+            "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-21",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers, "run_cmd") as dispatched,
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+
+    assert result["status"] == "BLOCKED"
+    assert "ensure-labels" in result["summary"], "must name the command that fixes it"
+    assert not dispatched.called, "must not dispatch a repair it could not lease"
+
+
+def test_a_lease_that_takes_proceeds(tmp_path) -> None:
+    project = {
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "worktree": str(_clean_worktree(tmp_path)),
+        "runner_kind": "project-local",
+    }
+    issue = _issue(22, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.registry,
+            "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-22",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "COMPLETED", result.get("summary")
