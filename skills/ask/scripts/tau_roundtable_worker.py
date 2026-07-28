@@ -58,6 +58,7 @@ BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
 WEBGPT_UNVERIFIED_CLEAN_OUTPUT = "missing_controlled_tab_id_or_contaminated_clean_output"
 BROWSER_HANDLER_TIMEOUT = "browser_handler_timeout"
 BROWSER_EXTENSION_COMMAND_TIMEOUT = "browser_extension_command_timeout"
+BROWSER_COMPOSER_INTERACTION_FAILED = "browser_composer_interaction_failed"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
 SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
 BROWSER_TRANSPORT_BLOCKERS = {
@@ -76,6 +77,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
     BROWSER_HANDLER_TIMEOUT,
     BROWSER_EXTENSION_COMMAND_TIMEOUT,
+    BROWSER_COMPOSER_INTERACTION_FAILED,
     SURF_BROWSER_LOCK_TIMEOUT,
     SURF_BROWSER_CONNECTION_UNAVAILABLE,
     "repo_access_blocked",
@@ -1392,6 +1394,8 @@ def _browser_failure_recovery_packet(
             "response_chars": len(response_text),
             "raw_response_chars": len(raw_text),
             "prompt_chars": len(prompt_text),
+            "measured_prompt_chars": len(prompt_text),
+            "provider_prompt_limit_chars": None,
             "submit_meta_status": submit_meta.get("status") or submit_meta.get("status_code"),
             "last_command": commands[-1] if commands else None,
             "timeout_diagnostics": submit_meta.get("ask_timeout_diagnostics"),
@@ -1543,6 +1547,8 @@ def _classify_browser_failure(
         return BROWSER_TAB_IDENTITY_MISMATCH
     if _looks_stale_raw_capture(haystack, submit_meta):
         return "stale_raw_capture"
+    if _looks_browser_composer_interaction_failed(haystack):
+        return BROWSER_COMPOSER_INTERACTION_FAILED
     if _looks_prompt_too_large_or_stalled(haystack):
         return "prompt_too_large_or_stalled"
     if _looks_missing_sentinel(haystack, submit_meta):
@@ -2062,12 +2068,37 @@ def _looks_browser_handler_timeout(text: str, commands: list[dict[str, Any]]) ->
     return False
 
 
-def _looks_prompt_too_large_or_stalled(text: str) -> bool:
+def _looks_browser_composer_interaction_failed(text: str) -> bool:
+    """The provider composer refused focus/typing.
+
+    This is a UI interaction failure on the controlled tab, independent of how
+    large the prompt is (agent-skills#1077: an 8288-char and a 42% smaller
+    4782-char prompt failed identically on webkimi).
+    """
     markers = (
-        "timed out",
-        "timeout",
+        "failed to focus/type",
+        "failed to focus prompt composer",
+        "failed to type into",
+        "prompt composer",
+        "composer not found",
+        "could not focus composer",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _looks_prompt_too_large_or_stalled(text: str) -> bool:
+    # Bare "timeout"/"timed out" are NOT size evidence: every browser dispatch
+    # command carries a --timeout flag, so those markers matched the argv of any
+    # failure that reached this check and mislabelled it as a size problem
+    # (agent-skills#1077). Only explicit size or stall wording counts now.
+    markers = (
+        # Precise stall wording only. A bare "timeout" also appears in the
+        # --timeout flag of every dispatch command.
+        "response timeout",
+        "response timed out",
+        "timed out waiting",
+        "submit timed out",
         "stalled",
-        "hang",
         "context length",
         "context_length",
         "maximum context",
@@ -2402,7 +2433,8 @@ def _recovery_reason(failure_code: str) -> str:
         SURF_BROWSER_CONNECTION_UNAVAILABLE: "The Surf native host or socket disconnected before the browser lane completed.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
-        "prompt_too_large_or_stalled": "The browser submit appears to have timed out, stalled, or exceeded prompt size limits.",
+        BROWSER_COMPOSER_INTERACTION_FAILED: "The provider composer refused focus or typing on the controlled tab, so the prompt was never entered. Prompt size is not implicated.",
+        "prompt_too_large_or_stalled": "The browser submit reported explicit size or stall wording from the provider.",
         "stale_raw_capture": "The raw browser capture appears to be from the wrong or stale assistant turn.",
     }[failure_code]
 
@@ -2440,6 +2472,8 @@ def _auto_retry_blocked_reason(
         return "browser_handler_timeout_expired"
     if failure_code == BROWSER_EXTENSION_COMMAND_TIMEOUT:
         return "surf_extension_command_timeout_retry_same_binding_after_extension_reload"
+    if failure_code == BROWSER_COMPOSER_INTERACTION_FAILED:
+        return "browser_composer_requires_fresh_tab_or_composer_recovery"
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return "surf_browser_lock_owner_still_running"
     if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
@@ -2533,6 +2567,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "Create a local readable review bundle, or grant/add the repository through the browser provider's GitHub integration, "
             "then rerun the next_command with the bundle path in the request."
         )
+    if failure_code == BROWSER_COMPOSER_INTERACTION_FAILED:
+        return (
+            "Open and bind a fresh provider tab, then rerun only this lane. The composer refused focus or "
+            "typing, so shrinking the prompt or moving it into a bundle does not address the failure."
+        )
     if failure_code == "prompt_too_large_or_stalled":
         return "Write the target material to a local readable bundle and rerun with that bundle instead of inlining a large prompt."
     if failure_code == "stale_raw_capture":
@@ -2557,6 +2596,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
         BROWSER_HANDLER_TIMEOUT,
         BROWSER_EXTENSION_COMMAND_TIMEOUT,
+        BROWSER_COMPOSER_INTERACTION_FAILED,
         SURF_BROWSER_LOCK_TIMEOUT,
         SURF_BROWSER_CONNECTION_UNAVAILABLE,
         "stale_raw_capture",

@@ -848,3 +848,70 @@ def test_match_text_flattens_values_and_drops_field_names() -> None:
     assert "timeout_error" not in text
     assert "submit_failed" in text
     assert "webgpt.submit" in text
+
+
+# agent-skills#1077: every browser dispatch command carries a --timeout flag, so
+# the bare "timeout" marker matched the argv of any failure that reached the size
+# heuristic and relabelled a composer failure as a prompt-size problem.
+_KIMI_COMPOSER_FAILURE = "Error: Failed to focus/type Kimi prompt composer"
+_KIMI_DISPATCH_COMMAND = {
+    "command": [
+        "surf", "kimi.submit", "--input", "prompt.md", "--meta-output", "response.meta.json",
+        "--timeout", "900", "--stable-polls", "2",
+    ],
+    "returncode": 1,
+    "stderr_excerpt": _KIMI_COMPOSER_FAILURE,
+}
+
+
+def test_composer_failure_is_not_reported_as_a_prompt_size_problem() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webkimi",
+        failure=_KIMI_COMPOSER_FAILURE,
+        response_text="",
+        raw_text="",
+        prompt_text="x" * 5249,
+        submit_meta={"failure": "submit_failed", "submitted_to_kimi": None},
+        commands=[_KIMI_DISPATCH_COMMAND],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_COMPOSER_INTERACTION_FAILED
+    assert failure_code != "prompt_too_large_or_stalled"
+
+
+def test_timeout_flag_in_dispatch_argv_is_not_size_evidence() -> None:
+    haystack = tau_roundtable_worker._match_text(_KIMI_DISPATCH_COMMAND).lower()
+
+    assert "--timeout" in haystack
+    assert tau_roundtable_worker._looks_prompt_too_large_or_stalled(haystack) is False
+
+
+def test_explicit_provider_size_wording_still_classifies_as_too_large() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webkimi",
+        failure="Provider rejected the request: message is too long",
+        response_text="",
+        raw_text="",
+        prompt_text="x" * 90000,
+        submit_meta={"failure": "submit_failed"},
+        commands=[{**_KIMI_DISPATCH_COMMAND, "stderr_excerpt": "message is too long"}],
+    )
+
+    assert failure_code == "prompt_too_large_or_stalled"
+
+
+def test_composer_recovery_does_not_send_the_operator_after_a_bundle(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure=_KIMI_COMPOSER_FAILURE,
+        prompt_text="x" * 5249,
+        submit_meta={"failure": "submit_failed"},
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_COMPOSER_INTERACTION_FAILED
+    assert packet["auto_retry_blocked_reason"] == "browser_composer_requires_fresh_tab_or_composer_recovery"
+    instruction = packet["fallback_instruction"].lower()
+    assert "fresh provider tab" in instruction
+    assert "does not address the failure" in instruction
+    assert packet["evidence"]["measured_prompt_chars"] == 5249
