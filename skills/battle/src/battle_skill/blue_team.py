@@ -268,13 +268,19 @@ class BlueAgent:
                         cwd=self.target_path,
                         env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
                     )
+                    # Receipt-truth: an anvil exit code is NOT proof the exploit is
+                    # blocked, and functionality-preservation requires a real functional
+                    # test. Neither is established here, so both stay fail-closed. A patch
+                    # only becomes verified / functionality_preserved via a Judge exploit
+                    # re-run and a functional check (see write_patch / the Judge phase),
+                    # not from this generator. (Matches the neutered red-side siblings.)
                     return Patch(
                         id=f"swarm_patch_{self.current_round}_{finding.id}",
                         finding_id=finding.id,
                         type=DefenseType.PATCH,
                         diff=result.stdout[:2000] if result.returncode == 0 else "",
-                        verified=result.returncode == 0,
-                        functionality_preserved=True,
+                        verified=False,
+                        functionality_preserved=False,
                     )
                 except (subprocess.TimeoutExpired, OSError):
                     pass

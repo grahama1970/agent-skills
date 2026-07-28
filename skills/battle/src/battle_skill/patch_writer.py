@@ -299,10 +299,16 @@ def write_patch(
             patch_diff = patch_artifact.read_text(encoding="utf-8")
     score = float(result.get("score", result.get("best_score", 0.0)) or 0.0)
 
-    functionality_preserved = success
+    # Receipt-truth: functionality-preservation is only PROVEN by explicit passing
+    # functional assertions. Deriving it from DoD `success` alone inflates the score,
+    # because the DoD can be a trivial gate (e.g. `test -d .` for a target with no test
+    # harness, or a compile-only `py_compile`) that never exercises real behavior.
+    # Absent real assertions the claim stays fail-closed (unproven -> False).
     final_assertions = result.get("assertions", [])
     if isinstance(final_assertions, list) and final_assertions:
         functionality_preserved = all(bool(x) for x in final_assertions)
+    else:
+        functionality_preserved = False
 
     return PatchResult(
         success=success,

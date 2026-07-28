@@ -149,32 +149,38 @@ export async function loadBattleRunnerSprites(spriteIds: BattleRunnerSpriteId[] 
 	const missing = spriteIds.filter((id) => !sheets.has(id));
 	if (missing.length === 0) return sheets;
 
-	if (!loadPromise) {
-		loadPromise = (async () => {
-			await ensureBattlePixiAssets();
-			if (!manifest) throw new Error("Battle runner sprite manifest not loaded");
+	// Serialize loads through loadPromise so concurrent callers don't double-load the
+	// same alias, but each call loads ITS OWN missing set and the chain is reset once
+	// it settles. The previous code kept a single loadPromise that captured the FIRST
+	// call's sprite ids and was never reset on success, so any later call requesting
+	// additional atlases was silently dropped (only awaited the stale promise).
+	const previous = loadPromise ?? Promise.resolve();
+	const mine = (async () => {
+		await previous.catch(() => {});
+		await ensureBattlePixiAssets();
+		if (!manifest) throw new Error("Battle runner sprite manifest not loaded");
+		const targets = missing.filter((id) => !sheets.has(id));
+		await Promise.all(
+			targets.map(async (spriteId) => {
+				if (sheets.has(spriteId)) return;
+				const alias = runnerAlias(spriteId);
+				const sheet = await Assets.load<Spritesheet>(alias);
+				if (!sheet?.textures || Object.keys(sheet.textures).length === 0) {
+					throw new Error(`Battle runner spritesheet missing frames: ${spriteId} (${runnerJsonSrc(spriteId)})`);
+				}
+				applyNearestNeighbor(sheet);
+				sheets.set(spriteId, sheet);
+			}),
+		);
+		return sheets;
+	})();
+	loadPromise = mine;
 
-			const targets = spriteIds.length ? spriteIds : manifest.assets.map((asset) => asset.sprite_id);
-			await Promise.all(
-				targets.map(async (spriteId) => {
-					if (sheets.has(spriteId)) return;
-					const alias = runnerAlias(spriteId);
-					const sheet = await Assets.load<Spritesheet>(alias);
-					if (!sheet?.textures || Object.keys(sheet.textures).length === 0) {
-						throw new Error(`Battle runner spritesheet missing frames: ${spriteId} (${runnerJsonSrc(spriteId)})`);
-					}
-					applyNearestNeighbor(sheet);
-					sheets.set(spriteId, sheet);
-				}),
-			);
-			return sheets;
-		})().catch((error) => {
-			loadPromise = null;
-			throw error;
-		});
+	try {
+		await mine;
+	} finally {
+		if (loadPromise === mine) loadPromise = null;
 	}
-
-	await loadPromise;
 	return sheets;
 }
 
