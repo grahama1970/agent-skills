@@ -78,6 +78,11 @@ def _repo_args(repo: Optional[str]) -> list[str]:
     return ["--repo", repo] if repo else []
 
 
+def _repo_hint(repo: Optional[str]) -> str:
+    """Render the --repo suffix for a copy-pasteable remediation command."""
+    return f" --repo {repo}" if repo else ""
+
+
 def _helper(args: list[str], *, repo: Optional[str] = None, dry_run: bool = False) -> None:
     cmd = [str(GH_HELPER), *args, *_repo_args(repo)]
     if dry_run:
@@ -495,11 +500,26 @@ def _create_or_preview(draft: TicketDraft, *, repo: Optional[str], apply: bool, 
         return
     # Drop labels that do not exist in the repo so one unknown label never aborts
     # the whole `gh issue create`. gh fails the entire call on a missing label.
+    #
+    # Scheduling labels are exempt from that leniency. `agent-work` is what makes
+    # a ticket visible to project-watchdog at all, and `lane:<id>` is what decides
+    # whether it may be dispatched alongside another in-flight ticket. Silently
+    # dropping either produces a ticket that looks filed and never gets picked up,
+    # so those fail closed with the command that fixes the repo.
     labels = list(draft.labels)
     existing = _existing_repo_labels(repo)
     if existing is not None:
         kept = [lbl for lbl in labels if lbl in existing]
         dropped = [lbl for lbl in labels if lbl not in existing]
+        missing_scheduling = [
+            lbl for lbl in dropped if lbl == AGENT_WORK_LABEL or lbl.startswith("lane:")
+        ]
+        if missing_scheduling:
+            _die(
+                f"scheduling labels missing from the repo: {', '.join(missing_scheduling)}. "
+                "Without them project-watchdog cannot see or safely schedule this ticket. "
+                f"Create them first: skills/ticket/run.sh ensure-labels{_repo_hint(repo)}"
+            )
         if dropped:
             typer.echo(
                 f"[ticket] skipping labels not present in repo (run ensure-labels to create them): {', '.join(dropped)}",
@@ -751,7 +771,10 @@ def question(
         proof=proof,
         route=route,
         agent=agent,
-        lane=lane,
+        # Question tickets are answered by a human, never dispatched to a repair
+        # agent, so they carry no concurrency lane. The lane is a scheduling fact
+        # for project-watchdog and would be meaningless here.
+        lane="",
         non_goals=non_goals,
         details={
             "Concrete question": question_text,
@@ -784,7 +807,10 @@ def triage(
         proof="Route/type decision or needs-human with exact missing information.",
         route=route,
         agent=agent,
-        lane=lane,
+        # A triage ticket exists precisely because the route is not yet known,
+        # and the lane is derived from the route. It gets a lane once triage
+        # decides what it actually is.
+        lane="",
         details={
             "Available clues": clues,
             "Missing data": missing_data,

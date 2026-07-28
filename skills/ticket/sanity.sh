@@ -239,9 +239,16 @@ grep -q "skills/project-state/run.sh" <<<"$OUT" || { echo "FAIL missing project-
 echo "PASS"
 
 echo -n "Check 20 - human-first tickets do not carry it: "
-OUT="$("$SCRIPT_DIR/run.sh" question "p" --target skills/x --question q --answer-format prose \
+# Capture the status separately. This assertion is negative -- the orientation
+# block must be ABSENT -- and a traceback contains no orientation block either,
+# so without an exit check a crashing command satisfies it. That is exactly how
+# a NameError in `question` shipped past a green sanity run.
+if OUT="$("$SCRIPT_DIR/run.sh" question "p" --target skills/x --question q --answer-format prose \
   --source-scope src --proof "./run.sh sanity-live.sh --allow-live" \
-  --route backend_python_or_skill_runtime 2>&1 || true)"
+  --route backend_python_or_skill_runtime 2>&1)"; then :; else
+  echo "FAIL question exited nonzero:"; echo "$OUT" | tail -3; exit 1
+fi
+grep -q '^Labels' <<<"$OUT" || { echo "FAIL question produced no draft"; exit 1; }
 grep -q "Orientation for a stateless agent" <<<"$OUT" && { echo "FAIL question got orientation"; exit 1; }
 echo "PASS"
 
@@ -261,6 +268,31 @@ BAD="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e 
 grep -q 'lane:fe' <<<"$FE" || { echo "FAIL frontend_code did not derive lane:fe"; exit 1; }
 grep -q 'lane:data' <<<"$OV" || { echo "FAIL --lane override ignored"; exit 1; }
 grep -q "unknown --lane" <<<"$BAD" || { echo "FAIL bad lane not refused"; exit 1; }
+echo "PASS"
+
+echo -n "Check 23 - every ticket type builds a draft without crashing: "
+# `question` and `triage` both raised NameError on main while sanity stayed
+# green, because no check required any command to actually succeed. Every ticket
+# type is exercised here, and each must exit zero and emit a Labels line.
+PROOF="./run.sh sanity-live.sh --allow-live"
+run_type() {
+  local name="$1"; shift
+  local out status=0
+  # Declare first, then assign: `local out="$(cmd)"` reports local's status, not
+  # the command's, and under `set -e` a failing substitution aborts the script
+  # before the check can report which type broke.
+  out="$("$SCRIPT_DIR/run.sh" "$name" "p" --target skills/x "$@" 2>&1)" || status=$?
+  if [[ $status -ne 0 ]]; then
+    echo "FAIL $name exited $status:"; echo "$out" | tail -3; exit 1
+  fi
+  grep -q '^Labels' <<<"$out" || { echo "FAIL $name emitted no draft"; exit 1; }
+}
+run_type bug          --observed o --expected e --repro r --proof "$PROOF"
+run_type feature      --limitation l --capability c --workflow w --acceptance a --proof "$PROOF"
+run_type optimization --friction f --improvement i --measurable-target t --proof "$PROOF"
+run_type maintenance  --invariant i --cleanup c --scoped-files f --proof "$PROOF"
+run_type question     --question q --answer-format prose --source-scope src --proof "$PROOF"
+run_type triage       --clues c --missing-data m
 echo "PASS"
 
 echo ""

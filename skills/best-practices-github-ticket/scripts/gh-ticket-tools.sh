@@ -518,7 +518,24 @@ cmd_ensure_labels() {
         "maintainer-blocked|b60205|Progress is blocked"
         "needs-human|d93f0b|Human input or authority required"
         "external-owner|6f42c1|Owner is outside this repository"
+        "agent-work|0052cc|Ticket is routable to a cron-dispatched repair agent"
         "route:backend_python_or_skill_runtime|1d76db|Maintainer route: backend Python or skill runtime"
+        "route:design_or_ux|1d76db|Maintainer route: design or UX"
+        "route:frontend_code|1d76db|Maintainer route: frontend code"
+        "route:rust_or_binary|1d76db|Maintainer route: Rust or binary"
+        "route:ops_or_scheduler|1d76db|Maintainer route: ops or scheduler"
+        "route:documentation_or_report|1d76db|Maintainer route: documentation or report"
+        "route:security_or_compliance|1d76db|Maintainer route: security or compliance"
+        # Concurrency lanes. These are scheduling facts, not documentation:
+        # project-watchdog will not dispatch two tickets in the same lane at
+        # once, and treats a ticket with no lane as unschedulable while any
+        # other ticket is in flight.
+        "lane:fe|c2e0c6|Concurrency lane: frontend"
+        "lane:be|c2e0c6|Concurrency lane: backend"
+        "lane:data|c2e0c6|Concurrency lane: data"
+        "lane:docs|c2e0c6|Concurrency lane: docs"
+        "lane:ops|c2e0c6|Concurrency lane: ops"
+        "lane:sec|c2e0c6|Concurrency lane: security"
         "agent:agent-skill-maintainer|5319e7|Requested repair agent: agent-skill-maintainer"
     )
     local item name color description
