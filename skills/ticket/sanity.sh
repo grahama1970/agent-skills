@@ -125,5 +125,37 @@ fi
 grep -q 'Exit code: 7' "$TMPDIR/bad-proof.md"
 echo "PASS"
 
+echo -n "Check 11 - bootstrap context renders and is machine-readable: "
+# project-watchdog forwards the whole issue body to the repair node, so these
+# sections are the only project context a stateless cron agent receives (#1046).
+"$SCRIPT_DIR/run.sh" bug "bootstrap probe" \
+  --target skills/x --observed o --expected e --repro r \
+  --proof "live run against 127.0.0.1:8018 read back from the written receipt" \
+  --route backend_python_or_skill_runtime --agent agent-skill-maintainer \
+  --context-file GOAL.md --context-file src/a.py \
+  --required-skill best-practices-python \
+  --depends-on grahama1970/agent-skills#1040 > "$TMPDIR/bootstrap.out"
+grep -q '## Required repository context' "$TMPDIR/bootstrap.out"
+grep -q -- '- `GOAL.md`' "$TMPDIR/bootstrap.out"
+grep -q '## Required skills' "$TMPDIR/bootstrap.out"
+grep -q '## Dependencies' "$TMPDIR/bootstrap.out"
+grep -q 'blocked-by: grahama1970/agent-skills#1040' "$TMPDIR/bootstrap.out"
+grep -q 'context_files: GOAL.md,src/a.py' "$TMPDIR/bootstrap.out"
+grep -q 'required_skills: best-practices-python' "$TMPDIR/bootstrap.out"
+grep -q 'depends_on: grahama1970/agent-skills#1040' "$TMPDIR/bootstrap.out"
+echo "PASS"
+
+echo -n "Check 12 - omitting bootstrap fields changes nothing: "
+"$SCRIPT_DIR/run.sh" bug "no bootstrap probe" \
+  --target skills/x --observed o --expected e --repro r \
+  --proof "live run against 127.0.0.1:8018 read back from the written receipt" \
+  --route backend_python_or_skill_runtime > "$TMPDIR/nobootstrap.out"
+if grep -qE 'Required repository context|Required skills|## Dependencies|context_files:' "$TMPDIR/nobootstrap.out"; then
+  echo "FAIL bootstrap sections rendered without the flags"
+  exit 1
+fi
+grep -q 'type: bug' "$TMPDIR/nobootstrap.out"
+echo "PASS"
+
 echo ""
 echo "Result: PASS"
