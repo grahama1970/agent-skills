@@ -1,0 +1,68 @@
+{
+  "schema": "cursor_agents.project_evidence.v1",
+  "target": "skills/cursor-agents",
+  "objective": "Provide Cursor Cloud Agents control through the official Cursor API instead of misusing Surf or browser-oracle tab bindings for https://cursor.com/agents.",
+  "commit": {
+    "origin_main": "29780a7da801b9b4ecb360a1a0c7eefb75a0d0c8",
+    "subject": "cursor-agents: add API control skill",
+    "files_changed": 7
+  },
+  "unit": {
+    "command": "skills/cursor-agents/sanity.sh",
+    "exit_code": 0,
+    "passed": 4,
+    "mocked": false,
+    "live": false,
+    "exercised": [
+      "Basic auth header construction",
+      "receipt redaction",
+      "documented /v1/agents/{agent_id}/runs path construction",
+      "documented /v1/agents/{agent_id}/usage path construction",
+      "raw mutating request guard",
+      "non-/v1 endpoint rejection"
+    ]
+  },
+  "skill_validation": {
+    "command": "python3 skills/best-practices-skills/scripts/validate_skill.py skills/cursor-agents",
+    "exit_code": 0,
+    "result": "PASS"
+  },
+  "mock_claim_check": {
+    "command": "python3 scripts/check_mock_evidence_claims.py",
+    "exit_code": 0,
+    "result": "OK: checked 454 test file(s); no mock+proof claim violations"
+  },
+  "live_e2e": {
+    "command": "skills/cursor-agents/sanity-live.sh",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "provider": "Cursor API",
+    "endpoint": "GET https://api.cursor.com/v1/models",
+    "auth_mode": "basic",
+    "credential_env": "CURSOR_API_KEY",
+    "status_code": 200,
+    "model_count": 33,
+    "first_model": "default",
+    "source_receipt": "/tmp/cursor-agents-live-models-20260728T114736Z.json",
+    "source_receipt_sha256": "df67d025dc9ff06a6cba73bf569b6df2efe2b9aae51b081cf60e8f66a8b76e47",
+    "secret_scan": "no_secret_in_receipt"
+  },
+  "ticket_check": {
+    "command": "skills/ticket/run.sh lookup --repo grahama1970/agent-skills --search 'webcursor OR \"Cursor Agents\" OR \"cursor.com/agents\" OR \"Cursor Cloud\" state:open'",
+    "exit_code": 0,
+    "result": []
+  },
+  "browser_boundary": {
+    "cursor_agents_tab_id_inspected": 837362388,
+    "visual_inspection_receipt": "/tmp/cursor-agents-control-assessment-837362388.json",
+    "decision": "Use official Cursor API for control. Use Surf/browser tab only for visual inspection.",
+    "browser_oracle": "not_applicable_for_cursor_agents_control"
+  },
+  "not_exercised": [
+    "Cursor agent creation",
+    "Cursor agent mutation",
+    "Raw POST/PUT/PATCH/DELETE API calls"
+  ],
+  "closure_bar": "API-backed control path exists, is pushed to origin/main, passes local skill gates, and has one non-mutating live Cursor API receipt."
+}
