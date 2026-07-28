@@ -157,5 +157,22 @@ fi
 grep -q 'type: bug' "$TMPDIR/nobootstrap.out"
 echo "PASS"
 
+echo -n "Check 13 - block --blocked-by validates references before mutating: "
+printf 'blocked probe\n' > "$TMPDIR/reason.md"
+# The watchdog polls these refs and fails closed, so an unreadable reference
+# would stall the downstream ticket forever. Both rejections must happen before
+# any label edit (#1042).
+if "$SCRIPT_DIR/run.sh" block 1 --reason "$TMPDIR/reason.md" --blocked-by "not-a-ref" \
+    --repo owner/repo >/dev/null 2>&1; then
+  echo "FAIL malformed --blocked-by reference was accepted"
+  exit 1
+fi
+if "$SCRIPT_DIR/run.sh" block 1 --reason "$TMPDIR/reason.md" \
+    --blocked-by "grahama1970/agent-skills#999999" --repo owner/repo >/dev/null 2>&1; then
+  echo "FAIL unreadable --blocked-by reference was accepted"
+  exit 1
+fi
+echo "PASS"
+
 echo ""
 echo "Result: PASS"

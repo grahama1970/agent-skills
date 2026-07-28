@@ -295,6 +295,7 @@ cmd_block() {
     local issue="$1"; shift
     local reason=""
     local release=0
+    local -a blocked_by=()
     while [[ $# -gt 0 ]]; do
         parse_common_flag "$@"
         if [[ "$PARSED" -gt 0 ]]; then shift "$PARSED"; continue; fi
@@ -304,16 +305,42 @@ cmd_block() {
                 reason="$2"; shift 2 ;;
             --release)
                 release=1; shift ;;
+            --blocked-by)
+                [[ $# -ge 2 ]] || die "--blocked-by requires owner/repo#N"
+                blocked_by+=("$2"); shift 2 ;;
             *) die "unknown block arg: $1" ;;
         esac
     done
     [[ -n "$reason" ]] || die "block requires --reason FILE"
     require_file "reason" "$reason"
+    # Validate every upstream reference BEFORE mutating the downstream issue.
+    # project-watchdog clears blocked:upstream by polling these; a reference it
+    # cannot read would stall the downstream ticket forever rather than erroring,
+    # so this fails closed instead.
+    for ref in ${blocked_by[@]+"${blocked_by[@]}"}; do
+        [[ -n "$ref" ]] || continue
+        [[ "$ref" =~ ^[^/]+/[^#]+#[0-9]+$ ]] || die "malformed --blocked-by reference: $ref (want owner/repo#N)"
+        local up_repo="${ref%%#*}"
+        local up_num="${ref##*#}"
+        gh issue view "$up_num" --repo "$up_repo" --json number >/dev/null 2>&1 \
+            || die "--blocked-by reference is not readable: $ref"
+    done
+    if [[ "${#blocked_by[@]}" -gt 0 ]]; then
+        run_gh gh issue edit "$issue" "${repo_args[@]}" --add-label blocked:upstream
+    fi
     run_gh gh issue edit "$issue" "${repo_args[@]}" --add-label maintainer-blocked --add-label needs-human
     if [[ "$release" == "1" ]]; then
         run_gh gh issue edit "$issue" "${repo_args[@]}" --remove-label maintainer-active
     fi
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$reason"
+    for ref in ${blocked_by[@]+"${blocked_by[@]}"}; do
+        [[ -n "$ref" ]] || continue
+        run_gh gh issue comment "$issue" "${repo_args[@]}" --body "blocked-by: $ref"
+        local up_repo="${ref%%#*}"
+        local up_num="${ref##*#}"
+        run_gh gh issue edit "$up_num" --repo "$up_repo" --add-label blocks-downstream
+        run_gh gh issue comment "$up_num" --repo "$up_repo" --body "blocks-downstream: this issue blocks ${ref%%#*}#${issue}"
+    done
     json_ok block issue "$issue" reason "$reason" released "$release"
 }
 

@@ -99,6 +99,25 @@ commands such as `lease`, `comment`, `block`, `release`, `close`, and
 | `attach-proof ISSUE --file proof.md` | Comment proof on the issue. |
 | `ci status`, `ci rerun`, `ci dispatch` | Explicit GitHub Actions status/rerun/dispatch helpers. |
 
+## Cross-repo dependencies
+
+When a ticket cannot proceed until another ships, record the dependency
+machine-readably so `project-watchdog` can clear it:
+
+```bash
+skills/ticket/run.sh block 149 \
+  --reason reason.md \
+  --blocked-by grahama1970/graph-memory-operator#61 \
+  --release
+```
+
+Repeatable. Downstream gets `blocked:upstream` plus a `blocked-by: owner/repo#N`
+comment; upstream gets `blocks-downstream` and a back-link.
+
+Every reference is validated **before** the downstream issue is touched, and a
+reference that cannot be read is refused. The watchdog poll fails closed, so a
+bad reference would stall the downstream ticket forever rather than erroring.
+
 ## Per-ticket bootstrap context
 
 `project-watchdog` forwards the whole issue body to the repair node, so the body
