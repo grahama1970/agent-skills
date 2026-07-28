@@ -1025,3 +1025,43 @@ def test_size_packet_leaves_the_limit_unset_when_the_provider_never_said_one(tmp
     assert silent["failure_code"] == "prompt_too_large_or_stalled"
     assert silent["evidence"]["measured_prompt_chars"] == 90000
     assert silent["evidence"]["provider_prompt_limit_chars"] is None
+
+
+# agent-skills#1081: surf webgpt/gemini/kimi submit one attachment each and
+# reject repeated --attach-file during argument parsing, producing no response
+# file. That used to read as missing_sentinel, hiding the real contract.
+_ATTACH_CONTRACT_STDERR = (
+    "surf webgpt.submit accepts --attach-files for flag parity, but this wrapper sends one "
+    "attachment. Pass one local bundle or zip."
+)
+
+
+def test_attachment_argument_rejection_is_not_missing_sentinel() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
+        failure=_ATTACH_CONTRACT_STDERR,
+        response_text="",
+        raw_text="",
+        prompt_text="x" * 2000,
+        submit_meta={},
+        commands=[{"command": ["surf", "webgpt.submit", "--attach-file", "a.md", "--attach-file", "b.md"],
+                   "returncode": 2, "stderr_excerpt": _ATTACH_CONTRACT_STDERR}],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED
+    assert failure_code != "missing_sentinel"
+
+
+def test_attachment_contract_packet_asks_for_one_bundle(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure=_ATTACH_CONTRACT_STDERR,
+        submit_meta={},
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED
+    assert packet["auto_retry_blocked_reason"] == "browser_attachment_contract_requires_single_bundle"
+    instruction = packet["fallback_instruction"].lower()
+    assert "one bundle or zip" in instruction
+    assert "single --attach-file" in instruction

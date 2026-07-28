@@ -3603,3 +3603,67 @@ def test_attachments_reach_every_browser_handler_dispatch_command(tmp_path: Path
         Path(bundle["command_spec_root"], "join", "tau-dispatch-command.json").read_text(encoding="utf-8")
     )["command"]
     assert "--attach-file" not in join_command
+
+
+def test_multiple_attachments_fail_preflight_before_tau_runs(tmp_path: Path) -> None:
+    first = tmp_path / "metrics.md"
+    second = tmp_path / "samples.md"
+    for path in (first, second):
+        path.write_text("evidence\n", encoding="utf-8")
+    request = infer_compile_input(
+        "Review the attached statistical-design bundle.",
+        repo="local/agent-skills",
+        target="attachment-contract",
+        immutable_goal="The reviewer sees the evidence it is asked to judge.",
+        handlers=["webgpt"],
+        output_root=tmp_path / "runs",
+        attachments=[str(first), str(second)],
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "BLOCKED"
+    assert bundle["failure_code"] == "browser_attachment_argument_contract_failed"
+    assert bundle["handlers"] == ["webgpt"]
+    assert bundle["attachment_count"] == 2
+    assert "one local bundle or zip" in bundle["remedy"]
+    assert Path(bundle["run_dir"], "attachment-contract-blocked.json").is_file()
+    assert not Path(bundle["run_dir"], "dag.json").exists()
+
+
+def test_a_single_attachment_still_compiles_for_a_single_attachment_handler(tmp_path: Path) -> None:
+    evidence = tmp_path / "bundle.md"
+    evidence.write_text("evidence\n", encoding="utf-8")
+    request = infer_compile_input(
+        "Review the attached bundle.",
+        repo="local/agent-skills",
+        target="attachment-contract-ok",
+        immutable_goal="The reviewer sees the evidence it is asked to judge.",
+        handlers=["webgpt"],
+        output_root=tmp_path / "runs",
+        attachments=[str(evidence)],
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+
+
+def test_multi_attachment_handlers_are_not_blocked(tmp_path: Path) -> None:
+    first = tmp_path / "a.md"
+    second = tmp_path / "b.md"
+    for path in (first, second):
+        path.write_text("evidence\n", encoding="utf-8")
+    request = infer_compile_input(
+        "Review the attached files.",
+        repo="local/agent-skills",
+        target="attachment-contract-grok",
+        immutable_goal="The reviewer sees the evidence it is asked to judge.",
+        handlers=["webgrok"],
+        output_root=tmp_path / "runs",
+        attachments=[str(first), str(second)],
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"

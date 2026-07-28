@@ -63,6 +63,7 @@ BROWSER_HANDLER_TIMEOUT = "browser_handler_timeout"
 BROWSER_EXTENSION_COMMAND_TIMEOUT = "browser_extension_command_timeout"
 BROWSER_COMPOSER_INTERACTION_FAILED = "browser_composer_interaction_failed"
 ENVIRONMENT_DEPENDENCY_INSTALL_FAILED = "environment_dependency_install_failed"
+BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED = "browser_attachment_argument_contract_failed"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
 SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
 BROWSER_TRANSPORT_BLOCKERS = {
@@ -83,6 +84,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_EXTENSION_COMMAND_TIMEOUT,
     BROWSER_COMPOSER_INTERACTION_FAILED,
     ENVIRONMENT_DEPENDENCY_INSTALL_FAILED,
+    BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED,
     SURF_BROWSER_LOCK_TIMEOUT,
     SURF_BROWSER_CONNECTION_UNAVAILABLE,
     "repo_access_blocked",
@@ -1528,6 +1530,8 @@ def _classify_browser_failure(
         return WEBGPT_CONVERSATION_FULL_BLOCKER
     if _webgpt_stale_binding_details(submit_meta):
         return WEBGPT_BINDING_STALE_BLOCKER
+    if _looks_browser_attachment_argument_contract_failed(haystack):
+        return BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED
     if _looks_environment_dependency_install_failed(haystack):
         return ENVIRONMENT_DEPENDENCY_INSTALL_FAILED
     if _looks_surf_browser_lock_timeout(haystack, commands, submit_meta):
@@ -2130,6 +2134,21 @@ def resolve_requested_attachments(requested: list[str], *, handler: str) -> list
     return [str(Path(item).expanduser().resolve()) for item in requested]
 
 
+def _looks_browser_attachment_argument_contract_failed(text: str) -> bool:
+    """Surf rejected the submit's attachment arguments before touching a browser.
+
+    An argument-parsing refusal produces no response file, which used to surface
+    as missing_sentinel and hid the real contract (agent-skills#1081).
+    """
+    markers = (
+        "accepts --attach-files for flag parity",
+        "this wrapper sends one attachment",
+        "pass one local bundle",
+        "supports one attachment",
+    )
+    return any(marker in text for marker in markers)
+
+
 def _looks_environment_dependency_install_failed(text: str) -> bool:
     """The lane died installing local Python dependencies.
 
@@ -2528,6 +2547,7 @@ def _recovery_reason(failure_code: str) -> str:
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
         ENVIRONMENT_DEPENDENCY_INSTALL_FAILED: "The lane died installing local Python dependencies, so no browser or provider work was attempted.",
+        BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED: "Surf refused the submit's attachment arguments before opening a browser: this transport sends one attachment per submit.",
         BROWSER_COMPOSER_INTERACTION_FAILED: "The provider composer refused focus or typing on the controlled tab, so the prompt was never entered. Prompt size is not implicated.",
         "prompt_too_large_or_stalled": "The browser submit reported explicit size or stall wording from the provider.",
         "stale_raw_capture": "The raw browser capture appears to be from the wrong or stale assistant turn.",
@@ -2571,6 +2591,8 @@ def _auto_retry_blocked_reason(
         return "browser_composer_requires_fresh_tab_or_composer_recovery"
     if failure_code == ENVIRONMENT_DEPENDENCY_INSTALL_FAILED:
         return "local_python_environment_requires_repair"
+    if failure_code == BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED:
+        return "browser_attachment_contract_requires_single_bundle"
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return "surf_browser_lock_owner_still_running"
     if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
@@ -2664,6 +2686,12 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "Create a local readable review bundle, or grant/add the repository through the browser provider's GitHub integration, "
             "then rerun the next_command with the bundle path in the request."
         )
+    if failure_code == BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED:
+        return (
+            "Combine the evidence into one bundle or zip and rerun with a single --attach-file, "
+            "or route it to a handler whose transport accepts several attachments. Surf rejected "
+            "the arguments before any browser work, so the prompt and tab are not implicated."
+        )
     if failure_code == ENVIRONMENT_DEPENDENCY_INSTALL_FAILED:
         return (
             "Repair the local Python environment before rerunning: install into the project virtualenv "
@@ -2705,6 +2733,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_EXTENSION_COMMAND_TIMEOUT,
         BROWSER_COMPOSER_INTERACTION_FAILED,
         ENVIRONMENT_DEPENDENCY_INSTALL_FAILED,
+        BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED,
         SURF_BROWSER_LOCK_TIMEOUT,
         SURF_BROWSER_CONNECTION_UNAVAILABLE,
         "stale_raw_capture",
