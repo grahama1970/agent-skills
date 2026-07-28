@@ -172,25 +172,42 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
 def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:
     """Issues already leased for this project, i.e. work in flight.
 
-    ``agent-active`` is applied when a repair is leased and removed when it
+    A lease label is applied when a repair is leased and removed when it
     finishes or blocks, so its presence is the in-flight signal. Dispatching a
     second ticket while one is leased is working ahead: the second repair is
     authored against a tree the first is still changing.
+
+    Scans every label in ``config.LEASE_LABELS``, which is the same vocabulary
+    ``classify_issue`` refuses to dispatch on. Scanning only ``agent-active``
+    missed ``maintainer-active`` -- the label ``skills/ticket/run.sh lease``
+    applies -- so a ticket leased through the documented command read as idle
+    and the watchdog dispatched alongside it.
+
+    One scan per label rather than one call: ``gh issue list`` ANDs repeated
+    ``--label``, so a single call with both would match only issues carrying
+    both at once, which is never.
     """
     repo = str(project["repo"])
-    result = run_cmd(
-        [
-            "gh", "issue", "list", "--repo", repo, "--state", "open",
-            "--label", config.LEASE_LABEL, "--limit", "20",
-            "--json", "number,title,labels,url",
-        ],
-        timeout_s=60,
-    )
-    if result.get("exit_code") != 0:
-        # A failed scan must never read as "nothing in flight" -- that would let
-        # the watchdog work ahead precisely when it cannot see the current state.
-        raise RuntimeError(f"lease scan failed for {repo}: {result.get('stderr')}")
-    return json.loads(result.get("stdout") or "[]")
+    by_number: dict[int, dict[str, Any]] = {}
+    for label in sorted(config.LEASE_LABELS):
+        result = run_cmd(
+            [
+                "gh", "issue", "list", "--repo", repo, "--state", "open",
+                "--label", label, "--limit", "20",
+                "--json", "number,title,labels,url",
+            ],
+            timeout_s=60,
+        )
+        if result.get("exit_code") != 0:
+            # A failed scan must never read as "nothing in flight" -- that would
+            # let the watchdog work ahead precisely when it cannot see the
+            # current state.
+            raise RuntimeError(
+                f"lease scan failed for {repo} on label {label}: {result.get('stderr')}"
+            )
+        for issue in json.loads(result.get("stdout") or "[]"):
+            by_number[int(issue["number"])] = issue
+    return [by_number[n] for n in sorted(by_number)]
 
 
 def select_next_project(

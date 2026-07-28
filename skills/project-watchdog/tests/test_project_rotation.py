@@ -109,3 +109,66 @@ def test_a_failed_lease_scan_never_reads_as_idle():
     )
     assert chosen is None
     assert any(s["reason"].startswith("lease_scan_failed") for s in skipped)
+
+
+# --- lease vocabulary (#1088) -------------------------------------------------
+#
+# lane_busy_issues scanned only `agent-active`, but `skills/ticket/run.sh lease`
+# applies `maintainer-active`. A ticket leased through the documented command
+# therefore read as idle and the watchdog dispatched alongside it -- the exact
+# work-ahead cascade #1083 closed, reachable through the supported path. There
+# was no coverage of this function at all, which is how it shipped.
+
+from watchdog import config, registry  # noqa: E402
+
+
+def _fake_gh(by_label: dict[str, list[dict]], fail_on: str | None = None):
+    """Stand in for `gh issue list`, which ANDs repeated --label flags."""
+    calls: list[str] = []
+
+    def run_cmd(cmd, timeout_s=None):
+        label = cmd[cmd.index("--label") + 1]
+        calls.append(label)
+        if label == fail_on:
+            return {"exit_code": 1, "stdout": "", "stderr": "gh unavailable"}
+        import json as _json
+        return {"exit_code": 0, "stdout": _json.dumps(by_label.get(label, [])), "stderr": ""}
+
+    return run_cmd, calls
+
+
+def test_maintainer_held_lease_counts_as_in_flight(monkeypatch):
+    run_cmd, calls = _fake_gh({"maintainer-active": [{"number": 1088, "labels": []}]})
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+
+    busy = registry.lane_busy_issues("t", {"repo": "o/agent-skills"})
+
+    assert [i["number"] for i in busy] == [1088]
+    assert sorted(calls) == sorted(config.LEASE_LABELS), "every lease label must be scanned"
+
+
+def test_lease_scan_covers_the_same_vocabulary_classify_issue_refuses(monkeypatch):
+    """One scan per label: a single call with both --labels matches neither."""
+    run_cmd, calls = _fake_gh({
+        "agent-active": [{"number": 10, "labels": []}],
+        "maintainer-active": [{"number": 20, "labels": []}, {"number": 10, "labels": []}],
+    })
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+
+    busy = registry.lane_busy_issues("t", {"repo": "o/agent-skills"})
+
+    assert [i["number"] for i in busy] == [10, 20], "deduplicated and ordered"
+    assert len(calls) == len(config.LEASE_LABELS)
+
+
+def test_one_failed_label_scan_fails_the_whole_scan(monkeypatch):
+    """A partial view must never be reported as the full in-flight set."""
+    run_cmd, _ = _fake_gh({"agent-active": []}, fail_on="maintainer-active")
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+
+    try:
+        registry.lane_busy_issues("t", {"repo": "o/agent-skills"})
+    except RuntimeError as exc:
+        assert "maintainer-active" in str(exc)
+    else:
+        raise AssertionError("a failed label scan must raise, not return a partial list")
