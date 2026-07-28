@@ -1356,3 +1356,17 @@ def test_the_audit_prompt_tells_the_seat_the_artifacts_are_real_output(tmp_path)
 
 def test_a_comment_without_the_schema_yields_no_artifacts() -> None:
     assert handlers.collect_closure_artifacts([{"body": "```json\n{\"a\": 1}\n```"}]) == []
+
+
+def test_a_pre_contract_closure_is_not_grounds_for_fail() -> None:
+    """40 closures predate the evidence contract and cite no artifacts. Failing
+    them for absent-by-design evidence would reopen all 40 and send repair
+    agents at work that may be finished."""
+    task = handlers.build_closure_audit_task(
+        repo="o/r", issue_number=1, issue_title="t", issue_body="b",
+        evidence="a closing comment with no evidence block",
+        artifacts=handlers.render_closure_artifacts([]),
+    )
+    assert "predates the evidence contract" in task
+    assert "not grounds for FAIL" in task
+    assert "absent by design" in task
