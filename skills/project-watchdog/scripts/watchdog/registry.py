@@ -1,0 +1,455 @@
+"""Project registry lookup, worktree resolution, and routable-issue selection.
+
+Purpose
+    Answer two questions and nothing else: *which project am I acting for* and
+    *which of its open issues may I route*. Dispatch lives in ``handlers``.
+
+Inputs
+    ``registry/projects.json`` and ``registry/state.json``, plus live GitHub
+    issue listings fetched through the ``gh`` CLI.
+
+Outputs
+    Project dictionaries and lists of issue dictionaries carrying an added
+    ``watchdog_action`` key naming the handler that claims them.
+
+Failure modes
+    - ``find_project`` raises ``ValueError`` naming every registered project id,
+      so a typo produces a usable error instead of ``unknown project_id: x``.
+    - ``list_routable_issues`` raises ``RuntimeError`` when ``gh`` fails. A
+      failed scan must never be reported as "no work to do".
+    - Issues labelled ``agent-active`` or ``agent-blocked`` are skipped so a cron
+      firing every minute cannot retry a failed ticket without a human decision.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from pathlib import Path
+from typing import Any
+
+from . import config
+from .core import log_event, run_cmd
+
+
+def find_project(projects: dict[str, Any], project_id: str) -> dict[str, Any]:
+    """Return the registered project entry, or raise listing the valid ids."""
+    entries = projects.get("projects", [])
+    for project in entries:
+        if project.get("project_id") == project_id:
+            return project
+    known = sorted(str(entry.get("project_id")) for entry in entries)
+    raise ValueError(
+        f"unknown project_id: {project_id!r}. "
+        f"Registered ids: {', '.join(known) or '(none)'}. "
+        f"Add an entry to {config.PROJECTS_PATH} to register a new project."
+    )
+
+
+def project_repo(project: dict[str, Any]) -> str:
+    """Return the ``owner/name`` GitHub slug for a registered project."""
+    repo = project.get("repo")
+    if not repo:
+        raise ValueError(
+            f"project {project.get('project_id')!r} has no 'repo' field; "
+            "the watchdog cannot address GitHub without one"
+        )
+    return str(repo)
+
+
+def project_worktree(project: dict[str, Any]) -> Path:
+    """Return the absolute worktree path for a registered project."""
+    raw = project.get("worktree")
+    if not raw:
+        return config.workspace_root() / str(project.get("project_id"))
+    return Path(str(raw)).expanduser()
+
+
+#: Branches a repair may be authored on. A repair committed onto whatever
+#: branch a worktree happens to hold is unattributable.
+DEFAULT_BRANCHES = ("main", "master")
+
+#: Branch prefix for per-ticket repair worktrees. The lane creates one from
+#: origin/main per dispatch, so its branch is not a default branch and is still
+#: a legitimate place to author.
+REPAIR_BRANCH_PREFIX = "watchdog/issue-"
+
+
+def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -> dict[str, Any]:
+    """Create a clean worktree from ``origin/main`` to author one repair in.
+
+    Isolation, not convenience. The registered checkout is a human's working
+    tree; authoring there builds on whatever it happens to hold and risks
+    clobbering uncommitted work. A fresh worktree off the fetched origin/main is
+    clean by construction and current by construction.
+
+    Returns the git commands run and the resolved branch, or an ``error``.
+    """
+    branch = f"{REPAIR_BRANCH_PREFIX}{issue_number}"
+    steps: list[dict[str, Any]] = []
+
+    def git(*args: str, cwd: Path) -> dict[str, Any]:
+        result = run_cmd(["git", "-C", str(cwd), *args], timeout_s=120)
+        steps.append({"argv": ["git", *args], "exit_code": result.get("exit_code")})
+        return result
+
+    # Remove a leftover worktree from an earlier attempt at the same issue,
+    # so a retry is not refused by a path that already exists.
+    if worktree.exists():
+        git("worktree", "remove", "--force", str(worktree), cwd=repo_dir)
+    git("worktree", "prune", cwd=repo_dir)
+
+    fetched = git("fetch", "origin", "main", cwd=repo_dir)
+    if fetched.get("exit_code") != 0:
+        return {"ok": False, "error": f"fetch failed: {fetched.get('stderr')}", "steps": steps}
+
+    worktree.parent.mkdir(parents=True, exist_ok=True)
+    added = git("worktree", "add", "-B", branch, str(worktree), "origin/main", cwd=repo_dir)
+    if added.get("exit_code") != 0:
+        return {"ok": False, "error": f"worktree add failed: {added.get('stderr')}", "steps": steps}
+    return {"ok": True, "branch": branch, "worktree": str(worktree), "steps": steps}
+
+
+def worktree_readiness(worktree: Path, targets: set[str] | None = None) -> dict[str, Any]:
+    """Report whether a worktree is safe to author a repair in.
+
+    Observed 2026-07-28: the registry pointed ``agent-skills`` at a worktree
+    sitting on an unrelated feature branch, 686 commits behind main, with 543
+    modified tracked files, while a cron lane wrote tracked files into it every
+    few seconds. Dispatching there would author a repair on the wrong branch, on
+    top of foreign uncommitted edits, and could corrupt a running job.
+
+    Dirtiness is judged against ``targets`` when given, not the whole tree. In
+    agent-skills 111 of 364 skills are dirty; requiring the repository to be
+    clean withheld the 253 that are not. A repair confined to a clean skill is
+    not endangered by unrelated edits elsewhere -- and a skill a cron lane is
+    actively writing shows up dirty, so this still refuses exactly that case.
+
+    The branch check stays global: a repair authored on a feature branch never
+    reaches main regardless of which paths it touches.
+
+    Read-only. Returns the facts; the caller decides.
+    """
+    row: dict[str, Any] = {"worktree": str(worktree), "exists": worktree.is_dir()}
+    if not row["exists"]:
+        row["reasons"] = ["worktree_missing"]
+        row["ready"] = False
+        return row
+
+    def git(*args: str) -> tuple[int, str]:
+        result = run_cmd(["git", "-C", str(worktree), *args], timeout_s=30)
+        return int(result.get("exit_code", 1)), str(result.get("stdout", "")).strip()
+
+    code, branch = git("branch", "--show-current")
+    row["branch"] = branch or "(detached HEAD)"
+    if code != 0:
+        row["reasons"] = ["not_a_git_worktree"]
+        row["ready"] = False
+        return row
+
+    scope = sorted(t for t in (targets or set()) if t and t != UNKNOWN_TARGET)
+    row["scope"] = scope or ["<whole worktree>"]
+
+    # `git status -- <path>...` restricts the report to those paths. With no
+    # scope this is the previous whole-tree behaviour.
+    _, dirty_out = git("status", "--porcelain", "--untracked-files=no", "--", *scope)
+    dirty = [line for line in dirty_out.splitlines() if line.strip()]
+    row["dirty_tracked"] = len(dirty)
+    # porcelain is "XY<space>PATH", but the status field width varies with
+    # staged-vs-worktree combinations; a fixed slice truncated the filename.
+    row["dirty_paths"] = [line[2:].strip() for line in dirty[:10]]
+
+    _, untracked_out = git("status", "--porcelain", "--", *scope)
+    row["untracked"] = len([ln for ln in untracked_out.splitlines() if ln.startswith("??")])
+
+    reasons: list[str] = []
+    if row["branch"] not in DEFAULT_BRANCHES and not row["branch"].startswith(
+        REPAIR_BRANCH_PREFIX
+    ):
+        reasons.append(f"branch_is_not_default:{row['branch']}")
+    if dirty:
+        reasons.append(f"tracked_files_dirty:{len(dirty)}")
+    row["reasons"] = reasons
+    row["ready"] = not reasons
+    return row
+
+
+def list_routable_issues(
+    run_id: str, project: dict[str, Any], busy: set[str] | None = None
+) -> list[dict[str, Any]]:
+    """Return open issues this watchdog is permitted to route, in listing order.
+
+    ``busy`` is the set of targets already in flight. A ticket against one of
+    them is held back; a ticket against any other target is free to go.
+    """
+    repo = project_repo(project)
+    command = [
+        "gh",
+        "issue",
+        "list",
+        "--repo",
+        repo,
+        "--state",
+        "open",
+        "--label",
+        config.READY_LABEL,
+        "--limit",
+        "50",
+        "--json",
+        "number,title,body,labels,url",
+    ]
+    result = run_cmd(command, timeout_s=60)
+    log_event(run_id, "github_issue_scan", repo=repo, exit_code=result["exit_code"])
+    if result["exit_code"] != 0:
+        raise RuntimeError(f"gh issue list failed for {repo}: {result['stderr']}")
+    issues = json.loads(result["stdout"] or "[]")
+    routable: list[dict[str, Any]] = []
+    unroutable_no_repair_lane = 0
+    # Every ticket the scan passes over is recorded with its reason, so a tick
+    # that dispatches nothing names the tickets it declined and why.
+    excluded: dict[str, list[int]] = {}
+    has_lane = project_has_repair_lane(project)
+    busy_now = set(busy or ())
+    for issue in issues:
+        action, reason = classify_issue_with_reason(issue)
+        if action is None:
+            excluded.setdefault(reason or "unknown", []).append(int(issue["number"]))
+            continue
+        targets = issue_targets(issue)
+        if targets_are_blocked(targets, busy_now):
+            excluded.setdefault("target_busy", []).append(int(issue["number"]))
+            continue
+        if action == "ticket_repair" and not has_lane:
+            # The project exposes no Tau DAG repair lane, so this issue is not
+            # routable HERE. Claiming it only to block it leases and blocks a
+            # different ticket every tick and exits 1 every minute, which reads
+            # as many broken tickets instead of one unconfigured project.
+            unroutable_no_repair_lane += 1
+            continue
+        issue["watchdog_action"] = action
+        issue["watchdog_targets"] = sorted(targets)
+        # Claim them for the rest of this scan: with max_tickets > 1 two tickets
+        # against the same target would otherwise both look free.
+        busy_now |= targets
+        routable.append(issue)
+    if excluded:
+        log_event(
+            run_id,
+            "issues_excluded_from_dispatch",
+            project_id=project.get("project_id"),
+            repo=repo,
+            counts={reason: len(nums) for reason, nums in sorted(excluded.items())},
+            issues={reason: nums for reason, nums in sorted(excluded.items())},
+        )
+    if unroutable_no_repair_lane:
+        log_event(
+            run_id,
+            "issues_unroutable_no_repair_lane",
+            project_id=project.get("project_id"),
+            runner_kind=project.get("runner_kind"),
+            count=unroutable_no_repair_lane,
+        )
+    LAST_SCAN["unroutable_no_repair_lane"] = unroutable_no_repair_lane
+    LAST_SCAN["scanned"] = len(issues)
+    LAST_SCAN["excluded"] = {reason: len(nums) for reason, nums in sorted(excluded.items())}
+    LAST_SCAN["excluded_issues"] = {reason: nums for reason, nums in sorted(excluded.items())}
+    return routable
+
+
+def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:
+    """Issues already leased for this project, i.e. work in flight.
+
+    A lease label is applied when a repair is leased and removed when it
+    finishes or blocks, so its presence is the in-flight signal. Dispatching a
+    second ticket while one is leased is working ahead: the second repair is
+    authored against a tree the first is still changing.
+
+    Scans every label in ``config.LEASE_LABELS``, which is the same vocabulary
+    ``classify_issue`` refuses to dispatch on. Scanning only ``agent-active``
+    missed ``maintainer-active`` -- the label ``skills/ticket/run.sh lease``
+    applies -- so a ticket leased through the documented command read as idle
+    and the watchdog dispatched alongside it.
+
+    One scan per label rather than one call: ``gh issue list`` ANDs repeated
+    ``--label``, so a single call with both would match only issues carrying
+    both at once, which is never.
+    """
+    repo = str(project["repo"])
+    by_number: dict[int, dict[str, Any]] = {}
+    for label in sorted(config.LEASE_LABELS):
+        result = run_cmd(
+            [
+                "gh", "issue", "list", "--repo", repo, "--state", "open",
+                "--label", label, "--limit", "20",
+                # body included: the target is read from it, and without it
+                # every in-flight ticket reads as unknown-target.
+                "--json", "number,title,body,labels,url",
+            ],
+            timeout_s=60,
+        )
+        if result.get("exit_code") != 0:
+            # A failed scan must never read as "nothing in flight" -- that would
+            # let the watchdog work ahead precisely when it cannot see the
+            # current state.
+            raise RuntimeError(
+                f"lease scan failed for {repo} on label {label}: {result.get('stderr')}"
+            )
+        for issue in json.loads(result.get("stdout") or "[]"):
+            by_number[int(issue["number"])] = issue
+    return [by_number[n] for n in sorted(by_number)]
+
+
+#: The machine-readable `target: skills/<name>` line `/ticket` writes into every
+#: body. That line is the ticket's own statement of what it will change.
+_TARGET_LINE = re.compile(r"^target:\s*(\S+)\s*$", re.MULTILINE)
+
+#: Fallback for tickets filed before that line existed: every skill path the
+#: body mentions. Coarser, but it resolves 7 of the 8 leases currently open on
+#: agent-skills, where the `target:` line resolves 1.
+_SKILL_PATH = re.compile(r"\bskills/[a-z0-9][a-z0-9._-]*")
+
+#: A ticket whose target cannot be read at all. Just another target value: it
+#: collides with other unreadable tickets and with nothing else. Treating it as
+#: colliding with everything sounds safer and is not -- one legacy ticket with
+#: no target then holds the whole fleet, which is the stall being fixed.
+UNKNOWN_TARGET = "?"
+
+
+def issue_targets(issue: dict[str, Any]) -> set[str]:
+    """The paths a ticket will change, e.g. ``{"skills/ticket"}``.
+
+    A repository is not the unit of collision. agent-skills holds 364 skills;
+    two tickets against different ones share no files and cannot cascade into
+    each other, while two against the same one edit the same tree. Scheduling on
+    the repo blocks 363 skills to protect 1.
+    """
+    body = issue.get("body") or ""
+    match = _TARGET_LINE.search(body)
+    if match and (declared := match.group(1).strip().rstrip("/")):
+        return {declared}
+    mentioned = {path.rstrip("/") for path in _SKILL_PATH.findall(body)}
+    return mentioned or {UNKNOWN_TARGET}
+
+
+def busy_targets(issues: list[dict[str, Any]]) -> set[str]:
+    """Every target held by the given in-flight issues."""
+    held: set[str] = set()
+    for issue in issues:
+        held |= issue_targets(issue)
+    return held
+
+
+def targets_are_blocked(targets: set[str], busy: set[str]) -> bool:
+    """Whether dispatching ``targets`` would touch something already in flight."""
+    return bool(targets & busy)
+
+
+def select_next_project(
+    *,
+    run_id: str,
+    projects: dict[str, Any],
+    state: dict[str, Any],
+    last_served: str | None,
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """Round-robin to the next ACTIVE project.
+
+    The crontab is hardcoded to one project, and ``tick`` resolved exactly that
+    one, so an idle project stalled the whole fleet and no other project was
+    ever serviced. Rotation starts AFTER the last-served project so service is
+    fair rather than always restarting at the head of the registry.
+
+    A leased ticket does NOT take its project out of the rotation. Collision is
+    a property of the target, not the repository, and is enforced per ticket in
+    ``list_routable_issues``. Skipping the project instead meant one lease on
+    agent-skills withheld the other 363 skills.
+
+    Returns the chosen project (or None) and a per-project skip ledger, so a
+    tick that dispatches nothing still says why for each candidate.
+    """
+    entries = list(projects.get("projects", []))
+    ids = [str(e.get("project_id")) for e in entries]
+    start = 0
+    if last_served in ids:
+        start = ids.index(last_served) + 1
+    ordered = entries[start:] + entries[:start]
+
+    skipped: list[dict[str, Any]] = []
+    for entry in ordered:
+        pid = str(entry.get("project_id"))
+        project_state = state.get("projects", {}).get(pid, {}).get("state")
+        if project_state != "active":
+            skipped.append({"project_id": pid, "reason": f"project_state_{project_state}"})
+            continue
+        return entry, skipped
+    return None, skipped
+
+
+#: Side-channel for the last scan's non-routable tally, so ``tick`` can report
+#: WHY nothing was routable without re-listing.
+LAST_SCAN: dict[str, int] = {}
+
+
+def project_has_repair_lane(project: dict[str, Any]) -> bool:
+    """Whether this project can actually run a ticket repair.
+
+    Every registered project can: $ask compiles the creator-reviewer DAG for any
+    repo and Tau executes it. This used to require ``runner_kind`` to be
+    ``tau-command-loop`` because the lane hand-authored a contract pointing at
+    Tau's own command-spec tree, which only the tau checkout has -- so all five
+    other registered projects were refused before dispatch. A project needs a
+    worktree; readiness of that worktree is checked per target at dispatch.
+    """
+    return bool(project.get("worktree"))
+
+
+def classify_issue(issue: dict[str, Any]) -> str | None:
+    """Return the handler name that claims this issue, or ``None`` to skip it.
+
+    Three routes, checked most-specific first:
+
+    1. ``add_tau_coder_command_spec`` — legacy, needs an explicit body marker.
+    2. ``tau_handoff_dispatch`` — legacy, needs an explicit body marker.
+    3. ``ticket_repair`` — any ``agent-work`` issue with no marker. This is the
+       route ordinary ``/ticket``-filed tickets take.
+
+    Before route 3 existed, an issue had to be hand-authored with a
+    ``project-watchdog-action:`` body marker to be routable at all, while
+    ``/ticket`` emitted only ``type:*`` and ``route:*``. The two halves of the
+    system shared no vocabulary, and the cron logged 41,607 consecutive
+    ``no_routable_issues`` ticks over roughly a month as a result.
+    """
+    action, _ = classify_issue_with_reason(issue)
+    return action
+
+
+def classify_issue_with_reason(issue: dict[str, Any]) -> tuple[str | None, str | None]:
+    """``classify_issue``, plus WHY an issue was excluded.
+
+    A tick that dispatches nothing has to say which tickets it passed over and
+    on what grounds. Without that, a fleet with no dispatchable work and a fleet
+    whose every ticket is blocked produce the same silent tick -- which is how
+    41,607 consecutive no-op ticks went unnoticed once already.
+
+    Returns ``(action, None)`` when routable and ``(None, reason)`` when not.
+    """
+    labels = {label.get("name") for label in issue.get("labels", [])}
+
+    # Never routable: already leased by any agent, human-blocked, or parked.
+    # Reported separately because the remedies are different: a lease clears
+    # itself, a blocked ticket needs its blocker resolved, and a human-held one
+    # needs a person.
+    if labels & config.LEASE_LABELS:
+        return None, "leased"
+    if config.BLOCKED_LABEL in labels:
+        return None, "blocked"
+    if labels & config.HUMAN_HOLD_LABELS:
+        return None, "human_hold"
+    if config.READY_LABEL not in labels:
+        return None, "not_ready"
+
+    body = issue.get("body") or ""
+    if "next:coder" in labels and "executor:local" in labels and config.TAU_REPAIR_MARKER in body:
+        return "add_tau_coder_command_spec", None
+    if "executor:local" in labels and config.TAU_HANDOFF_DISPATCH_MARKER in body:
+        return "tau_handoff_dispatch", None
+    return "ticket_repair", None

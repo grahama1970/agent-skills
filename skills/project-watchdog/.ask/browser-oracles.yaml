@@ -1,0 +1,15 @@
+# Browser-oracle registry for project-watchdog.
+#
+# Maps this skill directory to a WebGPT review project so $webgpt-review,
+# $ask webgpt, and $surf webgpt.submit resolve the right reviewer via
+# $browser-oracle directory walk-up.
+#
+# Tab id and conversation URL belong in the browser-oracle binding store, not
+# here. Bind with:
+#   skills/browser-oracle/run.sh bind project-watchdog \
+#     --backend webgpt --tab-id <id> --url '<url>' --manual --json
+#
+# This file is committed configuration. It is not proof that a review ran.
+version: 1
+webgpt:
+  default: project-watchdog
