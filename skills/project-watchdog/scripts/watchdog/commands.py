@@ -32,7 +32,7 @@ from typing import Any
 
 from loguru import logger
 
-from . import config, streaks
+from . import config, registry, streaks
 from .core import (
     acquire_lock,
     base_receipt,
@@ -135,6 +135,34 @@ def _tick_locked(
                 consecutive_ticks=streak.consecutive_ticks,
             )
             return finish(run_id, receipt_dir, receipt, 0, persist=streak.should_persist_receipt)
+        skipped = registry.LAST_SCAN.get("unroutable_no_repair_lane", 0)
+        if skipped:
+            # Distinct from an idle queue: there IS work, and this project
+            # cannot run it. Say so once per tick instead of leasing and
+            # blocking a different ticket every minute.
+            receipt.update(
+                {
+                    "ok": False,
+                    "status": "BLOCKED",
+                    "stop_reason": "project_exposes_no_repair_lane",
+                    "summary": (
+                        f"{skipped} agent-work issue(s) classify as ticket_repair but project "
+                        f"{project_id!r} has runner_kind "
+                        f"{str(project.get('runner_kind', '')) or '(unset)'!s}, which exposes no "
+                        f"Tau DAG repair lane. Register a repair lane or route these elsewhere; "
+                        f"no issue was leased or blocked."
+                    ),
+                    "unroutable_no_repair_lane": skipped,
+                }
+            )
+            log_event(
+                run_id,
+                "project_exposes_no_repair_lane",
+                project_id=project_id,
+                runner_kind=project.get("runner_kind"),
+                count=skipped,
+            )
+            return finish(run_id, receipt_dir, receipt, 1)
         receipt.update({"ok": True, "status": "NOOP", "stop_reason": "no_routable_issues"})
         log_event(
             run_id,

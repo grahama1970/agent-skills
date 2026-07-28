@@ -142,13 +142,47 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
         raise RuntimeError(f"gh issue list failed for {repo}: {result['stderr']}")
     issues = json.loads(result["stdout"] or "[]")
     routable: list[dict[str, Any]] = []
+    unroutable_no_repair_lane = 0
+    has_lane = project_has_repair_lane(project)
     for issue in issues:
         action = classify_issue(issue)
         if action is None:
             continue
+        if action == "ticket_repair" and not has_lane:
+            # The project exposes no Tau DAG repair lane, so this issue is not
+            # routable HERE. Claiming it only to block it leases and blocks a
+            # different ticket every tick and exits 1 every minute, which reads
+            # as many broken tickets instead of one unconfigured project.
+            unroutable_no_repair_lane += 1
+            continue
         issue["watchdog_action"] = action
         routable.append(issue)
+    if unroutable_no_repair_lane:
+        log_event(
+            run_id,
+            "issues_unroutable_no_repair_lane",
+            project_id=project.get("project_id"),
+            runner_kind=project.get("runner_kind"),
+            count=unroutable_no_repair_lane,
+        )
+    LAST_SCAN["unroutable_no_repair_lane"] = unroutable_no_repair_lane
     return routable
+
+
+#: Side-channel for the last scan's non-routable tally, so ``tick`` can report
+#: WHY nothing was routable without re-listing.
+LAST_SCAN: dict[str, int] = {}
+
+
+def project_has_repair_lane(project: dict[str, Any]) -> bool:
+    """Whether this project can actually run a Tau DAG ticket repair.
+
+    Imported lazily: ``handlers`` imports this module, so a module-level import
+    of ``handlers`` here would be circular.
+    """
+    from .handlers import TICKET_REPAIR_RUNNERS  # noqa: PLC0415
+
+    return str(project.get("runner_kind", "")) in TICKET_REPAIR_RUNNERS
 
 
 def classify_issue(issue: dict[str, Any]) -> str | None:

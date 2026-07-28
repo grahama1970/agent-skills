@@ -155,9 +155,51 @@ def test_ordinary_ticket_without_marker_is_now_routable() -> None:
     )
     gh_result = {"exit_code": 0, "stdout": json.dumps([issue]), "stderr": ""}
     with mock.patch.object(registry, "run_cmd", return_value=gh_result):
-        selected = registry.list_routable_issues("run-test", {"repo": TAU_REPO})
+        selected = registry.list_routable_issues(
+            "run-test", {"repo": TAU_REPO, "runner_kind": "tau-command-loop"}
+        )
     assert len(selected) == 1
     assert selected[0]["watchdog_action"] == "ticket_repair"
+
+
+def test_ticket_repair_is_not_routable_without_a_repair_lane() -> None:
+    """A project with no Tau DAG lane must not claim ticket_repair (#1044).
+
+    Claiming it only to block it leases and blocks a different ticket every
+    tick and exits 1 every minute, which reads as many broken tickets rather
+    than one unconfigured project.
+    """
+    issue = _issue(
+        45,
+        labels=["agent-work", "type:bug", "route:backend_python_or_skill_runtime"],
+        body="## Type\n\nbug\n\n## Target\n\nsrc/thing.py",
+    )
+    gh_result = {"exit_code": 0, "stdout": json.dumps([issue]), "stderr": ""}
+    with mock.patch.object(registry, "run_cmd", return_value=gh_result):
+        selected = registry.list_routable_issues(
+            "run-test",
+            {"repo": TAU_REPO, "project_id": "agent-skills", "runner_kind": "project-local"},
+        )
+
+    assert selected == []
+    assert registry.LAST_SCAN["unroutable_no_repair_lane"] == 1
+
+
+def test_marker_routes_still_work_without_a_repair_lane() -> None:
+    """Only ticket_repair depends on the lane; legacy marker routes do not."""
+    issue = _issue(
+        46,
+        labels=["agent-work", "executor:local"],
+        body=f"{config.TAU_HANDOFF_DISPATCH_MARKER}\nstart=experiments/start.json",
+    )
+    gh_result = {"exit_code": 0, "stdout": json.dumps([issue]), "stderr": ""}
+    with mock.patch.object(registry, "run_cmd", return_value=gh_result):
+        selected = registry.list_routable_issues(
+            "run-test", {"repo": TAU_REPO, "runner_kind": "project-local"}
+        )
+
+    assert len(selected) == 1
+    assert selected[0]["watchdog_action"] == "tau_handoff_dispatch"
 
 
 def test_issue_without_ready_label_is_not_routable() -> None:
