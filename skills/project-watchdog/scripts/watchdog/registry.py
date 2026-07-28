@@ -143,10 +143,14 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
     issues = json.loads(result["stdout"] or "[]")
     routable: list[dict[str, Any]] = []
     unroutable_no_repair_lane = 0
+    # Every ticket the scan passes over is recorded with its reason, so a tick
+    # that dispatches nothing names the tickets it declined and why.
+    excluded: dict[str, list[int]] = {}
     has_lane = project_has_repair_lane(project)
     for issue in issues:
-        action = classify_issue(issue)
+        action, reason = classify_issue_with_reason(issue)
         if action is None:
+            excluded.setdefault(reason or "unknown", []).append(int(issue["number"]))
             continue
         if action == "ticket_repair" and not has_lane:
             # The project exposes no Tau DAG repair lane, so this issue is not
@@ -157,6 +161,15 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
             continue
         issue["watchdog_action"] = action
         routable.append(issue)
+    if excluded:
+        log_event(
+            run_id,
+            "issues_excluded_from_dispatch",
+            project_id=project.get("project_id"),
+            repo=repo,
+            counts={reason: len(nums) for reason, nums in sorted(excluded.items())},
+            issues={reason: nums for reason, nums in sorted(excluded.items())},
+        )
     if unroutable_no_repair_lane:
         log_event(
             run_id,
@@ -166,6 +179,9 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
             count=unroutable_no_repair_lane,
         )
     LAST_SCAN["unroutable_no_repair_lane"] = unroutable_no_repair_lane
+    LAST_SCAN["scanned"] = len(issues)
+    LAST_SCAN["excluded"] = {reason: len(nums) for reason, nums in sorted(excluded.items())}
+    LAST_SCAN["excluded_issues"] = {reason: nums for reason, nums in sorted(excluded.items())}
     return routable
 
 
@@ -293,17 +309,38 @@ def classify_issue(issue: dict[str, Any]) -> str | None:
     system shared no vocabulary, and the cron logged 41,607 consecutive
     ``no_routable_issues`` ticks over roughly a month as a result.
     """
+    action, _ = classify_issue_with_reason(issue)
+    return action
+
+
+def classify_issue_with_reason(issue: dict[str, Any]) -> tuple[str | None, str | None]:
+    """``classify_issue``, plus WHY an issue was excluded.
+
+    A tick that dispatches nothing has to say which tickets it passed over and
+    on what grounds. Without that, a fleet with no dispatchable work and a fleet
+    whose every ticket is blocked produce the same silent tick -- which is how
+    41,607 consecutive no-op ticks went unnoticed once already.
+
+    Returns ``(action, None)`` when routable and ``(None, reason)`` when not.
+    """
     labels = {label.get("name") for label in issue.get("labels", [])}
 
     # Never routable: already leased by any agent, human-blocked, or parked.
-    if labels & {config.BLOCKED_LABEL, *config.LEASE_LABELS, *config.HUMAN_HOLD_LABELS}:
-        return None
+    # Reported separately because the remedies are different: a lease clears
+    # itself, a blocked ticket needs its blocker resolved, and a human-held one
+    # needs a person.
+    if labels & config.LEASE_LABELS:
+        return None, "leased"
+    if config.BLOCKED_LABEL in labels:
+        return None, "blocked"
+    if labels & config.HUMAN_HOLD_LABELS:
+        return None, "human_hold"
     if config.READY_LABEL not in labels:
-        return None
+        return None, "not_ready"
 
     body = issue.get("body") or ""
     if "next:coder" in labels and "executor:local" in labels and config.TAU_REPAIR_MARKER in body:
-        return "add_tau_coder_command_spec"
+        return "add_tau_coder_command_spec", None
     if "executor:local" in labels and config.TAU_HANDOFF_DISPATCH_MARKER in body:
-        return "tau_handoff_dispatch"
-    return "ticket_repair"
+        return "tau_handoff_dispatch", None
+    return "ticket_repair", None

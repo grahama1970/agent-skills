@@ -172,3 +172,67 @@ def test_one_failed_label_scan_fails_the_whole_scan(monkeypatch):
         assert "maintainer-active" in str(exc)
     else:
         raise AssertionError("a failed label scan must raise, not return a partial list")
+
+
+# --- a silent no-op tick is the failure this watchdog exists to prevent -------
+#
+# Both no-project-serviceable paths reported ok:True / exit 0, so a fleet where
+# every project was paused looked identical to a quiet minute. Measured live on
+# 2026-07-28: 5 registered projects, 4 paused, tau holding one lease, and the
+# tick reported success while dispatching nothing.
+
+from watchdog.commands import _record_fleet_stall  # noqa: E402
+
+
+def test_a_stall_that_cannot_clear_itself_needs_attention():
+    receipt = {"ok": True, "status": "SKIPPED"}
+    _record_fleet_stall(receipt, [
+        {"project_id": "tau", "reason": "lane_busy"},
+        {"project_id": "scillm", "reason": "project_state_paused"},
+        {"project_id": "pi-mono", "reason": "project_state_paused"},
+    ])
+    assert receipt["ok"] is False
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["fleet_stall"]["needs_human"] == ["project_state_paused"]
+    assert receipt["fleet_stall"]["self_clearing"] is False
+    assert "dispatch nothing" in receipt["summary"]
+
+
+def test_a_stall_held_open_only_by_leases_stays_ok():
+    """A lease ends when its holder finishes; that is a quiet tick, not a fault."""
+    receipt = {"ok": True, "status": "SKIPPED"}
+    _record_fleet_stall(receipt, [
+        {"project_id": "tau", "reason": "lane_busy"},
+        {"project_id": "alpha", "reason": "lane_busy"},
+    ])
+    assert receipt["ok"] is True
+    assert receipt["status"] == "SKIPPED"
+    assert receipt["fleet_stall"]["self_clearing"] is True
+    assert receipt["fleet_stall"]["needs_human"] == []
+
+
+def test_a_failed_lease_scan_is_not_treated_as_self_clearing():
+    receipt = {"ok": True, "status": "SKIPPED"}
+    _record_fleet_stall(receipt, [
+        {"project_id": "tau", "reason": "lease_scan_failed: gh unavailable"},
+    ])
+    assert receipt["ok"] is False
+    assert receipt["fleet_stall"]["self_clearing"] is False
+
+
+def test_exclusions_are_reported_by_distinct_reason():
+    """blocked, leased and human-held need different remedies, so they are separate."""
+    def issue(num, *labels):
+        return {"number": num, "labels": [{"name": n} for n in ("agent-work", *labels)]}
+
+    cases = {
+        "leased": issue(1, "maintainer-active"),
+        "blocked": issue(2, "agent-blocked"),
+        "human_hold": issue(3, "needs-human"),
+    }
+    for expected, iss in cases.items():
+        action, reason = registry.classify_issue_with_reason(iss)
+        assert action is None and reason == expected, f"{expected}: got {reason}"
+
+    action, reason = registry.classify_issue_with_reason(issue(4))
+    assert action == "ticket_repair" and reason is None

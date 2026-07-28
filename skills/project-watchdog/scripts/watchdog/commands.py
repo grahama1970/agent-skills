@@ -47,6 +47,46 @@ from .core import (
 from .handlers import handle_issue
 from .registry import find_project, list_routable_issues
 
+#: Skip reasons a later tick can clear without anyone intervening. A lease ends
+#: when its holder finishes. Everything else -- a paused project, a stopped one,
+#: a lease scan that will not run -- stays true until a human acts.
+_SELF_CLEARING_SKIPS = frozenset({"lane_busy"})
+
+
+def _record_fleet_stall(receipt: dict[str, Any], skipped: list[dict[str, Any]]) -> None:
+    """Mark a tick that serviced no project, and say whether it can recover.
+
+    Both no-project-serviceable paths used to report ``ok: True`` and exit 0, so
+    a fleet where every project is paused looked exactly like a quiet minute.
+    Cron saw success indefinitely while nothing was dispatched -- the failure
+    this watchdog exists to prevent, in the watchdog itself.
+
+    A stall held open only by leases is transient and stays ``ok``. A stall with
+    any other cause cannot clear on its own, so it reports NEEDS_ATTENTION and a
+    nonzero exit.
+    """
+    reasons = [str(entry.get("reason", "")) for entry in skipped]
+    blocking = sorted({r for r in reasons if r.split(":")[0] not in _SELF_CLEARING_SKIPS})
+    receipt["fleet_stall"] = {
+        "serviced_projects": 0,
+        "candidates": len(skipped),
+        "by_reason": {r: reasons.count(r) for r in sorted(set(reasons))},
+        "self_clearing": not blocking,
+        "needs_human": blocking,
+    }
+    if blocking:
+        receipt["ok"] = False
+        receipt["status"] = "NEEDS_ATTENTION"
+        detail = "; ".join(
+            f"{entry.get('project_id')}: {entry.get('reason')}" for entry in skipped
+        )
+        receipt["summary"] = (
+            f"no registered project was serviceable and the reasons do not clear on their own "
+            f"({detail}). The watchdog will dispatch nothing until this is resolved."
+        )
+    else:
+        receipt["ok"] = True
+
 
 def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
     """Run one bounded watchdog tick under the single-tick lock."""
@@ -109,7 +149,6 @@ def _tick_locked(
         if chosen is None:
             receipt.update(
                 {
-                    "ok": True,
                     "status": "SKIPPED",
                     "stop_reason": f"project_state_{project_state}",
                     "summary": (
@@ -118,8 +157,10 @@ def _tick_locked(
                     ),
                 }
             )
-            log_event(run_id, "project_skipped", reason=receipt["stop_reason"])
-            return finish(run_id, receipt_dir, receipt, 0)
+            _record_fleet_stall(receipt, skipped)
+            log_event(run_id, "project_skipped", reason=receipt["stop_reason"],
+                      fleet_stall=receipt["fleet_stall"])
+            return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
         project = chosen
         project_id = str(chosen.get("project_id"))
         receipt["rotation"]["selected"] = project_id
@@ -149,7 +190,6 @@ def _tick_locked(
             if chosen is None:
                 receipt.update(
                     {
-                        "ok": True,
                         "status": "SKIPPED",
                         "stop_reason": "lane_busy",
                         "summary": (
@@ -159,8 +199,10 @@ def _tick_locked(
                         ),
                     }
                 )
-                log_event(run_id, "lane_busy_no_alternative", project_id=project_id)
-                return finish(run_id, receipt_dir, receipt, 0)
+                _record_fleet_stall(receipt, skipped)
+                log_event(run_id, "lane_busy_no_alternative", project_id=project_id,
+                          fleet_stall=receipt["fleet_stall"])
+                return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
             project = chosen
             project_id = str(chosen.get("project_id"))
             receipt["rotation"]["selected"] = project_id
@@ -233,12 +275,35 @@ def _tick_locked(
                 count=skipped,
             )
             return finish(run_id, receipt_dir, receipt, 1)
-        receipt.update({"ok": True, "status": "NOOP", "stop_reason": "no_routable_issues"})
+        # An empty queue and a queue where every ticket is blocked are both NOOP,
+        # and telling them apart is the difference between "nothing to do" and
+        # "the fleet has stalled". Carry the per-reason tally into the receipt.
+        excluded = registry.LAST_SCAN.get("excluded", {})
+        excluded_issues = registry.LAST_SCAN.get("excluded_issues", {})
+        scanned = registry.LAST_SCAN.get("scanned", 0)
+        receipt.update(
+            {
+                "ok": True,
+                "status": "NOOP",
+                "stop_reason": "no_routable_issues",
+                "scanned_agent_work": scanned,
+                "excluded": excluded,
+                "excluded_issues": excluded_issues,
+            }
+        )
+        if excluded:
+            detail = ", ".join(f"{n} {reason}" for reason, n in sorted(excluded.items()))
+            receipt["summary"] = (
+                f"{scanned} agent-work issue(s) in {project_id!r}, none dispatchable: {detail}. "
+                "An empty queue and a fully blocked one are both NOOP; this one is blocked."
+            )
         log_event(
             run_id,
             "no_routable_issues",
             project_id=project_id,
             consecutive_idle_ticks=streak.consecutive_ticks,
+            scanned=scanned,
+            excluded=excluded,
         )
         return finish(run_id, receipt_dir, receipt, 0)
 
