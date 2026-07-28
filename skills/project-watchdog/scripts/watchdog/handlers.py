@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from . import config, github, registry
-from .core import log_event, run_cmd, write_json
+from .core import iso_now, log_event, run_cmd, write_json
 from .issue_fields import (
     parse_bool,
     parse_goal_hash,
@@ -144,6 +144,7 @@ def handle_tau_handoff_dispatch(
                 "Lease acquired",
                 {
                     "schema": "agent_skills.project_watchdog.lease.v1",
+                    "acquired_at": iso_now(),
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "selected_agent": "tau-handoff-dispatch",
@@ -287,6 +288,7 @@ def handle_tau_coder_spec(
                 "Lease acquired",
                 {
                     "schema": "agent_skills.project_watchdog.lease.v1",
+                    "acquired_at": iso_now(),
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "selected_agent": "coder",
@@ -509,10 +511,10 @@ def tau_coder_start_handoff(
 
 
 #: runner_kind values this generic handler knows how to drive.
-#: Reviewer seat for the repair DAG. A non-mutating answer/review subagent, so
-#: it needs no workspace binding; the creator seat (codex) is the one that
-#: writes.
-REPAIR_REVIEWER_HANDLER = "gpt-5.5-xhigh"
+#: Kept as the module-level default for tests; the live values come from
+#: ``config.repair_creator``/``config.repair_reviewer`` so a project can name its
+#: own seats (agent-skills#1086).
+REPAIR_REVIEWER_HANDLER = config.DEFAULT_REPAIR_REVIEWER
 
 
 def repair_immutable_goal(repo: str, issue_number: int) -> str:
@@ -523,7 +525,9 @@ def repair_immutable_goal(repo: str, issue_number: int) -> str:
     return (
         f"Resolve {repo}#{issue_number} so its stated acceptance criterion holds, "
         f"proven by the proof command the ticket names. Change only the paths the "
-        f"ticket targets. Do not weaken or delete a test to make it pass."
+        f"ticket targets. Do not weaken or delete a test to make it pass. "
+        f"Commit to the current branch only: do not push, do not merge, and do not "
+        f"modify any other branch. The reviewer seat decides whether this lands."
     )
 
 
@@ -544,6 +548,9 @@ def build_repair_task(
     return (
         f"Repair {repo}#{issue_number}: {issue_title}\n\n"
         f"Allowed paths: {', '.join(targets) or '(as stated in the ticket)'}\n\n"
+        f"Commit to the current branch only. Do not push, do not merge, do not "
+        f"switch branches. Whether this reaches main is the reviewer's decision "
+        f"and a human's, not the creator's.\n\n"
         f"The creator seat implements the fix and commits it. The reviewer seat "
         f"checks it against the ticket's acceptance criterion and required proof, "
         f"and answers VERDICT: PASS, VERDICT: FAIL, or VERDICT: NEEDS_ATTENTION.\n\n"
@@ -619,6 +626,25 @@ def handle_ticket_repair(
     result = _new_result(project, issue, "ticket_repair")
     result["selected_agent"] = "coder"
     result["runner_kind"] = runner_kind
+
+    # Two seats, deliberately different model families: a reviewer that shares
+    # the creator's blind spots is a second pass, not a second opinion.
+    creator = config.repair_creator(project)
+    reviewer = config.repair_reviewer(project)
+    result["seats"] = {"creator": creator, "reviewer": reviewer}
+    if creator == reviewer:
+        result.update(
+            {
+                "ok": False,
+                "status": "BLOCKED",
+                "summary": (
+                    f"creator and reviewer are both {creator!r}. A model reviewing its own "
+                    f"work is not review; configure repair_reviewer to a different family."
+                ),
+            }
+        )
+        log_event(run_id, "repair_seats_identical", issue=issue_number, seat=creator)
+        return result
 
     ask_run = config.ask_run_sh()
     if not ask_run.is_file():
@@ -708,6 +734,13 @@ def handle_ticket_repair(
         return result
     result["artifacts"].append(str(repair_worktree))
 
+    # The creator commits on its own branch; only the reviewer's verdict should
+    # move main. Observed 2026-07-28: the codex seat pushed a850e22a6 straight to
+    # origin/main while its own DAG node reported NEEDS_ATTENTION and the ticket
+    # stayed agent-blocked -- unreviewed work landed anyway.
+    main_before = registry.remote_main_sha(worktree)
+    result["origin_main_before"] = main_before
+
     result["commands"].append(
         github.issue_comment(
             repo,
@@ -716,6 +749,7 @@ def handle_ticket_repair(
                 "Lease acquired",
                 {
                     "schema": "agent_skills.project_watchdog.lease.v1",
+                    "acquired_at": iso_now(),
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "repo": repo,
@@ -743,9 +777,9 @@ def handle_ticket_repair(
             "--target", ",".join(sorted(targets)),
             "--immutable-goal", repair_immutable_goal(repo, issue_number),
             "--dag-template", "creator-reviewer",
-            "--handler", "codex",
-            "--handler-workspace", f"codex={repair_worktree}",
-            "--handler", REPAIR_REVIEWER_HANDLER,
+            "--handler", creator,
+            "--handler-workspace", f"{creator}={repair_worktree}",
+            "--handler", reviewer,
             "--topology", "sequential",
             "--run-output-root", str(ask_run_dir),
             "--execute",
@@ -800,6 +834,29 @@ def handle_ticket_repair(
             ),
         )
     )
+    main_after = registry.remote_main_sha(worktree)
+    result["origin_main_after"] = main_after
+    if main_before and main_after and main_before != main_after:
+        result.update(
+            {
+                "ok": False,
+                "status": "NEEDS_ATTENTION",
+                "summary": (
+                    f"origin/main moved during this repair ({main_before[:9]} -> "
+                    f"{main_after[:9]}). The creator seat must commit to its own branch "
+                    f"and let the reviewer decide what lands; unreviewed work on main is "
+                    f"exactly what the two-seat loop exists to prevent."
+                ),
+            }
+        )
+        log_event(run_id, "origin_main_moved_during_repair", issue=issue_number,
+                  before=main_before, after=main_after)
+        result["commands"].append(
+            github.issue_edit(repo, issue_number, add=[config.BLOCKED_LABEL],
+                              remove=[config.LEASE_LABEL])
+        )
+        return result
+
     result["commands"].append(github.issue_edit(repo, issue_number, remove=[config.LEASE_LABEL]))
     result.update(
         {

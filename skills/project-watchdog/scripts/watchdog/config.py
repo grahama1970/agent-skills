@@ -10,6 +10,14 @@ Inputs
     ``PROJECT_WATCHDOG_STATE_ROOT``
         Overrides the durable state root (default ``~/.local/state/project-watchdog``).
         Tests set this to a temporary directory to keep real receipts untouched.
+    ``PROJECT_WATCHDOG_PROJECTS_PATH``
+        Overrides the project registry file. Sanity checks point this at a
+        fixture so a gate about idle behaviour is not rewritten every time a
+        real project gains a ticket.
+    ``PROJECT_WATCHDOG_REPAIR_CREATOR`` / ``PROJECT_WATCHDOG_REPAIR_REVIEWER``
+        Override the two repair seats. Defaults are set so the reviewer is a
+        different model family from the creator; a reviewer that shares the
+        creator's blind spots is not a second opinion.
     ``PROJECT_WATCHDOG_WORKSPACE``
         Overrides the workspace root that holds project worktrees
         (default ``~/workspace/experiments``).
@@ -38,6 +46,7 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+from typing import Any
 
 from loguru import logger
 
@@ -58,7 +67,8 @@ ASK_RUN_SH = SKILL_DIR.parent / "ask" / "run.sh"
 def ask_run_sh() -> Path:
     """Path to the $ask runner used by the ticket-repair lane."""
     return ASK_RUN_SH
-STATE_PATH = REGISTRY_DIR / "state.json"
+#: Seed state, versioned with the skill. Runtime state is NOT written here.
+STATE_SEED_PATH = REGISTRY_DIR / "state.json"
 
 
 def _env_path(name: str, default: Path) -> Path:
@@ -86,6 +96,62 @@ def receipt_root() -> Path:
 
 def lock_dir() -> Path:
     return state_root() / "lock"
+
+
+def state_path() -> Path:
+    """Where mutable watchdog state actually lives.
+
+    NOT inside the repository. ``registry/state.json`` is tracked, and the tick
+    writes state on every run -- pausing a project, recording last_served -- so
+    the watchdog dirtied its own skill directory continuously. With readiness
+    judged per target that made every ticket against ``skills/project-watchdog``
+    permanently unrepairable, and in any checkout it produced endless spurious
+    diffs. Logs and receipts already live under the state root; state belongs
+    with them.
+
+    Seeded once from the versioned ``registry/state.json`` so a fresh install
+    starts from the committed defaults.
+    """
+    live = state_root() / "state.json"
+    if not live.exists() and STATE_SEED_PATH.is_file():
+        live.parent.mkdir(parents=True, exist_ok=True)
+        live.write_text(STATE_SEED_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+    return live
+
+
+def projects_path() -> Path:
+    """Return the project registry, honouring ``PROJECT_WATCHDOG_PROJECTS_PATH``."""
+    return _env_path("PROJECT_WATCHDOG_PROJECTS_PATH", PROJECTS_PATH)
+
+
+#: The creator seat. Must be able to mutate a workspace and produce a real git
+#: diff, which is the local Codex CLI lane -- an answer-only subagent cannot.
+DEFAULT_REPAIR_CREATOR = "codex"
+
+#: The reviewer seat. Deliberately a different model family from the creator:
+#: `gpt-5.5-xhigh` resolves to `codex exec --model ...`, the same family the
+#: creator runs, so it shared the creator's blind spots and was a second pass
+#: rather than a second opinion.
+DEFAULT_REPAIR_REVIEWER = "claude-opus-4-8"
+
+
+def repair_creator(project: dict[str, Any] | None = None) -> str:
+    """Handler that writes the fix, per project then env then default."""
+    return _repair_seat(project, "repair_creator", "PROJECT_WATCHDOG_REPAIR_CREATOR",
+                        DEFAULT_REPAIR_CREATOR)
+
+
+def repair_reviewer(project: dict[str, Any] | None = None) -> str:
+    """Handler that judges the fix, per project then env then default."""
+    return _repair_seat(project, "repair_reviewer", "PROJECT_WATCHDOG_REPAIR_REVIEWER",
+                        DEFAULT_REPAIR_REVIEWER)
+
+
+def _repair_seat(project: dict[str, Any] | None, key: str, env: str, default: str) -> str:
+    configured = str((project or {}).get(key) or "").strip()
+    if configured:
+        return configured
+    return os.environ.get(env, "").strip() or default
 
 
 def repair_worktrees_dir() -> Path:
@@ -175,6 +241,11 @@ def _env_seconds(name: str, default: int) -> int:
         return default
     return value if value > 0 else default
 
+
+#: A lease older than this is abandoned. The acquisition timestamp comes from
+#: GitHub's label event, not the issue's mutable ``updatedAt`` value, so later
+#: comments do not keep a dead holder alive indefinitely.
+LEASE_STALE_SECONDS = _env_seconds("PROJECT_WATCHDOG_LEASE_STALE_SECONDS", 86_400)
 
 #: How long a project may report "nothing routable" before that stops counting
 #: as a steady state. Silence is not success: before 2026-07-27 this skill

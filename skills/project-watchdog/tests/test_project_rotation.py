@@ -9,6 +9,7 @@ repository blocked 363 skills to protect 1, which is why a single lease on tau
 left the fleet dispatching nothing.
 """
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -123,7 +124,7 @@ def test_a_multi_skill_ticket_blocks_on_any_overlap():
 # work-ahead cascade #1083 closed, reachable through the supported path. There
 # was no coverage of this function at all, which is how it shipped.
 
-from watchdog import config, registry  # noqa: E402
+from watchdog import commands, config, registry  # noqa: E402
 
 
 def _fake_gh(by_label: dict[str, list[dict]], fail_on: str | None = None):
@@ -176,6 +177,133 @@ def test_one_failed_label_scan_fails_the_whole_scan(monkeypatch):
         assert "maintainer-active" in str(exc)
     else:
         raise AssertionError("a failed label scan must raise, not return a partial list")
+
+
+def _lease_scan_fake(issue: dict, acquired_at: str | None):
+    """Return live-shaped issue-list and label-event responses."""
+    def run_cmd(cmd, timeout_s=None):
+        if cmd[1] == "issue":
+            label = cmd[cmd.index("--label") + 1]
+            names = {entry["name"] for entry in issue["labels"]}
+            rows = [issue] if label in names else []
+            import json as _json
+            return {"exit_code": 0, "stdout": _json.dumps(rows), "stderr": ""}
+        assert cmd[1] == "api"
+        events = []
+        if acquired_at is not None:
+            events.append({
+                "event": "labeled",
+                "created_at": acquired_at,
+                "label": {"name": "maintainer-active"},
+            })
+        import json as _json
+        return {"exit_code": 0, "stdout": _json.dumps([events]), "stderr": ""}
+    return run_cmd
+
+
+def _live_shaped_lease(number: int = 7) -> dict:
+    return {
+        "number": number,
+        "title": "leased",
+        "body": "target: skills/project-watchdog\n",
+        "labels": [{"name": "maintainer-active"}],
+        "url": f"https://github.test/issues/{number}",
+        "updatedAt": "2026-07-28T00:00:00Z",
+    }
+
+
+def test_stale_lease_is_reclaimed_from_the_in_flight_set(monkeypatch):
+    issue = _live_shaped_lease()
+    monkeypatch.setattr(
+        registry, "run_cmd", _lease_scan_fake(issue, "2026-07-26T00:00:00Z")
+    )
+    monkeypatch.setattr(registry, "_now_utc", lambda: datetime(2026, 7, 28, tzinfo=UTC))
+    monkeypatch.setattr(config, "LEASE_STALE_SECONDS", 86_400)
+
+    busy = registry.lane_busy_issues("t", {"repo": "o/agent-skills"})
+
+    assert busy == []
+    stale = registry.LAST_LEASE_SCAN["stale"]
+    assert stale[0]["issue_number"] == 7
+    assert stale[0]["labels"] == ["maintainer-active"]
+    assert stale[0]["leases"][0]["reason"] == "lease_expired"
+    assert stale[0]["leases"][0]["acquired_at"] == "2026-07-26T00:00:00Z"
+
+
+def test_fresh_lease_remains_in_flight(monkeypatch):
+    issue = _live_shaped_lease()
+    monkeypatch.setattr(
+        registry, "run_cmd", _lease_scan_fake(issue, "2026-07-27T23:30:00Z")
+    )
+    monkeypatch.setattr(registry, "_now_utc", lambda: datetime(2026, 7, 28, tzinfo=UTC))
+    monkeypatch.setattr(config, "LEASE_STALE_SECONDS", 86_400)
+
+    busy = registry.lane_busy_issues("t", {"repo": "o/agent-skills"})
+
+    assert [row["number"] for row in busy] == [7]
+    assert registry.LAST_LEASE_SCAN["stale"] == []
+    assert registry.LAST_LEASE_SCAN["active"][0]["leases"][0]["reason"] == "lease_active"
+
+
+def test_unknown_acquisition_time_fails_closed_as_in_flight(monkeypatch):
+    issue = _live_shaped_lease()
+    monkeypatch.setattr(registry, "run_cmd", _lease_scan_fake(issue, None))
+    monkeypatch.setattr(registry, "_now_utc", lambda: datetime(2026, 7, 28, tzinfo=UTC))
+
+    busy = registry.lane_busy_issues("t", {"repo": "o/agent-skills"})
+
+    assert [row["number"] for row in busy] == [7]
+    assert registry.LAST_LEASE_SCAN["unknown_acquisition_time"] == [
+        {"issue_number": 7, "label": "maintainer-active"}
+    ]
+
+
+def test_reclaim_removes_only_the_expired_lease_label(monkeypatch):
+    calls = []
+
+    def issue_edit(repo, issue_number, *, add=None, remove=None):
+        calls.append({"repo": repo, "issue": issue_number, "add": add, "remove": remove})
+        return {"exit_code": 0, "stdout": "ok", "stderr": ""}
+
+    monkeypatch.setattr(commands.github, "issue_edit", issue_edit)
+    stale = [{
+        "issue_number": 7,
+        "labels": ["maintainer-active"],
+        "leases": [{"reason": "lease_expired"}],
+        "reason": "lease_expired",
+    }]
+
+    reclaimed, failures = commands._reclaim_stale_leases(
+        "o/agent-skills", stale, apply=True
+    )
+
+    assert failures == []
+    assert reclaimed[0]["status"] == "reclaimed"
+    assert calls == [{
+        "repo": "o/agent-skills",
+        "issue": 7,
+        "add": None,
+        "remove": ["maintainer-active"],
+    }]
+
+
+def test_reclaimed_issue_is_not_redispatched_in_the_same_tick(monkeypatch):
+    issue = _live_shaped_lease()
+    issue["labels"] = [{"name": "agent-work"}]
+
+    def run_cmd(cmd, timeout_s=None):
+        import json as _json
+        return {"exit_code": 0, "stdout": _json.dumps([issue]), "stderr": ""}
+
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+    routable = registry.list_routable_issues(
+        "t",
+        {"repo": "o/agent-skills", "worktree": "/tmp/worktree"},
+        skip_issue_numbers={7},
+    )
+
+    assert routable == []
+    assert registry.LAST_SCAN["excluded_issues"]["lease_reclaimed_this_tick"] == [7]
 
 
 # --- a silent no-op tick is the failure this watchdog exists to prevent -------
@@ -240,3 +368,41 @@ def test_exclusions_are_reported_by_distinct_reason():
 
     action, reason = registry.classify_issue_with_reason(issue(4))
     assert action == "ticket_repair" and reason is None
+
+
+# --- the tick must not stop at the first active project ----------------------
+
+
+def test_rotation_order_leads_with_the_requested_project():
+    order = registry.rotation_order(PROJECTS, ALL_ACTIVE, requested="beta")
+    assert [str(e["project_id"]) for e in order][0] == "beta"
+
+
+def test_rotation_order_starts_after_the_last_served():
+    state = dict(ALL_ACTIVE, last_served_project="alpha")
+    order = registry.rotation_order(PROJECTS, state)
+    assert [str(e["project_id"]) for e in order] == ["beta", "gamma", "alpha"]
+
+
+def test_rotation_order_covers_every_project_exactly_once():
+    """A project skipped this tick must still be tried before the tick ends."""
+    order = registry.rotation_order(PROJECTS, ALL_ACTIVE, requested="gamma")
+    ids = [str(e["project_id"]) for e in order]
+    assert sorted(ids) == ["alpha", "beta", "gamma"]
+    assert len(ids) == len(set(ids))
+
+
+# --- runtime state must not live in the repository ---------------------------
+
+
+def test_state_is_written_outside_the_repository():
+    """The tick writes state every run; inside the repo that dirties the skill.
+
+    With readiness judged per target, a watchdog that dirties
+    skills/project-watchdog makes every ticket against itself unrepairable.
+    """
+    from watchdog import config  # noqa: PLC0415
+
+    live = config.state_path()
+    assert config.SKILL_DIR not in live.parents, "state must not sit inside the skill"
+    assert live.parent == config.state_root()

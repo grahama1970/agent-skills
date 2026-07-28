@@ -229,7 +229,21 @@ gate 11 "IDLE ESCALATION — prolonged silence must stop reporting as healthy"
 # Real CLI, real ticks, 2s threshold. Not a unit test over our own helpers.
 export PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS=2
 export PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS=3600
-rm -f "$PROJECT_WATCHDOG_STATE_ROOT/streaks.json" 2>/dev/null || true
+rm -f "$PROJECT_WATCHDOG_STATE_ROOT/streaks.json" "$PROJECT_WATCHDOG_STATE_ROOT/state.json" 2>/dev/null || true
+# Point at a fixture registry holding one paused project. Against the real
+# registry this gate stopped being about idleness the moment any live project
+# gained a routable ticket -- the tick correctly dispatched, and the gate read
+# that as a regression.
+cat > "$WORK/idle-projects.json" <<'JSON'
+{"schema": "agent_skills.project_watchdog.registry.v1",
+ "projects": [{"project_id": "tau", "repo": "grahama1970/tau", "worktree": "/nonexistent"}]}
+JSON
+cat > "$PROJECT_WATCHDOG_STATE_ROOT/state.json" <<'JSON'
+{"schema": "agent_skills.project_watchdog.state.v1",
+ "global": {"state": "active"},
+ "projects": {"tau": {"state": "active"}}}
+JSON
+export PROJECT_WATCHDOG_PROJECTS_PATH="$WORK/idle-projects.json"
 FIRST="$(watchdog tick --project tau 2>/dev/null)"
 if jq -e '.status == "NOOP" and .idle_streak.escalated == false' <<<"$FIRST" >/dev/null 2>&1; then
   ok "first idle tick reports NOOP, not escalated"
