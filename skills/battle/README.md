@@ -13,6 +13,16 @@ tracks rounds, scores, termination conditions, and reports.
 Agents must treat [`SKILL.md`](SKILL.md) as the runtime contract. This README is
 the human/operator guide.
 
+## Current Battle State
+
+Authoritative current-state notes for the adaptive-lineage goal live in
+[`GOAL_ADAPTIVE_LINEAGE.md`](GOAL_ADAPTIVE_LINEAGE.md#current-state-addendum-2026-07-28).
+The original 2026-07-18 four-specimen adaptive-lineage goal remains accepted as
+`MET`. The later dual-team co-evolution amendment is separate and remains
+`NOT_MET` until #1048 and #1064 close with deterministic backend and frontend
+proof. Related active work is tracked in #1063, #1065, #1066, and the broader
+async scheduler epic #46.
+
 ## How Battle Works
 
 Battle is a stochastic exploit-code evolution system wrapped in deterministic

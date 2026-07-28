@@ -1,5 +1,23 @@
 # Handoff: Battle Adaptive Lineage — GOAL MET (backend + UX live)
 
+## Current State Addendum (2026-07-28)
+
+Source commit inspected: `277afadfdea5`.
+
+This handoff preserves the historical 2026-07-18 acceptance record for the
+original four-specimen adaptive-lineage goal. It must not be read as closure for
+the later dual-team co-evolution amendment. Current active state is summarized
+in `GOAL_ADAPTIVE_LINEAGE.md#current-state-addendum-2026-07-28`:
+
+- original `G0 -> {G1-A,G1-B} -> G2` four-specimen goal: `MET` on 2026-07-18;
+- later dual-team co-evolution amendment: `NOT_MET`;
+- deterministic health dependencies: #1035 and #1047 closed;
+- receipt-truth blockers: #1048 and #1063;
+- frontend consumption blocker: #1064;
+- live lineage blocker: #1065;
+- bounded proactive Red/Blue overlap blocker: #1066, with #46 as the broader
+  scheduler epic.
+
 **Timestamp**: 2026-07-18
 **Status**: `ADAPTIVE_LINEAGE_UX_LIVE_COMPLETE` — the immutable goal
 `GOAL_ADAPTIVE_LINEAGE.md` is met end to end: live backend qualification + finished

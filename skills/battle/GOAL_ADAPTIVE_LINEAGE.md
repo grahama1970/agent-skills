@@ -9,6 +9,50 @@
 > apply; this goal additionally re-authorizes the interface-completion and sprite
 > work that `GOAL.md`'s "agent is no longer UI owner" boundary had frozen.
 
+## Current State Addendum (2026-07-28)
+
+Verification date: 2026-07-28. Source commit inspected:
+`277afadfdea5`.
+
+Original goal: the four-specimen adaptive-lineage proof
+`G0 -> {G1-A,G1-B} -> G2` remains **MET** as accepted on 2026-07-18.
+This addendum does not delete, weaken, or re-adjudicate that acceptance record.
+
+Historical implementation descriptions in this file, including the former
+single-atlas limitation and early engine-state notes, are retained as history.
+They are superseded by the completion evidence below where that evidence records
+four distinct accepted sprites, an honest live badge, and the finished
+four-specimen comparison panel.
+
+Current active goal: the later dual-team co-evolution amendment is separate
+from the original four-specimen goal and is **NOT_MET** until its backend and
+frontend tickets close with deterministic proof. The amendment requires one
+canonical source-run fixture for populated Red and Blue mechanics trees,
+same-team lineage isolation, Judge-owned outcomes, and score evidence that the
+spectator can consume without importing unrelated mechanics data.
+
+Active and related tickets, grouped by purpose:
+
+- Deterministic health: #1035 added `backend-eval` and is closed; #1047 repaired
+  or retired the invalid adaptive-live genetic replay fixture and is closed.
+- Receipt truth: #1048 tracks the canonical dual-team co-evolution fixture;
+  #1063 tracks the kill-shot replay's missing Judge-backed kill receipt and is
+  currently `needs-human`.
+- Frontend proof: #1064 tracks deriving the adaptive mechanics panel from the
+  active receipt fixture instead of a static fixture import.
+- Live lineage: #1065 tracks real Memory plus verified primitive end-to-end
+  lineage lifecycle proof.
+- Production scheduler work: #1066 tracks the first bounded proactive Red/Blue
+  overlap slice; #46 remains the broader asynchronous scheduler epic.
+- Completed dependency tickets: #1051, #1052, #1053, and #1054 closed supporting
+  sprite loading, score evidence, self-certification removal, and deterministic
+  QEMU port allocation work.
+
+Current blocker summary: do not claim backend green, production readiness,
+dual-team closure, or human UX acceptance from the original 2026-07-18
+four-specimen proof. Those later claims require the active ticket receipts named
+above.
+
 ## One-line
 
 A single canonical Battle demonstrates end to end that adaptive lineage works:
