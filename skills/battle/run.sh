@@ -35,4 +35,9 @@ if [[ "${1:-}" == "backend-eval" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/backend_eval.py" "$@"
 fi
 
+if [[ "${1:-}" == "prove-adaptive-lineage-live-memory" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_adaptive_lineage_live_memory.py" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"

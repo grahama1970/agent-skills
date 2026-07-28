@@ -1,0 +1,246 @@
+{
+  "bad_genetic_material": {
+    "all_bad": false,
+    "bad_count": 1,
+    "bad_rate": 0.5,
+    "battle_id": "issue-1065-live-20260728T1718",
+    "generation": 2,
+    "lineage_id": "issue-1065-lineage",
+    "oracle_bad_record": {
+      "specimens": [
+        {
+          "candidate_id": "blue-g2-p1",
+          "reason_codes": [
+            "opponent_or_insufficient_verdict"
+          ],
+          "source": "verified-select-survivor",
+          "specimen_id": "blue-g2-p1"
+        }
+      ]
+    },
+    "pipeline_bad_event_count": 1,
+    "population_size": 2,
+    "role": "blue",
+    "run_id": "blue-g2",
+    "schema": "battle.bad_genetic_material.v2",
+    "specimens": [
+      {
+        "candidate_id": "blue-g2-p1",
+        "candidate_sha256": "8c2cd23909981a0187dc8542f856dd21959233353b5a07b2f52b93d1e343d360",
+        "evidence": [
+          {
+            "judge_receipt_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1065-live-memory-proof/blue/generation-0002/verified-primitives/docker-judge/blue-g2-p1/judge-receipt.json",
+            "judge_receipt_sha256": "7b690bb441e97134760378190b48722b0d85aa93c02fce7ea40628e95d3ddfd2"
+          }
+        ],
+        "reason_codes": [
+          "INSUFFICIENT_EVIDENCE",
+          "opponent_or_insufficient_verdict"
+        ],
+        "sources": [
+          "docker-judge",
+          "verified-select-survivor"
+        ]
+      }
+    ],
+    "survivor_id": "blue-g2-p0",
+    "unattributed_events": []
+  },
+  "battle_id": "issue-1065-live-20260728T1718",
+  "claims": {
+    "does_not_prove": [
+      "Runnable material is successful material.",
+      "Target contact is oracle success.",
+      "A role-specific oracle beyond the injected adapter is implemented."
+    ],
+    "proves": [
+      "The complete judged population was processed by the injected oracle.",
+      "The survivor, oracle evidence, and isolated bad-material record crossed the /memory HTTP boundary."
+    ]
+  },
+  "generation": 2,
+  "lineage_id": "issue-1065-lineage",
+  "lineage_terminal": true,
+  "materialize_only": false,
+  "oracle": {
+    "evidence": {
+      "fail_closed": false,
+      "judged_count": 2,
+      "role": "blue",
+      "winner_count": 1,
+      "winning_verdict": "BLUE_SUCCESS"
+    },
+    "oracle_id": "blue-verified-docker-judge-oracle",
+    "selection_schema": "battle.oracle_selection.v1",
+    "survivor_id": "blue-g2-p0"
+  },
+  "population": {
+    "generated_count": 2,
+    "generated_ids": [
+      "blue-g2-p0",
+      "blue-g2-p1"
+    ],
+    "judged_count": 2,
+    "judged_ids": [
+      "blue-g2-p0",
+      "blue-g2-p1"
+    ],
+    "reviewed_count": 2,
+    "reviewed_ids": [
+      "blue-g2-p0",
+      "blue-g2-p1"
+    ]
+  },
+  "population_size": 2,
+  "recall": {
+    "battle_id": "issue-1065-live-20260728T1718",
+    "confidence": 26.398,
+    "daemon_multihop": true,
+    "daemon_url": "http://127.0.0.1:8601",
+    "dropped_forbidden_item_count": 9,
+    "dropped_forbidden_item_ids": [
+      "battle-lineage:issue-1065-live-20260728T1718:issue-1065-lineage:red:g0001:survivor:4a658aa02324efa501743158",
+      "battle-lineage:issue-1065-live-20260728T1703:issue-1065-lineage:blue:g0001:survivor:c7af15f2f81efa6011762d8f",
+      "battle-lineage:issue-1065-live-20260728T1711:issue-1065-lineage:blue:g0001:survivor:0368f09d669122937dd9b5ad",
+      "battle-lineage:issue-1065-live-20260728T1650-rerun:issue-1065-lineage:blue:g0001:survivor:0326fec71b2181785305780e",
+      "battle-lineage:issue-1065-live-20260728T1718:issue-1065-lineage:red:g0002:survivor:d6bfcf7487e9900b778f4400",
+      "battle-lineage:issue-1065-live-20260728T1703:issue-1065-lineage:blue:g0002:survivor:92d99289fbc4f944710fe9da",
+      "battle-lineage:issue-1065-live-20260728T1711:issue-1065-lineage:blue:g0002:survivor:d00ab74f52089bc2c0eb58a8",
+      "battle-lineage:issue-1065-live-20260728T1650-rerun:issue-1065-lineage:blue:g0002:survivor:541d8a9c273508f607d41ace",
+      "battle-lineage:issue-1065-live-20260728T1703:issue-1065-lineage:red:g0001:survivor:effec31cb202034d827a396c"
+    ],
+    "isolation_policy": "drop_forbidden_daemon_hits_before_context",
+    "item_count": 1,
+    "lineage_id": "issue-1065-lineage",
+    "request": {
+      "collections": [
+        "battle_lineage_graph"
+      ],
+      "k": 64,
+      "q": "blue lineage survivor blue-g1-p0 battle-lineage:issue-1065-live-20260728T1718:issue-1065-lineage:blue:g0001:survivor:693f00df7e0917622fdf6789 issue-1065-live-20260728T1718 issue-1065-lineage",
+      "scope": "battle:issue-1065-live-20260728T1718:role:blue+public",
+      "tags": [
+        "battle",
+        "battle:issue-1065-live-20260728T1718",
+        "lineage:issue-1065-lineage",
+        "access:blue"
+      ]
+    },
+    "role": "blue",
+    "run_id": "blue-g2",
+    "schema": "battle.lineage_memory_recall.v2",
+    "scope": {
+      "battle_id": "issue-1065-live-20260728T1718",
+      "lineage_id": "issue-1065-lineage",
+      "private_scope": "battle:issue-1065-live-20260728T1718:role:blue",
+      "public_scope": "battle:issue-1065-live-20260728T1718:public",
+      "recall_scope": "battle:issue-1065-live-20260728T1718:role:blue+public",
+      "recall_tags": [
+        "battle",
+        "battle:issue-1065-live-20260728T1718",
+        "lineage:issue-1065-lineage",
+        "access:blue"
+      ],
+      "role": "blue"
+    },
+    "score_fields": [
+      "bm25",
+      "graph",
+      "dense",
+      "freshness"
+    ],
+    "should_scan": false,
+    "status": "PASS"
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1065-live-memory-proof/blue/generation-0002/universal-lineage-generation-receipt.json",
+  "receipt_payload_sha256": "e43583205de4121b8021e6aadd925f635c1a22ec0e657b2947a159b70dc4b6cf",
+  "reproduction": {
+    "bad_genetic_material_key": "battle-lineage:issue-1065-live-20260728T1718:issue-1065-lineage:blue:g0002:bad-material:95cec3bde5b80d22f760cbb0",
+    "bad_genetic_material_tags": [
+      "battle",
+      "battle:issue-1065-live-20260728T1718",
+      "lineage:issue-1065-lineage",
+      "role:blue",
+      "access:blue",
+      "visibility:role-only",
+      "kind:bad-genetic-material"
+    ],
+    "bad_material_store_ack": {
+      "_key": "battle-lineage:issue-1065-live-20260728T1718:issue-1065-lineage:blue:g0002:bad-material:95cec3bde5b80d22f760cbb0",
+      "collection": "battle_lineage_graph",
+      "stored": true
+    },
+    "collection": "battle_lineage_graph",
+    "daemon_owned_multihop": true,
+    "deterministic_keys": true,
+    "schema": "battle.lineage_survivor_writeback.v2",
+    "scope": {
+      "battle_id": "issue-1065-live-20260728T1718",
+      "lineage_id": "issue-1065-lineage",
+      "private_scope": "battle:issue-1065-live-20260728T1718:role:blue",
+      "public_scope": "battle:issue-1065-live-20260728T1718:public",
+      "recall_scope": "battle:issue-1065-live-20260728T1718:role:blue+public",
+      "recall_tags": [
+        "battle",
+        "battle:issue-1065-live-20260728T1718",
+        "lineage:issue-1065-lineage",
+        "access:blue"
+      ],
+      "role": "blue"
+    },
+    "status": "PASS",
+    "survivor_key": "battle-lineage:issue-1065-live-20260728T1718:issue-1065-lineage:blue:g0002:survivor:1996409e7c8edf63f1cdfbb3",
+    "survivor_store_ack": {
+      "_key": "battle-lineage:issue-1065-live-20260728T1718:issue-1065-lineage:blue:g0002:survivor:1996409e7c8edf63f1cdfbb3",
+      "collection": "battle_lineage_graph",
+      "stored": true
+    },
+    "survivor_tags": [
+      "battle",
+      "battle:issue-1065-live-20260728T1718",
+      "lineage:issue-1065-lineage",
+      "role:blue",
+      "access:blue",
+      "visibility:public",
+      "kind:survivor"
+    ]
+  },
+  "role": "blue",
+  "run_id": "blue-g2",
+  "schema": "battle.universal_adaptive_lineage_generation.v2",
+  "should_continue": false,
+  "status": "TERMINATED_VALID",
+  "stop_reason": "bounded_terminus",
+  "survivor": {
+    "_adaptive_stage": "judge",
+    "battle_id": "issue-1065-live-20260728T1718",
+    "candidate_id": "blue-g2-p0",
+    "generation": 2,
+    "inherited_document_count": 1,
+    "judge_receipt_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1065-live-memory-proof/blue/generation-0002/verified-primitives/docker-judge/blue-g2-p0/judge-receipt.json",
+    "judge_receipt_sha256": "f5082957e621bab3603a1d74102b9e51d4f31a94afd5a85aa69f63b3a28ba662",
+    "judge_status": "PASS",
+    "judge_verdict": "BLUE_SUCCESS",
+    "lineage_id": "issue-1065-lineage",
+    "population_index": 0,
+    "review_receipt": {
+      "candidate_id": "blue-g2-p0",
+      "checks": [
+        "identity_present",
+        "role_scoped"
+      ],
+      "role": "blue",
+      "schema": "battle.verified_review_receipt.v1",
+      "status": "PASS"
+    },
+    "review_status": "PASS",
+    "role": "blue",
+    "run_id": "blue-g2",
+    "schema": "battle.verified_judged_candidate.v1",
+    "source": "adaptive_red_blue_lineage_canary._judge_population",
+    "specimen_id": "blue-g2-p0",
+    "team": "blue"
+  },
+  "terminated_reason": "bounded_terminus",
+  "valid_outcome": true
+}
