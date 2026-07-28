@@ -70,6 +70,8 @@ def search(
     context: Optional[str] = typer.Option(None, "--context", help="Concrete problem context and constraints"),
     context_file: Optional[Path] = typer.Option(None, "--context-file", help="Additional context read from a local file"),
     read_n: int = typer.Option(1, "--read-n", min=1, max=15, help="Deep-read the top-N domain-diverse Brave sources into synthesis (Deep-Research style); 1 keeps the single best-of-top-3 pick"),
+    with_ip_discovery: bool = typer.Option(False, "--with-ip-discovery", help="Discover IP-only/domainless hosts via Shodan/Censys and deep-read them (opt-in, key-gated; degrades if no key/plan)"),
+    ip_limit: int = typer.Option(5, "--ip-limit", min=1, max=25, help="Max IP hosts to discover when --with-ip-discovery is used"),
 ):
     """Aggregate search results from multiple sources."""
 
@@ -117,6 +119,8 @@ def search(
             publisher=publisher,
             request_context=request_context,
             read_n=read_n,
+            with_ip_discovery=with_ip_discovery,
+            ip_limit=ip_limit,
         )
         search_success = True
     except Exception as e:

@@ -69,6 +69,8 @@ def _run_search(
     publisher: Optional[PartialResultsPublisher] = None,
     request_context: Optional[Dict[str, Any]] = None,
     read_n: int = 1,
+    with_ip_discovery: bool = False,
+    ip_limit: int = 5,
 ):
     """Internal search implementation."""
     # Pre-hook: Recall prior research on this topic to avoid redundant API calls
@@ -195,6 +197,23 @@ def _run_search(
 
     # Flush stage1 execution metadata to memory
     _flush_execution_records("stage1")
+
+    # Optional IP-only host discovery lane (opt-in, key-gated). Discovers
+    # domainless/IP-address hosts via Shodan/Censys and deep-reads them; degrades
+    # to a skipped record when no key/plan is available, never a hard failure.
+    if with_ip_discovery:
+        from dogpile.ip_discovery import deep_read_ip_hosts
+        try:
+            ip_result = deep_read_ip_hosts(query, limit=ip_limit)
+        except Exception as e:
+            ip_result = {"source": None, "urls": [], "skipped": f"ip discovery error: {e}", "extractions": []}
+        stage1_results["ip_discovery"] = ip_result
+        if publisher:
+            publisher.publish_result("stage1", "ip_discovery", ip_result)
+        if ip_result.get("urls"):
+            console.print(f"[cyan]IP discovery: added {len(ip_result['urls'])} IP-host URL(s) via {ip_result.get('source')}[/cyan]")
+        else:
+            console.print(f"[dim]IP discovery skipped: {ip_result.get('skipped')}[/dim]")
 
     # Show partial success status after Stage 1
     succeeded = [name for name, res in stage1_results.items()
