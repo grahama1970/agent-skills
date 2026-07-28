@@ -12,7 +12,6 @@ import os
 import re
 import shlex
 import subprocess
-import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -78,6 +77,11 @@ def _repo_args(repo: Optional[str]) -> list[str]:
     return ["--repo", repo] if repo else []
 
 
+def _repo_hint(repo: Optional[str]) -> str:
+    """Render the --repo suffix for a copy-pasteable remediation command."""
+    return f" --repo {repo}" if repo else ""
+
+
 def _helper(args: list[str], *, repo: Optional[str] = None, dry_run: bool = False) -> None:
     cmd = [str(GH_HELPER), *args, *_repo_args(repo)]
     if dry_run:
@@ -85,8 +89,214 @@ def _helper(args: list[str], *, repo: Optional[str] = None, dry_run: bool = Fals
     _run(cmd)
 
 
-def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[str] | None = None) -> list[str]:
+#: Ticket types that always need a human decision before an agent may act.
+HUMAN_ONLY_TYPES = {"question", "triage"}
+
+#: Label the project-watchdog router selects on. A ticket that does not carry it
+#: is invisible to automated dispatch.
+#:
+#: Before 2026-07-27 nothing here emitted it: /ticket wrote type:* and route:*
+#: while the watchdog routed on agent-work, so ordinary tickets were never
+#: picked up and the cron logged 41,607 consecutive no-work ticks over roughly a
+#: month. Stamping it at file time is what joins the two halves.
+AGENT_WORK_LABEL = "agent-work"
+
+#: Concurrency lanes. Two tickets in DIFFERENT lanes on one project can be
+#: worked at the same time; two in the SAME lane cannot, because they edit the
+#: same surface and the second stacks on the first's unmerged changes.
+#:
+#: project-watchdog uses `lane:<id>` to decide what is safe to dispatch in
+#: parallel, so the lane is a scheduling fact, not documentation.
+VALID_LANES = ("fe", "be", "data", "docs", "ops", "sec")
+
+#: Emitted into every agent-routable ticket body. project-watchdog forwards the
+#: body to a cron-dispatched agent that has no prior session, no memory of this
+#: project, and no idea which skills exist. Without this it starts by grepping.
+#:
+#: Every command below is verified present in agent-skills. Order matters:
+#: /memory's own contract is "query memory BEFORE scanning any codebase".
+ORIENTATION_BLOCK = """You are running from cron with no prior context. Build context in this order
+before changing anything. Do not start by grepping the repository.
+
+1. **Recall first.** `skills/memory/run.sh recall --q "<target or symptom>"`
+   Prior work on this exact problem may already exist. This is cheapest and
+   most often decisive.
+2. **Project state.** `skills/project-state/run.sh --json`
+   Readiness, infrastructure health, doc-code drift, and known gaps in one
+   command.
+3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or
+   repo when present. It records open blockers and decisions that the code does
+   not.
+
+Then use the narrowest tool for the actual question:
+
+| Need | Use |
+| --- | --- |
+| Locate code by symbol or structure | `skills/treesitter/run.sh` |
+| Find prior art in other repos | `skills/github-search/run.sh` |
+| External research on a load-bearing claim | `skills/dogpile/run.sh "<claim>"`, else `skills/brave-search/run.sh web "<query>"` |
+| Diagnose a failing test or traceback | load the `debugger` skill |
+| Run the target's suites | `skills/test/run.sh` |
+
+Load the skill's own `SKILL.md` before using it; do not infer its interface.
+Record what you actually ran. A tool's success response is not proof — read
+back the artifact it claims to have produced."""
+
+#: Every route maps to exactly one lane, so existing tickets get a lane without
+#: the filer having to think about it. `--lane` overrides when the route is a
+#: poor fit.
+ROUTE_LANE = {
+    "frontend_code": "fe",
+    "design_or_ux": "fe",
+    "backend_python_or_skill_runtime": "be",
+    "rust_or_binary": "be",
+    "ops_or_scheduler": "ops",
+    "documentation_or_report": "docs",
+    "security_or_compliance": "sec",
+    "unknown": "",
+}
+
+
+def _lane_for(route: str, lane: str) -> str:
+    """Return the concurrency lane for a ticket, or empty when undecidable."""
+    if lane:
+        if lane not in VALID_LANES:
+            _die(
+                f"unknown --lane {lane!r}. Valid lanes: {', '.join(VALID_LANES)}. "
+                "The lane decides what project-watchdog may dispatch concurrently: "
+                "different lanes on one project run in parallel, the same lane does not."
+            )
+        return lane
+    return ROUTE_LANE.get(route, "")
+
+#: Commands that only ever exercise a deterministic gate. A proof made of these
+#: alone is refused: a fixed expectation can be satisfied by a change that
+#: targets the expectation rather than the behaviour.
+#:
+#: Observed 2026-07-27: a ticket proved by `pytest test_calc.py -q` was closed by
+#: a patch that subclassed int and overrode __eq__ so the result compared equal
+#: to two different numbers. The test passed, an independent reviewer re-ran it
+#: and it passed there too. Nothing malfunctioned; the proof was just weaker than
+#: the claim.
+DETERMINISTIC_ONLY_MARKERS = (
+    "pytest",
+    "py_compile",
+    "ruff",
+    "mypy",
+    "eslint",
+    "npm test",
+    "cargo test",
+    "go test",
+    "unittest",
+    "jest",
+    "vitest",
+)
+
+#: Signals that a proof actually runs the real path. At least one is required.
+LIVE_PROOF_MARKERS = (
+    "sanity-live",
+    "sanity-e2e",
+    "live_e2e",
+    "--live",
+    "--apply",
+    "--allow-live",
+    "e2e",
+    "curl ",
+    "gh ",
+    "run.sh",
+    "screenshot",
+    "cdp",
+    "browser",
+    "readback",
+    "read-back",
+    "receipt",
+)
+
+
+def _is_deterministic_runner(command: str) -> bool:
+    """Return whether the command's *executable* is a deterministic test runner.
+
+    Matched against the leading words only. A substring search over the whole
+    string is exploitable: `pytest tests/test_e2e.py` contains "e2e" and would
+    otherwise satisfy a live-marker check on the strength of a filename.
+    """
+    head = " ".join(command.lower().split()[:3])
+    return any(marker in head for marker in DETERMINISTIC_ONLY_MARKERS)
+
+
+def _validate_live_proof(proof: str, ticket_type: str) -> None:
+    """Refuse a ticket whose proof cannot distinguish a fix from a plausible fake.
+
+    Enforces the Verification Contract in `best-practices-github-ticket`: every
+    ticket names a live end-to-end proof that runs the real entrypoint against a
+    surface the author does not control, and reads back the artifact it produced.
+
+    Deterministic checks are welcome alongside it and are never sufficient alone.
+    """
+    if ticket_type in HUMAN_ONLY_TYPES:
+        return
+    text = proof.strip()
+    if not text:
+        _die("--proof is required")
+    lowered = text.lower()
+    # A proof may pair both tiers; require at least one live clause that is not
+    # itself a deterministic runner.
+    clauses = re.split(r"\band\b|;|\n|,", lowered)
+    has_live = any(
+        any(marker in clause for marker in LIVE_PROOF_MARKERS)
+        and not _is_deterministic_runner(clause)
+        for clause in clauses
+    )
+    has_det = any(marker in lowered for marker in DETERMINISTIC_ONLY_MARKERS)
+    if has_live:
+        return
+    detail = (
+        f"the proof names only deterministic checks ({text[:80]!r})"
+        if has_det
+        else f"the proof names no runnable live command ({text[:80]!r})"
+    )
+    _die(
+        f"--proof must include a LIVE end-to-end command; {detail}.\n"
+        "  A deterministic test states a fixed expectation, so it can be satisfied by a\n"
+        "  change that targets the expectation instead of the behaviour. On 2026-07-27 a\n"
+        "  ticket proved only by pytest was closed by a patch that overrode __eq__ so the\n"
+        "  result compared equal to two different numbers. The test passed.\n"
+        "  A live proof must run the real entrypoint against a service, model, browser,\n"
+        "  repo, or filesystem you do not control, and read back the artifact it produced.\n"
+        "  Examples:\n"
+        "    'skills/x/sanity-live.sh, then read back the emitted receipt.json'\n"
+        "    'uv run tau dag-run <spec> --apply; assert dag-receipt.json verdict=PASS'\n"
+        "    'gh issue view <n> --json labels read back after the run'\n"
+        "    'pytest tests/test_x.py -q AND ./run.sh e2e --allow-live with screenshot'\n"
+        "  See best-practices-github-ticket, Verification Contract."
+    )
+
+
+
+def _is_agent_routable(ticket_type: str, route: str) -> bool:
+    """Return whether a ticket is safe to hand to an automated repair loop.
+
+    Requires a concrete maintainer route and a type that is actually actionable.
+    Questions and triage tickets are human-first by definition, and a ticket with
+    an unknown route has nowhere to be sent.
+    """
+    if ticket_type in HUMAN_ONLY_TYPES:
+        return False
+    return bool(route) and route != "unknown"
+
+
+def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[str] | None = None, lane: str = "") -> list[str]:
     labels = [f"type:{ticket_type}"]
+    routable = _is_agent_routable(ticket_type, route)
+    if routable:
+        labels.append(AGENT_WORK_LABEL)
+    # A lane is what project-watchdog reads to decide whether this ticket may be
+    # dispatched alongside another. It only means anything on a ticket the
+    # watchdog can dispatch at all, so a human-first ticket carries none rather
+    # than an inert label that reads like a scheduling commitment.
+    resolved_lane = _lane_for(route, lane) if routable else ""
+    if resolved_lane:
+        labels.append(f"lane:{resolved_lane}")
     if target.startswith("skills/"):
         if ticket_type == "bug":
             labels.append("skill-bug")
@@ -112,6 +322,7 @@ def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[s
 
 
 def _validate_common(ticket_type: str, target: str, proof: str, route: str) -> None:
+    _validate_live_proof(proof, ticket_type)
     if ticket_type not in VALID_TYPES:
         _die(f"unknown ticket type {ticket_type!r}")
     if not target.strip():
@@ -163,6 +374,13 @@ def _body(
     # files and skills here beats making it rediscover them on every tick, and
     # only the VARIABLE part goes in the body: universal execution policy stays
     # in best-practices-github-ticket rather than being copied into every issue.
+    # Always-on orientation. The per-ticket blocks below are the VARIABLE
+    # context; this is the fixed part a cold agent needs to find anything at
+    # all. It is a pointer, not policy: a cron-dispatched agent receives only
+    # this issue body, so it cannot be told to "read best-practices-*" unless
+    # the body says so and names how.
+    if _is_agent_routable(ticket_type, route):
+        lines.append(_section("Orientation for a stateless agent", ORIENTATION_BLOCK))
     if context_files:
         lines.append(
             _section(
@@ -221,6 +439,7 @@ def _draft(
     context_files: list[str] | None = None,
     required_skills: list[str] | None = None,
     depends_on: list[str] | None = None,
+    lane: str = "",
 ) -> TicketDraft:
     _validate_common(ticket_type, target, proof, route)
     body = _body(
@@ -242,7 +461,7 @@ def _draft(
         title=title,
         target=target,
         body=body,
-        labels=_labels(ticket_type, target, route, agent, extra_labels),
+        labels=_labels(ticket_type, target, route, agent, extra_labels, lane),
         route=route,
         agent=agent,
     )
@@ -265,13 +484,54 @@ def _emit_draft(draft: TicketDraft, *, as_json: bool = False) -> None:
     typer.echo("\nLabels: " + ", ".join(draft.labels))
 
 
+def _existing_repo_labels(repo: Optional[str]) -> Optional[set[str]]:
+    """Return the set of label names that exist in the repo, or None on failure."""
+    try:
+        out = subprocess.run(
+            ["gh", "label", "list", *_repo_args(repo), "--limit", "500", "--json", "name", "-q", ".[].name"],
+            capture_output=True, text=True, check=True,
+        )
+        return {line.strip() for line in out.stdout.splitlines() if line.strip()}
+    except Exception as exc:
+        logger.warning("could not list repo labels (skipping label validation): {}", exc)
+        return None
+
+
 def _create_or_preview(draft: TicketDraft, *, repo: Optional[str], apply: bool, as_json: bool) -> None:
     if not apply:
         _emit_draft(draft, as_json=as_json)
         typer.echo("\nPreview only. Re-run with --apply to create the GitHub issue.", err=True)
         return
+    # Drop labels that do not exist in the repo so one unknown label never aborts
+    # the whole `gh issue create`. gh fails the entire call on a missing label.
+    #
+    # Scheduling labels are exempt from that leniency. `agent-work` is what makes
+    # a ticket visible to project-watchdog at all, and `lane:<id>` is what decides
+    # whether it may be dispatched alongside another in-flight ticket. Silently
+    # dropping either produces a ticket that looks filed and never gets picked up,
+    # so those fail closed with the command that fixes the repo.
+    labels = list(draft.labels)
+    existing = _existing_repo_labels(repo)
+    if existing is not None:
+        kept = [lbl for lbl in labels if lbl in existing]
+        dropped = [lbl for lbl in labels if lbl not in existing]
+        missing_scheduling = [
+            lbl for lbl in dropped if lbl == AGENT_WORK_LABEL or lbl.startswith("lane:")
+        ]
+        if missing_scheduling:
+            _die(
+                f"scheduling labels missing from the repo: {', '.join(missing_scheduling)}. "
+                "Without them project-watchdog cannot see or safely schedule this ticket. "
+                f"Create them first: skills/ticket/run.sh ensure-labels{_repo_hint(repo)}"
+            )
+        if dropped:
+            typer.echo(
+                f"[ticket] skipping labels not present in repo (run ensure-labels to create them): {', '.join(dropped)}",
+                err=True,
+            )
+        labels = kept
     cmd = ["gh", "issue", "create", *_repo_args(repo), "--title", draft.title]
-    for label in draft.labels:
+    for label in labels:
         cmd.extend(["--label", label])
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".md", delete=False) as tmp:
         tmp.write(draft.body)
@@ -295,6 +555,7 @@ def bug(
     repro: str = typer.Option(..., "--repro"),
     proof: str = typer.Option(..., "--proof"),
     route: str = typer.Option("unknown", "--route"),
+    lane: str = typer.Option("", "--lane", help="Concurrency lane: fe, be, data, docs, ops, sec. Derived from --route when omitted."),
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
@@ -321,6 +582,7 @@ def bug(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Observed failure": observed,
@@ -345,6 +607,7 @@ def feature(
     acceptance: str = typer.Option(..., "--acceptance"),
     proof: str = typer.Option(..., "--proof"),
     route: str = typer.Option("unknown", "--route"),
+    lane: str = typer.Option("", "--lane", help="Concurrency lane: fe, be, data, docs, ops, sec. Derived from --route when omitted."),
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
@@ -371,6 +634,7 @@ def feature(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Current limitation": limitation,
@@ -395,6 +659,7 @@ def optimization(
     measurable_target: str = typer.Option(..., "--measurable-target"),
     proof: str = typer.Option(..., "--proof"),
     route: str = typer.Option("unknown", "--route"),
+    lane: str = typer.Option("", "--lane", help="Concurrency lane: fe, be, data, docs, ops, sec. Derived from --route when omitted."),
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
@@ -420,6 +685,7 @@ def optimization(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Current cost or friction": friction,
@@ -442,6 +708,7 @@ def maintenance(
     scoped_files: str = typer.Option(..., "--scoped-files"),
     proof: str = typer.Option(..., "--proof"),
     route: str = typer.Option("unknown", "--route"),
+    lane: str = typer.Option("", "--lane", help="Concurrency lane: fe, be, data, docs, ops, sec. Derived from --route when omitted."),
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
@@ -468,6 +735,7 @@ def maintenance(
         proof=proof,
         route=route,
         agent=agent,
+        lane=lane,
         non_goals=non_goals,
         details={
             "Invariant to preserve": invariant,
@@ -507,6 +775,10 @@ def question(
         proof=proof,
         route=route,
         agent=agent,
+        # Question tickets are answered by a human, never dispatched to a repair
+        # agent, so they carry no concurrency lane. The lane is a scheduling fact
+        # for project-watchdog and would be meaningless here.
+        lane="",
         non_goals=non_goals,
         details={
             "Concrete question": question_text,
@@ -539,6 +811,10 @@ def triage(
         proof="Route/type decision or needs-human with exact missing information.",
         route=route,
         agent=agent,
+        # A triage ticket exists precisely because the route is not yet known,
+        # and the lane is derived from the route. It gets a lane once triage
+        # decides what it actually is.
+        lane="",
         details={
             "Available clues": clues,
             "Missing data": missing_data,
@@ -696,18 +972,168 @@ def block(
 
 
 @app.command()
+def unblock(issue: int, reason: Path = typer.Option(..., "--reason"), agent: Optional[str] = typer.Option(None, "--agent"), repo: Optional[str] = typer.Option(None, "--repo", "-R"), dry_run: bool = False) -> None:
+    """Clear maintainer-blocked + needs-human so a resolved ticket can be closed.
+
+    Pass --agent to re-lease (add maintainer-active) so you can close in one step.
+    """
+    args = ["unblock", str(issue), "--reason", str(reason)]
+    if agent:
+        args += ["--agent", agent]
+    _helper(args, repo=repo, dry_run=dry_run)
+
+
+@app.command()
 def release(issue: int, agent: str = typer.Option(..., "--agent"), reason: Path = typer.Option(..., "--reason"), repo: Optional[str] = typer.Option(None, "--repo", "-R"), dry_run: bool = False) -> None:
     """Release a maintainer-active lease."""
     _helper(["release", str(issue), "--agent", agent, "--reason", str(reason)], repo=repo, dry_run=dry_run)
 
 
 @app.command()
-def close(issue: int, proof: Path = typer.Option(..., "--proof"), review: Optional[Path] = typer.Option(None, "--review"), reason: str = typer.Option("completed", "--reason"), repo: Optional[str] = typer.Option(None, "--repo", "-R"), dry_run: bool = False) -> None:
-    """Close an issue through proof-file gated helper."""
+def close(
+    issue: int,
+    proof: Path = typer.Option(..., "--proof"),
+    results: Path = typer.Option(
+        ...,
+        "--results",
+        help="agent_skills.ticket_closure_evidence.v1 JSON with passing unit AND live e2e runs.",
+    ),
+    review: Optional[Path] = typer.Option(None, "--review"),
+    reason: str = typer.Option("completed", "--reason"),
+    repo: Optional[str] = typer.Option(None, "--repo", "-R"),
+    dry_run: bool = False,
+) -> None:
+    """Close an issue. Requires a proof file AND machine-checkable test results."""
+    if reason == "completed":
+        _validate_closure_results(results)
+        # Post the evidence, do not just check it. It was validated here and
+        # then discarded, so nothing durable recorded what proved the closure:
+        # project-watchdog's closure audit found zero artifact paths to read on
+        # every ticket it reviewed, and had to judge "was the proof actually
+        # run" from prose alone.
+        proof = _proof_with_closure_evidence(proof, results)
     args = ["close", str(issue), "--proof", str(proof), "--reason", reason]
     if review:
         args.extend(["--review", str(review)])
     _helper(args, repo=repo, dry_run=dry_run)
+
+
+def _proof_with_closure_evidence(proof: Path, results: Path) -> Path:
+    """Append the closure-evidence JSON to the proof comment body.
+
+    The reader is a later auditor with no access to this session: it needs the
+    commands that ran and the artifact paths they wrote, in the ticket itself.
+    """
+    try:
+        evidence = json.loads(results.read_text(encoding="utf-8"))
+        body = proof.read_text(encoding="utf-8")
+    except (OSError, ValueError) as exc:
+        logger.error("could not merge closure evidence into the proof: {}", exc)
+        return proof
+
+    merged = (
+        f"{body.rstrip()}\n\n"
+        f"## Closure evidence\n\n"
+        f"Machine-checkable record of what proved this closure. The artifact "
+        f"paths are what a later audit reads to confirm the proof actually ran.\n\n"
+        f"```json\n{json.dumps(evidence, indent=2, sort_keys=True)}\n```\n"
+    )
+    merged_path = Path(tempfile.mkstemp(suffix=".md", prefix="ticket-proof-")[1])
+    merged_path.write_text(merged, encoding="utf-8")
+    return merged_path
+
+
+CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
+
+
+def _validate_closure_results(path: Path) -> None:
+    """Refuse closure unless both suites are present, passing, and live-backed.
+
+    A prose proof file can assert anything. This is the machine-checkable half:
+    the closer submits the actual runs, and each field is verified here rather
+    than read as a claim.
+
+    Requires, and fails on any of:
+
+    - both a ``unit`` and an ``e2e`` block;
+    - both reporting ``exit_code: 0``;
+    - ``e2e.mocked: false`` and ``e2e.live: true`` — a mocked run is not an e2e run;
+    - ``e2e.command`` naming something other than a deterministic test runner,
+      because a deterministic expectation can be satisfied by a change that
+      targets the expectation instead of the behaviour;
+    - ``e2e.artifact`` existing and non-empty on disk. The artifact is read back
+      here; a tool's own success response is not proof that it wrote anything.
+    """
+    if not path.is_file():
+        _die(f"--results file not found: {path}")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        _die(f"--results is not valid JSON: {exc}")
+    if data.get("schema") != CLOSURE_EVIDENCE_SCHEMA:
+        _die(f"--results must declare schema {CLOSURE_EVIDENCE_SCHEMA}; got {data.get('schema')!r}")
+
+    problems: list[str] = []
+    for tier in ("unit", "e2e"):
+        block = data.get(tier)
+        if not isinstance(block, dict):
+            problems.append(f"missing '{tier}' block")
+            continue
+        if not str(block.get("command", "")).strip():
+            problems.append(f"{tier}.command is empty")
+        if block.get("exit_code") != 0:
+            problems.append(f"{tier} did not pass: exit_code={block.get('exit_code')!r}")
+
+    e2e = data.get("e2e") if isinstance(data.get("e2e"), dict) else {}
+    if e2e:
+        if e2e.get("mocked") is not False:
+            problems.append("e2e.mocked must be false; a mocked run is not an end-to-end run")
+        if e2e.get("live") is not True:
+            problems.append("e2e.live must be true")
+        command = str(e2e.get("command", "")).lower()
+        if command and _is_deterministic_runner(command):
+            problems.append(
+                f"e2e.command {e2e.get('command')!r} is a deterministic test runner, "
+                "not a live end-to-end run (a filename containing 'e2e' is not a live entrypoint)"
+            )
+        elif command and not any(m in command for m in LIVE_PROOF_MARKERS):
+            problems.append(f"e2e.command {e2e.get('command')!r} names no live entrypoint")
+        artifact = str(e2e.get("artifact", "")).strip()
+        if not artifact:
+            problems.append("e2e.artifact is required; the live run must produce a read-back artifact")
+        else:
+            candidate = Path(artifact).expanduser()
+            if not candidate.is_file():
+                problems.append(f"e2e.artifact does not exist: {artifact}")
+            elif not candidate.read_text(encoding="utf-8", errors="replace").strip():
+                problems.append(f"e2e.artifact is empty: {artifact}")
+
+    if problems:
+        _die(
+            "closure refused; --results does not evidence a passing unit + live e2e run:\n"
+            + "\n".join(f"  - {item}" for item in problems)
+            + "\n\n  Required shape:\n"
+            + json.dumps(
+                {
+                    "schema": CLOSURE_EVIDENCE_SCHEMA,
+                    "issue": 123,
+                    "unit": {"command": "uv run pytest -q", "exit_code": 0, "passed": 42},
+                    "e2e": {
+                        "command": "./run.sh sanity-live.sh --allow-live",
+                        "exit_code": 0,
+                        "mocked": False,
+                        "live": True,
+                        "artifact": "/abs/path/receipt.json",
+                    },
+                },
+                indent=2,
+            )
+            + "\n  See best-practices-github-ticket, Verification Contract."
+        )
+    typer.echo(
+        f"closure evidence accepted: unit exit 0, live e2e exit 0, "
+        f"artifact read back from {e2e.get('artifact')}"
+    )
 
 
 @app.command("close-duplicate")
