@@ -9,4 +9,5 @@ dependencies = [
     "loguru>=0.7.0,<0.7.3",
     "websocket-client>=1.6.0",
     "pillow>=10.4.0",
+    "PyYAML>=6.0.0",
 ]

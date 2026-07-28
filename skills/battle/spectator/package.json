@@ -10,7 +10,10 @@
     "./*": "./src/*"
   },
   "scripts": {
+    "dev": "vite --host 127.0.0.1",
     "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "prove:source-build": "../scripts/prove-spectator-source-build.sh",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "prove:pixi": "node scripts/sanity-battle-pixi.mjs",
@@ -37,7 +40,6 @@
     "prove:score-package": "node scripts/prove-battle-score-package.mjs",
     "prove:music-m1": "node scripts/prove-battle-music-m1.mjs",
     "prove:adaptive-lineage-v13": "node scripts/prove-battle-adaptive-lineage-v13.mjs",
-    "prove:adaptive-lineage-panel-source": "node scripts/prove-battle-adaptive-lineage-panel-source.mjs",
     "prove:adaptive-memory-v14": "node scripts/prove-battle-adaptive-memory-v14.mjs",
     "prove:layout-geometry": "node scripts/prove-battle-layout-geometry.mjs"
   },
@@ -70,6 +72,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.6.0",
+    "vite": "^6.4.3",
     "vitest": "^4.1.0"
   }
 }

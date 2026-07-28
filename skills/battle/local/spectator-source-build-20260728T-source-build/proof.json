@@ -1,0 +1,28 @@
+{
+  "schema": "battle.spectator_source_build_proof.v1",
+  "mocked": false,
+  "live": true,
+  "url": "http://127.0.0.1:3015/#battle",
+  "source_entry": "/home/graham/workspace/experiments/agent-skills/skills/battle/spectator/src/main.tsx",
+  "source_entry_sha256": "e4370d94b247985e41910f2b008690b9735a2cc71706f9a3f7ec94e7a56f4ea5",
+  "dist_index": "/home/graham/workspace/experiments/agent-skills/skills/battle/spectator/dist/index.html",
+  "dist_index_sha256": "964eb6cb188f82079f31074af74a7dabfbf89b5a10e77d25cabc6a02d5b71116",
+  "interaction_results": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/results.json",
+  "interaction_counts": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "warned": 0,
+    "skipped": 0
+  },
+  "proves": [
+    "Battle spectator source has a standalone Vite entrypoint.",
+    "npm run build produced a served dist artifact.",
+    "The source-built route exposed Battle data-qid controls required by the interaction manifest."
+  ],
+  "does_not_prove": [
+    "Production hosting.",
+    "Long-running live backend campaigns.",
+    "Provider reliability."
+  ]
+}

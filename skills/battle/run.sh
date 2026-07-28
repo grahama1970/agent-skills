@@ -24,6 +24,11 @@ if [[ "${1:-}" == "prove-spectator" ]]; then
   exec "$SCRIPT_DIR/scripts/prove-spectator-local.sh" "$@"
 fi
 
+if [[ "${1:-}" == "prove-spectator-source-build" ]]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/prove-spectator-source-build.sh" "$@"
+fi
+
 if [[ "${1:-}" == "prove-backend-goal" ]]; then
   shift
   exec "$SCRIPT_DIR/scripts/prove-backend-goal-local.sh" "$@"
@@ -33,16 +38,6 @@ fi
 if [[ "${1:-}" == "backend-eval" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/backend_eval.py" "$@"
-fi
-
-if [[ "${1:-}" == "prove-adaptive-lineage-live-memory" ]]; then
-  shift
-  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_adaptive_lineage_live_memory.py" "$@"
-fi
-
-if [[ "${1:-}" == "prove-overlap-round" ]]; then
-  shift
-  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_overlap_round.py" "$@"
 fi
 
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"

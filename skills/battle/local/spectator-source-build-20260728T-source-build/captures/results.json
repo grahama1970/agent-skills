@@ -1,0 +1,343 @@
+{
+  "app": "Battle Spectator",
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "warned": 0,
+  "skipped": 0,
+  "interactions": [
+    {
+      "surface": "battle-receipt-controls",
+      "element": "agent-search-and-selection",
+      "action": "type",
+      "description": "Filter Battle agents",
+      "status": "PASS",
+      "evidence": "typed 'red', value='red'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0001_agent-search-and-selection_type.png",
+      "duration_ms": 1117,
+      "assertions": [
+        {
+          "check": "assert_value([data-qid='battle:roster:search'])",
+          "status": "PASS",
+          "evidence": "value='red' == 'red'"
+        },
+        {
+          "check": "assert_min_size([data-qid='battle:roster:search'], 44x44)",
+          "status": "PASS",
+          "evidence": "300x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:roster:search'])",
+          "status": "PASS",
+          "evidence": "title='Search payload, agent, or receipt'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:roster:search'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_SEARCH'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "agent-search-and-selection",
+      "action": "click",
+      "description": "Select red child lane from roster",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> '2Archive Escape red-1BLUE_SUCCESS: blocked by Blue.'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0002_agent-search-and-selection_click.png",
+      "duration_ms": 1149,
+      "assertions": [
+        {
+          "check": "assert_selector([data-qid='battle:agent-pane:payload-857-red-1'])",
+          "status": "PASS",
+          "evidence": "text='Agent DetailSelected agent cockpitRECEIPT-BACKED FIXTUREArchive Escape red-1Gen 2 \u00b7 payload-857-red-'"
+        },
+        {
+          "check": "assert_min_size([data-qid='battle:leaderboard:item:payload-857-red-1'], 44x44)",
+          "status": "PASS",
+          "evidence": "214x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:leaderboard:item:payload-857-red-1'])",
+          "status": "PASS",
+          "evidence": "title='Select Archive Escape red-1'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:leaderboard:item:payload-857-red-1'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_LEADERBOARD_SELECT'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "timeline-zoom",
+      "action": "click",
+      "description": "Zoom Battle timeline in",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> '+'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0003_timeline-zoom_click.png",
+      "duration_ms": 1118,
+      "assertions": [
+        {
+          "check": "assert_min_size([data-qid='battle:timeline:zoom:in'], 44x44)",
+          "status": "PASS",
+          "evidence": "44x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:timeline:zoom:in'])",
+          "status": "PASS",
+          "evidence": "title='Zoom Battle timeline in (Ctrl + scroll also works)'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:timeline:zoom:in'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_TIMELINE_ZOOM'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "timeline-zoom",
+      "action": "click",
+      "description": "Zoom Battle timeline out",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> '\u2212'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0004_timeline-zoom_click.png",
+      "duration_ms": 1132,
+      "assertions": [
+        {
+          "check": "assert_min_size([data-qid='battle:timeline:zoom:out'], 44x44)",
+          "status": "PASS",
+          "evidence": "44x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:timeline:zoom:out'])",
+          "status": "PASS",
+          "evidence": "title='Zoom Battle timeline out (Ctrl + scroll also works)'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:timeline:zoom:out'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_TIMELINE_ZOOM'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "timeline-zoom",
+      "action": "click",
+      "description": "Reset Battle timeline zoom",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Fit'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0005_timeline-zoom_click.png",
+      "duration_ms": 1105,
+      "assertions": [
+        {
+          "check": "assert_min_size([data-qid='battle:timeline:zoom:fit'], 44x44)",
+          "status": "PASS",
+          "evidence": "44x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:timeline:zoom:fit'])",
+          "status": "PASS",
+          "evidence": "title='Reset timeline zoom to 100% and center on playhead'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:timeline:zoom:fit'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_TIMELINE_ZOOM'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "agent-detail-tabs",
+      "action": "click",
+      "description": "Open Live tab",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Live'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0006_agent-detail-tabs_click.png",
+      "duration_ms": 1107,
+      "assertions": [
+        {
+          "check": "assert_attribute([data-qid='battle:agent-pane:tab:live'], data-state)",
+          "status": "PASS",
+          "evidence": "data-state='active' == 'active'"
+        },
+        {
+          "check": "assert_min_size([data-qid='battle:agent-pane:tab:live'], 44x44)",
+          "status": "PASS",
+          "evidence": "77x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:agent-pane:tab:live'])",
+          "status": "PASS",
+          "evidence": "title='Show Live tab'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:agent-pane:tab:live'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_AGENT_PANE_TAB_LIVE'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "agent-detail-tabs",
+      "action": "click",
+      "description": "Open Logs tab",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Logs'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0007_agent-detail-tabs_click.png",
+      "duration_ms": 1092,
+      "assertions": [
+        {
+          "check": "assert_attribute([data-qid='battle:agent-pane:tab:logs'], data-state)",
+          "status": "PASS",
+          "evidence": "data-state='active' == 'active'"
+        },
+        {
+          "check": "assert_min_size([data-qid='battle:agent-pane:tab:logs'], 44x44)",
+          "status": "PASS",
+          "evidence": "77x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:agent-pane:tab:logs'])",
+          "status": "PASS",
+          "evidence": "title='Show Logs tab'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:agent-pane:tab:logs'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_AGENT_PANE_TAB_LOGS'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "agent-detail-tabs",
+      "action": "click",
+      "description": "Return to Summary tab",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Summary'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0008_agent-detail-tabs_click.png",
+      "duration_ms": 1076,
+      "assertions": [
+        {
+          "check": "assert_attribute([data-qid='battle:agent-pane:tab:summary'], data-state)",
+          "status": "PASS",
+          "evidence": "data-state='active' == 'active'"
+        },
+        {
+          "check": "assert_min_size([data-qid='battle:agent-pane:tab:summary'], 44x44)",
+          "status": "PASS",
+          "evidence": "77x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:agent-pane:tab:summary'])",
+          "status": "PASS",
+          "evidence": "title='Show Summary tab'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:agent-pane:tab:summary'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_AGENT_PANE_TAB_SUMMARY'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "pane-controls",
+      "action": "click",
+      "description": "Toggle lifecycle evidence",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Show'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0009_pane-controls_click.png",
+      "duration_ms": 1183,
+      "assertions": [
+        {
+          "check": "assert_min_size([data-qid='battle:agent-pane:lifecycle-toggle'], 44x44)",
+          "status": "PASS",
+          "evidence": "46x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:agent-pane:lifecycle-toggle'])",
+          "status": "PASS",
+          "evidence": "title='Hide lifecycle evidence'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:agent-pane:lifecycle-toggle'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_AGENT_PANE_LIFECYCLE_TOGGLE'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "pane-controls",
+      "action": "click",
+      "description": "Collapse right detail pane",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Hide'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0010_pane-controls_click.png",
+      "duration_ms": 1022,
+      "assertions": [
+        {
+          "check": "assert_min_size([data-qid='battle:pane:right-toggle'], 44x44)",
+          "status": "PASS",
+          "evidence": "46x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:pane:right-toggle'])",
+          "status": "PASS",
+          "evidence": "title='Expand right detail pane'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:pane:right-toggle'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_PANE_RIGHT_TOGGLE'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "pane-controls",
+      "action": "click",
+      "description": "Collapse left evidence pane",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Hide'",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0011_pane-controls_click.png",
+      "duration_ms": 965,
+      "assertions": [
+        {
+          "check": "assert_min_size([data-qid='battle:pane:left-toggle'], 44x44)",
+          "status": "PASS",
+          "evidence": "46x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='battle:pane:left-toggle'])",
+          "status": "PASS",
+          "evidence": "title='Expand left evidence pane'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='battle:pane:left-toggle'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='BATTLE_PANE_LEFT_TOGGLE'"
+        }
+      ]
+    },
+    {
+      "surface": "battle-receipt-controls",
+      "element": "pane-controls",
+      "action": "screenshot",
+      "description": "Battle spectator after targeted control interactions",
+      "status": "PASS",
+      "evidence": "captured /home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0012_pane-controls_screenshot.png",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0012_pane-controls_screenshot.png",
+      "duration_ms": 637,
+      "assertions": []
+    }
+  ]
+}

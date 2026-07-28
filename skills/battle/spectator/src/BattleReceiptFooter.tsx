@@ -4,7 +4,7 @@ import { useRegisterAction } from "./hooks/useRegisterAction";
 import { Button } from "./ui/button";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 
-type BattleFilter = "all" | "red" | "blue" | "useful" | "receipt";
+type BattleFilter = "all" | "red" | "blue" | "useful" | "handoff" | "receipt";
 
 type Props = {
   playing: boolean;

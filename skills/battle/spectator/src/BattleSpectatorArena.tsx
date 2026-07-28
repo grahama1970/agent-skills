@@ -31,6 +31,8 @@ import { BattleMusicRoute } from "./music/BattleMusicRoute";
 import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
 import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
 import { BattleLineageComparisonPanel } from "./lineage/BattleLineageComparisonPanel";
+import adaptiveLineageLiveFixtureJson from "./lineage/__fixtures__/adaptive-lineage-live.json";
+import type { BattleAdaptiveLineageMechanicsFixtureV1 } from "./lib/battle-types";
 import { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
 import { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
 import { battleCampaignPresentationFromUrl, isBattleCampaignView } from "./lib/battle-campaign-registry";
@@ -50,33 +52,21 @@ import { hungerGamesDeathCard, type HungerGamesDeathCard } from "./lib/battle-hu
 import { RaceViewport } from "./RaceViewport";
 import { SpectatorRail } from "./SpectatorRail";
 import { AgentDetailPane } from "./AgentDetailPane";
-import { BattleComponentIsolationHarness, isBattleComponentIsolationTest } from "./BattleComponentIsolationHarness";
+import { BattleToolbar } from "./BattleToolbar";
 import { Icons } from "./battle-icons";
 import type { BattleEvent, BattleNormalizedUxFixture } from "./lib/battle-types";
 import "./battle-race.css";
 import "./battle-mockup-elements.css";
 
-type BattleFilter = "all" | "red" | "blue" | "useful" | "receipt";
+type BattleFilter = "all" | "red" | "blue" | "useful" | "handoff" | "receipt";
 
 export function BattleSpectatorArena() {
-  const [routeKey, setRouteKey] = useState(() => (typeof window !== "undefined" ? window.location.hash : ""));
-  useEffect(() => {
-    const onHashChange = () => setRouteKey(window.location.hash);
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  return <BattleSpectatorArenaRoute key={routeKey} routeKey={routeKey} />;
-}
-
-function BattleSpectatorArenaRoute({ routeKey }: { routeKey: string }) {
-  if (isBattleComponentIsolationTest()) return <BattleComponentIsolationHarness />;
-  if (isBattleMusicView(routeKey)) return <BattleMusicRoute />;
-  if (isBattlePopulationView(routeKey)) return <BattlePopulationRoute />;
-  if (isBattleRuntimeView(routeKey)) return <BattleRuntimeRoute />;
-  if (isBattleCompileView(routeKey)) return <BattleCompileRoute />;
-  if (isBattleSynthesisView(routeKey)) return <BattleSynthesisRoute />;
-  if (isBattleProofCardView(routeKey)) return <BattleProofCardRoute />;
+  if (isBattleMusicView()) return <BattleMusicRoute />;
+  if (isBattlePopulationView()) return <BattlePopulationRoute />;
+  if (isBattleRuntimeView()) return <BattleRuntimeRoute />;
+  if (isBattleCompileView()) return <BattleCompileRoute />;
+  if (isBattleSynthesisView()) return <BattleSynthesisRoute />;
+  if (isBattleProofCardView()) return <BattleProofCardRoute />;
   const [routeEpoch, setRouteEpoch] = useState(0);
   useEffect(() => {
     const onHashChange = () => setRouteEpoch((value) => value + 1);
@@ -111,9 +101,13 @@ function BattleSpectatorArenaRoute({ routeKey }: { routeKey: string }) {
   const firstReplayLane = initialLanes.find((lane) => lane.replay)?.id;
   const defaultLaneId = isBattleDesignView() ? mockupDefaultSelectedLaneId() : (firstReplayLane ?? initialLanes[0]?.id ?? "");
   const [selectedId, setSelectedId] = useState(defaultLaneId);
+  const [mode, setMode] = useState("spectator");
+  const [query, setQuery] = useState("");
   const [speed, setSpeed] = useState("1x");
   const [playing, setPlaying] = useState(false);
   const [filter, setFilter] = useState<BattleFilter>("all");
+  const [leftPaneOpen, setLeftPaneOpen] = useState(true);
+  const [rightPaneOpen, setRightPaneOpen] = useState(true);
   const [jsonlOpen, setJsonlOpen] = useState(false);
   const [playheadSeconds, setPlayheadSeconds] = useState(0);
   const [deathAnnouncement, setDeathAnnouncement] = useState<HungerGamesDeathCard | null>(null);
@@ -342,8 +336,7 @@ function BattleSpectatorArenaRoute({ routeKey }: { routeKey: string }) {
       {receiptReplay ? (
         <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }} data-qid="battle:adaptive-lineage:panel">
           <BattleLineageComparisonPanel
-            fixture={typedReceiptFixture ?? undefined}
-            sourceBound
+            adaptiveLineage={adaptiveLineageLiveFixtureJson as unknown as BattleAdaptiveLineageMechanicsFixtureV1}
           />
         </div>
       ) : null}
@@ -406,6 +399,11 @@ function BattleSpectatorArenaRoute({ routeKey }: { routeKey: string }) {
           />
         </div>
       ) : null}
+      {!mockupShell ? (
+        <div className="mx-auto mb-2 w-full max-w-[1920px] shrink-0">
+          <BattleToolbar mode={mode} setMode={setMode} filter={filter} setFilter={setFilter} query={query} setQuery={setQuery} />
+        </div>
+      ) : null}
       <div
         className={cn(
           "mx-auto grid min-h-0 w-full flex-1",
@@ -441,14 +439,36 @@ function BattleSpectatorArenaRoute({ routeKey }: { routeKey: string }) {
           }
         >
           <div className="battle-spectator-rail-slot h-full min-h-0 min-w-0 overflow-hidden">
-            <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />
+            <button
+              type="button"
+              className="battle-pane-toggle battle-pane-toggle-left"
+              data-qid="battle:pane:left-toggle"
+              data-qs-action="BATTLE_PANE_LEFT_TOGGLE"
+              title={leftPaneOpen ? "Collapse left evidence pane" : "Expand left evidence pane"}
+              aria-expanded={leftPaneOpen}
+              onClick={() => setLeftPaneOpen((value) => !value)}
+            >
+              {leftPaneOpen ? "Hide" : "Show"}
+            </button>
+            {leftPaneOpen ? <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} /> : null}
           </div>
           <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-            <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onReceiptBeat={handleReceiptBeat} onPlayheadSeconds={handlePlayheadSeconds} onUserScrubSeconds={handleUserScrubSeconds} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} highlightJumpToken={highlightJumpToken} onPlayingChange={setPlaying} />
+            <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query={query} filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onReceiptBeat={handleReceiptBeat} onPlayheadSeconds={handlePlayheadSeconds} onUserScrubSeconds={handleUserScrubSeconds} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} highlightJumpToken={highlightJumpToken} onPlayingChange={setPlaying} />
           </div>
           {selectedLane ? (
             <div className="battle-agent-pane-slot h-full min-h-0 min-w-0 overflow-hidden">
-              <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} />
+              <button
+                type="button"
+                className="battle-pane-toggle battle-pane-toggle-right"
+                data-qid="battle:pane:right-toggle"
+                data-qs-action="BATTLE_PANE_RIGHT_TOGGLE"
+                title={rightPaneOpen ? "Collapse right detail pane" : "Expand right detail pane"}
+                aria-expanded={rightPaneOpen}
+                onClick={() => setRightPaneOpen((value) => !value)}
+              >
+                {rightPaneOpen ? "Hide" : "Show"}
+              </button>
+              {rightPaneOpen ? <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} /> : null}
             </div>
           ) : null}
         </div>
