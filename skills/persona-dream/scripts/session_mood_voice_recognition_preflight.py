@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +20,22 @@ DEFAULT_REFERENCE_AUDIO = Path(
     "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/"
     "embry_authorized_ref_30s_8s.wav"
 )
+
+#: Interpreters known to carry a speaker-recognition backend. Backend
+#: availability is a property of the interpreter, not the machine: run under
+#: /usr/bin/python3 this preflight reported resemblyzer=false and BLOCKED, while
+#: the chatterbox voice lane venv has it and reports PASS. A BLOCKED receipt was
+#: therefore indistinguishable from "ran under the wrong interpreter", which
+#: stalled P2.4 for a day. When the current interpreter has no backend we probe
+#: these and name the one that does, so BLOCKED means genuinely absent.
+DEFAULT_PROBE_INTERPRETERS = (
+    "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
+)
+
+ENGINE_MODULES = {
+    "resemblyzer": ["resemblyzer", "numpy"],
+    "speechbrain_ecapa": ["speechbrain", "torch"],
+}
 
 
 def utc_now() -> str:
@@ -43,11 +60,8 @@ def artifact(path: Path) -> dict[str, Any]:
 
 
 def backend_status(engine: str) -> dict[str, Any]:
-    if engine == "resemblyzer":
-        required = ["resemblyzer", "numpy"]
-    elif engine == "speechbrain_ecapa":
-        required = ["speechbrain", "torch"]
-    else:
+    required = ENGINE_MODULES.get(engine)
+    if required is None:
         raise ValueError(f"unsupported_engine:{engine}")
     modules = {name: importlib.util.find_spec(name) is not None for name in required}
     return {
@@ -56,6 +70,46 @@ def backend_status(engine: str) -> dict[str, Any]:
         "modules": modules,
         "available": all(modules.values()),
     }
+
+
+def probe_interpreter(interpreter: str, engines: list[str], *, timeout_s: int = 30) -> dict[str, Any]:
+    """Report which of ``engines`` another interpreter can import.
+
+    Runs one short subprocess rather than importing anything here: the point is
+    to answer "does a different interpreter have the backend", which cannot be
+    decided from this process's own ``sys.path``.
+    """
+    probe = (
+        "import importlib.util, json, sys;"
+        f"req={json.dumps({e: ENGINE_MODULES.get(e, []) for e in engines})};"
+        "print(json.dumps({e: {m: importlib.util.find_spec(m) is not None for m in mods}"
+        " for e, mods in req.items()}))"
+    )
+    row: dict[str, Any] = {"interpreter": interpreter, "reachable": False, "engines": {}}
+    try:
+        done = subprocess.run(
+            [interpreter, "-c", probe],
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        row["error"] = f"{type(exc).__name__}: {exc}"
+        return row
+    if done.returncode != 0:
+        row["error"] = (done.stderr or "").strip()[:200]
+        return row
+    try:
+        modules_by_engine = json.loads(done.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError) as exc:
+        row["error"] = f"unparsable_probe_output: {exc}"
+        return row
+    row["reachable"] = True
+    row["engines"] = {
+        engine: {"modules": mods, "available": bool(mods) and all(mods.values())}
+        for engine, mods in modules_by_engine.items()
+    }
+    return row
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -108,8 +162,27 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if not reference["exists"]:
         failed_gates.append("embry_reference_audio_exists")
     backends = [backend_status(engine) for engine in args.engine]
+    probes: list[dict[str, Any]] = []
+    backend_interpreter: str | None = None
     if not any(item["available"] for item in backends):
         failed_gates.append("speaker_recognition_backend_available")
+        # The current interpreter has no backend. Before calling that "absent",
+        # ask the declared voice-lane interpreters, so the receipt distinguishes
+        # a missing package from a preflight launched under the wrong python.
+        candidates = [
+            candidate
+            for candidate in getattr(args, "probe_interpreter", None) or DEFAULT_PROBE_INTERPRETERS
+            if candidate != sys.executable
+        ]
+        for candidate in candidates:
+            row = probe_interpreter(candidate, list(args.engine))
+            probes.append(row)
+            if backend_interpreter is None and any(
+                engine.get("available") for engine in row.get("engines", {}).values()
+            ):
+                backend_interpreter = candidate
+        if backend_interpreter is not None:
+            failed_gates.append("preflight_ran_under_backend_interpreter")
     receipt = {
         "schema": "persona_dream.session_mood_voice_recognition_preflight.v1",
         "created_at": utc_now(),
@@ -123,6 +196,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "runtime": {
             "executable": sys.executable,
             "python_version": sys.version.split()[0],
+            # Set when this interpreter lacked a backend but a declared one has
+            # it: the blocker is the launch command, not a missing package.
+            "backend_interpreter_available_elsewhere": backend_interpreter,
+            "interpreter_probes": probes,
         },
         "inputs": {
             "live_session_mood_receipt": str(live_receipt),
@@ -157,6 +234,16 @@ def main() -> int:
     parser.add_argument("--live-receipt", type=Path, default=DEFAULT_LIVE_RECEIPT)
     parser.add_argument("--reference-audio", type=Path, default=DEFAULT_REFERENCE_AUDIO)
     parser.add_argument("--engine", action="append", default=["resemblyzer", "speechbrain_ecapa"])
+    # default=None, not a list: argparse's "append" ADDS to a list default
+    # instead of replacing it, so --probe-interpreter would have silently kept
+    # probing the built-in candidates alongside the caller's.
+    parser.add_argument(
+        "--probe-interpreter",
+        action="append",
+        default=None,
+        help="Interpreter to ask for a backend when this one has none. "
+        "Repeatable; replaces the built-in candidates.",
+    )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--allow-blocked", action="store_true")
     args = parser.parse_args()

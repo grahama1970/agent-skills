@@ -6,7 +6,7 @@
       "snapshot": {
         "bytes": 97998,
         "exists": true,
-        "path": "/home/graham/workspace/experiments/agent-skills-persona-dream-main-push/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_finished_response.wav",
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_finished_response.wav",
         "sha256": "sha256:ec3a987d6e164398b7502fca1ab6b6951f1d9360536e5fba2283b03e24229d12"
       },
       "turn_id": "turn_001"
@@ -17,7 +17,7 @@
       "snapshot": {
         "bytes": 103758,
         "exists": true,
-        "path": "/home/graham/workspace/experiments/agent-skills-persona-dream-main-push/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_finished_response.wav",
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_finished_response.wav",
         "sha256": "sha256:881be52fa0d8f9bef02b35570dd04620eda8647b7143efb85f28f7901ec1fc32"
       },
       "turn_id": "turn_002"
@@ -28,7 +28,7 @@
       "snapshot": {
         "bytes": 84558,
         "exists": true,
-        "path": "/home/graham/workspace/experiments/agent-skills-persona-dream-main-push/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_finished_response.wav",
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_finished_response.wav",
         "sha256": "sha256:a5d002a3b63178a0589e078153d1ffca294a4e62987eae59fb82f076cf418301"
       },
       "turn_id": "turn_003"
@@ -47,14 +47,14 @@
       "speaker_recognition_backend_is_available"
     ]
   },
-  "created_at": "2026-07-28T11:01:49Z",
+  "created_at": "2026-07-28T14:12:32Z",
   "failed_gates": [],
   "inputs": {
     "engines_checked": [
       "resemblyzer",
       "speechbrain_ecapa"
     ],
-    "live_session_mood_receipt": "/home/graham/workspace/experiments/agent-skills-persona-dream-main-push/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
+    "live_session_mood_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
     "reference_audio": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav"
   },
   "live": false,
@@ -66,7 +66,9 @@
     "sha256": "sha256:f9dc30305e04c3963cfb100d8a4438b2d1fb219bcabf8861f25407ff01c760fd"
   },
   "runtime": {
+    "backend_interpreter_available_elsewhere": null,
     "executable": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
+    "interpreter_probes": [],
     "python_version": "3.14.3"
   },
   "schema": "persona_dream.session_mood_voice_recognition_preflight.v1",
