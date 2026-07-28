@@ -22,6 +22,11 @@ provides:
   - dream-reflection
   - dream-contact-sheet
   - memory-write-receipt
+  - continuity-ledger-lineage
+  - bounded-arc-delta
+  - session-mood-binding
+  - voice-delivery-envelope
+  - joined-continuity-receipt
 composes:
   - memory
   - brave-search
@@ -43,11 +48,12 @@ taxonomy:
 
 # Persona Dream
 
-Naming note: this skill is evolving toward `agentic-dreams`. The current
-directory/name remains `persona-dream` for compatibility with existing scripts,
-reports, paths, and stored artifacts, but the conceptual scope is automated
-dream-sequence planning for any persona or persona set, not a Horus-specific or
-Embry-specific workflow.
+This skill has two lanes. The **generic packet lane** turns any persona's memory
+residue into a dream packet, reflection, contact sheet, and memory-write
+receipt. The **Embry continuity lane** additionally binds a dream into
+persistent-persona state: bounded arc delta, continuity ledger, session mood,
+voice delivery, and a recognition receipt. The continuity lane is under active
+development and is not complete; see `CURRENT_STATUS.json` for what is proven.
 
 Current operating hierarchy:
 
@@ -161,14 +167,62 @@ Do not own:
   when Brave receipts are insufficient.
 - Persona identity rewrites. One dream may add a dated reflection, not mutate
   durable identity unless a separate `create-persona` workflow accepts it.
-- Subjective proof that a Chatterbox render sounds like Embry or like the
-  intended emotion. Persona Dream may provide the `voice_delivery` envelope and
-  content-preservation receipt; perceptual listening, speaker similarity,
-  naturalness, and long-session voice acceptance require a dedicated voice/audio
-  evaluation lane.
+- Audio scoring. Speaker similarity, adversarial recognition, perceptual
+  listening, naturalness, and long-session voice acceptance are owned by
+  Chatterbox or a dedicated voice-evaluation implementation. Persona Dream owns
+  the cross-stage dream/session lineage and the `voice_delivery` envelope, and
+  CONSUMES a hash-bound recognition receipt from that evaluator; it never
+  asserts an identity verdict of its own.
 - Unreceipted memory writes.
 
+### External ownership
+
+| Owner | Owns | Persona Dream's role |
+|---|---|---|
+| Graph Memory | Canonical persistence and recall | Consumes receipts; never asserts durable state itself |
+| Tau | Sanctioned model routing, creator/reviewer loops | Routes through it; never calls scillm directly |
+| Watch | Observation and adjudication receipts | Consumes them as dream-observation evidence |
+| Chatterbox | Speech synthesis | Sends `voice_delivery`; consumes render receipts |
+| Chatterbox / voice-evaluation lane | Speaker similarity and identity scoring | Consumes a hash-bound recognition receipt |
+| Providers (Kling, Wan, ComfyUI) | Media generation | Compiles requests; never resubmits without new authorization |
+
+Persona Dream owns the lineage that joins these across stages, and the receipts
+that prove the join.
+
+### Status pointer
+
+This contract carries no mutable status. Current phase, active revision,
+blockers, and next step live in:
+
+- [`CURRENT_STATUS.json`](CURRENT_STATUS.json) — machine projection
+- [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md) — forensic chronology, provider
+  incident detail, superseded findings
+- [`local/HANDOFF.md`](local/HANDOFF.md) — operational continuation point
+- revision-scoped receipts under `reports/` — per-run evidence
+
+Do not restate revision ids, provider request ids, request hashes, or canary
+history here; they age independently of this contract.
+
 ## Runtime
+
+### Canonical operator surface
+
+These are the commands safe to advertise. `run.sh` exposes many more —
+specialist validators, provider lanes, and historical commands. Use
+`./run.sh --help` for those rather than treating them as the contract.
+
+| Command | Purpose | Side effects |
+|---|---|---|
+| `./run.sh generate` | Build a dream packet from memory residue | Memory write only with `--write-memory` |
+| `./run.sh read` | Read back a produced packet | None |
+| `./run.sh check-current-state-consistency --strict` | Fail closed when current-state surfaces contradict receipts | None |
+| `./run.sh session-mood-voice-recognition` | Score session-mood renders for Embry identity | None; requires a speaker backend |
+| `./run.sh test-suite` | Deterministic contract suite | None |
+
+Current phase, blockers, and next step are NOT in this file. Read
+[`CURRENT_STATUS.json`](CURRENT_STATUS.json).
+
+### Examples
 
 ```bash
 cd skills/persona-dream
@@ -512,86 +566,57 @@ terminal queue event, revision manifest, and artifact index to agree by run ID,
 revision ID, transaction ID, and SHA-256. Any missing or mismatched link returns
 `LEGACY_UNQUALIFIED` or a specific blocked state and prevents phase acceptance.
 
-The currently active qualified revision is `rev_successor_943b01ecd9a3` (the
-identity-source successor bound to `embry_contact_sheet_v3`; see
-`acceptance_rung_receipt.v1.json` in its revision root — acceptance rung
-reached, provider boundary not crossed). Earlier qualified revisions remain
-readable historical evidence.
+The active qualified revision is a mutable fact and is deliberately NOT named
+here. Read it from `CURRENT_STATUS.json` and the active pointer under
+`reports/pipeline-complete/.persona-dream/state/`. Earlier qualified revisions
+remain readable historical evidence; their chronology lives in
+`PROJECT_KNOWLEDGE.md` and revision-scoped receipts, not in this contract.
 
 The qualified founding revision was:
 
-```text
-run_id: pipeline-complete
-revision_id: rev_idea_f3f9c48d5cc2
-revision_qualification: ACTIVE_CONSISTENT
-phase_idea_lineage: 10/10
-phase_records: 10
-required_artifact_records: 16
-indexed_artifacts: 328
-actual_provider_call_attempts: 0
-provider_ready: false
-live_submit_ready: false
-```
+Phase 01-10 qualification must demonstrate, for the active revision, that:
 
-This is live Memory/Arango/Qdrant qualification evidence for Phases 01-10. It
-does not prove Phase 11 submission/return or Phases 12-16.
+- revision qualification is `ACTIVE_CONSISTENT`;
+- phase idea lineage is complete (every phase bound to the immutable idea);
+- required artifact records are all present and indexed;
+- `actual_provider_call_attempts` is zero, and both `provider_ready` and
+  `live_submit_ready` are false.
 
-The current canonical Phase 11 pre-Kling boundary for that revision is:
+The canonical Phase 11 pre-Kling boundary must additionally demonstrate:
 
-```text
-request_body_sha256: sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41
-validator_status: PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED
-adapter_status: PASS_PHASE11_ADAPTER_PREFLIGHT
-gate_status: BLOCKED_AWAITING_HUMAN_APPROVAL
-technical_blockers: 0
-missing_hash_bound_approvals: 5
-memory_exact_reread_count: 1
-memory_request_scoped_key: pd_phase11_eb5dbe1257f6152103d1ce1e2700f9582d8ef6e5fb87e90e
-memory_dense_recall_max: 0.7866844
-actual_provider_call_attempts: 0
-provider_ready: false
-live_submit_ready: false
-```
+- a canonical request body hash, with validator and adapter preflight `PASS`;
+- gate status blocked awaiting human approval, with zero technical blockers and
+  the outstanding hash-bound approvals counted;
+- an exact Memory reread of the request-scoped key;
+- `actual_provider_call_attempts` still zero.
 
-This proves the exact zero-call pre-Kling boundary and its Memory projection.
-It does not prove approval, submission, provider acceptance, returned video,
-Watch observation, interpretation, or later behavior.
+The concrete values — revision ids, request hashes, Memory keys, recall scores,
+approval counts — are per-revision facts. Read them from `CURRENT_STATUS.json`
+and the revision-scoped receipts; they are not restated here.
 
-The first explicitly authorized canary later consumed that zero-attempt state:
+This is live Memory/Arango/Qdrant qualification evidence for Phases 01-10 and
+the zero-call pre-Kling boundary. It does not prove Phase 11 submission/return
+or Phases 12-16.
 
-```text
-request_id: 019f6acb-853c-7552-bc73-ff8a6548afb1
-request_body_sha256: sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71
-attempt_ledger_state: FAILED
-actual_provider_call_attempts: 1
-provider_result_http_status: 422
-provider_error_count: 4
-failure: every multi_prompt prompt exceeded 512 characters
-automatic_resubmit_allowed: false
-returned_video: false
-```
 
-This attempt must never be reset or reused. A compiler repair must produce a
-new canonical request hash, rerun deterministic and live zero-call validation,
-and obtain new hash-bound approvals plus explicit paid-call authorization
-before any second generation attempt.
 
-The second explicitly authorized canary is also immutable failed history:
+Two explicitly authorized provider canaries have failed and are immutable
+history. Their request ids, body hashes, and HTTP responses are mutable
+incident detail and live in `PROJECT_KNOWLEDGE.md` and the revision-scoped
+provider receipts, not in this contract. The durable constraints they
+established are:
 
-```text
-request_id: 019f6b89-e69a-7371-9b98-313a96f5f020
-request_body_sha256: sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16
-attempt_ledger_state: FAILED
-actual_provider_call_attempts: 1
-provider_result_http_status: 422
-failure: End Image Url is not supported with Multi Prompt
-automatic_resubmit_allowed: false
-returned_video: false
-```
+- **Prompt length.** Every `multi_prompt` prompt must stay within 512
+  characters; exceeding it is rejected by the provider.
+- **Field incompatibility.** A request containing `multi_prompt` must omit
+  `end_image_url`; the two are not accepted together.
+- **No silent retry.** A consumed attempt must never be reset or reused. A
+  compiler repair must produce a new canonical request hash, rerun deterministic
+  and live zero-call validation, and obtain new hash-bound approvals plus
+  explicit paid-call authorization before any further generation attempt.
 
-For the selected fal Standard endpoint, a request containing `multi_prompt`
-must omit `end_image_url`. The accepted end frame remains immutable
-continuity-review evidence and must not be rebound to a provider input field.
+The accepted end frame remains immutable continuity-review evidence and must
+not be rebound to a provider input field.
 
 Before a Kling, Wan, ComfyUI, or other provider video call is allowed, write a
 final provider-readiness gate receipt. A provider packet is not live-submittable

@@ -226,6 +226,9 @@ fi
 # registry is now empty (all callers migrated to Tau, allowlisted as diagnostics,
 # or retired), so the ratchet runs in --strict mode: ANY remaining direct-scillm
 # line (a new caller, or a reverted migration) fails the gate.
+echo "== enforcing SKILL.md contract stability (check-skill-contract --strict) =="
+"${SCRIPT_DIR}/run.sh" check-skill-contract --strict
+
 echo "== enforcing current-state/receipt consistency (check-current-state-consistency --strict) =="
 "${SCRIPT_DIR}/run.sh" check-current-state-consistency --strict
 

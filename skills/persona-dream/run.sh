@@ -11,6 +11,7 @@ Usage: ./run.sh <command> [options]
 Commands:
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
+  check-skill-contract  Static check: SKILL.md remains a stable executable contract
   check-current-state-consistency  Static check: current-state surfaces must not contradict named receipts
   check-tau-routing-boundary  Static check: only /tau may reach /scillm (fails on un-sanctioned direct scillm calls)
   generate             Create a persona dream packet
@@ -727,6 +728,11 @@ case "$COMMAND" in
     # Speaker-identity gate over the durable session-mood renders. Needs a
     # speaker backend; run under the Chatterbox voice lane interpreter.
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/session_mood_voice_recognition.py" "$@"
+    ;;
+  check-skill-contract)
+    # Fail closed when SKILL.md stops being a stable executable contract:
+    # phantom commands, mutable status, broken links, missing status pointer.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_skill_contract.py" "$@"
     ;;
   check-current-state-consistency)
     # Fail closed when CURRENT_STATUS.json, PROJECT_KNOWLEDGE.md, or README.md
