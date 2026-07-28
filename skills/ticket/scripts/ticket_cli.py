@@ -97,13 +97,108 @@ HUMAN_ONLY_TYPES = {"question", "triage"}
 #: month. Stamping it at file time is what joins the two halves.
 AGENT_WORK_LABEL = "agent-work"
 
-#: Label marking a ticket as waiting on another repository. The
-#: project-watchdog unblock poll selects on this and removes it when every
-#: declared upstream has closed.
-UPSTREAM_BLOCKED_LABEL = "blocked:upstream"
+#: Commands that only ever exercise a deterministic gate. A proof made of these
+#: alone is refused: a fixed expectation can be satisfied by a change that
+#: targets the expectation rather than the behaviour.
+#:
+#: Observed 2026-07-27: a ticket proved by `pytest test_calc.py -q` was closed by
+#: a patch that subclassed int and overrode __eq__ so the result compared equal
+#: to two different numbers. The test passed, an independent reviewer re-ran it
+#: and it passed there too. Nothing malfunctioned; the proof was just weaker than
+#: the claim.
+DETERMINISTIC_ONLY_MARKERS = (
+    "pytest",
+    "py_compile",
+    "ruff",
+    "mypy",
+    "eslint",
+    "npm test",
+    "cargo test",
+    "go test",
+    "unittest",
+    "jest",
+    "vitest",
+)
 
-#: owner/repo#N
-UPSTREAM_REF_PATTERN = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#\d+")
+#: Signals that a proof actually runs the real path. At least one is required.
+LIVE_PROOF_MARKERS = (
+    "sanity-live",
+    "sanity-e2e",
+    "live_e2e",
+    "--live",
+    "--apply",
+    "--allow-live",
+    "e2e",
+    "curl ",
+    "gh ",
+    "run.sh",
+    "screenshot",
+    "cdp",
+    "browser",
+    "readback",
+    "read-back",
+    "receipt",
+)
+
+
+def _is_deterministic_runner(command: str) -> bool:
+    """Return whether the command's *executable* is a deterministic test runner.
+
+    Matched against the leading words only. A substring search over the whole
+    string is exploitable: `pytest tests/test_e2e.py` contains "e2e" and would
+    otherwise satisfy a live-marker check on the strength of a filename.
+    """
+    head = " ".join(command.lower().split()[:3])
+    return any(marker in head for marker in DETERMINISTIC_ONLY_MARKERS)
+
+
+def _validate_live_proof(proof: str, ticket_type: str) -> None:
+    """Refuse a ticket whose proof cannot distinguish a fix from a plausible fake.
+
+    Enforces the Verification Contract in `best-practices-github-ticket`: every
+    ticket names a live end-to-end proof that runs the real entrypoint against a
+    surface the author does not control, and reads back the artifact it produced.
+
+    Deterministic checks are welcome alongside it and are never sufficient alone.
+    """
+    if ticket_type in HUMAN_ONLY_TYPES:
+        return
+    text = proof.strip()
+    if not text:
+        _die("--proof is required")
+    lowered = text.lower()
+    # A proof may pair both tiers; require at least one live clause that is not
+    # itself a deterministic runner.
+    clauses = re.split(r"\band\b|;|\n|,", lowered)
+    has_live = any(
+        any(marker in clause for marker in LIVE_PROOF_MARKERS)
+        and not _is_deterministic_runner(clause)
+        for clause in clauses
+    )
+    has_det = any(marker in lowered for marker in DETERMINISTIC_ONLY_MARKERS)
+    if has_live:
+        return
+    detail = (
+        f"the proof names only deterministic checks ({text[:80]!r})"
+        if has_det
+        else f"the proof names no runnable live command ({text[:80]!r})"
+    )
+    _die(
+        f"--proof must include a LIVE end-to-end command; {detail}.\n"
+        "  A deterministic test states a fixed expectation, so it can be satisfied by a\n"
+        "  change that targets the expectation instead of the behaviour. On 2026-07-27 a\n"
+        "  ticket proved only by pytest was closed by a patch that overrode __eq__ so the\n"
+        "  result compared equal to two different numbers. The test passed.\n"
+        "  A live proof must run the real entrypoint against a service, model, browser,\n"
+        "  repo, or filesystem you do not control, and read back the artifact it produced.\n"
+        "  Examples:\n"
+        "    'skills/x/sanity-live.sh, then read back the emitted receipt.json'\n"
+        "    'uv run tau dag-run <spec> --apply; assert dag-receipt.json verdict=PASS'\n"
+        "    'gh issue view <n> --json labels read back after the run'\n"
+        "    'pytest tests/test_x.py -q AND ./run.sh e2e --allow-live with screenshot'\n"
+        "  See best-practices-github-ticket, Verification Contract."
+    )
+
 
 
 def _is_agent_routable(ticket_type: str, route: str) -> bool:
@@ -147,6 +242,7 @@ def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[s
 
 
 def _validate_common(ticket_type: str, target: str, proof: str, route: str) -> None:
+    _validate_live_proof(proof, ticket_type)
     if ticket_type not in VALID_TYPES:
         _die(f"unknown ticket type {ticket_type!r}")
     if not target.strip():
@@ -711,96 +807,12 @@ def comment(issue: int, body: Path = typer.Option(..., "--body"), repo: Optional
 
 
 @app.command()
-def block(
-    issue: int,
-    reason: Path = typer.Option(..., "--reason"),
-    release_lease: bool = typer.Option(False, "--release"),
-    blocked_by: Optional[list[str]] = typer.Option(
-        None,
-        "--blocked-by",
-        help="Upstream dependency as owner/repo#N. Repeatable. Creates a machine-readable "
-        "edge the project-watchdog unblock poll can clear automatically.",
-    ),
-    repo: Optional[str] = typer.Option(None, "--repo", "-R"),
-    dry_run: bool = False,
-) -> None:
-    """Mark an issue blocked, optionally on a named upstream ticket in another repo."""
-    refs = [_validate_upstream_ref(ref) for ref in (blocked_by or [])]
-    if refs:
-        _assert_upstreams_exist(refs, dry_run=dry_run)
-    _helper(
-        ["block", str(issue), "--reason", str(reason)] + (["--release"] if release_lease else []),
-        repo=repo,
-        dry_run=dry_run,
-    )
-    if refs:
-        _record_upstream_edges(issue, refs, repo=repo, dry_run=dry_run)
-
-
-def _validate_upstream_ref(ref: str) -> str:
-    """Validate an ``owner/repo#N`` dependency reference."""
-    match = UPSTREAM_REF_PATTERN.fullmatch(ref.strip())
-    if not match:
-        _die(
-            f"invalid --blocked-by reference {ref!r}. "
-            "Expected owner/repo#N, for example grahama1970/graph-memory-operator#61"
-        )
-    return ref.strip()
-
-
-def _assert_upstreams_exist(refs: list[str], *, dry_run: bool) -> None:
-    """Refuse to record an edge that points at nothing.
-
-    A typo'd reference would leave the downstream ticket blocked forever: the
-    watchdog fails closed on an unreadable upstream, so a bad ref is a permanent
-    stall rather than a loud error. Catch it here, at write time.
-    """
-    for ref in refs:
-        repo_slug, _, number = ref.partition("#")
-        cmd = ["gh", "issue", "view", number, "--repo", repo_slug, "--json", "state"]
-        if dry_run:
-            _print_command(cmd)
-            continue
-        result = _run(cmd, capture=True, check=False)
-        if result.returncode != 0:
-            _die(
-                f"upstream {ref} could not be read: "
-                f"{(result.stderr or '').strip()[:200]}. "
-                "Fix the reference before recording the dependency."
-            )
-
-
-def _record_upstream_edges(
-    issue: int, refs: list[str], *, repo: Optional[str], dry_run: bool
-) -> None:
-    """Label the issue blocked-upstream and comment the machine-readable edge."""
-    lines = "\n".join(f"blocked-by: {ref}" for ref in refs)
-    body = (
-        "## Blocked on another project\n\n"
-        "This ticket is waiting on work owned by a different repository. The "
-        "`project-watchdog` unblock poll reads the references below and removes "
-        f"the `{UPSTREAM_BLOCKED_LABEL}` label once **every** one of them is "
-        "closed, returning this ticket to the routable pool.\n\n"
-        "```text\n"
-        f"{lines}\n"
-        "```\n\n"
-        "An upstream that cannot be read counts as still blocking, so a wrong "
-        "reference stalls this ticket rather than releasing it early.\n"
-    )
-    label_cmd = ["gh", "issue", "edit", str(issue), "--add-label", UPSTREAM_BLOCKED_LABEL]
-    comment_cmd = ["gh", "issue", "comment", str(issue), "--body", body]
-    if repo:
-        label_cmd += ["--repo", repo]
-        comment_cmd += ["--repo", repo]
-    if dry_run:
-        _print_command(label_cmd)
-        _print_command(comment_cmd)
-        return
-    _run(label_cmd, check=False)
-    _run(comment_cmd, check=False)
-    typer.echo(f"Recorded {len(refs)} upstream dependency edge(s) on issue #{issue}:")
-    for ref in refs:
-        typer.echo(f"  blocked-by: {ref}")
+def block(issue: int, reason: Path = typer.Option(..., "--reason"), release_lease: bool = typer.Option(False, "--release"), repo: Optional[str] = typer.Option(None, "--repo", "-R"), dry_run: bool = False) -> None:
+    """Mark an issue blocked and optionally release the lease."""
+    args = ["block", str(issue), "--reason", str(reason)]
+    if release_lease:
+        args.append("--release")
+    _helper(args, repo=repo, dry_run=dry_run)
 
 
 @app.command()
@@ -810,12 +822,212 @@ def release(issue: int, agent: str = typer.Option(..., "--agent"), reason: Path 
 
 
 @app.command()
-def close(issue: int, proof: Path = typer.Option(..., "--proof"), review: Optional[Path] = typer.Option(None, "--review"), reason: str = typer.Option("completed", "--reason"), repo: Optional[str] = typer.Option(None, "--repo", "-R"), dry_run: bool = False) -> None:
-    """Close an issue through proof-file gated helper."""
+def close(
+    issue: int,
+    proof: Path = typer.Option(..., "--proof"),
+    results: Path = typer.Option(
+        ...,
+        "--results",
+        help="agent_skills.ticket_closure_evidence.v1 JSON with passing unit AND live e2e runs.",
+    ),
+    review: Optional[Path] = typer.Option(None, "--review"),
+    reason: str = typer.Option("completed", "--reason"),
+    repo: Optional[str] = typer.Option(None, "--repo", "-R"),
+    dry_run: bool = False,
+) -> None:
+    """Close an issue. Requires a proof file AND machine-checkable test results."""
+    if reason == "completed":
+        _validate_closure_results(results)
     args = ["close", str(issue), "--proof", str(proof), "--reason", reason]
     if review:
         args.extend(["--review", str(review)])
     _helper(args, repo=repo, dry_run=dry_run)
+
+
+CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
+
+
+def _validate_closure_results(path: Path) -> None:
+    """Refuse closure unless both suites are present, passing, and live-backed.
+
+    A prose proof file can assert anything. This is the machine-checkable half:
+    the closer submits the actual runs, and each field is verified here rather
+    than read as a claim.
+
+    Requires, and fails on any of:
+
+    - both a ``unit`` and an ``e2e`` block;
+    - both reporting ``exit_code: 0``;
+    - ``e2e.mocked: false`` and ``e2e.live: true`` — a mocked run is not an e2e run;
+    - ``e2e.command`` naming something other than a deterministic test runner,
+      because a deterministic expectation can be satisfied by a change that
+      targets the expectation instead of the behaviour;
+    - ``e2e.artifact`` existing and non-empty on disk. The artifact is read back
+      here; a tool's own success response is not proof that it wrote anything.
+    """
+    if not path.is_file():
+        _die(f"--results file not found: {path}")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        _die(f"--results is not valid JSON: {exc}")
+    if data.get("schema") != CLOSURE_EVIDENCE_SCHEMA:
+        _die(f"--results must declare schema {CLOSURE_EVIDENCE_SCHEMA}; got {data.get('schema')!r}")
+
+    problems: list[str] = []
+    for tier in ("unit", "e2e"):
+        block = data.get(tier)
+        if not isinstance(block, dict):
+            problems.append(f"missing '{tier}' block")
+            continue
+        if not str(block.get("command", "")).strip():
+            problems.append(f"{tier}.command is empty")
+        if block.get("exit_code") != 0:
+            problems.append(f"{tier} did not pass: exit_code={block.get('exit_code')!r}")
+
+    e2e = data.get("e2e") if isinstance(data.get("e2e"), dict) else {}
+    if e2e:
+        if e2e.get("mocked") is not False:
+            problems.append("e2e.mocked must be false; a mocked run is not an end-to-end run")
+        if e2e.get("live") is not True:
+            problems.append("e2e.live must be true")
+        command = str(e2e.get("command", "")).lower()
+        if command and _is_deterministic_runner(command):
+            problems.append(
+                f"e2e.command {e2e.get('command')!r} is a deterministic test runner, "
+                "not a live end-to-end run (a filename containing 'e2e' is not a live entrypoint)"
+            )
+        elif command and not any(m in command for m in LIVE_PROOF_MARKERS):
+            problems.append(f"e2e.command {e2e.get('command')!r} names no live entrypoint")
+        artifact = str(e2e.get("artifact", "")).strip()
+        if not artifact:
+            problems.append("e2e.artifact is required; the live run must produce a read-back artifact")
+        else:
+            candidate = Path(artifact).expanduser()
+            if not candidate.is_file():
+                problems.append(f"e2e.artifact does not exist: {artifact}")
+            elif not candidate.read_text(encoding="utf-8", errors="replace").strip():
+                problems.append(f"e2e.artifact is empty: {artifact}")
+
+    if problems:
+        _die(
+            "closure refused; --results does not evidence a passing unit + live e2e run:\n"
+            + "\n".join(f"  - {item}" for item in problems)
+            + "\n\n  Required shape:\n"
+            + json.dumps(
+                {
+                    "schema": CLOSURE_EVIDENCE_SCHEMA,
+                    "issue": 123,
+                    "unit": {"command": "uv run pytest -q", "exit_code": 0, "passed": 42},
+                    "e2e": {
+                        "command": "./run.sh sanity-live.sh --allow-live",
+                        "exit_code": 0,
+                        "mocked": False,
+                        "live": True,
+                        "artifact": "/abs/path/receipt.json",
+                    },
+                },
+                indent=2,
+            )
+            + "\n  See best-practices-github-ticket, Verification Contract."
+        )
+    typer.echo(
+        f"closure evidence accepted: unit exit 0, live e2e exit 0, "
+        f"artifact read back from {e2e.get('artifact')}"
+    )
+
+
+CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
+
+
+def _validate_closure_results(path: Path) -> None:
+    """Refuse closure unless both suites are present, passing, and live-backed.
+
+    A prose proof file can assert anything. This is the machine-checkable half:
+    the closer submits the actual runs, and each field is verified here rather
+    than read as a claim.
+
+    Requires, and fails on any of:
+
+    - both a ``unit`` and an ``e2e`` block;
+    - both reporting ``exit_code: 0``;
+    - ``e2e.mocked: false`` and ``e2e.live: true`` — a mocked run is not an e2e run;
+    - ``e2e.command`` naming something other than a deterministic test runner,
+      because a deterministic expectation can be satisfied by a change that
+      targets the expectation instead of the behaviour;
+    - ``e2e.artifact`` existing and non-empty on disk. The artifact is read back
+      here; a tool's own success response is not proof that it wrote anything.
+    """
+    if not path.is_file():
+        _die(f"--results file not found: {path}")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        _die(f"--results is not valid JSON: {exc}")
+    if data.get("schema") != CLOSURE_EVIDENCE_SCHEMA:
+        _die(f"--results must declare schema {CLOSURE_EVIDENCE_SCHEMA}; got {data.get('schema')!r}")
+
+    problems: list[str] = []
+    for tier in ("unit", "e2e"):
+        block = data.get(tier)
+        if not isinstance(block, dict):
+            problems.append(f"missing '{tier}' block")
+            continue
+        if not str(block.get("command", "")).strip():
+            problems.append(f"{tier}.command is empty")
+        if block.get("exit_code") != 0:
+            problems.append(f"{tier} did not pass: exit_code={block.get('exit_code')!r}")
+
+    e2e = data.get("e2e") if isinstance(data.get("e2e"), dict) else {}
+    if e2e:
+        if e2e.get("mocked") is not False:
+            problems.append("e2e.mocked must be false; a mocked run is not an end-to-end run")
+        if e2e.get("live") is not True:
+            problems.append("e2e.live must be true")
+        command = str(e2e.get("command", "")).lower()
+        if command and _is_deterministic_runner(command):
+            problems.append(
+                f"e2e.command {e2e.get('command')!r} is a deterministic test runner, "
+                "not a live end-to-end run (a filename containing 'e2e' is not a live entrypoint)"
+            )
+        elif command and not any(m in command for m in LIVE_PROOF_MARKERS):
+            problems.append(f"e2e.command {e2e.get('command')!r} names no live entrypoint")
+        artifact = str(e2e.get("artifact", "")).strip()
+        if not artifact:
+            problems.append("e2e.artifact is required; the live run must produce a read-back artifact")
+        else:
+            candidate = Path(artifact).expanduser()
+            if not candidate.is_file():
+                problems.append(f"e2e.artifact does not exist: {artifact}")
+            elif not candidate.read_text(encoding="utf-8", errors="replace").strip():
+                problems.append(f"e2e.artifact is empty: {artifact}")
+
+    if problems:
+        _die(
+            "closure refused; --results does not evidence a passing unit + live e2e run:\n"
+            + "\n".join(f"  - {item}" for item in problems)
+            + "\n\n  Required shape:\n"
+            + json.dumps(
+                {
+                    "schema": CLOSURE_EVIDENCE_SCHEMA,
+                    "issue": 123,
+                    "unit": {"command": "uv run pytest -q", "exit_code": 0, "passed": 42},
+                    "e2e": {
+                        "command": "./run.sh sanity-live.sh --allow-live",
+                        "exit_code": 0,
+                        "mocked": False,
+                        "live": True,
+                        "artifact": "/abs/path/receipt.json",
+                    },
+                },
+                indent=2,
+            )
+            + "\n  See best-practices-github-ticket, Verification Contract."
+        )
+    typer.echo(
+        f"closure evidence accepted: unit exit 0, live e2e exit 0, "
+        f"artifact read back from {e2e.get('artifact')}"
+    )
 
 
 @app.command("close-duplicate")

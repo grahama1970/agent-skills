@@ -561,7 +561,35 @@ def resolve_workspace(client: HerdrClient, space: str) -> dict[str, Any] | list[
             return workspace
         if str(workspace.get("number")) == space:
             return workspace
-    raise RuntimeError(f"Herdr workspace not found for --space {space!r}")
+    raise RuntimeError(
+        f"Herdr workspace not found for --space {space!r}. "
+        f"{describe_available_spaces(workspaces)}"
+    )
+
+
+def describe_available_spaces(workspaces: list[dict[str, Any]]) -> str:
+    """Render the spaces a caller could have asked for.
+
+    An unknown --space is a caller error, and a caller error should teach the
+    caller. Listing the live workspaces turns a dead end into a next step.
+    """
+    if not workspaces:
+        return "No Herdr workspaces are open; start one before running a tick."
+    known = []
+    for workspace in workspaces:
+        label = workspace.get("label")
+        number = workspace.get("number")
+        parts = [str(workspace.get("workspace_id"))]
+        if label:
+            parts.append(f"label={label}")
+        if number is not None:
+            parts.append(f"number={number}")
+        known.append(" ".join(parts))
+    return (
+        "Available spaces (match by workspace_id, label, or number): "
+        + "; ".join(known)
+        + ". Use --space '*' to scan every workspace."
+    )
 
 
 def update_stopped_observation(observations: dict[str, Any], candidate: dict[str, Any], *, now_epoch: int) -> None:
