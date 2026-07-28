@@ -1,0 +1,120 @@
+{
+  "blinding": "Condition labels are absent from stimulus filenames presented to raters; use stimulus_id. This file contains the key and must not be shown to raters.",
+  "claims": {
+    "does_not_prove": [
+      "anything at all until human raters respond",
+      "that any embedding score corresponds to perception"
+    ],
+    "proves": []
+  },
+  "created_at": "2026-07-28T17:35:35Z",
+  "live": true,
+  "mocked": false,
+  "preregistration": {
+    "adversarial_control_purpose": "A deliberately mismatched cheerful delivery of a firm-boundary sentence. If listeners cannot separate it from the dream condition, the emotion channel carries no perceptible signal.",
+    "analysis": "Report raw counts per condition per measure with Wilson 95% intervals. No LLM judge; no self-rating by the agent.",
+    "hypothesis": "Listeners recognize the dream-derived session mood above chance, and rate the dream condition as recognizably Embry at parity with control.",
+    "measures_in_order": [
+      "target-emotion recognition (forced choice among the four tone labels)",
+      "Embry identity recognition (yes/no + confidence 1-5)",
+      "naturalness (1-5)",
+      "content equivalence (does the sentence mean the same thing? yes/no)",
+      "preference (secondary, reported but not used for the primary claim)"
+    ],
+    "primary_measure": "target-emotion recognition accuracy for the dream condition",
+    "rater_inclusion_rule_fixed_before_analysis": "Exclude a rater only if the adversarial condition is judged as the target emotion of the dream condition, which indicates they were not attending. Declared before any response is collected.",
+    "stopping_rule": "Fixed n=20 raters. No interim analysis, no extension after seeing results."
+  },
+  "presentation_manifest": [
+    {
+      "condition": "control",
+      "slot": 1,
+      "stimulus_id": "S01"
+    },
+    {
+      "condition": "dream",
+      "slot": 2,
+      "stimulus_id": "S02"
+    },
+    {
+      "condition": "adversarial",
+      "slot": 3,
+      "stimulus_id": "S03"
+    },
+    {
+      "condition": "baseline",
+      "slot": 4,
+      "stimulus_id": "S04"
+    }
+  ],
+  "presentation_seed": 20260728,
+  "raters": [],
+  "responses_path": "reports/goal_v5/continuity/blinded_listener_study/responses.jsonl",
+  "schema": "persona_dream.blinded_listener_study.v1",
+  "status": "BLOCKED_AWAITING_HUMAN_RATERS",
+  "stimuli": [
+    {
+      "asr_wer": null,
+      "audio": "reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
+      "bytes": 261198,
+      "condition": "control",
+      "engine": "chatterbox_base",
+      "normalized_tone": "neutral_warm",
+      "sha256": "sha256:3c61c23200701563ae8eda0a6b51107109b0d0547d2a1ce7491e5961ccbea52f",
+      "voice_delivery": {
+        "intensity": 0.0,
+        "tone": "neutral",
+        "valence": 0.0
+      }
+    },
+    {
+      "asr_wer": null,
+      "audio": "reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
+      "bytes": 228558,
+      "condition": "baseline",
+      "engine": "chatterbox_base",
+      "normalized_tone": "careful_concerned",
+      "sha256": "sha256:6a1ec8962e74e0866979834e5162563fbf3efa0940b34e3a5a4ca5c763cae2e2",
+      "voice_delivery": {
+        "intensity": 0.4,
+        "tone": "careful_concerned",
+        "valence": -0.1
+      }
+    },
+    {
+      "asr_wer": null,
+      "audio": "reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
+      "bytes": 224718,
+      "condition": "dream",
+      "engine": "chatterbox_base",
+      "normalized_tone": "firm_boundary",
+      "sha256": "sha256:e5a421c3d0dad45710404fc56a1047c2c062d1faefe03bdebdac3f3a1fb8fbaa",
+      "voice_delivery": {
+        "intensity": 0.72,
+        "tone": "firm_boundary",
+        "valence": -0.25
+      }
+    },
+    {
+      "asr_wer": null,
+      "audio": "reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
+      "bytes": 362958,
+      "condition": "adversarial",
+      "engine": "chatterbox_base",
+      "normalized_tone": "neutral_warm",
+      "sha256": "sha256:8657c873f59428c65b633136309d8e73a2d29d54b7b69b1d8f139ef3b51dfc00",
+      "voice_delivery": {
+        "intensity": 0.95,
+        "tone": "cheerful",
+        "valence": 0.9
+      }
+    }
+  ],
+  "stimulus_source": {
+    "answer_text": "I need you to wait before you commit to that plan, because the constraint changed this morning.",
+    "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+    "engine": "chatterbox_base",
+    "note": "Identical answer text and identical speaker reference across all four conditions; only voice_delivery differs. That is what makes the comparison matched.",
+    "reference": "/data/embry_ref.wav -> voice_clone_candidates/embry_kling_clone_candidate.wav"
+  }
+}
