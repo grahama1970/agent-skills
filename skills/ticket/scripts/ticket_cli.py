@@ -1006,10 +1006,41 @@ def close(
     """Close an issue. Requires a proof file AND machine-checkable test results."""
     if reason == "completed":
         _validate_closure_results(results)
+        # Post the evidence, do not just check it. It was validated here and
+        # then discarded, so nothing durable recorded what proved the closure:
+        # project-watchdog's closure audit found zero artifact paths to read on
+        # every ticket it reviewed, and had to judge "was the proof actually
+        # run" from prose alone.
+        proof = _proof_with_closure_evidence(proof, results)
     args = ["close", str(issue), "--proof", str(proof), "--reason", reason]
     if review:
         args.extend(["--review", str(review)])
     _helper(args, repo=repo, dry_run=dry_run)
+
+
+def _proof_with_closure_evidence(proof: Path, results: Path) -> Path:
+    """Append the closure-evidence JSON to the proof comment body.
+
+    The reader is a later auditor with no access to this session: it needs the
+    commands that ran and the artifact paths they wrote, in the ticket itself.
+    """
+    try:
+        evidence = json.loads(results.read_text(encoding="utf-8"))
+        body = proof.read_text(encoding="utf-8")
+    except (OSError, ValueError) as exc:
+        logger.error("could not merge closure evidence into the proof: {}", exc)
+        return proof
+
+    merged = (
+        f"{body.rstrip()}\n\n"
+        f"## Closure evidence\n\n"
+        f"Machine-checkable record of what proved this closure. The artifact "
+        f"paths are what a later audit reads to confirm the proof actually ran.\n\n"
+        f"```json\n{json.dumps(evidence, indent=2, sort_keys=True)}\n```\n"
+    )
+    merged_path = Path(tempfile.mkstemp(suffix=".md", prefix="ticket-proof-")[1])
+    merged_path.write_text(merged, encoding="utf-8")
+    return merged_path
 
 
 CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"

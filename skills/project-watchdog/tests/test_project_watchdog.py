@@ -1295,3 +1295,64 @@ def test_a_dead_pid_does_not_count_as_a_live_holder(tmp_path, monkeypatch) -> No
 
     (lock / "owner.json").write_text(json.dumps({"pid": os.getpid(), "run_id": "x"}))
     assert core.lock_holder_alive() is True
+
+
+# --------------------------------------------------------------------------- #
+# The audit reads the proof, not just the prose about it
+# --------------------------------------------------------------------------- #
+
+
+def _evidence_comment(artifact: str) -> dict:
+    payload = {
+        "schema": handlers.CLOSURE_EVIDENCE_SCHEMA,
+        "unit": {"command": "uv run pytest -q", "exit_code": 0},
+        "e2e": {"command": "./run.sh --allow-live", "exit_code": 0,
+                "mocked": False, "live": True, "artifact": artifact},
+    }
+    return {"body": f"# Proof\n\n```json\n{json.dumps(payload)}\n```\n"}
+
+
+def test_the_audit_reads_the_artifact_a_closure_cited(tmp_path) -> None:
+    """Both seats reported they cannot read local files, so they judged "was the
+    proof run" from prose. The closer already submits artifact paths; nothing
+    read them, so a genuinely-proven closure could not pass."""
+    art = tmp_path / "live.txt"
+    art.write_text("PASS: live run against the real repo\n")
+
+    found = handlers.collect_closure_artifacts([_evidence_comment(str(art))])
+
+    assert len(found) == 1
+    assert found[0]["tier"] == "e2e"
+    assert "PASS: live run" in found[0]["content"]
+
+
+def test_a_cited_artifact_that_is_gone_is_reported_not_dropped(tmp_path) -> None:
+    """An artifact that cannot be produced is itself a fact about the closure."""
+    found = handlers.collect_closure_artifacts([_evidence_comment(str(tmp_path / "nope.txt"))])
+    assert len(found) == 1 and "missing" in found[0]
+    rendered = handlers.render_closure_artifacts(found)
+    assert "NOT READABLE" in rendered
+
+
+def test_artifacts_are_capped_so_a_huge_log_cannot_crowd_out_the_ticket(tmp_path) -> None:
+    art = tmp_path / "big.txt"
+    art.write_text("x" * (handlers.ARTIFACT_EXCERPT_CHARS * 3))
+    found = handlers.collect_closure_artifacts([_evidence_comment(str(art))])
+    assert len(found[0]["content"]) == handlers.ARTIFACT_EXCERPT_CHARS
+    assert found[0]["bytes"] > handlers.ARTIFACT_EXCERPT_CHARS
+
+
+def test_the_audit_prompt_tells_the_seat_the_artifacts_are_real_output(tmp_path) -> None:
+    art = tmp_path / "a.txt"
+    art.write_text("PASS")
+    found = handlers.collect_closure_artifacts([_evidence_comment(str(art))])
+    task = handlers.build_closure_audit_task(
+        repo="o/r", issue_number=1, issue_title="t", issue_body="b",
+        evidence="e", artifacts=handlers.render_closure_artifacts(found),
+    )
+    assert "read from disk" in task
+    assert "PASS" in task
+
+
+def test_a_comment_without_the_schema_yields_no_artifacts() -> None:
+    assert handlers.collect_closure_artifacts([{"body": "```json\n{\"a\": 1}\n```"}]) == []

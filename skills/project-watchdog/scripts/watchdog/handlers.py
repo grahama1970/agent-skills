@@ -25,6 +25,7 @@ Failure modes
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -881,6 +882,73 @@ def handle_ticket_repair(
 CLOSURE_AUDIT_MARKER = "project-watchdog:closure-audit"
 
 
+#: Closure-evidence schema `/ticket close --results` submits. Its `unit` and
+#: `e2e` blocks name the commands that ran and the artifact each wrote.
+CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
+
+#: Cap per artifact. The auditors read a prompt, not a filesystem; a 50MB log
+#: would crowd out the ticket itself.
+ARTIFACT_EXCERPT_CHARS = 4000
+
+
+def collect_closure_artifacts(comments: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Read the proof artifacts a closure claimed, so the audit can see them.
+
+    Both audit seats reported they could not read local files, so they judged
+    "was the proof actually run" from the ticket thread alone -- and a closing
+    comment that summarises rather than pastes its output could never pass. The
+    closer already submits artifact paths in the closure-evidence JSON; nothing
+    read them.
+
+    A path that no longer exists is reported as missing rather than omitted. An
+    artifact that cannot be produced is itself a fact about the closure.
+    """
+    found: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for comment in comments:
+        for block in re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", str(comment.get("body", "")), re.S):
+            try:
+                payload = json.loads(block)
+            except ValueError:
+                continue
+            if payload.get("schema") != CLOSURE_EVIDENCE_SCHEMA:
+                continue
+            for tier in ("unit", "e2e"):
+                entry = payload.get(tier)
+                if not isinstance(entry, dict):
+                    continue
+                path = str(entry.get("artifact") or "").strip()
+                if not path or path in seen:
+                    continue
+                seen.add(path)
+                record: dict[str, Any] = {"tier": tier, "path": path,
+                                          "command": entry.get("command")}
+                try:
+                    text = Path(path).read_text(encoding="utf-8", errors="replace")
+                    record["content"] = text[:ARTIFACT_EXCERPT_CHARS]
+                    record["bytes"] = len(text)
+                except OSError as exc:
+                    record["missing"] = str(exc)
+                found.append(record)
+    return found
+
+
+def render_closure_artifacts(artifacts: list[dict[str, Any]]) -> str:
+    """Format collected artifacts for the audit prompt."""
+    if not artifacts:
+        return "(the closure cited no artifact paths)"
+    chunks = []
+    for a in artifacts:
+        head = f"[{a['tier']}] {a['path']}"
+        if a.get("command"):
+            head += f"\n  command: {a['command']}"
+        if "missing" in a:
+            chunks.append(f"{head}\n  NOT READABLE: {a['missing']}")
+        else:
+            chunks.append(f"{head}\n  ({a['bytes']} chars)\n{a['content']}")
+    return "\n\n".join(chunks)
+
+
 def build_closure_audit_task(
     *,
     repo: str,
@@ -888,6 +956,7 @@ def build_closure_audit_task(
     issue_title: str,
     issue_body: str,
     evidence: str,
+    artifacts: str = "(no artifacts collected)",
 ) -> str:
     """The prompt the auditor answers.
 
@@ -908,8 +977,13 @@ def build_closure_audit_task(
         f"A closing comment claiming success is not evidence that the proof ran. "
         f"Deterministic tests over the closer's own new code are weak evidence "
         f"for a live defect. Say which specific criterion fails and why.\n\n"
+        f"You are shown the proof artifacts the closure cited, read from disk. "
+        f"Treat those as the actual output of the proof command. An artifact "
+        f"marked NOT READABLE is a gap; an artifact whose contents show the proof "
+        f"passing is the evidence you are looking for.\n\n"
         f"--- ticket ---\n{issue_body}\n\n"
-        f"--- closing evidence ---\n{evidence}"
+        f"--- closing evidence ---\n{evidence}\n\n"
+        f"--- proof artifacts read from disk ---\n{artifacts}"
     )
 
 
@@ -1016,12 +1090,17 @@ def handle_closure_audit(
         for c in comments
     ) or "(no comments on this issue)"
 
+    collected = collect_closure_artifacts(comments)
+    result["closure_artifacts"] = [
+        {k: v for k, v in a.items() if k != "content"} for a in collected
+    ]
     task = build_closure_audit_task(
         repo=repo,
         issue_number=issue_number,
         issue_title=str(issue.get("title", "")),
         issue_body=str(issue.get("body", ""))[:8000],
         evidence=evidence,
+        artifacts=render_closure_artifacts(collected),
     )
     if not apply:
         # Write nothing on a preview: creating the receipt directory is what
