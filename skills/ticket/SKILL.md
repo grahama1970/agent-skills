@@ -94,7 +94,7 @@ commands such as `lease`, `comment`, `block`, `release`, `close`, and
 | `bug`, `feature`, `optimization`, `maintenance`, `question`, `triage` | Build and optionally create one compliant GitHub issue. |
 | `fleet FILE` | Split a list of requested changes into one ticket preview per item; `--apply` files them. |
 | `lookup` | Search, next, or show issues through the guarded helper. |
-| `lease`, `comment`, `block`, `release`, `close`, `close-duplicate` | Guarded issue lifecycle wrappers. |
+| `lease`, `comment`, `block`, `unblock`, `release`, `close`, `close-duplicate` | Guarded issue lifecycle wrappers. |
 | `verify ISSUE --cmd CMD` | Run deterministic local commands and write a proof file. |
 | `attach-proof ISSUE --file proof.md` | Comment proof on the issue. |
 | `ci status`, `ci rerun`, `ci dispatch` | Explicit GitHub Actions status/rerun/dispatch helpers. |
@@ -148,6 +148,23 @@ project knowledge, lease one issue, fail closed, retain proof — lives in
 `best-practices-github-ticket` and is referenced, not copied into every issue:
 identical boilerplate in every body dilutes the ticket-specific signal and costs
 context on every dispatch.
+
+## Lifecycle gotchas (read before lease/block/close)
+
+- **Close requires an active `--agent` lease.** Run `lease ISSUE --agent NAME`
+  first (a bare `lease ISSUE` does not set `maintainer-active`); otherwise
+  `close` fails with `not leased with maintainer-active`.
+- **`--reason` on `block`/`unblock`/`release` is a FILE path, not free text.**
+  Point it at a markdown blocker/rationale file.
+- **`close --reason` accepts only `completed` or `not-planned`.** Any other value
+  fails with `unknown close reason`.
+- **A `needs-human`/`maintainer-blocked` ticket cannot be closed** until you run
+  `unblock ISSUE --reason FILE [--agent NAME]` (clears both labels; `--agent`
+  re-leases so you can close in one step). This is the inverse of `block`;
+  `block --release` only frees the lease, it does NOT clear the labels.
+- **Only pass `--label` values that exist in the repo.** The wrapper now drops
+  unknown labels with a warning instead of aborting the create, but run
+  `ensure-labels` once per repo to create the canonical set first.
 
 ## Rules
 

@@ -25,6 +25,7 @@ Usage:
   gh-ticket-tools.sh lease ISSUE --agent AGENT [--assign-me] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh comment ISSUE --body FILE [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh block ISSUE --reason FILE [--release] [--repo owner/name] [--dry-run]
+  gh-ticket-tools.sh unblock ISSUE --reason FILE [--agent AGENT] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh release ISSUE --agent AGENT --reason FILE [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh close ISSUE --proof FILE [--review FILE] [--reason completed|not-planned] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh close-duplicate ISSUE --duplicate-of ISSUE --proof FILE [--review FILE] [--repo owner/name] [--dry-run]
@@ -37,13 +38,14 @@ Agent workflow:
   3. Show the ticket and read body/comments before acting.
   4. Lease exactly one ticket before work.
   5. Comment progress, blockers, review, or proof from files.
-  6. Close only with a non-empty proof file.
-  7. If blocked, add maintainer-blocked + needs-human and either keep or release the lease explicitly.
+  6. Close only with a non-empty proof file, after `lease --agent` set maintainer-active. --reason is completed|not-planned.
+  7. If blocked, `block` adds maintainer-blocked + needs-human (keep or --release the lease).
+  8. When the blocker clears, `unblock ISSUE --reason FILE [--agent NAME]` removes both labels (and re-leases with --agent) so you can close. block --release does NOT clear the labels.
 
 Rules:
   - Never close without a proof file.
   - Never work two leased tickets at once.
-  - Never lease or close tickets labeled needs-human or external-owner.
+  - Never lease or close tickets labeled needs-human or external-owner. To close a resolved-but-blocked ticket, `unblock` it first (do not raw `gh issue edit`).
   - Use --dry-run before first mutation in a new repo.
   - Common flags --repo/-R and --dry-run are valid anywhere after the command.
   - The last output line for successful mutations is machine-readable JSON.
@@ -344,6 +346,38 @@ cmd_block() {
     json_ok block issue "$issue" reason "$reason" released "$release"
 }
 
+cmd_unblock() {
+    # Inverse of block: clears maintainer-blocked + needs-human so a resolved
+    # ticket can be closed via the tool. Pass --agent to re-lease (adds
+    # maintainer-active) so the caller can close in one step. Without this a
+    # blocked ticket cannot be closed except by a raw `gh issue edit`.
+    [[ $# -ge 1 ]] || die "unblock requires ISSUE"
+    local issue="$1"; shift
+    local reason=""
+    local agent=""
+    while [[ $# -gt 0 ]]; do
+        parse_common_flag "$@"
+        if [[ "$PARSED" -gt 0 ]]; then shift "$PARSED"; continue; fi
+        case "$1" in
+            --reason)
+                [[ $# -ge 2 ]] || die "--reason requires a file"
+                reason="$2"; shift 2 ;;
+            --agent)
+                [[ $# -ge 2 ]] || die "--agent requires a value"
+                agent="$2"; shift 2 ;;
+            *) die "unknown unblock arg: $1" ;;
+        esac
+    done
+    [[ -n "$reason" ]] || die "unblock requires --reason FILE"
+    require_file "reason" "$reason"
+    run_gh gh issue edit "$issue" "${repo_args[@]}" --remove-label maintainer-blocked --remove-label needs-human
+    if [[ -n "$agent" ]]; then
+        run_gh gh issue edit "$issue" "${repo_args[@]}" --add-label maintainer-active
+    fi
+    run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$reason"
+    json_ok unblock issue "$issue" agent "$agent" reason "$reason"
+}
+
 cmd_release() {
     [[ $# -ge 1 ]] || die "release requires ISSUE"
     local issue="$1"; shift
@@ -518,6 +552,7 @@ case "$cmd" in
     lease) cmd_lease "$@" ;;
     comment) cmd_comment "$@" ;;
     block) cmd_block "$@" ;;
+    unblock) cmd_unblock "$@" ;;
     release) cmd_release "$@" ;;
     close) cmd_close "$@" ;;
     close-duplicate) cmd_close_duplicate "$@" ;;

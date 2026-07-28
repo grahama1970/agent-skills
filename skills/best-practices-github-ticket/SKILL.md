@@ -367,10 +367,14 @@ skills/best-practices-github-ticket/scripts/gh-ticket-tools.sh close-duplicate 1
 - Frontmatter has `name`, folded `description`, `triggers`, `provides`, `composes`, and `complies`.
 - Ticket template asks for type, target, route, requested agent, current state, requested outcome, and required proof.
 - Route labels and issue-form fields are treated as first-class metadata.
-- Terminal helper has `doctor`, `ensure-labels`, `search`, `next`, `show`, `lease`, `comment`, `block`, `release`, `close`, `close-duplicate`, and `proof-template`.
-- Terminal helper dry-runs, leases, blocks, releases, comments, and closes issues with proof gates.
+- Terminal helper has `doctor`, `ensure-labels`, `search`, `next`, `show`, `lease`, `comment`, `block`, `unblock`, `release`, `close`, `close-duplicate`, and `proof-template`.
+- Terminal helper dry-runs, leases, blocks, unblocks, releases, comments, and closes issues with proof gates.
 - Terminal helper refuses live close/duplicate close unless `maintainer-active`
-  is present.
+  is present, and refuses close while `needs-human` is set.
+- `block` adds `maintainer-blocked` + `needs-human`; `unblock ISSUE --reason FILE
+  [--agent NAME]` removes both (and re-leases with `--agent`) so a resolved
+  ticket can be closed via the tool. `block --release` only frees the lease.
+- `close --reason` accepts only `completed` or `not-planned`.
 - Terminal helper parses `--repo` and `--dry-run` anywhere and rejects unknown args.
 - Resolver leases one ticket before patching.
 - Resolver reads target operational contracts before acting.

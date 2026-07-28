@@ -396,13 +396,39 @@ def _emit_draft(draft: TicketDraft, *, as_json: bool = False) -> None:
     typer.echo("\nLabels: " + ", ".join(draft.labels))
 
 
+def _existing_repo_labels(repo: Optional[str]) -> Optional[set[str]]:
+    """Return the set of label names that exist in the repo, or None on failure."""
+    try:
+        out = subprocess.run(
+            ["gh", "label", "list", *_repo_args(repo), "--limit", "500", "--json", "name", "-q", ".[].name"],
+            capture_output=True, text=True, check=True,
+        )
+        return {line.strip() for line in out.stdout.splitlines() if line.strip()}
+    except Exception as exc:
+        logger.warning("could not list repo labels (skipping label validation): {}", exc)
+        return None
+
+
 def _create_or_preview(draft: TicketDraft, *, repo: Optional[str], apply: bool, as_json: bool) -> None:
     if not apply:
         _emit_draft(draft, as_json=as_json)
         typer.echo("\nPreview only. Re-run with --apply to create the GitHub issue.", err=True)
         return
+    # Drop labels that do not exist in the repo so one unknown label never aborts
+    # the whole `gh issue create`. gh fails the entire call on a missing label.
+    labels = list(draft.labels)
+    existing = _existing_repo_labels(repo)
+    if existing is not None:
+        kept = [lbl for lbl in labels if lbl in existing]
+        dropped = [lbl for lbl in labels if lbl not in existing]
+        if dropped:
+            typer.echo(
+                f"[ticket] skipping labels not present in repo (run ensure-labels to create them): {', '.join(dropped)}",
+                err=True,
+            )
+        labels = kept
     cmd = ["gh", "issue", "create", *_repo_args(repo), "--title", draft.title]
-    for label in draft.labels:
+    for label in labels:
         cmd.extend(["--label", label])
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".md", delete=False) as tmp:
         tmp.write(draft.body)
@@ -823,6 +849,18 @@ def block(
         args.append("--release")
     for ref in blocked_by:
         args.extend(["--blocked-by", ref])
+    _helper(args, repo=repo, dry_run=dry_run)
+
+
+@app.command()
+def unblock(issue: int, reason: Path = typer.Option(..., "--reason"), agent: Optional[str] = typer.Option(None, "--agent"), repo: Optional[str] = typer.Option(None, "--repo", "-R"), dry_run: bool = False) -> None:
+    """Clear maintainer-blocked + needs-human so a resolved ticket can be closed.
+
+    Pass --agent to re-lease (add maintainer-active) so you can close in one step.
+    """
+    args = ["unblock", str(issue), "--reason", str(reason)]
+    if agent:
+        args += ["--agent", agent]
     _helper(args, repo=repo, dry_run=dry_run)
 
 
