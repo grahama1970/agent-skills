@@ -1125,3 +1125,25 @@ def test_recovery_packet_exposes_lock_owner_and_tab_liveness(tmp_path: Path) -> 
     assert "surf_lock_owner" in evidence
     assert "bound_tab_open" in evidence
     assert "recovery_prompt" in evidence
+
+
+# agent-skills#1025: concurrent seats share one browser, so a node that captured
+# from another seat's tab must never present that text as its own answer.
+def test_crosstalk_is_detected_when_the_captured_tab_is_not_the_bound_tab() -> None:
+    crosstalk = tau_roundtable_worker.crosstalk_tab_mismatch(
+        "837362945", {"controlled_tab_id": "837362948"}
+    )
+
+    assert crosstalk is not None
+    assert crosstalk["bound_tab_id"] == "837362945"
+    assert crosstalk["controlled_tab_id"] == "837362948"
+    assert "not attributable" in crosstalk["reason"]
+
+
+def test_matching_tabs_are_not_crosstalk() -> None:
+    assert tau_roundtable_worker.crosstalk_tab_mismatch("837362945", {"controlled_tab_id": "837362945"}) is None
+
+
+def test_unknown_tabs_are_not_reported_as_crosstalk() -> None:
+    assert tau_roundtable_worker.crosstalk_tab_mismatch("", {"controlled_tab_id": "837362948"}) is None
+    assert tau_roundtable_worker.crosstalk_tab_mismatch("837362945", {}) is None
