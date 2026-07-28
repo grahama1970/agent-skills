@@ -741,6 +741,25 @@ if surf_cli_available; then
             shift
             exec node "$LOCAL_CLI" page.text "$@"
         fi
+        # Extension builds disagree on whether user code is wrapped in a
+        # function: older ones require a top-level `return`, newer ones evaluate
+        # a bare expression and reject `return` outright. Send as written, and
+        # only if the runtime rejects the `return` do we resend it wrapped, so
+        # callers keep one form across builds (agent-skills#1062).
+        if [[ "$1" == "js" && "${2:-}" == *return* ]]; then
+            _js_rc=0
+            _js_out="$(node "$LOCAL_CLI" "$@" 2>&1)" || _js_rc=$?
+            # The CLI exits 0 even when the page evaluation throws, so key on
+            # the message rather than the status.
+            if [[ "$_js_out" == *"Unexpected token 'return'"* ]]; then
+                _js_code="$2"
+                shift 2
+                exec node "$LOCAL_CLI" js "(() => { ${_js_code}
+})()" "$@"
+            fi
+            printf '%s\n' "$_js_out"
+            exit $_js_rc
+        fi
         exec node "$LOCAL_CLI" "$@"
     fi
     echo "Error: surf-cli socket present but CLI missing at $LOCAL_CLI" >&2
