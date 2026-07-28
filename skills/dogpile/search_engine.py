@@ -21,6 +21,7 @@ if str(_SCRIPT_DIR.parent) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR.parent))
 
 import typer
+from loguru import logger
 from rich.markdown import Markdown
 
 from dogpile.config import console, REGISTRY_AVAILABLE, get_registry
@@ -184,8 +185,10 @@ def _run_search(
         for future in stage2_futures:
             try:
                 future.result()
-            except Exception:
-                pass
+            except Exception as e:
+                # Per-future errors are already captured in _store_stage2_result;
+                # this drain only surfaces anything that escaped that path.
+                logger.warning("stage2 future drain saw uncaptured error: {}", e)
 
     # Flush stage1 execution metadata to memory
     _flush_execution_records("stage1")

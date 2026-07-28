@@ -91,8 +91,8 @@ def fetch_repo_details(repo: str) -> Dict[str, Any]:
     try:
         if not meta_output.startswith("Error:"):
             result["metadata"] = json.loads(meta_output)
-    except json.JSONDecodeError:
-        pass
+    except json.JSONDecodeError as e:
+        logger.warning("repo metadata JSON parse failed: {}", e)
 
     # Get README content via API
     readme_cmd = ["gh", "api", f"repos/{repo}/readme", "--jq", ".content"]
@@ -114,8 +114,8 @@ def fetch_repo_details(repo: str) -> Dict[str, Any]:
     try:
         if not lang_output.startswith("Error:"):
             result["languages"] = json.loads(lang_output)
-    except json.JSONDecodeError:
-        pass
+    except json.JSONDecodeError as e:
+        logger.warning("repo languages JSON parse failed: {}", e)
 
     log_status(f"Fetched details for {repo}.", provider="github", status="DONE")
     return result
@@ -176,7 +176,7 @@ Return 0 if NONE are relevant to the query."""
             if 0 <= idx < len(repos_details):
                 return idx
     except Exception as e:
-        logger.debug("matching failed: {}", e)
+        logger.error("matching failed: {}", e)
 
     return -1
 

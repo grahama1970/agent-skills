@@ -117,7 +117,7 @@ def log_status(
         sys.stderr.write(f"[DOGPILE-STATUS] {msg}\n")
         sys.stderr.flush()
     except Exception as e:
-        logger.debug("file write failed: {}", e)
+        logger.error("file write failed: {}", e)
 
     # Log to error tracker if it's an error or rate limit
     tracker = _get_error_tracker()
@@ -211,7 +211,7 @@ def parse_rate_limit_headers(headers: Dict[str, str], provider: str) -> Optional
                 )
                 return wait_seconds
             except Exception as e:
-                logger.debug("import failed: {}", e)
+                logger.warning("import failed: {}", e)
 
     # 2. Check x-ratelimit-* headers (GitHub pattern)
     remaining = headers.get("x-ratelimit-remaining") or headers.get("X-RateLimit-Remaining")
@@ -249,8 +249,8 @@ def parse_rate_limit_headers(headers: Dict[str, str], provider: str) -> Optional
                 "reset": reset_timestamp,
                 "updated": time.time()
             }
-        except ValueError:
-            pass
+        except ValueError as e:
+            logger.warning("rate-limit header parse failed: {}", e)
 
     # 3. Check IETF RateLimit-* draft headers (future-proofing)
     ratelimit = headers.get("RateLimit") or headers.get("ratelimit")
@@ -271,7 +271,7 @@ def parse_rate_limit_headers(headers: Dict[str, str], provider: str) -> Optional
                 )
                 return wait_seconds
         except Exception as e:
-            logger.debug("value lookup failed: {}", e)
+            logger.warning("value lookup failed: {}", e)
 
     return None
 
@@ -446,13 +446,13 @@ def capture_execution_metadata(
                 if isinstance(result, dict):
                     try:
                         response_size = len(json.dumps(result))
-                    except (TypeError, ValueError):
-                        pass
+                    except (TypeError, ValueError) as e:
+                        logger.warning("response size estimate failed: {}", e)
                 elif isinstance(result, (list, str)):
                     try:
                         response_size = len(json.dumps(result))
-                    except (TypeError, ValueError):
-                        pass
+                    except (TypeError, ValueError) as e:
+                        logger.warning("response size estimate failed: {}", e)
 
                 return result
 

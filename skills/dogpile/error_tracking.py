@@ -52,7 +52,7 @@ def _log_human(msg: str):
         with open(_HUMAN_LOG, "a") as f:
             f.write(f"[{ts}] {msg}\n")
     except Exception as e:
-        logger.debug("file write failed: {}", e)
+        logger.error("file write failed: {}", e)
 
 
 def _save_session():
@@ -64,14 +64,14 @@ def _save_session():
             try:
                 sessions = json.loads(_ERROR_LOG.read_text()).get("sessions", [])
             except Exception as e:
-                logger.debug("JSON parse failed: {}", e)
+                logger.error("JSON parse failed: {}", e)
         sessions.append(_session)
         sessions = sessions[-50:]
         tmp = _ERROR_LOG.with_suffix(".tmp")
         tmp.write_text(json.dumps({"last_updated": datetime.now().isoformat(), "sessions": sessions}, indent=2))
         os.replace(tmp, _ERROR_LOG)
     except Exception as e:
-        logger.debug("formatting failed: {}", e)
+        logger.warning("formatting failed: {}", e)
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +127,7 @@ def log_error(
         sys.stderr.write(f"[DOGPILE-ERROR] [{provider}] {error_type.value}: {message}\n")
         sys.stderr.flush()
     except Exception as e:
-        logger.debug("file write failed: {}", e)
+        logger.error("file write failed: {}", e)
     return event
 
 

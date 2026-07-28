@@ -25,6 +25,7 @@ if str(_SCRIPT_DIR.parent) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR.parent))
 
 import typer
+from loguru import logger
 
 from dogpile.config import (
     app,
@@ -454,8 +455,8 @@ def extract(
                         })
                         if mem_resp.status_code == 200:
                             stored_count += 1
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning("QRA memory store failed for one item: {}", e)
             finally:
                 client.close()
 

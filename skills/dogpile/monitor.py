@@ -137,9 +137,9 @@ class DogpileMonitor(App):
                             card = self.query_one(f"#card-{provider}", ProviderCard)
                             card.status = status
                         except Exception as e:
-                            logger.debug("widget query failed: {}", e)
+                            logger.warning("widget query failed: {}", e)
                 except Exception as e:
-                    logger.debug("widget query failed: {}", e)
+                    logger.warning("widget query failed: {}", e)
             await asyncio.sleep(0.5)
 
     async def tail_log(self) -> None:
@@ -225,7 +225,7 @@ class DogpileMonitor(App):
                 card = self.query_one(f"#card-{provider}", ProviderCard)
                 card.status = status
             except Exception as e:
-                logger.debug("widget query failed: {}", e)
+                logger.warning("widget query failed: {}", e)
 
 
 if __name__ == "__main__":

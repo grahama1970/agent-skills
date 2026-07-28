@@ -353,7 +353,7 @@ class GeminiProvider(LLMProvider):
                 payload["generationConfig"]["responseMimeType"] = "application/json"
                 payload["generationConfig"]["responseSchema"] = schema_data
             except Exception as e:
-                logger.debug("value lookup failed: {}", e)
+                logger.warning("value lookup failed: {}", e)
 
         timeout = timeout_s or 120
         try:

@@ -41,7 +41,7 @@ class TaskMonitor:
                 try:
                     registry = json.loads(REGISTRY_FILE.read_text())
                 except Exception as e:
-                    logger.debug("failed to load registry: {}", e)
+                    logger.warning("failed to load registry: {}", e)
             
             registry[self.name] = {
                 "state_file": str(self.state_file),
@@ -83,7 +83,7 @@ class TaskMonitor:
             tmp.write_text(json.dumps(state, indent=2))
             os.replace(tmp, self.state_file)
         except Exception as e:
-            logger.debug("state file write failed: {}", e)
+            logger.error("state file write failed: {}", e)
 
     def finish(self):
         self.update(status="completed", current_item="Done")

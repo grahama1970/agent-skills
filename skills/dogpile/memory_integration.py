@@ -41,7 +41,7 @@ try:
     from common.memory_client import MemoryClient, MemoryScope, RecallResult
     _HAS_MEMORY = True
 except ImportError:
-    logger.debug("common.memory_client not available — memory integration disabled")
+    logger.warning("common.memory_client not available — memory integration disabled")
 
 # Taxonomy (loaded dynamically to avoid name conflicts)
 _taxonomy_extract = None
@@ -53,7 +53,7 @@ if _TAXONOMY_PATH.exists():
         _spec.loader.exec_module(_mod)
         _taxonomy_extract = getattr(_mod, "extract_taxonomy", None)
     except Exception as e:
-        logger.debug(f"Taxonomy module load failed: {e}")
+        logger.warning(f"Taxonomy module load failed: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ def extract_bridges(text: str) -> List[str]:
             if bridges:
                 return bridges
         except Exception as e:
-            logger.debug(f"Taxonomy extraction failed, using keyword fallback: {e}")
+            logger.warning(f"Taxonomy extraction failed, using keyword fallback: {e}")
 
     text_lower = text.lower()
     found = []
@@ -161,8 +161,8 @@ def recall_prior_research(
                 result = client.recall(f"dogpile research {query}", k=k)
                 if result.found:
                     return result.to_context(max_items=k)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error("memory recall fallback failed: {}", e)
         return ""
 
 
@@ -246,8 +246,8 @@ def learn_research(
                 )
                 if result.success:
                     learned_ids.append(result.lesson_id)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error("memory learn fallback failed: {}", e)
 
     logger.info(f"Research learn complete: {len(learned_ids)} entries stored for '{query[:60]}'")
     return learned_ids

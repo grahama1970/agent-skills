@@ -89,7 +89,7 @@ def update_task_monitor(task_id: str, status: str, progress: int):
                 env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
             )
     except Exception as e:
-        logger.debug("check failed: {}", e)
+        logger.error("check failed: {}", e)
 
 def trigger_code_review(project_path: Path, issue: Dict[str, Any], context: str):
     """Run code_review.py loop to fix the issue."""

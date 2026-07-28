@@ -310,7 +310,7 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
                 if match:
                     best_url_idx = int(match.group(1)) - 1
             except Exception as e:
-                logger.debug("matching failed: {}", e)
+                logger.error("matching failed: {}", e)
 
             if 0 <= best_url_idx < len(web_results):
                 best_result = web_results[best_url_idx]

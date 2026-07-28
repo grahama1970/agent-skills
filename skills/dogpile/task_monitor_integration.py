@@ -113,7 +113,7 @@ class DogpileMonitor:
             tmp.write_text(json.dumps(registry, indent=2))
             os.replace(tmp, TASK_MONITOR_REGISTRY)
         except Exception as e:
-            logger.debug("dogpile task monitor registry write failed: {}", e)
+            logger.error("dogpile task monitor registry write failed: {}", e)
 
     def _update_state(self, final: bool = False):
         """Update task-monitor state file."""
@@ -157,7 +157,7 @@ class DogpileMonitor:
             tmp.write_text(json.dumps(state, indent=2))
             os.replace(tmp, self.state_file)
         except Exception as e:
-            logger.debug("tmp failed: {}", e)
+            logger.error("tmp write failed: {}", e)
 
         # Push to API if configured
         if self.api_url:
@@ -169,7 +169,7 @@ class DogpileMonitor:
                     timeout=0.5
                 )
             except Exception as e:
-                logger.debug("HTTP request failed: {}", e)
+                logger.error("HTTP request failed: {}", e)
 
     def start_stage(self, stage: str):
         """Mark a stage as starting."""

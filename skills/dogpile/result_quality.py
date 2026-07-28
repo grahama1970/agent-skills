@@ -108,7 +108,7 @@ def score_credibility(result: Dict) -> float:
             if (datetime.now() - pub).days < 365:
                 score += 0.1
         except Exception as e:
-            logger.debug("scoring failed: {}", e)
+            logger.warning("scoring failed: {}", e)
 
     # Spam penalty
     snippet = (result.get("snippet") or result.get("description") or "").lower()

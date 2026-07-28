@@ -37,6 +37,8 @@ def _load_dotenv():
                             if key and key not in os.environ:
                                 os.environ[key] = value
             except Exception:
+                # Allowed silent fallback (correctness-no-silent-fallback exempts
+                # optional dotenv loading at module import); .env is best-effort.
                 pass
 
 _load_dotenv()

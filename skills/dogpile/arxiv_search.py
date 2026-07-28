@@ -202,7 +202,7 @@ Return just the number (1, 2, or 3) of the most relevant paper, or 0 if none are
                     if match:
                         best_paper_idx = int(match.group(1)) - 1
                 except Exception as e:
-                    logger.debug("matching failed: {}", e)
+                    logger.error("matching failed: {}", e)
 
                 if 0 <= best_paper_idx < len(arxiv_details):
                     best_paper = arxiv_details[best_paper_idx]
