@@ -1687,7 +1687,7 @@ const ALL_SOCKET_TOOLS = [
   "bookmark.add", "bookmark.remove", "bookmark.list",
   "history.list", "history.search",
   "window.new", "window.list", "window.focus", "window.close", "window.resize",
-  "chatgpt", "chatgpt.extract", "gemini", "gemini_tab", "kimi_tab", "perplexity", "grok", "aistudio", "aistudio.build",
+  "chatgpt", "chatgpt.extract", "gemini", "gemini_tab", "kimi_tab", "deepseek", "perplexity", "grok", "aistudio", "aistudio.build",
   "extension.ping", "extension.reload",
 ];
 
@@ -2830,6 +2830,7 @@ const PRIMARY_ARG_MAP = {
   gemini: "query",
   chatgpt: "query",
   gemini_tab: "query",
+  deepseek: "query",
   kimi_tab: "query",
   perplexity: "query",
   grok: "query",
@@ -3788,7 +3789,7 @@ async function handleResponse(response) {
     for (const [key, val] of Object.entries(data.paths)) {
       console.log(`${key}: ${val}`);
     }
-  } else if ((tool === "chatgpt" || tool === "chatgpt.extract" || tool === "gemini" || tool === "gemini_tab" || tool === "kimi_tab") && data?.response) {
+  } else if ((tool === "chatgpt" || tool === "chatgpt.extract" || tool === "gemini" || tool === "gemini_tab" || tool === "kimi_tab" || tool === "deepseek") && data?.response) {
     console.log(data.response);
     if (data.imagePath) {
       console.log(`\nImage saved: ${data.imagePath}`);

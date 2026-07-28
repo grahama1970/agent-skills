@@ -10,6 +10,7 @@ const { execSync } = require("child_process");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const chatgptClient = require("./chatgpt-client.cjs");
 const geminiTabClient = require("./gemini-tab-client.cjs");
+const deepseekClient = require("./deepseek-client.cjs");
 const kimiTabClient = require("./kimi-tab-client.cjs");
 const geminiClient = require("./gemini-client.cjs");
 const perplexityClient = require("./perplexity-client.cjs");
@@ -1002,6 +1003,88 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
         tabWasCreated: result.tabWasCreated,
         noActivate: result.noActivate,
         attachment: result.attachment,
+      }, null);
+    }).catch((err) => {
+      sendToolResponse(socket, originalId, null, err.message);
+    });
+
+    return;
+  }
+
+  if (extensionMsg.type === "DEEPSEEK_QUERY") {
+    const { query, mode, file, timeout, sentinel, stablePolls, keepTab, noActivate, targetTabId } = extensionMsg;
+
+    queueAiRequest(async () => {
+      const selectedTabId = Number.isFinite(Number(targetTabId)) ? Number(targetTabId) : undefined;
+      const result = await deepseekClient.query({
+        prompt: query,
+        mode,
+        file,
+        timeout: timeout || 900000,
+        sentinel,
+        stablePolls,
+        keepTab: keepTab === true,
+        noActivate: noActivate === true,
+        createTab: async () => {
+          if (selectedTabId) {
+            return { tabId: selectedTabId, reused: true, activated: false, tabWasCreated: false };
+          }
+          // DeepSeek has no dedicated NEW_TAB message; the generic tab opener
+          // takes any URL, so no extension change is required.
+          const tab = await requestCallExtension(
+            requestContext,
+            "new_tab",
+            { type: "NEW_TAB", url: deepseekClient.DEEPSEEK_URL, active: noActivate !== true },
+          );
+          const created = Array.isArray(tab?.tabs) ? tab.tabs[0] : tab;
+          return {
+            tabId: created?.tabId ?? created?.id,
+            activated: noActivate !== true,
+            tabWasCreated: true,
+          };
+        },
+        closeTab: (tabIdToClose) => requestCallExtension(
+          requestContext,
+          "close_tab",
+          { type: "CLOSE_TAB", tabId: tabIdToClose },
+          45000,
+          true,
+        ),
+        // KIMI_EVALUATE / KIMI_CDP_COMMAND are provider-agnostic: they act on
+        // the explicit tabId, which is what the grok compatibility path relies
+        // on too.
+        cdpEvaluate: (tabId, expression) => requestCallExtension(
+          requestContext,
+          "cdp_evaluate",
+          { type: "KIMI_EVALUATE", tabId, expression },
+        ),
+        cdpCommand: (tabId, method, params, timeoutMs) => requestCallExtension(
+          requestContext,
+          "cdp_command",
+          { type: "KIMI_CDP_COMMAND", tabId, method, params },
+          Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined,
+        ),
+        log: (msg) => log(`[deepseek] ${msg}`),
+      });
+
+      return result;
+    }).then((result) => {
+      sendToolResponse(socket, originalId, {
+        response: result.response,
+        model: result.mode,
+        mode: result.mode,
+        modeVerified: result.modeVerified,
+        modeChanged: result.modeChanged,
+        modeBefore: result.modeBefore,
+        tookMs: result.tookMs,
+        tabId: result.tabId,
+        controlledTabId: result.controlledTabId,
+        conversationUrl: result.conversationUrl,
+        responseSource: result.responseSource,
+        sentinel: result.sentinel,
+        hasSentinel: result.hasSentinel,
+        activated: result.activated,
+        noActivate: result.noActivate,
       }, null);
     }).catch((err) => {
       sendToolResponse(socket, originalId, null, err.message);

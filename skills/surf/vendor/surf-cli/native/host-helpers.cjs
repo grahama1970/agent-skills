@@ -1177,6 +1177,23 @@ function mapToolToMessage(tool, args, tabId) {
         targetTabId: a["target-tab-id"] !== undefined ? parseInt(a["target-tab-id"], 10) : tabId,
         ...baseMsg
       };
+    case "deepseek":
+      if (!a.query) throw new Error("query required");
+      return {
+        type: "DEEPSEEK_QUERY",
+        query: a.query,
+        // Expert is the default tier for every DeepSeek submit; the client
+        // fails closed when it cannot confirm the mode (agent-skills#1067).
+        mode: a.mode || "Expert",
+        file: a.file,
+        timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 900000,
+        sentinel: a.sentinel,
+        stablePolls: a["stable-polls"] !== undefined ? parseInt(a["stable-polls"], 10) : undefined,
+        keepTab: a["keep-tab"] || false,
+        noActivate: a["no-activate"] || false,
+        targetTabId: a["target-tab-id"] !== undefined ? parseInt(a["target-tab-id"], 10) : tabId,
+        ...baseMsg
+      };
     case "perplexity":
       if (!a.query) throw new Error("query required");
       return {
