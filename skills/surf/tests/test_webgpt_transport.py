@@ -543,3 +543,23 @@ esac
     assert "chatgpt.extract --tab-id 837360496" in calls.read_text(encoding="utf-8")
     summary = json.loads((round_dir / "webgpt_transport_summary.json").read_text(encoding="utf-8"))
     assert summary["final_transport_state"] == "completed"
+
+
+def test_rate_limit_cooldown_runs_before_the_got_it_dismissal() -> None:
+    """Operator rule (2026-07-28): let the throttle expire, then clear the modal.
+
+    Clicking "Got it" while ChatGPT is still limiting restarts the window, so the
+    cooldown must precede the dismissal in webgpt-submit.sh.
+    """
+    script = (Path(__file__).resolve().parents[1] / "scripts" / "webgpt-submit.sh").read_text(
+        encoding="utf-8"
+    )
+    loop_start = script.index("ChatGPTRateLimitRetryNumber:")
+    loop_body = script[loop_start : script.index("ChatGPTRateLimitRetryAttempted:", loop_start)]
+
+    cooldown_at = loop_body.index("ChatGPTRateLimitCooldownStarted:")
+    dismiss_at = loop_body.index("ChatGPTRateLimitDismissAttempted:")
+
+    assert cooldown_at < dismiss_at, "cooldown must be logged before the Got it dismissal"
+    assert "ChatGPTRateLimitCooldownBeforeDismiss: true" in loop_body
+    assert 'rate_limit_wait_s="${SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS:-300}"' in script

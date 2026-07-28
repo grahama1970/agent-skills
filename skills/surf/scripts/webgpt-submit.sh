@@ -931,6 +931,19 @@ attempt_chatgpt_too_many_requests_cooldown() {
 
   for ((retry_number = 1; retry_number <= rate_limit_retry_attempts; retry_number++)); do
     echo "ChatGPTRateLimitRetryNumber: ${retry_number}" >> "$stderr_log"
+
+    # Cool down BEFORE dismissing. Clicking "Got it" while the provider is still
+    # throttling just restarts the limit window; the operator's rule is to let
+    # the throttle expire first, then clear the modal (agent-skills, 2026-07-28).
+    if [[ "$rate_limit_wait_s" =~ ^[0-9]+$ ]] && [[ "$rate_limit_wait_s" -gt 0 ]]; then
+      echo "ChatGPTRateLimitCooldownStarted: true" >> "$stderr_log"
+      echo "ChatGPTRateLimitCooldownBeforeDismiss: true" >> "$stderr_log"
+      echo "ChatGPTRateLimitCooldownSeconds: ${rate_limit_wait_s}" >> "$stderr_log"
+      sleep "$rate_limit_wait_s"
+    else
+      echo "ChatGPTRateLimitCooldownStarted: false" >> "$stderr_log"
+    fi
+
     if [[ -z "${requested_tab_id:-}" ]]; then
       echo "ChatGPTRateLimitDismissError: requested_tab_id_missing" >> "$stderr_log"
     elif dismiss_out="$("$RUN_SH" js "$dismiss_js" --tab-id "$requested_tab_id" --no-activate 2>&1)"; then
@@ -947,12 +960,6 @@ attempt_chatgpt_too_many_requests_cooldown() {
       } >> "$stderr_log"
     fi
 
-    if [[ "$rate_limit_wait_s" =~ ^[0-9]+$ ]] && [[ "$rate_limit_wait_s" -gt 0 ]]; then
-      echo "ChatGPTRateLimitCooldownStarted: true" >> "$stderr_log"
-      sleep "$rate_limit_wait_s"
-    else
-      echo "ChatGPTRateLimitCooldownStarted: false" >> "$stderr_log"
-    fi
     echo "ChatGPTRateLimitRetryAttempted: true" >> "$stderr_log"
 
     retry_stderr="$(mktemp "${TMPDIR:-/tmp}/surf-webgpt-rate-retry.XXXXXX.log")"

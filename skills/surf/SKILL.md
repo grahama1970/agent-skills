@@ -512,10 +512,12 @@ Behavior:
   provider-throttle metadata so a roundtable or competition can continue with
   other available participants and tell the project agent why WebGPT was not
   usable. A deliberate manual recovery may set
-  `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS` above `0`; that opt-in path clicks the
-  visible **Got it** control when present, waits
-  `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`), then retries the same
-  prepared prompt on the same controlled tab. Metadata reports
+  `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS` above `0`; that opt-in path waits
+  `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`) FIRST, then clicks the
+  visible **Got it** control when present, then retries the same prepared prompt
+  on the same controlled tab. The cooldown precedes the dismissal deliberately:
+  clearing the modal while the provider is still throttling restarts the limit
+  window instead of ending it. Metadata reports
   `chatgpt_too_many_requests_detected: true`, `proof_status: rate_limited`, and
   `chatgpt_rate_limit` fields for `wait_seconds`, `retry_attempted`,
   `dismissed`, `exhausted`, and `error`. Project agents must not open parallel
@@ -1380,9 +1382,10 @@ the default WebGPT path is that the controlled tab is not foregrounded.
 
 4. **ChatGPT Too many requests cooldown**: If the controlled tab shows the
    Too many requests modal, `webgpt.submit` records
-   `chatgpt_too_many_requests_detected`, clicks **Got it** when possible, waits
-   `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`), and retries the same
-   prepared prompt once on the same controlled tab. It does not create parallel
+   `chatgpt_too_many_requests_detected`, waits
+   `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`) so the throttle expires,
+   then clicks **Got it** when possible, then retries the same prepared prompt
+   once on the same controlled tab. It does not create parallel
    tabs to bypass throttling. If the retry is still throttled, the run fails
    closed with `proof_status: rate_limited`.
 
