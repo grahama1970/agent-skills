@@ -15,6 +15,13 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CHATTERBOX = "http://127.0.0.1:8018"
+
+#: Voice the renders are conditioned on, sent explicitly with every request.
+#: Verified 2026-07-28 as what the service default already resolved to, so
+#: naming it changes nothing about the audio -- only about whether the receipt
+#: can prove which voice produced it. Whether this candidate should be the
+#: authorized Embry reference is a governance decision, tracked in #1070.
+REF_AUDIO = ROOT / "voice_clone_candidates" / "embry_kling_clone_candidate.wav"
 CHATTERBOX_OUT_HOST_ROOT = Path(
     os.environ.get("CHATTERBOX_OUT_HOST_ROOT", "/home/graham/workspace/experiments/chatterbox/logs")
 )
@@ -102,6 +109,11 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
         "asr_max_candidates": 3,
         "asr_max_wer": 0.0,
         "voice_delivery": turn["voice_delivery"],
+        # Explicit, never the service default. Relying on CHATTERBOX_REF_AUDIO
+        # meant the renders were conditioned on a clone candidate with nothing
+        # in the request, response, or receipt naming it (#1070). An unrecorded
+        # voice cannot be audited, and a default can change under you.
+        "ref_audio": str(REF_AUDIO),
     }
     request_path = out_dir / f"{turn['turn_id']}_request.json"
     response_path = out_dir / f"{turn['turn_id']}_response.json"
@@ -176,6 +188,13 @@ def run_live(persona: str, *, session_id: str, out_dir: Path, turns: list[str]) 
         "mocked": False,
         "live": True,
         "endpoint": f"POST {CHATTERBOX}/synthesize-batch",
+        # Which voice produced this audio, provable after the fact (#1070).
+        "conditioning_reference": {
+            "path": str(REF_AUDIO),
+            "exists": REF_AUDIO.is_file(),
+            "sha256": "sha256:" + hashlib.sha256(REF_AUDIO.read_bytes()).hexdigest()
+            if REF_AUDIO.is_file() else None,
+        },
         "binding": binding,
         "render_results": render_results,
         "claims": {
