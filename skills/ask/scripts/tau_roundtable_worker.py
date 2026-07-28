@@ -1407,7 +1407,7 @@ def _browser_failure_recovery_packet(
             "raw_response_chars": len(raw_text),
             "prompt_chars": len(prompt_text),
             "measured_prompt_chars": len(prompt_text),
-            "provider_prompt_limit_chars": None,
+            "provider_prompt_limit_chars": _provider_reported_limit_chars(failure),
             "submit_meta_status": submit_meta.get("status") or submit_meta.get("status_code"),
             "last_command": commands[-1] if commands else None,
             "timeout_diagnostics": submit_meta.get("ask_timeout_diagnostics"),
@@ -2087,6 +2087,26 @@ def _looks_browser_handler_timeout(text: str, commands: list[dict[str, Any]]) ->
     return False
 
 
+def _provider_reported_limit_chars(text: str) -> int | None:
+    """Read a size limit only when the provider actually states one.
+
+    A packet that asserts a limit it never saw is worse than one that omits it
+    (agent-skills#1077), so this returns None unless the failure text carries a
+    number next to limit wording.
+    """
+    patterns = (
+        r"maximum (?:context |prompt )?length[^0-9]{0,20}(\d{3,})",
+        r"limit(?:ed)? to[^0-9]{0,20}(\d{3,})\s*(?:characters|chars|tokens)",
+        r"(\d{3,})\s*(?:characters|chars|tokens)\s*(?:maximum|max|limit)",
+    )
+    lowered = (text or "").lower()
+    for pattern in patterns:
+        match = re.search(pattern, lowered)
+        if match:
+            return int(match.group(1))
+    return None
+
+
 def resolve_requested_attachments(requested: list[str], *, handler: str) -> list[str]:
     """Resolve caller-supplied evidence, failing closed on anything unusable.
 
@@ -2653,7 +2673,11 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "typing, so shrinking the prompt or moving it into a bundle does not address the failure."
         )
     if failure_code == "prompt_too_large_or_stalled":
-        return "Write the target material to a local readable bundle and rerun with that bundle instead of inlining a large prompt."
+        return (
+            "Write the target material to a local readable bundle and rerun passing it with "
+            "--attach-file <path> on tau-dag run or compete, instead of inlining a large prompt. "
+            "The measured prompt size is in evidence.measured_prompt_chars."
+        )
     if failure_code == "stale_raw_capture":
         return "Refresh or rebind the browser-oracle tab, then rerun the next_command; do not reuse the stale raw capture."
     return "Rerun only after the browser tab is responsive or a local readable bundle is available."
