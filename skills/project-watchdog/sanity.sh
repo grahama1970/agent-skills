@@ -166,11 +166,27 @@ if grep -q 'not-a-real-project' <<<"$UNKNOWN"; then ok "error echoes the offendi
 
 # --------------------------------------------------------------------------- #
 gate 7 "ARTIFACT policy — uneventful ticks leave no receipt directory"
+# Against the real fleet "uneventful" is not deterministic: a tick has three
+# lanes now (repair, closure audit, completion attestation) and any of them
+# becoming eventful is legitimate. Pin a paused fixture project so the tick has
+# provably nothing to do and this gate tests retention, not the fleet's mood.
+cat > "$WORK/idle-projects.json" <<'JSON'
+{"schema": "agent_skills.project_watchdog.registry.v1",
+ "projects": [{"project_id": "tau", "repo": "grahama1970/tau", "worktree": "/nonexistent"}]}
+JSON
+cat > "$PROJECT_WATCHDOG_STATE_ROOT/state.json" <<'JSON'
+{"schema": "agent_skills.project_watchdog.state.v1",
+ "global": {"state": "active"},
+ "projects": {"tau": {"state": "paused"}}}
+JSON
+PROJECT_WATCHDOG_PROJECTS_PATH="$WORK/idle-projects.json"
+export PROJECT_WATCHDOG_PROJECTS_PATH
 BEFORE="$(find "$PROJECT_WATCHDOG_STATE_ROOT/receipts" -maxdepth 1 -type d -name 'project-watchdog-2*' 2>/dev/null | wc -l)"
 watchdog tick --project tau >/dev/null 2>&1
 watchdog tick --project tau >/dev/null 2>&1
 watchdog tick --project tau >/dev/null 2>&1
 AFTER="$(find "$PROJECT_WATCHDOG_STATE_ROOT/receipts" -maxdepth 1 -type d -name 'project-watchdog-2*' 2>/dev/null | wc -l)"
+unset PROJECT_WATCHDOG_PROJECTS_PATH
 if [[ "$AFTER" -eq "$BEFORE" ]]; then
   ok "three uneventful ticks added zero receipt dirs (was $BEFORE, now $AFTER)"
 else

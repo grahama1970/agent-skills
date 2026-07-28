@@ -298,6 +298,16 @@ def completion_attestor(project: dict[str, Any] | None = None) -> str:
     )
 
 
+#: How long to leave a closure alone after an audit that produced no verdict.
+#: Observed 2026-07-28: a SciLLM auth failure made every audit inconclusive, and
+#: the cron re-audited the SAME closure ten times in ten minutes because nothing
+#: recorded the attempt. A provider outage should cost one attempt per hour, not
+#: one per minute, and it must not starve the other 36 pending closures.
+CLOSURE_AUDIT_RETRY_COOLDOWN_SECONDS = _env_seconds(
+    "PROJECT_WATCHDOG_CLOSURE_RETRY_COOLDOWN_SECONDS", 3_600
+)
+
+
 #: Applied to a closed ticket whose closure a reviewer checked and accepted.
 #: Its presence keeps the audit from re-reading the same closure every minute.
 CLOSURE_VERIFIED_LABEL = "closure-verified"

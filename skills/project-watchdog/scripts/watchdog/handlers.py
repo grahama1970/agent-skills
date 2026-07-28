@@ -1022,11 +1022,10 @@ def handle_closure_audit(
         issue_body=str(issue.get("body", ""))[:8000],
         evidence=evidence,
     )
-    task_path = receipt_dir / f"closure-audit-{issue_number}.md"
-    task_path.write_text(task, encoding="utf-8")
-    result["artifacts"].append(str(task_path))
-
     if not apply:
+        # Write nothing on a preview: creating the receipt directory is what
+        # makes a tick leave a directory behind, and a previewed audit is not an
+        # event. A per-minute cron would otherwise accumulate one per tick.
         result.update(
             {
                 "ok": True,
@@ -1037,6 +1036,10 @@ def handle_closure_audit(
             }
         )
         return result
+
+    task_path = receipt_dir / f"closure-audit-{issue_number}.md"
+    task_path.write_text(task, encoding="utf-8")
+    result["artifacts"].append(str(task_path))
 
     ask_run_dir = receipt_dir / f"closure-audit-{issue_number}"
     audit = run_cmd(
@@ -1260,10 +1263,6 @@ def handle_completion_attestation(
     log_event(run_id, "completion_attestation_start", repo=repo, attestor=attestor)
 
     task = build_completion_attestation_task(repo=repo, recent=recent)
-    task_path = receipt_dir / "completion-attestation.md"
-    task_path.write_text(task, encoding="utf-8")
-    result["artifacts"].append(str(task_path))
-
     if not apply:
         result.update(
             {
@@ -1273,6 +1272,10 @@ def handle_completion_attestation(
             }
         )
         return result
+
+    task_path = receipt_dir / "completion-attestation.md"
+    task_path.write_text(task, encoding="utf-8")
+    result["artifacts"].append(str(task_path))
 
     run_dir = receipt_dir / "completion-attestation"
     attest = run_cmd(
