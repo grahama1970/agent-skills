@@ -173,6 +173,7 @@ class BattleOrchestrator:
         executor = cf.ThreadPoolExecutor(max_workers=2, thread_name_prefix="battle")
         try:
             red_future = executor.submit(self.red_team_worker, round_num)
+            blue_future = executor.submit(self.blue_team_worker, [], round_num)
             try:
                 findings = red_future.result(timeout=self.worker_timeout)
             except cf.TimeoutError:
@@ -196,18 +197,14 @@ class BattleOrchestrator:
                 findings = validated_findings
                 console.print(f"[dim]Cascade: {len(findings)} findings after FP filter[/dim]")
 
-            if findings:
-                blue_future = executor.submit(self.blue_team_worker, findings, round_num)
-                try:
-                    patches = blue_future.result(timeout=self.worker_timeout)
-                except cf.TimeoutError:
-                    console.print(f"[yellow]Blue team timed out after {self.worker_timeout}s[/yellow]")
-                    blue_future.cancel()
-                    patches = []
-                except Exception as e:
-                    console.print(f"[red]Blue team error: {e}[/red]")
-                    patches = []
-            else:
+            try:
+                patches = blue_future.result(timeout=self.worker_timeout)
+            except cf.TimeoutError:
+                console.print(f"[yellow]Blue team timed out after {self.worker_timeout}s[/yellow]")
+                blue_future.cancel()
+                patches = []
+            except Exception as e:
+                console.print(f"[red]Blue team error: {e}[/red]")
                 patches = []
 
             if patches:

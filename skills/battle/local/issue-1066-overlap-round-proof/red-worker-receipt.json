@@ -1,0 +1,30 @@
+{
+  "commands_run": [
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "-v",
+        "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof:/work",
+        "-w",
+        "/work",
+        "python:3.12-slim",
+        "python",
+        "-c",
+        "import json, pathlib, time\ntime.sleep(0.45)\npathlib.Path('red-exploit.json').write_text(json.dumps({'finding_id':'red-zip-slip-001','exploit_confirmed':True,'artifact':'red-exploit.json'}), encoding='utf-8')\nprint('RED_SCAN_PROBE_PASS')\n"
+      ],
+      "elapsed_seconds": 0.799079,
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "RED_SCAN_PROBE_PASS\n"
+    }
+  ],
+  "exploit_artifact": "red-exploit.json",
+  "finding_id": "red-zip-slip-001",
+  "schema": "battle.overlap_worker_receipt.v1",
+  "status": "PASS",
+  "team": "red"
+}

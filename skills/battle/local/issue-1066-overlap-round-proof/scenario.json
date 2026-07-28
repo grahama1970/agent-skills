@@ -1,0 +1,18 @@
+{
+  "public_contract": {
+    "allowed_inputs": [
+      "scenario_id",
+      "target_sha256",
+      "public_target"
+    ],
+    "forbidden_blue_inputs": [
+      "red_exploit_artifact",
+      "red_finding",
+      "red_terminal_receipt"
+    ]
+  },
+  "public_target": "fixture/target/app.py",
+  "scenario_id": "overlap-zip-slip-deterministic",
+  "schema": "battle.overlap_fixture_scenario.v1",
+  "target_sha256": "d332b8a7aad66d36d653450f0899e0fc2ea38d802d77591d06b05b78dab89b97"
+}

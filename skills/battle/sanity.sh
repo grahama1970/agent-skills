@@ -144,8 +144,7 @@ tail -20 /tmp/battle-sanity-backend-eval.out || true
 # but any NEW fixture regression fails the gate immediately (#1035).
 python3 - <<'PYEOF'
 import json, os, sys
-known = {
-}
+known = set()
 receipt = json.load(open(os.path.join(os.environ.get("TMPDIR", "/tmp"), "battle-sanity", "backend-eval", "receipt.json")))
 failed = set(receipt["summary"].get("failed_cases") or [])
 unexpected = sorted(failed - known)

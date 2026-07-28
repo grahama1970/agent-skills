@@ -40,4 +40,9 @@ if [[ "${1:-}" == "prove-adaptive-lineage-live-memory" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_adaptive_lineage_live_memory.py" "$@"
 fi
 
+if [[ "${1:-}" == "prove-overlap-round" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_overlap_round.py" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"
