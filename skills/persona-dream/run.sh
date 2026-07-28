@@ -11,6 +11,7 @@ Usage: ./run.sh <command> [options]
 Commands:
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
+  check-pctom-measurement-validity-v2  Gate: PCTOM-R measurement must be falsifiable before live spend
   check-skill-contract  Static check: SKILL.md remains a stable executable contract
   check-current-state-consistency  Static check: current-state surfaces must not contradict named receipts
   check-tau-routing-boundary  Static check: only /tau may reach /scillm (fails on un-sanctioned direct scillm calls)
@@ -728,6 +729,11 @@ case "$COMMAND" in
     # Speaker-identity gate over the durable session-mood renders. Needs a
     # speaker backend; run under the Chatterbox voice lane interpreter.
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/session_mood_voice_recognition.py" "$@"
+    ;;
+  check-pctom-measurement-validity-v2)
+    # Gate before #1008 live held-out Tau spend: the estimator must be able to
+    # produce a CD loss, and predictions must depend on episode evidence.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_measurement_validity_v2.py" "$@"
     ;;
   check-skill-contract)
     # Fail closed when SKILL.md stops being a stable executable contract:
