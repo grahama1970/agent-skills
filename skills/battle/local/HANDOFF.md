@@ -1,5 +1,104 @@
 # Handoff: Battle Adaptive Lineage — GOAL MET (backend + UX live)
 
+## Ticket Closure Addendum (2026-07-28 17:15 UTC)
+
+Active worktree:
+
+`/home/graham/workspace/experiments/agent-skills-issue1049-20260728`
+
+Remote proof tip:
+
+`origin/main ba0e4fc75733e7bd0ce49fa52e11b69d8378a663`
+
+### Battle-directory ticket state
+
+Open `battle` label query:
+
+```bash
+gh issue list --repo grahama1970/agent-skills --state open --label battle --limit 100
+```
+
+Result: `[]`
+
+Open Battle title query:
+
+```bash
+gh search issues --repo grahama1970/agent-skills --state open 'battle in:title'
+```
+
+Result: only #1040, `Triage 195 unrelated commits stranded on battle-adaptive-lineage-goal`.
+#1040 is not a `skills/battle` implementation or proof ticket. It targets
+`/home/graham/workspace/experiments/agent-skills` primary-worktree cleanup and
+lists `skills/persona-dream/local/HANDOFF.md` as the scoped file. It remains a
+separate repository-maintenance ticket, not a Battle-directory blocker.
+
+### Closed Battle tickets and receipts
+
+- #1049: proof addendum preserved without rewriting the original immutable goal.
+- #1048: canonical dual-team co-evolution fixture and Judge-backed scoreboard.
+- #1063: invalid kill-shot replay retired; backend eval health preserved.
+- #1064: spectator adaptive mechanics panel derives from loaded receipt fixture.
+- #1065: live Memory-backed lineage proof.
+  - Commit: `e1b05a7cc351cc00e32713e111696b3b8500b7be`
+  - Proof: `skills/battle/docs/proofs/tickets/issue-1065-live-memory-lineage-20260728.md`
+  - Receipt: `skills/battle/local/issue-1065-live-memory-proof/proof-summary.json`
+  - Evidence: `status=PASS`, `mocked=false`, `live=true`; Red/Blue store+upsert acks real; next-generation recall found the owning survivor; negative controls empty.
+- #1066: one Red worker and one proactive Blue worker overlap in a deterministic Docker fixture.
+  - Commit: `64f5b18e7d7601da8944d5feb7d91afaee1bcf84`
+  - Proof: `skills/battle/docs/proofs/tickets/issue-1066-overlap-round-20260728.md`
+  - Receipt: `skills/battle/local/issue-1066-overlap-round-proof/proof-summary.json`
+  - Evidence: `status=PASS`, `mocked=false`, `live=true`; `blue_started_at < red_terminal_at`; `red_started_at < blue_terminal_at`; Blue first input has no Red finding/exploit artifact.
+- #46: parent async scheduler epic.
+  - Commit: `ba0e4fc75733e7bd0ce49fa52e11b69d8378a663`
+  - Proof: `skills/battle/docs/proofs/tickets/issue-46-async-battle-scheduler-20260728.md`
+  - Receipt: `skills/battle/local/issue-46-arena-prekill-survival-proof/run-receipt.json`
+  - Evidence: `status=PASS`, `mocked=false`, `live=brave_search_docker_arena_oracle_tau_harness`; `red_materialized=2`; `blue_materialized=2`; `judged_pairs=4`; `prekill_survival_contract.status=PASS`; Docker Judge and scorekeeper receipts present.
+
+### Commands that last exercised the Battle closure set
+
+```bash
+cd skills/battle && UV_PROJECT_ENVIRONMENT=/tmp/issue1066-uv-venv \
+  uv run --project . python -m pytest tests/test_overlap_round.py -q
+```
+
+Result: `1 passed in 0.30s`
+
+```bash
+./skills/battle/run.sh prove-overlap-round \
+  --out /home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof \
+  --timeout-s 30
+```
+
+Result: `status=PASS`, `mocked=false`, `live=true`
+
+```bash
+./skills/battle/run.sh arena-prekill-survival-proof battle-004 \
+  --out /home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof \
+  --red-workers 2 --blue-workers 2 --timeout-s 120
+```
+
+Result: `status=PASS`, `mocked=false`, `live=brave_search_docker_arena_oracle_tau_harness`
+
+```bash
+cd skills/battle && UV_PROJECT_ENVIRONMENT=/tmp/issue46-uv-venv \
+  uv run --project . python -m pytest tests/test_arena_live_battle_proof_contract.py -q
+```
+
+Result: `17 passed in 0.56s`
+
+```bash
+UV_PROJECT_ENVIRONMENT=/tmp/issue46-sanity-uv-venv \
+  skills/battle/sanity.sh > /tmp/issue-46-battle-sanity.out 2>&1
+```
+
+Result: exit `0`; backend eval `13/13`; `Result: PASS`.
+
+### Current cautions for the next agent
+
+- Do not use the contaminated primary worktree at `/home/graham/workspace/experiments/agent-skills` as a source of truth for Battle closure; it is the subject of #1040 and contains extensive unrelated dirty state.
+- Continue Battle work from a clean lane-named worktree and committed proof receipts.
+- UI work still requires `$pixijs`, `$best-practices-battle-pixi`, relevant React best practices, and `$test-interactions`; the #1065/#1066/#46 closure work above was backend/proof only.
+
 ## Current State Addendum (2026-07-28)
 
 Source commit inspected: `277afadfdea5`.
