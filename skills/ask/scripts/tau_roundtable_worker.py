@@ -1384,6 +1384,11 @@ def _browser_failure_recovery_packet(
         commands=commands,
         surf_lock_blocker=surf_lock_blocker,
     )
+    recovery_prompt = sanitize_recovery_prompt(prompt_path, bundle_paths)
+    recovery_prompt_path = Path(recovery_prompt.get("prompt_path") or prompt_path)
+    bound_tab_id = str(browser_oracle.get("tab_id") or "").strip()
+    bound_tab_open = tab_still_open(str(getattr(args, "surf_run", "") or ""), bound_tab_id)
+    lock_owner = surf_lock_owner()
     next_command = _recovery_next_command(
         args,
         request_payload=request_payload,
@@ -1395,8 +1400,17 @@ def _browser_failure_recovery_packet(
         response_path=response_path,
         raw_path=raw_path,
         meta_path=meta_path,
-        prompt_path=prompt_path,
+        prompt_path=recovery_prompt_path,
     )
+    if bound_tab_open is False:
+        # The bound tab is gone (fresh-temporary lifecycle already cleaned it up),
+        # so a --tab-id retry would target a closed tab (agent-skills#1081).
+        next_command = [item for item in next_command if item != bound_tab_id]
+        next_command = [
+            item for index, item in enumerate(next_command)
+            if item != "--tab-id" or index + 1 < len(next_command)
+        ]
+        next_command = [item for item in next_command if item != "--tab-id"]
     return {
         "schema": RECOVERY_PACKET_SCHEMA,
         "status": "NEEDS_ATTENTION",
@@ -1423,6 +1437,9 @@ def _browser_failure_recovery_packet(
             ),
             "stale_binding": stale_binding,
             "surf_lock_blocker": surf_lock_blocker,
+            "surf_lock_owner": lock_owner,
+            "bound_tab_open": bound_tab_open,
+            "recovery_prompt": recovery_prompt,
             "submit_meta_summary": transport_failure_summary,
         },
         "transport_failure_summary": transport_failure_summary,
@@ -2293,6 +2310,77 @@ def _is_bundle_like(path: Path) -> bool:
         ".tar.gz",
         ".tgz",
     }
+
+
+def sanitize_recovery_prompt(prompt_path: Path, attachment_paths: list[str]) -> dict[str, Any]:
+    """Strip bare local paths from a retry prompt unless they are attached.
+
+    A recovery packet that echoes the failing prompt verbatim hands the operator
+    a command Surf blocks as web_review_bundle_unreadable (agent-skills#1081).
+    """
+    try:
+        text = prompt_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {"sanitized": False, "reason": "prompt_unreadable", "prompt_path": str(prompt_path)}
+    attached = {str(Path(item).expanduser().resolve()) for item in attachment_paths}
+    unattached = [
+        candidate
+        for candidate in _local_path_candidates(text)
+        if str(Path(candidate).expanduser().resolve()) not in attached
+    ]
+    if not unattached:
+        return {"sanitized": False, "reason": "no_unattached_local_paths", "prompt_path": str(prompt_path)}
+    sanitized_text = text
+    for candidate in unattached:
+        sanitized_text = sanitized_text.replace(candidate, "<local path removed: not attached>")
+    sanitized_path = prompt_path.with_name("prompt.recovery.md")
+    sanitized_path.write_text(sanitized_text, encoding="utf-8")
+    return {
+        "sanitized": True,
+        "prompt_path": str(sanitized_path),
+        "original_prompt_path": str(prompt_path),
+        "removed_paths": unattached,
+    }
+
+
+def tab_still_open(surf_run: str, tab_id: str) -> bool | None:
+    """None when liveness cannot be determined; False only on a proven miss."""
+    if not tab_id or not surf_run or not Path(surf_run).is_file():
+        return None
+    try:
+        result = _run_cmd([str(surf_run), "tab.list", "--json"], timeout=60, cwd=Path.cwd())
+    except (OSError, RuntimeError):
+        return None
+    if result.returncode != 0:
+        return None
+    text = result.stdout.strip()
+    start = text.find("[")
+    if start == -1:
+        return None
+    try:
+        tabs = json.loads(text[start:])
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(tabs, list):
+        return None
+    return any(str(item.get("id")) == str(tab_id) for item in tabs if isinstance(item, dict))
+
+
+def surf_lock_owner() -> dict[str, Any] | None:
+    """Name whoever holds the shared Surf browser lock, for a stalled receipt."""
+    for lock_dir in sorted(Path("/tmp").glob("surf-lock-*")):
+        owner = lock_dir / "owner.json"
+        if not owner.is_file():
+            continue
+        try:
+            payload = json.loads(owner.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        pid = payload.get("pid")
+        payload["lock_dir"] = str(lock_dir)
+        payload["owner_alive"] = Path(f"/proc/{pid}").exists() if pid else None
+        return payload
+    return None
 
 
 def _recovery_next_command(
