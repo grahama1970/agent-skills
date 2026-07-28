@@ -25,9 +25,12 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+from loguru import logger
 
 from . import config
 from .core import log_event, run_cmd
@@ -351,6 +354,58 @@ def _lease_label_times(
             if moment is not None:
                 acquired[label] = moment
     return acquired
+
+
+def list_closed_for_audit(
+    run_id: str, project: dict[str, Any], *, now: float | None = None
+) -> list[dict[str, Any]]:
+    """Recently closed agent-work tickets whose closure has not been checked.
+
+    Closing a ticket is a claim that the work is done. Nothing verified that
+    claim: the repair lane's reviewer judges the diff, but a ticket can be
+    closed by anything -- a person, a script, an agent that mis-read its own
+    output -- and once closed it left the system entirely.
+
+    Excludes tickets already carrying ``closure-verified`` (checked and
+    accepted) or ``needs-human`` (a person already owns it), and anything closed
+    longer ago than the audit window, since an old closure is history rather
+    than something to reopen.
+    """
+    repo = project_repo(project)
+    result = run_cmd(
+        [
+            "gh", "issue", "list", "--repo", repo, "--state", "closed",
+            "--label", config.READY_LABEL, "--limit", "50",
+            "--json", "number,title,body,labels,url,closedAt,stateReason",
+        ],
+        timeout_s=60,
+    )
+    log_event(run_id, "closure_audit_scan", repo=repo, exit_code=result.get("exit_code"))
+    if result.get("exit_code") != 0:
+        raise RuntimeError(f"closed-issue scan failed for {repo}: {result.get('stderr')}")
+
+    cutoff = (now if now is not None else time.time()) - config.CLOSURE_AUDIT_WINDOW_SECONDS
+    pending: list[dict[str, Any]] = []
+    for issue in json.loads(result.get("stdout") or "[]"):
+        labels = {str(lbl.get("name")) for lbl in issue.get("labels", [])}
+        if config.CLOSURE_VERIFIED_LABEL in labels or labels & config.HUMAN_HOLD_LABELS:
+            continue
+        closed_at = _parse_iso(issue.get("closedAt"))
+        if closed_at is None or closed_at < cutoff:
+            continue
+        pending.append(issue)
+    return pending
+
+
+def _parse_iso(value: Any) -> float | None:
+    """Epoch seconds for a GitHub timestamp, or None when unreadable."""
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+    except ValueError as exc:
+        logger.error("unreadable timestamp {!r}: {}", value, exc)
+        return None
 
 
 def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:

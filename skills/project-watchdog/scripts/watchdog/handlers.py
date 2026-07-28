@@ -28,6 +28,8 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
+from loguru import logger
+
 from . import config, github, registry
 from .core import iso_now, log_event, run_cmd, write_json
 from .issue_fields import (
@@ -866,4 +868,262 @@ def handle_ticket_repair(
         }
     )
     log_event(run_id, "handle_ticket_repair_finish", issue=issue_number, ok=True)
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# Closure audit — a closure is a claim, not evidence
+# --------------------------------------------------------------------------- #
+
+#: Marks an audit comment so a later tick can count prior reopens without
+#: re-reading every comment body for meaning.
+CLOSURE_AUDIT_MARKER = "project-watchdog:closure-audit"
+
+
+def build_closure_audit_task(
+    *,
+    repo: str,
+    issue_number: int,
+    issue_title: str,
+    issue_body: str,
+    evidence: str,
+) -> str:
+    """The prompt the auditor answers.
+
+    It gets the ticket's own acceptance criterion and required proof, and the
+    closing evidence, and nothing else. The question is narrow on purpose: not
+    "is this good work" but "does the closure hold against what the ticket
+    asked for".
+    """
+    return (
+        f"Audit the closure of {repo}#{issue_number}: {issue_title}\n\n"
+        f"Decide one thing: does the evidence below actually establish the "
+        f"acceptance criterion and the required proof the ticket names?\n\n"
+        f"Answer VERDICT: PASS only if the named proof was actually run and its "
+        f"result is shown. Answer VERDICT: FAIL if the criterion is unmet, the "
+        f"proof was not run, the evidence is asserted rather than shown, or the "
+        f"change demonstrably does something other than what was asked. Answer "
+        f"VERDICT: NEEDS_ATTENTION if you cannot tell from what is here.\n\n"
+        f"A closing comment claiming success is not evidence that the proof ran. "
+        f"Deterministic tests over the closer's own new code are weak evidence "
+        f"for a live defect. Say which specific criterion fails and why.\n\n"
+        f"--- ticket ---\n{issue_body}\n\n"
+        f"--- closing evidence ---\n{evidence}"
+    )
+
+
+def _extract_verdict(text: str) -> str | None:
+    """Same convention $ask's reviewer seats use."""
+    upper = text.upper()
+    for verdict in ("NEEDS_ATTENTION", "PASS", "FAIL"):
+        if f"VERDICT: {verdict}" in upper or f"VERDICT {verdict}" in upper:
+            return verdict
+    return None
+
+
+def _read_ask_response(run_root: Path) -> str:
+    """Concatenate handler responses from an $ask run directory."""
+    chunks: list[str] = []
+    for path in sorted(run_root.glob("*/node-artifacts/*/response*.md")):
+        try:
+            chunks.append(path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            logger.error("could not read $ask response {}: {}", path, exc)
+    return "\n\n".join(chunks)
+
+
+def handle_closure_audit(
+    run_id: str,
+    receipt_dir: Path,
+    project: dict[str, Any],
+    issue: dict[str, Any],
+    *,
+    apply: bool,
+) -> dict[str, Any]:
+    """Review one closed ticket and reopen it if the closure does not hold.
+
+    Closing a ticket is a claim that the work is done, and nothing checked it.
+    The repair lane's reviewer judges a diff before it lands; this judges the
+    closure afterwards, including closures no agent made.
+    """
+    repo = project_repo(project)
+    issue_number = int(issue["number"])
+    reviewer = config.repair_reviewer(project)
+    result = _new_result(project, issue, "closure_audit")
+    result["selected_agent"] = reviewer
+    log_event(run_id, "closure_audit_start", issue=issue_number, repo=repo, reviewer=reviewer)
+
+    comments = github.issue_comments(repo, issue_number)
+    reopens = sum(
+        1
+        for c in comments
+        if CLOSURE_AUDIT_MARKER in str(c.get("body", "")) and "REOPENED" in str(c.get("body", ""))
+    )
+    result["prior_reopens"] = reopens
+
+    evidence = "\n\n".join(
+        f"[{c.get('author', {}).get('login', '?')} {str(c.get('createdAt', ''))[:19]}]\n"
+        f"{str(c.get('body', ''))[:4000]}"
+        for c in comments
+    ) or "(no comments on this issue)"
+
+    task = build_closure_audit_task(
+        repo=repo,
+        issue_number=issue_number,
+        issue_title=str(issue.get("title", "")),
+        issue_body=str(issue.get("body", ""))[:8000],
+        evidence=evidence,
+    )
+    task_path = receipt_dir / f"closure-audit-{issue_number}.md"
+    task_path.write_text(task, encoding="utf-8")
+    result["artifacts"].append(str(task_path))
+
+    if not apply:
+        result.update(
+            {
+                "ok": True,
+                "status": "DRY_RUN",
+                "summary": f"would audit the closure of {repo}#{issue_number} with {reviewer}",
+            }
+        )
+        return result
+
+    ask_run_dir = receipt_dir / f"closure-audit-{issue_number}"
+    audit = run_cmd(
+        [
+            str(config.ask_run_sh()),
+            "tau-dag",
+            task,
+            "--repo", repo,
+            "--target", f"issue#{issue_number}",
+            "--immutable-goal", (
+                f"Decide whether the closure of {repo}#{issue_number} is supported by "
+                f"evidence for the acceptance criterion and proof the ticket names. "
+                f"Do not accept an assertion of success as evidence that a proof ran."
+            ),
+            "--dag-template", "single-call",
+            "--handler", reviewer,
+            "--run-output-root", str(ask_run_dir),
+            "--execute",
+            "--allow-provider-calls",
+            "--json",
+        ],
+        cwd=config.ask_run_sh().parent,
+        timeout_s=int(project.get("closure_audit_timeout_s", 900)),
+    )
+    result["commands"].append(audit)
+    result["artifacts"].append(str(ask_run_dir))
+
+    response = _read_ask_response(ask_run_dir)
+    verdict = _extract_verdict(response)
+    result["verdict"] = verdict
+
+    if audit.get("exit_code") != 0 or verdict is None:
+        # No verdict is not a pass. Leave the ticket closed and say so, rather
+        # than reopening on a failed reviewer or silently accepting.
+        result.update(
+            {
+                "ok": False,
+                "status": "NEEDS_ATTENTION",
+                "summary": (
+                    f"closure audit of {repo}#{issue_number} produced no verdict "
+                    f"(exit {audit.get('exit_code')}). The closure is unreviewed, not accepted."
+                ),
+            }
+        )
+        log_event(run_id, "closure_audit_no_verdict", issue=issue_number)
+        return result
+
+    if verdict == "PASS":
+        result["commands"].append(
+            github.issue_comment(
+                repo,
+                issue_number,
+                github.watchdog_comment(
+                    "Closure audit: PASS",
+                    {
+                        "schema": "agent_skills.project_watchdog.closure_audit.v1",
+                        "marker": CLOSURE_AUDIT_MARKER,
+                        "run_id": run_id,
+                        "issue": f"issue#{issue_number}",
+                        "repo": repo,
+                        "reviewer": reviewer,
+                        "verdict": verdict,
+                        "outcome": "closure_upheld",
+                    },
+                ),
+            )
+        )
+        result["commands"].append(
+            github.issue_edit(repo, issue_number, add=[config.CLOSURE_VERIFIED_LABEL])
+        )
+        result.update(
+            {
+                "ok": True,
+                "status": "COMPLETED",
+                "summary": f"closure of {repo}#{issue_number} upheld by {reviewer}",
+            }
+        )
+        log_event(run_id, "closure_audit_pass", issue=issue_number)
+        return result
+
+    # FAIL or NEEDS_ATTENTION: the closure did not survive review.
+    exhausted = reopens >= config.CLOSURE_AUDIT_MAX_REOPENS
+    excerpt = response.strip()[-1500:]
+    outcome = "reopen_budget_exhausted" if exhausted else "REOPENED"
+    result["commands"].append(
+        github.issue_comment(
+            repo,
+            issue_number,
+            github.watchdog_comment(
+                f"Closure audit: {verdict}",
+                {
+                    "schema": "agent_skills.project_watchdog.closure_audit.v1",
+                    "marker": CLOSURE_AUDIT_MARKER,
+                    "run_id": run_id,
+                    "issue": f"issue#{issue_number}",
+                    "repo": repo,
+                    "reviewer": reviewer,
+                    "verdict": verdict,
+                    "outcome": outcome,
+                    "prior_reopens": reopens,
+                    "reviewer_excerpt": excerpt,
+                },
+            ),
+        )
+    )
+    if exhausted:
+        # Reopening again would loop. Hand it to a person instead.
+        result["commands"].append(
+            github.issue_edit(repo, issue_number, add=["needs-human"])
+        )
+        result.update(
+            {
+                "ok": False,
+                "status": "NEEDS_ATTENTION",
+                "summary": (
+                    f"{repo}#{issue_number} failed closure audit {reopens + 1} times; "
+                    f"not reopening again, needs a person."
+                ),
+            }
+        )
+        log_event(run_id, "closure_audit_reopen_budget_exhausted", issue=issue_number)
+        return result
+
+    result["commands"].append(github.issue_reopen(repo, issue_number))
+    result["commands"].append(
+        github.issue_edit(
+            repo, issue_number, add=[config.READY_LABEL], remove=[config.CLOSURE_VERIFIED_LABEL]
+        )
+    )
+    result.update(
+        {
+            "ok": True,
+            "status": "COMPLETED",
+            "summary": (
+                f"reopened {repo}#{issue_number}: closure did not survive review ({verdict})"
+            ),
+        }
+    )
+    log_event(run_id, "closure_audit_reopened", issue=issue_number, verdict=verdict)
     return result

@@ -62,6 +62,32 @@ def issue_edit(
     return run_cmd(command, timeout_s=60)
 
 
+def issue_reopen(repo: str, issue_number: int) -> dict[str, Any]:
+    """Reopen a closed issue. Used when a closure does not survive review."""
+    return run_cmd(
+        ["gh", "issue", "reopen", str(issue_number), "--repo", repo],
+        timeout_s=60,
+    )
+
+
+def issue_comments(repo: str, issue_number: int, limit: int = 6) -> list[dict[str, Any]]:
+    """The last few comments on an issue, oldest first.
+
+    The closure evidence lives here: proof files, verdicts, and whatever the
+    closer asserted. The auditor reads it rather than trusting the closure.
+    """
+    result = run_cmd(
+        ["gh", "issue", "view", str(issue_number), "--repo", repo, "--json", "comments"],
+        timeout_s=60,
+    )
+    if result.get("exit_code") != 0:
+        return []
+    import json as _json  # noqa: PLC0415
+
+    comments = _json.loads(result.get("stdout") or "{}").get("comments", [])
+    return comments[-limit:]
+
+
 def issue_close(repo: str, issue_number: int, *, reason: str = "completed") -> dict[str, Any]:
     return run_cmd(
         ["gh", "issue", "close", str(issue_number), "--repo", repo, "--reason", reason],

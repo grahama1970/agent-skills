@@ -875,3 +875,127 @@ def test_the_creator_is_told_not_to_push() -> None:
     )
     assert "Do not push" in task
     assert "reviewer's decision" in task
+
+
+# --------------------------------------------------------------------------- #
+# Closure audit — a closure is a claim, not evidence
+# --------------------------------------------------------------------------- #
+
+
+def _closed(number: int, *, labels: list[str], closed_at: str) -> dict:
+    return {
+        "number": number,
+        "title": f"issue {number}",
+        "body": "type: bug\ntarget: skills/x\n",
+        "labels": [{"name": n} for n in labels],
+        "closedAt": closed_at,
+        "stateReason": "COMPLETED",
+        "url": "u",
+    }
+
+
+def _audit_scan(issues: list[dict], now: float):
+    gh = {"exit_code": 0, "stdout": json.dumps(issues), "stderr": ""}
+    with mock.patch.object(registry, "run_cmd", return_value=gh):
+        return registry.list_closed_for_audit(
+            "run", {"repo": TAU_REPO, "project_id": "p"}, now=now
+        )
+
+
+def test_audit_skips_closures_already_verified_or_owned_by_a_human() -> None:
+    import datetime as _dt
+
+    now = _dt.datetime(2026, 7, 28, tzinfo=_dt.UTC)
+    recent = (now - _dt.timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    pending = _audit_scan(
+        [
+            _closed(1, labels=["agent-work"], closed_at=recent),
+            _closed(2, labels=["agent-work", config.CLOSURE_VERIFIED_LABEL], closed_at=recent),
+            _closed(3, labels=["agent-work", "needs-human"], closed_at=recent),
+        ],
+        now.timestamp(),
+    )
+    assert [i["number"] for i in pending] == [1]
+
+
+def test_audit_ignores_closures_older_than_the_window() -> None:
+    import datetime as _dt
+
+    now = _dt.datetime(2026, 7, 28, tzinfo=_dt.UTC)
+    old = (now - _dt.timedelta(days=30)).isoformat().replace("+00:00", "Z")
+    recent = (now - _dt.timedelta(hours=2)).isoformat().replace("+00:00", "Z")
+    pending = _audit_scan(
+        [
+            _closed(4, labels=["agent-work"], closed_at=old),
+            _closed(5, labels=["agent-work"], closed_at=recent),
+        ],
+        now.timestamp(),
+    )
+    assert [i["number"] for i in pending] == [5], "an old closure is history, not a reopen"
+
+
+def _run_audit(tmp_path, response: str, *, exit_code: int = 0, comments=None):
+    project = {"project_id": "p", "repo": TAU_REPO, "worktree": str(tmp_path)}
+    issue = _closed(9, labels=["agent-work"], closed_at="2026-07-28T00:00:00Z")
+    calls: dict = {"edits": [], "reopened": [], "comments": []}
+    with (
+        mock.patch.object(handlers.github, "issue_comments", return_value=comments or []),
+        mock.patch.object(
+            handlers.github, "issue_comment",
+            side_effect=lambda r, n, b: calls["comments"].append(b) or {"exit_code": 0},
+        ),
+        mock.patch.object(
+            handlers.github, "issue_edit",
+            side_effect=lambda *a, **k: calls["edits"].append(k) or {"exit_code": 0},
+        ),
+        mock.patch.object(
+            handlers.github, "issue_reopen",
+            side_effect=lambda r, n: calls["reopened"].append(n) or {"exit_code": 0},
+        ),
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": exit_code, "stderr": ""}),
+        mock.patch.object(handlers, "_read_ask_response", return_value=response),
+    ):
+        result = handlers.handle_closure_audit("run", tmp_path, project, issue, apply=True)
+    return result, calls
+
+
+def test_an_upheld_closure_is_labelled_and_left_closed(tmp_path) -> None:
+    result, calls = _run_audit(tmp_path, "The proof command was run and shown.\nVERDICT: PASS")
+    assert result["verdict"] == "PASS" and result["status"] == "COMPLETED"
+    assert calls["reopened"] == [], "a passing audit must not reopen"
+    assert any(e.get("add") == [config.CLOSURE_VERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_a_closure_that_fails_review_is_reopened(tmp_path) -> None:
+    result, calls = _run_audit(
+        tmp_path, "The named proof was never run; the comment only asserts it.\nVERDICT: FAIL"
+    )
+    assert result["verdict"] == "FAIL" and result["status"] == "COMPLETED"
+    assert calls["reopened"] == [9]
+    assert any(e.get("add") == [config.READY_LABEL] for e in calls["edits"]), "routable again"
+
+
+def test_an_unreadable_audit_is_not_treated_as_a_pass(tmp_path) -> None:
+    """A reviewer that produced no verdict leaves the closure unreviewed."""
+    result, calls = _run_audit(tmp_path, "the model rambled and never answered")
+    assert result["status"] == "NEEDS_ATTENTION" and result["verdict"] is None
+    assert calls["reopened"] == []
+    assert not any(e.get("add") == [config.CLOSURE_VERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_a_failed_reviewer_run_is_not_treated_as_a_pass(tmp_path) -> None:
+    result, calls = _run_audit(tmp_path, "VERDICT: PASS", exit_code=1)
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert not any(e.get("add") == [config.CLOSURE_VERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_repeated_audit_failures_stop_reopening_and_ask_for_a_person(tmp_path) -> None:
+    """Without a bound, a reviewer that always fails reopens the same ticket forever."""
+    prior = [
+        {"body": f"{handlers.CLOSURE_AUDIT_MARKER} REOPENED", "author": {"login": "x"}}
+        for _ in range(config.CLOSURE_AUDIT_MAX_REOPENS)
+    ]
+    result, calls = _run_audit(tmp_path, "VERDICT: FAIL", comments=prior)
+    assert calls["reopened"] == [], "must stop reopening once the budget is spent"
+    assert any(e.get("add") == ["needs-human"] for e in calls["edits"])
+    assert result["status"] == "NEEDS_ATTENTION"
