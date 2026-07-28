@@ -1,0 +1,8 @@
+{
+  "schema": "battle.unsupported_fixture.v1",
+  "fixture_id": "battle-004-kill-shot-pixi-replay",
+  "status": "RETIRED",
+  "reason": "No current Battle producer emits a Judge-backed blue.kill_confirmed, red.killed, or tau.killed receipt; killed terminal presentation is fail-closed.",
+  "replacement_fixture": "battle-004-parent-spawn-pixi-replay",
+  "ticket": "https://github.com/grahama1970/agent-skills/issues/1063"
+}

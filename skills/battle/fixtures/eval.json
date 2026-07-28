@@ -16,7 +16,7 @@
         "deterministic_contracts",
         "receipt_path"
       ],
-      "note": "expected_exit_code is 1 while battle-004-adaptive-live and battle-004-kill-shot-pixi-replay fixtures carry known contract violations; drop to 0 once both are regenerated to pass their declared validators.",
+      "note": "expected_exit_code is 0; committed fixture contract violations must be tracked by a dedicated ticket or retired fail-closed before this eval is considered healthy.",
       "tags": ["battle", "backend", "eval", "contracts"]
     }
   ]

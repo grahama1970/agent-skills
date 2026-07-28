@@ -498,7 +498,7 @@ fixtures.
 |---|---|---|---|
 | BATTLE-004 spectator replay (parent spawn) | `spectator/public/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-spectator-replay.webp` | `cd spectator && npm run prove:receipt-replay` |
 | Lifecycle evidence cockpit (fail-closed) | same fixture; agent pane `data-qid="battle:agent-pane:lifecycle-evidence"` | `docs/assets/screenshots/battle-004-lifecycle-cockpit.webp` | `cd spectator && npm run prove:receipt-replay` (check 7) |
-| Kill-shot impact + HG death card | `spectator/public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-kill-shot-impact.webp` | `cd spectator && npm run prove:kill-shot-pixi` |
+| Retired kill-shot route (fail-closed) | `spectator/public/battle-fixtures/battle-004-kill-shot-pixi-replay/unsupported.json` | n/a | `cd spectator && npm run prove:kill-shot-pixi` |
 | Spawn/block receipt beats (Pixi VFX) | parent-spawn fixture frozen at `pixiSeconds=99.4` | `docs/assets/screenshots/battle-004-spawn-block-vfx.webp` | `cd spectator && npm run prove:receipt-director-spawn-block` |
 | PR3b research/genome proof card | `spectator/public/battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json` | `docs/assets/screenshots/battle-004-pr3b-proof-card.webp` | `cd spectator && npm run prove:pr3b-proof-card` |
 | PR3d compile fixture | `spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json` | planned | `./run.sh validate-compile-fixture spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json` |
@@ -516,8 +516,6 @@ cd .. && python3 scripts/compress-readme-screenshots.py
 ![BATTLE-004 spectator replay](docs/assets/screenshots/battle-004-spectator-replay.webp)
 
 ![Lifecycle evidence cockpit](docs/assets/screenshots/battle-004-lifecycle-cockpit.webp)
-
-![Kill-shot impact replay](docs/assets/screenshots/battle-004-kill-shot-impact.webp)
 
 ![Spawn/block receipt beats](docs/assets/screenshots/battle-004-spawn-block-vfx.webp)
 

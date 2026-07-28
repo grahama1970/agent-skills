@@ -145,7 +145,6 @@ tail -20 /tmp/battle-sanity-backend-eval.out || true
 python3 - <<'PYEOF'
 import json, os, sys
 known = {
-    "fixture_valid::battle-004-kill-shot-pixi-replay",  # tracked in #1063
 }
 receipt = json.load(open(os.path.join(os.environ.get("TMPDIR", "/tmp"), "battle-sanity", "backend-eval", "receipt.json")))
 failed = set(receipt["summary"].get("failed_cases") or [])
