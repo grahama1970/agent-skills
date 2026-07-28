@@ -96,11 +96,81 @@ def _tick_locked(
 
     project_state = state.get("projects", {}).get(project_id, {}).get("state")
     if project_state != "active":
-        receipt.update(
-            {"ok": True, "status": "SKIPPED", "stop_reason": f"project_state_{project_state}"}
+        # Rotate rather than stall. The crontab pins one project, so a paused or
+        # busy project used to stop the whole fleet (#1084). Fall through to the
+        # selector and let it find the next serviceable project.
+        chosen, skipped = registry.select_next_project(
+            run_id=run_id,
+            projects=load_json(config.PROJECTS_PATH),
+            state=state,
+            last_served=state.get("last_served_project"),
         )
-        log_event(run_id, "project_skipped", reason=receipt["stop_reason"])
-        return finish(run_id, receipt_dir, receipt, 0)
+        receipt["rotation"] = {"requested": project_id, "skipped": skipped}
+        if chosen is None:
+            receipt.update(
+                {
+                    "ok": True,
+                    "status": "SKIPPED",
+                    "stop_reason": f"project_state_{project_state}",
+                    "summary": (
+                        f"requested project {project_id!r} is {project_state}; no other "
+                        f"registered project was serviceable this tick."
+                    ),
+                }
+            )
+            log_event(run_id, "project_skipped", reason=receipt["stop_reason"])
+            return finish(run_id, receipt_dir, receipt, 0)
+        project = chosen
+        project_id = str(chosen.get("project_id"))
+        receipt["rotation"]["selected"] = project_id
+        receipt["project_id"] = project_id
+        log_event(run_id, "rotated_to_project", requested=receipt["rotation"]["requested"],
+                  selected=project_id, skipped=len(skipped))
+    else:
+        # Requested project is active; refuse to work ahead on a lane that
+        # already has a leased ticket in flight (#1083).
+        try:
+            in_flight = registry.lane_busy_issues(run_id, project)
+        except RuntimeError as exc:
+            receipt.update({"ok": False, "status": "BLOCKED", "errors": [str(exc)]})
+            return finish(run_id, receipt_dir, receipt, 1)
+        if in_flight:
+            chosen, skipped = registry.select_next_project(
+                run_id=run_id,
+                projects=load_json(config.PROJECTS_PATH),
+                state=state,
+                last_served=project_id,
+            )
+            receipt["rotation"] = {
+                "requested": project_id,
+                "requested_lane_busy": [int(i["number"]) for i in in_flight],
+                "skipped": skipped,
+            }
+            if chosen is None:
+                receipt.update(
+                    {
+                        "ok": True,
+                        "status": "SKIPPED",
+                        "stop_reason": "lane_busy",
+                        "summary": (
+                            f"project {project_id!r} has "
+                            f"{len(in_flight)} leased ticket(s) in flight and no other project "
+                            f"was serviceable; not working ahead."
+                        ),
+                    }
+                )
+                log_event(run_id, "lane_busy_no_alternative", project_id=project_id)
+                return finish(run_id, receipt_dir, receipt, 0)
+            project = chosen
+            project_id = str(chosen.get("project_id"))
+            receipt["rotation"]["selected"] = project_id
+            receipt["project_id"] = project_id
+            log_event(run_id, "rotated_off_busy_lane", selected=project_id)
+
+    # Record who was served so the next tick starts after them, not at the head.
+    state.setdefault("last_served_project", None)
+    state["last_served_project"] = project_id
+    write_json(config.STATE_PATH, state)
 
     try:
         issues = list_routable_issues(run_id, project)

@@ -169,6 +169,81 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
     return routable
 
 
+def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:
+    """Issues already leased for this project, i.e. work in flight.
+
+    ``agent-active`` is applied when a repair is leased and removed when it
+    finishes or blocks, so its presence is the in-flight signal. Dispatching a
+    second ticket while one is leased is working ahead: the second repair is
+    authored against a tree the first is still changing.
+    """
+    repo = str(project["repo"])
+    result = run_cmd(
+        [
+            "gh", "issue", "list", "--repo", repo, "--state", "open",
+            "--label", config.LEASE_LABEL, "--limit", "20",
+            "--json", "number,title,labels,url",
+        ],
+        timeout_s=60,
+    )
+    if result.get("exit_code") != 0:
+        # A failed scan must never read as "nothing in flight" -- that would let
+        # the watchdog work ahead precisely when it cannot see the current state.
+        raise RuntimeError(f"lease scan failed for {repo}: {result.get('stderr')}")
+    return json.loads(result.get("stdout") or "[]")
+
+
+def select_next_project(
+    *,
+    run_id: str,
+    projects: dict[str, Any],
+    state: dict[str, Any],
+    last_served: str | None,
+    busy_checker: Any = None,
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """Round-robin to the next ACTIVE project whose lane is free.
+
+    The crontab is hardcoded to one project, and ``tick`` resolved exactly that
+    one, so a busy or idle project stalled the whole fleet and no other project
+    was ever serviced. Rotation starts AFTER the last-served project so service
+    is fair rather than always restarting at the head of the registry.
+
+    Returns the chosen project (or None) and a per-project skip ledger, so a
+    tick that dispatches nothing still says why for each candidate.
+    """
+    check = busy_checker if busy_checker is not None else lane_busy_issues
+    entries = list(projects.get("projects", []))
+    ids = [str(e.get("project_id")) for e in entries]
+    start = 0
+    if last_served in ids:
+        start = ids.index(last_served) + 1
+    ordered = entries[start:] + entries[:start]
+
+    skipped: list[dict[str, Any]] = []
+    for entry in ordered:
+        pid = str(entry.get("project_id"))
+        project_state = state.get("projects", {}).get(pid, {}).get("state")
+        if project_state != "active":
+            skipped.append({"project_id": pid, "reason": f"project_state_{project_state}"})
+            continue
+        try:
+            in_flight = check(run_id, entry)
+        except RuntimeError as exc:
+            skipped.append({"project_id": pid, "reason": f"lease_scan_failed: {exc}"})
+            continue
+        if in_flight:
+            skipped.append(
+                {
+                    "project_id": pid,
+                    "reason": "lane_busy",
+                    "in_flight_issues": [int(i["number"]) for i in in_flight],
+                }
+            )
+            continue
+        return entry, skipped
+    return None, skipped
+
+
 #: Side-channel for the last scan's non-routable tally, so ``tick`` can report
 #: WHY nothing was routable without re-listing.
 LAST_SCAN: dict[str, int] = {}
