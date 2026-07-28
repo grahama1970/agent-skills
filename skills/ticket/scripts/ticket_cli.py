@@ -12,7 +12,6 @@ import os
 import re
 import shlex
 import subprocess
-import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -1006,99 +1005,6 @@ def close(
     if review:
         args.extend(["--review", str(review)])
     _helper(args, repo=repo, dry_run=dry_run)
-
-
-CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
-
-
-def _validate_closure_results(path: Path) -> None:
-    """Refuse closure unless both suites are present, passing, and live-backed.
-
-    A prose proof file can assert anything. This is the machine-checkable half:
-    the closer submits the actual runs, and each field is verified here rather
-    than read as a claim.
-
-    Requires, and fails on any of:
-
-    - both a ``unit`` and an ``e2e`` block;
-    - both reporting ``exit_code: 0``;
-    - ``e2e.mocked: false`` and ``e2e.live: true`` — a mocked run is not an e2e run;
-    - ``e2e.command`` naming something other than a deterministic test runner,
-      because a deterministic expectation can be satisfied by a change that
-      targets the expectation instead of the behaviour;
-    - ``e2e.artifact`` existing and non-empty on disk. The artifact is read back
-      here; a tool's own success response is not proof that it wrote anything.
-    """
-    if not path.is_file():
-        _die(f"--results file not found: {path}")
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except ValueError as exc:
-        _die(f"--results is not valid JSON: {exc}")
-    if data.get("schema") != CLOSURE_EVIDENCE_SCHEMA:
-        _die(f"--results must declare schema {CLOSURE_EVIDENCE_SCHEMA}; got {data.get('schema')!r}")
-
-    problems: list[str] = []
-    for tier in ("unit", "e2e"):
-        block = data.get(tier)
-        if not isinstance(block, dict):
-            problems.append(f"missing '{tier}' block")
-            continue
-        if not str(block.get("command", "")).strip():
-            problems.append(f"{tier}.command is empty")
-        if block.get("exit_code") != 0:
-            problems.append(f"{tier} did not pass: exit_code={block.get('exit_code')!r}")
-
-    e2e = data.get("e2e") if isinstance(data.get("e2e"), dict) else {}
-    if e2e:
-        if e2e.get("mocked") is not False:
-            problems.append("e2e.mocked must be false; a mocked run is not an end-to-end run")
-        if e2e.get("live") is not True:
-            problems.append("e2e.live must be true")
-        command = str(e2e.get("command", "")).lower()
-        if command and _is_deterministic_runner(command):
-            problems.append(
-                f"e2e.command {e2e.get('command')!r} is a deterministic test runner, "
-                "not a live end-to-end run (a filename containing 'e2e' is not a live entrypoint)"
-            )
-        elif command and not any(m in command for m in LIVE_PROOF_MARKERS):
-            problems.append(f"e2e.command {e2e.get('command')!r} names no live entrypoint")
-        artifact = str(e2e.get("artifact", "")).strip()
-        if not artifact:
-            problems.append("e2e.artifact is required; the live run must produce a read-back artifact")
-        else:
-            candidate = Path(artifact).expanduser()
-            if not candidate.is_file():
-                problems.append(f"e2e.artifact does not exist: {artifact}")
-            elif not candidate.read_text(encoding="utf-8", errors="replace").strip():
-                problems.append(f"e2e.artifact is empty: {artifact}")
-
-    if problems:
-        _die(
-            "closure refused; --results does not evidence a passing unit + live e2e run:\n"
-            + "\n".join(f"  - {item}" for item in problems)
-            + "\n\n  Required shape:\n"
-            + json.dumps(
-                {
-                    "schema": CLOSURE_EVIDENCE_SCHEMA,
-                    "issue": 123,
-                    "unit": {"command": "uv run pytest -q", "exit_code": 0, "passed": 42},
-                    "e2e": {
-                        "command": "./run.sh sanity-live.sh --allow-live",
-                        "exit_code": 0,
-                        "mocked": False,
-                        "live": True,
-                        "artifact": "/abs/path/receipt.json",
-                    },
-                },
-                indent=2,
-            )
-            + "\n  See best-practices-github-ticket, Verification Contract."
-        )
-    typer.echo(
-        f"closure evidence accepted: unit exit 0, live e2e exit 0, "
-        f"artifact read back from {e2e.get('artifact')}"
-    )
 
 
 CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
