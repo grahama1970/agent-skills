@@ -144,15 +144,10 @@ For Battle use, prefer bounded Dogpile searches with clear team intent:
 
 ```bash
 ./run.sh search "Zip Slip exploit mitigations Java archive extraction" \
-  --preset red_team \
-  --no-interactive
+  --persona battle-red \
+  --rationale "Battle research scout needs candidate exploit families and mitigations" \
+  --context "Treat sources as design input only; Docker/Judge replay is required for any exploit-success claim"
 ```
-
-Fold team intent into the query text itself and select the matching source
-preset (`red_team` or `blue_team`). Treat every source as design input only:
-Docker/Judge replay is required for any exploit-success or patch-effectiveness
-claim. Use `--no-interactive` for programmatic Battle calls so a short query
-never routes into the ambiguity prompt.
 
 Useful Battle-oriented Dogpile lanes:
 
@@ -420,29 +415,32 @@ synthesis must:
 - Avoid inventing citations, URLs, or conclusions not supported by retrieved
   evidence.
 
-## Encoding Persona, Rationale, and Problem Context
+## Persona, Rationale, and Problem Context
 
-Dogpile's `search` command takes a query plus source-selection flags. It does
-not accept `--persona`, `--rationale`, `--context`, or `--context-file` flags.
-To steer a search toward a specific reviewer intent or blocker, fold that intent
-into the query text and pick the matching preset:
+Dogpile requests may include explicit review persona, rationale, and problem
+context. These fields are first-class request metadata, not hidden prose:
 
 ```bash
-./run.sh search "accessible warning validation message contrast dark UI dark-mode WCAG" \
-  --preset general
+./run.sh search "accessible warning validation message contrast dark UI" \
+  --persona nico-bailon \
+  --rationale "Resolve repeated review-design blockers for the DAG editor" \
+  --context "Need evidence-backed guidance for warning acknowledgement, Memory amendment copy, and audit traceability"
 ```
 
-Practical guidance:
+Supported fields:
 
-- Put the concrete problem and constraints directly in the query string; the
-  retrieval providers only ever see the query text.
-- Use `--preset` to bias source selection (`red_team`, `blue_team`,
-  `vulnerability_research`, `threat_intel`, `general`, etc.); run
-  `./run.sh search --help` for the current list.
-- Use `--no-interactive` for programmatic callers so a short query does not route
-  into the ambiguity check.
-- Keep the human-facing rationale (why this search is being run) in the calling
-  workflow's own notes/receipts, not in a dogpile flag.
+- `--persona`: reviewer or research persona whose priorities should shape LLM
+  analysis and query tailoring.
+- `--rationale`: why the dogpile is being run now, including blocker context.
+- `--context`: concrete problem context and constraints.
+- `--context-file`: additional context read from a local file.
+
+Dogpile stores these fields in `dogpile_partial_results.json` under
+`request_context`, emits them in the initial `[dogpile-event] search_started`
+event, includes them in Tau/model-powered ambiguity/tailoring/knowledge prompts,
+and prepends them to the final report. Retrieval providers still receive
+search-engine-suitable queries; the context is used to generate and interpret
+those queries rather than silently broadening every native search call.
 
 ## GitHub Three-Stage Search
 
