@@ -3,7 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
+import pytest
+
 from battle_skill.adaptive_lineage_engine import (
+    AdaptiveLineageContractError,
     AdaptiveLineageEngine,
     GenerationRequest,
     JudgedPopulation,
@@ -35,8 +38,10 @@ def generation_request(
     population_size: int = 3,
     role: str = "red",
     materialize_only: bool = False,
+    context: Mapping[str, Any] | None = None,
 ) -> GenerationRequest:
     return GenerationRequest(
+        context=dict(context or {}),
         battle_id=BATTLE_ID,
         lineage_id=LINEAGE_ID,
         run_id=f"run-{role}-g{generation}",
@@ -222,7 +227,9 @@ def test_a_all_bad_generation_is_common_valid_terminal(tmp_path: Path) -> None:
     assert receipt["bad_genetic_material"]["bad_count"] == 9
     assert receipt["bad_genetic_material"]["bad_rate"] == 1.0
     assert receipt["bad_genetic_material"]["all_bad"] is True
-    assert not any(call["path"] == "/store" for call in fake.calls)
+    assert not any(
+        call["path"] in ("/store", "/upsert") for call in fake.calls
+    )
 
 
 def test_b_rare_survivor_is_stored_then_inherited_next_generation(
@@ -247,13 +254,18 @@ def test_b_rare_survivor_is_stored_then_inherited_next_generation(
     assert first["status"] == "ACTIVE"
     assert first["stop_reason"] == "survivor_reproduced"
     assert first["bad_genetic_material"]["bad_rate"] == (5 - 1) / 5
-    assert first["reproduction"]["survivor_store_ack"]["ok"] is True
-    store_calls = [call for call in fake.calls if call["path"] == "/store"]
-    assert len(store_calls) == 2
-    assert store_calls[0]["json"]["document"]["node_kind"] == "survivor"
-    assert "visibility:public" in store_calls[0]["json"]["document"]["tags"]
-    assert store_calls[1]["json"]["document"]["node_kind"] == "bad_genetic_material"
-    assert "visibility:role-only" in store_calls[1]["json"]["document"]["tags"]
+    # A generation reproduces the survivor and its bad genetic material
+    # together, so the write is ONE batched /upsert, not two /store calls
+    # (/memory contract: "/upsert for batches, /store only for a single doc").
+    assert not any(call["path"] == "/store" for call in fake.calls)
+    upsert_calls = [call for call in fake.calls if call["path"] == "/upsert"]
+    assert len(upsert_calls) == 1
+    written = upsert_calls[0]["json"]["documents"]
+    assert len(written) == 2
+    assert written[0]["node_kind"] == "survivor"
+    assert "visibility:public" in written[0]["tags"]
+    assert written[1]["node_kind"] == "bad_genetic_material"
+    assert "visibility:role-only" in written[1]["tags"]
 
     inherited = memory.recall(
         request=generation_request(
@@ -424,6 +436,263 @@ def test_primitive_backed_oracle_plugs_all_four_verified_helpers(
     assert receipt["bad_genetic_material"]["bad_count"] == 2
 
 
+def test_verified_hooks_drive_the_real_canary_primitive_contract(
+    tmp_path: Path,
+) -> None:
+    """Pin the LIVE signatures and shapes of the four canary primitives.
+
+    Captured 2026-07-24 from battle_skill.adaptive_red_blue_lineage_canary::
+
+      _population_genomes(*, battle_id, run_id, generation, generation_dir,
+                          manifest) -> {"red": [...], "blue": [...]}
+      _review_population(*, ..., manifest, target_identity_sha256,
+                         docker_image, genomes)
+                      -> (reviewed_manifest, {"red": [...], "blue": [...]})
+      _judge_population(*, generation_dir, scenario, docker_image,
+                        reviewed_manifest, review_pipelines) -> dict
+      _select_survivor(judge, team) -> dict
+
+    The primitives are two-team and interleave good/bad specimens inside each
+    team list by ``status``; the engine is role-scoped. Arena facts (manifest,
+    scenario, docker_image, target_identity_sha256) reach them only through
+    request.context.
+    """
+
+    seen: dict[str, Any] = {}
+    manifest = {"teams": [{"team": "blue", "worker_id": "blue-0"}]}
+    scenario = {"battle_id": BATTLE_ID, "cwe": "CWE-22"}
+
+    def population_genomes(
+        *,
+        battle_id: str,
+        run_id: str,
+        generation: int,
+        generation_dir: Path,
+        manifest: dict[str, Any],
+    ) -> dict[str, list[dict[str, Any]]]:
+        seen["population_manifest"] = manifest
+        return {
+            "red": [{"worker_id": "red-0", "status": "PASS"}],
+            "blue": [
+                {"worker_id": "blue-0", "status": "PASS"},
+                {"worker_id": "blue-1", "status": "PASS"},
+                {"worker_id": "blue-2", "status": "BAD", "reason": "no genome"},
+            ],
+        }
+
+    def review_population(
+        *,
+        battle_id: str,
+        run_id: str,
+        generation: int,
+        generation_dir: Path,
+        manifest: dict[str, Any],
+        target_identity_sha256: str,
+        docker_image: str,
+        genomes: dict[str, list[dict[str, Any]]],
+    ) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]]]]:
+        seen["review_genomes"] = genomes
+        seen["target_identity_sha256"] = target_identity_sha256
+        seen["review_docker_image"] = docker_image
+        return (
+            {"reviewed": True, "teams": manifest["teams"]},
+            {
+                "red": [{"worker_id": "red-0", "status": "PASS"}],
+                "blue": [
+                    {"worker_id": "blue-0", "status": "PASS"},
+                    {"worker_id": "blue-1", "status": "BLOCKED"},
+                ],
+            },
+        )
+
+    def judge_population(
+        *,
+        generation_dir: Path,
+        scenario: dict[str, Any],
+        docker_image: str,
+        reviewed_manifest: dict[str, Any],
+        review_pipelines: dict[str, list[dict[str, Any]]],
+    ) -> dict[str, Any]:
+        seen["judge_scenario"] = scenario
+        seen["judge_reviewed_manifest"] = reviewed_manifest
+        seen["judge_review_pipelines"] = review_pipelines
+        # Live Judge payload: pair-keyed replay attempts.
+        return {
+            "attempts": [
+                {"pair_id": "red-0__blue-0", "verdict": "BLUE_SUCCESS"},
+                {"pair_id": "red-0__blue-1", "verdict": "BLUE_SUCCESS"},
+            ]
+        }
+
+    def select_survivor(judge: dict[str, Any], team: str) -> dict[str, Any]:
+        seen["select_judge"] = judge
+        seen["select_team"] = team
+        # Live _select_survivor return shape.
+        return {
+            "team": team,
+            "population_size": 2,
+            "survivor_worker_ids": ["blue-0", "blue-1"],
+            "selected_survivor": "blue-0",
+            "bad_worker_ids": [],
+            "bad_genetic_material_rate": 0.0,
+            "outcomes": {
+                "blue-0": {"won": True, "verdicts": ["BLUE_SUCCESS"]},
+                "blue-1": {"won": True, "verdicts": ["BLUE_SUCCESS"]},
+            },
+        }
+
+    bundle = PrimitiveBundle(
+        population_genomes=population_genomes,
+        review_population=review_population,
+        judge_population=judge_population,
+        select_survivor=select_survivor,
+    )
+    # The live Judge replays against the arena target in the generation dir.
+    tmp_path.joinpath(
+        "generation-0001", "arena", "team-public", "target"
+    ).mkdir(parents=True)
+    memory, _fake = backend_with_root()
+    receipt = AdaptiveLineageEngine(
+        population_hooks=VerifiedPopulationHooks(bundle),
+        oracle=PrimitiveBackedOracle(bundle),
+        memory_hooks=memory,
+    ).run_generation(
+        generation_request(
+            tmp_path,
+            role="blue",
+            context={
+                "manifest": manifest,
+                "scenario": scenario,
+                "docker_image": "python:3.12-slim",
+                "target_identity_sha256": "abc123",
+            },
+        )
+    )
+
+    # Arena facts reached the primitives through request.context.
+    assert seen["population_manifest"] == manifest
+    assert seen["target_identity_sha256"] == "abc123"
+    assert seen["review_docker_image"] == "python:3.12-slim"
+    assert seen["judge_scenario"] == scenario
+
+    # review received the team-keyed genome map, not a flattened item list.
+    assert set(seen["review_genomes"]) == {"red", "blue"}
+
+    # judge received review's 2-tuple payload, split correctly.
+    assert seen["judge_reviewed_manifest"]["reviewed"] is True
+    assert set(seen["judge_review_pipelines"]) == {"red", "blue"}
+
+    # The oracle received the Judge's own pair-keyed payload and this role's team.
+    assert [a["pair_id"] for a in seen["select_judge"]["attempts"]] == [
+        "red-0__blue-0",
+        "red-0__blue-1",
+    ]
+    assert seen["select_team"] == "blue"
+
+    # The worker-id survivor is honored even though the Judge payload is
+    # pair-keyed, so the id is absent from the judged items by construction.
+    assert receipt["oracle"]["survivor_id"] == "blue-0"
+
+    # blue-0 and blue-1 BOTH blocked the exploit, so both are viable. Only
+    # blue-0 reproduces; blue-1 is a RETAINED RUNNER-UP, not bad genetic
+    # material (GOAL_ADAPTIVE_LINEAGE.md: "The runner-up G1 is retained and
+    # shown."). blue-2 is the only genuinely bad specimen -- it never produced
+    # a valid strategy_genome, which is what SKILL.md calls bad material.
+    bad = receipt["bad_genetic_material"]
+    assert bad["retained_runner_up_ids"] == ["blue-1"]
+    assert [s["candidate_id"] for s in bad["specimens"]] == ["blue-2"]
+    assert bad["bad_count"] == 1
+    assert bad["bad_rate"] == 1 / 3
+    assert bad["all_bad"] is False
+
+    # Role scoping: red specimens are never this lineage's population, and the
+    # review 2-tuple was not misread as (items, bad).
+    assert receipt["population"]["generated_count"] == 3
+
+    # Bad specimens stay IN the population (a generation materializes N, most
+    # of them bad) while still being recorded as bad genetic material.
+    assert seen["review_genomes"]["blue"] == [
+        {"worker_id": "blue-0", "status": "PASS"},
+        {"worker_id": "blue-1", "status": "PASS"},
+        {"worker_id": "blue-2", "status": "BAD", "reason": "no genome"},
+    ]
+    assert receipt["oracle"]["survivor_id"] == "blue-0"
+
+
+def test_judge_stage_fails_closed_without_the_arena_it_replays_against(
+    tmp_path: Path,
+) -> None:
+    """The live Judge copies <generation_dir>/arena/team-public/target.
+
+    Unmet, that surfaced as a bare FileNotFoundError from shutil.copytree only
+    AFTER every specimen had been compiled in Docker. Name the requirement
+    instead, and only for the live judge contract.
+    """
+
+    def judge_population(
+        *,
+        generation_dir: Path,
+        scenario: dict[str, Any],
+        docker_image: str,
+        reviewed_manifest: dict[str, Any],
+        review_pipelines: dict[str, list[dict[str, Any]]],
+    ) -> dict[str, Any]:
+        raise AssertionError("judge must not run without its arena")
+
+    hooks = VerifiedPopulationHooks(
+        PrimitiveBundle(
+            population_genomes=lambda **_: {"blue": []},
+            review_population=lambda **_: ({}, {"blue": []}),
+            judge_population=judge_population,
+            select_survivor=lambda judge, team: {},
+        )
+    )
+    request = generation_request(tmp_path, role="blue")
+    empty = PopulationStageResult(items=())
+
+    with pytest.raises(AdaptiveLineageContractError, match="arena target"):
+        hooks.judge(
+            request=request,
+            recall=RecallResult(),
+            generated=empty,
+            reviewed=empty,
+        )
+
+    # Staging the arena clears the preflight; the judge is reached and fails on
+    # its own contract instead (this fake declares the live signature but the
+    # request carries none of the arena facts it needs).
+    request.out_dir.joinpath(
+        "generation-0001", "arena", "team-public", "target"
+    ).mkdir(parents=True)
+    with pytest.raises(AdaptiveLineageContractError, match="unsupported arguments"):
+        hooks.judge(
+            request=request,
+            recall=RecallResult(),
+            generated=empty,
+            reviewed=empty,
+        )
+
+    # The preflight is gated on the live judge contract, so a fake judge that
+    # does not replay against an arena is never asked for one.
+    plain_hooks = VerifiedPopulationHooks(
+        PrimitiveBundle(
+            population_genomes=lambda **_: {"blue": []},
+            review_population=lambda **_: ({}, {"blue": []}),
+            judge_population=lambda **_: {"judged_population": []},
+            select_survivor=lambda judge, team: {},
+        )
+    )
+    assert (
+        plain_hooks.judge(
+            request=generation_request(tmp_path / "no-arena", role="blue"),
+            recall=RecallResult(),
+            generated=empty,
+            reviewed=empty,
+        ).items
+        == ()
+    )
+
+
 def test_materialize_only_emits_n_and_skips_review_judge_oracle(
     tmp_path: Path,
 ) -> None:
@@ -469,4 +738,53 @@ def test_materialize_only_emits_n_and_skips_review_judge_oracle(
     assert receipt["review_skipped"] is True
     assert receipt["judge_skipped"] is True
     assert receipt["oracle_skipped"] is True
-    assert not any(call["path"] == "/store" for call in fake.calls)
+    assert not any(
+        call["path"] in ("/store", "/upsert") for call in fake.calls
+    )
+
+
+# Real /memory daemon ack shapes, captured live 2026-07-24 against
+# http://127.0.0.1:8601. The daemon does NOT return {"ok": true}; it returns
+# these two shapes. _require_write_ack must accept both, or every real write
+# raises even though it persisted (confirmed live: POST /list showed total:1
+# after an upsert whose ack the pre-fix check rejected).
+def test_require_write_ack_accepts_real_store_daemon_shape() -> None:
+    MemoryBackend._require_write_ack(
+        "/store",
+        {
+            "stored": True,
+            "collection": COLLECTION,
+            "_key": "k",
+            "deprecated": True,
+        },
+    )
+
+
+def test_require_write_ack_accepts_real_upsert_daemon_shape() -> None:
+    for applied in ({"inserted": 1, "updated": 0}, {"inserted": 0, "updated": 1}):
+        MemoryBackend._require_write_ack(
+            "/upsert",
+            {
+                "collection": COLLECTION,
+                **applied,
+                "errors": [],
+                "total": 1,
+                "writeahead_path": "artifacts/memory_upsert_writeahead/x.jsonl",
+            },
+        )
+
+
+def test_require_write_ack_rejects_upsert_with_per_document_errors() -> None:
+    with pytest.raises(AdaptiveLineageContractError):
+        MemoryBackend._require_write_ack(
+            "/upsert",
+            {"inserted": 0, "updated": 0, "errors": ["boom"], "total": 1},
+        )
+
+
+def test_require_write_ack_rejects_upsert_that_wrote_nothing() -> None:
+    with pytest.raises(AdaptiveLineageContractError):
+        MemoryBackend._require_write_ack(
+            "/upsert",
+            {"inserted": 0, "updated": 0, "errors": [], "total": 0},
+        )

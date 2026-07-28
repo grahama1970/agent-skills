@@ -152,12 +152,19 @@ class JudgedPopulation:
 
 @dataclass(frozen=True)
 class OracleSelection:
-    """Universal oracle result: rare survivor or None, plus bad material."""
+    """Universal oracle result: rare survivor or None, plus bad material.
+
+    ``runners_up`` are specimens the oracle judged VIABLE but did not select --
+    a Blue patch that blocked the exploit, a Red exploit that landed -- when only
+    one survivor reproduces. They are not bad genetic material: they passed the
+    fitness bar. They are retained so a later generation can inherit them.
+    """
 
     survivor: Mapping[str, Any] | None
     bad_genetic_material: Mapping[str, Any]
     evidence: Mapping[str, Any] = field(default_factory=dict)
     oracle_id: str = "unspecified-oracle"
+    runners_up: Sequence[Mapping[str, Any]] = ()
 
 
 @dataclass(frozen=True)
@@ -345,9 +352,23 @@ def build_bad_genetic_material_record(
         if normalized["evidence"]:
             item["evidence"].append(normalized["evidence"])
 
-    # Every generated non-survivor is genetic material, including runnable losers.
+    # Retained runners-up are NOT bad genetic material. They cleared the
+    # oracle's fitness bar (a Blue patch that blocked the exploit, a Red exploit
+    # that landed) and simply were not the one selected to reproduce.
+    # GOAL_ADAPTIVE_LINEAGE.md: "The runner-up G1 is retained and shown."
+    # SKILL.md defines bad material as failing to compile / failing at runtime /
+    # yielding no useful signal -- not as losing a tie-break.
+    runner_up_ids = {
+        identifier
+        for record in selection.runners_up
+        if (identifier := candidate_id(record)) is not None
+        and identifier != survivor_id
+    }
+
+    # Every other generated non-survivor is bad genetic material, including
+    # runnable losers.
     for identifier, candidate in generated.items():
-        if identifier == survivor_id:
+        if identifier == survivor_id or identifier in runner_up_ids:
             bad_by_id.pop(identifier, None)
             continue
         item = bad_by_id.setdefault(
@@ -372,7 +393,10 @@ def build_bad_genetic_material_record(
     specimens = [bad_by_id[key] for key in sorted(bad_by_id)]
     population_size = len(generated)
     bad_count = len(specimens)
-    expected_bad = population_size - (1 if survivor_id else 0)
+    retained = sorted(runner_up_ids & set(generated))
+    expected_bad = (
+        population_size - (1 if survivor_id else 0) - len(retained)
+    )
     if bad_count != expected_bad:
         raise AdaptiveLineageContractError(
             f"bad material count {bad_count} != expected {expected_bad}"
@@ -388,8 +412,11 @@ def build_bad_genetic_material_record(
         "population_size": population_size,
         "bad_count": bad_count,
         "bad_rate": bad_count / population_size if population_size else 0.0,
-        "all_bad": survivor_id is None,
+        # A generation with no survivor but a viable retained runner-up is not
+        # an all-bad generation.
+        "all_bad": survivor_id is None and not retained,
         "survivor_id": survivor_id,
+        "retained_runner_up_ids": retained,
         "specimens": specimens,
         "unattributed_events": unattributed,
         "pipeline_bad_event_count": len(judged_population.bad_genetic_material),
@@ -477,6 +504,7 @@ class AdaptiveLineageEngine:
                 bad_genetic_material=selection.bad_genetic_material,
                 evidence=selection.evidence,
                 oracle_id=selection.oracle_id,
+                runners_up=selection.runners_up,
             ),
         )
 
