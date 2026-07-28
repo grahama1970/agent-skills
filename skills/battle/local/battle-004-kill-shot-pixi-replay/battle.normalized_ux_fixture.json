@@ -1,12 +1,12 @@
 {
   "battle_clock": {
     "allotted_seconds": 1200.0,
-    "current_seconds": 76.414883,
+    "current_seconds": 85,
     "elapsed_seconds": 85,
     "ended_at": null,
     "mode": "receipt_elapsed",
     "proof_mode": "receipt_backed_fixture",
-    "remaining_seconds": 1123.585117,
+    "remaining_seconds": 1115.0,
     "schema": "battle.clock.legacy_receipt_elapsed.v1",
     "source_receipt_id": "scoreboard",
     "started_at": "2026-07-07T22:06:06Z"
@@ -105,12 +105,12 @@
   },
   "clock": {
     "allotted_seconds": 1200.0,
-    "current_seconds": 76.414883,
+    "current_seconds": 85,
     "elapsed_seconds": 85,
     "ended_at": null,
     "mode": "receipt_replay",
     "proof_mode": "receipt_backed_fixture",
-    "remaining_seconds": 1123.585117,
+    "remaining_seconds": 1115.0,
     "round_config": {
       "canonical_allotted_seconds": 1200.0,
       "resolved_allotted_seconds": 1200.0,
@@ -648,7 +648,7 @@
       "blue_action_id": "blue-blue-0-patch",
       "blue_worker_id": "blue-0",
       "elapsed_seconds": null,
-      "event_type": "blue.killed_red",
+      "event_type": "blue.kill_confirmed",
       "evidence": {
         "artifact_ref": "judge/judge-receipt.json",
         "proof_mode": "receipt_backed_fixture",
@@ -731,7 +731,7 @@
       "blue_action_id": "blue-blue-1-patch",
       "blue_worker_id": "blue-1",
       "elapsed_seconds": null,
-      "event_type": "blue.killed_red",
+      "event_type": "blue.kill_confirmed",
       "evidence": {
         "artifact_ref": "judge/judge-receipt.json",
         "proof_mode": "receipt_backed_fixture",
@@ -848,6 +848,7 @@
       }
     }
   ],
+  "fixture_label": "battle-004-kill-shot-pixi-replay",
   "generated_at": "2026-07-07T22:06:06Z",
   "lane_activity_timeline_model": {
     "lane_count": 2,
@@ -2564,7 +2565,7 @@
       "blue_blocks": {
         "allowed": true,
         "blue_success_pair_count": 4,
-        "event_count": 4,
+        "event_count": 2,
         "lane_ids": [
           "payload-857-receipt",
           "payload-857-red-1"
@@ -2591,10 +2592,12 @@
     },
     "forbidden": {
       "blue_kill": {
-        "allowed": false,
+        "allowed": true,
         "forbidden_inference_present": true,
         "inference": "Blue kill attribution",
-        "present_event_types": [],
+        "present_event_types": [
+          "blue.kill_confirmed"
+        ],
         "render_policy": "render_only_when_allowed_true",
         "required_event_types": [
           "blue.kill_confirmed"
@@ -2644,6 +2647,59 @@
   },
   "proof_blockers": [],
   "proof_mode": "receipt_backed_fixture",
+  "receipt_backed_values": {
+    "activity_segment_count_for_timing": 12,
+    "blue_blocked_lane_ids": [
+      "payload-857-receipt",
+      "payload-857-red-1"
+    ],
+    "child_lane_ids": [
+      "payload-857-red-1"
+    ],
+    "child_spawn_count": 1,
+    "child_spawn_request_status": "PASS",
+    "child_spawn_requested": true,
+    "complete_elapsed_activity_segment_count": 12,
+    "elapsed_axis_current_elapsed_seconds": 99.392622,
+    "elapsed_axis_current_x": 8.282718,
+    "elapsed_axis_keyframe_count": 12,
+    "elapsed_axis_keyframes_are_monotonic": true,
+    "elapsed_axis_x_axis_mode": "elapsed_seconds",
+    "elapsed_axis_x_position_is_elapsed_time": true,
+    "event_count": 12,
+    "judge_pair_count": 4,
+    "lane_activity_segment_count": 12,
+    "lane_count": 2,
+    "lane_event_count_for_timing": 12,
+    "lane_phase_coverage_count": 2,
+    "lane_start_model_count": 2,
+    "lanes_with_research_count": 2,
+    "lanes_with_spawn_handoff_count": 2,
+    "lineage_group_count": 1,
+    "parent_lane_ids": [
+      "payload-857-receipt"
+    ],
+    "playhead_current_x": 98,
+    "playhead_elapsed_monotonic_by_x": false,
+    "proof_blocker_count": 0,
+    "round_allotted_seconds": 1200.0,
+    "round_elapsed_seconds": 85,
+    "round_remaining_seconds": 1115.0,
+    "spawn_receipt_ids": [
+      "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
+    ],
+    "timed_lane_event_count": 12,
+    "timed_playhead_keyframe_count": 12,
+    "timeline_label_collision_group_count": 7,
+    "timeline_label_count": 12,
+    "timeline_playhead_keyframe_count": 12,
+    "timeline_viewport_initial_max_x": 100,
+    "timeline_viewport_initial_min_x": 45,
+    "timeline_viewport_max_zoom": 4.0,
+    "timeline_viewport_min_zoom": 0.75,
+    "timeline_x_axis_mode": "receipt_order_percent",
+    "timeline_x_position_is_elapsed_time": false
+  },
   "receipts": [
     {
       "artifact_ref": "run-receipt.json",
@@ -3611,7 +3667,7 @@
       },
       {
         "label": "Round time",
-        "value": "01:16 / 20:00"
+        "value": "01:25 / 20:00"
       }
     ],
     "mode_badge": "RECEIPT-BACKED",
@@ -3863,8 +3919,8 @@
         {
           "elapsed_seconds": 99.392622,
           "event_id": "payload-857-red-1:judge",
-          "kind": "blocked",
-          "label": "BLUE_SUCCESS",
+          "kind": "killed",
+          "label": "ELIMINATED",
           "lane_id": "payload-857-red-1",
           "proof_mode": "receipt_backed_fixture",
           "timing_source": "judge_attempt_receipt",
@@ -4016,8 +4072,8 @@
       {
         "elapsed_seconds": 99.392622,
         "event_id": "payload-857-red-1:judge",
-        "kind": "blocked",
-        "label": "BLUE_SUCCESS",
+        "kind": "killed",
+        "label": "ELIMINATED",
         "lane_id": "payload-857-red-1",
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 98,
@@ -4029,7 +4085,7 @@
     "mode": "receipt_elapsed_axis",
     "playhead": {
       "animation_semantics": "receipt_elapsed_replay",
-      "current_elapsed_seconds": 85,
+      "current_elapsed_seconds": 99.392622,
       "current_x": 8.282718,
       "source_event_id": "payload-857-red-1:judge"
     },
@@ -4040,8 +4096,8 @@
       "Do not render elapsed-time x positions unless keyframes_are_monotonic is true."
     ],
     "round_clock_allotted_seconds": 1200.0,
-    "round_clock_elapsed_seconds": 76.414883,
-    "round_clock_remaining_seconds": 1123.585117,
+    "round_clock_elapsed_seconds": 85,
+    "round_clock_remaining_seconds": 1115.0,
     "schema": "battle.timeline_elapsed_axis_model.v1",
     "x_axis_mode": "elapsed_seconds",
     "x_position_is_elapsed_time": true
@@ -4361,8 +4417,8 @@
           {
             "collision_group": "x09",
             "event_id": "payload-857-red-1:judge",
-            "kind": "blocked",
-            "label": "BLUE_SUCCESS",
+            "kind": "killed",
+            "label": "ELIMINATED",
             "label_band": "lower",
             "marker_priority": 70,
             "order_index": 98,
@@ -4470,9 +4526,9 @@
     ],
     "round_clock": {
       "allotted_seconds": 1200.0,
-      "elapsed_seconds": 76.414883,
+      "elapsed_seconds": 85,
       "proof_mode": "receipt_backed_fixture",
-      "remaining_seconds": 1123.585117,
+      "remaining_seconds": 1115.0,
       "source_receipt_id": "scoreboard"
     },
     "round_clock_source": "battle_clock",
@@ -4566,19 +4622,57 @@
     "mode": "receipt_backed",
     "proof_mode": "receipt_backed_fixture",
     "receipt_backed_values": {
+      "activity_segment_count_for_timing": 12,
       "blue_blocked_lane_ids": [
         "payload-857-receipt",
+        "payload-857-red-1"
+      ],
+      "child_lane_ids": [
         "payload-857-red-1"
       ],
       "child_spawn_count": 1,
       "child_spawn_request_status": "PASS",
       "child_spawn_requested": true,
+      "complete_elapsed_activity_segment_count": 12,
+      "elapsed_axis_current_elapsed_seconds": 99.392622,
+      "elapsed_axis_current_x": 8.282718,
+      "elapsed_axis_keyframe_count": 12,
+      "elapsed_axis_keyframes_are_monotonic": true,
+      "elapsed_axis_x_axis_mode": "elapsed_seconds",
+      "elapsed_axis_x_position_is_elapsed_time": true,
       "event_count": 12,
       "judge_pair_count": 4,
+      "lane_activity_segment_count": 12,
       "lane_count": 2,
+      "lane_event_count_for_timing": 12,
+      "lane_phase_coverage_count": 2,
+      "lane_start_model_count": 2,
+      "lanes_with_research_count": 2,
+      "lanes_with_spawn_handoff_count": 2,
       "lineage_group_count": 1,
+      "parent_lane_ids": [
+        "payload-857-receipt"
+      ],
       "playhead_current_x": 98,
-      "proof_blocker_count": 0
+      "playhead_elapsed_monotonic_by_x": false,
+      "proof_blocker_count": 0,
+      "round_allotted_seconds": 1200.0,
+      "round_elapsed_seconds": 85,
+      "round_remaining_seconds": 1115.0,
+      "spawn_receipt_ids": [
+        "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
+      ],
+      "timed_lane_event_count": 12,
+      "timed_playhead_keyframe_count": 12,
+      "timeline_label_collision_group_count": 7,
+      "timeline_label_count": 12,
+      "timeline_playhead_keyframe_count": 12,
+      "timeline_viewport_initial_max_x": 100,
+      "timeline_viewport_initial_min_x": 45,
+      "timeline_viewport_max_zoom": 4.0,
+      "timeline_viewport_min_zoom": 0.75,
+      "timeline_x_axis_mode": "receipt_order_percent",
+      "timeline_x_position_is_elapsed_time": false
     },
     "required_render_guards": [
       "Do not render child lanes unless lineage.spawn_count > 0 and child lane ids exist in lanes[].",
@@ -4605,6 +4699,5 @@
     "schema": "battle.fixture_validation.v1",
     "terminal_claims_receipt_backed": true,
     "warnings": []
-  },
-  "fixture_label": "battle-004-kill-shot-pixi-replay"
+  }
 }

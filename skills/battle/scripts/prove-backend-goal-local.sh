@@ -5,9 +5,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BATTLE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ARTIFACT_DIR="${BATTLE_BACKEND_GOAL_PROOF_DIR:-/tmp/battle-backend-goal-proof}"
-HOST="${BATTLE_HOST:-http://127.0.0.1:3002}"
-
-export BATTLE_HOST="$HOST"
+HOST="${BATTLE_HOST:-<auto Battle spectator preview>}"
+if [[ -n "${BATTLE_HOST:-}" ]]; then
+  export BATTLE_HOST
+fi
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-${BATTLE_STORAGE_ROOT:-/mnt/storage12tb/skills/battle}/.venv}"
 export PYTHONPATH="$BATTLE_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
 
@@ -29,6 +30,7 @@ echo "3/10 Exploit combiner specimen proof"
 COMBINER_DIR="$ARTIFACT_DIR/battle-004-combiner"
 rm -rf "$COMBINER_DIR"
 uv run --project "$BATTLE_DIR" python -m battle_skill.cli exploit-combiner-proof battle-004 --out "$COMBINER_DIR" --max-attempts 4
+export BATTLE_COMBINER_DIR="$COMBINER_DIR"
 python3 -c 'import json, pathlib, sys; root = pathlib.Path(sys.argv[1]); receipt = json.loads((root / "run-receipt.json").read_text()); assert receipt["proof_mode"] == "local_docker_specimen_fixture"; assert receipt["agentic"] is False; assert receipt["scoreboard"]["verdict"] == "RUNNABLE_UNPROVEN"; assert receipt["scoreboard"]["judge_verified_exploits"] == 0; assert "Any specimen exploited the target." in receipt["claims"]["does_not_prove"]' "$COMBINER_DIR"
 
 echo "4/10 Spawn Architect DAG birth proof"

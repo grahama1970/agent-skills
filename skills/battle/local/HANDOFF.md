@@ -1,87 +1,129 @@
-# Handoff: Battle Adaptive Lineage — GOAL MET (backend + UX live)
+# Battle Handoff - main branch proof path
 
-**Timestamp**: 2026-07-18
-**Status**: `ADAPTIVE_LINEAGE_UX_LIVE_COMPLETE` — the immutable goal
-`GOAL_ADAPTIVE_LINEAGE.md` is met end to end: live backend qualification + finished
-UX (LIVE comparison panel + four distinct validated PixiJS sprites), all on branch
-`battle-adaptive-lineage-goal`.
+Timestamp: 2026-07-28T20:32Z
+Branch rule: work only on `agent-skills@main`. Do not resume old Battle feature branches.
 
-> Supersedes `ADAPTIVE_LINEAGE_LIVE_QUALIFIED`. The migration is landed, the
-> qualification reproduced live, and the spectator now renders it.
+## Current Slice
 
-## What is proven (verified this session)
+Objective: inventory the existing Battle backend proof path, patch the obvious failures directly, and prove it without spending a reviewer competition.
 
-### Backend — live qualification PASS
-- `arena-adaptive-lineage-qualification battle-004` (real SciLLM gpt-5.5 + real
-  Docker Judge `python:3.12-slim`): **11/11 checks PASS**, all four Tau stages
-  `mocked=false, live=true, PASS`. Four distinct source hashes; operators per
-  contract (G0=none, G1-A=method_replace, G1-B=oracle_or_parameter_mutation,
-  G2=failure_guided_crossover); selection G1-A over G1-B by `novelty_distance`.
-- Normalized to `spectator/src/lineage/__fixtures__/adaptive-lineage-live.json`
-  with `data_source:live` (validator PASS, 4 nodes / 3 edges).
+Deterministic path found:
 
-### UX — finished interface at http://localhost:3002/#battle/receipt
-- **Live comparison panel**: the migrated `BattleLineageComparisonPanel` is now
-  wired into the arena (receipt route), fed by the live mechanics fixture. Renders
-  `G0 -> {G1-A, G1-B} -> G2` with operators, changed AST dimensions, novelty
-  distances, SELECTED vs RUNNER-UP, "Selection: G1-A over G1-B · novelty_distance",
-  and mutation edges — under an honest green **LIVE** badge (`data_source:live`).
-- **Distinct PixiJS sprites**: the single-atlas lock is removed. `spriteIdForLane`
-  is now a deterministic receipt-backed map (team+generation+selection role). The
-  four specimens render as four distinct validated atlases —
-  G0=`plague_nurgling` (floor), G1-A=`crimson_chainsaw_demon`,
-  G1-B=`crimson_hornbreaker`, G2=`typhus`. Verified live: crimson demon on RED G1,
-  green plague-walker on RED G2.
-- **Notifications**: LIVE EVENTS ticker populated from receipts.
-- Proof artifacts: `assets/sprites/working-sprite-proof/FOUR-SPECIMEN-SPRITES.png`
-  (composite) and `LIVE-battle-adaptive-lineage-proof.jpg` (live browser).
-
-### Gates
-- Spectator: **190 vitest pass**, **typecheck clean**.
-- Backend adaptive suite: 48 pass (earlier), ruff clean.
-- `/sprite-atlas` validation: 23/23 for each enabled atlas.
-
-## Commits (branch `battle-adaptive-lineage-goal`)
-- `9282ed14a` land migration + `GOAL_ADAPTIVE_LINEAGE.md` + working-sprite proofs
-- `53198045c` refresh `adaptive-lineage-live` fixture from the live qualification
-- `034617cad` finish UX — distinct sprites + live comparison panel + layout + tests
-- Tau recognizer fix: committed on `tau-adaptive-mechanics` worktree branch.
-
-## Resolved this session (were caveats, now closed)
-1. **Deploy — done properly.** A clean git-sha release is cut per commit
-   (`git archive main | tar -x` into `releases/<sha>`), `current` repointed, and
-   vite restarted (kill the :3002 tree → the dev supervisor respawns it reading the
-   new `current`). Current live release: `995ea0ad8`. The frozen `2a3c82e12` release
-   was restored to pristine (the earlier in-place overlay was fully reverted).
-2. **PixiJS HMR init — fixed.** `ensureBattlePixiAssets` now catches pixi's
-   "Assets already initialized" (its global singleton survives HMR while this
-   module's state resets) and treats it as success, so runner sprites paint
-   reliably without a hard reload.
-3. **Sprite acceptance — reviewer loop actually run.** An independent
-   sprite-reviewer gave per-atlas visual verdicts (not my eyeball): REJECTED
-   `crimson_hornbreaker` (garbled) and flagged `skull_horn` (REVISE), and caught
-   that the two crimson G1 specimens weren't distinguishable. Fixed: dropped both
-   from the enabled set, re-mapped G1-B → `slug_demon`; the four live specimens are
-   now distinct silhouettes (verified live). Rejections locked in by unit test.
-
-## Remaining honest note
-- **Music**: system is wired (AudioContext score runtime, functional sound-arm
-  control, cue bindings) and covered by passing tests (`music-m1`, `score-package`,
-  `hg-death-notification`, `hg-kill-cue-replay`). Live *audible* playback could not
-  be captured via browser automation even on the `hgDeathDemo=1` cue route with
-  sound armed — Web Audio does not fully unlock without a trusted human gesture.
-  This is a headless-verification limit, not evidence of a defect. Not a
-  `GOAL_ADAPTIVE_LINEAGE` requirement.
-- Branch `battle-adaptive-lineage-goal` is redundant (its battle commits are on
-  `origin/main`) and can be deleted.
-
-## Reproduce
 ```bash
 cd skills/battle
-TAU_REPO=/home/graham/workspace/experiments/tau-adaptive-mechanics \
-  ./run.sh arena-adaptive-lineage-qualification battle-004 --out /tmp/relive
-./run.sh normalize-adaptive-lineage-fixture /tmp/relive \
-  --out spectator/src/lineage/__fixtures__/adaptive-lineage-live.json --data-source live
-cd spectator && npx vitest run && npm run -s typecheck
-# UX: http://localhost:3002/#battle/receipt?engine=pixi  (full reload for pixi sprites)
+./run.sh backend-eval --out-dir <out>
+./run.sh prove-backend-goal
+./run.sh prove-spectator-source-build
 ```
+
+## Repairs In This Slice
+
+- Kill-shot Pixi replay fixture now uses canonical `blue.kill_confirmed` terminal events and consistent clock/timeline fields.
+- Outcome validator now allows kill attribution only when the canonical terminal event is present while preserving the no-inference guard.
+- Backend goal proof no longer assumes Battle is served from SPARTA's `:3002`; spectator proof starts its own Battle preview port.
+- Spectator proof avoids unnecessary `npm install` when `node_modules` is already usable.
+- Parent-spawn lifecycle enrichment now uses the fresh combiner artifact directory before the Vite build copies public fixtures.
+- Adaptive lineage V13 proof no longer depends on `/tmp` source artifacts and samples the Pixi canvas for mobile visibility.
+- Adaptive lineage validator supports depth-N spawn lineages while retaining the V14 memory boundary.
+- Battle standalone Vite source-build path is wired for `$test-interactions`.
+
+## Proof Receipts
+
+Backend eval:
+
+```bash
+cd skills/battle
+./run.sh backend-eval --out-dir local/backend-eval-20260728T-kill-shot-repair
+```
+
+Receipt: `skills/battle/local/backend-eval-20260728T-kill-shot-repair/receipt.json`
+
+Result:
+
+```json
+{
+  "mocked": false,
+  "live": false,
+  "summary": {
+    "passed": 14,
+    "failed": 0,
+    "total": 14,
+    "channels": [
+      "adaptive_lineage_fixtures",
+      "deterministic_contracts",
+      "genetic_lifecycle_fixtures",
+      "live_transport",
+      "race_replay_fixtures"
+    ]
+  }
+}
+```
+
+Full backend goal proof:
+
+```bash
+cd skills/battle
+BATTLE_BACKEND_GOAL_PROOF_DIR=$PWD/local/backend-goal-proof-20260728T-kill-shot-repair-final ./run.sh prove-backend-goal
+```
+
+Log: `skills/battle/local/prove-backend-goal-20260728T-kill-shot-repair-final.log`
+Receipt directory: `skills/battle/local/backend-goal-proof-20260728T-kill-shot-repair-final/`
+Result markers:
+
+```text
+BATTLE_PROVE_SPECTATOR_PASS
+OK: checked 566 test file(s); no mock+proof claim violations
+BATTLE_PROVE_BACKEND_GOAL_PASS
+```
+
+Source-built Battle interaction proof:
+
+```bash
+cd skills/battle
+./run.sh prove-spectator-source-build
+```
+
+Proof: `skills/battle/local/spectator-source-build-source-build-20260728T203204Z/proof.json`
+Interaction results: `skills/battle/local/spectator-source-build-source-build-20260728T203204Z/captures/results.json`
+Screenshot: `skills/battle/local/spectator-source-build-source-build-20260728T203204Z/captures/battle-receipt-controls/0012_pane-controls_screenshot.png`
+
+Result:
+
+```json
+{
+  "mocked": false,
+  "live": true,
+  "interaction_counts": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "warned": 0,
+    "skipped": 0
+  }
+}
+```
+
+Visual inspection note: the screenshot visibly shows the source-built Battle header, roster search with `red`, selected timeline lane, zoom controls, live-events panel, and left/right pane toggles after the interaction sequence.
+
+Focused code checks:
+
+```bash
+cd skills/battle
+uv run pytest tests/test_battle_event_adapter_contract.py -q
+# 99 passed
+
+cd skills/battle/spectator
+npm run test -- src/lib/battle-adaptive-lineage.test.ts src/lib/battle-adaptive-lineage-depth3.test.ts
+# 8 passed
+
+npm run typecheck
+# exit 0
+```
+
+## Honest Scope
+
+This slice proves the existing MVP backend proof path and the source-built interaction path. It does not prove production hosting, long-running provider reliability, audible playback, or that every future Battle product goal has been accepted by the human.
+
+Any future UI claim must include `$test-interactions` output and an inspected screenshot. Any future backend readiness claim must include a fresh `prove-backend-goal` receipt or a narrower receipt that states exactly what it proves and does not prove.
+
+Immutable Goal: NOT_MET

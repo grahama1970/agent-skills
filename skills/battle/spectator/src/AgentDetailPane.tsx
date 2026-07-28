@@ -3,12 +3,12 @@ import { Bot, Bug, Database, FileJson, Play, Search, ShieldX, Terminal } from "l
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import type { BattleEvent, BattleReceiptRef, BattleReplayRef, BlueFinisherState, Lane, ProofMode } from "./lib/battle-types";
 import { laneLifecycleEvidenceView } from "./lib/battle-lane-lifecycle-evidence";
 import { useRegisterAction } from "./hooks/useRegisterAction";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
 import { MockupAgentDetailPane } from "./MockupAgentDetailPane";
+import { cn } from "./lib/utils";
 
 type Props = { lane: Lane; lanes: Lane[]; events: BattleEvent[]; activeFinisher: BlueFinisherState | null; onSound?: (cue: string) => void };
 type TraceField = "observation" | "hypothesis" | "action" | "result" | "learned" | "next_move";
@@ -20,7 +20,7 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
   void activeFinisher;
   void onSound;
   useRegisterAction("battle:agent-pane:tab:summary", { action: "BATTLE_AGENT_PANE_TAB_SUMMARY", label: "Show Battle Agent Summary", description: "Show the Summary tab in the Battle agent detail pane.", tags: ["battle", "agent-cockpit"] });
-  useRegisterAction("battle:agent-pane:tab:turns", { action: "BATTLE_AGENT_PANE_TAB_TURNS", label: "Show Battle Agent Turns", description: "Show the public Battle event trace for the selected lane.", tags: ["battle", "agent-cockpit"] });
+  useRegisterAction("battle:agent-pane:tab:live", { action: "BATTLE_AGENT_PANE_TAB_LIVE", label: "Show Battle Agent Live Events", description: "Show the public Battle event trace for the selected lane.", tags: ["battle", "agent-cockpit"] });
   useRegisterAction("battle:agent-pane:tab:logs", { action: "BATTLE_AGENT_PANE_TAB_LOGS", label: "Show Battle Agent Logs", description: "Show receipt-backed JSON events for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
   useRegisterAction("battle:agent-pane:tab:skills", { action: "BATTLE_AGENT_PANE_TAB_SKILLS", label: "Show Battle Agent Skills", description: "Show emitted skills/tools for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
   useRegisterAction("battle:agent-pane:tab:receipts", { action: "BATTLE_AGENT_PANE_TAB_RECEIPTS", label: "Show Battle Agent Receipts", description: "Show proof artifacts for the selected Battle lane.", tags: ["battle", "agent-cockpit"] });
@@ -29,6 +29,7 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
   const lifecycle = useMemo(() => laneLifecycleEvidenceView(lane), [lane]);
   const model = useMemo(() => buildModel(lane, events), [lane, events]);
   const replay = model.replay;
+  const [activeTab, setActiveTab] = useState("summary");
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col" data-qid={`battle:agent-pane:${lane.id}`} title={`Agent detail for ${lane.name}`}>
@@ -52,24 +53,59 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
 
         <LifecycleEvidencePanel lifecycle={lifecycle} />
 
-        <Tabs defaultValue="summary" className="flex min-h-0 flex-1 flex-col">
-          <TabsList className="grid w-full grid-cols-5 rounded-none border-b border-white/10 bg-black/20">
-            <TabsTrigger data-qid="battle:agent-pane:tab:summary" data-qs-action="BATTLE_AGENT_PANE_TAB_SUMMARY" value="summary" title="Show Summary tab" className="min-h-11 px-1.5 text-[11px]">Summary</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:turns" data-qs-action="BATTLE_AGENT_PANE_TAB_TURNS" value="turns" title="Show Turns tab" className="min-h-11 px-1.5 text-[11px]">Turns</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:logs" data-qs-action="BATTLE_AGENT_PANE_TAB_LOGS" value="logs" title="Show Logs tab" className="min-h-11 px-1.5 text-[11px]">Logs</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:skills" data-qs-action="BATTLE_AGENT_PANE_TAB_SKILLS" value="skills" title="Show Skills tab" className="min-h-11 px-1.5 text-[11px]">Skills</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:receipts" data-qs-action="BATTLE_AGENT_PANE_TAB_RECEIPTS" value="receipts" title="Show Receipts tab" className="min-h-11 px-1.5 text-[11px]">Receipts</TabsTrigger>
-          </TabsList>
-          <div className="min-h-0 flex-1 overflow-auto p-2.5">
-            <TabsContent value="summary" className="mt-0 space-y-2"><CurrentTurn model={model} /><TraceCard trace={model.trace} /><OutputCard stdout={model.stdout} stderr={model.stderr} /><SkillsCard skills={model.skills} /></TabsContent>
-            <TabsContent value="turns" className="mt-0 space-y-2">{model.turnEvents.length ? model.turnEvents.map((event) => <TurnEvent key={event.id} event={event} />) : <EmptyState label="No Battle turns emitted." />}</TabsContent>
-            <TabsContent value="logs" className="mt-0 space-y-3">{model.relatedEvents.map((event) => <EventRow key={event.id} event={event} />)}<RawJson events={model.relatedEvents} /></TabsContent>
-            <TabsContent value="skills" className="mt-0 space-y-2">{model.skills.length ? model.skills.map((skill) => <SkillRow key={`${skill.name}-${skill.receipt_id ?? "no-receipt"}`} skill={skill} />) : <EmptyState label="No skills/tools emitted for this lane." />}</TabsContent>
-            <TabsContent value="receipts" className="mt-0 space-y-3"><ReceiptsCard receipts={model.receipts} /></TabsContent>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="grid w-full grid-cols-5 rounded-none border-b border-white/10 bg-black/20" role="tablist" aria-label="Battle agent detail tabs">
+            <AgentPaneTab qid="battle:agent-pane:tab:summary" action="BATTLE_AGENT_PANE_TAB_SUMMARY" value="summary" activeTab={activeTab} onSelect={setActiveTab} title="Show Summary tab">Summary</AgentPaneTab>
+            <AgentPaneTab qid="battle:agent-pane:tab:live" action="BATTLE_AGENT_PANE_TAB_LIVE" value="live" activeTab={activeTab} onSelect={setActiveTab} title="Show Live tab">Live</AgentPaneTab>
+            <AgentPaneTab qid="battle:agent-pane:tab:logs" action="BATTLE_AGENT_PANE_TAB_LOGS" value="logs" activeTab={activeTab} onSelect={setActiveTab} title="Show Logs tab">Logs</AgentPaneTab>
+            <AgentPaneTab qid="battle:agent-pane:tab:skills" action="BATTLE_AGENT_PANE_TAB_SKILLS" value="skills" activeTab={activeTab} onSelect={setActiveTab} title="Show Skills tab">Skills</AgentPaneTab>
+            <AgentPaneTab qid="battle:agent-pane:tab:receipts" action="BATTLE_AGENT_PANE_TAB_RECEIPTS" value="receipts" activeTab={activeTab} onSelect={setActiveTab} title="Show Receipts tab">Receipts</AgentPaneTab>
           </div>
-        </Tabs>
+          <div className="min-h-0 flex-1 overflow-auto p-2.5">
+            {activeTab === "summary" ? <div className="mt-0 space-y-2"><CurrentTurn model={model} /><TraceCard trace={model.trace} /><OutputCard stdout={model.stdout} stderr={model.stderr} /><SkillsCard skills={model.skills} /></div> : null}
+            {activeTab === "live" ? <div className="mt-0 space-y-2">{model.turnEvents.length ? model.turnEvents.map((event) => <TurnEvent key={event.id} event={event} />) : <EmptyState label="No live Battle turns emitted." />}</div> : null}
+            {activeTab === "logs" ? <div className="mt-0 space-y-3">{model.relatedEvents.map((event) => <EventRow key={event.id} event={event} />)}<RawJson events={model.relatedEvents} /></div> : null}
+            {activeTab === "skills" ? <div className="mt-0 space-y-2">{model.skills.length ? model.skills.map((skill) => <SkillRow key={`${skill.name}-${skill.receipt_id ?? "no-receipt"}`} skill={skill} />) : <EmptyState label="No skills/tools emitted for this lane." />}</div> : null}
+            {activeTab === "receipts" ? <div className="mt-0 space-y-3"><ReceiptsCard receipts={model.receipts} /></div> : null}
+          </div>
+        </div>
       </Card>
     </aside>
+  );
+}
+
+function AgentPaneTab({
+  qid,
+  action,
+  value,
+  activeTab,
+  onSelect,
+  title,
+  children,
+}: {
+  qid: string;
+  action: string;
+  value: string;
+  activeTab: string;
+  onSelect: (value: string) => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const active = activeTab === value;
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      data-state={active ? "active" : "inactive"}
+      data-qid={qid}
+      data-qs-action={action}
+      title={title}
+      className={cn("battle-hit-target min-h-11 px-1.5 text-[11px]", active ? "battle-tab-active" : "battle-tab-inactive")}
+      onClick={() => onSelect(value)}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -113,8 +149,10 @@ function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof la
         <div className="battle-label">Lifecycle evidence</div>
         <button
           type="button"
-          className="rounded border border-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 hover:border-white/20 hover:text-slate-200"
+          className="battle-hit-target rounded border border-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 hover:border-white/20 hover:text-slate-200"
           data-qid="battle:agent-pane:lifecycle-toggle"
+          data-qs-action="BATTLE_AGENT_PANE_LIFECYCLE_TOGGLE"
+          title={expanded ? "Hide lifecycle evidence" : "Show lifecycle evidence"}
           onClick={() => setExpanded((value) => !value)}
         >
           {expanded ? "Hide" : "Show"}

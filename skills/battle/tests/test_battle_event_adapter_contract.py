@@ -1359,6 +1359,19 @@ def test_renderer_values_extracts_direct_ux_values_from_bundle() -> None:
     assert "Fastest crash" in values["forbidden_inferences"]
 
 
+def test_outcome_truth_allows_blue_kill_only_from_canonical_event(tmp_path: Path) -> None:
+    fixture = _fixture(tmp_path, include_lineage=True)
+    truth = ux_contract_validator._outcome_truth_constraints_model(fixture=fixture)
+    assert truth["forbidden"]["blue_kill"]["allowed"] is False
+    assert truth["forbidden"]["blue_kill"]["forbidden_inference_present"] is True
+
+    fixture["events"].append({"event_type": "blue.kill_confirmed"})
+    truth = ux_contract_validator._outcome_truth_constraints_model(fixture=fixture)
+    assert truth["forbidden"]["blue_kill"]["allowed"] is True
+    assert truth["forbidden"]["blue_kill"]["present_event_types"] == ["blue.kill_confirmed"]
+    assert truth["forbidden"]["blue_kill"]["forbidden_inference_present"] is True
+
+
 def test_renderer_values_source_validation_rejects_drift() -> None:
     values = export_renderer_values_from_bundle_path(Path(EXPECTED_RENDERER_BUNDLE_PATH))
     values["timeline"]["playhead"]["current_x"] = 97

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 from pathlib import Path
 from typing import Any
@@ -242,7 +243,7 @@ def copy_stream_artifacts(base_dir: Path, out_dir: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", type=Path, default=DEFAULT_BASE)
-    parser.add_argument("--combiner-dir", type=Path, default=DEFAULT_COMBINER)
+    parser.add_argument("--combiner-dir", type=Path, default=Path(os.environ.get("BATTLE_COMBINER_DIR", DEFAULT_COMBINER)))
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--skip-combiner", action="store_true")
     args = parser.parse_args()

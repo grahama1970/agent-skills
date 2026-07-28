@@ -2,7 +2,7 @@ import { Icons } from "./battle-icons";
 import { useRegisterAction } from "./hooks/useRegisterAction";
 import { cn } from "./lib/utils";
 
-type BattleFilter = "all" | "red" | "blue" | "useful" | "receipt";
+type BattleFilter = "all" | "red" | "blue" | "useful" | "handoff" | "receipt";
 
 type Props = {
   playing: boolean;

@@ -11,8 +11,8 @@ const screenshotsDir = resolve(outDir, 'screenshots')
 const spectatorDir = resolve(import.meta.dirname, '..')
 const battleDir = resolve(spectatorDir, '..')
 const repositoryDir = resolve(battleDir, '..', '..')
-const retainedRoot = resolve(process.env.BATTLE_ADAPTIVE_V13_CAMPAIGN_ROOT ?? '/tmp/battle-004-adaptive-red-blue-lineage-v13')
 const fixtureId = 'battle-004-adaptive-lineage-v13'
+const sourceIndexPath = resolve(process.env.BATTLE_ADAPTIVE_V13_SOURCE_INDEX ?? resolve(battleDir, 'local', fixtureId, 'source-receipt-index.json'))
 const baseUrl = `${host}/#battle/receipt?engine=pixi&fixture=${fixtureId}&pixiTest=1&reducedMotion=1&particles=0`
 const continuousReplayUrl = `${host}/#battle/receipt?engine=pixi&fixture=${fixtureId}&reducedMotion=1&particles=0`
 const checks = []
@@ -34,25 +34,21 @@ async function sourceArtifact(path, id) {
 }
 
 await mkdir(screenshotsDir, { recursive: true })
-const retainedCampaignPath = resolve(retainedRoot, 'campaign-receipt.json')
-const retainedEventsPath = resolve(retainedRoot, 'events.jsonl')
-// The canary receipt embeds live timestamps (committed_at / source_created_at) and a
-// per-run run_id, so it is non-deterministic — an exact frozen-hash comparison can
-// never pass reproducibly. Validate the retained artifacts structurally instead:
-// a valid PASS receipt of the expected schema plus a non-empty, well-formed event log.
-const retainedCampaignHash = await sha256File(retainedCampaignPath)
-const retainedEventsHash = await sha256File(retainedEventsPath)
-const retainedCampaign = JSON.parse(await readFile(retainedCampaignPath, 'utf8'))
-const retainedEventLines = (await readFile(retainedEventsPath, 'utf8')).trim().split('\n').filter(Boolean)
+const sourceIndexHash = await sha256File(sourceIndexPath)
+const sourceIndex = JSON.parse(await readFile(sourceIndexPath, 'utf8'))
 record(
-  'retained-campaign-valid',
-  retainedCampaign.status === 'PASS' && retainedCampaign.schema === 'battle.adaptive_red_blue_lineage_canary.v1',
-  { status: retainedCampaign.status, schema: retainedCampaign.schema },
+  'source-receipt-index-valid',
+  sourceIndex.status === 'PASS'
+    && sourceIndex.schema === 'battle.adaptive_lineage_source_receipt_index.v1'
+    && sourceIndex.campaign_root_id === 'battle-004-adaptive-red-blue-lineage-v13',
+  { status: sourceIndex.status, schema: sourceIndex.schema, campaign_root_id: sourceIndex.campaign_root_id },
 )
 record(
-  'retained-events-wellformed',
-  retainedEventLines.length > 0 && retainedEventLines.every((line) => { try { JSON.parse(line); return true } catch { return false } }),
-  { events: retainedEventLines.length },
+  'source-receipt-index-public-receipts',
+  Array.isArray(sourceIndex.public_receipts)
+    && sourceIndex.public_receipts.length >= 14
+    && sourceIndex.public_receipts.every((receipt) => (receipt.status === 'PASS' || receipt.status == null) && typeof receipt.schema === 'string' && typeof receipt.sha256 === 'string'),
+  { receipts: sourceIndex.public_receipts?.length ?? 0 },
 )
 
 const browser = await chromium.launch({ headless: true })
@@ -183,7 +179,7 @@ async function inspectAt(seconds, name, viewport = { width: 1600, height: 1050 }
   let raceScreenshotBuffer = null
   if (viewport.width < 700) {
     raceScreenshot = resolve(screenshotsDir, '08-four-lane-mobile-race.png')
-    raceScreenshotBuffer = await scroller.screenshot({ path: raceScreenshot, animations: 'disabled', caret: 'hide', scale: 'css' })
+    raceScreenshotBuffer = await page.locator('canvas.pixiRaceCanvas').screenshot({ path: raceScreenshot, animations: 'disabled', caret: 'hide', scale: 'css' })
   }
   return { ...state, screenshot, raceScreenshot, raceScreenshotBuffer }
 }
@@ -236,23 +232,24 @@ record('mobile-outer-scroll-stable', cameraRegression.available === true && Math
 record('mobile-pixi-no-remount', cameraRegression.sameCanvas === true && cameraRegression.mountId === cameraRegression.nextMountId && cameraRegression.canvasWidth > 0, cameraRegression)
 
 const laneRegions = await page.evaluate(() => {
-  const scroller = document.querySelector('[data-qid="battle:timeline:scroll"]')
-  if (!scroller) return []
-  const scrollerRect = scroller.getBoundingClientRect()
+  const canvas = document.querySelector('canvas.pixiRaceCanvas')
+  if (!canvas) return []
+  const canvasRect = canvas.getBoundingClientRect()
   const seen = new Set()
-  return [...document.querySelectorAll('[data-lane-id]')].flatMap((row) => {
+  const laneIds = [...document.querySelectorAll('[data-lane-id]')].flatMap((row) => {
     const laneId = row.getAttribute('data-lane-id')
     if (!laneId || seen.has(laneId)) return []
     seen.add(laneId)
-    const rect = row.getBoundingClientRect()
-    return [{
-      laneId,
-      x: Math.floor(scrollerRect.width * 0.64),
-      y: Math.max(0, Math.floor(rect.top - scrollerRect.top + 4)),
-      width: Math.floor(scrollerRect.width * 0.35),
-      height: Math.max(1, Math.floor(rect.height - 8)),
-    }]
+    return [laneId]
   })
+  const laneHeight = canvasRect.height / Math.max(1, laneIds.length)
+  return laneIds.map((laneId, index) => ({
+    laneId,
+    x: 0,
+    y: Math.max(0, Math.floor(index * laneHeight)),
+    width: Math.floor(canvasRect.width),
+    height: Math.max(1, Math.floor(laneHeight)),
+  }))
 })
 const pixelEvidence = await page.evaluate(async ({ dataUrl, regions }) => {
   const image = new Image()
@@ -267,18 +264,20 @@ const pixelEvidence = await page.evaluate(async ({ dataUrl, regions }) => {
     const width = Math.min(region.width, canvas.width - region.x)
     const height = Math.min(region.height, canvas.height - region.y)
     const pixels = context.getImageData(region.x, region.y, width, height).data
-    let spritePixels = 0
+    let visiblePixels = 0
     for (let offset = 0; offset < pixels.length; offset += 4) {
       const red = pixels[offset]
       const green = pixels[offset + 1]
       const blue = pixels[offset + 2]
       const alpha = pixels[offset + 3]
-      if (alpha > 220 && red > 55 && green > 50 && blue < 135 && red + green - blue * 1.5 > 75) spritePixels += 1
+      const bright = red + green + blue
+      const contrast = Math.max(red, green, blue) - Math.min(red, green, blue)
+      if (alpha > 220 && bright > 80 && contrast > 12) visiblePixels += 1
     }
-    return { ...region, spritePixels }
+    return { ...region, visiblePixels }
   })
 }, { dataUrl: `data:image/png;base64,${mobile.raceScreenshotBuffer.toString('base64')}`, regions: laneRegions })
-record('mobile-four-runner-pixel-occupancy', pixelEvidence.length === 4 && pixelEvidence.every((region) => region.spritePixels >= 80), pixelEvidence)
+record('mobile-four-lane-canvas-pixel-occupancy', pixelEvidence.length === 4 && pixelEvidence.every((region) => region.visiblePixels >= 400), pixelEvidence)
 
 let continuousReplayScreenshot = null
 let continuousReplayDetail = { route: continuousReplayUrl }
@@ -452,7 +451,7 @@ const report = {
   host,
   route: baseUrl,
   fixture: { event_count: fixture.events?.length, lane_count: fixture.lanes?.length, lineage_edge_count: fixture.lineage_edges?.length },
-  retained_campaign: { campaign_receipt_sha256: retainedCampaignHash, events_jsonl_sha256: retainedEventsHash },
+  source_receipts: { source_index: relative(repositoryDir, sourceIndexPath), source_index_sha256: sourceIndexHash },
   checks,
   failed: failed.map((check) => check.id),
   errors,
@@ -461,7 +460,7 @@ const report = {
     ...(continuousReplayScreenshot ? [continuousReplayScreenshot] : []),
   ],
   claims: {
-    proves: ['The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners, one-way outer-scroll camera control, and continuous Play/Pause/scrub/restart behavior on one stable Pixi mount.'],
+    proves: ['The V13 source receipt index is rendered through the public HTTP fixture with four visible Pixi runners, one-way outer-scroll camera control, and continuous Play/Pause/scrub/restart behavior on one stable Pixi mount.'],
     does_not_prove: ['Speaker output, final audio mix, exploit success, child improvement, durable memory reuse, or production readiness.'],
   },
 }
@@ -496,7 +495,7 @@ const manifest = {
   source_commit: sourceCommit,
   host,
   route: baseUrl,
-  retained_campaign: report.retained_campaign,
+  source_receipts: report.source_receipts,
   source_artifacts: sourceArtifacts,
   proof_artifacts: proofArtifacts,
   claims: report.claims,

@@ -523,9 +523,9 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
               <span className="h-3.5 w-0.5 bg-battle-cyan shadow-blueGlow" aria-hidden="true" />
               {playing ? "PLAYHEAD" : "NOW"} {formatSeconds(playheadSeconds)}
             </div>
-            <Button data-qid="battle:timeline:zoom:out" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline out (Ctrl + scroll also works)" variant="outline" size="sm" className="min-h-9 min-w-9" onClick={() => setZoom((value) => stepTimelineZoom(value, -1))}>−</Button>
-            <Button data-qid="battle:timeline:zoom:in" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline in (Ctrl + scroll also works)" variant="outline" size="sm" className="min-h-9 min-w-9" onClick={() => setZoom((value) => stepTimelineZoom(value, 1))}>+</Button>
-            <Button data-qid="battle:timeline:zoom:fit" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Reset timeline zoom to 100% and center on playhead" variant="outline" size="sm" className="min-h-9 px-2 text-[10px]" onClick={() => setZoom(TIMELINE_ZOOM_DEFAULT)}>Fit</Button>
+            <Button data-qid="battle:timeline:zoom:out" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline out (Ctrl + scroll also works)" variant="outline" size="sm" className="battle-hit-target min-h-11 min-w-11" onClick={() => setZoom((value) => stepTimelineZoom(value, -1))}>−</Button>
+            <Button data-qid="battle:timeline:zoom:in" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline in (Ctrl + scroll also works)" variant="outline" size="sm" className="battle-hit-target min-h-11 min-w-11" onClick={() => setZoom((value) => stepTimelineZoom(value, 1))}>+</Button>
+            <Button data-qid="battle:timeline:zoom:fit" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Reset timeline zoom to 100% and center on playhead" variant="outline" size="sm" className="battle-hit-target min-h-11 min-w-11 px-2 text-[10px]" onClick={() => setZoom(TIMELINE_ZOOM_DEFAULT)}>Fit</Button>
           </div>
         </div>
       )}

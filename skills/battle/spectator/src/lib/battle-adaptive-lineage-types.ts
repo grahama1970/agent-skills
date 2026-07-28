@@ -74,8 +74,8 @@ export type BattleNormalizedAdaptiveLineageFixtureV1 = {
 	campaign: {
 		campaign_clock_id: string;
 		elapsed_seconds: number;
-		generation_count: 2;
-		generation_ids?: [number, number];
+		generation_count: number;
+		generation_ids?: number[];
 		teams: ["red", "blue"];
 	};
 	lanes: AdaptiveLineageLane[];

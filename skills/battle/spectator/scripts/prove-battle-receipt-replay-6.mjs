@@ -102,11 +102,17 @@ async function main() {
   }))
   record('6-child-after-spawn-visible', post.parent && post.child, JSON.stringify(post))
 
+  if (post.child) {
+    await page.locator('[data-qid="battle:lane:payload-857-red-1"]').first().click({ force: true })
+    await page.waitForTimeout(600)
+  }
   const lifecycle = await page.evaluate(() => {
     const panel = document.querySelector('[data-qid="battle:agent-pane:lifecycle-evidence"]')
     const text = panel?.textContent ?? ''
+    const selected = document.querySelector('[data-qid="battle:agent-pane:title"]')?.textContent ?? ''
     return {
       panel: Boolean(panel),
+      selected,
       text,
       hasKnowledge: text.includes('knowledge_packet'),
       hasPromotion: text.includes('memory_promotion'),
@@ -115,8 +121,8 @@ async function main() {
     }
   })
   record(
-    '7-lifecycle-evidence',
-    lifecycle.panel && lifecycle.hasKnowledge && lifecycle.hasPromotion && lifecycle.hasPacketCapture && lifecycle.hasCalibration,
+    '7-lifecycle-fail-closed-plain-fixture',
+    lifecycle.panel && lifecycle.text.includes('No adaptive-lifecycle receipts') && !lifecycle.hasKnowledge && !lifecycle.hasPromotion && !lifecycle.hasPacketCapture && !lifecycle.hasCalibration,
     JSON.stringify(lifecycle),
   )
 

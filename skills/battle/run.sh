@@ -24,6 +24,11 @@ if [[ "${1:-}" == "prove-spectator" ]]; then
   exec "$SCRIPT_DIR/scripts/prove-spectator-local.sh" "$@"
 fi
 
+if [[ "${1:-}" == "prove-spectator-source-build" ]]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/prove-spectator-source-build.sh" "$@"
+fi
+
 if [[ "${1:-}" == "prove-backend-goal" ]]; then
   shift
   exec "$SCRIPT_DIR/scripts/prove-backend-goal-local.sh" "$@"
