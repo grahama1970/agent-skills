@@ -131,6 +131,12 @@ pre-create tabs or pass `--handler-project` for normal web seats. Use
 after the run. Use `--browser-tab-lifecycle reuse-bound` only for an
 intentionally known-good existing browser-oracle project.
 
+Browser lanes queue on the shared Surf browser lock. Ask derives the wait from
+handler count and topology; pass `--browser-lock-timeout <seconds>` on `tau-dag
+run` or `compete` to widen it for a busy browser. The resolved value is recorded
+as `lock_timeout_seconds` in `browser-tab-lifecycle.json` and reaches each
+browser handler's dispatch command.
+
 After execution, read the returned `run_dir` and inspect:
 
 - `dag.json`

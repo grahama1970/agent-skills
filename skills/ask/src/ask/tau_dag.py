@@ -213,6 +213,7 @@ class TauDagCompileInput:
     scillm_base_url: str = DEFAULT_SCILLM_BASE_URL
     scillm_api_key: str = DEFAULT_SCILLM_API_KEY
     tau_project_root: Path = DEFAULT_TAU_PROJECT_ROOT
+    browser_lock_timeout: int = 0
 
 
 def infer_compile_input(
@@ -237,6 +238,7 @@ def infer_compile_input(
     scillm_base_url: str = DEFAULT_SCILLM_BASE_URL,
     scillm_api_key: str = DEFAULT_SCILLM_API_KEY,
     tau_project_root: Path = DEFAULT_TAU_PROJECT_ROOT,
+    browser_lock_timeout: int = 0,
 ) -> TauDagCompileInput:
     """Merge explicit CLI fields with conservative request-text inference."""
 
@@ -297,6 +299,7 @@ def infer_compile_input(
         scillm_base_url=scillm_base_url.rstrip("/"),
         scillm_api_key=scillm_api_key or default_scillm_api_key(),
         tau_project_root=tau_project_root,
+        browser_lock_timeout=max(0, int(browser_lock_timeout or 0)),
     )
 
 
@@ -1974,6 +1977,11 @@ def _browser_lock_timeout_seconds(input: TauDagCompileInput) -> int:
     browser_count = _browser_handler_count(input)
     if browser_count == 0:
         return 0
+    # An explicit --browser-lock-timeout wins over the derived default so a
+    # caller can widen the wait for a busy browser (agent-skills#1033).
+    override = int(getattr(input, "browser_lock_timeout", 0) or 0)
+    if override > 0:
+        return override
     if input.topology == "concurrent":
         return DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS * max(browser_count - 1, 1)
     return DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS

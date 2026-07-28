@@ -126,6 +126,16 @@ shape or sanity command is needed.
   --browser-tab-lifecycle fresh-keep \
   --execute --json
 
+# Widen the shared Surf browser-lock wait for a busy browser. Accepted by both
+# `tau-dag run` and `compete`; 0 or omitted keeps the value Ask derives from
+# handler count and topology.
+./run.sh tau-dag "Roundtable these handlers concurrently, then join." \
+  --repo local/ask --target roundtable-busy-browser \
+  --immutable-goal "Every handler answers from identical context." \
+  --handler webgpt --handler webclaude \
+  --browser-lock-timeout 2700 \
+  --execute --json
+
 # API/model DAG with real provider calls requires explicit provider consent.
 ./run.sh tau-dag "Solve X with two solvers, then review." \
   --repo local/tau --target issue-123 \

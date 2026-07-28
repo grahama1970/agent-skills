@@ -121,6 +121,13 @@ def run(
             help="Browser tab handling for Tau browser handlers: auto, reuse-bound, fresh-temporary, or fresh-keep.",
         ),
     ] = "auto",
+    browser_lock_timeout: Annotated[
+        int,
+        typer.Option(
+            "--browser-lock-timeout",
+            help="Seconds a browser handler waits for the shared Surf browser lock. 0 keeps the derived default.",
+        ),
+    ] = 0,
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Reviewer criterion. Repeat for multiple criteria."),
@@ -194,6 +201,7 @@ def run(
         scillm_base_url=scillm_base_url,
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
+        browser_lock_timeout=browser_lock_timeout,
     )
     bundle = compile_tau_dag_bundle(input_payload)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
@@ -361,6 +369,13 @@ def compete(
             help="Browser tab handling for Tau browser handlers: auto, reuse-bound, fresh-temporary, or fresh-keep.",
         ),
     ] = "auto",
+    browser_lock_timeout: Annotated[
+        int,
+        typer.Option(
+            "--browser-lock-timeout",
+            help="Seconds a browser handler waits for the shared Surf browser lock. 0 keeps the derived default.",
+        ),
+    ] = 0,
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Evaluation criterion. Repeat for multiple criteria."),
@@ -417,6 +432,7 @@ def compete(
         scillm_base_url=scillm_base_url,
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
+        browser_lock_timeout=browser_lock_timeout,
     )
     bundle = compile_tau_dag_bundle(input_payload)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}

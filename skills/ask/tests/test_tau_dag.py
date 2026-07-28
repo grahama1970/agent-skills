@@ -3517,3 +3517,60 @@ def test_webgpt_model_routes_to_interview_until_native_tau_skill_node_exists(tmp
     assert bundle["status"] == "NEEDS_INTERVIEW"
     assert "model_routes" in bundle["missing_fields"]
     assert "native Tau skill nodes" in bundle["questions"][-1]["question"]
+
+
+def _handler_lock_timeout(bundle: dict, node_id: str) -> str:
+    spec = json.loads(
+        Path(bundle["command_spec_root"], node_id, "tau-dispatch-command.json").read_text(encoding="utf-8")
+    )
+    command = spec["command"]
+    if "--browser-lock-timeout" not in command:
+        return ""
+    return command[command.index("--browser-lock-timeout") + 1]
+
+
+# agent-skills#1033: the lock wait was only derivable from handler count and
+# topology, so a caller facing a busy browser had no way to widen it and
+# `--browser-lock-timeout` failed with "No such option" on both subcommands.
+def test_browser_lock_timeout_override_reaches_every_browser_handler(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Roundtable webgpt and webclaude concurrently.",
+        repo="local/agent-skills",
+        target="lock-timeout-override",
+        immutable_goal="Every seat answers the same shared prompt.",
+        handlers=["webgpt", "webclaude"],
+        topology="concurrent",
+        output_root=tmp_path,
+        browser_lock_timeout=2700,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    assert _handler_lock_timeout(bundle, "handler-webgpt") == "2700"
+    assert _handler_lock_timeout(bundle, "handler-webclaude") == "2700"
+    assert _handler_lock_timeout(bundle, "join") == ""
+
+
+def test_browser_lock_timeout_default_is_kept_without_an_override(tmp_path: Path) -> None:
+    def compile_with(**kwargs) -> dict:
+        return compile_tau_dag_bundle(
+            infer_compile_input(
+                "Roundtable webgpt and webclaude concurrently.",
+                repo="local/agent-skills",
+                target="lock-timeout-default",
+                immutable_goal="Every seat answers the same shared prompt.",
+                handlers=["webgpt", "webclaude"],
+                topology="concurrent",
+                output_root=tmp_path / kwargs.pop("slug"),
+                **kwargs,
+            )
+        )
+
+    derived = compile_with(slug="derived")
+    zeroed = compile_with(slug="zeroed", browser_lock_timeout=0)
+
+    derived_timeout = _handler_lock_timeout(derived, "handler-webgpt")
+    assert derived_timeout != ""
+    assert derived_timeout != "0"
+    assert _handler_lock_timeout(zeroed, "handler-webgpt") == derived_timeout
