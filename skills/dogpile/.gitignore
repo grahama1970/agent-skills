@@ -1,0 +1,13 @@
+# Runtime state — regenerated on every dogpile run, must not be tracked.
+# dogpile_partial_results.json is still read live by /ask (see
+# config/ask_dag_repair_hints.yaml); the working copy is written at runtime, so
+# ignoring the tracked copy does not affect that consumer.
+dogpile_errors.json
+dogpile_partial_results.json
+dogpile_partial_results_dogpile_*.json
+dogpile_task_state.json
+dogpile.log
+rate_limit_state.json
+
+# Transient run cache
+run/fetch_cache/
