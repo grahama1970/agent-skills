@@ -723,6 +723,11 @@ case "$COMMAND" in
   check-dream-observation-packet)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dream_observation_packet.py" "$@"
     ;;
+  session-mood-voice-recognition)
+    # Speaker-identity gate over the durable session-mood renders. Needs a
+    # speaker backend; run under the Chatterbox voice lane interpreter.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/session_mood_voice_recognition.py" "$@"
+    ;;
   check-current-state-consistency)
     # Fail closed when CURRENT_STATUS.json, PROJECT_KNOWLEDGE.md, or README.md
     # contradict the receipts they describe. Receipts outrank prose.
