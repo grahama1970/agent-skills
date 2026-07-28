@@ -39,6 +39,7 @@ from .core import (
     base_receipt,
     finish,
     load_json,
+    lock_holder_alive,
     log_event,
     release_lock,
     run_cmd,
@@ -133,6 +134,22 @@ def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
 
     if not acquire_lock(run_id):
         receipt = base_receipt(run_id, receipt_dir, apply)
+        # Stepping aside for a tick that is genuinely working is not an error.
+        # An audit takes minutes, so treating contention as failure logged
+        # BLOCKED and exited 1 every minute for the whole run -- a healthy
+        # long-running lane reading as a broken one. A lock held by nothing is
+        # still a fault.
+        if lock_holder_alive():
+            receipt.update(
+                {
+                    "ok": True,
+                    "status": "SKIPPED",
+                    "stop_reason": "tick_already_running",
+                    "summary": "another tick holds the lock and is still working",
+                }
+            )
+            log_event(run_id, "tick_skipped_lock_held")
+            return finish(run_id, receipt_dir, receipt, 0, persist=False)
         receipt.update({"ok": False, "status": "BLOCKED", "errors": ["lock already held"]})
         return finish(run_id, receipt_dir, receipt, 1, persist=False)
     try:

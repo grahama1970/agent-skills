@@ -155,6 +155,31 @@ def acquire_lock(run_id: str) -> bool:
     return True
 
 
+def lock_holder_alive() -> bool:
+    """Whether a live process currently holds the tick lock.
+
+    A tick that steps aside for another tick that is genuinely working is not a
+    failure. Reporting it as one made every minute of a multi-minute audit log
+    BLOCKED and exit 1, so a healthy long-running lane looked like a broken one.
+    """
+    owner_path = config.lock_dir() / "owner.json"
+    try:
+        owner = json.loads(owner_path.read_text(encoding="utf-8"))
+        pid = int(owner.get("pid", 0))
+    except (OSError, ValueError, TypeError) as exc:
+        logger.error("could not read lock owner: {}", exc)
+        return False
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True  # exists, owned by someone else
+    return True
+
+
 def _reclaim_stale_lock(run_id: str, lock: Path) -> bool:
     owner_path = lock / "owner.json"
     try:
