@@ -1,10 +1,9 @@
 ---
 name: extractor
 description: >
-  Extract content from any document using the Preset-First Agentic Pipeline.
-  Auto-detects format and document type (scientific papers, requirements specs, etc.).
-  Supports PDF, DOCX, HTML, XML, PPTX, XLSX, EPUB, Markdown, images, YouTube URLs.
-  Use when user says "extract this", "convert to markdown", "process pdf", or provides a document.
+  Extract one local document through the canonical Extractor application
+  command. Use when the user says "extract this", "extract pdf", "convert to
+  markdown", "parse this file", "process document", or provides a document.
 allowed-tools: Bash, Read
 triggers:
   - extract this
@@ -22,375 +21,69 @@ triggers:
   - pdf to markdown
   - docx to markdown
   - document to json
-  - extract youtube
-  - youtube transcript
-  - extract and create qra
-  - extract with qra
 metadata:
-  short-description: Preset-First document extraction (PDF/DOCX/HTML/XML/YouTube)
+  short-description: Thin wrapper for canonical Extractor file extraction
   project-path: ${HOME}/workspace/experiments/extractor
 provides:
+  - document-extraction
   - pdf-extraction
   - html-extraction
-  - youtube-extraction
-composes:
-  - extract-pdf         # Rust-native PDF extraction via pdf_oxide
-  - scillm
-  - memory
-  - task-monitor
-  - ingest-youtube
-  - doc2qra
-
+composes: []
+complies:
+  - best-practices-skills
+  - best-practices-python
 taxonomy:
   - ingestion
   - extraction
   - precision
+runtime_self_improvement: basic
 ---
-
-> STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
 # Extractor
 
-Self-correcting agentic document extraction using a **Preset-First Methodology**.
-Auto-detects document type and applies calibrated extraction settings.
+This skill is a thin wrapper over the Extractor project. Give it one supported
+file and it delegates route selection, PDF handling, provider choice, artifact
+validation, and terminal status to Extractor.
 
 ## Quick Start
 
 ```bash
-# Auto mode (recommended) - detects document type automatically
 .pi/skills/extractor/run.sh paper.pdf
-
-# Specify output directory
 .pi/skills/extractor/run.sh paper.pdf --out ./results
-
-# Get markdown output directly
-.pi/skills/extractor/run.sh paper.pdf --markdown
-
-# OCR scanned PDFs (lazy-loads OCRmyPDF docker image if needed)
-.pi/skills/extractor/run.sh scanned.pdf --auto-ocr
-
-# Extract + generate QRA pairs for memory recall
-.pi/skills/extractor/run.sh paper.pdf --qra --qra-scope research
+.pi/skills/extractor/run.sh paper.pdf --offline
+.pi/skills/extractor/run.sh paper.pdf --format markdown
 ```
 
-## Extraction Modes
+The command writes the canonical `extractor.result.v1` result to stdout for JSON
+output. Human progress and errors belong on stderr.
 
-| Mode         | Flag         | Description                          |
-| ------------ | ------------ | ------------------------------------ |
-| **Auto**     | (default)    | Profile detector picks best settings |
-| **Fast**     | `--fast`     | PyMuPDF only, no ML/LLM (fastest)    |
-| **Accurate** | `--accurate` | Full pipeline with LLM enhancements  |
-| **Offline**  | `--offline`  | Deterministic, no network calls      |
+## Normal Flags
+
+| Flag | Purpose |
+| --- | --- |
+| `input` | Required local file path. |
+| `--out PATH` | Output directory for run artifacts. |
+| `--offline` | Disable network/model enrichment. |
+| `--format json` | Emit canonical JSON, the default. |
+| `--format markdown` | Emit Markdown presentation when available. |
+| `--json` | Compatibility alias for `--format json`. |
+| `--markdown` | Compatibility alias for `--format markdown`. |
+
+Do not choose engines, presets, providers, models, OCR strategy, or pipeline
+stages from this skill. Extractor owns those decisions behind its application
+facade.
+
+## Maintainer Commands
 
 ```bash
-# Fast mode - quick extraction, no LLM
-.pi/skills/extractor/run.sh report.pdf --fast
-
-# Accurate mode - full pipeline with LLM for tables/math
-.pi/skills/extractor/run.sh paper.pdf --accurate
-
-# Offline smoke test (deterministic)
-.pi/skills/extractor/run.sh doc.pdf --offline
-```
-
-## Collaboration Flow
-
-For PDFs without `--preset`, the skill runs an intelligent collaboration flow:
-
-1. **Profile Detection**: Analyzes document (layout, tables, formulas, requirements)
-2. **High Confidence Match**: If confidence >= 8, auto-extracts with detected preset
-3. **Low Confidence / Unknown**:
-   - **Interactive (TTY)**: Prompts user to select preset
-   - **Non-interactive**: Uses auto mode with warning
-
-```bash
-# See what the detector finds (no extraction)
-.pi/skills/extractor/run.sh paper.pdf --profile-only
-
-# Output:
-# {
-#   "preset": "arxiv",
-#   "confidence": 12,
-#   "tables": true,
-#   "figures": true,
-#   "formulas": true,
-#   "recommended_mode": "accurate"
-# }
-
-# Interactive prompt (in terminal)
-.pi/skills/extractor/run.sh unknown_paper.pdf
-# Analyzing: unknown_paper.pdf
-# Detected: multi-column layout, 12 pages
-# Contains: tables, figures, formulas
-#
-# Select extraction preset:
-#   [1] arxiv - Academic papers [RECOMMENDED]
-#   [2] requirements_spec - Engineering specs
-#   [3] auto - Let pipeline decide
-#   [4] fast - Quick extraction, no LLM
-# Enter choice [1-4]:
-
-# Non-interactive (batch/CI) - auto-selects
-echo | .pi/skills/extractor/run.sh paper.pdf --no-interactive
-```
-
-## Preset Selection
-
-The pipeline auto-detects document type via `s00_profile_detector`:
-
-| Preset                | Detected When                                           | Confidence Points                   |
-| --------------------- | ------------------------------------------------------- | ----------------------------------- |
-| **arxiv**             | Academic papers (2-column, math, "Abstract/References") | +5 filename, +4 sections, +3 layout |
-| **requirements_spec** | Engineering specs (REQ-xxx, "Shall", nested sections)   | +5 filename, +4 REQ pattern         |
-| **auto**              | Unknown documents                                       | Fallback when confidence < 8        |
-
-```bash
-# Force a specific preset (skip detection)
-.pi/skills/extractor/run.sh paper.pdf --preset arxiv
-.pi/skills/extractor/run.sh spec.pdf --preset requirements_spec
-
-# Let collaboration flow decide
-.pi/skills/extractor/run.sh paper.pdf
-```
-
-## Output Options
-
-```bash
-# JSON output (default) - full structured data
-.pi/skills/extractor/run.sh doc.pdf --json
-
-# Markdown output - human-readable text
-.pi/skills/extractor/run.sh doc.pdf --markdown
-
-# Sections only (skip tables/figures)
-.pi/skills/extractor/run.sh doc.pdf --sections-only
-```
-
-## Supported Formats
-
-Cross-format parity measured against HTML reference (2026-01-17):
-
-| Format       | Method                   | Parity    | Notes                                 |
-| ------------ | ------------------------ | --------- | ------------------------------------- |
-| **Markdown** | Direct parse             | 100%      | Perfect structural match              |
-| **DOCX**     | Native XML (python-docx) | 100%      | Perfect structural match              |
-| **HTML**     | BeautifulSoup            | Reference | Baseline for comparison               |
-| **XML**      | defusedxml               | 90%       | Structure preserved, markdown differs |
-| **PDF**      | 14-stage pipeline        | 87%       | Varies by document complexity         |
-| **RST**      | docutils                 | 85%       | Section structure varies              |
-| **EPUB**     | ebooklib                 | 82%       | Chapter structure varies              |
-| **PPTX**     | python-pptx              | 81%       | Slide-based structure                 |
-| **XLSX**     | openpyxl                 | 16%       | Expected (spreadsheet format)         |
-| **Images**   | OCR/VLM                  | 16%       | Requires VLM for text extraction      |
-
-## Pipeline Stages
-
-PDF extraction delegates to `/extract-pdf` (Rust-native via pdf_oxide). This is
-**significantly faster** than the legacy Python pipeline.
-
-```
-[/extract-pdf pipeline — Rust core]
-├── profile_document()     Domain detection, preset selection, complexity scoring
-├── extract_spans()        Text extraction with font/bbox metadata
-├── classify_blocks()      Header/body/equation/boilerplate classification
-├── build_flat_sections()  Section hierarchy from headers
-├── extract_tables()       Table detection via pdfplumber/Camelot
-└── extract_figures()      Figure/image extraction
-
-[Optional plugins — enabled via --accurate]
-├── describe              VLM figure descriptions
-├── requirements          Requirement mining (SHALL/MUST/WILL)
-├── arango                Sync to ArangoDB graph
-└── embeddings            Generate semantic embeddings
-```
-
-**Performance comparison:**
-
-| Document | Legacy Pipeline | pdf_oxide (Rust) | Speedup |
-|----------|-----------------|------------------|---------|
-| 10-page PDF | ~45s | ~2s | **22x** |
-| 100-page PDF | ~8 min | ~15s | **32x** |
-| 492-page NIST | ~37 min | ~2 min | **18x** |
-
-**pdf_oxide** is the Rust-based extraction core (MIT-licensed). It provides:
-- Fast text extraction via native Rust PDF parsing
-- Block classification without ML dependencies
-- Section hierarchy building
-- Table detection via pdfplumber/Camelot delegation
-
-### Stage 12: Framework Mapper (Control Extraction)
-
-Runs after s10 (ArangoDB export). Extracts framework control references from document chunks and creates graph edges to `sparta_controls`.
-
-**3-Tier Architecture**:
-1. **Regex** (wide net): Loose patterns for NIST, CWE, ATT&CK, SPARTA, D3FEND, ISO, CAPEC, ESA
-2. **RapidFuzz** (validation): Matches candidates against 7,020 controls in `sparta_controls` catalog
-3. **Classifier** (future): Trained from Shadow-LEGO disagreements
-
-**Edge Creation**:
-- ALL matched chunks → `chunk_control_edges` (evidence: "document mentions AC-2")
-- Requirement chunks → `requirement_control_edges` (claim: "requirement implements AC-2") + `proof_jobs` queue for `/lean4-prove`
-
-**Requirement detection**: SHALL/MUST/WILL modals, asset_type Requirement/Table/Equation, req_id from s08, hardware data tables.
-
-**Performance**: 2.2M chunks backfilled in 6.6 minutes (~5,600 chunks/s). 86,552 edges across 11 frameworks.
-
-### Table Extraction Intelligence
-
-S05 uses a trained **ML ensemble classifier** (95.07% accuracy) for intelligent strategy selection:
-- EfficientNet-B0 (55%) + EdgeNeXt-small (45%) ensemble
-- Predicts optimal Camelot strategy (lattice/stream/lattice_sensitive)
-- Reduces fallback rate from ~25% to <10%
-
-Configure via environment variables:
-```bash
-USE_STRATEGY_PREDICTOR=true         # Enable ML predictor (default: true)
-STRATEGY_PREDICTOR_CONFIDENCE_THRESHOLD=0.75  # Min confidence to use prediction
-```
-
-## Output Structure
-
-```json
-{
-  "success": true,
-  "preset": "arxiv",
-  "outputs": {
-    "markdown": "results/10_markdown_exporter/document.md",
-    "sections": "results/04_section_builder/json_output/04_sections.json",
-    "tables": "results/05_table_extractor/json_output/05_tables.json",
-    "figures": "results/06_figure_extractor/json_output/06_figures.json",
-    "report": "results/14_report_generator/json_output/final_report.json"
-  },
-  "counts": {
-    "sections": 12,
-    "tables": 5,
-    "figures": 8
-  }
-}
-```
-
-## Batch Processing
-
-```bash
-# Process all PDFs in a directory
-.pi/skills/extractor/run.sh ./documents/ --out ./results
-
-# With glob pattern
-.pi/skills/extractor/run.sh ./documents/ --glob "**/*.pdf"
-
-# Non-interactive batch (CI/scripts)
-.pi/skills/extractor/run.sh ./documents/ --no-interactive
-
-# Force preset for entire batch
-.pi/skills/extractor/run.sh ./documents/ --preset arxiv --out ./results
-```
-
-## Agent-Friendly Flags
-
-| Flag                  | Purpose                                                  |
-| --------------------- | -------------------------------------------------------- |
-| `--profile-only`      | Return profile JSON without extraction                   |
-| `--no-interactive`    | Skip prompts, use auto mode                              |
-| `--preset <name>`     | Force preset (skip detection)                            |
-| `--fast`              | No LLM, quick extraction                                 |
-| `--toc-check`         | Check TOC integrity against extracted sections           |
-| `--auto-ocr`          | OCR scanned PDFs with OCRmyPDF (lazy-loads docker image) |
-| `--no-auto-ocr`       | Disable OCRmyPDF preprocessing for scanned PDFs          |
-| `--skip-scanned`      | Skip scanned PDFs and write a skip manifest              |
-| `--ocr-lang <langs>`  | OCR language(s), e.g. `eng` or `eng+deu`                 |
-| `--ocr-deskew`        | Deskew scanned pages during OCR                          |
-| `--ocr-force`         | Force OCR even if text exists                            |
-| `--ocr-timeout <sec>` | OCR timeout in seconds                                   |
-| `--continue-on-error` | Continue pipeline on step failures (batch-friendly)      |
-| `--qra`               | Generate QRA pairs via /doc2qra after extraction         |
-| `--qra-scope <scope>` | Memory scope for QRA pairs (default: research)           |
-| `--qra-domain <ctx>`  | Domain focus for QRA generation (e.g. "ML researcher")   |
-
-## TOC Integrity Check
-
-Verify that extracted sections match the PDF's Table of Contents (bookmarks):
-
-```bash
-# Check integrity on pipeline output directory
-.pi/skills/extractor/run.sh ./results/ --toc-check
-
-# Check specific DuckDB file
-.pi/skills/extractor/run.sh ./results/corpus.duckdb --toc-check
-```
-
-Output:
-
-```json
-{
-  "success": true,
-  "has_toc": true,
-  "integrity_score": 0.85,
-  "status": "GOOD",
-  "toc_entries_count": 20,
-  "sections_count": 18,
-  "matched_count": 17,
-  "missing_count": 3,
-  "matched": [
-    { "toc_title": "1. Introduction", "section_id": "sec_001", "score": 0.95 }
-  ],
-  "missing": [{ "toc_title": "Appendix A", "toc_page": 45 }]
-}
-```
-
-Status levels:
-
-- **EXCELLENT**: >= 90% match
-- **GOOD**: >= 70% match
-- **FAIR**: >= 50% match
-- **POOR**: < 50% match
-
-## Environment
-
-Requires the extractor project with its virtual environment:
-
-- **Project**: `${HOME}/workspace/experiments/extractor`
-- **Venv**: `.venv/bin/python`
-- **Dependencies**: `scillm`, `fetcher` (local paths)
-
-Set `EXTRACTOR_ROOT` to override the project location.
-
-## Sanity Check
-
-```bash
-# Verify skill works across all formats
+.pi/skills/extractor/run.sh doctor
+.pi/skills/extractor/run.sh debug-routing paper.pdf
 .pi/skills/extractor/sanity.sh
 ```
 
-Tests: HTML, MD, XML, RST, DOCX, PPTX, EPUB, XLSX, PDF, PNG
+`doctor` checks the declared Extractor project and installed command.
+`debug-routing` prints the canonical Extractor help and supported wrapper
+arguments; it does not perform extraction.
 
-## LLM Requirements
-
-For accurate mode (VLM/table descriptions):
-
-- `CHUTES_API_BASE` - Chutes API endpoint
-- `CHUTES_API_KEY` - API key
-- `CHUTES_VLM_MODEL` - Vision model (default: Qwen/Qwen3-VL-235B-A22B-Instruct)
-- `CHUTES_TEXT_MODEL` - Text model (default: moonshotai/Kimi-K2-Instruct-0905)
-
-For Lean4 proving (arxiv preset):
-
-- `lean_runner` container running
-- `OPENROUTER_API_KEY` set
-
-## Common Mistakes
-
-```python
-# WRONG: Spawn extractors in a loop without concurrency limit
-for pdf in glob.glob("*.pdf"):
-    subprocess.run(["extractor/run.sh", pdf, "--accurate"])
-# → 79+ concurrent processes, 141GB RAM, system swap death (incident 2026-03-03)
-# RIGHT: Check active count, enforce MAX_CONCURRENT=4
-
-# WRONG: Use --accurate for first pass on unknown corpus
-# → Full LLM pipeline, 5000+ Chutes API calls, blows daily budget
-# RIGHT: Use --fast first pass, --accurate only on high-value docs
-
-# WRONG: No task-monitor registration for batch extraction
-# → Extractor runs silently for 24h, errors accumulate unnoticed
-# RIGHT: Register with task-monitor, watchdog checks error_rate every 60s
-```
+Set `EXTRACTOR_ROOT` only when the Extractor checkout is not at
+`${HOME}/workspace/experiments/extractor`.
