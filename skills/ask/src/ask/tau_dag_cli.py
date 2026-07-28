@@ -128,6 +128,13 @@ def run(
             help="Seconds a browser handler waits for the shared Surf browser lock. 0 keeps the derived default.",
         ),
     ] = 0,
+    attach_file: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--attach-file",
+            help="Local file forwarded to browser handlers as Surf --attach-file evidence. Repeat for multiple files.",
+        ),
+    ] = None,
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Reviewer criterion. Repeat for multiple criteria."),
@@ -202,6 +209,7 @@ def run(
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
         browser_lock_timeout=browser_lock_timeout,
+        attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
@@ -376,6 +384,13 @@ def compete(
             help="Seconds a browser handler waits for the shared Surf browser lock. 0 keeps the derived default.",
         ),
     ] = 0,
+    attach_file: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--attach-file",
+            help="Local file forwarded to browser handlers as Surf --attach-file evidence. Repeat for multiple files.",
+        ),
+    ] = None,
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Evaluation criterion. Repeat for multiple criteria."),
@@ -433,6 +448,7 @@ def compete(
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
         browser_lock_timeout=browser_lock_timeout,
+        attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}

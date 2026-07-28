@@ -119,6 +119,9 @@ def main() -> int:
     parser.add_argument("--stable-polls", type=int, default=2)
     parser.add_argument("--no-activate", action="store_true")
     parser.add_argument("--evidence", action="append", default=[])
+    # Caller-supplied local evidence forwarded to the provider as --attach-file
+    # (agent-skills#1062).
+    parser.add_argument("--attach-file", action="append", default=[], dest="attach_files")
     parser.add_argument("--codex-workspace", default="")
     parser.add_argument("--browser-model-preference", default="")
     parser.add_argument("--subagent-runner", default="")
@@ -249,6 +252,12 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 url = str(binding_refresh["current_url"])
 
             attachment_paths: list[str] = []
+            attachment_paths.extend(
+                resolve_requested_attachments(
+                    [str(item) for item in (getattr(args, "attach_files", None) or [])],
+                    handler=handler,
+                )
+            )
             for prior in prior_receipts:
                 prior_response = str(prior.get("response_path") or "")
                 if prior_response and Path(prior_response).is_file():
@@ -485,6 +494,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "prompt_path": str(prompt_path),
         "browser_prompt_path": str(submit_prompt_path) if submit_prompt_path != prompt_path else None,
         "browser_attachment_paths": browser_attachment_paths,
+        "requested_attachment_paths": [str(item) for item in (getattr(args, "attach_files", None) or [])],
         "browser_local_path_preflight": browser_local_path_preflight,
         "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
         "response_chars": len(response_text),
@@ -2075,6 +2085,26 @@ def _looks_browser_handler_timeout(text: str, commands: list[dict[str, Any]]) ->
         if "[tau-worker] command timed out after" in stderr:
             return True
     return False
+
+
+def resolve_requested_attachments(requested: list[str], *, handler: str) -> list[str]:
+    """Resolve caller-supplied evidence, failing closed on anything unusable.
+
+    A browser lane that silently drops requested evidence still answers, from
+    prose alone, and sounds just as confident (agent-skills#1062).
+    """
+    if not requested:
+        return []
+    missing = [item for item in requested if not Path(item).expanduser().is_file()]
+    if missing:
+        raise RuntimeError(
+            "browser_attachment_missing: requested attachment(s) not readable: " + ", ".join(missing)
+        )
+    if handler not in ATTACH_FILE_HANDLERS:
+        raise RuntimeError(
+            f"browser_attachment_unsupported: handler {handler} cannot receive --attach-file evidence"
+        )
+    return [str(Path(item).expanduser().resolve()) for item in requested]
 
 
 def _looks_environment_dependency_install_failed(text: str) -> bool:

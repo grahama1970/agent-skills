@@ -131,6 +131,15 @@ pre-create tabs or pass `--handler-project` for normal web seats. Use
 after the run. Use `--browser-tab-lifecycle reuse-bound` only for an
 intentionally known-good existing browser-oracle project.
 
+Pass local evidence a browser seat must actually see with `--attach-file <path>`
+(repeatable) on `tau-dag run` or `compete`. Ask forwards each file to Surf as
+`--attach-file` for browser handlers and records `requested_attachment_paths`
+plus `browser_attachment_paths` in the node receipt. A missing file or a handler
+that cannot attach fails the lane closed rather than answering from prose.
+Attachment delivery needs an extension build that handles
+`AI_UPLOAD_FILE_TO_TAB`; older extensions reject the upload and the lane reports
+`browser_submit_not_accepted` with that message.
+
 Browser lanes queue on the shared Surf browser lock. Ask derives the wait from
 handler count and topology; pass `--browser-lock-timeout <seconds>` on `tau-dag
 run` or `compete` to widen it for a busy browser. The resolved value is recorded
