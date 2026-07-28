@@ -809,10 +809,11 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
           "cdp_evaluate",
           { type: "CHATGPT_EVALUATE", tabId, expression },
         ),
-        cdpCommand: (tabId, method, params) => requestCallExtension(
+        cdpCommand: (tabId, method, params, timeoutMs) => requestCallExtension(
           requestContext,
           "cdp_command",
           { type: "CHATGPT_CDP_COMMAND", tabId, method, params },
+          Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined,
         ),
         uploadFile: (tabId, filePaths) => requestCallExtension(
           requestContext,

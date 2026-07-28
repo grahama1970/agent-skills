@@ -760,3 +760,91 @@ def test_webgpt_home_url_identity_mismatch_does_not_scan_unrelated_tabs() -> Non
     )
 
     assert retry is False
+
+
+# agent-skills#1034: a WebGPT submit meta always carries the field name
+# `browser_access_blocked`, so dumping the whole meta into the marker haystack
+# labelled every pre-delivery failure as a provider access challenge.
+_EXTENSION_TIMEOUT_FAILURE = (
+    "Terminated Error: Timeout waiting for extension: cdp_command\n"
+    "NotificationAssistedWaitRequested: false\n"
+    "ExtractFallbackReason: submit_failed\n"
+    "ExtractFallbackAttempts: 3"
+)
+_EXTENSION_TIMEOUT_META = {
+    "browser_access_blocked": False,
+    "cloudflare_challenge_detected": False,
+    "chatgpt_too_many_requests_detected": False,
+    "controlled_tab_id": None,
+    "exit_code": 1,
+    "failure": "submit_failed",
+    "proof_status": "delivery_not_proven",
+    "raw_contains_sentinel": False,
+    "status": "failed",
+    "submitted_to_chatgpt": False,
+    "timeout_error": None,
+}
+
+
+def test_extension_command_timeout_is_not_a_provider_access_challenge() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
+        failure=_EXTENSION_TIMEOUT_FAILURE,
+        response_text="",
+        raw_text="",
+        prompt_text="x" * 31955,
+        submit_meta=_EXTENSION_TIMEOUT_META,
+        commands=[],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_EXTENSION_COMMAND_TIMEOUT
+
+
+def test_extension_command_timeout_recovery_keeps_the_same_binding(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure=_EXTENSION_TIMEOUT_FAILURE,
+        submit_meta=dict(_EXTENSION_TIMEOUT_META),
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_EXTENSION_COMMAND_TIMEOUT
+    assert packet["auto_retry_blocked_reason"] == (
+        "surf_extension_command_timeout_retry_same_binding_after_extension_reload"
+    )
+    instruction = packet["fallback_instruction"].lower()
+    assert "extension" in instruction
+    assert "complete the provider access challenge" not in instruction
+    assert packet["reason"] != tau_roundtable_worker._recovery_reason(
+        tau_roundtable_worker.BROWSER_ACCESS_BLOCKED
+    )
+
+
+def test_real_access_challenge_still_classifies_as_access_blocked() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webgpt",
+        failure="verify you are human",
+        response_text="",
+        raw_text="",
+        prompt_text="",
+        submit_meta={**_EXTENSION_TIMEOUT_META, "browser_access_blocked": True, "failure": ""},
+        commands=[],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_ACCESS_BLOCKED
+
+
+def test_match_text_flattens_values_and_drops_field_names() -> None:
+    text = tau_roundtable_worker._match_text(
+        {
+            "browser_access_blocked": False,
+            "timeout_error": None,
+            "nested": {"failure": "submit_failed"},
+            "commands": [["surf", "webgpt.submit"]],
+        }
+    )
+
+    assert "browser_access_blocked" not in text
+    assert "timeout_error" not in text
+    assert "submit_failed" in text
+    assert "webgpt.submit" in text

@@ -57,6 +57,7 @@ BROWSER_CLEAN_OUTPUT_CONTAMINATED = "browser_clean_output_contaminated"
 BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
 WEBGPT_UNVERIFIED_CLEAN_OUTPUT = "missing_controlled_tab_id_or_contaminated_clean_output"
 BROWSER_HANDLER_TIMEOUT = "browser_handler_timeout"
+BROWSER_EXTENSION_COMMAND_TIMEOUT = "browser_extension_command_timeout"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
 SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
 BROWSER_TRANSPORT_BLOCKERS = {
@@ -74,6 +75,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_SENTINEL_TRAILING_CONTENT,
     WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
     BROWSER_HANDLER_TIMEOUT,
+    BROWSER_EXTENSION_COMMAND_TIMEOUT,
     SURF_BROWSER_LOCK_TIMEOUT,
     SURF_BROWSER_CONNECTION_UNAVAILABLE,
     "repo_access_blocked",
@@ -1490,8 +1492,8 @@ def _classify_browser_failure(
             failure,
             response_text,
             raw_text,
-            json.dumps(submit_meta, sort_keys=True, default=str),
-            json.dumps(commands[-1] if commands else {}, sort_keys=True, default=str),
+            _match_text(submit_meta),
+            _match_text(commands[-1] if commands else {}),
         ]
     ).lower()
     if (
@@ -1510,10 +1512,17 @@ def _classify_browser_failure(
         return BROWSER_PROVIDER_RATE_LIMITED
     if _looks_browser_provider_setup_failed(haystack, submit_meta):
         return BROWSER_PROVIDER_SETUP_FAILED
-    if _looks_browser_submit_not_accepted(haystack, submit_meta):
-        return BROWSER_SUBMIT_NOT_ACCEPTED
+    # Specific pre-delivery causes must precede submit-not-accepted: that check
+    # fires on `submitted_to_chatgpt is False`, which holds for EVERY failure
+    # before delivery, so it otherwise masks the real mechanism (a genuine
+    # access challenge or a Surf extension stall) behind a composer-recovery
+    # instruction (agent-skills#1034).
     if _looks_browser_access_blocked(haystack, submit_meta):
         return BROWSER_ACCESS_BLOCKED
+    if _looks_browser_extension_command_timeout(haystack, submit_meta):
+        return BROWSER_EXTENSION_COMMAND_TIMEOUT
+    if _looks_browser_submit_not_accepted(haystack, submit_meta):
+        return BROWSER_SUBMIT_NOT_ACCEPTED
     if _looks_browser_tool_unsupported(haystack):
         return BROWSER_TOOL_UNSUPPORTED
     if BROWSER_ATTACHMENT_UNAVAILABLE in haystack or _response_denies_attachment_access(response_text):
@@ -1618,6 +1627,44 @@ def _response_denies_attachment_access(text: str) -> bool:
         "file was not provided or rendered",
     )
     return any(marker in normalized for marker in markers)
+
+
+def _match_text(value: Any) -> str:
+    """Flatten a payload to its VALUES for substring classification.
+
+    Field names must never reach the marker haystack: a meta payload always
+    carries keys like `browser_access_blocked` and `timeout_error`, so dumping
+    the whole JSON made every WebGPT failure match those markers regardless of
+    the field values (agent-skills#1034).
+    """
+    parts: list[str] = []
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for item in node.values():
+                walk(item)
+        elif isinstance(node, (list, tuple, set)):
+            for item in node:
+                walk(item)
+        elif isinstance(node, str):
+            parts.append(node)
+        elif node is not None and not isinstance(node, bool):
+            parts.append(str(node))
+
+    walk(value)
+    return "\n".join(parts)
+
+
+def _looks_browser_extension_command_timeout(text: str, meta: dict[str, Any]) -> bool:
+    """Surf's native host gave up waiting for the browser extension.
+
+    This is a transport stall inside Surf/Chrome (`Timeout waiting for
+    extension: <tool>`), not a provider access challenge. It is lane-local and
+    retryable on the same binding.
+    """
+    if str(meta.get("failure") or "").strip().lower() == "extension_command_timeout":
+        return True
+    return "timeout waiting for extension" in text
 
 
 def _looks_browser_access_blocked(text: str, meta: dict[str, Any]) -> bool:
@@ -2350,6 +2397,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_SENTINEL_TRAILING_CONTENT: "The browser provider output included text after the terminal sentinel, so the clean assistant turn is not attributable.",
         WEBGPT_UNVERIFIED_CLEAN_OUTPUT: "WebGPT returned plausible text, but Surf could not prove the controlled tab or clean output attribution.",
         BROWSER_HANDLER_TIMEOUT: "The browser handler did not produce a usable, receipt-backed response before the declared worker timeout.",
+        BROWSER_EXTENSION_COMMAND_TIMEOUT: "Surf's native host timed out waiting for the Chrome extension to answer a browser command, so the prompt was never delivered; the provider itself did not block the request.",
         SURF_BROWSER_LOCK_TIMEOUT: "The Surf browser lock is held by another live command; the browser lane was not submitted.",
         SURF_BROWSER_CONNECTION_UNAVAILABLE: "The Surf native host or socket disconnected before the browser lane completed.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
@@ -2390,6 +2438,8 @@ def _auto_retry_blocked_reason(
         return "webgpt_controlled_tab_or_clean_output_unproven"
     if failure_code == BROWSER_HANDLER_TIMEOUT:
         return "browser_handler_timeout_expired"
+    if failure_code == BROWSER_EXTENSION_COMMAND_TIMEOUT:
+        return "surf_extension_command_timeout_retry_same_binding_after_extension_reload"
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return "surf_browser_lock_owner_still_running"
     if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
@@ -2426,6 +2476,13 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return (
             "Run the next_command to open and bind a clean provider tab, then rerun only this lane. "
             "Do not treat an uncleared composer draft as a provider rate limit or as a completed response."
+        )
+    if failure_code == BROWSER_EXTENSION_COMMAND_TIMEOUT:
+        return (
+            "Surf's native host timed out waiting for the Chrome extension, so nothing was submitted. "
+            "Reload the Surf extension (surf extension.reload), confirm the tab still answers "
+            "surf webgpt.tab-id-background-sanity, then rerun only this lane on the same binding. "
+            "Do not treat this as a provider access challenge and do not ask a human to solve a captcha."
         )
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "Repair the Surf wrapper/provider adapter command mapping, then rerun the Tau DAG node. Do not retry the same browser call unchanged."
@@ -2499,6 +2556,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_SENTINEL_TRAILING_CONTENT,
         WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
         BROWSER_HANDLER_TIMEOUT,
+        BROWSER_EXTENSION_COMMAND_TIMEOUT,
         SURF_BROWSER_LOCK_TIMEOUT,
         SURF_BROWSER_CONNECTION_UNAVAILABLE,
         "stale_raw_capture",

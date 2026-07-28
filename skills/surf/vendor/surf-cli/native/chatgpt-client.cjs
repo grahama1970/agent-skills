@@ -856,6 +856,31 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
   })()`;
 };
 
+const PROMPT_INSERT_CHUNK_CHARS = clampPositiveInt(process.env.SURF_WEBGPT_INSERT_CHUNK_CHARS, 6000);
+const PROMPT_INSERT_TIMEOUT_MS = clampPositiveInt(process.env.SURF_WEBGPT_INSERT_TIMEOUT_MS, 90000);
+
+function clampPositiveInt(raw, fallback) {
+  const value = Number.parseInt(raw || "", 10);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+// A single Input.insertText carrying the whole prompt stalls past the native
+// host's extension timeout on heavy conversations (agent-skills#1034: 32KB into
+// a long project thread never returned, while the same prompt succeeded on a
+// fresh tab). Chunking keeps every extension round-trip small; the caret stays
+// at the end of the composer, so sequential inserts rebuild the prompt in order.
+async function insertPromptText(inputCdp, prompt, signal) {
+  if (prompt.length <= PROMPT_INSERT_CHUNK_CHARS) {
+    await inputCdp("Input.insertText", { text: prompt }, PROMPT_INSERT_TIMEOUT_MS);
+    return;
+  }
+  for (let offset = 0; offset < prompt.length; offset += PROMPT_INSERT_CHUNK_CHARS) {
+    throwIfAborted(signal);
+    const chunk = prompt.slice(offset, offset + PROMPT_INSERT_CHUNK_CHARS);
+    await inputCdp("Input.insertText", { text: chunk }, PROMPT_INSERT_TIMEOUT_MS);
+  }
+}
+
 async function typePrompt(cdp, inputCdp, prompt, signal) {
   throwIfAborted(signal);
   const selectors = JSON.stringify(SELECTORS.promptTextarea.split(", "));
@@ -887,7 +912,7 @@ async function typePrompt(cdp, inputCdp, prompt, signal) {
   if (!focused) {
     throw new Error("Failed to focus prompt textarea");
   }
-  await inputCdp("Input.insertText", { text: prompt });
+  await insertPromptText(inputCdp, prompt, signal);
   await delay(300, signal);
   const verified = await evaluate(
     cdp,
@@ -1459,7 +1484,7 @@ async function query(options) {
   log(`${tabInfo.reused ? "Using" : "Created"} tab ${tabId}`);
 
   const cdp = (expr) => raceAbort(() => cdpEvaluate(tabId, expr), signal);
-  const inputCdp = (method, params) => raceAbort(() => cdpCommand(tabId, method, params), signal);
+  const inputCdp = (method, params, timeoutMs) => raceAbort(() => cdpCommand(tabId, method, params, timeoutMs), signal);
 
   try {
     await waitForPageLoad(cdp, 45000, signal);
