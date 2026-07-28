@@ -1065,3 +1065,63 @@ def test_attachment_contract_packet_asks_for_one_bundle(tmp_path: Path) -> None:
     instruction = packet["fallback_instruction"].lower()
     assert "one bundle or zip" in instruction
     assert "single --attach-file" in instruction
+
+
+# agent-skills#1081: a recovery packet that echoes the failing prompt verbatim
+# hands the operator a command Surf blocks as web_review_bundle_unreadable.
+def test_recovery_prompt_strips_local_paths_that_are_not_attached(tmp_path: Path) -> None:
+    prompt = tmp_path / "prompt.md"
+    prompt.write_text(
+        "Review /home/graham/workspace/experiments/sparta/metrics.md and report.\n", encoding="utf-8"
+    )
+
+    result = tau_roundtable_worker.sanitize_recovery_prompt(prompt, [])
+
+    assert result["sanitized"] is True
+    assert result["removed_paths"] == ["/home/graham/workspace/experiments/sparta/metrics.md"]
+    sanitized = Path(result["prompt_path"]).read_text(encoding="utf-8")
+    assert "/home/graham/workspace/experiments/sparta/metrics.md" not in sanitized
+    assert "<local path removed: not attached>" in sanitized
+
+
+def test_recovery_prompt_keeps_paths_that_are_actually_attached(tmp_path: Path) -> None:
+    evidence = tmp_path / "bundle.md"
+    evidence.write_text("evidence\n", encoding="utf-8")
+    prompt = tmp_path / "prompt.md"
+    prompt.write_text(f"Review {evidence} and report.\n", encoding="utf-8")
+
+    result = tau_roundtable_worker.sanitize_recovery_prompt(prompt, [str(evidence)])
+
+    assert result["sanitized"] is False
+    assert result["reason"] == "no_unattached_local_paths"
+
+
+def test_tab_liveness_is_unknown_without_a_usable_surf_runner(tmp_path: Path) -> None:
+    assert tau_roundtable_worker.tab_still_open(str(tmp_path / "absent-run.sh"), "837360001") is None
+    assert tau_roundtable_worker.tab_still_open("", "837360001") is None
+
+
+def test_tab_liveness_detects_a_closed_tab(tmp_path: Path) -> None:
+    fake = tmp_path / "surf-run.sh"
+    fake.write_text(
+        '#!/usr/bin/env bash\nprintf \'[{"id": 111, "url": "https://chatgpt.com/"}]\\n\'\n',
+        encoding="utf-8",
+    )
+    fake.chmod(0o755)
+
+    assert tau_roundtable_worker.tab_still_open(str(fake), "111") is True
+    assert tau_roundtable_worker.tab_still_open(str(fake), "999") is False
+
+
+def test_recovery_packet_exposes_lock_owner_and_tab_liveness(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure="Terminated Error: Response timeout",
+        submit_meta={"failure": "submit_failed"},
+    )
+
+    evidence = packet["evidence"]
+    assert "surf_lock_owner" in evidence
+    assert "bound_tab_open" in evidence
+    assert "recovery_prompt" in evidence
