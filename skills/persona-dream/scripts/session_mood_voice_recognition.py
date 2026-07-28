@@ -31,6 +31,20 @@ DEFAULT_LIVE_RECEIPT = LIVE_DIR / "RECEIPT.json"
 VOICE_REFS = Path("/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs")
 DEFAULT_REFERENCE_AUDIO = VOICE_REFS / "embry_authorized_ref_30s_8s.wav"
 
+#: The reference the live Chatterbox service actually conditions on. Verified
+#: 2026-07-28 from the container: CHATTERBOX_REF_AUDIO=/data/embry_ref.wav is
+#: bind-mounted from this path. Scoring a render against the AUTHORIZED
+#: reference alone measures render->candidate->authorized, two gaps at once,
+#: and reads as "not Embry" when the synthesis is in fact faithful to what it
+#: was given. Identity is judged against the conditioning reference; whether
+#: that reference is the authorized one is a separate, explicit gate.
+DEFAULT_CONDITIONING_REFERENCE = (
+    ROOT / "voice_clone_candidates" / "embry_kling_clone_candidate.wav"
+)
+
+#: Floor for "the conditioning reference is the authorized Embry voice".
+MIN_REFERENCE_PROVENANCE_SIMILARITY = 0.75
+
 #: Real non-Embry voices from the same corpus, recorded/rendered through the
 #: same pipeline. Using genuine other speakers rather than noise is what makes
 #: the negative meaningful: noise trivially scores low and would prove nothing.
@@ -174,18 +188,39 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     adversarial_rows: list[dict[str, Any]] = []
     backend_error: str | None = None
     baseline: dict[str, Any] | None = None
+    provenance: dict[str, Any] | None = None
 
     if not failed_gates:
         try:
             encoder = load_encoder()
             ref_embedding = embed(encoder, reference)
             baseline = within_speaker_baseline(encoder, reference)
+            cond_path = args.conditioning_reference
+            if cond_path.is_file():
+                cond_embedding = embed(encoder, cond_path)
+                provenance = {
+                    "conditioning_reference": artifact(cond_path),
+                    "seconds": audio_seconds(cond_path),
+                    "similarity_to_authorized": round(cosine(ref_embedding, cond_embedding), 6),
+                    "min_required": MIN_REFERENCE_PROVENANCE_SIMILARITY,
+                }
+                provenance["is_authorized_voice"] = (
+                    provenance["similarity_to_authorized"]
+                    >= MIN_REFERENCE_PROVENANCE_SIMILARITY
+                )
+            else:
+                cond_embedding = ref_embedding
+                provenance = {"error": f"conditioning reference missing: {cond_path}"}
             for path in renders:
-                score = cosine(ref_embedding, embed(encoder, path))
+                score = cosine(cond_embedding, embed(encoder, path))
                 genuine_rows.append(
                     {
                         "audio": artifact(path),
                         "seconds": audio_seconds(path),
+                        "similarity_to_conditioning_reference": round(score, 6),
+                        "similarity_to_authorized_reference": round(
+                            cosine(ref_embedding, embed(encoder, path)), 6
+                        ),
                         "similarity_to_embry": round(score, 6),
                         "passes_threshold": score >= MIN_EMBRY_SIMILARITY,
                     }
@@ -215,6 +250,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             failed_gates.append("adversarial_voices_rejected")
         if separation < MIN_SEPARATION:
             failed_gates.append("embry_impostor_separation")
+    if provenance is not None and not provenance.get("is_authorized_voice", False):
+        # The renders may be faithful to their conditioning voice and still be
+        # the wrong voice. This is the gate that catches an unauthorized default.
+        failed_gates.append("conditioning_reference_is_authorized_voice")
 
     receipt = {
         "schema": "persona_dream.session_mood_voice_recognition.v1",
@@ -234,6 +273,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "genuine_renders": genuine_rows,
         "adversarial_voices": adversarial_rows,
         "within_speaker_baseline": baseline,
+        "reference_provenance": provenance,
         "separation": separation,
         "backend_error": backend_error,
         "failed_gates": failed_gates,
@@ -262,6 +302,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--live-receipt", type=Path, default=DEFAULT_LIVE_RECEIPT)
     parser.add_argument("--reference-audio", type=Path, default=DEFAULT_REFERENCE_AUDIO)
+    parser.add_argument(
+        "--conditioning-reference",
+        type=Path,
+        default=DEFAULT_CONDITIONING_REFERENCE,
+        help="Reference the renders were actually conditioned on.",
+    )
     parser.add_argument(
         "--adversarial-audio",
         type=Path,

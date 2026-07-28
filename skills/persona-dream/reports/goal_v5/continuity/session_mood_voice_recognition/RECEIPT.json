@@ -34,11 +34,11 @@
     ],
     "proves": []
   },
-  "created_at": "2026-07-28T14:34:41Z",
+  "created_at": "2026-07-28T14:38:21Z",
   "engine": "resemblyzer",
   "failed_gates": [
     "all_renders_recognized_as_embry",
-    "embry_impostor_separation"
+    "conditioning_reference_is_authorized_voice"
   ],
   "genuine_renders": [
     {
@@ -48,9 +48,11 @@
         "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_finished_response.wav",
         "sha256": "sha256:ec3a987d6e164398b7502fca1ab6b6951f1d9360536e5fba2283b03e24229d12"
       },
-      "passes_threshold": false,
+      "passes_threshold": true,
       "seconds": 2.04,
-      "similarity_to_embry": 0.657272
+      "similarity_to_authorized_reference": 0.657272,
+      "similarity_to_conditioning_reference": 0.780143,
+      "similarity_to_embry": 0.780143
     },
     {
       "audio": {
@@ -61,7 +63,9 @@
       },
       "passes_threshold": false,
       "seconds": 2.16,
-      "similarity_to_embry": 0.607973
+      "similarity_to_authorized_reference": 0.607973,
+      "similarity_to_conditioning_reference": 0.738204,
+      "similarity_to_embry": 0.738204
     },
     {
       "audio": {
@@ -72,7 +76,9 @@
       },
       "passes_threshold": false,
       "seconds": 1.76,
-      "similarity_to_embry": 0.589046
+      "similarity_to_authorized_reference": 0.589046,
+      "similarity_to_conditioning_reference": 0.745472,
+      "similarity_to_embry": 0.745472
     }
   ],
   "live": false,
@@ -89,8 +95,20 @@
     "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
     "sha256": "sha256:f9dc30305e04c3963cfb100d8a4438b2d1fb219bcabf8861f25407ff01c760fd"
   },
+  "reference_provenance": {
+    "conditioning_reference": {
+      "bytes": 960078,
+      "exists": true,
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/voice_clone_candidates/embry_kling_clone_candidate.wav",
+      "sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098"
+    },
+    "is_authorized_voice": false,
+    "min_required": 0.75,
+    "seconds": 30.0,
+    "similarity_to_authorized": 0.738446
+  },
   "schema": "persona_dream.session_mood_voice_recognition.v1",
-  "separation": 0.000283,
+  "separation": 0.149441,
   "status": "BLOCKED_SESSION_MOOD_VOICE_RECOGNITION",
   "within_speaker_baseline": {
     "half_seconds": 4.0,
