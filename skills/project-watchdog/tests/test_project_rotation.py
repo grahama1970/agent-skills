@@ -406,3 +406,60 @@ def test_state_is_written_outside_the_repository():
     live = config.state_path()
     assert config.SKILL_DIR not in live.parents, "state must not sit inside the skill"
     assert live.parent == config.state_root()
+
+
+# --- an inconclusive audit must not be retried every minute ------------------
+
+
+def test_an_unanswered_audit_cools_down_and_the_backlog_advances(tmp_path, monkeypatch):
+    """A SciLLM auth failure made every audit inconclusive and the cron
+    re-audited the SAME closure ten times in ten minutes, while 36 other
+    closures waited."""
+    from watchdog import commands, config  # noqa: PLC0415
+
+    monkeypatch.setattr(config, "state_path", lambda: tmp_path / "state.json")
+    project = {"project_id": "p", "repo": "o/r", "worktree": "/tmp/x"}
+    projects = {"projects": [project]}
+    state = {"projects": {"p": {"state": "active"}}}
+    pending = [
+        {"number": 10, "closedAt": "2026-07-01T00:00:00Z"},
+        {"number": 11, "closedAt": "2026-07-02T00:00:00Z"},
+    ]
+    seen: list[int] = []
+
+    def fake_audit(run_id, receipt_dir, proj, issue, *, apply):
+        seen.append(int(issue["number"]))
+        return {"ok": False, "status": "NEEDS_ATTENTION", "verdict": None,
+                "project_id": "p"}
+
+    monkeypatch.setattr(commands.registry, "list_closed_for_audit", lambda r, p: pending)
+    monkeypatch.setattr(commands.registry, "rotation_order", lambda p, s, **k: [project])
+    monkeypatch.setattr(commands, "handle_closure_audit", fake_audit)
+    monkeypatch.setattr(commands, "load_json", lambda p: projects)
+
+    receipt: dict = {}
+    commands._audit_one_closure("r1", tmp_path, state, receipt, apply=True)
+    commands._audit_one_closure("r2", tmp_path, state, receipt, apply=True)
+
+    assert seen == [10, 11], "the second tick must move on, not re-audit #10"
+    assert receipt["closure_audit"]["cooling_down"] == 1
+
+
+def test_an_answered_audit_is_not_held_back(tmp_path, monkeypatch):
+    from watchdog import commands, config  # noqa: PLC0415
+
+    monkeypatch.setattr(config, "state_path", lambda: tmp_path / "state.json")
+    project = {"project_id": "p", "repo": "o/r", "worktree": "/tmp/x"}
+    state = {"projects": {"p": {"state": "active"}}}
+    monkeypatch.setattr(
+        commands.registry, "list_closed_for_audit",
+        lambda r, p: [{"number": 10, "closedAt": "2026-07-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(commands.registry, "rotation_order", lambda p, s, **k: [project])
+    monkeypatch.setattr(commands, "load_json", lambda p: {"projects": [project]})
+    monkeypatch.setattr(
+        commands, "handle_closure_audit",
+        lambda *a, **k: {"ok": True, "status": "COMPLETED", "verdict": "PASS", "project_id": "p"},
+    )
+    commands._audit_one_closure("r1", tmp_path, state, {}, apply=True)
+    assert state["closure_audit_attempts"] == {}, "an answered audit leaves no cooldown"

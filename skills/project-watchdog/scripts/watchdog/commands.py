@@ -177,12 +177,44 @@ def _audit_one_closure(
     if not pending_by_project:
         return None
 
-    chosen = pending_by_project[0]
+    # An audit that produced no verdict must not be retried on the next tick.
+    # A provider outage otherwise pins the lane to one closure forever while the
+    # rest of the backlog waits.
+    now = time.time()
+    attempts = state.setdefault("closure_audit_attempts", {})
+    cooling: list[str] = []
+    for entry in pending_by_project:
+        repo = str(entry["project"].get("repo"))
+        fresh = []
+        for issue in entry["pending"]:
+            key = f"{repo}#{issue['number']}"
+            last = float(attempts.get(key) or 0)
+            if now - last < config.CLOSURE_AUDIT_RETRY_COOLDOWN_SECONDS:
+                cooling.append(key)
+                continue
+            fresh.append(issue)
+        entry["pending"] = fresh
+    receipt["closure_audit"]["cooling_down"] = len(cooling)
+
+    ready = [e for e in pending_by_project if e["pending"]]
+    if not ready:
+        return None
+
+    chosen = ready[0]
     # Oldest closure first: the longest-unverified claim is the one most worth
     # checking, and it makes progress through a backlog deterministic.
     issue = sorted(chosen["pending"], key=lambda i: str(i.get("closedAt") or ""))[0]
     receipt["closure_audit"]["selected"] = int(issue["number"])
-    return handle_closure_audit(run_id, receipt_dir, chosen["project"], issue, apply=apply)
+
+    key = f"{chosen['project'].get('repo')}#{issue['number']}"
+    audited = handle_closure_audit(run_id, receipt_dir, chosen["project"], issue, apply=apply)
+    if apply:
+        if audited.get("verdict"):
+            attempts.pop(key, None)  # answered: no reason to hold it back
+        else:
+            attempts[key] = now
+        write_json(config.state_path(), state)
+    return audited
 
 
 def _attest_completion(
@@ -361,9 +393,16 @@ def _tick_locked(
             receipt["handled_issues"].append(audited)
             receipt["handled_count"] = 1
             receipt["ok"] = bool(audited.get("ok"))
-            receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"
+            # A previewed audit is not an event. Persisting a receipt for one
+            # would put a directory on disk every minute for work not done.
+            preview = audited.get("status") == "DRY_RUN"
+            receipt["status"] = (
+                "DRY_RUN" if preview else ("COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION")
+            )
             streaks.clear_idle(str(audited.get("project_id") or project_id))
-            return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
+            return finish(
+                run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=not preview
+            )
 
     # Nothing to repair and nothing to audit: the point where the system would
     # otherwise call itself done. Ask an independent seat whether it actually is.
@@ -373,8 +412,13 @@ def _tick_locked(
             receipt["handled_issues"].append(attested)
             receipt["handled_count"] = 1
             receipt["ok"] = bool(attested.get("ok"))
-            receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"
-            return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
+            preview = attested.get("status") == "DRY_RUN"
+            receipt["status"] = (
+                "DRY_RUN" if preview else ("COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION")
+            )
+            return finish(
+                run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=not preview
+            )
 
     if project is None:
         streak = streaks.record_idle(project_id)
