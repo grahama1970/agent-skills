@@ -138,6 +138,9 @@ def _body(
     agent: str,
     non_goals: str,
     details: dict[str, str],
+    context_files: list[str] | None = None,
+    required_skills: list[str] | None = None,
+    depends_on: list[str] | None = None,
 ) -> str:
     lines = [
         _section("Type", ticket_type),
@@ -154,13 +157,46 @@ def _body(
     if details:
         detail_text = "\n".join(f"- **{key}:** {value.strip() or 'Not specified.'}" for key, value in details.items())
         lines.append(_section("Ticket type details", detail_text))
+    # Bootstrap context for a stateless recurring agent. project-watchdog
+    # forwards the whole issue body to the repair node, so the body is the only
+    # project context a cron-dispatched agent gets. Naming the load-bearing
+    # files and skills here beats making it rediscover them on every tick, and
+    # only the VARIABLE part goes in the body: universal execution policy stays
+    # in best-practices-github-ticket rather than being copied into every issue.
+    if context_files:
+        lines.append(
+            _section(
+                "Required repository context",
+                "Read these before diagnosing or changing code:\n\n"
+                + "\n".join(f"- `{item}`" for item in context_files),
+            )
+        )
+    if required_skills:
+        lines.append(
+            _section(
+                "Required skills",
+                "Load these skills; do not rely on discovering them:\n\n"
+                + "\n".join(f"- `{item}`" for item in required_skills),
+            )
+        )
+    if depends_on:
+        lines.append(
+            _section(
+                "Dependencies",
+                "This ticket cannot close before these do:\n\n"
+                + "\n".join(f"- blocked-by: {item}" for item in depends_on),
+            )
+        )
     lines.append(
         "<!-- ticket-skill\n"
         f"type: {ticket_type}\n"
         f"target: {target}\n"
         f"route: {route}\n"
         f"agent: {agent or 'unspecified'}\n"
-        "-->\n"
+        + (f"context_files: {','.join(context_files)}\n" if context_files else "")
+        + (f"required_skills: {','.join(required_skills)}\n" if required_skills else "")
+        + (f"depends_on: {','.join(depends_on)}\n" if depends_on else "")
+        + "-->\n"
     )
     lines.append(
         "This ticket must be resolved under `best-practices-github-ticket`. "
@@ -182,6 +218,9 @@ def _draft(
     non_goals: str = "",
     details: dict[str, str] | None = None,
     extra_labels: list[str] | None = None,
+    context_files: list[str] | None = None,
+    required_skills: list[str] | None = None,
+    depends_on: list[str] | None = None,
 ) -> TicketDraft:
     _validate_common(ticket_type, target, proof, route)
     body = _body(
@@ -194,6 +233,9 @@ def _draft(
         agent=agent,
         non_goals=non_goals,
         details=details or {},
+        context_files=context_files,
+        required_skills=required_skills,
+        depends_on=depends_on,
     )
     return TicketDraft(
         ticket_type=ticket_type,
@@ -256,6 +298,15 @@ def bug(
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
+    context_file: list[str] = typer.Option(
+        [], "--context-file", help="Load-bearing file a stateless agent must read. Repeatable."
+    ),
+    required_skill: list[str] = typer.Option(
+        [], "--required-skill", help="Skill the resolver must load. Repeatable."
+    ),
+    depends_on: list[str] = typer.Option(
+        [], "--depends-on", help="owner/repo#N this ticket is blocked by. Repeatable."
+    ),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
     apply: bool = typer.Option(False, "--apply"),
     as_json: bool = typer.Option(False, "--json"),
@@ -277,6 +328,9 @@ def bug(
             "Reproduction or artifact": repro,
         },
         extra_labels=label,
+        context_files=list(context_file),
+        required_skills=list(required_skill),
+        depends_on=list(depends_on),
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 
@@ -294,6 +348,15 @@ def feature(
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
+    context_file: list[str] = typer.Option(
+        [], "--context-file", help="Load-bearing file a stateless agent must read. Repeatable."
+    ),
+    required_skill: list[str] = typer.Option(
+        [], "--required-skill", help="Skill the resolver must load. Repeatable."
+    ),
+    depends_on: list[str] = typer.Option(
+        [], "--depends-on", help="owner/repo#N this ticket is blocked by. Repeatable."
+    ),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
     apply: bool = typer.Option(False, "--apply"),
     as_json: bool = typer.Option(False, "--json"),
@@ -316,6 +379,9 @@ def feature(
             "Acceptance criteria": acceptance,
         },
         extra_labels=label,
+        context_files=list(context_file),
+        required_skills=list(required_skill),
+        depends_on=list(depends_on),
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 
@@ -332,6 +398,15 @@ def optimization(
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
+    context_file: list[str] = typer.Option(
+        [], "--context-file", help="Load-bearing file a stateless agent must read. Repeatable."
+    ),
+    required_skill: list[str] = typer.Option(
+        [], "--required-skill", help="Skill the resolver must load. Repeatable."
+    ),
+    depends_on: list[str] = typer.Option(
+        [], "--depends-on", help="owner/repo#N this ticket is blocked by. Repeatable."
+    ),
     apply: bool = typer.Option(False, "--apply"),
     as_json: bool = typer.Option(False, "--json"),
 ) -> None:
@@ -351,6 +426,9 @@ def optimization(
             "Proposed improvement": improvement,
             "Measurable target": measurable_target,
         },
+        context_files=list(context_file),
+        required_skills=list(required_skill),
+        depends_on=list(depends_on),
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 
@@ -367,6 +445,15 @@ def maintenance(
     agent: str = typer.Option("", "--agent"),
     non_goals: str = typer.Option("", "--non-goals"),
     label: list[str] = typer.Option([], "--label"),
+    context_file: list[str] = typer.Option(
+        [], "--context-file", help="Load-bearing file a stateless agent must read. Repeatable."
+    ),
+    required_skill: list[str] = typer.Option(
+        [], "--required-skill", help="Skill the resolver must load. Repeatable."
+    ),
+    depends_on: list[str] = typer.Option(
+        [], "--depends-on", help="owner/repo#N this ticket is blocked by. Repeatable."
+    ),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
     apply: bool = typer.Option(False, "--apply"),
     as_json: bool = typer.Option(False, "--json"),
@@ -388,6 +475,9 @@ def maintenance(
             "Scoped files": scoped_files,
         },
         extra_labels=label,
+        context_files=list(context_file),
+        required_skills=list(required_skill),
+        depends_on=list(depends_on),
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 
