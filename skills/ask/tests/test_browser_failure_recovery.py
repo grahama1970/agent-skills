@@ -994,3 +994,34 @@ def test_attachment_on_a_non_attaching_handler_fails_closed(tmp_path: Path) -> N
 
 def test_no_attachments_requested_is_not_an_error() -> None:
     assert tau_roundtable_worker.resolve_requested_attachments([], handler="webgpt") == []
+
+
+def test_size_packet_reports_a_provider_limit_only_when_stated(tmp_path: Path) -> None:
+    stated_root = tmp_path / "stated"
+    stated_root.mkdir()
+    stated = _packet(
+        stated_root,
+        handler="webkimi",
+        failure="Provider rejected the request: message is too long, limited to 32000 characters",
+        prompt_text="x" * 90000,
+        submit_meta={"failure": "submit_failed"},
+    )
+    assert stated["failure_code"] == "prompt_too_large_or_stalled"
+    assert stated["evidence"]["measured_prompt_chars"] == 90000
+    assert stated["evidence"]["provider_prompt_limit_chars"] == 32000
+    assert "--attach-file" in stated["fallback_instruction"]
+
+
+def test_size_packet_leaves_the_limit_unset_when_the_provider_never_said_one(tmp_path: Path) -> None:
+    silent_root = tmp_path / "silent"
+    silent_root.mkdir()
+    silent = _packet(
+        silent_root,
+        handler="webkimi",
+        failure="Provider rejected the request: message is too long",
+        prompt_text="x" * 90000,
+        submit_meta={"failure": "submit_failed"},
+    )
+    assert silent["failure_code"] == "prompt_too_large_or_stalled"
+    assert silent["evidence"]["measured_prompt_chars"] == 90000
+    assert silent["evidence"]["provider_prompt_limit_chars"] is None
