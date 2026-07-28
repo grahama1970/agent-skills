@@ -176,6 +176,11 @@ def _env_seconds(name: str, default: int) -> int:
     return value if value > 0 else default
 
 
+#: A lease older than this is abandoned. The acquisition timestamp comes from
+#: GitHub's label event, not the issue's mutable ``updatedAt`` value, so later
+#: comments do not keep a dead holder alive indefinitely.
+LEASE_STALE_SECONDS = _env_seconds("PROJECT_WATCHDOG_LEASE_STALE_SECONDS", 86_400)
+
 #: How long a project may report "nothing routable" before that stops counting
 #: as a steady state. Silence is not success: before 2026-07-27 this skill
 #: logged 41,607 consecutive idle ticks over roughly a month, every one of them

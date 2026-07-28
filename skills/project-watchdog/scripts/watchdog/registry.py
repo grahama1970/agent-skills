@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -175,7 +176,11 @@ def worktree_readiness(worktree: Path, targets: set[str] | None = None) -> dict[
 
 
 def list_routable_issues(
-    run_id: str, project: dict[str, Any], busy: set[str] | None = None
+    run_id: str,
+    project: dict[str, Any],
+    busy: set[str] | None = None,
+    *,
+    skip_issue_numbers: set[int] | None = None,
 ) -> list[dict[str, Any]]:
     """Return open issues this watchdog is permitted to route, in listing order.
 
@@ -210,7 +215,11 @@ def list_routable_issues(
     excluded: dict[str, list[int]] = {}
     has_lane = project_has_repair_lane(project)
     busy_now = set(busy or ())
+    skip_now = set(skip_issue_numbers or ())
     for issue in issues:
+        if int(issue["number"]) in skip_now:
+            excluded.setdefault("lease_reclaimed_this_tick", []).append(int(issue["number"]))
+            continue
         action, reason = classify_issue_with_reason(issue)
         if action is None:
             excluded.setdefault(reason or "unknown", []).append(int(issue["number"]))
@@ -256,6 +265,80 @@ def list_routable_issues(
     return routable
 
 
+def _parse_github_time(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed.astimezone(UTC)
+
+
+def _now_utc() -> datetime:
+    return datetime.now(UTC)
+
+
+def _lease_label_times(
+    run_id: str,
+    repo: str,
+    issue_number: int,
+    current_labels: set[str],
+) -> dict[str, datetime]:
+    """Return the latest active acquisition event for each current lease label."""
+    result = run_cmd(
+        [
+            "gh",
+            "api",
+            "--paginate",
+            "--slurp",
+            f"repos/{repo}/issues/{issue_number}/events?per_page=100",
+        ],
+        timeout_s=60,
+    )
+    log_event(
+        run_id,
+        "github_lease_event_scan",
+        repo=repo,
+        issue=issue_number,
+        exit_code=result.get("exit_code"),
+    )
+    if result.get("exit_code") != 0:
+        raise RuntimeError(
+            f"lease event scan failed for {repo}#{issue_number}: {result.get('stderr')}"
+        )
+    try:
+        payload = json.loads(result.get("stdout") or "[]")
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"lease event scan returned invalid JSON for {repo}#{issue_number}: {exc}"
+        ) from exc
+    if not isinstance(payload, list):
+        raise RuntimeError(
+            f"lease event scan returned a non-list for {repo}#{issue_number}"
+        )
+    pages = payload if payload and isinstance(payload[0], list) else [payload]
+    acquired: dict[str, datetime] = {}
+    for page in pages:
+        if not isinstance(page, list):
+            raise RuntimeError(
+                f"lease event scan returned a malformed page for {repo}#{issue_number}"
+            )
+        for event in page:
+            label = str((event.get("label") or {}).get("name", ""))
+            if label not in current_labels:
+                continue
+            if event.get("event") == "unlabeled":
+                acquired.pop(label, None)
+                continue
+            if event.get("event") != "labeled":
+                continue
+            moment = _parse_github_time(event.get("created_at"))
+            if moment is not None:
+                acquired[label] = moment
+    return acquired
+
+
 def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:
     """Issues already leased for this project, i.e. work in flight.
 
@@ -283,7 +366,7 @@ def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any
                 "--label", label, "--limit", "20",
                 # body included: the target is read from it, and without it
                 # every in-flight ticket reads as unknown-target.
-                "--json", "number,title,body,labels,url",
+                "--json", "number,title,body,labels,url,updatedAt",
             ],
             timeout_s=60,
         )
@@ -295,8 +378,93 @@ def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any
                 f"lease scan failed for {repo} on label {label}: {result.get('stderr')}"
             )
         for issue in json.loads(result.get("stdout") or "[]"):
-            by_number[int(issue["number"])] = issue
-    return [by_number[n] for n in sorted(by_number)]
+            number = int(issue["number"])
+            existing = by_number.get(number, issue)
+            scanned = set(existing.get("_watchdog_scanned_labels", []))
+            scanned.add(label)
+            existing["_watchdog_scanned_labels"] = sorted(scanned)
+            by_number[number] = existing
+
+    now = _now_utc()
+    active: list[dict[str, Any]] = []
+    stale_by_issue: list[dict[str, Any]] = []
+    unknown: list[dict[str, Any]] = []
+    for number in sorted(by_number):
+        issue = by_number[number]
+        current_labels = {
+            str(label.get("name"))
+            for label in issue.get("labels", [])
+            if str(label.get("name")) in config.LEASE_LABELS
+        }
+        current_labels |= set(issue.get("_watchdog_scanned_labels", []))
+        # ``updatedAt`` is requested by the live scan and acts only as a payload
+        # completeness marker. The timestamp itself is never used as lease age:
+        # comments can change it long after acquisition.
+        label_times = (
+            _lease_label_times(run_id, repo, number, current_labels)
+            if issue.get("updatedAt")
+            else {}
+        )
+        stale_labels: list[dict[str, Any]] = []
+        fresh_labels: list[dict[str, Any]] = []
+        for label in sorted(current_labels):
+            acquired = label_times.get(label)
+            if acquired is None:
+                # Fail closed when GitHub cannot establish acquisition time. The
+                # lease remains in flight and the receipt exposes the gap.
+                fresh_labels.append(
+                    {
+                        "label": label,
+                        "acquired_at": None,
+                        "reason": "lease_acquisition_time_unknown",
+                    }
+                )
+                unknown.append({"issue_number": number, "label": label})
+                continue
+            age_seconds = max(0, int((now - acquired).total_seconds()))
+            lease = {
+                "label": label,
+                "acquired_at": acquired.isoformat().replace("+00:00", "Z"),
+                "age_seconds": age_seconds,
+                "stale_after_seconds": config.LEASE_STALE_SECONDS,
+                "timestamp_source": "github_label_event",
+            }
+            if age_seconds >= config.LEASE_STALE_SECONDS:
+                lease["reason"] = "lease_expired"
+                stale_labels.append(lease)
+            else:
+                lease["reason"] = "lease_active"
+                fresh_labels.append(lease)
+        if stale_labels:
+            stale_by_issue.append(
+                {
+                    "issue_number": number,
+                    "issue_url": str(issue.get("url", "")),
+                    "labels": [lease["label"] for lease in stale_labels],
+                    "leases": stale_labels,
+                    "reason": "lease_expired",
+                }
+            )
+        if fresh_labels:
+            issue["watchdog_leases"] = fresh_labels
+            active.append(issue)
+
+    LAST_LEASE_SCAN.clear()
+    LAST_LEASE_SCAN.update(
+        {
+            "stale_after_seconds": config.LEASE_STALE_SECONDS,
+            "stale": stale_by_issue,
+            "active": [
+                {
+                    "issue_number": int(issue["number"]),
+                    "leases": issue.get("watchdog_leases", []),
+                }
+                for issue in active
+            ],
+            "unknown_acquisition_time": unknown,
+        }
+    )
+    return active
 
 
 #: The machine-readable `target: skills/<name>` line `/ticket` writes into every
@@ -387,6 +555,10 @@ def select_next_project(
 #: Side-channel for the last scan's non-routable tally, so ``tick`` can report
 #: WHY nothing was routable without re-listing.
 LAST_SCAN: dict[str, int] = {}
+
+#: Side-channel for receipt construction, parallel to ``LAST_SCAN`` above.
+#: ``lane_busy_issues`` stays backward-compatible as a list-returning function.
+LAST_LEASE_SCAN: dict[str, Any] = {}
 
 
 def project_has_repair_lane(project: dict[str, Any]) -> bool:

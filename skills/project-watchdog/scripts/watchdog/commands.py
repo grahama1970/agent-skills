@@ -32,7 +32,7 @@ from typing import Any
 
 from loguru import logger
 
-from . import config, registry, streaks
+from . import config, github, registry, streaks
 from .core import (
     acquire_lock,
     base_receipt,
@@ -86,6 +86,33 @@ def _record_fleet_stall(receipt: dict[str, Any], skipped: list[dict[str, Any]]) 
         )
     else:
         receipt["ok"] = True
+
+
+def _reclaim_stale_leases(
+    repo: str,
+    stale: list[dict[str, Any]],
+    *,
+    apply: bool,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Clear only expired lease labels and return reclaimed rows plus failures."""
+    reclaimed: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    if not apply:
+        return reclaimed, failures
+    for entry in stale:
+        command = github.issue_edit(
+            repo,
+            int(entry["issue_number"]),
+            remove=list(entry.get("labels", [])),
+        )
+        row = {**entry, "command": command}
+        if command.get("exit_code") == 0:
+            row["status"] = "reclaimed"
+            reclaimed.append(row)
+        else:
+            row["status"] = "reclaim_failed"
+            failures.append(row)
+    return reclaimed, failures
 
 
 def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
@@ -181,14 +208,53 @@ def _tick_locked(
     except RuntimeError as exc:
         receipt.update({"ok": False, "status": "BLOCKED", "errors": [str(exc)]})
         return finish(run_id, receipt_dir, receipt, 1)
+    stale = list(registry.LAST_LEASE_SCAN.get("stale", []))
+    receipt["lease_staleness"] = {
+        "stale_after_seconds": registry.LAST_LEASE_SCAN.get(
+            "stale_after_seconds", config.LEASE_STALE_SECONDS
+        ),
+        "stale": stale,
+        "unknown_acquisition_time": registry.LAST_LEASE_SCAN.get(
+            "unknown_acquisition_time", []
+        ),
+    }
+    reclaimed, reclaim_failures = _reclaim_stale_leases(
+        registry.project_repo(project), stale, apply=apply
+    )
+    receipt["reclaimed_leases"] = reclaimed
+    if not apply and stale:
+        receipt["would_reclaim_leases"] = stale
+    if reclaim_failures:
+        receipt.update(
+            {
+                "ok": False,
+                "status": "BLOCKED",
+                "stop_reason": "stale_lease_reclaim_failed",
+                "reclaim_failures": reclaim_failures,
+                "errors": [
+                    f"failed to clear stale lease labels on issue "
+                    f"{entry['issue_number']}"
+                    for entry in reclaim_failures
+                ],
+            }
+        )
+        return finish(run_id, receipt_dir, receipt, 1)
     busy = registry.busy_targets(in_flight)
     receipt["in_flight"] = {
         "issues": [int(i["number"]) for i in in_flight],
         "targets": sorted(busy),
+        "leases": registry.LAST_LEASE_SCAN.get("active", []),
     }
 
     try:
-        issues = list_routable_issues(run_id, project, busy)
+        issues = list_routable_issues(
+            run_id,
+            project,
+            busy,
+            skip_issue_numbers={
+                int(entry["issue_number"]) for entry in reclaimed
+            },
+        )
     except (RuntimeError, ValueError) as exc:
         receipt.update({"ok": False, "status": "BLOCKED", "errors": [f"issue scan failed: {exc}"]})
         logger.error("issue scan failed for project {}: {}", project_id, exc)
@@ -196,6 +262,19 @@ def _tick_locked(
 
     receipt["scanned_issues"] = issues
     if not issues:
+        if reclaimed:
+            receipt.update(
+                {
+                    "ok": True,
+                    "status": "COMPLETED",
+                    "stop_reason": "stale_leases_reclaimed",
+                    "summary": (
+                        f"reclaimed {len(reclaimed)} stale lease(s); no ticket was "
+                        "reassigned in this tick"
+                    ),
+                }
+            )
+            return finish(run_id, receipt_dir, receipt, 0)
         streak = streaks.record_idle(project_id)
         receipt["idle_streak"] = streak.as_receipt_block()
         if streak.escalated:

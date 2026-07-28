@@ -192,6 +192,19 @@ abandoned by a killed process and reclaimed, with the takeover logged at
 WARNING. Without this, a single SIGKILL would leave the watchdog permanently
 `BLOCKED`.
 
+## Lease expiry
+
+Issue leases use `agent-active` or `maintainer-active`. Their acquisition time
+comes from GitHub's label event, and new watchdog lease comments also include
+`acquired_at`. A lease becomes stale after
+`PROJECT_WATCHDOG_LEASE_STALE_SECONDS` (default 24 hours).
+
+On an applied tick, stale lease labels are removed before routing. The tick
+receipt names each issue, label, acquisition time, age, expiry window, and
+reason under `reclaimed_leases`. Reclamation removes only the lease label; it
+does not change assignees or dispatch that same issue again in the reclaiming
+tick. A dry run reports `would_reclaim_leases` without mutating GitHub.
+
 ## Pause, Stop, Resume
 
 The watchdog must check both global and per-project state before scanning or

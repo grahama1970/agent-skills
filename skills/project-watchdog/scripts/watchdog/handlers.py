@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from . import config, github, registry
-from .core import log_event, run_cmd, write_json
+from .core import iso_now, log_event, run_cmd, write_json
 from .issue_fields import (
     parse_bool,
     parse_goal_hash,
@@ -144,6 +144,7 @@ def handle_tau_handoff_dispatch(
                 "Lease acquired",
                 {
                     "schema": "agent_skills.project_watchdog.lease.v1",
+                    "acquired_at": iso_now(),
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "selected_agent": "tau-handoff-dispatch",
@@ -287,6 +288,7 @@ def handle_tau_coder_spec(
                 "Lease acquired",
                 {
                     "schema": "agent_skills.project_watchdog.lease.v1",
+                    "acquired_at": iso_now(),
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "selected_agent": "coder",
@@ -716,6 +718,7 @@ def handle_ticket_repair(
                 "Lease acquired",
                 {
                     "schema": "agent_skills.project_watchdog.lease.v1",
+                    "acquired_at": iso_now(),
                     "run_id": run_id,
                     "issue": f"issue#{issue_number}",
                     "repo": repo,
