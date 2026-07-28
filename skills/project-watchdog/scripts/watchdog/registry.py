@@ -24,6 +24,7 @@ Failure modes
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -118,8 +119,14 @@ def worktree_readiness(worktree: Path) -> dict[str, Any]:
     return row
 
 
-def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return open issues this watchdog is permitted to route, in listing order."""
+def list_routable_issues(
+    run_id: str, project: dict[str, Any], busy: set[str] | None = None
+) -> list[dict[str, Any]]:
+    """Return open issues this watchdog is permitted to route, in listing order.
+
+    ``busy`` is the set of targets already in flight. A ticket against one of
+    them is held back; a ticket against any other target is free to go.
+    """
     repo = project_repo(project)
     command = [
         "gh",
@@ -147,10 +154,15 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
     # that dispatches nothing names the tickets it declined and why.
     excluded: dict[str, list[int]] = {}
     has_lane = project_has_repair_lane(project)
+    busy_now = set(busy or ())
     for issue in issues:
         action, reason = classify_issue_with_reason(issue)
         if action is None:
             excluded.setdefault(reason or "unknown", []).append(int(issue["number"]))
+            continue
+        targets = issue_targets(issue)
+        if targets_are_blocked(targets, busy_now):
+            excluded.setdefault("target_busy", []).append(int(issue["number"]))
             continue
         if action == "ticket_repair" and not has_lane:
             # The project exposes no Tau DAG repair lane, so this issue is not
@@ -160,6 +172,10 @@ def list_routable_issues(run_id: str, project: dict[str, Any]) -> list[dict[str,
             unroutable_no_repair_lane += 1
             continue
         issue["watchdog_action"] = action
+        issue["watchdog_targets"] = sorted(targets)
+        # Claim them for the rest of this scan: with max_tickets > 1 two tickets
+        # against the same target would otherwise both look free.
+        busy_now |= targets
         routable.append(issue)
     if excluded:
         log_event(
@@ -210,7 +226,9 @@ def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any
             [
                 "gh", "issue", "list", "--repo", repo, "--state", "open",
                 "--label", label, "--limit", "20",
-                "--json", "number,title,labels,url",
+                # body included: the target is read from it, and without it
+                # every in-flight ticket reads as unknown-target.
+                "--json", "number,title,body,labels,url",
             ],
             timeout_s=60,
         )
@@ -226,25 +244,73 @@ def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any
     return [by_number[n] for n in sorted(by_number)]
 
 
+#: The machine-readable `target: skills/<name>` line `/ticket` writes into every
+#: body. That line is the ticket's own statement of what it will change.
+_TARGET_LINE = re.compile(r"^target:\s*(\S+)\s*$", re.MULTILINE)
+
+#: Fallback for tickets filed before that line existed: every skill path the
+#: body mentions. Coarser, but it resolves 7 of the 8 leases currently open on
+#: agent-skills, where the `target:` line resolves 1.
+_SKILL_PATH = re.compile(r"\bskills/[a-z0-9][a-z0-9._-]*")
+
+#: A ticket whose target cannot be read at all. Just another target value: it
+#: collides with other unreadable tickets and with nothing else. Treating it as
+#: colliding with everything sounds safer and is not -- one legacy ticket with
+#: no target then holds the whole fleet, which is the stall being fixed.
+UNKNOWN_TARGET = "?"
+
+
+def issue_targets(issue: dict[str, Any]) -> set[str]:
+    """The paths a ticket will change, e.g. ``{"skills/ticket"}``.
+
+    A repository is not the unit of collision. agent-skills holds 364 skills;
+    two tickets against different ones share no files and cannot cascade into
+    each other, while two against the same one edit the same tree. Scheduling on
+    the repo blocks 363 skills to protect 1.
+    """
+    body = issue.get("body") or ""
+    match = _TARGET_LINE.search(body)
+    if match and (declared := match.group(1).strip().rstrip("/")):
+        return {declared}
+    mentioned = {path.rstrip("/") for path in _SKILL_PATH.findall(body)}
+    return mentioned or {UNKNOWN_TARGET}
+
+
+def busy_targets(issues: list[dict[str, Any]]) -> set[str]:
+    """Every target held by the given in-flight issues."""
+    held: set[str] = set()
+    for issue in issues:
+        held |= issue_targets(issue)
+    return held
+
+
+def targets_are_blocked(targets: set[str], busy: set[str]) -> bool:
+    """Whether dispatching ``targets`` would touch something already in flight."""
+    return bool(targets & busy)
+
+
 def select_next_project(
     *,
     run_id: str,
     projects: dict[str, Any],
     state: dict[str, Any],
     last_served: str | None,
-    busy_checker: Any = None,
 ) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
-    """Round-robin to the next ACTIVE project whose lane is free.
+    """Round-robin to the next ACTIVE project.
 
     The crontab is hardcoded to one project, and ``tick`` resolved exactly that
-    one, so a busy or idle project stalled the whole fleet and no other project
-    was ever serviced. Rotation starts AFTER the last-served project so service
-    is fair rather than always restarting at the head of the registry.
+    one, so an idle project stalled the whole fleet and no other project was
+    ever serviced. Rotation starts AFTER the last-served project so service is
+    fair rather than always restarting at the head of the registry.
+
+    A leased ticket does NOT take its project out of the rotation. Collision is
+    a property of the target, not the repository, and is enforced per ticket in
+    ``list_routable_issues``. Skipping the project instead meant one lease on
+    agent-skills withheld the other 363 skills.
 
     Returns the chosen project (or None) and a per-project skip ledger, so a
     tick that dispatches nothing still says why for each candidate.
     """
-    check = busy_checker if busy_checker is not None else lane_busy_issues
     entries = list(projects.get("projects", []))
     ids = [str(e.get("project_id")) for e in entries]
     start = 0
@@ -258,20 +324,6 @@ def select_next_project(
         project_state = state.get("projects", {}).get(pid, {}).get("state")
         if project_state != "active":
             skipped.append({"project_id": pid, "reason": f"project_state_{project_state}"})
-            continue
-        try:
-            in_flight = check(run_id, entry)
-        except RuntimeError as exc:
-            skipped.append({"project_id": pid, "reason": f"lease_scan_failed: {exc}"})
-            continue
-        if in_flight:
-            skipped.append(
-                {
-                    "project_id": pid,
-                    "reason": "lane_busy",
-                    "in_flight_issues": [int(i["number"]) for i in in_flight],
-                }
-            )
             continue
         return entry, skipped
     return None, skipped
