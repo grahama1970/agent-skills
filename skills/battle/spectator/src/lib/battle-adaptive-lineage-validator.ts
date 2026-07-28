@@ -7,6 +7,7 @@ type ValidationResult =
 const V13_LANES = ["red-g1", "red-g2", "blue-g1", "blue-g2"] as const;
 const V14_LANES = ["red-g2", "red-g3", "blue-g2", "blue-g3"] as const;
 const RAW_PATH_MARKERS = ["/tmp/", "/home/", "tau-live", "command-loop/", "provider-workspace", "arena/private", "reviewed/", "memory_service", "service_response", "recalled_document"];
+const TEAMS = ["red", "blue"] as const;
 
 function record(value: unknown): Record<string, unknown> | null {
 	return value != null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -23,25 +24,31 @@ export function validateAdaptiveLineageFixture(data: unknown): ValidationResult 
 	}
 	if (root.proof_mode !== "receipt_backed_fixture" || root.causal_continuity_proven !== true) return fail("Causal receipt-backed proof is required.");
 	const campaign = record(root.campaign);
-	if (!campaign || campaign.generation_count !== 2 || !Number.isFinite(campaign.elapsed_seconds)) return fail("Two-generation campaign clock is invalid.");
+	const generationCount = Number(campaign?.generation_count);
+	if (!campaign || !Number.isInteger(generationCount) || generationCount < 2 || !Number.isFinite(campaign.elapsed_seconds)) return fail("Adaptive campaign clock is invalid.");
 	const isMemory = root.live_source === "adaptive_memory_v14";
-	const expectedLanes = isMemory ? V14_LANES : V13_LANES;
-	const generationIds = Array.isArray(campaign.generation_ids) ? campaign.generation_ids : isMemory ? [] : [1, 2];
-	const expectedGenerations = isMemory ? [2, 3] : [1, 2];
-	if (generationIds.length !== 2 || generationIds.some((value, index) => value !== expectedGenerations[index])) return fail(`Expected ${expectedGenerations.join("/")} campaign generations.`);
+	if (isMemory && generationCount !== 2) return fail("V14 memory projection must remain a two-generation continuation.");
+	const generationIds = Array.isArray(campaign.generation_ids) ? campaign.generation_ids.map(Number) : isMemory ? [] : [1, 2];
+	const expectedGenerations = isMemory ? [2, 3] : Array.from({ length: generationCount }, (_unused, index) => index + 1);
+	if (generationIds.length !== expectedGenerations.length || generationIds.some((value, index) => value !== expectedGenerations[index])) return fail(`Expected ${expectedGenerations.join("/")} campaign generations.`);
+	const expectedLanes = isMemory ? [...V14_LANES] : TEAMS.flatMap((team) => expectedGenerations.map((generation) => `${team}-g${generation}`));
 
 	const lanes = Array.isArray(root.lanes) ? root.lanes.map(record) : [];
-	if (lanes.length !== 4 || lanes.some((lane) => !lane)) return fail("Exactly four adaptive lanes are required.");
+	if (lanes.length !== expectedLanes.length || lanes.some((lane) => !lane)) return fail(`Exactly ${expectedLanes.length} adaptive lanes are required.`);
 	const laneIds = lanes.map((lane) => String(lane!.lane_id));
-	if (new Set(laneIds).size !== 4 || expectedLanes.some((laneId) => !laneIds.includes(laneId))) return fail(`Stable Red/Blue ${expectedGenerations.map((generation) => `G${generation}`).join("/")} lane ids are required.`);
+	if (new Set(laneIds).size !== expectedLanes.length || expectedLanes.some((laneId) => !laneIds.includes(laneId))) return fail(`Stable Red/Blue ${expectedGenerations.map((generation) => `G${generation}`).join("/")} lane ids are required.`);
 	for (const lane of lanes) {
 		const visual = record(lane!.actor_visual);
 		if (!visual || visual.variant_id !== "v13-shared-runner" || visual.cosmetic_only !== true || visual.semantic_authority !== false) return fail(`Lane ${String(lane!.lane_id)} lacks the cosmetic-only sprite binding.`);
 		if (!Number.isFinite(lane!.visible_from_elapsed_seconds) || !Number.isFinite(lane!.active_from_elapsed_seconds) || Number(lane!.active_from_elapsed_seconds) < Number(lane!.visible_from_elapsed_seconds)) return fail(`Lane ${String(lane!.lane_id)} has invalid visibility/activation timing.`);
+		if (!TEAMS.includes(String(lane!.team) as (typeof TEAMS)[number]) || !expectedGenerations.includes(Number(lane!.generation))) return fail(`Lane ${String(lane!.lane_id)} has invalid team or generation.`);
+		const expectedParent = Number(lane!.generation) === expectedGenerations[0] ? null : `${String(lane!.team)}-g${Number(lane!.generation) - 1}`;
+		if (lane!.parent_lane_id !== expectedParent) return fail(`Lane ${String(lane!.lane_id)} has invalid parent lane.`);
 	}
 
 	const edges = Array.isArray(root.lineage_edges) ? root.lineage_edges.map(record) : [];
-	if (edges.length !== 2 || edges.some((edge) => !edge)) return fail("Exactly two lineage edges are required.");
+	const expectedEdgeCount = isMemory ? 2 : TEAMS.length * (expectedGenerations.length - 1);
+	if (edges.length !== expectedEdgeCount || edges.some((edge) => !edge)) return fail(`Exactly ${expectedEdgeCount} lineage edges are required.`);
 	for (const edge of edges) {
 		if (!laneIds.includes(String(edge!.parent_lane_id)) || !laneIds.includes(String(edge!.child_lane_id))) return fail("Lineage edge references an unknown lane.");
 		if (isMemory) {
@@ -49,6 +56,9 @@ export function validateAdaptiveLineageFixture(data: unknown): ValidationResult 
 		} else if ((edge!.edge_kind != null && edge!.edge_kind !== "spawn") || !record(edge!.requested_receipt_ref) || !record(edge!.authorized_receipt_ref)) {
 			return fail("Spawn lineage receipt bindings are required.");
 		}
+		const parentLane = lanes.find((lane) => lane?.lane_id === edge!.parent_lane_id);
+		const childLane = lanes.find((lane) => lane?.lane_id === edge!.child_lane_id);
+		if (!parentLane || !childLane || parentLane.team !== childLane.team || Number(childLane.generation) !== Number(parentLane.generation) + 1) return fail("Lineage edge must connect same-team adjacent generations.");
 	}
 
 	const theme = record(root.sprite_theme);
@@ -61,7 +71,7 @@ export function validateAdaptiveLineageFixture(data: unknown): ValidationResult 
 
 	const events = Array.isArray(root.events) ? root.events.map(record) : [];
 	const expectedEventCount = isMemory ? 9 : 24;
-	if (events.length !== expectedEventCount || events.some((event) => !event)) return fail(`The ${isMemory ? "V14 memory" : "retained V13"} journal must contain ${expectedEventCount} events.`);
+	if ((isMemory ? events.length !== expectedEventCount : events.length < expectedEventCount) || events.some((event) => !event)) return fail(`The ${isMemory ? "V14 memory" : "retained V13"} journal must contain ${isMemory ? expectedEventCount : `at least ${expectedEventCount}`} events.`);
 	let lastElapsed = -1;
 	for (let index = 0; index < events.length; index += 1) {
 		const event = events[index]!;
@@ -89,7 +99,7 @@ export function validateAdaptiveLineageFixture(data: unknown): ValidationResult 
 		if (evaluation.scope !== "generation_pair" || evaluation.lane_id !== null || record(evaluation.payload)?.improvement_proven !== false) return fail("Memory generation evaluation must remain global and must not prove improvement.");
 		if (record(root.memory_lifecycle)?.improvement_proven !== false) return fail("Memory lifecycle must explicitly deny measured improvement.");
 	} else {
-		if (events.filter((event) => event!.event_type === "judge_verdict" && event!.scope === "generation_pair").length !== 2) return fail("Exactly two global Judge events are required.");
+		if (events.filter((event) => event!.event_type === "judge_verdict" && event!.scope === "generation_pair").length !== expectedGenerations.length) return fail("Exactly one global Judge event per generation is required.");
 		if (events.some((event) => event!.event_type === "selection_decision" && event!.scope !== "campaign")) return fail("Selection must remain campaign-scoped.");
 	}
 

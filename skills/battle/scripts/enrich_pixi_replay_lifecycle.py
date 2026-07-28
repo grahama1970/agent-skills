@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,12 @@ def _link_public_fixture(out_dir: Path, name: str) -> None:
                 public_dir.unlink()
             elif public_dir.is_dir():
                 shutil.rmtree(public_dir)
-        public_dir.symlink_to(out_dir.resolve())
+        target = out_dir.resolve()
+        try:
+            target = Path(os.path.relpath(target, public_root.resolve()))
+        except ValueError:
+            pass
+        public_dir.symlink_to(target)
 
 DEFAULT_BASE = BATTLE_DIR / "local/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json"
 DEFAULT_OUT_DIR = BATTLE_DIR / "local/battle-004-parent-spawn-lifecycle-pixi-replay"
@@ -34,6 +40,16 @@ DEFAULT_COMBINER = Path("/tmp/battle-004-combiner")
 
 def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _display_path(path: Path | None) -> str | None:
+    if path is None:
+        return None
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(BATTLE_DIR))
+    except ValueError:
+        return str(resolved)
 
 
 def _lane_by_id(fixture: dict[str, Any], lane_id: str) -> dict[str, Any] | None:
@@ -207,7 +223,7 @@ def enrich_fixture(fixture: dict[str, Any], *, combiner_dir: Path | None) -> dic
     enriched["lifecycle_enrichment"].update(
         {
             "schema": "battle.lifecycle_enrichment.v1",
-            "source": str(combiner_dir) if combiner_dir else None,
+            "source": _display_path(combiner_dir),
             "proof_mode": "receipt_backed_fixture",
             "fields_emitted": [
                 key
@@ -242,7 +258,7 @@ def copy_stream_artifacts(base_dir: Path, out_dir: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", type=Path, default=DEFAULT_BASE)
-    parser.add_argument("--combiner-dir", type=Path, default=DEFAULT_COMBINER)
+    parser.add_argument("--combiner-dir", type=Path, default=Path(os.environ.get("BATTLE_COMBINER_DIR", DEFAULT_COMBINER)))
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--skip-combiner", action="store_true")
     args = parser.parse_args()

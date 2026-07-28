@@ -1,0 +1,1155 @@
+{
+  "battle_id": "battle-004",
+  "campaign": {
+    "campaign_clock_id": "clock",
+    "elapsed_seconds": 41.0,
+    "generation_count": 3,
+    "generation_ids": [
+      1,
+      2,
+      3
+    ],
+    "teams": [
+      "red",
+      "blue"
+    ]
+  },
+  "causal_continuity_proven": true,
+  "claim_boundary": {
+    "may_claim": [
+      "3 receipt-continuous Red/Blue generations",
+      "parent-authored spawn requests",
+      "semantic genome mutation",
+      "deterministic selection",
+      "memory-policy evaluation"
+    ],
+    "must_not_claim": [
+      "Judge exploit success unless Judge says RED_SUCCESS",
+      "child improvement unless selection proves it",
+      "durable memory write or recall",
+      "population-scale or production readiness"
+    ]
+  },
+  "events": [
+    {
+      "affected_lane_ids": [
+        "red-g1",
+        "blue-g1"
+      ],
+      "elapsed_seconds": 1.0,
+      "event_id": "e1",
+      "event_type": "judge_verdict",
+      "generation": 1,
+      "lane_id": null,
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r1",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000001",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      },
+      "scope": "generation_pair",
+      "seq": 1,
+      "team": null
+    },
+    {
+      "affected_lane_ids": [
+        "red-g1"
+      ],
+      "elapsed_seconds": 2.0,
+      "event_id": "e2",
+      "event_type": "parent_observation_materialized",
+      "generation": 1,
+      "lane_id": "red-g1",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r2",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000002",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 2,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g1"
+      ],
+      "elapsed_seconds": 3.0,
+      "event_id": "e3",
+      "event_type": "parent_observation_materialized",
+      "generation": 1,
+      "lane_id": "blue-g1",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r3",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000003",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 3,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g1"
+      ],
+      "elapsed_seconds": 4.0,
+      "event_id": "e4",
+      "event_type": "fitness_materialized",
+      "generation": 1,
+      "lane_id": "red-g1",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r4",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000004",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 4,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g1"
+      ],
+      "elapsed_seconds": 5.0,
+      "event_id": "e5",
+      "event_type": "fitness_materialized",
+      "generation": 1,
+      "lane_id": "blue-g1",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r5",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000005",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 5,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g1"
+      ],
+      "elapsed_seconds": 6.0,
+      "event_id": "e6",
+      "event_type": "spawn_requested",
+      "generation": 1,
+      "lane_id": "red-g1",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r6",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000006",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 6,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g1"
+      ],
+      "elapsed_seconds": 7.0,
+      "event_id": "e7",
+      "event_type": "spawn_requested",
+      "generation": 1,
+      "lane_id": "blue-g1",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r7",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000007",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 7,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g1"
+      ],
+      "elapsed_seconds": 8.0,
+      "event_id": "e8",
+      "event_type": "spawn_authorized",
+      "generation": 1,
+      "lane_id": "red-g1",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r8",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000008",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 8,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g1"
+      ],
+      "elapsed_seconds": 9.0,
+      "event_id": "e9",
+      "event_type": "spawn_authorized",
+      "generation": 1,
+      "lane_id": "blue-g1",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r9",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000009",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 9,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 10.0,
+      "event_id": "e10",
+      "event_type": "knowledge_packet_materialized",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r10",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000000a",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 10,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 11.0,
+      "event_id": "e11",
+      "event_type": "knowledge_packet_materialized",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r11",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000000b",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 11,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 12.0,
+      "event_id": "e12",
+      "event_type": "child_research_materialized",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r12",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000000c",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 12,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 13.0,
+      "event_id": "e13",
+      "event_type": "child_research_materialized",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r13",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000000d",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 13,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2",
+        "blue-g2"
+      ],
+      "elapsed_seconds": 14.0,
+      "event_id": "e14",
+      "event_type": "judge_verdict",
+      "generation": 2,
+      "lane_id": null,
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r14",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000000e",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      },
+      "scope": "generation_pair",
+      "seq": 14,
+      "team": null
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 15.0,
+      "event_id": "e15",
+      "event_type": "child_knowledge_acknowledged",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r15",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000000f",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 15,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 16.0,
+      "event_id": "e16",
+      "event_type": "child_knowledge_acknowledged",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r16",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000010",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 16,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 17.0,
+      "event_id": "e17",
+      "event_type": "genome_mutated",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r17",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000011",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 17,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 18.0,
+      "event_id": "e18",
+      "event_type": "genome_mutated",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r18",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000012",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 18,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 19.0,
+      "event_id": "e19",
+      "event_type": "generation_observation_materialized",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r19",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000013",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 19,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 20.0,
+      "event_id": "e20",
+      "event_type": "generation_observation_materialized",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r20",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000014",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 20,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 21.0,
+      "event_id": "e21",
+      "event_type": "fitness_materialized",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r21",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000015",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 21,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 22.0,
+      "event_id": "e22",
+      "event_type": "fitness_materialized",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r22",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000016",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 22,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 23.0,
+      "event_id": "e23",
+      "event_type": "spawn_requested",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r23",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000017",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 23,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 24.0,
+      "event_id": "e24",
+      "event_type": "spawn_requested",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r24",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000018",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 24,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 25.0,
+      "event_id": "e25",
+      "event_type": "spawn_authorized",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r25",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000019",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 25,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 26.0,
+      "event_id": "e26",
+      "event_type": "spawn_authorized",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r26",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000001a",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 26,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g3"
+      ],
+      "elapsed_seconds": 27.0,
+      "event_id": "e27",
+      "event_type": "knowledge_packet_materialized",
+      "generation": 3,
+      "lane_id": "red-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r27",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000001b",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 27,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g3"
+      ],
+      "elapsed_seconds": 28.0,
+      "event_id": "e28",
+      "event_type": "knowledge_packet_materialized",
+      "generation": 3,
+      "lane_id": "blue-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r28",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000001c",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 28,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g3"
+      ],
+      "elapsed_seconds": 29.0,
+      "event_id": "e29",
+      "event_type": "child_research_materialized",
+      "generation": 3,
+      "lane_id": "red-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r29",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000001d",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 29,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g3"
+      ],
+      "elapsed_seconds": 30.0,
+      "event_id": "e30",
+      "event_type": "child_research_materialized",
+      "generation": 3,
+      "lane_id": "blue-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r30",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000001e",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 30,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g3",
+        "blue-g3"
+      ],
+      "elapsed_seconds": 31.0,
+      "event_id": "e31",
+      "event_type": "judge_verdict",
+      "generation": 3,
+      "lane_id": null,
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r31",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000001f",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      },
+      "scope": "generation_pair",
+      "seq": 31,
+      "team": null
+    },
+    {
+      "affected_lane_ids": [
+        "red-g3"
+      ],
+      "elapsed_seconds": 32.0,
+      "event_id": "e32",
+      "event_type": "child_knowledge_acknowledged",
+      "generation": 3,
+      "lane_id": "red-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r32",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000020",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 32,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g3"
+      ],
+      "elapsed_seconds": 33.0,
+      "event_id": "e33",
+      "event_type": "child_knowledge_acknowledged",
+      "generation": 3,
+      "lane_id": "blue-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r33",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000021",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 33,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g3"
+      ],
+      "elapsed_seconds": 34.0,
+      "event_id": "e34",
+      "event_type": "genome_mutated",
+      "generation": 3,
+      "lane_id": "red-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r34",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000022",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 34,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g3"
+      ],
+      "elapsed_seconds": 35.0,
+      "event_id": "e35",
+      "event_type": "genome_mutated",
+      "generation": 3,
+      "lane_id": "blue-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r35",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000023",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 35,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g3"
+      ],
+      "elapsed_seconds": 36.0,
+      "event_id": "e36",
+      "event_type": "generation_observation_materialized",
+      "generation": 3,
+      "lane_id": "red-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r36",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000024",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 36,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g3"
+      ],
+      "elapsed_seconds": 37.0,
+      "event_id": "e37",
+      "event_type": "generation_observation_materialized",
+      "generation": 3,
+      "lane_id": "blue-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r37",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000025",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 37,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g3"
+      ],
+      "elapsed_seconds": 38.0,
+      "event_id": "e38",
+      "event_type": "fitness_materialized",
+      "generation": 3,
+      "lane_id": "red-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r38",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000026",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 38,
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g3"
+      ],
+      "elapsed_seconds": 39.0,
+      "event_id": "e39",
+      "event_type": "fitness_materialized",
+      "generation": 3,
+      "lane_id": "blue-g3",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r39",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000027",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 39,
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g1",
+        "blue-g2",
+        "blue-g3",
+        "red-g1",
+        "red-g2",
+        "red-g3"
+      ],
+      "elapsed_seconds": 40.0,
+      "event_id": "e40",
+      "event_type": "selection_decision",
+      "generation": null,
+      "lane_id": null,
+      "payload": {
+        "blue_selected_generation": 3,
+        "red_selected_generation": 3
+      },
+      "receipt_ref": {
+        "receipt_id": "r40",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000028",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "campaign",
+      "seq": 40,
+      "team": null
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g1",
+        "blue-g2",
+        "blue-g3",
+        "red-g1",
+        "red-g2",
+        "red-g3"
+      ],
+      "elapsed_seconds": 41.0,
+      "event_id": "e41",
+      "event_type": "memory_evaluation",
+      "generation": null,
+      "lane_id": null,
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": "r41",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000029",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "campaign",
+      "seq": 41,
+      "team": null
+    }
+  ],
+  "fixture_id": "depth3-sample",
+  "lanes": [
+    {
+      "active_from_elapsed_seconds": 0.0,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "RED G1 PARENT",
+      "end_elapsed_seconds": 41.0,
+      "generation": 1,
+      "lane_id": "red-g1",
+      "parent_lane_id": null,
+      "role": "parent",
+      "team": "red",
+      "visible_from_elapsed_seconds": 0.0
+    },
+    {
+      "active_from_elapsed_seconds": 12.0,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "RED G2 CHILD",
+      "end_elapsed_seconds": 41.0,
+      "generation": 2,
+      "lane_id": "red-g2",
+      "parent_lane_id": "red-g1",
+      "role": "child",
+      "team": "red",
+      "visible_from_elapsed_seconds": 8.0
+    },
+    {
+      "active_from_elapsed_seconds": 29.0,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "RED G3 CHILD",
+      "end_elapsed_seconds": 41.0,
+      "generation": 3,
+      "lane_id": "red-g3",
+      "parent_lane_id": "red-g2",
+      "role": "child",
+      "team": "red",
+      "visible_from_elapsed_seconds": 25.0
+    },
+    {
+      "active_from_elapsed_seconds": 0.0,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "BLUE G1 PARENT",
+      "end_elapsed_seconds": 41.0,
+      "generation": 1,
+      "lane_id": "blue-g1",
+      "parent_lane_id": null,
+      "role": "parent",
+      "team": "blue",
+      "visible_from_elapsed_seconds": 0.0
+    },
+    {
+      "active_from_elapsed_seconds": 13.0,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "BLUE G2 CHILD",
+      "end_elapsed_seconds": 41.0,
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "parent_lane_id": "blue-g1",
+      "role": "child",
+      "team": "blue",
+      "visible_from_elapsed_seconds": 9.0
+    },
+    {
+      "active_from_elapsed_seconds": 30.0,
+      "actor_visual": {
+        "cosmetic_only": true,
+        "semantic_authority": false,
+        "variant_id": "v13-shared-runner"
+      },
+      "display_name": "BLUE G3 CHILD",
+      "end_elapsed_seconds": 41.0,
+      "generation": 3,
+      "lane_id": "blue-g3",
+      "parent_lane_id": "blue-g2",
+      "role": "child",
+      "team": "blue",
+      "visible_from_elapsed_seconds": 26.0
+    }
+  ],
+  "lineage_edges": [
+    {
+      "authorized_receipt_ref": {
+        "receipt_id": "r8",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000008",
+        "status": "PASS",
+        "verdict": null
+      },
+      "child_lane_id": "red-g2",
+      "edge_id": "red-g1-to-g2",
+      "edge_kind": "spawn",
+      "parent_lane_id": "red-g1",
+      "requested_receipt_ref": {
+        "receipt_id": "r6",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000006",
+        "status": "PASS",
+        "verdict": null
+      },
+      "team": "red",
+      "visible_from_elapsed_seconds": 8.0
+    },
+    {
+      "authorized_receipt_ref": {
+        "receipt_id": "r25",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000019",
+        "status": "PASS",
+        "verdict": null
+      },
+      "child_lane_id": "red-g3",
+      "edge_id": "red-g2-to-g3",
+      "edge_kind": "spawn",
+      "parent_lane_id": "red-g2",
+      "requested_receipt_ref": {
+        "receipt_id": "r23",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000017",
+        "status": "PASS",
+        "verdict": null
+      },
+      "team": "red",
+      "visible_from_elapsed_seconds": 25.0
+    },
+    {
+      "authorized_receipt_ref": {
+        "receipt_id": "r9",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000009",
+        "status": "PASS",
+        "verdict": null
+      },
+      "child_lane_id": "blue-g2",
+      "edge_id": "blue-g1-to-g2",
+      "edge_kind": "spawn",
+      "parent_lane_id": "blue-g1",
+      "requested_receipt_ref": {
+        "receipt_id": "r7",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000007",
+        "status": "PASS",
+        "verdict": null
+      },
+      "team": "blue",
+      "visible_from_elapsed_seconds": 9.0
+    },
+    {
+      "authorized_receipt_ref": {
+        "receipt_id": "r26",
+        "schema": "x",
+        "sha256": "000000000000000000000000000000000000000000000000000000000000001a",
+        "status": "PASS",
+        "verdict": null
+      },
+      "child_lane_id": "blue-g3",
+      "edge_id": "blue-g2-to-g3",
+      "edge_kind": "spawn",
+      "parent_lane_id": "blue-g2",
+      "requested_receipt_ref": {
+        "receipt_id": "r24",
+        "schema": "x",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000018",
+        "status": "PASS",
+        "verdict": null
+      },
+      "team": "blue",
+      "visible_from_elapsed_seconds": 26.0
+    }
+  ],
+  "live_source": "adaptive_red_blue_lineage_v2",
+  "memory_evaluation": {},
+  "proof_mode": "receipt_backed_fixture",
+  "provenance": {
+    "projection_kind": "adaptive_lineage_v13",
+    "raw_paths_redacted": true,
+    "source_proof_id": "depth3-fixture-campaign",
+    "source_run_count": 1
+  },
+  "receipt_refs": [],
+  "renderer_contract": {
+    "child_activation_event": "child_research_materialized",
+    "child_pending_state": "AUTHORIZED_PENDING",
+    "child_visibility_event": "spawn_authorized",
+    "event_order_authority": "event.seq",
+    "no_promotion_is_not_promoted": true,
+    "pair_judge_event_is_global": true,
+    "schema": "battle.adaptive_lineage_renderer_contract.v1",
+    "selection_is_not_victory": true,
+    "sprite_identity_is_cosmetic_only": true,
+    "time_authority": "event.elapsed_seconds_is_receipt_commit_time"
+  },
+  "run_id": "run3",
+  "schema": "battle.normalized_adaptive_lineage_fixture.v1",
+  "scoreboard": {
+    "blue_label": "exploits blocked",
+    "blue_score": 0,
+    "red_label": "exploits bypassing patch",
+    "red_score": 0,
+    "schema": "battle.adaptive_scoreboard.v1",
+    "source": "judge_verdict per generation",
+    "verdicts": []
+  },
+  "selection": {
+    "blue": {
+      "selected_generation": 3
+    },
+    "red": {
+      "selected_generation": 3
+    }
+  },
+  "sprite_theme": {
+    "proof_scope": "cosmetic_identity_only",
+    "schema": "battle.sprite_theme.v1",
+    "semantic_authority": false,
+    "shared_atlas": true,
+    "theme_id": "v13-shared-plague-nurgling",
+    "variants": {
+      "v13-shared-runner": {
+        "scale": 1.0,
+        "sprite_id": "plague_nurgling"
+      }
+    }
+  }
+}

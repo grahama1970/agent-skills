@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { BattleSpectatorRoot } from "./BattleActionRegistrar";
+import { BattleComponentIsolationHarness, isBattleComponentIsolationTest } from "./BattleComponentIsolationHarness";
 import { BattleSpectatorArena } from "./BattleSpectatorArena";
 import "./standalone.css";
 
@@ -14,7 +15,7 @@ if (!root) {
 createRoot(root).render(
 	<StrictMode>
 		<BattleSpectatorRoot appId="battle-spectator-standalone">
-			<BattleSpectatorArena />
+			{isBattleComponentIsolationTest() ? <BattleComponentIsolationHarness /> : <BattleSpectatorArena />}
 		</BattleSpectatorRoot>
 	</StrictMode>,
 );

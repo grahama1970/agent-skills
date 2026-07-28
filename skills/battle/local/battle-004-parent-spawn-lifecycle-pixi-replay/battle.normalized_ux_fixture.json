@@ -1800,6 +1800,64 @@
           "sprite_choice_does_not_create_score_truth",
           "scorekeeper owns semantic totals"
         ]
+      },
+      "knowledge_packet": {
+        "present": true,
+        "status": "materialized",
+        "packet_id": "knowledge:parent",
+        "parent_packet_id": null,
+        "research_goals": [
+          "exercise local BATTLE-004 target surface",
+          "capture bad generated code as genetic material"
+        ],
+        "parent_analysis": {
+          "hypotheses": [],
+          "observations": []
+        },
+        "child_ack": {
+          "required": false,
+          "received": false,
+          "ack_source": null
+        }
+      },
+      "spawn_request": {
+        "present": true,
+        "schema": "battle.spawn_policy_decision.v1",
+        "request_id": "spawn-policy:None",
+        "claim_authority": "battle",
+        "requested_decision": "NOT_REQUESTED",
+        "child_exploit_id": null,
+        "battle_allowed": false,
+        "policy_owner": "battle"
+      },
+      "tau_branch_decision": {
+        "present": true,
+        "schema": "battle.tau_branch_decision.v1",
+        "decision_authority": "battle",
+        "battle_policy_authority": "battle",
+        "decision": "research_more",
+        "observed_evidence_refs": [
+          "method-menu.json",
+          "knowledge-packets/parent-knowledge-packet.json"
+        ],
+        "rationale": "combiner proof validates specimen lifecycle only; child materialization deferred",
+        "confidence": "high",
+        "battle_policy_result": "denied"
+      },
+      "memory_promotion": {
+        "present": true,
+        "candidate_id": null,
+        "durable_promoted": false,
+        "validator_required": true,
+        "reason": "parent lane retained useful signal; promotion evaluated by scorekeeper"
+      },
+      "network_summary": {
+        "capture_requested": true,
+        "available": false,
+        "full_packet_capture_proven": false,
+        "reason": "no live packet capture in combiner proof rung",
+        "artifact_uri": null,
+        "sha256": null
       }
     },
     {
@@ -2420,6 +2478,92 @@
           "sprite_choice_does_not_create_score_truth",
           "scorekeeper owns semantic totals"
         ]
+      },
+      "knowledge_packet": {
+        "present": true,
+        "status": "inherited",
+        "packet_id": "knowledge:None",
+        "parent_packet_id": "knowledge:payload-857-combiner",
+        "research_goals": [
+          "What Zip Slip archive path variants affect Python zipfile extraction?"
+        ],
+        "parent_analysis": {
+          "failed_specimens": [
+            {
+              "failure_class": "SPECIMEN_COMPILE_FAILED",
+              "specimen_id": "specimen-0001",
+              "stderr_summary": "SyntaxError: invalid syntax"
+            },
+            {
+              "failure_class": "SPECIMEN_RUNTIME_FAILED",
+              "specimen_id": "specimen-0002",
+              "stderr_summary": "ModuleNotFoundError: No module named 'requests_missing_dependency'"
+            },
+            {
+              "failure_class": "SPECIMEN_RUNTIME_FAILED",
+              "specimen_id": "specimen-0003",
+              "stderr_summary": "RuntimeError: fixture response parser failed after target contact"
+            }
+          ],
+          "blocked_ideas": [
+            "Assembly payload probe has no useful execution path in this Python zip extraction scenario."
+          ],
+          "inherited_methods": [
+            "archive_encoding_variant",
+            "assembly_payload_probe",
+            "mitm_payload_staging",
+            "zip_slip_basic"
+          ]
+        },
+        "child_ack": {
+          "required": true,
+          "received": true,
+          "ack_source": "combiner_proof"
+        }
+      },
+      "child_plan": {
+        "present": true,
+        "schema": "battle.child_inherited_plan.v1",
+        "plan_id": "child-plan:payload-857-red-1",
+        "knowledge_packet_id": "knowledge:None",
+        "inherited_item_refs": [
+          "archive_encoding_variant",
+          "assembly_payload_probe",
+          "mitm_payload_staging",
+          "zip_slip_basic"
+        ],
+        "used_before_first_probe": true,
+        "scope_inherited": true
+      },
+      "inherited_probe": {
+        "present": true,
+        "schema": "battle.child_inherited_probe.v1",
+        "probe_id": "probe:payload-857-red-1",
+        "child_plan_id": "child-plan:payload-857-red-1",
+        "knowledge_packet_id": "knowledge:None",
+        "used_inherited_state": true,
+        "inherited_item_refs": [
+          "archive_encoding_variant",
+          "assembly_payload_probe",
+          "mitm_payload_staging",
+          "zip_slip_basic"
+        ]
+      },
+      "memory_promotion": {
+        "present": true,
+        "candidate_id": null,
+        "durable_promoted": false,
+        "validator_required": true,
+        "promotion_scope": "combiner_specimen_lifecycle",
+        "reason": "combiner proof evaluated specimen lifecycle; durable promotion deferred"
+      },
+      "network_summary": {
+        "capture_requested": true,
+        "available": false,
+        "full_packet_capture_proven": false,
+        "reason": "no live packet capture in combiner proof rung",
+        "artifact_uri": null,
+        "sha256": null
       }
     }
   ],
@@ -4654,9 +4798,16 @@
   },
   "lifecycle_enrichment": {
     "schema": "battle.lifecycle_enrichment.v1",
-    "source": "/tmp/battle-004-combiner",
+    "source": "local/backend-goal-proof-20260728T-rebased/battle-004-combiner",
     "proof_mode": "receipt_backed_fixture",
     "fields_emitted": [
+      "knowledge_packet",
+      "spawn_request",
+      "tau_branch_decision",
+      "child_plan",
+      "inherited_probe",
+      "memory_promotion",
+      "network_summary",
       "score_calibration"
     ]
   }

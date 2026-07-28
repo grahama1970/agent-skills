@@ -2880,7 +2880,7 @@ def _outcome_truth_constraints_model(*, fixture: dict[str, Any]) -> dict[str, An
     def forbidden_entry(*, inference: str, required_event_types: list[str]) -> dict[str, Any]:
         present = sorted(event_type for event_type in required_event_types if event_type in event_types)
         return {
-            "allowed": bool(present) and inference not in forbidden_inferences,
+            "allowed": bool(present),
             "inference": inference,
             "required_event_types": required_event_types,
             "present_event_types": present,
@@ -4338,7 +4338,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
     forbidden_inferences = ux_contract.get("forbidden_inferences") if isinstance(ux_contract.get("forbidden_inferences"), list) else []
     for event_type, inference in forbidden_without_receipts.items():
         if event_type in event_types:
-            _check(inference not in forbidden_inferences, f"{event_type} cannot be both emitted and forbidden", errors)
+            _check(inference in forbidden_inferences, f"{event_type} must retain the {inference!r} no-inference guard", errors)
 
     terminal_state_requirements = {
         "killed": {"blue.kill_confirmed", "tau.killed", "red.killed"},

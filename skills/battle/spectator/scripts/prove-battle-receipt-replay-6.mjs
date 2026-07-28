@@ -5,7 +5,7 @@ import { chromium } from 'playwright'
 import { resolveBattleProveHost } from './battle-prove-host.mjs'
 
 const host = await resolveBattleProveHost()
-const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi&fixture=battle-004-parent-spawn`
+const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi`
 const outDir = resolve(process.env.BATTLE_RECEIPT_PROOF_DIR ?? '/tmp/battle-receipt-replay-6-proof')
 
 const checks = []
@@ -102,26 +102,27 @@ async function main() {
   }))
   record('6-child-after-spawn-visible', post.parent && post.child, JSON.stringify(post))
 
+  if (post.child) {
+    await page.locator('[data-qid="battle:lane:payload-857-red-1"]').first().click({ force: true })
+    await page.waitForTimeout(600)
+  }
   const lifecycle = await page.evaluate(() => {
     const panel = document.querySelector('[data-qid="battle:agent-pane:lifecycle-evidence"]')
     const text = panel?.textContent ?? ''
-    const failClosed = /No adaptive-lifecycle receipts on this lane yet/i.test(text) && /nothing invented/i.test(text)
+    const selected = document.querySelector('[data-qid="battle:agent-pane:title"]')?.textContent ?? ''
     return {
       panel: Boolean(panel),
+      selected,
       text,
       hasKnowledge: text.includes('knowledge_packet'),
       hasPromotion: text.includes('memory_promotion'),
       hasPacketCapture: text.includes('packet capture'),
       hasCalibration: text.includes('score_calibration'),
-      failClosed,
     }
   })
   record(
-    '7-lifecycle-evidence',
-    lifecycle.panel && (
-      (lifecycle.hasKnowledge && lifecycle.hasPromotion && lifecycle.hasPacketCapture && lifecycle.hasCalibration) ||
-      lifecycle.failClosed
-    ),
+    '7-lifecycle-fail-closed-plain-fixture',
+    lifecycle.panel && lifecycle.text.includes('No adaptive-lifecycle receipts') && !lifecycle.hasKnowledge && !lifecycle.hasPromotion && !lifecycle.hasPacketCapture && !lifecycle.hasCalibration,
     JSON.stringify(lifecycle),
   )
 

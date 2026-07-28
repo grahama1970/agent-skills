@@ -1,52 +1,91 @@
-# Battle Handoff — main branch, source-build MVP proof
+# Battle Handoff - main branch proof path
 
-Timestamp: 2026-07-28
-Branch rule: work only on `agent-skills@main`. Do not resume the old
-`battle-adaptive-lineage-goal` branch.
+Timestamp: 2026-07-28T20:32Z
+Branch rule: work only on `agent-skills@main`. Do not resume old Battle feature branches.
 
-## Current GitHub ticket state
+## Current Slice
 
-Command run:
+Objective: inventory the existing Battle backend proof path, patch the obvious failures directly, and prove it without spending a reviewer competition.
 
-```bash
-gh issue list --repo grahama1970/agent-skills --state open --limit 200 \
-  --json number,title,labels,assignees,updatedAt,url \
-  | jq '[.[] | select((.title|test("(?i)battle")) or ([.labels[].name] | any(test("(?i)battle"))))]'
-```
-
-Result on 2026-07-28: `[]`.
-
-## Main branch receipts
-
-- `773eae2bd873c035892b06b7ced14d6f841f3057`:
-  source-built Battle spectator proof, pushed to `refs/heads/main`.
-- `324f805b69286f2adc8ea9904233fad56374563a`:
-  recovered WebGPT roundtable lane recorded on `main`.
-- `848443435...`:
-  roundtable synthesis and executable slice manifest recorded on `main`.
-- `166cb20f320085b715e00c171ec89dfe171eb085`:
-  issue #1040 branch-triage proof recorded on `main`.
-
-Remote check:
-
-```text
-773eae2bd873c035892b06b7ced14d6f841f3057	refs/heads/main
-```
-
-## Source-build MVP proof
-
-Command:
+Deterministic path found:
 
 ```bash
 cd skills/battle
-BATTLE_SPECTATOR_PROOF_ID=20260728T-source-build ./run.sh prove-spectator-source-build
+./run.sh backend-eval --out-dir <out>
+./run.sh prove-backend-goal
+./run.sh prove-spectator-source-build
 ```
 
-Receipt:
+## Repairs In This Slice
 
-- `skills/battle/local/spectator-source-build-20260728T-source-build/proof.json`
-- `skills/battle/local/spectator-source-build-20260728T-source-build/captures/results.json`
-- `skills/battle/local/spectator-source-build-20260728T-source-build/captures/battle-receipt-controls/0012_pane-controls_screenshot.png`
+- Kill-shot Pixi replay remains retired/fail-closed on current `main`; the obsolete normalized kill-shot fixture must stay absent until a real Judge-backed producer emits `blue.kill_confirmed`, `red.killed`, or `tau.killed`.
+- Outcome validator now allows kill attribution only when the canonical terminal event is present while preserving the no-inference guard for future terminal fixtures.
+- Backend goal proof no longer assumes Battle is served from SPARTA's `:3002`; spectator proof starts its own Battle preview port.
+- Spectator proof avoids unnecessary `npm install` when `node_modules` is already usable.
+- Parent-spawn lifecycle enrichment now uses the fresh combiner artifact directory before the Vite build copies public fixtures.
+- Adaptive lineage V13 proof no longer depends on `/tmp` source artifacts and samples the Pixi canvas for mobile visibility.
+- Adaptive lineage validator supports depth-N spawn lineages while retaining the V14 memory boundary.
+- Battle standalone Vite source-build path is wired for `$test-interactions`.
+
+## Proof Receipts
+
+Backend eval:
+
+```bash
+cd skills/battle
+./run.sh backend-eval --out-dir local/backend-eval-20260728T-rebased
+```
+
+Receipt: `skills/battle/local/backend-eval-20260728T-rebased/receipt.json`
+
+Result:
+
+```json
+{
+  "mocked": false,
+  "live": false,
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13,
+    "channels": [
+      "adaptive_lineage_fixtures",
+      "deterministic_contracts",
+      "genetic_lifecycle_fixtures",
+      "live_transport",
+      "race_replay_fixtures"
+    ]
+  }
+}
+```
+
+Full backend goal proof:
+
+```bash
+cd skills/battle
+BATTLE_BACKEND_GOAL_PROOF_DIR=$PWD/local/backend-goal-proof-20260728T-rebased ./run.sh prove-backend-goal
+```
+
+Log: `skills/battle/local/prove-backend-goal-20260728T-rebased-r2.log`
+Receipt directory: `skills/battle/local/backend-goal-proof-20260728T-rebased/`
+Result markers:
+
+```text
+BATTLE_PROVE_SPECTATOR_PASS
+OK: checked 566 test file(s); no mock+proof claim violations
+BATTLE_PROVE_BACKEND_GOAL_PASS
+```
+
+Source-built Battle interaction proof:
+
+```bash
+cd skills/battle
+./run.sh prove-spectator-source-build
+```
+
+Proof: `skills/battle/local/spectator-source-build-source-build-20260728T205752Z/proof.json`
+Interaction results: `skills/battle/local/spectator-source-build-source-build-20260728T205752Z/captures/results.json`
+Screenshot: `skills/battle/local/spectator-source-build-source-build-20260728T205752Z/captures/battle-receipt-controls/0012_pane-controls_screenshot.png`
 
 Result:
 
@@ -64,50 +103,27 @@ Result:
 }
 ```
 
-What this proves:
+Visual inspection note: the screenshot visibly shows the source-built Battle header, roster search with `red`, selected timeline lane, zoom controls, live-events panel, and left/right pane toggles after the interaction sequence.
 
-- `skills/battle/spectator` has a standalone Vite source entrypoint.
-- `npm run build` produces a served `dist` artifact from source.
-- The source-built `http://127.0.0.1:3015/#battle` route exposes and executes the
-  targeted Battle controls required by `$test-interactions`.
-- The final screenshot visibly renders the Battle header, roster search,
-  receipt-backed timeline, zoom controls, and pane toggles after interaction.
-
-What this does not prove:
-
-- Production hosting.
-- Long-running live backend campaigns.
-- Provider reliability.
-
-Additional check:
+Focused code checks:
 
 ```bash
+cd skills/battle
+uv run pytest tests/test_battle_event_adapter_contract.py -q
+# 99 passed
+
 cd skills/battle/spectator
+npm run test -- src/lib/battle-adaptive-lineage.test.ts src/lib/battle-adaptive-lineage-depth3.test.ts
+# 8 passed
+
 npm run typecheck
+# exit 0
 ```
 
-Result: `tsc --noEmit -p tsconfig.json` exited `0`.
+## Honest Scope
 
-## Roundtable status
+This slice proves the existing MVP backend proof path and the source-built interaction path. It does not prove production hosting, long-running provider reliability, audible playback, or that every future Battle product goal has been accepted by the human.
 
-Artifacts:
+Any future UI claim must include `$test-interactions` output and an inspected screenshot. Any future backend readiness claim must include a fresh `prove-backend-goal` receipt or a narrower receipt that states exactly what it proves and does not prove.
 
-- `skills/battle/local/roundtable-full-battle-arena-20260728/roundtable-synthesis.md`
-- `skills/battle/local/roundtable-full-battle-arena-20260728/executable-slice-manifest.json`
-- WebGPT recovery receipt:
-  `/mnt/storage12tb/skills/ask/outputs/battle-arena-roundtable-20260728/ask-tau-recovery-round-for-the-missing-w-b812ba02719d/node-artifacts/handler-webgpt/node-receipt.json`
-
-The roundtable is advisory. It does not replace local source-build, typecheck,
-browser screenshot, backend endpoint, or live campaign receipts.
-
-## Remaining non-ticket caveats
-
-- The project-state snapshot at
-  `skills/battle/local/project-state/battle-project-state-20260728T000000Z.json`
-  is an Embry OS-wide snapshot, not a Battle ticket ledger.
-- The source-build proof is the first frontend MVP proof. A fully working Battle
-  Arena frontend/back end still needs broader live backend campaign proof if the
-  human asks for product-level readiness rather than ticket closure.
-- Any future UI claim must include `$test-interactions` output and inspected
-  screenshot evidence.
-
+Immutable Goal: NOT_MET
