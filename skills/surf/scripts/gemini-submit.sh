@@ -301,11 +301,19 @@ if idx == -1:
         pathlib.Path(out_path).write_text(text.rstrip() + "\n")
         raise SystemExit(0)
     raise SystemExit("sentinel missing from assistant response")
+# Gemini echoes part of the prompt after the marker, which used to fail the whole
+# lane even though the attributable answer sits before it (agent-skills#1025).
+# The raw capture keeps everything; the clean output truncates at the sentinel and
+# the discarded tail is reported for the receipt.
 after = text[idx + len(sentinel):].strip()
-if after:
-    raise SystemExit("assistant response contains text after terminal sentinel")
 clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
+if after:
+    pathlib.Path(out_path + ".trailing.txt").write_text(after + "\n")
+    sys.stderr.write(
+        "gemini_trailing_sentinel_content_truncated: discarded %d chars after the terminal sentinel\n"
+        % len(after)
+    )
 PY
 
 python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" <<'PY'
