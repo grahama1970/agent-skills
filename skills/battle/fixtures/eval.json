@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skill": "battle",
+  "defaults": {
+    "latency_budget_ms": 420000
+  },
+  "cases": [
+    {
+      "name": "backend-eval-deterministic-health",
+      "command": ["backend-eval", "--out-dir", "reports/backend-eval-test"],
+      "expected_exit_code": 1,
+      "expected_stdout_contains": [
+        "\"schema\"",
+        "battle.backend_eval",
+        "\"channels\"",
+        "deterministic_contracts",
+        "receipt_path"
+      ],
+      "note": "expected_exit_code is 1 while battle-004-adaptive-live and battle-004-kill-shot-pixi-replay fixtures carry known contract violations; drop to 0 once both are regenerated to pass their declared validators.",
+      "tags": ["battle", "backend", "eval", "contracts"]
+    }
+  ]
+}

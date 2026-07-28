@@ -29,4 +29,10 @@ if [[ "${1:-}" == "prove-backend-goal" ]]; then
   exec "$SCRIPT_DIR/scripts/prove-backend-goal-local.sh" "$@"
 fi
 
+# Deterministic "is the backend working as expected?" eval (no live Tau/Docker/browser).
+if [[ "${1:-}" == "backend-eval" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/backend_eval.py" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"

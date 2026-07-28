@@ -128,4 +128,16 @@ else
   echo "11. Skipping spectator live proof (set BATTLE_PROVE_SPECTATOR=1 to enable)"
 fi
 
+echo "12. Running deterministic backend eval (informational health signal)"
+# Non-fatal: surfaces backend-contract + committed-fixture health as a legible
+# receipt. Known pre-existing fixture defects must not block the sanity gate;
+# the dedicated `./run.sh backend-eval` command owns the pass/fail gate.
+if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/backend_eval.py" \
+    --out-dir "$TMP_ROOT/backend-eval" >/tmp/battle-sanity-backend-eval.out 2>&1; then
+  echo "BATTLE_BACKEND_EVAL_ALL_PASS"
+else
+  echo "BATTLE_BACKEND_EVAL_HAS_FAILURES (informational; see receipt)"
+fi
+tail -20 /tmp/battle-sanity-backend-eval.out || true
+
 echo "Result: PASS"

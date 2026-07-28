@@ -5,6 +5,7 @@ Supports git worktree, Docker, QEMU, and copy modes.
 """
 from __future__ import annotations
 
+import hashlib
 import shutil
 import subprocess
 from pathlib import Path
@@ -203,7 +204,7 @@ class DigitalTwin:
         try:
             network_name = f"battle_{self.battle_id}"
             subprocess.run(["docker", "network", "create", network_name], capture_output=True, check=False)
-            for team in ["red", "blue", "arena"]:
+            for team_index, team in enumerate(["red", "blue", "arena"]):
                 team_dir = self.worktree_base / team
                 team_dir.mkdir(exist_ok=True)
                 if self.source_path.is_file():
@@ -215,7 +216,12 @@ class DigitalTwin:
                         shutil.rmtree(fw_dest)
                     shutil.copytree(self.source_path, fw_dest, ignore=shutil.ignore_patterns('.git'))
                     fw_name = "firmware"
-                gdb_port = 5000 + hash(f'{self.battle_id}_{team}') % 1000
+                # Deterministic, cross-run-stable, collision-free across the 3 teams.
+                # Python's builtin hash() is PYTHONHASHSEED-salted (differs per process),
+                # which broke receipt reproducibility; sha256 is stable, and the per-team
+                # index offset guarantees the three teams never share a port.
+                base = int(hashlib.sha256(self.battle_id.encode()).hexdigest()[:8], 16) % 900
+                gdb_port = 5000 + base * 3 + team_index
                 (team_dir / "qemu.conf").write_text(f"machine={machine}\nfirmware={fw_name}\ngdb_port={gdb_port}\n")
             self._setup_worktree_dirs()
             console.print(f"  [green]QEMU mode ready: {machine}[/green]")
