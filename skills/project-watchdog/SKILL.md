@@ -79,15 +79,24 @@ first matching route:
 | --- | --- | --- |
 | `add_tau_coder_command_spec` | `next:coder` + `executor:local` + repair marker in body | `tau handoff-command-loop` |
 | `tau_handoff_dispatch` | `executor:local` + handoff marker in body | `tau handoff-command-loop` |
-| `ticket_repair` | anything else carrying `agent-work` | `tau dag-run` on a compiled `tau.dag_contract.v1` |
+| `ticket_repair` | anything else carrying `agent-work` | `$ask tau-dag` creator-reviewer DAG, executed by Tau |
 
 `ticket_repair` is the route ordinary `/ticket`-filed tickets take. `/ticket`
 stamps `agent-work` at file time for any ticket with a concrete `route:` whose
 type is not `question` or `triage`; those two are human-first by definition and
 an unknown route has nowhere to be sent.
 
-Projects whose `runner_kind` is not `tau-command-loop` are refused by name
-rather than handed to a runner that cannot accept an issue number.
+`runner_kind` does not gate routability. It used to require `tau-command-loop`,
+because the lane hand-authored a contract against Tau's own command-spec tree,
+which only the tau checkout has — so every other registered project was refused
+before it could dispatch. `$ask` compiles the DAG for any repo; a project needs
+only a worktree.
+
+Collision is a property of the **target**, not the repository. agent-skills
+holds 364 skills, and two tickets against different ones share no files. Each
+ticket names its target on the `target:` line `/ticket` writes; older tickets
+fall back to the skill paths their body mentions. A leased ticket blocks its own
+targets and nothing else.
 
 ## Troubleshooting: the watchdog runs but never dispatches
 
@@ -266,29 +275,65 @@ Issues with `agent-active` or `agent-blocked` are skipped until a human/operator
 clears the state label. This prevents cron from retrying a failed ticket every
 minute without an explicit retry decision.
 
-## Repair lane: Tau DAG contract
+## Three lanes, in order
 
-`ticket_repair` compiles a `tau.dag_contract.v1` (`coder` -> `reviewer` ->
-`human`) and calls `tau dag-run`. The watchdog does not drive the loop, count
-attempts, or decide when work is done — Tau owns dispatch, receipt validation,
-resume, timeouts, immutable-goal enforcement, and fail-closed drift detection,
-and its DAG receipt is the verdict.
+A tick tries them in this order and stops at the first that has work, so an
+audit can never delay a ticket that is actually waiting.
 
-The graph is acyclic: retry lives in `coder.max_attempts`, not in a
-`reviewer -> coder` edge. Tau's compiler rejects that edge with
-`cycle_detected` and `unsupported_ready_queue_condition`, and it duplicates a
-policy Tau already owns. Verified against Tau at `origin/main`:
-`tau dag-plan` exits 0 and emits `tau.dag_plan.v1` with nodes
-`coder, human, reviewer`.
+### 1. Repair — `ticket_repair`
 
-`coder` gates on `required_evidence: [changed_files, focused_tests]`. That
-matters because the shipped coder command spec is a **transport stub** that
-returns `--result-status COMPLETED` unconditionally; the evidence gate makes it
-fail closed rather than report a repair it never performed.
+`$ask tau-dag --dag-template creator-reviewer` compiles the DAG and Tau executes
+it. The watchdog does not drive the loop, count attempts, or decide when work is
+done; Tau owns dispatch, receipt validation, resume, timeouts, immutable-goal
+enforcement and fail-closed drift detection, and its receipt is the verdict.
 
-Command specs resolve from Tau's own root
-(`experiments/goal-locked-subagents/agent-command-specs/`), not
-`agent-skills/agents/`, which holds specs for only 3 of 92 agents. Missing specs
-block before any GitHub write.
+Two seats, deliberately different model families (`repair_creator`,
+`repair_reviewer`, per project or env). A reviewer sharing the creator's blind
+spots is a second pass, not a second opinion, so identical seats are refused
+before dispatch.
+
+Each repair is authored in a worktree of its own, created from `origin/main`
+per dispatch under the state root. The registered checkout is a human's working
+tree; authoring there builds on whatever it happens to hold. It is still
+consulted for one thing: whether this ticket's targets are settled.
+
+The creator commits to its branch and must not push — the immutable goal says
+so, and the lane records `origin/main` before and after, blocking the ticket if
+it moved. That detects the violation; preventing it belongs in branch
+protection.
+
+### 2. Closure audit — closing a ticket is a claim
+
+Two seats (`closure_auditors`, at least two distinct) judge each `COMPLETED`
+closure against the ticket's own acceptance criterion and required proof, using
+the closing comments plus the proof artifacts named in the closure-evidence JSON,
+read from disk.
+
+- any FAIL → reopened, `agent-work` restored, the repair lane takes it again
+- every seat PASS → `closure-verified`, stays closed
+- a silent seat, or none → NEEDS_ATTENTION, left closed and unverified
+
+`NOT_PLANNED` closures are excluded: a duplicate or won't-fix is bookkeeping,
+not a claim that work was done. A closure citing no artifacts predates the
+evidence contract and is NEEDS_ATTENTION, not FAIL. An audit that produced no
+verdict cools down rather than retrying the same ticket every minute.
+
+### 3. Completion attestation — an empty queue is not proof
+
+When nothing is open to repair and nothing is left to audit — where the system
+would otherwise call itself done — `completion_attestor` (WebGPT by default, a
+different transport from the models that did and reviewed the work) judges
+whether the project is genuinely finished. On FAIL it names tickets on a
+`REOPEN: #123, #456` line and those are reopened, so the cycle repeats. The list
+is intersected with the tickets it was shown. Rate-limited per project.
+
+## cron needs a login environment
+
+cron starts with a nearly empty environment and does not read the user's
+profile, so provider credentials and PATH entries exported from a shell rc are
+absent: every provider seat failed to authenticate under cron while the same
+handler answered from an interactive shell. `install-cron` emits an explicit
+`source` of the shell rc before the tick. Override with
+`PROJECT_WATCHDOG_SHELL_INIT`.
 
 See `PROJECT_KNOWLEDGE.md` for current readiness and open questions.

@@ -1392,3 +1392,18 @@ def test_a_duplicate_closure_is_not_audited_for_proof_of_work() -> None:
             "run", {"repo": TAU_REPO, "project_id": "p"}, now=now.timestamp()
         )
     assert [i["number"] for i in pending] == [1], "only closures claiming the work is done"
+
+
+def test_the_attestation_shows_whether_each_closure_was_verified() -> None:
+    """Given only titles and statuses the attestor refused to certify anything --
+    "a set of titles and statuses with no underlying evidence" -- so the lane
+    could only ever answer NEEDS_ATTENTION."""
+    recent = [
+        {"number": 1, "title": "a", "stateReason": "COMPLETED",
+         "labels": [{"name": config.CLOSURE_VERIFIED_LABEL}]},
+        {"number": 2, "title": "b", "stateReason": "COMPLETED", "labels": []},
+    ]
+    task = handlers.build_completion_attestation_task(repo=TAU_REPO, recent=recent)
+    assert "#1 [COMPLETED] [audited+upheld]" in task
+    assert "#2 [COMPLETED] [closure NOT independently verified]" in task
+    assert "independently" in task

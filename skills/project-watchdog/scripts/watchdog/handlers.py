@@ -1339,10 +1339,23 @@ def handle_closure_audit(
 
 def build_completion_attestation_task(*, repo: str, recent: list[dict[str, Any]]) -> str:
     """Ask an independent seat whether this project is genuinely finished."""
-    listing = "\n".join(
-        f"- #{i['number']} [{i.get('stateReason') or 'CLOSED'}] {str(i.get('title', ''))[:110]}"
-        for i in recent[:40]
-    ) or "(no recently closed tickets)"
+    # Include each ticket's audit status. Shown only titles and statuses, the
+    # attestor correctly refused to certify anything -- "this ticket list is a
+    # set of titles and statuses with no underlying evidence" -- so the lane
+    # could only ever answer NEEDS_ATTENTION. Whether a closure was
+    # independently reviewed and upheld is the fact worth weighing here.
+    rows = []
+    for i in recent[:40]:
+        labels = {str(lbl.get("name")) for lbl in i.get("labels", [])}
+        audited = (
+            "audited+upheld" if config.CLOSURE_VERIFIED_LABEL in labels
+            else "closure NOT independently verified"
+        )
+        rows.append(
+            f"- #{i['number']} [{i.get('stateReason') or 'CLOSED'}] [{audited}] "
+            f"{str(i.get('title', ''))[:100]}"
+        )
+    listing = "\n".join(rows) or "(no recently closed tickets)"
     return (
         f"Every agent-routable ticket in {repo} is closed. Decide whether each one "
         f"is legitimately closed, and whether the set as a whole means the work is "
@@ -1355,6 +1368,10 @@ def build_completion_attestation_task(*, repo: str, recent: list[dict[str, Any]]
         f"If you answer FAIL, list the tickets to reopen on their own final line, "
         f"exactly:\n\n"
         f"REOPEN: #123, #456\n\n"
+        f"Each ticket is marked with whether its closure was independently "
+        f"reviewed and upheld by the closure audit. A repo where most closures "
+        f"were never verified is weaker evidence of completion than the same "
+        f"list where they were; say that rather than guess from titles.\n\n"
         f"List only tickets from the set below, and only ones you can say are "
         f"wrongly closed. Reopening is not free: each one goes back to a repair "
         f"agent. An empty queue is not evidence of a finished project -- it is "
