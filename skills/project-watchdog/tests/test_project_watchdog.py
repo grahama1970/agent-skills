@@ -1370,3 +1370,25 @@ def test_a_pre_contract_closure_is_not_grounds_for_fail() -> None:
     assert "predates the evidence contract" in task
     assert "not grounds for FAIL" in task
     assert "absent by design" in task
+
+
+def test_a_duplicate_closure_is_not_audited_for_proof_of_work() -> None:
+    """tau#213 was closed as a duplicate of a lower-numbered ticket. The audit
+    reopened it for lacking proof of work it was never going to do."""
+    import datetime as _dt
+
+    now = _dt.datetime(2026, 7, 28, tzinfo=_dt.UTC)
+    recent = (now - _dt.timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+
+    def closed(number, reason):
+        return {"number": number, "title": "t", "body": "", "labels": [{"name": "agent-work"}],
+                "closedAt": recent, "stateReason": reason, "url": "u"}
+
+    gh = {"exit_code": 0, "stdout": json.dumps([
+        closed(1, "COMPLETED"), closed(2, "NOT_PLANNED"), closed(3, "REOPENED"),
+    ]), "stderr": ""}
+    with mock.patch.object(registry, "run_cmd", return_value=gh):
+        pending = registry.list_closed_for_audit(
+            "run", {"repo": TAU_REPO, "project_id": "p"}, now=now.timestamp()
+        )
+    assert [i["number"] for i in pending] == [1], "only closures claiming the work is done"

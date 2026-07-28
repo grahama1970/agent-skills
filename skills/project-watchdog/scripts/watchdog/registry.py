@@ -366,6 +366,12 @@ def list_closed_for_audit(
     closed by anything -- a person, a script, an agent that mis-read its own
     output -- and once closed it left the system entirely.
 
+    Only closures GitHub records as COMPLETED. A ticket closed NOT_PLANNED --
+    a duplicate, a won't-fix, an abandoned scope -- is not a claim that work was
+    done, so auditing it for proof is a category error. tau#213 was closed as a
+    duplicate of a lower-numbered ticket and the audit reopened it for having no
+    proof of work it was never going to do.
+
     Excludes tickets already carrying ``closure-verified`` (checked and
     accepted) or ``needs-human`` (a person already owns it), and anything closed
     longer ago than the audit window, since an old closure is history rather
@@ -389,6 +395,8 @@ def list_closed_for_audit(
     for issue in json.loads(result.get("stdout") or "[]"):
         labels = {str(lbl.get("name")) for lbl in issue.get("labels", [])}
         if config.CLOSURE_VERIFIED_LABEL in labels or labels & config.HUMAN_HOLD_LABELS:
+            continue
+        if str(issue.get("stateReason") or "").upper() != "COMPLETED":
             continue
         closed_at = _parse_iso(issue.get("closedAt"))
         if closed_at is None or closed_at < cutoff:
