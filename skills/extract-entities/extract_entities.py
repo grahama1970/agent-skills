@@ -2052,7 +2052,11 @@ def extract(
     output_view = "verbose" if verbose else view
     if output_view not in {"agent", "legacy", "verbose", "debug"}:
         raise typer.BadParameter("view must be one of: agent, legacy, verbose, debug")
-    result = _enrich_extraction_result(_call_extract_entities(text, include_taxonomy=taxonomy, view="legacy"), text)
+    daemon_result = _call_extract_entities(text, include_taxonomy=taxonomy, view="verbose")
+    result = _enrich_extraction_result(daemon_result, text)
+    for authoritative_key in ("proof_packet", "display_summary", "agent_contract"):
+        if daemon_result.get(authoritative_key):
+            result[authoritative_key] = daemon_result[authoritative_key]
 
     if json_output or quiet:
         print(json.dumps(_shape_extraction_result(result, output_view), indent=2, default=str))
