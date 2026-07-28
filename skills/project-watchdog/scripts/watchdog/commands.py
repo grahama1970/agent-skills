@@ -472,10 +472,23 @@ def install_cron(*, apply: bool, minute: str) -> int:
     """Install or dry-run the crontab line that drives the watchdog."""
     run_id = f"project-watchdog-install-{timestamp()}"
     cron_log = config.cron_log_path()
-    command = (
-        f"{minute} * * * * cd {shlex.quote(str(config.SKILL_DIR))} && "
+    # Run through a LOGIN shell. cron starts with a nearly empty environment and
+    # does not read the user's profile, so provider credentials exported there
+    # are absent: every audit seat under cron failed with
+    # `scillm_auth_invalid_api_key` while the same handler answered fine from an
+    # interactive shell. A login shell inherits them without copying a secret
+    # into the crontab or into a file in the repo.
+    inner = (
+        f"cd {shlex.quote(str(config.SKILL_DIR))} && "
         f"{shlex.quote(str(config.SKILL_DIR / 'run.sh'))} tick --apply --project tau "
-        f"--max-tickets 1 >> {shlex.quote(str(cron_log))} 2>&1 {config.CRON_MARKER}"
+        f"--max-tickets 1"
+    )
+    init_file = config.shell_init_file()
+    if init_file is not None:
+        inner = f"source {shlex.quote(str(init_file))} >/dev/null 2>&1; {inner}"
+    command = (
+        f"{minute} * * * * {shlex.quote(config.login_shell())} -c {shlex.quote(inner)} "
+        f">> {shlex.quote(str(cron_log))} 2>&1 {config.CRON_MARKER}"
     )
     current = run_cmd(["crontab", "-l"])
     existing = current["stdout"] if current["exit_code"] == 0 else ""

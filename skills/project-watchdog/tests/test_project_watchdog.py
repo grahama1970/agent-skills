@@ -1170,3 +1170,39 @@ def test_the_attestation_task_names_the_empty_queue_trap(tmp_path) -> None:
 
 def test_a_project_may_name_its_own_attestor() -> None:
     assert config.completion_attestor({"completion_attestor": "webkimi"}) == "webkimi"
+
+
+# --------------------------------------------------------------------------- #
+# cron environment — a credential the cron cannot see is a credential it lacks
+# --------------------------------------------------------------------------- #
+
+
+def test_the_cron_line_sources_a_shell_init_file(tmp_path, monkeypatch) -> None:
+    """Every audit seat under cron failed `scillm_auth_invalid_api_key` while
+    the same handler answered from an interactive shell: cron's environment is
+    nearly empty and never read the rc file exporting the key."""
+    rc = tmp_path / ".zshrc"
+    rc.write_text("export SCILLM_PROXY_KEY=x\n")
+    monkeypatch.setenv("PROJECT_WATCHDOG_SHELL_INIT", str(rc))
+    monkeypatch.setenv("PROJECT_WATCHDOG_LOGIN_SHELL", "/usr/bin/zsh")
+
+    from watchdog import commands  # noqa: PLC0415
+
+    captured: dict = {}
+
+    def fake_finish(run_id, receipt_dir, receipt, code, **kwargs):
+        captured["receipt"] = receipt
+        return code
+
+    monkeypatch.setattr(commands, "run_cmd", lambda *a, **k: {"exit_code": 0, "stdout": ""})
+    monkeypatch.setattr(commands, "finish", fake_finish)
+    commands.install_cron(apply=False, minute="*")
+
+    line = captured["receipt"]["cron_line"]
+    assert f"source {rc}" in line, "the rc file must be sourced before the tick"
+    assert "/usr/bin/zsh -c" in line
+
+
+def test_a_missing_rc_file_is_not_sourced(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("PROJECT_WATCHDOG_SHELL_INIT", str(tmp_path / "nope"))
+    assert config.shell_init_file() is None

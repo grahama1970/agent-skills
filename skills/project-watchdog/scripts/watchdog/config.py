@@ -154,6 +154,41 @@ def _repair_seat(project: dict[str, Any] | None, key: str, env: str, default: st
     return os.environ.get(env, "").strip() or default
 
 
+def login_shell() -> str:
+    """The shell cron runs the tick through."""
+    configured = os.environ.get("PROJECT_WATCHDOG_LOGIN_SHELL", "").strip()
+    if configured:
+        return configured
+    shell = os.environ.get("SHELL", "").strip()
+    return shell if shell and Path(shell).exists() else "/bin/bash"
+
+
+def shell_init_file() -> Path | None:
+    """The rc file holding the environment cron needs, if there is one.
+
+    cron starts with a nearly empty environment and does not read the user's
+    profile, so provider credentials exported from a shell rc are missing --
+    every audit seat under cron failed `scillm_auth_invalid_api_key` while the
+    same handler answered from an interactive shell.
+
+    `-lc` does not help for zsh: a non-interactive login shell reads `.zprofile`
+    and `.zlogin` but NOT `.zshrc`, which is where the key is. `-ic` does work,
+    but an interactive shell under cron has no TTY and can emit control noise
+    into the log. Sourcing the rc explicitly is the predictable option.
+    """
+    override = os.environ.get("PROJECT_WATCHDOG_SHELL_INIT", "").strip()
+    if override:
+        path = Path(override).expanduser()
+        return path if path.is_file() else None
+    shell = Path(login_shell()).name
+    candidates = {"zsh": [".zshrc", ".zshenv"], "bash": [".bashrc", ".bash_profile"]}
+    for name in candidates.get(shell, [".profile"]):
+        path = Path.home() / name
+        if path.is_file():
+            return path
+    return None
+
+
 def repair_worktrees_dir() -> Path:
     """Where per-ticket repair worktrees are created.
 
