@@ -155,6 +155,10 @@ ROUNDTABLE_HANDLERS = {
         "proof_required": "workspace_git_diff",
     },
 }
+# surf webgpt/gemini/kimi submit wrappers send exactly one attachment and reject
+# repeated --attach-file outright (agent-skills#1081). Catch that here rather
+# than letting Tau launch a lane that dies on argument parsing.
+SINGLE_ATTACHMENT_HANDLERS = {"webgpt", "webgemini", "webkimi"}
 SUBAGENT_HANDLER_MODEL_PREFIXES = ("gpt-", "codex-")
 _HANDLER_ALIASES = {
     "chatgpt": "webgpt",
@@ -549,6 +553,41 @@ def build_interview_packet(
     return packet
 
 
+def _attachment_contract_blocker(input: TauDagCompileInput) -> dict[str, Any] | None:
+    """Refuse a multi-attachment run the browser transport cannot accept.
+
+    surf webgpt/gemini/kimi submit exactly one file and reject repeated
+    --attach-file with an argument error, which a lane then reported as
+    missing_sentinel long after Tau had launched it (agent-skills#1081). Failing
+    here names the real contract before any browser work starts.
+    """
+    attachments = [str(item) for item in getattr(input, "attachments", ())]
+    if len(attachments) < 2:
+        return None
+    affected = sorted(
+        handler for handler in input.handlers if handler in SINGLE_ATTACHMENT_HANDLERS
+    )
+    if not affected:
+        return None
+    return {
+        "schema": "ask.tau_dag_attachment_contract.v1",
+        "status": "BLOCKED",
+        "ok": False,
+        "failure_code": "browser_attachment_argument_contract_failed",
+        "handlers": affected,
+        "attachment_count": len(attachments),
+        "attachments": attachments,
+        "reason": (
+            f"{', '.join(affected)} send exactly one attachment per submit, but "
+            f"{len(attachments)} were requested."
+        ),
+        "remedy": (
+            "Pass one local bundle or zip with a single --attach-file, or route the multi-file "
+            "evidence to a handler whose transport accepts several attachments."
+        ),
+    }
+
+
 def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
     missing = missing_dag_fields(input)
     run_dir = _run_dir(input)
@@ -584,6 +623,14 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         _write_json(run_dir / "interview-required.json", packet)
         _write_json(run_dir / "compile-status.json", packet)
         return packet
+
+    attachment_blocker = _attachment_contract_blocker(input)
+    if attachment_blocker:
+        attachment_blocker["run_dir"] = str(run_dir)
+        attachment_blocker["request_path"] = str(request_path)
+        _write_json(run_dir / "attachment-contract-blocked.json", attachment_blocker)
+        _write_json(run_dir / "compile-status.json", attachment_blocker)
+        return attachment_blocker
 
     worker_path = _write_roundtable_worker(run_dir) if input.handlers else _write_worker(run_dir)
     command_specs_dir = run_dir / "command-specs"
