@@ -34,10 +34,10 @@
     ],
     "proves": []
   },
-  "created_at": "2026-07-28T15:28:54Z",
+  "created_at": "2026-07-28T17:19:59Z",
   "engine": "resemblyzer",
   "failed_gates": [
-    "all_renders_recognized_as_embry"
+    "renders_long_enough_to_judge_identity"
   ],
   "genuine_renders": [
     {
@@ -47,6 +47,9 @@
         "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_finished_response.wav",
         "sha256": "sha256:ec3a987d6e164398b7502fca1ab6b6951f1d9360536e5fba2283b03e24229d12"
       },
+      "duration_aware_floor": 0.670039,
+      "long_enough_to_judge": false,
+      "passes_duration_aware_floor": true,
       "passes_threshold": true,
       "seconds": 2.04,
       "similarity_to_authorized_reference": 0.780143,
@@ -60,6 +63,9 @@
         "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_finished_response.wav",
         "sha256": "sha256:881be52fa0d8f9bef02b35570dd04620eda8647b7143efb85f28f7901ec1fc32"
       },
+      "duration_aware_floor": 0.670039,
+      "long_enough_to_judge": false,
+      "passes_duration_aware_floor": true,
       "passes_threshold": false,
       "seconds": 2.16,
       "similarity_to_authorized_reference": 0.738204,
@@ -73,6 +79,9 @@
         "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_finished_response.wav",
         "sha256": "sha256:a5d002a3b63178a0589e078153d1ffca294a4e62987eae59fb82f076cf418301"
       },
+      "duration_aware_floor": 0.670039,
+      "long_enough_to_judge": false,
+      "passes_duration_aware_floor": true,
       "passes_threshold": false,
       "seconds": 1.76,
       "similarity_to_authorized_reference": 0.745472,

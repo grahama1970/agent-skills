@@ -1,0 +1,74 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "perceived naturalness",
+      "human recognition",
+      "that any particular threshold is correct policy"
+    ],
+    "proves": [
+      "the deployed engine's achievable similarity as a function of clip duration"
+    ]
+  },
+  "created_at": "2026-07-28T17:19:04Z",
+  "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+  "engine": "chatterbox_base",
+  "engine_deficit": {
+    "max": 0.152439,
+    "mean": 0.088305,
+    "min": 0.042943
+  },
+  "findings": [
+    "absolute similarity is dominated by clip duration, not by engine fidelity",
+    "the deployed chatterbox_base engine reaches 0.87-0.90 given 4s or more of audio",
+    "the engine sits consistently BELOW the same-speaker ceiling at equal duration; that gap is the true fidelity deficit",
+    "a fixed absolute floor conflates the two and mislabels short clips as the wrong voice"
+  ],
+  "live": true,
+  "method": "render the same speaker through the live engine at three lengths, score each against the reference, and compare to the reference sliced to the SAME length",
+  "mocked": false,
+  "points": [
+    {
+      "duration_matched_ceiling": {
+        "max": 0.886078,
+        "mean": 0.783195,
+        "min": 0.630382,
+        "slices": 20
+      },
+      "engine_deficit": 0.152439,
+      "render": 1,
+      "seconds": 1.48,
+      "similarity": 0.630756
+    },
+    {
+      "duration_matched_ceiling": {
+        "max": 0.921537,
+        "mean": 0.914968,
+        "min": 0.901713,
+        "slices": 7
+      },
+      "engine_deficit": 0.042943,
+      "render": 2,
+      "seconds": 4.16,
+      "similarity": 0.872025
+    },
+    {
+      "duration_matched_ceiling": {
+        "max": 0.974516,
+        "mean": 0.967613,
+        "min": 0.962869,
+        "slices": 3
+      },
+      "engine_deficit": 0.069532,
+      "render": 3,
+      "seconds": 9.8,
+      "similarity": 0.898081
+    }
+  ],
+  "reference": {
+    "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/voice_clone_candidates/embry_kling_clone_candidate.wav",
+    "seconds": 30.0,
+    "sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098"
+  },
+  "schema": "persona_dream.voice_fidelity_ceiling.v1",
+  "status": "PASS_VOICE_FIDELITY_CEILING_MEASURED"
+}

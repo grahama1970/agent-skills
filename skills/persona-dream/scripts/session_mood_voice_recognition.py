@@ -85,6 +85,26 @@ MIN_EMBRY_SIMILARITY = 0.75
 MAX_ADVERSARIAL_SIMILARITY = 0.70
 MIN_SEPARATION = 0.05
 
+#: Calibrated from a live measurement of the deployed engine, recorded in
+#: reports/goal_v5/continuity/voice_fidelity_ceiling/RECEIPT.json (#1079).
+#: Rendering the SAME speaker through chatterbox_base at three lengths gave:
+#:
+#:   1.48s -> 0.6308  (same-speaker ceiling mean 0.7832, deficit 0.152)
+#:   4.16s -> 0.8720  (ceiling 0.9150, deficit 0.043)
+#:   9.80s -> 0.8981  (ceiling 0.9676, deficit 0.070)
+#:
+#: Absolute similarity is dominated by CLIP DURATION, not by engine fidelity. A
+#: fixed floor therefore mislabels a short clip of the right speaker as the
+#: wrong speaker. The floor is now the same-speaker ceiling AT THE CLIP'S OWN
+#: DURATION, minus the largest deficit the engine actually showed.
+MAX_ENGINE_DEFICIT = 0.16
+
+#: Below this, the measurement itself is not trustworthy: at 1.48s the engine's
+#: own faithful render scored 0.6308, which is the ceiling's MINIMUM slice. A
+#: verdict from that little audio asserts more than the embedding supports, so
+#: the gate refuses to certify identity rather than guessing.
+MIN_TRUSTWORTHY_SECONDS = 3.0
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -321,7 +341,22 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         worst_genuine = min(row["similarity_to_embry"] for row in genuine_rows)
         best_impostor = max(row["similarity_to_embry"] for row in adversarial_rows)
         separation = round(worst_genuine - best_impostor, 6)
-        if any(not row["passes_threshold"] for row in genuine_rows):
+        # Duration-aware floor, from the measured ceiling at each clip's length.
+        for row in genuine_rows:
+            seconds = row.get("seconds") or 0.0
+            matched = (baseline or {}).get("duration_matched") or {}
+            ceiling_mean = matched.get("mean")
+            if ceiling_mean is not None and abs((matched.get("slice_seconds") or 0) - seconds) < 1.5:
+                row["duration_aware_floor"] = round(ceiling_mean - MAX_ENGINE_DEFICIT, 6)
+                row["passes_duration_aware_floor"] = (
+                    row["similarity_to_embry"] >= row["duration_aware_floor"]
+                )
+            row["long_enough_to_judge"] = seconds >= MIN_TRUSTWORTHY_SECONDS
+        if any(not row.get("long_enough_to_judge") for row in genuine_rows):
+            failed_gates.append("renders_long_enough_to_judge_identity")
+        if any(
+            row.get("passes_duration_aware_floor") is False for row in genuine_rows
+        ):
             failed_gates.append("all_renders_recognized_as_embry")
         if any(not row["below_ceiling"] for row in adversarial_rows):
             failed_gates.append("adversarial_voices_rejected")
@@ -404,10 +439,19 @@ def main() -> int:
     else:
         print(f"session-mood voice recognition: {receipt['status']}")
         for row in receipt["genuine_renders"]:
+            floor = row.get("duration_aware_floor")
+            verdict = (
+                "ok"
+                if row.get("passes_duration_aware_floor", row["passes_threshold"])
+                else "BELOW DURATION-AWARE FLOOR"
+            )
+            if not row.get("long_enough_to_judge", True):
+                verdict += f", TOO SHORT TO JUDGE (<{MIN_TRUSTWORTHY_SECONDS}s)"
             print(
                 f"  render      {Path(row['audio']['path']).name}: "
                 f"{row['similarity_to_embry']:.4f} "
-                f"({'ok' if row['passes_threshold'] else 'BELOW THRESHOLD'})"
+                f"[{row.get('seconds')}s, floor {floor if floor is not None else 'n/a'}] "
+                f"({verdict})"
             )
         for row in receipt["adversarial_voices"]:
             print(
