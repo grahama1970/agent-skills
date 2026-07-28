@@ -368,3 +368,41 @@ def test_exclusions_are_reported_by_distinct_reason():
 
     action, reason = registry.classify_issue_with_reason(issue(4))
     assert action == "ticket_repair" and reason is None
+
+
+# --- the tick must not stop at the first active project ----------------------
+
+
+def test_rotation_order_leads_with_the_requested_project():
+    order = registry.rotation_order(PROJECTS, ALL_ACTIVE, requested="beta")
+    assert [str(e["project_id"]) for e in order][0] == "beta"
+
+
+def test_rotation_order_starts_after_the_last_served():
+    state = dict(ALL_ACTIVE, last_served_project="alpha")
+    order = registry.rotation_order(PROJECTS, state)
+    assert [str(e["project_id"]) for e in order] == ["beta", "gamma", "alpha"]
+
+
+def test_rotation_order_covers_every_project_exactly_once():
+    """A project skipped this tick must still be tried before the tick ends."""
+    order = registry.rotation_order(PROJECTS, ALL_ACTIVE, requested="gamma")
+    ids = [str(e["project_id"]) for e in order]
+    assert sorted(ids) == ["alpha", "beta", "gamma"]
+    assert len(ids) == len(set(ids))
+
+
+# --- runtime state must not live in the repository ---------------------------
+
+
+def test_state_is_written_outside_the_repository():
+    """The tick writes state every run; inside the repo that dirties the skill.
+
+    With readiness judged per target, a watchdog that dirties
+    skills/project-watchdog makes every ticket against itself unrepairable.
+    """
+    from watchdog import config  # noqa: PLC0415
+
+    live = config.state_path()
+    assert config.SKILL_DIR not in live.parents, "state must not sit inside the skill"
+    assert live.parent == config.state_root()

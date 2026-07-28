@@ -10,6 +10,10 @@ Inputs
     ``PROJECT_WATCHDOG_STATE_ROOT``
         Overrides the durable state root (default ``~/.local/state/project-watchdog``).
         Tests set this to a temporary directory to keep real receipts untouched.
+    ``PROJECT_WATCHDOG_PROJECTS_PATH``
+        Overrides the project registry file. Sanity checks point this at a
+        fixture so a gate about idle behaviour is not rewritten every time a
+        real project gains a ticket.
     ``PROJECT_WATCHDOG_WORKSPACE``
         Overrides the workspace root that holds project worktrees
         (default ``~/workspace/experiments``).
@@ -58,7 +62,8 @@ ASK_RUN_SH = SKILL_DIR.parent / "ask" / "run.sh"
 def ask_run_sh() -> Path:
     """Path to the $ask runner used by the ticket-repair lane."""
     return ASK_RUN_SH
-STATE_PATH = REGISTRY_DIR / "state.json"
+#: Seed state, versioned with the skill. Runtime state is NOT written here.
+STATE_SEED_PATH = REGISTRY_DIR / "state.json"
 
 
 def _env_path(name: str, default: Path) -> Path:
@@ -86,6 +91,32 @@ def receipt_root() -> Path:
 
 def lock_dir() -> Path:
     return state_root() / "lock"
+
+
+def state_path() -> Path:
+    """Where mutable watchdog state actually lives.
+
+    NOT inside the repository. ``registry/state.json`` is tracked, and the tick
+    writes state on every run -- pausing a project, recording last_served -- so
+    the watchdog dirtied its own skill directory continuously. With readiness
+    judged per target that made every ticket against ``skills/project-watchdog``
+    permanently unrepairable, and in any checkout it produced endless spurious
+    diffs. Logs and receipts already live under the state root; state belongs
+    with them.
+
+    Seeded once from the versioned ``registry/state.json`` so a fresh install
+    starts from the committed defaults.
+    """
+    live = state_root() / "state.json"
+    if not live.exists() and STATE_SEED_PATH.is_file():
+        live.parent.mkdir(parents=True, exist_ok=True)
+        live.write_text(STATE_SEED_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+    return live
+
+
+def projects_path() -> Path:
+    """Return the project registry, honouring ``PROJECT_WATCHDOG_PROJECTS_PATH``."""
+    return _env_path("PROJECT_WATCHDOG_PROJECTS_PATH", PROJECTS_PATH)
 
 
 def repair_worktrees_dir() -> Path:

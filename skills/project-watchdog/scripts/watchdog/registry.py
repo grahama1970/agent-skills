@@ -43,7 +43,7 @@ def find_project(projects: dict[str, Any], project_id: str) -> dict[str, Any]:
     raise ValueError(
         f"unknown project_id: {project_id!r}. "
         f"Registered ids: {', '.join(known) or '(none)'}. "
-        f"Add an entry to {config.PROJECTS_PATH} to register a new project."
+        f"Add an entry to {config.projects_path()} to register a new project."
     )
 
 
@@ -510,6 +510,27 @@ def busy_targets(issues: list[dict[str, Any]]) -> set[str]:
 def targets_are_blocked(targets: set[str], busy: set[str]) -> bool:
     """Whether dispatching ``targets`` would touch something already in flight."""
     return bool(targets & busy)
+
+
+def rotation_order(
+    projects: dict[str, Any], state: dict[str, Any], *, requested: str | None = None
+) -> list[dict[str, Any]]:
+    """Projects to try this tick, best candidate first.
+
+    The requested project leads when it is active -- the crontab names one and
+    that intent is honoured -- and the rest follow in round-robin order starting
+    after the last one served, so service is fair rather than always restarting
+    at the head of the registry.
+    """
+    entries = list(projects.get("projects", []))
+    ids = [str(e.get("project_id")) for e in entries]
+    last_served = state.get("last_served_project")
+    start = ids.index(last_served) + 1 if last_served in ids else 0
+    ordered = entries[start:] + entries[:start]
+    if requested in ids:
+        wanted = next(e for e in entries if str(e.get("project_id")) == requested)
+        ordered = [wanted] + [e for e in ordered if e is not wanted]
+    return ordered
 
 
 def select_next_project(
