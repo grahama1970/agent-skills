@@ -185,9 +185,17 @@ Do not own:
 | Chatterbox | Speech synthesis | Sends `voice_delivery`; consumes render receipts |
 | Chatterbox / voice-evaluation lane | Speaker similarity and identity scoring | Consumes a hash-bound recognition receipt |
 | Providers (Kling, Wan, ComfyUI) | Media generation | Compiles requests; never resubmits without new authorization |
+| SPARTA (`grahama1970/sparta`) | The conversation service: session/turn state, per-turn tone composition | Publishes an arc-bias artifact SPARTA reads; never edits the conversation service |
 
 Persona Dream owns the lineage that joins these across stages, and the receipts
 that prove the join.
+
+These are separate projects with their own repositories and issue trackers. A
+Persona Dream ticket may not carry acceptance criteria that require editing one
+of them; file into that project instead. Observed 2026-07-28: #1057 demanded a
+change to the SPARTA conversation service, which is how a persona-dream lane
+ended up editing `experiments/sparta`. SPARTA was absent from this table at the
+time, which is what made the boundary easy to cross.
 
 ### Status pointer
 
