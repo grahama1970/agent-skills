@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-27 UTC (P2 live-chain next-step synthesis) by Codex
+**Last updated:** 2026-07-28 UTC (P2.4 backend preflight PASS; recognition scoring still open) by Claude
 **Status:** Active development
 
 ## 2026-07-27 — CURRENT NEXT STEP: P2.4 recognition gate before live-chain receipt
@@ -31,16 +31,18 @@ Ticket state folded into current truth:
   P2 live continuity-chain recognition gate unless the operator explicitly
   reprioritizes the research workstream.
 
+Evaluator runtime is AVAILABLE. The P2.4 backend preflight is
+`PASS_SPEAKER_RECOGNITION_PREFLIGHT` under the Chatterbox voice-lane
+interpreter, which supplies `resemblyzer`. Backend discovery is a closed step;
+do not repeat it. The unclosed capability is actual speaker scoring.
+
 Next implementation order:
 
-1. Resolve the speaker-recognition backend blocker with an approved real
-   backend such as `resemblyzer` or `speechbrain_ecapa`, or route the artifacts
-   to a dedicated voice/audio evaluation lane that already has one.
-2. Add speaker-similarity and adversarial Embry-recognition checks for the
-   three live session-mood Chatterbox renders. This is the missing bridge
-   between "emotion controls reached Chatterbox" and "speech remains
+1. #1037 recognition gate — score the three durable session-mood renders for
+   speaker similarity and adversarial Embry recognition. This is the missing
+   bridge between "emotion controls reached Chatterbox" and "speech remains
    recognizably Embry."
-3. Use those gates in the target receipt
+2. #1039 joined live-chain receipt — use those gates in the target receipt
    `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
 4. The live-chain receipt must still prove or explicitly mark every leg:
    accepted dream -> Watch observations -> first-person synthetic journal ->
@@ -54,7 +56,14 @@ report-local WAV snapshots. It does not prove perceived target emotion,
 naturalness, speaker similarity, adversarial recognition, production
 conversation-service binding, or repeated full-pipeline reliability.
 
-## 2026-07-27 — P2.4 voice-recognition preflight blocks on missing backend
+## 2026-07-27 — SUPERSEDED — P2.4 voice-recognition preflight blocks on missing backend
+
+> SUPERSEDED 2026-07-28. Retained as the record of the failed attempts and the
+> evidence that produced them. The blocker was not a missing package: backend
+> availability is a property of the interpreter, and the Chatterbox voice-lane
+> interpreter already had `resemblyzer` (#1038). The authoritative preflight
+> receipt is now `PASS_SPEAKER_RECOGNITION_PREFLIGHT`. Do not read anything
+> below as a current instruction.
 
 The P2.4 preflight receipt exists:
 `reports/goal_v5/continuity/session_mood_voice_recognition_preflight/RECEIPT.json`.

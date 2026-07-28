@@ -136,3 +136,49 @@ def test_missing_current_status_blocks(tmp_path):
 
     assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
     assert "current_status_missing" in _rules(got)
+
+
+def test_reintroducing_the_1069_stale_instruction_blocks(tmp_path, monkeypatch):
+    """The exact wording that slipped past the first marker set must block.
+
+    #1069: PROJECT_KNOWLEDGE's order said "Resolve the speaker-recognition
+    backend blocker with an approved real backend" -- no "p2.4" token, so every
+    marker in the original set missed it while the checker reported PASS.
+    """
+    stale = tmp_path / "PROJECT_KNOWLEDGE.md"
+    stale.write_text(
+        "# Project Knowledge: persona-dream\n\n"
+        "## CURRENT NEXT STEP\n\n"
+        "Next implementation order:\n\n"
+        "1. Resolve the speaker-recognition backend blocker with an approved real\n"
+        "   backend such as `resemblyzer` or `speechbrain_ecapa`.\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(checker, "PROJECT_KNOWLEDGE", stale)
+
+    args = type("Args", (), {"current_status": ROOT / "CURRENT_STATUS.json", "out": None})()
+    got = checker.run(args)
+
+    assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
+    offenders = {r.get("offending") for r in got["mismatches"]}
+    assert "resolve the speaker-recognition backend blocker" in offenders
+    assert any(r["rule"] == "current_summary_contradicts_receipt" for r in got["mismatches"])
+
+
+def test_superseded_marker_exempts_the_historical_p24_section(tmp_path, monkeypatch):
+    """Marking the old section SUPERSEDED must keep its evidence readable."""
+    marked = tmp_path / "PROJECT_KNOWLEDGE.md"
+    marked.write_text(
+        "# Project Knowledge: persona-dream\n\n"
+        "## CURRENT NEXT STEP\n\n"
+        "1. #1037 recognition gate.\n\n"
+        "## SUPERSEDED - P2.4 voice-recognition preflight blocks on missing backend\n\n"
+        "> SUPERSEDED 2026-07-28. Retained as the record of the failed attempts.\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(checker, "PROJECT_KNOWLEDGE", marked)
+
+    args = type("Args", (), {"current_status": ROOT / "CURRENT_STATUS.json", "out": None})()
+    got = checker.run(args)
+
+    assert got["status"] == "PASS_CURRENT_STATE_CONSISTENT", got["mismatches"]

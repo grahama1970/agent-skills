@@ -43,6 +43,11 @@ README = ROOT / "README.md"
 #: superseded claim is fine; an unmarked one is treated as a current assertion.
 HISTORICAL_MARKERS = ("historical", "superseded", "retracted", "stale", "folded into")
 
+#: How far into a document counts as "current summary". Raised from 60 after
+#: #1069: the stale P2.4 section header sat at line 57 and its body beyond it,
+#: so a 60-line window saw the header but not the instruction under it.
+SUMMARY_LINE_LIMIT = 120
+
 
 class Stage:
     """One receipted stage, plus the phrases that would contradict acceptance.
@@ -79,6 +84,14 @@ STAGES = (
             "speaker-recognition preflight is blocked",
             "resolve the p2.4 speaker-recognition backend blocker",
             "install or route to a real speaker-recognition backend",
+            # Observed 2026-07-28 (#1069): PROJECT_KNOWLEDGE's stale order said
+            # "Resolve the speaker-recognition backend blocker with an approved
+            # real backend" -- no "p2.4" token, so every marker above missed it
+            # while the checker reported PASS. Markers must match the words the
+            # documents actually use, not the words the ticket used.
+            "resolve the speaker-recognition backend blocker",
+            "preflight blocks on missing backend",
+            "blocks on missing backend",
         ),
         status_pin="continuity_state.latest_voice_recognition_preflight_receipt_sha256",
     ),
@@ -235,7 +248,7 @@ def check_blockers_and_next_steps(
                 )
 
 
-def current_summary(path: Path, limit: int = 60) -> str:
+def current_summary(path: Path, limit: int = SUMMARY_LINE_LIMIT) -> str:
     """The top-of-file current summary, which is what an agent reads first."""
     if not path.is_file():
         return ""
@@ -243,7 +256,7 @@ def current_summary(path: Path, limit: int = 60) -> str:
     return "\n".join(lines).lower()
 
 
-def summary_paragraphs(path: Path, limit: int = 60) -> list[tuple[int, str]]:
+def summary_paragraphs(path: Path, limit: int = SUMMARY_LINE_LIMIT) -> list[tuple[int, str]]:
     """Yield ``(first_line_number, whitespace-normalized paragraph)``.
 
     Paragraphs, not lines: markdown hard-wraps prose, so the README's
