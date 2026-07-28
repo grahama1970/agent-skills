@@ -1118,16 +1118,28 @@ def test_the_two_default_seats_are_different_families() -> None:
 # --------------------------------------------------------------------------- #
 
 
-def _run_attestation(tmp_path, response: str, *, exit_code: int = 0, project=None):
+def _run_attestation(tmp_path, response: str, *, exit_code: int = 0, project=None, recent=None):
     project = project or {"project_id": "p", "repo": TAU_REPO}
-    recent = [{"number": 1, "title": "did a thing", "stateReason": "COMPLETED"}]
+    recent = recent or [{"number": 1, "title": "did a thing", "stateReason": "COMPLETED"}]
+    calls: dict = {"reopened": [], "edits": []}
     with (
         mock.patch.object(handlers, "run_cmd", return_value={"exit_code": exit_code, "stderr": ""}),
         mock.patch.object(handlers, "_read_ask_response", return_value=response),
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github, "issue_edit",
+            side_effect=lambda *a, **k: calls["edits"].append(k) or {"exit_code": 0},
+        ),
+        mock.patch.object(
+            handlers.github, "issue_reopen",
+            side_effect=lambda r, n: calls["reopened"].append(n) or {"exit_code": 0},
+        ),
     ):
-        return handlers.handle_completion_attestation(
+        result = handlers.handle_completion_attestation(
             "run", tmp_path, project, recent, apply=True
         )
+    result["_calls"] = calls
+    return result
 
 
 def test_the_attestor_is_a_different_transport_from_the_working_models() -> None:
@@ -1144,13 +1156,36 @@ def test_an_attested_project_passes(tmp_path) -> None:
     assert result["status"] == "COMPLETED"
 
 
-def test_a_refused_attestation_is_not_a_finished_project(tmp_path) -> None:
+def test_a_refused_attestation_reopens_what_it_named(tmp_path) -> None:
+    """The cycle repeats: rejected closures go back to the repair lane."""
+    recent = [
+        {"number": 12, "title": "a", "stateReason": "COMPLETED"},
+        {"number": 13, "title": "b", "stateReason": "COMPLETED"},
+    ]
     result = _run_attestation(
-        tmp_path, "#12 implies a follow-up nobody filed.\nVERDICT: FAIL"
+        tmp_path,
+        "#12 was closed without the work being done.\nVERDICT: FAIL\nREOPEN: #12",
+        recent=recent,
     )
     assert result["verdict"] == "FAIL" and result["ok"] is False
-    assert result["status"] == "NEEDS_ATTENTION"
-    assert "named gap" in result["summary"]
+    assert result["reopened"] == [12]
+    assert 13 not in result["reopened"], "only what it named"
+    assert any(e.get("add") == [config.READY_LABEL] for e in result["_calls"]["edits"])
+
+
+def test_an_inconclusive_attestation_reopens_nothing(tmp_path) -> None:
+    """"Cannot tell" is not a finding that a ticket was wrongly closed."""
+    result = _run_attestation(
+        tmp_path, "I cannot judge these from titles.\nVERDICT: NEEDS_ATTENTION\nREOPEN: #1"
+    )
+    assert result["reopened"] == []
+
+
+def test_the_attestor_cannot_reopen_a_ticket_it_was_not_shown() -> None:
+    """A number outside the set is a guess, and reopening on a guess sends a
+    repair agent at a ticket nobody reviewed."""
+    picked = handlers.extract_reopen_list("VERDICT: FAIL\nREOPEN: #1, #999", allowed={1, 2})
+    assert picked == [1]
 
 
 def test_a_failed_attestor_run_does_not_attest(tmp_path) -> None:
