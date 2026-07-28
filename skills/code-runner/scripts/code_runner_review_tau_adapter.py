@@ -65,9 +65,11 @@ def _verdict(
     goal_hash: str,
     checks: list[dict[str, Any]],
     summary: str,
+    handoff: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    """Build the reviewer response, preserving the identity fields Tau checks."""
     passed = status == "PASS"
-    return {
+    packet: dict[str, Any] = {
         "schema": "tau.agent_handoff.v1",
         "goal": {"goal_hash": goal_hash},
         "previous_subagent": "reviewer",
@@ -76,7 +78,8 @@ def _verdict(
             "summary": summary,
             "review_verdict": status,
             "checks": checks,
-            "evidence": [c["name"] for c in checks],
+            # Tau matches required_evidence inside result.evidence.
+            "evidence": [{"review_verdict": status}, *[c["name"] for c in checks]],
         },
         "next_agent": {
             "name": "human",
@@ -90,16 +93,25 @@ def _verdict(
         "required_evidence": ["human decision on the reviewed patch"],
         "stop_condition": "Human applies, rejects, or redirects the patch.",
     }
+    source = handoff or {}
+    if source.get("github"):
+        packet["github"] = source["github"]
+    if source.get("goal"):
+        packet["goal"] = source["goal"]
+    packet["context"] = {"summary": summary, "artifacts": [c["name"] for c in checks]}
+    packet["rationale"] = summary
+    return packet
 
 
 def main() -> int:
     goal_hash = os.environ.get("TAU_HANDOFF_ACTIVE_GOAL_HASH", "")
     checks: list[dict[str, Any]] = []
+    handoff: dict[str, Any] = {}
 
     def fail(summary: str) -> int:
         print(
             json.dumps(
-                _verdict("FAIL", goal_hash, checks, summary), indent=2, sort_keys=True
+                _verdict("FAIL", goal_hash, checks, summary, handoff), indent=2, sort_keys=True
             )
         )
         return 1
@@ -197,6 +209,7 @@ def main() -> int:
                 checks,
                 f"Patch applies cleanly, stays inside {allowlist}, and {command!r} passes on "
                 "independent re-run.",
+                handoff,
             ),
             indent=2,
             sort_keys=True,

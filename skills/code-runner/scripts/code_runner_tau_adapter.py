@@ -104,8 +104,11 @@ def build_spec(
 ) -> tuple[dict[str, Any], str]:
     """Return (spec, refusal_reason). A non-empty reason means do not run."""
     context = handoff.get("context") or {}
-    body = str(context.get("issue_body") or context.get("summary") or "")
-    repo_path = str(context.get("repo_path") or handoff.get("cwd") or "")
+    # Tau nests the DAG node's declared context under context.tau_dag_node.context;
+    # its start handoff carries no issue_body or repo_path at the top level.
+    node_context = ((context.get("tau_dag_node") or {}).get("context")) or {}
+    body = str(node_context.get("issue_body") or context.get("issue_body") or "")
+    repo_path = str(node_context.get("repo_path") or context.get("repo_path") or "")
     target = str((handoff.get("github") or {}).get("target") or "task")
 
     allowlist = parse_allowlist(body)
@@ -142,6 +145,29 @@ def build_spec(
         # Never true here. A cron-driven loop must not write to a source repo.
         "apply_to_source": False,
     }, ""
+
+
+def _echo(handoff: dict[str, Any], packet: dict[str, Any]) -> dict[str, Any]:
+    """Preserve the identity fields Tau requires a node response to carry.
+
+    Tau rejects a response whose github target or goal differs from the start
+    handoff ("response.github target must match start handoff target"), and
+    requires context and rationale on every packet. Echoing them is how a node
+    proves it acted on the work it was given rather than drifting.
+    """
+    if handoff.get("github"):
+        packet["github"] = handoff["github"]
+    if handoff.get("goal"):
+        packet["goal"] = handoff["goal"]
+    packet.setdefault(
+        "context",
+        {
+            "summary": packet["result"]["summary"],
+            "artifacts": [e for e in packet["result"].get("evidence", []) if isinstance(e, str)],
+        },
+    )
+    packet.setdefault("rationale", packet["result"]["summary"])
+    return packet
 
 
 def emit(packet: dict[str, Any]) -> int:
@@ -181,7 +207,7 @@ def main() -> int:
 
     spec, refusal = build_spec(handoff, artifact_dir=artifact_dir)
     if refusal:
-        return emit(blocked(refusal, goal_hash))
+        return emit(_echo(handoff, blocked(refusal, goal_hash)))
 
     spec_path = artifact_dir / "code-runner-spec.json"
     spec_path.write_text(
@@ -197,21 +223,21 @@ def main() -> int:
     )
     if result.returncode != 0:
         return emit(
-            blocked(
+            _echo(handoff, blocked(
                 f"code-runner exited {result.returncode}: {result.stderr.strip()[:400]}",
                 goal_hash,
                 [str(spec_path)],
-            )
+            ))
         )
 
     patch = Path(spec["output_dir"]) / f"{spec['task_id']}.patch"
     if not patch.is_file() or not patch.read_text(encoding="utf-8").strip():
         return emit(
-            blocked(
+            _echo(handoff, blocked(
                 "code-runner produced no non-empty patch; an empty diff is not a repair",
                 goal_hash,
                 [str(spec_path)],
-            )
+            ))
         )
 
     changed = [
@@ -220,7 +246,7 @@ def main() -> int:
         if line.startswith("diff --git ") and " b/" in line
     ]
     return emit(
-        {
+        _echo(handoff, {
             "schema": "tau.agent_handoff.v1",
             "goal": {"goal_hash": goal_hash},
             "previous_subagent": "coder",
@@ -230,8 +256,15 @@ def main() -> int:
                     f"code-runner produced a reviewed-scope patch touching {len(changed)} "
                     f"file(s); definition of done passed. Source repository not modified."
                 ),
-                "evidence": [str(patch), str(spec_path)],
-                # The exact names the repair DAG's coder node gates on.
+                # Tau matches required_evidence by searching the JSON of
+                # result.evidence (project_dag._missing_required_evidence), so the
+                # named items must live INSIDE this list, not beside it.
+                "evidence": [
+                    str(patch),
+                    str(spec_path),
+                    {"changed_files": changed},
+                    {"focused_tests": [spec["definition_of_done"]["command"]]},
+                ],
                 "changed_files": changed,
                 "focused_tests": [spec["definition_of_done"]["command"]],
             },
@@ -242,7 +275,7 @@ def main() -> int:
             },
             "required_evidence": ["review_verdict"],
             "stop_condition": "Reviewer accepts the patch or routes back with findings.",
-        }
+        })
     )
 
 

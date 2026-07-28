@@ -522,6 +522,8 @@ def build_repair_contract(
     issue_title: str,
     goal_hash: str,
     spec_root: str,
+    issue_body: str = "",
+    repo_path: str = "",
 ) -> dict[str, Any]:
     """Compile a ``tau.dag_contract.v1`` coder/reviewer repair loop for one issue.
 
@@ -567,6 +569,11 @@ def build_repair_contract(
                 "executor": "local",
                 "max_attempts": 2,
                 "command_spec": f"{spec_root}/coder/tau-dispatch-command.json",
+                # Tau forwards node context to the adapter as
+                # context.tau_dag_node.context. The coder needs the ticket body
+                # (allowlist + definition of done) and the checkout to work in;
+                # Tau's start handoff carries neither.
+                "context": {"issue_body": issue_body, "repo_path": repo_path},
                 # The evidence gate that stops a transport-only stub from
                 # reporting a repair it never performed.
                 "required_evidence": ["changed_files", "focused_tests"],
@@ -678,6 +685,8 @@ def handle_ticket_repair(
         issue_title=str(issue.get("title", "")),
         goal_hash=issue_goal_hash(repo, issue_number),
         spec_root=str(spec_root),
+        issue_body=str(issue.get("body", "")),
+        repo_path=str(worktree),
     )
     contract_path = receipt_dir / "repair-dag.json"
     write_json(contract_path, contract)
