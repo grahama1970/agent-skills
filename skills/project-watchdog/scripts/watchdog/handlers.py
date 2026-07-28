@@ -25,6 +25,7 @@ Failure modes
 from __future__ import annotations
 
 import hashlib
+import re
 from pathlib import Path
 from typing import Any
 
@@ -1143,7 +1144,45 @@ def handle_closure_audit(
         log_event(run_id, "closure_audit_pass", issue=issue_number)
         return result
 
-    # FAIL or NEEDS_ATTENTION: the closure did not survive review.
+    if verdict == "NEEDS_ATTENTION":
+        # "I cannot tell from what is here" is not a finding that the work is
+        # wrong. Reopening on it would churn every ticket whose proof lives in
+        # an artifact the auditor cannot read. Say so and leave it closed.
+        result["commands"].append(
+            github.issue_comment(
+                repo,
+                issue_number,
+                github.watchdog_comment(
+                    "Closure audit: NEEDS_ATTENTION",
+                    {
+                        "schema": "agent_skills.project_watchdog.closure_audit.v1",
+                        "marker": CLOSURE_AUDIT_MARKER,
+                        "run_id": run_id,
+                        "issue": f"issue#{issue_number}",
+                        "repo": repo,
+                        "auditors": auditors,
+                        "seat_verdicts": seat_verdicts,
+                        "verdict": verdict,
+                        "outcome": "left_closed_unverified",
+                        "reviewer_excerpt": response.strip()[:2000],
+                    },
+                ),
+            )
+        )
+        result.update(
+            {
+                "ok": True,
+                "status": "NEEDS_ATTENTION",
+                "summary": (
+                    f"closure of {repo}#{issue_number} could not be judged from the ticket "
+                    f"thread; left closed and unverified rather than reopened"
+                ),
+            }
+        )
+        log_event(run_id, "closure_audit_inconclusive", issue=issue_number)
+        return result
+
+    # FAIL: a seat showed the closure does not hold.
     exhausted = reopens >= config.CLOSURE_AUDIT_MAX_REOPENS
     # Lead of the reviewer's reasoning, not the tail: taking the last N characters
     # started the excerpt mid-word and cut off the argument that justified it.
@@ -1220,17 +1259,21 @@ def build_completion_attestation_task(*, repo: str, recent: list[dict[str, Any]]
         for i in recent[:40]
     ) or "(no recently closed tickets)"
     return (
-        f"Every agent-routable ticket in {repo} is closed, and each closure was "
-        f"reviewed and upheld. Decide whether that actually means the work is done.\n\n"
-        f"Answer VERDICT: PASS only if this set of closed tickets plausibly "
-        f"represents finished work. Answer VERDICT: FAIL if the titles suggest an "
-        f"obvious gap: a ticket closed as done whose stated outcome contradicts "
-        f"another, work that clearly implies a follow-up nobody filed, or a pattern "
-        f"of closures that looks like scope was quietly abandoned rather than "
-        f"completed. Answer VERDICT: NEEDS_ATTENTION if you cannot tell.\n\n"
-        f"Name the specific missing work if you find any. An empty queue is not "
-        f"evidence of a finished project -- it is equally consistent with nobody "
-        f"filing the remaining tickets.\n\n"
+        f"Every agent-routable ticket in {repo} is closed. Decide whether each one "
+        f"is legitimately closed, and whether the set as a whole means the work is "
+        f"actually done.\n\n"
+        f"Answer VERDICT: PASS if these closures look legitimate and nothing "
+        f"obvious is missing. Answer VERDICT: FAIL if any ticket was closed without "
+        f"the work plausibly being done, if a closure contradicts another, or if the "
+        f"pattern looks like scope was quietly abandoned rather than completed. "
+        f"Answer VERDICT: NEEDS_ATTENTION only if you genuinely cannot tell.\n\n"
+        f"If you answer FAIL, list the tickets to reopen on their own final line, "
+        f"exactly:\n\n"
+        f"REOPEN: #123, #456\n\n"
+        f"List only tickets from the set below, and only ones you can say are "
+        f"wrongly closed. Reopening is not free: each one goes back to a repair "
+        f"agent. An empty queue is not evidence of a finished project -- it is "
+        f"equally consistent with nobody filing the remaining work.\n\n"
         f"--- recently closed ---\n{listing}"
     )
 
@@ -1321,17 +1364,80 @@ def handle_completion_attestation(
         log_event(run_id, "completion_attestation_no_verdict", repo=repo)
         return result
 
+    if verdict == "PASS":
+        result.update(
+            {"ok": True, "status": "COMPLETED", "summary": f"{attestor} attests {repo} is finished"}
+        )
+        log_event(run_id, "completion_attestation_verdict", repo=repo, verdict="PASS")
+        return result
+
+    # FAIL: reopen exactly what it named, so the repair lane picks them up and
+    # the cycle runs again. NEEDS_ATTENTION reopens nothing -- "cannot tell" is
+    # not a finding.
+    reopen = extract_reopen_list(response, allowed={int(i["number"]) for i in recent})
+    result["reopen_requested"] = reopen
+    reopened: list[int] = []
+    if verdict == "FAIL":
+        for number in reopen:
+            r = github.issue_reopen(repo, number)
+            result["commands"].append(r)
+            if r.get("exit_code") != 0:
+                continue
+            result["commands"].append(
+                github.issue_edit(
+                    repo, number,
+                    add=[config.READY_LABEL],
+                    remove=[config.CLOSURE_VERIFIED_LABEL],
+                )
+            )
+            result["commands"].append(
+                github.issue_comment(
+                    repo, number,
+                    github.watchdog_comment(
+                        "Reopened by completion attestation",
+                        {
+                            "schema": "agent_skills.project_watchdog.completion_attestation.v1",
+                            "run_id": run_id,
+                            "repo": repo,
+                            "attestor": attestor,
+                            "verdict": verdict,
+                            "reason": "not legitimately closed",
+                            "excerpt": response.strip()[:1500],
+                        },
+                    ),
+                )
+            )
+            reopened.append(number)
+    result["reopened"] = reopened
     result.update(
         {
-            "ok": verdict == "PASS",
-            "status": "COMPLETED" if verdict == "PASS" else "NEEDS_ATTENTION",
+            "ok": False,
+            "status": "NEEDS_ATTENTION",
             "summary": (
-                f"{attestor} attests {repo} is finished"
-                if verdict == "PASS"
-                else f"{attestor} does not attest {repo} is finished ({verdict}); "
-                f"see excerpt for the named gap"
+                f"{attestor} does not attest {repo} is finished ({verdict}); "
+                f"reopened {reopened or 'nothing'}"
             ),
         }
     )
-    log_event(run_id, "completion_attestation_verdict", repo=repo, verdict=verdict)
+    log_event(run_id, "completion_attestation_verdict", repo=repo, verdict=verdict,
+              reopened=reopened)
     return result
+
+
+_REOPEN_LINE = re.compile(r"^\s*REOPEN:\s*(.+)$", re.MULTILINE | re.IGNORECASE)
+
+
+def extract_reopen_list(text: str, *, allowed: set[int]) -> list[int]:
+    """Ticket numbers the attestor asked to reopen.
+
+    Restricted to the set it was shown. A model naming a number outside that set
+    is guessing, and reopening on a guess sends a repair agent at a ticket
+    nobody reviewed.
+    """
+    numbers: list[int] = []
+    for match in _REOPEN_LINE.finditer(text):
+        for token in re.findall(r"#?(\d+)", match.group(1)):
+            number = int(token)
+            if number in allowed and number not in numbers:
+                numbers.append(number)
+    return numbers
