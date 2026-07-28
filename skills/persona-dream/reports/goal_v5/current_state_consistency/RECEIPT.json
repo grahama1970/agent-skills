@@ -1,0 +1,57 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "receipt correctness",
+      "that the described work is complete",
+      "anything about surfaces not named in STAGES"
+    ],
+    "proves": [
+      "current-state surfaces do not contradict named receipts"
+    ]
+  },
+  "created_at": "2026-07-28T14:30:35Z",
+  "current_status_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/CURRENT_STATUS.json",
+  "hierarchy": [
+    "named receipt status and hash",
+    "CURRENT_STATUS.json machine projection",
+    "PROJECT_KNOWLEDGE.md current summary",
+    "README.md current state",
+    "historical log entries (must be marked, never current)"
+  ],
+  "live": false,
+  "mismatch_count": 0,
+  "mismatches": [],
+  "mocked": false,
+  "schema": "persona_dream.current_state_consistency.v1",
+  "stages": {
+    "P2.1_ledger_hardening": {
+      "accepted": true,
+      "exists": true,
+      "receipt": "reports/goal_v5/continuity/ledger_hardening/RECEIPT.json",
+      "sha256": "sha256:02f866e0b208c531902129cff2cd385ba29b28d6170d3ea027993fea01f7502b",
+      "status": "PASS_DETERMINISTIC_LEDGER_HARDENING"
+    },
+    "P2.2_session_mood_binding": {
+      "accepted": true,
+      "exists": true,
+      "receipt": "reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
+      "sha256": "sha256:5ad61984b0f77022b8d62a57d2791d11eb800bf5509320dbb82b42f51f218edc",
+      "status": "PASS_SESSION_MOOD_BINDING_DETERMINISTIC"
+    },
+    "P2.3_live_chatterbox_render": {
+      "accepted": true,
+      "exists": true,
+      "receipt": "reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
+      "sha256": "sha256:4827cb0ff7ebeb74363ff0ee9d6d3d62fe487caecf3c3802c15eb8f4e6e97260",
+      "status": "PASS_SESSION_MOOD_CHATTERBOX_LIVE"
+    },
+    "P2.4_speaker_recognition_preflight": {
+      "accepted": true,
+      "exists": true,
+      "receipt": "reports/goal_v5/continuity/session_mood_voice_recognition_preflight/RECEIPT.json",
+      "sha256": "sha256:f0cf2723f7d04486a1277c191d000e7e9ad822480d71d04b19693e177beaf941",
+      "status": "PASS_SPEAKER_RECOGNITION_PREFLIGHT"
+    }
+  },
+  "status": "PASS_CURRENT_STATE_CONSISTENT"
+}

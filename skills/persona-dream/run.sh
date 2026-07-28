@@ -11,6 +11,7 @@ Usage: ./run.sh <command> [options]
 Commands:
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
+  check-current-state-consistency  Static check: current-state surfaces must not contradict named receipts
   check-tau-routing-boundary  Static check: only /tau may reach /scillm (fails on un-sanctioned direct scillm calls)
   generate             Create a persona dream packet
   research-bakeoff     Run opt-in story/contact-sheet/A-V research bakeoff modes
@@ -721,6 +722,11 @@ case "$COMMAND" in
     ;;
   check-dream-observation-packet)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dream_observation_packet.py" "$@"
+    ;;
+  check-current-state-consistency)
+    # Fail closed when CURRENT_STATUS.json, PROJECT_KNOWLEDGE.md, or README.md
+    # contradict the receipts they describe. Receipts outrank prose.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_current_state_consistency.py" "$@"
     ;;
   check-tau-routing-boundary)
     # Enforce operator rule "only /tau may reach /scillm": deterministic static

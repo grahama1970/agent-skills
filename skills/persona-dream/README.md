@@ -46,14 +46,15 @@ remain historical or experimental until a fresh paired receipt proves them.
 Machine-readable current state lives in `CURRENT_STATUS.json`.
 
 **Operational next step (P2):** build
-`reports/goal_v5/continuity/live_chain/RECEIPT.json`, but harden the continuity
-ledger first. `scripts/continuity_ledger.py` needs atomic write/replace, epoch
-compare-and-set, cycle-derived idempotency, recomputed identity-core hash
-validation, read-time ledger validation, and Embry schema normalization before a
-live continuity receipt can be trusted. After that, bind one session mood before
-turn 1, reread the same mood across turns, preserve answer propositions, route
-the derived voice delivery to Chatterbox, and run the adversarial recognition
-check. Do not expand PCTOM-R, generate a new Kling clip, or run another broad
+`reports/goal_v5/continuity/live_chain/RECEIPT.json`. The stages it depends on
+are receipted already: P2.1 ledger hardening (`scripts/continuity_ledger.py` has
+atomic write/replace, epoch compare-and-set, cycle-derived idempotency,
+recomputed identity-core hash validation, read-time validation, and Embry schema
+normalization), P2.2 deterministic session-mood binding, P2.3 live Chatterbox
+rendering, and P2.4 speaker-recognition backend preflight. What remains is
+scoring speaker similarity and adversarial Embry recognition on the durable
+session-mood renders, then joining one fresh accepted dream through the whole
+chain. Do not expand PCTOM-R, generate a new Kling clip, or run another broad
 assessment before this receipt.
 
 | Lane | Current proof | Boundary |

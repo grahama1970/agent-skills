@@ -123,18 +123,17 @@
   "active_blockers": [
     "Continuity ledger is not yet proven as the runtime authority across real sessions.",
     "Chatterbox proof is transport/content-preservation evidence, not perceptual emotion or identity evidence.",
-    "P2.4 speaker-recognition preflight is blocked because no real speaker-recognition backend is importable in the Persona Dream or Chatterbox runtime checked here: resemblyzer=false and speechbrain_ecapa=false.",
+    "P2.4 speaker recognition is unscored: the preflight now passes under the Chatterbox voice-lane interpreter with resemblyzer available, but no speaker-similarity or adversarial Embry-recognition score has been computed for the session-mood renders (#1037).",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
     "Repeated full dream-pipeline reliability is not proven.",
     "PCTOM-R archived evidence now has durable local custody, but PCTOM-R still does not prove confidence-bounded planning advantage."
   ],
   "next_step": {
-    "default": "Install or route to a real speaker-recognition backend for the durable session-mood WAV snapshots, then run speaker-similarity and adversarial Embry-recognition checks before the full accepted-dream to live-chain proof.",
+    "default": "Score the durable session-mood WAV snapshots for speaker similarity and adversarial Embry recognition using the reachable resemblyzer backend, then produce the full accepted-dream to live-chain proof.",
     "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "ordered_steps": [
-      "Resolve the P2.4 speaker-recognition backend blocker with an approved real backend such as resemblyzer or speechbrain ECAPA, or route the artifacts to a dedicated voice/audio evaluation lane.",
-      "Add speaker-similarity and adversarial Embry recognition checks for the live session-mood Chatterbox outputs.",
-      "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls."
+      "Add speaker-similarity and adversarial Embry recognition checks for the live session-mood Chatterbox outputs (#1037).",
+      "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls (#1039)."
     ]
   }
 }
