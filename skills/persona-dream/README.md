@@ -68,204 +68,141 @@ assessment before this receipt.
 
 ![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)
 
-> **Can an AI persona dream about what has happened to it, watch the dream it
-> made, learn from it, and still remain recognizably itself?**
+> **Can a persistent AI persona turn its own experiences into a synthetic dream,
+> inspect what was actually rendered, learn from the result, and express the
+> resulting emotional conflict without confusing imagination with history or
+> losing its identity?**
 
-Persona Dream gives a persistent multimodal voice persona, a long-lived agent
-with durable memory, a stable character, and access to text, images, audio, and
-video, a controlled way to turn experience into a synthetic dream and examine
-what comes back.
+Persona Dream is a research system for **multimodal autobiographical
+consolidation**. It gives a long-lived voice persona a controlled way to select
+emotionally important memories, externalize an unresolved conflict as a bounded
+cinematic episode, observe the returned media, form grounded interpretations,
+store an explicitly synthetic dream in graph memory, and use it later in
+reasoning and speech.
 
-We are not building a movie generator. We are testing whether a bounded
-synthetic experience can become useful memory and enrich later Theory of Mind
-(ToM): the persona's structured beliefs, desires, emotions, stances, and
-relationships.
+It is not primarily a movie generator. The media pipeline is an **inspectable
+intermediate representation of the persona's self-model**.
 
-The intended durable output is an explicitly synthetic dream memory. Every
-conclusion must remain linked to the memories, media, relationships, and
-observed scenes that support it. A dream can influence later reasoning, but it
-cannot silently become literal history or rewrite the persona's identity.
+[`SKILL.md`](SKILL.md) is the operational contract. This README explains the
+research thesis, current proof boundary, architecture, active hardening work,
+and the intended integration with
+[Graph Memory Operator](https://github.com/grahama1970/graph-memory-operator)
+and [Chatterbox](https://github.com/grahama1970/chatterbox).
 
-> [`SKILL.md`](SKILL.md) is the current runtime contract. This README explains
-> the research purpose, wider architecture, current proof boundary, and intended
-> closed loop. The implemented runtime remains narrower than the complete system
-> described here.
+## Research Thesis
 
-**Current proof boundary (2026-07-18):** the active revision is the
-identity-source successor `rev_successor_943b01ecd9a3`, derived from the frozen
-`rev_upstream_bf3b05d47fb8` and bound to the qualified `embry_contact_sheet_v3`
-identity source. A live Kling return exists **historically** (on
-`rev_upstream_bf3b05d47fb8`, request
-`sha256:ca90ba9f…`) but is **superseded**: it failed post-provider Embry
-identity continuity and visible-speaker lip sync, and it was generated from the
-rejected character-sheet montage. The successor now stands at its **acceptance
-rung**: the revision is `PASS_ACTIVE_CONSISTENT`, Memory prepare/verify and the
-42-step bundle exactly reread (`PASS_EXACT_REREAD_42_OF_42`), and all eight Phase
-07 storyboard frames PASS actual-pixel identity review (8/8, first attempt each;
-7/7 continuity pairs). Evidence:
-`.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json`.
-The next step is a compiled successor provider request, provider media
-publication for the regenerated frames, and a new hash-bound paid authorization
-— all human-gated. This is **not** green or complete: no new provider return,
-lip sync, Watch-based self-analysis, synthetic dream persistence, or changed
-later behavior is proven.
+Most persistent-agent systems store events, retrieve memories, and produce text
+reflections. Persona Dream tests a stronger loop:
 
-**Stage B update (2026-07-18, supersedes the paragraph above):** the successor
-provider call has since been made and its return received (commit a47fc595) —
-the live successor Kling return `provider_return.mp4` (`sha256:59b9ff31…`,
-10.041667s, one submit, request `sha256:97688ec5…`, silent/`generate_audio=false`).
-The post-return gauntlet was run on THIS return with results **fail-closed and
-blocked**, not accepted: Step 35 frame contact sheet **PASS** (12 frames);
-Watch gauntlet **DEGRADED** (single-shot, no scene cuts; per-frame VLM entities
-and transcript unavailable — scillm gpt-5.5 chat auth rotated); Step 36
-post-Kling continuity **FAIL** — a live deterministic ArcFace read
-(InsightFace buffalo_l, CPU, threshold 0.421) vs `embry_contact_sheet_v3` shows
-the identity-source fix matching strongly in the opening identity window (cos
-0.60-0.61) but clearing only 7/12 frames overall (mean 0.378), with the final
-third at cos 0.02-0.15; ArcFace alone cannot separate drift from pose and the
-VLM adjudication layer is down, so identity is **not certifiable**; Steps 37-38
-audio + final assembly **BLOCKED** (the exact Kai line was never rendered, no
-chatterbox engine, no paid authorization, VLM lip-sync unavailable). **Acceptance
-is BLOCKED**; the canonical cognitive loop was **NOT run** — dry-run only,
-`canonical_dream_memory_written: false`; no failed/unaccepted dream was written
-to canonical memory. Human subjective acceptance remains the human's and is not
-claimed.
+```text
+experience and memory
+    -> unresolved emotional conflict
+    -> story, crew, blocking, camera, lens, light, color, sound and dialogue
+    -> rendered synthetic episode
+    -> independent perception of the returned artifact
+    -> bounded interpretation and social-state proposals
+    -> explicitly synthetic graph memory
+    -> later recall, behavior and voice expression
+```
 
-**Stage B update 2 (2026-07-19, supersedes the paragraph above):** the missing
-VLM layer was restored by routing every VLM call through the **Tau** panel-reviewer
-node (Tau owns scillm access; commit `416edc5a`) — no direct scillm from Stage B
-drivers. On re-run: Step 36 post-Kling continuity **PASS** — the ArcFace whole-clip
-metric still fails, but VLM adjudication (via Tau) explains all 5 sub-threshold
-frames as `POSE_OCCLUSION` consistent with storyboard beat intent, with no
-different-looking person substituted in any frame; scene/wardrobe/action continuity
-PASS; Kai (recovered face-bearing reference `02-kai_character_sheet.png`) not
-contradicted. Steps 37-38 audio + final assembly **PASS** — the exact canonical
-Kai line + ocean bed were hash-bound-reused from the frozen predecessor (re-mixed
-bit-identically, `sha256:33edae9a…`) and muxed onto the silent return; whisper
-`large-v3-turbo` forced alignment recognizes the line in-window; lip-sync is
-`INAPPLICABLE_BY_COMPOSITION` (wide lineup, no readable mouth); no paid call, no new
-voice engine. **Acceptance is ACCEPTED at agent level** (both fail-closed gates
-pass); human subjective acceptance still remains the human's. The canonical
-cognitive loop is still **dry-run only** with **no canonical write** (fail-closed):
-phases 13/14 text reasoning cannot route through an existing Tau node at 416edc5a,
-and direct scillm is forbidden, so canonical persistence is deferred. **Proof
-boundary:** the identity PASS is a no-drift/no-substitution + composition verdict,
-NOT an embedding-certified whole-clip identity; the audio deliverable is muxed +
-forced-aligned, NOT frame-accurate lip-sync; no canonical dream memory was written.
+The claim is not that filmmaking terminology automatically creates a better
+hidden latent space. The claim is that cinematic construction creates a **richer
+externalized constraint space** than a short text summary. It forces an implicit
+interpretation to become concrete across many human-inspectable choices:
 
-**Stage B update 3 (2026-07-19, supersedes the deferral above): phases 13-15 now
-route through Tau and the FIRST canonical dream memory was written.** A minimal
-text-only Tau node was added (tau commit `09e64a44`,
-`tau_coding.persona_dream_text_reasoning_agent`) that carries a caller
-hash-recorded prompt + caller-defined JSON contract and emits a receipt
-(`api_key_source docker:scillm-proxy`). Persona-dream's
-`scripts/tau_text_reasoning_adapter.py` dispatches phase 13/14 prompts to it (no
-direct scillm); the deterministic citation gates are unchanged. Live on the
-accepted return: Phase 13 **PASS** (4 interpretations, all citing Watch
-observation ids + source-memory ids, live `$memory` recall confirmed), Phase 14
-**PASS** (4 ToM candidates accepted, subset-grounded), Phase 15
-**LIVE_CANONICAL_PERSISTENCE** — 19 records written through the `$memory` API with
-exact reread-by-key (synthetic dream node
-`dream_dream_successor_943b01ecd9a3`, 4 ToM nodes, 14 edges), plus governance +
-step records. Loop receipt `PASS_COGNITIVE_LOOP`,
-`canonical_dream_memory_written: true`. Canonical write is permitted only by a
-binding agent-level acceptance receipt overriding the DEGRADED status; the
-superseded historical return stays BLOCKED (verified live). **Phase 16
-(recall + behavior evaluation) is LIVE-PROVEN for its machine-decidable slice**
-(`scripts/phase16_behavior_evaluation.py`, `overall_status: PASS`): semantic
-recall of the dream from 3 differently-worded queries + a negative control,
-multi-hop traversal persona→dream→source/Watch/ToM across all 14 canonical
-edges, grounded persona use of the dream, synthetic-vs-literal distinction with
-exact flag reread, and identity stability. All LLM probes route through the Tau
-text node (no direct scillm). **What remains is the human's: watching the dream
-video and giving subjective acceptance, plus Chatterbox voice expression
-(item 10, out of scope this slice).**
+- who owns agency in the scene;
+- who initiates, waits, warns, commands, yields or leaves;
+- whether care is staged as support or control;
+- how physical risk embodies emotional risk;
+- whether camera distance creates intimacy, equality or dominance;
+- whether lighting and color make the memory nostalgic, threatening or unresolved;
+- whether timing, silence, pauses and sound support the stated conflict;
+- and whether the generated artifact contradicts the persona's declared values.
 
-**Jump to:**
-[Quick Start](#quick-start) -
-[Research](#research) -
-[Pipeline](#pipeline-01-16) -
-[Working Example](#embry-and-kai-the-working-example) -
-[Interface Walkthrough](#interface-walkthrough) -
-[Technical Architecture](#technical-architecture) -
-[Acceptance and Proof](#acceptance-and-proof)
+A human can inspect those commitments. `watch` can independently report what is
+visible and audible. Persona Dream can then compare intention with observation
+instead of treating its own prompt as proof.
 
----
+### Novelty Boundary
 
-## Quick Start
+The individual ideas are not new. Prior work already covers agent memory and
+reflection, offline consolidation or “dreaming,” multimodal long-term memory,
+agentic filmmaking, render-and-review learning loops, and emotionally expressive
+speech agents.
 
-| What you want | Command |
+Persona Dream's potentially distinctive contribution is their integration into a
+single provenance-governed autobiographical loop:
+
+> **cinematic conflict externalization -> independent perceptual verification ->
+> graph-governed synthetic memory -> evidence-linked voice expression**
+
+This is a research hypothesis, not a world-first claim. The system must still
+show that the cinematic path provides measurable value over a matched-budget
+text reflection.
+
+## Current State
+
+**Snapshot: 2026-07-19.** The founding Embry/Kai experiment has crossed its
+machine-decidable closed-loop boundary on one accepted successor return.
+
+| Boundary | Current evidence |
 |---|---|
-| Explore a persona's memory residue | `./run.sh generate --persona <name>` |
-| Build a fixture-backed dream packet | `./run.sh generate --persona <name> --fixture <file>` |
-| Bias recall toward a topic | `./run.sh generate --persona <name> --about "<topic>"` |
-| Create bounded video-planning material | `./run.sh generate --mode video_plan --persona <name>` |
-| Write an explicitly approved reflection to Memory | `./run.sh generate --persona <name> --write-memory` |
+| Phases 01-10 | Active successor revision `rev_successor_943b01ecd9a3` is qualified and `PASS_ACTIVE_CONSISTENT`; the pipeline bundle and accepted storyboard evidence reread exactly. |
+| Phase 11 | One hash-bound successor provider request returned a valid 10.041667-second H.264 video. The post-return continuity and audio/dialogue gates pass at agent level. |
+| Phase 12 | Watch-derived frames, transcript/audio facts, coverage gaps and adjudication evidence exist. The accepted successor is consumed through an acceptance-bound observation path; the earlier failed return remains superseded evidence. |
+| Phases 13-14 | Four grounded self-interpretations and four bounded ToM candidates passed deterministic citation and subset gates. Model drafting routes through Tau; code decides admissibility. |
+| Phase 15 | The first canonical synthetic dream was persisted through the Memory API. Current code uses typed transitions, staged verification, published rereads, an active commit manifest, and materialized Watch-evidence vertices. |
+| Phase 16 | Semantic recall, strict graph traversal, grounded later use, synthetic-versus-literal distinction and an honest identity-stability slice pass for the canonical dream. |
+| Chatterbox expression | The general voice runtime and delivery-arc interfaces exist, but the dream-derived **Embry** affective-performance bridge is the next research boundary. |
+| Human acceptance | Remains a human judgment and is not inferred from machine gates. |
 
-These commands exercise the current runtime. They do not perform the unproven
-live-provider, Watch, graph-persistence, or behavior-evaluation stages.
+The deterministic contract suite is currently reported as **342 passed, 0
+failed, 0 skipped**. The recent correctness work also fixed three important
+closed-loop defects: ungated phase transitions, non-transactional canonical
+persistence, and graph traversal over missing Watch vertices.
 
----
+### What This Proves
 
-## Research
+The current run demonstrates that one persistent persona can:
 
-### Why This Matters
+1. select grounded multimodal residue;
+2. construct a bounded synthetic dream with traceable source lineage;
+3. receive and inspect a real rendered artifact;
+4. distinguish renderer evidence from psychological interpretation;
+5. persist a synthetic dream, observation vertices, ToM candidates and edges;
+6. retrieve the dream from differently worded queries;
+7. use the dream in a later response while marking it as a dream; and
+8. preserve the literal-history boundary and protected source records.
 
-Most agent-memory systems retrieve facts and prior episodes. They do not give a
-persistent persona a controlled way to combine emotionally important
-experiences, externalize them, inspect the result, and carry a grounded
-interpretation forward.
+### What This Does Not Yet Prove
 
-Persona Dream explores that missing middle. A persona could use a dream to
-rehearse a difficult relationship, connect a present event to an older memory,
-or surface a conflict it could not express directly. The dream is synthetic,
-but its effect on later reasoning can still matter, provided every stage
-preserves provenance, uncertainty, and the boundary between imagination and
-history.
+It does not yet prove:
 
-The same architecture could support persistent companions, game characters,
-simulation agents, and other long-lived systems that need to adapt without
-losing continuity or inventing a false past.
+- that multimodal dreaming is better than structured text reflection;
+- generality across many personas, relationships, conflicts and providers;
+- durable personality evolution across unrelated future situations;
+- strong predictive Theory of Mind or false-belief reasoning;
+- embedding-certified whole-clip character identity;
+- frame-accurate lip synchronization;
+- ideal or even reliably distinguishable emotional voice performance; or
+- human subjective acceptance of the dream video.
 
-### Founding Research Question
-
-Can a persona whose speech is rendered through Chatterbox, the voice layer:
-
-1. recall emotionally salient past memories and relevant present events;
-2. combine text, images, audio, video, relationships, and project or code
-   activity into a synthetic dream;
-3. render that dream into inspectable multimodal media;
-4. use [`watch`](../watch/SKILL.md) to observe what the generated dream actually
-   contains instead of assuming the renderer followed the prompt;
-5. interpret those observations against its existing memories and persona state;
-6. persist grounded ToM tags, graph edges, multimodal embeddings, and an
-   explicitly synthetic dream memory; and
-7. use that dream appropriately in later reasoning and conversation without
-   confusing it with a literal historical event?
-
-The experiment succeeds only when the dream can affect later recall or behavior
-while the persona remains recognizably itself.
-
-### The Rule That Keeps the Experiment Honest
+## The Honesty Rule
 
 One kind of evidence must never silently become another.
 
-| Evidence class | What it means | Owning boundary |
+| Evidence class | Meaning | Owning boundary |
 |---|---|---|
-| **Historical memory or present event** | Something stored or observed as part of the persona's real history | Memory / Graph Memory |
-| **Dream intention** | What Persona Dream planned, scripted, or asked a renderer to create | Persona Dream |
-| **Rendered dream observation** | What is actually visible, audible, or temporally present in returned media | `watch` |
-| **Persona interpretation** | What the persona tentatively thinks the observed dream may mean | Persona Dream interpretation gate |
-| **Theory-of-Mind inference** | A validated candidate belief, fear, desire, trust state, stance, or relationship update | Memory / ToM validation |
-| **Durable persona change** | A promoted change to canonical goals, concerns, worldview, identity, or voice profile | `create-persona` |
+| Historical memory or present event | Something that belongs to the persona's real history | Memory / Graph Memory |
+| Dream intention | What Persona Dream planned, scripted or asked a renderer to create | Persona Dream |
+| Rendered observation | What is actually visible, audible, spoken, absent or temporally present | `watch` |
+| Persona interpretation | A tentative reading of the observed dream against grounded memory | Persona Dream interpretation gate |
+| ToM or social-state candidate | A bounded belief, fear, desire, trust, stance, relationship or uncertainty proposal | Graph Memory validation |
+| Adaptive state proposal | A proposed change to a disposition, relationship expectation or coping strategy | Graph Memory promotion policy |
+| Durable identity change | A promoted change to canonical identity, worldview, goals or voice identity | `create-persona` |
+| Voice performance | Audible expression of an already accepted response state | Chatterbox |
 
-Suppose the script asks Kai to answer Embry, but the generated video drops Kai
-from the final scene. `watch` can report that Kai is absent. Persona Dream may
-tentatively connect that absence to Embry's uncertainty about whether her
-boundaries will be respected, but it must also preserve the simpler explanation:
-the renderer failed to maintain character continuity.
-
-A dream-derived record therefore keeps facts such as:
+A dream record therefore remains explicit:
 
 ```json
 {
@@ -274,717 +211,403 @@ A dream-derived record therefore keeps facts such as:
 }
 ```
 
-There is no direct path from a renderer defect to a durable personality rewrite.
+A renderer defect can be psychologically suggestive, but it cannot become a
+fact about the persona merely because the generated video contains it. A dream
+may propose a state change; it may not silently rewrite identity.
 
-### How a Dream Works
+## Architecture
 
 ```text
 create-persona
-  canonical identity, voice profile, and identity-consistency tests
+  protected identity, values, voice identity and regression tests
         |
         v
-memory + graph-memory-operator
-  past memories + present events + text/image/audio/video/code activity
-  + ToM state + emotional intensity + graph relationships
+graph-memory-operator
+  historical events, multimodal memories, relationships, current affect,
+  social-state evidence, emotional salience and recall policy
         |
         v
 persona-dream
-  residue selection -> dream synthesis -> optional media production
+  residue selection -> conflict model -> story -> crew -> contact sheets
+  -> script DNA -> look lock -> storyboard -> provider contract
+        |
+        v
+renderer / provider
+  bounded synthetic media
         |
         v
 watch
-  frames + transcript + sound + scenes + visible evidence
+  frames, transcript, sound, scenes, visible entities, actions, absences,
+  identity evidence, speaker visibility and coverage gaps
         |
         v
-persona self-interpretation
-  intended dream vs observed dream + source-memory grounding
+persona-dream interpretation
+  intended dream vs observed dream + source-memory grounding + uncertainty
         |
         v
-memory + graph-memory-operator
-  synthetic dream memory + ToM tags/edges + Qdrant multimodal embeddings
+graph-memory-operator
+  dream episode + observation vertices + interpretation vertices + ToM/social
+  state candidates + causal lineage + commit visibility + semantic retrieval
         |
         v
-future recall, reasoning, conversation, and Chatterbox expression
+future conversation
+  literal memories and synthetic dreams retrieved as distinct evidence classes
+        |
+        v
+chatterbox
+  evidence-linked affective performance; expression, not psychological authority
 ```
-
-The ordinary experience should eventually be simple: a persona says `dream`, or
-`dream about Kai and the surf trip`, and the system performs the grounded loop
-behind the scenes. React Flow remains an optional human inspection and
-correction surface, not a prerequisite for autonomous dreaming.
-
----
-
-## Current Proof Boundary
-
-Persona Dream is an advanced research prototype and a substantial hardening
-workload for Tau, the agentic harness that runs and verifies the pipeline. It is
-not yet a completed personality-evolution product.
-
-### Status Vocabulary
-
-The README uses these proof terms consistently:
-
-| Status | Meaning |
-|---|---|
-| **Implemented** | Code, scripts, artifacts, or a UX surface exist |
-| **Accepted evidence** | The selected run contains a receipt-backed artifact accepted by its current gate |
-| **Fixture-proven** | Deterministic fixture-backed checks pass; no live external behavior is implied |
-| **Live slice proven** | A real external operation or generated artifact was executed and inspected |
-| **Qualified revision** | The immutable revision, required evidence, Memory projection, active pointer, and terminal repair event agree |
-| **Blocked** | A named prerequisite is missing or intentionally disallowed |
-| **Designed** | The architecture and evidence contract exist, but the implementation proof does not |
-| **Not implemented** | No working rung currently exists |
-
-| Boundary | State | What that proves |
-|---|---|---|
-| Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
-| Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
-| Phases 01-10 - Qualified successor revision | **Qualified revision at acceptance rung** | `rev_successor_943b01ecd9a3` is `PASS_ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, 10 phase + 16 required-artifact Memory records and the 42-step bundle exactly reread, and the rebuilt artifact index makes the eight Phase C storyboard frames (8/8 actual-pixel identity PASS, 7/7 continuity) the active Phase 07 evidence while the montage-derived frames stay stale |
-| Phase 11 - Submit and Return | **Live successor return received and accepted (agent level)** | The successor made exactly one hash-bound authorized submit (request `sha256:97688ec5…`, fal request id `019f77f0…`) and received a valid 10.041667s H.264 720p return (`sha256:59b9ff31…`). Step 36 continuity PASS v2 (ArcFace + Tau-routed pose/occlusion adjudication); steps 37-38 PASS v2 (exact line muxed and force-aligned 4.74-7.86s; visible-speaker inapplicable-by-composition per the lane C design). The earlier `rev_upstream_bf3b05d47fb8` return remains superseded historical evidence. Human subjective acceptance of the video remains open |
-| Phase 12 - Watch Observation | **Live slice proven for perception-on-historical-return** | The `watch` post-return gauntlet (`scripts/watch_post_return_gauntlet.py`) runs the `watch` skill over the frozen historical Kling return, extracts scene-driven frames + Whisper transcript, and independently localizes the identity-drift and visible-speaker windows. Validated against ground truth: `watch_gauntlet/991c311f365f/watch_gauntlet_validation_receipt.v1.json` (`PASS_WATCH_GAUNTLET_VALIDATED`, 5/5 expectations). The gauntlet has since also run on the accepted successor return (`watch_gauntlet/59b9ff3155d6/`); its observation packet remains `DEGRADED` (per-frame VLM entities pending), with the authoritative visual verdicts carried by the step-36 v2 receipt |
-| Phases 13-15 - Interpretation through persistence | **Live slice proven on accepted return** | On the ACCEPTED successor return, phase 13/14 text reasoning routes through the Tau node (tau `09e64a44`; no direct scillm), 4 interpretations + 4 ToM candidates pass the deterministic gates, and phase 15 wrote the FIRST canonical dream memory (19 records, exact reread-by-key) permitted only by a binding agent-level acceptance receipt; superseded/historical returns stay fail-closed |
-| Phase 16 - Recall and later persona behavior | **Machine-decidable slice LIVE-PROVEN (`PASS`)** | `scripts/phase16_behavior_evaluation.py` → `phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json` (`overall_status: PASS`): (a) semantic recall returns the dream from 3 differently-worded queries (ranks 1/3/7, dense 0.59/0.43/0.74) while a `orbital telemetry` negative control does NOT; (b) multi-hop traversal resolves all 14 canonical edges live to 3 source memories + 7 Watch observations + 4 ToM nodes; (c) the persona uses the dream and marks it as a dream, with context assembled ONLY from live recall; (d) it denies literal occurrence and the `synthetic_origin=true`/`literal_historical_event=false` flags reread exactly; (e) identity is stable (loop write-set is dream+edges+ToM only, source anchors literal/unchanged, Tau values Q&A stable). All LLM probes route through the Tau node (no direct scillm). **Out of scope this slice: Chatterbox voice expression (item 10) and human subjective acceptance of the video** |
-
-The screenshots below come from an archived Embry/Kai run. That run has not been
-regenerated with every newer provider artifact. A blocked screenshot describes
-the selected run root, not the full set of current development capabilities.
-
-Provider selection is near the end of the media-production spine. It is not the
-end of the founding research experiment.
-
----
 
 ## Pipeline: 01-16
 
-The complete Persona Dream pipeline has two connected parts:
-
-- **Phases 01-11** create, ground, plan, and eventually render the dream.
-- **Phases 12-16** let the persona observe, interpret, store, and later use that
-  experience.
-
-### Media-Production Spine
-
-| Phase | Question | Primary evidence or output | Status |
+| Phase | Core question | Durable output | State |
 |---|---|---|---|
-| **01 - Idea and Memory Residue** | What is the persona dreaming about, and which memories actually support it? | Core directive, grounded multimodal residue, source IDs, relevance, contradictions | **Qualified revision** |
-| **02 - Story** | What bounded story emerges from the accepted residue? | `story_contract.json`, interaction and relationship coverage, story intent | **Qualified revision** |
-| **03 - Crew** | Who has creative authority over this dream? | Producer, scriptwriter, director, reviewer, and authority contracts | **Qualified revision** |
-| **04 - Contact Sheets** | Which characters, props, and environments must remain visually stable? | Character, prop, environment, and reference-pack evidence | **Qualified revision** |
-| **05 - Voices** | How should each persona sound without confusing voice expression with psychological authority? | Voice references, audition state, identity boundaries, voice handoff plan | **Qualified revision** |
-| **06 - Script** | How does story intent become timed action and dialogue? | `script_contract.json`, beats, dialogue/action coverage, interaction matrix | **Qualified revision** |
-| **07 - Storyboard** | What must each shot visibly contain, and has it passed visual review? | Accepted panels, start/end frames, prompt contracts, visual-review receipts | **Qualified revision** |
-| **08 - Media Lock** | Which accepted visual assets are frozen for provider-facing use? | Locked frame subset, roles, hashes, dimensions, identity state | **Qualified revision** |
-| **09 - Video Provider** | Which provider best fits the accepted scene, and why? | Provider registry refresh, scorecard, selected provider, dry-run packet | **Qualified revision; no live call** |
-| **10 - Provider Contract** | Exactly what would eventually be sent, against which endpoint and contract? | Request body, payload hash, field mapping, media plan, cost/entitlement plan, async plan, non-claims | **Qualified revision; no live call** |
-| **11 - Submit and Return** | Can one explicitly authorized provider call produce a valid returned dream artifact? | Media URLs, approval, paid authorization, submit receipt, task ID, polling/callback, downloaded video, FFprobe | **Blocked** |
-
-### Cognitive and Memory Loop
-
-| Phase | Question | Primary evidence or output | Status |
-|---|---|---|---|
-| **12 - Watch Observation** | What is actually visible, audible, spoken, absent, or changed in the returned dream? | Frames, transcript, sound, scene table, visual descriptions, coverage gaps | **Live slice proven (historical return)** — `watch_post_return_gauntlet.py` + `watch_gauntlet_observation_packet.v1`; validated on the frozen Kling return, not yet on a successor return |
-| **13 - Persona Self-Interpretation** | What might the observed dream mean in the context of the persona's grounded memories? | Observation-backed interpretations, source references, uncertainty, alternative explanations | **Implemented; fixture-and-live-slice proven (historical return)** — `phase13_self_interpretation.py` + `dream_self_interpretation.v1`; scillm gpt-5.5 drafts, deterministic gate rejects uncited claims. NOT the closed-loop research claim |
-| **14 - Theory-of-Mind Validation** | Which proposed beliefs, fears, desires, trust states, or relationship updates are sufficiently grounded? | Accepted or rejected ToM candidates with subject, target, confidence, intensity, and receipts | **Implemented; fixture-and-live-slice proven (historical return)** — `phase14_tom_validation.py` + `tom_candidate.v1`; LLM proposes, deterministic gate decides admissibility against parent grounding. NOT the closed-loop research claim |
-| **15 - Memory, Graph, and Qdrant Persistence** | Can the accepted synthetic dream be stored and retrieved without becoming false history? | Dream memory record, ArangoDB edges, Qdrant points, cross-store validation receipts | **Implemented; fixture-and-live-slice proven (historical return)** — `phase15_dream_persistence.py`; default dry-run plan with zero canonical writes, real write proven into non-canonical `persona_dream_loop_validation`, canonical write hard-fails on the superseded return. NOT the closed-loop research claim |
-| **16 - Recall and Behavior Evaluation** | Does the persona later use the dream appropriately while remaining recognizably itself? | Semantic recall, multi-hop traversal, identity-consistency probes, before/after conversation and Chatterbox evidence | **Not implemented as a closed proof** |
-
-### Current Qualified Runtime Boundary
-
-The active revision is `rev_successor_943b01ecd9a3` (run `pipeline-complete`),
-reported `PASS_ACTIVE_CONSISTENT`. Memory contains one revision, ten phase
-records, sixteen required-artifact references, one run-scoped active pointer, and
-the durably reread 42-step pipeline bundle, all with Qdrant semantic sync
-metadata. The rebuilt immutable artifact index contains 398 revision-scoped local
-artifacts and binds the eight regenerated Phase C storyboard frames as the active
-accepted Phase 07 evidence. This qualifies Phases 01-10 and reaches the
-acceptance rung; it does not prove a successor provider call, returned dream,
-lip sync, Watch analysis, interpretation, or later persona behavior. The earlier
-`rev_idea_f3f9c48d5cc2` qualification is historical and superseded.
-
-Primary receipts:
-
-- `.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json`
-- `.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_prepare_receipt.json`
-- `.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_verify_receipt.json`
-- `.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_activation_receipt.json`
-- `.persona-dream/state/pipeline_step_memory_receipt_rev_successor_943b01ecd9a3.json`
-- `.persona-dream/repair/queue-events/repair-454b255245a1a162/000001-completed.json`
-
-### Cognitive Loop 13-15: Fixture-and-Live-Slice Proof (Historical Return)
-
-Phases 13-15 are implemented and proven on the HISTORICAL Kling return
-(`991c311f365f`), whose observation packet failed identity continuity (DRIFT)
-and lip sync. Those failures are themselves ground-truth observations. This is
-NOT the closed-loop research claim (Acceptance items 4-8), which still requires a
-non-superseded successor return.
-
-- Runner: `scripts/run_cognitive_loop.py` chains 12 -> 13 -> 14 -> 15 from an
-  observation packet and emits a loop receipt.
-- Phase 13 (`scripts/phase13_self_interpretation.py`): scillm gpt-5.5 drafts
-  tentative interpretations; a deterministic gate rejects any claim that does not
-  cite at least one Watch observation id AND at least one source-memory id, or
-  that treats a renderer defect as psychological truth. The honesty rule fired on
-  the identity-DRIFT observation: the accepted claim carries both a psychological
-  and a renderer-defect reading with the renderer defect favored.
-- Phase 14 (`scripts/phase14_tom_validation.py`): the LLM proposes bounded ToM
-  candidates; a deterministic gate rejects any whose grounding is not a subset of
-  its parent accepted interpretation. Four grounded candidates accepted
-  (trust / stance / uncertainty / belief).
-- Phase 15 (`scripts/phase15_dream_persistence.py`): default dry-run emits an
-  exact canonical would-write plan (dream memory doc + `derived_from`,
-  `observed_in_scene`, `supports_interpretation` edges + Qdrant embedding note)
-  with hashes and ZERO canonical writes. A canonical write requires
-  `--allow-canonical-write` AND a non-superseded return id and HARD-FAILS (exit 1)
-  on this superseded return. The write path is proven by 16 exact-reread-matched
-  documents in the non-canonical `persona_dream_loop_validation` collection.
-
-Receipts:
-`.persona-dream/revisions/rev_successor_943b01ecd9a3/cognitive_loop/991c311f365f/`
-(`cognitive_loop_receipt.json`, `dream_self_interpretation.json`,
-`tom_validation_receipt.json`, `dream_persistence_receipt.json`,
-`cognitive_loop_memory_governance_receipt.json`). Deterministic logic is covered
-by `tests/test_cognitive_loop_phases.py` (16 cases, no live calls).
-
-### Remaining Work Beyond the Qualified Revision
-
-The remaining live and closed-loop work is:
-
-1. verify the current provider endpoint and API schema;
-2. publish and externally probe provider-accessible input media;
-3. verify cost, entitlement, manual acceptance, and paid authorization;
-4. submit one bounded provider request and retrieve the returned artifact;
-5. run `watch` against the actual returned media;
-6. produce grounded self-interpretation and ToM candidates;
-7. persist only accepted synthetic memory and graph/embedding records; and
-8. prove later retrieval and bounded behavior change without identity drift.
-
----
-
-## Embry and Kai: The Working Example
-
-The current fixture begins with a deceptively ordinary choice: Embry and Kai
-fake a sick day from their summer jobs to surf Kahaluʻu Bay on Hawaiʻi's Big
-Island. Heat softens the board wax. A lava reef narrows the safe choices. The
-lineup adds social pressure, while Embry's history with Kai gives every warning
-and hesitation relational weight.
-
-One voice-test line captures the tension:
-
-> "Kai, wait. If we paddle now, we're cutting across the lineup."
-
-The pipeline can draw on character images, older text memories, surf audio,
-video references, environmental evidence, and relationship history.
-
-The test is not whether it can make an attractive surf clip. The test is
-whether Embry can later watch the actual returned media, distinguish a renderer
-failure from a meaningful pattern, form a bounded interpretation, and use that
-experience in a future conversation without claiming the dream literally
-happened.
-
-Chatterbox can express the resulting tone. It does not decide the psychology or
-rewrite Embry's durable identity.
-
----
-
-## Interface Walkthrough
-
-The current UX Lab surface is a developer-oriented inspection pane over the
-pipeline and its machine-readable receipts.
-
-The walkthrough lists every pipeline phase in order. Screenshots are included
-where committed README assets exist. A phase without a screenshot is still
-shown because it is a real research boundary, not hidden implementation detail.
-
-### 01 - Idea and Memory Residue
-
-![Phase 01 Idea and memory residue board](assets/readme/phase01-idea-memory-residue.webp)
-
-Phase 01 begins with the core creative directive and the recalled memory board.
-It mixes Embry/Kai surf images, text memories, character sheets, reef
-references, video, and audio so the source material can be inspected before
-story or media production begins.
-
-**What to notice:** the system exposes multiple memory modalities before it asks
-a story model or renderer to transform them.
-
-#### 01A - Memory Relationship Graph
-
-![Embry portrait D3 Theory-of-Mind trace graph](assets/readme/phase01-embry-portrait-d3-graph.webp)
-
-The graph affordance on Embry's portrait opens a D3 memory neighborhood. The
-selected portrait becomes the root, and related media, text, people, audio, and
-relationship nodes expand around it.
-
-**What to notice:** this is an explorer, not a write surface. It does not create
-canonical graph edges or accept a psychological interpretation.
-
-### 02 - Story
-
-![Phase 02 Story contract surface](assets/readme/phase02-story-content-pane.webp)
-
-Phase 02 turns accepted memory residue into a story contract: the narrative
-premise, relationship pressure, surf-etiquette stakes, contradiction checks,
-and interaction model that later phases must preserve.
-
-**What to notice:** this is where the Embry/Kai sick-day idea becomes a bounded
-story rather than a loose prompt.
-
-### 03 - Crew
-
-![Phase 03 Crew selection surface](assets/readme/phase03-crew-content-pane.webp)
-
-Phase 03 selects the creative authorities for the run: producer, scriptwriter,
-director, and reviewer roles. Those choices determine which creative standards
-control later script, storyboard, and visual-review decisions.
-
-**What to notice:** crew selection is part of the evidence chain. It is not a
-cosmetic cast list.
-
-### 04 - Contact Sheets
-
-![Phase 04 Contact Sheets surface](assets/readme/phase04-contact-sheets-content-pane.webp)
-
-Phase 04 gathers character, environment, surfboard, lineup, and lava-reef
-references. Contact sheets are source and planning evidence; they do not
-automatically become provider-ready upload packs.
-
-**What to notice:** Embry, Kai, Kahaluʻu Bay, the lava reef, and the public
-lineup are grounded before the script and storyboard try to reuse them.
-
-### 05 - Voices
-
-![Phase 05 Voices surface](assets/readme/phase05-voices-content-pane.webp)
-
-Phase 05 inspects voice references, dialogue readiness, and voice-identity
-boundaries. It can preserve conversational intent and Chatterbox tone without
-claiming provider voice IDs or live voice readiness.
-
-**What to notice:** a voice surface can support the dream's emotional tone while
-still blocking live provider voice submission.
-
-### 06 - Script
-
-![Phase 06 Script contract surface](assets/readme/phase06-script-content-pane.webp)
-
-Phase 06 converts the accepted story into timed action, dialogue, interaction
-coverage, and screenplay evidence. The Embry/Kai fixture uses this phase to
-make surf etiquette, hesitation, pressure, and boundary-setting concrete.
-
-**What to notice:** this is the bridge from story intent to frameable action.
-
-### 07 - Storyboard
-
-![Phase 07 Storyboard surface](assets/readme/phase07-storyboard-content-pane.webp)
-
-Phase 07 produces and reviews storyboard panels, start/end frames, identity
-continuity, prompt contracts, and visual-review receipts. Accepted storyboard
-evidence is what Phase 08 is allowed to lock.
-
-**What to notice:** Media Lock does not create visual truth. It freezes the
-accepted storyboard evidence produced here.
-
-### 08 - Media Lock
-
-![Phase 08 Media Lock accepted storyboard frames](assets/readme/phase08-media-lock.webp)
-
-Phase 08 locks accepted storyboard evidence: start and end frames, dimensions,
-hashes, identity status, and the receipts that support them.
-
-**What to notice:** a media lock proves a stable local evidence boundary. It
-does not prove that any provider is ready.
-
-### 09 - Video Provider
-
-![Phase 09 Video Provider dry-run scorecard](assets/readme/phase09-video-provider-scorecard-20260710.webp)
-
-Phase 09 answers one question: which provider best fits the accepted scene, and
-why?
-
-The selected Embry/Kai run currently shows a local provider scorecard and
-dry-run routing state. It remains explicitly non-live: no paid call, no
-provider submission, and no provider-ready claim.
-
-**What to notice:** provider ranking is an inspectable recommendation. It is
-not authorization to call Kling, fal.ai, or any other live provider.
-
-### 10 - Provider Contract
-
-![Phase 10 Provider Contract current fail-closed state](assets/readme/phase10-provider-contract-current.webp)
-
-Phase 10 answers a different question: exactly what would eventually be sent,
-against which endpoint and schema evidence, using which media plan, cost policy,
-and asynchronous return path?
-
-The canonical run contains a deterministic compiler, independent validator,
-live zero-call adapter preflight, and Memory-persisted fail-closed boundary.
-The archived screenshot shown here predates that current contract artifact.
-
-**What to notice:** the screenshot is correctly blocked even though newer local
-contract tooling exists. Neither state proves live fal.ai compatibility.
-
-### 11 - Submit and Return
-
-Phase 11 is the live-provider boundary. It requires:
-
-- current provider schema evidence;
-- externally accessible and probed media URLs;
-- verified cost and entitlement;
-- manual acceptance bound to the exact payload;
-- paid-call authorization;
-- one bounded submission;
-- task-ID extraction;
-- polling or callback handling;
-- returned-media download;
-- hash and FFprobe validation.
-
-**What to notice:** this phase is intentionally blocked. The README must not
-claim that the persona watched a dream until a provider return exists and Watch
-has analyzed the actual media.
-
-Current canonical evidence for `rev_idea_f3f9c48d5cc2`:
+| 01 - Idea and Memory Residue | What conflict is worth dreaming about, and which memories support it? | Immutable idea, residue links, contradictions, source IDs | Qualified |
+| 02 - Story | What bounded drama emerges from the accepted residue? | Story contract and relationship pressure | Qualified |
+| 03 - Crew | Which creative lenses shape the transformation? | Producer, writer, director and reviewer authority contracts | Qualified |
+| 04 - Contact Sheets | Which people, objects and environments must remain stable? | Character, prop, environment and reference evidence | Qualified |
+| 05 - Voices | How should characters sound without giving voice authority over psychology? | Voice references, boundaries and handoff plan | Qualified |
+| 06 - Script | How does conflict become timed action and dialogue? | Script contract, beats, interaction coverage and physical stakes | Qualified |
+| 07 - Storyboard | What must each shot visibly contain? | Accepted frames, prompt contracts, identity and continuity receipts | Qualified |
+| 08 - Media Lock | Which accepted assets are frozen for provider use? | Hash-bound media subset | Qualified |
+| 09 - Provider Selection | Which provider best fits the scene and constraints? | Registry evidence, scorecard and selected route | Qualified |
+| 10 - Provider Contract | Exactly what will be sent, under which cost and authorization boundary? | Canonical payload and approval contract | Qualified |
+| 11 - Submit and Return | Did one authorized request produce a valid artifact? | Submit, poll, download and FFprobe evidence | Live accepted successor return |
+| 12 - Watch Observation | What actually exists in the returned media? | Evidence-only observation packet and Watch vertices | Live |
+| 13 - Self-Interpretation | What might the observed dream mean against source memory? | Grounded interpretations with uncertainty and alternatives | Live |
+| 14 - ToM Validation | Which social-state proposals are sufficiently grounded? | Accepted and rejected ToM candidates | Live |
+| 15 - Persistence | Can the synthetic episode be stored without becoming false history? | Staged write set, canonical records, commit manifest and exact rereads | Live |
+| 16 - Recall and Behavior | Does the persona later use the dream appropriately and remain itself? | Recall, traversal, literal-boundary and identity-stability receipts | Machine-decidable slice live-proven |
+
+The ordinary interface is intended to become simple: a persona says `dream` or
+`dream about Kai and the surf trip`, and the system executes the accepted loop
+behind the scenes. The current runtime still exposes specialist commands and
+receipts because this remains a research system.
+
+## Embry and Kai: Working Example
+
+The founding example begins with a stolen sick day at Kahaluʻu Bay. Embry and
+Kai want to surf, but the scene is built around several linked conflicts:
+
+- autonomy versus obligation;
+- independence versus accepting correction;
+- desire versus restraint;
+- competence versus fatigue and vulnerability;
+- and intimacy versus control in Embry's relationship with Kai.
+
+The pipeline does not merely label those themes. It turns them into observable
+mechanics:
+
+- Embry's phone buzzes from the beach as a physical reminder of obligation;
+- heat and humidity soften the board wax;
+- her palm slips and she must reset her grip;
+- the lava reef and lineup etiquette make restraint materially necessary;
+- Kai gives one practical warning rather than taking over her decision;
+- Embry waits, then commits through the safe channel when the choice is hers.
+
+The accepted Script DNA names the conflict as **autonomy versus obligation** and
+the theme as **earned autonomy: choosing carefully is the rebellion**. The Look
+Lock uses waterline photography, a moderate wide lens, hard June daylight, warm
+natural color, restrained camera drift and identity-readable blocking. The final
+beat gives Embry the forward movement while Kai remains outside the decision
+point.
+
+This is why the production stages matter. Story, crew, camera and color are not
+just decoration: they determine how the persona distributes agency, stages care,
+embodies danger and resolves conflict.
+
+### What a Human Can Learn From the Dream
+
+A human reviewer can ask:
+
+- Does the visual staging actually preserve Embry's autonomy?
+- Is Kai framed as a trusted equal, a controller, or a passive witness?
+- Does the environment make her caution competent or fearful?
+- Does the editing allow her hesitation to exist?
+- Does the voice sound restrained, defensive, relieved or falsely resolved?
+- Does the generated artifact expose a contradiction that the text reflection hid?
+
+Even if the cinematic path does not outperform text reflection as machine
+learning, it can still be valuable as an inspectable performance of the agent's
+current self-model.
+
+## Graph Memory Operator Integration
+
+Graph Memory Operator is the canonical persistence, retrieval and state-promotion
+authority. Persona Dream should submit typed evidence and proposals; it should
+not own a parallel memory database or directly mutate durable personality.
+
+### Current Stored Structure
+
+The current closed-loop implementation stores or traverses:
 
 ```text
-request_body_sha256: sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41
-validator_status: PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED
-adapter_status: PASS_PHASE11_ADAPTER_PREFLIGHT
-gate_status: BLOCKED_AWAITING_HUMAN_APPROVAL
-technical_blockers: []
-missing_approval_count: 5
-actual_provider_call_attempts: 0
-memory_key: pd_phase11_eb5dbe1257f6152103d1ce1e2700f9582d8ef6e5fb87e90e
-memory_dense_recall_max: 0.7866844
-provider_ready: false
-live_submit_ready: false
+persona_memory                 synthetic dream and source memories
+persona_dream_watch_evidence   immutable evidence-only Watch vertices
+tom_candidates                 bounded social-state candidates
+persona_memory_edges           derived_from and observed_in_scene edges
+tom_edges                      supports_interpretation edges
+persona_dream_canonical_staging
+persona_dream_commit_manifests
 ```
 
-That zero-call receipt is the current corrected-request authority. Two prior
-requests remain immutable failed-attempt history. Request `444a5a27...` failed
-because all four prompts exceeded 512 characters. Request `9966f6b6...` failed
-because fal rejects `end_image_url` with `multi_prompt`:
+The commit path now stages and rereads the complete write set before publication,
+then binds the published records to an active commit manifest.
 
-```text
-request_id: 019f6b89-e69a-7371-9b98-313a96f5f020
-request_body_sha256: sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16
-state: FAILED
-actual_provider_call_attempts: 1
-provider_result_http_status: 422
-provider_error: End Image Url is not supported with Multi Prompt
-automatic_resubmit_allowed: false
-returned_video: false
+### Active Hardening Work
+
+The integration is being hardened around these principles:
+
+1. **Graph Memory owns the schema.** Dream collections, indices, migrations,
+   commit visibility and vector synchronization belong in Graph Memory Operator.
+2. **Every key is namespaced.** Dream, observation, interpretation, ToM and voice
+   records include persona, dream and revision identity to prevent cross-dream
+   collisions.
+3. **Interpretations are vertices.** The graph preserves the full chain from
+   observation to tentative interpretation to validated social-state proposal.
+4. **Causal families are explicit.** Derived frames, observations and reflections
+   do not count as independent evidence merely because one event produced many
+   records.
+5. **Synthetic depth is bounded.** A dream can reorganize evidence but cannot
+   create a new historical root or recursively confirm itself.
+6. **Commit visibility is enforced at recall.** Pending, incomplete, quarantined
+   or uncommitted records are excluded from ordinary retrieval.
+7. **State changes use a promotion ladder.** Episodic affect may change quickly;
+   adaptive dispositions require repeated independent evidence; protected identity
+   changes require a separate `create-persona` workflow.
+8. **Dream-aware recall is typed.** Literal memories, synthetic dreams, active
+   conflicts, adaptive dispositions and protected identity are returned as
+   separate evidence classes.
+
+A target state-delta proposal looks like:
+
+```json
+{
+  "state_key": "relationship.kai.accepts_correction_without_loss_of_autonomy",
+  "proposed_delta": 0.06,
+  "root_event_ids": ["event-014", "event-027"],
+  "dream_support_ids": ["dream-004"],
+  "independent_real_event_count": 2,
+  "synthetic_support_count": 1,
+  "confidence": 0.58,
+  "counterevidence_ids": [],
+  "decay_policy": "decay_unless_reinforced",
+  "status": "proposed"
+}
 ```
 
-### 12 - Watch Observation
+The dream may support that proposal. It must not be the sole evidence that
+promotes it.
 
-Phase 12 sends the actual returned dream to [`watch`](../watch/SKILL.md).
-`watch` extracts frames, transcript, sound, scene changes, visible facts, missing
-elements, and coverage gaps.
+## Chatterbox Integration
 
-**What to notice:** Watch reports evidence. It does not decide what the dream
-means or how the persona should change.
+Chatterbox is the speech renderer. It already accepts structured tone, delivery
+stage, pace, pause strategy and chunk-level delivery arcs through the Tau voice
+request path. Memory and the coordinator decide the response and affective
+policy; Chatterbox makes the accepted plan audible.
 
-### 13 - Persona Self-Interpretation
+The next boundary is not merely “render a line from the dream.” It is to compile
+the dream's accepted conflict into an **affective-performance contract** for the
+persona who experienced it.
 
-Phase 13 compares:
+A target contract includes:
 
-- the grounded source memories;
-- the intended dream;
-- the actual Watch observations; and
-- the persona's current state.
-
-It produces tentative interpretations with source references, observation
-references, confidence, uncertainty, and alternative explanations.
-
-**What to notice:** interpretation remains a proposal. A generated symbol is not
-automatically psychological truth.
-
-### 14 - Theory-of-Mind Validation
-
-Phase 14 accepts or rejects bounded ToM candidates such as beliefs, fears,
-desires, trust, distrust, avoidance, obligation, uncertainty, emotion, stance,
-preference, or relationship state.
-
-**What to notice:** a candidate must identify its subject, target, source
-memories, Watch observations, confidence, emotional intensity, and accepting or
-rejecting receipt.
-
-### 15 - Memory, Graph, and Qdrant Persistence
-
-Phase 15 writes only accepted records through the owning Memory and Graph Memory
-layers.
-
-The intended result includes:
-
-- an explicitly synthetic dream memory;
-- source and observation relationships in ArangoDB;
-- accepted ToM edges;
-- multimodal semantic points in Qdrant; and
-- receipts proving cross-store consistency.
-
-**What to notice:** Persona Dream does not create a second memory database or
-write directly around the Memory contract.
-
-### 16 - Recall and Behavior Evaluation
-
-Phase 16 asks whether the dream has become useful without destabilizing the
-persona.
-
-It should prove that:
-
-- Qdrant retrieves the dream from differently worded queries;
-- ArangoDB reconstructs the multi-hop relationship chain;
-- later conversation uses the dream appropriately;
-- the persona still distinguishes the dream from literal history;
-- identity-consistency probes remain stable; and
-- Chatterbox expresses the resulting state without inventing it.
-
-**What to notice:** this is the completion boundary for the founding research
-experiment, not provider selection and not video generation alone.
-
----
-
-## Technical Architecture
-
-### Memory, Graphs, and Retrieval
-
-A stored dream remains explicitly synthetic and connected to its evidence.
-Typical relationships include:
-
-```text
-persona --dreamed--> dream
-
-dream --derived_from--> source memory
-dream --incorporates_event--> present event
-dream --features_person--> persona or user
-dream --features_place--> location
-dream --references_media--> image/audio/video/code memory
-dream --observed_in_scene--> Watch scene evidence
-dream --supports_interpretation--> grounded ToM candidate
+```json
+{
+  "schema": "persona_dream.affective_performance_contract.v1",
+  "persona_id": "embry",
+  "dream_id": "dream-004",
+  "conflict": {
+    "pole_a": "personal autonomy",
+    "pole_b": "accepting trusted correction",
+    "agency_owner": "embry",
+    "resolution": "correction informs her choice without replacing it",
+    "resolution_state": "partial",
+    "residual_uncertainty": 0.32
+  },
+  "protected_identity": [
+    "independence",
+    "competence",
+    "honesty about uncertainty"
+  ],
+  "performance_arc": [
+    {"role": "recall obligation", "tone": "memory_uncertain", "pace": "measured"},
+    {"role": "acknowledge warning", "tone": "careful_concerned"},
+    {"role": "reassert chosen agency", "tone": "firm_boundary"},
+    {"role": "settled recognition", "tone": "relieved"}
+  ]
+}
 ```
 
-ToM candidates can represent beliefs, desires, fears, trust, distrust,
-avoidance, obligation, uncertainty, emotion, stance, preference, or relationship
-state. Every candidate retains:
+The chunk arc must follow semantic clauses, not generic sentence position. A
+complex emotional conflict should not be reduced to a single global label such
+as `concerned` or `positive`.
 
-- its subject and target;
-- source-memory IDs;
-- Watch observation IDs where applicable;
-- confidence;
-- emotional intensity;
-- synthetic origin; and
-- the gate receipt that accepted or rejected it.
+### Voice Evaluation
 
-Qdrant and ArangoDB solve different retrieval problems:
+Text and audio must be evaluated separately.
 
-- **Qdrant** finds semantically similar dream, text, image, audio, video, and code
-  memories even when a later question uses different words.
-- **ArangoDB** explains how a candidate connects through explicit people, events,
-  scenes, evidence, beliefs, and relationships.
+**Text route**
 
-Future recall uses semantic retrieval to find candidates and graph traversal to
-establish the grounded relationship chain. Emotional intensity can rank memories
-that already pass identity, scope, evidence, and graph checks. It cannot
-override those checks.
+- Was the dream retrieved from active canonical memory?
+- Was it identified as synthetic?
+- Did the answer preserve the source evidence and protected identity?
+- Did it express the intended conflict without inventing history?
 
-### Phase 01: From D3 Explorer to React Flow Canvas
+**Audio route**
 
-The current developer UX includes a D3-based multimodal memory and ToM explorer.
-The intended user-facing evolution is a React Flow canvas backed by the same
-canonical Memory and Graph Memory records.
+- Was speaker identity preserved?
+- Did timing, energy, pitch, rate and pauses follow the intended arc?
+- Did the audio contradict or flatten the text?
+- Can blind human listeners perceive the intended ambivalence, agency and
+  resolution?
 
-The canvas should let a human inspect or correct:
+ASR verifies wording. It does not verify emotional performance.
 
-- the core idea;
-- present events;
-- recalled text, images, audio, video, and code activity;
-- people, places, objects, emotions, and conflicts;
-- typed relationships;
-- emotional salience;
-- accepted or rejected dream residue.
+## Research Evaluation
 
-D3 can remain the force-layout engine. React Flow should own editable custom
-nodes, typed connections, selection, grouping, saved layout, undo/redo, and
-multimodal playback.
+The central experiment is a matched comparison, not another demonstration video.
 
-User-created links are not canonical until Memory accepts and receipts the
-write.
-
-### Ownership Boundaries
-
-| Component | Owns |
+| Condition | Memory treatment |
 |---|---|
-| [`create-persona`](../create-persona/SKILL.md) | Canonical persona construction, identity invariants, voice profile, durable persona updates, and identity-consistency tests |
-| [`memory`](../memory/SKILL.md) and [Graph Memory Operator](https://github.com/grahama1970/graph-memory-operator) | Canonical multimodal memories, ArangoDB graph state, ToM records and edges, Qdrant embeddings, recall, and persistence |
-| `persona-dream` | Dream-residue selection, synthetic dream construction, creative and media orchestration, self-interpretation proposals, and receipts linking the cycle |
-| [`watch`](../watch/SKILL.md) | Evidence-first perception of rendered media: frames, transcript, sound, scenes, visual descriptions, and coverage gaps |
-| Chatterbox / voice lane | Audible expression of the current persona response and performance direction; it does not decide beliefs or memory truth |
-| [`create-movie`](../create-movie/SKILL.md) | Long-form audio, score, mixing, assembly, and polished movie production beyond the bounded dream sequence |
+| A | Source memories only |
+| B | Source memories plus ordinary summary |
+| C | Structured text reflection |
+| D | Cinematic dream plan without rendered media |
+| E | Rendered dream without Watch |
+| F | Rendered dream plus Watch and graph consolidation |
+| G | Full condition F plus dream-derived Chatterbox performance plan |
 
-Persona Dream does not create a second persona database or a parallel memory
-store. It can emit proposal and evidence artifacts, but accepted memories,
-relationships, ToM state, and embeddings belong to Memory and Graph Memory.
+This design isolates the value of each layer:
 
-Durable canonical persona changes belong to `create-persona`.
+- C vs D: does rich production planning add value before rendering?
+- D vs E: does the artifact add value beyond the plan?
+- E vs F: does independent re-perception prevent false assumptions and improve use?
+- F vs G: does the consolidated conflict survive into audible performance?
 
-### Artifacts
+Measure:
 
-#### Every Run
+- human insight into conflict, agency and unresolved tension;
+- grounded later recall;
+- social prediction and ToM calibration;
+- identity stability and contradiction rate;
+- literal-memory confusion;
+- appropriate adaptive-state change;
+- text-route persona consistency;
+- audio-route persona and emotion consistency;
+- cost, latency and failure rate.
 
-| Artifact | Purpose |
-|---|---|
-| `dream_request.json` | Persona, memory residue, mode, and run metadata |
-| `response.json` | Model or fixture response captured for audit |
+The full system earns its complexity only if it beats a simpler reflection on at
+least one important outcome without increasing false memories, identity drift or
+unsafe personalization.
 
-#### Successful Dream Runs
+## Quick Start
 
-| Artifact | Purpose |
-|---|---|
-| `residue_links.json` | Provenance from the dream packet to recalled source memories |
-| `contradiction_report.json` | Tensions or contradictions detected in selected residue |
-| `dream_packet.json` | Structured synthetic dream material for downstream tools |
-| `dream_prompt.txt` | Human-readable synthetic dream prompt |
-| `frame_prompts.json` | Visual planning prompts when frames are requested |
-| `contact_sheet.png` | Inspectable visual review surface when images are produced |
-| `dream_reflection.md` | Human-readable reflection, not a canonical persona rewrite |
-| `memory_write_receipt.json` | Proof that a Memory write succeeded or was deliberately skipped |
+```bash
+cd skills/persona-dream
 
-`memory_write_receipt.json` remains `skipped` unless `--write-memory` was
-explicitly requested and the Memory API confirmed the write.
+# Read current project knowledge.
+./run.sh read
 
-#### `video_plan` Runs
+# Run the offline deterministic contract suite.
+./run.sh test-suite
 
-```text
-dream_story.md
-dream_story.json
-character_scene_bible.json
-technique_selection.json
-script_dna_selection.json
-storyboard.json
-timed_transcript.json
-multimodal_prompts.json
-voice_handoff_plan.json
-pipeline_stage_report.json
-pipeline_stage_report.md
-manifest.json
+# Build a fixture-backed dream packet without memory side effects.
+./run.sh generate \
+  --persona embry \
+  --fixture scripts/fixtures/sample_residue.json \
+  --output-dir /tmp/persona-dream-smoke
+
+# Recall live persona residue.
+./run.sh generate --persona embry
+
+# Bias residue selection toward a topic.
+./run.sh generate --persona embry --about "Kai, trust and autonomy"
+
+# Create bounded video-planning material.
+./run.sh generate --mode video_plan --persona embry
 ```
 
-#### Provider-Hardening Artifacts
+Writing a reflection remains explicit:
 
-Hardened provider experiments can additionally emit artifacts such as:
-
-```text
-video_provider_scorecard.json
-video_provider_packet.json
-provider_payload_mapping_receipt.json
-phase10_provider_contract.json
-phase10_provider_contract_receipt.json
+```bash
+./run.sh generate --persona embry --write-memory
 ```
 
-Their existence proves only the boundary named by the artifact or receipt. A
-Phase 10 contract does not prove live schema compatibility, media publication,
-authorization, submission, or provider return.
+The full accepted provider, Watch, interpretation, commit and voice loop is still
+operated through specialist phase commands and receipts while the unified
+`dream` / `resume` interface is being hardened.
 
-#### Intended Closed-Loop Evidence
+## Evidence and Project History
 
-The complete research loop should eventually produce evidence such as:
+The README intentionally contains one current state rather than a stack of
+chronological updates. Detailed execution history, superseded states and repair
+notes belong in:
+
+- [`HANDOFF.md`](HANDOFF.md);
+- [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md);
+- `reports/pipeline-complete/`; and
+- revision-scoped receipts under
+  `reports/pipeline-complete/.persona-dream/revisions/`.
+
+Primary current evidence includes:
 
 ```text
-rendered_dream.mp4
-watch/frames_manifest.json
-watch/transcript.json
-watch/scenes.json
-watch/report.json
-dream_observation_packet.json
-dream_self_interpretation.json
-tom_edge_proposals.json
-dream_memory_record.json
-qdrant_embedding_receipt.json
-graph_edge_write_receipt.json
-persona_before_after_evaluation.json
+rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json
+phase_11_submit_return/.../post_return_acceptance_receipt.v2.json
+watch_gauntlet/59b9ff3155d6/cognitive_loop/cognitive_loop_receipt.json
+watch_gauntlet/59b9ff3155d6/cognitive_loop/retroactive_reconciliation_receipt.v1.json
+phase_16_behavior_evaluation/corrected_traversal_receipt.v1.json
+phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json
+.persona-dream/state/green_canonical_lane_reconciliation_receipt.v1.json
 ```
 
-These names describe the intended contract. They are not a claim that every
-artifact is currently implemented.
+A receipt proves only the boundary it names. Human acceptance remains human.
 
----
+## Proof Discipline
 
-## Acceptance and Proof
+- Do not invent residue when recall is empty.
+- Preserve source IDs, hashes, timestamps, run IDs, revision IDs and causal roots.
+- Treat prompts and scripts as intention, not evidence of rendered contents.
+- Treat Watch outputs as observations, not automatic psychological truth.
+- Keep literal history, synthetic dreams, interpretations and state proposals
+  structurally distinct.
+- Do not count derived records as independent confirmation of their root event.
+- Do not expose incomplete commits through ordinary recall.
+- Do not promote one dream into a durable identity rewrite.
+- Let models propose; deterministic policy and owning systems decide promotion.
+- Evaluate spoken persona on both text and audio routes.
+- Publish failures and null results, including dreams that add cost without adding
+  insight.
 
-### Research Acceptance Boundary
+## Related Research
 
-The founding experiment is complete only when one non-mocked run proves all of
-the following. Per-item state as of 2026-07-18 (Phase 16 completion):
+Persona Dream is informed by, but not equivalent to:
 
-1. A persona autonomously selects grounded multimodal residue and current events.
-   — **PROVEN** (phase 01 idea/residue selection, live).
-2. It creates a synthetic dream with complete source provenance.
-   — **PROVEN** (canonical `dream_dream_successor_943b01ecd9a3`,
-   `synthetic_origin: true`, 3 source memories + Watch/ToM provenance).
-3. When media is rendered, the returned artifact is technically valid and
-   independently analyzed by `watch`.
-   — **PROVEN for the frozen historical return** (watch post-return gauntlet,
-   5/5). The accepted successor return is validated; the observation packet is
-   `DEGRADED` (authoritative verdicts carried by the step-36 v2 receipt).
-4. Self-interpretation claims cite Watch observations and source memories.
-   — **PROVEN** (phase 13, 4 interpretations, deterministic citation gate).
-5. Accepted ToM records and graph edges are written through Memory and Graph
-   Memory. — **PROVEN** (phase 15, 19 canonical records, exact reread-by-key).
-6. Qdrant retrieves the dream from a semantically related, differently worded
-   query. — **PROVEN** (phase 16 probe a: dream returned by 3 differently-worded
-   queries, ranks 1/3/7; negative control excludes it).
-7. ArangoDB traverses from the persona through the dream to source memories,
-   observations, people, events, and ToM state. — **PROVEN** (phase 16 probe b:
-   14/14 canonical edges resolve live to 3 sources + 7 Watch observations + 4
-   ToM nodes; actual vertex/edge keys recorded).
-8. A later persona response uses the dream appropriately while preserving the
-   synthetic-versus-literal distinction. — **PROVEN** (phase 16 probes c and d:
-   grounded dream use marked as a dream; literal occurrence denied; DB flags
-   reread exactly). LLM routed through the Tau node; checks deterministic.
-9. Identity-consistency probes show bounded evolution without destructive
-   identity drift. — **PROVEN for the honest slice** (phase 16 probe e: the dream
-   loop's canonical write-set is dream+edges+ToM only — it never wrote/updated an
-   identity or source record; source anchors reread as literal/unchanged;
-   create-persona working tree clean; Tau values/relationship Q&A stable). No
-   standalone Embry persona-definition file or runnable create-persona identity
-   suite exists; labeled as the honest slice.
-10. Chatterbox audibly expresses the resulting persona state without becoming
-    the authority that invented it. — **NOT PROVEN / OUT OF SCOPE this slice**
-    (no Chatterbox/voice runtime exercised; factually out of scope). Human
-    subjective acceptance of the dream video also remains the human's.
+- [Generative Agents](https://arxiv.org/abs/2304.03442) — experience streams,
+  reflection and later behavior;
+- [Reflexion](https://arxiv.org/abs/2303.11366) — verbal feedback stored as
+  episodic memory;
+- [M3-Agent](https://arxiv.org/abs/2508.09736) — multimodal long-term episodic and
+  semantic memory;
+- [Auto-Dreamer](https://arxiv.org/abs/2605.20616) — offline provenance-linked
+  memory consolidation;
+- [Camera Artist](https://arxiv.org/abs/2604.09195) — multi-agent cinematic
+  planning and recursive storyboards;
+- [ManimAgent](https://arxiv.org/abs/2606.30296) — render, visually evaluate and
+  retain cross-task positive and negative experience;
+- [PED](https://aclanthology.org/2026.findings-acl.445/) — separate text-route and
+  audio-route persona diagnostics; and
+- [ActorMind](https://aclanthology.org/2026.findings-acl.1718/) — role, emotional
+  state reasoning and expressive speech delivery.
 
-### Proof Discipline
+## Internal References
 
-- Do not invent memory residue when recall is empty.
-- Label fixture, synthetic, inferred, observed, and literal evidence distinctly.
-- Preserve source IDs, scopes, hashes, timestamps, and revision boundaries.
-- Treat prompts as intent, not proof of generated-media contents.
-- Treat Watch observations as evidence, not automatic psychological conclusions.
-- Treat image, video, graph, embedding, persona, and Memory receipts as claims
-  until their underlying artifacts and side effects are inspected.
-- Do not turn one dream into an unreviewed durable identity rewrite.
-- Never claim final video or personality-evolution success without concrete
-  media, Watch evidence, persisted graph and embedding receipts, and later
-  behavior proof.
-
-### Common Mistakes
-
-| Mistake | Better move |
-|---|---|
-| Calling Persona Dream a finished movie generator | Treat media generation as one optional part of a graph-memory consolidation experiment |
-| Treating the script as proof of what the dream video contains | Run `watch` and interpret observed evidence |
-| Creating a second persona or memory database | Persist through `create-persona`, `memory`, and Graph Memory Operator |
-| Letting a dream silently rewrite canonical identity | Store bounded synthetic memory and ToM state; promote durable changes only through the owning gate |
-| Making React Flow mandatory for autonomous dreaming | Use it as the human inspection and correction canvas over the same graph-native backend |
-| Treating a contact sheet as final output | Use it as an inspectable review artifact |
-| Treating provider selection as research completion | Close Watch, graph and Qdrant persistence, and future-behavior evaluation |
-
----
-
-## References
-
-- [`SKILL.md`](SKILL.md) - current operational contract
-- [`create-persona`](../create-persona/SKILL.md) - persona authority and identity-consistency validation
-- [`memory`](../memory/SKILL.md) - Memory First, multimodal recall, ToM, and persistence contract
-- [`watch`](../watch/SKILL.md) - evidence-first dream-media perception
-- [`create-movie`](../create-movie/SKILL.md) - downstream polished media lane
-- [Graph Memory Operator](https://github.com/grahama1970/graph-memory-operator) - graph, retrieval, and persistence implementation
-- Nested creative helpers live under `skills/persona-dream/skills/`.
+- [`SKILL.md`](SKILL.md) — current operational contract
+- [`GOAL.md`](GOAL.md) — immutable goal and acceptance criteria
+- [`create-persona`](../create-persona/SKILL.md) — identity authority
+- [`memory`](../memory/SKILL.md) — Memory First and persistence contract
+- [`watch`](../watch/SKILL.md) — evidence-first media perception
+- [`create-movie`](../create-movie/SKILL.md) — long-form media and audio lane
+- [Graph Memory Operator](https://github.com/grahama1970/graph-memory-operator)
+- [Chatterbox](https://github.com/grahama1970/chatterbox)
