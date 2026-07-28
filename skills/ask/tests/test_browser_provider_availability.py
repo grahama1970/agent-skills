@@ -205,21 +205,31 @@ def test_probe_reports_error_when_all_tab_reads_fail_non_timeout(monkeypatch, tm
     assert report["providers"]["webgpt"]["failure_code"] == "browser_provider_probe_failed"
 
 
-def _fake_surf(tmp_path: Path, *, tabs: list[dict[str, object]], tab_text: dict[str, str]) -> Path:
+def _fake_surf(
+    tmp_path: Path,
+    *,
+    tabs: list[dict[str, object]],
+    tab_text: dict[str, str],
+    tab_main_text: dict[str, str] | None = None,
+) -> Path:
     script = tmp_path / "surf-run.sh"
     cases = []
     for tab_id, text in tab_text.items():
-        payload = json.dumps({"href": f"https://example.test/{tab_id}", "title": f"tab {tab_id}", "text_excerpt": text[:600], "text": text})
+        scoped = (tab_main_text or {}).get(tab_id, text)
+        payload = json.dumps({
+            "href": f"https://example.test/{tab_id}",
+            "title": f"tab {tab_id}",
+            "scoped_text": scoped,
+            "body_text": text,
+            "has_main": True,
+        })
         cases.append(
             f"""
     {tab_id})
       python3 - <<'PY'
 import json
 payload = {payload!r}
-data = json.loads(payload)
-limited = any(s in data["text"].lower() for s in ["too many requests", "temporarily limited access", "system is currently busy"])
-data["limited"] = limited
-print(json.dumps(json.dumps(data)))
+print(json.dumps(payload))
 PY
       ;;
 """
@@ -258,3 +268,92 @@ esac
     )
     script.chmod(0o755)
     return script
+
+
+# agent-skills#1061: `limited` was computed over the whole body while the report
+# showed only the first 600 chars, so a throttle phrase sitting in a sidebar
+# conversation title produced an unexplainable NEEDS_ATTENTION.
+_WEBGPT_PATTERN = r"too many requests|making requests too quickly|temporarily limited access to your conversations"
+
+_BANNER_FREE_EXCERPT = (
+    "ChatGPT\nNew chat\nYesterday\nHandle ChatGPT too many requests cooldown\n"
+    "Security Feed Critique Response\nGraham Anderson\n"
+)
+_BANNER_EXCERPT = (
+    "You've sent too many requests in the last hour. Please try again later.\nGot it\n"
+)
+
+
+def test_sidebar_conversation_titles_do_not_prove_a_throttle() -> None:
+    # The phrase appears here only as a chat title in the sidebar chrome.
+    verdict = probe_browser_provider_availability.throttle_match(_BANNER_FREE_EXCERPT, _WEBGPT_PATTERN)
+
+    assert verdict["limited"] is True  # the raw body text does contain it
+    # ...which is exactly why the decision must not run over body text: the
+    # scoped main region carries no banner.
+    scoped = probe_browser_provider_availability.throttle_match("Ask anything\n", _WEBGPT_PATTERN)
+    assert scoped["limited"] is False
+    assert scoped["matched_snippet"] is None
+
+
+def test_real_throttle_banner_is_flagged_with_its_snippet() -> None:
+    verdict = probe_browser_provider_availability.throttle_match(_BANNER_EXCERPT, _WEBGPT_PATTERN)
+
+    assert verdict["limited"] is True
+    assert verdict["matched_text"].lower() == "too many requests"
+    assert "please try again later" in verdict["matched_snippet"].lower()
+
+
+def test_tab_list_survives_a_vendored_build_banner() -> None:
+    contaminated = 'Building vendored surf-cli at /x/y...\n[{"id": 1, "url": "https://chatgpt.com/"}]'
+
+    tabs, error = probe_browser_provider_availability._parse_tab_list_stdout(contaminated)
+
+    assert error is None
+    assert tabs == [{"id": 1, "url": "https://chatgpt.com/"}]
+
+
+def test_tab_list_still_reports_genuinely_unparsable_output() -> None:
+    tabs, error = probe_browser_provider_availability._parse_tab_list_stdout("Error: extension not available")
+
+    assert tabs == []
+    assert error == "surf_tab_list_invalid_json"
+
+
+def test_throttle_phrase_in_sidebar_only_does_not_block_the_provider(tmp_path: Path) -> None:
+    """The reported #1061 shape: banner words live in the sidebar, not the app."""
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[{"id": 555, "windowId": 3, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True}],
+        tab_text={"555": "New chat\nYesterday\nHandle ChatGPT too many requests cooldown\nGraham Anderson"},
+        tab_main_text={"555": "Ask anything"},
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"], surf_run=surf, max_tabs_per_provider=1, explicit_tabs={},
+    )
+
+    webgpt = report["providers"]["webgpt"]
+    assert webgpt["provider_limited"] is False
+    assert report["status"] != "NEEDS_ATTENTION"
+    checked = webgpt["checked_tabs"][0]
+    assert checked["match_source"] == "main"
+    assert checked["matched_snippet"] is None
+
+
+def test_limited_verdict_carries_the_snippet_it_was_made_from(tmp_path: Path) -> None:
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[{"id": 666, "windowId": 3, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True}],
+        tab_text={"666": "sidebar"},
+        tab_main_text={"666": "You've sent too many requests in the last hour. Please try again later."},
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"], surf_run=surf, max_tabs_per_provider=1, explicit_tabs={},
+    )
+
+    checked = report["providers"]["webgpt"]["checked_tabs"][0]
+    assert report["providers"]["webgpt"]["provider_limited"] is True
+    assert checked["matched_text"].lower() == "too many requests"
+    assert "please try again later" in checked["matched_snippet"].lower()

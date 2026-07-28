@@ -915,3 +915,49 @@ def test_composer_recovery_does_not_send_the_operator_after_a_bundle(tmp_path: P
     assert "fresh provider tab" in instruction
     assert "does not address the failure" in instruction
     assert packet["evidence"]["measured_prompt_chars"] == 5249
+
+
+# agent-skills#1078: a lane that dies installing local Python dependencies never
+# touched the browser, so browser and prompt remedies are all wrong for it.
+_DEPENDENCY_INSTALL_STDERR = (
+    "Note: surf-cli extension not available, using CDP fallback\n"
+    "error: Failed to install: httpx-0.28.1-py3-none-any.whl (httpx==0.28.1)\n"
+    "  Caused by: failed to create directory /usr/local/lib/python3.12/dist-packages/httpx: "
+    "Permission denied (os error 13)"
+)
+
+
+def test_dependency_install_failure_gets_its_own_code() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webclaude",
+        failure=_DEPENDENCY_INSTALL_STDERR,
+        response_text="",
+        raw_text="",
+        prompt_text="x" * 4000,
+        submit_meta={"failure": "submit_failed"},
+        commands=[{"command": ["surf", "claude.submit", "--timeout", "900"], "returncode": 1,
+                   "stderr_excerpt": _DEPENDENCY_INSTALL_STDERR}],
+    )
+
+    assert failure_code == tau_roundtable_worker.ENVIRONMENT_DEPENDENCY_INSTALL_FAILED
+    assert failure_code != "prompt_too_large_or_stalled"
+    assert failure_code != "missing_sentinel"
+
+
+def test_dependency_install_packet_points_at_environment_repair(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webclaude",
+        failure=_DEPENDENCY_INSTALL_STDERR,
+        prompt_text="x" * 4000,
+        submit_meta={"failure": "submit_failed"},
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.ENVIRONMENT_DEPENDENCY_INSTALL_FAILED
+    assert packet["auto_retry_blocked_reason"] == "local_python_environment_requires_repair"
+    instruction = packet["fallback_instruction"].lower()
+    assert "virtualenv" in instruction
+    assert "no browser tab, prompt size, or bundle change" in instruction
+    details = packet["evidence"]["environment_dependency"]
+    assert details["package"] == "httpx-0.28.1-py3-none-any.whl"
+    assert details["target_directory"] == "/usr/local/lib/python3.12/dist-packages/httpx"

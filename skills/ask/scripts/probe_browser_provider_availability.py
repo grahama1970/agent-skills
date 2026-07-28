@@ -126,11 +126,10 @@ def probe(
         report["status"] = "ERROR"
         report["error"] = "surf_tab_list_failed"
         return report
-    try:
-        tabs = json.loads(tab_proc.stdout)
-    except json.JSONDecodeError as exc:
+    tabs, tab_list_error = _parse_tab_list_stdout(tab_proc.stdout)
+    if tab_list_error:
         report["status"] = "ERROR"
-        report["error"] = f"surf_tab_list_invalid_json: {exc}"
+        report["error"] = tab_list_error
         return report
     if not isinstance(tabs, list):
         report["status"] = "ERROR"
@@ -186,22 +185,83 @@ def _probe_provider(
     }
 
 
+def _parse_tab_list_stdout(stdout: str) -> tuple[list[Any], str | None]:
+    """Read the tab array even when a build banner precedes it.
+
+    The first surf invocation in a fresh checkout prints "Building vendored
+    surf-cli at ..." before the JSON, which used to abort the whole probe with
+    surf_tab_list_invalid_json (agent-skills#1061).
+    """
+    text = stdout.strip()
+    for candidate in (text, text[text.find("[") :] if "[" in text else ""):
+        if not candidate:
+            continue
+        try:
+            value = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            value = value.get("tabs")
+        if isinstance(value, list):
+            return value, None
+        return [], "surf_tab_list_unexpected_shape"
+    return [], "surf_tab_list_invalid_json"
+
+
+def throttle_match(text: str, pattern: str) -> dict[str, Any]:
+    """Locate a provider throttle banner and keep the proof of the decision.
+
+    The decision runs here rather than in the page so it can be tested over
+    recorded excerpts, and so a `provider_limited` verdict always carries the
+    snippet it was made from (agent-skills#1061).
+    """
+    match = re.search(pattern, text or "", flags=re.IGNORECASE)
+    if not match:
+        return {"limited": False, "matched_text": None, "matched_snippet": None}
+    start, end = match.span()
+    return {
+        "limited": True,
+        "matched_text": match.group(0),
+        "matched_snippet": (text[max(0, start - 90) : end + 60]).strip(),
+    }
+
+
 def _check_tab(*, surf_run: Path, tab_id: str, pattern: str) -> dict[str, Any]:
     js = (
-        "const text = document.body && document.body.innerText || '';"
+        "const main = document.querySelector('main') || document.querySelector('[role=\"main\"]');"
+        "const body = document.body && document.body.innerText || '';"
+        "const scoped = main && main.innerText ? main.innerText : '';"
         "return JSON.stringify({"
         "href: location.href,"
         "title: document.title,"
-        "text_excerpt: text.slice(0, 600),"
-        f"limited: /{pattern}/i.test(text)"
+        "scoped_text: scoped.slice(0, 8000),"
+        "body_text: body.slice(0, 8000),"
+        "has_main: !!main"
         "});"
     )
     proc = _run([str(surf_run), "js", js, "--tab-id", tab_id, "--no-activate"], timeout=20)
     payload: dict[str, Any] = {"tab_id": tab_id, **_proc_summary(proc)}
-    if proc.returncode == 0:
-        decoded = _decode_surf_js_stdout(proc.stdout)
-        if isinstance(decoded, dict):
-            payload.update(decoded)
+    if proc.returncode != 0:
+        return payload
+    decoded = _decode_surf_js_stdout(proc.stdout)
+    if not isinstance(decoded, dict):
+        return payload
+    scoped = str(decoded.get("scoped_text") or "")
+    body = str(decoded.get("body_text") or "")
+    # Sidebar conversation titles live in body text, so a bare page whose
+    # history mentions a throttle would otherwise read as throttled. Judge the
+    # main region when the app exposes one.
+    decision_text = scoped if decoded.get("has_main") and scoped else body
+    verdict = throttle_match(decision_text, pattern)
+    payload.update(
+        {
+            "href": decoded.get("href"),
+            "title": decoded.get("title"),
+            "match_source": "main" if (decoded.get("has_main") and scoped) else "body",
+            "text_excerpt": decision_text[:600],
+            **verdict,
+        }
+    )
     return payload
 
 

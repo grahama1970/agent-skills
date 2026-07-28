@@ -59,6 +59,7 @@ WEBGPT_UNVERIFIED_CLEAN_OUTPUT = "missing_controlled_tab_id_or_contaminated_clea
 BROWSER_HANDLER_TIMEOUT = "browser_handler_timeout"
 BROWSER_EXTENSION_COMMAND_TIMEOUT = "browser_extension_command_timeout"
 BROWSER_COMPOSER_INTERACTION_FAILED = "browser_composer_interaction_failed"
+ENVIRONMENT_DEPENDENCY_INSTALL_FAILED = "environment_dependency_install_failed"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
 SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
 BROWSER_TRANSPORT_BLOCKERS = {
@@ -78,6 +79,7 @@ BROWSER_TRANSPORT_BLOCKERS = {
     BROWSER_HANDLER_TIMEOUT,
     BROWSER_EXTENSION_COMMAND_TIMEOUT,
     BROWSER_COMPOSER_INTERACTION_FAILED,
+    ENVIRONMENT_DEPENDENCY_INSTALL_FAILED,
     SURF_BROWSER_LOCK_TIMEOUT,
     SURF_BROWSER_CONNECTION_UNAVAILABLE,
     "repo_access_blocked",
@@ -1399,6 +1401,11 @@ def _browser_failure_recovery_packet(
             "submit_meta_status": submit_meta.get("status") or submit_meta.get("status_code"),
             "last_command": commands[-1] if commands else None,
             "timeout_diagnostics": submit_meta.get("ask_timeout_diagnostics"),
+            "environment_dependency": (
+                _environment_dependency_details(failure.lower())
+                if failure_code == ENVIRONMENT_DEPENDENCY_INSTALL_FAILED
+                else None
+            ),
             "stale_binding": stale_binding,
             "surf_lock_blocker": surf_lock_blocker,
             "submit_meta_summary": transport_failure_summary,
@@ -1508,6 +1515,8 @@ def _classify_browser_failure(
         return WEBGPT_CONVERSATION_FULL_BLOCKER
     if _webgpt_stale_binding_details(submit_meta):
         return WEBGPT_BINDING_STALE_BLOCKER
+    if _looks_environment_dependency_install_failed(haystack):
+        return ENVIRONMENT_DEPENDENCY_INSTALL_FAILED
     if _looks_surf_browser_lock_timeout(haystack, commands, submit_meta):
         return SURF_BROWSER_LOCK_TIMEOUT
     if _looks_surf_browser_connection_unavailable(haystack):
@@ -2068,6 +2077,38 @@ def _looks_browser_handler_timeout(text: str, commands: list[dict[str, Any]]) ->
     return False
 
 
+def _looks_environment_dependency_install_failed(text: str) -> bool:
+    """The lane died installing local Python dependencies.
+
+    Nothing about the browser or the prompt is implicated: the run never got
+    far enough to drive a provider (agent-skills#1078).
+    """
+    install_markers = (
+        "failed to install:",
+        "failed to create directory",
+        "could not install packages",
+        "error: externally-managed-environment",
+        "no space left on device",
+    )
+    env_markers = (
+        "dist-packages",
+        "site-packages",
+        "permission denied (os error 13)",
+        "permission denied:",
+    )
+    return any(marker in text for marker in install_markers) and any(marker in text for marker in env_markers)
+
+
+def _environment_dependency_details(text: str) -> dict[str, Any]:
+    """Name the wheel and the directory the install was denied, for the packet."""
+    package = re.search(r"failed to install:\s*([^\s(]+)", text)
+    directory = re.search(r"failed to create directory\s+([^\s:]+)", text)
+    return {
+        "package": package.group(1) if package else None,
+        "target_directory": directory.group(1) if directory else None,
+    }
+
+
 def _looks_browser_composer_interaction_failed(text: str) -> bool:
     """The provider composer refused focus/typing.
 
@@ -2433,6 +2474,7 @@ def _recovery_reason(failure_code: str) -> str:
         SURF_BROWSER_CONNECTION_UNAVAILABLE: "The Surf native host or socket disconnected before the browser lane completed.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
+        ENVIRONMENT_DEPENDENCY_INSTALL_FAILED: "The lane died installing local Python dependencies, so no browser or provider work was attempted.",
         BROWSER_COMPOSER_INTERACTION_FAILED: "The provider composer refused focus or typing on the controlled tab, so the prompt was never entered. Prompt size is not implicated.",
         "prompt_too_large_or_stalled": "The browser submit reported explicit size or stall wording from the provider.",
         "stale_raw_capture": "The raw browser capture appears to be from the wrong or stale assistant turn.",
@@ -2474,6 +2516,8 @@ def _auto_retry_blocked_reason(
         return "surf_extension_command_timeout_retry_same_binding_after_extension_reload"
     if failure_code == BROWSER_COMPOSER_INTERACTION_FAILED:
         return "browser_composer_requires_fresh_tab_or_composer_recovery"
+    if failure_code == ENVIRONMENT_DEPENDENCY_INSTALL_FAILED:
+        return "local_python_environment_requires_repair"
     if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
         return "surf_browser_lock_owner_still_running"
     if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
@@ -2567,6 +2611,12 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "Create a local readable review bundle, or grant/add the repository through the browser provider's GitHub integration, "
             "then rerun the next_command with the bundle path in the request."
         )
+    if failure_code == ENVIRONMENT_DEPENDENCY_INSTALL_FAILED:
+        return (
+            "Repair the local Python environment before rerunning: install into the project virtualenv "
+            "(uv sync / uv run --project <skill>) instead of a system dist-packages directory. No browser "
+            "tab, prompt size, or bundle change affects this failure."
+        )
     if failure_code == BROWSER_COMPOSER_INTERACTION_FAILED:
         return (
             "Open and bind a fresh provider tab, then rerun only this lane. The composer refused focus or "
@@ -2597,6 +2647,7 @@ def _requires_local_readable_bundle(failure_code: str) -> bool:
         BROWSER_HANDLER_TIMEOUT,
         BROWSER_EXTENSION_COMMAND_TIMEOUT,
         BROWSER_COMPOSER_INTERACTION_FAILED,
+        ENVIRONMENT_DEPENDENCY_INSTALL_FAILED,
         SURF_BROWSER_LOCK_TIMEOUT,
         SURF_BROWSER_CONNECTION_UNAVAILABLE,
         "stale_raw_capture",
