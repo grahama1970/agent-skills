@@ -45,6 +45,10 @@ PROVIDERS: dict[str, ProviderProbe] = {
         hosts=("grok.com", "x.com"),
         limited_pattern=r"before limit is gone|wait or upgrade|rate limit|too many requests|system is currently busy",
     ),
+    "webdeepseek": ProviderProbe(
+        hosts=("chat.deepseek.com",),
+        limited_pattern=r"server is busy|too many requests|rate limit(?:ed)?|try again later",
+    ),
 }
 
 

@@ -136,6 +136,14 @@ ROUNDTABLE_HANDLERS = {
         "runtime": "browser",
         "proof_required": "surf_sentinel_meta",
     },
+    # DeepSeek answers in Expert mode by default; the Surf client verifies the
+    # tier before typing and fails closed if it cannot (agent-skills#1067).
+    "webdeepseek": {
+        "transport_owner": "$surf",
+        "transport": "deepseek.submit",
+        "runtime": "browser",
+        "proof_required": "surf_sentinel_meta",
+    },
     # Local coding agent. Runs `codex exec` inside a caller-named workspace
     # (git worktree) with a writable sandbox; the node's response is the
     # summary plus the actual `git diff` of the workspace, so a downstream
@@ -155,6 +163,7 @@ _HANDLER_ALIASES = {
     "claude": "webclaude",
     "gemini": "webgemini",
     "grok": "webgrok",
+    "deepseek": "webdeepseek",
 }
 FAIL_CLOSED_ON = [
     "goal_hash_mismatch",

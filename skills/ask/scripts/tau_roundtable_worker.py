@@ -31,6 +31,7 @@ HANDLER_BACKENDS = {
     "webkimi": "webkimi",
     "webgemini": "webgemini",
     "webgrok": "webgrok",
+    "webdeepseek": "webdeepseek",
 }
 HANDLER_SUBMIT_COMMANDS = {
     "webgpt": "webgpt.submit",
@@ -38,7 +39,9 @@ HANDLER_SUBMIT_COMMANDS = {
     "webkimi": "kimi.submit",
     "webgemini": "gemini.submit",
     "webgrok": "grok.submit",
+    "webdeepseek": "deepseek.submit",
 }
+# webdeepseek is absent on purpose: DeepSeek cannot receive attachments.
 ATTACH_FILE_HANDLERS = {"webgpt", "webclaude", "webkimi", "webgemini", "webgrok"}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
 HANDLER_RECOVERY_PACKET_SCHEMA = "ask.handler_failure_recovery_packet.v1"
