@@ -445,6 +445,22 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         )
         if response_quarantine.get("quarantine_path"):
             response_path = Path(str(response_quarantine["quarantine_path"]))
+    crosstalk = crosstalk_tab_mismatch(str(resolve_payload.get("tab_id") or ""), submit_meta)
+    if crosstalk:
+        # Never let a cross-tab capture be read as this seat's answer.
+        ok = False
+        status = "BLOCKED"
+        failure = failure or (
+            f"browser_tab_crosstalk: bound tab {crosstalk['bound_tab_id']} but captured from "
+            f"{crosstalk['controlled_tab_id']}"
+        )
+        if response_path.is_file():
+            crosstalk_path = _unique_quarantine_path(response_path.with_name("response.crosstalk.md"))
+            response_path.rename(crosstalk_path)
+            crosstalk["quarantine_path"] = str(crosstalk_path)
+            response_path = crosstalk_path
+        response_quarantine = {**(response_quarantine or {}), "crosstalk": crosstalk}
+
     if not ok and recovery_packet is None:
         recovery_packet = _handler_failure_recovery_packet(
             args,
@@ -2309,6 +2325,25 @@ def _is_bundle_like(path: Path) -> bool:
         ".tar",
         ".tar.gz",
         ".tgz",
+    }
+
+
+def crosstalk_tab_mismatch(bound_tab_id: str, submit_meta: dict[str, Any]) -> dict[str, Any] | None:
+    """Detect a seat that captured from a tab it does not own.
+
+    Concurrent seats share one browser; a node whose controlled tab differs from
+    its bound tab has captured another seat's conversation, so its response is
+    not attributable (agent-skills#1025).
+    """
+    bound = str(bound_tab_id or "").strip()
+    controlled = str(submit_meta.get("controlled_tab_id") or "").strip()
+    if not bound or not controlled or bound == controlled:
+        return None
+    return {
+        "schema": "ask.browser_tab_crosstalk.v1",
+        "bound_tab_id": bound,
+        "controlled_tab_id": controlled,
+        "reason": "the seat captured from a tab it does not own; the response is not attributable",
     }
 
 
