@@ -39,10 +39,20 @@ VOICE_REFS = Path("/home/graham/workspace/experiments/chatterbox/persona_dream_v
 #: Prior label holder, embry_authorized_ref_30s_8s.wav, is retained as
 #: LEGACY_STAGING_REFERENCE below and is still what the emotion-proof lane
 #: stages; reconciling that lane is tracked separately.
-DEFAULT_REFERENCE_AUDIO = (
-    ROOT / "voice_clone_candidates" / "embry_kling_clone_candidate.wav"
-)
-LEGACY_STAGING_REFERENCE = VOICE_REFS / "embry_authorized_ref_30s_8s.wav"
+try:
+    from embry_voice_reference import AUTHORIZED_EMBRY_REFERENCE, LEGACY_STAGING_REFERENCE
+except ImportError:  # loaded by path in some test harnesses
+    import importlib.util as _ilu
+
+    _spec = _ilu.spec_from_file_location(
+        "embry_voice_reference", Path(__file__).resolve().parent / "embry_voice_reference.py"
+    )
+    _mod = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_mod)
+    AUTHORIZED_EMBRY_REFERENCE = _mod.AUTHORIZED_EMBRY_REFERENCE
+    LEGACY_STAGING_REFERENCE = _mod.LEGACY_STAGING_REFERENCE
+
+DEFAULT_REFERENCE_AUDIO = AUTHORIZED_EMBRY_REFERENCE
 
 #: The reference the live Chatterbox service actually conditions on. Verified
 #: 2026-07-28 from the container: CHATTERBOX_REF_AUDIO=/data/embry_ref.wav is

@@ -1,0 +1,68 @@
+"""One authoritative Embry voice reference across lanes (#1080).
+
+Two lanes disagreed: the continuity lane conditioned renders on the clone
+candidate (the Chatterbox service default), the emotion-proof lane staged
+embry_authorized_ref_30s_8s.wav. They score 0.7384 against each other, below the
+0.75 same-speaker floor. These pin the single source of truth and pin that
+historical receipts are deliberately left naming the old clip.
+"""
+import importlib.util
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str, rel: str = "scripts"):
+    spec = importlib.util.spec_from_file_location(name, ROOT / rel / f"{name}.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+ref = _load("embry_voice_reference")
+
+
+def test_authorized_reference_is_the_promoted_clip():
+    assert ref.AUTHORIZED_EMBRY_REFERENCE.name == "embry_kling_clone_candidate.wav"
+    assert ref.AUTHORIZED_EMBRY_REFERENCE.is_file()
+
+
+def test_legacy_reference_is_recorded_but_not_authorized():
+    assert ref.LEGACY_STAGING_REFERENCE.name == "embry_authorized_ref_30s_8s.wav"
+    assert ref.LEGACY_STAGING_REFERENCE != ref.AUTHORIZED_EMBRY_REFERENCE
+
+
+def test_provenance_is_receipt_ready():
+    got = ref.reference_provenance()
+    assert got["exists"] is True
+    assert got["is_authorized"] is True
+    assert str(got["sha256"]).startswith("sha256:")
+    assert got["bytes"] > 0
+
+
+def test_provenance_flags_a_non_authorized_clip():
+    got = ref.reference_provenance(ref.LEGACY_STAGING_REFERENCE)
+    assert got["is_authorized"] is False
+
+
+def test_live_consumers_do_not_hardcode_the_legacy_path():
+    """A literal path in one more file is how the lanes diverged."""
+    offenders = []
+    for rel in (
+        "scripts/session_mood_voice_recognition.py",
+        "scripts/session_mood_voice_recognition_preflight.py",
+        "reports/goal_v5/emotion_proof/weight_proof/emotion_weight_to_voice.py",
+        "reports/goal_v5/emotion_proof/wired_e2e/driver.ts",
+    ):
+        text = (ROOT / rel).read_text(encoding="utf-8")
+        for line in text.splitlines():
+            if "embry_authorized_ref_30s_8s" in line and not line.lstrip().startswith(("#", "//")):
+                offenders.append((rel, line.strip()[:70]))
+    assert offenders == [], offenders
+
+
+def test_historical_receipts_still_name_the_old_clip():
+    """Receipts are evidence of what ran, not of what is currently authorized."""
+    receipt = ROOT / "reports/goal_v5/emotion_proof/weight_proof/RECEIPT.json"
+    assert "embry_authorized_ref_30s_8s" in receipt.read_text(encoding="utf-8")

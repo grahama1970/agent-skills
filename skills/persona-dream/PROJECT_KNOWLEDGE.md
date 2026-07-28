@@ -56,6 +56,38 @@ report-local WAV snapshots. It does not prove perceived target emotion,
 naturalness, speaker similarity, adversarial recognition, production
 conversation-service binding, or repeated full-pipeline reliability.
 
+## 2026-07-28 — Embry voice reference reconciled across lanes
+
+Two lanes disagreed about which clip is Embry:
+
+- the continuity lane conditioned live Chatterbox renders on
+  `voice_clone_candidates/embry_kling_clone_candidate.wav`, because that is what
+  `CHATTERBOX_REF_AUDIO` resolves to and the render path sent no `ref_audio`;
+- the emotion-proof lane staged
+  `persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav`.
+
+Measured: the two recordings score **0.7384** against each other, below the 0.75
+same-speaker floor, so "which file is Embry" genuinely had two answers.
+
+Resolved by operator decision: the clone candidate is **promoted** to authorized.
+It is the only Embry clip that exists — `SPEC_arc_state_to_voice.md` recorded on
+2026-07-25 that "the anchor bank does not exist. Only ONE clip per persona is
+present" — and it is the clip every live render actually used.
+
+`scripts/embry_voice_reference.py` is now the single source of truth. Live code
+imports `AUTHORIZED_EMBRY_REFERENCE`; a literal path in one more file is how the
+lanes diverged.
+
+**Receipts under `reports/` were NOT rewritten.** They record which clip a past
+run actually used. Editing them to match the promotion would destroy the evidence
+that the divergence happened, and would make old ASR and emotion proofs claim a
+provenance they never had. A receipt naming
+`embry_authorized_ref_30s_8s.wav` is correct history, not drift.
+
+Still open: the renders score 0.7382-0.7801 against their own conditioning
+reference while genuine Embry audio at the same duration scores mean 0.8300
+(#1079). Promotion fixed provenance, not synthesis fidelity.
+
 ## 2026-07-27 — SUPERSEDED — P2.4 voice-recognition preflight blocks on missing backend
 
 > SUPERSEDED 2026-07-28. Retained as the record of the failed attempts and the
