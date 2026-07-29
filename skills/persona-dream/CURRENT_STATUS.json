@@ -36,10 +36,10 @@
     "latest_voice_recognition_preflight_runtime": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
     "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json",
     "latest_voice_recognition_receipt_sha256": "sha256:9a1e6de22b0b608570d0458394b64746be8737154d886f8a91dc9cf4c2e159bd",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256; blinded-listener study stimuli restored from exact preregistered Chatterbox WAV hashes and validated through live ASR with WER 0.0 for all four conditions, but responses remain 0/20",
     "unverified": [
       "SPARTA production conversation-service consumption of the session_arc_bias artifact",
-      "perceived target emotion, naturalness, or human listener acceptance",
+      "perceived target emotion, naturalness, or human listener acceptance; blinded listener responses remain 0/20",
       "recognition check across multiple moods",
       "production reliability beyond an N=5 pilot"
     ],
@@ -85,6 +85,15 @@
         "sha256:85f36a690c10c16d3f53bbf659d9ea21ea4e4cafd7c687fda6bbb55c28c5b3d1",
         "sha256:8cac02308458c2c6fd64150e59fbbdf070579440a491bfb2a54a3f8a7f55ecf3"
       ]
+    },
+    "latest_blinded_listener_study_validation_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json",
+    "latest_blinded_listener_study_validation_receipt_sha256": "sha256:a4dd056ae36ac5ad2e96ed990ad30fc5554355a733113097a5b2a275c982d634",
+    "latest_blinded_listener_study_readiness": {
+      "status": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
+      "stimulus_hashes_matched": "4/4",
+      "stimulus_asr_wer": "0.0/0.0/0.0/0.0",
+      "human_responses": "0/20",
+      "remaining_failed_gate": "human_responses_complete"
     }
   },
   "latest_voice_proof": {
@@ -235,7 +244,7 @@
   },
   "active_blockers": [
     "SPARTA production conversation service has not yet consumed the Persona Dream session_arc_bias artifact; tracked outside Persona Dream ownership.",
-    "Chatterbox proof is transport/content-preservation and resemblyzer speaker-recognition evidence, not perceptual emotion, naturalness, or human listener acceptance.",
+    "Blinded Chatterbox listener-study stimuli are present and ASR-verified, but human listener responses remain 0/20; no perceptual emotion, naturalness, or human listener acceptance claim is available.",
     "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
     "Previous-video attachment A/B proof remains unrun and is not on the current critical path."

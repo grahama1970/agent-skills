@@ -1,7 +1,36 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + N=5 reliability pilot PASS; SPARTA/perceptual evidence next) by Codex
+**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + N=5 reliability pilot PASS; listener stimuli ready; SPARTA/human responses next) by Codex
 **Status:** Active development
+**Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
+
+## 2026-07-29 — #1058 deterministic readiness PASS; human listener responses still missing
+
+The blinded listener study is not complete, but its local stimulus bundle is now
+durable and validated:
+
+- Validation receipt:
+  `reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
+  - SHA-256: `sha256:a4dd056ae36ac5ad2e96ed990ad30fc5554355a733113097a5b2a275c982d634`
+  - status: `PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS`
+  - `mocked: false`, `live: true`
+  - failed gates: `human_responses_complete`
+- Restored preregistered stimuli:
+  - `control.wav`: `sha256:3c61c23200701563ae8eda0a6b51107109b0d0547d2a1ce7491e5961ccbea52f`
+  - `baseline.wav`: `sha256:6a1ec8962e74e0866979834e5162563fbf3efa0940b34e3a5a4ca5c763cae2e2`
+  - `dream.wav`: `sha256:e5a421c3d0dad45710404fc56a1047c2c062d1faefe03bdebdac3f3a1fb8fbaa`
+  - `adversarial.wav`: `sha256:8657c873f59428c65b633136309d8e73a2d29d54b7b69b1d8f139ef3b51dfc00`
+- Live ASR content check:
+  - all four stimuli transcribed as the intended sentence;
+  - WER: `0.0`, `0.0`, `0.0`, `0.0`.
+- Human response status:
+  - `responses.jsonl` has `0` responses;
+  - required raters: `20`;
+  - signed human interpretation record: missing.
+
+Boundary: this fixes the missing-stimulus and ASR-readiness caveats. It does
+not produce perceptual evidence. #1058 remains blocked on human listener
+responses and the signed human interpretation record.
 
 ## 2026-07-29 — #1041 N=5 live-chain reliability pilot PASS; not production reliability
 

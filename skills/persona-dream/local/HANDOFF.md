@@ -1,6 +1,6 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-29T13:39:00Z
+**Timestamp:** 2026-07-29T13:58:00Z
 **Active Agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target Branch:** `main`
@@ -40,6 +40,12 @@
   `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` with 5
   attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted
   effects, and Wilson 95% lower bound 0.565509.
+- **Blinded listener-study readiness:** Four preregistered Chatterbox stimuli
+  are restored under `reports/goal_v5/continuity/blinded_listener_study/stimuli/`
+  and validated by
+  `reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`.
+  All four hashes match the preregistration, live ASR returns WER 0.0 for all
+  four, and the remaining failed gate is `human_responses_complete`.
 - **Status boundary:** P2.4 recognition proof does not prove perceived emotion,
   naturalness, human listener recognition, production conversation-service
   binding, production reliability beyond an N=5 pilot, or PCTOM-R benefit.
@@ -84,6 +90,12 @@
   `sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f`,
   campaign id `live_chain_reliability_20260729t133501z`, 5/5 cycle receipts
   passed, duplicate accepted effects `0`, and Wilson 95% lower bound `0.565509`.
+- Blinded listener-study validation receipt:
+  `reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
+  with `PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS`, SHA-256
+  `sha256:a4dd056ae36ac5ad2e96ed990ad30fc5554355a733113097a5b2a275c982d634`,
+  stimulus hashes matched `4/4`, live ASR WER `0.0/0.0/0.0/0.0`, and human
+  responses `0/20`.
 - `session_mood_chatterbox_live.py` now sends Chatterbox the service-visible
   `/data/embry_ref.wav` path while the receipt records the host-side authorized
   reference path and SHA-256. This avoids the `reference_audio_outside_allowed_roots`
@@ -97,8 +109,9 @@
   receipt runner, and the Persona Dream arc-bias artifact is published, but the
   SPARTA-owned production conversation service has not yet consumed that
   artifact.
-- **Perception not proven:** Resemblyzer separation is not a human listener
-  study and does not prove perceived target emotion or naturalness.
+- **Perception not proven:** The listener-study stimuli are ready, but
+  `responses.jsonl` has 0/20 human responses and there is no signed human
+  interpretation record.
 - **PCTOM-R benefit unproven:** The machinery remains strong, but no
   confidence-bounded counterfactual-dreaming planning advantage has been shown.
 - **Reliability boundary:** The five-cycle engineering pilot passed, but this is
@@ -110,8 +123,8 @@
 1. Hand `session_arc_bias.v1` to the SPARTA-owned production conversation
    consumer; do not edit SPARTA from Persona Dream unless the operator routes
    that work in the SPARTA lane.
-2. Run the blinded Chatterbox listener study for dream-derived emotion, Embry
-   identity, and naturalness.
+2. Collect the 20 human responses for the blinded Chatterbox listener study and
+   append them to `responses.jsonl`; do not substitute an LLM/self-rating.
 3. Return to PCTOM-R condition-benefit work such as issue `#1008` only after an
    explicit operator reprioritization or after the voice/perception gate is
    receipted.
@@ -130,6 +143,7 @@
 - **Joined live-chain receipt:** `skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json`
 - **Session arc-bias receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`
 - **Reliability aggregate receipt:** `skills/persona-dream/reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`
+- **Listener-study readiness receipt:** `skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
 
 Use this claim boundary:
 
