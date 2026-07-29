@@ -545,6 +545,7 @@ cmd_ensure_labels() {
         "lane:docs|c2e0c6|Concurrency lane: docs"
         "lane:ops|c2e0c6|Concurrency lane: ops"
         "lane:sec|c2e0c6|Concurrency lane: security"
+        "agent:skill-maintainer|5319e7|Requested repair agent: skill-maintainer"
         "agent:agent-skill-maintainer|5319e7|Requested repair agent: agent-skill-maintainer"
     )
     local item name color description
