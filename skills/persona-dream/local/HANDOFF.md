@@ -50,7 +50,9 @@
   and validated by
   `reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`.
   All four hashes match the preregistration, live ASR returns WER 0.0 for all
-  four, and the remaining failed gate is `human_responses_complete`.
+  four, the rater response schema/instructions are present, empty/malformed
+  rater rows are rejected, and the remaining failed gate is
+  `human_responses_complete`.
 - **Status boundary:** P2.4 recognition proof does not prove perceived emotion,
   naturalness, human listener recognition, production conversation-service
   binding, production reliability beyond an N=5 pilot, or PCTOM-R benefit.
@@ -108,9 +110,12 @@
 - Blinded listener-study validation receipt:
   `reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
   with `PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS`, SHA-256
-  `sha256:a4dd056ae36ac5ad2e96ed990ad30fc5554355a733113097a5b2a275c982d634`,
+  `sha256:c5d6c01e4f4db0fb7f1a4a5c1535c316d666665c541753b6c4f8db46f162e7fa`,
   stimulus hashes matched `4/4`, live ASR WER `0.0/0.0/0.0/0.0`, and human
-  responses `0/20`.
+  responses `0/20 valid`. `RESPONSE_SCHEMA.json` is
+  `sha256:21e51f2392ab9a9c4d6bfb8d15907fa36eb292f443cbc2861c61be2d4650850e`;
+  `RATER_INSTRUCTIONS.md` is
+  `sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5`.
 - `session_mood_chatterbox_live.py` now sends Chatterbox the service-visible
   `/data/embry_ref.wav` path while the receipt records the host-side authorized
   reference path and SHA-256. This avoids the `reference_audio_outside_allowed_roots`
@@ -126,7 +131,7 @@
   conversation service has not yet consumed that contract/artifact in a
   production receipt.
 - **Perception not proven:** The listener-study stimuli are ready, but
-  `responses.jsonl` has 0/20 human responses and there is no signed human
+  `responses.jsonl` has 0/20 valid human responses and there is no signed human
   interpretation record.
 - **PCTOM-R benefit unproven:** The machinery remains strong, but no
   confidence-bounded counterfactual-dreaming planning advantage has been shown.

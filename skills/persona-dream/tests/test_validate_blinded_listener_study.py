@@ -17,7 +17,24 @@ def _load(name: str):
 validator = _load("validate_blinded_listener_study")
 
 
-def _write_study(tmp_path: Path, *, response_count: int = 0) -> Path:
+def _valid_response(rater_id: str) -> dict:
+    return {
+        "rater_id": rater_id,
+        "responses": [
+            {
+                "stimulus_id": "S01",
+                "target_emotion_choice": "neutral",
+                "embry_identity": "yes",
+                "identity_confidence": 4,
+                "naturalness": 4,
+                "content_equivalent": "yes",
+                "preference_rank": 1,
+            }
+        ],
+    }
+
+
+def _write_study(tmp_path: Path, *, response_count: int = 0, empty_responses: bool = False) -> Path:
     study = tmp_path / "study"
     stimuli = study / "stimuli"
     stimuli.mkdir(parents=True)
@@ -40,10 +57,13 @@ def _write_study(tmp_path: Path, *, response_count: int = 0) -> Path:
         ],
     }
     (study / "PREREGISTRATION.json").write_text(json.dumps(prereg), encoding="utf-8")
-    rows = [
-        json.dumps({"rater_id": f"rater_{idx:03d}", "responses": []})
-        for idx in range(response_count)
-    ]
+    (study / "RESPONSE_SCHEMA.json").write_text(json.dumps({"schema": "test.response.schema"}), encoding="utf-8")
+    (study / "RATER_INSTRUCTIONS.md").write_text("Use stimulus IDs only.\n", encoding="utf-8")
+    rows = []
+    for idx in range(response_count):
+        rater_id = f"rater_{idx:03d}"
+        row = {"rater_id": rater_id, "responses": []} if empty_responses else _valid_response(rater_id)
+        rows.append(json.dumps(row))
     (study / "responses.jsonl").write_text("\n".join(rows) + ("\n" if rows else ""), encoding="utf-8")
     return study
 
@@ -115,3 +135,29 @@ def test_enough_distinct_raters_can_advance_to_response_present_status(tmp_path)
 
     assert receipt["status"] == "PASS_BLINDED_LISTENER_STUDY_RESPONSES_PRESENT"
     assert receipt["responses_summary"]["unique_rater_count"] == 2
+    assert receipt["responses_summary"]["unique_valid_rater_count"] == 2
+
+
+def test_empty_response_rows_do_not_count_as_complete(tmp_path):
+    study = _write_study(tmp_path, response_count=2, empty_responses=True)
+    args = type(
+        "Args",
+        (),
+        {
+            "study_dir": study,
+            "out": None,
+            "required_raters": 2,
+            "asr": False,
+            "asr_base_url": "http://127.0.0.1:9000",
+            "asr_api_key": "none",
+            "max_wer": 0.0,
+        },
+    )()
+
+    receipt = validator.run(args)
+
+    assert receipt["status"] == "BLOCKED_BLINDED_LISTENER_STUDY"
+    assert receipt["responses_summary"]["unique_rater_count"] == 2
+    assert receipt["responses_summary"]["unique_valid_rater_count"] == 0
+    assert "human_responses_complete" in receipt["failed_gates"]
+    assert any("responses_missing" in gate for gate in receipt["failed_gates"])

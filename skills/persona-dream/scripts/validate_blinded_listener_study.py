@@ -144,15 +144,99 @@ def transcribe(base_url: str, api_key: str, audio: Path) -> str:
     return str(data.get("text") or "").strip()
 
 
-def validate_responses(rows: list[dict[str, Any]], required: int) -> dict[str, Any]:
+def _yes_no_or_bool(value: Any) -> bool:
+    return isinstance(value, bool) or (isinstance(value, str) and value.lower() in {"yes", "no"})
+
+
+def _int_in_range(value: Any, lo: int, hi: int) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and lo <= value <= hi
+
+
+def validate_response_row(
+    row: dict[str, Any],
+    *,
+    expected_stimulus_ids: set[str],
+    allowed_tones: set[str],
+    line_no: int,
+) -> list[str]:
+    errors: list[str] = []
+    rater_id = str(row.get("rater_id") or "")
+    if not rater_id:
+        errors.append(f"response_invalid:{line_no}:rater_id_missing")
+    responses = row.get("responses")
+    if not isinstance(responses, list) or not responses:
+        errors.append(f"response_invalid:{line_no}:responses_missing")
+        return errors
+    seen_ids: list[str] = []
+    ranks: list[int] = []
+    for idx, response in enumerate(responses, start=1):
+        if not isinstance(response, dict):
+            errors.append(f"response_invalid:{line_no}:response_{idx}_not_object")
+            continue
+        if "condition" in response:
+            errors.append(f"response_invalid:{line_no}:response_{idx}_contains_condition_label")
+        stimulus_id = str(response.get("stimulus_id") or "")
+        if stimulus_id not in expected_stimulus_ids:
+            errors.append(f"response_invalid:{line_no}:response_{idx}_stimulus_id_invalid")
+        seen_ids.append(stimulus_id)
+        target = response.get("target_emotion_choice", response.get("target_emotion"))
+        if target not in allowed_tones:
+            errors.append(f"response_invalid:{line_no}:response_{idx}_target_emotion_invalid")
+        if not _yes_no_or_bool(response.get("embry_identity")):
+            errors.append(f"response_invalid:{line_no}:response_{idx}_embry_identity_invalid")
+        if not _int_in_range(response.get("identity_confidence"), 1, 5):
+            errors.append(f"response_invalid:{line_no}:response_{idx}_identity_confidence_invalid")
+        if not _int_in_range(response.get("naturalness"), 1, 5):
+            errors.append(f"response_invalid:{line_no}:response_{idx}_naturalness_invalid")
+        if not _yes_no_or_bool(response.get("content_equivalent")):
+            errors.append(f"response_invalid:{line_no}:response_{idx}_content_equivalent_invalid")
+        rank = response.get("preference_rank")
+        if not _int_in_range(rank, 1, len(expected_stimulus_ids)):
+            errors.append(f"response_invalid:{line_no}:response_{idx}_preference_rank_invalid")
+        else:
+            ranks.append(rank)
+    if set(seen_ids) != expected_stimulus_ids:
+        errors.append(f"response_invalid:{line_no}:stimulus_set_mismatch")
+    if len(seen_ids) != len(set(seen_ids)):
+        errors.append(f"response_invalid:{line_no}:duplicate_stimulus_id")
+    if len(ranks) == len(expected_stimulus_ids) and sorted(ranks) != list(range(1, len(expected_stimulus_ids) + 1)):
+        errors.append(f"response_invalid:{line_no}:preference_ranks_not_permutation")
+    return errors
+
+
+def validate_responses(
+    rows: list[dict[str, Any]],
+    required: int,
+    *,
+    expected_stimulus_ids: set[str],
+    allowed_tones: set[str],
+) -> dict[str, Any]:
     rater_ids = [str(row.get("rater_id") or "") for row in rows]
     unique_raters = sorted({rid for rid in rater_ids if rid})
+    row_errors: list[str] = []
+    valid_rater_ids: list[str] = []
+    for line_no, row in enumerate(rows, start=1):
+        errors = validate_response_row(
+            row,
+            expected_stimulus_ids=expected_stimulus_ids,
+            allowed_tones=allowed_tones,
+            line_no=line_no,
+        )
+        row_errors.extend(errors)
+        if not errors and row.get("rater_id"):
+            valid_rater_ids.append(str(row["rater_id"]))
+    unique_valid_raters = sorted(set(valid_rater_ids))
     return {
         "response_count": len(rows),
         "unique_rater_count": len(unique_raters),
+        "valid_response_count": len(valid_rater_ids),
+        "unique_valid_rater_count": len(unique_valid_raters),
         "required_raters": required,
-        "enough_human_responses": len(unique_raters) >= required,
+        "enough_human_responses": len(unique_valid_raters) >= required and not row_errors,
         "duplicate_rater_ids": sorted({rid for rid in unique_raters if rater_ids.count(rid) > 1}),
+        "response_errors": row_errors,
+        "expected_stimulus_ids": sorted(expected_stimulus_ids),
+        "allowed_tone_choices": sorted(allowed_tones),
     }
 
 
@@ -166,6 +250,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         prereg = {}
     else:
         prereg = load_json(prereg_path)
+    response_contract = {
+        "response_schema": artifact(study_dir / "RESPONSE_SCHEMA.json"),
+        "rater_instructions": artifact(study_dir / "RATER_INSTRUCTIONS.md"),
+    }
+    for name, row in response_contract.items():
+        if not row["exists"]:
+            failed_gates.append(f"response_contract_missing:{name}")
 
     expected_text = ((prereg.get("stimulus_source") or {}).get("answer_text") or "")
     stimulus_rows: list[dict[str, Any]] = []
@@ -215,7 +306,23 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     responses, response_errors = load_jsonl(responses_path)
     failed_gates.extend(response_errors)
-    response_summary = validate_responses(responses, args.required_raters)
+    expected_stimulus_ids = {
+        str(item.get("stimulus_id") or "")
+        for item in prereg.get("presentation_manifest") or []
+        if item.get("stimulus_id")
+    }
+    allowed_tones = {
+        str(((stimulus.get("voice_delivery") or {}).get("tone")) or "")
+        for stimulus in prereg.get("stimuli") or []
+        if ((stimulus.get("voice_delivery") or {}).get("tone"))
+    }
+    response_summary = validate_responses(
+        responses,
+        args.required_raters,
+        expected_stimulus_ids=expected_stimulus_ids,
+        allowed_tones=allowed_tones,
+    )
+    failed_gates.extend(response_summary["response_errors"])
     if not response_summary["enough_human_responses"]:
         failed_gates.append("human_responses_complete")
     if response_summary["duplicate_rater_ids"]:
@@ -223,9 +330,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     stimuli_ready = all(row["hash_match"] and row["bytes_match"] for row in stimulus_rows)
     asr_ready = all((row.get("asr") or {}).get("ok") is True for row in stimulus_rows) if args.asr else None
+    readiness_only_missing_humans = failed_gates == ["human_responses_complete"]
     status = (
         "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS"
-        if stimuli_ready and (asr_ready is not False) and not response_summary["enough_human_responses"]
+        if stimuli_ready and (asr_ready is not False) and readiness_only_missing_humans
         else "PASS_BLINDED_LISTENER_STUDY_RESPONSES_PRESENT"
         if stimuli_ready and response_summary["enough_human_responses"] and not failed_gates
         else "BLOCKED_BLINDED_LISTENER_STUDY"
@@ -238,6 +346,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "live": bool(args.asr),
         "study_dir": rel(study_dir),
         "preregistration": artifact(prereg_path),
+        "response_contract": response_contract,
         "responses": artifact(responses_path),
         "stimuli": stimulus_rows,
         "responses_summary": response_summary,

@@ -43,10 +43,14 @@ durable and validated:
 
 - Validation receipt:
   `reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
-  - SHA-256: `sha256:a4dd056ae36ac5ad2e96ed990ad30fc5554355a733113097a5b2a275c982d634`
+  - SHA-256: `sha256:c5d6c01e4f4db0fb7f1a4a5c1535c316d666665c541753b6c4f8db46f162e7fa`
   - status: `PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS`
   - `mocked: false`, `live: true`
   - failed gates: `human_responses_complete`
+- Response contract:
+  - `RESPONSE_SCHEMA.json`: `sha256:21e51f2392ab9a9c4d6bfb8d15907fa36eb292f443cbc2861c61be2d4650850e`
+  - `RATER_INSTRUCTIONS.md`: `sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5`
+  - empty or malformed rater rows do not count as completed responses.
 - Restored preregistered stimuli:
   - `control.wav`: `sha256:3c61c23200701563ae8eda0a6b51107109b0d0547d2a1ce7491e5961ccbea52f`
   - `baseline.wav`: `sha256:6a1ec8962e74e0866979834e5162563fbf3efa0940b34e3a5a4ca5c763cae2e2`
@@ -56,7 +60,7 @@ durable and validated:
   - all four stimuli transcribed as the intended sentence;
   - WER: `0.0`, `0.0`, `0.0`, `0.0`.
 - Human response status:
-  - `responses.jsonl` has `0` responses;
+  - `responses.jsonl` has `0` valid responses;
   - required raters: `20`;
   - signed human interpretation record: missing.
 
