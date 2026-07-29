@@ -1,7 +1,7 @@
 """Phase 2: Memory recall collector.
 
-Queries the /memory skill for known Embry OS features, architecture,
-competitive advantages, and known issues.
+Queries the /memory skill for known target-project features, architecture,
+advantages, and known issues.
 """
 
 from __future__ import annotations
@@ -10,18 +10,18 @@ import json
 import subprocess
 from typing import Any
 
-from constants import MEMORY_SKILL
+from constants import MEMORY_SKILL, PROJECT_NAME
 
 
 def collect_memory() -> dict[str, Any]:
-    """Query /memory for known Embry OS features and architecture."""
+    """Query /memory for known target-project features and architecture."""
     if not MEMORY_SKILL.exists():
         return {"available": False, "error": "memory skill not found"}
 
     queries = [
-        "embry os features architecture cascade daemons deployment",
-        "embry os competitive advantages unique capabilities",
-        "embry os known issues gaps missing features",
+        f"{PROJECT_NAME} features architecture deployment",
+        f"{PROJECT_NAME} competitive advantages unique capabilities",
+        f"{PROJECT_NAME} known issues gaps missing features",
     ]
     results = []
     for q in queries:
