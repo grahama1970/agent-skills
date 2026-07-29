@@ -30,6 +30,7 @@ RECEIPTS = {
     "pilot_protocol": SKILL / "contracts/pilot_c_vs_f_frozen_protocol.v3.md",
     "voice_expression": RR / "voice_expression/voice_expression_evaluation_receipt.v1.json",
     "live_chain": SKILL / "reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "session_arc_bias": SKILL / "reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
 }
 
 
@@ -54,6 +55,7 @@ def render() -> str:
     p16 = _load(RECEIPTS["phase16"])
     voice = _load(RECEIPTS["voice_expression"])
     live_chain = _load(RECEIPTS["live_chain"])
+    arc_bias = _load(RECEIPTS["session_arc_bias"])
 
     dur = ret.get("ffprobe", {}).get("format", {}).get("duration", "?")
     rows = [
@@ -85,6 +87,11 @@ def render() -> str:
             f"negative_controls={sum(1 for row in live_chain.get('negative_controls', []) if row.get('status') == 'PASS_NEGATIVE_BLOCKED')}/{len(live_chain.get('negative_controls', []))}",
             "live_chain",
         ),
+        (
+            "Session arc bias",
+            f"{arc_bias.get('status')} negative_controls={sum(1 for row in arc_bias.get('negative_controls', []) if row.get('status') == 'PASS_NEGATIVE_BLOCKED')}/{len(arc_bias.get('negative_controls', []))}",
+            "session_arc_bias",
+        ),
     ]
 
     lines = [
@@ -107,6 +114,7 @@ def render() -> str:
         "subjective acceptance of the dream video; perceived emotional fidelity",
         "and lip-sync quality of the voice lane (canary proves the route only);",
         "repeatability beyond N=1; production conversation-service authority;",
+        "SPARTA consumption of the session arc-bias artifact;",
         "whole-clip embedding-certified identity.",
         "",
     ]

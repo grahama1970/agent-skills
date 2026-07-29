@@ -73,16 +73,18 @@ table below is checked against it by
 | Chatterbox voice | Live `/synthesize-batch` render of the mood envelope, strict ASR WER 0.0, durable WAV snapshots | Perceived emotion, naturalness, human acceptance |
 | Speaker recognition | Long 4.68-6.0s session-mood renders pass resemblyzer identity/adversarial scoring with separation 0.208427 | Human listener recognition, perceived emotion, naturalness, cross-mood identity |
 | Joined live chain | One fresh cycle id, `live_chain_20260729t130950z`, joins accepted dream evidence -> Watch binding -> journal -> ledger delta -> pre-turn session mood -> three live Chatterbox turns -> Embry recognition, with 13/13 negative controls blocked | Repeated reliability; production conversation-service authority; perceived emotion |
+| Session arc bias | `session_arc_bias.v1` publishes bounded deltas from the latest ledger arc, `intensity_delta=0.18`, `valence_delta=-0.18`, with no tone category and 7/7 negative controls blocked | SPARTA consumption; per-turn tone classification; perceived emotion |
 | Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
 | PCTOM-R | Strong deterministic receipt machinery, live Tau slices | Confidence-bounded planning advantage |
 
 **The active gate** is no longer producing the first joined live-chain receipt;
 that receipt exists at `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
 The next gate is repeated reliability plus production conversation-service
-authority: run multiple fresh continuity-chain cycles and prove the live
-conversation service consumes the continuity ledger as the session-mood source
-before turn 1. Do not expand PCTOM-R, generate a new Kling clip, or run another
-broad assessment before that gate unless the operator explicitly reprioritizes.
+authority: run multiple fresh continuity-chain cycles, and hand the published
+`session_arc_bias.v1` artifact to the SPARTA-owned production conversation
+consumer. Persona Dream does not own SPARTA service edits. Do not expand
+PCTOM-R, generate a new Kling clip, or run another broad assessment before that
+gate unless the operator explicitly reprioritizes.
 
 ## PCTOM-R, and why its numbers are not a result
 

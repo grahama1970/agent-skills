@@ -1,0 +1,76 @@
+{
+  "artifact": {
+    "bytes": 2097,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+    "sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152"
+  },
+  "artifact_readback": {
+    "artifact_sha256": "sha256:c2063f3c0062c7e2deea6514cf4ec965945350074f9bcbd1ca8c003bbd0d07b6",
+    "ledger_epoch": 2,
+    "readback_ok": true,
+    "source_dream_cycle_id": "live_chain_20260729t130950z",
+    "status": "PASS_SESSION_ARC_BIAS_PUBLISHED"
+  },
+  "claims": {
+    "does_not_prove": [
+      "production SPARTA consumption",
+      "live Chatterbox rendering",
+      "perceived emotion",
+      "repeated pipeline reliability"
+    ],
+    "proves": [
+      "Persona Dream publishes bounded numeric arc deltas with ledger provenance",
+      "the artifact emits no tone category and cannot replace per-turn intent classification"
+    ]
+  },
+  "created_at": "2026-07-29T13:23:39Z",
+  "live": false,
+  "mocked": false,
+  "negative_controls": [
+    {
+      "blocked_reason": "BLOCKED_SESSION_ARC_BIAS_LEDGER_MISSING:/tmp/tmp0okhe7vw/missing.json",
+      "expected_token": "BLOCKED_SESSION_ARC_BIAS_LEDGER_MISSING",
+      "name": "missing_ledger_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_ARC_BIAS_STALE_LEDGER_EPOCH:2!=1",
+      "expected_token": "BLOCKED_SESSION_ARC_BIAS_STALE_LEDGER_EPOCH",
+      "name": "stale_epoch_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_ARC_BIAS_STALE_LEDGER_HASH:sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b!=sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "expected_token": "BLOCKED_SESSION_ARC_BIAS_STALE_LEDGER_HASH",
+      "name": "stale_hash_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_CORE_MUTATED:identity_core_sha256_mismatch",
+      "expected_token": "BLOCKED_CORE_MUTATED",
+      "name": "mutated_identity_core_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_ARC_BIAS_NO_ARC_DELTA",
+      "expected_token": "BLOCKED_SESSION_ARC_BIAS_NO_ARC_DELTA",
+      "name": "missing_arc_delta_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_ARC_BIAS_ARC_DELTA_UNBOUND",
+      "expected_token": "BLOCKED_SESSION_ARC_BIAS_ARC_DELTA_UNBOUND",
+      "name": "unbound_arc_delta_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_ARC_BIAS_SOURCE_NOT_LIVE_CHAIN:cycle_20260723T234851Z",
+      "expected_token": "BLOCKED_SESSION_ARC_BIAS_SOURCE_NOT_LIVE_CHAIN",
+      "name": "non_live_chain_source_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    }
+  ],
+  "schema": "persona_dream.session_arc_bias_receipt.v1",
+  "status": "PASS_SESSION_ARC_BIAS_RECEIPT"
+}

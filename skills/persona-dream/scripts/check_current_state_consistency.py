@@ -131,6 +131,19 @@ STAGES = (
         ),
         status_pin="continuity_state.latest_live_chain_receipt_sha256",
     ),
+    Stage(
+        stage_id="P2_session_arc_bias",
+        receipt="reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
+        accepted_prefix="PASS_SESSION_ARC_BIAS_RECEIPT",
+        contradiction_markers=(
+            "publish the persona arc-bias artifact",
+            "derive an arc bias from the continuity ledger",
+            "session arc bias missing",
+            "publish it under a stable schema",
+            "session_arc_bias.v1 artifact missing",
+        ),
+        status_pin="continuity_state.latest_session_arc_bias_receipt_sha256",
+    ),
 )
 
 

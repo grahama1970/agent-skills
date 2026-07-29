@@ -1,0 +1,66 @@
+{
+  "artifact_sha256": "sha256:c2063f3c0062c7e2deea6514cf4ec965945350074f9bcbd1ca8c003bbd0d07b6",
+  "bias": {
+    "bounds": {
+      "intensity_delta": [
+        0.0,
+        0.18
+      ],
+      "valence_delta": [
+        -0.18,
+        0.12
+      ]
+    },
+    "derivation": "deterministic lexical arc-bias v1; deltas only, no tone category",
+    "feature_counts": {
+      "boundary": 4,
+      "pressure": 3,
+      "wanting": 1,
+      "warmth": 3
+    },
+    "intensity_delta": 0.18,
+    "valence_delta": -0.18
+  },
+  "claims": {
+    "does_not_prove": [
+      "production SPARTA consumption",
+      "live Chatterbox rendering",
+      "perceived emotion",
+      "repeated pipeline reliability"
+    ],
+    "proves": [
+      "Persona Dream publishes bounded numeric arc deltas with ledger provenance",
+      "the artifact emits no tone category and cannot replace per-turn intent classification"
+    ]
+  },
+  "consumer_contract": {
+    "allowed_to_modify": [
+      "intensity",
+      "valence"
+    ],
+    "emits_tone": false,
+    "must_not_modify": [
+      "canonical_answer_text",
+      "identity_core",
+      "tone_category"
+    ],
+    "neutral_fallback_rule": "if this artifact is missing or blocked, consumer must record neutral fallback as unproven arc influence",
+    "tone_category_owner": "per_turn_intent_classifier"
+  },
+  "created_at": "2026-07-29T13:23:39Z",
+  "live": false,
+  "mocked": false,
+  "persona_id": "embry",
+  "schema": "persona_dream.session_arc_bias.v1",
+  "source": {
+    "arc_delta_id": "arc_1_55a79f6ef25f",
+    "arc_delta_idempotency_key": "dream_cycle:55a79f6ef25f388ad399c09b",
+    "identity_core_sha256": "2288b4e4c1aa8aedb753a8c1f787d7ae74e5462f65752c1c4e4f91d1b6ebfb66",
+    "ledger_epoch": 2,
+    "ledger_path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
+    "ledger_sha256": "sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b",
+    "source_dream_cycle_id": "live_chain_20260729t130950z",
+    "source_journal_id": "journal_live_chain_20260729t130950z"
+  },
+  "status": "PASS_SESSION_ARC_BIAS_PUBLISHED"
+}

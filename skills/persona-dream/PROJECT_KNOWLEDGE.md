@@ -1,7 +1,45 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (joined live-chain receipt PASS; reliability/production authority next) by Codex
+**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias PASS; reliability/SPARTA consumption next) by Codex
 **Status:** Active development
+
+## 2026-07-29 — #1057 scoped Persona Dream artifact PASS: session arc bias
+
+Issue #1057 was re-scoped by the operator: Persona Dream owns the lineage
+artifact, not SPARTA production-service edits. The Persona Dream deliverable now
+exists:
+
+- Receipt:
+  `reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`
+  - SHA-256: `sha256:3949f62a8306e5a6040b66fd6982d396748e239745e665bc66a357ab3337d3d3`
+  - status: `PASS_SESSION_ARC_BIAS_RECEIPT`
+  - `mocked: false`, `live: false`
+  - negative controls: `7/7 PASS_NEGATIVE_BLOCKED`
+- Artifact:
+  `reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json`
+  - SHA-256: `sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152`
+  - schema: `persona_dream.session_arc_bias.v1`
+  - source dream: `live_chain_20260729t130950z`
+  - ledger epoch: `2`
+  - ledger SHA-256: `sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b`
+  - arc delta: `arc_1_55a79f6ef25f`
+  - `intensity_delta=0.18`, `valence_delta=-0.18`
+  - `emits_tone=false`
+
+Negative controls block:
+
+- missing ledger;
+- stale epoch;
+- stale hash;
+- mutated identity core;
+- missing arc delta;
+- unbound arc delta;
+- non-live-chain source.
+
+Boundary: this closes the Persona Dream half of #1057 only. SPARTA must still
+consume this artifact in its production conversation lane, and that remains
+outside Persona Dream ownership. The artifact emits numeric deltas only; tone
+category belongs to the consumer's per-turn intent classifier.
 
 ## 2026-07-29 — P2 joined live-chain receipt PASS; immutable goal still NOT_MET
 

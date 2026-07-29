@@ -1,6 +1,6 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-29T13:12:53Z
+**Timestamp:** 2026-07-29T13:24:15Z
 **Active Agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target Branch:** `main`
@@ -31,6 +31,11 @@
 - **P2 joined live-chain receipt:** Passed for cycle
   `live_chain_20260729t130950z` at
   `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
+- **Session arc-bias artifact:** Passed under the re-scoped #1057 Persona
+  Dream ownership boundary at
+  `reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`. Persona Dream
+  publishes numeric deltas only; SPARTA owns production conversation-service
+  consumption.
 - **Status boundary:** P2.4 recognition proof does not prove perceived emotion,
   naturalness, human listener recognition, production conversation-service
   binding, repeated dream-pipeline reliability, or PCTOM-R benefit.
@@ -62,6 +67,13 @@
   `reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json` with
   `PASS_SESSION_MOOD_VOICE_RECOGNITION`, failed gates `[]`, Embry similarities
   `0.850468`, `0.872958`, `0.793123`, and separation `0.159977`.
+- Session arc-bias receipt:
+  `reports/goal_v5/continuity/session_arc_bias/RECEIPT.json` with
+  `PASS_SESSION_ARC_BIAS_RECEIPT`, artifact SHA-256
+  `sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152`,
+  source dream `live_chain_20260729t130950z`, ledger epoch `2`,
+  arc delta `arc_1_55a79f6ef25f`, `intensity_delta=0.18`,
+  `valence_delta=-0.18`, `emits_tone=false`, and 7/7 negative controls blocked.
 - `session_mood_chatterbox_live.py` now sends Chatterbox the service-visible
   `/data/embry_ref.wav` path while the receipt records the host-side authorized
   reference path and SHA-256. This avoids the `reference_audio_outside_allowed_roots`
@@ -72,8 +84,9 @@
 ## 4. What is Currently Broken
 
 - **Production service not joined:** Session mood is proven in the deterministic
-  receipt runner, not as authoritative state inside the production conversation
-  service.
+  receipt runner, and the Persona Dream arc-bias artifact is published, but the
+  SPARTA-owned production conversation service has not yet consumed that
+  artifact.
 - **Perception not proven:** Resemblyzer separation is not a human listener
   study and does not prove perceived target emotion or naturalness.
 - **PCTOM-R benefit unproven:** The machinery remains strong, but no
@@ -86,8 +99,9 @@
 1. Run the five-cycle engineering reliability campaign. Each cycle should either
    produce one accepted live-chain receipt or a named fail-closed blocker with
    zero unauthorized writes.
-2. Add a production conversation-service authority receipt proving session mood
-   is selected from the continuity ledger before turn 1 and reused across turns.
+2. Hand `session_arc_bias.v1` to the SPARTA-owned production conversation
+   consumer; do not edit SPARTA from Persona Dream unless the operator routes
+   that work in the SPARTA lane.
 3. Return to PCTOM-R condition-benefit work such as issue `#1008` only after the
    P2 live-chain receipt or an explicit operator reprioritization.
 
@@ -103,13 +117,15 @@
 - **Long render receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json`
 - **Long recognition receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json`
 - **Joined live-chain receipt:** `skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json`
+- **Session arc-bias receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`
 
 Use this claim boundary:
 
 ```text
 Persona Dream remains in P2_LIVE_CONTINUITY_CHAIN. The joined
-accepted-dream-to-live-chain receipt now passes for one cycle, but the immutable
-Embry continuity goal remains NOT_MET until repeated reliability and production
-conversation-service authority are receipted, and perceptual emotion/PCTOM-R
-benefit boundaries remain explicitly unproven.
+accepted-dream-to-live-chain receipt now passes for one cycle, and Persona
+Dream publishes a session_arc_bias artifact for SPARTA. The immutable Embry
+continuity goal remains NOT_MET until repeated reliability and downstream
+production consumption are receipted, and perceptual emotion/PCTOM-R benefit
+boundaries remain explicitly unproven.
 ```

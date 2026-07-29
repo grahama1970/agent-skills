@@ -16,9 +16,11 @@ runs in the test suite and fails on drift.
 | Pilot protocol | `frozen sha:483fb1706141c738` | `contracts/pilot_c_vs_f_frozen_protocol.v3.md` (sha:483fb1706141c738) |
 | Voice expression | `text=PASS audio=PASS lipsync=output_ready` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/voice_expression_evaluation_receipt.v1.json` (sha:daf82c1e1a6db43b) |
 | Joined live chain | `PASS_PERSONA_DREAM_LIVE_CHAIN cycle=live_chain_20260729t130950z negative_controls=13/13` | `reports/goal_v5/continuity/live_chain/RECEIPT.json` (sha:436075e6635ff9a6) |
+| Session arc bias | `PASS_SESSION_ARC_BIAS_RECEIPT negative_controls=7/7` | `reports/goal_v5/continuity/session_arc_bias/RECEIPT.json` (sha:3949f62a8306e5a6) |
 
 Not proven (from the receipts' own does_not_prove sets): human
 subjective acceptance of the dream video; perceived emotional fidelity
 and lip-sync quality of the voice lane (canary proves the route only);
 repeatability beyond N=1; production conversation-service authority;
+SPARTA consumption of the session arc-bias artifact;
 whole-clip embedding-certified identity.

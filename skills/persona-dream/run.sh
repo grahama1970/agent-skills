@@ -728,6 +728,9 @@ case "$COMMAND" in
   live-chain)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_receipt.py" "$@"
     ;;
+  session-arc-bias)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/session_arc_bias.py" "$@"
+    ;;
   session-mood-voice-recognition)
     # Speaker-identity gate over the durable session-mood renders. Needs a
     # speaker backend; run under the Chatterbox voice lane interpreter.

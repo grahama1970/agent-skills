@@ -1,0 +1,105 @@
+"""Deterministic checks for the session arc-bias publication artifact."""
+import importlib.util
+import json
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+arc_bias = _load("session_arc_bias")
+
+
+def _ledger() -> dict:
+    return {
+        "schema": "persona_dream.persona_continuity_state.v1",
+        "persona_id": "embry",
+        "identity_core": {
+            "identity_core_version": 1,
+            "durable_rule": "Embry moves toward being witnessed while protecting her right to remain partly unknowable.",
+        },
+        "identity_core_sha256": "replace",
+        "arc_state": {
+            "current_self_claims": ["Distance protects me."],
+            "active_tensions": ["I want witness without intrusion."],
+            "earned_permissions": [],
+            "contested_beliefs": [],
+            "unresolved_questions": [],
+            "recurring_avoidances": [],
+            "recent_arc_deltas": [
+                {
+                    "before": "Distance protects me.",
+                    "now": "I want witness and keep a boundary.",
+                    "because": "dream live_chain_unit joined proof",
+                    "still_true": "I resist assumed access.",
+                    "open_tension": "yearning for witness without surrendering privacy",
+                    "possible_expression": "soft ache under a boundary",
+                    "arc_delta_id": "arc_1_unit",
+                    "idempotency_key": "dream_cycle:unit",
+                    "source_epoch": 1,
+                }
+            ],
+        },
+        "provenance": {
+            "source_journal_ids": ["journal_live_chain_unit"],
+            "source_dream_ids": ["live_chain_unit"],
+            "relevant_canon_event_ids": [],
+            "identity_core_version": 1,
+            "arc_delta_idempotency_keys": ["dream_cycle:unit"],
+        },
+        "epoch": 2,
+        "core_amendment_log": [],
+    }
+
+
+def _valid_ledger(tmp_path: Path) -> Path:
+    ledger = _ledger()
+    ledger["identity_core_sha256"] = arc_bias.continuity_ledger._sha(ledger["identity_core"])
+    path = tmp_path / "ledger.json"
+    path.write_text(json.dumps(ledger), encoding="utf-8")
+    return path
+
+
+def test_arc_bias_publishes_deltas_only_with_lineage(tmp_path):
+    path = _valid_ledger(tmp_path)
+
+    got = arc_bias.build_arc_bias("embry", ledger_path=path, expected_epoch=2)
+
+    assert got["status"] == "PASS_SESSION_ARC_BIAS_PUBLISHED"
+    assert got["consumer_contract"]["emits_tone"] is False
+    assert "tone" not in got["bias"]
+    assert got["bias"]["intensity_delta"] > 0
+    assert got["bias"]["bounds"]["intensity_delta"] == [0.0, 0.18]
+    assert got["source"]["source_dream_cycle_id"] == "live_chain_unit"
+    assert got["source"]["arc_delta_id"] == "arc_1_unit"
+
+
+def test_stale_epoch_blocks(tmp_path):
+    path = _valid_ledger(tmp_path)
+
+    with pytest.raises(ValueError, match="BLOCKED_SESSION_ARC_BIAS_STALE_LEDGER_EPOCH"):
+        arc_bias.build_arc_bias("embry", ledger_path=path, expected_epoch=1)
+
+
+def test_mutated_identity_core_blocks(tmp_path):
+    path = _valid_ledger(tmp_path)
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    doc["identity_core"]["durable_rule"] = "mutated"
+    path.write_text(json.dumps(doc), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="BLOCKED_CORE_MUTATED"):
+        arc_bias.build_arc_bias("embry", ledger_path=path)
+
+
+def test_missing_ledger_blocks(tmp_path):
+    with pytest.raises(ValueError, match="BLOCKED_SESSION_ARC_BIAS_LEDGER_MISSING"):
+        arc_bias.build_arc_bias("embry", ledger_path=tmp_path / "missing.json")
