@@ -163,6 +163,7 @@ Commands:
   run-causal-replay  Validate PCTOM-R Gate 9 causal replay and failure localization
   live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
   validate-blinded-listener-study  Validate stimulus hashes/ASR and human-response readiness
+  analyze-blinded-listener-study  Analyze completed human listener responses with signed interpretation
   validate-sparta-arc-bias-handoff Validate the SPARTA consumer contract for session_arc_bias
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
@@ -736,6 +737,9 @@ case "$COMMAND" in
     ;;
   validate-blinded-listener-study)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_blinded_listener_study.py" "$@"
+    ;;
+  analyze-blinded-listener-study)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/analyze_blinded_listener_study.py" "$@"
     ;;
   validate-sparta-arc-bias-handoff)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_sparta_arc_bias_handoff.py" "$@"

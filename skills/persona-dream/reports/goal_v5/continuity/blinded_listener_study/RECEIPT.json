@@ -1,0 +1,217 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "general voice identity across long sessions",
+      "emotion perception beyond this preregistered stimulus set",
+      "PCTOM-R planning benefit",
+      "SPARTA production conversation-service consumption",
+      "Persona Dream immutable-goal completion by itself"
+    ],
+    "proves": []
+  },
+  "created_at": "2026-07-29T14:28:18Z",
+  "failed_gates": [
+    "human_responses_complete",
+    "signed_human_interpretation_missing"
+  ],
+  "live": false,
+  "mocked": false,
+  "preregistration": {
+    "bytes": 4746,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
+    "sha256": "sha256:745f7dfc19aada4563bbd7f0b1a0ba234cecdeb787d9ed6e4312218e79ffdbef"
+  },
+  "response_analysis": {
+    "attention_rule": "Exclude a rater only if the adversarial condition is judged as the target emotion of the dream condition.",
+    "by_condition": {
+      "adversarial": {
+        "content_equivalent_yes": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        },
+        "embry_identity_yes": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        },
+        "expected_tone": "cheerful",
+        "identity_confidence_mean": null,
+        "n": 0,
+        "naturalness_mean": null,
+        "preference_rank_counts": {},
+        "target_emotion_recognition": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        }
+      },
+      "baseline": {
+        "content_equivalent_yes": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        },
+        "embry_identity_yes": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        },
+        "expected_tone": "careful_concerned",
+        "identity_confidence_mean": null,
+        "n": 0,
+        "naturalness_mean": null,
+        "preference_rank_counts": {},
+        "target_emotion_recognition": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        }
+      },
+      "control": {
+        "content_equivalent_yes": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        },
+        "embry_identity_yes": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        },
+        "expected_tone": "neutral",
+        "identity_confidence_mean": null,
+        "n": 0,
+        "naturalness_mean": null,
+        "preference_rank_counts": {},
+        "target_emotion_recognition": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        }
+      },
+      "dream": {
+        "content_equivalent_yes": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        },
+        "embry_identity_yes": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        },
+        "expected_tone": "firm_boundary",
+        "identity_confidence_mean": null,
+        "n": 0,
+        "naturalness_mean": null,
+        "preference_rank_counts": {},
+        "target_emotion_recognition": {
+          "lower": null,
+          "method": "Wilson score interval, 95%",
+          "n": 0,
+          "proportion": null,
+          "successes": 0,
+          "upper": null
+        }
+      }
+    },
+    "excluded_by_preregistered_attention_rule": [],
+    "included_human_raters": 0,
+    "primary_measure": {
+      "condition": "dream",
+      "measure": "target_emotion_recognition",
+      "result": {
+        "lower": null,
+        "method": "Wilson score interval, 95%",
+        "n": 0,
+        "proportion": null,
+        "successes": 0,
+        "upper": null
+      }
+    },
+    "valid_human_raters": 0
+  },
+  "response_summary": {
+    "allowed_tone_choices": [
+      "careful_concerned",
+      "cheerful",
+      "firm_boundary",
+      "neutral"
+    ],
+    "duplicate_rater_ids": [],
+    "enough_human_responses": false,
+    "expected_stimulus_ids": [
+      "S01",
+      "S02",
+      "S03",
+      "S04"
+    ],
+    "required_raters": 20,
+    "response_count": 0,
+    "response_errors": [],
+    "unique_rater_count": 0,
+    "unique_valid_rater_count": 0,
+    "valid_response_count": 0
+  },
+  "responses": {
+    "bytes": 0,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/responses.jsonl",
+    "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "schema": "persona_dream.blinded_listener_study_analysis.v1",
+  "signed_human_interpretation": {
+    "bytes": 0,
+    "exists": false,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/SIGNED_INTERPRETATION.json",
+    "sha256": null
+  },
+  "signed_interpretation_summary": {
+    "present": false,
+    "signed_at": null,
+    "signed_by": null
+  },
+  "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
+  "stimulus_validation_receipt": {
+    "bytes": 6199,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json",
+    "sha256": "sha256:c5d6c01e4f4db0fb7f1a4a5c1535c316d666665c541753b6c4f8db46f162e7fa"
+  },
+  "study_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study"
+}
