@@ -1,9 +1,69 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-28 UTC (P2.4 backend preflight PASS; recognition scoring still open) by Claude
+**Last updated:** 2026-07-29 UTC (P2.4 recognition PASS; joined live-chain receipt next) by Codex
 **Status:** Active development
 
-## 2026-07-27 — CURRENT NEXT STEP: P2.4 recognition gate before live-chain receipt
+## 2026-07-29 — CURRENT NEXT STEP: joined live-chain receipt after P2.4 recognition PASS
+
+P2.4 speaker recognition is now scored and passing for longer session-mood
+renders. Do not run another `$ask` roundtable or re-open the backend preflight
+unless a later receipt contradicts this result.
+
+New receipts:
+
+- Live longer Chatterbox render:
+  `reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json`
+  with SHA-256
+  `sha256:b7ddbfd0592fc9376ca2e01c4cbb2caeae5222b519ac5f9287edd0d880846875`.
+- Speaker recognition:
+  `reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json`
+  with SHA-256
+  `sha256:9a1e6de22b0b608570d0458394b64746be8737154d886f8a91dc9cf4c2e159bd`.
+
+What changed:
+
+- The old P2.4 renders were 1.76-2.16 seconds and correctly blocked with
+  `renders_long_enough_to_judge_identity`.
+- The new live render uses simple longer answer text, still bound to the same
+  deterministic session mood and `voice_delivery`, and produces 4.68s, 4.8s,
+  and 6.0s WAV snapshots through `chatterbox_base`.
+- Strict ASR remains WER 0.0 on all three turns.
+- Resemblyzer scoring now returns `PASS_SESSION_MOOD_VOICE_RECOGNITION` with
+  failed gates `[]`, Embry similarities `0.872906`, `0.841573`, `0.842233`, and
+  separation `0.208427` against real Kai/Horus adversarial voices.
+- The live render script now sends `/data/embry_ref.wav` to Chatterbox while
+  recording the repo-local authorized reference in receipts. This fixes the
+  `reference_audio_outside_allowed_roots` failure that appears when running
+  from a fresh worktree.
+- The recognition script now records repo-contained artifact paths as
+  repo-relative paths instead of temporary worktree absolute paths.
+
+Next implementation order:
+
+1. #1039 joined live-chain receipt — write
+   `reports/goal_v5/continuity/live_chain/RECEIPT.json` proving or explicitly
+   blocking the joined chain: accepted dream -> Watch observations ->
+   first-person synthetic journal -> bounded arc delta -> hardened ledger
+   append/reread -> session mood selected before turn 1 -> same mood across
+   multiple turns -> Chatterbox outputs -> Embry recognition result.
+2. Include negative controls for unsupported journal facts, identity-core
+   rewrite, stale ledger epoch, duplicate cycle replay, post-turn mood
+   selection, silent mid-session mood change, answer-content drift, fallback to
+   an engine that ignores controls, non-Embry voice passing recognition, and
+   synthetic dream recalled as literal history.
+3. After the joined receipt exists, run the five-cycle engineering reliability
+   campaign.
+
+Evidence boundary: this is real live Chatterbox transport plus deterministic
+resemblyzer scoring, not a human listener study. It does not prove perceived
+target emotion, naturalness, production conversation-service binding, repeated
+pipeline reliability, or PCTOM-R planning benefit.
+
+## 2026-07-27 — SUPERSEDED — P2.4 recognition gate before live-chain receipt
+
+> SUPERSEDED 2026-07-29. P2.4 recognition scoring now has a passing long-render
+> receipt. Retained for chronology and ticket history only. The current next
+> step is the joined live-chain receipt, not #1037 scoring.
 
 WebGPT's updated review, Claude's clean-checkout verification, and the local
 `CURRENT_STATUS.json` now agree on the operational state:

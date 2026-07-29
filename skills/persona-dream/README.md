@@ -71,7 +71,7 @@ table below is checked against it by
 | Continuity ledger | Atomic writes, epoch compare-and-set, cycle idempotency, identity-core hash guard, read-time validation | Runtime authority across real sessions |
 | Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Binding inside the production conversation service |
 | Chatterbox voice | Live `/synthesize-batch` render of the mood envelope, strict ASR WER 0.0, durable WAV snapshots | Perceived emotion, naturalness, human acceptance |
-| Speaker recognition | Backend preflight passes; renders score above real non-Embry voices with margin | Renders do not yet reach same-speaker fidelity against their own reference |
+| Speaker recognition | Long 4.68-6.0s session-mood renders pass resemblyzer identity/adversarial scoring with separation 0.208427 | Human listener recognition, perceived emotion, naturalness, cross-mood identity |
 | Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
 | PCTOM-R | Strong deterministic receipt machinery, live Tau slices | Confidence-bounded planning advantage |
 

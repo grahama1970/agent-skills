@@ -19,6 +19,11 @@ def _load(name: str):
 live_mod = _load("session_mood_chatterbox_live")
 
 
+def test_ref_audio_request_uses_chatterbox_allowed_mount():
+    assert live_mod.REQUEST_REF_AUDIO == "/data/embry_ref.wav"
+    assert live_mod.REF_AUDIO.is_file()
+
+
 def _response(audio_path: Path) -> dict:
     digest = hashlib.sha256(audio_path.read_bytes()).hexdigest()
     return {
@@ -76,6 +81,7 @@ def test_render_turn_snapshots_finished_audio(monkeypatch, tmp_path):
     assert got["finished_response_audio_snapshot_sha256"] == "sha256:" + expected_sha
     assert seen["asr_max_wer"] == 0.0
     assert seen["asr_max_candidates"] == 3
+    assert seen["ref_audio"] == live_mod.REQUEST_REF_AUDIO
 
 
 def test_out_path_maps_to_host_log_root(monkeypatch, tmp_path):

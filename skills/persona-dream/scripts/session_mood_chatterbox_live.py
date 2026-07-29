@@ -10,18 +10,14 @@ import os
 import shutil
 import time
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent.parent
 CHATTERBOX = "http://127.0.0.1:8018"
 
-#: Voice the renders are conditioned on, sent explicitly with every request.
-#: Verified 2026-07-28 as what the service default already resolved to, so
-#: naming it changes nothing about the audio -- only about whether the receipt
-#: can prove which voice produced it. Whether this candidate should be the
-#: authorized Embry reference is a governance decision, tracked in #1070.
-REF_AUDIO = ROOT / "voice_clone_candidates" / "embry_kling_clone_candidate.wav"
 CHATTERBOX_OUT_HOST_ROOT = Path(
     os.environ.get("CHATTERBOX_OUT_HOST_ROOT", "/home/graham/workspace/experiments/chatterbox/logs")
 )
@@ -35,6 +31,12 @@ def _load(name: str):
 
 
 session_mood_binding = _load("session_mood_binding")
+embry_voice_reference = _load("embry_voice_reference")
+
+#: Host-side authorized voice recorded in receipts.
+REF_AUDIO = embry_voice_reference.AUTHORIZED_EMBRY_REFERENCE
+#: Service-visible bind mount path accepted by the live Chatterbox endpoint.
+REQUEST_REF_AUDIO = embry_voice_reference.CHATTERBOX_CONTAINER_REFERENCE
 
 
 def _sha(obj: Any) -> str:
@@ -47,6 +49,17 @@ def _sha_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def format_receipt_path(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(REPO_ROOT.resolve()))
+    except ValueError:
+        return str(path)
 
 
 def _normalize_text(text: str | None) -> str:
@@ -113,7 +126,7 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
         # meant the renders were conditioned on a clone candidate with nothing
         # in the request, response, or receipt naming it (#1070). An unrecorded
         # voice cannot be audited, and a default can change under you.
-        "ref_audio": str(REF_AUDIO),
+        "ref_audio": REQUEST_REF_AUDIO,
     }
     request_path = out_dir / f"{turn['turn_id']}_request.json"
     response_path = out_dir / f"{turn['turn_id']}_response.json"
@@ -183,14 +196,15 @@ def run_live(persona: str, *, session_id: str, out_dir: Path, turns: list[str]) 
         render_results.append(render_turn(turn, label=label, out_dir=out_dir))
     receipt = {
         "schema": "persona_dream.session_mood_chatterbox_live_receipt.v1",
-        "created_at": "2026-07-27T16:50:00Z",
+        "created_at": utc_now(),
         "status": "PASS_SESSION_MOOD_CHATTERBOX_LIVE",
         "mocked": False,
         "live": True,
         "endpoint": f"POST {CHATTERBOX}/synthesize-batch",
         # Which voice produced this audio, provable after the fact (#1070).
         "conditioning_reference": {
-            "path": str(REF_AUDIO),
+            "path": format_receipt_path(REF_AUDIO),
+            "request_path": REQUEST_REF_AUDIO,
             "exists": REF_AUDIO.is_file(),
             "sha256": "sha256:" + hashlib.sha256(REF_AUDIO.read_bytes()).hexdigest()
             if REF_AUDIO.is_file() else None,
