@@ -1,0 +1,91 @@
+schema: best-practices-skills.capability_vocabulary.v1
+capabilities:
+  llm-completion:
+    providers:
+      - scillm
+      - codex
+  embedding:
+    providers:
+      - embedding
+  memory-recall:
+    providers:
+      - memory
+  memory-learn:
+    providers:
+      - memory
+  web-search:
+    providers:
+      - brave-search
+      - dogpile
+  pdf-extraction:
+    providers:
+      - extractor
+      - review-pdf
+  security-scan:
+    providers:
+      - hack
+      - security-scan
+  skill-creation:
+    providers:
+      - prompt-lab
+      - gpt-lab
+      - classifier-lab
+  skill-validation:
+    providers:
+      - skills-ci
+      - best-practices-skills
+  skill-scaffolding:
+    providers:
+      - best-practices-skills
+  composition-rules:
+    providers:
+      - best-practices-skills
+  misuse-guard-template:
+    providers:
+      - best-practices-skills
+  project-state-readiness-pattern:
+    providers:
+      - best-practices-skills
+  skill-evaluation:
+    providers:
+      - eval-skills
+  behavioral-testing:
+    providers:
+      - eval-skills
+  agentic-evaluation:
+    providers:
+      - agentic-evals
+  multi-trial-evaluation:
+    providers:
+      - agentic-evals
+  readiness-scoring:
+    providers:
+      - agentic-evals
+  trajectory-validation-pattern:
+    providers:
+      - agentic-evals
+  competitive-selection:
+    providers:
+      - battle
+  hardening:
+    providers:
+      - anvil
+  docker-isolation:
+    providers:
+      - battle
+      - hack
+  human-interview:
+    providers:
+      - interview
+  task-planning:
+    providers:
+      - plan
+  task-orchestration:
+    providers:
+      - orchestrate
+  taxonomy-tagging:
+    providers:
+      - taxonomy
+  progress-tracking:
+    providers:
+      - task-monitor

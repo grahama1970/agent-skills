@@ -1,0 +1,72 @@
+schema: best-practices-skills.rules.v1
+rules:
+  - id: frontmatter.required
+    severity: error
+    fields:
+      - name
+      - description
+      - triggers
+      - provides
+      - composes
+      - complies
+  - id: frontmatter.complies
+    severity: error
+    description: >
+      Every skill declares audit standards in complies:. The field is metadata
+      for skills-ci and skill-maintainer, not runtime composition.
+    required:
+      - best-practices-skills
+  - id: routing.composes
+    severity: error
+    description: >
+      composes: lists runtime skill dependencies only. Do not put audit
+      standards there unless the skill actually delegates to them.
+  - id: runtime.sanity
+    severity: warning
+    description: >
+      Non-trivial executable skills should provide sanity.sh with positive and
+      negative behavioral gates plus concrete artifact/schema assertions.
+
+  - id: runtime.self_improvement.substantial
+    severity: error
+    description: >
+      Skills declaring runtime_self_improvement: substantial must provide a
+      deterministic verify entrypoint, maintainer escalation reference, and
+      agent post-run verification when a transport subagent exists.
+    requires_frontmatter: runtime_self_improvement
+    frontmatter_value: substantial
+
+  - id: evaluation.agentic_evals_default
+    severity: warning
+    description: >
+      Every skill defaults to an explicit evaluation posture. Skills that claim
+      durable agent behavior beyond one-shot CLI output should provide an
+      agentic-evals fixture or delegate to an evaluation skill; simple skills
+      may opt out only with a concrete eval_not_required rationale.
+    applies_when:
+      any:
+        - runtime_self_improvement: substantial
+        - has_run_sh: true
+        - has_sanity_sh: true
+        - provides_any:
+            - agentic-evaluation
+            - behavioral-testing
+            - readiness-scoring
+            - skill-evaluation
+            - task-orchestration
+            - progress-tracking
+        - composes_count_min: 1
+    recommended:
+      skill: agentic-evals
+      fixture_path: fixtures/agentic_eval.json
+      command: ./skills/agentic-evals/run.sh run <skill>/fixtures/agentic_eval.json --output <receipt>
+      receipt_fields:
+        - mocked
+        - live
+        - proof_scope
+        - claims.proves
+        - claims.does_not_prove
+        - readiness
+    allowed_exemption: >
+      Document eval_not_required in SKILL.md or project knowledge with a
+      concrete reason and the deterministic checks that cover the simpler risk.
