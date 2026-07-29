@@ -2032,6 +2032,41 @@ def prove_packaged_deployment_smoke(
     console.print_json(data=receipt)
 
 
+@app.command("prove-transport-safety-smoke")
+def prove_transport_safety_smoke(
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the local transport safety smoke receipt.",
+    ),
+    battle_root: Path = typer.Option(
+        Path(__file__).resolve().parents[2],
+        "--battle-root",
+        help="skills/battle directory containing spectator and fixtures.",
+    ),
+    fixture: Path = typer.Option(
+        Path(
+            "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"
+        ),
+        "--fixture",
+        help="Fixture path relative to skills/battle.",
+    ),
+    battle_id: str = typer.Option(
+        "battle-004", "--battle-id", help="Battle id for the transport safety smoke."
+    ),
+):
+    """Prove existing local HTTP/SSE transport safety gates and frontend reducers."""
+    from .transport_safety_smoke import prove_transport_safety_smoke as _prove
+
+    receipt = _prove(
+        out_dir=out,
+        battle_root=battle_root,
+        fixture=fixture,
+        battle_id=battle_id,
+    )
+    console.print_json(data=receipt)
+
+
 @app.command("export-ux-handoff-summary")
 def export_ux_handoff_summary(
     summary: Path = typer.Argument(

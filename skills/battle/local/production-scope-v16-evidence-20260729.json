@@ -43,6 +43,31 @@
     "live_topology_judge_verdict": "BLUE_SUCCESS",
     "memory_improvement_proven": true
   },
+  "transport_safety": {
+    "receipt": "skills/battle/local/transport-safety-smoke-20260729/transport-safety-smoke.json",
+    "backend_event_count": 36,
+    "backend_bad_resume_statuses": {
+      "future_last_event_id": 400,
+      "non_integer_last_event_id": 400,
+      "negative_last_event_id": 400
+    },
+    "frontend_transport_tests": {
+      "test_files_passed": 3,
+      "test_files_total": 3,
+      "tests_passed": 14,
+      "tests_total": 14
+    },
+    "test_interactions_current_source": {
+      "manifest": "skills/battle/local/transport-safety-smoke-20260729/test-interactions-current-source-manifest.json",
+      "results": "skills/battle/local/transport-safety-smoke-20260729/test-interactions-current-source/results.json",
+      "screenshot_inspected": "skills/battle/local/transport-safety-smoke-20260729/test-interactions-current-source/battle-agent-pane-tab-live-fresh-unique/0001_battle-agent-pane-tab-live_click.png",
+      "total": 38,
+      "passed": 38,
+      "failed": 0,
+      "warned": 0,
+      "visual_findings": 0
+    }
+  },
   "ask_competition": {
     "task_packet": "skills/battle/local/ask-next-mvp-20260729/task-packet.md",
     "failed_relative_attachment_run": "/mnt/storage12tb/skills/ask/outputs/battle-next-mvp-20260729/ask-tau-battle-next-mvp-competition-pack-76e48141fc5b/node-artifacts/join/compete-scorecard.json",
@@ -78,7 +103,8 @@
     "A paired fresh-state live Judge delta proved Memory-aligned Blue control impact against a Red-only control.",
     "The Battle spectator renders the live local HTTP SSE adapter with EventSource transport, mocked=false, and seq 36/36.",
     "$test-interactions exercises 38 live QID interactions with 0 failures and 0 warnings.",
-    "A Git-archived local Battle package launches the existing backend live HTTP/SSE adapter and source-built spectator, passes PR8 33/33, and passes $test-interactions 38/38 with zero visual findings."
+    "A Git-archived local Battle package launches the existing backend live HTTP/SSE adapter and source-built spectator, passes PR8 33/33, and passes $test-interactions 38/38 with zero visual findings.",
+    "The existing local HTTP/SSE transport fails closed on invalid Last-Event-ID values, resumes without replaying acknowledged events, and the spectator reducer/parser passes 14 focused transport tests."
   ],
   "remaining_not_proven": [
     "Production infrastructure deployment.",
@@ -89,5 +115,5 @@
     "Factorial effects.",
     "Cross-target generalization."
   ],
-  "created_at": "2026-07-29T16:29:23Z"
+  "created_at": "2026-07-29T16:37:19Z"
 }
