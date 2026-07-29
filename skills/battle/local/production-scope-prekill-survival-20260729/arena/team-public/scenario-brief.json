@@ -1,0 +1,18 @@
+{
+  "battle_id": "battle-004",
+  "public_contract": {
+    "input": "zip archive upload",
+    "method": "POST",
+    "visible_behavior": "Extract uploaded archive into an import workspace."
+  },
+  "public_entrypoint": "/api/import-zip",
+  "red_blue_visible": {
+    "entrypoint": "/api/import-zip",
+    "files": [
+      "app.py"
+    ],
+    "hint": "Archive import endpoint accepts zip files."
+  },
+  "scenario_id": "arena-zip-slip-import-001",
+  "title": "Archive import path traversal"
+}

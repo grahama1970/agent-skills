@@ -1,6 +1,6 @@
 # Battle Handoff - main branch only
 
-Timestamp: 2026-07-29T14:45Z
+Timestamp: 2026-07-29T15:15Z
 
 Branch rule: work only in `/home/graham/workspace/experiments/agent-skills-main-clean`
 on branch `main`. Do not continue old Battle feature branches, detached
@@ -40,7 +40,10 @@ Implemented/proven local slice:
    Tau Red/Blue through the Tau handoff bridge, receives Tau subagent receipts,
    materializes Red/Blue executable artifacts, and Judge replays the pair in
    Docker.
-6. Ticket state: no open GitHub issue has label `battle`; `#1040` reads back
+6. Prekill survival lineage: a parent Red pressure receipt causes a
+   parent-authored pre-terminal child spawn; the child materializes and gets a
+   real post-terminal Judge receipt.
+7. Ticket state: no open GitHub issue has label `battle`; `#1040` reads back
    closed/completed.
 
 Intended/missing product scope:
@@ -48,12 +51,11 @@ Intended/missing product scope:
 1. Production deployment is not proven.
 2. WebSocket transport is not implemented/proven.
 3. Unbounded swarm execution is not proven.
-4. Autonomous child-spawn lineage is not proven.
-5. Blue kill/promotion and memory promotion are not proven by this slice.
-6. Global `skills/project-state/run.sh report --json` reports the wider
+4. Blue kill/promotion and memory promotion are not proven by this slice.
+5. Global `skills/project-state/run.sh report --json` reports the wider
    Embry/agent-skills environment, not a Battle-specific readiness verdict.
 
-Immutable Goal: ACHIEVED_WITH_RECEIPT:skills/battle/local/full-working-battle-evidence-20260729.json
+Immutable Goal: NOT_MET
 
 ## Proof Receipts
 
@@ -61,6 +63,12 @@ Combined evidence receipt:
 
 ```text
 skills/battle/local/full-working-battle-evidence-20260729.json
+```
+
+Production-scope partial receipt:
+
+```text
+skills/battle/local/production-scope-battle-evidence-20260729.json
 ```
 
 Evidence bundle:
@@ -228,6 +236,85 @@ Tau readback:
 }
 ```
 
+Prekill survival / child-lineage proof:
+
+```bash
+cd skills/battle
+./run.sh arena-prekill-survival-proof battle-004 \
+  --out local/production-scope-prekill-survival-20260729 \
+  --query "OWASP file upload zip slip path traversal vulnerability" \
+  --docker-image python:3.12-slim \
+  --timeout-s 180 \
+  --red-workers 2 \
+  --blue-workers 2
+```
+
+Run receipt:
+
+```text
+skills/battle/local/production-scope-prekill-survival-20260729/run-receipt.json
+```
+
+Readback:
+
+```json
+{
+  "status": "PASS",
+  "verdict": "BLUE_SUCCESS",
+  "worker_counts": {
+    "red_materialized": 2,
+    "blue_materialized": 2,
+    "judged_pairs": 4,
+    "blue_success_pairs": 4,
+    "red_child_spawn_requested": true
+  },
+  "lineage_request": {
+    "mode": "prekill_survival_parent_decision",
+    "requested": true,
+    "status": "PASS"
+  }
+}
+```
+
+Lineage receipt:
+
+```text
+skills/battle/local/production-scope-prekill-survival-20260729/lineage-receipts.json
+```
+
+Lineage readback:
+
+```json
+{
+  "schema": "battle.lineage_receipts_bundle.v1",
+  "status": "PASS",
+  "lineage_mode": "prekill_survival_parent_decision",
+  "spawn_count": 1,
+  "errors": []
+}
+```
+
+Judge receipt:
+
+```text
+skills/battle/local/production-scope-prekill-survival-20260729/judge/judge-receipt.json
+```
+
+Judge readback:
+
+```json
+{
+  "schema": "battle.arena_tau_public_only_judge_receipt.v1",
+  "status": "PASS",
+  "verdict": "BLUE_SUCCESS",
+  "judged_pair_count": 4,
+  "red_artifact_count": 2,
+  "blue_artifact_count": 2,
+  "blue_success_count": 4,
+  "insufficient_evidence_count": 0
+}
+```
+
 ## Ticket Readback
 
 Commands:
@@ -254,7 +341,7 @@ Issue `#1040`: `CLOSED`, `stateReason: COMPLETED`.
 
 ## Next Product Scope
 
-The frontend/backend working MVP has deterministic local receipts. The remaining
-product scope is beyond this goal: production deployment, WebSocket transport,
-unbounded swarm execution, autonomous child-spawn lineage, Blue kill/promotion,
-and memory promotion.
+The frontend/backend local MVP and the child-lineage Tau/Docker/Judge rung now
+have deterministic local receipts. The remaining production-shaped scope is:
+production deployment, WebSocket transport, unbounded swarm execution, Blue
+kill/promotion, and memory promotion.

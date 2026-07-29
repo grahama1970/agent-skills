@@ -1,0 +1,6 @@
+{
+  "errors": [],
+  "next_subagent": "battle-red-blue-dispatch",
+  "ok": true,
+  "schema": "tau.subagent_receipt_validation.v1"
+}
