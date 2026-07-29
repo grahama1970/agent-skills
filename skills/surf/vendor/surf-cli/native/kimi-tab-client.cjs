@@ -1,4 +1,5 @@
 const KIMI_TAB_URL = "https://www.kimi.com/";
+const { insertPromptText } = require("./prompt-insert.cjs");
 
 const SELECTORS = {
   promptTextarea: 'textarea[placeholder*="Ask anything"], textarea[placeholder*="follow-up"], textarea[placeholder*="Add a follow-up"], .chat-input-editor[role="textbox"], .chat-input-editor, div[class*="editorContentEditable"], [contenteditable="true"][role="textbox"], [contenteditable="true"]',
@@ -61,14 +62,6 @@ function withTimeout(promise, timeoutMs, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
-async function insertTextInChunks(inputCdp, text, chunkSize = 4000) {
-  const value = String(text || "");
-  for (let index = 0; index < value.length; index += chunkSize) {
-    await inputCdp("Input.insertText", { text: value.slice(index, index + chunkSize) });
-    await delay(20);
-  }
-}
-
 function textLooksKimiProviderBusy(text) {
   const lower = String(text || "").toLowerCase();
   return (
@@ -79,6 +72,173 @@ function textLooksKimiProviderBusy(text) {
       || lower.includes("high demand")
     )
   );
+}
+
+async function setPromptInComposerDom(cdp, prompt) {
+  const encodedPrompt = JSON.stringify(prompt);
+  return await evaluate(
+    cdp,
+    `(() => {
+      ${buildClickDispatcher()}
+      const prompt = ${encodedPrompt};
+      const selectors = [
+        '.chat-input-editor[role="textbox"]',
+        '.chat-input-editor',
+        'textarea[placeholder*="Ask anything"]',
+        'textarea[placeholder*="follow-up"]',
+        'textarea[placeholder*="Add a follow-up"]',
+        'div[class*="editorContentEditable"]',
+        '[role="textbox"]',
+        '[contenteditable="true"]',
+      ];
+      const visible = (node) => {
+        if (!node) return false;
+        const rect = node.getBoundingClientRect();
+        const style = window.getComputedStyle(node);
+        return rect.width > 0
+          && rect.height > 0
+          && style.visibility !== 'hidden'
+          && style.display !== 'none';
+      };
+      const textOf = (node) => node.innerText || node.textContent || node.value || '';
+      const setNativeValue = (node, value) => {
+        const proto = node instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : node instanceof HTMLInputElement
+          ? HTMLInputElement.prototype
+          : null;
+        const setter = proto ? Object.getOwnPropertyDescriptor(proto, 'value')?.set : null;
+        if (setter) setter.call(node, value);
+        else node.value = value;
+      };
+      const selectNodeContents = (node) => {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      };
+      const fireInput = (node, data, inputType) => {
+        node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, data, inputType }));
+        node.dispatchEvent(new InputEvent('input', { bubbles: true, data, inputType }));
+      };
+      const dispatchPaste = (node, text) => {
+        try {
+          const dt = new DataTransfer();
+          dt.setData('text/plain', text);
+          dt.setData('text/markdown', text);
+          const paste = new ClipboardEvent('paste', { bubbles: true, cancelable: true, composed: true });
+          Object.defineProperty(paste, 'clipboardData', { value: dt });
+          node.dispatchEvent(paste);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      const promptStart = prompt.slice(0, 80);
+      const promptEnd = prompt.slice(-80);
+      for (const selector of selectors) {
+        const nodes = Array.from(document.querySelectorAll(selector));
+        for (const node of nodes) {
+          if (!visible(node) || node.hasAttribute('disabled')) continue;
+          dispatchClickSequence(node);
+          if (typeof node.focus === 'function') node.focus();
+          if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
+            setNativeValue(node, '');
+            node.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
+            setNativeValue(node, prompt);
+            node.dispatchEvent(new InputEvent('input', { bubbles: true, data: prompt, inputType: 'insertFromPaste' }));
+          } else {
+            selectNodeContents(node);
+            document.execCommand('delete', false, null);
+            fireInput(node, null, 'deleteContentBackward');
+            dispatchPaste(node, prompt);
+            let inserted = textOf(node).includes(promptStart) && textOf(node).includes(promptEnd);
+            if (!inserted) {
+              selectNodeContents(node);
+              inserted = document.execCommand('insertText', false, prompt);
+            }
+            if (!inserted || !textOf(node).includes(promptStart) || !textOf(node).includes(promptEnd)) {
+              node.textContent = prompt;
+              fireInput(node, prompt, 'insertFromPaste');
+            }
+          }
+          const text = textOf(node);
+          if (text.includes(promptStart) && text.includes(promptEnd)) {
+            return { ok: true, selector, length: text.length, mode: 'dom_fallback' };
+          }
+        }
+      }
+      return { ok: false };
+    })()`,
+  );
+}
+
+async function clearPromptInComposerDom(cdp, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  let last = { ok: false, length: null };
+  while (Date.now() < deadline) {
+    last = await evaluate(
+      cdp,
+      `(() => {
+        ${buildClickDispatcher()}
+        const selectors = [
+          '.chat-input-editor[role="textbox"]',
+          '.chat-input-editor',
+          'textarea[placeholder*="Ask anything"]',
+          'textarea[placeholder*="follow-up"]',
+          'textarea[placeholder*="Add a follow-up"]',
+          'div[class*="editorContentEditable"]',
+          '[role="textbox"]',
+          '[contenteditable="true"]',
+        ];
+        const visible = (node) => {
+          if (!node) return false;
+          const rect = node.getBoundingClientRect();
+          const style = window.getComputedStyle(node);
+          return rect.width > 0
+            && rect.height > 0
+            && style.visibility !== 'hidden'
+            && style.display !== 'none';
+        };
+        const textOf = (node) => node.innerText || node.textContent || node.value || '';
+        const fireInput = (node, data, inputType) => {
+          node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, data, inputType }));
+          node.dispatchEvent(new InputEvent('input', { bubbles: true, data, inputType }));
+        };
+        for (const selector of selectors) {
+          for (const node of Array.from(document.querySelectorAll(selector))) {
+            if (!visible(node) || node.hasAttribute('disabled')) continue;
+            dispatchClickSequence(node);
+            if (typeof node.focus === 'function') node.focus();
+            if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
+              const proto = node instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+              const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+              if (setter) setter.call(node, '');
+              else node.value = '';
+              fireInput(node, null, 'deleteContentBackward');
+            } else {
+              const selection = window.getSelection();
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              selection.removeAllRanges();
+              selection.addRange(range);
+              document.execCommand('delete', false, null);
+              node.textContent = '';
+              node.innerHTML = '';
+              fireInput(node, null, 'deleteContentBackward');
+            }
+            const text = textOf(node);
+            return { ok: text.length === 0, selector, length: text.length };
+          }
+        }
+        return { ok: false, length: null };
+      })()`,
+    );
+    if (last?.ok) return last;
+    await delay(150);
+  }
+  return last || { ok: false, length: null };
 }
 
 const assistantSnapshotExpression = (sentinel) => {
@@ -740,6 +900,25 @@ async function clearFocusedEditor(inputCdp) {
   });
 }
 
+async function clickComposerCenter(inputCdp, target) {
+  if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.y)) return;
+  await inputCdp("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    x: target.x,
+    y: target.y,
+    button: "left",
+    clickCount: 1,
+  });
+  await inputCdp("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    x: target.x,
+    y: target.y,
+    button: "left",
+    clickCount: 1,
+  });
+  await delay(100);
+}
+
 async function typePrompt(cdp, inputCdp, prompt) {
   const encodedPrompt = JSON.stringify(prompt);
   const typed = await evaluate(
@@ -761,16 +940,23 @@ async function typePrompt(cdp, inputCdp, prompt) {
         if (!node || node.hasAttribute('disabled')) continue;
         dispatchClickSequence(node);
         if (typeof node.focus === 'function') node.focus();
+        const rect = node.getBoundingClientRect();
+        const target = rect.width > 0 && rect.height > 0
+          ? { x: rect.left + Math.min(rect.width / 2, Math.max(12, rect.width - 12)), y: rect.top + Math.min(rect.height / 2, Math.max(12, rect.height - 12)) }
+          : null;
         if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
           const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
             || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
           if (setter) setter.call(node, ${encodedPrompt});
           else node.value = ${encodedPrompt};
           node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
-          return { ok: true, mode: 'value' };
+          return { ok: true, mode: 'value', target };
         }
         if (node.isContentEditable || node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
-          return { ok: true, mode: 'focused_editable' };
+          return { ok: true, mode: 'focused_editable', target };
+        }
+        if (node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
+          return { ok: true, mode: 'focused_custom_textbox', target };
         }
       }
       return { ok: false };
@@ -780,9 +966,16 @@ async function typePrompt(cdp, inputCdp, prompt) {
     throw new Error("Failed to focus/type Kimi prompt composer");
   }
   if (typed.mode === "focused_editable") {
+    await clickComposerCenter(inputCdp, typed.target);
     await clearFocusedEditor(inputCdp);
-    await insertTextInChunks(inputCdp, prompt);
-    const verified = await verifyPromptInComposer(cdp, prompt);
+    await clearPromptInComposerDom(cdp);
+    let verified = await setPromptInComposerDom(cdp, prompt);
+    if (!verified?.ok) {
+      await clearFocusedEditor(inputCdp);
+      await clearPromptInComposerDom(cdp);
+      await insertPromptText(inputCdp, prompt);
+      verified = await verifyPromptInComposer(cdp, prompt);
+    }
     if (!verified?.ok) {
       throw new Error("Kimi prompt composer did not receive inserted text");
     }

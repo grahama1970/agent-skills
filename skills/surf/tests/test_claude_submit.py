@@ -3,12 +3,22 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import importlib.util
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CLAUDE_SUBMIT = REPO_ROOT / "skills/surf/scripts/claude-submit.py"
 SURF_RUN = REPO_ROOT / "skills/surf/run.sh"
+
+
+def _load_claude_submit_module():
+    spec = importlib.util.spec_from_file_location("claude_submit_script", CLAUDE_SUBMIT)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_surf_run_routes_claude_submit_help() -> None:
@@ -683,6 +693,136 @@ esac
     assert payload["raw_contains_sentinel"] is True
     assert "recovered_after_failure" not in payload
     assert not response.exists()
+
+
+def test_claude_submit_rejects_completed_page_prompt_echo(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    raw = tmp_path / "response.raw.md"
+    meta = tmp_path / "response.meta.json"
+    fake_run = tmp_path / "surf-run.sh"
+    sentinel_file = tmp_path / "sentinel.txt"
+    prompt_file = tmp_path / "composer.txt"
+    submitted_file = tmp_path / "submitted.flag"
+    acceptance_seen_file = tmp_path / "acceptance-seen.flag"
+
+    request.write_text("You are one participant in a Tau-managed roundtable.\n", encoding="utf-8")
+    fake_run.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  tab.list)
+    printf '[{{"id":837360921,"url":"https://claude.ai/new","title":"New chat - Claude"}}]\\n'
+    ;;
+  focus.state)
+    printf '{{"focusedWindowId":1,"activeTabId":837360921}}\\n'
+    ;;
+  page.text)
+    sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
+    if [[ -f {str(submitted_file)!r} ]]; then
+      if [[ ! -f {str(acceptance_seen_file)!r} ]]; then
+        printf 'accepted' > {str(acceptance_seen_file)!r}
+        printf 'https://claude.ai/new\\nClaude is responding\\n'
+      else
+        printf 'Title: New chat - Claude\\n'
+        printf 'URL: https://claude.ai/new\\n'
+        printf '@keyframes look-around {{ from {{ opacity: 1; }} }}\\n'
+        printf 'What can we tackle together?sparta-readme-roundtable-r2-bundle.mdmd'
+        printf '%s\\n' "$(cat {str(prompt_file)!r} 2>/dev/null || true)"
+      fi
+    else
+      printf 'https://claude.ai/new\\n%s\\n' "$(cat {str(prompt_file)!r} 2>/dev/null || true)"
+    fi
+    ;;
+  read)
+    printf 'textbox "Write your prompt to Claude" [e1]\\n'
+    printf 'button "Send message" [e2]\\n'
+    ;;
+  click)
+    if [[ "${{2:-}}" == "e2" ]]; then
+      printf 'submitted' > {str(submitted_file)!r}
+    fi
+    printf 'ok\\n'
+    ;;
+  key)
+    printf 'submitted' > {str(submitted_file)!r}
+    printf 'ok\\n'
+    ;;
+  type)
+    python3 - "${{2:-}}" {str(sentinel_file)!r} {str(prompt_file)!r} <<'PY'
+import pathlib
+import re
+import sys
+
+pathlib.Path(sys.argv[3]).write_text(sys.argv[1], encoding="utf-8")
+match = re.search(r"<<<CLAUDE_DONE:[^>]+>>>", sys.argv[1], re.S)
+if match:
+    pathlib.Path(sys.argv[2]).write_text(match.group(0), encoding="utf-8")
+PY
+    printf 'typed\\n'
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "python3",
+            str(CLAUDE_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--raw-output",
+            str(raw),
+            "--meta-output",
+            str(meta),
+            "--sentinel",
+            "<<<CLAUDE_DONE:prompt_echo>>>",
+            "--tab-id",
+            "837360921",
+            "--url",
+            "https://claude.ai/new",
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "0",
+            "--no-activate",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 5, proc.stderr
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert payload["failure"] == "missing_sentinel_or_contaminated_clean_output"
+    assert payload["raw_contains_sentinel"] is True
+    assert payload["clean_contains_sentinel"] is False
+    assert "What can we tackle together?" in payload["clean_contamination_markers"]
+    assert "Automation-only instruction:" in payload["clean_contamination_markers"]
+
+
+def test_claude_clean_contamination_allows_marker_discussion() -> None:
+    claude_submit = _load_claude_submit_module()
+    text = (
+        "The prior detector matched @keyframes and What can we tackle together? "
+        "as page-shell markers, but this answer is discussing them as evidence."
+    )
+
+    assert claude_submit._clean_contamination_markers(text) == []
 
 
 def test_claude_submit_chat_url_mismatch_still_fails_closed(tmp_path: Path) -> None:

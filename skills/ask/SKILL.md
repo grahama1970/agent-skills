@@ -147,15 +147,15 @@ repairing a browser roundtable packet, apply this matrix:
 | --- | --- | --- | --- |
 | `webgpt` | Short prompt plus one readable bundle | One attachment only; zip is allowed when the task needs a bundle | Multiple attachments fail before submission. Do not infer file creation from prose; download and verify generated artifacts. |
 | `webgemini` | Short prompt plus one readable Markdown/text bundle | Ask inlines Markdown/text bundles for current Gemini tabs; do not rely on upload unless Surf records attachment metadata | Current Gemini UI may expose `Upload & tools` without an `input[type=file]`; stale page text can look like a response if sentinel capture is not strict. |
-| `webkimi` | Short prompt plus one plain readable Markdown/text bundle | One attachment only; do not use zip | Large inline prompts can be truncated or scrambled by the Kimi composer. Kimi and DeepSeek must not receive zip bundles. |
+| `webkimi` | Short prompt plus one plain readable Markdown/text bundle | Do not use zip; Ask passes the Markdown/text bundle through Surf `kimi.submit --attach-file` | Kimi's Lexical composer can corrupt large inline payloads; do not paste or inline full review bundles into the composer. |
 | `webclaude` | Prompt plus readable files | Multiple attachments are supported | Claude can stage a prompt without submitting it; require submit-acceptance and sentinel proof, not only a prepared prompt file. |
 | `webdeepseek` / `deepseek` | Inline text or short prompt only | Attachments and zip files are unsupported | If local evidence is required, route through another handler or summarize the evidence into the prompt within size limits. |
 
 Do not automatically convert every evidence set into a zip. For one-attachment
 providers, choose the provider-compatible single file: usually Markdown for
 Kimi and README/code review packets, and inline Markdown/text for Gemini when
-the current tab lacks a file input; zip only when the provider is
-known to accept it and the task actually needs an archive.
+the current tab lacks a file input; zip only when the provider is known to
+accept it and the task actually needs an archive.
 
 Browser lanes queue on the shared Surf browser lock. Ask derives the wait from
 handler count and topology; pass `--browser-lock-timeout <seconds>` on `tau-dag
@@ -183,14 +183,18 @@ launch a new round when appropriate.
 Before launching a costly live browser panel, Ask runs a standard read-only
 provider availability probe automatically. It inspects existing provider tabs
 for visible rate-limit or capacity banners and writes
-`<run_dir>/browser-provider-availability.json`; it does not submit prompts.
-Provider cooldown is lane-local. If WebGPT, Grok, Kimi, Claude, Gemini, or
-another browser provider is visibly rate-limited or busy, Ask records that lane,
-writes `<run_dir>/browser-provider-selection.json`, waits no less than a
-10-minute recovery horizon for that provider, and selects the next best
-available browser provider when the workflow still has enough participants.
-Hard local probe errors, such as Surf tab-list failure or a malformed probe
-report, still fail closed before fresh tabs or Tau dispatch.
+`<run_dir>/browser-provider-availability.json`; it does not submit prompts. If
+the report is `ERROR`, or `NEEDS_ATTENTION` without specific provider cooldown
+metadata, Ask exits before creating fresh browser tabs or dispatching Tau, with
+`blocked_reason: browser_provider_unavailable_preflight`, `failure_code`, and
+`next_command` in the top-level execution receipt. If `NEEDS_ATTENTION` names
+provider-limited lanes, Ask treats that as lane-local: it records
+`limited_providers` and `cooldown_policy` in the availability artifact, writes
+`<run_dir>/browser-provider-selection.json`, removes unavailable requested
+providers, and selects the next best available browser provider when the
+workflow still has enough participants. WebGPT cooldowns opt the WebGPT worker
+into one bounded Surf retry after 300 seconds only when that WebGPT lane is
+still intentionally run.
 
 Project agents can also run the same probe manually before a planned panel:
 
@@ -204,14 +208,14 @@ Project agents can also run the same probe manually before a planned panel:
   --json
 ```
 
-If the report is `NEEDS_ATTENTION`, treat the named provider as unavailable for
-new lanes in this run unless the human explicitly asks to try it anyway. Do not
-pause healthy participants. Use the adjusted handler list from
-`browser-provider-selection.json`; if Ask cannot keep enough participants after
+If the report is `NEEDS_ATTENTION` with `cooldown_policy.status:
+LANE_LOCAL_RETRY`, do not cancel healthy peers. Treat only the named providers
+as cooling down, preserve the policy, and use the adjusted handler list from
+`browser-provider-selection.json`. If Ask cannot keep enough participants after
 filtering unavailable providers, it exits with
 `blocked_reason: browser_provider_selection_insufficient_participants`. This
-preflight is not completion proof; it prevents obvious provider-throttle loops
-before a live DAG starts.
+preflight is not completion proof; it only prevents obvious provider throttle
+loops from becoming whole-panel failures.
 
 Failures must be non-silent. A failed browser/API/subagent lane must expose
 `failure_code`, `recovery_packet_path`, `next_command` or an explicit
@@ -377,14 +381,15 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `browser-provider-selection.json`. Ask writes these before browser tab
   lifecycle provisioning for executed browser roundtables and competitions. A
   visible WebGPT "Too many requests", WebGrok limit countdown, Kimi/Grok
-  "System is currently busy", or similar provider banner marks that provider
-  unavailable for the run, records `cooldown_seconds: 600`, and selects an
-  available fallback such as WebClaude, WebGemini, or WebKimi when possible.
-  Roundtable-mode WebClaude uses Fable 5 High by default; competition-mode
-  WebClaude uses Opus 5 High by default. Stale or background old-tab read
-  timeouts appear as `probe_degraded`; they are diagnostic, not proof of
-  provider cooldown. Surf tab-list failure or non-timeout probe failures remain
-  `ERROR` and fail closed.
+  "System is currently busy", or similar provider banner is a lane-local
+  cooldown, not a whole-panel launch block. Ask records `limited_providers` plus
+  `cooldown_policy.status: LANE_LOCAL_RETRY`, records `cooldown_seconds: 600`,
+  selects an available fallback such as WebClaude, WebGemini, or WebKimi when
+  possible, and continues with available participants. Roundtable-mode
+  WebClaude uses Fable 5 High by default; competition-mode WebClaude uses Opus
+  5 High by default. Stale or background old-tab read timeouts appear as
+  `probe_degraded`; they are diagnostic, not proof of provider cooldown. Surf
+  tab-list failure or non-timeout probe failures remain `ERROR`.
 - **Surf lock behavior**: Tau may launch browser handler workers concurrently,
   but Surf browser operations share `/tmp/surf.sock` and must wait on the Surf
   lock. Ask emits long `--browser-lock-timeout` / `--lock-timeout` envelopes so
@@ -671,9 +676,9 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   Surf's provider-throttle cooldown path. Surf waits
   `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`) before it clicks
   **Got it**, because dismissing the modal during the throttle restarts the
-  limit window, and retries only when the caller
-  deliberately opts in with `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS>0`; default
-  Ask/SURF behavior is no automatic WebGPT resubmit after this modal. Do not
+  limit window. Ask browser workers opt WebGPT into one automatic retry by
+  setting `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS=1`; raw Surf defaults still do
+  not retry unless their caller opts in. Do not
   reclassify it as a reviewer failure, browser-oracle mismatch, download
   failure, or sentinel parser defect. Mark only that browser handler node
   `NEEDS_ATTENTION` or rate-limited, preserve the throttle metadata, continue

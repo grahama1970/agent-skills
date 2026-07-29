@@ -93,8 +93,8 @@ PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
         can_attach=True,
         max_attachments=1,
         zip_allowed=False,
-        preferred_bundle="one plain Markdown or text bundle",
-        gotcha="large inline prompts can truncate or scramble in the composer; do not use zip",
+        preferred_bundle="one plain Markdown or text bundle attached with --attach-file",
+        gotcha="do not use zip; send a short prompt plus one readable Markdown/text attachment, not a large inline composer payload",
     ),
     "webgemini": ProviderPayloadPolicy(
         handler="webgemini",
@@ -166,6 +166,7 @@ BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 BROWSER_PROVIDER_SETUP_FAILED = "browser_provider_setup_failed"
 BROWSER_SUBMIT_NOT_ACCEPTED = "browser_submit_not_accepted"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
+BROWSER_ATTACHMENT_UI_MISSING = "attachment_ui_missing"
 BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
 BROWSER_CLEAN_OUTPUT_CONTAMINATED = "browser_clean_output_contaminated"
 BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
@@ -227,6 +228,11 @@ BROWSER_FAILURE_CODES: dict[str, BrowserFailureCode] = {
         BROWSER_TOOL_UNSUPPORTED,
         "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
         auto_retry_blocked_reason="surf_runtime_command_mismatch_requires_repair",
+    ),
+    BROWSER_ATTACHMENT_UI_MISSING: BrowserFailureCode(
+        BROWSER_ATTACHMENT_UI_MISSING,
+        "The provider attachment UI or file input was not available before prompt submission.",
+        auto_retry_blocked_reason="attachment_ui_missing_requires_transport_repair",
     ),
     BROWSER_ATTACHMENT_UNAVAILABLE: BrowserFailureCode(
         BROWSER_ATTACHMENT_UNAVAILABLE,
@@ -355,6 +361,7 @@ def main() -> int:
     parser.add_argument("--scillm-api-key", default="")
     parser.add_argument("--prior-node", action="append", default=[])
     parser.add_argument("--timeout", type=int, default=300)
+    parser.add_argument("--command-timeout-budget", type=int, default=0)
     parser.add_argument("--browser-lock-timeout", type=int, default=0)
     parser.add_argument("--stable-polls", type=int, default=2)
     parser.add_argument("--no-activate", action="store_true")
@@ -369,11 +376,7 @@ def main() -> int:
     parser.add_argument("--subagent-reasoning-effort", default="")
     parser.add_argument("--subagent-requested-model", default="")
     args = parser.parse_args()
-    if args.handler in HANDLER_SUBMIT_COMMANDS:
-        if args.browser_lock_timeout > 0:
-            os.environ["SURF_LOCK_TIMEOUT_MS"] = str(args.browser_lock_timeout * 1000)
-        else:
-            os.environ.setdefault("SURF_LOCK_TIMEOUT_MS", "1800000")
+    _configure_browser_runtime_environment(args)
 
     start = _read_stdin_handoff()
     artifact_dir = Path(args.artifact_dir)
@@ -384,6 +387,18 @@ def main() -> int:
         result = _run_handler(args, start, artifact_dir)
     print(json.dumps(result["handoff"], sort_keys=True))
     return int(result["exit_code"])
+
+
+def _configure_browser_runtime_environment(args: argparse.Namespace) -> None:
+    if args.handler in HANDLER_SUBMIT_COMMANDS:
+        browser_lock_timeout = int(getattr(args, "browser_lock_timeout", 0) or 0)
+        if browser_lock_timeout > 0:
+            os.environ["SURF_LOCK_TIMEOUT_MS"] = str(browser_lock_timeout * 1000)
+        else:
+            os.environ.setdefault("SURF_LOCK_TIMEOUT_MS", "1800000")
+    if args.handler == "webgpt":
+        os.environ.setdefault("SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS", "300")
+        os.environ.setdefault("SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS", "1")
 
 
 def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
@@ -526,7 +541,11 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             submit = _run_cmd(
                 submit_cmd,
                 cwd=Path(args.surf_run).parent,
-                timeout=_browser_submit_timeout(handler, args.timeout),
+                timeout=_browser_submit_timeout(
+                    handler,
+                    args.timeout,
+                    command_timeout_budget=args.command_timeout_budget,
+                ),
             )
             commands.append(submit.summary())
             if meta_path.is_file():
@@ -951,7 +970,7 @@ def _prepare_browser_submit_payload(
     inline_paths = _inline_text_bundle_paths(combined_attachments) if policy.inline_text_attachments else []
     inline_by_resolved = {str(Path(path).resolve()): index + 1 for index, path in enumerate(inline_paths)}
     submit_attachments = [path for path in combined_attachments if str(Path(path).resolve()) not in inline_by_resolved]
-    if not local_candidates and not inline_paths:
+    if not local_candidates and not inline_paths and not submit_attachments:
         return (
             prompt_path,
             submit_attachments,
@@ -1162,7 +1181,11 @@ def _retry_browser_stale_binding(
         retry = _run_cmd(
             retry_cmd,
             cwd=Path(args.surf_run).parent,
-            timeout=_browser_submit_timeout(handler, args.timeout),
+            timeout=_browser_submit_timeout(
+                handler,
+                args.timeout,
+                command_timeout_budget=args.command_timeout_budget,
+            ),
         )
         retry_summary = retry.summary()
         retry_summary["recovery_attempt"] = f"{handler}_stale_binding_submit_existing_tab"
@@ -1230,7 +1253,11 @@ def _retry_browser_stale_binding(
     retry = _run_cmd(
         retry_cmd,
         cwd=Path(args.surf_run).parent,
-        timeout=_browser_submit_timeout(handler, args.timeout),
+        timeout=_browser_submit_timeout(
+            handler,
+            args.timeout,
+            command_timeout_budget=args.command_timeout_budget,
+        ),
     )
     retry_summary = retry.summary()
     retry_summary["recovery_attempt"] = f"{handler}_stale_binding_submit_after_new_tab_rebind"
@@ -1652,7 +1679,13 @@ def _browser_failure_recovery_packet(
         submit_meta=submit_meta,
         commands=commands,
     )
-    bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
+    bundle_paths = _unique_existing_files(
+        [
+            *[str(item) for item in (getattr(args, "attach_files", None) or [])],
+            str(submit_meta.get("attach_file") or ""),
+            *_local_readable_bundle_paths(prompt_text, request_payload),
+        ]
+    )
     payload_policy = _payload_policy(handler)
     can_attach = payload_policy.can_attach
     failure_meta = _browser_failure_code(failure_code)
@@ -1845,8 +1878,14 @@ def _classify_browser_failure(
     if _looks_browser_tool_unsupported(haystack):
         return BROWSER_TOOL_UNSUPPORTED
     if (
+        _browser_attachment_ui_missing_in_meta(submit_meta)
+        or _looks_browser_attachment_ui_missing(haystack)
+        or _kimi_attachment_metadata_missing_after_attach(handler, submit_meta)
+    ):
+        return BROWSER_ATTACHMENT_UI_MISSING
+    if (
         BROWSER_ATTACHMENT_UNAVAILABLE in haystack
-        or submit_meta.get("attachment_missing") is True
+        or _browser_attachment_missing_in_meta(submit_meta)
         or _response_denies_attachment_access(response_text)
     ):
         return BROWSER_ATTACHMENT_UNAVAILABLE
@@ -1961,6 +2000,50 @@ def _response_denies_attachment_access(text: str) -> bool:
         "file was not provided or rendered",
     )
     return any(marker in normalized for marker in markers)
+
+
+def _looks_browser_attachment_ui_missing(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text.lower())
+    return (
+        "file input" in normalized
+        and "not present" in normalized
+        and ("kimi" in normalized or "attachment" in normalized or "upload" in normalized)
+    )
+
+
+def _browser_attachment_ui_missing_in_meta(meta: dict[str, Any]) -> bool:
+    if not isinstance(meta, dict):
+        return False
+    failure = str(meta.get("failure") or "").lower()
+    blocker = str(meta.get("blocker") or "").lower()
+    proof_status = str(meta.get("proof_status") or "").lower()
+    return (
+        failure == "attachment_ui_missing"
+        or blocker == "blocked_attachment_ui_missing"
+        or proof_status == "file_upload_unavailable"
+    )
+
+
+def _kimi_attachment_metadata_missing_after_attach(handler: str, meta: dict[str, Any]) -> bool:
+    if handler != "webkimi" or not isinstance(meta, dict):
+        return False
+    failure = str(meta.get("failure") or "").lower()
+    return (
+        failure == "attachment_metadata_missing"
+        and bool(meta.get("attach_file"))
+        and meta.get("attachment_missing") is True
+    )
+
+
+def _browser_attachment_missing_in_meta(meta: dict[str, Any]) -> bool:
+    if not isinstance(meta, dict):
+        return False
+    failure = str(meta.get("failure") or "").lower()
+    return (
+        meta.get("attachment_missing") is True
+        or meta.get("attachment_preview_missing") is True
+        or failure in {"attachment_metadata_missing", "attachment_preview_missing"}
+    )
 
 
 def _match_text(value: Any) -> str:
@@ -2091,6 +2174,17 @@ def _looks_browser_submit_not_accepted(text: str, meta: dict[str, Any]) -> bool:
         "input was not submitted",
     )
     return any(marker in text for marker in markers)
+
+
+def _submit_not_accepted_can_retry_same_identity(handler: str, meta: dict[str, Any]) -> bool:
+    if handler != "webgpt":
+        return False
+    if str(meta.get("failure") or "").strip().lower() != "tab_identity_preflight_failed":
+        return False
+    identity = meta.get("tab_identity_preflight")
+    if not isinstance(identity, dict):
+        return False
+    return str(identity.get("error") or "").strip().lower() == "unverified_tab_id_with_multiple_chatgpt_tabs"
 
 
 def _timeout_diagnostic_markers(meta: dict[str, Any]) -> dict[str, Any]:
@@ -2338,6 +2432,11 @@ def _looks_clean_output_contaminated(text: str, meta: dict[str, Any]) -> bool:
         "clean response contains sentinel",
         "contaminated clean output",
         "sentinel remained in clean output",
+        "what can we tackle together?",
+        "@keyframes",
+        "automation-only instruction:",
+        "after your complete answer, append a final line containing only this exact marker:",
+        "do not print anything after that marker.",
     )
     return any(marker in text for marker in markers)
 
@@ -2449,6 +2548,7 @@ def _looks_environment_dependency_install_failed(text: str) -> bool:
     """
     install_markers = (
         "failed to install:",
+        "failed to create virtual environment",
         "failed to create directory",
         "could not install packages",
         "error: externally-managed-environment",
@@ -2457,6 +2557,8 @@ def _looks_environment_dependency_install_failed(text: str) -> bool:
     env_markers = (
         "dist-packages",
         "site-packages",
+        "virtual environment already exists",
+        "a virtual environment already exists",
         "permission denied (os error 13)",
         "permission denied:",
     )
@@ -2647,14 +2749,7 @@ def tab_still_open(surf_run: str, tab_id: str) -> bool | None:
         return None
     if result.returncode != 0:
         return None
-    text = result.stdout.strip()
-    start = text.find("[")
-    if start == -1:
-        return None
-    try:
-        tabs = json.loads(text[start:])
-    except json.JSONDecodeError:
-        return None
+    tabs = _parse_json_array_or_tabs(result.stdout)
     if not isinstance(tabs, list):
         return None
     return any(str(item.get("id")) == str(tab_id) for item in tabs if isinstance(item, dict))
@@ -2691,6 +2786,23 @@ def _recovery_next_command(
     meta_path: Path,
     prompt_path: Path,
 ) -> list[str]:
+    def append_browser_identity(command: list[str]) -> None:
+        tab_id = ""
+        if isinstance(browser_oracle, dict):
+            tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "").strip()
+        if not tab_id:
+            tab_id = _tab_id_from_commands(args)
+        url = str(
+            browser_oracle.get("conversation_url")
+            or submit_meta.get("current_url")
+            or submit_meta.get("requested_url")
+            or ""
+        ).strip()
+        if tab_id:
+            command.extend(["--tab-id", tab_id])
+        if url:
+            command.extend(["--expect-url" if str(args.handler) == "webgpt" and tab_id else "--url", url])
+
     if failure_code in {
         BROWSER_ATTACHMENT_UNAVAILABLE,
         BROWSER_SENTINEL_TRAILING_CONTENT,
@@ -2759,17 +2871,41 @@ def _recovery_next_command(
         command.extend(["--manual", "--json"])
         return command
     if failure_code == BROWSER_SUBMIT_NOT_ACCEPTED:
-        project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
         url = str(
             browser_oracle.get("conversation_url")
             or submit_meta.get("current_url")
             or submit_meta.get("requested_url")
             or ""
         ).strip()
+        if _submit_not_accepted_can_retry_same_identity(str(args.handler), submit_meta):
+            command = [
+                str(args.surf_run),
+                HANDLER_SUBMIT_COMMANDS[str(args.handler)],
+                "--input",
+                str(prompt_path),
+                "--output",
+                str(response_path.with_name("response.identity-retry.md")),
+                "--raw-output",
+                str(raw_path.with_name("response.identity-retry.raw.md")),
+                "--meta-output",
+                str(meta_path.with_name("response.identity-retry.meta.json")),
+                "--timeout",
+                str(args.timeout),
+                "--stable-polls",
+                str(args.stable_polls),
+            ]
+            _append_browser_lock_timeout(command, args)
+            append_browser_identity(command)
+            if not any(item in {"--tab-id", "--url"} for item in command):
+                project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
+                command.extend(["--project", project])
+            if args.no_activate:
+                command.append("--no-activate")
+            return command
         command = [
             str(args.browser_oracle_run),
             "open-bind",
-            project,
+            str(args.browser_oracle_project or browser_oracle.get("project") or args.handler),
             "--backend",
             HANDLER_BACKENDS[str(args.handler)],
         ]
@@ -2867,13 +3003,7 @@ def _recovery_next_command(
             bundle_path,
         ]
         _append_browser_lock_timeout(command, args)
-        tab_id = ""
-        if isinstance(browser_oracle, dict):
-            tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "")
-        if not tab_id:
-            tab_id = _tab_id_from_commands(args)
-        if tab_id:
-            command.extend(["--tab-id", tab_id])
+        append_browser_identity(command)
         if args.no_activate:
             command.append("--no-activate")
         return command
@@ -2960,6 +3090,12 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         )
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "Repair the Surf wrapper/provider adapter command mapping, then rerun the Tau DAG node. Do not retry the same browser call unchanged."
+    if failure_code == BROWSER_ATTACHMENT_UI_MISSING:
+        return (
+            "Do not submit this lane unchanged. Repair the provider attachment UI path, open the provider's "
+            "attachment menu/file input before upload, or switch to a handler with working attachment support. "
+            "Then rerun a focused attachment lane and read back response.meta.json before using the reviewer output."
+        )
     if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
         return (
             "Do not retry the same attachment submission unchanged. Repair or replace this provider's "
@@ -3600,6 +3736,12 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         fatal_blockers.append("no_explicit_verified_features_to_promote")
     if transport_blockers:
         blockers.append("competition_transport_degraded")
+    if (
+        handler_receipts
+        and len(transport_blockers) == len(handler_receipts)
+        and not any(candidate["ok"] is True for candidate in handler_receipts)
+    ):
+        blockers.append("competition_transport_blocked")
     blockers.extend(fatal_blockers)
     status = "PASS" if candidate_winner_handler and not blockers else "NEEDS_ATTENTION"
     ok = status == "PASS"
@@ -4013,7 +4155,12 @@ class CmdResult:
         }
 
 
-def _browser_submit_timeout(handler: str, provider_timeout: int) -> int:
+def _browser_submit_timeout(
+    handler: str,
+    provider_timeout: int,
+    *,
+    command_timeout_budget: int = 0,
+) -> int:
     try:
         lock_wait_ms = (
             os.environ["SURF_LOCK_TIMEOUT_MS"]
@@ -4034,17 +4181,27 @@ def _browser_submit_timeout(handler: str, provider_timeout: int) -> int:
     if handler == "webgpt":
         # webgpt-submit permits three default 300-second rate-limit cooldowns
         # before the final provider observation.
-        return max(provider_timeout + (3 * 300) + lock_wait_seconds + 150, 180)
+        timeout = max(provider_timeout + (3 * 300) + lock_wait_seconds + 150, 180)
+        return _cap_browser_command_timeout(timeout, command_timeout_budget)
     if handler == "webgemini":
         # gemini-submit permits two provider observations separated by its
         # default 120-second stalled-response cooldown.
-        return max((2 * (provider_timeout + 60)) + 120 + lock_wait_seconds + 30, 180)
+        timeout = max((2 * (provider_timeout + 60)) + 120 + lock_wait_seconds + 30, 180)
+        return _cap_browser_command_timeout(timeout, command_timeout_budget)
     # Claude, Kimi, and Grok receive the provider timeout as a Surf argument.
     # The worker watchdog must be longer than that provider timeout, otherwise
     # Ask kills Surf at the moment Surf should be writing its provider timeout
     # metadata. Keep the grace proportional so tiny debug timeouts remain fast.
     grace_seconds = min(45, max(2, int(provider_timeout * 0.15)))
-    return provider_timeout + lock_wait_seconds + grace_seconds
+    timeout = provider_timeout + lock_wait_seconds + grace_seconds
+    return _cap_browser_command_timeout(timeout, command_timeout_budget)
+
+
+def _cap_browser_command_timeout(timeout: int, command_timeout_budget: int) -> int:
+    budget = max(0, int(command_timeout_budget or 0))
+    if budget <= 0:
+        return timeout
+    return max(1, min(timeout, budget))
 
 
 def _browser_timeout_diagnostics(

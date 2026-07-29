@@ -5,9 +5,14 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import pytest
 import sys
 from pathlib import Path
+
+from dotenv import find_dotenv, load_dotenv
+
+load_dotenv(find_dotenv(usecwd=True), override=False)
 
 
 WORKER_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_roundtable_worker.py"
@@ -93,6 +98,83 @@ def test_repo_access_blocked_fails_closed_without_local_readable_bundle(tmp_path
     assert "local readable review bundle" in packet["fallback_instruction"]
     assert packet["ticket_target"] == "$ask at agent-skills@main"
     assert "$ticket to $ask at agent-skills@main" in packet["ticket_instruction"]
+
+
+def test_gemini_attachment_metadata_missing_is_attachment_unavailable(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgemini",
+        failure="Gemini submit failed after response readback",
+        response_text="gemini attachment smoke",
+        raw_text="gemini attachment smoke<<<GEMINI_DONE:test>>>",
+        prompt_text="Use the attached evidence bundle.",
+        submit_meta={
+            "status": "failed",
+            "failure": "attachment_metadata_missing",
+            "attach_file": "/tmp/evidence-bundle.zip",
+            "attachment": None,
+            "attachment_missing": True,
+            "proof_status": "response_proven",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UNAVAILABLE
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_transport_must_be_repaired"
+    assert "attachment transport" in packet["fallback_instruction"].lower()
+
+
+def test_kimi_attachment_ui_missing_gets_specific_recovery_packet(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure='Error: Kimi file input (input[type="file"]) not present in the DOM; Kimi may require opening the attachment menu first.',
+        prompt_text="Use the attached evidence bundle.",
+        submit_meta={
+            "status": "failed",
+            "failure": "attachment_ui_missing",
+            "blocker": "BLOCKED_ATTACHMENT_UI_MISSING",
+            "proof_status": "file_upload_unavailable",
+            "attach_file": "/tmp/evidence-bundle.zip",
+            "attachment_ui_missing": True,
+            "attachment_missing": True,
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UI_MISSING
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_ui_missing_requires_transport_repair"
+    assert "attachment menu" in packet["fallback_instruction"].lower()
+    assert "next_command" in packet and packet["next_command"]
+
+
+def test_kimi_attachment_metadata_missing_gets_upload_ui_recovery_packet(tmp_path: Path) -> None:
+    bundle = tmp_path / "evidence-bundle.zip"
+    bundle.write_bytes(b"PK\x05\x06" + b"\0" * 18)
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure="Kimi returned a response but no attachment metadata was emitted.",
+        response_text="kimi answer without attachment proof",
+        raw_text="kimi answer without attachment proof<<<KIMI_DONE:test>>>",
+        prompt_text="Use the attached evidence bundle.",
+        submit_meta={
+            "status": "failed",
+            "failure": "attachment_metadata_missing",
+            "attach_file": str(bundle),
+            "attachment": None,
+            "attachment_missing": True,
+            "proof_status": "response_proven",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UI_MISSING
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_ui_missing_requires_transport_repair"
+    assert "attachment menu" in packet["fallback_instruction"].lower()
+    assert packet["next_command"]
+    assert "--attach-file" in packet["next_command"]
+    assert packet["next_command"][packet["next_command"].index("--attach-file") + 1] == str(bundle)
 
 
 def test_prompt_too_large_or_stalled_allows_retry_only_with_attachable_bundle(tmp_path: Path) -> None:
@@ -304,6 +386,28 @@ def test_webgemini_inlines_markdown_bundle_instead_of_attaching(tmp_path: Path) 
     text = submit_prompt.read_text(encoding="utf-8")
     assert "### INLINE_1: review-bundle.md" in text
     assert "Current README text." in text
+
+
+def test_webkimi_uses_one_markdown_attachment_instead_of_inline_payload(tmp_path: Path) -> None:
+    prompt = tmp_path / "prompt.md"
+    bundle = tmp_path / "review-bundle.md"
+    prompt.write_text("Review the provided source bundle.\n", encoding="utf-8")
+    bundle.write_text("# README Bundle\n\nCurrent README text.\n", encoding="utf-8")
+
+    submit_prompt, attachment_paths, preflight = tau_roundtable_worker._prepare_browser_submit_payload(
+        handler="webkimi",
+        prompt_path=prompt,
+        request_payload={"request": "Review the bundle."},
+        attachment_paths=[str(bundle)],
+    )
+
+    assert attachment_paths == [str(bundle)]
+    assert preflight["status"] == "PASS"
+    assert preflight["attached_file_count"] == 1
+    assert preflight["inlined_file_count"] == 0
+    text = submit_prompt.read_text(encoding="utf-8")
+    assert "ATTACHMENT_1: review-bundle.md" in text
+    assert "Current README text." not in text
 
 
 def test_webclaude_auto_retry_uses_readable_bundle_when_transport_supports_attach_file(
@@ -778,10 +882,25 @@ def test_webgpt_submit_command_still_expects_specific_conversation_url(tmp_path:
     assert command[command.index("--expect-url") + 1] == "https://chatgpt.com/c/6a6749ed-7924-83ea-abda-93d6e2570b04"
 
 
+def test_webgpt_worker_opts_into_single_rate_limit_retry(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.delenv("SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS", raising=False)
+    monkeypatch.delenv("SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS", raising=False)
+    args = _args(tmp_path, handler="webgpt")
+
+    tau_roundtable_worker._configure_browser_runtime_environment(args)
+
+    assert os.environ["SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS"] == "300"
+    assert os.environ["SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS"] == "1"
+
+
 def test_worker_parses_mixed_stdout_large_tab_list_for_live_url() -> None:
     tabs = [{"id": index, "url": "https://example.com/" + ("x" * 220)} for index in range(40)]
     tabs.append({"id": 837362426, "url": "https://chatgpt.com/c/live", "title": "ChatGPT"})
-    text = "Building vendored surf-cli...\n" + json.dumps(tabs)
+    text = (
+        "Building vendored surf-cli...\n"
+        "\x1b[33m[INEFFECTIVE_DYNAMIC_IMPORT]\x1b[0m src/native/port-manager.ts is dynamically imported\n"
+        + json.dumps(tabs)
+    )
 
     parsed = tau_roundtable_worker._parse_json_array_or_tabs(text)
 
