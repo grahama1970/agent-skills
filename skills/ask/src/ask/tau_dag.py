@@ -1025,11 +1025,25 @@ def _synthesize_missing_browser_handler_receipts(
         submit_receipt = _read_json(submit_receipt_path) if submit_receipt_path.is_file() else {}
         inflight = _read_json(inflight_path) if inflight_path.is_file() else {}
         heartbeat = _read_json(heartbeat_path) if heartbeat_path.is_file() else {}
+        command_attachment_paths = _attachment_paths_from_command_spec(run_dir, node_id)
+        command_surf_run = _command_spec_flag_value(run_dir, node_id, "--surf-run")
+        if command_attachment_paths:
+            for payload in (submit_meta, submit_receipt, inflight):
+                if isinstance(payload, dict):
+                    payload.setdefault("attach_file", command_attachment_paths[0])
+                    payload.setdefault("attachment_paths", command_attachment_paths)
         orphan_summary = _browser_orphan_artifact_summary(
             submit_meta=submit_meta,
             submit_receipt=submit_receipt,
             inflight=inflight,
             heartbeat=heartbeat,
+            handler=handler,
+            surf_run=Path(command_surf_run) if command_surf_run else Path("skills/surf/run.sh"),
+            prompt_path=prompt_path,
+            response_path=response_path,
+            raw_path=raw_path,
+            meta_path=meta_path,
+            attachment_paths=command_attachment_paths,
         )
         failure_code = orphan_summary["failure_code"]
         quarantined_response_path = response_path
@@ -1088,11 +1102,13 @@ def _synthesize_missing_browser_handler_receipts(
                 "requested_tab_id": orphan_summary["requested_tab_id"],
                 "response_chars": response_chars,
                 "provider_throttle": orphan_summary["provider_throttle"],
+                "requested_attachment_paths": command_attachment_paths,
             },
             "response_path": str(quarantined_response_path),
             "raw_response_path": str(raw_path),
             "meta_path": str(meta_path),
             "prompt_path": str(prompt_path),
+            "requested_attachment_paths": command_attachment_paths,
             "auto_retry_allowed": False,
             "auto_retry_blocked_reason": orphan_summary["auto_retry_blocked_reason"],
             "next_command": orphan_summary["next_command"],
@@ -1169,6 +1185,13 @@ def _browser_orphan_artifact_summary(
     submit_receipt: dict[str, Any],
     inflight: dict[str, Any],
     heartbeat: dict[str, Any],
+    handler: str,
+    surf_run: Path,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    attachment_paths: list[str],
 ) -> dict[str, Any]:
     haystack = "\n".join(
         json.dumps(item, sort_keys=True, default=str)
@@ -1186,7 +1209,19 @@ def _browser_orphan_artifact_summary(
             "provider_rate_limited",
         )
     )
-    failure_code = "browser_provider_rate_limited" if provider_throttle else "browser_handler_timeout"
+    prepared_prompt_only = any(
+        isinstance(source, dict)
+        and str(source.get("status") or "") == "prepared_prompt"
+        and source.get("submitted_to_chatgpt") is False
+        for source in (submit_meta, submit_receipt, inflight, heartbeat)
+    )
+    failure_code = (
+        "browser_provider_rate_limited"
+        if provider_throttle
+        else "browser_submit_not_accepted"
+        if prepared_prompt_only
+        else "browser_handler_timeout"
+    )
     recovery_command = ""
     for source in (submit_meta, inflight, submit_receipt, heartbeat):
         if isinstance(source, dict):
@@ -1206,6 +1241,31 @@ def _browser_orphan_artifact_summary(
         fallback_instruction = (
             "Treat only this browser lane as provider-rate-limited. Do not launch parallel WebGPT "
             "attempts. Wait for provider cooldown, then rerun this lane or continue with available peers."
+        )
+    elif prepared_prompt_only and attachment_paths:
+        blocked_reason = "browser_prepared_prompt_requires_attachment_preserving_resubmit"
+        submit_binary = surf_run if str(surf_run) else Path("skills/surf/run.sh")
+        transport = str(ROUNDTABLE_HANDLERS.get(handler, {}).get("transport") or f"{handler}.submit")
+        command = [
+            str(submit_binary),
+            transport,
+            "--input",
+            str(prompt_path),
+            "--output",
+            str(response_path.with_name("response.retry.md")),
+            "--raw-output",
+            str(raw_path.with_name("response.retry.raw.md")),
+            "--meta-output",
+            str(meta_path.with_name("response.retry.meta.json")),
+        ]
+        for attachment_path in attachment_paths:
+            command.extend(["--attach-file", attachment_path])
+        if requested_tab_id:
+            command.extend(["--tab-id", requested_tab_id])
+        next_command = command
+        fallback_instruction = (
+            "The WebGPT worker prepared the prompt but did not prove browser submission. "
+            "Run next_command only after tab preflight; it preserves the original local attachment path."
         )
     elif next_command:
         blocked_reason = "browser_submitted_no_response_proof_requires_recover"
@@ -1227,7 +1287,43 @@ def _browser_orphan_artifact_summary(
         "fallback_instruction": fallback_instruction,
         "sentinel": sentinel or None,
         "requested_tab_id": requested_tab_id or None,
+        "requested_attachment_paths": attachment_paths,
     }
+
+
+def _attachment_paths_from_command_spec(run_dir: Path, node_id: str) -> list[str]:
+    paths: list[str] = []
+    for spec_path in _command_spec_paths(run_dir, node_id):
+        if not spec_path.is_file():
+            continue
+        payload = _read_json(spec_path)
+        command = payload.get("command") if isinstance(payload.get("command"), list) else []
+        for index, item in enumerate(command):
+            if str(item) != "--attach-file" or index + 1 >= len(command):
+                continue
+            value = str(command[index + 1] or "").strip()
+            if value and value not in paths:
+                paths.append(value)
+    return paths
+
+
+def _command_spec_flag_value(run_dir: Path, node_id: str, flag: str) -> str:
+    for spec_path in _command_spec_paths(run_dir, node_id):
+        if not spec_path.is_file():
+            continue
+        payload = _read_json(spec_path)
+        command = payload.get("command") if isinstance(payload.get("command"), list) else []
+        for index, item in enumerate(command):
+            if str(item) == flag and index + 1 < len(command):
+                return str(command[index + 1] or "").strip()
+    return ""
+
+
+def _command_spec_paths(run_dir: Path, node_id: str) -> tuple[Path, Path]:
+    return (
+        run_dir / "command-specs" / node_id / "tau-dispatch-command.json",
+        run_dir / "tau-receipts" / "compiled-command-specs" / node_id / "tau-dispatch-command.json",
+    )
 
 
 def _next_available_path(path: Path) -> Path:

@@ -2495,6 +2495,103 @@ def test_run_tau_dag_bundle_synthesizes_webgpt_recovery_from_orphaned_submit_art
     assert failed["recovery_packet_path"] == str(node_dir / "browser-recovery-packet.json")
 
 
+def test_run_tau_dag_bundle_preserves_attachment_for_prepared_webgpt_orphan(
+    monkeypatch, tmp_path: Path
+) -> None:
+    attached_bundle = tmp_path / "compact evidence bundle.zip"
+    attached_bundle.write_text("bundle bytes", encoding="utf-8")
+    request = infer_compile_input(
+        "Ask webgpt for a tiny attached-bundle review.",
+        repo="local/agent-skills",
+        target="issue-1093-prepared-webgpt-attachment",
+        immutable_goal="Prepared WebGPT prompt recovery preserves the original local attachment path.",
+        handlers=["webgpt"],
+        dag_template="single-call",
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    spec_path = run_dir / "command-specs" / "handler-webgpt" / "tau-dispatch-command.json"
+    command_spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    command_spec["command"].extend(["--attach-file", str(attached_bundle)])
+    spec_path.write_text(json.dumps(command_spec, indent=2) + "\n", encoding="utf-8")
+
+    artifacts = run_dir / "node-artifacts"
+    node_dir = artifacts / "handler-webgpt"
+    node_dir.mkdir(parents=True, exist_ok=True)
+    (node_dir / "prompt.md").write_text("Prompt prepared for WebGPT.\n", encoding="utf-8")
+    (node_dir / "response.md.submitted.md").write_text("Prompt prepared for WebGPT.\n", encoding="utf-8")
+    sentinel = "<<<WEBGPT_DONE:20260729T131500Z:1093>>>>"
+    (node_dir / "response.md.receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_submit_receipt.v1",
+                "status": "prepared_prompt",
+                "submitted_to_chatgpt": False,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363305",
+                "output": str(node_dir / "response.md"),
+                "raw_output": str(node_dir / "response.raw.md"),
+                "meta_output": str(node_dir / "response.meta.json"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (node_dir / "webgpt_inflight.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_inflight.v1",
+                "status": "prepared_prompt",
+                "submitted_to_chatgpt": False,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363305",
+                "recovery_command": f"surf webgpt.recover --artifact-dir {node_dir} --finalize",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (node_dir / "webgpt_heartbeat.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_heartbeat.v1",
+                "phase": "prompt_prepared",
+                "page_state": "waiting_for_submit",
+                "next_expected_artifact": str(node_dir / "response.raw.md"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "worker exited after prompt preparation", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    execution = run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    receipt = json.loads((node_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((node_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert execution["status"] == "NEEDS_ATTENTION"
+    assert receipt["failure_code"] == "browser_submit_not_accepted"
+    assert recovery["failure_code"] == "browser_submit_not_accepted"
+    assert recovery["auto_retry_blocked_reason"] == "browser_prepared_prompt_requires_attachment_preserving_resubmit"
+    assert recovery["evidence"]["requested_attachment_paths"] == [str(attached_bundle)]
+    assert recovery["requested_attachment_paths"] == [str(attached_bundle)]
+    assert recovery["next_command"][1] == "webgpt.submit"
+    assert "--attach-file" in recovery["next_command"]
+    attach_index = recovery["next_command"].index("--attach-file")
+    assert recovery["next_command"][attach_index + 1] == str(attached_bundle)
+    assert "--tab-id" in recovery["next_command"]
+    assert recovery["next_command"][recovery["next_command"].index("--tab-id") + 1] == "837363305"
+
+
 def test_run_tau_dag_bundle_reclassifies_orphaned_webgpt_rate_limit_metadata(
     monkeypatch, tmp_path: Path
 ) -> None:

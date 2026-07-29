@@ -612,14 +612,14 @@ write_submit_receipt() {
   local status="$1"
   local receipt_at="$2"
   local accepted="${3:-false}"
-  python3 - "$receipt_output" "$status" "$receipt_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
+  python3 - "$receipt_output" "$status" "$receipt_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$attach_file_abs" <<'PY'
 import json
 import pathlib
 import sys
 
 (
     receipt, status, receipt_at, accepted_s, inp, submitted, out, raw, meta,
-    sentinel, requested_tab_id, target_url, model, reasoning,
+    sentinel, requested_tab_id, target_url, model, reasoning, attach_file,
 ) = sys.argv[1:]
 pathlib.Path(receipt).write_text(json.dumps({
     "schema": "surf.webgpt_submit_receipt.v1",
@@ -636,6 +636,8 @@ pathlib.Path(receipt).write_text(json.dumps({
     "requested_url": target_url or None,
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
+    "attach_file": attach_file or None,
+    "attachment_paths": [attach_file] if attach_file else [],
     "receipt_at": receipt_at,
 }, indent=2) + "\n", encoding="utf-8")
 PY
@@ -645,7 +647,7 @@ write_inflight_marker() {
   local status="$1"
   local marker_at="$2"
   local accepted="${3:-false}"
-  python3 - "$inflight_output" "$status" "$marker_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$receipt_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$$" <<'PY'
+  python3 - "$inflight_output" "$status" "$marker_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$receipt_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$attach_file_abs" "$$" <<'PY'
 import json
 import os
 import pathlib
@@ -654,7 +656,7 @@ import tempfile
 
 (
     marker, status, marker_at, accepted_s, inp, submitted, out, raw, meta, receipt,
-    sentinel, requested_tab_id, target_url, model, reasoning, pid,
+    sentinel, requested_tab_id, target_url, model, reasoning, attach_file, pid,
 ) = sys.argv[1:]
 payload = {
     "schema": "surf.webgpt_inflight.v1",
@@ -672,6 +674,8 @@ payload = {
     "requested_url": target_url or None,
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
+    "attach_file": attach_file or None,
+    "attachment_paths": [attach_file] if attach_file else [],
     "submit_pid": int(pid),
     "updated_at": marker_at,
     "recovery_command": (
