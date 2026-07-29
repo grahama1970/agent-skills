@@ -249,15 +249,48 @@ kimi_provider_capacity_busy = (
     or "high demand" in lower_stderr
     or "please try again later" in lower_stderr
 )
+attachment_ui_missing = (
+    bool(attach_file)
+    and "file input" in lower_stderr
+    and "not present" in lower_stderr
+    and ("kimi" in lower_stderr or "attachment" in lower_stderr or "upload" in lower_stderr)
+)
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
-    "failure": "kimi_provider_capacity_busy" if kimi_provider_capacity_busy else None,
-    "blocker": "BLOCKED_KIMI_PROVIDER_CAPACITY" if kimi_provider_capacity_busy else None,
-    "proof_status": "provider_capacity_limited" if kimi_provider_capacity_busy else "failed",
+    "failure": (
+        "kimi_provider_capacity_busy"
+        if kimi_provider_capacity_busy
+        else "attachment_ui_missing"
+        if attachment_ui_missing
+        else None
+    ),
+    "blocker": (
+        "BLOCKED_KIMI_PROVIDER_CAPACITY"
+        if kimi_provider_capacity_busy
+        else "BLOCKED_ATTACHMENT_UI_MISSING"
+        if attachment_ui_missing
+        else None
+    ),
+    "proof_status": (
+        "provider_capacity_limited"
+        if kimi_provider_capacity_busy
+        else "file_upload_unavailable"
+        if attachment_ui_missing
+        else "failed"
+    ),
     "kimi_provider_capacity_busy": kimi_provider_capacity_busy,
+    "attachment_ui_missing": attachment_ui_missing,
+    "attachment_missing": bool(attach_file) if attachment_ui_missing else None,
+    "attachment_preview_missing": False if attachment_ui_missing else None,
     "submitted_to_kimi": True if kimi_provider_capacity_busy else None,
-    "recommended_action": "wait_for_provider_capacity_or_use_another_browser_handler" if kimi_provider_capacity_busy else None,
+    "recommended_action": (
+        "wait_for_provider_capacity_or_use_another_browser_handler"
+        if kimi_provider_capacity_busy
+        else "repair_kimi_attachment_menu_or_use_another_attachment_capable_handler"
+        if attachment_ui_missing
+        else None
+    ),
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -417,14 +450,23 @@ elif activation_violation:
 elif tab_mismatch:
     failure = "controlled_tab_id_mismatch"
 elif attachment_missing:
-    failure = "attachment_metadata_missing"
+    failure = "attachment_ui_missing"
 elif attachment_preview_missing:
     failure = "attachment_preview_missing"
 else:
     failure = "missing_controlled_tab_id_or_contaminated_clean_output"
+proof_status = "response_proven" if status == "completed" else "failed"
+blocker = None
+recommended_action = None
+if failure == "attachment_ui_missing":
+    proof_status = "file_upload_unavailable"
+    blocker = "BLOCKED_ATTACHMENT_UI_MISSING"
+    recommended_action = "repair_kimi_attachment_menu_or_use_another_attachment_capable_handler"
 pathlib.Path(meta).write_text(json.dumps({
     "status": status,
     "failure": failure,
+    "blocker": blocker,
+    "proof_status": proof_status,
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -437,8 +479,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_reasoning": requested_reasoning or None,
     "attach_file": attach_file or None,
     "attachment": attachment,
+    "attachment_ui_missing": failure == "attachment_ui_missing",
     "attachment_missing": attachment_missing,
     "attachment_preview_missing": attachment_preview_missing,
+    "recommended_action": recommended_action,
     "provider_busy_cooldown_seconds": int(cooldown_s),
     "provider_busy_cooldown_count": int(cooldown_count),
     "provider_busy_retry_attempts": int(retry_attempts),

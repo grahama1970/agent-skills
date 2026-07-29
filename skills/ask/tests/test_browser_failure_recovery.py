@@ -124,6 +124,59 @@ def test_gemini_attachment_metadata_missing_is_attachment_unavailable(tmp_path: 
     assert "attachment transport" in packet["fallback_instruction"].lower()
 
 
+def test_kimi_attachment_ui_missing_gets_specific_recovery_packet(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure='Error: Kimi file input (input[type="file"]) not present in the DOM; Kimi may require opening the attachment menu first.',
+        prompt_text="Use the attached evidence bundle.",
+        submit_meta={
+            "status": "failed",
+            "failure": "attachment_ui_missing",
+            "blocker": "BLOCKED_ATTACHMENT_UI_MISSING",
+            "proof_status": "file_upload_unavailable",
+            "attach_file": "/tmp/evidence-bundle.zip",
+            "attachment_ui_missing": True,
+            "attachment_missing": True,
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UI_MISSING
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_ui_missing_requires_transport_repair"
+    assert "attachment menu" in packet["fallback_instruction"].lower()
+    assert "next_command" in packet and packet["next_command"]
+
+
+def test_kimi_attachment_metadata_missing_gets_upload_ui_recovery_packet(tmp_path: Path) -> None:
+    bundle = tmp_path / "evidence-bundle.zip"
+    bundle.write_bytes(b"PK\x05\x06" + b"\0" * 18)
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure="Kimi returned a response but no attachment metadata was emitted.",
+        response_text="kimi answer without attachment proof",
+        raw_text="kimi answer without attachment proof<<<KIMI_DONE:test>>>",
+        prompt_text="Use the attached evidence bundle.",
+        submit_meta={
+            "status": "failed",
+            "failure": "attachment_metadata_missing",
+            "attach_file": str(bundle),
+            "attachment": None,
+            "attachment_missing": True,
+            "proof_status": "response_proven",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UI_MISSING
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_ui_missing_requires_transport_repair"
+    assert "attachment menu" in packet["fallback_instruction"].lower()
+    assert packet["next_command"]
+    assert "--attach-file" in packet["next_command"]
+    assert packet["next_command"][packet["next_command"].index("--attach-file") + 1] == str(bundle)
+
+
 def test_prompt_too_large_or_stalled_allows_retry_only_with_attachable_bundle(tmp_path: Path) -> None:
     bundle = tmp_path / "review-bundle.md"
     bundle.write_text("# Bundle\n\nReadable local target.", encoding="utf-8")

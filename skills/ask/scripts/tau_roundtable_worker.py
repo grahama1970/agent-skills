@@ -55,6 +55,7 @@ BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 BROWSER_PROVIDER_SETUP_FAILED = "browser_provider_setup_failed"
 BROWSER_SUBMIT_NOT_ACCEPTED = "browser_submit_not_accepted"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
+BROWSER_ATTACHMENT_UI_MISSING = "attachment_ui_missing"
 BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
 BROWSER_CLEAN_OUTPUT_CONTAMINATED = "browser_clean_output_contaminated"
 BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
@@ -1396,7 +1397,13 @@ def _browser_failure_recovery_packet(
         submit_meta=submit_meta,
         commands=commands,
     )
-    bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
+    bundle_paths = _unique_existing_files(
+        [
+            *[str(item) for item in (getattr(args, "attach_files", None) or [])],
+            str(submit_meta.get("attach_file") or ""),
+            *_local_readable_bundle_paths(prompt_text, request_payload),
+        ]
+    )
     can_attach = handler in ATTACH_FILE_HANDLERS
     auto_retry_allowed = (
         failure_code
@@ -1410,6 +1417,7 @@ def _browser_failure_recovery_packet(
             BROWSER_PROVIDER_SETUP_FAILED,
             BROWSER_SUBMIT_NOT_ACCEPTED,
             BROWSER_TOOL_UNSUPPORTED,
+            BROWSER_ATTACHMENT_UI_MISSING,
             BROWSER_ATTACHMENT_UNAVAILABLE,
             BROWSER_SENTINEL_TRAILING_CONTENT,
             WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
@@ -1614,6 +1622,12 @@ def _classify_browser_failure(
     if _looks_browser_tool_unsupported(haystack):
         return BROWSER_TOOL_UNSUPPORTED
     if (
+        _browser_attachment_ui_missing_in_meta(submit_meta)
+        or _looks_browser_attachment_ui_missing(haystack)
+        or _kimi_attachment_metadata_missing_after_attach(handler, submit_meta)
+    ):
+        return BROWSER_ATTACHMENT_UI_MISSING
+    if (
         BROWSER_ATTACHMENT_UNAVAILABLE in haystack
         or _browser_attachment_missing_in_meta(submit_meta)
         or _response_denies_attachment_access(response_text)
@@ -1721,6 +1735,39 @@ def _response_denies_attachment_access(text: str) -> bool:
         "file was not provided or rendered",
     )
     return any(marker in normalized for marker in markers)
+
+
+def _looks_browser_attachment_ui_missing(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text.lower())
+    return (
+        "file input" in normalized
+        and "not present" in normalized
+        and ("kimi" in normalized or "attachment" in normalized or "upload" in normalized)
+    )
+
+
+def _browser_attachment_ui_missing_in_meta(meta: dict[str, Any]) -> bool:
+    if not isinstance(meta, dict):
+        return False
+    failure = str(meta.get("failure") or "").lower()
+    blocker = str(meta.get("blocker") or "").lower()
+    proof_status = str(meta.get("proof_status") or "").lower()
+    return (
+        failure == "attachment_ui_missing"
+        or blocker == "blocked_attachment_ui_missing"
+        or proof_status == "file_upload_unavailable"
+    )
+
+
+def _kimi_attachment_metadata_missing_after_attach(handler: str, meta: dict[str, Any]) -> bool:
+    if handler != "webkimi" or not isinstance(meta, dict):
+        return False
+    failure = str(meta.get("failure") or "").lower()
+    return (
+        failure == "attachment_metadata_missing"
+        and bool(meta.get("attach_file"))
+        and meta.get("attachment_missing") is True
+    )
 
 
 def _browser_attachment_missing_in_meta(meta: dict[str, Any]) -> bool:
@@ -2741,6 +2788,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_PROVIDER_SETUP_FAILED: "Surf reached the browser provider, but a provider UI setup step such as model or reasoning selection failed before prompt delivery.",
         BROWSER_SUBMIT_NOT_ACCEPTED: "Surf reached the browser composer, but the prompt was not accepted as a submitted message.",
         BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
+        BROWSER_ATTACHMENT_UI_MISSING: "The provider attachment UI or file input was not available before prompt submission.",
         BROWSER_ATTACHMENT_UNAVAILABLE: "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
         BROWSER_CLEAN_OUTPUT_CONTAMINATED: "The browser provider returned text, but Surf could not produce a clean response because the terminal sentinel remained in the cleaned output.",
         BROWSER_SENTINEL_TRAILING_CONTENT: "The browser provider output included text after the terminal sentinel, so the clean assistant turn is not attributable.",
@@ -2780,6 +2828,8 @@ def _auto_retry_blocked_reason(
         return "browser_submit_not_accepted_requires_composer_recovery_or_fresh_tab"
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "surf_runtime_command_mismatch_requires_repair"
+    if failure_code == BROWSER_ATTACHMENT_UI_MISSING:
+        return "attachment_ui_missing_requires_transport_repair"
     if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
         return "attachment_transport_must_be_repaired"
     if failure_code == BROWSER_CLEAN_OUTPUT_CONTAMINATED:
@@ -2844,6 +2894,12 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         )
     if failure_code == BROWSER_TOOL_UNSUPPORTED:
         return "Repair the Surf wrapper/provider adapter command mapping, then rerun the Tau DAG node. Do not retry the same browser call unchanged."
+    if failure_code == BROWSER_ATTACHMENT_UI_MISSING:
+        return (
+            "Do not submit this lane unchanged. Repair the provider attachment UI path, open the provider's "
+            "attachment menu/file input before upload, or switch to a handler with working attachment support. "
+            "Then rerun a focused attachment lane and read back response.meta.json before using the reviewer output."
+        )
     if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
         return (
             "Do not retry the same attachment submission unchanged. Repair or replace this provider's "
