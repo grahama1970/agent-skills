@@ -1989,6 +1989,49 @@ def prove_live_transport_server(
     console.print_json(data=receipt)
 
 
+@app.command("prove-packaged-deployment-smoke")
+def prove_packaged_deployment_smoke(
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the packaged local deployment smoke receipt.",
+    ),
+    repo_root: Path = typer.Option(
+        Path(__file__).resolve().parents[4],
+        "--repo-root",
+        help="agent-skills repository root to archive from.",
+    ),
+    fixture: Path = typer.Option(
+        Path(
+            "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"
+        ),
+        "--fixture",
+        help="Fixture path relative to packaged skills/battle.",
+    ),
+    interaction_manifest: Path = typer.Option(
+        Path(
+            "local/working-frontend-backend-20260729/test-interactions-live-after-patch/live-route-unique-hash-manifest.json"
+        ),
+        "--interaction-manifest",
+        help="Interaction manifest path relative to the live skills/battle root.",
+    ),
+    battle_id: str = typer.Option(
+        "battle-004", "--battle-id", help="Battle id for the packaged smoke."
+    ),
+):
+    """Prove a Git-archived local package can launch Battle frontend/backend."""
+    from .packaged_deployment_smoke import prove_packaged_deployment_smoke as _prove
+
+    receipt = _prove(
+        out_dir=out,
+        repo_root=repo_root,
+        fixture=fixture,
+        interaction_manifest=interaction_manifest,
+        battle_id=battle_id,
+    )
+    console.print_json(data=receipt)
+
+
 @app.command("export-ux-handoff-summary")
 def export_ux_handoff_summary(
     summary: Path = typer.Argument(
