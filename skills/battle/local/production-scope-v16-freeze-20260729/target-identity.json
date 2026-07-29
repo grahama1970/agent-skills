@@ -1,0 +1,14 @@
+{
+  "blockers": [
+    "durable-memory-packets-unimplemented",
+    "live-topology-not-qualified"
+  ],
+  "freeze_manifest_file_sha256": "f6fc776df650563e6293de27e1ddcdac7a7dbea756a8d7bf147f200de77b8802",
+  "freeze_manifest_sha256": "3e342b0baa7e9ad65981e9ef93c240722eb80d6b3ea83b4bf6e37c1a42b73e4f",
+  "qualification_eligible": false,
+  "schema": "battle.v16.target_identity.v1",
+  "semantic_version": "0.5.0-deterministic",
+  "status": "FROZEN_NOT_QUALIFIED",
+  "target_id": "battle-v16-relayforge-a",
+  "target_identity_sha256": "3e342b0baa7e9ad65981e9ef93c240722eb80d6b3ea83b4bf6e37c1a42b73e4f"
+}

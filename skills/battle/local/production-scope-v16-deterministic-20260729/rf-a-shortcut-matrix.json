@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "case_id": "malformed-member-name",
+      "highest_stage": "UNSEEN",
+      "http_status": 422,
+      "passed": true,
+      "reason": "invalid_member_name",
+      "sink_hashes_unchanged": true
+    },
+    {
+      "case_id": "absolute-member-name",
+      "highest_stage": "UNSEEN",
+      "http_status": 422,
+      "passed": true,
+      "reason": "invalid_member_name",
+      "sink_hashes_unchanged": true
+    },
+    {
+      "case_id": "non-rf-a-escape",
+      "highest_stage": "REPRODUCIBLE_PROBE",
+      "http_status": 409,
+      "passed": true,
+      "reason": "REJECTED",
+      "sink_hashes_unchanged": true
+    },
+    {
+      "case_id": "direct-sink-endpoint",
+      "highest_stage": "UNSEEN",
+      "http_status": 404,
+      "passed": true,
+      "sink_hashes_unchanged": true
+    }
+  ],
+  "schema": "battle.v16.relayforge.rf_a_shortcut_matrix.v1",
+  "status": "PASS"
+}

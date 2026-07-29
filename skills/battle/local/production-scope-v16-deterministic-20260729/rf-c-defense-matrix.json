@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "highest_stage": "EVIDENCE_GATHERED",
+      "mode": "preview-defense",
+      "objective": false,
+      "passed": true,
+      "preview_http_status": 422,
+      "render_http_status": 0
+    },
+    {
+      "highest_stage": "REPRODUCIBLE_PROBE",
+      "mode": "capability-defense",
+      "objective": false,
+      "passed": true,
+      "preview_http_status": 200,
+      "render_http_status": 403
+    },
+    {
+      "highest_stage": "REPRODUCIBLE_PROBE",
+      "mode": "renderer-defense",
+      "objective": false,
+      "passed": true,
+      "preview_http_status": 200,
+      "render_http_status": 404
+    },
+    {
+      "highest_stage": "EVIDENCE_GATHERED",
+      "mode": "defended",
+      "objective": false,
+      "passed": true,
+      "preview_http_status": 422,
+      "render_http_status": 0
+    }
+  ],
+  "schema": "battle.v16.relayforge.rf_c_defense_matrix.v1",
+  "status": "PASS"
+}

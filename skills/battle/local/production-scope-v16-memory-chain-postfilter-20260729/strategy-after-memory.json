@@ -1,0 +1,39 @@
+{
+  "expected_observation": "contain the evidenced trust boundary while preserving the public functionality contract",
+  "live": true,
+  "memory_citations": {
+    "memory_content_sha256": "bca9772fed610e30a54a8e9cf297061e470369ae66dae31c5ce6e91d40d3fffd",
+    "memory_key": "battle-v16-relayforge-a:memory-chain:blue:b781345bc7367f6a76cfafc4",
+    "memory_recall_receipt_sha256": "2fc424818d951f0757012962696218f536d56d0f0f23310cac11b4f3f302753f",
+    "source_observation_receipt_sha256": "b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f"
+  },
+  "memory_origin_reason": "Changed selected_methods from global-service-quarantine to evidence-targeted-boundary-control; changed rejected_methods to reject global-service-quarantine; changed parameters.control_scope from global to measured_trust_boundary and preserve_functionality from false to true; changed mutation_origin from pre-memory baseline to durable_memory; changed expected_observation from unavailable workflows to preserving the public functionality contract while containing the evidenced trust boundary.",
+  "mocked": false,
+  "mutation_origin": "durable_memory from memory_key=battle-v16-relayforge-a:memory-chain:blue:b781345bc7367f6a76cfafc4; memory_content_sha256=bca9772fed610e30a54a8e9cf297061e470369ae66dae31c5ce6e91d40d3fffd; memory_recall_receipt_sha256=2fc424818d951f0757012962696218f536d56d0f0f23310cac11b4f3f302753f; source_observation_receipt_sha256=b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f",
+  "outcome_improvement_proven": false,
+  "parameters": {
+    "boundary_checks": [
+      "reject_absolute_paths",
+      "reject_parent_traversal",
+      "reject_drive_or_root_qualified_paths",
+      "reject_symlink_entries",
+      "resolve_and_verify_destination_containment"
+    ],
+    "control_scope": "measured_trust_boundary",
+    "preserve_functionality": true
+  },
+  "phase": "POST_MEMORY",
+  "rejected_methods": [
+    "global-service-quarantine"
+  ],
+  "schema": "battle.v16.memory_chain_strategy.v1",
+  "selected_methods": [
+    "evidence-targeted-boundary-control"
+  ],
+  "source_lesson_sha256": "0f317274033c0b6b8a7be89c5e87dc5bb0e96ab60cf298ada860b7b0a574c1a3",
+  "source_observation_receipt_sha256": "b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f",
+  "status": "PASS",
+  "strategy_id": "relayforge-v16-blue-post-memory",
+  "target_id": "battle-v16-relayforge-a",
+  "team": "blue"
+}

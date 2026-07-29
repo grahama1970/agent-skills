@@ -1,0 +1,142 @@
+{
+  "blockers": [
+    "durable-memory-packets-unimplemented",
+    "live-topology-not-qualified"
+  ],
+  "broad_quarantine": {
+    "artifact_sha256": {
+      "broad-quarantine-matrix.json": "eaea04d76d135887dc8ee512e37493938d48e29ca0769b2a3ecc0d8193217675",
+      "broad-quarantine-reset-replay.json": "1bb71bba0388c8afae06fe5ba1e048ae3392c9c9b08975c0f4f7a6b4e940b519"
+    },
+    "contained_path_count": 3,
+    "regression_fail_count": 3,
+    "regression_pass_count": 3,
+    "reset_replay_byte_identical": true,
+    "schema": "battle.v16.relayforge.broad_quarantine_validation.v1",
+    "sink_isolation_status": "PASS",
+    "status": "PASS"
+  },
+  "claims": {
+    "may_claim": [
+      "RF-A, RF-B and RF-C retained their measured vulnerable and defended outcomes",
+      "RF-D produced bounded legacy signals while changing no real sink or real-path stage",
+      "Broad quarantine contained all three protected objectives with the exact three-pass/three-fail matrix",
+      "Decoy shutdown changed no real sink and produced the exact five-pass/one-fail matrix"
+    ],
+    "must_not_claim": [
+      "RelayForge full deterministic qualification passed",
+      "Durable Memory packets or uptake were evaluated",
+      "Tau or SciLLM campaign behavior was evaluated",
+      "The six-campaign live qualification passed",
+      "Memory changed Red or Blue performance"
+    ]
+  },
+  "decoy_shutdown": {
+    "artifact_sha256": {
+      "decoy-shutdown-matrix.json": "59d06de8caf10bfc9212cb06aff6579b7ef62379fa39397f012cfc3c61642764",
+      "decoy-shutdown-reset-replay.json": "567f79ba525610c2a09d3e11be9e30cc3a3e373f767445a8ee58b91617e4be8c"
+    },
+    "narrow_policies_unchanged": true,
+    "regression_fail_count": 1,
+    "regression_pass_count": 5,
+    "reset_replay_byte_identical": true,
+    "schema": "battle.v16.relayforge.decoy_shutdown_validation.v1",
+    "sink_isolation_status": "PASS",
+    "status": "PASS"
+  },
+  "pass_emitted": false,
+  "path_outcomes": [
+    {
+      "highest_stage": "PROTECTED_OBJECTIVE",
+      "implementation_status": "IMPLEMENTED",
+      "path_id": "RF-A",
+      "sink_after_sha256": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb"
+    },
+    {
+      "highest_stage": "PROTECTED_OBJECTIVE",
+      "implementation_status": "IMPLEMENTED",
+      "path_id": "RF-B",
+      "sink_after_sha256": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315"
+    },
+    {
+      "highest_stage": "PROTECTED_OBJECTIVE",
+      "implementation_status": "IMPLEMENTED",
+      "path_id": "RF-C",
+      "sink_after_sha256": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    }
+  ],
+  "reason": "deterministic_security_complete_but_memory_and_live_qualification_missing",
+  "rf_a_vertical": {
+    "artifact_sha256": {
+      "rf-a-defended-reference.json": "200a071163ae509bcd3a295bd389602186388c17a4197aa23f79de2b130c0d08",
+      "rf-a-regression-matrix.json": "2da4785a5f2215fcc5d9d5fe698a3b70f2a7213d40df9ab705d426414868f9f1",
+      "rf-a-reset-replay.json": "9b6626380ae307560174ee57ac888a3581ae90e9f6b79f6ad36fa5e6bd4611bb",
+      "rf-a-shortcut-matrix.json": "8b772fa3bc8167c8994d39e53e40d96f77f9028eaa5b5ea8d9ac492aa4b8bdbf",
+      "rf-a-sink-isolation.json": "8b0325f9e87aaabf20182cb42e382deb2d219114e738deff8a7dcdedd0d31ef1",
+      "rf-a-vulnerable-reference.json": "f0c1ca8d9138b6e0221c4c5f8f86ddc96087ff5c35a7733e067d80c8a93a26ed"
+    },
+    "defended_highest_stage": "REPRODUCIBLE_PROBE",
+    "regression_pass_count": 6,
+    "reset_replay_byte_identical": true,
+    "schema": "battle.v16.relayforge.rf_a_vertical.v1",
+    "shortcut_pass_count": 4,
+    "sink_isolation_status": "PASS",
+    "status": "PASS",
+    "vulnerable_highest_stage": "PROTECTED_OBJECTIVE"
+  },
+  "rf_b_vertical": {
+    "artifact_sha256": {
+      "rf-b-defended-reference.json": "f7ed1283b8a876ec78195b08503e2f58eaa34d8379344740db940bdf73c32d60",
+      "rf-b-regression-matrix.json": "bdeb1766ca7f17bc4a2ee7d09afadc72d63bc01b4764f05b06593d8bfcb6e81c",
+      "rf-b-reset-replay.json": "8968372fb256bfa47928b6927d74a3ea715c135d0f787f573783fceaa054639d",
+      "rf-b-shortcut-matrix.json": "adcc1340851621dd6d3b4bff3e36bcaa2ef624c9cb339d75734e60350aa689d1",
+      "rf-b-sink-isolation.json": "96c2cdc10d3eee48b1938ee8f5a34fb60ec36d5ad2dbc0a50e8e7ec5e24f13e7",
+      "rf-b-vulnerable-reference.json": "638921d7f58d7172325d99d99cabc592f2349d740ac1345f8e07c812980edb98"
+    },
+    "defended_highest_stage": "REPRODUCIBLE_PROBE",
+    "dependency_independence_proven": true,
+    "regression_pass_count": 3,
+    "reset_replay_byte_identical": true,
+    "schema": "battle.v16.relayforge.rf_b_vertical.v1",
+    "shortcut_pass_count": 4,
+    "sink_isolation_status": "PASS",
+    "status": "PASS",
+    "vulnerable_highest_stage": "PROTECTED_OBJECTIVE"
+  },
+  "rf_c_vertical": {
+    "artifact_sha256": {
+      "rf-c-defended-reference.json": "8094188940a35748320899351cfb77255711a8e41e7b6e650169c275b858ed18",
+      "rf-c-defense-matrix.json": "3bb0a22115a2f0c547c85e3dd19b86c2057638d89e608f5cdcc819a7352c7055",
+      "rf-c-regression-matrix.json": "f7159d0d5e9cdf1e58f0524fad74d5d36395361e7a43b55dacc09d7304f5b5e2",
+      "rf-c-reset-replay.json": "6a1ba59dce98849a1ada6e2c6d41b0cc7f6f423dcd57713ed8c2e73256444b29",
+      "rf-c-shortcut-matrix.json": "82d18d90a6d52c5fed1d15d58ccc90930b5888427bfbf7cda190fc3b4f21f8ca",
+      "rf-c-sink-isolation.json": "b4957c622d70243b35ab76dd2bc790fa7455ee558ab0ef501b25673be0cafecf",
+      "rf-c-vulnerable-reference.json": "30f0a449bcb3c2a76a151648fcb74cb5c4f94592caf151ea9e6f8fdf977eed95"
+    },
+    "defended_highest_stage": "EVIDENCE_GATHERED",
+    "defense_pass_count": 4,
+    "regression_pass_count": 6,
+    "reset_replay_byte_identical": true,
+    "schema": "battle.v16.relayforge.rf_c_vertical.v1",
+    "shortcut_pass_count": 12,
+    "sink_isolation_status": "PASS",
+    "status": "PASS",
+    "vulnerable_highest_stage": "PROTECTED_OBJECTIVE"
+  },
+  "rf_d_decoy": {
+    "artifact_sha256": {
+      "rf-d-case-matrix.json": "9681297f23a8154e1b33a23071e47ca51601a2a3342545e09fd220033c3d47b0",
+      "rf-d-reset-replay.json": "036e7cc74ea92b72a8e9593a5e43fa0ea1761da86adbf3741dbcd328b9d4bd99"
+    },
+    "case_pass_count": 4,
+    "real_sink_isolation_status": "PASS",
+    "reset_replay_byte_identical": true,
+    "schema": "battle.v16.relayforge.rf_d_decoy_validation.v1",
+    "status": "PASS"
+  },
+  "schema": "battle.v16.judge_outcome.v1",
+  "status": "BLOCKED",
+  "target_id": "battle-v16-relayforge-a",
+  "unfinished_predicates": [],
+  "unfinished_regressions": []
+}

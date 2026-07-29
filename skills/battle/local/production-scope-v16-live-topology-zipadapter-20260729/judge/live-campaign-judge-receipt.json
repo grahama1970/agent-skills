@@ -1,0 +1,66 @@
+{
+  "after_red_measurement_sha256": "abe5eb85975585ade14508c922b34c28d50a2ecf0e373e4c132656a347001ff2",
+  "baseline_measurement_sha256": "ffcd311ec9c2c3e4638414cc49ff5bda78b2cfdbcf533b0361a4a92a25608429",
+  "blue_execution_sha256": "7d8096e2fbb39171daf377a1fc217da8337caafa9f199517be5f01af4b635c41",
+  "blue_selection_sha256": "62ad2b791266c322be0c5a924590151304775d03d497a9ea28ed406942154320",
+  "created_at": "2026-07-29T15:28:55Z",
+  "final_measurement_sha256": "b19611f71ce5299eb25290914358b8c685eec2b63d15c5aa06ccc77647c39e67",
+  "final_recheck_sha256": "a8cb43d730d41473f9a0487e7b695c4139967c6f335d674323b904bfde2e90ac",
+  "fixture_fallback_used": false,
+  "judge_authority": "relayforge-private-judge-cli",
+  "live": true,
+  "memory_improvement_proven": false,
+  "mocked": false,
+  "path_stages": {
+    "after_red": {
+      "RF-A": "UNSEEN",
+      "RF-B": "REPRODUCIBLE_PROBE",
+      "RF-C": "UNSEEN"
+    },
+    "baseline": {
+      "RF-A": "UNSEEN",
+      "RF-B": "REPRODUCIBLE_PROBE",
+      "RF-C": "UNSEEN"
+    },
+    "final": {
+      "RF-A": "UNSEEN",
+      "RF-B": "REPRODUCIBLE_PROBE",
+      "RF-C": "UNSEEN"
+    }
+  },
+  "post_regression_measurement_sha256": "407c3578b62210715e160add936f940d04e59363f805137915651e381fdb74c5",
+  "production_readiness_proven": false,
+  "red_execution_sha256": "2593dee606fd0fcb9a82d04f65168919a2df1f054f47eaac6d4d24cd070381dd",
+  "red_replay_sha256": "9e9f7cdb1891c5ed409aa3d4e2314859c61510dda15be85d10ac2e9e3a5c041f",
+  "red_selection_sha256": "00f2f54235b4f5aa6f87618e59a5d7e5f963faf6985ef0aaf6b2e66e0a6adbeb",
+  "regression_receipt_sha256": "4447e731d4a1a4dca3e4d5623f2bc893683270b7c35ab68292c33071f135e78d",
+  "regression_vector": {
+    "in-bound-transformed-object": true,
+    "legacy-conversion": true,
+    "regular-package-import": true,
+    "safe-report-profile": true,
+    "tenant-owned-report": true,
+    "valid-external-preview": true
+  },
+  "schema": "battle.v16.live_topology_judge.v1",
+  "sink_hashes": {
+    "after_red": {
+      "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+      "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+      "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    },
+    "baseline": {
+      "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+      "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+      "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    },
+    "final": {
+      "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+      "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+      "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    }
+  },
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "verdict": "CONTESTED"
+}

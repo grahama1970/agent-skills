@@ -1,0 +1,52 @@
+{
+  "adopted_methods": [
+    "evidence-targeted-boundary-control"
+  ],
+  "changed_strategy_fields": [
+    "expected_observation",
+    "mutation_origin",
+    "parameters",
+    "rejected_methods",
+    "selected_methods"
+  ],
+  "claims": {
+    "does_not_prove": [
+      "The changed strategy improved any RelayForge Judge outcome."
+    ],
+    "proves": [
+      "The live provider cited the exact recalled record and changed a strategy artifact for an explicit Memory-origin reason."
+    ]
+  },
+  "context_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/context/tau-public-context.json",
+  "created_at": "2026-07-29T15:19:56Z",
+  "fixture_fallback_used": false,
+  "live": true,
+  "memory_content_sha256": "bca9772fed610e30a54a8e9cf297061e470369ae66dae31c5ce6e91d40d3fffd",
+  "memory_key": "battle-v16-relayforge-a:memory-chain:blue:b781345bc7367f6a76cfafc4",
+  "memory_origin_reason": "Changed selected_methods from global-service-quarantine to evidence-targeted-boundary-control; changed rejected_methods to reject global-service-quarantine; changed parameters.control_scope from global to measured_trust_boundary and preserve_functionality from false to true; changed mutation_origin from pre-memory baseline to durable_memory; changed expected_observation from unavailable workflows to preserving the public functionality contract while containing the evidenced trust boundary.",
+  "memory_recall_receipt_sha256": "2fc424818d951f0757012962696218f536d56d0f0f23310cac11b4f3f302753f",
+  "memory_write_receipt_sha256": "460a7fed78a043fe364509d6f0c2c84bf4767e044541221f15a64b9e2ca7c024",
+  "mocked": false,
+  "outcome_improvement_proven": false,
+  "post_strategy_artifact_sha256": "e0dac6dc4c3159be8c7cdcefc2b534dfe421065dea0f8489bb42f44de64e4095",
+  "post_strategy_canonical_sha256": "c7238d082e64917e3eba2e5393ba54ab47368c207e980bc0acf6e101d33974be",
+  "pre_strategy_sha256": "00d5f45305cb8456b91ff3661bda4988e30f9e69ffd03e0ad9a06b5e694c2bf9",
+  "provider_call_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/blue/scillm-call-receipt.json",
+  "provider_call_receipt_sha256": "80c8818134b725fa36f17f49a8b63551b441828994b38a43cbcb8c561a033c25",
+  "provider_citations": {
+    "memory_content_sha256": true,
+    "memory_key": true,
+    "memory_recall_receipt_sha256": true,
+    "source_observation_receipt_sha256": true
+  },
+  "rejected_methods": [
+    "global-service-quarantine"
+  ],
+  "schema": "battle.v16.memory_chain_provider_use.v1",
+  "source_observation_receipt_sha256": "b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f",
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "tau_manifest_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/manifest.json",
+  "tau_manifest_sha256": "5d89eb91ded8647295decd119c96530161b5afd6ce7e4a572a22b81c813d0915",
+  "team": "blue"
+}

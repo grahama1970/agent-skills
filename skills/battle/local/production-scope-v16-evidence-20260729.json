@@ -1,0 +1,52 @@
+{
+  "schema": "battle.production_scope_v16_evidence.v1",
+  "status": "PARTIAL_PASS",
+  "branch": "main",
+  "mocked": false,
+  "frontend": {
+    "pr8_live_transport_summary": "skills/battle/local/working-frontend-backend-20260729/pr8-integrated-main-after-v16/summary.json",
+    "pr8_live_transport_checks": {
+      "total": 33,
+      "failed": 0
+    },
+    "test_interactions_results": "skills/battle/local/working-frontend-backend-20260729/test-interactions-live-after-patch/captures-live-route-v16-refresh/results.json",
+    "test_interactions_counts": {
+      "total": 38,
+      "passed": 38,
+      "failed": 0,
+      "warned": 0,
+      "skipped": 0
+    },
+    "visual_findings": 0,
+    "screenshot": "skills/battle/local/working-frontend-backend-20260729/pr8-integrated-main-after-v16/01-live-sse-adapter.png"
+  },
+  "backend": {
+    "memory_chain_qualification": "skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/memory-chain-qualification.json",
+    "memory_chain_status": "PASS",
+    "memory_chain_closed_blocker": "durable-memory-packets-unimplemented",
+    "live_topology_qualification": "skills/battle/local/production-scope-v16-live-topology-zipadapter-20260729/live-topology-qualification.json",
+    "live_topology_status": "PASS",
+    "live_topology_closed_blocker": "live-topology-not-qualified",
+    "live_topology_remaining_blockers": [],
+    "live_topology_judge_verdict": "CONTESTED"
+  },
+  "proved_now": [
+    "Battle writes and exactly recalls one team-scoped measured RelayForge record through the production Memory API.",
+    "A live Tau/SciLLM provider cites and uses the exact Memory record to change a Blue strategy artifact.",
+    "One immutable nine-service RelayForge topology runs healthy for a live bounded Red/Blue campaign.",
+    "Live Tau/SciLLM provider artifacts are converted into typed Battle-selected public actions and bound to private Judge measurements.",
+    "The Battle spectator renders the live local HTTP SSE adapter with EventSource transport, mocked=false, and seq 36/36.",
+    "$test-interactions exercises 38 live QID interactions with 0 failures and 0 warnings."
+  ],
+  "remaining_not_proven": [
+    "Production deployment.",
+    "WebSocket transport.",
+    "Unbounded swarm execution.",
+    "Memory-improved Judge outcome.",
+    "Battle or RelayForge production readiness.",
+    "Six-trial qualification.",
+    "Factorial effects.",
+    "Cross-target generalization."
+  ],
+  "created_at": "2026-07-29T15:33:30Z"
+}

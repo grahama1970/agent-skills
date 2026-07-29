@@ -1,0 +1,22 @@
+{
+  "fixture_fallback_used": false,
+  "label": "setup-import",
+  "live": true,
+  "method": "POST",
+  "mocked": false,
+  "public_route": "/api/v1/jobs/import",
+  "request_sha256": "fd7bc3f5b49f7712c13a2a6183c0f33e89c6d395657b616c2140931a7f681b52",
+  "response_artifact_sha256": "b41768e3264de7fa2a4821b24e18f64c713b2ac4a9e8daa6e0546889c5c73db3",
+  "response_body_sha256": "eb8b81b7344e4138fd5621fac511515646a89631015ddca436f3bf8d0e193cbb",
+  "response_status_code": 201,
+  "schema": "battle.v16.live_topology_action_execution.v1",
+  "selected_action_sha256": null,
+  "source_bindings": {},
+  "source_time": {
+    "duration_seconds": 0.0449,
+    "ended_at": "2026-07-29T15:27:58Z",
+    "started_at": "2026-07-29T15:27:57Z"
+  },
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a"
+}

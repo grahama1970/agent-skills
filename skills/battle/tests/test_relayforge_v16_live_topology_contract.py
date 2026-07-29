@@ -9,6 +9,7 @@ from battle_skill.relayforge_v16_live_topology import (
     CampaignJournal,
     LiveTopologyContractError,
     classify_judge_verdict,
+    execute_blue_action,
     validate_action_proposals,
 )
 
@@ -120,6 +121,57 @@ def test_missing_structured_proposals_fails_closed() -> None:
         )
 
 
+def test_red_legacy_strategy_genome_can_derive_one_public_action() -> None:
+    valid, rejected = validate_action_proposals(
+        team="red",
+        parsed={
+            "strategy_genome": {
+                "selected_methods": [
+                    "regular-package-import",
+                    "bounded traversal-like ZIP member",
+                ],
+                "parameters": {"zip_entry": "../arena_escape.txt"},
+                "expected_observation": "regular import returns one bounded response",
+            }
+        },
+        known_evidence_refs={"setup-import", "public-action-catalog"},
+        private_identifiers=["judge-probe"],
+    )
+
+    assert rejected == []
+    assert valid == [
+        {
+            "action_id": "red-derived-regular-package-import",
+            "rank": 1,
+            "operation": "regular-package-import",
+            "evidence_refs": ["setup-import", "public-action-catalog"],
+            "expected_observation": "regular import returns one bounded response",
+            "parameters": {},
+        }
+    ]
+
+
+def test_red_zip_exploit_artifact_derives_regular_import_action() -> None:
+    valid, rejected = validate_action_proposals(
+        team="red",
+        parsed={
+            "artifact_type": "red_exploit",
+            "exploit_py": "make a zip with ../arena_escape.txt and call import_zip",
+            "strategy_genome": {
+                "selected_methods": ["direct local app.py import"],
+                "parameters": {"zip_entry": "../arena_escape.txt"},
+                "expected_observation": "RED_EXPLOIT_CONFIRMED on traversal",
+            },
+        },
+        known_evidence_refs={"setup-import", "public-action-catalog"},
+        private_identifiers=["judge-probe"],
+    )
+
+    assert rejected == []
+    assert valid[0]["operation"] == "regular-package-import"
+    assert valid[0]["evidence_refs"] == ["setup-import", "public-action-catalog"]
+
+
 def test_judge_accepts_red_success() -> None:
     verdict = classify_judge_verdict(
         before_red=_measurement("UNSEEN"),
@@ -182,3 +234,62 @@ def test_campaign_journal_is_monotonic_and_hash_chained(tmp_path: Path) -> None:
         second["source_time"]["elapsed_seconds"]
         > first["source_time"]["elapsed_seconds"]
     )
+
+
+def test_blue_action_execution_records_required_schema_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class _Response:
+        status_code = 200
+
+        def json(self) -> dict:
+            return {"status": "DEPLOYED"}
+
+    class _Client:
+        def __init__(self, **_: object) -> None:
+            pass
+
+        def __enter__(self) -> "_Client":
+            return self
+
+        def __exit__(self, *_: object) -> None:
+            return None
+
+        def request(
+            self,
+            method: str,
+            route: str,
+            json: dict | None = None,
+            headers: dict | None = None,
+        ) -> _Response:
+            assert method == "POST"
+            assert route == "/api/v1/defenses/cache-principal-partition"
+            assert json == {"enabled": True}
+            assert headers == {"x-relayforge-team": "blue"}
+            return _Response()
+
+    monkeypatch.setattr(
+        "battle_skill.relayforge_v16_live_topology.httpx.Client", _Client
+    )
+    selection_path = tmp_path / "selection.json"
+    selection_path.write_text("{}", encoding="utf-8")
+    selection = {
+        "selected_proposal": {
+            "operation": "cache-principal-partition",
+            "parameters": {"enabled": True},
+        },
+        "provider_call_sha256": "a" * 64,
+        "provider_artifact_sha256": "b" * 64,
+    }
+
+    receipt, path = execute_blue_action(
+        selection=selection,
+        selection_path=selection_path,
+        base_url="http://relayforge",
+        out=tmp_path,
+    )
+
+    assert receipt["response_contains_protected_value"] is False
+    assert receipt["replay"] is False
+    assert receipt["equivalence_basis"] is None
+    assert path.is_file()

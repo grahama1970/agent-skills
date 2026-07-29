@@ -1,6 +1,6 @@
 # Battle Handoff - main branch only
 
-Timestamp: 2026-07-29T15:15Z
+Timestamp: 2026-07-29T15:33Z
 
 Branch rule: work only in `/home/graham/workspace/experiments/agent-skills-main-clean`
 on branch `main`. Do not continue old Battle feature branches, detached
@@ -43,7 +43,13 @@ Implemented/proven local slice:
 6. Prekill survival lineage: a parent Red pressure receipt causes a
    parent-authored pre-terminal child spawn; the child materializes and gets a
    real post-terminal Judge receipt.
-7. Ticket state: no open GitHub issue has label `battle`; `#1040` reads back
+7. V16 durable Memory chain: Battle writes and exactly recalls one team-scoped
+   measured RelayForge record through the production Memory API, then a live
+   Tau/SciLLM provider cites and uses it to change a Blue strategy artifact.
+8. V16 live topology: one immutable nine-service RelayForge topology runs a
+   live bounded Red/Blue campaign; provider artifacts are converted into typed
+   Battle-selected public actions and bound to private Judge measurements.
+9. Ticket state: no open GitHub issue has label `battle`; `#1040` reads back
    closed/completed.
 
 Intended/missing product scope:
@@ -51,9 +57,12 @@ Intended/missing product scope:
 1. Production deployment is not proven.
 2. WebSocket transport is not implemented/proven.
 3. Unbounded swarm execution is not proven.
-4. Blue kill/promotion and memory promotion are not proven by this slice.
+4. Blue kill/promotion and memory-improved Judge outcome are not proven by this
+   slice.
 5. Global `skills/project-state/run.sh report --json` reports the wider
    Embry/agent-skills environment, not a Battle-specific readiness verdict.
+6. Six-trial qualification, factorial effects, and cross-target generalization
+   are not proven.
 
 Immutable Goal: NOT_MET
 
@@ -69,6 +78,12 @@ Production-scope partial receipt:
 
 ```text
 skills/battle/local/production-scope-battle-evidence-20260729.json
+```
+
+Current V16 production-scope partial receipt:
+
+```text
+skills/battle/local/production-scope-v16-evidence-20260729.json
 ```
 
 Evidence bundle:
@@ -150,6 +165,123 @@ Readback:
   "failed": 0,
   "warned": 0,
   "skipped": 0
+}
+```
+
+Refreshed `$test-interactions` proof after V16 backend work:
+
+```bash
+skills/test-interactions/run.sh run \
+  --manifest /home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/working-frontend-backend-20260729/test-interactions-live-after-patch/live-route-unique-hash-manifest.json \
+  --output-dir /home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/working-frontend-backend-20260729/test-interactions-live-after-patch/captures-live-route-v16-refresh \
+  --max-retries 1
+```
+
+Receipt:
+
+```text
+skills/battle/local/working-frontend-backend-20260729/test-interactions-live-after-patch/captures-live-route-v16-refresh/results.json
+```
+
+Readback:
+
+```json
+{
+  "run_id": "test-interactions-20260729T153115519021Z",
+  "total": 38,
+  "passed": 38,
+  "failed": 0,
+  "warned": 0,
+  "skipped": 0
+}
+```
+
+Refreshed PR8 live transport proof:
+
+```bash
+cd skills/battle/spectator
+BATTLE_HOST=http://127.0.0.1:3016 \
+BATTLE_LIVE_TRANSPORT_BASE=http://127.0.0.1:18766 \
+BATTLE_LIVE_TRANSPORT_PROOF_DIR=/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/working-frontend-backend-20260729/pr8-integrated-main-after-v16 \
+BATTLE_LIVE_TRANSPORT_TIMEOUT_MS=120000 \
+npm run prove:pr8-live-transport
+```
+
+Readback:
+
+```json
+{
+  "mocked": false,
+  "live": "local_http_sse_adapter",
+  "checks_total": 33,
+  "failed": []
+}
+```
+
+Screenshot inspected:
+
+```text
+skills/battle/local/working-frontend-backend-20260729/pr8-integrated-main-after-v16/01-live-sse-adapter.png
+```
+
+Visible state observed: live adapter banner, `LIVE: LOCAL HTTP SSE`,
+`MOCKED: NO`, `TRANSPORT: EVENTSOURCE`, `SEQ 36/36`, and the claim boundary.
+
+Live V16 durable Memory chain:
+
+```bash
+cd skills/battle
+./run.sh v16-memory-chain-qualify \
+  --deterministic-qualification local/production-scope-v16-deterministic-20260729 \
+  --out local/production-scope-v16-memory-chain-postfilter-20260729
+```
+
+Receipt:
+
+```text
+skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/memory-chain-qualification.json
+```
+
+Readback:
+
+```json
+{
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "closed_blocker": "durable-memory-packets-unimplemented",
+  "remaining_blockers": ["live-topology-not-qualified"]
+}
+```
+
+Live V16 topology:
+
+```bash
+cd skills/battle
+./run.sh v16-live-topology-qualify \
+  --freeze local/production-scope-v16-freeze-20260729 \
+  --deterministic-qualification local/production-scope-v16-deterministic-20260729 \
+  --memory-chain local/production-scope-v16-memory-chain-postfilter-20260729 \
+  --out local/production-scope-v16-live-topology-zipadapter-20260729
+```
+
+Receipt:
+
+```text
+skills/battle/local/production-scope-v16-live-topology-zipadapter-20260729/live-topology-qualification.json
+```
+
+Readback:
+
+```json
+{
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "closed_blocker": "live-topology-not-qualified",
+  "remaining_blockers": [],
+  "judge_verdict": "CONTESTED",
+  "production_readiness_proven": false
 }
 ```
 

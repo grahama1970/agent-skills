@@ -113,6 +113,17 @@ class _FakeMemoryClient:
 
     def post(self, path: str, json: dict) -> _Response:
         if path == "/list":
+            if self.document is not None:
+                filters = json.get("filters", {})
+                kind = None
+                if filters.get("_key") == self.document["_key"] and filters.get("team") == "red":
+                    kind = "cross_team"
+                elif filters.get("_key") == self.document["_key"] + ":wrong":
+                    kind = "wrong_key"
+                elif filters.get("source_memory_sha256") == "0" * 64:
+                    kind = "wrong_source_hash"
+                if self.leak_kind == kind:
+                    return _Response({"documents": [self.document]})
             return _Response({"documents": []})
         if path == "/upsert":
             self.__class__.document = json["documents"][0]
@@ -176,7 +187,7 @@ def test_production_memory_contract_requires_exact_and_negative_isolation(
 def test_production_memory_contract_rejects_cross_team_recall(tmp_path: Path) -> None:
     _FakeMemoryClient.document = None
     _FakeMemoryClient.leak_kind = "cross_team"
-    with pytest.raises(chain.MemoryChainContractError, match="cross_team recall returned"):
+    with pytest.raises(chain.MemoryChainContractError, match="cross_team exact lookup returned"):
         chain.write_and_recall_memory(
             source=_source_receipt(),
             source_receipt_sha256="d" * 64,
@@ -331,7 +342,7 @@ def test_production_memory_contract_rejects_other_isolation_leaks(
 ) -> None:
     _FakeMemoryClient.document = None
     _FakeMemoryClient.leak_kind = leak_kind
-    with pytest.raises(chain.MemoryChainContractError, match=f"{leak_kind} recall returned"):
+    with pytest.raises(chain.MemoryChainContractError, match=f"{leak_kind} exact lookup returned"):
         chain.write_and_recall_memory(
             source=_source_receipt(),
             source_receipt_sha256="d" * 64,

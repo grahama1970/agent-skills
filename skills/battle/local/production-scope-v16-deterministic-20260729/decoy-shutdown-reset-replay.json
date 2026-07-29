@@ -1,0 +1,6 @@
+{
+  "byte_identical": true,
+  "first_sha256": "59d06de8caf10bfc9212cb06aff6579b7ef62379fa39397f012cfc3c61642764",
+  "schema": "battle.v16.relayforge.decoy_shutdown_replay.v1",
+  "second_sha256": "59d06de8caf10bfc9212cb06aff6579b7ef62379fa39397f012cfc3c61642764"
+}

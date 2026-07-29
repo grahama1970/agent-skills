@@ -1408,7 +1408,89 @@ def _contains_forbidden_key(value: Any) -> bool:
     return False
 
 
-def _proposal_list(parsed: Mapping[str, Any]) -> list[Any]:
+def _derived_red_operation(parsed: Mapping[str, Any], genome: Mapping[str, Any]) -> str | None:
+    if parsed.get("artifact_type") != "red_exploit":
+        return None
+    text = json.dumps(
+        {
+            "rationale": parsed.get("rationale"),
+            "exploit_py": parsed.get("exploit_py"),
+            "selected_methods": genome.get("selected_methods"),
+            "parameters": genome.get("parameters"),
+        },
+        sort_keys=True,
+    ).casefold()
+    if (
+        "zip" in text
+        and ("import_zip" in text or "package-import" in text or "regular package" in text)
+        and ("../" in text or "traversal" in text)
+    ):
+        return "regular-package-import"
+    return None
+
+
+def _derived_proposal_from_genome(
+    team: str, parsed: Mapping[str, Any], genome: Mapping[str, Any]
+) -> dict[str, Any] | None:
+    selected_methods = genome.get("selected_methods")
+    if not isinstance(selected_methods, list):
+        selected_methods = []
+    allowed = RED_OPERATIONS if team == "red" else ALL_BLUE_OPERATIONS
+    operations = {
+        str(method)
+        for method in selected_methods
+        if isinstance(method, str) and method in allowed
+    }
+    if not operations and team == "red":
+        operation = _derived_red_operation(parsed, genome)
+        if operation is not None:
+            operations.add(operation)
+    if len(operations) != 1:
+        return None
+    operation = sorted(operations)[0]
+    parameters: dict[str, Any] = {}
+    genome_parameters = genome.get("parameters")
+    if (
+        team == "red"
+        and operation == "legacy-conversion-probe"
+        and isinstance(genome_parameters, dict)
+        and genome_parameters.get("input_class") in {
+            "ordinary",
+            "malformed",
+            "injection-like",
+            "traversal-like",
+        }
+    ):
+        parameters["input_class"] = genome_parameters["input_class"]
+    if team == "blue":
+        parameters["enabled"] = True
+    expected = genome.get("expected_observation")
+    if not isinstance(expected, str) or not expected.strip():
+        expected = f"execute bounded public {operation} action"
+    evidence_by_operation = {
+        "retrieve-observed-report": ["OBS-21", "public-action-catalog"],
+        "regular-package-import": ["setup-import", "public-action-catalog"],
+        "valid-external-preview": ["setup-import", "public-action-catalog"],
+        "safe-report-profile": ["setup-import", "public-action-catalog"],
+        "legacy-conversion-probe": ["public-action-catalog"],
+    }
+    evidence_refs = evidence_by_operation.get(
+        operation,
+        ["public-action-catalog", "memory-chain", "post-memory-strategy"]
+        if team == "blue"
+        else ["public-action-catalog"],
+    )
+    return {
+        "action_id": f"{team}-derived-{operation}",
+        "rank": 1,
+        "operation": operation,
+        "evidence_refs": evidence_refs,
+        "expected_observation": expected,
+        "parameters": parameters,
+    }
+
+
+def _proposal_list(team: str, parsed: Mapping[str, Any]) -> list[Any]:
     genome = parsed.get("strategy_genome")
     if not isinstance(genome, dict):
         raise LiveTopologyContractError("provider response lacks strategy_genome")
@@ -1419,6 +1501,9 @@ def _proposal_list(parsed: Mapping[str, Any]) -> list[Any]:
     if proposals is None:
         proposals = parsed.get("action_proposals")
     if not isinstance(proposals, list):
+        derived = _derived_proposal_from_genome(team, parsed, genome)
+        if derived is not None:
+            return [derived]
         raise LiveTopologyContractError("provider response lacks structured action_proposals")
     return proposals
 
@@ -1430,7 +1515,7 @@ def validate_action_proposals(
     known_evidence_refs: set[str],
     private_identifiers: Iterable[str],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    proposals = _proposal_list(parsed)
+    proposals = _proposal_list(team, parsed)
     if not 1 <= len(proposals) <= 2:
         raise LiveTopologyContractError(f"{team} must provide one or two proposals")
     valid: list[dict[str, Any]] = []
@@ -1670,7 +1755,7 @@ def execute_blue_action(
     route = f"/api/v1/defenses/{operation}"
     action_sha = file_sha256(selection_path)
     with httpx.Client(base_url=base_url, timeout=httpx.Timeout(30.0, connect=5.0)) as client:
-        receipt, path, _ = _http_request(
+        receipt, path, payload = _http_request(
             client=client,
             method="POST",
             route=route,
@@ -1688,6 +1773,7 @@ def execute_blue_action(
     if receipt["response_status_code"] != 200:
         raise LiveTopologyContractError("selected Blue control did not deploy")
     receipt["operation"] = operation
+    receipt["response_contains_protected_value"] = "protected_canary" in payload
     receipt["replay"] = False
     receipt["equivalence_basis"] = None
     _validate(receipt, "execution")
