@@ -1,0 +1,163 @@
+{
+  "schema": "test-interactions.animation-evidence.v1",
+  "generated_at": "2026-07-29T12:28:33.926856+00:00",
+  "surface": "fixture-main",
+  "element": "animated-button",
+  "action": "click",
+  "interaction_step": 1,
+  "target_selector": "[data-qid='fixture:animated-button']",
+  "target_qid": "fixture:animated-button",
+  "frame_count": 6,
+  "interval_ms": 80,
+  "frames": [
+    {
+      "index": 0,
+      "timestamp_ms": 69,
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_000.png",
+      "clipping": {
+        "clipped": true,
+        "ancestorQid": "fixture:clip-container",
+        "ancestorTag": "DIV",
+        "overflow": "hidden hidden hidden",
+        "targetRect": {
+          "x": 36,
+          "y": 143.875,
+          "width": 112,
+          "height": 44
+        },
+        "ancestorRect": {
+          "x": 48,
+          "y": 127.875,
+          "width": 184,
+          "height": 76
+        }
+      }
+    },
+    {
+      "index": 1,
+      "timestamp_ms": 214,
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_001.png",
+      "clipping": {
+        "clipped": true,
+        "ancestorQid": "fixture:clip-container",
+        "ancestorTag": "DIV",
+        "overflow": "hidden hidden hidden",
+        "targetRect": {
+          "x": 36,
+          "y": 143.875,
+          "width": 112,
+          "height": 44
+        },
+        "ancestorRect": {
+          "x": 48,
+          "y": 127.875,
+          "width": 184,
+          "height": 76
+        }
+      }
+    },
+    {
+      "index": 2,
+      "timestamp_ms": 369,
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_002.png",
+      "clipping": {
+        "clipped": true,
+        "ancestorQid": "fixture:clip-container",
+        "ancestorTag": "DIV",
+        "overflow": "hidden hidden hidden",
+        "targetRect": {
+          "x": 36,
+          "y": 143.875,
+          "width": 112,
+          "height": 44
+        },
+        "ancestorRect": {
+          "x": 48,
+          "y": 127.875,
+          "width": 184,
+          "height": 76
+        }
+      }
+    },
+    {
+      "index": 3,
+      "timestamp_ms": 522,
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_003.png",
+      "clipping": {
+        "clipped": true,
+        "ancestorQid": "fixture:clip-container",
+        "ancestorTag": "DIV",
+        "overflow": "hidden hidden hidden",
+        "targetRect": {
+          "x": 36,
+          "y": 143.875,
+          "width": 112,
+          "height": 44
+        },
+        "ancestorRect": {
+          "x": 48,
+          "y": 127.875,
+          "width": 184,
+          "height": 76
+        }
+      }
+    },
+    {
+      "index": 4,
+      "timestamp_ms": 650,
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_004.png",
+      "clipping": {
+        "clipped": true,
+        "ancestorQid": "fixture:clip-container",
+        "ancestorTag": "DIV",
+        "overflow": "hidden hidden hidden",
+        "targetRect": {
+          "x": 36,
+          "y": 143.875,
+          "width": 112,
+          "height": 44
+        },
+        "ancestorRect": {
+          "x": 48,
+          "y": 127.875,
+          "width": 184,
+          "height": 76
+        }
+      }
+    },
+    {
+      "index": 5,
+      "timestamp_ms": 807,
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_005.png",
+      "clipping": {
+        "clipped": true,
+        "ancestorQid": "fixture:clip-container",
+        "ancestorTag": "DIV",
+        "overflow": "hidden hidden hidden",
+        "targetRect": {
+          "x": 36,
+          "y": 143.875,
+          "width": 112,
+          "height": 44
+        },
+        "ancestorRect": {
+          "x": 48,
+          "y": 127.875,
+          "width": 184,
+          "height": 76
+        }
+      }
+    }
+  ],
+  "video": {
+    "status": "ok",
+    "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation.webm",
+    "format": "webm",
+    "fps": 12
+  },
+  "time_range_ms": {
+    "start": 69,
+    "end": 807
+  },
+  "clipped_frame_count": 6
+}

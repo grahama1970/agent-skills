@@ -1,0 +1,308 @@
+{
+  "app": "test-interactions animation clipping fixture",
+  "run_id": "test-interactions-20260729T122829103801Z",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "warned": 0,
+  "skipped": 0,
+  "interactions": [
+    {
+      "surface": "fixture-main",
+      "element": "animated-button",
+      "action": "click",
+      "description": "Click animated button that remains clickable while clipped",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Animate'",
+      "screenshot": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/0001_animated-button_click.png",
+      "duration_ms": 2341,
+      "assertions": [
+        {
+          "check": "assert_text('clicked')",
+          "status": "PASS",
+          "evidence": "found in page"
+        },
+        {
+          "check": "assert_min_size([data-qid='fixture:animated-button'], 44x44)",
+          "status": "PASS",
+          "evidence": "112x44px >= 44x44px"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:animated-button'])",
+          "status": "PASS",
+          "evidence": "title='Animate clipped button'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:animated-button'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_ANIMATE'"
+        }
+      ],
+      "visual_evidence": {
+        "schema": "test-interactions.visual-evidence.v1",
+        "run_id": "test-interactions-20260729T122829103801Z",
+        "generated_at": "2026-07-29T12:28:32.353995+00:00",
+        "surface": "fixture-main",
+        "element": "animated-button",
+        "action": "click",
+        "description": "Click animated button that remains clickable while clipped",
+        "interaction_step": 1,
+        "deterministic_status": "PASS",
+        "source_image": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/0001_animated-button_click.png",
+        "qid": "fixture:animated-button",
+        "target_selector": "[data-qid='fixture:animated-button']",
+        "semantic_container_selector": "[data-qid='fixture:clip-container']",
+        "target_bbox": {
+          "width": 112.0,
+          "height": 44.0,
+          "x": 36.0,
+          "y": 143.875
+        },
+        "semantic_container_bbox": {
+          "width": 184.0,
+          "height": 76.0,
+          "x": 48.0,
+          "y": 127.875
+        },
+        "viewport": {
+          "width": 1600.0,
+          "height": 913.0,
+          "deviceScaleFactor": 1.0
+        },
+        "artifacts": {
+          "target_crop": {
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_target-crop.png",
+            "padding": 24,
+            "image_box": {
+              "x0": 12,
+              "y0": 119,
+              "x1": 172,
+              "y1": 212
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            }
+          },
+          "target_crop_enlarged": {
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_target-crop-2x.png",
+            "scale": 2,
+            "width": 320,
+            "height": 186
+          },
+          "semantic_container_crop": {
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_semantic-container.png",
+            "padding": 12,
+            "image_box": {
+              "x0": 36,
+              "y0": 115,
+              "x1": 244,
+              "y1": 216
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            }
+          }
+        },
+        "metadata_path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_metadata.json"
+      },
+      "animation_evidence": {
+        "schema": "test-interactions.animation-evidence.v1",
+        "generated_at": "2026-07-29T12:28:33.926856+00:00",
+        "surface": "fixture-main",
+        "element": "animated-button",
+        "action": "click",
+        "interaction_step": 1,
+        "target_selector": "[data-qid='fixture:animated-button']",
+        "target_qid": "fixture:animated-button",
+        "frame_count": 6,
+        "interval_ms": 80,
+        "frames": [
+          {
+            "index": 0,
+            "timestamp_ms": 69,
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_000.png",
+            "clipping": {
+              "clipped": true,
+              "ancestorQid": "fixture:clip-container",
+              "ancestorTag": "DIV",
+              "overflow": "hidden hidden hidden",
+              "targetRect": {
+                "x": 36,
+                "y": 143.875,
+                "width": 112,
+                "height": 44
+              },
+              "ancestorRect": {
+                "x": 48,
+                "y": 127.875,
+                "width": 184,
+                "height": 76
+              }
+            }
+          },
+          {
+            "index": 1,
+            "timestamp_ms": 214,
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_001.png",
+            "clipping": {
+              "clipped": true,
+              "ancestorQid": "fixture:clip-container",
+              "ancestorTag": "DIV",
+              "overflow": "hidden hidden hidden",
+              "targetRect": {
+                "x": 36,
+                "y": 143.875,
+                "width": 112,
+                "height": 44
+              },
+              "ancestorRect": {
+                "x": 48,
+                "y": 127.875,
+                "width": 184,
+                "height": 76
+              }
+            }
+          },
+          {
+            "index": 2,
+            "timestamp_ms": 369,
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_002.png",
+            "clipping": {
+              "clipped": true,
+              "ancestorQid": "fixture:clip-container",
+              "ancestorTag": "DIV",
+              "overflow": "hidden hidden hidden",
+              "targetRect": {
+                "x": 36,
+                "y": 143.875,
+                "width": 112,
+                "height": 44
+              },
+              "ancestorRect": {
+                "x": 48,
+                "y": 127.875,
+                "width": 184,
+                "height": 76
+              }
+            }
+          },
+          {
+            "index": 3,
+            "timestamp_ms": 522,
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_003.png",
+            "clipping": {
+              "clipped": true,
+              "ancestorQid": "fixture:clip-container",
+              "ancestorTag": "DIV",
+              "overflow": "hidden hidden hidden",
+              "targetRect": {
+                "x": 36,
+                "y": 143.875,
+                "width": 112,
+                "height": 44
+              },
+              "ancestorRect": {
+                "x": 48,
+                "y": 127.875,
+                "width": 184,
+                "height": 76
+              }
+            }
+          },
+          {
+            "index": 4,
+            "timestamp_ms": 650,
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_004.png",
+            "clipping": {
+              "clipped": true,
+              "ancestorQid": "fixture:clip-container",
+              "ancestorTag": "DIV",
+              "overflow": "hidden hidden hidden",
+              "targetRect": {
+                "x": 36,
+                "y": 143.875,
+                "width": 112,
+                "height": 44
+              },
+              "ancestorRect": {
+                "x": 48,
+                "y": 127.875,
+                "width": 184,
+                "height": 76
+              }
+            }
+          },
+          {
+            "index": 5,
+            "timestamp_ms": 807,
+            "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_frames/frame_005.png",
+            "clipping": {
+              "clipped": true,
+              "ancestorQid": "fixture:clip-container",
+              "ancestorTag": "DIV",
+              "overflow": "hidden hidden hidden",
+              "targetRect": {
+                "x": 36,
+                "y": 143.875,
+                "width": 112,
+                "height": 44
+              },
+              "ancestorRect": {
+                "x": 48,
+                "y": 127.875,
+                "width": 184,
+                "height": 76
+              }
+            }
+          }
+        ],
+        "video": {
+          "status": "ok",
+          "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation.webm",
+          "format": "webm",
+          "fps": 12
+        },
+        "time_range_ms": {
+          "start": 69,
+          "end": 807
+        },
+        "clipped_frame_count": 6,
+        "metadata_path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_metadata.json",
+        "pre_action_screenshot": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_animated-button_click_pre-action.png"
+      },
+      "visual_findings": [
+        {
+          "schema": "test-interactions.visual-finding.v1",
+          "finding_id": "vfind-ad50c4f892d46ebecd93cfef",
+          "fingerprint": "ad50c4f892d46ebecd93cfef",
+          "run_id": "test-interactions-20260729T122829103801Z",
+          "surface": "fixture-main",
+          "element": "animated-button",
+          "interaction_step": 1,
+          "qid": "fixture:animated-button",
+          "finding_kind": "animation_clipping",
+          "confidence": 0.95,
+          "observed_state": "6 animation frame(s) clipped by an ancestor viewport",
+          "expected_state": "Animated button should remain visible inside fixture clipping container.",
+          "reproduction": "Run this manifest and execute step 1: fixture-main > animated-button > Click animated button that remains clickable while clipped",
+          "deterministic_status": "PASS",
+          "evidence": {
+            "screenshot": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/0001_animated-button_click.png",
+            "target_crop": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_target-crop.png",
+            "target_crop_enlarged": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_target-crop-2x.png",
+            "semantic_container_crop": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_semantic-container.png",
+            "crop_metadata": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_metadata.json",
+            "video": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation.webm",
+            "video_metadata": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_animation_metadata.json"
+          },
+          "video_time_range_ms": {
+            "start": 69,
+            "end": 807
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "app": "test-interactions animation clipping fixture",
+  "base_url": "http://127.0.0.1:8765",
+  "surfaces": [
+    {
+      "name": "fixture-main",
+      "path": "/animation_clipping.html",
+      "wait_ready": "[data-qid='fixture:animated-button']",
+      "qid_compliance": true,
+      "elements": [
+        {
+          "name": "animated-button",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:animated-button']",
+              "description": "Click animated button that remains clickable while clipped",
+              "assert_text": "clicked",
+              "assert_min_size": {"selector": "[data-qid='fixture:animated-button']", "min_width": 44, "min_height": 44},
+              "assert_title": "[data-qid='fixture:animated-button']",
+              "assert_qs_action": "[data-qid='fixture:animated-button']",
+              "visual_evidence": true,
+              "animation_capture": true,
+              "animation_frames": 6,
+              "animation_interval_ms": 80,
+              "detect_animation_clipping": true,
+              "expected_visual_state": "Animated button should remain visible inside fixture clipping container."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

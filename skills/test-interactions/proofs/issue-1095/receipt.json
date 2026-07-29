@@ -1,0 +1,43 @@
+{
+  "schema": "test-interactions.issue-proof.v1",
+  "issue": 1095,
+  "mocked": false,
+  "live": true,
+  "unit": {
+    "py_compile_exit_code": 0,
+    "unittest_command": "uv run --project skills/test-interactions python -m unittest discover -s skills/test-interactions/tests -v",
+    "unittest_exit_code": 0,
+    "tests": 4,
+    "sanity_command": "skills/test-interactions/sanity.sh",
+    "sanity_exit_code": 0
+  },
+  "live_e2e": {
+    "command": "skills/test-interactions/run.sh run --manifest /tmp/test-interactions-1095-live-20260729T122828Z/manifest.json --output-dir /tmp/test-interactions-1095-live-20260729T122828Z/captures",
+    "exit_code": 0,
+    "results": "skills/test-interactions/proofs/issue-1095/live-results.json",
+    "structured_findings": "skills/test-interactions/proofs/issue-1095/visual-findings.jsonl",
+    "deterministic_status": "PASS",
+    "finding_kind": "animation_clipping",
+    "playable_video": "skills/test-interactions/proofs/issue-1095/animation.webm",
+    "crop_metadata": "skills/test-interactions/proofs/issue-1095/crop-metadata.json",
+    "animation_metadata": "skills/test-interactions/proofs/issue-1095/animation-metadata.json"
+  },
+  "invalid_output_gate": {
+    "command": "skills/test-interactions/run.sh validate-visual-findings --analyst-output /tmp/test-interactions-1095-invalid-20260729T122907Z/analyst.txt --output /tmp/test-interactions-1095-invalid-20260729T122907Z/visual-findings.jsonl --failure-output /tmp/test-interactions-1095-invalid-20260729T122907Z/invalid.json",
+    "expected_nonzero": true,
+    "structured_findings_bytes": 0,
+    "diagnostic": "/tmp/test-interactions-1095-invalid-20260729T122907Z/invalid.json"
+  },
+  "screenshot_only_compatibility": {
+    "command": "skills/test-interactions/run.sh run --manifest /tmp/test-interactions-1095-screenshot-only-20260729T122907Z/manifest.json --output-dir /tmp/test-interactions-1095-screenshot-only-20260729T122907Z/captures",
+    "exit_code": 0,
+    "results": "/tmp/test-interactions-1095-screenshot-only-20260729T122907Z/captures/results.json",
+    "structured_findings_count": 0
+  },
+  "cdp_verification": {
+    "command": "~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:8775/animation_clipping.html --name test-interactions-1095-animation-fixture",
+    "exit_code": 0,
+    "latest": "skills/test-interactions/proofs/issue-1095/cdp-latest.json",
+    "screenshot": "skills/test-interactions/proofs/issue-1095/cdp-screenshot.png"
+  }
+}

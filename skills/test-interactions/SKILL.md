@@ -32,6 +32,11 @@ composes:
   - interview
   - best-practices-react
   - best-practices-cots
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-react
+  - best-practices-cots
 taxonomy:
   - validation
   - precision
@@ -74,6 +79,41 @@ REVIEW stage (one batched LLM call at the end)
 
 The LLM never decides pass/fail. It only comments on evidence after
 deterministic tests have already run.
+
+## Evidence Boundary
+
+Deterministic DOM/COTS assertions own deterministic `PASS`, `FAIL`, `WARN`, and
+`SKIP`. Semantic or visual analysis may emit candidate visual findings only.
+Those findings are additive evidence; they never rewrite an interaction result.
+
+For selected interactions, the run stage preserves the untouched full-viewport
+screenshot and can emit structured visual evidence under `visual-evidence/`:
+
+- QID-bounded target crop derived from the target element's live CDP
+  `getBoundingClientRect()` result.
+- Semantic-container crop from an explicit `semantic_container`, `review_pane`,
+  `container`, or nearest stable ancestor.
+- Enlarged target crop for reviewer legibility.
+- Crop metadata with source image, QID, target rectangle, viewport, scale,
+  surface, element, action, run id, and interaction step.
+- Timestamped animation frames plus a playable WebM, or GIF fallback when
+  `ffmpeg` is unavailable.
+
+Structured visual findings use schema `test-interactions.visual-finding.v1`.
+Invalid analyst prose or malformed JSON is recorded as a review-failure artifact
+and produces zero structured findings. Use:
+
+```bash
+./run.sh validate-visual-findings \
+  --analyst-output analyst-output.jsonl \
+  --output visual-findings.jsonl \
+  --failure-output visual-findings-invalid.json
+```
+
+Visual-finding records must include the stable fingerprint, run id, surface,
+element, interaction step, QID when available, finding kind, confidence,
+observed state, expected state, reproduction, deterministic status, and evidence
+paths. The deterministic status field is copied for context only.
 
 ## Critical Rules
 
@@ -244,11 +284,18 @@ Use `--no-preprocess` to skip.
 ## Burst Mode (Animation Capture)
 
 For interactions with animations, use `"burst": true`. Captures multiple frames
-that get stitched into a filmstrip for the VLM review.
+that get stitched into a filmstrip for the VLM review. Burst mode also records
+timestamped animation frames and a playable video artifact while keeping the
+standard screenshot-only path available for interactions without animations.
 
 ```json
 {"action": "hover", "target": "[data-qid='animated:element']", "burst": true, "burst_frames": 10}
 ```
+
+Use `"detect_animation_clipping": true` or `"expected_visual_state"` with an
+animation capture when a test should emit a schema-valid
+`animation_clipping` candidate if live geometry shows clipped frames. The
+click/hover/key assertion result remains separate and may still be `PASS`.
 
 ## Workflow
 
