@@ -34,6 +34,7 @@ DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS = 900
 BROWSER_COMMAND_GRACE_SECONDS = 180
 COMPETE_WEBCLAUDE_MODEL = "Opus 5 High"
+ROUNDTABLE_WEBCLAUDE_MODEL = "Fable 5 High"
 TERMINAL_STATUSES = {"PASS", "DEGRADED", "NEEDS_ATTENTION", "BLOCKED", "FAILED", "ERROR"}
 ROUNDTABLE_TOPOLOGIES = {"concurrent", "sequential"}
 SUPPORTED_DAG_TEMPLATES = {
@@ -2413,6 +2414,12 @@ def _handler_policy(handler: str, *, provider_hint: str = "", workflow_mode: str
             policy["model_preference_scope"] = "ask_compete_default"
             policy["model_preference_reason"] = (
                 "Competition mode defaults the webclaude browser seat to Claude Opus 5 High."
+            )
+        elif workflow_mode == "roundtable" and handler == "webclaude":
+            policy["model_preference"] = ROUNDTABLE_WEBCLAUDE_MODEL
+            policy["model_preference_scope"] = "ask_roundtable_default"
+            policy["model_preference_reason"] = (
+                "Roundtable mode defaults the webclaude browser seat to Claude Fable 5 High."
             )
         return policy
     if _is_subagent_handler(handler, provider_hint):

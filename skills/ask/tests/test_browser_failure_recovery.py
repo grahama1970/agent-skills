@@ -10,6 +10,10 @@ import pytest
 import sys
 from pathlib import Path
 
+from dotenv import find_dotenv, load_dotenv
+
+load_dotenv(find_dotenv(usecwd=True), override=False)
+
 
 WORKER_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_roundtable_worker.py"
 SPEC = importlib.util.spec_from_file_location("tau_roundtable_worker", WORKER_PATH)

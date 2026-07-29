@@ -225,7 +225,13 @@ def run(
         )
         browser_availability = _annotate_browser_availability_cooldown(browser_availability)
         _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
-        if not _browser_availability_blocks(browser_availability):
+        browser_selection = _select_available_browser_handlers(input_payload, browser_availability)
+        _write_browser_provider_selection(Path(str(bundle["run_dir"])), browser_selection)
+        if browser_selection.get("status") == "ADJUSTED":
+            input_payload = _apply_browser_provider_selection(input_payload, browser_selection)
+            bundle = compile_tau_dag_bundle(input_payload)
+            _write_browser_provider_selection(Path(str(bundle["run_dir"])), browser_selection)
+        if not _browser_availability_blocks(browser_availability) and browser_selection.get("status") != "BLOCKED":
             lifecycle = _provision_browser_lifecycle(
                 input_payload,
                 mode=browser_tab_lifecycle,
@@ -242,6 +248,7 @@ def run(
                 lifecycle["run_dir"] = str(bundle["run_dir"])
     provider_gate = None
     execution = None
+    browser_selection = browser_selection if "browser_selection" in locals() else _skipped_browser_provider_selection()
     exit_code = 0
 
     if bundle.get("status") == "NEEDS_INTERVIEW":
@@ -276,6 +283,9 @@ def run(
         elif execute:
             if _browser_availability_blocks(browser_availability):
                 execution = browser_availability_blocked_execution(browser_availability)
+                exit_code = 4
+            elif browser_selection.get("status") == "BLOCKED":
+                execution = browser_provider_selection_blocked_execution(browser_selection)
                 exit_code = 4
             elif lifecycle.get("status") == "BLOCKED":
                 execution = browser_lifecycle_blocked_execution(lifecycle)
@@ -339,6 +349,7 @@ def run(
         "bundle": bundle,
         "provider_gate": provider_gate,
         "browser_provider_availability": browser_availability,
+        "browser_provider_selection": browser_selection,
         "browser_tab_lifecycle": lifecycle,
         "execution": execution,
         "join_artifact_path": execution.get("join_artifact_path") if isinstance(execution, dict) else None,
@@ -468,7 +479,13 @@ def compete(
         )
         browser_availability = _annotate_browser_availability_cooldown(browser_availability)
         _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
-        if not _browser_availability_blocks(browser_availability):
+        browser_selection = _select_available_browser_handlers(input_payload, browser_availability)
+        _write_browser_provider_selection(Path(str(bundle["run_dir"])), browser_selection)
+        if browser_selection.get("status") == "ADJUSTED":
+            input_payload = _apply_browser_provider_selection(input_payload, browser_selection)
+            bundle = compile_tau_dag_bundle(input_payload)
+            _write_browser_provider_selection(Path(str(bundle["run_dir"])), browser_selection)
+        if not _browser_availability_blocks(browser_availability) and browser_selection.get("status") != "BLOCKED":
             lifecycle = _provision_browser_lifecycle(
                 input_payload,
                 mode=browser_tab_lifecycle,
@@ -485,6 +502,7 @@ def compete(
                 lifecycle["run_dir"] = str(bundle["run_dir"])
     provider_gate = None
     execution = None
+    browser_selection = browser_selection if "browser_selection" in locals() else _skipped_browser_provider_selection()
     exit_code = 0
     if bundle.get("status") == "NEEDS_INTERVIEW":
         exit_code = 2
@@ -508,6 +526,9 @@ def compete(
         if execute:
             if _browser_availability_blocks(browser_availability):
                 execution = browser_availability_blocked_execution(browser_availability)
+                exit_code = 4
+            elif browser_selection.get("status") == "BLOCKED":
+                execution = browser_provider_selection_blocked_execution(browser_selection)
                 exit_code = 4
             elif lifecycle.get("status") == "BLOCKED":
                 execution = browser_lifecycle_blocked_execution(lifecycle)
@@ -550,6 +571,7 @@ def compete(
         "provider_gate": provider_gate,
         "execution": execution,
         "browser_provider_availability": browser_availability,
+        "browser_provider_selection": browser_selection,
         "browser_tab_lifecycle": lifecycle,
     }
     if json_output:
@@ -569,6 +591,16 @@ def _browser_handlers(input_payload: Any) -> list[str]:
     return handlers
 
 
+def _browser_providers_to_probe(input_payload: Any) -> list[str]:
+    seen: set[str] = set()
+    providers: list[str] = []
+    for provider in [*_browser_handlers(input_payload), *_fallback_provider_order(str(getattr(input_payload, "request", "") or ""))]:
+        if provider in BROWSER_FRESH_URLS and provider not in seen:
+            seen.add(provider)
+            providers.append(provider)
+    return providers
+
+
 def _skipped_browser_availability(reason: str) -> dict[str, Any]:
     return {
         "schema": "ask.browser_provider_availability.v1",
@@ -580,13 +612,23 @@ def _skipped_browser_availability(reason: str) -> dict[str, Any]:
     }
 
 
+def _skipped_browser_provider_selection() -> dict[str, Any]:
+    return {
+        "schema": "ask.browser_provider_selection.v1",
+        "status": "skipped",
+        "mocked": False,
+        "live": False,
+        "reason": "not_checked",
+    }
+
+
 def _probe_browser_provider_availability(
     input_payload: Any,
     *,
     run_dir: Path,
     timeout_seconds: float = 180.0,
 ) -> dict[str, Any]:
-    handlers = _browser_handlers(input_payload)
+    handlers = _browser_providers_to_probe(input_payload)
     if not handlers:
         report = _skipped_browser_availability("no_browser_handlers")
         _write_browser_availability(run_dir, report)
@@ -689,6 +731,153 @@ def _browser_availability_limited_providers(report: dict[str, Any]) -> list[str]
     return []
 
 
+def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any]) -> dict[str, Any]:
+    requested = list(getattr(input_payload, "handlers", ()) or ())
+    if not any(handler in BROWSER_FRESH_URLS for handler in requested):
+        return _skipped_browser_provider_selection()
+    providers = report.get("providers") if isinstance(report, dict) else {}
+    if not isinstance(providers, dict):
+        providers = {}
+    limited = {
+        name
+        for name, payload in providers.items()
+        if isinstance(payload, dict) and payload.get("provider_limited") is True
+    }
+    active: list[str] = []
+    removed: list[str] = []
+    for handler in requested:
+        if handler in BROWSER_FRESH_URLS and handler in limited:
+            removed.append(handler)
+        else:
+            active.append(handler)
+
+    min_handlers = _minimum_handlers_for_workflow(input_payload)
+    desired_handlers = max(min_handlers, len(requested))
+    fallback_added: list[str] = []
+    if removed:
+        for candidate in _fallback_provider_order(str(getattr(input_payload, "request", "") or "")):
+            if candidate in active or candidate in requested or candidate in limited:
+                continue
+            payload = providers.get(candidate)
+            if isinstance(payload, dict) and payload.get("probe_failed") is True:
+                continue
+            active.append(candidate)
+            fallback_added.append(candidate)
+            if len(active) >= desired_handlers:
+                break
+
+    if removed and len(active) < min_handlers:
+        status = "BLOCKED"
+    elif removed or fallback_added:
+        status = "ADJUSTED"
+    else:
+        status = "READY"
+
+    return {
+        "schema": "ask.browser_provider_selection.v1",
+        "status": status,
+        "mocked": False,
+        "live": bool(report.get("live") is True),
+        "workflow_mode": str(getattr(input_payload, "workflow_mode", "") or ""),
+        "minimum_handlers": min_handlers,
+        "desired_handlers": desired_handlers,
+        "original_handlers": requested,
+        "active_handlers": active,
+        "limited_providers": sorted(limited.intersection(set(requested))),
+        "removed_handlers": removed,
+        "fallback_handlers": fallback_added,
+        "fallback_order": _fallback_provider_order(str(getattr(input_payload, "request", "") or "")),
+        "failure_code": "browser_provider_rate_limited" if removed else None,
+        "cooldown_seconds": 600 if removed else 0,
+        "message": (
+            "Provider cooldown/capacity is lane-local. Ask removed unavailable browser handlers "
+            "and added available fallback handlers when the workflow still needed enough participants."
+        )
+        if status == "ADJUSTED"
+        else "Browser provider selection did not require fallback."
+        if status == "READY"
+        else "Not enough available browser/API participants remain after provider cooldown filtering.",
+        "next_command": (
+            "Wait 600 seconds, rerun `skills/ask/run.sh browser-availability --provider <provider> --json`, "
+            "then rerun only the missing provider lane or a new linked round if its contribution is still required."
+        )
+        if removed
+        else "",
+        "ticket_instruction": (
+            "File a $ticket to $ask at agent-skills@main when a requested provider is unavailable and this packet "
+            "does not already give enough local recovery evidence. Include browser-provider-availability.json, "
+            "browser-provider-selection.json, provider name, tab id, visible text excerpt, failure_code, and the "
+            "fallback handler Ask selected."
+        )
+        if removed
+        else "",
+        "ticket_command": (
+            "skills/ticket/run.sh bug \"Ask browser provider unavailable during roundtable/competition\" "
+            "--target skills/ask "
+            "--observed \"Requested browser provider was unavailable; see browser-provider-availability.json and browser-provider-selection.json\" "
+            "--expected \"Ask records the unavailable lane, selects an available fallback provider, and keeps the workflow moving\" "
+            "--repro \"Run the same Ask command with the same immutable goal and provider set\" "
+            "--proof \"provider availability receipt plus live Ask DAG receipt showing fallback selection\" "
+            "--route backend_python_or_skill_runtime --agent coder --apply"
+        )
+        if removed
+        else "",
+    }
+
+
+def _minimum_handlers_for_workflow(input_payload: Any) -> int:
+    if str(getattr(input_payload, "workflow_mode", "") or "") == "compete":
+        return 2
+    template = str(getattr(input_payload, "dag_template", "") or "")
+    if template == "roundtable":
+        return 2
+    return 1
+
+
+def _fallback_provider_order(request: str) -> list[str]:
+    configured = os.environ.get("ASK_BROWSER_FALLBACK_ORDER", "").strip()
+    if configured:
+        order = [item.strip() for item in configured.split(",") if item.strip()]
+    else:
+        lower = request.lower()
+        if any(word in lower for word in ("code", "patch", "bug", "review", "diff", "implementation")):
+            order = ["webclaude", "webgemini", "webkimi", "webgpt", "webgrok"]
+        elif any(word in lower for word in ("current", "web", "source", "research", "search")):
+            order = ["webgpt", "webgemini", "webclaude", "webkimi", "webgrok"]
+        else:
+            order = ["webclaude", "webgemini", "webkimi", "webgpt", "webgrok"]
+    seen: set[str] = set()
+    result: list[str] = []
+    for handler in order:
+        if handler in BROWSER_FRESH_URLS and handler not in seen:
+            seen.add(handler)
+            result.append(handler)
+    return result
+
+
+def _apply_browser_provider_selection(input_payload: Any, selection: dict[str, Any]) -> Any:
+    active = tuple(str(handler) for handler in selection.get("active_handlers", []) if str(handler))
+    original = list(getattr(input_payload, "handlers", ()) or ())
+    original_hints = list(getattr(input_payload, "handler_provider_hints", ()) or ())
+    hint_by_handler = {
+        handler: original_hints[index] if index < len(original_hints) else ""
+        for index, handler in enumerate(original)
+    }
+    return replace(
+        input_payload,
+        handlers=active,
+        handler_provider_hints=tuple(hint_by_handler.get(handler, "") for handler in active),
+    )
+
+
+def _write_browser_provider_selection(run_dir: Path, selection: dict[str, Any]) -> None:
+    run_dir.mkdir(parents=True, exist_ok=True)
+    path = run_dir / "browser-provider-selection.json"
+    payload = dict(selection)
+    payload["path"] = str(path)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def _annotate_browser_availability_cooldown(report: dict[str, Any]) -> dict[str, Any]:
     limited = _browser_availability_limited_providers(report)
     if not limited:
@@ -749,6 +938,31 @@ def browser_availability_blocked_execution(report: dict[str, Any]) -> dict[str, 
         "ticket_instruction": (
             "If this report is missing the provider, tab id, visible text excerpt, failure_code, or next_command, "
             "file a $ticket to $ask at agent-skills@main with the Ask run_dir and browser-provider-availability.json."
+        ),
+    }
+
+
+def browser_provider_selection_blocked_execution(selection: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": "ask.tau_dag_execution.v1",
+        "status": "NEEDS_ATTENTION",
+        "ok": False,
+        "mocked": False,
+        "live": bool(selection.get("live") is True),
+        "provider_live": False,
+        "blocked_reason": "browser_provider_selection_insufficient_participants",
+        "failure_code": selection.get("failure_code") or "browser_provider_unavailable",
+        "limited_providers": selection.get("limited_providers", []),
+        "active_handlers": selection.get("active_handlers", []),
+        "minimum_handlers": selection.get("minimum_handlers"),
+        "no_tau_execution": True,
+        "message": selection.get("message"),
+        "browser_provider_selection": selection,
+        "next_command": selection.get("next_command"),
+        "ticket_instruction": (
+            "If Ask could not continue with available providers but the project has usable alternates, "
+            "file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and "
+            "browser-provider-selection.json."
         ),
     }
 

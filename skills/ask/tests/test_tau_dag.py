@@ -3402,16 +3402,21 @@ def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch
             "path": str(tmp_path / "runs" / "browser-provider-availability.json"),
         }
 
-    def fake_lifecycle(*args, **kwargs):
+    def fake_lifecycle(input_payload, *args, **kwargs):
         captured["lifecycle_started"] = True
+        captured["lifecycle_handlers"] = list(input_payload.handlers)
         return {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"}
 
     def fake_tau_execution(bundle: dict[str, Any], **kwargs):
         captured["bundle"] = bundle
+        dag = json.loads(Path(bundle["dag_path"]).read_text(encoding="utf-8"))
+        captured["dag_handlers"] = dag["context"]["handlers"]
+        claude = next(node for node in dag["nodes"] if node["context"].get("handler") == "webclaude")
+        captured["claude_model_preference"] = claude["context"]["handler_policy"].get("model_preference")
         return {
             "schema": "ask.tau_dag_execution.v1",
-            "status": "DEGRADED",
-            "ok": False,
+            "status": "PASS",
+            "ok": True,
             "mocked": False,
             "live": True,
             "provider_live": True,
@@ -3444,12 +3449,15 @@ def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch
         ],
     )
 
-    assert result.exit_code == 4
+    assert result.exit_code == 0
     payload = json.loads(result.stdout)
-    assert payload["status"] == "DEGRADED"
+    assert payload["status"] == "PASS"
     assert payload["live"] is True
     assert captured["lifecycle_started"] is True
     assert captured["bundle"]["status"] == "READY"
+    assert captured["lifecycle_handlers"] == ["webclaude", "webgemini"]
+    assert captured["dag_handlers"] == ["webclaude", "webgemini"]
+    assert captured["claude_model_preference"] == "Fable 5 High"
     assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
     assert payload["browser_provider_availability"]["limited_providers"] == ["webgpt"]
     assert payload["browser_provider_availability"]["cooldown_policy"]["status"] == "LANE_LOCAL_RETRY"
@@ -3458,7 +3466,15 @@ def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch
         "SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS": "1",
         "SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS": "300",
     }
-    assert payload["execution"]["status"] == "DEGRADED"
+    selection = payload["browser_provider_selection"]
+    assert selection["status"] == "ADJUSTED"
+    assert selection["limited_providers"] == ["webgpt"]
+    assert selection["removed_handlers"] == ["webgpt"]
+    assert selection["fallback_handlers"] == ["webgemini"]
+    assert selection["active_handlers"] == ["webclaude", "webgemini"]
+    assert selection["cooldown_seconds"] == 600
+    assert "skills/ticket/run.sh bug" in selection["ticket_command"]
+    assert payload["execution"]["status"] == "PASS"
     assert "no_tau_execution" not in payload["execution"]
 
 
@@ -3479,16 +3495,21 @@ def test_compete_browser_availability_rate_limit_continues_to_tau(monkeypatch, t
             },
         }
 
-    def fake_lifecycle(*args, **kwargs):
+    def fake_lifecycle(input_payload, *args, **kwargs):
         captured["lifecycle_started"] = True
+        captured["lifecycle_handlers"] = list(input_payload.handlers)
         return {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"}
 
     def fake_tau_execution(bundle: dict[str, Any], **kwargs):
         captured["bundle"] = bundle
+        dag = json.loads(Path(bundle["dag_path"]).read_text(encoding="utf-8"))
+        captured["dag_handlers"] = dag["context"]["handlers"]
+        claude = next(node for node in dag["nodes"] if node["context"].get("handler") == "webclaude")
+        captured["claude_model_preference"] = claude["context"]["handler_policy"].get("model_preference")
         return {
             "schema": "ask.tau_dag_execution.v1",
-            "status": "DEGRADED",
-            "ok": False,
+            "status": "PASS",
+            "ok": True,
             "mocked": False,
             "live": True,
             "provider_live": True,
@@ -3521,16 +3542,83 @@ def test_compete_browser_availability_rate_limit_continues_to_tau(monkeypatch, t
         ],
     )
 
-    assert result.exit_code == 4
+    assert result.exit_code == 0
     payload = json.loads(result.stdout)
-    assert payload["status"] == "DEGRADED"
+    assert payload["status"] == "PASS"
     assert captured["lifecycle_started"] is True
     assert captured["bundle"]["status"] == "READY"
+    assert captured["lifecycle_handlers"] == ["webkimi", "webclaude"]
+    assert captured["dag_handlers"] == ["webkimi", "webclaude"]
+    assert captured["claude_model_preference"] == "Opus 5 High"
     assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
     assert payload["browser_provider_availability"]["limited_providers"] == ["webgpt"]
     assert payload["browser_provider_availability"]["cooldown_policy"]["retry_after_seconds"] == 300
-    assert payload["execution"]["status"] == "DEGRADED"
+    selection = payload["browser_provider_selection"]
+    assert selection["status"] == "ADJUSTED"
+    assert selection["limited_providers"] == ["webgpt"]
+    assert selection["active_handlers"] == ["webkimi", "webclaude"]
+    assert selection["fallback_handlers"] == ["webclaude"]
+    assert "skills/ticket/run.sh bug" in selection["ticket_command"]
+    assert payload["execution"]["status"] == "PASS"
     assert "no_tau_execution" not in payload["execution"]
+
+
+def test_browser_availability_blocks_when_not_enough_available_participants(monkeypatch, tmp_path: Path) -> None:
+    def fake_availability(*args, **kwargs):
+        return {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "NEEDS_ATTENTION",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "requested_providers": ["webgpt", "webkimi"],
+            "providers": {
+                "webgpt": {"provider_limited": True, "checked_tabs": [{"tab_id": "837362610"}]},
+                "webkimi": {"provider_limited": True, "checked_tabs": [{"tab_id": "837362611"}]},
+            },
+        }
+
+    def unexpected_lifecycle(*args, **kwargs):
+        raise AssertionError("Browser lifecycle should not start without enough available participants")
+
+    def unexpected_tau_execution(*args, **kwargs):
+        raise AssertionError("Tau execution should not start without enough available participants")
+
+    monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
+    monkeypatch.setattr(tau_dag_cli, "_fallback_provider_order", lambda request: [])
+    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", unexpected_lifecycle)
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", unexpected_tau_execution)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "compete",
+            "Each candidate must answer PING_RESULT: 4.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "blocked-compete-no-available-provider",
+            "--immutable-goal",
+            "Block only when no sufficient provider set remains.",
+            "--handler",
+            "webgpt",
+            "--handler",
+            "webkimi",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 4
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "NEEDS_ATTENTION"
+    assert payload["browser_provider_selection"]["status"] == "BLOCKED"
+    assert payload["execution"]["blocked_reason"] == "browser_provider_selection_insufficient_participants"
+    assert payload["execution"]["limited_providers"] == ["webgpt", "webkimi"]
+    assert payload["execution"]["no_tau_execution"] is True
 
 
 def test_roundtable_webgrok_stale_binding_retries_existing_provider_tab_before_blocking(tmp_path: Path) -> None:
