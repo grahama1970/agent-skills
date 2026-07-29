@@ -1407,3 +1407,66 @@ def test_the_attestation_shows_whether_each_closure_was_verified() -> None:
     assert "#1 [COMPLETED] [audited+upheld]" in task
     assert "#2 [COMPLETED] [closure NOT independently verified]" in task
     assert "independently" in task
+
+
+# --------------------------------------------------------------------------- #
+# A finished repair must not be re-dispatched over itself
+# --------------------------------------------------------------------------- #
+
+
+def test_a_finished_repair_stops_being_routable() -> None:
+    """watchdog-probe#1: the repair completed, the lease was released, the ticket
+    stayed agent-work, and cron re-dispatched it -- each dispatch resetting the
+    branch over the previous fix."""
+    issue = _issue(1, labels=["agent-work", config.DONE_LABEL], body="target: src/x.py\n")
+    action, reason = registry.classify_issue_with_reason(issue)
+    assert action is None and reason == "awaiting_review"
+
+
+def test_a_completed_repair_marks_the_ticket_done(tmp_path) -> None:
+    project = {
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+    }
+    issue = _issue(51, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    edits: list[dict] = []
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github, "issue_edit",
+            side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
+        ),
+        mock.patch.object(
+            handlers.registry, "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-51",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+
+    assert result["status"] == "COMPLETED"
+    assert any(e.get("add") == [config.DONE_LABEL] for e in edits), "must mark it done"
+
+
+def test_a_worktree_holding_unmerged_work_is_not_reset(tmp_path, monkeypatch) -> None:
+    """`worktree add -B` resets the branch to origin/main. Removing and re-adding
+    blindly destroyed codex's commit 9feb862 on watchdog-probe#1."""
+    wt = tmp_path / "wt"
+    wt.mkdir()
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, timeout_s=None):
+        calls.append(cmd)
+        if "log" in cmd:
+            return {"exit_code": 0, "stdout": "9feb862 Fix partial-window rolling means\n"}
+        return {"exit_code": 0, "stdout": "", "stderr": ""}
+
+    monkeypatch.setattr(registry, "run_cmd", fake_run)
+    out = registry.prepare_repair_worktree(tmp_path / "repo", wt, 1)
+
+    assert out["ok"] is False
+    assert "unmerged" in out and out["unmerged"]
+    assert "lose that work" in out["error"]
+    assert not any("remove" in c for c in calls), "must not remove a worktree holding work"

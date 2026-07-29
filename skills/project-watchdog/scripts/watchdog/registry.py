@@ -111,9 +111,28 @@ def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -
         steps.append({"argv": ["git", *args], "exit_code": result.get("exit_code")})
         return result
 
-    # Remove a leftover worktree from an earlier attempt at the same issue,
-    # so a retry is not refused by a path that already exists.
+    # A leftover worktree from an earlier attempt may hold a finished repair
+    # that nobody has merged yet. `worktree add -B` resets the branch to
+    # origin/main, so removing and re-adding blindly DESTROYS that work --
+    # observed on watchdog-probe#1: codex committed 9feb862, a later dispatch
+    # reset the branch, and the commit was left unreferenced.
     if worktree.exists():
+        result = run_cmd(
+            ["git", "-C", str(worktree), "log", "--oneline", "origin/main..HEAD"],
+            timeout_s=60,
+        )
+        unmerged = [ln for ln in str(result.get("stdout", "")).splitlines() if ln.strip()]
+        if unmerged:
+            return {
+                "ok": False,
+                "error": (
+                    f"{worktree} already holds {len(unmerged)} unmerged commit(s) on "
+                    f"{branch} ({unmerged[0]}). Refusing to reset it and lose that work: "
+                    f"merge or delete the branch first."
+                ),
+                "unmerged": unmerged,
+                "steps": steps,
+            }
         git("worktree", "remove", "--force", str(worktree), cwd=repo_dir)
     git("worktree", "prune", cwd=repo_dir)
 
@@ -729,6 +748,8 @@ def classify_issue_with_reason(issue: dict[str, Any]) -> tuple[str | None, str |
         return None, "leased"
     if config.BLOCKED_LABEL in labels:
         return None, "blocked"
+    if config.DONE_LABEL in labels:
+        return None, "awaiting_review"
     if labels & config.HUMAN_HOLD_LABELS:
         return None, "human_hold"
     if config.READY_LABEL not in labels:

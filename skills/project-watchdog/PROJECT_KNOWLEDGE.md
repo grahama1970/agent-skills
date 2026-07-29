@@ -1,70 +1,71 @@
 # Project Knowledge: project-watchdog
 
-**Last updated:** 2026-07-27 08:52 by agent
-**Status:** Active development
+**Last updated:** 2026-07-29 by agent
+**Status:** Active development — all three lanes proven live
 
 ## Current Understanding
 
-- project-watchdog is a cron that scans registered GitHub repos for issues labelled agent-work, leases one per tick, and hands the repair to Tau as a tau.dag_contract.v1 DAG. It does not orchestrate the repair itself.
-- Live dispatch is UNPROVEN end to end. As of 2026-07-27 every persisted receipt sampled (3000/3000) is NOOP and zero issues have ever been handled to completion.
-- The coder command spec at tau/experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json is a TRANSPORT STUB: it returns --result-status COMPLETED unconditionally. The repair DAG gates on required_evidence [changed_files, focused_tests] so the stub fails the gate instead of reporting a false PASS.
+- The watchdog runs three lanes per tick, in order, stopping at the first with
+  work: **repair** (fix an open ticket), **closure audit** (judge a closure), and
+  **completion attestation** (judge whether a project with an empty queue is
+  actually finished). An audit can never delay a ticket that is waiting.
+- Every lane dispatches through `$ask tau-dag`, which compiles the DAG and lets
+  Tau execute it. The watchdog does not orchestrate models itself.
+- Collision is a property of the **target**, not the repository. agent-skills
+  holds 364 skills; two tickets against different ones share no files.
+- All three lanes are proven against live repos, not fixtures:
+  - repair — `watchdog-probe#1`, 2026-07-29: codex produced
+    `9feb862 Fix partial-window rolling means`, a correct one-line fix
+    (`sum(chunk) / window` → `sum(chunk) / len(chunk)`), verified by running the
+    real module. Earlier: agent-skills#1090, a 408-line lease-expiry
+    implementation.
+  - closure audit — ~27 cron audits; `tau#206` reopened on FAIL, the missing
+    proof was then run and posted, and it was re-closed.
+  - completion attestation — webgpt returned FAIL naming seven tickets, and its
+    central claim checked out: PRs #226/#227/#228/#229 were OPEN while
+    #211/#223/#224/#225 were CLOSED/COMPLETED.
+- **Not yet observed:** the attestation firing from cron unaided. It requires a
+  project with nothing open to repair and nothing left to audit.
 
 ## Recent Decisions
 
 | Date | Decision | Why |
 |------|----------|-----|
-| 2026-07-27 | Repair goes through tau.dag_contract.v1, not tau self-fix tick | The /tau skill states creator/reviewer and repair loops must be DAG contracts. self-fix tick resolves specs from agent-skills/agents/, where only 3 of 92 agents have one; the DAG lane uses Tau's own spec root, where coder/reviewer/goal-guardian all exist. |
-| 2026-07-27 | Repair DAG is acyclic; retry lives in coder.max_attempts | A reviewer->coder retry edge was rejected by real Tau with cycle_detected and unsupported_ready_queue_condition. Tau already owns retry policy, so the edge duplicated it. |
-| 2026-07-27 | Removed herdr pane dispatch and cross-repo blocked-by | Neither was touched by the first live probe and neither had ever run outside self-authored tests. Runtime code dropped 2307 -> ~1750 lines. |
-| 2026-07-27 | /ticket stamps agent-work at file time | The router selected on agent-work while /ticket emitted only type:*/route:*. The two halves shared no vocabulary, producing 41,607 consecutive no-work ticks over roughly a month. |
-
-## Coder lane: verified state
-
-The repair DAG dispatches `coder` -> `reviewer` -> `human` through
-`tau dag-run`. Both command specs currently return BLOCKED by design. The
-blocker is infrastructure, not wiring:
-
-- Tau's coding worker lane is `tau scillm-worker-launch`, schema
-  `tau.executor.scillm_worker.v1`, with `model_provider_route.surface =
-  opencode_serve` and endpoint `/v1/scillm/opencode/runs`. A well-formed work
-  order validates: ok true, status PASS, zero alerts.
-- Without `--apply` it does not run. The first probe returned ok true with
-  `dry_run: true`, `live: false`, and wrote no result file. The tool's success
-  response was request validation, not execution.
-- With `--apply`: ok false, status BLOCKED, `scillm_http_error: SciLLM returned
-  HTTP 404`. The OpenCode serve surface is not running.
-- Corroborated independently: `skills/tau/run.sh doctor` reports
-  `can_run_provider_live_lane: false`.
-
-Do **not** route the coder through `agent-skills/code-runner`. Its own
-description is "runs one LLM backend through /scillm", so it calls SciLLM
-directly from a project-agent skill and bypasses Tau's provider boundary. A
-loop wired that way completes end to end — it was proven doing so on
-2026-07-27 — which makes it a tempting and wrong shortcut.
+| 2026-07-29 | A finished repair gets `agent-done` and stops being routable | The repair completed, released the lease, and left the ticket `agent-work`, so cron re-dispatched it every tick — and each dispatch reset the branch over the previous fix. |
+| 2026-07-29 | `prepare_repair_worktree` refuses to reset a worktree holding unmerged commits | `worktree add -B` resets to origin/main. Removing and re-adding blindly destroyed codex's `9feb862`. |
+| 2026-07-29 | A tick writes back only the keys it owns | It wrote the whole state document, so `set-state` returned UPDATED and was silently reverted moments later by a tick that started earlier. A newly registered project never dispatched. |
+| 2026-07-29 | Only `COMPLETED` closures are audited | `tau#213` was closed as a duplicate and reopened for lacking proof of work it was never going to do. |
+| 2026-07-29 | `close --results` posts the evidence JSON | It was validated then discarded, so no closure carried the artifact paths and the audit could never confirm a proof actually ran. |
+| 2026-07-28 | Two audit seats, different model families | One seat that over-accepts would both pass bad repairs and uphold the bad closures that followed. |
+| 2026-07-28 | Repairs are authored in a per-dispatch worktree off origin/main | The registered checkout is a human's working tree: 1,911 dirty entries, cron lanes writing mid-run, 60 commits stale. |
+| 2026-07-28 | The creator seat must not push | codex pushed `a850e22a6` to main while its own node reported NEEDS_ATTENTION and the ticket stayed blocked. |
+| 2026-07-28 | `install-cron` sources the shell rc | cron's environment lacks the provider credentials and PATH entries, so every seat failed to authenticate while the same handler answered from a shell. |
+| 2026-07-28 | Repair goes through `$ask tau-dag`, not a hand-authored contract | The old lane pointed at Tau's own command-spec tree, so every non-tau project was refused before dispatch. |
 
 ## Open Questions
 
-- [ ] Bring up the SciLLM OpenCode serve surface, or supply a Tau-owned coder
-      adapter that emits changed_files and focused_tests. This is the only
-      thing between the current state and a completed loop.
-- [ ] (superseded) What fills the coder command spec? A real coder writes to the repo; code-runner returns a patch for review. Unresolved, and it is the last blocker to a completed loop.
-- [ ] Should sanity.sh gain the live E2E gate that best-practices-skills requires for composite runtime skills? Its absence is why the missing-spec failure was found by a manual probe rather than by CI.
-- [ ] core.py:254 still has one silent except handler flagged by correctness-no-silent-fallback.
+- [ ] Who merges a repair branch? The lane deliberately does not push, so a
+      finished repair waits at `agent-done` for a human or a review step. There
+      is no automated merge path yet.
+- [ ] The audit has upheld zero closures out of ~12. Every rejection checked out
+      as correct, but no closure has yet carried readable artifacts, so PASS is
+      untested in production.
+- [ ] The attestation and the closure audit share a seat vocabulary but not a
+      configured seat. Whether they should be independently configurable is open.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `scripts/project_watchdog.py` | Typer CLI only; no business logic |
-| `scripts/watchdog/commands.py` | tick / install-cron / set-state / status |
-| `scripts/watchdog/registry.py` | project lookup and routable-issue selection |
-| `scripts/watchdog/handlers.py` | compiles the repair DAG and calls `tau dag-run` |
-| `scripts/watchdog/streaks.py` | idle-streak escalation |
-| `scripts/watchdog/github.py` | gh wrappers; `repo` required, never defaulted |
-| `scripts/check_path_literals.py` | AST guard against `Path("${VAR}/...")` |
-| `registry/projects.json` | registered projects; `registry/state.json` is the operator gate |
-| `sanity.sh` | 45 behavioural gates, zero mocks |
+| `scripts/watchdog/commands.py` | tick, the three lanes and their precedence, state persistence |
+| `scripts/watchdog/registry.py` | project lookup, target collision, routable/closed scans, repair worktrees |
+| `scripts/watchdog/handlers.py` | repair, closure audit, completion attestation |
+| `scripts/watchdog/config.py` | paths, labels, seats, windows, cron shell init |
+| `registry/projects.json` | registered projects (versioned config) |
+| `~/.local/state/project-watchdog/state.json` | runtime state — deliberately NOT in the repo |
 
-## Infrastructure State
+## Verification
 
-<!-- Auto-populated from /project-state --quick -->
+`./sanity.sh` — 45 behavioural gates. `uv run pytest tests -q` — 154 tests.
+Neither proves a lane works: only a live receipt read back from the produced
+artifact does.
