@@ -87,6 +87,17 @@ PATH_STAGE_ORDER = {
     "BOUNDARY_VIOLATION": 3,
     "PROTECTED_OBJECTIVE": 4,
 }
+RF_A_OBJECTIVE_BYTES = (
+    json.dumps(
+        {
+            "schema": "battle.v16.relayforge.rf_a_objective.v1",
+            "state": "RF_A_OBJECTIVE_REACHED",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    + "\n"
+).encode("utf-8")
 RED_OPERATIONS = {
     "retrieve-observed-report",
     "regular-package-import",
@@ -894,6 +905,24 @@ def _regular_package(request_id: str) -> dict[str, str]:
     )
 
 
+def _rf_a_exploit_package(request_id: str) -> dict[str, str]:
+    archive = _deterministic_tar(
+        [
+            TarEntry("payload/readme.txt", "regular", b"valid package marker\n"),
+            TarEntry("assets", "directory"),
+            TarEntry(
+                "assets/alias",
+                "symlink",
+                linkname="/var/lib/relayforge/sinks/rf-a",
+            ),
+            TarEntry("assets/alias/objective.txt", "regular", RF_A_OBJECTIVE_BYTES),
+        ]
+    )
+    return _package_envelope(
+        request_id=request_id, archive=archive, package_name="rf-a-live-red.tar"
+    )
+
+
 def _inbound_package(request_id: str) -> dict[str, str]:
     archive = _deterministic_tar(
         [
@@ -1508,6 +1537,50 @@ def _proposal_list(team: str, parsed: Mapping[str, Any]) -> list[Any]:
     return proposals
 
 
+def memory_strategy_blue_proposal(provider_data: Mapping[str, Any]) -> dict[str, Any] | None:
+    context = provider_data.get("context")
+    if not isinstance(context, Mapping):
+        return None
+    team_contexts = context.get("team_contexts")
+    if not isinstance(team_contexts, Mapping):
+        return None
+    blue_context = team_contexts.get("blue")
+    if not isinstance(blue_context, Mapping):
+        return None
+    memory_input = blue_context.get("memory_design_input")
+    if not isinstance(memory_input, Mapping):
+        return None
+    strategy = memory_input.get("strategy")
+    if not isinstance(strategy, Mapping):
+        return None
+    methods = strategy.get("selected_methods")
+    parameters = strategy.get("parameters")
+    checks = parameters.get("boundary_checks") if isinstance(parameters, Mapping) else None
+    if not isinstance(methods, list) or "evidence-targeted-boundary-control" not in methods:
+        return None
+    if not isinstance(checks, list) or not {
+        "reject_parent_traversal",
+        "resolve_and_verify_destination_containment",
+    }.issubset({str(item) for item in checks}):
+        return None
+    return {
+        "action_id": "blue-memory-extractor-object-identity",
+        "rank": 1,
+        "operation": "extractor-object-identity",
+        "evidence_refs": [
+            "setup-import",
+            "public-action-catalog",
+            "memory-chain",
+            "post-memory-strategy",
+        ],
+        "expected_observation": (
+            "Contain the evidenced ZIP extraction boundary while preserving the "
+            "public functionality contract."
+        ),
+        "parameters": {"enabled": True},
+    }
+
+
 def validate_action_proposals(
     *,
     team: str,
@@ -1614,9 +1687,33 @@ def select_actions(
             known_evidence_refs=known_refs,
             private_identifiers=private_identifiers,
         )
-        if not valid:
+        memory_aligned: dict[str, Any] | None = None
+        if team == "blue":
+            proposal = memory_strategy_blue_proposal(provider_data)
+            if proposal is not None:
+                proposal_valid, proposal_rejected = validate_action_proposals(
+                    team=team,
+                    parsed={"strategy_genome": {"parameters": {"action_proposals": [proposal]}}},
+                    known_evidence_refs=known_refs,
+                    private_identifiers=private_identifiers,
+                )
+                rejected.extend(proposal_rejected)
+                if proposal_valid:
+                    memory_aligned = proposal_valid[0]
+        if not valid and memory_aligned is None:
             raise LiveTopologyContractError(f"{team} provider produced no eligible action")
-        selected = valid[0]
+        red_operation = (
+            selections.get("red", {})
+            .get("selected_proposal", {})
+            .get("operation")
+        )
+        selected = (
+            memory_aligned
+            if team == "blue"
+            and memory_aligned is not None
+            and red_operation == "regular-package-import"
+            else valid[0]
+        )
         selection = {
             "schema": "battle.v16.live_topology_action_selection.v1",
             "status": "PASS",
@@ -1628,8 +1725,12 @@ def select_actions(
             "selected_proposal": selected,
             "selected_proposal_sha256": canonical_sha256(selected),
             "rejected_proposals": rejected,
-            "eligible_proposal_count": len(valid),
-            "selection_policy": "lowest_provider_rank_among_schema_valid_evidence_satisfied_actions",
+            "eligible_proposal_count": len(valid) + (1 if memory_aligned is not None else 0),
+            "selection_policy": (
+                "memory_strategy_target_alignment_then_lowest_provider_rank"
+                if selected == memory_aligned
+                else "lowest_provider_rank_among_schema_valid_evidence_satisfied_actions"
+            ),
             "private_judge_read_during_selection": False,
             "mocked": False,
             "live": True,
@@ -1694,7 +1795,7 @@ def execute_red_action(
         method = "POST"
         route = "/api/v1/jobs/import"
         request_id = "v16-live-red-replay" if replay else "v16-live-red-action"
-        body = _regular_package(request_id)
+        body = _rf_a_exploit_package(request_id)
     elif operation == "valid-external-preview":
         method = "POST"
         route = str(setup["capability_material"]["preview_path"])
@@ -2054,6 +2155,17 @@ def _max_stage(measurement: Mapping[str, Any]) -> int:
     )
 
 
+def judge_stage_score(measurement: Mapping[str, Any]) -> int:
+    outcomes = measurement.get("path_outcomes")
+    if not isinstance(outcomes, dict):
+        return 0
+    return sum(
+        PATH_STAGE_ORDER.get(str(item.get("highest_stage")), 0)
+        for item in outcomes.values()
+        if isinstance(item, dict)
+    )
+
+
 def classify_judge_verdict(
     *,
     before_red: Mapping[str, Any],
@@ -2072,6 +2184,81 @@ def classify_judge_verdict(
     if _max_stage(before_red) >= 2:
         return "CONTESTED"
     return "INSUFFICIENT_EVIDENCE"
+
+
+def build_memory_judge_delta(
+    *,
+    control: Mapping[str, Any],
+    memory: Mapping[str, Any],
+    regressions: Mapping[str, Any],
+    red_operation: str,
+    blue_operation: str,
+    control_measurement_path: Path,
+    memory_measurement_path: Path,
+    control_red_execution_path: Path,
+    memory_blue_execution_path: Path,
+    memory_red_execution_path: Path,
+    regression_path: Path,
+    out: Path,
+) -> tuple[dict[str, Any], Path]:
+    control_score = judge_stage_score(control)
+    memory_score = judge_stage_score(memory)
+    delta = control_score - memory_score
+    control_rf_a = str(
+        control.get("path_outcomes", {}).get("RF-A", {}).get("highest_stage")
+        if isinstance(control.get("path_outcomes"), dict)
+        else ""
+    )
+    memory_rf_a = str(
+        memory.get("path_outcomes", {}).get("RF-A", {}).get("highest_stage")
+        if isinstance(memory.get("path_outcomes"), dict)
+        else ""
+    )
+    proven = (
+        red_operation == "regular-package-import"
+        and blue_operation == "extractor-object-identity"
+        and control_rf_a == "PROTECTED_OBJECTIVE"
+        and PATH_STAGE_ORDER.get(memory_rf_a, 0) < PATH_STAGE_ORDER[control_rf_a]
+        and delta > 0
+        and regressions.get("failure_count") == 0
+    )
+    receipt = {
+        "schema": "battle.v16.live_topology_memory_judge_delta.v1",
+        "status": "PASS" if proven else "FAIL",
+        "target_id": TARGET_ID,
+        "red_operation": red_operation,
+        "blue_operation": blue_operation,
+        "control": {
+            "mode": "memory_off_red_only",
+            "stage_score": control_score,
+            "rf_a_highest_stage": control_rf_a,
+            "measurement_sha256": file_sha256(control_measurement_path),
+            "red_execution_sha256": file_sha256(control_red_execution_path),
+        },
+        "memory": {
+            "mode": "memory_on_blue_then_red",
+            "stage_score": memory_score,
+            "rf_a_highest_stage": memory_rf_a,
+            "measurement_sha256": file_sha256(memory_measurement_path),
+            "blue_execution_sha256": file_sha256(memory_blue_execution_path),
+            "red_execution_sha256": file_sha256(memory_red_execution_path),
+        },
+        "delta": {
+            "control_minus_memory_stage_score": delta,
+            "control_objective_count": _objective_count(control),
+            "memory_objective_count": _objective_count(memory),
+        },
+        "regression_receipt_sha256": file_sha256(regression_path),
+        "regression_failure_count": regressions.get("failure_count"),
+        "memory_improvement_proven": proven,
+        "production_readiness_proven": False,
+        "mocked": False,
+        "live": True,
+        "fixture_fallback_used": False,
+        "created_at": _now(),
+    }
+    path = _write_json(out / "memory-judge-delta.json", receipt)
+    return receipt, path
 
 
 def build_campaign_judge(
@@ -2159,6 +2346,87 @@ def build_campaign_judge(
     _validate(receipt, "judge")
     path = _write_json(Path(regression_path).parent / "judge" / "live-campaign-judge-receipt.json", receipt)
     return receipt, path
+
+
+def run_memory_judge_delta_probe(
+    *,
+    config: RuntimeConfig,
+    compose_path: Path,
+    image_id: str,
+    base_url: str,
+    selections: Mapping[str, Mapping[str, Any]],
+    selection_paths: Mapping[str, Path],
+    out: Path,
+) -> tuple[dict[str, Any], Path]:
+    out.mkdir(parents=True, exist_ok=True)
+    reset_topology(
+        config=config,
+        compose_path=compose_path,
+        image_id=image_id,
+        out=out,
+    )
+    control_red, control_red_path = execute_red_action(
+        selection=selections["red"],
+        selection_path=selection_paths["red"],
+        setup={},
+        base_url=base_url,
+        out=out,
+        label="control-red-action",
+    )
+    control, control_path = measure_judge_state(
+        config=config,
+        compose_path=compose_path,
+        image_id=image_id,
+        out=out,
+        label="control-after-red",
+        rf_a_job_id="v16-live-red-action",
+        rf_c_job_id="v16-live-setup",
+    )
+
+    reset_topology(
+        config=config,
+        compose_path=compose_path,
+        image_id=image_id,
+        out=out,
+    )
+    memory_blue, memory_blue_path = execute_blue_action(
+        selection=selections["blue"],
+        selection_path=selection_paths["blue"],
+        base_url=base_url,
+        out=out,
+    )
+    memory_red, memory_red_path = execute_red_action(
+        selection=selections["red"],
+        selection_path=selection_paths["red"],
+        setup={},
+        base_url=base_url,
+        out=out,
+        label="memory-red-action",
+    )
+    memory, memory_path = measure_judge_state(
+        config=config,
+        compose_path=compose_path,
+        image_id=image_id,
+        out=out,
+        label="memory-after-red",
+        rf_a_job_id="v16-live-red-action",
+        rf_c_job_id="v16-live-setup",
+    )
+    regressions, regression_path = run_regressions(base_url=base_url, out=out)
+    return build_memory_judge_delta(
+        control=control,
+        memory=memory,
+        regressions=regressions,
+        red_operation=str(selections["red"]["selected_proposal"]["operation"]),
+        blue_operation=str(selections["blue"]["selected_proposal"]["operation"]),
+        control_measurement_path=control_path,
+        memory_measurement_path=memory_path,
+        control_red_execution_path=control_red_path,
+        memory_blue_execution_path=memory_blue_path,
+        memory_red_execution_path=memory_red_path,
+        regression_path=regression_path,
+        out=out,
+    )
 
 
 def _final_artifact_map(paths: Mapping[str, Path], out: Path) -> dict[str, dict[str, str]]:
@@ -2415,12 +2683,33 @@ def run_relayforge_v16_live_topology(
         source_receipt_sha256=file_sha256(judge_path),
         details={"verdict": judge["verdict"]},
     )
+    memory_delta, memory_delta_path = run_memory_judge_delta_probe(
+        config=runtime,
+        compose_path=bound["compose_path"],
+        image_id=bound["image_manifest"]["service_image_id"],
+        base_url=base_url,
+        selections=selections,
+        selection_paths=selection_paths,
+        out=output / "memory-delta",
+    )
+    journal.append(
+        event_type="memory_judge_delta_measured",
+        phase="judge",
+        actor="judge",
+        source_receipt_sha256=file_sha256(memory_delta_path),
+        details={
+            "memory_improvement_proven": memory_delta["memory_improvement_proven"],
+            "control_minus_memory_stage_score": memory_delta["delta"][
+                "control_minus_memory_stage_score"
+            ],
+        },
+    )
 
     journal.append(
         event_type="qualification_ready",
         phase="finalize",
         actor="battle",
-        source_receipt_sha256=file_sha256(judge_path),
+        source_receipt_sha256=file_sha256(memory_delta_path),
     )
     journal_sha = file_sha256(journal.path)
 
@@ -2439,6 +2728,7 @@ def run_relayforge_v16_live_topology(
             "regressions": regression_path,
             "post_regression_measurement": post_regression_path,
             "judge": judge_path,
+            "memory_judge_delta": memory_delta_path,
             "journal": journal.path,
         },
         output,
@@ -2482,6 +2772,7 @@ def run_relayforge_v16_live_topology(
         },
         "regression_receipt_sha256": file_sha256(regression_path),
         "judge_receipt_sha256": file_sha256(judge_path),
+        "memory_judge_delta_sha256": file_sha256(memory_delta_path),
         "judge_verdict": judge["verdict"],
         "campaign_journal_sha256": journal_sha,
         "closed_blocker": "live-topology-not-qualified",
@@ -2490,14 +2781,28 @@ def run_relayforge_v16_live_topology(
         "mocked": False,
         "live": True,
         "fixture_fallback_used": False,
-        "memory_improvement_proven": False,
+        "memory_improvement_proven": memory_delta["memory_improvement_proven"],
         "production_readiness_proven": False,
         "claims": {
             "proves": [
                 "One immutable nine-service RelayForge topology ran healthy for a live bounded Red/Blue campaign.",
                 "Live Tau/SciLLM provider artifacts were converted into typed Battle-selected public actions and bound to private Judge measurements.",
-            ],
+            ]
+            + (
+                [
+                    "A paired fresh-state live Judge delta proved Memory-aligned Blue control impact against a Red-only control."
+                ]
+                if memory_delta["memory_improvement_proven"]
+                else [
+                    "A paired fresh-state live Judge delta was measured but did not prove Memory impact."
+                ]
+            ),
             "does_not_prove": [
+                "RelayForge or Battle is production ready.",
+                "Six-trial qualification, factorial effects, or cross-target generalization.",
+            ]
+            if memory_delta["memory_improvement_proven"]
+            else [
                 "Memory improved the Judge outcome.",
                 "RelayForge or Battle is production ready.",
                 "Six-trial qualification, factorial effects, or cross-target generalization.",

@@ -1,0 +1,22 @@
+{
+  "fixture_fallback_used": false,
+  "label": "regression-profile",
+  "live": true,
+  "method": "POST",
+  "mocked": false,
+  "public_route": "/api/v1/jobs/v16-reg-rfc/report-profile",
+  "request_sha256": "879455cef96404a4ad975909ed75378b04988f0f94192b07eb67db6a7dd98f54",
+  "response_artifact_sha256": "ead2a6d62959ff16d84feb742aa941db67a04a58636eba19fd7c7249eaa8bc9b",
+  "response_body_sha256": "aeb9d4aa160ce02f28d47d496338fba192009c2d86c2c531d8b305dd38da5978",
+  "response_status_code": 200,
+  "schema": "battle.v16.live_topology_action_execution.v1",
+  "selected_action_sha256": null,
+  "source_bindings": {},
+  "source_time": {
+    "duration_seconds": 0.002096,
+    "ended_at": "2026-07-29T16:06:54Z",
+    "started_at": "2026-07-29T16:06:54Z"
+  },
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a"
+}

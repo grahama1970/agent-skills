@@ -1,0 +1,5 @@
+{
+  "command_receipt_sha256": "c00215a3b97330b8267e8ed398994a6093abe6279ed69e51d3bea9cfa78841e4",
+  "payload_sha256": "30accbff07f19e60ac9cab9f4b2bb6bc80fe7802ffa46a6a71f399bf8ef967e6",
+  "schema": "battle.v16.live_topology_judge_command_binding.v1"
+}

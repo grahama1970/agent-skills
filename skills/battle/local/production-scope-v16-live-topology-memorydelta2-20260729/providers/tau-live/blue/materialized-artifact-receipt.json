@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 4433,
+  "artifact_sha256": "8bacdba0a219561131f598100e2c1ea6cf1f6a91f968eaa4006009d798aa4251",
+  "artifact_type": "blue_patch",
+  "parsed_keys": [
+    "app_py",
+    "artifact_type",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/providers/tau-live/blue/app.py",
+  "rationale": "Selects narrow public-catalog controls that match the public evidence: OBS-20 shows tenant-owned report retrieval and OBS-21 shows an observed recent report reference, so cache-principal-partition directly addresses cross-principal cache/reference reuse risk without broad outage. capability-audience-policy protects discovered preview/report-profile capability material while preserving valid workflows. This uses memory_chain_qualification_sha256=72d1f41dd20ba4ad7777dce434615fa88277c5818f5bdbe78684dab3e95be5f2 and post_memory_strategy_sha256=e0dac6dc4c3159be8c7cdcefc2b534dfe421065dea0f8489bb42f44de64e4095 as design input only, rejecting broad quarantine and legacy shutdown as selected recommendations.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "ec053f41c8a4dc94ac955c7d74d19919421e76fd10eadc2ce203cf5bac188692",
+  "status": "PASS",
+  "strategy_genome_sha256": "a752908b66d56b8373122d5238a3f65c13736ca7c30de41280cc9d706fc58231"
+}

@@ -1,0 +1,66 @@
+{
+  "after_red_measurement_sha256": "a62e0956dc47de6f366fa43cdedddce1a7e4d04268da295ade41b004cd00e10a",
+  "baseline_measurement_sha256": "416e6bdc6b756927c66496abc30c809649d1c54e3cf67a9a9bf82fc74d78b8a2",
+  "blue_execution_sha256": "e5864f081108f908dfb43391d7df58dc731706f70c749264346969dbe8e1ca84",
+  "blue_selection_sha256": "3f472701f5a17e4134f15a978b5975045fd82344fe17e5d051971252be328690",
+  "created_at": "2026-07-29T16:06:50Z",
+  "final_measurement_sha256": "fc17cf797d9c2a9c354ea8f6c3b7008e235b357952b067e664c529a0096fbea1",
+  "final_recheck_sha256": "79ecc55e41da8289b0dd545143893a88b0f52b55314e0cc2d4e65c9876918b6e",
+  "fixture_fallback_used": false,
+  "judge_authority": "relayforge-private-judge-cli",
+  "live": true,
+  "memory_improvement_proven": false,
+  "mocked": false,
+  "path_stages": {
+    "after_red": {
+      "RF-A": "PROTECTED_OBJECTIVE",
+      "RF-B": "REPRODUCIBLE_PROBE",
+      "RF-C": "UNSEEN"
+    },
+    "baseline": {
+      "RF-A": "UNSEEN",
+      "RF-B": "REPRODUCIBLE_PROBE",
+      "RF-C": "UNSEEN"
+    },
+    "final": {
+      "RF-A": "REPRODUCIBLE_PROBE",
+      "RF-B": "REPRODUCIBLE_PROBE",
+      "RF-C": "UNSEEN"
+    }
+  },
+  "post_regression_measurement_sha256": "537c61205aee2abce14da2ab4dcd1f788b50b247c73963951a288e45436cd2cf",
+  "production_readiness_proven": false,
+  "red_execution_sha256": "61b83173db19dca37bc8417d2cf743cdd9d0d78544ca2b6c93da9ffc13d401ba",
+  "red_replay_sha256": "c335146774869d779393abccb088a021b8d0d5c1f5379b52418c069e9fed0454",
+  "red_selection_sha256": "361f74f24fac417c978022976c9ad81c83bf958b72d9ee5ddec219113f931830",
+  "regression_receipt_sha256": "10a70ea39a52896e1a2b275cc0e1656066fb3e2159298b16d672fbb2661277d9",
+  "regression_vector": {
+    "in-bound-transformed-object": true,
+    "legacy-conversion": true,
+    "regular-package-import": true,
+    "safe-report-profile": true,
+    "tenant-owned-report": true,
+    "valid-external-preview": true
+  },
+  "schema": "battle.v16.live_topology_judge.v1",
+  "sink_hashes": {
+    "after_red": {
+      "RF-A-SINK": "acbed2a2948b63c37dd24062fa0c10596b8b00b0ac82e490db6379d34eda7c99",
+      "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+      "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    },
+    "baseline": {
+      "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+      "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+      "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    },
+    "final": {
+      "RF-A-SINK": "acbed2a2948b63c37dd24062fa0c10596b8b00b0ac82e490db6379d34eda7c99",
+      "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+      "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    }
+  },
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "verdict": "BLUE_SUCCESS"
+}

@@ -1,0 +1,134 @@
+{
+  "action_execution_sha256": {
+    "blue": "e5864f081108f908dfb43391d7df58dc731706f70c749264346969dbe8e1ca84",
+    "red": "61b83173db19dca37bc8417d2cf743cdd9d0d78544ca2b6c93da9ffc13d401ba",
+    "red_replay": "c335146774869d779393abccb088a021b8d0d5c1f5379b52418c069e9fed0454"
+  },
+  "artifacts": {
+    "blue_execution": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/http/blue-action-execution.json",
+      "relative_path": "http/blue-action-execution.json",
+      "sha256": "e5864f081108f908dfb43391d7df58dc731706f70c749264346969dbe8e1ca84"
+    },
+    "blue_selection": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/actions/blue/action-selection.json",
+      "relative_path": "actions/blue/action-selection.json",
+      "sha256": "3f472701f5a17e4134f15a978b5975045fd82344fe17e5d051971252be328690"
+    },
+    "campaign_reset": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/judge/campaign-reset.json",
+      "relative_path": "judge/campaign-reset.json",
+      "sha256": "9c7751d3a027226c767e35916a716889caaef77aaed88353cd60cb76b330a1a8"
+    },
+    "input_binding": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/input-binding.json",
+      "relative_path": "input-binding.json",
+      "sha256": "8b7a3436573734cededb7924e141dd3bad322b39b168bef639d1eee139d79a85"
+    },
+    "journal": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/campaign-events.jsonl",
+      "relative_path": "campaign-events.jsonl",
+      "sha256": "8ee1b78def9c936ac019da4311a2cd2f46c9d891063666873b8f9f4ca099ec76"
+    },
+    "judge": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/judge/live-campaign-judge-receipt.json",
+      "relative_path": "judge/live-campaign-judge-receipt.json",
+      "sha256": "20473cefd1c1c7b3d5d687f06a7fa4d66b0c527c3d0f0b2c4ed621727695337f"
+    },
+    "memory_judge_delta": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/memory-delta/memory-judge-delta.json",
+      "relative_path": "memory-delta/memory-judge-delta.json",
+      "sha256": "39e417815d7340731dced01830ac068b627f14537a2ab92c50b463f72e4e4dab"
+    },
+    "post_regression_measurement": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/judge/post-regression-state-measurement.json",
+      "relative_path": "judge/post-regression-state-measurement.json",
+      "sha256": "537c61205aee2abce14da2ab4dcd1f788b50b247c73963951a288e45436cd2cf"
+    },
+    "provider_manifest": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/provider-manifest-receipt.json",
+      "relative_path": "provider-manifest-receipt.json",
+      "sha256": "1b5bd2c2336c3da49baef283d4d3d7123f4117ac72b04146f164350bc4470d63"
+    },
+    "public_setup": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/campaign-public-setup.json",
+      "relative_path": "campaign-public-setup.json",
+      "sha256": "fc8e9b3ceaeec12440f4db36473178db168d1a6a718bc0173da483311522ffa4"
+    },
+    "red_execution": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/http/red-action-execution.json",
+      "relative_path": "http/red-action-execution.json",
+      "sha256": "61b83173db19dca37bc8417d2cf743cdd9d0d78544ca2b6c93da9ffc13d401ba"
+    },
+    "red_replay": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/http/red-post-blue-replay-execution.json",
+      "relative_path": "http/red-post-blue-replay-execution.json",
+      "sha256": "c335146774869d779393abccb088a021b8d0d5c1f5379b52418c069e9fed0454"
+    },
+    "red_selection": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/actions/red/action-selection.json",
+      "relative_path": "actions/red/action-selection.json",
+      "sha256": "361f74f24fac417c978022976c9ad81c83bf958b72d9ee5ddec219113f931830"
+    },
+    "regressions": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/regression-execution.json",
+      "relative_path": "regression-execution.json",
+      "sha256": "10a70ea39a52896e1a2b275cc0e1656066fb3e2159298b16d672fbb2661277d9"
+    },
+    "topology_health": {
+      "absolute_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/topology-health-receipt.json",
+      "relative_path": "topology-health-receipt.json",
+      "sha256": "c81426cb3923cb584623f471c76ff8a2486fb577e64e3748f4a161d614c6a92c"
+    }
+  },
+  "base_image_digest": "python@sha256:6c4dd321d176d61ea848dc8c73a4f7dbae8f70e0ee48bb411ea2f045b599fa8e",
+  "campaign_journal_sha256": "8ee1b78def9c936ac019da4311a2cd2f46c9d891063666873b8f9f4ca099ec76",
+  "claims": {
+    "does_not_prove": [
+      "RelayForge or Battle is production ready.",
+      "Six-trial qualification, factorial effects, or cross-target generalization."
+    ],
+    "proves": [
+      "One immutable nine-service RelayForge topology ran healthy for a live bounded Red/Blue campaign.",
+      "Live Tau/SciLLM provider artifacts were converted into typed Battle-selected public actions and bound to private Judge measurements.",
+      "A paired fresh-state live Judge delta proved Memory-aligned Blue control impact against a Red-only control."
+    ]
+  },
+  "closed_blocker": "live-topology-not-qualified",
+  "compose_sha256": "4c6b73cf983f4c1dec8f91020004078cc479656051e5717a9425a7bbcec94707",
+  "created_at": "2026-07-29T16:06:54Z",
+  "deterministic_qualification_sha256": "89c174a6075fd7698e98771ea276356c3aca5a2098b66fe8291c18153b28c6c5",
+  "fixture_fallback_used": false,
+  "freeze_manifest_sha256": "f6fc776df650563e6293de27e1ddcdac7a7dbea756a8d7bf147f200de77b8802",
+  "goal_hash": "737abd58a3233793827b1108dcb7132d175a1d6f488ecddbf0c57f62ab200c83",
+  "immutable_goal_hash": "26d57f45a1a93e0f000c775530fb5ec543e833e2e7a4a1c189b4b28d13e722c6",
+  "judge_receipt_sha256": "20473cefd1c1c7b3d5d687f06a7fa4d66b0c527c3d0f0b2c4ed621727695337f",
+  "judge_verdict": "BLUE_SUCCESS",
+  "live": true,
+  "memory_chain_qualification_sha256": "72d1f41dd20ba4ad7777dce434615fa88277c5818f5bdbe78684dab3e95be5f2",
+  "memory_improvement_proven": true,
+  "memory_judge_delta_sha256": "39e417815d7340731dced01830ac068b627f14537a2ab92c50b463f72e4e4dab",
+  "mocked": false,
+  "post_memory_strategy_sha256": "e0dac6dc4c3159be8c7cdcefc2b534dfe421065dea0f8489bb42f44de64e4095",
+  "production_readiness_proven": false,
+  "provider_artifact_sha256": {
+    "blue": "8bacdba0a219561131f598100e2c1ea6cf1f6a91f968eaa4006009d798aa4251",
+    "red": "4ef2c9048fd13566762e17cb258aa16b9321c70d889c46a4d70558759d17ceb3"
+  },
+  "provider_call_sha256": {
+    "blue": "ec053f41c8a4dc94ac955c7d74d19919421e76fd10eadc2ce203cf5bac188692",
+    "red": "ab8d1c4e3c7a8c144ba4e8f60feeb1b436551d7cc09ddcf9350525c795c5ac3d"
+  },
+  "regression_receipt_sha256": "10a70ea39a52896e1a2b275cc0e1656066fb3e2159298b16d672fbb2661277d9",
+  "remaining_blockers": [],
+  "schema": "battle.v16.live_topology_qualification.v1",
+  "selected_action_sha256": {
+    "blue": "3f472701f5a17e4134f15a978b5975045fd82344fe17e5d051971252be328690",
+    "red": "361f74f24fac417c978022976c9ad81c83bf958b72d9ee5ddec219113f931830"
+  },
+  "service_image_id": "sha256:93e6a4c824bd062657b063531f65e8b91295ac5733757a46fce45666b5ba041f",
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "target_identity_sha256": "3e342b0baa7e9ad65981e9ef93c240722eb80d6b3ea83b4bf6e37c1a42b73e4f",
+  "topology_sha256": "6b74869a6a74457c06fe61a096e85157895e1a350554ce36f8ace6a8f909e86d"
+}

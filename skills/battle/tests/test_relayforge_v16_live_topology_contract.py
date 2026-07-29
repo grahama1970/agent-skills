@@ -8,8 +8,10 @@ import pytest
 from battle_skill.relayforge_v16_live_topology import (
     CampaignJournal,
     LiveTopologyContractError,
+    build_memory_judge_delta,
     classify_judge_verdict,
     execute_blue_action,
+    memory_strategy_blue_proposal,
     validate_action_proposals,
 )
 
@@ -43,8 +45,15 @@ def _measurement(stage: str) -> dict:
             "RF-A": {"highest_stage": stage},
             "RF-B": {"highest_stage": "UNSEEN"},
             "RF-C": {"highest_stage": "UNSEEN"},
-        }
+        },
+        "sink_hashes": {},
     }
+
+
+def _write_receipt(tmp_path: Path, name: str) -> Path:
+    path = tmp_path / name
+    path.write_text(json.dumps({"name": name}, sort_keys=True), encoding="utf-8")
+    return path
 
 
 def test_red_proposal_is_typed_and_evidence_bound() -> None:
@@ -70,6 +79,41 @@ def test_blue_broad_action_is_rejected_for_memory_strategy() -> None:
     )
     assert [item["operation"] for item in valid] == ["cache-principal-partition"]
     assert rejected[0]["reasons"] == ["inconsistent_with_memory_targeted_control"]
+
+
+def test_memory_strategy_derives_extractor_identity_control() -> None:
+    proposal = memory_strategy_blue_proposal(
+        {
+            "context": {
+                "team_contexts": {
+                    "blue": {
+                        "memory_design_input": {
+                            "strategy": {
+                                "selected_methods": [
+                                    "evidence-targeted-boundary-control"
+                                ],
+                                "parameters": {
+                                    "boundary_checks": [
+                                        "reject_parent_traversal",
+                                        "resolve_and_verify_destination_containment",
+                                    ]
+                                },
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    )
+
+    assert proposal is not None
+    assert proposal["operation"] == "extractor-object-identity"
+    assert proposal["evidence_refs"] == [
+        "setup-import",
+        "public-action-catalog",
+        "memory-chain",
+        "post-memory-strategy",
+    ]
 
 
 def test_provider_controlled_transport_is_rejected() -> None:
@@ -211,6 +255,48 @@ def test_judge_accepts_contested_and_insufficient_evidence() -> None:
         )
         == "INSUFFICIENT_EVIDENCE"
     )
+
+
+def test_memory_judge_delta_passes_for_fresh_state_reduction(tmp_path: Path) -> None:
+    receipt, path = build_memory_judge_delta(
+        control=_measurement("PROTECTED_OBJECTIVE"),
+        memory=_measurement("REPRODUCIBLE_PROBE"),
+        regressions={"failure_count": 0},
+        red_operation="regular-package-import",
+        blue_operation="extractor-object-identity",
+        control_measurement_path=_write_receipt(tmp_path, "control.json"),
+        memory_measurement_path=_write_receipt(tmp_path, "memory.json"),
+        control_red_execution_path=_write_receipt(tmp_path, "control-red.json"),
+        memory_blue_execution_path=_write_receipt(tmp_path, "memory-blue.json"),
+        memory_red_execution_path=_write_receipt(tmp_path, "memory-red.json"),
+        regression_path=_write_receipt(tmp_path, "regressions.json"),
+        out=tmp_path,
+    )
+
+    assert receipt["status"] == "PASS"
+    assert receipt["memory_improvement_proven"] is True
+    assert receipt["delta"]["control_minus_memory_stage_score"] == 2
+    assert path.is_file()
+
+
+def test_memory_judge_delta_fails_closed_without_reduction(tmp_path: Path) -> None:
+    receipt, _path = build_memory_judge_delta(
+        control=_measurement("REPRODUCIBLE_PROBE"),
+        memory=_measurement("REPRODUCIBLE_PROBE"),
+        regressions={"failure_count": 0},
+        red_operation="regular-package-import",
+        blue_operation="extractor-object-identity",
+        control_measurement_path=_write_receipt(tmp_path, "control.json"),
+        memory_measurement_path=_write_receipt(tmp_path, "memory.json"),
+        control_red_execution_path=_write_receipt(tmp_path, "control-red.json"),
+        memory_blue_execution_path=_write_receipt(tmp_path, "memory-blue.json"),
+        memory_red_execution_path=_write_receipt(tmp_path, "memory-red.json"),
+        regression_path=_write_receipt(tmp_path, "regressions.json"),
+        out=tmp_path,
+    )
+
+    assert receipt["status"] == "FAIL"
+    assert receipt["memory_improvement_proven"] is False
 
 
 def test_campaign_journal_is_monotonic_and_hash_chained(tmp_path: Path) -> None:

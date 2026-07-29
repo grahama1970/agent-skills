@@ -1,0 +1,43 @@
+{
+  "capability_material": {
+    "capability_material_sha256": "d908943581aff90668891875e66e449110677aa1c8a147a326da1c57d9b1ff4d",
+    "preview_locator": "https://public.example/preview/62f6a76873aa9099dcaec299da4f101f",
+    "preview_path": "/api/v1/jobs/v16-live-red-replay/preview",
+    "principal_identity_sha256": "06416dd8a81eb1fa9036c77da0364ebb19d5d44aadd561db676f063473aca03c",
+    "report_profile_alias": "f03f68a1b0ccc8f9778748f89769470a6a2b9d3936fd4f6be3753abe6004c509",
+    "report_profile_path": "/api/v1/jobs/v16-live-red-replay/report-profile"
+  },
+  "job_id": "v16-live-red-replay",
+  "observations": [
+    {
+      "functional_result": "VALID_PACKAGE",
+      "object_class_counts": {
+        "directory": 1,
+        "regular": 2,
+        "transformed": 1
+      },
+      "observation_id": "OBS-10",
+      "opaque_input_identity_sha256": "a4483fc822d373faca2e8e316a40a8268a4fd3828d1d7ecc83ab3b0f52274787",
+      "opaque_output_identity_sha256": "c87259a5719fa03677aa75b4d9d008f7e4e15073236740e835deeac449ac2767",
+      "request_id": "v16-live-red-replay",
+      "schema": "battle.v16.relayforge.public_observation.v1",
+      "status_code": 202,
+      "target_id": "battle-v16-relayforge-a"
+    },
+    {
+      "functional_result": "CONTAINED",
+      "observation_id": "OBS-11",
+      "opaque_input_identity_sha256": "a62af120b687653ab3f369e6991b8e01d619ba6017fd90963311c83fb21321de",
+      "opaque_output_identity_sha256": "3e3286e482c004965d1e1f26785a175761c93a128677a7258f84fbd59c0e81c7",
+      "request_id": "v16-live-red-replay",
+      "schema": "battle.v16.relayforge.public_observation.v1",
+      "status_code": 409,
+      "target_id": "battle-v16-relayforge-a",
+      "transformed_object_count": 1
+    }
+  ],
+  "schema": "battle.v16.relayforge.job_status.v1",
+  "status": "CONTAINED",
+  "target_id": "battle-v16-relayforge-a",
+  "tenant_id": "tenant-red"
+}
