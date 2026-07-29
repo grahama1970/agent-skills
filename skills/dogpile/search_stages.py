@@ -115,44 +115,72 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
     if name == "brave" and isinstance(result, dict):
         web_results = result.get("web", {}).get("results", []) or result.get("results", [])
         summary["result_count"] = len(web_results)
+        summary["source_bearing_evidence_count"] = sum(1 for item in web_results if item.get("url") or item.get("link"))
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
         if result.get("query"):
             summary["query"] = result["query"]
     elif name == "brave_questions" and isinstance(result, dict):
         summary["queries"] = len(result.get("queries", []) or [])
         summary["succeeded"] = result.get("succeeded", 0)
         summary["total"] = result.get("total", 0)
+        count = 0
+        for run in result.get("results", []) or []:
+            run_result = run.get("result", {})
+            if isinstance(run_result, dict):
+                items = run_result.get("web", {}).get("results", []) or run_result.get("results", [])
+                count += sum(1 for item in items if item.get("url") or item.get("link"))
+        summary["source_bearing_evidence_count"] = count
+        summary["source_bearing"] = count > 0
     elif name == "github" and isinstance(result, dict):
         summary["repos"] = len(result.get("repos", []) or [])
         summary["issues"] = len(result.get("issues", []) or [])
+        summary["source_bearing_evidence_count"] = 0
+        summary["source_bearing"] = False
     elif name == "arxiv" and isinstance(result, dict):
         summary["papers"] = len(result.get("items", []) or [])
+        summary["source_bearing_evidence_count"] = sum(1 for item in result.get("items", []) or [] if item.get("id") or item.get("abs_url") or item.get("url"))
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
     elif name in {"youtube", "readarr"} and isinstance(result, list):
         summary["result_count"] = len(result)
+        summary["source_bearing_evidence_count"] = sum(1 for item in result if isinstance(item, dict) and (item.get("id") or item.get("url")))
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
     elif name == "feeds" and isinstance(result, dict):
         summary["returncode"] = result.get("returncode")
         summary["limit"] = result.get("limit")
         stdout = str(result.get("stdout", ""))
         summary["output_chars"] = len(stdout)
+        summary["source_bearing_evidence_count"] = 1 if stdout else 0
+        summary["source_bearing"] = bool(stdout)
     elif name == "wayback" and isinstance(result, dict):
         summary["has_snapshot"] = bool(result.get("closest") or result.get("snapshots"))
     elif name == "codex_knowledge":
         text = result if isinstance(result, str) else json.dumps(result, ensure_ascii=False)
         summary["excerpt"] = text[:180]
+        summary["source_bearing_evidence_count"] = 0
+        summary["source_bearing"] = False
+        summary["model_synthesis_present"] = True
     elif name == "stage2_github" and isinstance(result, dict):
         summary["repos_examined"] = len(result.get("github_details", []) or [])
         summary["target_repo"] = result.get("target_repo")
         github_deep = result.get("github_deep", {}) or {}
         summary["code_matches"] = len(github_deep.get("code_matches", []) or [])
+        has_receipt = bool(result.get("evaluation_receipt") or result.get("github_search_receipt"))
+        summary["source_bearing_evidence_count"] = 1 if has_receipt and result.get("target_repo") else 0
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
     elif name == "stage2_arxiv" and isinstance(result, dict):
         summary["paper_details"] = len(result.get("arxiv_details", []) or [])
         summary["deep_extractions"] = len(result.get("arxiv_deep", []) or [])
     elif name == "stage2_youtube" and isinstance(result, list):
         summary["transcripts"] = len(result)
+        summary["source_bearing_evidence_count"] = sum(1 for item in result if isinstance(item, dict) and (item.get("id") or item.get("url") or item.get("full_text")))
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
     elif name == "stage2_brave" and isinstance(result, list):
         summary["deep_extractions"] = len(result)
     elif name == "report" and isinstance(result, str):
         summary["chars"] = len(result)
         summary["lines"] = len(result.splitlines())
+        summary["source_bearing_evidence_count"] = 0
+        summary["source_bearing"] = False
     else:
         summary["type"] = type(result).__name__
     return summary

@@ -1,0 +1,11 @@
+{
+  "evaluation_receipt": {
+    "artifact_path": "github-search-receipt.json",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "repo": {
+    "description": "tool",
+    "fullName": "example/tool",
+    "url": "https://github.com/example/tool"
+  }
+}

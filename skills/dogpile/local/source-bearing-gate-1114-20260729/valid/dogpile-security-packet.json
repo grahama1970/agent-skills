@@ -1,0 +1,163 @@
+{
+  "adapter_outputs": {
+    "hack_scan_request": {
+      "artifact_path": "hack-scan-request.json",
+      "schema": "dogpile.hack_scan_request.v1"
+    }
+  },
+  "conflicts": [],
+  "effective_query": "fixture source bearing",
+  "ended_at": "2026-07-29T00:00:01Z",
+  "github_candidates": [
+    {
+      "evaluation_receipt": {
+        "artifact_path": "github-search-receipt.json",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "rejection_reason": null,
+      "repository": "example/tool",
+      "selected": true,
+      "source_bearing": true,
+      "url": "https://github.com/example/tool"
+    }
+  ],
+  "live": "deterministic_source_bearing_fixture",
+  "mocked": false,
+  "model_synthesis": {
+    "error": null,
+    "present": true,
+    "receipt_path": "report.md",
+    "receipt_sha256": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "source_bearing": false,
+    "text": "separate synthesis"
+  },
+  "negative_evidence": [
+    {
+      "artifact_path": "providers/stage1-readarr.json",
+      "artifact_sha256": "6c7824580be01c89d2e4ba75e7268333fdf7ef6a5cd05c9ca4b69a68a2c13612",
+      "provider": "readarr",
+      "query": null,
+      "skip_reason": "disabled",
+      "stage": "stage1",
+      "status": "skipped"
+    }
+  ],
+  "non_claims": [
+    "research_design_input_only",
+    "source_bearing_is_traceability_not_truth",
+    "no_scan_executed",
+    "no_docker_invoked",
+    "no_authorization_proof",
+    "no_exploit_or_patch_proof",
+    "no_repository_adoption_proof"
+  ],
+  "packet_sha256": "6f9520a4a2f78a88fe483405799e383f920537bd126a5061a60dcc312f810589",
+  "packet_version": "1.0",
+  "provider_statuses": [
+    {
+      "artifact_path": "providers/stage1-brave.json",
+      "artifact_sha256": "a9ac17d823f4b0c944f9395eb691a60120a5896896a5e5c8b56ffe944ab601a5",
+      "provider": "brave",
+      "query": null,
+      "stage": "stage1",
+      "status": "ok"
+    },
+    {
+      "artifact_path": "providers/stage1-codex_knowledge.json",
+      "artifact_sha256": "54c09f86324de2ad289263084d2f9fad1b1cfe1b16587408a044978ebb06c1af",
+      "provider": "codex_knowledge",
+      "query": null,
+      "stage": "stage1",
+      "status": "ok"
+    },
+    {
+      "artifact_path": "providers/stage1-github.json",
+      "artifact_sha256": "c7e38168d7ff1ce7669a50f5739027a3d02e3fcc4d54e5d4b44de59da4a055e8",
+      "provider": "github",
+      "query": null,
+      "stage": "stage1",
+      "status": "ok"
+    },
+    {
+      "artifact_path": "providers/stage1-readarr.json",
+      "artifact_sha256": "6c7824580be01c89d2e4ba75e7268333fdf7ef6a5cd05c9ca4b69a68a2c13612",
+      "provider": "readarr",
+      "query": null,
+      "skip_reason": "disabled",
+      "stage": "stage1",
+      "status": "skipped"
+    },
+    {
+      "artifact_path": "providers/stage2-github.json",
+      "artifact_sha256": "a98c4facc5418d03efb653e86a626d3164988a8fa3062bcf9ff214b94813751c",
+      "provider": "github",
+      "query": null,
+      "stage": "stage2",
+      "status": "ok"
+    },
+    {
+      "artifact_path": "providers/stage2-synthesis.json",
+      "artifact_sha256": "20f076b180871ce7e9e6d15dbd1e58a43288e0720e3e3fc424c4fe4a9dd3ae7d",
+      "provider": "synthesis",
+      "query": null,
+      "stage": "stage2",
+      "status": "ok"
+    }
+  ],
+  "rejected_candidates": [],
+  "request_context": {},
+  "requested_query": "fixture source bearing",
+  "retrieval_evidence": [
+    {
+      "classification_reason": "web result has URL and bound evidence artifact",
+      "content_sha256": "b0c5f886605d0e4ab09f568bc3d8cd8a25a377ccc7b36256b3b6220cddea6465",
+      "content_verdict": "ok",
+      "evidence_id": "brave-6b194379d486",
+      "excerpt": "web",
+      "paper_id": null,
+      "provider": "brave",
+      "repository": null,
+      "repository_ref": null,
+      "retrieval_artifact": "evidence/brave-6b194379d486.json",
+      "retrieved_at": "2026-07-29T00:00:01Z",
+      "source_bearing": true,
+      "source_type": "web_page",
+      "title": "Fixture web source",
+      "url": "https://example.com/web",
+      "video_id": null
+    },
+    {
+      "classification_reason": "GitHub repository has evaluation receipt and bound metadata artifact",
+      "content_sha256": "da424beff22ff15a7e2cb45389d7eaea8c50af2a7f8a864cb2d46a20818c2877",
+      "content_verdict": "ok",
+      "evidence_id": "github-13ea73089245",
+      "excerpt": "tool",
+      "paper_id": null,
+      "provider": "github",
+      "repository": "example/tool",
+      "repository_ref": "metadata",
+      "retrieval_artifact": "evidence/github-13ea73089245.json",
+      "retrieved_at": "2026-07-29T00:00:01Z",
+      "source_bearing": true,
+      "source_type": "github_repository",
+      "title": "example/tool",
+      "url": "https://github.com/example/tool",
+      "video_id": null
+    }
+  ],
+  "run_id": "source-bearing-valid-fixture",
+  "schema": "dogpile.security_research_packet.v1",
+  "source_bearing_evidence_count": 2,
+  "source_bearing_provider_count": 2,
+  "started_at": "2026-07-29T00:00:00Z",
+  "target_context": {
+    "canonical_id": "fixture-target",
+    "immutable_ref": "sha256:fixture",
+    "kind": "repository",
+    "target_url": "file:///fixtures/fixture-target"
+  },
+  "unresolved_questions": [],
+  "weak_coverage": [
+    "readarr skipped"
+  ]
+}

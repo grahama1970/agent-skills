@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from hashlib import sha256
 from pathlib import Path
 from typing import Any, Callable
 
 import typer
 from rich.console import Console
+
+from common.source_bearing_evidence import classify_source_bearing_record, sha256_file
 
 REQUEST_SCHEMA = "dogpile.hack_scan_request.v1"
 RECEIPT_SCHEMA = "hack.scan_request_validation_receipt.v1"
@@ -65,11 +66,6 @@ ALLOWED_EVIDENCE_KEYS = {
 ALLOWED_REQUESTED_SCAN_KEYS = {"lanes", "profile"}
 
 console = Console()
-
-
-def sha256_file(path: Path) -> str:
-    """Return a SHA-256 hex digest for a local file."""
-    return sha256(path.read_bytes()).hexdigest()
 
 
 def _json_file_sha256(path: Path) -> str | None:
@@ -204,15 +200,10 @@ def _validate_evidence_item(
     _parse_time(item.get("retrieved_at"), f"{label}.retrieved_at", errors)
     if item.get("source_bearing") is not True:
         return False
-    artifact = _resolve_artifact(request_dir, item.get("retrieval_artifact"))
-    if artifact is None:
-        return True
-    if not artifact.exists() or not artifact.is_file():
-        errors.append(f"{label}.retrieval_artifact does not exist: {artifact}")
-        return True
-    actual_sha = sha256_file(artifact)
-    if actual_sha != item.get("content_sha256"):
-        errors.append(f"{label}.content_sha256 does not match retrieval_artifact")
+    classification = classify_source_bearing_record(item, base_dir=request_dir)
+    if classification.get("source_bearing") is not True:
+        errors.append(f"{label} is not source-bearing: {classification.get('reason')}")
+        return False
     return True
 
 

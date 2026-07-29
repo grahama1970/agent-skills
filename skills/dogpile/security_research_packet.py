@@ -16,6 +16,11 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+from common.source_bearing_evidence import (
+    classify_source_bearing_record,
+    summarize_source_bearing_records,
+)
+
 SCHEMA = "dogpile.security_research_packet.v1"
 VALIDATION_SCHEMA = "dogpile.security_research_packet_validation.v1"
 HACK_REQUEST_SCHEMA = "dogpile.hack_scan_request.v1"
@@ -611,6 +616,85 @@ def validate_security_research_packet(packet: dict[str, Any]) -> dict[str, Any]:
         "mocked": packet.get("mocked"),
         "live": packet.get("live"),
     }
+
+
+def run_source_bearing_fixture_eval(out: Path) -> dict[str, Any]:
+    """Write deterministic source-bearing gate fixtures for downstream tests."""
+
+    out = out.resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    valid = build_security_research_packet(
+        requested_query="fixture source bearing",
+        effective_query="fixture source bearing",
+        request_context={},
+        tailored_queries={},
+        stage1_results={
+            "brave": {"web": {"results": [{"title": "Fixture web source", "url": "https://example.com/web", "description": "web"}]}},
+            "github": {"repos": [{"fullName": "example/tool", "url": "https://github.com/example/tool", "description": "tool"}]},
+            "codex_knowledge": "model interpretation only",
+            "readarr": {"skipped": "disabled"},
+        },
+        stage2_results={
+            "github": {"evaluation_receipt": {"artifact_path": "github-search-receipt.json", "sha256": "a" * 64}},
+            "synthesis": {"ok": True, "text": "separate synthesis"},
+        },
+        final_report="# fixture\n",
+        output_dir=out / "valid",
+        run_id="source-bearing-valid-fixture",
+        started_at="2026-07-29T00:00:00Z",
+        ended_at="2026-07-29T00:00:01Z",
+        mocked=False,
+        live="deterministic_source_bearing_fixture",
+    )
+    model_only = build_security_research_packet(
+        requested_query="fixture model only",
+        effective_query="fixture model only",
+        request_context={},
+        tailored_queries={},
+        stage1_results={"codex_knowledge": "model-only overview"},
+        stage2_results={"synthesis": {"ok": True, "text": "model only"}},
+        final_report="# model only\n",
+        output_dir=out / "model-only",
+        run_id="source-bearing-model-only-fixture",
+        started_at="2026-07-29T00:00:00Z",
+        ended_at="2026-07-29T00:00:01Z",
+        mocked=False,
+        live="deterministic_source_bearing_fixture",
+    )
+    skipped = build_security_research_packet(
+        requested_query="fixture skipped",
+        effective_query="fixture skipped",
+        request_context={},
+        tailored_queries={},
+        stage1_results={"brave": {"skipped": "fixture skip"}, "github": {"error": "fixture error"}},
+        stage2_results={},
+        final_report="# skipped\n",
+        output_dir=out / "skipped-provider",
+        run_id="source-bearing-skipped-fixture",
+        started_at="2026-07-29T00:00:00Z",
+        ended_at="2026-07-29T00:00:01Z",
+        mocked=False,
+        live="deterministic_source_bearing_fixture",
+    )
+    receipt = {
+        "schema": "dogpile.source_bearing_gate_receipt.v1",
+        "status": "PASS"
+        if valid["packet"]["source_bearing_evidence_count"] >= 2
+        and model_only["packet"]["source_bearing_evidence_count"] == 0
+        and skipped["packet"]["source_bearing_evidence_count"] == 0
+        else "FAIL",
+        "mocked": False,
+        "live": "deterministic_source_bearing_fixture",
+        "valid_packet": "valid/dogpile-security-packet.json",
+        "valid_hack_scan_request": "valid/hack-scan-request.json",
+        "model_only_negative_receipt": "model-only/dogpile-security-packet.json",
+        "skipped_provider_negative_receipt": "skipped-provider/dogpile-security-packet.json",
+        "source_bearing_provider_count": valid["packet"]["source_bearing_provider_count"],
+        "source_bearing_evidence_count": valid["packet"]["source_bearing_evidence_count"],
+        "non_claims": DEFAULT_NON_CLAIMS,
+    }
+    write_json(out / "source-bearing-gate-receipt.json", receipt)
+    return receipt
 
 
 def _slug(value: str) -> str:

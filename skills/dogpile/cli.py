@@ -46,6 +46,7 @@ from dogpile.task_monitor_integration import (
     end_search as end_monitor,
 )
 from dogpile.search_engine import PartialResultsPublisher, _run_search
+from dogpile.security_research_packet import run_source_bearing_fixture_eval
 
 
 @app.command()
@@ -182,6 +183,17 @@ def search(
                     console.print(f"    {provider}: {count}x → {hint_text}")
 
             console.print(f"\n  [dim]Total errors: {session.get('error_count', 0)} | Log: dogpile_errors.json[/dim]")
+
+
+@app.command()
+def source_bearing_fixture_eval(
+    out: Path = typer.Option(..., "--out", help="Output directory for deterministic source-bearing gate fixtures."),
+):
+    """Write deterministic source-bearing gate fixtures and a receipt."""
+    receipt = run_source_bearing_fixture_eval(out)
+    console.print(json.dumps(receipt, indent=2, sort_keys=True))
+    if receipt.get("status") != "PASS":
+        raise typer.Exit(2)
 
 
 @app.command()
