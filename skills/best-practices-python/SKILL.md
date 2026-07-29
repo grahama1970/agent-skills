@@ -76,6 +76,9 @@ Use this skill whenever you:
 - `style-max-800-lines`
 - `style-module-docstring`
 - `style-thin-init-py`
+- `style-dataclass-records-over-stringly-dicts`
+- `correctness-centralized-error-codes`
+- `correctness-regex-only-known-grammar`
 - `conventions-loguru`
 - `conventions-typer-cli`
 - `conventions-httpx`
@@ -83,6 +86,127 @@ Use this skill whenever you:
 - `conventions-functions-over-classes`
 - `conventions-pyproject-deps-complete`
 - `testing-non-mocked-sanity`
+
+## Dataclasses for Typed Records and Error Codes
+
+**Use dataclasses for typed, repeated record shapes instead of scattered string keys, loose dictionaries, or long `if`/`elif` chains.**
+
+### Rule: `style-dataclass-records-over-stringly-dicts`
+
+When a concept has a stable shape and is passed across functions, model it as a dataclass. This gives the code one discoverable definition, typed fields, readable construction, and safer refactors than repeating dictionary keys or unpacked tuples at call sites.
+
+**Use a dataclass when:**
+- the same dictionary shape appears in more than one function
+- fields are read by string key in several places
+- construction requires defaults, derived fields, or validation
+- an `if`/`elif` chain is switching on ad hoc string values that should be named states or result types
+
+**Do not use a dataclass for:**
+- arbitrary JSON payloads that stay at the IO boundary
+- one-off local dictionaries that never cross a function boundary
+- records that need runtime validation, coercion, or serialization guarantees strong enough to require Pydantic
+
+### Rule: `correctness-centralized-error-codes`
+
+Closed vocabularies such as statuses, error codes, lanes, providers, and result categories MUST be centralized with symbolic names. Use `StrEnum` for the closed set and a frozen dataclass for error metadata when callers need more than the raw code.
+
+```python
+from dataclasses import dataclass
+from enum import StrEnum
+
+
+class ErrorCode(StrEnum):
+    MISSING_INPUT = "missing_input"
+    PROVIDER_TIMEOUT = "provider_timeout"
+    INVALID_RECEIPT = "invalid_receipt"
+
+
+@dataclass(frozen=True, slots=True)
+class ErrorInfo:
+    code: ErrorCode
+    message: str
+    retryable: bool = False
+
+
+ERRORS: dict[ErrorCode, ErrorInfo] = {
+    ErrorCode.MISSING_INPUT: ErrorInfo(
+        code=ErrorCode.MISSING_INPUT,
+        message="required input was not provided",
+    ),
+    ErrorCode.PROVIDER_TIMEOUT: ErrorInfo(
+        code=ErrorCode.PROVIDER_TIMEOUT,
+        message="provider did not respond before the timeout",
+        retryable=True,
+    ),
+    ErrorCode.INVALID_RECEIPT: ErrorInfo(
+        code=ErrorCode.INVALID_RECEIPT,
+        message="receipt failed schema or consistency checks",
+    ),
+}
+```
+
+**Wrong:**
+```python
+if error == "timeout":
+    return {"code": "provider_timeout", "retry": "yes"}
+if error == "bad_receipt":
+    return {"code": "invalid_receipt", "retry": "no"}
+```
+
+**Right:**
+```python
+info = ERRORS[ErrorCode.PROVIDER_TIMEOUT]
+if info.retryable:
+    logger.warning("retryable error: {}", info.code.value)
+```
+
+Use `frozen=True` when the record is configuration, registry metadata, or a returned result that should not be mutated after construction. Use `slots=True` for small high-volume records unless the code needs dynamic attributes.
+
+## Regex Is Seldom the Right Choice
+
+**Use regex only when the input grammar is known in advance, bounded, and covered by fixtures.**
+
+### Rule: `correctness-regex-only-known-grammar`
+
+Regex is brittle against human text, generated text, HTML, JSON, Markdown, PDFs, code, logs with evolving formats, and any input whose shape is learned from examples rather than specified by a grammar. A project agent MUST NOT add regex as the first parsing or classification tool for unknown or drifting input.
+
+**Regex is allowed when:**
+- the accepted input format is documented and stable
+- the pattern is anchored or scoped to the smallest known field
+- positive and negative fixtures cover realistic edge cases
+- the failure mode is explicit instead of silently returning partial data
+
+**Prefer these instead of regex:**
+- structured parsers for structured data: `json`, `tomllib`, `csv`, `ast`, XML/HTML parsers, Markdown parsers, tree-sitter, or service schemas
+- exact keyed lookup or `Enum`/`StrEnum` for closed vocabularies
+- a classifier or fastText-style model when the input category is learned from examples
+- RapidFuzz after classification, using a bounded candidate set and an explicit score threshold
+
+**Wrong:**
+```python
+if re.search("urgent|important|asap", message.lower()):
+    route = "priority"
+elif re.search("refund|billing|invoice", message.lower()):
+    route = "billing"
+```
+
+**Right:**
+```python
+from rapidfuzz import fuzz, process
+
+
+label = classify_message(message)
+match, score, _ = process.extractOne(
+    label,
+    ["priority", "billing", "support"],
+    scorer=fuzz.WRatio,
+)
+if score < 90:
+    raise ValueError(f"unmatched route label: {label}")
+route = Route(match)
+```
+
+When regex is truly justified, name the grammar in the function or constant, keep the pattern centralized, and add tests that prove both accepted and rejected inputs.
 
 ## Thin `__init__.py` in Packages (NON-NEGOTIABLE)
 
