@@ -837,7 +837,9 @@ only for debugging the native Grok path. The proof metadata records
 All browser submit wrappers accept `--attach-file PATH` and `--attach-files
 PATH[,PATH...]` for one simple project-agent contract. Prefer one local bundle.
 Claude can upload multiple files directly. WebGPT and Kimi currently send one
-attachment and fail closed if multiple files are passed. Current Gemini tabs may
+attachment and fail closed if multiple files are passed. For Kimi, prefer a
+short prompt plus one plain Markdown/text attachment; do not inline large review
+bundles into the composer. Current Gemini tabs may
 not expose an upload file input; Ask inlines Markdown/text bundles for
 WebGemini instead of relying on `gemini.submit --attach-file`. Grok uploads
 through its visible file input when available; if Grok exposes no upload input
@@ -850,7 +852,7 @@ Provider payload rules are part of the Surf contract:
 | --- | --- | --- | --- |
 | `webgpt.submit` | Text prompt through the ChatGPT composer | Exactly one attachment; zip is allowed when a real archive is needed | Do not pass multiple files. Do not treat assistant prose about a downloadable file as local proof. |
 | `gemini.submit` | Text prompt through the Gemini page composer | Upload is available only when the current UI exposes a file input; Ask should inline Markdown/text review bundles for WebGemini | Do not assume `Upload & tools` means a usable `input[type=file]` exists. Do not accept stale page text or prompt echo as a response. |
-| `kimi.submit` | Text prompt through the Kimi composer via `--query-file`; large prompts must fail closed if start/end verification fails | Upload is available only when Kimi exposes a file input; Ask should inline Markdown/text review bundles when upload input is unavailable | Do not send zip files to Kimi. Do not paste large bundles manually or through shell argv; use `--query-file`-backed inline text. |
+| `kimi.submit` | Short text prompt through the Kimi composer | Exactly one plain Markdown/text attachment for large review bundles | Do not send zip files to Kimi. Do not paste or inline large bundles manually, through shell argv, or through the composer; attach the bundle and verify attachment metadata. |
 | `claude.submit` | Text prompt through the Claude composer with submit-acceptance verification | Multiple attachments are supported | Do not accept a staged draft, `.submitted.md`, or prompt echo as proof of submission. |
 | `deepseek.submit` | Inline text prompt only | Unsupported | Do not pass attachments or zip files to DeepSeek. |
 | `grok.submit` | Text prompt through the Grok composer | Attachment support depends on the visible file input and preview proof | Do not continue if no upload input or preview appears. |

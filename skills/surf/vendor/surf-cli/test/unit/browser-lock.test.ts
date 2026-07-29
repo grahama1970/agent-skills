@@ -40,6 +40,16 @@ describe("browser lock", () => {
     second.release();
   });
 
+  it("uses independent lock directories for different tab-scoped keys", () => {
+    const first = acquireBrowserLock("unix:/tmp/surf.sock|tab:101", tempDir);
+    const second = acquireBrowserLock("unix:/tmp/surf.sock|tab:202", tempDir);
+
+    expect(first.lockDir).not.toBe(second.lockDir);
+
+    first.release();
+    second.release();
+  });
+
   it("removes stale locks owned by dead processes before acquiring", () => {
     const lockDir = getBrowserLockDir("/tmp/surf.sock", tempDir);
     fs.mkdirSync(lockDir);

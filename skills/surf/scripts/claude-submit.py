@@ -613,7 +613,25 @@ def _success_meta(
 
 
 def _clean_contamination_markers(clean_text: str) -> list[str]:
-    return [needle for needle in CLAUDE_CLEAN_CONTAMINATION_MARKERS if needle in clean_text]
+    markers: list[str] = []
+    page_shell_context = any(
+        needle in clean_text
+        for needle in (
+            "Title: New chat - Claude",
+            "URL: https://claude.ai/",
+            "Write your prompt to Claude",
+            "Automation-only instruction:",
+            "After your complete answer, append a final line containing only this exact marker:",
+            "Do not print anything after that marker.",
+        )
+    )
+    for needle in CLAUDE_CLEAN_CONTAMINATION_MARKERS:
+        if needle not in clean_text:
+            continue
+        if needle in {"What can we tackle together?", "@keyframes"} and not page_shell_context:
+            continue
+        markers.append(needle)
+    return markers
 
 
 def _recovered_attachment_metadata(attach_files: list[Path]) -> list[dict[str, Any]]:
