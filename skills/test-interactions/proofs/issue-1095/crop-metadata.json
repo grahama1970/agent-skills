@@ -1,0 +1,68 @@
+{
+  "schema": "test-interactions.visual-evidence.v1",
+  "run_id": "test-interactions-20260729T122829103801Z",
+  "generated_at": "2026-07-29T12:28:32.353995+00:00",
+  "surface": "fixture-main",
+  "element": "animated-button",
+  "action": "click",
+  "description": "Click animated button that remains clickable while clipped",
+  "interaction_step": 1,
+  "deterministic_status": "PASS",
+  "source_image": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/0001_animated-button_click.png",
+  "qid": "fixture:animated-button",
+  "target_selector": "[data-qid='fixture:animated-button']",
+  "semantic_container_selector": "[data-qid='fixture:clip-container']",
+  "target_bbox": {
+    "width": 112.0,
+    "height": 44.0,
+    "x": 36.0,
+    "y": 143.875
+  },
+  "semantic_container_bbox": {
+    "width": 184.0,
+    "height": 76.0,
+    "x": 48.0,
+    "y": 127.875
+  },
+  "viewport": {
+    "width": 1600.0,
+    "height": 913.0,
+    "deviceScaleFactor": 1.0
+  },
+  "artifacts": {
+    "target_crop": {
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_target-crop.png",
+      "padding": 24,
+      "image_box": {
+        "x0": 12,
+        "y0": 119,
+        "x1": 172,
+        "y1": 212
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0
+      }
+    },
+    "target_crop_enlarged": {
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_target-crop-2x.png",
+      "scale": 2,
+      "width": 320,
+      "height": 186
+    },
+    "semantic_container_crop": {
+      "path": "/tmp/test-interactions-1095-live-20260729T122828Z/captures/fixture-main/visual-evidence/0001_fixture-main_animated-button_click_semantic-container.png",
+      "padding": 12,
+      "image_box": {
+        "x0": 36,
+        "y0": 115,
+        "x1": 244,
+        "y1": 216
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0
+      }
+    }
+  }
+}

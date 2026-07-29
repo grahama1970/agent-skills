@@ -29,6 +29,7 @@ import os
 import re
 import time
 import base64
+from datetime import datetime, timezone
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
@@ -40,6 +41,24 @@ from loguru import logger
 
 from cdp_client import CDPClient
 from assertions import run_assertions, run_qid_compliance
+from visual_evidence import (
+    build_animation_clipping_finding,
+    capture_animation_evidence,
+    capture_step_visual_evidence,
+    parse_analyst_findings,
+    qid_from_selector,
+    validate_visual_finding,
+    write_findings_jsonl,
+)
+from discovery import discover_live_dom, write_discovery_artifacts
+from ticket_integration import run_ticket_integration
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 app = typer.Typer(help="Systematic UI interaction testing with verification.")
 
@@ -57,11 +76,15 @@ class InteractionResult:
     screenshot: str = ""
     duration_ms: int = 0
     assertions: list = field(default_factory=list)
+    visual_evidence: dict = field(default_factory=dict)
+    animation_evidence: dict = field(default_factory=dict)
+    visual_findings: list = field(default_factory=list)
 
 
 @dataclass
 class TestResults:
     app: str = ""
+    run_id: str = ""
     total: int = 0
     passed: int = 0
     failed: int = 0
@@ -108,13 +131,39 @@ def _get_vlm_prepare():
 
 
 def _capture_step_screenshot(cdp: CDPClient, path: str):
-    """Capture screenshot for each interaction and preprocess for visual clarity."""
+    """Capture an untouched full-viewport screenshot for each interaction."""
     cdp.screenshot(path)
-    prepare = _get_vlm_prepare()
-    if prepare:
-        raw = Path(path).read_bytes()
-        out = prepare(raw)
-        Path(path).write_bytes(out)
+
+
+def _run_id() -> str:
+    return datetime.now(timezone.utc).strftime("test-interactions-%Y%m%dT%H%M%S%fZ")
+
+
+def _should_capture_visual_evidence(interaction: dict) -> bool:
+    if interaction.get("visual_evidence") is False:
+        return False
+    if interaction.get("visual_evidence") is True:
+        return True
+    return bool(
+        interaction.get("target")
+        and (
+            interaction.get("animation_capture")
+            or interaction.get("animation_video")
+            or interaction.get("burst")
+            or interaction.get("expected_visual_state")
+            or interaction.get("visual_finding_kind")
+            or interaction.get("detect_animation_clipping")
+        )
+    )
+
+
+def _should_capture_animation(interaction: dict) -> bool:
+    return bool(
+        interaction.get("animation_capture")
+        or interaction.get("animation_video")
+        or interaction.get("burst_video")
+        or interaction.get("burst")
+    )
 
 
 def _execute_interaction(
@@ -124,6 +173,7 @@ def _execute_interaction(
     surface_name: str,
     output_dir: Path,
     step_index: int,
+    run_id: str,
     url_guard: str = "",
 ) -> InteractionResult:
     action = interaction.get("action", "screenshot")
@@ -137,8 +187,21 @@ def _execute_interaction(
         surface=surface_name, element=element_name,
         action=action, description=description,
     )
+    target_selector = str(
+        interaction.get("target")
+        or interaction.get("review_target")
+        or interaction.get("focus")
+        or ""
+    ).strip()
+    pre_action_screenshot = ""
 
     try:
+        if _should_capture_animation(interaction) and target_selector:
+            pre_dir = output_dir / "visual-evidence"
+            pre_dir.mkdir(parents=True, exist_ok=True)
+            pre_action_screenshot = str(pre_dir / f"{safe_name}_pre-action.png")
+            cdp.screenshot(pre_action_screenshot)
+
         if action == "screenshot":
             result.status = "PASS"
             result.evidence = "screenshot requested"
@@ -272,6 +335,59 @@ def _execute_interaction(
             result.screenshot = path
             if action == "screenshot" and result.evidence == "screenshot requested":
                 result.evidence = f"captured {path}"
+            if _should_capture_visual_evidence(interaction):
+                result.visual_evidence = capture_step_visual_evidence(
+                    cdp,
+                    source_screenshot=Path(path),
+                    output_dir=output_dir,
+                    surface=surface_name,
+                    element=element_name,
+                    action=action,
+                    description=description,
+                    step_index=step_index,
+                    interaction=interaction,
+                    deterministic_status=result.status,
+                    run_id=run_id,
+                )
+            if _should_capture_animation(interaction) and target_selector:
+                result.animation_evidence = capture_animation_evidence(
+                    cdp,
+                    output_dir=output_dir,
+                    step_index=step_index,
+                    surface=surface_name,
+                    element=element_name,
+                    action=action,
+                    interaction=interaction,
+                )
+                if pre_action_screenshot:
+                    result.animation_evidence["pre_action_screenshot"] = pre_action_screenshot
+                if result.animation_evidence.get("clipped_frame_count", 0) > 0:
+                    qid = (
+                        result.visual_evidence.get("qid")
+                        or cdp.get_attribute(target_selector, "data-qid")
+                        or qid_from_selector(target_selector)
+                    )
+                    finding = build_animation_clipping_finding(
+                        run_id=run_id,
+                        surface=surface_name,
+                        element=element_name,
+                        step_index=step_index,
+                        qid=qid,
+                        deterministic_status=result.status,
+                        visual_evidence=result.visual_evidence,
+                        animation_evidence=result.animation_evidence,
+                        expected_state=str(interaction.get("expected_visual_state") or ""),
+                        reproduction=(
+                            f"Run this manifest and execute step {step_index}: "
+                            f"{surface_name} > {element_name} > {description}"
+                        ),
+                    )
+                    ok, errors = validate_visual_finding(finding)
+                    if ok:
+                        result.visual_findings.append(finding)
+                    else:
+                        invalid_path = output_dir / "visual-evidence" / f"{safe_name}_invalid-finding.json"
+                        invalid_path.write_text(json.dumps({"finding": finding, "errors": errors}, indent=2) + "\n")
         except Exception as shot_e:  # noqa: BLE001
             if result.status != "FAIL":
                 result.status = "FAIL"
@@ -333,7 +449,16 @@ def _run_surface(cdp: CDPClient, surface: dict, base_url: str, output_dir: Path,
         element_name = element.get("name", "unnamed")
         for interaction in element.get("interactions", []):
             step_index += 1
-            r = _execute_interaction(cdp, interaction, element_name, surface_name, surface_dir, step_index, url_guard)
+            r = _execute_interaction(
+                cdp,
+                interaction,
+                element_name,
+                surface_name,
+                surface_dir,
+                step_index,
+                results.run_id,
+                url_guard,
+            )
             results.add(r)
 
     # Per-surface qid compliance scan (deterministic, no LLM)
@@ -375,7 +500,7 @@ def run(
         for el in s.get("elements", [])
     )
 
-    results = TestResults(app=data.get("app", "unknown"))
+    results = TestResults(app=data.get("app", "unknown"), run_id=_run_id())
     cdp = CDPClient()
     cdp.connect()
 
@@ -384,7 +509,7 @@ def run(
     try:
         for s in surfaces:
             for attempt in range(1, max_retries + 1):
-                attempt_results = TestResults(app=data.get("app", "unknown"))
+                attempt_results = TestResults(app=data.get("app", "unknown"), run_id=results.run_id)
                 _run_surface(cdp, s, base_url, output_dir, attempt_results)
                 if attempt_results.failed == 0 or attempt >= max_retries:
                     for r in attempt_results.interactions:
@@ -413,6 +538,15 @@ def run(
     results_path.write_text(json.dumps(asdict(results), indent=2, default=str))
     logger.info("Results written to {}", results_path)
 
+    visual_findings = [
+        finding
+        for item in results.interactions
+        for finding in getattr(item, "visual_findings", [])
+    ]
+    findings_path = output_dir / "visual-findings.jsonl"
+    write_findings_jsonl(findings_path, visual_findings)
+    logger.info("Structured visual findings written to {} ({} finding(s))", findings_path, len(visual_findings))
+
     if results.failed > 0:
         raise typer.Exit(1)
 
@@ -421,25 +555,97 @@ def run(
 def generate(
     url: str = typer.Option(..., help="Target URL to analyze"),
     output: Path = typer.Option(Path("manifest.json"), help="Output manifest path"),
+    output_dir: Path = typer.Option(Path("./discovery"), help="Directory for discovery inventory/findings/state graph"),
+    max_depth: int = typer.Option(2, help="Maximum state exploration depth"),
+    max_states: int = typer.Option(12, help="Maximum unique states to visit"),
+    max_actions: int = typer.Option(40, help="Maximum QID actions to execute during discovery"),
 ):
-    """Generate an interaction manifest from a URL."""
+    """Generate a replayable QID-only interaction manifest from the live DOM."""
     cdp = CDPClient()
     cdp.connect()
     try:
-        cdp.navigate(url)
-        title = cdp.evaluate("document.title") or url
-        manifest = {
-            "version": 1, "app": title, "base_url": url,
-            "surfaces": [{
-                "name": "main", "path": "/",
-                "elements": [{"name": "full-page", "selector": "body",
-                    "interactions": [{"action": "screenshot", "description": f"Full page of {url}"}]}],
-            }],
-        }
+        result = discover_live_dom(
+            cdp,
+            url=url,
+            max_depth=max_depth,
+            max_states=max_states,
+            max_actions=max_actions,
+        )
     finally:
         cdp.close()
-    output.write_text(json.dumps(manifest, indent=2))
-    logger.info("Manifest written to {}", output)
+    paths = write_discovery_artifacts(result, output_dir, manifest_output=output)
+    logger.info(
+        "Manifest written to {} from {} discovered state(s), {} action(s), {} finding(s)",
+        output, result["states_seen"], result["actions_run"], len(result.get("findings") or []),
+    )
+    logger.info("Discovery artifacts: {}", paths)
+
+
+@app.command()
+def discover(
+    url: str = typer.Option(..., help="Target URL to explore via live CDP"),
+    output_dir: Path = typer.Option(Path("./discovery"), help="Output directory for discovery artifacts"),
+    manifest_output: Path = typer.Option(Path("./manifest.generated.json"), help="Generated replayable manifest path"),
+    max_depth: int = typer.Option(2, help="Maximum state exploration depth"),
+    max_states: int = typer.Option(12, help="Maximum unique states to visit"),
+    max_actions: int = typer.Option(40, help="Maximum QID actions to execute during discovery"),
+):
+    """Explore live DOM states and write inventory, findings, state graph, and manifest."""
+    cdp = CDPClient()
+    cdp.connect()
+    try:
+        result = discover_live_dom(
+            cdp,
+            url=url,
+            max_depth=max_depth,
+            max_states=max_states,
+            max_actions=max_actions,
+        )
+    finally:
+        cdp.close()
+    paths = write_discovery_artifacts(result, output_dir, manifest_output=manifest_output)
+    logger.info("Discovery artifacts written: {}", paths)
+
+
+@app.command("ticket-findings")
+def ticket_findings(
+    repo: str = typer.Option(..., help="Target GitHub repository, owner/name"),
+    output_dir: Path = typer.Option(Path("./ticket-findings"), help="Output directory for candidates, previews, and apply/readback receipts"),
+    target: str = typer.Option("skills/test-interactions", help="Concrete target path or skill for filed tickets"),
+    policy: str = typer.Option("preview", help="Ticket policy: off, preview, deterministic-only, high-confidence, apply-confirmed"),
+    results: Optional[Path] = typer.Option(None, help="results.json from run stage"),
+    visual_findings: Optional[Path] = typer.Option(None, help="visual-findings.jsonl from #1095 structured visual findings"),
+    discovery_findings: Optional[Path] = typer.Option(None, help="discovery-findings.jsonl from #1096 live discovery"),
+    replay_command: str = typer.Option(..., help="Exact command that replays the source interaction/finding"),
+    ticket_skill: Path = typer.Option(Path("skills/ticket/run.sh"), help="Delegated ticket runtime entrypoint"),
+    confidence_threshold: float = typer.Option(0.85, help="Minimum visual confidence for high-confidence policy"),
+    max_apply: int = typer.Option(1, help="Maximum issues to create in apply-confirmed mode"),
+):
+    """Normalize findings and preview/apply repair tickets through skills/ticket."""
+    try:
+        result = run_ticket_integration(
+            repo=repo,
+            target=target,
+            policy=policy,
+            output_dir=output_dir,
+            ticket_skill=ticket_skill,
+            replay_command=replay_command,
+            results=results,
+            visual_findings=visual_findings,
+            discovery_findings=discovery_findings,
+            threshold=confidence_threshold,
+            max_apply=max_apply,
+        )
+    except Exception as exc:  # noqa: BLE001
+        output_dir.mkdir(parents=True, exist_ok=True)
+        failure_path = output_dir / "ticket-failure.json"
+        failure_path.write_text(json.dumps({"error": str(exc), "mocked": False, "live": policy == "apply-confirmed"}, indent=2) + "\n")
+        logger.error("Ticket integration failed; wrote {}", failure_path)
+        raise typer.Exit(1)
+    logger.info(
+        "Ticket integration wrote {} candidate(s), {} preview(s), {} duplicate comment(s), {} created issue(s) to {}",
+        result["candidate_count"], result["preview_count"], result["duplicate_count"], result["created_count"], output_dir,
+    )
 
 
 def _preprocess_screenshots(captures_dir: Path):
@@ -654,7 +860,7 @@ def _run_review_design(
 
 
 def _selected_visual_review_screenshots(captures: Path, limit: int = 6) -> list[tuple[str, Path]]:
-    """Pick interaction screenshots that prove content wells and artifact pane transitions."""
+    """Pick generic screenshots/crops for batched visual review."""
     results_file = captures / "results.json"
     if not results_file.exists():
         return [(path.name, path) for path in sorted(captures.rglob("*.png"))[:limit]]
@@ -663,26 +869,29 @@ def _selected_visual_review_screenshots(captures: Path, limit: int = 6) -> list[
     except Exception:
         return [(path.name, path) for path in sorted(captures.rglob("*.png"))[:limit]]
 
-    priority_terms = [
-        ("table inline and right-pane artifact match", "open cat-family table in artifact pane"),
-        ("D3 inline and right-pane artifact match", "open family-tree graph in artifact pane"),
-        ("evidence-case inline and right-pane artifact match", "open evidence-case artifact pane"),
-        ("missing-input clarification artifact", "open missing-input clarification artifact"),
-        ("stale artifact prevention after direct answer", "capture post-artifact direct answer state"),
-        ("artifact pane collapsed after command", "click collapse run details"),
-    ]
     selected: list[tuple[str, Path]] = []
     selected_paths: set[Path] = set()
-    for label, term in priority_terms:
-        for item in data.get("interactions", []):
-            haystack = f"{item.get('description', '')} {item.get('evidence', '')}".lower()
-            screenshot = item.get("screenshot")
-            if term in haystack and screenshot:
-                path = Path(screenshot)
-                if path.exists() and path not in selected_paths:
-                    selected.append((label, path))
-                    selected_paths.add(path)
-                    break
+    for item in data.get("interactions", []):
+        evidence = item.get("visual_evidence") or {}
+        artifacts = evidence.get("artifacts") or {}
+        for role in ("target_crop_enlarged", "target_crop", "semantic_container_crop"):
+            artifact = artifacts.get(role) or {}
+            path = Path(str(artifact.get("path") or ""))
+            if path.exists() and path not in selected_paths:
+                selected.append((f"{role}: {item.get('element', '')}", path))
+                selected_paths.add(path)
+                if len(selected) >= limit:
+                    return selected[:limit]
+    for item in data.get("interactions", []):
+        if item.get("status") != "FAIL":
+            continue
+        screenshot = item.get("screenshot")
+        path = Path(screenshot) if screenshot else Path()
+        if path.exists() and path not in selected_paths:
+            selected.append((f"deterministic failure: {item.get('element', '')}", path))
+            selected_paths.add(path)
+            if len(selected) >= limit:
+                return selected[:limit]
     for path in sorted(captures.rglob("*.png")):
         if len(selected) >= limit:
             break
@@ -706,12 +915,12 @@ def _run_scillm_visual_review(captures: Path, context: str = "", persona: str = 
         {
             "type": "text",
             "text": (
-                f"You are {persona or 'a practical UI QA reviewer'} reviewing agent-operator screenshots. "
-                "Do a semantic visual review, not a DOM assertion summary. Verify whether the screenshots prove: "
-                "inline content wells render tables/D3/evidence/clarification, expand clicks open the right artifact pane, "
-                "the pane can collapse/reopen, and stale artifacts do not leak into direct answers. "
-                "Call out mismatches between the visible prompt, visible artifact, and right-pane content. "
-                f"Context: {context or 'agent-operator browser bank'}"
+                f"You are {persona or 'a practical UI QA reviewer'} reviewing UI interaction evidence. "
+                "Review only the screenshots and crop metadata provided for each interaction. "
+                "Call out candidate visual defects such as clipping, occlusion, unreadable text, incorrect transition order, "
+                "unexpected visual state, missing feedback, or target/context mismatch. "
+                "Do not change deterministic PASS/FAIL verdicts; visual observations are candidate findings only. "
+                f"Context/profile: {context or 'generic UI interaction test'}"
             ),
         }
     ]
@@ -746,6 +955,37 @@ def _run_scillm_visual_review(captures: Path, context: str = "", persona: str = 
         + "\n\n"
         + text
     )
+
+
+@app.command("validate-visual-findings")
+def validate_visual_findings_command(
+    analyst_output: Path = typer.Option(..., help="JSON or JSONL analyst output to validate"),
+    output: Path = typer.Option(Path("./visual-findings.jsonl"), help="Validated findings JSONL output"),
+    failure_output: Path = typer.Option(Path("./visual-findings-invalid.json"), help="Invalid-output diagnostic artifact"),
+):
+    """Validate analyst visual-finding output and fail closed on prose/invalid schema."""
+    if not analyst_output.exists():
+        logger.error("Analyst output not found: {}", analyst_output)
+        raise typer.Exit(1)
+    valid, invalid = parse_analyst_findings(analyst_output.read_text())
+    if invalid:
+        failure_output.parent.mkdir(parents=True, exist_ok=True)
+        failure_output.write_text(json.dumps({
+            "schema": "test-interactions.visual-finding-validation.v1",
+            "status": "review_failure",
+            "source": str(analyst_output),
+            "valid_count": len(valid),
+            "invalid_count": len(invalid),
+            "invalid": invalid,
+        }, indent=2) + "\n")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text("")
+        logger.error("Invalid analyst output recorded at {}; zero structured findings emitted", failure_output)
+        raise typer.Exit(1)
+    write_findings_jsonl(output, valid)
+    if failure_output.exists():
+        failure_output.unlink()
+    logger.info("Validated {} structured visual finding(s) into {}", len(valid), output)
 
 
 @app.command()

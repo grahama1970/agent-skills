@@ -1,0 +1,13 @@
+{
+  "verified_at": "2026-07-29T12:29:25.081978+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "root": "/home/graham/workspace/experiments/agent-skills",
+  "output_root": "/tmp/codex-ui-verification/agent-skills",
+  "url": "http://127.0.0.1:8775/animation_clipping.html",
+  "name": "test-interactions-1095-animation-fixture",
+  "tab_id": null,
+  "transport": "isolated_cdp",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/test-interactions-1095-animation-fixture/20260729T122919Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/test-interactions-1095-animation-fixture/20260729T122919Z.read.json",
+  "latest_marker_created_at": "2026-07-29T12:29:25Z"
+}

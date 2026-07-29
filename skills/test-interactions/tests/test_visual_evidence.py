@@ -1,0 +1,128 @@
+"""Focused tests for structured visual evidence and finding validation."""
+
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from visual_evidence import (
+    VISUAL_FINDING_SCHEMA,
+    build_animation_clipping_finding,
+    capture_step_visual_evidence,
+    parse_analyst_findings,
+    validate_visual_finding,
+)
+
+
+class FakeCDP:
+    def get_bounding_rect(self, selector: str):
+        if selector == "[data-qid='fixture:animated-button']":
+            return {"x": 40, "y": 30, "width": 80, "height": 28}
+        if selector == "[data-qid='fixture:clip-container']":
+            return {"x": 20, "y": 20, "width": 180, "height": 80}
+        return None
+
+    def get_attribute(self, selector: str, attribute: str):
+        if selector == "[data-qid='fixture:animated-button']" and attribute == "data-qid":
+            return "fixture:animated-button"
+        return None
+
+    def viewport(self):
+        return {"width": 200, "height": 100, "deviceScaleFactor": 1}
+
+    def nearest_semantic_container(self, selector: str):
+        return {
+            "selector": "[data-qid='fixture:clip-container']",
+            "qid": "fixture:clip-container",
+            "rect": {"x": 20, "y": 20, "width": 180, "height": 80},
+        }
+
+
+class VisualEvidenceTests(unittest.TestCase):
+    def test_capture_step_visual_evidence_writes_crop_zoom_and_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            screenshot = root / "viewport.png"
+            Image.new("RGB", (400, 200), (240, 240, 240)).save(screenshot)
+
+            metadata = capture_step_visual_evidence(
+                FakeCDP(),
+                source_screenshot=screenshot,
+                output_dir=root,
+                surface="fixture",
+                element="animated",
+                action="click",
+                description="click animated fixture",
+                step_index=1,
+                interaction={"target": "[data-qid='fixture:animated-button']", "visual_evidence": True},
+                deterministic_status="PASS",
+                run_id="run-1",
+            )
+
+            self.assertEqual(metadata["schema"], "test-interactions.visual-evidence.v1")
+            self.assertEqual(metadata["qid"], "fixture:animated-button")
+            self.assertEqual(metadata["deterministic_status"], "PASS")
+            target_crop = Path(metadata["artifacts"]["target_crop"]["path"])
+            enlarged = Path(metadata["artifacts"]["target_crop_enlarged"]["path"])
+            meta_path = Path(metadata["metadata_path"])
+            self.assertTrue(target_crop.is_file())
+            self.assertTrue(enlarged.is_file())
+            self.assertTrue(meta_path.is_file())
+            with Image.open(target_crop) as crop, Image.open(enlarged) as zoom:
+                self.assertGreater(zoom.width, crop.width)
+                self.assertGreater(zoom.height, crop.height)
+
+    def test_animation_clipping_finding_is_schema_valid_and_status_separate(self):
+        visual = {
+            "source_image": "/tmp/source.png",
+            "metadata_path": "/tmp/crop.json",
+            "artifacts": {
+                "target_crop": {"path": "/tmp/crop.png"},
+                "target_crop_enlarged": {"path": "/tmp/crop-2x.png"},
+            },
+        }
+        animation = {
+            "video": {"path": "/tmp/animation.webm"},
+            "metadata_path": "/tmp/animation.json",
+            "time_range_ms": {"start": 0, "end": 400},
+            "clipped_frame_count": 3,
+        }
+        finding = build_animation_clipping_finding(
+            run_id="run-1",
+            surface="fixture",
+            element="animated",
+            step_index=2,
+            qid="fixture:animated-button",
+            deterministic_status="PASS",
+            visual_evidence=visual,
+            animation_evidence=animation,
+            expected_state="No clipping during transition.",
+            reproduction="Run fixture manifest step 2.",
+        )
+        ok, errors = validate_visual_finding(finding)
+        self.assertTrue(ok, errors)
+        self.assertEqual(finding["schema"], VISUAL_FINDING_SCHEMA)
+        self.assertEqual(finding["deterministic_status"], "PASS")
+        self.assertEqual(finding["finding_kind"], "animation_clipping")
+
+    def test_invalid_analyst_prose_produces_zero_structured_findings(self):
+        valid, invalid = parse_analyst_findings("The button looks clipped and awkward.")
+        self.assertEqual(valid, [])
+        self.assertGreaterEqual(len(invalid), 1)
+
+    def test_missing_required_finding_fields_fails_closed(self):
+        valid, invalid = parse_analyst_findings(json.dumps({"schema": VISUAL_FINDING_SCHEMA}))
+        self.assertEqual(valid, [])
+        self.assertEqual(len(invalid), 1)
+        self.assertIn("missing fields", " ".join(invalid[0]["errors"]))
+
+
+if __name__ == "__main__":
+    unittest.main()

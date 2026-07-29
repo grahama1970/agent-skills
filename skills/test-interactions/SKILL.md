@@ -32,6 +32,11 @@ composes:
   - interview
   - best-practices-react
   - best-practices-cots
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-react
+  - best-practices-cots
 taxonomy:
   - validation
   - precision
@@ -75,6 +80,84 @@ REVIEW stage (one batched LLM call at the end)
 The LLM never decides pass/fail. It only comments on evidence after
 deterministic tests have already run.
 
+## Evidence Boundary
+
+Deterministic DOM/COTS assertions own deterministic `PASS`, `FAIL`, `WARN`, and
+`SKIP`. Semantic or visual analysis may emit candidate visual findings only.
+Those findings are additive evidence; they never rewrite an interaction result.
+
+For selected interactions, the run stage preserves the untouched full-viewport
+screenshot and can emit structured visual evidence under `visual-evidence/`:
+
+- QID-bounded target crop derived from the target element's live CDP
+  `getBoundingClientRect()` result.
+- Semantic-container crop from an explicit `semantic_container`, `review_pane`,
+  `container`, or nearest stable ancestor.
+- Enlarged target crop for reviewer legibility.
+- Crop metadata with source image, QID, target rectangle, viewport, scale,
+  surface, element, action, run id, and interaction step.
+- Timestamped animation frames plus a playable WebM, or GIF fallback when
+  `ffmpeg` is unavailable.
+
+Structured visual findings use schema `test-interactions.visual-finding.v1`.
+Invalid analyst prose or malformed JSON is recorded as a review-failure artifact
+and produces zero structured findings. Use:
+
+```bash
+./run.sh validate-visual-findings \
+  --analyst-output analyst-output.jsonl \
+  --output visual-findings.jsonl \
+  --failure-output visual-findings-invalid.json
+```
+
+Visual-finding records must include the stable fingerprint, run id, surface,
+element, interaction step, QID when available, finding kind, confidence,
+observed state, expected state, reproduction, deterministic status, and evidence
+paths. The deterministic status field is copied for context only.
+
+## Ticket Finding Integration
+
+`ticket-findings` normalizes deterministic failures, live discovery findings,
+and schema-valid visual findings into preview-first ticket candidates. It
+delegates all GitHub mutation to `skills/ticket/run.sh`; this skill does not
+close, lease, block, release, or otherwise change issue lifecycle state.
+
+Policies:
+
+- `off` writes report-only candidates and performs no ticket work.
+- `preview` is the default; it searches open issues by stable fingerprint and
+  emits ticket previews or duplicate evidence-comment artifacts only.
+- `deterministic-only` permits deterministic run/discovery findings and
+  excludes visual-only candidates.
+- `high-confidence` permits only schema-valid visual findings above the
+  configured threshold with reproduction and evidence paths.
+- `apply-confirmed` is the only mutating mode. It calls `skills/ticket/run.sh`
+  with `--apply`, creates at most `--max-apply` issues, and independently reads
+  each created GitHub issue back.
+
+Fingerprints are derived from repository, target, surface/state, QID or
+missing-QID identity, finding kind, and normalized expected outcome. Run IDs,
+timestamps, and screenshot file names are not part of the fingerprint.
+
+```bash
+./run.sh ticket-findings \
+  --repo grahama1970/agent-skills \
+  --policy preview \
+  --discovery-findings ./discovery/discovery-findings.jsonl \
+  --replay-command "./run.sh discover --url http://localhost:3000 --output-dir ./discovery"
+
+./run.sh ticket-findings \
+  --repo grahama1970/agent-skills \
+  --policy apply-confirmed \
+  --max-apply 1 \
+  --discovery-findings ./discovery/discovery-findings.jsonl \
+  --replay-command "./run.sh discover --url http://localhost:3000 --output-dir ./discovery"
+```
+
+Outputs include `ticket-candidates.json`, `ticket-previews.json`,
+`ticket-duplicate-comments.json`, `ticket-apply-result.json`, and
+`ticket-failure.json` on fail-closed errors.
+
 ## Critical Rules
 
 ### 1. All selectors MUST be [data-qid]
@@ -100,14 +183,42 @@ Available personas:
 If it's in the DOM and it's interactive (button, link, input, select, tab),
 it must appear in a manifest and have assertions against it.
 
+### 4. Discovery is live, bounded, and QID-only
+
+`generate` and `discover` use a real CDP browser session to inventory rendered
+semantic controls, interactive ARIA roles, `data-qid`, `data-qs-action`, visible
+state, enabled state, bounding boxes, and reachable overlay/menu/dialog states.
+Source grep is not discovery.
+
+Discovery prevents loops with a stable state fingerprint plus `--max-depth`,
+`--max-states`, and `--max-actions`. It writes:
+
+- `discovery-inventory.json` for observed states and element evidence.
+- `discovery-findings.jsonl` for deterministic live-DOM findings.
+- `state-graph.json` for QID action transitions.
+- A replayable generated manifest containing only `[data-qid='...']`
+  executable selectors.
+
+Missing QIDs, duplicate QIDs, absent `data-qs-action`, absent `title`, manifest
+coverage gaps, keyboard-unreachable controls, inert actions, URL drift,
+console exceptions, failed network requests, and overlay focus-return defects
+are findings. They are not permission to invent `nth-child`, class, ID, text,
+XPath, or positional selector fallbacks.
+
 ## Commands
 
 ```bash
 # Generate an interaction manifest from a URL
 ./run.sh generate --url "http://localhost:3000" --output manifest.json
 
+# Explore live DOM state and write inventory/findings/state graph plus manifest
+./run.sh discover --url "http://localhost:3000" --output-dir ./discovery --manifest-output manifest.json
+
 # Run the manifest — deterministic CDP + assertions → PASS/FAIL
 ./run.sh run --manifest manifest.json --output-dir ./captures/
+
+# Preview repair tickets from deterministic or schema-valid findings
+./run.sh ticket-findings --repo owner/repo --policy preview --results ./captures/results.json --replay-command "./run.sh run --manifest manifest.json"
 
 # Review captures — PERSONA REQUIRED
 ./run.sh review --captures ./captures/ --persona brandon-bailey
@@ -244,11 +355,18 @@ Use `--no-preprocess` to skip.
 ## Burst Mode (Animation Capture)
 
 For interactions with animations, use `"burst": true`. Captures multiple frames
-that get stitched into a filmstrip for the VLM review.
+that get stitched into a filmstrip for the VLM review. Burst mode also records
+timestamped animation frames and a playable video artifact while keeping the
+standard screenshot-only path available for interactions without animations.
 
 ```json
 {"action": "hover", "target": "[data-qid='animated:element']", "burst": true, "burst_frames": 10}
 ```
+
+Use `"detect_animation_clipping": true` or `"expected_visual_state"` with an
+animation capture when a test should emit a schema-valid
+`animation_clipping` candidate if live geometry shows clipped frames. The
+click/hover/key assertion result remains separate and may still be `PASS`.
 
 ## Workflow
 

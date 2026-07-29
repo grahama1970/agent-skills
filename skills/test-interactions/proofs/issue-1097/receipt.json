@@ -1,0 +1,29 @@
+{
+  "issue": 1097,
+  "mocked": false,
+  "live": true,
+  "preview": {
+    "candidate_count": 1,
+    "preview_count": 1,
+    "created_count": 0
+  },
+  "apply": {
+    "created_count": 1,
+    "created_issue": 1098,
+    "created_url": "https://github.com/grahama1970/agent-skills/issues/1098",
+    "readback_verified": true,
+    "fingerprint": "c4d0f09bbe52e68ec88f77f4"
+  },
+  "duplicate": {
+    "duplicate_count": 1,
+    "preview_count": 0,
+    "created_count": 0
+  },
+  "artifacts": {
+    "preview": "skills/test-interactions/proofs/issue-1097/preview-result.json",
+    "apply": "skills/test-interactions/proofs/issue-1097/apply-result.json",
+    "duplicate": "skills/test-interactions/proofs/issue-1097/duplicate-result.json",
+    "created_issue_readback": "skills/test-interactions/proofs/issue-1097/created-issue-1098-readback.json",
+    "cdp_screenshot": "skills/test-interactions/proofs/issue-1097/cdp-screenshot.png"
+  }
+}

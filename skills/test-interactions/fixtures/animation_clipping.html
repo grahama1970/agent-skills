@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>test-interactions animation clipping fixture</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f7f7fb;
+        color: #111827;
+      }
+      main {
+        padding: 48px;
+      }
+      .clip-container {
+        width: 180px;
+        height: 72px;
+        overflow: hidden;
+        border: 2px solid #374151;
+        background: white;
+        position: relative;
+      }
+      button {
+        min-width: 112px;
+        min-height: 44px;
+        margin: 14px 0 0 120px;
+        border: 0;
+        background: #0f766e;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 350ms linear;
+      }
+      button.shifted {
+        transform: translateX(-82px);
+      }
+      .state {
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <main data-qid="fixture:surface" data-review-surface="animation fixture">
+      <h1 data-qid="fixture:heading">Animation clipping fixture</h1>
+      <div
+        class="clip-container"
+        data-qid="fixture:clip-container"
+        data-review-kind="primary-interaction-pane"
+        data-review-scope="Only judge whether the animated button remains visible inside this clipping container."
+      >
+        <button
+          data-qid="fixture:animated-button"
+          data-qs-action="FIXTURE_ANIMATE"
+          title="Animate clipped button"
+          onclick="this.classList.toggle('shifted'); document.querySelector('[data-qid=&quot;fixture:state&quot;]').textContent = 'clicked';"
+        >Animate</button>
+      </div>
+      <p class="state" data-qid="fixture:state">ready</p>
+    </main>
+  </body>
+</html>

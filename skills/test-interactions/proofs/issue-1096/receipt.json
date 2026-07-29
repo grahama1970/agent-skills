@@ -1,0 +1,30 @@
+{
+  "issue": 1096,
+  "mocked": false,
+  "live": true,
+  "discovery": {
+    "states_seen": 4,
+    "actions_run": 40,
+    "bounds": {
+      "max_depth": 2,
+      "max_states": 12,
+      "max_actions": 40
+    }
+  },
+  "generated_manifest_run": {
+    "passed": 11,
+    "failed": 0,
+    "warned": 0,
+    "total": 11
+  },
+  "finding_kind_counts": "      4 console_error\n      4 console_exception\n      4 duplicate_qid\n     20 focus_return_defect\n     13 inert_interaction\n      8 keyboard_unreachable\n      4 manifest_uncovered_interactive\n      4 missing_qid\n      4 network_failure\n      4 qs_action_missing\n      4 title_missing\n      1 unexpected_url_drift\n",
+  "artifacts": {
+    "inventory": "skills/test-interactions/proofs/issue-1096/discovery-inventory.json",
+    "findings": "skills/test-interactions/proofs/issue-1096/discovery-findings.jsonl",
+    "state_graph": "skills/test-interactions/proofs/issue-1096/state-graph.json",
+    "manifest": "skills/test-interactions/proofs/issue-1096/manifest.generated.json",
+    "results": "skills/test-interactions/proofs/issue-1096/results.json",
+    "cdp_screenshot": "skills/test-interactions/proofs/issue-1096/cdp-screenshot.png",
+    "cdp_read": "skills/test-interactions/proofs/issue-1096/cdp-read.json"
+  }
+}

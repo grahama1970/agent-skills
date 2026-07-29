@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "app": "test-interactions discovery defects fixture",
+  "base_url": "http://127.0.0.1:8775",
+  "discovery": {
+    "generated_at": "2026-07-29T12:42:15.155518+00:00",
+    "states": 4,
+    "qid_only_executable_selectors": true
+  },
+  "surfaces": [
+    {
+      "name": "discovered-main",
+      "path": "/discovery_defects.html",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "fixture-open-dialog",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:open-dialog']",
+              "description": "Discovered live interaction: fixture:open-dialog",
+              "assert_visible": "[data-qid='fixture:open-dialog']",
+              "assert_title": "[data-qid='fixture:open-dialog']",
+              "assert_qs_action": "[data-qid='fixture:open-dialog']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-duplicate",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:duplicate']",
+              "description": "Discovered live interaction: fixture:duplicate",
+              "assert_visible": "[data-qid='fixture:duplicate']",
+              "assert_title": "[data-qid='fixture:duplicate']",
+              "assert_qs_action": "[data-qid='fixture:duplicate']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-throws",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:throws']",
+              "description": "Discovered live interaction: fixture:throws",
+              "assert_visible": "[data-qid='fixture:throws']",
+              "assert_title": "[data-qid='fixture:throws']",
+              "assert_qs_action": "[data-qid='fixture:throws']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-fetch-fails",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:fetch-fails']",
+              "description": "Discovered live interaction: fixture:fetch-fails",
+              "assert_visible": "[data-qid='fixture:fetch-fails']",
+              "assert_title": "[data-qid='fixture:fetch-fails']",
+              "assert_qs_action": "[data-qid='fixture:fetch-fails']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-inert",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:inert']",
+              "description": "Discovered live interaction: fixture:inert",
+              "assert_visible": "[data-qid='fixture:inert']",
+              "assert_title": "[data-qid='fixture:inert']",
+              "assert_qs_action": "[data-qid='fixture:inert']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-no-title",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:no-title']",
+              "description": "Discovered live interaction: fixture:no-title",
+              "assert_visible": "[data-qid='fixture:no-title']",
+              "assert_qs_action": "[data-qid='fixture:no-title']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-no-action",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:no-action']",
+              "description": "Discovered live interaction: fixture:no-action",
+              "assert_visible": "[data-qid='fixture:no-action']",
+              "assert_title": "[data-qid='fixture:no-action']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-keyboard-miss",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:keyboard-miss']",
+              "description": "Discovered live interaction: fixture:keyboard-miss",
+              "assert_visible": "[data-qid='fixture:keyboard-miss']",
+              "assert_title": "[data-qid='fixture:keyboard-miss']",
+              "assert_qs_action": "[data-qid='fixture:keyboard-miss']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-url-drift",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:url-drift']",
+              "description": "Discovered live interaction: fixture:url-drift",
+              "assert_visible": "[data-qid='fixture:url-drift']",
+              "assert_title": "[data-qid='fixture:url-drift']",
+              "assert_qs_action": "[data-qid='fixture:url-drift']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-dialog-control",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:dialog-control']",
+              "description": "Discovered live interaction: fixture:dialog-control",
+              "assert_visible": "[data-qid='fixture:dialog-control']",
+              "assert_title": "[data-qid='fixture:dialog-control']",
+              "assert_qs_action": "[data-qid='fixture:dialog-control']"
+            }
+          ]
+        },
+        {
+          "name": "fixture-close-dialog",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='fixture:close-dialog']",
+              "description": "Discovered live interaction: fixture:close-dialog",
+              "assert_title": "[data-qid='fixture:close-dialog']",
+              "assert_qs_action": "[data-qid='fixture:close-dialog']"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

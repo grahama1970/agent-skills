@@ -16,6 +16,13 @@ from pathlib import Path
 from urllib.parse import quote
 
 try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
+try:
     import websocket as _ws
 except ImportError:
     subprocess.check_call(["uv", "pip", "install", "websocket-client", "-q"])
@@ -36,6 +43,7 @@ class CDPClient:
         self.browser_process = None
         self.user_data_dir = None
         self.owns_browser = False
+        self.events: list[dict] = []
 
     def _free_port(self) -> int:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -157,6 +165,8 @@ class CDPClient:
                 if "error" in resp:
                     raise RuntimeError(f"CDP error: {resp['error']}")
                 return resp.get("result", {})
+            if resp.get("method"):
+                self.events.append(resp)
 
     def evaluate(self, js: str):
         result = self.send("Runtime.evaluate", {
@@ -176,8 +186,49 @@ class CDPClient:
     def current_url(self) -> str:
         return self.evaluate("window.location.href") or ""
 
+    def enable_observers(self):
+        """Enable console/network event streams for discovery diagnostics."""
+        for method in ("Runtime.enable", "Log.enable", "Network.enable"):
+            try:
+                self.send(method)
+            except RuntimeError:
+                pass
+
+    def drain_events(self) -> list[dict]:
+        """Flush pending protocol events by issuing a cheap Runtime call."""
+        try:
+            self.evaluate("void 0")
+        except RuntimeError:
+            pass
+        events = list(self.events)
+        self.events.clear()
+        return events
+
+    def viewport(self) -> dict:
+        return self.evaluate(
+            "(function(){ return {width: window.innerWidth, height: window.innerHeight, "
+            "deviceScaleFactor: window.devicePixelRatio || 1}; })()"
+        ) or {"width": 1200, "height": 900, "deviceScaleFactor": 1}
+
     def screenshot(self, output_path: str) -> str:
         result = self.send("Page.captureScreenshot", {"format": "png"})
+        img_data = base64.b64decode(result["data"])
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(output_path).write_bytes(img_data)
+        return output_path
+
+    def screenshot_clip(self, output_path: str, clip: dict) -> str:
+        """Capture a viewport clip to a PNG file."""
+        result = self.send("Page.captureScreenshot", {
+            "format": "png",
+            "clip": {
+                "x": max(0, float(clip["x"])),
+                "y": max(0, float(clip["y"])),
+                "width": max(1, float(clip["width"])),
+                "height": max(1, float(clip["height"])),
+                "scale": float(clip.get("scale", 1)),
+            },
+        })
         img_data = base64.b64decode(result["data"])
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         Path(output_path).write_bytes(img_data)
@@ -212,8 +263,26 @@ class CDPClient:
             f"}})()"
         ) or ""
 
+    def get_attribute(self, selector: str, attribute: str) -> str | None:
+        return self.evaluate(
+            f"(function() {{"
+            f"  var el = document.querySelector({json.dumps(selector)});"
+            f"  return el ? el.getAttribute({json.dumps(attribute)}) : null;"
+            f"}})()"
+        )
+
     def get_inner_text(self) -> str:
         return self.evaluate("document.body.innerText") or ""
+
+    def scroll_into_view(self, selector: str) -> bool:
+        return bool(self.evaluate(
+            f"(function() {{"
+            f"  var el = document.querySelector({json.dumps(selector)});"
+            f"  if (!el) return false;"
+            f"  el.scrollIntoView({{block: 'center', inline: 'center'}});"
+            f"  return true;"
+            f"}})()"
+        ))
 
     def click_selector(self, selector: str) -> dict:
         result = self.evaluate(
@@ -331,6 +400,81 @@ class CDPClient:
             f"  return {{width: r.width, height: r.height, x: r.x, y: r.y}};"
             f"}})()"
         )
+
+    def screenshot_element_bounds(self, output_path: str, selector: str, padding: int = 0) -> dict:
+        """Capture a selector's current bounding box with optional viewport padding."""
+        self.scroll_into_view(selector)
+        rect = self.get_bounding_rect(selector)
+        if not rect:
+            raise RuntimeError(f"selector not found for screenshot: {selector}")
+        viewport = self.viewport()
+        x = max(0, rect["x"] - padding)
+        y = max(0, rect["y"] - padding)
+        max_w = max(1, viewport["width"] - x)
+        max_h = max(1, viewport["height"] - y)
+        clip = {
+            "x": x,
+            "y": y,
+            "width": min(max_w, rect["width"] + padding * 2),
+            "height": min(max_h, rect["height"] + padding * 2),
+            "scale": 1,
+        }
+        self.screenshot_clip(output_path, clip)
+        return clip
+
+    def nearest_semantic_container(self, selector: str) -> dict | None:
+        """Return nearest stable ancestor with data-qid/role or review metadata."""
+        return self.evaluate(
+            f"(function() {{"
+            f"  var el = document.querySelector({json.dumps(selector)});"
+            f"  if (!el) return null;"
+            f"  var cur = el.parentElement;"
+            f"  while (cur) {{"
+            f"    var qid = cur.getAttribute('data-qid');"
+            f"    var role = cur.getAttribute('role');"
+            f"    if (qid || role || cur.getAttribute('data-review-surface') || cur.getAttribute('data-review-kind')) {{"
+            f"      var r = cur.getBoundingClientRect();"
+            f"      return {{"
+            f"        selector: qid ? \"[data-qid='\" + qid.replace(/'/g, \"\\\\'\") + \"']\" : null,"
+            f"        qid: qid,"
+            f"        role: role,"
+            f"        rect: {{width: r.width, height: r.height, x: r.x, y: r.y}}"
+            f"      }};"
+            f"    }}"
+            f"    cur = cur.parentElement;"
+            f"  }}"
+            f"  return null;"
+            f"}})()"
+        )
+
+    def clipping_status(self, selector: str) -> dict:
+        """Detect whether selector bounds overflow a clipping ancestor."""
+        return self.evaluate(
+            f"(function() {{"
+            f"  var el = document.querySelector({json.dumps(selector)});"
+            f"  if (!el) return {{clipped: false, reason: 'target_not_found'}};"
+            f"  var target = el.getBoundingClientRect();"
+            f"  var cur = el.parentElement;"
+            f"  while (cur) {{"
+            f"    var style = getComputedStyle(cur);"
+            f"    var overflow = style.overflow + ' ' + style.overflowX + ' ' + style.overflowY;"
+            f"    if (/(hidden|clip|auto|scroll)/.test(overflow)) {{"
+            f"      var r = cur.getBoundingClientRect();"
+            f"      var clipped = target.left < r.left || target.top < r.top || target.right > r.right || target.bottom > r.bottom;"
+            f"      if (clipped) return {{"
+            f"        clipped: true,"
+            f"        ancestorQid: cur.getAttribute('data-qid'),"
+            f"        ancestorTag: cur.tagName,"
+            f"        overflow: overflow,"
+            f"        targetRect: {{x: target.x, y: target.y, width: target.width, height: target.height}},"
+            f"        ancestorRect: {{x: r.x, y: r.y, width: r.width, height: r.height}}"
+            f"      }};"
+            f"    }}"
+            f"    cur = cur.parentElement;"
+            f"  }}"
+            f"  return {{clipped: false}};"
+            f"}})()"
+        ) or {"clipped": False}
 
     def get_computed_font_size(self, selector: str) -> float | None:
         """Get computed font-size in px for a selector."""
