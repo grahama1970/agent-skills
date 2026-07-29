@@ -2445,6 +2445,23 @@ def _recovery_next_command(
     meta_path: Path,
     prompt_path: Path,
 ) -> list[str]:
+    def append_browser_identity(command: list[str]) -> None:
+        tab_id = ""
+        if isinstance(browser_oracle, dict):
+            tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "").strip()
+        if not tab_id:
+            tab_id = _tab_id_from_commands(args)
+        url = str(
+            browser_oracle.get("conversation_url")
+            or submit_meta.get("current_url")
+            or submit_meta.get("requested_url")
+            or ""
+        ).strip()
+        if tab_id:
+            command.extend(["--tab-id", tab_id])
+        if url:
+            command.extend(["--expect-url" if str(args.handler) == "webgpt" and tab_id else "--url", url])
+
     if failure_code in {
         BROWSER_ATTACHMENT_UNAVAILABLE,
         BROWSER_SENTINEL_TRAILING_CONTENT,
@@ -2513,7 +2530,6 @@ def _recovery_next_command(
         command.extend(["--manual", "--json"])
         return command
     if failure_code == BROWSER_SUBMIT_NOT_ACCEPTED:
-        project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
         url = str(
             browser_oracle.get("conversation_url")
             or submit_meta.get("current_url")
@@ -2521,15 +2537,28 @@ def _recovery_next_command(
             or ""
         ).strip()
         command = [
-            str(args.browser_oracle_run),
-            "open-bind",
-            project,
-            "--backend",
-            HANDLER_BACKENDS[str(args.handler)],
+            str(args.surf_run),
+            HANDLER_SUBMIT_COMMANDS[str(args.handler)],
+            "--input",
+            str(prompt_path),
+            "--output",
+            str(response_path.with_name("response.identity-retry.md")),
+            "--raw-output",
+            str(raw_path.with_name("response.identity-retry.raw.md")),
+            "--meta-output",
+            str(meta_path.with_name("response.identity-retry.meta.json")),
+            "--timeout",
+            str(args.timeout),
+            "--stable-polls",
+            str(args.stable_polls),
         ]
-        if url:
-            command.extend(["--url", url])
-        command.extend(["--manual", "--json"])
+        _append_browser_lock_timeout(command, args)
+        append_browser_identity(command)
+        if not any(item in {"--tab-id", "--url"} for item in command):
+            project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
+            command.extend(["--project", project])
+        if args.no_activate:
+            command.append("--no-activate")
         return command
     if failure_code == BROWSER_PROVIDER_SETUP_FAILED:
         command = [
@@ -2621,13 +2650,7 @@ def _recovery_next_command(
             bundle_path,
         ]
         _append_browser_lock_timeout(command, args)
-        tab_id = ""
-        if isinstance(browser_oracle, dict):
-            tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "")
-        if not tab_id:
-            tab_id = _tab_id_from_commands(args)
-        if tab_id:
-            command.extend(["--tab-id", tab_id])
+        append_browser_identity(command)
         if args.no_activate:
             command.append("--no-activate")
         return command

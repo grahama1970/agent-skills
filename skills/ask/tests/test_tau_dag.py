@@ -1612,6 +1612,123 @@ raise SystemExit(2)
     assert recovery["next_command"]
 
 
+def test_webgpt_identity_failure_recovery_resubmits_with_expected_url(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Compete with a fresh WebGPT tab while many ChatGPT tabs are open."}) + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    surf_log = tmp_path / "surf-commands.jsonl"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        f"""#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+with Path({str(surf_log)!r}).open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(args) + "\\n")
+if args[:1] == ["webgpt.submit"]:
+    raw = Path(args[args.index("--raw-output") + 1])
+    meta = Path(args[args.index("--meta-output") + 1])
+    raw.write_text("")
+    meta.write_text(json.dumps({{
+        "status": "failed",
+        "failure": "tab_identity_preflight_failed",
+        "submitted_to_chatgpt": False,
+        "requested_tab_id": "837362433",
+        "requested_url": None,
+        "tab_identity_preflight": {{
+            "ok": False,
+            "error": "unverified_tab_id_with_multiple_chatgpt_tabs",
+            "expected_url": None,
+            "tab": {{"id": "837362433", "url": "https://chatgpt.com/", "title": "ChatGPT"}},
+            "chatgpt_tabs_count": 23,
+        }},
+    }}) + "\\n")
+    print("unverified_tab_id_with_multiple_chatgpt_tabs", file=sys.stderr)
+    raise SystemExit(2)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    print(json.dumps({
+        "backend": "webgpt",
+        "project": "pdf-oxide-mvp-retry-20260727T1315Z-webgpt",
+        "tab_id": "837362433",
+        "conversation_url": "https://chatgpt.com/",
+        "status": "ok",
+    }))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-webgpt",
+            "--handler",
+            "webgpt",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            str(surf),
+            "--browser-oracle-run",
+            str(browser_oracle),
+            "--browser-oracle-project",
+            "pdf-oxide-mvp-retry-20260727T1315Z-webgpt",
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    submitted = [json.loads(line) for line in surf_log.read_text(encoding="utf-8").splitlines()]
+    webgpt_submit = next(item for item in submitted if item[:1] == ["webgpt.submit"])
+    assert webgpt_submit[0] == "webgpt.submit"
+    assert webgpt_submit[webgpt_submit.index("--tab-id") + 1] == "837362433"
+    assert webgpt_submit[webgpt_submit.index("--expect-url") + 1] == "https://chatgpt.com/"
+
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["failure_code"] == "browser_submit_not_accepted"
+    assert recovery["failure_code"] == "browser_submit_not_accepted"
+    assert recovery["next_command"][1] == "webgpt.submit"
+    assert "open-bind" not in recovery["next_command"]
+    assert recovery["next_command"][recovery["next_command"].index("--tab-id") + 1] == "837362433"
+    assert recovery["next_command"][recovery["next_command"].index("--expect-url") + 1] == "https://chatgpt.com/"
+
+
 def test_browser_lane_sanitizes_local_paths_and_attaches_bundle_before_submit(tmp_path: Path) -> None:
     evidence = tmp_path / "review-target.md"
     evidence.write_text("# Evidence\n\nThe answer should be 4.\n", encoding="utf-8")
