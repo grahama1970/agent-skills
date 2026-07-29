@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from page_eval import PAGE_EVAL_FINDING_SCHEMA, validate_page_eval_finding
 from visual_evidence import validate_visual_finding
 
 TICKET_CANDIDATE_SCHEMA = "test-interactions.ticket-candidate.v1"
@@ -38,6 +39,9 @@ class TicketCandidate:
     deterministic: bool = False
     visual: bool = False
     confidence: float | None = None
+    evidence_class: str = ""
+    proof_grade: str = ""
+    source_tool: str = ""
     eligible: bool = False
     report_only_reason: str = ""
 
@@ -81,6 +85,9 @@ def _candidate(
     deterministic: bool = False,
     visual: bool = False,
     confidence: float | None = None,
+    evidence_class: str = "",
+    proof_grade: str = "",
+    source_tool: str = "",
 ) -> TicketCandidate:
     identity = qid or selector or element or observed_state
     return TicketCandidate(
@@ -107,6 +114,9 @@ def _candidate(
         deterministic=deterministic,
         visual=visual,
         confidence=confidence,
+        evidence_class=evidence_class,
+        proof_grade=proof_grade,
+        source_tool=source_tool,
     )
 
 
@@ -189,6 +199,40 @@ def candidates_from_visual(path: Path | None, *, repo: str, target: str, replay_
     return out
 
 
+def candidates_from_page_eval(path: Path | None, *, repo: str, target: str, replay_command: str) -> list[TicketCandidate]:
+    out: list[TicketCandidate] = []
+    for item in _jsonl(path) if path else []:
+        if item.get("schema") != PAGE_EVAL_FINDING_SCHEMA:
+            continue
+        ok, errors = validate_page_eval_finding(item)
+        target_info = item.get("target_info") or {}
+        evidence_paths = [str(path), *[str(p) for p in item.get("evidence_paths") or [] if p]]
+        candidate = _candidate(
+            repo=repo,
+            target=target,
+            source=str(path),
+            finding_kind=str(item.get("finding_kind") or "page_eval_finding"),
+            surface=str(item.get("route") or ""),
+            element=str(target_info.get("element") or ""),
+            qid=str(target_info.get("qid") or ""),
+            selector=str(target_info.get("selector") or ""),
+            expected_outcome=str(item.get("expected") or "page should satisfy evaluation invariant"),
+            observed_state=str(item.get("observed") or ""),
+            reproduction=str(item.get("reproduction") or replay_command),
+            evidence_paths=evidence_paths,
+            deterministic=item.get("proof_grade") == "deterministic",
+            visual=item.get("proof_grade") == "advisory",
+            confidence=1.0 if item.get("proof_grade") == "advisory" else None,
+            evidence_class=str(item.get("evidence_class") or ""),
+            proof_grade=str(item.get("proof_grade") or ""),
+            source_tool=str(item.get("source_tool") or ""),
+        )
+        if not ok:
+            candidate.report_only_reason = "; ".join(errors)
+        out.append(candidate)
+    return out
+
+
 def apply_policy(candidates: list[TicketCandidate], policy: str, *, threshold: float) -> list[TicketCandidate]:
     if policy not in VALID_POLICIES:
         raise ValueError(f"unknown ticket policy: {policy}")
@@ -264,6 +308,9 @@ def _ticket_args(candidate: TicketCandidate, *, repo: str, as_json: bool, apply:
         f"{candidate.observed_state}\n\n"
         f"Source finding fingerprint: {candidate.fingerprint}\n"
         f"Finding kind: {candidate.finding_kind}\n"
+        f"Evidence class: {candidate.evidence_class or 'legacy'}\n"
+        f"Proof grade: {candidate.proof_grade or ('deterministic' if candidate.deterministic else 'advisory' if candidate.visual else 'unknown')}\n"
+        f"Source tool: {candidate.source_tool or 'test-interactions'}\n"
         f"Surface/state: {candidate.surface}\n"
         f"QID: {candidate.qid or 'missing'}\n"
         f"Evidence paths:\n" + "\n".join(f"- `{path}`" for path in candidate.evidence_paths)
@@ -334,6 +381,7 @@ def run_ticket_integration(
     results: Path | None = None,
     visual_findings: Path | None = None,
     discovery_findings: Path | None = None,
+    page_eval_findings: Path | None = None,
     threshold: float = 0.85,
     max_apply: int = 1,
 ) -> dict[str, Any]:
@@ -344,6 +392,7 @@ def run_ticket_integration(
         candidates_from_results(results, repo=repo, target=target, replay_command=replay_command)
         + candidates_from_discovery(discovery_findings, repo=repo, target=target, replay_command=replay_command)
         + candidates_from_visual(visual_findings, repo=repo, target=target, replay_command=replay_command, threshold=threshold)
+        + candidates_from_page_eval(page_eval_findings, repo=repo, target=target, replay_command=replay_command)
     )
     apply_policy(candidates, policy, threshold=threshold)
 

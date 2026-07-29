@@ -51,6 +51,7 @@ from visual_evidence import (
     write_findings_jsonl,
 )
 from discovery import discover_live_dom, write_discovery_artifacts
+from page_eval import normalize_page_eval_findings
 from ticket_integration import run_ticket_integration
 
 try:
@@ -616,6 +617,7 @@ def ticket_findings(
     results: Optional[Path] = typer.Option(None, help="results.json from run stage"),
     visual_findings: Optional[Path] = typer.Option(None, help="visual-findings.jsonl from #1095 structured visual findings"),
     discovery_findings: Optional[Path] = typer.Option(None, help="discovery-findings.jsonl from #1096 live discovery"),
+    page_eval_findings: Optional[Path] = typer.Option(None, help="page-eval.finding.v1 JSONL from normalize-page-eval"),
     replay_command: str = typer.Option(..., help="Exact command that replays the source interaction/finding"),
     ticket_skill: Path = typer.Option(Path("skills/ticket/run.sh"), help="Delegated ticket runtime entrypoint"),
     confidence_threshold: float = typer.Option(0.85, help="Minimum visual confidence for high-confidence policy"),
@@ -633,6 +635,7 @@ def ticket_findings(
             results=results,
             visual_findings=visual_findings,
             discovery_findings=discovery_findings,
+            page_eval_findings=page_eval_findings,
             threshold=confidence_threshold,
             max_apply=max_apply,
         )
@@ -645,6 +648,49 @@ def ticket_findings(
     logger.info(
         "Ticket integration wrote {} candidate(s), {} preview(s), {} duplicate comment(s), {} created issue(s) to {}",
         result["candidate_count"], result["preview_count"], result["duplicate_count"], result["created_count"], output_dir,
+    )
+
+
+@app.command("normalize-page-eval")
+def normalize_page_eval(
+    repo: str = typer.Option(..., help="Target repository, owner/name"),
+    target: str = typer.Option("skills/test-interactions", help="Concrete target path or skill for filed tickets"),
+    route: str = typer.Option("/", help="Rendered app route evaluated by the source artifacts"),
+    viewport: str = typer.Option("unknown", help="Viewport label or WxH used by the source artifacts"),
+    output: Path = typer.Option(Path("./page-eval-findings.jsonl"), help="Strict page-eval.finding.v1 JSONL output"),
+    summary_output: Path = typer.Option(Path("./page-eval-summary.json"), help="Normalization summary output"),
+    impeccable_findings: Optional[Path] = typer.Option(None, help="Impeccable detector JSON output"),
+    disable_impeccable: bool = typer.Option(False, help="Exclude Impeccable design findings even when --impeccable-findings is provided"),
+    results: Optional[Path] = typer.Option(None, help="test-interactions results.json from run stage"),
+    discovery_findings: Optional[Path] = typer.Option(None, help="test-interactions discovery-findings.jsonl"),
+    visual_findings: Optional[Path] = typer.Option(None, help="test-interactions visual-findings.jsonl"),
+    replay_command: str = typer.Option(..., help="Exact command that reproduces the source artifacts"),
+):
+    """Normalize Impeccable and test-interactions artifacts into one strict schema."""
+    try:
+        summary = normalize_page_eval_findings(
+            repo=repo,
+            target=target,
+            route=route,
+            viewport=viewport,
+            replay_command=replay_command,
+            output=output,
+            summary_output=summary_output,
+            impeccable_findings=impeccable_findings,
+            disable_impeccable=disable_impeccable,
+            results=results,
+            discovery_findings=discovery_findings,
+            visual_findings=visual_findings,
+        )
+    except Exception as exc:  # noqa: BLE001
+        output.parent.mkdir(parents=True, exist_ok=True)
+        failure_path = output.parent / "page-eval-failure.json"
+        failure_path.write_text(json.dumps({"error": str(exc), "mocked": False, "live": False}, indent=2) + "\n")
+        logger.error("Page-eval normalization failed; wrote {}", failure_path)
+        raise typer.Exit(1)
+    logger.info(
+        "Page-eval normalization wrote {} finding(s) to {} (impeccable_included={})",
+        summary["finding_count"], output, summary["impeccable_included"],
     )
 
 
