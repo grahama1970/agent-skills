@@ -2395,6 +2395,161 @@ def test_run_tau_dag_bundle_synthesizes_missing_browser_timeout_receipt_and_join
     assert "DO NOT IMPORT" not in summary
 
 
+def test_run_tau_dag_bundle_synthesizes_webgpt_recovery_from_orphaned_submit_artifacts(
+    monkeypatch, tmp_path: Path
+) -> None:
+    request = infer_compile_input(
+        "Ask webgpt for a tiny attached-bundle review.",
+        repo="local/agent-skills",
+        target="issue-1094-orphaned-webgpt",
+        immutable_goal="WebGPT lane emits terminal artifacts when submit was accepted but no receipt was written.",
+        handlers=["webgpt"],
+        dag_template="single-call",
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    artifacts = run_dir / "node-artifacts"
+    node_dir = artifacts / "handler-webgpt"
+    node_dir.mkdir(parents=True, exist_ok=True)
+    (node_dir / "prompt.md").write_text("Prompt submitted to WebGPT.\n", encoding="utf-8")
+    (node_dir / "response.md.submitted.md").write_text("Prompt submitted to WebGPT.\n", encoding="utf-8")
+    sentinel = "<<<WEBGPT_DONE:20260729T121500Z:1094>>>>"
+    (node_dir / "response.md.receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_submit_receipt.v1",
+                "status": "submitted_to_chatgpt",
+                "submitted_to_chatgpt": True,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363669",
+                "output": str(node_dir / "response.md"),
+                "raw_output": str(node_dir / "response.raw.md"),
+                "meta_output": str(node_dir / "response.meta.json"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (node_dir / "webgpt_inflight.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_inflight.v1",
+                "status": "submitted_to_chatgpt",
+                "submitted_to_chatgpt": True,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363669",
+                "recovery_command": f"surf webgpt.recover --artifact-dir {node_dir} --finalize",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (node_dir / "webgpt_heartbeat.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_heartbeat.v1",
+                "phase": "generating",
+                "page_state": "waiting_for_sentinel",
+                "next_expected_artifact": str(node_dir / "response.raw.md"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "handler died before receipt", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    execution = run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    receipt = json.loads((node_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((node_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert execution["status"] == "NEEDS_ATTENTION"
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["synthesized_missing_receipt"] is True
+    assert receipt["failure_code"] == "browser_handler_timeout"
+    assert recovery["failure_code"] == "browser_handler_timeout"
+    assert recovery["auto_retry_blocked_reason"] == "browser_submitted_no_response_proof_requires_recover"
+    assert recovery["evidence"]["submit_receipt_path"] == str(node_dir / "response.md.receipt.json")
+    assert recovery["evidence"]["inflight_path"] == str(node_dir / "webgpt_inflight.json")
+    assert recovery["evidence"]["heartbeat_path"] == str(node_dir / "webgpt_heartbeat.json")
+    assert recovery["evidence"]["inflight_submitted_to_chatgpt"] is True
+    assert recovery["next_command"] == [
+        "surf",
+        "webgpt.recover",
+        "--artifact-dir",
+        str(node_dir),
+        "--finalize",
+    ]
+    assert "$ticket to $ask at agent-skills@main" in recovery["ticket_instruction"]
+    join = json.loads((artifacts / "join" / "node-receipt.json").read_text(encoding="utf-8"))
+    assert join["status"] == "NEEDS_ATTENTION"
+    failed = next(item for item in join["handler_response_index"] if item["handler"] == "webgpt")
+    assert failed["recovery_packet_path"] == str(node_dir / "browser-recovery-packet.json")
+
+
+def test_run_tau_dag_bundle_reclassifies_orphaned_webgpt_rate_limit_metadata(
+    monkeypatch, tmp_path: Path
+) -> None:
+    request = infer_compile_input(
+        "Ask webgpt while ChatGPT is rate limited.",
+        repo="local/agent-skills",
+        target="issue-1094-rate-limited-webgpt",
+        immutable_goal="WebGPT provider throttling is terminal lane-local evidence.",
+        handlers=["webgpt"],
+        dag_template="single-call",
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    node_dir = run_dir / "node-artifacts" / "handler-webgpt"
+    node_dir.mkdir(parents=True, exist_ok=True)
+    (node_dir / "prompt.md").write_text("Prompt submitted to WebGPT.\n", encoding="utf-8")
+    (node_dir / "response.md.submitted.md").write_text("Prompt submitted to WebGPT.\n", encoding="utf-8")
+    (node_dir / "response.meta.json").write_text(
+        json.dumps(
+            {
+                "status": "failed",
+                "proof_status": "rate_limited",
+                "submitted_to_chatgpt": False,
+                "chatgpt_too_many_requests_detected": True,
+                "chatgpt_rate_limit": {"exhausted": True, "wait_seconds": 300},
+                "blocker": "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT",
+                "requested_tab_id": "837363698",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "provider throttle before receipt", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    receipt = json.loads((node_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((node_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["failure_code"] == "browser_provider_rate_limited"
+    assert recovery["failure_code"] == "browser_provider_rate_limited"
+    assert recovery["auto_retry_blocked_reason"] == "browser_provider_rate_limit_requires_backoff"
+    assert recovery["evidence"]["provider_throttle"] is True
+    assert recovery["fallback_instruction"].startswith("Treat only this browser lane as provider-rate-limited")
+
+
 def test_run_tau_dag_bundle_synthesizes_compete_join_when_all_browser_lanes_need_attention(
     monkeypatch, tmp_path: Path
 ) -> None:

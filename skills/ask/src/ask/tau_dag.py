@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -1004,11 +1005,33 @@ def _synthesize_missing_browser_handler_receipts(
         response_path = artifact_dir / "response.md"
         raw_path = artifact_dir / "response.raw.md"
         meta_path = artifact_dir / "response.meta.json"
-        evidence_paths = [prompt_path, submitted_path, response_path, raw_path, meta_path]
+        submit_receipt_path = artifact_dir / "response.md.receipt.json"
+        inflight_path = artifact_dir / "webgpt_inflight.json"
+        heartbeat_path = artifact_dir / "webgpt_heartbeat.json"
+        evidence_paths = [
+            prompt_path,
+            submitted_path,
+            response_path,
+            raw_path,
+            meta_path,
+            submit_receipt_path,
+            inflight_path,
+            heartbeat_path,
+        ]
         if not any(path.exists() for path in evidence_paths):
             continue
         artifact_dir.mkdir(parents=True, exist_ok=True)
         submit_meta = _read_json(meta_path) if meta_path.is_file() else {}
+        submit_receipt = _read_json(submit_receipt_path) if submit_receipt_path.is_file() else {}
+        inflight = _read_json(inflight_path) if inflight_path.is_file() else {}
+        heartbeat = _read_json(heartbeat_path) if heartbeat_path.is_file() else {}
+        orphan_summary = _browser_orphan_artifact_summary(
+            submit_meta=submit_meta,
+            submit_receipt=submit_receipt,
+            inflight=inflight,
+            heartbeat=heartbeat,
+        )
+        failure_code = orphan_summary["failure_code"]
         quarantined_response_path = response_path
         quarantine_receipt: dict[str, Any] | None = None
         response_chars = response_path.stat().st_size if response_path.is_file() else 0
@@ -1021,7 +1044,7 @@ def _synthesize_missing_browser_handler_receipts(
                 "status": "QUARANTINED",
                 "ok": False,
                 "provider_live": False,
-                "failure_code": "browser_handler_timeout",
+                "failure_code": failure_code,
                 "original_response_path": str(response_path),
                 "quarantine_path": str(quarantined_response_path),
                 "response_chars": response_chars,
@@ -1038,7 +1061,7 @@ def _synthesize_missing_browser_handler_receipts(
             "status": "NEEDS_ATTENTION",
             "mocked": False,
             "live": True,
-            "failure_code": "browser_handler_timeout",
+            "failure_code": failure_code,
             "handler": handler,
             "node_id": node_id,
             "reason": (
@@ -1048,21 +1071,39 @@ def _synthesize_missing_browser_handler_receipts(
             "evidence": {
                 "prompt_path": str(prompt_path) if prompt_path.exists() else None,
                 "submitted_prompt_path": str(submitted_path) if submitted_path.exists() else None,
+                "submit_receipt_path": str(submit_receipt_path) if submit_receipt_path.exists() else None,
+                "inflight_path": str(inflight_path) if inflight_path.exists() else None,
+                "heartbeat_path": str(heartbeat_path) if heartbeat_path.exists() else None,
                 "raw_response_path": str(raw_path) if raw_path.exists() else None,
                 "meta_path": str(meta_path) if meta_path.exists() else None,
                 "submit_meta_status": submit_meta.get("status") if isinstance(submit_meta, dict) else None,
+                "submit_receipt_status": submit_receipt.get("status") if isinstance(submit_receipt, dict) else None,
+                "inflight_status": inflight.get("status") if isinstance(inflight, dict) else None,
+                "inflight_submitted_to_chatgpt": inflight.get("submitted_to_chatgpt")
+                if isinstance(inflight, dict)
+                else None,
+                "heartbeat_phase": heartbeat.get("phase") if isinstance(heartbeat, dict) else None,
+                "heartbeat_page_state": heartbeat.get("page_state") if isinstance(heartbeat, dict) else None,
+                "sentinel": orphan_summary["sentinel"],
+                "requested_tab_id": orphan_summary["requested_tab_id"],
                 "response_chars": response_chars,
+                "provider_throttle": orphan_summary["provider_throttle"],
             },
             "response_path": str(quarantined_response_path),
             "raw_response_path": str(raw_path),
             "meta_path": str(meta_path),
             "prompt_path": str(prompt_path),
             "auto_retry_allowed": False,
-            "auto_retry_blocked_reason": "browser_handler_timeout_expired",
-            "next_command": [],
-            "fallback_instruction": (
-                "Treat only this browser lane as timed out. Let the join preserve usable peer seats, "
-                "then rerun this handler later or with a fresh provider tab."
+            "auto_retry_blocked_reason": orphan_summary["auto_retry_blocked_reason"],
+            "next_command": orphan_summary["next_command"],
+            "fallback_instruction": orphan_summary["fallback_instruction"],
+            "ticket_target": "$ask at agent-skills@main",
+            "ticket_instruction": (
+                "If this browser-recovery-packet still blocks the project after following next_command, "
+                "file a $ticket to $ask at agent-skills@main. Include the Ask run directory, dag.json, "
+                "node-receipt.json, browser-recovery-packet.json, response.meta.json when present, "
+                "response.md.receipt.json, webgpt_inflight.json, webgpt_heartbeat.json, raw response, "
+                "and exact command stderr."
             ),
         }
         _write_json(recovery_path, recovery_packet)
@@ -1085,9 +1126,12 @@ def _synthesize_missing_browser_handler_receipts(
             "recovery_packet_path": str(recovery_path),
             "response_chars": response_chars,
             "submit_meta": submit_meta if isinstance(submit_meta, dict) else {},
+            "submit_receipt": submit_receipt if isinstance(submit_receipt, dict) else {},
+            "webgpt_inflight": inflight if isinstance(inflight, dict) else {},
+            "webgpt_heartbeat": heartbeat if isinstance(heartbeat, dict) else {},
             "commands": [],
             "failure": "browser_handler_timeout: missing node-receipt.json after browser submit artifacts existed",
-            "failure_code": "browser_handler_timeout",
+            "failure_code": failure_code,
             "competition_lane_exit_ok": True,
             "recovery_packet": recovery_packet,
             "synthesized_missing_receipt": True,
@@ -1117,6 +1161,73 @@ def _synthesize_missing_browser_handler_receipts(
             }
         )
     return synthesized
+
+
+def _browser_orphan_artifact_summary(
+    *,
+    submit_meta: dict[str, Any],
+    submit_receipt: dict[str, Any],
+    inflight: dict[str, Any],
+    heartbeat: dict[str, Any],
+) -> dict[str, Any]:
+    haystack = "\n".join(
+        json.dumps(item, sort_keys=True, default=str)
+        for item in (submit_meta, submit_receipt, inflight, heartbeat)
+        if item
+    ).lower()
+    provider_throttle = any(
+        marker in haystack
+        for marker in (
+            "chatgpt_too_many_requests_detected",
+            "blocked_webgpt_provider_rate_limit",
+            "proof_status\": \"rate_limited",
+            "too many requests",
+            "temporarily limited access",
+            "provider_rate_limited",
+        )
+    )
+    failure_code = "browser_provider_rate_limited" if provider_throttle else "browser_handler_timeout"
+    recovery_command = ""
+    for source in (submit_meta, inflight, submit_receipt, heartbeat):
+        if isinstance(source, dict):
+            recovery_command = str(source.get("recovery_command") or "").strip()
+            if recovery_command:
+                break
+    next_command = shlex.split(recovery_command) if recovery_command else []
+    sentinel = ""
+    requested_tab_id = ""
+    for source in (submit_meta, inflight, submit_receipt, heartbeat):
+        if not isinstance(source, dict):
+            continue
+        sentinel = sentinel or str(source.get("sentinel") or "").strip()
+        requested_tab_id = requested_tab_id or str(source.get("requested_tab_id") or "").strip()
+    if provider_throttle:
+        blocked_reason = "browser_provider_rate_limit_requires_backoff"
+        fallback_instruction = (
+            "Treat only this browser lane as provider-rate-limited. Do not launch parallel WebGPT "
+            "attempts. Wait for provider cooldown, then rerun this lane or continue with available peers."
+        )
+    elif next_command:
+        blocked_reason = "browser_submitted_no_response_proof_requires_recover"
+        fallback_instruction = (
+            "Surf proved prompt submission but did not produce a terminal response/meta artifact. Run "
+            "next_command to recover the existing controlled tab before submitting a new WebGPT prompt."
+        )
+    else:
+        blocked_reason = "browser_handler_timeout_expired"
+        fallback_instruction = (
+            "Treat only this browser lane as timed out. Let the join preserve usable peer seats, "
+            "then rerun this handler later or with a fresh provider tab."
+        )
+    return {
+        "failure_code": failure_code,
+        "provider_throttle": provider_throttle,
+        "auto_retry_blocked_reason": blocked_reason,
+        "next_command": next_command,
+        "fallback_instruction": fallback_instruction,
+        "sentinel": sentinel or None,
+        "requested_tab_id": requested_tab_id or None,
+    }
 
 
 def _next_available_path(path: Path) -> Path:
