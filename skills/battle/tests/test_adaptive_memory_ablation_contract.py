@@ -358,6 +358,7 @@ class _MemoryClient:
     def __init__(self) -> None:
         self.document: dict | None = None
         self.calls: list[tuple[str, dict]] = []
+        self.semantic_exact_recall = True
 
     def __enter__(self) -> "_MemoryClient":
         return self
@@ -373,6 +374,9 @@ class _MemoryClient:
         self.calls.append((path, json))
         assert json.get("collection", ablation.MEMORY_COLLECTION) == ablation.MEMORY_COLLECTION
         if path == "/list":
+            key = (json.get("filters") or {}).get("_key")
+            if self.document is not None and key == self.document["_key"]:
+                return _MemoryResponse({"documents": [dict(self.document)]})
             return _MemoryResponse({"documents": []})
         if path == "/upsert":
             self.document = dict(json["documents"][0])
@@ -390,7 +394,9 @@ class _MemoryClient:
                 "tags": ["team:blue", "battle:other"],
             }
             if json["tags"] == self.document["tags"]:
-                return _MemoryResponse({"items": [noisy_candidate]})
+                if self.semantic_exact_recall:
+                    return _MemoryResponse({"items": [noisy_candidate]})
+                return _MemoryResponse({"items": [unrelated_candidate]})
             return _MemoryResponse({"items": [noisy_candidate, unrelated_candidate]})
         raise AssertionError(f"unexpected Memory path: {path}")
 
@@ -489,6 +495,33 @@ def test_live_memory_recall_uses_the_same_exact_identity_tags(tmp_path) -> None:
     assert recall_calls[0]["tags"] == result["document"]["tags"]
     assert "team:blue" in recall_calls[1]["tags"]
     assert f"trial:{trial['trial_id']}-other" in recall_calls[2]["tags"]
+
+
+def test_live_memory_recall_falls_back_to_exact_key_lookup(tmp_path) -> None:
+    plan = _plan()
+    trial = next(item for item in plan["trials"] if item["condition_id"] == "R1B0")
+    client = _MemoryClient()
+    client.semantic_exact_recall = False
+
+    result = ablation._write_and_recall_memory(
+        client=client,
+        collection=ablation.MEMORY_COLLECTION,
+        plan=plan,
+        trial=trial,
+        team="red",
+        out_dir=tmp_path,
+    )
+
+    assert result["service_request_count"] == 14
+    assert result["recall"]["exact_match_source"] == "exact_key_lookup"
+    list_calls = [payload for path, payload in client.calls if path == "/list"]
+    assert list_calls == [
+        {
+            "collection": ablation.MEMORY_COLLECTION,
+            "limit": 2,
+            "filters": {"_key": result["document"]["_key"]},
+        }
+    ]
 
 
 def test_judge_readiness_binds_frozen_policy_and_executable_hashes() -> None:
