@@ -44,10 +44,40 @@ def test_default_scillm_api_key_prefers_ambient_proxy_key_over_deployment_env(
     env_file.write_text("SCILLM_MASTER_KEY=stale-deployment-key\n", encoding="utf-8")
     monkeypatch.setenv("SCILLM_ENV_FILE", str(env_file))
     monkeypatch.setenv("SCILLM_PROXY_KEY", "running-proxy-key")
+    monkeypatch.setattr(tau_dag, "_running_scillm_proxy_key", lambda: None)
     for var in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY", "SCILLM_API_KEY", "SCILLM_PROXY_API_KEY"):
         monkeypatch.delenv(var, raising=False)
 
     assert tau_dag.default_scillm_api_key() == "running-proxy-key"
+
+
+def test_default_scillm_api_key_prefers_running_proxy_over_stale_deployment_env(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    env_file = tmp_path / "scillm.env"
+    env_file.write_text("SCILLM_MASTER_KEY=stale-deployment-key\n", encoding="utf-8")
+    monkeypatch.setenv("SCILLM_ENV_FILE", str(env_file))
+    for var in (
+        "SCILLM_PROXY_KEY",
+        "SCILLM_MASTER_KEY",
+        "LITELLM_MASTER_KEY",
+        "SCILLM_API_KEY",
+        "SCILLM_PROXY_API_KEY",
+    ):
+        monkeypatch.delenv(var, raising=False)
+
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout="SCILLM_MASTER_KEY=running-container-key\nLITELLM_MASTER_KEY=running-litellm-key\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr(tau_dag.subprocess, "run", fake_run)
+
+    assert tau_dag.default_scillm_api_key() == "running-container-key"
 
 
 def test_incomplete_tau_dag_request_routes_to_interview(tmp_path: Path) -> None:

@@ -567,6 +567,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "status": status,
             "verdict": verdict,
             "failure_code": recovery_packet.get("failure_code") if recovery_packet else None,
+            "mocked": False,
+            "live": bool(commands),
+            "provider_live": provider_live,
+            "provider_receipt": receipt["provider_receipt"],
         },
         {
             "kind": "normalized_handler_receipt",
@@ -2963,6 +2967,10 @@ def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[s
         "http 401" in haystack
         or "invalid api key" in haystack
         or "authentication_error" in haystack
+        or "provider_auth_error" in haystack
+        or "provider_auth_failed" in haystack
+        or "token_revoked" in haystack
+        or "invalidated oauth token" in haystack
         or "autherror" in haystack
         or "please pass a valid api key" in haystack
     ):
