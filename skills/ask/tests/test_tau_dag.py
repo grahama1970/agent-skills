@@ -43,10 +43,40 @@ def test_default_scillm_api_key_prefers_ambient_proxy_key_over_deployment_env(
     env_file.write_text("SCILLM_MASTER_KEY=stale-deployment-key\n", encoding="utf-8")
     monkeypatch.setenv("SCILLM_ENV_FILE", str(env_file))
     monkeypatch.setenv("SCILLM_PROXY_KEY", "running-proxy-key")
+    monkeypatch.setattr(tau_dag, "_running_scillm_proxy_key", lambda: None)
     for var in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY", "SCILLM_API_KEY", "SCILLM_PROXY_API_KEY"):
         monkeypatch.delenv(var, raising=False)
 
     assert tau_dag.default_scillm_api_key() == "running-proxy-key"
+
+
+def test_default_scillm_api_key_prefers_running_proxy_over_stale_deployment_env(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    env_file = tmp_path / "scillm.env"
+    env_file.write_text("SCILLM_MASTER_KEY=stale-deployment-key\n", encoding="utf-8")
+    monkeypatch.setenv("SCILLM_ENV_FILE", str(env_file))
+    for var in (
+        "SCILLM_PROXY_KEY",
+        "SCILLM_MASTER_KEY",
+        "LITELLM_MASTER_KEY",
+        "SCILLM_API_KEY",
+        "SCILLM_PROXY_API_KEY",
+    ):
+        monkeypatch.delenv(var, raising=False)
+
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout="SCILLM_MASTER_KEY=running-container-key\nLITELLM_MASTER_KEY=running-litellm-key\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr(tau_dag.subprocess, "run", fake_run)
+
+    assert tau_dag.default_scillm_api_key() == "running-container-key"
 
 
 def test_incomplete_tau_dag_request_routes_to_interview(tmp_path: Path) -> None:
@@ -2806,7 +2836,7 @@ def test_browser_tab_lifecycle_failure_blocks_tau_execution(monkeypatch, tmp_pat
     assert payload["execution"]["no_tau_execution"] is True
 
 
-def test_roundtable_browser_availability_blocks_before_lifecycle_and_tau(monkeypatch, tmp_path: Path) -> None:
+def test_roundtable_browser_availability_selects_fallback_and_continues(monkeypatch, tmp_path: Path) -> None:
     def fake_availability(*args, **kwargs):
         return {
             "schema": "ask.browser_provider_availability.v1",
@@ -2822,15 +2852,29 @@ def test_roundtable_browser_availability_blocks_before_lifecycle_and_tau(monkeyp
             "path": str(tmp_path / "runs" / "browser-provider-availability.json"),
         }
 
-    def unexpected_lifecycle(*args, **kwargs):
-        raise AssertionError("Browser lifecycle should not start when provider availability blocks")
+    seen: dict[str, object] = {}
 
-    def unexpected_tau_execution(*args, **kwargs):
-        raise AssertionError("Tau execution should not start when provider availability blocks")
+    def fake_lifecycle(input_payload, *args, **kwargs):
+        seen["lifecycle_handlers"] = list(input_payload.handlers)
+        return {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"}
+
+    def fake_tau_execution(bundle, *args, **kwargs):
+        dag = json.loads(Path(bundle["dag_path"]).read_text(encoding="utf-8"))
+        seen["dag_handlers"] = dag["context"]["handlers"]
+        claude = next(node for node in dag["nodes"] if node["context"].get("handler") == "webclaude")
+        seen["claude_model_preference"] = claude["context"]["handler_policy"].get("model_preference")
+        return {
+            "schema": "ask.tau_dag_execution.v1",
+            "status": "PASS",
+            "ok": True,
+            "mocked": False,
+            "live": True,
+            "provider_live": True,
+        }
 
     monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
-    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", unexpected_lifecycle)
-    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", unexpected_tau_execution)
+    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", fake_lifecycle)
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_tau_execution)
 
     result = CliRunner().invoke(
         tau_dag_cli.app,
@@ -2840,9 +2884,9 @@ def test_roundtable_browser_availability_blocks_before_lifecycle_and_tau(monkeyp
             "--repo",
             "local/agent-skills",
             "--target",
-            "blocked-browser-availability",
+            "fallback-browser-availability",
             "--immutable-goal",
-            "Do not submit browser prompts while a requested provider is rate limited.",
+            "Record provider cooldown and continue the roundtable with the best available replacement.",
             "--handler",
             "webgpt",
             "--handler",
@@ -2855,20 +2899,25 @@ def test_roundtable_browser_availability_blocks_before_lifecycle_and_tau(monkeyp
         ],
     )
 
-    assert result.exit_code == 4
+    assert result.exit_code == 0
     payload = json.loads(result.stdout)
-    assert payload["status"] == "NEEDS_ATTENTION"
+    assert payload["status"] == "PASS"
     assert payload["live"] is True
-    assert payload["browser_tab_lifecycle"] == {"status": "skipped", "mode": "auto"}
     assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
-    assert payload["execution"]["blocked_reason"] == "browser_provider_unavailable_preflight"
-    assert payload["execution"]["failure_code"] == "browser_provider_rate_limited"
-    assert payload["execution"]["limited_providers"] == ["webgpt"]
-    assert payload["execution"]["no_tau_execution"] is True
-    assert "browser-availability" in payload["execution"]["next_command"]
+    selection = payload["browser_provider_selection"]
+    assert selection["status"] == "ADJUSTED"
+    assert selection["limited_providers"] == ["webgpt"]
+    assert selection["removed_handlers"] == ["webgpt"]
+    assert selection["fallback_handlers"] == ["webgemini"]
+    assert selection["active_handlers"] == ["webclaude", "webgemini"]
+    assert selection["cooldown_seconds"] == 600
+    assert "skills/ticket/run.sh bug" in selection["ticket_command"]
+    assert seen["lifecycle_handlers"] == ["webclaude", "webgemini"]
+    assert seen["dag_handlers"] == ["webclaude", "webgemini"]
+    assert seen["claude_model_preference"] == "Fable 5 High"
 
 
-def test_compete_browser_availability_blocks_before_lifecycle_and_tau(monkeypatch, tmp_path: Path) -> None:
+def test_compete_browser_availability_selects_fallback_and_continues(monkeypatch, tmp_path: Path) -> None:
     def fake_availability(*args, **kwargs):
         return {
             "schema": "ask.browser_provider_availability.v1",
@@ -2883,13 +2932,91 @@ def test_compete_browser_availability_blocks_before_lifecycle_and_tau(monkeypatc
             },
         }
 
-    def unexpected_lifecycle(*args, **kwargs):
-        raise AssertionError("Browser lifecycle should not start when provider availability blocks")
+    seen: dict[str, object] = {}
 
-    def unexpected_tau_execution(*args, **kwargs):
-        raise AssertionError("Tau execution should not start when provider availability blocks")
+    def fake_lifecycle(input_payload, *args, **kwargs):
+        seen["lifecycle_handlers"] = list(input_payload.handlers)
+        return {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"}
+
+    def fake_tau_execution(bundle, *args, **kwargs):
+        dag = json.loads(Path(bundle["dag_path"]).read_text(encoding="utf-8"))
+        seen["dag_handlers"] = dag["context"]["handlers"]
+        claude = next(node for node in dag["nodes"] if node["context"].get("handler") == "webclaude")
+        seen["claude_model_preference"] = claude["context"]["handler_policy"].get("model_preference")
+        return {
+            "schema": "ask.tau_dag_execution.v1",
+            "status": "PASS",
+            "ok": True,
+            "mocked": False,
+            "live": True,
+            "provider_live": True,
+        }
 
     monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
+    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", fake_lifecycle)
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_tau_execution)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "compete",
+            "Each candidate must answer PING_RESULT: 4.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "fallback-compete-browser-availability",
+            "--immutable-goal",
+            "Record provider cooldown and continue the competition with the best available replacement.",
+            "--handler",
+            "webgpt",
+            "--handler",
+            "webkimi",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "PASS"
+    assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
+    selection = payload["browser_provider_selection"]
+    assert selection["status"] == "ADJUSTED"
+    assert selection["limited_providers"] == ["webgpt"]
+    assert selection["active_handlers"] == ["webkimi", "webclaude"]
+    assert selection["fallback_handlers"] == ["webclaude"]
+    assert "skills/ticket/run.sh bug" in selection["ticket_command"]
+    assert seen["lifecycle_handlers"] == ["webkimi", "webclaude"]
+    assert seen["dag_handlers"] == ["webkimi", "webclaude"]
+    assert seen["claude_model_preference"] == "Opus 5 High"
+
+
+def test_browser_availability_blocks_when_not_enough_available_participants(monkeypatch, tmp_path: Path) -> None:
+    def fake_availability(*args, **kwargs):
+        return {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "NEEDS_ATTENTION",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "requested_providers": ["webgpt", "webkimi"],
+            "providers": {
+                "webgpt": {"provider_limited": True, "checked_tabs": [{"tab_id": "837362610"}]},
+                "webkimi": {"provider_limited": True, "checked_tabs": [{"tab_id": "837362611"}]},
+            },
+        }
+
+    def unexpected_lifecycle(*args, **kwargs):
+        raise AssertionError("Browser lifecycle should not start without enough available participants")
+
+    def unexpected_tau_execution(*args, **kwargs):
+        raise AssertionError("Tau execution should not start without enough available participants")
+
+    monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
+    monkeypatch.setattr(tau_dag_cli, "_fallback_provider_order", lambda request: [])
     monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", unexpected_lifecycle)
     monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", unexpected_tau_execution)
 
@@ -2901,9 +3028,9 @@ def test_compete_browser_availability_blocks_before_lifecycle_and_tau(monkeypatc
             "--repo",
             "local/agent-skills",
             "--target",
-            "blocked-compete-browser-availability",
+            "blocked-compete-no-available-provider",
             "--immutable-goal",
-            "Do not submit competition browser prompts while a requested provider is rate limited.",
+            "Block only when no sufficient provider set remains.",
             "--handler",
             "webgpt",
             "--handler",
@@ -2919,10 +3046,9 @@ def test_compete_browser_availability_blocks_before_lifecycle_and_tau(monkeypatc
     assert result.exit_code == 4
     payload = json.loads(result.stdout)
     assert payload["status"] == "NEEDS_ATTENTION"
-    assert payload["browser_tab_lifecycle"] == {"status": "skipped", "mode": "auto"}
-    assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
-    assert payload["execution"]["blocked_reason"] == "browser_provider_unavailable_preflight"
-    assert payload["execution"]["limited_providers"] == ["webgpt"]
+    assert payload["browser_provider_selection"]["status"] == "BLOCKED"
+    assert payload["execution"]["blocked_reason"] == "browser_provider_selection_insufficient_participants"
+    assert payload["execution"]["limited_providers"] == ["webgpt", "webkimi"]
     assert payload["execution"]["no_tau_execution"] is True
 
 

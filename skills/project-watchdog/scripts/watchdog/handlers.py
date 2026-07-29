@@ -861,12 +861,22 @@ def handle_ticket_repair(
         )
         return result
 
-    result["commands"].append(github.issue_edit(repo, issue_number, remove=[config.LEASE_LABEL]))
+    # Mark the repair done and stop routing it. The ticket stays OPEN because the
+    # work has not landed -- it is a branch awaiting review -- but leaving it
+    # routable made cron re-dispatch every tick, and each dispatch reset the
+    # branch over the previous repair.
+    result["commands"].append(
+        github.issue_edit(
+            repo, issue_number,
+            add=[config.DONE_LABEL],
+            remove=[config.LEASE_LABEL],
+        )
+    )
     result.update(
         {
             "ok": True,
             "status": "COMPLETED",
-            "summary": f"tau dag-run completed for {repo}#{issue_number}",
+            "summary": f"$ask tau-dag completed for {repo}#{issue_number}; branch {prepared.get('branch')} awaiting review",
         }
     )
     log_event(run_id, "handle_ticket_repair_finish", issue=issue_number, ok=True)

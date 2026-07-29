@@ -1,0 +1,96 @@
+{
+  "version": 2,
+  "skill": "project-watchdog",
+  "trials": 3,
+  "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root",
+  "claims": {
+    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions",
+    "does_not_prove": "that a live repair, closure audit, or completion attestation succeeds. Those dispatch models through $ask/Tau and are proven only by a live receipt read back from the produced artifact, not by this fixture."
+  },
+  "cases": [
+    {
+      "name": "sanity-gates",
+      "type": "positive",
+      "command": ["bash", "../sanity.sh"],
+      "expected": {"exit_code": 0, "stdout_contains": ["0 failed"]}
+    },
+    {
+      "name": "unit-suite",
+      "type": "positive",
+      "command": ["uv", "run", "--project", "..", "pytest", "../tests", "-q"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "unknown-project-fails-closed-and-names-it",
+      "type": "negative",
+      "command": ["bash", "-c", "../run.sh tick --project not-a-real-project 2>&1; echo EXIT=$?"],
+      "expected": {"exit_code": 0, "stdout_contains": ["not-a-real-project", "EXIT=2"]}
+    },
+    {
+      "name": "global-pause-refuses-to-dispatch",
+      "type": "negative",
+      "command": ["bash", "-c", "d=$(mktemp -d); mkdir -p $d/receipts; printf '{\"schema\":\"agent_skills.project_watchdog.registry.v1\",\"projects\":[{\"project_id\":\"probe\",\"repo\":\"o/r\",\"worktree\":\"/nonexistent\"}]}' > $d/p.json; printf '{\"global\":{\"state\":\"paused\"},\"projects\":{\"probe\":{\"state\":\"active\"}}}' > $d/state.json; PROJECT_WATCHDOG_STATE_ROOT=$d PROJECT_WATCHDOG_PROJECTS_PATH=$d/p.json ../run.sh tick --apply --project probe | grep -o '\"status\": \"[A-Z]*\"' | head -1; echo DIRS=$(find $d/receipts -maxdepth 1 -type d -name 'project-watchdog-2*' | wc -l)"],
+      "expected": {"exit_code": 0, "stdout_contains": ["SKIPPED", "DIRS=0"]}
+    },
+    {
+      "name": "finished-repair-stops-being-routable",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys; sys.path.insert(0,'../scripts'); from watchdog import registry, config; i={'number':1,'labels':[{'name':'agent-work'},{'name':config.DONE_LABEL}],'body':'target: src/x.py'}; a,r=registry.classify_issue_with_reason(i); assert a is None and r=='awaiting_review', (a,r); print('REFUSED', r)"],
+      "expected": {"exit_code": 0, "stdout_contains": ["REFUSED awaiting_review"]}
+    },
+    {
+      "name": "worktree-holding-unmerged-work-is-not-reset",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import registry; d=pathlib.Path(tempfile.mkdtemp()); wt=d/'wt'; wt.mkdir(); calls=[];\nregistry.run_cmd=lambda cmd, timeout_s=None: (calls.append(cmd), {'exit_code':0,'stdout':'9feb862 Fix partial-window rolling means\\n' if 'log' in cmd else '','stderr':''})[1]\nout=registry.prepare_repair_worktree(d/'repo', wt, 1); assert out['ok'] is False, out; assert 'lose that work' in out['error']; assert not any('remove' in c for c in calls); print('PROTECTED', out['unmerged'][0])"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PROTECTED 9feb862"]}
+    },
+    {
+      "name": "tick-does-not-revert-an-operator-state-change",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys, json, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import commands, config; p=pathlib.Path(tempfile.mkdtemp())/'state.json'; config.state_path=lambda: p; p.write_text(json.dumps({'projects':{'tau':{'state':'active'}}})); stale={'projects':{'tau':{'state':'active'}},'last_served_project':'tau'}; live=json.loads(p.read_text()); live['projects']['new-project']={'state':'active'}; p.write_text(json.dumps(live)); commands._persist_tick_state(stale); after=json.loads(p.read_text()); assert 'new-project' in after['projects'], after; assert after['last_served_project']=='tau'; print('SURVIVED', sorted(after['projects']))"],
+      "expected": {"exit_code": 0, "stdout_contains": ["SURVIVED", "new-project"]}
+    },
+    {
+      "name": "duplicate-closure-is-not-audited-for-proof",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys, json, datetime as dt; sys.path.insert(0,'../scripts'); from watchdog import registry; now=dt.datetime(2026,7,29,tzinfo=dt.UTC); ts=(now-dt.timedelta(hours=1)).isoformat().replace('+00:00','Z');\nmk=lambda n,reason: {'number':n,'title':'t','body':'','labels':[{'name':'agent-work'}],'closedAt':ts,'stateReason':reason,'url':'u'}\nregistry.run_cmd=lambda cmd, timeout_s=None: {'exit_code':0,'stdout':json.dumps([mk(1,'COMPLETED'),mk(2,'NOT_PLANNED')]),'stderr':''}\np=registry.list_closed_for_audit('r',{'repo':'o/r','project_id':'p'},now=now.timestamp()); assert [i['number'] for i in p]==[1], p; print('SKIPPED_DUPLICATE ok')"],
+      "expected": {"exit_code": 0, "stdout_contains": ["SKIPPED_DUPLICATE ok"]}
+    },
+    {
+      "name": "single-seat-audit-panel-is-refused",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import handlers; calls=[]; handlers.run_cmd=lambda *a, **k: calls.append(a) or {'exit_code':0}; d=pathlib.Path(tempfile.mkdtemp()); proj={'project_id':'p','repo':'o/r','worktree':str(d),'closure_auditors':['claude-opus-4-8']}; iss={'number':9,'title':'t','body':'','labels':[],'url':'u','closedAt':'2026-07-29T00:00:00Z','stateReason':'COMPLETED'}; res=handlers.handle_closure_audit('r', d, proj, iss, apply=True); assert res['status']=='BLOCKED', res; assert 'two distinct seats' in res['summary']; assert not calls; print('PANEL_REFUSED ok')"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PANEL_REFUSED ok"]}
+    },
+    {
+      "name": "identical-creator-and-reviewer-are-refused",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys; sys.path.insert(0,'../scripts'); from watchdog import config; c=config.repair_creator({}); r=config.repair_reviewer({}); assert c!=r, (c,r); assert 'codex' not in r and 'gpt' not in r, r; print('SEATS_DIFFER', c, r)"],
+      "expected": {"exit_code": 0, "stdout_contains": ["SEATS_DIFFER codex"]}
+    },
+    {
+      "name": "an-unreadable-target-does-not-block-the-fleet",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys; sys.path.insert(0,'../scripts'); from watchdog import registry as g; U=g.UNKNOWN_TARGET; assert g.targets_are_blocked({'skills/ticket'}, {U}) is False; assert g.targets_are_blocked({U},{U}) is True; assert g.targets_are_blocked({U}, set()) is False; print('UNKNOWN_ISOLATED ok')"],
+      "expected": {"exit_code": 0, "stdout_contains": ["UNKNOWN_ISOLATED ok"]}
+    },
+    {
+      "name": "a-failed-lease-stops-the-dispatch",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import handlers; res={'ok':True,'commands':[]}; handlers.github.issue_edit=lambda *a, **k: {'exit_code':1,'stderr':\"label 'agent-active' not found\"}; ok=handlers.acquire_lease('r', res, 'o/r', 7); assert ok is False; assert res['status']=='BLOCKED'; assert 'ensure-labels' in res['summary']; print('LEASE_FAILCLOSED ok')"],
+      "expected": {"exit_code": 0, "stdout_contains": ["LEASE_FAILCLOSED ok"]}
+    },
+    {
+      "name": "a-stall-that-needs-a-human-is-not-reported-as-success",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "-c", "import sys; sys.path.insert(0,'../scripts'); from watchdog import commands; r={'ok':True,'status':'SKIPPED'}; commands._record_fleet_stall(r,[{'project_id':'a','reason':'project_state_paused'},{'project_id':'b','reason':'lane_busy'}]); assert r['ok'] is False and r['status']=='NEEDS_ATTENTION', r; q={'ok':True,'status':'SKIPPED'}; commands._record_fleet_stall(q,[{'project_id':'a','reason':'lane_busy'}]); assert q['ok'] is True, q; print('STALL_HONEST ok')"],
+      "expected": {"exit_code": 0, "stdout_contains": ["STALL_HONEST ok"]}
+    },
+    {
+      "name": "path-literals-never-contain-shell-variables",
+      "type": "adversarial",
+      "command": ["uv", "run", "--project", "..", "python", "../scripts/check_path_literals.py", "../scripts"],
+      "expected": {"exit_code": 0}
+    }
+  ]
+}

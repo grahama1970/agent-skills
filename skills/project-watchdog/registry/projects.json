@@ -294,6 +294,23 @@
         "Paused until a bounded one-issue runner exists. The Makefile exposes recall, multihop, propose, and prune targets but none is a bounded issue tick, and 'uv run pytest -q' is a placeholder verification command, not a repair runner.",
         "Third routing vocabulary in the fleet: this repo labels issues 'ready-for-agent' + 'area:*', while routing expects 'agent-work' + 'executor:local' and /ticket emits 'type:*' + 'route:*'."
       ]
+    },
+    {
+      "project_id": "watchdog-probe",
+      "display_name": "Watchdog Probe",
+      "repo": "grahama1970/watchdog-probe",
+      "worktree": "/home/graham/workspace/experiments/watchdog-probe",
+      "status": "registered",
+      "runner_kind": "project-local",
+      "state_policy": {
+        "default_state": "active",
+        "resume_allowed_by": [
+          "human"
+        ]
+      },
+      "notes": [
+        "Controlled probe project for exercising repair, closure audit and completion attestation end to end."
+      ]
     }
   ]
 }

@@ -32,6 +32,7 @@ DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS = 900
 BROWSER_COMMAND_GRACE_SECONDS = 180
 COMPETE_WEBCLAUDE_MODEL = "Opus 5 High"
+ROUNDTABLE_WEBCLAUDE_MODEL = "Fable 5 High"
 TERMINAL_STATUSES = {"PASS", "DEGRADED", "NEEDS_ATTENTION", "BLOCKED", "FAILED", "ERROR"}
 ROUNDTABLE_TOPOLOGIES = {"concurrent", "sequential"}
 SUPPORTED_DAG_TEMPLATES = {
@@ -496,10 +497,14 @@ def unsupported_model_routes(input: TauDagCompileInput) -> list[str]:
 def default_scillm_api_key() -> str:
     """Resolve the scillm bearer per the tau#114 auth contract.
 
-    The ambient proxy key wins because it reflects the running proxy's current
-    authentication contract. Other explicitly exported keys follow, then the
-    deployment .env is used only as a fallback.
+    The running Docker proxy wins because it is the service that receives the
+    request. Ambient environment keys follow; they may have been populated from
+    a stale local dotenv at import time. The deployment .env is used only as a
+    final fallback.
     """
+    docker_key = _running_scillm_proxy_key()
+    if docker_key:
+        return docker_key
     for var in (
         "SCILLM_PROXY_KEY",
         "SCILLM_MASTER_KEY",
@@ -523,6 +528,41 @@ def default_scillm_api_key() -> str:
                 if line.startswith(f"{var}=") and line.split("=", 1)[1].strip():
                     return line.split("=", 1)[1].strip().strip('"')
     return DEFAULT_SCILLM_API_KEY
+
+
+def _running_scillm_proxy_key() -> str | None:
+    """Read the active SciLLM proxy key from a local running Docker container."""
+    for container in ("docker-scillm-proxy-1", "scillm-proxy"):
+        try:
+            result = subprocess.run(
+                [
+                    "docker",
+                    "inspect",
+                    container,
+                    "--format",
+                    "{{range .Config.Env}}{{println .}}{{end}}",
+                ],
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=5,
+            )
+        except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+            continue
+        if result.returncode != 0:
+            continue
+        env: dict[str, str] = {}
+        for line in result.stdout.splitlines():
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            env[key.strip()] = value.strip()
+        for var in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY", "SCILLM_PROXY_KEY", "SCILLM_API_KEY"):
+            value = env.get(var)
+            if value:
+                return value.strip().strip('"')
+    return None
 
 
 def build_interview_packet(
@@ -2118,6 +2158,12 @@ def _handler_policy(handler: str, *, provider_hint: str = "", workflow_mode: str
             policy["model_preference_scope"] = "ask_compete_default"
             policy["model_preference_reason"] = (
                 "Competition mode defaults the webclaude browser seat to Claude Opus 5 High."
+            )
+        elif workflow_mode == "roundtable" and handler == "webclaude":
+            policy["model_preference"] = ROUNDTABLE_WEBCLAUDE_MODEL
+            policy["model_preference_scope"] = "ask_roundtable_default"
+            policy["model_preference_reason"] = (
+                "Roundtable mode defaults the webclaude browser seat to Claude Fable 5 High."
             )
         return policy
     if _is_subagent_handler(handler, provider_hint):

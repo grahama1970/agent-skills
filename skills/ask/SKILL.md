@@ -163,14 +163,17 @@ project's deterministic proof command or artifact validation. Treat `DEGRADED`,
 peer receipts, read the recovery packet, and rerun only the affected lane or
 launch a new round when appropriate.
 
-Before launching a costly live browser panel, Ask now runs a standard read-only
+Before launching a costly live browser panel, Ask runs a standard read-only
 provider availability probe automatically. It inspects existing provider tabs
 for visible rate-limit or capacity banners and writes
-`<run_dir>/browser-provider-availability.json`; it does not submit prompts. If
-the report is `NEEDS_ATTENTION` or `ERROR`, Ask exits before creating fresh
-browser tabs or dispatching Tau, with `blocked_reason:
-browser_provider_unavailable_preflight`, `failure_code`, `limited_providers`,
-and `next_command` in the top-level execution receipt.
+`<run_dir>/browser-provider-availability.json`; it does not submit prompts.
+Provider cooldown is lane-local. If WebGPT, Grok, Kimi, Claude, Gemini, or
+another browser provider is visibly rate-limited or busy, Ask records that lane,
+writes `<run_dir>/browser-provider-selection.json`, waits no less than a
+10-minute recovery horizon for that provider, and selects the next best
+available browser provider when the workflow still has enough participants.
+Hard local probe errors, such as Surf tab-list failure or a malformed probe
+report, still fail closed before fresh tabs or Tau dispatch.
 
 Project agents can also run the same probe manually before a planned panel:
 
@@ -184,10 +187,14 @@ Project agents can also run the same probe manually before a planned panel:
   --json
 ```
 
-If the report is `NEEDS_ATTENTION`, treat the named provider as currently
-unavailable for new roundtable or competition lanes unless the human explicitly
-asks to try it anyway. This preflight is not completion proof; it only prevents
-obvious provider-throttle loops before a live DAG starts.
+If the report is `NEEDS_ATTENTION`, treat the named provider as unavailable for
+new lanes in this run unless the human explicitly asks to try it anyway. Do not
+pause healthy participants. Use the adjusted handler list from
+`browser-provider-selection.json`; if Ask cannot keep enough participants after
+filtering unavailable providers, it exits with
+`blocked_reason: browser_provider_selection_insufficient_participants`. This
+preflight is not completion proof; it prevents obvious provider-throttle loops
+before a live DAG starts.
 
 Failures must be non-silent. A failed browser/API/subagent lane must expose
 `failure_code`, `recovery_packet_path`, `next_command` or an explicit
@@ -349,16 +356,18 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   and competitions, validate this file together with Tau receipts and per-lane
   node receipts; command exit status alone is not proof.
 - **Browser cooldown evidence**: preserve
-  `browser-provider-availability.json`. Ask writes this before browser tab
+  `browser-provider-availability.json` and
+  `browser-provider-selection.json`. Ask writes these before browser tab
   lifecycle provisioning for executed browser roundtables and competitions. A
   visible WebGPT "Too many requests", WebGrok limit countdown, Kimi/Grok
-  "System is currently busy", or similar provider banner blocks the launch
-  before any prompt is submitted. That provider is unavailable for this run;
-  rerun the availability probe after the cooldown and continue with available
-  participants when the workflow allows it. Stale or background old-tab read
+  "System is currently busy", or similar provider banner marks that provider
+  unavailable for the run, records `cooldown_seconds: 600`, and selects an
+  available fallback such as WebClaude, WebGemini, or WebKimi when possible.
+  Roundtable-mode WebClaude uses Fable 5 High by default; competition-mode
+  WebClaude uses Opus 5 High by default. Stale or background old-tab read
   timeouts appear as `probe_degraded`; they are diagnostic, not proof of
   provider cooldown. Surf tab-list failure or non-timeout probe failures remain
-  `ERROR`.
+  `ERROR` and fail closed.
 - **Surf lock behavior**: Tau may launch browser handler workers concurrently,
   but Surf browser operations share `/tmp/surf.sock` and must wait on the Surf
   lock. Ask emits long `--browser-lock-timeout` / `--lock-timeout` envelopes so
@@ -375,6 +384,11 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   knows exactly when to file a `$ticket` to `$ask` at `agent-skills@main`.
   A provider-specific rate limit degrades only that provider; keep usable seats
   and select available participants instead of failing the whole panel.
+  `browser-provider-selection.json` must show `removed_handlers`,
+  `fallback_handlers`, `active_handlers`, `cooldown_seconds`, `ticket_command`,
+  and `ticket_instruction` when a requested provider was unavailable. File the
+  `$ticket` when the unavailable provider looks broken, repeats after cooldown,
+  or the packet lacks enough evidence for the project agent to recover.
   If a provider returns raw sentinel-bearing text but the cleaned response still
   contains the sentinel, classify the lane as
   `browser_clean_output_contaminated`, surface `raw_contains_sentinel`,

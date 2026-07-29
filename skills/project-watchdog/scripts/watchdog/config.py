@@ -242,6 +242,12 @@ TAU_ACTIVE_GOAL_HASH = "sha256:" + "1" * 64
 
 LEASE_LABEL = "agent-active"
 BLOCKED_LABEL = "agent-blocked"
+
+#: Applied when a repair finished and left a branch for review. The ticket stays
+#: open -- the work has not landed -- but it must stop being routable, or cron
+#: re-dispatches it every tick and each dispatch resets the branch over the last
+#: repair. Observed on watchdog-probe#1.
+DONE_LABEL = "agent-done"
 DONE_LABEL = "agent-done"
 READY_LABEL = "agent-work"
 
