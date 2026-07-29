@@ -54,6 +54,16 @@ VOCAB_FILE = Path(__file__).parent.parent / "references" / "capability_vocabular
 FRONTMATTER_RE = re.compile(r"\A---\n(?P<frontmatter>.*?)\n---(?:\n|$)", re.DOTALL)
 LIVE_RUNTIME_DEPS = {"ask", "dogpile", "memory", "scillm", "surf"}
 LIVE_E2E_MARKERS = ("sanity-live.sh", "sanity-e2e.sh", "sanity-webgpt.sh", "scripts/live_e2e.py")
+EVAL_FIXTURES = ("fixtures/agentic_eval.json", "fixtures/eval.json")
+EVAL_PROVIDER_SKILLS = {"agentic-evals", "eval-skills"}
+EVAL_TRIGGER_PROVIDES = {
+    "agentic-evaluation",
+    "behavioral-testing",
+    "progress-tracking",
+    "readiness-scoring",
+    "skill-evaluation",
+    "task-orchestration",
+}
 
 
 def _extract_frontmatter(skill_md: Path) -> dict | None:
@@ -194,6 +204,32 @@ def validate_skill(skill_dir: Path, skills_root: Path | None = None) -> list[dic
     line_count = len(text.split("\n"))
     if line_count > 500:
         _add("CONT002", "warning", f"SKILL.md has {line_count} lines (max 500)")
+
+    # --- Agentic evaluation posture ---
+    provides_list = provides if isinstance(provides, list) else []
+    composes_list = composes if isinstance(composes, list) else []
+    requires_eval = (
+        fm.get("runtime_self_improvement") == "substantial"
+        or (skill_dir / "run.sh").exists()
+        or (skill_dir / "sanity.sh").exists()
+        or bool(composes_list)
+        or bool(set(provides_list) & EVAL_TRIGGER_PROVIDES)
+    )
+    has_eval_posture = (
+        skill_dir.name in EVAL_PROVIDER_SKILLS
+        or any((skill_dir / fixture).exists() for fixture in EVAL_FIXTURES)
+        or any(dep in EVAL_PROVIDER_SKILLS for dep in composes_list)
+        or "eval_not_required" in fm
+        or "eval_not_required" in text
+    )
+    if requires_eval and not has_eval_posture:
+        _add(
+            "EVAL001",
+            "warning",
+            "Skill has runtime/orchestration surface but no agentic eval posture "
+            "(add fixtures/agentic_eval.json, compose/delegate to agentic-evals, "
+            "or document eval_not_required)",
+        )
 
     # --- Storage checks ---
     for d in [".venv", "node_modules", "models", "outputs", "logs", "data",
