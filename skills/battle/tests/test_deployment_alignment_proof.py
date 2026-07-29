@@ -63,6 +63,8 @@ def _git_repo(path: Path) -> Path:
     _run(["git", "config", "user.name", "Battle Test"], path)
     (path / "skills" / "battle").mkdir(parents=True)
     (path / "skills" / "battle" / "SKILL.md").write_text("battle\n", encoding="utf-8")
+    (path / ".opencode").mkdir()
+    (path / ".opencode" / "skills").symlink_to("/tmp/agent-skills-test-skills")
     _run(["git", "add", "."], path)
     _run(["git", "commit", "-m", "seed"], path)
     commit = _run(["git", "rev-parse", "HEAD"], path).stdout.strip()

@@ -10,6 +10,7 @@ import subprocess
 import tarfile
 import tempfile
 from pathlib import Path
+from tarfile import TarInfo
 from typing import Any
 
 from .packaged_deployment_smoke import _now_utc
@@ -201,8 +202,18 @@ def _extract_git_archive(*, repo_root: Path, commit: str, dest: Path) -> None:
     tar_path = dest / ".archive.tar"
     tar_path.write_bytes(archive.stdout)
     with tarfile.open(tar_path, "r") as tar:
-        tar.extractall(dest, filter="data")
+        tar.extractall(dest, filter=_git_archive_filter)
     tar_path.unlink()
+
+
+def _git_archive_filter(member: TarInfo, dest_path: str) -> TarInfo | None:
+    # The archive was produced by local `git archive`; keep Git-tracked symlinks
+    # while rejecting paths that would escape the release root.
+    del dest_path
+    path = Path(member.name)
+    if path.is_absolute() or ".." in path.parts:
+        raise tarfile.FilterError(f"unsafe archive path: {member.name}")
+    return member
 
 
 def _activate_symlink(*, current_link: Path, release_dir: Path) -> None:
