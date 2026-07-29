@@ -1937,6 +1937,7 @@ def _execute_live_trial(
     from .arena_battle_proof import _write_json as write_battle_json
 
     started = time.perf_counter()
+    trial_dir = trial_dir.resolve()
     source = _load_v13_source(battle_id=str(plan["battle_id"]), source_root=source_root)
 
     memory_dir = trial_dir / "memory"
