@@ -2,8 +2,8 @@
   "schema": "battle.websocket_mvp_packaged_receipt.v1",
   "status": "PASS",
   "mocked": false,
-  "source_commit": "76d626b035fd0c1423edba7f373c9b20f70f57f3",
-  "archive_sha256": "9eb0a130fde3d8ad1718f7f300f4979509c18ef946226bdd745787ff1c7a68c7",
+  "source_commit": "6cb2a9d13d3f7b5ef1c7c356d95de7458f9583da",
+  "archive_sha256": "4af6db5d7bae23ff5831fa37712afd29b4dafd59eeba4fb5e3ec1a7d89a165ec",
   "health": {
     "battle_id": "battle-004",
     "event_count": 36,
@@ -12,7 +12,7 @@
     "schema": "battle.live_transport_health.v1",
     "status": "PASS",
     "websocket_endpoint": "/battle/live/battle-004/ws",
-    "websocket_port": 52807
+    "websocket_port": 60955
   },
   "counts": {
     "pr8_failed": 0,

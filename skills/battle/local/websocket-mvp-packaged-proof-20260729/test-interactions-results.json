@@ -1,6 +1,6 @@
 {
   "app": "Battle Spectator",
-  "run_id": "test-interactions-20260729T192705640781Z",
+  "run_id": "test-interactions-20260729T193053040306Z",
   "total": 38,
   "passed": 38,
   "failed": 0,
@@ -14,8 +14,8 @@
       "description": "Discovered live interaction: battle:events:item:battle-004-pr6-genetic-pixi:branch_abandoned:22",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '07:00:00 PMFailed branch retained as negative evidence'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22-fresh-unique/0001_battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22_click.png",
-      "duration_ms": 836,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22-fresh-unique/0001_battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22_click.png",
+      "duration_ms": 806,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:events:item:battle-004-pr6-genetic-pixi:branch_abandoned:22'])",
@@ -44,8 +44,8 @@
       "description": "Discovered live interaction: battle:events:item:battle-004-pr6-genetic-pixi:judge_pending:21",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '07:00:00 PMJudge success event is not emitted; Judge remains'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21-fresh-unique/0001_battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21_click.png",
-      "duration_ms": 776,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21-fresh-unique/0001_battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21_click.png",
+      "duration_ms": 773,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:events:item:battle-004-pr6-genetic-pixi:judge_pending:21'])",
@@ -74,8 +74,8 @@
       "description": "Discovered live interaction: battle:events:item:battle-004-pr6-genetic-pixi:target_contact_unproven:20",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '07:00:00 PMSpecimen contacted target surface without exploit'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20-fresh-unique/0001_battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20_click.png",
-      "duration_ms": 766,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20-fresh-unique/0001_battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20_click.png",
+      "duration_ms": 742,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:events:item:battle-004-pr6-genetic-pixi:target_contact_unproven:20'])",
@@ -104,8 +104,8 @@
       "description": "Discovered live interaction: battle:events:view-all",
       "status": "PASS",
       "evidence": "clicked <BUTTON> ''",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-events-view-all-fresh-unique/0001_battle-events-view-all_click.png",
-      "duration_ms": 810,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-events-view-all-fresh-unique/0001_battle-events-view-all_click.png",
+      "duration_ms": 771,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:events:view-all'])",
@@ -134,8 +134,8 @@
       "description": "Discovered live interaction: battle:pane:left-toggle",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Hide'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-pane-left-toggle-fresh-unique/0001_battle-pane-left-toggle_click.png",
-      "duration_ms": 773,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-pane-left-toggle-fresh-unique/0001_battle-pane-left-toggle_click.png",
+      "duration_ms": 752,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:pane:left-toggle'])",
@@ -164,8 +164,8 @@
       "description": "Discovered live interaction: battle:leaderboard:item:payload-857-receipt",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '1Archive EscapeBLUE_SUCCESS: handoff.'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-leaderboard-item-payload-857-receipt-fresh-unique/0001_battle-leaderboard-item-payload-857-receipt_click.png",
-      "duration_ms": 779,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-leaderboard-item-payload-857-receipt-fresh-unique/0001_battle-leaderboard-item-payload-857-receipt_click.png",
+      "duration_ms": 765,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:leaderboard:item:payload-857-receipt'])",
@@ -194,8 +194,8 @@
       "description": "Discovered live interaction: battle:leaderboard:item:payload-857-red-1",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '2Archive Escape red-1BLUE_SUCCESS: blocked by Blue.'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-leaderboard-item-payload-857-red-1-fresh-unique/0001_battle-leaderboard-item-payload-857-red-1_click.png",
-      "duration_ms": 800,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-leaderboard-item-payload-857-red-1-fresh-unique/0001_battle-leaderboard-item-payload-857-red-1_click.png",
+      "duration_ms": 745,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:leaderboard:item:payload-857-red-1'])",
@@ -224,8 +224,8 @@
       "description": "Discovered live interaction: battle:timeline:zoom:out",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '\u2212'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-timeline-zoom-out-fresh-unique/0001_battle-timeline-zoom-out_click.png",
-      "duration_ms": 782,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-timeline-zoom-out-fresh-unique/0001_battle-timeline-zoom-out_click.png",
+      "duration_ms": 757,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:timeline:zoom:out'])",
@@ -254,8 +254,8 @@
       "description": "Discovered live interaction: battle:timeline:zoom:in",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '+'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-timeline-zoom-in-fresh-unique/0001_battle-timeline-zoom-in_click.png",
-      "duration_ms": 791,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-timeline-zoom-in-fresh-unique/0001_battle-timeline-zoom-in_click.png",
+      "duration_ms": 746,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:timeline:zoom:in'])",
@@ -284,8 +284,8 @@
       "description": "Discovered live interaction: battle:lane:payload-857-receipt",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Archive Escapepayload-857GEN 1BLOCKED HANDOFF'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-lane-payload-857-receipt-fresh-unique/0001_battle-lane-payload-857-receipt_click.png",
-      "duration_ms": 777,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-lane-payload-857-receipt-fresh-unique/0001_battle-lane-payload-857-receipt_click.png",
+      "duration_ms": 776,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:lane:payload-857-receipt'])",
@@ -314,8 +314,8 @@
       "description": "Discovered live interaction: battle:lane:collapse:payload-857-receipt",
       "status": "PASS",
       "evidence": "clicked <BUTTON> ''",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-lane-collapse-payload-857-receipt-fresh-unique/0001_battle-lane-collapse-payload-857-receipt_click.png",
-      "duration_ms": 783,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-lane-collapse-payload-857-receipt-fresh-unique/0001_battle-lane-collapse-payload-857-receipt_click.png",
+      "duration_ms": 745,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:lane:collapse:payload-857-receipt'])",
@@ -344,8 +344,8 @@
       "description": "Discovered live interaction: battle:lane:payload-857-red-1",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Archive Escapered-1 \u00b7 payload-857-red-1GEN 2BLOCKED'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-lane-payload-857-red-1-fresh-unique/0001_battle-lane-payload-857-red-1_click.png",
-      "duration_ms": 802,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-lane-payload-857-red-1-fresh-unique/0001_battle-lane-payload-857-red-1_click.png",
+      "duration_ms": 732,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:lane:payload-857-red-1'])",
@@ -374,8 +374,8 @@
       "description": "Discovered live interaction: battle:timeline:scrub",
       "status": "PASS",
       "evidence": "clicked <DIV> ''",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-timeline-scrub-fresh-unique/0001_battle-timeline-scrub_click.png",
-      "duration_ms": 784,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-timeline-scrub-fresh-unique/0001_battle-timeline-scrub_click.png",
+      "duration_ms": 735,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:timeline:scrub'])",
@@ -394,8 +394,8 @@
       "description": "Discovered live interaction: battle:pane:right-toggle",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Hide'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-pane-right-toggle-fresh-unique/0001_battle-pane-right-toggle_click.png",
-      "duration_ms": 757,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-pane-right-toggle-fresh-unique/0001_battle-pane-right-toggle_click.png",
+      "duration_ms": 730,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:pane:right-toggle'])",
@@ -424,8 +424,8 @@
       "description": "Discovered live interaction: battle:agent-pane:replay:red-0__blue-0",
       "status": "PASS",
       "evidence": "clicked <BUTTON> ' OPEN REPLAY RECEIPT'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-agent-pane-replay-red-0__blue-0-fresh-unique/0001_battle-agent-pane-replay-red-0__blue-0_click.png",
-      "duration_ms": 727,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-agent-pane-replay-red-0__blue-0-fresh-unique/0001_battle-agent-pane-replay-red-0__blue-0_click.png",
+      "duration_ms": 743,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:agent-pane:replay:red-0__blue-0'])",
@@ -454,8 +454,8 @@
       "description": "Discovered live interaction: battle:agent-pane:lifecycle-toggle",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Show'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-agent-pane-lifecycle-toggle-fresh-unique/0001_battle-agent-pane-lifecycle-toggle_click.png",
-      "duration_ms": 771,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-agent-pane-lifecycle-toggle-fresh-unique/0001_battle-agent-pane-lifecycle-toggle_click.png",
+      "duration_ms": 749,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:agent-pane:lifecycle-toggle'])",
@@ -484,8 +484,8 @@
       "description": "Discovered live interaction: battle:agent-pane:tab:summary",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Summary'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-agent-pane-tab-summary-fresh-unique/0001_battle-agent-pane-tab-summary_click.png",
-      "duration_ms": 763,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-agent-pane-tab-summary-fresh-unique/0001_battle-agent-pane-tab-summary_click.png",
+      "duration_ms": 732,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:agent-pane:tab:summary'])",
@@ -514,8 +514,8 @@
       "description": "Discovered live interaction: battle:agent-pane:tab:live",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Live'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-agent-pane-tab-live-fresh-unique/0001_battle-agent-pane-tab-live_click.png",
-      "duration_ms": 775,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-agent-pane-tab-live-fresh-unique/0001_battle-agent-pane-tab-live_click.png",
+      "duration_ms": 750,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:agent-pane:tab:live'])",
@@ -544,8 +544,8 @@
       "description": "Discovered live interaction: battle:agent-pane:tab:logs",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Logs'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-agent-pane-tab-logs-fresh-unique/0001_battle-agent-pane-tab-logs_click.png",
-      "duration_ms": 770,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-agent-pane-tab-logs-fresh-unique/0001_battle-agent-pane-tab-logs_click.png",
+      "duration_ms": 758,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:agent-pane:tab:logs'])",
@@ -574,8 +574,8 @@
       "description": "Discovered live interaction: battle:agent-pane:tab:skills",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Skills'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-agent-pane-tab-skills-fresh-unique/0001_battle-agent-pane-tab-skills_click.png",
-      "duration_ms": 788,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-agent-pane-tab-skills-fresh-unique/0001_battle-agent-pane-tab-skills_click.png",
+      "duration_ms": 746,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:agent-pane:tab:skills'])",
@@ -604,7 +604,7 @@
       "description": "Discovered live interaction: battle:agent-pane:tab:receipts",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Receipts'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-agent-pane-tab-receipts-fresh-unique/0001_battle-agent-pane-tab-receipts_click.png",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-agent-pane-tab-receipts-fresh-unique/0001_battle-agent-pane-tab-receipts_click.png",
       "duration_ms": 741,
       "assertions": [
         {
@@ -634,8 +634,8 @@
       "description": "Discovered live interaction: battle:control:playhead",
       "status": "PASS",
       "evidence": "clicked <BUTTON> ''",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-playhead-fresh-unique/0001_battle-control-playhead_click.png",
-      "duration_ms": 773,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-playhead-fresh-unique/0001_battle-control-playhead_click.png",
+      "duration_ms": 754,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:playhead'])",
@@ -664,7 +664,7 @@
       "description": "Discovered live interaction: battle:control:highlight-next",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Next highlight'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-highlight-next-fresh-unique/0001_battle-control-highlight-next_click.png",
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-highlight-next-fresh-unique/0001_battle-control-highlight-next_click.png",
       "duration_ms": 765,
       "assertions": [
         {
@@ -694,8 +694,8 @@
       "description": "Discovered live interaction: battle:control:highlight-reel",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Highlights'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-highlight-reel-fresh-unique/0001_battle-control-highlight-reel_click.png",
-      "duration_ms": 773,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-highlight-reel-fresh-unique/0001_battle-control-highlight-reel_click.png",
+      "duration_ms": 741,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:highlight-reel'])",
@@ -724,8 +724,8 @@
       "description": "Discovered live interaction: battle:control:sound-arm",
       "status": "PASS",
       "evidence": "clicked <BUTTON> ' Spectator mode click to arm'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-sound-arm-fresh-unique/0001_battle-control-sound-arm_click.png",
-      "duration_ms": 774,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-sound-arm-fresh-unique/0001_battle-control-sound-arm_click.png",
+      "duration_ms": 742,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:sound-arm'])",
@@ -754,8 +754,8 @@
       "description": "Discovered live interaction: battle:control:speed",
       "status": "PASS",
       "evidence": "clicked <DIV> '1x2x4x8x'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-speed-fresh-unique/0001_battle-control-speed_click.png",
-      "duration_ms": 773,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-speed-fresh-unique/0001_battle-control-speed_click.png",
+      "duration_ms": 755,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:speed'])",
@@ -784,8 +784,8 @@
       "description": "Discovered live interaction: battle:control:speed:1x",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '1x'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-speed-1x-fresh-unique/0001_battle-control-speed-1x_click.png",
-      "duration_ms": 772,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-speed-1x-fresh-unique/0001_battle-control-speed-1x_click.png",
+      "duration_ms": 737,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:speed:1x'])",
@@ -814,8 +814,8 @@
       "description": "Discovered live interaction: battle:control:speed:2x",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '2x'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-speed-2x-fresh-unique/0001_battle-control-speed-2x_click.png",
-      "duration_ms": 794,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-speed-2x-fresh-unique/0001_battle-control-speed-2x_click.png",
+      "duration_ms": 758,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:speed:2x'])",
@@ -844,8 +844,8 @@
       "description": "Discovered live interaction: battle:control:speed:4x",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '4x'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-speed-4x-fresh-unique/0001_battle-control-speed-4x_click.png",
-      "duration_ms": 778,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-speed-4x-fresh-unique/0001_battle-control-speed-4x_click.png",
+      "duration_ms": 762,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:speed:4x'])",
@@ -874,8 +874,8 @@
       "description": "Discovered live interaction: battle:control:speed:8x",
       "status": "PASS",
       "evidence": "clicked <BUTTON> '8x'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-speed-8x-fresh-unique/0001_battle-control-speed-8x_click.png",
-      "duration_ms": 790,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-speed-8x-fresh-unique/0001_battle-control-speed-8x_click.png",
+      "duration_ms": 732,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:speed:8x'])",
@@ -904,8 +904,8 @@
       "description": "Discovered live interaction: battle:toolbar:filter:all",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'All Lanes'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-toolbar-filter-all-fresh-unique/0001_battle-toolbar-filter-all_click.png",
-      "duration_ms": 790,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-toolbar-filter-all-fresh-unique/0001_battle-toolbar-filter-all_click.png",
+      "duration_ms": 729,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:toolbar:filter:all'])",
@@ -934,8 +934,8 @@
       "description": "Discovered live interaction: battle:toolbar:filter:red",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Red Team'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-toolbar-filter-red-fresh-unique/0001_battle-toolbar-filter-red_click.png",
-      "duration_ms": 798,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-toolbar-filter-red-fresh-unique/0001_battle-toolbar-filter-red_click.png",
+      "duration_ms": 769,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:toolbar:filter:red'])",
@@ -964,8 +964,8 @@
       "description": "Discovered live interaction: battle:toolbar:filter:blue",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Blue Team'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-toolbar-filter-blue-fresh-unique/0001_battle-toolbar-filter-blue_click.png",
-      "duration_ms": 795,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-toolbar-filter-blue-fresh-unique/0001_battle-toolbar-filter-blue_click.png",
+      "duration_ms": 759,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:toolbar:filter:blue'])",
@@ -994,8 +994,8 @@
       "description": "Discovered live interaction: battle:toolbar:filter:useful",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Useful'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-toolbar-filter-useful-fresh-unique/0001_battle-toolbar-filter-useful_click.png",
-      "duration_ms": 789,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-toolbar-filter-useful-fresh-unique/0001_battle-toolbar-filter-useful_click.png",
+      "duration_ms": 761,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:toolbar:filter:useful'])",
@@ -1024,8 +1024,8 @@
       "description": "Discovered live interaction: battle:toolbar:filter:receipt",
       "status": "PASS",
       "evidence": "clicked <BUTTON> 'Receipts'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-toolbar-filter-receipt-fresh-unique/0001_battle-toolbar-filter-receipt_click.png",
-      "duration_ms": 728,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-toolbar-filter-receipt-fresh-unique/0001_battle-toolbar-filter-receipt_click.png",
+      "duration_ms": 738,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:toolbar:filter:receipt'])",
@@ -1054,8 +1054,8 @@
       "description": "Discovered live interaction: battle:control:event:blue-patch",
       "status": "PASS",
       "evidence": "clicked <BUTTON> ' Blue patch proof'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-event-blue-patch-fresh-unique/0001_battle-control-event-blue-patch_click.png",
-      "duration_ms": 779,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-event-blue-patch-fresh-unique/0001_battle-control-event-blue-patch_click.png",
+      "duration_ms": 750,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:event:blue-patch'])",
@@ -1084,8 +1084,8 @@
       "description": "Discovered live interaction: battle:control:event:blue-block",
       "status": "PASS",
       "evidence": "clicked <BUTTON> ' Blue block proof'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-control-event-blue-block-fresh-unique/0001_battle-control-event-blue-block_click.png",
-      "duration_ms": 767,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-control-event-blue-block-fresh-unique/0001_battle-control-event-blue-block_click.png",
+      "duration_ms": 742,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:control:event:blue-block'])",
@@ -1114,8 +1114,8 @@
       "description": "Discovered live interaction: battle:stream:jsonl-open",
       "status": "PASS",
       "evidence": "clicked <BUTTON> ' Receipt stream'",
-      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/test-interactions/battle-stream-jsonl-open-fresh-unique/0001_battle-stream-jsonl-open_click.png",
-      "duration_ms": 794,
+      "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/test-interactions/battle-stream-jsonl-open-fresh-unique/0001_battle-stream-jsonl-open_click.png",
+      "duration_ms": 748,
       "assertions": [
         {
           "check": "assert_visible([data-qid='battle:stream:jsonl-open'])",

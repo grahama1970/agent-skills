@@ -1,6 +1,6 @@
 {
   "app": "Battle Spectator",
-  "base_url": "http://127.0.0.1:57083/#battle",
+  "base_url": "http://127.0.0.1:33751/#battle",
   "discovery": {
     "focus": "patched live-route controls; one unique hash route per element to force remount",
     "generated_at": "2026-07-29T14:19:26.738328+00:00",
@@ -25,7 +25,7 @@
         }
       ],
       "name": "battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22-fresh",
       "qid_compliance": false
     },
     {
@@ -45,7 +45,7 @@
         }
       ],
       "name": "battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21-fresh",
       "qid_compliance": false
     },
     {
@@ -65,7 +65,7 @@
         }
       ],
       "name": "battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20-fresh",
       "qid_compliance": false
     },
     {
@@ -85,7 +85,7 @@
         }
       ],
       "name": "battle-events-view-all-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-events-view-all-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-events-view-all-fresh",
       "qid_compliance": false
     },
     {
@@ -105,7 +105,7 @@
         }
       ],
       "name": "battle-pane-left-toggle-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-pane-left-toggle-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-pane-left-toggle-fresh",
       "qid_compliance": false
     },
     {
@@ -125,7 +125,7 @@
         }
       ],
       "name": "battle-leaderboard-item-payload-857-receipt-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-leaderboard-item-payload-857-receipt-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-leaderboard-item-payload-857-receipt-fresh",
       "qid_compliance": false
     },
     {
@@ -145,7 +145,7 @@
         }
       ],
       "name": "battle-leaderboard-item-payload-857-red-1-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-leaderboard-item-payload-857-red-1-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-leaderboard-item-payload-857-red-1-fresh",
       "qid_compliance": false
     },
     {
@@ -165,7 +165,7 @@
         }
       ],
       "name": "battle-timeline-zoom-out-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-timeline-zoom-out-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-timeline-zoom-out-fresh",
       "qid_compliance": false
     },
     {
@@ -185,7 +185,7 @@
         }
       ],
       "name": "battle-timeline-zoom-in-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-timeline-zoom-in-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-timeline-zoom-in-fresh",
       "qid_compliance": false
     },
     {
@@ -205,7 +205,7 @@
         }
       ],
       "name": "battle-lane-payload-857-receipt-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-lane-payload-857-receipt-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-lane-payload-857-receipt-fresh",
       "qid_compliance": false
     },
     {
@@ -225,7 +225,7 @@
         }
       ],
       "name": "battle-lane-collapse-payload-857-receipt-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-lane-collapse-payload-857-receipt-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-lane-collapse-payload-857-receipt-fresh",
       "qid_compliance": false
     },
     {
@@ -245,7 +245,7 @@
         }
       ],
       "name": "battle-lane-payload-857-red-1-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-lane-payload-857-red-1-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-lane-payload-857-red-1-fresh",
       "qid_compliance": false
     },
     {
@@ -263,7 +263,7 @@
         }
       ],
       "name": "battle-timeline-scrub-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-timeline-scrub-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-timeline-scrub-fresh",
       "qid_compliance": false
     },
     {
@@ -283,7 +283,7 @@
         }
       ],
       "name": "battle-pane-right-toggle-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-pane-right-toggle-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-pane-right-toggle-fresh",
       "qid_compliance": false
     },
     {
@@ -303,7 +303,7 @@
         }
       ],
       "name": "battle-agent-pane-replay-red-0__blue-0-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-agent-pane-replay-red-0__blue-0-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-agent-pane-replay-red-0__blue-0-fresh",
       "qid_compliance": false
     },
     {
@@ -323,7 +323,7 @@
         }
       ],
       "name": "battle-agent-pane-lifecycle-toggle-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-agent-pane-lifecycle-toggle-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-agent-pane-lifecycle-toggle-fresh",
       "qid_compliance": false
     },
     {
@@ -343,7 +343,7 @@
         }
       ],
       "name": "battle-agent-pane-tab-summary-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-agent-pane-tab-summary-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-agent-pane-tab-summary-fresh",
       "qid_compliance": false
     },
     {
@@ -363,7 +363,7 @@
         }
       ],
       "name": "battle-agent-pane-tab-live-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-agent-pane-tab-live-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-agent-pane-tab-live-fresh",
       "qid_compliance": false
     },
     {
@@ -383,7 +383,7 @@
         }
       ],
       "name": "battle-agent-pane-tab-logs-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-agent-pane-tab-logs-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-agent-pane-tab-logs-fresh",
       "qid_compliance": false
     },
     {
@@ -403,7 +403,7 @@
         }
       ],
       "name": "battle-agent-pane-tab-skills-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-agent-pane-tab-skills-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-agent-pane-tab-skills-fresh",
       "qid_compliance": false
     },
     {
@@ -423,7 +423,7 @@
         }
       ],
       "name": "battle-agent-pane-tab-receipts-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-agent-pane-tab-receipts-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-agent-pane-tab-receipts-fresh",
       "qid_compliance": false
     },
     {
@@ -443,7 +443,7 @@
         }
       ],
       "name": "battle-control-playhead-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-playhead-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-playhead-fresh",
       "qid_compliance": false
     },
     {
@@ -463,7 +463,7 @@
         }
       ],
       "name": "battle-control-highlight-next-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-highlight-next-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-highlight-next-fresh",
       "qid_compliance": false
     },
     {
@@ -483,7 +483,7 @@
         }
       ],
       "name": "battle-control-highlight-reel-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-highlight-reel-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-highlight-reel-fresh",
       "qid_compliance": false
     },
     {
@@ -503,7 +503,7 @@
         }
       ],
       "name": "battle-control-sound-arm-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-sound-arm-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-sound-arm-fresh",
       "qid_compliance": false
     },
     {
@@ -523,7 +523,7 @@
         }
       ],
       "name": "battle-control-speed-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-speed-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-speed-fresh",
       "qid_compliance": false
     },
     {
@@ -543,7 +543,7 @@
         }
       ],
       "name": "battle-control-speed-1x-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-speed-1x-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-speed-1x-fresh",
       "qid_compliance": false
     },
     {
@@ -563,7 +563,7 @@
         }
       ],
       "name": "battle-control-speed-2x-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-speed-2x-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-speed-2x-fresh",
       "qid_compliance": false
     },
     {
@@ -583,7 +583,7 @@
         }
       ],
       "name": "battle-control-speed-4x-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-speed-4x-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-speed-4x-fresh",
       "qid_compliance": false
     },
     {
@@ -603,7 +603,7 @@
         }
       ],
       "name": "battle-control-speed-8x-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-speed-8x-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-speed-8x-fresh",
       "qid_compliance": false
     },
     {
@@ -623,7 +623,7 @@
         }
       ],
       "name": "battle-toolbar-filter-all-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-toolbar-filter-all-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-toolbar-filter-all-fresh",
       "qid_compliance": false
     },
     {
@@ -643,7 +643,7 @@
         }
       ],
       "name": "battle-toolbar-filter-red-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-toolbar-filter-red-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-toolbar-filter-red-fresh",
       "qid_compliance": false
     },
     {
@@ -663,7 +663,7 @@
         }
       ],
       "name": "battle-toolbar-filter-blue-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-toolbar-filter-blue-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-toolbar-filter-blue-fresh",
       "qid_compliance": false
     },
     {
@@ -683,7 +683,7 @@
         }
       ],
       "name": "battle-toolbar-filter-useful-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-toolbar-filter-useful-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-toolbar-filter-useful-fresh",
       "qid_compliance": false
     },
     {
@@ -703,7 +703,7 @@
         }
       ],
       "name": "battle-toolbar-filter-receipt-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-toolbar-filter-receipt-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-toolbar-filter-receipt-fresh",
       "qid_compliance": false
     },
     {
@@ -723,7 +723,7 @@
         }
       ],
       "name": "battle-control-event-blue-patch-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-event-blue-patch-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-event-blue-patch-fresh",
       "qid_compliance": false
     },
     {
@@ -743,7 +743,7 @@
         }
       ],
       "name": "battle-control-event-blue-block-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-control-event-blue-block-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-control-event-blue-block-fresh",
       "qid_compliance": false
     },
     {
@@ -763,7 +763,7 @@
         }
       ],
       "name": "battle-stream-jsonl-open-fresh-unique",
-      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333&ti=battle-stream-jsonl-open-fresh",
+      "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281&ti=battle-stream-jsonl-open-fresh",
       "qid_compliance": false
     }
   ],

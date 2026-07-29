@@ -1,7 +1,7 @@
 {
-  "host": "http://127.0.0.1:57083",
-  "liveBase": "http://127.0.0.1:47333",
-  "liveUrl": "http://127.0.0.1:57083/#battle/live?engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A47333",
+  "host": "http://127.0.0.1:33751",
+  "liveBase": "http://127.0.0.1:39281",
+  "liveUrl": "http://127.0.0.1:33751/#battle/live?engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A39281",
   "mocked": false,
   "live": "local_http_sse_adapter",
   "checks": [
@@ -33,7 +33,7 @@
     {
       "id": "6-adapter-health",
       "pass": true,
-      "detail": "{\"battle_id\":\"battle-004\",\"event_count\":36,\"last_seq\":36,\"run_id\":\"arena-parent-spawn-20260707T220426Z\",\"schema\":\"battle.live_transport_health.v1\",\"status\":\"PASS\",\"websocket_endpoint\":\"/battle/live/battle-004/ws\",\"websocket_port\":52807}"
+      "detail": "{\"battle_id\":\"battle-004\",\"event_count\":36,\"last_seq\":36,\"run_id\":\"arena-parent-spawn-20260707T220426Z\",\"schema\":\"battle.live_transport_health.v1\",\"status\":\"PASS\",\"websocket_endpoint\":\"/battle/live/battle-004/ws\",\"websocket_port\":60955}"
     },
     {
       "id": "7-adapter-snapshot",
@@ -98,7 +98,7 @@
     {
       "id": "18-base-url",
       "pass": true,
-      "detail": "base: http://127.0.0.1:47333"
+      "detail": "base: http://127.0.0.1:39281"
     },
     {
       "id": "19-genetic-count",

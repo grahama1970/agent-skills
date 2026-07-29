@@ -1,5 +1,5 @@
 {
-  "base_url": "http://127.0.0.1:37963",
+  "base_url": "http://127.0.0.1:42993",
   "battle_id": "battle-004",
   "claim_boundary": {
     "does_not_prove": [
@@ -21,7 +21,7 @@
   },
   "event_count": 36,
   "event_schema": "battle.live_event.v1",
-  "fixture_ref": "skills/battle/local/packaged-deployment-smoke-websocket-mvp-rerun-20260729/package-root/skills/battle/spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json",
+  "fixture_ref": "skills/battle/local/packaged-deployment-smoke-websocket-mvp-rebased-20260729/package-root/skills/battle/spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json",
   "future_last_event_id_status": 400,
   "genetic_event_types_when_live": [
     "research_started",
@@ -74,5 +74,5 @@
   "websocket_event_count": 36,
   "websocket_matches_sse_payloads": true,
   "websocket_snapshot_first": true,
-  "websocket_url": "ws://127.0.0.1:42633/battle/live/battle-004/ws"
+  "websocket_url": "ws://127.0.0.1:44683/battle/live/battle-004/ws"
 }
