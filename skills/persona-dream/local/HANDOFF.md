@@ -1,6 +1,6 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-29T16:46:00Z
+**Timestamp:** 2026-07-29T18:25:00Z
 **Active Agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target Branch:** `main`
@@ -42,8 +42,17 @@
 - **SPARTA arc-bias handoff contract:** Passed at
   `reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json`. This
   publishes the machine-checkable SPARTA consumer target and binds the exact
-  `session_arc_bias.v1` source hash, but it is not SPARTA production
-  consumption.
+  `session_arc_bias.v1` source hash.
+- **SPARTA local live arc-bias consumption:** Passed in the SPARTA repository at
+  `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716`, receipt
+  `artifacts/persona_dream_arc_bias_consumer/20260729T180334Z/RECEIPT.json`,
+  SHA-256
+  `sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813`.
+  The receipt is `mocked=false`, `live=true`, and shows the local live SPARTA
+  API consumed the current Persona Dream `session_arc_bias.v1` artifact before
+  turn 1, kept the same artifact across three turns, preserved canonical answer
+  text, preserved tone category, and used neutral fallback when no artifact was
+  supplied.
 - **Five-cycle reliability pilot:** Passed under #1041 at
   `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` with 5
   attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted
@@ -73,9 +82,10 @@
   `human_responses_complete` and `signed_human_interpretation_missing` are
   cleared. Receipt SHA-256:
   `sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89`.
-- **Status boundary:** P2.4 recognition proof does not prove perceived emotion,
-  naturalness, human listener recognition, production conversation-service
-  binding, production reliability beyond an N=5 pilot, or PCTOM-R benefit.
+- **Status boundary:** P2.4 recognition proof and the SPARTA local live receipt
+  do not prove perceived emotion, naturalness, human listener recognition,
+  deployed SPARTA production behavior beyond the local live API receipt,
+  production reliability beyond an N=5 pilot, or PCTOM-R benefit.
 - **Issue #1117 durability repair:** `CURRENT_STATUS.json` no longer cites `/tmp`
   evidence paths for the agentic-eval fixture output or rater-page screenshot;
   durable copies live under
@@ -123,8 +133,23 @@
   `reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json`,
   contract SHA-256
   `sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df`,
-  and 7/7 negative controls blocked. This proves only Persona Dream's handoff
-  contract, not SPARTA production consumption.
+  and 7/7 negative controls blocked.
+- SPARTA local live arc-bias consumption receipt:
+  `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716`
+  `artifacts/persona_dream_arc_bias_consumer/20260729T180334Z/RECEIPT.json`
+  with `PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED`, receipt SHA-256
+  `sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813`,
+  `mocked=false`, `live=true`, current Persona Dream session-arc-bias artifact
+  SHA-256
+  `sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152`,
+  contract SHA-256
+  `sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df`,
+  `arc_bias_applied_before_first_turn=true`,
+  `same_arc_bias_artifact_all_turns=true`,
+  `answer_text_unchanged=true`,
+  `tone_category_unchanged_by_arc_bias=true`, `neutral_fallback_checked=true`,
+  and failures `[]`. This proves local live API consumption only; it does not
+  prove human perception or deployed production behavior beyond the local API.
 - Reliability aggregate receipt:
   `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` with
   `PASS_LIVE_CHAIN_RELIABILITY_PILOT`, SHA-256
@@ -154,11 +179,11 @@
 
 ## 4. What is Currently Broken
 
-- **Production service not joined:** Session mood is proven in the deterministic
-  receipt runner, and Persona Dream now publishes both the arc-bias artifact and
-  the SPARTA consumer handoff contract, but the SPARTA-owned production
-  conversation service has not yet consumed that contract/artifact in a
-  production receipt.
+- **Deployed production service not proven beyond local live receipt:** Session
+  mood is proven in the deterministic receipt runner, Persona Dream publishes
+  the arc-bias artifact and SPARTA consumer handoff contract, and SPARTA has a
+  local live API consumption receipt. There is still no deployed-production
+  claim beyond that local receipt.
 - **Perception not proven:** The listener-study stimuli are ready, but
   `responses.jsonl` has 0/20 valid human responses and there is no signed human
   interpretation record. The analysis receipt now enforces that boundary.
@@ -170,13 +195,12 @@
 
 ## 5. Next Steps
 
-1. Route
-   `reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json`
-   to the SPARTA-owned production conversation consumer; do not edit SPARTA
-   from Persona Dream unless the operator routes that work in the SPARTA lane.
-2. Collect the 20 human responses for the blinded Chatterbox listener study,
+1. Collect the 20 human responses for the blinded Chatterbox listener study,
    append them to `responses.jsonl`, and add `SIGNED_INTERPRETATION.json`; do
    not substitute an LLM/self-rating.
+2. Rerun `./run.sh analyze-blinded-listener-study --json` and require it to
+   clear `human_responses_complete` and
+   `signed_human_interpretation_missing`.
 3. Return to PCTOM-R condition-benefit work such as issue `#1008` only after an
    explicit operator reprioritization or after the voice/perception gate is
    receipted.
@@ -195,6 +219,7 @@
 - **Joined live-chain receipt:** `skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json`
 - **Session arc-bias receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`
 - **SPARTA arc-bias handoff receipt:** `skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json`
+- **SPARTA local live arc-bias consumption receipt:** `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716:artifacts/persona_dream_arc_bias_consumer/20260729T180334Z/RECEIPT.json`
 - **Reliability aggregate receipt:** `skills/persona-dream/reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`
 - **Listener-study readiness receipt:** `skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
 - **Listener-study analysis receipt:** `skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json`
@@ -204,9 +229,10 @@ Use this claim boundary:
 ```text
 Persona Dream remains in P2_LIVE_CONTINUITY_CHAIN. The joined
 accepted-dream-to-live-chain receipt passes, Persona Dream publishes a
-session_arc_bias artifact and SPARTA consumer handoff contract, and an N=5
-live-chain reliability pilot passes. The immutable Embry continuity goal
-remains NOT_MET until downstream production consumption and perceptual emotion
-evidence are receipted, and production reliability/PCTOM-R benefit boundaries
-remain explicitly unproven.
+session_arc_bias artifact and SPARTA consumer handoff contract, SPARTA has a
+local live API receipt consuming that artifact, and an N=5 live-chain
+reliability pilot passes. The immutable Embry continuity goal remains NOT_MET
+until human perceptual emotion/identity evidence is receipted; deployed
+production behavior beyond the local live API, production reliability, and
+PCTOM-R benefit remain explicitly unproven.
 ```
