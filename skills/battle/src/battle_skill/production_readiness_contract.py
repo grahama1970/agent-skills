@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -72,7 +71,11 @@ def validate_production_readiness(
         "status": status,
         "mocked": False,
         "live": "receipt_contract_validation",
-        "source_commit": _git_rev_parse(repo_root),
+        "repo_root": str(repo_root),
+        "local_source_commits": {
+            "containerized_package": _package_source_commit(containerized),
+            "packaged_package": _package_source_commit(packaged) if packaged_receipt is not None else None,
+        },
         "local_working_frontend_backend_status": "PASS" if not errors else "FAIL",
         "local_checks": local_checks,
         "external_checks": external_checks,
@@ -186,12 +189,7 @@ def _load_receipt(path: Path) -> dict[str, Any]:
     return data
 
 
-def _git_rev_parse(repo_root: Path) -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=repo_root,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    return result.stdout.strip() if result.returncode == 0 else "UNKNOWN"
+def _package_source_commit(receipt: dict[str, Any]) -> str | None:
+    package = receipt.get("package") if isinstance(receipt.get("package"), dict) else {}
+    value = package.get("source_commit")
+    return value if isinstance(value, str) and value else None

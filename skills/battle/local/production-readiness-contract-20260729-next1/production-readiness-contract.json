@@ -26,7 +26,7 @@
       "Production readiness remains blocked unless external production receipts are supplied."
     ]
   },
-  "created_at": "2026-07-29T21:31:14Z",
+  "created_at": "2026-07-29T21:33:20Z",
   "errors": [],
   "external_checks": [
     {
@@ -54,9 +54,13 @@
       "status": "PASS"
     }
   ],
+  "local_source_commits": {
+    "containerized_package": "69d65110f503170fc2a8e39b345a61398a110f41",
+    "packaged_package": null
+  },
   "local_working_frontend_backend_status": "PASS",
   "mocked": false,
+  "repo_root": "/home/graham/workspace/experiments/agent-skills-main-clean",
   "schema": "battle.production_readiness_contract.v1",
-  "source_commit": "0b26fa4cf0462727c7876721203276c365df04bf",
   "status": "BLOCKED"
 }
