@@ -65,3 +65,38 @@ def test_packaged_receipt_error_gate_requires_zero_failures(tmp_path: Path) -> N
         screenshot_path=screenshot,
     )
     assert errors == ["packaged PR8 live transport proof has failures"]
+
+
+def test_rewrite_interaction_manifest_forces_websocket_transport(tmp_path: Path) -> None:
+    source = tmp_path / "manifest.json"
+    dest = tmp_path / "rewritten.json"
+    source.write_text(
+        json.dumps(
+            {
+                "base_url": "http://127.0.0.1:3016/#battle",
+                "surfaces": [
+                    {
+                        "name": "live",
+                        "path": "/live?engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A18766",
+                    },
+                    {
+                        "name": "live-websocket",
+                        "path": "/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A18766",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _rewrite_interaction_manifest(
+        source=source,
+        dest=dest,
+        preview_base="http://127.0.0.1:3111",
+        adapter_base="http://127.0.0.1:18888",
+    )
+
+    rewritten = json.loads(dest.read_text(encoding="utf-8"))
+    paths = [surface["path"] for surface in rewritten["surfaces"]]
+    assert all("transport=websocket" in path for path in paths)
+    assert all("liveBase=http%3A%2F%2F127.0.0.1%3A18888" in path for path in paths)

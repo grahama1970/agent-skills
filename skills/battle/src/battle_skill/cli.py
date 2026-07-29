@@ -2072,6 +2072,49 @@ def prove_packaged_deployment_smoke(
     console.print_json(data=receipt)
 
 
+@app.command("prove-containerized-deployment-smoke")
+def prove_containerized_deployment_smoke(
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the containerized local deployment smoke receipt.",
+    ),
+    repo_root: Path = typer.Option(
+        Path(__file__).resolve().parents[4],
+        "--repo-root",
+        help="agent-skills repository root to archive from.",
+    ),
+    fixture: Path = typer.Option(
+        Path(
+            "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"
+        ),
+        "--fixture",
+        help="Fixture path relative to packaged skills/battle.",
+    ),
+    interaction_manifest: Path = typer.Option(
+        Path(
+            "local/working-frontend-backend-20260729/test-interactions-live-after-patch/live-route-unique-hash-manifest.json"
+        ),
+        "--interaction-manifest",
+        help="Interaction manifest path relative to the live skills/battle root.",
+    ),
+    battle_id: str = typer.Option(
+        "battle-004", "--battle-id", help="Battle id for the containerized smoke."
+    ),
+):
+    """Prove a Git-archived Battle package can run frontend/backend in Docker."""
+    from .containerized_deployment_smoke import prove_containerized_deployment_smoke as _prove
+
+    receipt = _prove(
+        out_dir=out,
+        repo_root=repo_root,
+        fixture=fixture,
+        interaction_manifest=interaction_manifest,
+        battle_id=battle_id,
+    )
+    console.print_json(data=receipt)
+
+
 @app.command("prove-transport-safety-smoke")
 def prove_transport_safety_smoke(
     out: Path = typer.Option(
