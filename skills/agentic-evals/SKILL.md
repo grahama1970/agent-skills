@@ -51,6 +51,7 @@ unless the fixture commands themselves exercise those live paths.
 ```bash
 ./run.sh run fixtures/agentic_eval.json
 ./run.sh run fixtures/agentic_eval.json --output /tmp/agentic-evals-report.json
+./run.sh audit-skills ../ --output /tmp/agentic-evals-baseline-gap-report.json
 ```
 
 ## Fixture Contract
@@ -99,6 +100,7 @@ repository fixture schema and broad skill regression checks; use
 `agentic-evals` when the evaluation needs repeated trials, trajectory-oriented
 case typing, and readiness-state output.
 
-The next useful composition into `best-practices-skills` is to add an
-"agentic evaluation readiness" subsection and a rule recommending this skill
-for complex skills that claim durable agent behavior beyond simple CLI output.
+Use `audit-skills` after changing `best-practices-skills` eval rules. The audit
+does not prove per-skill behavior; it proves the repository's current eval
+posture by recording which skills already have fixtures, delegate to eval
+skills, document `eval_not_required`, or still emit `EVAL001`.

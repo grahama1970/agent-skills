@@ -25,4 +25,59 @@ assert report["trial_count"] == 6
 assert all(case["pass_rate"] == 1.0 for case in report["cases"])
 PY
 
-rm -f "$OUT"
+AUDIT_ROOT="$(mktemp -d)"
+trap 'rm -f "$OUT" "$AUDIT_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
+mkdir -p "$AUDIT_ROOT/covered/fixtures" "$AUDIT_ROOT/missing"
+cat > "$AUDIT_ROOT/covered/SKILL.md" <<'EOF'
+---
+name: covered
+description: >
+  Temporary skill with an agentic eval fixture.
+triggers:
+  - covered eval fixture
+provides:
+  - task-orchestration
+composes: []
+complies:
+  - best-practices-skills
+---
+
+# covered
+EOF
+cat > "$AUDIT_ROOT/covered/fixtures/agentic_eval.json" <<'EOF'
+{"version": 2, "trials": 3, "cases": []}
+EOF
+cat > "$AUDIT_ROOT/missing/SKILL.md" <<'EOF'
+---
+name: missing
+description: >
+  Temporary executable skill without an eval posture.
+triggers:
+  - missing eval fixture
+provides:
+  - task-orchestration
+composes: []
+complies:
+  - best-practices-skills
+---
+
+# missing
+EOF
+cat > "$AUDIT_ROOT/missing/run.sh" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "$AUDIT_ROOT/missing/run.sh"
+AUDIT_OUT="$(mktemp)"
+"$SCRIPT_DIR/run.sh" audit-skills "$AUDIT_ROOT" --output "$AUDIT_OUT" >/dev/null
+uv run --project "$SCRIPT_DIR" python - "$AUDIT_OUT" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["schema"] == "agentic_evals.skill_posture_audit.v1"
+assert report["summary"]["skills_checked"] == 2
+assert report["summary"]["eval001_count"] == 1
+assert report["summary"]["posture_counts"]["agentic_fixture"] == 1
+assert report["summary"]["posture_counts"]["missing"] == 1
+PY

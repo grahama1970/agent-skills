@@ -10,16 +10,20 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import time
 from pathlib import Path
 from statistics import mean
 from typing import Any
 
 import typer
+from loguru import logger
 
 app = typer.Typer(no_args_is_help=True)
 
 VALID_CASE_TYPES = {"positive", "negative", "adversarial"}
+EVAL_FIXTURES = ("fixtures/agentic_eval.json", "fixtures/eval.json")
+EVAL_PROVIDER_SKILLS = {"agentic-evals", "eval-skills"}
 
 
 def load_manifest(path: Path) -> dict[str, Any]:
@@ -44,7 +48,11 @@ def validate_case(case: dict[str, Any]) -> None:
     if case.get("type") not in VALID_CASE_TYPES:
         raise typer.BadParameter(f"case {case['name']} has invalid type")
     command = case.get("command")
-    if not isinstance(command, list) or not command or not all(isinstance(part, str) for part in command):
+    if (
+        not isinstance(command, list)
+        or not command
+        or not all(isinstance(part, str) for part in command)
+    ):
         raise typer.BadParameter(f"case {case['name']} command must be a non-empty argv list")
     expected = case.get("expected")
     if not isinstance(expected, dict) or not isinstance(expected.get("exit_code"), int):
@@ -144,6 +152,119 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
     }
 
 
+def classify_eval_posture(skill_dir: Path) -> str:
+    skill_md = skill_dir / "SKILL.md"
+    text = skill_md.read_text(encoding="utf-8", errors="ignore") if skill_md.exists() else ""
+    if skill_dir.name in EVAL_PROVIDER_SKILLS:
+        return "eval_provider"
+    if (skill_dir / "fixtures" / "agentic_eval.json").exists():
+        return "agentic_fixture"
+    if (skill_dir / "fixtures" / "eval.json").exists():
+        return "legacy_eval_fixture"
+    if "agentic-evals" in text or "eval-skills" in text:
+        return "delegates_to_eval_skill"
+    if "eval_not_required" in text:
+        return "eval_not_required"
+    return "missing"
+
+
+def run_validator(skill_dir: Path, skills_root: Path, validator: Path, timeout_seconds: float) -> list[dict[str, Any]]:
+    try:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(validator),
+                str(skill_dir),
+                "--json",
+                "--skills-root",
+                str(skills_root),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        logger.error("validator timed out for {}: {}", skill_dir.name, exc)
+        return [
+            {
+                "rule": "VALIDATOR_TIMEOUT",
+                "severity": "error",
+                "skill": skill_dir.name,
+                "message": f"validator exceeded {timeout_seconds} seconds",
+            }
+        ]
+    if result.returncode != 0:
+        return [
+            {
+                "rule": "VALIDATOR_RUNNER",
+                "severity": "error",
+                "skill": skill_dir.name,
+                "message": result.stderr.strip() or result.stdout.strip() or "validator failed",
+            }
+        ]
+    try:
+        parsed = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        logger.error("validator returned invalid JSON for {}: {}", skill_dir.name, exc)
+        return [
+            {
+                "rule": "VALIDATOR_JSON",
+                "severity": "error",
+                "skill": skill_dir.name,
+                "message": "validator returned invalid JSON",
+            }
+        ]
+    return parsed if isinstance(parsed, list) else []
+
+
+def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: float) -> dict[str, Any]:
+    skills = sorted(path for path in skills_root.iterdir() if (path / "SKILL.md").exists())
+    skill_reports = []
+    findings: list[dict[str, Any]] = []
+    for skill_dir in skills:
+        posture = classify_eval_posture(skill_dir)
+        skill_findings = run_validator(skill_dir, skills_root, validator, timeout_seconds)
+        eval_findings = [finding for finding in skill_findings if finding.get("rule") == "EVAL001"]
+        findings.extend(skill_findings)
+        skill_reports.append(
+            {
+                "skill": skill_dir.name,
+                "eval_posture": posture,
+                "eval_required": bool(eval_findings),
+                "eval_findings": eval_findings,
+            }
+        )
+
+    posture_counts: dict[str, int] = {}
+    for item in skill_reports:
+        posture = item["eval_posture"]
+        posture_counts[posture] = posture_counts.get(posture, 0) + 1
+
+    eval001 = [finding for finding in findings if finding.get("rule") == "EVAL001"]
+    return {
+        "schema": "agentic_evals.skill_posture_audit.v1",
+        "mocked": False,
+        "live": False,
+        "proof_scope": "static repository eval posture audit",
+        "claims": {
+            "proves": "which top-level skills currently declare an eval posture or emit EVAL001",
+            "does_not_prove": "per-skill semantic behavior, live service behavior, or fixture quality",
+        },
+        "skills_root": str(skills_root),
+        "validator": str(validator),
+        "summary": {
+            "skills_checked": len(skills),
+            "total_findings": len(findings),
+            "eval001_count": len(eval001),
+            "posture_counts": posture_counts,
+            "eval001_skills": sorted({finding["skill"] for finding in eval001}),
+        },
+        "skills": skill_reports,
+        "findings": findings,
+    }
+
+
 @app.command("run")
 def run(
     manifest: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
@@ -152,6 +273,28 @@ def run(
 ) -> None:
     """Run an agentic evaluation manifest."""
     report = evaluate_manifest(manifest, timeout_seconds)
+    payload = json.dumps(report, indent=2)
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(payload + "\n", encoding="utf-8")
+    typer.echo(payload)
+
+
+@app.command("audit-skills")
+def audit_skills(
+    skills_root: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Optional path for the JSON report."),
+    validator: Path | None = typer.Option(None, "--validator", help="Path to validate_skill.py."),
+    timeout_seconds: float = typer.Option(10.0, "--timeout-seconds", min=0.1),
+) -> None:
+    """Audit top-level skills for an explicit agentic eval posture."""
+    resolved_root = skills_root.resolve()
+    resolved_validator = (
+        validator.resolve()
+        if validator is not None
+        else (Path(__file__).resolve().parents[2] / "best-practices-skills" / "scripts" / "validate_skill.py")
+    )
+    report = audit_skills_report(resolved_root, resolved_validator, timeout_seconds)
     payload = json.dumps(report, indent=2)
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
