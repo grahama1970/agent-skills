@@ -648,6 +648,17 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   `NEEDS_ATTENTION` or rate-limited, preserve the throttle metadata, continue
   with other available participants, and let the outer scheduler back off. Do
   not launch parallel WebGPT attempts to bypass the throttle.
+- If a WebGPT handler leaves orphaned submit artifacts but no final
+  `node-receipt.json`, treat those artifacts as terminal recovery evidence, not
+  as a silent hang. Preserve and read `response.md.receipt.json`,
+  `webgpt_inflight.json`, and `webgpt_heartbeat.json`; Ask should synthesize a
+  lane-local `node-receipt.json` plus `browser-recovery-packet.json` that
+  promotes submitted state, sentinel, requested tab id, heartbeat phase/page
+  state, provider-throttle evidence, and an actionable `next_command` when one
+  exists. If those synthesized receipts are missing or collapse rate-limit
+  metadata into a generic timeout, file a `$ticket` to `$ask` at
+  `agent-skills@main` with the Ask run directory and all three orphaned
+  artifacts.
 - If a WebKimi/Tau browser-handler receipt or Surf metadata reports
   `kimi_provider_capacity_busy`, `BLOCKED_KIMI_PROVIDER_CAPACITY`, or
   `proof_status: provider_capacity_limited`, classify only that browser handler
