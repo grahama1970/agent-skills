@@ -24,6 +24,9 @@
 - Declared compliance overlays: `best-practices-skills`,
   `best-practices-python`, and `best-practices-security`.
 - Current runtime self-improvement tier: `basic`.
+- Agentic eval posture: `fixtures/agentic_eval.json` exists and is intended to
+  be run by `/agentic-evals`; it is a positive `sanity.sh` smoke fixture, not a
+  semantic or release-readiness proof.
 - WebGPT oracle binding exists at `.ask/browser-oracles.yaml` for blocked or
   drift-prone reviews.
 - Environment-backed configuration is loaded through `hack.env.load_hack_dotenv`
@@ -33,6 +36,8 @@
 
 - `SKILL.md` is over the 500-line preferred limit and should be split into
   concise runtime instructions plus referenced docs.
+- The current agentic eval fixture lacks negative and adversarial Hack-specific
+  safety-boundary cases.
 - `session_audit.py` and `evolutionary_campaign.py` exceed the 800-line Python
   module limit and need focused extraction.
 - `hack.py`, `utils.py`, and `cascade_integration.py` still use bootstrap

@@ -6,6 +6,12 @@ export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills
 export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
 mkdir -p "$(dirname "$UV_PROJECT_ENVIRONMENT")"
 OUT="$(mktemp)"
+TIMEOUT_FIXTURE="$(mktemp)"
+TIMEOUT_OUT="$(mktemp)"
+AUDIT_ROOT="$(mktemp -d)"
+AUDIT_OUT=""
+APPLY_OUT=""
+trap 'rm -f "$OUT" "$TIMEOUT_FIXTURE" "$TIMEOUT_OUT" "$AUDIT_OUT" "$APPLY_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
 
 "$SCRIPT_DIR/run.sh" run "$SCRIPT_DIR/fixtures/agentic_eval.json" --output "$OUT" >/dev/null
 
@@ -25,10 +31,39 @@ assert report["trial_count"] == 6
 assert all(case["pass_rate"] == 1.0 for case in report["cases"])
 PY
 
-AUDIT_ROOT="$(mktemp -d)"
-AUDIT_OUT=""
-APPLY_OUT=""
-trap 'rm -f "$OUT" "$AUDIT_OUT" "$APPLY_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
+cat > "$TIMEOUT_FIXTURE" <<'EOF'
+{
+  "version": 2,
+  "skill": "agentic-evals-timeout",
+  "trials": 1,
+  "proof_scope": "timeout receipt serialization",
+  "claims": {
+    "proves": "timeout output is JSON-serializable",
+    "does_not_prove": "skill semantic correctness"
+  },
+  "cases": [
+    {
+      "name": "timeout-captures-output",
+      "type": "negative",
+      "command": ["bash", "-c", "printf partial-output; sleep 1"],
+      "expected": {"exit_code": 0}
+    }
+  ]
+}
+EOF
+"$SCRIPT_DIR/run.sh" run "$TIMEOUT_FIXTURE" --timeout-seconds 0.1 --output "$TIMEOUT_OUT" >/dev/null
+uv run --project "$SCRIPT_DIR" python - "$TIMEOUT_OUT" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+trial = report["cases"][0]["trials"][0]
+assert report["readiness"] == "NOT_READY"
+assert trial["timed_out"] is True
+assert isinstance(trial["stdout"], str)
+assert "partial-output" in trial["stdout"]
+PY
+
 mkdir -p \
   "$AUDIT_ROOT/covered/fixtures" \
   "$AUDIT_ROOT/missing" \

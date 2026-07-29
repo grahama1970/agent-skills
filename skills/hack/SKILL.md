@@ -63,11 +63,19 @@ isolation, authorization-bound target workflows, fixtures, schemas, tests, and a
 `sanity.sh` smoke check. It is not yet a fully self-maintaining substantial
 runtime skill.
 
+Agentic eval posture is provided by `fixtures/agentic_eval.json` and should be
+run through `/agentic-evals` when checking Hack readiness. Hack does not list
+`agentic-evals` in `composes:` because it does not delegate to that skill during
+normal security workflows; `composes:` is runtime delegation, while eval posture
+is a standards gate.
+
 Required next-step updates before declaring `runtime_self_improvement:
 substantial`:
 
 - Add `./run.sh verify` as a non-destructive verifier that emits a durable
   receipt under the skill artifact root.
+- Strengthen `fixtures/agentic_eval.json` beyond the current positive
+  `sanity.sh` fixture with negative and adversarial safety-boundary cases.
 - Add a maintainer ticket/plan that references that verifier and its receipt.
 - Add an `agents/hack/AGENTS.md` maintainer contract for post-run inspection,
   evidence triage, and safe repair routing.

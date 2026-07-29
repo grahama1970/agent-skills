@@ -60,6 +60,14 @@ def validate_case(case: dict[str, Any]) -> None:
         raise typer.BadParameter(f"case {case['name']} expected.exit_code must be an integer")
 
 
+def _stream_text(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
 def run_trial(command: list[str], cwd: Path, timeout_seconds: float) -> dict[str, Any]:
     started = time.monotonic()
     try:
@@ -81,8 +89,8 @@ def run_trial(command: list[str], cwd: Path, timeout_seconds: float) -> dict[str
     except subprocess.TimeoutExpired as exc:
         return {
             "exit_code": None,
-            "stdout": exc.stdout or "",
-            "stderr": exc.stderr or "",
+            "stdout": _stream_text(exc.stdout),
+            "stderr": _stream_text(exc.stderr),
             "duration_ms": round((time.monotonic() - started) * 1000, 3),
             "timed_out": True,
         }
