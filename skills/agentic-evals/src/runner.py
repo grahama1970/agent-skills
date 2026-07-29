@@ -9,6 +9,7 @@ with a non-zero CLI exit.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -265,20 +266,25 @@ def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: flo
     }
 
 
-def scaffold_manifest(skill_dir: Path) -> dict[str, Any]:
+def _entrypoint_command(fixture_dir: Path, entrypoint: Path, *args: str) -> list[str]:
+    rel_entrypoint = os.path.relpath(entrypoint, start=fixture_dir)
+    return ["bash", rel_entrypoint, *args]
+
+
+def scaffold_manifest(skill_dir: Path, fixture_dir: Path) -> dict[str, Any]:
     skill_name = skill_dir.name
     if (skill_dir / "sanity.sh").exists():
         case = {
             "name": "sanity",
             "type": "positive",
-            "command": ["bash", "../sanity.sh"],
+            "command": _entrypoint_command(fixture_dir, skill_dir / "sanity.sh"),
             "expected": {"exit_code": 0},
         }
     elif (skill_dir / "run.sh").exists():
         case = {
             "name": "run-help",
             "type": "positive",
-            "command": ["bash", "../run.sh", "--help"],
+            "command": _entrypoint_command(fixture_dir, skill_dir / "run.sh", "--help"),
             "expected": {"exit_code": 0},
         }
     else:
@@ -319,8 +325,8 @@ def scaffold_fixture(
     force: bool = typer.Option(False, "--force", help="Overwrite an existing fixture."),
 ) -> None:
     """Create a first-pass agentic eval fixture from a skill entrypoint."""
-    manifest = scaffold_manifest(skill_dir.resolve())
     target = output or (skill_dir / "fixtures" / "agentic_eval.json")
+    manifest = scaffold_manifest(skill_dir.resolve(), target.resolve().parent)
     if target.exists() and not force:
         raise typer.BadParameter(f"{target} already exists; pass --force to overwrite")
     target.parent.mkdir(parents=True, exist_ok=True)
