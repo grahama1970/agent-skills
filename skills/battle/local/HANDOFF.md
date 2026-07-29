@@ -142,14 +142,29 @@ New bounded receipts on `main`:
    - fanout: `2` clients with identical streams
 
 7. Updated fail-closed production-readiness contract with WebSocket proof attached:
-   `skills/battle/local/production-readiness-contract-20260729-next2/production-readiness-contract.json`
+   `skills/battle/local/production-readiness-contract-20260729-next3/production-readiness-contract.json`
    - `status`: `BLOCKED`
    - `mocked`: `false`
+   - containerized source commit:
+     `2d4f0bfd514de10fb4c1069517ba782c2c71b6dc`
    - local working frontend/backend status: `PASS`
    - production WebSocket receipt status: `PASS`
    - remaining blockers:
      `production_infrastructure_missing_or_not_pass`,
      `unbounded_swarm_missing_or_not_pass`
+
+8. Fresh containerized local frontend/backend deployment smoke after the
+   production-WebSocket source change:
+   `skills/battle/local/containerized-deployment-smoke-20260729-next4/containerized-deployment-smoke.json`
+   - `status`: `PASS`
+   - `mocked`: `false`
+   - `live`: `containerized_http_sse_websocket_adapter_plus_vite_preview`
+   - source commit: `2d4f0bfd514de10fb4c1069517ba782c2c71b6dc`
+   - PR8: `33 total / 0 failed`
+   - `$test-interactions`: `38 passed / 0 failed / 0 warned`
+   - visual findings: `0`
+   - screenshot:
+     `skills/battle/local/containerized-deployment-smoke-20260729-next4/frontend-pr8/01-live-sse-adapter.png`
 
 The containerized proof may claim only local Docker container packaging and
 mapped local frontend/backend execution. It still must not claim production
