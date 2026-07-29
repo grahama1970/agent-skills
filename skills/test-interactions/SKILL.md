@@ -158,6 +158,62 @@ Outputs include `ticket-candidates.json`, `ticket-previews.json`,
 `ticket-duplicate-comments.json`, `ticket-apply-result.json`, and
 `ticket-failure.json` on fail-closed errors.
 
+## Page-Eval Finding Schema
+
+Project agents that evaluate full pages should use one strict returned schema
+while preserving evidence provenance. `normalize-page-eval` writes
+`page-eval.finding.v1` JSONL as a tagged union:
+
+- `finding_type`: `design`, `interaction`, `instrumentation`, or `visual`
+- `source_tool`: `impeccable` or `test-interactions`
+- `evidence_class`: `design`, `interaction`, `instrumentation`, or `visual`
+- `proof_grade`: `advisory` or `deterministic`
+
+Impeccable findings may appear in the same JSON stream as design findings, but
+they must remain `proof_grade=advisory` and must not carry deterministic
+`PASS`/`FAIL`. `$test-interactions` discovery/run findings are the only source
+of deterministic interaction or instrumentation failures.
+
+Use `--disable-impeccable` when a project agent should run the page-eval flow
+without ingesting Impeccable design findings:
+
+```bash
+./run.sh normalize-page-eval \
+  --repo grahama1970/agent-skills \
+  --target experiments/impeccable \
+  --route / \
+  --viewport 1280x800 \
+  --impeccable-findings ./artifacts/impeccable.json \
+  --discovery-findings ./discovery/discovery-findings.jsonl \
+  --output ./artifacts/page-eval-findings.jsonl \
+  --summary-output ./artifacts/page-eval-summary.json \
+  --replay-command "./run.sh discover --url http://localhost:3000 --output-dir ./discovery"
+
+./run.sh normalize-page-eval \
+  --repo grahama1970/agent-skills \
+  --target experiments/impeccable \
+  --route / \
+  --viewport 1280x800 \
+  --disable-impeccable \
+  --discovery-findings ./discovery/discovery-findings.jsonl \
+  --output ./artifacts/page-eval-findings.jsonl \
+  --summary-output ./artifacts/page-eval-summary.json \
+  --replay-command "./run.sh discover --url http://localhost:3000 --output-dir ./discovery"
+```
+
+`ticket-findings` can consume this unified stream:
+
+```bash
+./run.sh ticket-findings \
+  --repo grahama1970/agent-skills \
+  --policy preview \
+  --page-eval-findings ./artifacts/page-eval-findings.jsonl \
+  --replay-command "./run.sh normalize-page-eval ..."
+```
+
+This provides one project-agent workflow without schema laundering: design
+findings are ticketable as design bugs, but they are not interaction proof.
+
 ## Critical Rules
 
 ### 1. All selectors MUST be [data-qid]
@@ -219,6 +275,9 @@ XPath, or positional selector fallbacks.
 
 # Preview repair tickets from deterministic or schema-valid findings
 ./run.sh ticket-findings --repo owner/repo --policy preview --results ./captures/results.json --replay-command "./run.sh run --manifest manifest.json"
+
+# Normalize Impeccable + test-interactions artifacts into one strict JSON stream
+./run.sh normalize-page-eval --repo owner/repo --route / --viewport 1280x800 --disable-impeccable --discovery-findings ./discovery/discovery-findings.jsonl --output page-eval-findings.jsonl --replay-command "./run.sh discover --url http://localhost:3000 --output-dir ./discovery"
 
 # Review captures — PERSONA REQUIRED
 ./run.sh review --captures ./captures/ --persona brandon-bailey
