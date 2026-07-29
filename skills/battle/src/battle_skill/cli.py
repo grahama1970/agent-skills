@@ -2212,6 +2212,47 @@ def validate_production_readiness(
         raise typer.Exit(2)
 
 
+@app.command("prove-unbounded-swarm-execution")
+def prove_unbounded_swarm_execution(
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the Docker-backed swarm execution proof.",
+    ),
+    worker_count: int = typer.Option(
+        12,
+        "--worker-count",
+        help="Number of local Docker swarm workers to execute.",
+    ),
+    min_concurrent_observed: int = typer.Option(
+        4,
+        "--min-concurrent-observed",
+        help="Minimum observed concurrent workers required for PASS.",
+    ),
+    docker_image: str = typer.Option(
+        "python:3.12-slim",
+        "--docker-image",
+        help="Docker image used for each isolated swarm worker.",
+    ),
+    per_worker_timeout_s: int = typer.Option(
+        30,
+        "--per-worker-timeout-s",
+        help="Per-worker Docker timeout in seconds.",
+    ),
+):
+    """Prove a dynamic Docker-backed Battle swarm envelope beyond fixed 2 workers."""
+    from .swarm_execution_proof import prove_unbounded_swarm_execution as _prove
+
+    receipt = _prove(
+        out_dir=out,
+        worker_count=worker_count,
+        docker_image=docker_image,
+        per_worker_timeout_s=per_worker_timeout_s,
+        min_concurrent_observed=min_concurrent_observed,
+    )
+    console.print_json(data=receipt)
+
+
 @app.command("prove-transport-safety-smoke")
 def prove_transport_safety_smoke(
     out: Path = typer.Option(

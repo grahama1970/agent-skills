@@ -166,6 +166,17 @@ New bounded receipts on `main`:
    - screenshot:
      `skills/battle/local/containerized-deployment-smoke-20260729-next4/frontend-pr8/01-live-sse-adapter.png`
 
+9. Docker-backed dynamic swarm execution proof:
+   `skills/battle/local/unbounded-swarm-execution-20260729-next1/unbounded-swarm-execution-proof.json`
+   - `status`: `PASS`
+   - `mocked`: `false`
+   - `live`: `local_docker_dynamic_swarm_execution`
+   - workers: `12`
+   - completed workers: `12`
+   - failed workers: `0`
+   - max observed concurrency: `12`
+   - network mode: `none`
+
 The containerized proof may claim only local Docker container packaging and
 mapped local frontend/backend execution. It still must not claim production
 infrastructure, TLS/certificate/ingress/secret management, production-scale
