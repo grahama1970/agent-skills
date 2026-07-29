@@ -27,7 +27,7 @@ def collect_memory() -> dict[str, Any]:
     for q in queries:
         try:
             out = subprocess.run(
-                ["bash", str(MEMORY_SKILL), "recall", "--q", q],
+                ["bash", str(MEMORY_SKILL), "recall", "--q", q, "--scope", PROJECT_NAME],
                 capture_output=True, text=True, timeout=30,
             )
             if out.returncode == 0:
