@@ -2203,6 +2203,7 @@ def _looks_environment_dependency_install_failed(text: str) -> bool:
     """
     install_markers = (
         "failed to install:",
+        "failed to create virtual environment",
         "failed to create directory",
         "could not install packages",
         "error: externally-managed-environment",
@@ -2211,6 +2212,8 @@ def _looks_environment_dependency_install_failed(text: str) -> bool:
     env_markers = (
         "dist-packages",
         "site-packages",
+        "virtual environment already exists",
+        "a virtual environment already exists",
         "permission denied (os error 13)",
         "permission denied:",
     )

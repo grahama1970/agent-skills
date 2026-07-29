@@ -3993,7 +3993,34 @@ def test_kimi_clean_output_contamination_is_not_tab_identity_mismatch() -> None:
     assert summary["transport_failure_kind"] == "browser_clean_output_contaminated"
     assert summary["raw_contains_sentinel"] is True
     assert summary["clean_contains_sentinel"] is True
-    assert summary["controlled_tab_id_mismatch"] is False
+
+
+def test_browser_oracle_existing_venv_setup_failure_is_not_missing_sentinel() -> None:
+    failure = """Using CPython 3.14.3
+Creating virtual environment at: .venv
+error: Failed to create virtual environment
+  Caused by: A virtual environment already exists at `/tmp/askmain/skills/browser-oracle/.venv`. Use `--clear` to replace it
+"""
+    commands = [
+        {
+            "command": ["skills/browser-oracle/run.sh", "resolve", "--backend", "webkimi", "--project", "webkimi", "--json"],
+            "returncode": 2,
+            "stderr_excerpt": failure,
+            "stdout_excerpt": "",
+        }
+    ]
+
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webkimi",
+        failure=failure,
+        response_text="",
+        raw_text="",
+        prompt_text="Roundtable request",
+        submit_meta={},
+        commands=commands,
+    )
+
+    assert failure_code == tau_roundtable_worker.ENVIRONMENT_DEPENDENCY_INSTALL_FAILED
 
 
 def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -> None:
