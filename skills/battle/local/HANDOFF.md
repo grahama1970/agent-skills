@@ -119,6 +119,17 @@ New bounded receipts on `main`:
      WebGPT as a compete handler; use the project WebGPT/Surf workflow for a
      separate WebGPT lane.
 
+5. Fail-closed production-readiness contract:
+   `skills/battle/local/production-readiness-contract-20260729-next1/production-readiness-contract.json`
+   - `status`: `BLOCKED`
+   - `mocked`: `false`
+   - `live`: `receipt_contract_validation`
+   - local working frontend/backend status: `PASS`
+   - blockers:
+     `production_infrastructure_missing_or_not_pass`,
+     `production_websocket_missing_or_not_pass`,
+     `unbounded_swarm_missing_or_not_pass`
+
 The containerized proof may claim only local Docker container packaging and
 mapped local frontend/backend execution. It still must not claim production
 infrastructure, TLS/auth/fanout/reconnect behavior, cloud/Kubernetes/DNS/secret

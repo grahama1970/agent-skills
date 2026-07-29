@@ -2115,6 +2115,68 @@ def prove_containerized_deployment_smoke(
     console.print_json(data=receipt)
 
 
+@app.command("validate-production-readiness")
+def validate_production_readiness(
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the fail-closed production readiness contract receipt.",
+    ),
+    containerized_receipt: Path = typer.Option(
+        ...,
+        "--containerized-receipt",
+        help="Required battle.containerized_deployment_smoke.v1 receipt.",
+    ),
+    packaged_receipt: Optional[Path] = typer.Option(
+        None,
+        "--packaged-receipt",
+        help="Optional battle.packaged_deployment_smoke.v1 receipt.",
+    ),
+    production_infrastructure_receipt: Optional[Path] = typer.Option(
+        None,
+        "--production-infrastructure-receipt",
+        help="Optional external production infrastructure deployment receipt.",
+    ),
+    production_websocket_receipt: Optional[Path] = typer.Option(
+        None,
+        "--production-websocket-receipt",
+        help="Optional production WebSocket TLS/auth/fanout/reconnect receipt.",
+    ),
+    unbounded_swarm_receipt: Optional[Path] = typer.Option(
+        None,
+        "--unbounded-swarm-receipt",
+        help="Optional unbounded swarm execution receipt.",
+    ),
+    repo_root: Path = typer.Option(
+        Path(__file__).resolve().parents[4],
+        "--repo-root",
+        help="agent-skills repository root.",
+    ),
+    fail_on_blocked: bool = typer.Option(
+        True,
+        "--fail-on-blocked/--no-fail-on-blocked",
+        help="Exit nonzero when production readiness is blocked.",
+    ),
+):
+    """Fail closed unless local and external production readiness receipts exist."""
+    from .production_readiness_contract import validate_production_readiness as _validate
+
+    receipt = _validate(
+        out_dir=out,
+        repo_root=repo_root,
+        containerized_receipt=containerized_receipt,
+        packaged_receipt=packaged_receipt,
+        production_infrastructure_receipt=production_infrastructure_receipt,
+        production_websocket_receipt=production_websocket_receipt,
+        unbounded_swarm_receipt=unbounded_swarm_receipt,
+    )
+    console.print_json(data=receipt)
+    if receipt.get("status") == "FAIL":
+        raise typer.Exit(1)
+    if fail_on_blocked and receipt.get("status") == "BLOCKED":
+        raise typer.Exit(2)
+
+
 @app.command("prove-transport-safety-smoke")
 def prove_transport_safety_smoke(
     out: Path = typer.Option(
