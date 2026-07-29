@@ -1,0 +1,684 @@
+{
+  "ok": true,
+  "mocked": false,
+  "live": true,
+  "engine": "chatterbox_base",
+  "batch_label": "persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc",
+  "tone": "firm_boundary",
+  "requested_tone": "firm_boundary",
+  "normalized_tone": "firm_boundary",
+  "delivery_stage": "deflecting",
+  "requested_delivery_stage": null,
+  "voice_delivery": {
+    "schema": "chatterbox.voice_delivery.v1",
+    "requested_tone": "firm_boundary",
+    "normalized_tone": "firm_boundary",
+    "tone": "firm_boundary",
+    "tone_was_normalized": false,
+    "requested_delivery_stage": null,
+    "delivery_stage": "deflecting",
+    "delivery_stage_source": "tone_mapping",
+    "ignored_turbo_params": [
+      "cfg_weight",
+      "exaggeration",
+      "min_p"
+    ],
+    "tag_handling": {
+      "schema": "chatterbox.tag_handling.v1",
+      "dedicated_tag_channel": "unsupported",
+      "accepted_tags": [],
+      "unknown_tag_behavior": "ignored",
+      "inline_text_tag_behavior": "synthesized_as_literal_text",
+      "applied_tags": [],
+      "tags_interpreted": false,
+      "requested_tags": []
+    },
+    "pace": "steady",
+    "pause_strategy": null,
+    "wait_activity": null,
+    "source": "continuity_session_mood",
+    "confidence": null,
+    "evidence": null,
+    "intensity": 0.78,
+    "valence": -0.45,
+    "use_base_emotion": true
+  },
+  "tag_handling": {
+    "schema": "chatterbox.tag_handling.v1",
+    "dedicated_tag_channel": "unsupported",
+    "accepted_tags": [],
+    "unknown_tag_behavior": "ignored",
+    "inline_text_tag_behavior": "synthesized_as_literal_text",
+    "applied_tags": [],
+    "tags_interpreted": false,
+    "requested_tags": []
+  },
+  "stochasticity": {
+    "schema": "chatterbox.stochasticity.v1",
+    "repeat_group_id": null,
+    "deterministic_audio": false,
+    "seed_supported": false,
+    "seed": null,
+    "equivalence": "same_repeat_group_id_groups_comparable_stochastic_renders_without_implying_identical_audio",
+    "cache_behavior": "repeat_group_id_is_receipt_metadata_not_a_cache_buster"
+  },
+  "applied_controls": [
+    {
+      "chunk_index": 1,
+      "requested": {
+        "tone": "firm_boundary",
+        "delivery_stage": null,
+        "pace": "steady",
+        "pause_strategy": null,
+        "pause_after_ms": 0
+      },
+      "normalized": {
+        "tone": "firm_boundary",
+        "delivery_stage": "satisfied",
+        "pace": "steady",
+        "pause_strategy": null,
+        "pause_after_ms": 0
+      },
+      "applied": {
+        "tone": "firm_boundary",
+        "delivery_stage": "satisfied",
+        "pace": "steady",
+        "pause_strategy": null,
+        "pause_after_ms": 0,
+        "can_interrupt_after": true
+      }
+    }
+  ],
+  "ignored_turbo_params": [
+    "cfg_weight",
+    "exaggeration",
+    "min_p"
+  ],
+  "cache_key": "0e9f606a67a1bb3c23f9794b0edf40ef378cf313a8c93c90bbd7beb220eee111",
+  "cache_material": {
+    "engine": "chatterbox_base",
+    "emotion_knobs": {
+      "exaggeration": 1.002,
+      "cfg_weight": 0.41,
+      "temperature": 0.7,
+      "intensity": 0.78,
+      "valence": -0.45
+    },
+    "voice_delivery": {
+      "schema": "chatterbox.voice_delivery.v1",
+      "requested_tone": "firm_boundary",
+      "normalized_tone": "firm_boundary",
+      "tone": "firm_boundary",
+      "tone_was_normalized": false,
+      "requested_delivery_stage": null,
+      "delivery_stage": "deflecting",
+      "delivery_stage_source": "tone_mapping",
+      "ignored_turbo_params": [
+        "cfg_weight",
+        "exaggeration",
+        "min_p"
+      ],
+      "tag_handling": {
+        "schema": "chatterbox.tag_handling.v1",
+        "dedicated_tag_channel": "unsupported",
+        "accepted_tags": [],
+        "unknown_tag_behavior": "ignored",
+        "inline_text_tag_behavior": "synthesized_as_literal_text",
+        "applied_tags": [],
+        "tags_interpreted": false,
+        "requested_tags": []
+      },
+      "pace": "steady",
+      "pause_strategy": null,
+      "wait_activity": null,
+      "source": "continuity_session_mood",
+      "confidence": null,
+      "evidence": null,
+      "intensity": 0.78,
+      "valence": -0.45,
+      "use_base_emotion": true
+    },
+    "answer_text_sha256": "ca2f689ed7f04dff1d5865a15847b9d36a46e3a0f54b578bff809183a0bb00ae",
+    "completion_cue_sha256": null,
+    "chunk_text_sha256": [
+      "ca2f689ed7f04dff1d5865a15847b9d36a46e3a0f54b578bff809183a0bb00ae"
+    ],
+    "delivery_stages": [
+      "satisfied"
+    ],
+    "max_chars": 300,
+    "ref_audio": "/data/embry_ref.wav",
+    "stage_presets": {
+      "satisfied": {
+        "temperature": 0.84,
+        "top_p": 0.96,
+        "top_k": 1000,
+        "repetition_penalty": 1.18,
+        "norm_loudness": true
+      }
+    },
+    "asr_verify": true
+  },
+  "answer_text_sha256": "ca2f689ed7f04dff1d5865a15847b9d36a46e3a0f54b578bff809183a0bb00ae",
+  "render_plan": {
+    "answer_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+    "answer_text_sha256": "ca2f689ed7f04dff1d5865a15847b9d36a46e3a0f54b578bff809183a0bb00ae",
+    "max_chars": 300,
+    "requested_max_chars": 300,
+    "chunking_strategy": {
+      "name": "sentence_aware_turbo_safety",
+      "target_max_chars": 300,
+      "requested_max_chars": 300,
+      "turbo_safety_recommended_max_chars": 300,
+      "safety_activated": false,
+      "hard_cap_enforced": true,
+      "splitter": "regex_sentence_then_clause_then_words",
+      "does_not_split_inside_words": true
+    },
+    "chunks": [
+      {
+        "index": 1,
+        "total": 1,
+        "text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "text_sha256": "ca2f689ed7f04dff1d5865a15847b9d36a46e3a0f54b578bff809183a0bb00ae",
+        "char_len": 74,
+        "delivery_stage": "satisfied",
+        "delivery_tone": "settled and lightly pleased",
+        "delivery_role": "close with the usable answer",
+        "arc_position": 1.0,
+        "pause_after_ms": 0,
+        "can_interrupt_after": true
+      }
+    ],
+    "chunk_count": 1,
+    "completion_cue": null,
+    "completion_cue_sha256": null
+  },
+  "chunks": [
+    {
+      "ok": true,
+      "mocked": false,
+      "live": true,
+      "engine": "chatterbox_base",
+      "emotion_knobs": {
+        "exaggeration": 1.002,
+        "cfg_weight": 0.41,
+        "temperature": 0.7,
+        "intensity": 0.78,
+        "valence": -0.45
+      },
+      "requested_device": "cuda",
+      "text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+      "text_sha256": "ca2f689ed7f04dff1d5865a15847b9d36a46e3a0f54b578bff809183a0bb00ae",
+      "reference_audio": "/data/embry_ref.wav",
+      "voice_conditioning": {
+        "reference_audio": "/data/embry_ref.wav",
+        "engine": "chatterbox_base",
+        "emotion_knobs": {
+          "exaggeration": 1.002,
+          "cfg_weight": 0.41,
+          "temperature": 0.7,
+          "intensity": 0.78,
+          "valence": -0.45
+        }
+      },
+      "audio": "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/chunk_01_satisfied_candidate_01_stage_default.wav",
+      "tone": "firm_boundary",
+      "requested_tone": "firm_boundary",
+      "normalized_tone": "firm_boundary",
+      "delivery_stage": "satisfied",
+      "requested_delivery_stage": "satisfied",
+      "voice_delivery": {
+        "schema": "chatterbox.voice_delivery.v1",
+        "requested_tone": "firm_boundary",
+        "normalized_tone": "firm_boundary",
+        "tone": "firm_boundary",
+        "tone_was_normalized": false,
+        "requested_delivery_stage": "satisfied",
+        "delivery_stage": "satisfied",
+        "delivery_stage_source": "request.delivery_stage",
+        "ignored_turbo_params": [
+          "cfg_weight",
+          "exaggeration",
+          "min_p"
+        ],
+        "tag_handling": {
+          "schema": "chatterbox.tag_handling.v1",
+          "dedicated_tag_channel": "unsupported",
+          "accepted_tags": [],
+          "unknown_tag_behavior": "ignored",
+          "inline_text_tag_behavior": "synthesized_as_literal_text",
+          "applied_tags": [],
+          "tags_interpreted": false,
+          "requested_tags": []
+        },
+        "pace": "steady",
+        "pause_strategy": null,
+        "wait_activity": null,
+        "source": "continuity_session_mood",
+        "confidence": null,
+        "evidence": null,
+        "intensity": 0.78,
+        "valence": -0.45,
+        "use_base_emotion": true
+      },
+      "tag_handling": {
+        "schema": "chatterbox.tag_handling.v1",
+        "dedicated_tag_channel": "unsupported",
+        "accepted_tags": [],
+        "unknown_tag_behavior": "ignored",
+        "inline_text_tag_behavior": "synthesized_as_literal_text",
+        "applied_tags": [],
+        "tags_interpreted": false,
+        "requested_tags": []
+      },
+      "stochasticity": {
+        "schema": "chatterbox.stochasticity.v1",
+        "repeat_group_id": null,
+        "deterministic_audio": false,
+        "seed_supported": false,
+        "seed": null,
+        "equivalence": "same_repeat_group_id_groups_comparable_stochastic_renders_without_implying_identical_audio",
+        "cache_behavior": "repeat_group_id_is_receipt_metadata_not_a_cache_buster"
+      },
+      "generation_params": {
+        "temperature": 0.84,
+        "top_p": 0.96,
+        "top_k": 1000,
+        "repetition_penalty": 1.18,
+        "norm_loudness": true
+      },
+      "ignored_turbo_params": [
+        "cfg_weight",
+        "exaggeration",
+        "min_p"
+      ],
+      "generation_seconds": 3.955,
+      "latency_events": [
+        {
+          "name": "request_received",
+          "elapsed_ms": 0.0
+        },
+        {
+          "name": "generation_params_ready",
+          "elapsed_ms": 0.127
+        },
+        {
+          "name": "voice_conditioning_ready",
+          "elapsed_ms": 0.132,
+          "engine": "chatterbox_base",
+          "render_lock": "held"
+        },
+        {
+          "name": "first_audio_ready",
+          "elapsed_ms": 3955.576,
+          "generation_seconds": 3.955
+        },
+        {
+          "name": "audio_saved",
+          "elapsed_ms": 3959.914
+        },
+        {
+          "name": "audio_metrics_ready",
+          "elapsed_ms": 4012.986
+        }
+      ],
+      "total_elapsed_ms": 4013.002,
+      "duration_seconds": 5.92,
+      "realtime_factor": 0.668,
+      "metrics": {
+        "path": "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/chunk_01_satisfied_candidate_01_stage_default.wav",
+        "exists": true,
+        "bytes": 284238,
+        "sha256": "5c5c953fb21aedeed2b61441138e6a99202bbad014e70e38dd3b138782ab94a7",
+        "ffprobe": {
+          "cmd": [
+            "ffprobe",
+            "-hide_banner",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration,size",
+            "-show_entries",
+            "stream=codec_name,sample_rate,channels",
+            "-of",
+            "json",
+            "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/chunk_01_satisfied_candidate_01_stage_default.wav"
+          ],
+          "returncode": 0,
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.920000\",\n        \"size\": \"284238\"\n    }\n}\n",
+          "stderr": ""
+        },
+        "codec_name": "pcm_s16le",
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_seconds": 5.92,
+        "ffprobe_size": 284238
+      },
+      "failed_gates": [],
+      "asr_verification": {
+        "enabled": true,
+        "ok": true,
+        "candidate_count": 1,
+        "accepted_candidate_index": 1,
+        "accepted_variant": "stage_default",
+        "accepted_gate": {
+          "ok": true,
+          "wer": 0.0,
+          "repeated_ngram_hits": [],
+          "failed_gates": []
+        },
+        "max_wer": 0.0,
+        "max_duration_ratio": 2.5,
+        "candidates": [
+          {
+            "candidate_index": 1,
+            "variant": "stage_default",
+            "overrides": {},
+            "synthesis": {
+              "ok": true,
+              "mocked": false,
+              "live": true,
+              "engine": "chatterbox_base",
+              "emotion_knobs": {
+                "exaggeration": 1.002,
+                "cfg_weight": 0.41,
+                "temperature": 0.7,
+                "intensity": 0.78,
+                "valence": -0.45
+              },
+              "requested_device": "cuda",
+              "text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+              "text_sha256": "ca2f689ed7f04dff1d5865a15847b9d36a46e3a0f54b578bff809183a0bb00ae",
+              "reference_audio": "/data/embry_ref.wav",
+              "voice_conditioning": {
+                "reference_audio": "/data/embry_ref.wav",
+                "engine": "chatterbox_base",
+                "emotion_knobs": {
+                  "exaggeration": 1.002,
+                  "cfg_weight": 0.41,
+                  "temperature": 0.7,
+                  "intensity": 0.78,
+                  "valence": -0.45
+                }
+              },
+              "audio": "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/chunk_01_satisfied_candidate_01_stage_default.wav",
+              "tone": "firm_boundary",
+              "requested_tone": "firm_boundary",
+              "normalized_tone": "firm_boundary",
+              "delivery_stage": "satisfied",
+              "requested_delivery_stage": "satisfied",
+              "voice_delivery": {
+                "schema": "chatterbox.voice_delivery.v1",
+                "requested_tone": "firm_boundary",
+                "normalized_tone": "firm_boundary",
+                "tone": "firm_boundary",
+                "tone_was_normalized": false,
+                "requested_delivery_stage": "satisfied",
+                "delivery_stage": "satisfied",
+                "delivery_stage_source": "request.delivery_stage",
+                "ignored_turbo_params": [
+                  "cfg_weight",
+                  "exaggeration",
+                  "min_p"
+                ],
+                "tag_handling": {
+                  "schema": "chatterbox.tag_handling.v1",
+                  "dedicated_tag_channel": "unsupported",
+                  "accepted_tags": [],
+                  "unknown_tag_behavior": "ignored",
+                  "inline_text_tag_behavior": "synthesized_as_literal_text",
+                  "applied_tags": [],
+                  "tags_interpreted": false,
+                  "requested_tags": []
+                },
+                "pace": "steady",
+                "pause_strategy": null,
+                "wait_activity": null,
+                "source": "continuity_session_mood",
+                "confidence": null,
+                "evidence": null,
+                "intensity": 0.78,
+                "valence": -0.45,
+                "use_base_emotion": true
+              },
+              "tag_handling": {
+                "schema": "chatterbox.tag_handling.v1",
+                "dedicated_tag_channel": "unsupported",
+                "accepted_tags": [],
+                "unknown_tag_behavior": "ignored",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "applied_tags": [],
+                "tags_interpreted": false,
+                "requested_tags": []
+              },
+              "stochasticity": {
+                "schema": "chatterbox.stochasticity.v1",
+                "repeat_group_id": null,
+                "deterministic_audio": false,
+                "seed_supported": false,
+                "seed": null,
+                "equivalence": "same_repeat_group_id_groups_comparable_stochastic_renders_without_implying_identical_audio",
+                "cache_behavior": "repeat_group_id_is_receipt_metadata_not_a_cache_buster"
+              },
+              "generation_params": {
+                "temperature": 0.84,
+                "top_p": 0.96,
+                "top_k": 1000,
+                "repetition_penalty": 1.18,
+                "norm_loudness": true
+              },
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "generation_seconds": 3.955,
+              "latency_events": [
+                {
+                  "name": "request_received",
+                  "elapsed_ms": 0.0
+                },
+                {
+                  "name": "generation_params_ready",
+                  "elapsed_ms": 0.127
+                },
+                {
+                  "name": "voice_conditioning_ready",
+                  "elapsed_ms": 0.132,
+                  "engine": "chatterbox_base",
+                  "render_lock": "held"
+                },
+                {
+                  "name": "first_audio_ready",
+                  "elapsed_ms": 3955.576,
+                  "generation_seconds": 3.955
+                },
+                {
+                  "name": "audio_saved",
+                  "elapsed_ms": 3959.914
+                },
+                {
+                  "name": "audio_metrics_ready",
+                  "elapsed_ms": 4012.986
+                }
+              ],
+              "total_elapsed_ms": 4013.002,
+              "duration_seconds": 5.92,
+              "realtime_factor": 0.668,
+              "metrics": {
+                "path": "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/chunk_01_satisfied_candidate_01_stage_default.wav",
+                "exists": true,
+                "bytes": 284238,
+                "sha256": "5c5c953fb21aedeed2b61441138e6a99202bbad014e70e38dd3b138782ab94a7",
+                "ffprobe": {
+                  "cmd": [
+                    "ffprobe",
+                    "-hide_banner",
+                    "-v",
+                    "error",
+                    "-show_entries",
+                    "format=duration,size",
+                    "-show_entries",
+                    "stream=codec_name,sample_rate,channels",
+                    "-of",
+                    "json",
+                    "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/chunk_01_satisfied_candidate_01_stage_default.wav"
+                  ],
+                  "returncode": 0,
+                  "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.920000\",\n        \"size\": \"284238\"\n    }\n}\n",
+                  "stderr": ""
+                },
+                "codec_name": "pcm_s16le",
+                "sample_rate": 24000,
+                "channels": 1,
+                "duration_seconds": 5.92,
+                "ffprobe_size": 284238
+              },
+              "failed_gates": []
+            },
+            "audio_exists_for_asr": true,
+            "asr": {
+              "ok": true,
+              "mocked": false,
+              "live": true,
+              "transcript": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+              "gate": {
+                "ok": true,
+                "wer": 0.0,
+                "repeated_ngram_hits": [],
+                "failed_gates": []
+              },
+              "failed_gates": []
+            },
+            "ok": true,
+            "failed_gates": []
+          }
+        ],
+        "failed_gates": []
+      },
+      "cache": {
+        "hit": false,
+        "disabled": true,
+        "cache_key": "da813f60942ff79d2bfc98c40b75637bd2e1b8683cce01ef016f9fdffd4d03e4"
+      },
+      "phase": "answer_chunk",
+      "chunk_index": 1,
+      "chunk_total": 1,
+      "pause_after_ms": 0,
+      "can_interrupt_after": true,
+      "applied_control": {
+        "chunk_index": 1,
+        "requested": {
+          "tone": "firm_boundary",
+          "delivery_stage": null,
+          "pace": "steady",
+          "pause_strategy": null,
+          "pause_after_ms": 0
+        },
+        "normalized": {
+          "tone": "firm_boundary",
+          "delivery_stage": "satisfied",
+          "pace": "steady",
+          "pause_strategy": null,
+          "pause_after_ms": 0
+        },
+        "applied": {
+          "tone": "firm_boundary",
+          "delivery_stage": "satisfied",
+          "pace": "steady",
+          "pause_strategy": null,
+          "pause_after_ms": 0,
+          "can_interrupt_after": true
+        }
+      }
+    }
+  ],
+  "completion_cue": null,
+  "finished_response_audio": "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/finished_response.wav",
+  "finished_response_metrics": {
+    "path": "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/finished_response.wav",
+    "exists": true,
+    "bytes": 284238,
+    "sha256": "5c5c953fb21aedeed2b61441138e6a99202bbad014e70e38dd3b138782ab94a7",
+    "ffprobe": {
+      "cmd": [
+        "ffprobe",
+        "-hide_banner",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration,size",
+        "-show_entries",
+        "stream=codec_name,sample_rate,channels",
+        "-of",
+        "json",
+        "/out/persona-dream-live_chain_reliability_live_chain_reliability_20260729t133501z_cyc/finished_response.wav"
+      ],
+      "returncode": 0,
+      "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.920000\",\n        \"size\": \"284238\"\n    }\n}\n",
+      "stderr": ""
+    },
+    "codec_name": "pcm_s16le",
+    "sample_rate": 24000,
+    "channels": 1,
+    "duration_seconds": 5.92,
+    "ffprobe_size": 284238
+  },
+  "crossfade_ms": 20,
+  "asr_verification": {
+    "enabled": true,
+    "openai_base_url": "http://whisper:9000",
+    "api_key_env": "WHISPER_API_KEY",
+    "request_overrides_allowed": false,
+    "api_key_available": true,
+    "max_wer": 0.0,
+    "max_duration_ratio": 2.5,
+    "max_candidates": 3,
+    "cache_enabled": false,
+    "failed_gates": []
+  },
+  "blessed_qra_cache": {
+    "enabled": false,
+    "hit": false,
+    "reason": "request_disabled",
+    "schema_version": "blessed_qra_response_cache.v1",
+    "failed_gates": []
+  },
+  "latency_events": [
+    {
+      "name": "batch_received",
+      "elapsed_ms": 0.001
+    },
+    {
+      "name": "batch_dir_ready",
+      "elapsed_ms": 0.116
+    },
+    {
+      "name": "blessed_qra_lookup_done",
+      "elapsed_ms": 0.12,
+      "enabled": false,
+      "hit": false,
+      "reason": "request_disabled"
+    },
+    {
+      "name": "render_plan_ready",
+      "elapsed_ms": 0.173,
+      "chunk_count": 1
+    },
+    {
+      "name": "chunk_done",
+      "elapsed_ms": 4173.369,
+      "chunk_index": 1,
+      "ok": true,
+      "asr_verified": true
+    },
+    {
+      "name": "finished_audio_ready",
+      "elapsed_ms": 4238.866,
+      "bytes": 284238
+    }
+  ],
+  "total_elapsed_ms": 4238.879,
+  "failed_gates": []
+}

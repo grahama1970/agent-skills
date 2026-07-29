@@ -1,6 +1,6 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-29T13:24:15Z
+**Timestamp:** 2026-07-29T13:39:00Z
 **Active Agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target Branch:** `main`
@@ -36,9 +36,13 @@
   `reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`. Persona Dream
   publishes numeric deltas only; SPARTA owns production conversation-service
   consumption.
+- **Five-cycle reliability pilot:** Passed under #1041 at
+  `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` with 5
+  attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted
+  effects, and Wilson 95% lower bound 0.565509.
 - **Status boundary:** P2.4 recognition proof does not prove perceived emotion,
   naturalness, human listener recognition, production conversation-service
-  binding, repeated dream-pipeline reliability, or PCTOM-R benefit.
+  binding, production reliability beyond an N=5 pilot, or PCTOM-R benefit.
 
 ## 3. What is Working Well
 
@@ -74,6 +78,12 @@
   source dream `live_chain_20260729t130950z`, ledger epoch `2`,
   arc delta `arc_1_55a79f6ef25f`, `intensity_delta=0.18`,
   `valence_delta=-0.18`, `emits_tone=false`, and 7/7 negative controls blocked.
+- Reliability aggregate receipt:
+  `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` with
+  `PASS_LIVE_CHAIN_RELIABILITY_PILOT`, SHA-256
+  `sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f`,
+  campaign id `live_chain_reliability_20260729t133501z`, 5/5 cycle receipts
+  passed, duplicate accepted effects `0`, and Wilson 95% lower bound `0.565509`.
 - `session_mood_chatterbox_live.py` now sends Chatterbox the service-visible
   `/data/embry_ref.wav` path while the receipt records the host-side authorized
   reference path and SHA-256. This avoids the `reference_audio_outside_allowed_roots`
@@ -91,19 +101,20 @@
   study and does not prove perceived target emotion or naturalness.
 - **PCTOM-R benefit unproven:** The machinery remains strong, but no
   confidence-bounded counterfactual-dreaming planning advantage has been shown.
-- **Repeated reliability unproven:** The historical accepted media loop remains
-  N=1; no five-cycle reliability campaign exists.
+- **Reliability boundary:** The five-cycle engineering pilot passed, but this is
+  not production reliability and does not cover a larger campaign or restart
+  recovery.
 
 ## 5. Next Steps
 
-1. Run the five-cycle engineering reliability campaign. Each cycle should either
-   produce one accepted live-chain receipt or a named fail-closed blocker with
-   zero unauthorized writes.
-2. Hand `session_arc_bias.v1` to the SPARTA-owned production conversation
+1. Hand `session_arc_bias.v1` to the SPARTA-owned production conversation
    consumer; do not edit SPARTA from Persona Dream unless the operator routes
    that work in the SPARTA lane.
-3. Return to PCTOM-R condition-benefit work such as issue `#1008` only after the
-   P2 live-chain receipt or an explicit operator reprioritization.
+2. Run the blinded Chatterbox listener study for dream-derived emotion, Embry
+   identity, and naturalness.
+3. Return to PCTOM-R condition-benefit work such as issue `#1008` only after an
+   explicit operator reprioritization or after the voice/perception gate is
+   receipted.
 
 ## 6. Project Context for Success
 
@@ -118,14 +129,15 @@
 - **Long recognition receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json`
 - **Joined live-chain receipt:** `skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json`
 - **Session arc-bias receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`
+- **Reliability aggregate receipt:** `skills/persona-dream/reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`
 
 Use this claim boundary:
 
 ```text
 Persona Dream remains in P2_LIVE_CONTINUITY_CHAIN. The joined
-accepted-dream-to-live-chain receipt now passes for one cycle, and Persona
-Dream publishes a session_arc_bias artifact for SPARTA. The immutable Embry
-continuity goal remains NOT_MET until repeated reliability and downstream
-production consumption are receipted, and perceptual emotion/PCTOM-R benefit
-boundaries remain explicitly unproven.
+accepted-dream-to-live-chain receipt passes, Persona Dream publishes a
+session_arc_bias artifact for SPARTA, and an N=5 live-chain reliability pilot
+passes. The immutable Embry continuity goal remains NOT_MET until downstream
+production consumption and perceptual emotion evidence are receipted, and
+production reliability/PCTOM-R benefit boundaries remain explicitly unproven.
 ```

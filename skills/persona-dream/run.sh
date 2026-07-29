@@ -161,6 +161,7 @@ Commands:
   check-tom-belief-revision  Validate PCTOM-R Gate 7 non-destructive belief revision
   run-reliability-surface  Validate PCTOM-R Gate 8 repeated, perturbed, and fault-injected reliability surface
   run-causal-replay  Validate PCTOM-R Gate 9 causal replay and failure localization
+  live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -727,6 +728,9 @@ case "$COMMAND" in
     ;;
   live-chain)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_receipt.py" "$@"
+    ;;
+  live-chain-reliability)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_reliability.py" "$@"
     ;;
   session-arc-bias)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/session_arc_bias.py" "$@"

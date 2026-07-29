@@ -22,7 +22,7 @@
     "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
     "mocked": false,
     "live": true,
-    "status": "LIVE_CHAIN_AND_SESSION_ARC_BIAS_PASSED_NOT_PRODUCTION_OR_RELIABILITY",
+    "status": "LIVE_CHAIN_SESSION_ARC_BIAS_AND_N5_RELIABILITY_PILOT_PASSED_NOT_PRODUCTION_OR_PERCEPTUAL",
     "latest_authority_receipt": "skills/persona-dream/reports/goal_v5/continuity/ledger_hardening/RECEIPT.json",
     "latest_authority_receipt_sha256": "sha256:02f866e0b208c531902129cff2cd385ba29b28d6170d3ea027993fea01f7502b",
     "latest_session_mood_binding_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
@@ -36,12 +36,12 @@
     "latest_voice_recognition_preflight_runtime": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
     "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json",
     "latest_voice_recognition_receipt_sha256": "sha256:9a1e6de22b0b608570d0458394b64746be8737154d886f8a91dc9cf4c2e159bd",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256",
     "unverified": [
       "SPARTA production conversation-service consumption of the session_arc_bias artifact",
-      "recognition check across multiple moods",
       "perceived target emotion, naturalness, or human listener acceptance",
-      "five-cycle repeated full dream-pipeline reliability"
+      "recognition check across multiple moods",
+      "production reliability beyond an N=5 pilot"
     ],
     "latest_live_chain_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "latest_live_chain_receipt_sha256": "sha256:436075e6635ff9a6e643a46c624ace9a9eb0cd201130baea242742efdaf7919f",
@@ -65,6 +65,26 @@
       "valence_delta": -0.18,
       "emits_tone": false,
       "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED"
+    },
+    "latest_reliability_aggregate_receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
+    "latest_reliability_aggregate_receipt_sha256": "sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f",
+    "latest_reliability_pilot": {
+      "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
+      "campaign_id": "live_chain_reliability_20260729t133501z",
+      "attempted": 5,
+      "completed": 5,
+      "passed": 5,
+      "blocked": 0,
+      "errored": 0,
+      "duplicate_accepted_effect_count": 0,
+      "wilson_95_lower": 0.565509,
+      "cycle_receipts": [
+        "sha256:77ab4d73cf376cf7532d828ca251adcb244b96ee1e5df1a91a2720aef1c35437",
+        "sha256:1b8d338850b43d2edfcab455836376ed015ccef09d3376648af4bcfdb6580c16",
+        "sha256:2544988bed01b419ed22222d677ec637f5c2b2198d33ec4ed6ed2ef529c1f5d1",
+        "sha256:85f36a690c10c16d3f53bbf659d9ea21ea4e4cafd7c687fda6bbb55c28c5b3d1",
+        "sha256:8cac02308458c2c6fd64150e59fbbdf070579440a491bfb2a54a3f8a7f55ecf3"
+      ]
     }
   },
   "latest_voice_proof": {
@@ -216,16 +236,16 @@
   "active_blockers": [
     "SPARTA production conversation service has not yet consumed the Persona Dream session_arc_bias artifact; tracked outside Persona Dream ownership.",
     "Chatterbox proof is transport/content-preservation and resemblyzer speaker-recognition evidence, not perceptual emotion, naturalness, or human listener acceptance.",
-    "Repeated full dream-pipeline reliability is not proven; no five-cycle campaign exists.",
+    "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
     "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
   ],
   "next_step": {
-    "default": "Run the five-cycle engineering reliability campaign, or hand the published session_arc_bias artifact to the SPARTA-owned production conversation-service consumer.",
-    "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/reliability_campaign/RECEIPT.json",
+    "default": "Hand the published session_arc_bias artifact to the SPARTA-owned production conversation-service consumer, then run the blinded Chatterbox listener study.",
+    "receipt_target": "SPARTA-owned production conversation-service receipt plus skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
     "ordered_steps": [
-      "Run five fresh continuity-chain cycles with distinct cycle ids and record completion/fail-closed outcomes.",
       "Do not modify SPARTA from Persona Dream; SPARTA consumption of session_arc_bias belongs to the SPARTA ticket lane.",
+      "Run a blinded Chatterbox listener study for dream-derived emotion, Embry identity, and naturalness.",
       "Defer PCTOM-R condition-benefit expansion until continuity runtime reliability has deterministic evidence or the operator explicitly reprioritizes the research workstream."
     ]
   }

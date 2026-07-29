@@ -31,6 +31,7 @@ RECEIPTS = {
     "voice_expression": RR / "voice_expression/voice_expression_evaluation_receipt.v1.json",
     "live_chain": SKILL / "reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "session_arc_bias": SKILL / "reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
+    "reliability": SKILL / "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
 }
 
 
@@ -56,6 +57,7 @@ def render() -> str:
     voice = _load(RECEIPTS["voice_expression"])
     live_chain = _load(RECEIPTS["live_chain"])
     arc_bias = _load(RECEIPTS["session_arc_bias"])
+    reliability = _load(RECEIPTS["reliability"])
 
     dur = ret.get("ffprobe", {}).get("format", {}).get("duration", "?")
     rows = [
@@ -92,6 +94,12 @@ def render() -> str:
             f"{arc_bias.get('status')} negative_controls={sum(1 for row in arc_bias.get('negative_controls', []) if row.get('status') == 'PASS_NEGATIVE_BLOCKED')}/{len(arc_bias.get('negative_controls', []))}",
             "session_arc_bias",
         ),
+        (
+            "Five-cycle reliability pilot",
+            f"{reliability.get('status')} passed={reliability.get('counts', {}).get('passed')}/{reliability.get('counts', {}).get('attempted')} "
+            f"wilson_lower={reliability.get('success_interval', {}).get('lower')}",
+            "reliability",
+        ),
     ]
 
     lines = [
@@ -113,7 +121,7 @@ def render() -> str:
         "Not proven (from the receipts' own does_not_prove sets): human",
         "subjective acceptance of the dream video; perceived emotional fidelity",
         "and lip-sync quality of the voice lane (canary proves the route only);",
-        "repeatability beyond N=1; production conversation-service authority;",
+        "production reliability beyond an N=5 pilot; production conversation-service authority;",
         "SPARTA consumption of the session arc-bias artifact;",
         "whole-clip embedding-certified identity.",
         "",

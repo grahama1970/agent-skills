@@ -1,0 +1,133 @@
+{
+  "adversarial_voices": [
+    {
+      "audio": {
+        "bytes": 960078,
+        "exists": true,
+        "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+        "sha256": "sha256:d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65"
+      },
+      "below_ceiling": true,
+      "seconds": 30.0,
+      "similarity_to_embry": 0.633146
+    },
+    {
+      "audio": {
+        "bytes": 288078,
+        "exists": true,
+        "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+        "sha256": "sha256:66b5b7518b86fc91546d469087cb9a2a616f2e8867b5f1dbd4c0aea62fe357f4"
+      },
+      "below_ceiling": true,
+      "seconds": 6.0,
+      "similarity_to_embry": 0.478377
+    }
+  ],
+  "backend_error": null,
+  "claims": {
+    "does_not_prove": [
+      "perceived emotion or target tone",
+      "naturalness or human acceptance",
+      "that a human listener would identify Embry",
+      "robustness to a deliberate voice-cloning attack",
+      "that a low score means the wrong voice rather than too-short audio: renders are ~2s while the within-speaker baseline uses ~4s halves"
+    ],
+    "proves": [
+      "each session-mood render is closer to the authorized Embry reference than real non-Embry voices, by a preregistered margin"
+    ]
+  },
+  "created_at": "2026-07-29T13:36:18Z",
+  "engine": "resemblyzer",
+  "failed_gates": [],
+  "genuine_renders": [
+    {
+      "audio": {
+        "bytes": 217038,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_003/chatterbox_live/turn_001_finished_response.wav",
+        "sha256": "sha256:77a13cfe7860e6d6664ad97fd960e8520c280cc4bbc68fcc3f3857230d77ffa2"
+      },
+      "duration_aware_floor": 0.763979,
+      "long_enough_to_judge": true,
+      "passes_duration_aware_floor": true,
+      "passes_threshold": true,
+      "seconds": 4.52,
+      "similarity_to_authorized_reference": 0.851578,
+      "similarity_to_conditioning_reference": 0.851578,
+      "similarity_to_embry": 0.851578
+    },
+    {
+      "audio": {
+        "bytes": 251598,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_003/chatterbox_live/turn_002_finished_response.wav",
+        "sha256": "sha256:7ef7cc4273a241175ad89fd6e87bcb331497c584b7a59defd252fabd51ea4d0f"
+      },
+      "duration_aware_floor": 0.763979,
+      "long_enough_to_judge": true,
+      "passes_duration_aware_floor": true,
+      "passes_threshold": true,
+      "seconds": 5.24,
+      "similarity_to_authorized_reference": 0.812772,
+      "similarity_to_conditioning_reference": 0.812772,
+      "similarity_to_embry": 0.812772
+    },
+    {
+      "audio": {
+        "bytes": 261198,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_003/chatterbox_live/turn_003_finished_response.wav",
+        "sha256": "sha256:184589572c897b91792e48cdacda2affdd50ce46af06e4eb7d14452a29b2ad34"
+      },
+      "duration_aware_floor": 0.763979,
+      "long_enough_to_judge": true,
+      "passes_duration_aware_floor": true,
+      "passes_threshold": true,
+      "seconds": 5.44,
+      "similarity_to_authorized_reference": 0.873627,
+      "similarity_to_conditioning_reference": 0.873627,
+      "similarity_to_embry": 0.873627
+    }
+  ],
+  "live": false,
+  "mocked": false,
+  "preregistered_thresholds": {
+    "max_adversarial_similarity": 0.7,
+    "min_embry_similarity": 0.75,
+    "min_separation": 0.05,
+    "note": "Fixed before any score was computed; not tuned to observed values."
+  },
+  "reference_audio": {
+    "bytes": 960078,
+    "exists": true,
+    "path": "skills/persona-dream/voice_clone_candidates/embry_kling_clone_candidate.wav",
+    "sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098"
+  },
+  "reference_provenance": {
+    "conditioning_reference": {
+      "bytes": 960078,
+      "exists": true,
+      "path": "skills/persona-dream/voice_clone_candidates/embry_kling_clone_candidate.wav",
+      "sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098"
+    },
+    "is_authorized_voice": true,
+    "min_required": 0.75,
+    "seconds": 30.0,
+    "similarity_to_authorized": 1.0
+  },
+  "schema": "persona_dream.session_mood_voice_recognition.v1",
+  "separation": 0.179626,
+  "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION",
+  "within_speaker_baseline": {
+    "duration_matched": {
+      "max": 0.94238,
+      "mean": 0.923979,
+      "min": 0.905403,
+      "slice_seconds": 4.52,
+      "slices": 6
+    },
+    "half_seconds": 15.0,
+    "method": "reference split into two equal halves",
+    "within_speaker_similarity": 0.929829
+  }
+}

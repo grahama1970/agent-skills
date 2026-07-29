@@ -144,6 +144,21 @@ STAGES = (
         ),
         status_pin="continuity_state.latest_session_arc_bias_receipt_sha256",
     ),
+    Stage(
+        stage_id="P2_five_cycle_reliability_pilot",
+        receipt="reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
+        accepted_prefix="PASS_LIVE_CHAIN_RELIABILITY_PILOT",
+        contradiction_markers=(
+            "five-cycle repeated full dream-pipeline reliability",
+            "no five-cycle campaign exists",
+            "run the five-cycle engineering reliability campaign",
+            "run five fresh continuity-chain cycles",
+            "run five fresh continuity chain cycles",
+            "repeated full dream-pipeline reliability is not proven",
+            "five-cycle reliability campaign with distinct cycle ids",
+        ),
+        status_pin="continuity_state.latest_reliability_aggregate_receipt_sha256",
+    ),
 )
 
 

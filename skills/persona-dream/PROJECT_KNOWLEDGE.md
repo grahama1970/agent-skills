@@ -1,7 +1,60 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias PASS; reliability/SPARTA consumption next) by Codex
+**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + N=5 reliability pilot PASS; SPARTA/perceptual evidence next) by Codex
 **Status:** Active development
+
+## 2026-07-29 — #1041 N=5 live-chain reliability pilot PASS; not production reliability
+
+The five-cycle engineering pilot now exists:
+
+- Aggregate receipt:
+  `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`
+  - SHA-256: `sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f`
+  - status: `PASS_LIVE_CHAIN_RELIABILITY_PILOT`
+  - campaign id: `live_chain_reliability_20260729t133501z`
+  - `mocked: false`, `live: true`
+  - attempted: `5`
+  - completed: `5`
+  - passed: `5`
+  - blocked: `0`
+  - errored: `0`
+  - duplicate accepted effects: `0`
+  - Wilson 95% lower bound: `0.565509`
+- Cycle receipts:
+  - `cycle_001/RECEIPT.json`: `sha256:77ab4d73cf376cf7532d828ca251adcb244b96ee1e5df1a91a2720aef1c35437`
+  - `cycle_002/RECEIPT.json`: `sha256:1b8d338850b43d2edfcab455836376ed015ccef09d3376648af4bcfdb6580c16`
+  - `cycle_003/RECEIPT.json`: `sha256:2544988bed01b419ed22222d677ec637f5c2b2198d33ec4ed6ed2ef529c1f5d1`
+  - `cycle_004/RECEIPT.json`: `sha256:85f36a690c10c16d3f53bbf659d9ea21ea4e4cafd7c687fda6bbb55c28c5b3d1`
+  - `cycle_005/RECEIPT.json`: `sha256:8cac02308458c2c6fd64150e59fbbdf070579440a491bfb2a54a3f8a7f55ecf3`
+
+What this proves:
+
+- five sequential live-chain cycles reached terminal PASS receipts;
+- every cycle used a distinct dream-cycle id and durable per-cycle receipt;
+- each cycle rendered three live `chatterbox_base` turns with ASR acceptance;
+- each cycle produced a passing resemblyzer speaker-recognition receipt;
+- the aggregate recomputes and binds every cycle receipt hash;
+- no duplicate accepted effects were observed.
+
+What this does not prove:
+
+- production reliability;
+- restart/recovery behavior;
+- perceptual emotion, naturalness, or human listener acceptance;
+- SPARTA production conversation-service consumption;
+- PCTOM-R confidence-bounded planning advantage;
+- paid provider/video repeatability.
+
+Current next implementation order:
+
+1. Hand `session_arc_bias.v1` to the SPARTA-owned production conversation
+   consumer; do not edit SPARTA from Persona Dream unless the operator routes
+   that work in the SPARTA lane.
+2. Run the blinded Chatterbox listener study for dream-derived emotion, Embry
+   identity, and naturalness.
+3. Return to PCTOM-R condition-benefit work only after the operator explicitly
+   prioritizes the research workstream or the voice/perception gate is
+   receipted.
 
 ## 2026-07-29 — #1057 scoped Persona Dream artifact PASS: session arc bias
 
@@ -88,9 +141,10 @@ What it does not prove:
 - PCTOM-R confidence-bounded planning advantage;
 - new paid Kling/video generation.
 
-Current next implementation order:
+SUPERSEDED current order from this section. Historical only; the N=5 pilot now
+exists under `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`:
 
-1. Run a five-cycle engineering reliability campaign with distinct cycle ids,
+1. Historical/superseded: run a five-cycle engineering reliability campaign with distinct cycle ids,
    recording either accepted live-chain completion or named fail-closed blockers.
 2. Add a production conversation-service authority receipt proving session mood
    is selected from the continuity ledger before turn 1 and reused across turns.
