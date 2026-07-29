@@ -55,9 +55,38 @@ class HostSessionManager {
     this.contexts = new Set();
     this.principalCounts = new Map();
     this.waiters = [];
-    this.leaseOwner = null;
+    this.leaseOwners = new Map();
     this.remoteConnections = 0;
     this.streams = new Set();
+  }
+
+  leaseKeyFromRequest(msg) {
+    const args = msg?.params?.args || {};
+    const tabId = msg?.tabId || args["target-tab-id"] || args["tab-id"];
+    if (tabId) return `tab:${tabId}`;
+    const windowId = msg?.windowId || args["window-id"];
+    if (windowId) return `window:${windowId}`;
+    return "global";
+  }
+
+  hasLeaseForContext(context) {
+    for (const owner of this.leaseOwners.values()) {
+      if (owner === context) return true;
+    }
+    return false;
+  }
+
+  canGrantLease(context, leaseKey) {
+    if (leaseKey === "global") {
+      return (
+        this.leaseOwners.size === 0
+        || (this.leaseOwners.size === 1 && this.leaseOwners.get("global") === context)
+      );
+    }
+    const globalOwner = this.leaseOwners.get("global");
+    if (globalOwner && globalOwner !== context) return false;
+    const scopedOwner = this.leaseOwners.get(leaseKey);
+    return !scopedOwner || scopedOwner === context;
   }
 
   admit(socket, isRemote) {
@@ -108,7 +137,7 @@ class HostSessionManager {
   }
 
   canStartStream(context) {
-    if (context.closed || context.stream || context.activeRequest || this.leaseOwner === context) return false;
+    if (context.closed || context.stream || context.activeRequest || this.hasLeaseForContext(context)) return false;
     const principalId = context.principal?.clientId || "local";
     const principalStreams = [...this.streams].filter((entry) => entry.principalId === principalId).length;
     if (principalStreams >= MAX_STREAMS_PER_PRINCIPAL) return false;
@@ -128,7 +157,7 @@ class HostSessionManager {
     context.stream = false;
   }
 
-  beginRequest(context, { id, tool, deadlineMs, requiresLease = true }) {
+  beginRequest(context, { id, tool, deadlineMs, requiresLease = true, leaseKey = "global" }) {
     if (context.closed) return Promise.reject(new Error("connection is closed"));
     if (context.workTimer) {
       clearTimeout(context.workTimer);
@@ -151,6 +180,7 @@ class HostSessionManager {
       deadlineMs: Math.min(Math.max(deadlineMs || DEFAULT_DEADLINE_MS, 1), MAX_DEADLINE_MS),
       queued: true,
       requiresLease,
+      leaseKey,
       settled: false,
       controller,
       signal: controller.signal,
@@ -167,11 +197,11 @@ class HostSessionManager {
       if (context.closed) return Promise.reject(new Error("connection closed while waiting for browser lease"));
       request.queued = false;
       request.timer = setTimeout(() => this.onRequestTimeout(context, request), request.deadlineMs);
-      this.leaseOwner = context;
+      this.leaseOwners.set(request.leaseKey, context);
       this.audit({ event: "lease", context, request, outcome: "acquired" });
       return Promise.resolve(request);
     };
-    if (!this.leaseOwner || this.leaseOwner === context) {
+    if (this.canGrantLease(context, request.leaseKey)) {
       if (context.idleTimer) clearTimeout(context.idleTimer);
       context.idleTimer = null;
       return grant();
@@ -214,30 +244,47 @@ class HostSessionManager {
     if (request.abortCleanup) request.abortCleanup();
     context.activeRequest = null;
     this.audit({ event: "request", context, request, outcome, elapsedMs: Date.now() - request.startedAt });
-    if (this.leaseOwner === context) {
+    if (this.leaseOwners.get(request.leaseKey) === context) {
       if (context.closed) this.releaseLease(context);
       else {
         if (context.idleTimer) clearTimeout(context.idleTimer);
         context.idleTimer = setTimeout(() => {
-          if (!context.activeRequest && this.leaseOwner === context) this.releaseLease(context);
+          if (!context.activeRequest && this.leaseOwners.get(request.leaseKey) === context) {
+            this.releaseLease(context, request.leaseKey);
+          }
         }, LEASE_IDLE_MS);
       }
     }
   }
 
-  releaseLease(context) {
-    if (this.leaseOwner !== context) return;
+  releaseLease(context, leaseKey = null) {
+    const keys = leaseKey
+      ? [leaseKey]
+      : [...this.leaseOwners.entries()]
+          .filter(([, owner]) => owner === context)
+          .map(([key]) => key);
+    if (!keys.length) return;
     if (context.idleTimer) clearTimeout(context.idleTimer);
     context.idleTimer = null;
-    this.leaseOwner = null;
+    for (const key of keys) {
+      if (this.leaseOwners.get(key) === context) {
+        this.leaseOwners.delete(key);
+      }
+    }
     this.audit({ event: "lease", context, outcome: "released" });
-    while (this.waiters.length) {
-      const waiter = this.waiters.shift();
-      if (!waiter || waiter.context.closed) continue;
+    for (let index = 0; index < this.waiters.length; index += 1) {
+      const waiter = this.waiters[index];
+      if (!waiter || waiter.context.closed) {
+        this.waiters.splice(index, 1);
+        index -= 1;
+        continue;
+      }
+      if (!this.canGrantLease(waiter.context, waiter.request.leaseKey)) continue;
+      this.waiters.splice(index, 1);
       clearTimeout(waiter.timer);
-      this.leaseOwner = waiter.context;
+      this.leaseOwners.set(waiter.request.leaseKey, waiter.context);
       waiter.resolve();
-      return;
+      index -= 1;
     }
   }
 
@@ -271,7 +318,7 @@ class HostSessionManager {
       if (!request.signal.aborted) request.controller.abort(abortError(null, "Request cancelled: client disconnected"));
       this.audit({ event: "request", context, request, outcome: "abort-requested" });
       this.audit({ event: "request", context, request, outcome: "abandoned" });
-    } else if (this.leaseOwner === context) {
+    } else if (this.hasLeaseForContext(context)) {
       this.releaseLease(context);
     }
     this.contexts.delete(context);

@@ -48,11 +48,30 @@ function parseBrowserLockTimeoutMs(value, fallbackMs) {
   return seconds * 1000;
 }
 
-function installBrowserLock({ noLock, timeoutMs }, endpoint) {
+function lockScopeForRequest(endpoint, globalOpts = {}, toolArgs = {}) {
+  const targetTabId = globalOpts.tabId || toolArgs["target-tab-id"];
+  if (targetTabId) {
+    return {
+      ...endpoint,
+      key: `${endpoint.key}|tab:${targetTabId}`,
+      display: `${endpoint.display} tab:${targetTabId}`,
+    };
+  }
+  if (globalOpts.windowId) {
+    return {
+      ...endpoint,
+      key: `${endpoint.key}|window:${globalOpts.windowId}`,
+      display: `${endpoint.display} window:${globalOpts.windowId}`,
+    };
+  }
+  return endpoint;
+}
+
+function installBrowserLock({ noLock, timeoutMs }, endpoint, scope = endpoint) {
   let releaseBrowserLock = () => {};
   if (!noLock) {
     try {
-      const lock = acquireBrowserLock(endpoint.key, SURF_TMP, { timeoutMs });
+      const lock = acquireBrowserLock(scope.key, SURF_TMP, { timeoutMs });
       releaseBrowserLock = lock.release;
     } catch (error) {
       if (error && error.code === "SURF_BROWSER_LOCK_TIMEOUT" && error.surfLockBlocker) {
@@ -3487,7 +3506,7 @@ if (finalTool === "record") {
     console.error(`Error: record is not supported with remote endpoint ${endpoint.display}`);
     process.exit(1);
   }
-  installBrowserLock(lockOptions, endpoint);
+  installBrowserLock(lockOptions, endpoint, lockScopeForRequest(endpoint, globalOpts, toolArgs));
   runRecord()
     .then(() => process.exit(0))
     .catch((error) => {
@@ -3497,7 +3516,7 @@ if (finalTool === "record") {
   return;
 }
 
-installBrowserLock(lockOptions, endpoint);
+installBrowserLock(lockOptions, endpoint, lockScopeForRequest(endpoint, globalOpts, toolArgs));
 let socket;
 let timeout;
 let responseFinished = false;

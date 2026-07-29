@@ -93,9 +93,8 @@ PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
         can_attach=True,
         max_attachments=1,
         zip_allowed=False,
-        preferred_bundle="one plain Markdown or text bundle, inlined through --query-file when upload input is unavailable",
-        gotcha="do not use zip; inline only readable Markdown/text bundles through query-file so large prompts avoid argv limits",
-        inline_text_attachments=True,
+        preferred_bundle="one plain Markdown or text bundle attached with --attach-file",
+        gotcha="do not use zip; send a short prompt plus one readable Markdown/text attachment, not a large inline composer payload",
     ),
     "webgemini": ProviderPayloadPolicy(
         handler="webgemini",
@@ -971,7 +970,7 @@ def _prepare_browser_submit_payload(
     inline_paths = _inline_text_bundle_paths(combined_attachments) if policy.inline_text_attachments else []
     inline_by_resolved = {str(Path(path).resolve()): index + 1 for index, path in enumerate(inline_paths)}
     submit_attachments = [path for path in combined_attachments if str(Path(path).resolve()) not in inline_by_resolved]
-    if not local_candidates and not inline_paths:
+    if not local_candidates and not inline_paths and not submit_attachments:
         return (
             prompt_path,
             submit_attachments,

@@ -3,12 +3,22 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import importlib.util
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CLAUDE_SUBMIT = REPO_ROOT / "skills/surf/scripts/claude-submit.py"
 SURF_RUN = REPO_ROOT / "skills/surf/run.sh"
+
+
+def _load_claude_submit_module():
+    spec = importlib.util.spec_from_file_location("claude_submit_script", CLAUDE_SUBMIT)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_surf_run_routes_claude_submit_help() -> None:
@@ -803,6 +813,16 @@ esac
     assert payload["clean_contains_sentinel"] is False
     assert "What can we tackle together?" in payload["clean_contamination_markers"]
     assert "Automation-only instruction:" in payload["clean_contamination_markers"]
+
+
+def test_claude_clean_contamination_allows_marker_discussion() -> None:
+    claude_submit = _load_claude_submit_module()
+    text = (
+        "The prior detector matched @keyframes and What can we tackle together? "
+        "as page-shell markers, but this answer is discussing them as evidence."
+    )
+
+    assert claude_submit._clean_contamination_markers(text) == []
 
 
 def test_claude_submit_chat_url_mismatch_still_fails_closed(tmp_path: Path) -> None:

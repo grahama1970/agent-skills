@@ -101,6 +101,40 @@ async function setPromptInComposerDom(cdp, prompt) {
           && style.display !== 'none';
       };
       const textOf = (node) => node.innerText || node.textContent || node.value || '';
+      const setNativeValue = (node, value) => {
+        const proto = node instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : node instanceof HTMLInputElement
+          ? HTMLInputElement.prototype
+          : null;
+        const setter = proto ? Object.getOwnPropertyDescriptor(proto, 'value')?.set : null;
+        if (setter) setter.call(node, value);
+        else node.value = value;
+      };
+      const selectNodeContents = (node) => {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      };
+      const fireInput = (node, data, inputType) => {
+        node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, data, inputType }));
+        node.dispatchEvent(new InputEvent('input', { bubbles: true, data, inputType }));
+      };
+      const dispatchPaste = (node, text) => {
+        try {
+          const dt = new DataTransfer();
+          dt.setData('text/plain', text);
+          dt.setData('text/markdown', text);
+          const paste = new ClipboardEvent('paste', { bubbles: true, cancelable: true, composed: true });
+          Object.defineProperty(paste, 'clipboardData', { value: dt });
+          node.dispatchEvent(paste);
+          return true;
+        } catch {
+          return false;
+        }
+      };
       const promptStart = prompt.slice(0, 80);
       const promptEnd = prompt.slice(-80);
       for (const selector of selectors) {
@@ -110,26 +144,23 @@ async function setPromptInComposerDom(cdp, prompt) {
           dispatchClickSequence(node);
           if (typeof node.focus === 'function') node.focus();
           if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
-            const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
-              || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-            if (setter) setter.call(node, '');
-            else node.value = '';
+            setNativeValue(node, '');
             node.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
-            if (setter) setter.call(node, prompt);
-            else node.value = prompt;
+            setNativeValue(node, prompt);
             node.dispatchEvent(new InputEvent('input', { bubbles: true, data: prompt, inputType: 'insertFromPaste' }));
           } else {
-            const selection = window.getSelection();
-            const range = document.createRange();
-            range.selectNodeContents(node);
-            selection.removeAllRanges();
-            selection.addRange(range);
+            selectNodeContents(node);
             document.execCommand('delete', false, null);
-            const inserted = document.execCommand('insertText', false, prompt);
+            fireInput(node, null, 'deleteContentBackward');
+            dispatchPaste(node, prompt);
+            let inserted = textOf(node).includes(promptStart) && textOf(node).includes(promptEnd);
+            if (!inserted) {
+              selectNodeContents(node);
+              inserted = document.execCommand('insertText', false, prompt);
+            }
             if (!inserted || !textOf(node).includes(promptStart) || !textOf(node).includes(promptEnd)) {
               node.textContent = prompt;
-              node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, data: prompt, inputType: 'insertFromPaste' }));
-              node.dispatchEvent(new InputEvent('input', { bubbles: true, data: prompt, inputType: 'insertFromPaste' }));
+              fireInput(node, prompt, 'insertFromPaste');
             }
           }
           const text = textOf(node);
@@ -141,6 +172,73 @@ async function setPromptInComposerDom(cdp, prompt) {
       return { ok: false };
     })()`,
   );
+}
+
+async function clearPromptInComposerDom(cdp, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  let last = { ok: false, length: null };
+  while (Date.now() < deadline) {
+    last = await evaluate(
+      cdp,
+      `(() => {
+        ${buildClickDispatcher()}
+        const selectors = [
+          '.chat-input-editor[role="textbox"]',
+          '.chat-input-editor',
+          'textarea[placeholder*="Ask anything"]',
+          'textarea[placeholder*="follow-up"]',
+          'textarea[placeholder*="Add a follow-up"]',
+          'div[class*="editorContentEditable"]',
+          '[role="textbox"]',
+          '[contenteditable="true"]',
+        ];
+        const visible = (node) => {
+          if (!node) return false;
+          const rect = node.getBoundingClientRect();
+          const style = window.getComputedStyle(node);
+          return rect.width > 0
+            && rect.height > 0
+            && style.visibility !== 'hidden'
+            && style.display !== 'none';
+        };
+        const textOf = (node) => node.innerText || node.textContent || node.value || '';
+        const fireInput = (node, data, inputType) => {
+          node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, data, inputType }));
+          node.dispatchEvent(new InputEvent('input', { bubbles: true, data, inputType }));
+        };
+        for (const selector of selectors) {
+          for (const node of Array.from(document.querySelectorAll(selector))) {
+            if (!visible(node) || node.hasAttribute('disabled')) continue;
+            dispatchClickSequence(node);
+            if (typeof node.focus === 'function') node.focus();
+            if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
+              const proto = node instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+              const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+              if (setter) setter.call(node, '');
+              else node.value = '';
+              fireInput(node, null, 'deleteContentBackward');
+            } else {
+              const selection = window.getSelection();
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              selection.removeAllRanges();
+              selection.addRange(range);
+              document.execCommand('delete', false, null);
+              node.textContent = '';
+              node.innerHTML = '';
+              fireInput(node, null, 'deleteContentBackward');
+            }
+            const text = textOf(node);
+            return { ok: text.length === 0, selector, length: text.length };
+          }
+        }
+        return { ok: false, length: null };
+      })()`,
+    );
+    if (last?.ok) return last;
+    await delay(150);
+  }
+  return last || { ok: false, length: null };
 }
 
 const assistantSnapshotExpression = (sentinel) => {
@@ -870,10 +968,13 @@ async function typePrompt(cdp, inputCdp, prompt) {
   if (typed.mode === "focused_editable") {
     await clickComposerCenter(inputCdp, typed.target);
     await clearFocusedEditor(inputCdp);
-    await insertPromptText(inputCdp, prompt);
-    let verified = await verifyPromptInComposer(cdp, prompt);
+    await clearPromptInComposerDom(cdp);
+    let verified = await setPromptInComposerDom(cdp, prompt);
     if (!verified?.ok) {
-      verified = await setPromptInComposerDom(cdp, prompt);
+      await clearFocusedEditor(inputCdp);
+      await clearPromptInComposerDom(cdp);
+      await insertPromptText(inputCdp, prompt);
+      verified = await verifyPromptInComposer(cdp, prompt);
     }
     if (!verified?.ok) {
       throw new Error("Kimi prompt composer did not receive inserted text");

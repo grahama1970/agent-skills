@@ -23,7 +23,7 @@ const {
     ): void;
     beginRequest(
       context: Record<string, unknown>,
-      options: { id: string; tool: string; deadlineMs?: number; requiresLease?: boolean },
+      options: { id: string; tool: string; deadlineMs?: number; requiresLease?: boolean; leaseKey?: string },
     ): Promise<Record<string, unknown>>;
     canRespond(context: Record<string, unknown>, id: string): boolean;
     complete(context: Record<string, unknown>, id: string, outcome?: string): void;
@@ -258,6 +258,66 @@ describe("host session manager", () => {
     sessions.close(owner);
     sessions.close(observer);
     sessions.close(queuedContext);
+  });
+
+  it("allows concurrent leases for different explicit tabs", async () => {
+    const sessions = manager();
+    const first = connection(sessions);
+    const second = connection(sessions);
+    const third = connection(sessions);
+
+    await sessions.beginRequest(first, { id: "tab-a", tool: "chatgpt", leaseKey: "tab:101" });
+    const secondRequest = await sessions.beginRequest(second, {
+      id: "tab-b",
+      tool: "kimi_tab",
+      leaseKey: "tab:202",
+    });
+
+    let sameTabGranted = false;
+    const sameTab = sessions.beginRequest(third, {
+      id: "tab-a-queued",
+      tool: "chatgpt.extract",
+      leaseKey: "tab:101",
+    }).then(() => {
+      sameTabGranted = true;
+    });
+    await Promise.resolve();
+
+    expect(secondRequest.id).toBe("tab-b");
+    expect(sameTabGranted).toBe(false);
+    sessions.complete(first, "tab-a");
+    await sameTab;
+    expect(sameTabGranted).toBe(true);
+    sessions.complete(second, "tab-b");
+    sessions.complete(third, "tab-a-queued");
+    sessions.close(first);
+    sessions.close(second);
+    sessions.close(third);
+  });
+
+  it("keeps an unscoped global lease exclusive with tab-scoped work", async () => {
+    const sessions = manager();
+    const global = connection(sessions);
+    const scoped = connection(sessions);
+    await sessions.beginRequest(global, { id: "global", tool: "page.text", leaseKey: "global" });
+
+    let scopedGranted = false;
+    const waiting = sessions.beginRequest(scoped, {
+      id: "scoped",
+      tool: "click",
+      leaseKey: "tab:303",
+    }).then(() => {
+      scopedGranted = true;
+    });
+    await Promise.resolve();
+
+    expect(scopedGranted).toBe(false);
+    sessions.complete(global, "global");
+    await waiting;
+    expect(scopedGranted).toBe(true);
+    sessions.complete(scoped, "scoped");
+    sessions.close(global);
+    sessions.close(scoped);
   });
 
   it("classifies only safe observation tools as browser-lease bypasses", () => {

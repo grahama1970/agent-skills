@@ -147,15 +147,15 @@ repairing a browser roundtable packet, apply this matrix:
 | --- | --- | --- | --- |
 | `webgpt` | Short prompt plus one readable bundle | One attachment only; zip is allowed when the task needs a bundle | Multiple attachments fail before submission. Do not infer file creation from prose; download and verify generated artifacts. |
 | `webgemini` | Short prompt plus one readable Markdown/text bundle | Ask inlines Markdown/text bundles for current Gemini tabs; do not rely on upload unless Surf records attachment metadata | Current Gemini UI may expose `Upload & tools` without an `input[type=file]`; stale page text can look like a response if sentinel capture is not strict. |
-| `webkimi` | Short prompt plus one plain readable Markdown/text bundle | Do not use zip; Ask inlines Markdown/text bundles through `kimi.submit --query-file` when upload input is unavailable | Kimi upload UI may expose no `input[type=file]`; large inline prompts must go through `--query-file`, not shell argv or manual paste. |
+| `webkimi` | Short prompt plus one plain readable Markdown/text bundle | Do not use zip; Ask passes the Markdown/text bundle through Surf `kimi.submit --attach-file` | Kimi's Lexical composer can corrupt large inline payloads; do not paste or inline full review bundles into the composer. |
 | `webclaude` | Prompt plus readable files | Multiple attachments are supported | Claude can stage a prompt without submitting it; require submit-acceptance and sentinel proof, not only a prepared prompt file. |
 | `webdeepseek` / `deepseek` | Inline text or short prompt only | Attachments and zip files are unsupported | If local evidence is required, route through another handler or summarize the evidence into the prompt within size limits. |
 
 Do not automatically convert every evidence set into a zip. For one-attachment
 providers, choose the provider-compatible single file: usually Markdown for
-Kimi and README/code review packets, and inline Markdown/text for Gemini or Kimi when
-the current tab lacks a file input; zip only when the provider is
-known to accept it and the task actually needs an archive.
+Kimi and README/code review packets, and inline Markdown/text for Gemini when
+the current tab lacks a file input; zip only when the provider is known to
+accept it and the task actually needs an archive.
 
 Browser lanes queue on the shared Surf browser lock. Ask derives the wait from
 handler count and topology; pass `--browser-lock-timeout <seconds>` on `tau-dag
