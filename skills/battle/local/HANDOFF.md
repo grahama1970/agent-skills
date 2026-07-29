@@ -66,6 +66,65 @@ Intended/missing product scope:
 
 Immutable Goal: NOT_MET
 
+## 2026-07-29 Current-Main Update
+
+Source commit under the newest deployment proof:
+
+```text
+69d65110f503170fc2a8e39b345a61398a110f41
+```
+
+New bounded receipts on `main`:
+
+1. Packaged frontend/backend smoke with WebSocket:
+   `skills/battle/local/packaged-deployment-smoke-current-main-20260729-next5/packaged-deployment-smoke.json`
+   - `status`: `PASS`
+   - `mocked`: `false`
+   - `live`: `packaged_local_http_sse_websocket_adapter_plus_vite_preview`
+   - PR8: `33 total / 0 failed`
+   - `$test-interactions`: `38 passed / 0 failed / 0 warned`
+   - visual findings: `0`
+   - backend WebSocket proof: `websocket_event_count=36`,
+     `websocket_snapshot_first=true`, `websocket_matches_sse_payloads=true`
+
+2. Bounded live Memory ablation:
+   `skills/battle/local/adaptive-memory-ablation-v15-20260729-next5/memory-ablation-result.json`
+   - `status`: `PASS`
+   - live trials: `12/12`
+   - all trials crossed Tau, Docker, and Judge: `true`
+   - Red memory classification: `INCONCLUSIVE`
+   - Blue memory classification: `INCONCLUSIVE`
+
+3. Containerized local frontend/backend deployment smoke:
+   `skills/battle/local/containerized-deployment-smoke-20260729-next3/containerized-deployment-smoke.json`
+   - `status`: `PASS`
+   - `mocked`: `false`
+   - `live`: `containerized_http_sse_websocket_adapter_plus_vite_preview`
+   - Docker image id:
+     `sha256:596dc25fe5cbab67c94cab6a70f8dad570755b8aabcddd1a4e3a5bc83dbceba2`
+   - PR8: `33 total / 0 failed`
+   - `$test-interactions`: `38 passed / 0 failed / 0 warned`
+   - visual findings: `0`
+   - screenshot:
+     `skills/battle/local/containerized-deployment-smoke-20260729-next3/frontend-pr8/01-live-sse-adapter.png`
+
+4. Ask competition attempt for next MVP:
+   `/mnt/storage12tb/skills/ask/outputs/battle-next-mvp-production-deployment-20260729/battle-next-mvp-production-deployment-execute-20260729`
+   - `webgemini`: `PASS`
+   - `webclaude`: `NEEDS_ATTENTION`, `surf_browser_connection_unavailable`
+   - `webkimi`: `NEEDS_ATTENTION`, `surf_browser_connection_unavailable`
+   - `webgrok`: `NEEDS_ATTENTION`, `missing_sentinel`
+   - Tau progress verdict: `SURF_BROWSER_CONNECTION_UNAVAILABLE`
+   - WebGPT was availability-probed by the runtime, but `/ask` no longer accepts
+     WebGPT as a compete handler; use the project WebGPT/Surf workflow for a
+     separate WebGPT lane.
+
+The containerized proof may claim only local Docker container packaging and
+mapped local frontend/backend execution. It still must not claim production
+infrastructure, TLS/auth/fanout/reconnect behavior, cloud/Kubernetes/DNS/secret
+management, unbounded swarm execution, Battle/RelayForge production readiness,
+six-trial qualification, factorial effects, or cross-target generalization.
+
 ## Proof Receipts
 
 Combined evidence receipt:
@@ -474,6 +533,9 @@ Issue `#1040`: `CLOSED`, `stateReason: COMPLETED`.
 ## Next Product Scope
 
 The frontend/backend local MVP and the child-lineage Tau/Docker/Judge rung now
-have deterministic local receipts. The remaining production-shaped scope is:
-production deployment, WebSocket transport, unbounded swarm execution, Blue
-kill/promotion, and memory promotion.
+have deterministic local receipts. WebSocket transport, bounded live Memory
+ablation, and a local Docker containerized frontend/backend deployment smoke now
+also have deterministic local receipts. The remaining production-shaped scope is:
+external production infrastructure authority and proof, production
+TLS/auth/fanout/reconnect behavior, unbounded swarm execution, and any broader
+Battle/RelayForge production-readiness claim.
