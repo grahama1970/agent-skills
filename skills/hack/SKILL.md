@@ -321,6 +321,25 @@ or Battle scoring. A valid request is research design input only; it is not
 target authorization and cannot be executed until the authorization-manifest,
 Compose-policy, sterile-environment, and independent-proof-authority gates exist.
 
+### Target Authorization Manifest
+
+Execution-capable Hack commands require a `security.target_authorization.v1`
+manifest before Docker, clone, scanner, network probe, proof-probe, or target
+runtime setup can start:
+
+```bash
+./run.sh authorization-preflight \
+  --authorization-manifest fixtures/authorization/valid-local.json \
+  --target fixture-target@sha256:fixture \
+  --action session-audit \
+  --receipt-out /tmp/hack-authorization-preflight.json
+```
+
+The manifest records project/operator scope, target identity, allowed URLs,
+CIDRs, ports, actions, probe classes, runtime modes, resource budgets, and
+denied behavior. It is not a legal opinion and does not prove Docker isolation,
+source truth, exploitability, patch effectiveness, or Battle readiness.
+
 ## Architecture
 
 ```

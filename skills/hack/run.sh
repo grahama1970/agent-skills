@@ -19,8 +19,8 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
 fi
 # Hack Skill Entry Point
 
-# Ensure the script directory is in PYTHONPATH so we can import modules if needed
-export PYTHONPATH="${PYTHONPATH-}:$(dirname "$0")"
+# Ensure the script directory and shared repo contracts are importable.
+export PYTHONPATH="$PROJECT_ROOT:$PROJECT_ROOT/skills:${PYTHONPATH-}:$(dirname "$0")"
 
 # Execute the python CLI
 exec python3 "$(dirname "$0")/hack.py" "$@"

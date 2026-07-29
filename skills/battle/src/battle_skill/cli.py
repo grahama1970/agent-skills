@@ -28,6 +28,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from common.security_authorization import validate_target_authorization
 from .config import (
     BATTLES_DIR,
     REPORTS_DIR,
@@ -95,6 +96,21 @@ def battle(
     model: str = typer.Option(
         "gpt-5.2-codex", help="AI model to use for research and brainstorming"
     ),
+    authorization_manifest: Optional[Path] = typer.Option(
+        None,
+        "--authorization-manifest",
+        help="security.target_authorization.v1 manifest required before Battle execution.",
+    ),
+    authorization_target: Optional[str] = typer.Option(
+        None,
+        "--authorization-target",
+        help="Expected authorization target identity. Defaults to resolved target path or docker image.",
+    ),
+    expected_manifest_sha256: Optional[str] = typer.Option(
+        None,
+        "--expected-manifest-sha256",
+        help="Expected authorization manifest SHA-256.",
+    ),
 ):
     """
     Start a Red vs Blue team battle.
@@ -141,11 +157,27 @@ def battle(
     # Handle Docker image as target
     if docker_image and target == ".":
         target_path = Path.cwd()
+        requested_identity = authorization_target or docker_image
     else:
         target_path = Path(target).resolve()
+        requested_identity = authorization_target or str(target_path)
         if not target_path.exists():
             console.print(f"[red]Target not found: {target}[/red]")
             raise typer.Exit(1)
+
+    requested_runtime_mode = mode or ("docker" if docker_image else "git_worktree")
+    authorization_receipt = validate_target_authorization(
+        authorization_manifest,
+        expected_target=requested_identity,
+        requested_action="battle",
+        requested_runtime_mode=requested_runtime_mode,
+        expected_manifest_sha256=expected_manifest_sha256,
+    )
+    if authorization_receipt["status"] != "PASS":
+        console.print("[red]Authorization preflight failed[/red]")
+        for error in authorization_receipt["errors"]:
+            console.print(f"- {error}")
+        raise typer.Exit(2)
 
     # Pre-hook: Recall prior battle findings for this target
     if _HAS_MEMORY_INTEGRATION:

@@ -60,6 +60,11 @@ Required production invariants:
 - Red and Blue are subagent teams. Each dispatched subagent must include an
   explicit persona selected by the orchestrator for that turn. Multiple personas
   per team may run concurrently when the turn benefits from breadth.
+- Battle execution requires a `security.target_authorization.v1` manifest before
+  Docker, QEMU, target runtime setup, Hack delegation, proof replay, or patch
+  replay starts. The manifest binds project/operator scope and target identity;
+  it is not a legal opinion and does not prove exploit success or patch
+  effectiveness.
 - Red-team `$hack` execution is a subagent responsibility, not a Battle Python
   import. Battle performs or schedules scan/research/memory recall, builds the
   candidate exploit list, chooses the Red persona, dispatches an

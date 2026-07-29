@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 import typer
 from rich.console import Console
 
+from common.security_authorization import require_target_authorization
 from hack.self_improve_loop import ARTIFACT_ROOT
 
 console = Console()
@@ -139,6 +140,21 @@ def create_session_audit_command() -> Callable[..., None]:
             3,
             help="Maximum /code-runner rounds for each generated probe",
         ),
+        authorization_manifest: Path = typer.Option(
+            ...,
+            "--authorization-manifest",
+            help="security.target_authorization.v1 manifest required before execution.",
+        ),
+        authorization_target: str | None = typer.Option(
+            None,
+            "--authorization-target",
+            help="Expected authorization target identity. Defaults to repo_url for legacy callers.",
+        ),
+        expected_manifest_sha256: str | None = typer.Option(
+            None,
+            "--expected-manifest-sha256",
+            help="Expected authorization manifest SHA-256.",
+        ),
     ) -> None:
         """Clone, launch, scan, and report on an authorized target in containers."""
 
@@ -159,6 +175,9 @@ def create_session_audit_command() -> Callable[..., None]:
                 code_runner_run=Path(code_runner_run),
                 max_rounds=probe_max_rounds,
             ),
+            authorization_manifest=authorization_manifest,
+            authorization_target=authorization_target or repo_url,
+            expected_manifest_sha256=expected_manifest_sha256,
         )
         console.print(f"[green]Report written:[/green] {report}")
 
@@ -179,8 +198,22 @@ def run_session_audit(
     extra_pip_packages: tuple[str, ...] = (),
     nuclei_version: str = DEFAULT_NUCLEI_VERSION,
     probe_config: ProbeRunConfig | None = None,
+    authorization_manifest: Path | None = None,
+    authorization_target: str | None = None,
+    expected_manifest_sha256: str | None = None,
 ) -> Path:
     """Run the complete /hack session workflow and return the report path."""
+
+    require_target_authorization(
+        manifest_path=authorization_manifest,
+        expected_target=authorization_target or repo_url,
+        requested_action="session-audit",
+        requested_port=int(str(port).split(",", maxsplit=1)[0]),
+        requested_target_url=target_url,
+        requested_probe_class="sast",
+        requested_runtime_mode="session-audit",
+        expected_manifest_sha256=expected_manifest_sha256,
+    )
 
     if not shutil.which("docker"):
         raise RuntimeError("Docker is required for /hack session-audit")

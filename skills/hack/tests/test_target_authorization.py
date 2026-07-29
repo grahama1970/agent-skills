@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+"""Tests for shared target authorization preflight in Hack."""
+
+from __future__ import annotations
+
+import json
+import shutil
+import sys
+import unittest
+from datetime import datetime, timezone
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
+from typer.testing import CliRunner
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+for import_path in (REPO_ROOT, REPO_ROOT / "skills"):
+    if str(import_path) not in sys.path:
+        sys.path.insert(0, str(import_path))
+
+from common.security_authorization import file_sha256, validate_target_authorization
+from hack.evolutionary_campaign import run_evolutionary_campaign
+from hack.hack import app
+from hack.session_audit import run_session_audit
+from hack.self_improve_loop import DecisionOutcome, LoopConfig, decide_next_action
+
+FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "authorization" / "valid-local.json"
+
+
+def _copy_manifest(tmp: Path) -> Path:
+    target = tmp / "authorization.json"
+    shutil.copy(FIXTURE, target)
+    return target
+
+
+def _mutate_manifest(tmp: Path, mutator) -> Path:
+    manifest = _copy_manifest(tmp)
+    payload = json.loads(manifest.read_text())
+    mutator(payload)
+    manifest.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    return manifest
+
+
+class TargetAuthorizationTests(unittest.TestCase):
+    def test_valid_manifest_preflight_receipt_passes(self) -> None:
+        with TemporaryDirectory() as temp:
+            manifest = _copy_manifest(Path(temp))
+            receipt = validate_target_authorization(
+                manifest,
+                expected_target="fixture-target@sha256:fixture",
+                requested_action="authorization-preflight",
+                requested_port=80,
+                requested_target_url="http://127.0.0.1",
+                requested_probe_class="sast",
+                requested_runtime_mode="no-op",
+            )
+
+        self.assertEqual(receipt["status"], "PASS", receipt["errors"])
+        self.assertFalse(receipt["execution_started"])
+        self.assertFalse(receipt["docker_invoked"])
+        self.assertFalse(receipt["qemu_invoked"])
+        self.assertFalse(receipt["subprocess_invoked"])
+
+    def test_cli_authorization_preflight_writes_receipt(self) -> None:
+        with TemporaryDirectory() as temp:
+            manifest = _copy_manifest(Path(temp))
+            receipt_out = Path(temp) / "receipt.json"
+            result = CliRunner().invoke(
+                app,
+                [
+                    "authorization-preflight",
+                    "--authorization-manifest",
+                    str(manifest),
+                    "--target",
+                    "fixture-target@sha256:fixture",
+                    "--action",
+                    "session-audit",
+                    "--receipt-out",
+                    str(receipt_out),
+                ],
+            )
+            self.assertEqual(result.exit_code, 0, result.output)
+            receipt = json.loads(receipt_out.read_text())
+
+        self.assertEqual(receipt["schema"], "security.target_authorization_validation_receipt.v1")
+        self.assertEqual(receipt["status"], "PASS")
+        self.assertFalse(receipt["execution_started"])
+
+    def test_negative_manifest_matrix_fails_without_execution_flags(self) -> None:
+        cases = {
+            "expired": lambda p: p.__setitem__("expires_at", "2000-01-01T00:00:00Z"),
+            "wrong_target": lambda p: p["target"].__setitem__("immutable_ref", "sha256:wrong"),
+            "unapproved_port": lambda p: p.__setitem__("allowed_ports", [443]),
+            "unapproved_cidr": lambda p: p.__setitem__("allowed_target_urls", ["http://127.0.0.2"]),
+            "unapproved_probe_class": lambda p: p.__setitem__("allowed_probe_classes", ["sca"]),
+            "unknown_field": lambda p: p.__setitem__("run_without_authority", True),
+        }
+        for name, mutator in cases.items():
+            with self.subTest(name=name), TemporaryDirectory() as temp:
+                manifest = _mutate_manifest(Path(temp), mutator)
+                receipt = validate_target_authorization(
+                    manifest,
+                    expected_target="fixture-target@sha256:fixture",
+                    requested_action="session-audit",
+                    requested_port=80,
+                    requested_target_url="http://127.0.0.1",
+                    requested_probe_class="sast",
+                    requested_runtime_mode="session-audit",
+                    now=datetime(2026, 7, 29, tzinfo=timezone.utc),
+                )
+                self.assertEqual(receipt["status"], "FAIL")
+                self.assertFalse(receipt["execution_started"])
+                self.assertFalse(receipt["docker_invoked"])
+                self.assertFalse(receipt["subprocess_invoked"])
+
+    def test_manifest_hash_mismatch_fails(self) -> None:
+        receipt = validate_target_authorization(
+            FIXTURE,
+            expected_target="fixture-target@sha256:fixture",
+            requested_action="session-audit",
+            expected_manifest_sha256="0" * 64,
+        )
+
+        self.assertEqual(receipt["status"], "FAIL")
+        self.assertIn("manifest SHA-256 does not match expected hash", receipt["errors"])
+
+    def test_missing_manifest_stops_before_docker_or_subprocess(self) -> None:
+        with patch("hack.session_audit.shutil.which", side_effect=AssertionError("docker preflight reached")):
+            with self.assertRaisesRegex(ValueError, "authorization manifest is required"):
+                run_session_audit(
+                    repo_url="fixture-target@sha256:fixture",
+                    target_url="http://127.0.0.1",
+                    compose_file="docker-compose.yml",
+                    port="80",
+                    session_root=Path("/tmp/hack-auth-test"),
+                    keep_running=False,
+                    run_nuclei=False,
+                    authorization_manifest=None,
+                    authorization_target="fixture-target@sha256:fixture",
+                )
+
+    def test_evolve_live_missing_manifest_stops_before_docker(self) -> None:
+        with patch("hack.evolutionary_campaign.shutil.which", side_effect=AssertionError("docker preflight reached")):
+            with self.assertRaisesRegex(ValueError, "authorization manifest is required"):
+                run_evolutionary_campaign(
+                    target_url="http://127.0.0.1",
+                    output_root=Path("/tmp/hack-auth-evolve"),
+                    duration_minutes=1,
+                    max_attempts=1,
+                    max_generations=1,
+                    population_size=1,
+                    seed=1,
+                    docker_image="python:3.11-slim",
+                    allow_builtin_seed=True,
+                    dry_run=False,
+                    authorization_manifest=None,
+                    authorization_target="fixture-target@sha256:fixture",
+                )
+
+    def test_loop_config_defaults_to_unauthorized(self) -> None:
+        decision = decide_next_action(LoopConfig(session_id="unit"), [])
+
+        self.assertEqual(decision.outcome, DecisionOutcome.STOP_UNSAFE_SCOPE)
+
+    def test_fixture_hash_is_stable_input_to_hash_mismatch_gate(self) -> None:
+        self.assertEqual(len(file_sha256(FIXTURE)), 64)
+
+
+if __name__ == "__main__":
+    unittest.main()
