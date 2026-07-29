@@ -211,15 +211,18 @@ def _fake_surf(
     tabs: list[dict[str, object]],
     tab_text: dict[str, str],
     tab_main_text: dict[str, str] | None = None,
+    tab_modal_text: dict[str, str] | None = None,
 ) -> Path:
     script = tmp_path / "surf-run.sh"
     cases = []
     for tab_id, text in tab_text.items():
         scoped = (tab_main_text or {}).get(tab_id, text)
+        modal = (tab_modal_text or {}).get(tab_id, "")
         payload = json.dumps({
             "href": f"https://example.test/{tab_id}",
             "title": f"tab {tab_id}",
             "scoped_text": scoped,
+            "modal_text": modal,
             "body_text": text,
             "has_main": True,
         })
@@ -339,6 +342,54 @@ def test_throttle_phrase_in_sidebar_only_does_not_block_the_provider(tmp_path: P
     checked = webgpt["checked_tabs"][0]
     assert checked["match_source"] == "main"
     assert checked["matched_snippet"] is None
+
+
+def test_chatgpt_rate_limit_modal_in_body_overrides_clean_main_region(tmp_path: Path) -> None:
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[{"id": 777, "windowId": 3, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True}],
+        tab_text={
+            "777": (
+                "What's on the agenda today?\n\nExtra High\n"
+                "Too many requests\n"
+                "You're making requests too quickly. We've temporarily limited access to your conversations "
+                "to protect your data.\n"
+                "Please wait a few minutes before trying again.\n"
+                "Got it"
+            )
+        },
+        tab_main_text={"777": "What's on the agenda today?\n\nExtra High"},
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"], surf_run=surf, max_tabs_per_provider=1, explicit_tabs={},
+    )
+
+    checked = report["providers"]["webgpt"]["checked_tabs"][0]
+    assert report["status"] == "NEEDS_ATTENTION"
+    assert report["providers"]["webgpt"]["provider_limited"] is True
+    assert checked["match_source"] == "body_modal_like"
+    assert checked["matched_text"].lower() == "too many requests"
+    assert "making requests too quickly" in checked["matched_snippet"].lower()
+
+
+def test_explicit_dialog_text_overrides_clean_main_region(tmp_path: Path) -> None:
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[{"id": 778, "windowId": 3, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True}],
+        tab_text={"778": "New chat\nAsk anything"},
+        tab_main_text={"778": "Ask anything"},
+        tab_modal_text={"778": "Too many requests\nPlease wait a few minutes before trying again.\nGot it"},
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"], surf_run=surf, max_tabs_per_provider=1, explicit_tabs={},
+    )
+
+    checked = report["providers"]["webgpt"]["checked_tabs"][0]
+    assert report["providers"]["webgpt"]["provider_limited"] is True
+    assert checked["match_source"] == "modal"
+    assert "please wait" in checked["matched_snippet"].lower()
 
 
 def test_limited_verdict_carries_the_snippet_it_was_made_from(tmp_path: Path) -> None:

@@ -233,12 +233,15 @@ def throttle_match(text: str, pattern: str) -> dict[str, Any]:
 def _check_tab(*, surf_run: Path, tab_id: str, pattern: str) -> dict[str, Any]:
     js = (
         "const main = document.querySelector('main') || document.querySelector('[role=\"main\"]');"
+        "const modal = document.querySelector('[role=\"dialog\"], [role=\"alertdialog\"], [aria-modal=\"true\"]');"
         "const body = document.body && document.body.innerText || '';"
         "const scoped = main && main.innerText ? main.innerText : '';"
+        "const modalText = modal && modal.innerText ? modal.innerText : '';"
         "return JSON.stringify({"
         "href: location.href,"
         "title: document.title,"
         "scoped_text: scoped.slice(0, 8000),"
+        "modal_text: modalText.slice(0, 4000),"
         "body_text: body.slice(0, 8000),"
         "has_main: !!main"
         "});"
@@ -251,22 +254,71 @@ def _check_tab(*, surf_run: Path, tab_id: str, pattern: str) -> dict[str, Any]:
     if not isinstance(decoded, dict):
         return payload
     scoped = str(decoded.get("scoped_text") or "")
+    modal = str(decoded.get("modal_text") or "")
     body = str(decoded.get("body_text") or "")
     # Sidebar conversation titles live in body text, so a bare page whose
     # history mentions a throttle would otherwise read as throttled. Judge the
-    # main region when the app exposes one.
-    decision_text = scoped if decoded.get("has_main") and scoped else body
+    # main region when the app exposes one, but let explicit modal/dialog text
+    # and modal-shaped body fallback override clean main text.
+    decision_text, match_source = _provider_decision_text(
+        scoped=scoped,
+        modal=modal,
+        body=body,
+        has_main=bool(decoded.get("has_main")),
+        pattern=pattern,
+    )
     verdict = throttle_match(decision_text, pattern)
     payload.update(
         {
             "href": decoded.get("href"),
             "title": decoded.get("title"),
-            "match_source": "main" if (decoded.get("has_main") and scoped) else "body",
+            "match_source": match_source,
             "text_excerpt": decision_text[:600],
             **verdict,
         }
     )
     return payload
+
+
+def _provider_decision_text(
+    *,
+    scoped: str,
+    modal: str,
+    body: str,
+    has_main: bool,
+    pattern: str,
+) -> tuple[str, str]:
+    if throttle_match(modal, pattern)["limited"]:
+        return modal, "modal"
+    if has_main and scoped:
+        body_verdict = throttle_match(body, pattern)
+        scoped_verdict = throttle_match(scoped, pattern)
+        if (
+            body_verdict["limited"]
+            and not scoped_verdict["limited"]
+            and _body_has_modal_throttle_shape(body)
+        ):
+            return body, "body_modal_like"
+        return scoped, "main"
+    return body, "body"
+
+
+def _body_has_modal_throttle_shape(body: str) -> bool:
+    lowered = (body or "").lower()
+    marker_count = sum(
+        marker in lowered
+        for marker in (
+            "got it",
+            "please wait",
+            "temporarily limited access",
+            "protect your data",
+            "upgrade now",
+            "wait or upgrade",
+            "before limit is gone",
+            "system is currently busy",
+        )
+    )
+    return marker_count >= 1
 
 
 def _provider_probe_failure_code(checked: list[dict[str, Any]]) -> str | None:
