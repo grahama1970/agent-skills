@@ -80,6 +80,7 @@ esac
     payload = json.loads(meta.read_text(encoding="utf-8"))
     assert payload["requested_model"] is None
     assert payload["requested_reasoning"] is None
+    assert payload["submitted_to_kimi"] is True
 
 
 def test_kimi_submit_passes_explicit_model_and_reasoning(tmp_path: Path) -> None:
@@ -449,7 +450,9 @@ esac
     assert "--file" in kimi_args
     payload = json.loads(meta.read_text(encoding="utf-8"))
     assert payload["status"] == "completed"
+    assert payload["submitted_to_kimi"] is True
     assert payload["attachment_missing"] is False
+    assert payload["attachment_delivery_proven"] is True
     assert payload["attachment"]["source"] == "wrapper_zero_exit_attach_file"
     assert payload["attachment"]["name"] == "review-bundle.md"
 
@@ -527,8 +530,87 @@ esac
     assert payload["status"] == "completed"
     assert payload["failure"] is None
     assert payload["proof_status"] == "response_proven"
+    assert payload["submitted_to_kimi"] is True
     assert payload["attachment_ui_missing"] is False
     assert payload["attachment_missing"] is False
+    assert payload["attachment_delivery_proven"] is True
     assert payload["attach_file"] == str(attachment.resolve())
     assert payload["attachment"]["source"] == "wrapper_zero_exit_attach_file"
     assert payload["attachment"]["name"] == "bundle.md"
+
+
+def test_kimi_submit_failed_exit_records_unproven_delivery_and_sentinel_state(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    raw = tmp_path / "response.raw.md"
+    meta = tmp_path / "response.meta.json"
+    attachment = tmp_path / "bundle.md"
+    fake_run = tmp_path / "surf-run.sh"
+
+    request.write_text("Use the attached bundle and reply with sentinel.\n", encoding="utf-8")
+    attachment.write_text("# Evidence\n\nReadable attachment text.\n", encoding="utf-8")
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  focus.state)
+    printf '{"focusedWindowId":1,"activeTabId":837360924}\\n'
+    ;;
+  kimi_tab)
+    printf ''
+    echo 'Error: Request timed out' >&2
+    exit 1
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "bash",
+            str(KIMI_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--raw-output",
+            str(raw),
+            "--meta-output",
+            str(meta),
+            "--sentinel",
+            "<<<KIMI_DONE:test>>>",
+            "--tab-id",
+            "837360924",
+            "--no-activate",
+            "--stable-polls",
+            "0",
+            "--timeout",
+            "5",
+            "--attach-file",
+            str(attachment),
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert payload["submitted_to_kimi"] is False
+    assert payload["raw_contains_sentinel"] is False
+    assert payload["clean_contains_sentinel"] is False
+    assert payload["controlled_tab_id"] is None
+    assert payload["attachment_delivery_proven"] is False
+    assert payload["attach_file"] == str(attachment.resolve())

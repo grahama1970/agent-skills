@@ -154,6 +154,181 @@ def test_validate_live_browser_workflow_rejects_clean_contamination_markers(tmp_
     assert any(item["name"] == "webclaude_clean_response_uncontaminated" for item in report["failed_checks"])
 
 
+def test_validate_live_browser_workflow_reports_compact_failed_seat_summary(tmp_path: Path) -> None:
+    run_dir = tmp_path / "ask-live-roundtable-degraded-fixture"
+    handlers = ["webgpt", "webclaude", "webkimi", "webgemini"]
+    created_tabs = [
+        {"handler": handler, "tab_id": str(100 + index), "project": f"{run_dir.name}-{handler}"}
+        for index, handler in enumerate(handlers)
+    ]
+    _write_json(
+        run_dir / "browser-tab-lifecycle.json",
+        {
+            "schema": "ask.browser_tab_lifecycle.v1",
+            "status": "READY",
+            "mode": "fresh-temporary",
+            "window_id": "999",
+            "created_tabs": created_tabs,
+            "cleanup_status": "attempted",
+            "cleanup": [{"returncode": 0}],
+        },
+    )
+    _write_json(
+        run_dir / "tau-receipts" / "dag-receipt.json",
+        {
+            "ok": False,
+            "status": "BLOCKED",
+            "mocked": False,
+            "live": True,
+            "max_observed_concurrency": 2,
+        },
+    )
+    for tab in created_tabs:
+        handler = str(tab["handler"])
+        node_dir = run_dir / "node-artifacts" / f"handler-{handler}"
+        if handler in {"webclaude", "webgemini"}:
+            _write_json(
+                node_dir / "node-receipt.json",
+                {
+                    "ok": True,
+                    "status": "PASS",
+                    "mocked": False,
+                    "live": True,
+                    "provider_live": True,
+                },
+            )
+            _write_json(
+                node_dir / "response.meta.json",
+                {
+                    "requested_tab_id": tab["tab_id"],
+                    "controlled_tab_id": tab["tab_id"],
+                    "sentinel": f"<<<{handler.upper()}_DONE:test>>>",
+                    "proof_status": "response_proven",
+                },
+            )
+            (node_dir / "response.raw.md").write_text(
+                f"{handler} response\n<<<{handler.upper()}_DONE:test>>>\n",
+                encoding="utf-8",
+            )
+            (node_dir / "response.md").write_text(f"{handler} response\n", encoding="utf-8")
+            continue
+        code = "browser_submit_not_accepted" if handler == "webgpt" else "missing_sentinel"
+        recovery = node_dir / "browser-recovery-packet.json"
+        _write_json(recovery, {"failure_code": code, "next_command": ["retry"]})
+        _write_json(
+            node_dir / "node-receipt.json",
+            {
+                "ok": False,
+                "status": "NEEDS_ATTENTION",
+                "mocked": False,
+                "live": True,
+                "provider_live": False,
+                "failure_code": code,
+                "response_path": str(node_dir / "response.md"),
+                "recovery_packet_path": str(recovery),
+            },
+        )
+        _write_json(
+            node_dir / "response.meta.json",
+            {
+                "requested_tab_id": tab["tab_id"],
+                "controlled_tab_id": None,
+                "sentinel": f"<<<{handler.upper()}_DONE:test>>>",
+                "proof_status": "delivery_not_proven",
+                "failure": code,
+            },
+        )
+        (node_dir / "response.raw.md").write_text("", encoding="utf-8")
+        (node_dir / "response.md").write_text("", encoding="utf-8")
+
+    join_dir = run_dir / "node-artifacts" / "join"
+    _write_json(join_dir / "node-receipt.json", {"ok": False, "status": "DEGRADED"})
+    (join_dir / "roundtable-summary.md").write_text("summary\n", encoding="utf-8")
+
+    report = validate_live_browser_workflow.validate(
+        run_dir,
+        workflow_mode="roundtable",
+        handlers=handlers,
+        expect_text=[],
+        min_concurrency=4,
+        require_cleanup=True,
+    )
+
+    assert report["ok"] is False
+    assert report["status_counts"] == {"usable": 2, "failed": 2, "missing": 0}
+    assert report["failure_codes"] == {"browser_submit_not_accepted": 1, "missing_sentinel": 1}
+    assert report["seat_status"]["webgpt"]["state"] == "failed"
+    assert report["seat_status"]["webgpt"]["raw_contains_sentinel"] is False
+    assert report["seat_status"]["webclaude"]["state"] == "usable"
+    assert any(item["name"] == "tau_observed_concurrency" for item in report["failed_checks"])
+
+
+def test_validate_live_browser_workflow_accepts_reuse_bound_tabs_from_metadata(tmp_path: Path) -> None:
+    run_dir = tmp_path / "ask-live-roundtable-reuse-bound-fixture"
+    handlers = ["webgpt", "webkimi"]
+    tabs = {"webgpt": "111", "webkimi": "222"}
+    _write_json(
+        run_dir / "browser-tab-lifecycle.json",
+        {
+            "schema": "ask.browser_tab_lifecycle.v1",
+            "status": "skipped",
+            "mode": "reuse-bound",
+            "mocked": False,
+        },
+    )
+    _write_json(
+        run_dir / "tau-receipts" / "dag-receipt.json",
+        {
+            "ok": True,
+            "status": "PASS",
+            "mocked": False,
+            "live": True,
+            "max_observed_concurrency": 2,
+        },
+    )
+    for handler in handlers:
+        node_dir = run_dir / "node-artifacts" / f"handler-{handler}"
+        _write_json(
+            node_dir / "node-receipt.json",
+            {
+                "ok": True,
+                "status": "PASS",
+                "mocked": False,
+                "live": True,
+                "provider_live": True,
+            },
+        )
+        sentinel = f"<<<{handler.upper()}_DONE:test>>>"
+        _write_json(
+            node_dir / "response.meta.json",
+            {
+                "requested_tab_id": tabs[handler],
+                "controlled_tab_id": tabs[handler],
+                "sentinel": sentinel,
+                "proof_status": "response_proven",
+            },
+        )
+        (node_dir / "response.raw.md").write_text(f"{handler} response\n{sentinel}\n", encoding="utf-8")
+        (node_dir / "response.md").write_text(f"{handler} response\n", encoding="utf-8")
+    join_dir = run_dir / "node-artifacts" / "join"
+    _write_json(join_dir / "node-receipt.json", {"ok": True, "status": "PASS"})
+    (join_dir / "roundtable-summary.md").write_text("summary\n", encoding="utf-8")
+
+    report = validate_live_browser_workflow.validate(
+        run_dir,
+        workflow_mode="roundtable",
+        handlers=handlers,
+        expect_text=[],
+        min_concurrency=2,
+        require_cleanup=False,
+    )
+
+    assert report["ok"] is True
+    assert report["status_counts"] == {"usable": 2, "failed": 0, "missing": 0}
+    assert report["seat_status"]["webgpt"]["requested_tab_id"] == "111"
+    assert report["seat_status"]["webkimi"]["controlled_tab_id"] == "222"
+
+
 def _write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")

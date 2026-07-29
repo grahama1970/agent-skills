@@ -388,6 +388,35 @@ def test_webgemini_inlines_markdown_bundle_instead_of_attaching(tmp_path: Path) 
     assert "Current README text." in text
 
 
+def test_webgemini_recovery_inlines_markdown_bundle_instead_of_retrying_attach(tmp_path: Path) -> None:
+    bundle = tmp_path / "review-bundle.md"
+    bundle.write_text("# README Bundle\n\nCurrent README text.\n", encoding="utf-8")
+
+    packet = _packet(
+        tmp_path,
+        handler="webgemini",
+        failure="Error: Request timed out",
+        prompt_text=f"Review the current README using {bundle}",
+        submit_meta={"status": "failed", "failure": "missing_sentinel"},
+        browser_oracle={
+            "tab_id": "837364346",
+            "conversation_url": "https://gemini.google.com/app/11c2de1da65b339f",
+        },
+    )
+
+    command = packet["next_command"]
+    assert command[:2][-1] == "gemini.submit"
+    assert "--attach-file" not in command
+    assert "--tab-id" in command
+    assert command[command.index("--tab-id") + 1] == "837364346"
+    retry_prompt = tmp_path / "artifacts" / "retry-with-local-bundle.md"
+    assert retry_prompt.is_file()
+    text = retry_prompt.read_text(encoding="utf-8")
+    assert "Use the inlined local bundle as the source of truth." in text
+    assert "### INLINE_1: review-bundle.md" in text
+    assert "Current README text." in text
+
+
 def test_webkimi_uses_one_markdown_attachment_instead_of_inline_payload(tmp_path: Path) -> None:
     prompt = tmp_path / "prompt.md"
     bundle = tmp_path / "review-bundle.md"
@@ -1328,6 +1357,8 @@ def test_recovery_packet_exposes_lock_owner_and_tab_liveness(tmp_path: Path) -> 
 
     evidence = packet["evidence"]
     assert "surf_lock_owner" in evidence
+    assert evidence["surf_lock_snapshot"]["observed_after_failure"] is True
+    assert evidence["surf_lock_snapshot"]["causal_only_when_surf_lock_blocker_present"] is False
     assert "bound_tab_open" in evidence
     assert "recovery_prompt" in evidence
 

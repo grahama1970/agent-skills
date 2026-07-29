@@ -51,13 +51,19 @@ def validate(
 
     lifecycle = _load_lifecycle(run_dir)
     receipt = _load_json(run_dir / "tau-receipts" / "dag-receipt.json")
+    lifecycle_mode = str(lifecycle.get("workflow_mode") or lifecycle.get("mode") or "")
+    reuse_bound = lifecycle_mode == "reuse-bound"
     handler_tabs = _handler_tabs(lifecycle)
-    checks.append(_check(_lifecycle_ok(lifecycle), "browser_lifecycle_ok", lifecycle.get("status")))
+    checks.append(_check(_lifecycle_ok(lifecycle, reuse_bound=reuse_bound), "browser_lifecycle_ok", lifecycle.get("status")))
     checks.append(_check(lifecycle.get("mocked") is not True, "browser_lifecycle_not_mocked"))
-    checks.append(_check(bool(lifecycle.get("live") is True or lifecycle.get("created_tabs")), "browser_lifecycle_live"))
+    checks.append(
+        _check(
+            bool(lifecycle.get("live") is True or lifecycle.get("created_tabs") or reuse_bound),
+            "browser_lifecycle_live",
+        )
+    )
     checks.append(_check(_workflow_matches(lifecycle, workflow_mode), "workflow_mode", lifecycle.get("workflow_mode") or lifecycle.get("mode")))
-    checks.append(_check(bool(lifecycle.get("window_id")), "fresh_window_id", lifecycle.get("window_id")))
-    checks.append(_check(bool(handler_tabs), "handler_tabs_present", len(handler_tabs)))
+    checks.append(_check(reuse_bound or bool(lifecycle.get("window_id")), "fresh_window_id", lifecycle.get("window_id")))
     checks.append(_check(receipt.get("ok") is True, "tau_receipt_ok", receipt.get("status")))
     checks.append(_check(receipt.get("mocked") is False, "tau_receipt_not_mocked"))
     checks.append(_check(receipt.get("live") is True, "tau_receipt_live"))
@@ -70,6 +76,9 @@ def validate(
     )
 
     seen_tabs: set[str] = set()
+    seat_status: dict[str, dict[str, Any]] = {}
+    status_counts = {"usable": 0, "failed": 0, "missing": 0}
+    failure_codes: dict[str, int] = {}
     for handler in handlers:
         tab = handler_tabs.get(handler) or {}
         tab_id = str(tab.get("tab_id") or "")
@@ -81,11 +90,26 @@ def validate(
         raw_path = node_dir / "response.raw.md"
         response_text = response_path.read_text(encoding="utf-8", errors="replace") if response_path.is_file() else ""
         raw_text = raw_path.read_text(encoding="utf-8", errors="replace") if raw_path.is_file() else ""
+        requested = str(meta.get("requested_tab_id") or "")
+        controlled = str(meta.get("controlled_tab_id") or "")
+        if handler == "webgpt" and not controlled and meta.get("controlled_tab_id_inferred_from_requested") is True:
+            controlled = requested
+        if reuse_bound and not tab_id:
+            tab_id = controlled or requested
+            if tab_id:
+                tab = {"handler": handler, "tab_id": tab_id, "project": project}
+                handler_tabs[handler] = tab
 
         checks.append(_check(bool(tab_id), f"{handler}_tab_id", tab_id))
         checks.append(_check(tab_id not in seen_tabs, f"{handler}_tab_unique", tab_id))
         seen_tabs.add(tab_id)
-        checks.append(_check(project.startswith(f"{run_dir.name}-{handler}"), f"{handler}_run_scoped_project", project))
+        checks.append(
+            _check(
+                reuse_bound or project.startswith(f"{run_dir.name}-{handler}"),
+                f"{handler}_run_scoped_project",
+                project,
+            )
+        )
         checks.append(_check(node_receipt.get("ok") is True, f"{handler}_node_receipt_ok", node_receipt.get("status")))
         checks.append(_check(node_receipt.get("mocked") is False, f"{handler}_not_mocked"))
         checks.append(_check(node_receipt.get("live") is True, f"{handler}_live"))
@@ -103,12 +127,31 @@ def validate(
                 meta.get("clean_contamination_markers") or _clean_response_contamination_markers(response_text),
             )
         )
-        requested = str(meta.get("requested_tab_id") or "")
-        controlled = str(meta.get("controlled_tab_id") or "")
-        if handler == "webgpt" and not controlled and meta.get("controlled_tab_id_inferred_from_requested") is True:
-            controlled = requested
         checks.append(_check(not requested or requested == tab_id, f"{handler}_requested_tab_matches_workspace", requested))
         checks.append(_check(not controlled or controlled == tab_id, f"{handler}_controlled_tab_matches_workspace", controlled))
+        failure_code = str(node_receipt.get("failure_code") or meta.get("failure_code") or meta.get("failure") or "")
+        if node_receipt.get("__missing_path__"):
+            seat_state = "missing"
+        elif node_receipt.get("ok") is True and response_path.is_file() and bool(response_text.strip()):
+            seat_state = "usable"
+        else:
+            seat_state = "failed"
+        status_counts[seat_state] += 1
+        if failure_code:
+            failure_codes[failure_code] = failure_codes.get(failure_code, 0) + 1
+        seat_status[handler] = {
+            "state": seat_state,
+            "status": node_receipt.get("status"),
+            "ok": node_receipt.get("ok"),
+            "provider_live": node_receipt.get("provider_live"),
+            "failure_code": failure_code or None,
+            "proof_status": meta.get("proof_status"),
+            "requested_tab_id": requested or None,
+            "controlled_tab_id": controlled or None,
+            "raw_contains_sentinel": _has_sentinel(raw_text, sentinel),
+            "response_path": str(response_path),
+            "recovery_packet_path": node_receipt.get("recovery_packet_path"),
+        }
 
     join_dir = run_dir / "node-artifacts" / "join"
     join_receipt = _load_json(join_dir / "node-receipt.json")
@@ -129,6 +172,7 @@ def validate(
 
     if require_cleanup:
         checks.append(_check(_cleanup_ok(lifecycle), "browser_lifecycle_cleanup_ok", lifecycle.get("cleanup_status")))
+    checks.insert(6, _check(bool(handler_tabs), "handler_tabs_present", len(handler_tabs)))
 
     ok = all(item["ok"] for item in checks)
     return {
@@ -140,6 +184,9 @@ def validate(
         "run_dir": str(run_dir),
         "workflow_mode": workflow_mode,
         "handlers": handlers,
+        "seat_status": seat_status,
+        "status_counts": status_counts,
+        "failure_codes": failure_codes,
         "checks": checks,
         "failed_checks": [item for item in checks if not item["ok"]],
     }
@@ -173,10 +220,12 @@ def _handler_tabs(lifecycle: dict[str, Any]) -> dict[str, dict[str, Any]]:
 def _workflow_matches(lifecycle: dict[str, Any], workflow_mode: str) -> bool:
     if lifecycle.get("workflow_mode"):
         return str(lifecycle.get("workflow_mode")) == workflow_mode
-    return str(lifecycle.get("mode") or "") in {"fresh-temporary", "fresh-keep", "auto"}
+    return str(lifecycle.get("mode") or "") in {"fresh-temporary", "fresh-keep", "reuse-bound", "auto"}
 
 
-def _lifecycle_ok(lifecycle: dict[str, Any]) -> bool:
+def _lifecycle_ok(lifecycle: dict[str, Any], *, reuse_bound: bool = False) -> bool:
+    if reuse_bound and lifecycle.get("status") in {"skipped", "READY"}:
+        return True
     return lifecycle.get("ok") is True or lifecycle.get("status") == "READY"
 
 
