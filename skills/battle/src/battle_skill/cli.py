@@ -21,6 +21,7 @@ Based on research into:
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -2215,6 +2216,89 @@ def validate_production_readiness(
     if receipt.get("status") == "FAIL":
         raise typer.Exit(1)
     if fail_on_blocked and receipt.get("status") == "BLOCKED":
+        raise typer.Exit(2)
+
+
+@app.command("prove-production-infrastructure-deployment")
+def prove_production_infrastructure_deployment(
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the production infrastructure deployment receipt.",
+    ),
+    frontend_url: str = typer.Option(
+        ...,
+        "--frontend-url",
+        help="Production HTTPS frontend URL.",
+    ),
+    backend_health_url: str = typer.Option(
+        ...,
+        "--backend-health-url",
+        help="Production HTTPS backend health URL.",
+    ),
+    websocket_url: str = typer.Option(
+        ...,
+        "--websocket-url",
+        help="Production WSS Battle live WebSocket URL.",
+    ),
+    commit: str = typer.Option(
+        ...,
+        "--commit",
+        help="Deployed git commit.",
+    ),
+    release_id: str = typer.Option(
+        ...,
+        "--release-id",
+        help="Production release or deployment identifier.",
+    ),
+    secret_source: str = typer.Option(
+        ...,
+        "--secret-source",
+        help="Secret manager/config source name, not the secret value.",
+    ),
+    websocket_bearer_token_env: Optional[str] = typer.Option(
+        None,
+        "--websocket-bearer-token-env",
+        help="Optional environment variable containing the WebSocket bearer token.",
+    ),
+    timeout_s: float = typer.Option(
+        5.0,
+        "--timeout-s",
+        min=1.0,
+        max=60.0,
+        help="Network timeout for production probes.",
+    ),
+    allow_private_targets: bool = typer.Option(
+        False,
+        "--allow-private-targets/--reject-private-targets",
+        help="Allow private network targets. Disabled by default for production proof.",
+    ),
+    fail_on_blocked: bool = typer.Option(
+        True,
+        "--fail-on-blocked/--no-fail-on-blocked",
+        help="Exit nonzero when the production infrastructure probe is blocked.",
+    ),
+):
+    """Probe production HTTPS/WSS infrastructure and emit a fail-closed receipt."""
+    from .production_infrastructure_probe import prove_production_infrastructure_deployment as _prove
+
+    websocket_bearer_token = (
+        os.environ.get(websocket_bearer_token_env) if websocket_bearer_token_env else None
+    )
+    receipt = _prove(
+        out_dir=out,
+        frontend_url=frontend_url,
+        backend_health_url=backend_health_url,
+        websocket_url=websocket_url,
+        commit=commit,
+        release_id=release_id,
+        secret_source=secret_source,
+        websocket_bearer_token=websocket_bearer_token,
+        timeout_s=timeout_s,
+        allow_private_targets=allow_private_targets,
+    )
+    console.print_json(data=receipt)
+    if fail_on_blocked and receipt.get("status") != "PASS":
         raise typer.Exit(2)
 
 
