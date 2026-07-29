@@ -2408,14 +2408,7 @@ def tab_still_open(surf_run: str, tab_id: str) -> bool | None:
         return None
     if result.returncode != 0:
         return None
-    text = result.stdout.strip()
-    start = text.find("[")
-    if start == -1:
-        return None
-    try:
-        tabs = json.loads(text[start:])
-    except json.JSONDecodeError:
-        return None
+    tabs = _parse_json_array_or_tabs(result.stdout)
     if not isinstance(tabs, list):
         return None
     return any(str(item.get("id")) == str(tab_id) for item in tabs if isinstance(item, dict))

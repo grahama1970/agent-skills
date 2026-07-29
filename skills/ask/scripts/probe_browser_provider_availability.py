@@ -199,13 +199,26 @@ def _parse_tab_list_stdout(stdout: str) -> tuple[list[Any], str | None]:
     surf_tab_list_invalid_json (agent-skills#1061).
     """
     text = stdout.strip()
-    for candidate in (text, text[text.find("[") :] if "[" in text else ""):
-        if not candidate:
-            continue
-        try:
-            value = json.loads(candidate)
-        except json.JSONDecodeError:
-            continue
+    if not text:
+        return [], "surf_tab_list_invalid_json"
+    decoder = json.JSONDecoder()
+    try:
+        value, end = decoder.raw_decode(text)
+    except json.JSONDecodeError:
+        value = None
+    else:
+        if text[end:].strip():
+            value = None
+    if value is None:
+        for index, char in enumerate(text):
+            if char not in "[{":
+                continue
+            try:
+                value, _ = decoder.raw_decode(text[index:])
+            except json.JSONDecodeError:
+                continue
+            break
+    if value is not None:
         if isinstance(value, dict):
             value = value.get("tabs")
         if isinstance(value, list):

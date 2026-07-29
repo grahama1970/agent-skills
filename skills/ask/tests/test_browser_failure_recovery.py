@@ -724,7 +724,11 @@ def test_webgpt_submit_command_still_expects_specific_conversation_url(tmp_path:
 def test_worker_parses_mixed_stdout_large_tab_list_for_live_url() -> None:
     tabs = [{"id": index, "url": "https://example.com/" + ("x" * 220)} for index in range(40)]
     tabs.append({"id": 837362426, "url": "https://chatgpt.com/c/live", "title": "ChatGPT"})
-    text = "Building vendored surf-cli...\n" + json.dumps(tabs)
+    text = (
+        "Building vendored surf-cli...\n"
+        "\x1b[33m[INEFFECTIVE_DYNAMIC_IMPORT]\x1b[0m src/native/port-manager.ts is dynamically imported\n"
+        + json.dumps(tabs)
+    )
 
     parsed = tau_roundtable_worker._parse_json_array_or_tabs(text)
 

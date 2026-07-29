@@ -333,7 +333,11 @@ def test_real_throttle_banner_is_flagged_with_its_snippet() -> None:
 
 
 def test_tab_list_survives_a_vendored_build_banner() -> None:
-    contaminated = 'Building vendored surf-cli at /x/y...\n[{"id": 1, "url": "https://chatgpt.com/"}]'
+    contaminated = (
+        "Building vendored surf-cli at /x/y...\n"
+        "\x1b[33m[INEFFECTIVE_DYNAMIC_IMPORT]\x1b[0m src/native/port-manager.ts is dynamically imported\n"
+        '[{"id": 1, "url": "https://chatgpt.com/"}]'
+    )
 
     tabs, error = probe_browser_provider_availability._parse_tab_list_stdout(contaminated)
 
