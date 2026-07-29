@@ -53,6 +53,7 @@ unless the fixture commands themselves exercise those live paths.
 ./run.sh run fixtures/agentic_eval.json --output /tmp/agentic-evals-report.json
 ./run.sh audit-skills ../ --output /tmp/agentic-evals-baseline-gap-report.json
 ./run.sh scaffold-fixture ../some-skill --output ../some-skill/fixtures/agentic_eval.json
+./run.sh apply-scaffolds ../ --write --output /tmp/agentic-evals-apply-scaffolds.json
 ```
 
 ## Fixture Contract
@@ -109,3 +110,9 @@ skills, document `eval_not_required`, or still emit `EVAL001`.
 Use `scaffold-fixture` only as the first mechanical eval posture for a skill. A
 generated fixture proves wiring only until a human or maintainer adds
 skill-specific positive, negative, and adversarial cases.
+
+Use `apply-scaffolds` to apply that first mechanical posture across all
+currently scaffoldable `EVAL001` skills. It writes only missing
+`fixtures/agentic_eval.json` files unless `--force` is passed and emits a JSON
+receipt. This reduces missing eval posture; it does not establish semantic
+coverage.

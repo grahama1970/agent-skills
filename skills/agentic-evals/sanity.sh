@@ -27,7 +27,8 @@ PY
 
 AUDIT_ROOT="$(mktemp -d)"
 AUDIT_OUT=""
-trap 'rm -f "$OUT" "$AUDIT_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
+APPLY_OUT=""
+trap 'rm -f "$OUT" "$AUDIT_OUT" "$APPLY_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
 mkdir -p "$AUDIT_ROOT/covered/fixtures" "$AUDIT_ROOT/missing"
 cat > "$AUDIT_ROOT/covered/SKILL.md" <<'EOF'
 ---
@@ -98,4 +99,18 @@ assert fixture["version"] == 2
 assert fixture["trials"] == 3
 assert fixture["cases"][0]["name"] == "run-help"
 assert fixture["cases"][0]["expected"]["exit_code"] == 0
+PY
+
+APPLY_OUT="$(mktemp)"
+"$SCRIPT_DIR/run.sh" apply-scaffolds "$AUDIT_ROOT" --write --output "$APPLY_OUT" >/dev/null
+uv run --project "$SCRIPT_DIR" python - "$APPLY_OUT" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["schema"] == "agentic_evals.scaffold_apply_report.v1"
+assert report["mocked"] is False
+assert report["live"] is False
+assert report["summary"]["eligible"] == 0
+assert report["summary"]["created"] == 0
 PY

@@ -320,6 +320,96 @@ def scaffold_manifest(skill_dir: Path, fixture_dir: Path) -> dict[str, Any]:
     }
 
 
+def write_scaffold_fixture(skill_dir: Path, force: bool) -> dict[str, Any]:
+    target = skill_dir / "fixtures" / "agentic_eval.json"
+    if target.exists() and not force:
+        return {
+            "skill": skill_dir.name,
+            "status": "skipped",
+            "reason": "fixture_exists",
+            "path": str(target),
+        }
+    manifest = scaffold_manifest(skill_dir.resolve(), target.resolve().parent)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    return {
+        "skill": skill_dir.name,
+        "status": "created",
+        "path": str(target),
+        "case": manifest["cases"][0]["name"],
+        "proof_scope": manifest["proof_scope"],
+    }
+
+
+def apply_scaffolds_report(
+    skills_root: Path,
+    validator: Path,
+    timeout_seconds: float,
+    write: bool,
+    force: bool,
+    limit: int | None,
+) -> dict[str, Any]:
+    audit = audit_skills_report(skills_root, validator, timeout_seconds)
+    eligible = [
+        item
+        for item in audit["skills"]
+        if item["recommended_action"] == "scaffold_fixture"
+    ]
+    selected = eligible[:limit] if limit is not None else eligible
+    results = []
+    for item in selected:
+        skill_dir = skills_root / item["skill"]
+        if not write:
+            results.append(
+                {
+                    "skill": item["skill"],
+                    "status": "dry_run",
+                    "path": str(skill_dir / "fixtures" / "agentic_eval.json"),
+                }
+            )
+            continue
+        try:
+            results.append(write_scaffold_fixture(skill_dir, force))
+        except Exception as exc:
+            logger.error("failed to scaffold {}: {}", item["skill"], exc)
+            results.append(
+                {
+                    "skill": item["skill"],
+                    "status": "error",
+                    "message": str(exc),
+                }
+            )
+
+    status_counts: dict[str, int] = {}
+    for result in results:
+        status = result["status"]
+        status_counts[status] = status_counts.get(status, 0) + 1
+    return {
+        "schema": "agentic_evals.scaffold_apply_report.v1",
+        "mocked": False,
+        "live": False,
+        "proof_scope": "fixture wiring scaffold application",
+        "claims": {
+            "proves": "which missing eval-posture skills had wiring fixtures created or would be created",
+            "does_not_prove": "semantic correctness, fixture pass status, live service behavior, or release readiness",
+        },
+        "skills_root": str(skills_root),
+        "write": write,
+        "force": force,
+        "limit": limit,
+        "summary": {
+            "eligible": len(eligible),
+            "selected": len(selected),
+            "created": status_counts.get("created", 0),
+            "skipped": status_counts.get("skipped", 0),
+            "dry_run": status_counts.get("dry_run", 0),
+            "errors": status_counts.get("error", 0),
+            "status_counts": status_counts,
+        },
+        "results": results,
+    }
+
+
 @app.command("run")
 def run(
     manifest: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
@@ -328,6 +418,31 @@ def run(
 ) -> None:
     """Run an agentic evaluation manifest."""
     report = evaluate_manifest(manifest, timeout_seconds)
+    payload = json.dumps(report, indent=2)
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(payload + "\n", encoding="utf-8")
+    typer.echo(payload)
+
+
+@app.command("apply-scaffolds")
+def apply_scaffolds(
+    skills_root: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Optional path for the JSON report."),
+    validator: Path | None = typer.Option(None, "--validator", help="Path to validate_skill.py."),
+    timeout_seconds: float = typer.Option(10.0, "--timeout-seconds", min=0.1),
+    write: bool = typer.Option(False, "--write", help="Create missing fixtures. Default is dry-run."),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing generated fixtures."),
+    limit: int | None = typer.Option(None, "--limit", min=1, help="Maximum scaffoldable skills to process."),
+) -> None:
+    """Create first-pass fixtures for skills whose audit action is scaffold_fixture."""
+    resolved_root = skills_root.resolve()
+    resolved_validator = (
+        validator.resolve()
+        if validator is not None
+        else (Path(__file__).resolve().parents[2] / "best-practices-skills" / "scripts" / "validate_skill.py")
+    )
+    report = apply_scaffolds_report(resolved_root, resolved_validator, timeout_seconds, write, force, limit)
     payload = json.dumps(report, indent=2)
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
