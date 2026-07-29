@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Listener Study Rater</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5c6670;
+      --line: #d7dce2;
+      --paper: #f7f8fa;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --bad: #a32020;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      letter-spacing: 0;
+    }
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 18px;
+      align-items: start;
+    }
+    header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+    }
+    h1, h2 { margin: 0; font-weight: 650; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; }
+    .meta { color: var(--muted); font-size: 13px; }
+    .stimuli {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .stimulus, .output {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .stimulus {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      min-width: 0;
+    }
+    .stimulus-head {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 8px;
+    }
+    audio { width: 100%; min-width: 0; }
+    label { display: grid; gap: 5px; font-size: 13px; color: var(--muted); }
+    input, select, textarea {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 7px 9px;
+      font: inherit;
+    }
+    textarea {
+      min-height: 220px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    .output { display: grid; gap: 12px; position: sticky; top: 16px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      min-height: 36px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      padding: 7px 10px;
+      font: inherit;
+      cursor: pointer;
+    }
+    button.secondary { background: #fff; color: var(--accent); }
+    .status { min-height: 22px; color: var(--muted); font-size: 13px; }
+    .status.error { color: var(--bad); }
+    details {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      margin: 8px 0 0;
+      color: var(--ink);
+      font-size: 12px;
+    }
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; width: min(100vw - 20px, 680px); }
+      .stimuli { grid-template-columns: 1fr; }
+      .output { position: static; }
+    }
+    @media (max-width: 520px) {
+      header { display: grid; }
+      .stimulus { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Listener Study Rater</h1>
+        <div class="meta">4 audio stimuli; one JSONL row per rater.</div>
+      </div>
+      <label>Rater ID
+        <input id="rater-id" autocomplete="off" placeholder="human_001">
+      </label>
+    </header>
+    <div class="stimuli">
+      
+      <section class="stimulus" data-stimulus-id="S01">
+        <div class="stimulus-head">
+          <h2>S01</h2>
+          <audio controls preload="metadata" src="blinded_stimuli/S01.wav"></audio>
+        </div>
+        <label>Emotion
+          <select data-field="target_emotion_choice">
+            <option value=""></option>
+            <option value="neutral">neutral</option>
+<option value="careful_concerned">careful concerned</option>
+<option value="firm_boundary">firm boundary</option>
+<option value="cheerful">cheerful</option>
+          </select>
+        </label>
+        <label>Same Speaker
+          <select data-field="embry_identity">
+            <option value=""></option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+        </label>
+        <label>Speaker Confidence
+          <input data-field="identity_confidence" type="number" min="1" max="5" step="1">
+        </label>
+        <label>Naturalness
+          <input data-field="naturalness" type="number" min="1" max="5" step="1">
+        </label>
+        <label>Same Meaning
+          <select data-field="content_equivalent">
+            <option value=""></option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+        </label>
+        <label>Rank
+          <input data-field="preference_rank" type="number" min="1" max="4" step="1">
+        </label>
+      </section>
+
+
+      <section class="stimulus" data-stimulus-id="S02">
+        <div class="stimulus-head">
+          <h2>S02</h2>
+          <audio controls preload="metadata" src="blinded_stimuli/S02.wav"></audio>
+        </div>
+        <label>Emotion
+          <select data-field="target_emotion_choice">
+            <option value=""></option>
+            <option value="neutral">neutral</option>
+<option value="careful_concerned">careful concerned</option>
+<option value="firm_boundary">firm boundary</option>
+<option value="cheerful">cheerful</option>
+          </select>
+        </label>
+        <label>Same Speaker
+          <select data-field="embry_identity">
+            <option value=""></option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+        </label>
+        <label>Speaker Confidence
+          <input data-field="identity_confidence" type="number" min="1" max="5" step="1">
+        </label>
+        <label>Naturalness
+          <input data-field="naturalness" type="number" min="1" max="5" step="1">
+        </label>
+        <label>Same Meaning
+          <select data-field="content_equivalent">
+            <option value=""></option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+        </label>
+        <label>Rank
+          <input data-field="preference_rank" type="number" min="1" max="4" step="1">
+        </label>
+      </section>
+
+
+      <section class="stimulus" data-stimulus-id="S03">
+        <div class="stimulus-head">
+          <h2>S03</h2>
+          <audio controls preload="metadata" src="blinded_stimuli/S03.wav"></audio>
+        </div>
+        <label>Emotion
+          <select data-field="target_emotion_choice">
+            <option value=""></option>
+            <option value="neutral">neutral</option>
+<option value="careful_concerned">careful concerned</option>
+<option value="firm_boundary">firm boundary</option>
+<option value="cheerful">cheerful</option>
+          </select>
+        </label>
+        <label>Same Speaker
+          <select data-field="embry_identity">
+            <option value=""></option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+        </label>
+        <label>Speaker Confidence
+          <input data-field="identity_confidence" type="number" min="1" max="5" step="1">
+        </label>
+        <label>Naturalness
+          <input data-field="naturalness" type="number" min="1" max="5" step="1">
+        </label>
+        <label>Same Meaning
+          <select data-field="content_equivalent">
+            <option value=""></option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+        </label>
+        <label>Rank
+          <input data-field="preference_rank" type="number" min="1" max="4" step="1">
+        </label>
+      </section>
+
+
+      <section class="stimulus" data-stimulus-id="S04">
+        <div class="stimulus-head">
+          <h2>S04</h2>
+          <audio controls preload="metadata" src="blinded_stimuli/S04.wav"></audio>
+        </div>
+        <label>Emotion
+          <select data-field="target_emotion_choice">
+            <option value=""></option>
+            <option value="neutral">neutral</option>
+<option value="careful_concerned">careful concerned</option>
+<option value="firm_boundary">firm boundary</option>
+<option value="cheerful">cheerful</option>
+          </select>
+        </label>
+        <label>Same Speaker
+          <select data-field="embry_identity">
+            <option value=""></option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+        </label>
+        <label>Speaker Confidence
+          <input data-field="identity_confidence" type="number" min="1" max="5" step="1">
+        </label>
+        <label>Naturalness
+          <input data-field="naturalness" type="number" min="1" max="5" step="1">
+        </label>
+        <label>Same Meaning
+          <select data-field="content_equivalent">
+            <option value=""></option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+        </label>
+        <label>Rank
+          <input data-field="preference_rank" type="number" min="1" max="4" step="1">
+        </label>
+      </section>
+
+    </div>
+    <aside class="output">
+      <h2>Response Row</h2>
+      <div class="actions">
+        <button id="build-row" type="button">Build Row</button>
+        <button id="copy-row" type="button" class="secondary">Copy</button>
+        <button id="download-row" type="button" class="secondary">Download</button>
+      </div>
+      <textarea id="jsonl-row" spellcheck="false"></textarea>
+      <div id="status" class="status"></div>
+      <details>
+        <summary>Schema Example</summary>
+        <pre>{
+  &quot;created_at&quot;: &quot;2026-07-29T00:00:00Z&quot;,
+  &quot;rater_id&quot;: &quot;human_001&quot;,
+  &quot;responses&quot;: [
+    {
+      &quot;content_equivalent&quot;: &quot;yes&quot;,
+      &quot;embry_identity&quot;: &quot;yes&quot;,
+      &quot;identity_confidence&quot;: 4,
+      &quot;naturalness&quot;: 4,
+      &quot;preference_rank&quot;: 2,
+      &quot;stimulus_id&quot;: &quot;S01&quot;,
+      &quot;target_emotion_choice&quot;: &quot;neutral&quot;
+    },
+    {
+      &quot;content_equivalent&quot;: &quot;yes&quot;,
+      &quot;embry_identity&quot;: &quot;yes&quot;,
+      &quot;identity_confidence&quot;: 4,
+      &quot;naturalness&quot;: 3,
+      &quot;preference_rank&quot;: 1,
+      &quot;stimulus_id&quot;: &quot;S02&quot;,
+      &quot;target_emotion_choice&quot;: &quot;firm_boundary&quot;
+    },
+    {
+      &quot;content_equivalent&quot;: &quot;yes&quot;,
+      &quot;embry_identity&quot;: &quot;no&quot;,
+      &quot;identity_confidence&quot;: 3,
+      &quot;naturalness&quot;: 3,
+      &quot;preference_rank&quot;: 4,
+      &quot;stimulus_id&quot;: &quot;S03&quot;,
+      &quot;target_emotion_choice&quot;: &quot;cheerful&quot;
+    },
+    {
+      &quot;content_equivalent&quot;: &quot;yes&quot;,
+      &quot;embry_identity&quot;: &quot;yes&quot;,
+      &quot;identity_confidence&quot;: 3,
+      &quot;naturalness&quot;: 4,
+      &quot;preference_rank&quot;: 3,
+      &quot;stimulus_id&quot;: &quot;S04&quot;,
+      &quot;target_emotion_choice&quot;: &quot;careful_concerned&quot;
+    }
+  ]
+}</pre>
+      </details>
+    </aside>
+  </main>
+  <script type="application/json" id="study-config">{&quot;stimuli&quot;: [{&quot;audio_src&quot;: &quot;blinded_stimuli/S01.wav&quot;, &quot;slot&quot;: 1, &quot;stimulus_id&quot;: &quot;S01&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S02.wav&quot;, &quot;slot&quot;: 2, &quot;stimulus_id&quot;: &quot;S02&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S03.wav&quot;, &quot;slot&quot;: 3, &quot;stimulus_id&quot;: &quot;S03&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S04.wav&quot;, &quot;slot&quot;: 4, &quot;stimulus_id&quot;: &quot;S04&quot;}], &quot;tones&quot;: [&quot;neutral&quot;, &quot;careful_concerned&quot;, &quot;firm_boundary&quot;, &quot;cheerful&quot;]}</script>
+  <script>
+    const config = JSON.parse(document.getElementById("study-config").textContent);
+    const statusEl = document.getElementById("status");
+    const outputEl = document.getElementById("jsonl-row");
+
+    function intValue(value) {
+      const parsed = Number.parseInt(value, 10);
+      return Number.isInteger(parsed) ? parsed : null;
+    }
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.classList.toggle("error", isError);
+    }
+
+    function buildRow() {
+      const raterId = document.getElementById("rater-id").value.trim();
+      const errors = [];
+      if (!raterId) errors.push("rater_id");
+      const responses = [];
+      document.querySelectorAll(".stimulus").forEach((section) => {
+        const response = { stimulus_id: section.dataset.stimulusId };
+        section.querySelectorAll("[data-field]").forEach((field) => {
+          const name = field.dataset.field;
+          const raw = field.value;
+          if (["identity_confidence", "naturalness", "preference_rank"].includes(name)) {
+            response[name] = intValue(raw);
+          } else {
+            response[name] = raw;
+          }
+        });
+        responses.push(response);
+      });
+      const ranks = responses.map((row) => row.preference_rank).filter((value) => Number.isInteger(value));
+      const rankSet = new Set(ranks);
+      const expectedRanks = config.stimuli.map((_, index) => index + 1).join(",");
+      const actualRanks = [...rankSet].sort((a, b) => a - b).join(",");
+      responses.forEach((response) => {
+        ["target_emotion_choice", "embry_identity", "content_equivalent"].forEach((field) => {
+          if (!response[field]) errors.push(`${response.stimulus_id}:${field}`);
+        });
+        ["identity_confidence", "naturalness"].forEach((field) => {
+          if (!Number.isInteger(response[field]) || response[field] < 1 || response[field] > 5) {
+            errors.push(`${response.stimulus_id}:${field}`);
+          }
+        });
+      });
+      if (actualRanks !== expectedRanks) errors.push("preference_rank_permutation");
+      const row = {
+        rater_id: raterId,
+        created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
+        responses
+      };
+      outputEl.value = JSON.stringify(row);
+      setStatus(errors.length ? `Missing or invalid: ${errors.join(", ")}` : "Ready to append.", errors.length > 0);
+      return errors.length === 0 ? row : null;
+    }
+
+    document.getElementById("build-row").addEventListener("click", buildRow);
+    document.getElementById("copy-row").addEventListener("click", async () => {
+      if (!outputEl.value) buildRow();
+      if (!outputEl.value) return;
+      await navigator.clipboard.writeText(outputEl.value + "\n");
+      setStatus("Copied JSONL row.");
+    });
+    document.getElementById("download-row").addEventListener("click", () => {
+      if (!outputEl.value) buildRow();
+      if (!outputEl.value) return;
+      const blob = new Blob([outputEl.value + "\n"], { type: "application/x-ndjson" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "listener-response.jsonl";
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setStatus("Downloaded JSONL row.");
+    });
+  </script>
+</body>
+</html>

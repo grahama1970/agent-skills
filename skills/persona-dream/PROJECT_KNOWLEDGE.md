@@ -1,8 +1,50 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener stimuli ready and analysis false-green gated; SPARTA/human responses next) by Codex
+**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener rater page ready and analysis false-green gated; SPARTA/human responses next) by Codex
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
+
+## 2026-07-29 — Listener-study rater page ready; still no perceptual conclusion
+
+The missing UX bridge for the Chatterbox emotion evaluation is now a static
+Persona Dream collection artifact, not a SPARTA production surface:
+
+- Rater page:
+  `reports/goal_v5/continuity/blinded_listener_study/rater_page.html`
+  - SHA-256: `sha256:64b2f992a28c5d98c327212832f0be6d96e45b683eefd39323ea51c9ff4a2b85`
+- Rater-page receipt:
+  `reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json`
+  - SHA-256: `sha256:8026000a080add6f63df81cf90c9b8522bed442c0f28b91647555ca2bed67bce`
+  - status: `PASS_BLINDED_LISTENER_RATER_PAGE_READY`
+  - `mocked: false`, `live: false`
+  - failed gates: `[]`
+- Blinded audio copies:
+  - `blinded_stimuli/S01.wav`: `sha256:3c61c23200701563ae8eda0a6b51107109b0d0547d2a1ce7491e5961ccbea52f`
+  - `blinded_stimuli/S02.wav`: `sha256:e5a421c3d0dad45710404fc56a1047c2c062d1faefe03bdebdac3f3a1fb8fbaa`
+  - `blinded_stimuli/S03.wav`: `sha256:8657c873f59428c65b633136309d8e73a2d29d54b7b69b1d8f139ef3b51dfc00`
+  - `blinded_stimuli/S04.wav`: `sha256:6a1ec8962e74e0866979834e5162563fbf3efa0940b34e3a5a4ca5c763cae2e2`
+
+The page exposes only stimulus ids and blinded `S01`-style audio filenames to
+raters, then produces one schema-compatible JSONL row for append-only
+collection in `responses.jsonl`.
+
+Proof on the rebased tree:
+
+- `./skills/persona-dream/run.sh render-blinded-listener-rater-page --json`
+  -> `PASS_BLINDED_LISTENER_RATER_PAGE_READY`
+- `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_render_blinded_listener_rater_page.py skills/persona-dream/tests/test_validate_blinded_listener_study.py skills/persona-dream/tests/test_analyze_blinded_listener_study.py -q`
+  -> `10 passed`
+- `./skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.json --output /tmp/persona-dream-agentic-eval.json`
+  -> `READY`, 2 cases, 6 trials
+- `~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:8876/rater_page.html --name persona-dream-listener-rater`
+  -> `.codex/ui-verification/latest.json`, screenshot
+  `/tmp/codex-ui-verification/agent-skills-persona-dream-next-obvious-20260729/persona-dream-listener-rater/20260729T151347Z.png`
+- `rg -n "stimuli/(control|dream|adversarial|baseline)\.wav|>control<|>dream<|>adversarial<|>baseline<|\"condition\"" skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html`
+  -> no matches
+
+Boundary: this answers the UX question for evaluation collection. It does not
+create human ratings, signed interpretation, perceived-emotion evidence,
+SPARTA production consumption, or immutable-goal completion.
 
 ## 2026-07-29 — #1058 analysis guard BLOCKED; no perceptual conclusion without humans
 

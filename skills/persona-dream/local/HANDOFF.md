@@ -1,6 +1,6 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-29T14:32:32Z
+**Timestamp:** 2026-07-29T15:07:57Z
 **Active Agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target Branch:** `main`
@@ -53,6 +53,17 @@
   four, the rater response schema/instructions are present, empty/malformed
   rater rows are rejected, and the remaining failed gate is
   `human_responses_complete`.
+- **Blinded listener-study rater page:** A static collection surface now exists
+  at `reports/goal_v5/continuity/blinded_listener_study/rater_page.html`, with
+  receipt
+  `reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json`
+  and SHA-256
+  `sha256:8026000a080add6f63df81cf90c9b8522bed442c0f28b91647555ca2bed67bce`.
+  It copies the four WAVs into `blinded_stimuli/S01.wav` through `S04.wav`,
+  avoids condition-labelled audio paths in the HTML, and emits
+  schema-compatible JSONL for `responses.jsonl`. This is a Persona Dream
+  evaluation-collection artifact, not SPARTA production UX and not perceptual
+  proof.
 - **Blinded listener-study analysis guard:** The analysis receipt at
   `reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json` now fails
   closed with `BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS` until
