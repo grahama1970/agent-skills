@@ -72,12 +72,17 @@ table below is checked against it by
 | Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Binding inside the production conversation service |
 | Chatterbox voice | Live `/synthesize-batch` render of the mood envelope, strict ASR WER 0.0, durable WAV snapshots | Perceived emotion, naturalness, human acceptance |
 | Speaker recognition | Long 4.68-6.0s session-mood renders pass resemblyzer identity/adversarial scoring with separation 0.208427 | Human listener recognition, perceived emotion, naturalness, cross-mood identity |
+| Joined live chain | One fresh cycle id, `live_chain_20260729t130950z`, joins accepted dream evidence -> Watch binding -> journal -> ledger delta -> pre-turn session mood -> three live Chatterbox turns -> Embry recognition, with 13/13 negative controls blocked | Repeated reliability; production conversation-service authority; perceived emotion |
 | Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
 | PCTOM-R | Strong deterministic receipt machinery, live Tau slices | Confidence-bounded planning advantage |
 
-**The active gate** is joining one fresh accepted dream through the whole loop
-into `reports/goal_v5/continuity/live_chain/RECEIPT.json`. Do not expand
-PCTOM-R, generate a new Kling clip, or run another broad assessment before it.
+**The active gate** is no longer producing the first joined live-chain receipt;
+that receipt exists at `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
+The next gate is repeated reliability plus production conversation-service
+authority: run multiple fresh continuity-chain cycles and prove the live
+conversation service consumes the continuity ledger as the session-mood source
+before turn 1. Do not expand PCTOM-R, generate a new Kling clip, or run another
+broad assessment before that gate unless the operator explicitly reprioritizes.
 
 ## PCTOM-R, and why its numbers are not a result
 

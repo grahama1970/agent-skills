@@ -1,9 +1,70 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (P2.4 recognition PASS; joined live-chain receipt next) by Codex
+**Last updated:** 2026-07-29 UTC (joined live-chain receipt PASS; reliability/production authority next) by Codex
 **Status:** Active development
 
-## 2026-07-29 — CURRENT NEXT STEP: joined live-chain receipt after P2.4 recognition PASS
+## 2026-07-29 — P2 joined live-chain receipt PASS; immutable goal still NOT_MET
+
+The joined P2 live-chain receipt now exists:
+
+- `reports/goal_v5/continuity/live_chain/RECEIPT.json`
+  - SHA-256: `sha256:436075e6635ff9a6e643a46c624ace9a9eb0cd201130baea242742efdaf7919f`
+  - status: `PASS_PERSONA_DREAM_LIVE_CHAIN`
+  - dream cycle id: `live_chain_20260729t130950z`
+  - `mocked: false`, `live: true`
+- Chatterbox leg:
+  `reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json`
+  - SHA-256: `sha256:7947ecdce50c0ddab47301bfda37225683dfcf2196a1dfed0e75d6321e9e43fb`
+  - endpoint: `POST http://127.0.0.1:8018/synthesize-batch`
+  - engine: `chatterbox_base`
+  - WER: `0.0`, `0.0`, `0.0`
+  - durations: `5.32`, `5.24`, `4.64` seconds
+- Recognition leg:
+  `reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json`
+  - SHA-256: `sha256:b034c4c5520676cfe263af3c618638a9d17317eb51be7bfa1c0973cb2992689e`
+  - status: `PASS_SESSION_MOOD_VOICE_RECOGNITION`
+  - engine: `resemblyzer`
+  - failed gates: `[]`
+  - Embry similarities: `0.850468`, `0.872958`, `0.793123`
+  - separation: `0.159977`
+
+What the joined receipt proves:
+
+- one fresh live-chain cycle id joins accepted synthetic dream evidence to live
+  Memory rereads;
+- the journal remains synthetic self-reflection and cites only source roots and
+  Watch observations;
+- one bounded arc delta appends to the continuity ledger and rereads exactly;
+- session mood is selected before turn 1 and remains stable across three live
+  Chatterbox turns;
+- live Chatterbox renders use `chatterbox_base` and preserve answer content
+  under ASR;
+- the bound recognition receipt passes Embry/adversarial speaker scoring;
+- 13/13 required negative controls block.
+
+What it does not prove:
+
+- repeated dream-pipeline reliability;
+- production SPARTA conversation-service integration;
+- perceived emotion, naturalness, or human listener acceptance;
+- PCTOM-R confidence-bounded planning advantage;
+- new paid Kling/video generation.
+
+Current next implementation order:
+
+1. Run a five-cycle engineering reliability campaign with distinct cycle ids,
+   recording either accepted live-chain completion or named fail-closed blockers.
+2. Add a production conversation-service authority receipt proving session mood
+   is selected from the continuity ledger before turn 1 and reused across turns.
+3. Keep PCTOM-R condition-benefit work deferred until continuity runtime
+   reliability is receipted, unless the operator explicitly reprioritizes that
+   research workstream.
+
+## 2026-07-29 — SUPERSEDED — joined live-chain receipt after P2.4 recognition PASS
+
+> SUPERSEDED 2026-07-29. The joined live-chain receipt now exists and passed.
+> Retained for chronology only. The current next step is five-cycle reliability
+> and production conversation-service authority, not producing #1039 again.
 
 P2.4 speaker recognition is now scored and passing for longer session-mood
 renders. Do not run another `$ask` roundtable or re-open the backend preflight

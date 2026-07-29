@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-29T12:43:03Z",
+  "updated_at": "2026-07-29T13:17:06Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:a67eeca95951f1a0e2d514ea57093b2ece9510c853780afc1a6d24dcbf8d9b8a",
@@ -21,8 +21,8 @@
   "continuity_state": {
     "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
     "mocked": false,
-    "live": false,
-    "status": "LEDGER_HARDENED_SESSION_MOOD_BOUND_LIVE_CHATTERBOX_RENDERED_RECOGNITION_PASSED_NOT_LIVE_CHAIN",
+    "live": true,
+    "status": "LIVE_CHAIN_RECEIPT_PASSED_NOT_PRODUCTION_OR_RELIABILITY",
     "latest_authority_receipt": "skills/persona-dream/reports/goal_v5/continuity/ledger_hardening/RECEIPT.json",
     "latest_authority_receipt_sha256": "sha256:02f866e0b208c531902129cff2cd385ba29b28d6170d3ea027993fea01f7502b",
     "latest_session_mood_binding_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
@@ -36,16 +36,24 @@
     "latest_voice_recognition_preflight_runtime": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
     "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json",
     "latest_voice_recognition_receipt_sha256": "sha256:9a1e6de22b0b608570d0458394b64746be8737154d886f8a91dc9cf4c2e159bd",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the report directory, passing speaker-recognition backend preflight under the Chatterbox voice lane interpreter, longer 4.68-6.0s session-mood renders through chatterbox_base, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.208427",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977",
     "unverified": [
-      "persisted as authoritative runtime state",
-      "live Memory and Watch reread in a full accepted-dream chain",
       "stable session mood inside the production conversation service rather than the deterministic receipt runner",
-      "recognition check across multiple moods"
-    ]
+      "recognition check across multiple moods",
+      "perceived target emotion, naturalness, or human listener acceptance",
+      "five-cycle repeated full dream-pipeline reliability"
+    ],
+    "latest_live_chain_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "latest_live_chain_receipt_sha256": "sha256:436075e6635ff9a6e643a46c624ace9a9eb0cd201130baea242742efdaf7919f",
+    "latest_live_chain_chatterbox_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
+    "latest_live_chain_chatterbox_receipt_sha256": "sha256:7947ecdce50c0ddab47301bfda37225683dfcf2196a1dfed0e75d6321e9e43fb",
+    "latest_live_chain_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
+    "latest_live_chain_voice_recognition_receipt_sha256": "sha256:b034c4c5520676cfe263af3c618638a9d17317eb51be7bfa1c0973cb2992689e",
+    "latest_live_chain_dream_cycle_id": "live_chain_20260729t130950z",
+    "latest_live_chain_session_mood_id": "session_mood:f65062c26b4b30d507f793f9"
   },
   "latest_voice_proof": {
-    "path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json",
+    "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
     "mocked": false,
     "live": true,
     "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
@@ -59,26 +67,26 @@
       0.0
     ],
     "durations_seconds": [
-      4.68,
-      4.8,
-      6.0
+      5.32,
+      5.24,
+      4.64
     ],
     "audio_snapshots": [
-      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/turn_001_finished_response.wav",
-      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/turn_002_finished_response.wav",
-      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/turn_003_finished_response.wav"
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_001_finished_response.wav",
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_002_finished_response.wav",
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_003_finished_response.wav"
     ],
     "source": "continuity_session_mood",
-    "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json",
+    "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
     "voice_recognition_status": "PASS_SESSION_MOOD_VOICE_RECOGNITION",
     "voice_recognition_engine": "resemblyzer",
     "voice_recognition_similarity_to_embry": [
-      0.872906,
-      0.841573,
-      0.842233
+      0.850468,
+      0.872958,
+      0.793123
     ],
-    "voice_recognition_separation": 0.208427,
-    "exercised": "session-derived voice_delivery survived ASR batch rendering for three longer turns, used chatterbox_base, passed strict WER 0.0 ASR checks, preserved durable report-local WAV snapshots, and passed resemblyzer speaker-recognition/adversarial scoring",
+    "voice_recognition_separation": 0.159977,
+    "exercised": "live-chain session-derived voice_delivery survived ASR batch rendering for three turns, used chatterbox_base, passed strict WER 0.0 ASR checks, preserved durable report-local WAV snapshots, and passed resemblyzer speaker-recognition/adversarial scoring",
     "unverified": [
       "perceived target emotion",
       "naturalness",
@@ -134,11 +142,36 @@
       {
         "command": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python skills/persona-dream/scripts/session_mood_voice_recognition.py --live-receipt skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json --out skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json --json",
         "result": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh live-chain --json",
+        "result": "PASS_PERSONA_DREAM_LIVE_CHAIN",
+        "dream_cycle_id": "live_chain_20260729t130950z",
+        "negative_controls": "13/13 PASS_NEGATIVE_BLOCKED",
+        "receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_live_chain_receipt.py skills/persona-dream/tests/test_current_state_consistency.py skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_session_mood_chatterbox_live.py skills/persona-dream/tests/test_session_mood_voice_recognition_preflight.py -q",
+        "result": "41 passed"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh check-current-state-consistency --strict --json",
+        "result": "PASS_CURRENT_STATE_CONSISTENT",
+        "stage_count": 5,
+        "mismatch_count": 0
+      },
+      {
+        "command": "python3 scripts/check_mock_evidence_claims.py",
+        "result": "OK: checked 467 test file(s); no mock+proof claim violations"
+      },
+      {
+        "command": "git diff --check -- skills/persona-dream",
+        "result": "PASS"
       }
     ],
     "full_sanity_command": "./skills/persona-dream/sanity.sh",
     "full_sanity_status": "PASS",
-    "full_sanity_result": "554 passed, 9 subtests passed",
+    "full_sanity_result": "562 passed, 9 subtests passed",
     "full_sanity_notes": [
       "static dream fixture produced 10 required artifacts and 6 frame prompts",
       "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
@@ -147,18 +180,19 @@
     ]
   },
   "active_blockers": [
-    "Continuity ledger is not yet proven as the runtime authority across real sessions.",
+    "Production conversation service has not yet consumed the continuity ledger as the authoritative runtime session-mood source.",
     "Chatterbox proof is transport/content-preservation and resemblyzer speaker-recognition evidence, not perceptual emotion, naturalness, or human listener acceptance.",
-    "The full joined live-chain receipt has not been produced: accepted dream -> Watch observations -> journal -> bounded arc delta -> ledger reread -> pre-turn session mood -> multi-turn Chatterbox -> recognition.",
+    "Repeated full dream-pipeline reliability is not proven; no five-cycle campaign exists.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
-    "Repeated full dream-pipeline reliability is not proven.",
-    "PCTOM-R archived evidence now has durable local custody, but PCTOM-R still does not prove confidence-bounded planning advantage."
+    "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
   ],
   "next_step": {
-    "default": "Produce the full accepted-dream to live-chain proof now that longer session-mood Chatterbox renders pass speaker-recognition/adversarial scoring.",
-    "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "default": "Run the five-cycle engineering reliability campaign and/or wire the production conversation service to consume the continuity ledger as authoritative session-mood state.",
+    "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/reliability_campaign/RECEIPT.json",
     "ordered_steps": [
-      "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls (#1039)."
+      "Run five fresh continuity-chain cycles with distinct cycle ids and record completion/fail-closed outcomes.",
+      "Add a production conversation-service authority receipt proving session mood is selected from the continuity ledger before turn 1 and reused across turns.",
+      "Defer PCTOM-R condition-benefit expansion until continuity runtime reliability has deterministic evidence or the operator explicitly reprioritizes the research workstream."
     ]
   }
 }

@@ -1,0 +1,133 @@
+"""Focused fail-closed tests for the joined live-chain receipt runner."""
+import importlib.util
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+live_chain = _load("live_chain_receipt")
+
+
+def _source():
+    return {
+        "source_cycle_id": "cycle_a",
+        "source_dream_node_key": "dream_a",
+        "roots": ["root_1", "root_2"],
+        "watch_observation_ids": ["frame_0001", "identity_temporal_continuity_review"],
+    }
+
+
+def _journal():
+    return {
+        "schema": "persona_dream.persona_journal.v1",
+        "persona_id": "embry",
+        "cycle": "cycle_a",
+        "journal": "I woke knowing it had been a dream, not a fact.",
+        "unresolved_tension": "wanting witness while keeping a boundary",
+        "expanded_understanding": "The dream sharpened the question of witness versus capture.",
+        "session_mood": {
+            "mood_label": "guarded_quietly_wanting",
+            "mood_description": "Composed, practical, and quietly wanting to be understood.",
+            "carried_tension": "wanting witness while keeping a boundary",
+            "source_cycle": "cycle_a",
+            "affect_source": "persona_dream",
+        },
+        "affect_source": "persona_dream",
+        "dream_provenance": {"cycle": "cycle_a", "kind": "dream_journal"},
+        "memory_kind": "self_narrative",
+        "canon_status": "synthetic_self_reflection",
+        "never_promote_to_event_fact": True,
+        "asserts_only_own_inner_state": True,
+        "memory_web_entities": "Embry, Kai",
+        "tom_summary": "boundary",
+        "memory_web_size": 2,
+        "source_memory_ids": ["root_1", "root_2"],
+    }
+
+
+def test_journal_lineage_accepts_synthetic_source_bound_entry():
+    entry = live_chain.build_journal(_journal(), dream_cycle_id="live_chain_unit", source=_source())
+
+    live_chain.validate_journal_lineage(
+        entry,
+        source_roots=set(_source()["roots"]),
+        watch_ids=set(_source()["watch_observation_ids"]),
+        journal_watch_refs=_source()["watch_observation_ids"],
+    )
+
+
+def test_journal_literal_promotion_blocks():
+    entry = live_chain.build_journal(_journal(), dream_cycle_id="live_chain_unit", source=_source())
+    entry["canon_status"] = "literal_history"
+
+    with pytest.raises(ValueError, match="BLOCKED_JOURNAL_PROMOTED_TO_LITERAL_HISTORY"):
+        live_chain.validate_journal_lineage(
+            entry,
+            source_roots=set(_source()["roots"]),
+            watch_ids=set(_source()["watch_observation_ids"]),
+            journal_watch_refs=_source()["watch_observation_ids"],
+        )
+
+
+def test_cross_cycle_watch_citation_blocks():
+    entry = live_chain.build_journal(_journal(), dream_cycle_id="live_chain_unit", source=_source())
+
+    with pytest.raises(ValueError, match="BLOCKED_JOURNAL_CROSS_CYCLE_WATCH_CITATION"):
+        live_chain.validate_journal_lineage(
+            entry,
+            source_roots=set(_source()["roots"]),
+            watch_ids=set(_source()["watch_observation_ids"]),
+            journal_watch_refs=["other_cycle_frame"],
+        )
+
+
+def test_cross_cycle_source_citation_blocks():
+    entry = live_chain.build_journal(_journal(), dream_cycle_id="live_chain_unit", source=_source())
+    entry["source_memory_ids"] = ["root_1", "other_cycle_memory"]
+
+    with pytest.raises(ValueError, match="BLOCKED_JOURNAL_CROSS_CYCLE_SOURCE_CITATION"):
+        live_chain.validate_journal_lineage(
+            entry,
+            source_roots=set(_source()["roots"]),
+            watch_ids=set(_source()["watch_observation_ids"]),
+            journal_watch_refs=_source()["watch_observation_ids"],
+        )
+
+
+def test_unsupported_external_claim_blocks():
+    entry = live_chain.build_journal(_journal(), dream_cycle_id="live_chain_unit", source=_source())
+
+    with pytest.raises(ValueError, match="BLOCKED_JOURNAL_UNSUPPORTED_EXTERNAL_FACT"):
+        live_chain.validate_journal_lineage(
+            entry,
+            source_roots=set(_source()["roots"]),
+            watch_ids=set(_source()["watch_observation_ids"]),
+            journal_watch_refs=_source()["watch_observation_ids"],
+            unsupported_external_claim="Kai promised an outcome.",
+        )
+
+
+def test_watch_memory_collection_uses_existing_watch_evidence_contract():
+    source = "watch_memory = memory_exact_create("
+
+    text = (ROOT / "scripts/live_chain_receipt.py").read_text(encoding="utf-8")
+    assert f'{source}"persona_dream_watch_evidence"' in text
+    assert "persona_dream_watch_observations" not in text
+
+
+def test_ledger_snapshot_uses_existing_persona_memory_contract():
+    source = "ledger_memory = memory_exact_create("
+
+    text = (ROOT / "scripts/live_chain_receipt.py").read_text(encoding="utf-8")
+    assert f'{source}"persona_memory"' in text
+    assert "persona_continuity_ledgers" not in text

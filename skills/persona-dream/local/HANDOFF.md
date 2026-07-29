@@ -1,6 +1,6 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-29T12:43:03Z
+**Timestamp:** 2026-07-29T13:12:53Z
 **Active Agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target Branch:** `main`
@@ -28,7 +28,8 @@
 - **P2.4 recognition scoring:** Passed after rendering longer 4.68-6.0s
   session-mood turns. The earlier short 1.76-2.16s renders remain useful
   historical evidence, but they were too short for the identity gate.
-- **Current blocker:** The joined live-chain receipt does not exist yet:
+- **P2 joined live-chain receipt:** Passed for cycle
+  `live_chain_20260729t130950z` at
   `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
 - **Status boundary:** P2.4 recognition proof does not prove perceived emotion,
   naturalness, human listener recognition, production conversation-service
@@ -47,6 +48,20 @@
   with `status=PASS_SESSION_MOOD_VOICE_RECOGNITION`, `engine=resemblyzer`,
   failed gates `[]`, Embry similarities `0.872906`, `0.841573`, `0.842233`,
   and impostor separation `0.208427`.
+- Joined live-chain receipt:
+  `reports/goal_v5/continuity/live_chain/RECEIPT.json` with
+  `status=PASS_PERSONA_DREAM_LIVE_CHAIN`, `mocked=false`, `live=true`, receipt
+  SHA-256 `sha256:436075e6635ff9a6e643a46c624ace9a9eb0cd201130baea242742efdaf7919f`,
+  side-effect counters `{accepted dream writes: 1, journal writes: 1, ledger arc
+  deltas: 1, live Chatterbox turns: 3}`, and 13/13 negative controls blocked.
+- Live-chain Chatterbox leg:
+  `reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json` with
+  `chatterbox_base`, WER `0.0`, `0.0`, `0.0`, and durations `5.32`, `5.24`,
+  `4.64` seconds.
+- Live-chain recognition leg:
+  `reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json` with
+  `PASS_SESSION_MOOD_VOICE_RECOGNITION`, failed gates `[]`, Embry similarities
+  `0.850468`, `0.872958`, `0.793123`, and separation `0.159977`.
 - `session_mood_chatterbox_live.py` now sends Chatterbox the service-visible
   `/data/embry_ref.wav` path while the receipt records the host-side authorized
   reference path and SHA-256. This avoids the `reference_audio_outside_allowed_roots`
@@ -56,10 +71,6 @@
 
 ## 4. What is Currently Broken
 
-- **Joined live chain missing:** No receipt yet proves one fresh accepted dream
-  through Watch observations, first-person journal, bounded arc delta, hardened
-  ledger append/reread, pre-turn session mood, multi-turn Chatterbox, and Embry
-  recognition in one joined run.
 - **Production service not joined:** Session mood is proven in the deterministic
   receipt runner, not as authoritative state inside the production conversation
   service.
@@ -72,18 +83,12 @@
 
 ## 5. Next Steps
 
-1. Produce
-   `skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json`
-   for the joined chain, using the long-identity Chatterbox and recognition
-   receipts as the voice leg.
-2. Include the required negative controls: unsupported journal fact, identity
-   core rewrite, stale ledger epoch, duplicate cycle replay, post-turn mood
-   selection, silent mid-session mood change, answer-content drift, fallback to
-   an engine that ignores controls, non-Embry voice passing recognition, and
-   synthetic dream recalled as literal history.
-3. After the joined receipt exists, run the five-cycle engineering reliability
-   campaign.
-4. Return to PCTOM-R condition-benefit work such as issue `#1008` only after the
+1. Run the five-cycle engineering reliability campaign. Each cycle should either
+   produce one accepted live-chain receipt or a named fail-closed blocker with
+   zero unauthorized writes.
+2. Add a production conversation-service authority receipt proving session mood
+   is selected from the continuity ledger before turn 1 and reused across turns.
+3. Return to PCTOM-R condition-benefit work such as issue `#1008` only after the
    P2 live-chain receipt or an explicit operator reprioritization.
 
 ## 6. Project Context for Success
@@ -97,12 +102,14 @@
 - **Recognition script:** `skills/persona-dream/scripts/session_mood_voice_recognition.py`
 - **Long render receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json`
 - **Long recognition receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json`
+- **Joined live-chain receipt:** `skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json`
 
 Use this claim boundary:
 
 ```text
-Persona Dream remains in P2_LIVE_CONTINUITY_CHAIN. P2.4 speaker recognition
-now passes for longer session-mood Chatterbox renders, but the immutable Embry
-continuity goal remains NOT_MET until a joined accepted-dream-to-live-chain
-receipt exists at reports/goal_v5/continuity/live_chain/RECEIPT.json.
+Persona Dream remains in P2_LIVE_CONTINUITY_CHAIN. The joined
+accepted-dream-to-live-chain receipt now passes for one cycle, but the immutable
+Embry continuity goal remains NOT_MET until repeated reliability and production
+conversation-service authority are receipted, and perceptual emotion/PCTOM-R
+benefit boundaries remain explicitly unproven.
 ```

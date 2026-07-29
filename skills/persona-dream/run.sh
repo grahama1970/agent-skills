@@ -725,6 +725,9 @@ case "$COMMAND" in
   check-dream-observation-packet)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dream_observation_packet.py" "$@"
     ;;
+  live-chain)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_receipt.py" "$@"
+    ;;
   session-mood-voice-recognition)
     # Speaker-identity gate over the durable session-mood renders. Needs a
     # speaker backend; run under the Chatterbox voice lane interpreter.

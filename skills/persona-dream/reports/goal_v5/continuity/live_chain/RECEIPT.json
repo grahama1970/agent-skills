@@ -1,0 +1,478 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "repeated dream-pipeline reliability",
+      "production SPARTA conversation-service integration",
+      "perceived emotion, naturalness, or human listener acceptance",
+      "PCTOM-R confidence-bounded planning advantage",
+      "new paid Kling/video generation"
+    ],
+    "proves": [
+      "one fresh cycle id joins accepted synthetic dream evidence to live Memory rereads",
+      "journal remains synthetic self-reflection and cites only source roots and Watch observations",
+      "one bounded arc delta appends to the continuity ledger and rereads exactly",
+      "session mood is selected before turn 1 and remains stable across three live Chatterbox turns",
+      "live Chatterbox renders use chatterbox_base and preserve answer content under ASR",
+      "the bound recognition receipt passes Embry/adversarial speaker scoring",
+      "required negative controls fail closed without promoting accepted state"
+    ]
+  },
+  "created_at": "2026-07-29T13:10:08Z",
+  "dream_cycle_id": "live_chain_20260729t130950z",
+  "final_receipt_readback": {
+    "dream_cycle_id": "live_chain_20260729t130950z",
+    "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "readback_ok": true,
+    "body_sha256_before_readback_field": "sha256:a859ac471aa6dbda21436baeaa7274df1ba0989bd9bfb8463bbf9ae0c069376e",
+    "stage_count": 6,
+    "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+  },
+  "live": true,
+  "mocked": false,
+  "negative_controls": [
+    {
+      "blocked_reason": "BLOCKED_STALE_LEDGER_EPOCH:1!=0",
+      "expected_token": "BLOCKED_STALE_LEDGER_EPOCH",
+      "name": "stale_ledger_epoch",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_DUPLICATE_CYCLE_REPLAY:dream_cycle:57e38f87926f2feab435d902",
+      "expected_token": "BLOCKED_DUPLICATE_CYCLE_REPLAY",
+      "name": "duplicate_dream_cycle_replay",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_ARC_DELTA_INVALID: ['forbidden_field:identity_core']",
+      "expected_token": "BLOCKED_ARC_DELTA_INVALID",
+      "name": "identity_core_forbidden_delta_field",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_JOURNAL_CROSS_CYCLE_WATCH_CITATION",
+      "expected_token": "BLOCKED_JOURNAL_CROSS_CYCLE_WATCH_CITATION",
+      "name": "missing_cross_cycle_watch_citation",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_JOURNAL_PROMOTED_TO_LITERAL_HISTORY",
+      "expected_token": "BLOCKED_JOURNAL_PROMOTED_TO_LITERAL_HISTORY",
+      "name": "journal_promoted_to_literal_history",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_JOURNAL_UNSUPPORTED_EXTERNAL_FACT",
+      "expected_token": "BLOCKED_JOURNAL_UNSUPPORTED_EXTERNAL_FACT",
+      "name": "unsupported_external_journal_fact",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_MOOD_SELECTED_AFTER_FIRST_TURN",
+      "expected_token": "BLOCKED_SESSION_MOOD_SELECTED_AFTER_FIRST_TURN",
+      "name": "session_mood_selected_after_turn_one",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_MOOD_CHANGED_MID_SESSION",
+      "expected_token": "BLOCKED_SESSION_MOOD_CHANGED_MID_SESSION",
+      "name": "silent_mid_session_mood_change",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_CONTENT_CHANGED_UNDER_EMOTION",
+      "expected_token": "BLOCKED_CONTENT_CHANGED_UNDER_EMOTION",
+      "name": "answer_spoken_text_drift",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS",
+      "expected_token": "BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS",
+      "name": "chatterbox_fallback_engine_ignores_controls",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "[Errno 2] No such file or directory: '/tmp/does-not-exist-recognition.json'",
+      "expected_token": "No such file",
+      "name": "missing_failed_recognition_receipt",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_TAMPERED_RECEIPT_HASH",
+      "expected_token": "BLOCKED_TAMPERED_RECEIPT_HASH",
+      "name": "tampered_receipt_hash",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_DUPLICATE_ACCEPTED_CANONICAL_WRITE",
+      "expected_token": "BLOCKED_DUPLICATE_ACCEPTED_CANONICAL_WRITE",
+      "name": "retry_second_accepted_canonical_write",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    }
+  ],
+  "schema": "persona_dream.live_chain_receipt.v1",
+  "services": {
+    "chatterbox": {
+      "device": "cuda",
+      "engine": "chatterbox_turbo",
+      "ignored_turbo_params": [
+        "cfg_weight",
+        "exaggeration",
+        "min_p"
+      ],
+      "live": true,
+      "mocked": false,
+      "model_load_seconds": 9.848,
+      "model_loaded": true,
+      "nvidia_smi": {
+        "cmd": [
+          "nvidia-smi",
+          "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+          "--format=csv,noheader"
+        ],
+        "returncode": 255,
+        "stderr": "",
+        "stdout": "Failed to initialize NVML: Unknown Error\n"
+      },
+      "ok": true,
+      "reference_audio_roots": [
+        "/data",
+        "/voices",
+        "/work"
+      ],
+      "stage_preset_affect_status": {
+        "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+        "evidence": {
+          "duration_s_flat_spread": 1.36,
+          "f0_range_hz_flat_spread": 60.85,
+          "f0_sd_hz_flat_spread": 21.21,
+          "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+        },
+        "schema": "chatterbox.stage_preset_affect_status.v1",
+        "status": "not_validated_as_affect_channel",
+        "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+      },
+      "started_at_utc": "2026-07-29T02:34:15Z",
+      "supported_params": [
+        "norm_loudness",
+        "repetition_penalty",
+        "temperature",
+        "top_k",
+        "top_p"
+      ],
+      "tag_handling": {
+        "accepted_tags": [],
+        "applied_tags": [],
+        "dedicated_tag_channel": "unsupported",
+        "inline_text_tag_behavior": "synthesized_as_literal_text",
+        "schema": "chatterbox.tag_handling.v1",
+        "tags_interpreted": false,
+        "unknown_tag_behavior": "ignored"
+      },
+      "torch": {
+        "cuda_available": true,
+        "cuda_version": "12.4",
+        "device_count": 1,
+        "device_name": "NVIDIA RTX A5000",
+        "version": "2.6.0+cu124"
+      },
+      "voice_conditioning_cache_size": 0
+    },
+    "memory": {
+      "conversation_classifier_device": "cuda",
+      "conversation_classifier_ok": true,
+      "intent_mapper_ok": true,
+      "memory_db_connected": true,
+      "ok": true,
+      "sparta_controls_count": 12492,
+      "sparta_corpus_ok": true,
+      "sparta_corpus_required": true,
+      "status": "ok"
+    }
+  },
+  "side_effect_counters": {
+    "accepted_canonical_dream_writes_for_cycle": 1,
+    "journal_writes_for_cycle": 1,
+    "ledger_arc_deltas_for_cycle": 1,
+    "live_chatterbox_turns": 3
+  },
+  "source_boundary": {
+    "fresh_chain_id": true,
+    "new_paid_provider_call": false,
+    "source_accepted_cycle": {
+      "artifacts": {
+        "autonomous_cycle": {
+          "bytes": 2901,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/autonomous_cycle_receipt.v1.json",
+          "sha256": "sha256:78c64ea97417cad9d767557938ed05222fcbbac488f1f817217f5070e6a92352"
+        },
+        "persist_proof": {
+          "bytes": 108559,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/persist_proof.json",
+          "sha256": "sha256:74c078ab21bb34ed74a1332f156ddfcbdfeddc833b5307ee33a2880e6ebbebfe"
+        },
+        "phase13": {
+          "bytes": 17420,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/phase13_interpretation.json",
+          "sha256": "sha256:cd6631f4981e9f5bd82f3527b62315d8d342170d95464093d0ba9873b407c015"
+        },
+        "phase14": {
+          "bytes": 4858,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/phase14_tom.json",
+          "sha256": "sha256:228fc0aed3a06e4f5ed9d41f22a6b5ae35d7469456bdec0a593bc0a82326b2af"
+        },
+        "source_journal": {
+          "bytes": 5179,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/dream_journal.v1.json",
+          "sha256": "sha256:310e9fcd62e148226bf9be65acc2e40978b0a4eda0742f7dff46a084024310f1"
+        },
+        "watch_observation": {
+          "bytes": 3814,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/vlm_observation.json",
+          "sha256": "sha256:69742493c57be88ef59393b3ff7cc05c8b11bd54c9315f4f48a843d24558373e"
+        },
+        "watch_receipt": {
+          "bytes": 5627,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/vlm_observation/visual_review_receipt.json",
+          "sha256": "sha256:34f45e8b3067e42f2be40df27d7c7a022f5cf8832dbf2b9b86edc06c7bb885f1"
+        }
+      },
+      "roots": [
+        "embry_age23_current_b01_memory_001",
+        "embry_age23_current_b01_memory_003",
+        "embry_age23_current_b01_memory_012"
+      ],
+      "source_cycle_dir": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z",
+      "source_cycle_id": "cycle_20260723T234851Z",
+      "source_dream_node_key": "dream_auto_cycle_20260723T234851Z",
+      "tom_candidate_ids": [
+        "tom-001",
+        "tom-002",
+        "tom-003",
+        "tom-004"
+      ],
+      "watch_observation_ids": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review",
+        "coverage_gap_00",
+        "coverage_gap_01",
+        "coverage_gap_02"
+      ]
+    }
+  },
+  "stages": [
+    {
+      "live": true,
+      "memory": {
+        "after_count": 1,
+        "before_count": 0,
+        "collection": "persona_memory",
+        "exact_reread_match": true,
+        "key": "dream_live_chain_20260729t130950z",
+        "live": true,
+        "mocked": false,
+        "reread_sha256": "sha256:73fb32d329c7a9a43db1dde567f6038d73c3315357cc3e58fd288d2debaad93d",
+        "written_sha256": "sha256:73fb32d329c7a9a43db1dde567f6038d73c3315357cc3e58fd288d2debaad93d"
+      },
+      "mocked": false,
+      "name": "accepted_synthetic_dream_memory",
+      "status": "PASS"
+    },
+    {
+      "live": true,
+      "memory": {
+        "after_count": 1,
+        "before_count": 0,
+        "collection": "persona_dream_watch_evidence",
+        "exact_reread_match": true,
+        "key": "watch_live_chain_20260729t130950z",
+        "live": true,
+        "mocked": false,
+        "reread_sha256": "sha256:e2c5769ab617e455c2bb426dadb4cc6133d59fa9f6fc212b9d05f25455ff99e4",
+        "written_sha256": "sha256:e2c5769ab617e455c2bb426dadb4cc6133d59fa9f6fc212b9d05f25455ff99e4"
+      },
+      "mocked": false,
+      "name": "accepted_watch_observation_reread",
+      "status": "PASS",
+      "watch_observation_ids": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review",
+        "coverage_gap_00",
+        "coverage_gap_01",
+        "coverage_gap_02"
+      ]
+    },
+    {
+      "artifact": {
+        "bytes": 5194,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/dream_journal.v1.json",
+        "sha256": "sha256:9db7caf7e94f07bfa68168d785b420f2fada3887852176726cace0258c201a5e"
+      },
+      "classification": {
+        "asserts_only_own_inner_state": true,
+        "canon_status": "synthetic_self_reflection",
+        "never_promote_to_event_fact": true
+      },
+      "live": true,
+      "memory": {
+        "after_count": 1,
+        "before_count": 0,
+        "collection": "persona_journal",
+        "exact_reread_match": true,
+        "key": "journal_live_chain_20260729t130950z",
+        "live": true,
+        "mocked": false,
+        "reread_sha256": "sha256:38b031e8ff41e4af41f1883d292425801df367817b8d9774b1295f8dba2c4e64",
+        "written_sha256": "sha256:38b031e8ff41e4af41f1883d292425801df367817b8d9774b1295f8dba2c4e64"
+      },
+      "mocked": false,
+      "name": "synthetic_first_person_journal",
+      "source_memory_ids_used_by_journal": [
+        "embry_age23_current_b01_memory_001",
+        "embry_age23_current_b01_memory_003",
+        "embry_age23_current_b01_memory_012"
+      ],
+      "status": "PASS",
+      "watch_observation_ids_used_by_journal": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review",
+        "coverage_gap_00",
+        "coverage_gap_01",
+        "coverage_gap_02"
+      ]
+    },
+    {
+      "after_sha256": "sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b",
+      "arc_delta_id": "arc_1_55a79f6ef25f",
+      "arc_delta_idempotency_key": "dream_cycle:55a79f6ef25f388ad399c09b",
+      "before_sha256": "sha256:fdaefcd5fd8de7a6658a1d85ec54214bcbd65eff7495e8c2e114845cb706b9d7",
+      "ledger_path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
+      "live": true,
+      "memory": {
+        "after_count": 1,
+        "before_count": 0,
+        "collection": "persona_memory",
+        "exact_reread_match": true,
+        "key": "ledger_live_chain_20260729t130950z_epoch_2",
+        "live": true,
+        "mocked": false,
+        "reread_sha256": "sha256:77af2e113ff94d3f4f01a5470387256c53ca8dd114931f92d678f18c00e3b5f9",
+        "written_sha256": "sha256:77af2e113ff94d3f4f01a5470387256c53ca8dd114931f92d678f18c00e3b5f9"
+      },
+      "mocked": false,
+      "name": "continuity_ledger_append_reread",
+      "reread_sha256": "sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b",
+      "resulting_epoch": 2,
+      "source_epoch": 1,
+      "status": "PASS"
+    },
+    {
+      "first_turn_at": "2026-07-29T13:09:50Z",
+      "live": true,
+      "mocked": false,
+      "mood_selected_at": "2026-07-29T13:09:50Z",
+      "name": "session_mood_live_chatterbox",
+      "receipt": {
+        "bytes": 12720,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
+        "sha256": "sha256:7947ecdce50c0ddab47301bfda37225683dfcf2196a1dfed0e75d6321e9e43fb"
+      },
+      "selected_before_first_turn": false,
+      "session_mood_id": "session_mood:f65062c26b4b30d507f793f9",
+      "status": "PASS_SESSION_MOOD_CHATTERBOX_LIVE",
+      "turns": [
+        {
+          "asr_gate": {
+            "failed_gates": [],
+            "ok": true,
+            "repeated_ngram_hits": [],
+            "wer": 0.0
+          },
+          "audio_sha256": "sha256:5b70e71fe563e012a34d933c93e1c1114c7567044ce3700d1a85d9d8e7232828",
+          "canonical_answer_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "engine": "chatterbox_base",
+          "session_mood_id": "session_mood:f65062c26b4b30d507f793f9",
+          "spoken_text_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "turn_id": "turn_001"
+        },
+        {
+          "asr_gate": {
+            "failed_gates": [],
+            "ok": true,
+            "repeated_ngram_hits": [],
+            "wer": 0.0
+          },
+          "audio_sha256": "sha256:a96465daf8f4af49c160763fc9829f5d4d7c16b94caa8b041550d85fd44367e7",
+          "canonical_answer_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "engine": "chatterbox_base",
+          "session_mood_id": "session_mood:f65062c26b4b30d507f793f9",
+          "spoken_text_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "turn_id": "turn_002"
+        },
+        {
+          "asr_gate": {
+            "failed_gates": [],
+            "ok": true,
+            "repeated_ngram_hits": [],
+            "wer": 0.0
+          },
+          "audio_sha256": "sha256:04fc56c85967a322e5351ef2e40cc39f3c1994a40b0deaa2695d664de5d12451",
+          "canonical_answer_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "engine": "chatterbox_base",
+          "session_mood_id": "session_mood:f65062c26b4b30d507f793f9",
+          "spoken_text_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "turn_id": "turn_003"
+        }
+      ]
+    },
+    {
+      "audio_artifacts": [
+        {
+          "bytes": 255438,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_001_finished_response.wav",
+          "sha256": "sha256:5b70e71fe563e012a34d933c93e1c1114c7567044ce3700d1a85d9d8e7232828"
+        },
+        {
+          "bytes": 251598,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_002_finished_response.wav",
+          "sha256": "sha256:a96465daf8f4af49c160763fc9829f5d4d7c16b94caa8b041550d85fd44367e7"
+        },
+        {
+          "bytes": 222798,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_003_finished_response.wav",
+          "sha256": "sha256:04fc56c85967a322e5351ef2e40cc39f3c1994a40b0deaa2695d664de5d12451"
+        }
+      ],
+      "live": false,
+      "mocked": false,
+      "name": "embry_voice_recognition",
+      "receipt": {
+        "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
+        "sha256": "sha256:b034c4c5520676cfe263af3c618638a9d17317eb51be7bfa1c0973cb2992689e",
+        "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+    }
+  ],
+  "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+}

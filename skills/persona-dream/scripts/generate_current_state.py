@@ -29,6 +29,7 @@ RECEIPTS = {
     "phase16": RR / "phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json",
     "pilot_protocol": SKILL / "contracts/pilot_c_vs_f_frozen_protocol.v3.md",
     "voice_expression": RR / "voice_expression/voice_expression_evaluation_receipt.v1.json",
+    "live_chain": SKILL / "reports/goal_v5/continuity/live_chain/RECEIPT.json",
 }
 
 
@@ -52,6 +53,7 @@ def render() -> str:
     loop = _load(RECEIPTS["cognitive_loop"])
     p16 = _load(RECEIPTS["phase16"])
     voice = _load(RECEIPTS["voice_expression"])
+    live_chain = _load(RECEIPTS["live_chain"])
 
     dur = ret.get("ffprobe", {}).get("format", {}).get("duration", "?")
     rows = [
@@ -77,6 +79,12 @@ def render() -> str:
             f"lipsync={(voice.get('lipsync_canary_receipt') or {}).get('status')}",
             "voice_expression",
         ),
+        (
+            "Joined live chain",
+            f"{live_chain.get('status')} cycle={live_chain.get('dream_cycle_id')} "
+            f"negative_controls={sum(1 for row in live_chain.get('negative_controls', []) if row.get('status') == 'PASS_NEGATIVE_BLOCKED')}/{len(live_chain.get('negative_controls', []))}",
+            "live_chain",
+        ),
     ]
 
     lines = [
@@ -98,7 +106,8 @@ def render() -> str:
         "Not proven (from the receipts' own does_not_prove sets): human",
         "subjective acceptance of the dream video; perceived emotional fidelity",
         "and lip-sync quality of the voice lane (canary proves the route only);",
-        "repeatability beyond N=1; whole-clip embedding-certified identity.",
+        "repeatability beyond N=1; production conversation-service authority;",
+        "whole-clip embedding-certified identity.",
         "",
     ]
     return "\n".join(lines)

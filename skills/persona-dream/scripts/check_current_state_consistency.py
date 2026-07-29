@@ -116,6 +116,21 @@ STAGES = (
         contradiction_markers=("render session mood through chatterbox",),
         status_pin="continuity_state.latest_session_mood_chatterbox_live_receipt_sha256",
     ),
+    Stage(
+        stage_id="P2_live_chain_receipt",
+        receipt="reports/goal_v5/continuity/live_chain/RECEIPT.json",
+        accepted_prefix="PASS_PERSONA_DREAM_LIVE_CHAIN",
+        contradiction_markers=(
+            "joined live-chain receipt does not exist",
+            "joined live chain missing",
+            "produce the full accepted-dream to live-chain proof",
+            "produce reports/goal_v5/continuity/live_chain/receipt.json",
+            "write reports/goal_v5/continuity/live_chain/receipt.json",
+            "the full joined live-chain receipt has not been produced",
+            "current blocker: the joined live-chain receipt",
+        ),
+        status_pin="continuity_state.latest_live_chain_receipt_sha256",
+    ),
 )
 
 
