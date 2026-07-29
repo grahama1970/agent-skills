@@ -93,8 +93,9 @@ PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
         can_attach=True,
         max_attachments=1,
         zip_allowed=False,
-        preferred_bundle="one plain Markdown or text bundle",
-        gotcha="large inline prompts can truncate or scramble in the composer; do not use zip",
+        preferred_bundle="one plain Markdown or text bundle, inlined through --query-file when upload input is unavailable",
+        gotcha="do not use zip; inline only readable Markdown/text bundles through query-file so large prompts avoid argv limits",
+        inline_text_attachments=True,
     ),
     "webgemini": ProviderPayloadPolicy(
         handler="webgemini",

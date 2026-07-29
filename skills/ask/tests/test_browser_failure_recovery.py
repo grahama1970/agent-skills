@@ -388,6 +388,28 @@ def test_webgemini_inlines_markdown_bundle_instead_of_attaching(tmp_path: Path) 
     assert "Current README text." in text
 
 
+def test_webkimi_inlines_markdown_bundle_instead_of_requiring_attachment_ui(tmp_path: Path) -> None:
+    prompt = tmp_path / "prompt.md"
+    bundle = tmp_path / "review-bundle.md"
+    prompt.write_text("Review the provided source bundle.\n", encoding="utf-8")
+    bundle.write_text("# README Bundle\n\nCurrent README text.\n", encoding="utf-8")
+
+    submit_prompt, attachment_paths, preflight = tau_roundtable_worker._prepare_browser_submit_payload(
+        handler="webkimi",
+        prompt_path=prompt,
+        request_payload={"request": "Review the bundle."},
+        attachment_paths=[str(bundle)],
+    )
+
+    assert attachment_paths == []
+    assert preflight["status"] == "PASS"
+    assert preflight["attached_file_count"] == 0
+    assert preflight["inlined_file_count"] == 1
+    text = submit_prompt.read_text(encoding="utf-8")
+    assert "### INLINE_1: review-bundle.md" in text
+    assert "Current README text." in text
+
+
 def test_webclaude_auto_retry_uses_readable_bundle_when_transport_supports_attach_file(
     tmp_path: Path,
 ) -> None:
