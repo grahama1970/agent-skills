@@ -114,6 +114,18 @@ const assistantSnapshotExpression = (sentinel) => {
         source = 'page-text-gemini-said';
       }
     }
+    if (
+      SENTINEL
+      && source !== 'assistant-dom'
+      && (
+        text.includes('You said')
+        || text.includes('Completion contract for browser automation:')
+        || text.includes('At the very end of your final answer, print exactly:')
+      )
+    ) {
+      text = '';
+      source = 'page-text-contaminated';
+    }
     const sentinelMatch = findSentinel(text);
     if (SENTINEL && sentinelMatch && sentinelMatch !== SENTINEL) {
       const idx = text.lastIndexOf(sentinelMatch);
@@ -284,30 +296,70 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
   const fs = require("fs");
   const path = require("path");
   const absolutePath = path.resolve(filePath);
+  const name = path.basename(absolutePath);
   if (!fs.existsSync(absolutePath)) {
     throw new Error(`File not found: ${absolutePath}`);
   }
 
-  // Wait for a file input to appear. ChatGPT lazily mounts the hidden
+  // Wait for a file input to appear. Gemini lazily mounts the hidden
   // <input type="file"> when the composer attach button is interactable;
   // recent revs mount it unconditionally, but we poll defensively.
   const selectorJson = JSON.stringify(SELECTORS.fileInput);
-  const deadline = Date.now() + 5000;
+  await evaluate(
+    cdp,
+    `(() => {
+      ${buildClickDispatcher()}
+      const uploadButton = Array.from(document.querySelectorAll('button, [role="button"]'))
+        .find((el) => /upload|attach|add/i.test([
+          el.getAttribute('aria-label') || '',
+          el.getAttribute('title') || '',
+          el.textContent || '',
+        ].join(' ')));
+      if (uploadButton) dispatchClickSequence(uploadButton);
+      return Boolean(uploadButton);
+    })()`,
+  ).catch(() => false);
+  const deadline = Date.now() + 10000;
   let found = false;
+  let menuClicked = false;
   while (Date.now() < deadline) {
     const probe = await evaluate(
       cdp,
-      `(() => !!document.querySelector(${selectorJson}))()`,
+      `(() => {
+        ${buildClickDispatcher()}
+        if (document.querySelector(${selectorJson})) return true;
+        if (!${JSON.stringify(menuClicked)}) {
+          const item = Array.from(document.querySelectorAll([
+            'button',
+            '[role="menuitem"]',
+            '[role="option"]',
+            '.mat-mdc-menu-item',
+            '.mat-mdc-option',
+          ].join(', '))).find((el) => /upload|file|files|device/i.test([
+            el.getAttribute('aria-label') || '',
+            el.getAttribute('title') || '',
+            el.textContent || '',
+          ].join(' ')));
+          if (item) {
+            dispatchClickSequence(item);
+            return 'menu-clicked';
+          }
+        }
+        return false;
+      })()`,
     );
-    if (probe) {
+    if (probe === true) {
       found = true;
       break;
+    }
+    if (probe === "menu-clicked") {
+      menuClicked = true;
     }
     await delay(150);
   }
   if (!found) {
     throw new Error(
-      "ChatGPT file input (input[type=\"file\"]) not present in the DOM; ChatGPT may have moved or hidden the attach control.",
+      "Gemini file input (input[type=\"file\"]) not present in the DOM; Gemini may have moved or hidden the attach control.",
     );
   }
 
@@ -324,14 +376,14 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     selector: SELECTORS.fileInput,
   });
   if (!node || !node.nodeId) {
-    throw new Error("DOM.querySelector returned no nodeId for the ChatGPT file input");
+    throw new Error("DOM.querySelector returned no nodeId for the Gemini file input");
   }
   await inputCdp("DOM.setFileInputFiles", {
     files: [absolutePath],
     nodeId: node.nodeId,
   });
 
-  // Give ChatGPT a moment to process the file (it reads, hashes, sometimes
+  // Give Gemini a moment to process the file (it reads, hashes, sometimes
   // uploads). If the attachment is not yet visible after a brief wait we
   // surface the failure so the caller can decide to retry rather than send
   // a prompt that references a missing attachment.
@@ -354,14 +406,14 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     );
     if (preview) {
       log(`File attachment preview visible`);
-      return { attached: true };
+      return { attached: true, path: absolutePath, name, previewVisible: true };
     }
     await delay(250);
   }
-  // No preview shown, but the input file was set. Proceed; ChatGPT often
+  // No preview shown, but the input file was set. Proceed; Gemini often
   // accepts files without a visible thumbnail (especially text/markdown).
   log(`File attachment set (no preview detected within 20s; proceeding)`);
-  return { attached: true, previewVisible: false };
+  return { attached: true, path: absolutePath, name, previewVisible: false };
 }
 
 
@@ -741,6 +793,10 @@ async function query(options) {
     log("Prompt ready");
     const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
     const baselineUrl = await evaluate(cdp, "window.location.href").catch(() => "");
+    const attachment = file ? await attachFile(cdp, inputCdp, file, log) : null;
+    if (attachment?.attached) {
+      log(`Attached file ${attachment.name}`);
+    }
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
     await clickSend(cdp, inputCdp);
@@ -783,6 +839,7 @@ async function query(options) {
       activated: tabInfo.activated === true,
       tabWasCreated: tabInfo.tabWasCreated === true,
       noActivate: noActivate === true,
+      attachment,
     };
   } finally {
     if (!keepTab) {

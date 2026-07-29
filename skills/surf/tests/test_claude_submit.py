@@ -34,6 +34,8 @@ def test_claude_submit_accepts_attach_file_and_records_upload_metadata(tmp_path:
     fake_run = tmp_path / "surf-run.sh"
     invocation_log = tmp_path / "surf-invocations.log"
     sentinel_file = tmp_path / "sentinel.txt"
+    prompt_file = tmp_path / "composer.txt"
+    submitted_file = tmp_path / "submitted.flag"
 
     request.write_text("Review the attached prior handler response.\n", encoding="utf-8")
     attachment.write_text("Prior handler response.\n", encoding="utf-8")
@@ -50,7 +52,11 @@ case "${{1:-}}" in
     ;;
   page.text)
     sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
-    printf 'https://claude.ai/chat/example\\nprior-response.md\\nClaude responded:\\nAttached review complete\\n%s\\n' "$sentinel"
+    if [[ -f {str(submitted_file)!r} ]]; then
+      printf 'https://claude.ai/chat/example\\nprior-response.md\\nClaude responded:\\nAttached review complete\\n%s\\n' "$sentinel"
+    else
+      printf 'https://claude.ai/chat/example\\nprior-response.md\\n%s\\n' "$(cat {str(prompt_file)!r} 2>/dev/null || true)"
+    fi
     ;;
   read)
     printf 'textbox "Write your prompt to Claude" [e1]\\n'
@@ -64,15 +70,23 @@ case "${{1:-}}" in
   upload)
     printf 'uploaded\\n'
     ;;
-  click|key)
+  click)
+    if [[ "${{2:-}}" == "e2" ]]; then
+      printf 'submitted' > {str(submitted_file)!r}
+    fi
+    printf 'ok\\n'
+    ;;
+  key)
+    printf 'submitted' > {str(submitted_file)!r}
     printf 'ok\\n'
     ;;
   type)
-    python3 - "${{2:-}}" {str(sentinel_file)!r} <<'PY'
+    python3 - "${{2:-}}" {str(sentinel_file)!r} {str(prompt_file)!r} <<'PY'
 import pathlib
 import re
 import sys
 
+pathlib.Path(sys.argv[3]).write_text(sys.argv[1], encoding="utf-8")
 match = re.search(r"<<<CLAUDE_DONE:[^>]+>>>", sys.argv[1], re.S)
 if match:
     pathlib.Path(sys.argv[2]).write_text(match.group(0), encoding="utf-8")
@@ -141,6 +155,117 @@ esac
     assert "Automation-only instruction" in submitted
     assert "Do not mention," in submitted
     assert "For transport verification" not in submitted
+
+
+def test_claude_submit_recovery_preserves_attachment_metadata(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    attachment = tmp_path / "review-bundle.md"
+    fake_run = tmp_path / "surf-run.sh"
+    sentinel_file = tmp_path / "sentinel.txt"
+
+    request.write_text("Review the attached bundle.\n", encoding="utf-8")
+    attachment.write_text("# Bundle\n\nReadable local target.\n", encoding="utf-8")
+    fake_run.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  tab.list)
+    printf '[{{"id":837360812,"url":"https://claude.ai/chat/example","title":"Claude"}}]\\n'
+    ;;
+  focus.state)
+    printf '{{"focusedWindowId":1,"activeTabId":837360812}}\\n'
+    ;;
+  page.text)
+    sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
+    printf 'https://claude.ai/chat/example\\nreview-bundle.md\\nClaude responded:\\nRecovered attached review complete\\n%s\\n' "$sentinel"
+    ;;
+  read)
+    printf 'textbox "Write your prompt to Claude" [e1]\\n'
+    printf 'button "Send message" [e2]\\n'
+    printf 'button "Upload files" [e3] type="file"\\n'
+    printf 'review-bundle.md\\n'
+    ;;
+  js)
+    printf '{{"ok":true}}\\n'
+    ;;
+  upload)
+    printf 'uploaded\\n'
+    ;;
+  type)
+    python3 - "${{2:-}}" {str(sentinel_file)!r} <<'PY'
+import pathlib
+import re
+import sys
+
+match = re.search(r"<<<CLAUDE_DONE:[^>]+>>>", sys.argv[1], re.S)
+if match:
+    pathlib.Path(sys.argv[2]).write_text(match.group(0), encoding="utf-8")
+PY
+    printf 'typed\\n'
+    ;;
+  click)
+    if [[ "${{2:-}}" == "e2" ]]; then
+      echo "simulated post-submit transport failure" >&2
+      exit 7
+    fi
+    printf 'ok\\n'
+    ;;
+  key)
+    echo "simulated post-submit transport failure" >&2
+    exit 7
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "python3",
+            str(CLAUDE_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--meta-output",
+            str(meta),
+            "--tab-id",
+            "837360812",
+            "--url",
+            "https://claude.ai/chat/example",
+            "--attach-file",
+            str(attachment),
+            "--stable-polls",
+            "0",
+            "--timeout",
+            "5",
+            "--no-activate",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert response.read_text(encoding="utf-8").strip() == "Recovered attached review complete"
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "completed"
+    assert payload["recovered_after_failure"] is True
+    assert payload["attachment_missing"] is False
+    assert payload["attachment"]["source"] == "post_failure_sentinel_recovery_attach_file"
+    assert payload["attachment"]["name"] == "review-bundle.md"
 
 
 def test_claude_submit_recovers_missing_content_script_with_same_tab_reload(tmp_path: Path) -> None:
@@ -268,6 +393,8 @@ def test_claude_submit_finalizes_raw_sentinel_after_wait_failure(tmp_path: Path)
     invocation_log = tmp_path / "surf-invocations.log"
     sentinel_file = tmp_path / "sentinel.txt"
     text_count_file = tmp_path / "text-count.txt"
+    prompt_file = tmp_path / "composer.txt"
+    submitted_file = tmp_path / "submitted.flag"
 
     request.write_text("Review the generated records.\n", encoding="utf-8")
     fake_run.write_text(
@@ -282,29 +409,41 @@ case "${{1:-}}" in
     printf '{{"focusedWindowId":1,"activeTabId":837360812}}\\n'
     ;;
   page.text)
-    count="$(cat {str(text_count_file)!r} 2>/dev/null || printf '0')"
-    count="$((count + 1))"
-    printf '%s' "$count" > {str(text_count_file)!r}
     sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
-    if [[ "$count" -le 2 ]]; then
-      printf 'https://claude.ai/chat/example\\nClaude is responding\\nClaude responded:\\nCompleted review\\n%s\\n' "$sentinel"
+    if [[ ! -f {str(submitted_file)!r} ]]; then
+      printf 'https://claude.ai/chat/example\\n%s\\n' "$(cat {str(prompt_file)!r} 2>/dev/null || true)"
     else
-      printf 'https://claude.ai/chat/example\\nClaude responded:\\nCompleted review\\n%s\\n' "$sentinel"
+      count="$(cat {str(text_count_file)!r} 2>/dev/null || printf '0')"
+      count="$((count + 1))"
+      printf '%s' "$count" > {str(text_count_file)!r}
+      if [[ "$count" -le 2 ]]; then
+        printf 'https://claude.ai/chat/example\\nClaude is responding\\nClaude responded:\\nCompleted review\\n%s\\n' "$sentinel"
+      else
+        printf 'https://claude.ai/chat/example\\nClaude responded:\\nCompleted review\\n%s\\n' "$sentinel"
+      fi
     fi
     ;;
   read)
     printf 'textbox "Write your prompt to Claude" [e1]\\n'
     printf 'button "Send message" [e2]\\n'
     ;;
-  click|key)
+  click)
+    if [[ "${{2:-}}" == "e2" ]]; then
+      printf 'submitted' > {str(submitted_file)!r}
+    fi
+    printf 'ok\\n'
+    ;;
+  key)
+    printf 'submitted' > {str(submitted_file)!r}
     printf 'ok\\n'
     ;;
   type)
-    python3 - "${{2:-}}" {str(sentinel_file)!r} <<'PY'
+    python3 - "${{2:-}}" {str(sentinel_file)!r} {str(prompt_file)!r} <<'PY'
 import pathlib
 import re
 import sys
 
+pathlib.Path(sys.argv[3]).write_text(sys.argv[1], encoding="utf-8")
 match = re.search(r"<<<CLAUDE_DONE:[^>]+>>>", sys.argv[1], re.S)
 if match:
     pathlib.Path(sys.argv[2]).write_text(match.group(0), encoding="utf-8")
@@ -453,6 +592,97 @@ esac
     assert payload["current_url"] == "https://claude.ai/chat/live-url"
     assert payload["tab_identity_preflight"]["accepted_url_transition"] is True
     assert payload["tab_identity_preflight"]["reason"] == "claude_new_tab_materialized_chat"
+
+
+def test_claude_submit_does_not_recover_from_prompt_echo_sentinel(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    raw = tmp_path / "response.raw.md"
+    meta = tmp_path / "response.meta.json"
+    fake_run = tmp_path / "surf-run.sh"
+    prompt_file = tmp_path / "composer.txt"
+
+    request.write_text("Review this.\n", encoding="utf-8")
+    fake_run.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  tab.list)
+    printf '[{{"id":837360921,"url":"https://claude.ai/new","title":"Claude"}}]\\n'
+    ;;
+  focus.state)
+    printf '{{"focusedWindowId":1,"activeTabId":837360921}}\\n'
+    ;;
+  page.text)
+    printf 'https://claude.ai/new\\n%s\\n' "$(cat {str(prompt_file)!r} 2>/dev/null || true)"
+    ;;
+  read)
+    printf 'textbox "Write your prompt to Claude" [e1]\\n'
+    printf 'button "Send message" [e2]\\n'
+    ;;
+  click|key)
+    printf 'ok\\n'
+    ;;
+  type)
+    python3 - "${{2:-}}" {str(prompt_file)!r} <<'PY'
+import pathlib
+import sys
+
+pathlib.Path(sys.argv[2]).write_text(sys.argv[1], encoding="utf-8")
+PY
+    printf 'typed\\n'
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "python3",
+            str(CLAUDE_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--raw-output",
+            str(raw),
+            "--meta-output",
+            str(meta),
+            "--sentinel",
+            "<<<CLAUDE_DONE:prompt_echo>>>",
+            "--tab-id",
+            "837360921",
+            "--url",
+            "https://claude.ai/new",
+            "--timeout",
+            "1",
+            "--stable-polls",
+            "0",
+            "--no-activate",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 4
+    assert "Claude prompt was staged but not submitted" in proc.stderr
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert payload["raw_contains_sentinel"] is True
+    assert "recovered_after_failure" not in payload
+    assert not response.exists()
 
 
 def test_claude_submit_chat_url_mismatch_still_fails_closed(tmp_path: Path) -> None:

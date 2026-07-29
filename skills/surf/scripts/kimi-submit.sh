@@ -137,7 +137,7 @@ printf '%s\n' "$submitted_prompt" > "$submitted_output"
 stderr_log="$(mktemp /tmp/surf-kimi-submit-stderr.XXXXXX.log)"
 raw_tmp="$(mktemp /tmp/surf-kimi-submit-raw.XXXXXX.md)"
 export SURF_LOCK_TIMEOUT_MS="$surf_lock_wait_ms"
-args=(kimi_tab "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$timeout_s" --keep-tab)
+args=(kimi_tab --query-file "$submitted_output" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$timeout_s" --keep-tab)
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
 fi
@@ -357,6 +357,19 @@ for line in reversed(stderr_text.splitlines()):
             attachment = {"parse_error": True, "raw": payload}
     if tab_id is not None and activated is not None and tab_was_created is not None and (not attach_file or attachment is not None):
         break
+if attach_file and attachment is None:
+    # A zero-exit native kimi_tab call means attachFile() completed without
+    # throwing before the prompt was sent. Older native-host builds did not emit
+    # the Attachment: stderr line, so preserve a deterministic wrapper-side
+    # proof instead of false-failing an otherwise sentinel-bearing response.
+    attachment_path = pathlib.Path(attach_file)
+    attachment = {
+        "attached": True,
+        "path": attach_file,
+        "name": attachment_path.name,
+        "previewVisible": None,
+        "source": "wrapper_zero_exit_attach_file",
+    }
 if tab_id is None and requested_tab_id:
     tab_id = requested_tab_id
     tab_id_source = "requested_tab_id_fallback"

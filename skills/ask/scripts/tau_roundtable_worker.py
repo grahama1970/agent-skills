@@ -15,6 +15,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -41,8 +42,118 @@ HANDLER_SUBMIT_COMMANDS = {
     "webgrok": "grok.submit",
     "webdeepseek": "deepseek.submit",
 }
-# webdeepseek is absent on purpose: DeepSeek cannot receive attachments.
-ATTACH_FILE_HANDLERS = {"webgpt", "webclaude", "webkimi", "webgemini", "webgrok"}
+
+
+@dataclass(frozen=True)
+class ProviderPayloadPolicy:
+    handler: str
+    submit_command: str
+    can_attach: bool
+    max_attachments: int
+    zip_allowed: bool
+    preferred_bundle: str
+    gotcha: str
+    inline_text_attachments: bool = False
+
+
+@dataclass(frozen=True)
+class BrowserFailureCode:
+    code: str
+    reason: str
+    transport_blocker: bool = True
+    requires_local_readable_bundle: bool = False
+    bundle_retry_candidate: bool = False
+    auto_retry_blocked_reason: str = ""
+    quarantine_label: str = "unverified"
+    transport_failure_kind: str = ""
+
+
+PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
+    "webgpt": ProviderPayloadPolicy(
+        handler="webgpt",
+        submit_command="webgpt.submit",
+        can_attach=True,
+        max_attachments=1,
+        zip_allowed=True,
+        preferred_bundle="one readable bundle; zip allowed when an archive is required",
+        gotcha="multiple attachments fail before submission",
+    ),
+    "webclaude": ProviderPayloadPolicy(
+        handler="webclaude",
+        submit_command="claude.submit",
+        can_attach=True,
+        max_attachments=99,
+        zip_allowed=True,
+        preferred_bundle="readable files; multiple attachments supported",
+        gotcha="staged prompt or prompt echo is not submit proof",
+    ),
+    "webkimi": ProviderPayloadPolicy(
+        handler="webkimi",
+        submit_command="kimi.submit",
+        can_attach=True,
+        max_attachments=1,
+        zip_allowed=False,
+        preferred_bundle="one plain Markdown or text bundle",
+        gotcha="large inline prompts can truncate or scramble in the composer; do not use zip",
+    ),
+    "webgemini": ProviderPayloadPolicy(
+        handler="webgemini",
+        submit_command="gemini.submit",
+        can_attach=True,
+        max_attachments=1,
+        zip_allowed=False,
+        preferred_bundle="one readable Markdown/text bundle inlined when upload input is unavailable",
+        gotcha="current Gemini tab UI may not expose a file input; inline Markdown/text bundles instead of assuming upload",
+        inline_text_attachments=True,
+    ),
+    "webgrok": ProviderPayloadPolicy(
+        handler="webgrok",
+        submit_command="grok.submit",
+        can_attach=True,
+        max_attachments=1,
+        zip_allowed=False,
+        preferred_bundle="one readable bundle when upload input and preview exist",
+        gotcha="upload support is visible-input dependent",
+    ),
+    "webdeepseek": ProviderPayloadPolicy(
+        handler="webdeepseek",
+        submit_command="deepseek.submit",
+        can_attach=False,
+        max_attachments=0,
+        zip_allowed=False,
+        preferred_bundle="bounded inline text only",
+        gotcha="attachments and zip files are unsupported",
+    ),
+    "deepseek": ProviderPayloadPolicy(
+        handler="deepseek",
+        submit_command="deepseek.submit",
+        can_attach=False,
+        max_attachments=0,
+        zip_allowed=False,
+        preferred_bundle="bounded inline text only",
+        gotcha="attachments and zip files are unsupported",
+    ),
+}
+
+
+def _payload_policy(handler: str) -> ProviderPayloadPolicy:
+    return PROVIDER_PAYLOAD_POLICIES.get(
+        handler,
+        ProviderPayloadPolicy(
+            handler=handler,
+            submit_command=HANDLER_SUBMIT_COMMANDS.get(handler, ""),
+            can_attach=False,
+            max_attachments=0,
+            zip_allowed=False,
+            preferred_bundle="inline text only unless a provider policy is added",
+            gotcha="unknown provider payload contract",
+        ),
+    )
+
+
+ATTACH_FILE_HANDLERS = {
+    handler for handler, policy in PROVIDER_PAYLOAD_POLICIES.items() if policy.can_attach
+}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
 HANDLER_RECOVERY_PACKET_SCHEMA = "ask.handler_failure_recovery_packet.v1"
 ASK_TICKET_TARGET = "$ask at agent-skills@main"
@@ -66,31 +177,143 @@ ENVIRONMENT_DEPENDENCY_INSTALL_FAILED = "environment_dependency_install_failed"
 BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED = "browser_attachment_argument_contract_failed"
 SURF_BROWSER_LOCK_TIMEOUT = "surf_browser_lock_timeout"
 SURF_BROWSER_CONNECTION_UNAVAILABLE = "surf_browser_connection_unavailable"
+REPO_ACCESS_BLOCKED = "repo_access_blocked"
+MISSING_SENTINEL = "missing_sentinel"
+PROMPT_TOO_LARGE_OR_STALLED = "prompt_too_large_or_stalled"
+STALE_RAW_CAPTURE = "stale_raw_capture"
+BROWSER_FAILURE_CODES: dict[str, BrowserFailureCode] = {
+    WEBGPT_CONVERSATION_FULL_BLOCKER: BrowserFailureCode(
+        WEBGPT_CONVERSATION_FULL_BLOCKER,
+        "The controlled ChatGPT conversation is at its maximum length and cannot accept the WebGPT round.",
+        auto_retry_blocked_reason="conversation_full_requires_fresh_chatgpt_conversation",
+    ),
+    WEBGPT_BINDING_STALE_BLOCKER: BrowserFailureCode(
+        WEBGPT_BINDING_STALE_BLOCKER,
+        "The browser-oracle binding points at a stale ChatGPT URL; the controlled tab is open at a different live URL.",
+        auto_retry_blocked_reason="browser_oracle_binding_stale_rebind_required",
+        transport_failure_kind="browser_oracle_binding_stale",
+    ),
+    BROWSER_TAB_IDENTITY_MISMATCH: BrowserFailureCode(
+        BROWSER_TAB_IDENTITY_MISMATCH,
+        "The browser-oracle binding or requested tab does not match the live browser tab URL.",
+        auto_retry_blocked_reason="browser_tab_identity_rebind_required",
+    ),
+    BROWSER_TAB_READ_TIMEOUT: BrowserFailureCode(
+        BROWSER_TAB_READ_TIMEOUT,
+        "The bound browser tab was reachable by identity but did not respond to Surf page reads.",
+        auto_retry_blocked_reason="browser_tab_read_timeout_rebind_required",
+    ),
+    BROWSER_ACCESS_BLOCKED: BrowserFailureCode(
+        BROWSER_ACCESS_BLOCKED,
+        "The browser provider presented an access challenge before the request could be submitted.",
+        auto_retry_blocked_reason="browser_access_challenge_requires_human_browser_recovery",
+    ),
+    BROWSER_PROVIDER_RATE_LIMITED: BrowserFailureCode(
+        BROWSER_PROVIDER_RATE_LIMITED,
+        "The browser provider accepted routing but reported a provider-side request limit.",
+        auto_retry_blocked_reason="browser_provider_rate_limit_requires_backoff",
+    ),
+    BROWSER_PROVIDER_SETUP_FAILED: BrowserFailureCode(
+        BROWSER_PROVIDER_SETUP_FAILED,
+        "Surf reached the browser provider, but a provider UI setup step such as model or reasoning selection failed before prompt delivery.",
+        auto_retry_blocked_reason="browser_provider_setup_requires_transport_repair_or_fresh_tab",
+    ),
+    BROWSER_SUBMIT_NOT_ACCEPTED: BrowserFailureCode(
+        BROWSER_SUBMIT_NOT_ACCEPTED,
+        "Surf reached the browser composer, but the prompt was not accepted as a submitted message.",
+        auto_retry_blocked_reason="browser_submit_not_accepted_requires_composer_recovery_or_fresh_tab",
+    ),
+    BROWSER_TOOL_UNSUPPORTED: BrowserFailureCode(
+        BROWSER_TOOL_UNSUPPORTED,
+        "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
+        auto_retry_blocked_reason="surf_runtime_command_mismatch_requires_repair",
+    ),
+    BROWSER_ATTACHMENT_UNAVAILABLE: BrowserFailureCode(
+        BROWSER_ATTACHMENT_UNAVAILABLE,
+        "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
+        auto_retry_blocked_reason="attachment_transport_must_be_repaired",
+    ),
+    BROWSER_CLEAN_OUTPUT_CONTAMINATED: BrowserFailureCode(
+        BROWSER_CLEAN_OUTPUT_CONTAMINATED,
+        "The browser provider returned text, but Surf could not produce a clean response because the terminal sentinel remained in the cleaned output.",
+        auto_retry_blocked_reason="browser_clean_output_contains_terminal_sentinel",
+        quarantine_label="contaminated",
+    ),
+    BROWSER_SENTINEL_TRAILING_CONTENT: BrowserFailureCode(
+        BROWSER_SENTINEL_TRAILING_CONTENT,
+        "The browser provider output included text after the terminal sentinel, so the clean assistant turn is not attributable.",
+        auto_retry_blocked_reason="browser_terminal_sentinel_parser_requires_repair_or_fresh_tab",
+        quarantine_label="contaminated",
+    ),
+    WEBGPT_UNVERIFIED_CLEAN_OUTPUT: BrowserFailureCode(
+        WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
+        "WebGPT returned plausible text, but Surf could not prove the controlled tab or clean output attribution.",
+        auto_retry_blocked_reason="webgpt_controlled_tab_or_clean_output_unproven",
+        quarantine_label="contaminated",
+    ),
+    BROWSER_HANDLER_TIMEOUT: BrowserFailureCode(
+        BROWSER_HANDLER_TIMEOUT,
+        "The browser handler did not produce a usable, receipt-backed response before the declared worker timeout.",
+        auto_retry_blocked_reason="browser_handler_timeout_expired",
+    ),
+    BROWSER_EXTENSION_COMMAND_TIMEOUT: BrowserFailureCode(
+        BROWSER_EXTENSION_COMMAND_TIMEOUT,
+        "Surf's native host timed out waiting for the Chrome extension to answer a browser command, so the prompt was never delivered; the provider itself did not block the request.",
+        auto_retry_blocked_reason="surf_extension_command_timeout_retry_same_binding_after_extension_reload",
+    ),
+    BROWSER_COMPOSER_INTERACTION_FAILED: BrowserFailureCode(
+        BROWSER_COMPOSER_INTERACTION_FAILED,
+        "The provider composer refused focus or typing on the controlled tab, so the prompt was never entered. Prompt size is not implicated.",
+        auto_retry_blocked_reason="browser_composer_requires_fresh_tab_or_composer_recovery",
+    ),
+    ENVIRONMENT_DEPENDENCY_INSTALL_FAILED: BrowserFailureCode(
+        ENVIRONMENT_DEPENDENCY_INSTALL_FAILED,
+        "The lane died installing local Python dependencies, so no browser or provider work was attempted.",
+        auto_retry_blocked_reason="local_python_environment_requires_repair",
+    ),
+    BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED: BrowserFailureCode(
+        BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED,
+        "Surf refused the submit's attachment arguments before opening a browser: this transport sends one attachment per submit.",
+        auto_retry_blocked_reason="browser_attachment_contract_requires_single_bundle",
+    ),
+    SURF_BROWSER_LOCK_TIMEOUT: BrowserFailureCode(
+        SURF_BROWSER_LOCK_TIMEOUT,
+        "The Surf browser lock is held by another live command; the browser lane was not submitted.",
+        auto_retry_blocked_reason="surf_browser_lock_owner_still_running",
+        transport_failure_kind="browser_cdp_lock_timeout",
+    ),
+    SURF_BROWSER_CONNECTION_UNAVAILABLE: BrowserFailureCode(
+        SURF_BROWSER_CONNECTION_UNAVAILABLE,
+        "The Surf native host or socket disconnected before the browser lane completed.",
+        auto_retry_blocked_reason="surf_browser_connection_must_recover",
+    ),
+    REPO_ACCESS_BLOCKED: BrowserFailureCode(
+        REPO_ACCESS_BLOCKED,
+        "The browser reviewer appears unable to read the referenced repository or local path.",
+        requires_local_readable_bundle=True,
+        bundle_retry_candidate=True,
+    ),
+    MISSING_SENTINEL: BrowserFailureCode(
+        MISSING_SENTINEL,
+        "The browser transport did not produce the expected completion sentinel.",
+        requires_local_readable_bundle=True,
+        bundle_retry_candidate=True,
+    ),
+    PROMPT_TOO_LARGE_OR_STALLED: BrowserFailureCode(
+        PROMPT_TOO_LARGE_OR_STALLED,
+        "The browser submit reported explicit size or stall wording from the provider.",
+        requires_local_readable_bundle=True,
+        bundle_retry_candidate=True,
+    ),
+    STALE_RAW_CAPTURE: BrowserFailureCode(
+        STALE_RAW_CAPTURE,
+        "The raw browser capture appears to be from the wrong or stale assistant turn.",
+        auto_retry_blocked_reason="browser_raw_capture_stale_rebind_required",
+        quarantine_label="contaminated",
+    ),
+}
 BROWSER_TRANSPORT_BLOCKERS = {
-    WEBGPT_CONVERSATION_FULL_BLOCKER,
-    WEBGPT_BINDING_STALE_BLOCKER,
-    BROWSER_TAB_IDENTITY_MISMATCH,
-    BROWSER_TAB_READ_TIMEOUT,
-    BROWSER_ACCESS_BLOCKED,
-    BROWSER_PROVIDER_RATE_LIMITED,
-    BROWSER_PROVIDER_SETUP_FAILED,
-    BROWSER_SUBMIT_NOT_ACCEPTED,
-    BROWSER_TOOL_UNSUPPORTED,
-    BROWSER_ATTACHMENT_UNAVAILABLE,
-    BROWSER_CLEAN_OUTPUT_CONTAMINATED,
-    BROWSER_SENTINEL_TRAILING_CONTENT,
-    WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
-    BROWSER_HANDLER_TIMEOUT,
-    BROWSER_EXTENSION_COMMAND_TIMEOUT,
-    BROWSER_COMPOSER_INTERACTION_FAILED,
-    ENVIRONMENT_DEPENDENCY_INSTALL_FAILED,
-    BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED,
-    SURF_BROWSER_LOCK_TIMEOUT,
-    SURF_BROWSER_CONNECTION_UNAVAILABLE,
-    "repo_access_blocked",
-    "missing_sentinel",
-    "prompt_too_large_or_stalled",
-    "stale_raw_capture",
+    code for code, failure_code in BROWSER_FAILURE_CODES.items() if failure_code.transport_blocker
 }
 
 
@@ -100,6 +323,18 @@ def _ask_ticket_instruction(*, failure_code: str, packet_kind: str) -> str:
         f"or still blocks the project after following the recovery instruction, file a $ticket to "
         f"{ASK_TICKET_TARGET}. Include the Ask run directory, dag.json, node-receipt.json, "
         f"{packet_kind}.json, response.meta.json, response.raw.md, and the exact command stderr."
+    )
+
+
+def _browser_failure_code(code: str) -> BrowserFailureCode:
+    return BROWSER_FAILURE_CODES.get(
+        code,
+        BrowserFailureCode(
+            code=code,
+            reason="The browser handler failed with an unregistered failure code.",
+            transport_blocker=True,
+            auto_retry_blocked_reason="unregistered_browser_failure_code_requires_ask_ticket",
+        ),
     )
 
 
@@ -562,6 +797,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "status": status,
             "verdict": verdict,
             "failure_code": recovery_packet.get("failure_code") if recovery_packet else None,
+            "mocked": False,
+            "live": bool(commands),
+            "provider_live": provider_live,
+            "provider_receipt": receipt["provider_receipt"],
         },
         {
             "kind": "normalized_handler_receipt",
@@ -708,33 +947,44 @@ def _prepare_browser_submit_payload(
     local_candidates = _local_path_candidates(prompt_text)
     readable_bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
     combined_attachments = _unique_existing_files([*attachment_paths, *readable_bundle_paths])
-    if not local_candidates:
+    policy = _payload_policy(handler)
+    inline_paths = _inline_text_bundle_paths(combined_attachments) if policy.inline_text_attachments else []
+    inline_by_resolved = {str(Path(path).resolve()): index + 1 for index, path in enumerate(inline_paths)}
+    submit_attachments = [path for path in combined_attachments if str(Path(path).resolve()) not in inline_by_resolved]
+    if not local_candidates and not inline_paths:
         return (
             prompt_path,
-            combined_attachments,
+            submit_attachments,
             {
                 "schema": "ask.browser_local_path_preflight.v1",
                 "status": "PASS",
                 "local_path_count": 0,
-                "attached_file_count": len(combined_attachments),
+                "attached_file_count": len(submit_attachments),
+                "inlined_file_count": 0,
                 "sanitized_prompt_path": None,
             },
         )
 
-    attached_by_resolved = {str(Path(path).resolve()): index + 1 for index, path in enumerate(combined_attachments)}
+    attached_by_resolved = {str(Path(path).resolve()): index + 1 for index, path in enumerate(submit_attachments)}
     sanitized = prompt_text
     replacements: list[dict[str, Any]] = []
     for candidate in local_candidates:
         path = Path(candidate).expanduser()
         label = "local-only path not attached"
         attachment_index = None
+        inline_index = None
         if path.is_file():
             try:
-                attachment_index = attached_by_resolved.get(str(path.resolve()))
+                resolved = str(path.resolve())
+                attachment_index = attached_by_resolved.get(resolved)
+                inline_index = inline_by_resolved.get(resolved)
             except OSError:
                 attachment_index = None
+                inline_index = None
         if attachment_index is not None:
             label = f"attached local evidence file ATTACHMENT_{attachment_index}"
+        elif inline_index is not None:
+            label = f"inlined local evidence file INLINE_{inline_index}"
         replacement = f"[{label}: {path.name}]"
         sanitized = sanitized.replace(candidate, replacement)
         replacements.append(
@@ -742,27 +992,37 @@ def _prepare_browser_submit_payload(
                 "path": candidate,
                 "file_exists": path.is_file(),
                 "attached": attachment_index is not None,
+                "inlined": inline_index is not None,
                 "attachment_index": attachment_index,
+                "inline_index": inline_index,
                 "replacement": replacement,
             }
         )
 
     sanitized_prompt_path = prompt_path.with_name("browser-readable-prompt.md")
     attachment_lines = []
-    for index, path in enumerate(combined_attachments, start=1):
+    for index, path in enumerate(submit_attachments, start=1):
         attachment_lines.append(f"- ATTACHMENT_{index}: {Path(path).name}")
     if attachment_lines:
         sanitized += "\n\nLocal evidence attachments available to the browser model:\n" + "\n".join(attachment_lines)
         sanitized += "\nUse the attached files as source material; do not rely on local filesystem paths.\n"
+    if inline_paths:
+        sanitized += "\n\nLocal evidence bundles inlined for this provider:\n"
+        for index, path in enumerate(inline_paths, start=1):
+            path_obj = Path(path)
+            text = path_obj.read_text(encoding="utf-8", errors="replace")
+            sanitized += f"\n### INLINE_{index}: {path_obj.name}\n\n```text\n{text.rstrip()}\n```\n"
+        sanitized += "\nUse the INLINE_* sections as source material; they replace local filesystem attachment paths for this provider.\n"
     sanitized_prompt_path.write_text(sanitized, encoding="utf-8")
     return (
         sanitized_prompt_path,
-        combined_attachments,
+        submit_attachments,
         {
             "schema": "ask.browser_local_path_preflight.v1",
-            "status": "PASS" if handler in ATTACH_FILE_HANDLERS or not readable_bundle_paths else "NEEDS_ATTENTION",
+            "status": "PASS" if policy.can_attach or inline_paths or not readable_bundle_paths else "NEEDS_ATTENTION",
             "local_path_count": len(local_candidates),
-            "attached_file_count": len(combined_attachments),
+            "attached_file_count": len(submit_attachments),
+            "inlined_file_count": len(inline_paths),
             "sanitized_prompt_path": str(sanitized_prompt_path),
             "replacements": replacements,
         },
@@ -795,6 +1055,27 @@ def _unique_existing_files(paths: list[str]) -> list[str]:
         if resolved not in unique:
             unique.append(resolved)
     return unique
+
+
+def _inline_text_bundle_paths(paths: list[str], *, max_total_chars: int = 120_000) -> list[str]:
+    inlineable_suffixes = {".md", ".markdown", ".txt", ".json", ".yaml", ".yml", ".csv"}
+    selected: list[str] = []
+    total = 0
+    for item in paths:
+        path = Path(item)
+        if path.suffix.lower() not in inlineable_suffixes:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+            resolved = str(path.resolve())
+        except OSError:
+            continue
+        next_total = total + len(text)
+        if next_total > max_total_chars:
+            continue
+        selected.append(resolved)
+        total = next_total
+    return selected
 
 
 def _should_retry_browser_stale_binding(
@@ -1372,26 +1653,10 @@ def _browser_failure_recovery_packet(
         commands=commands,
     )
     bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
-    can_attach = handler in ATTACH_FILE_HANDLERS
-    auto_retry_allowed = (
-        failure_code
-        not in {
-            WEBGPT_CONVERSATION_FULL_BLOCKER,
-            WEBGPT_BINDING_STALE_BLOCKER,
-            BROWSER_TAB_IDENTITY_MISMATCH,
-            BROWSER_TAB_READ_TIMEOUT,
-            BROWSER_ACCESS_BLOCKED,
-            BROWSER_PROVIDER_RATE_LIMITED,
-            BROWSER_PROVIDER_SETUP_FAILED,
-            BROWSER_SUBMIT_NOT_ACCEPTED,
-            BROWSER_TOOL_UNSUPPORTED,
-            BROWSER_ATTACHMENT_UNAVAILABLE,
-            BROWSER_SENTINEL_TRAILING_CONTENT,
-            WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
-        }
-        and bool(bundle_paths)
-        and can_attach
-    )
+    payload_policy = _payload_policy(handler)
+    can_attach = payload_policy.can_attach
+    failure_meta = _browser_failure_code(failure_code)
+    auto_retry_allowed = failure_meta.bundle_retry_candidate and bool(bundle_paths) and can_attach
     stale_binding = _webgpt_stale_binding_details(submit_meta)
     surf_lock_blocker = _surf_lock_blocker_details(failure=failure, commands=commands, submit_meta=submit_meta)
     transport_failure_summary = _browser_transport_failure_summary(
@@ -1494,16 +1759,7 @@ def _quarantine_failed_browser_response(
     failure_code = str(recovery_packet.get("failure_code") or "browser_handler_failed")
     quarantine_path: Path | None = None
     if response_path.is_file():
-        label = (
-            "contaminated"
-            if failure_code
-            in {
-                WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
-                BROWSER_SENTINEL_TRAILING_CONTENT,
-                "stale_raw_capture",
-            }
-            else "unverified"
-        )
+        label = _browser_failure_code(failure_code).quarantine_label
         quarantine_path = _unique_quarantine_path(response_path.with_name(f"response.{label}.md"))
         response_path.rename(quarantine_path)
     quarantine = {
@@ -1588,7 +1844,11 @@ def _classify_browser_failure(
         return BROWSER_SUBMIT_NOT_ACCEPTED
     if _looks_browser_tool_unsupported(haystack):
         return BROWSER_TOOL_UNSUPPORTED
-    if BROWSER_ATTACHMENT_UNAVAILABLE in haystack or _response_denies_attachment_access(response_text):
+    if (
+        BROWSER_ATTACHMENT_UNAVAILABLE in haystack
+        or submit_meta.get("attachment_missing") is True
+        or _response_denies_attachment_access(response_text)
+    ):
         return BROWSER_ATTACHMENT_UNAVAILABLE
     if _looks_webgpt_unverified_clean_output(handler, haystack, submit_meta):
         return WEBGPT_UNVERIFIED_CLEAN_OUTPUT
@@ -1601,18 +1861,18 @@ def _classify_browser_failure(
     if _looks_browser_handler_timeout(haystack, commands):
         return BROWSER_HANDLER_TIMEOUT
     if _looks_repo_access_blocked(haystack):
-        return "repo_access_blocked"
+        return REPO_ACCESS_BLOCKED
     if _looks_tab_identity_mismatch(haystack, submit_meta):
         return BROWSER_TAB_IDENTITY_MISMATCH
     if _looks_stale_raw_capture(haystack, submit_meta):
-        return "stale_raw_capture"
+        return STALE_RAW_CAPTURE
     if _looks_browser_composer_interaction_failed(haystack):
         return BROWSER_COMPOSER_INTERACTION_FAILED
     if _looks_prompt_too_large_or_stalled(haystack):
-        return "prompt_too_large_or_stalled"
+        return PROMPT_TOO_LARGE_OR_STALLED
     if _looks_missing_sentinel(haystack, submit_meta):
-        return "missing_sentinel"
-    return "missing_sentinel"
+        return MISSING_SENTINEL
+    return MISSING_SENTINEL
 
 
 def _webgpt_stale_binding_details(meta: dict[str, Any]) -> dict[str, Any]:
@@ -1678,9 +1938,18 @@ def _response_denies_attachment_access(text: str) -> bool:
         "attached image cannot be inspected",
         "attachment cannot be inspected",
         "attachment is unreachable",
+        "attachment was not provided",
+        "attachment is missing",
         "local attachment is unreachable",
+        "source-of-truth attachment was not provided",
+        "source of truth attachment was not provided",
+        "designated source-of-truth attachment",
+        "designated source of truth attachment",
         "image file was not provided",
         "image file was not attached",
+        "attached review bundle was not provided",
+        "review bundle was not provided",
+        "no attachment or readme text was included",
         "image was not provided",
         "image was not attached",
         "no image content was provided",
@@ -1924,17 +2193,7 @@ def _browser_transport_failure_summary(
 
 
 def _transport_failure_kind(failure_code: str) -> str:
-    return {
-        SURF_BROWSER_LOCK_TIMEOUT: "browser_cdp_lock_timeout",
-        BROWSER_TAB_READ_TIMEOUT: "browser_tab_read_timeout",
-        BROWSER_HANDLER_TIMEOUT: "browser_handler_timeout",
-        BROWSER_PROVIDER_SETUP_FAILED: "browser_provider_setup_failed",
-        BROWSER_SUBMIT_NOT_ACCEPTED: "browser_submit_not_accepted",
-        SURF_BROWSER_CONNECTION_UNAVAILABLE: "surf_browser_connection_unavailable",
-        BROWSER_TAB_IDENTITY_MISMATCH: "browser_tab_identity_mismatch",
-        BROWSER_CLEAN_OUTPUT_CONTAMINATED: "browser_clean_output_contaminated",
-        WEBGPT_BINDING_STALE_BLOCKER: "browser_oracle_binding_stale",
-    }.get(failure_code, failure_code)
+    return _browser_failure_code(failure_code).transport_failure_kind or failure_code
 
 
 def _last_nonempty_command_field(commands: list[dict[str, Any]], key: str) -> str:
@@ -2649,77 +2908,15 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
 
 
 def _recovery_reason(failure_code: str) -> str:
-    return {
-        WEBGPT_CONVERSATION_FULL_BLOCKER: "The controlled ChatGPT conversation is at its maximum length and cannot accept the WebGPT round.",
-        WEBGPT_BINDING_STALE_BLOCKER: "The browser-oracle binding points at a stale ChatGPT URL; the controlled tab is open at a different live URL.",
-        BROWSER_TAB_IDENTITY_MISMATCH: "The browser-oracle binding or requested tab does not match the live browser tab URL.",
-        BROWSER_TAB_READ_TIMEOUT: "The bound browser tab was reachable by identity but did not respond to Surf page reads.",
-        BROWSER_ACCESS_BLOCKED: "The browser provider presented an access challenge before the request could be submitted.",
-        BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
-        BROWSER_PROVIDER_SETUP_FAILED: "Surf reached the browser provider, but a provider UI setup step such as model or reasoning selection failed before prompt delivery.",
-        BROWSER_SUBMIT_NOT_ACCEPTED: "Surf reached the browser composer, but the prompt was not accepted as a submitted message.",
-        BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
-        BROWSER_ATTACHMENT_UNAVAILABLE: "The browser provider returned text but explicitly reported that the attached evidence was unavailable.",
-        BROWSER_CLEAN_OUTPUT_CONTAMINATED: "The browser provider returned text, but Surf could not produce a clean response because the terminal sentinel remained in the cleaned output.",
-        BROWSER_SENTINEL_TRAILING_CONTENT: "The browser provider output included text after the terminal sentinel, so the clean assistant turn is not attributable.",
-        WEBGPT_UNVERIFIED_CLEAN_OUTPUT: "WebGPT returned plausible text, but Surf could not prove the controlled tab or clean output attribution.",
-        BROWSER_HANDLER_TIMEOUT: "The browser handler did not produce a usable, receipt-backed response before the declared worker timeout.",
-        BROWSER_EXTENSION_COMMAND_TIMEOUT: "Surf's native host timed out waiting for the Chrome extension to answer a browser command, so the prompt was never delivered; the provider itself did not block the request.",
-        SURF_BROWSER_LOCK_TIMEOUT: "The Surf browser lock is held by another live command; the browser lane was not submitted.",
-        SURF_BROWSER_CONNECTION_UNAVAILABLE: "The Surf native host or socket disconnected before the browser lane completed.",
-        "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
-        "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
-        ENVIRONMENT_DEPENDENCY_INSTALL_FAILED: "The lane died installing local Python dependencies, so no browser or provider work was attempted.",
-        BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED: "Surf refused the submit's attachment arguments before opening a browser: this transport sends one attachment per submit.",
-        BROWSER_COMPOSER_INTERACTION_FAILED: "The provider composer refused focus or typing on the controlled tab, so the prompt was never entered. Prompt size is not implicated.",
-        "prompt_too_large_or_stalled": "The browser submit reported explicit size or stall wording from the provider.",
-        "stale_raw_capture": "The raw browser capture appears to be from the wrong or stale assistant turn.",
-    }[failure_code]
+    return _browser_failure_code(failure_code).reason
 
 
 def _auto_retry_blocked_reason(
     *, failure_code: str, bundle_paths: list[str], can_attach: bool
 ) -> str:
-    if failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
-        return "conversation_full_requires_fresh_chatgpt_conversation"
-    if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
-        return "browser_oracle_binding_stale_rebind_required"
-    if failure_code == BROWSER_TAB_IDENTITY_MISMATCH:
-        return "browser_tab_identity_rebind_required"
-    if failure_code == BROWSER_TAB_READ_TIMEOUT:
-        return "browser_tab_read_timeout_rebind_required"
-    if failure_code == BROWSER_ACCESS_BLOCKED:
-        return "browser_access_challenge_requires_human_browser_recovery"
-    if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
-        return "browser_provider_rate_limit_requires_backoff"
-    if failure_code == BROWSER_PROVIDER_SETUP_FAILED:
-        return "browser_provider_setup_requires_transport_repair_or_fresh_tab"
-    if failure_code == BROWSER_SUBMIT_NOT_ACCEPTED:
-        return "browser_submit_not_accepted_requires_composer_recovery_or_fresh_tab"
-    if failure_code == BROWSER_TOOL_UNSUPPORTED:
-        return "surf_runtime_command_mismatch_requires_repair"
-    if failure_code == BROWSER_ATTACHMENT_UNAVAILABLE:
-        return "attachment_transport_must_be_repaired"
-    if failure_code == BROWSER_CLEAN_OUTPUT_CONTAMINATED:
-        return "browser_clean_output_contains_terminal_sentinel"
-    if failure_code == BROWSER_SENTINEL_TRAILING_CONTENT:
-        return "browser_terminal_sentinel_parser_requires_repair_or_fresh_tab"
-    if failure_code == WEBGPT_UNVERIFIED_CLEAN_OUTPUT:
-        return "webgpt_controlled_tab_or_clean_output_unproven"
-    if failure_code == BROWSER_HANDLER_TIMEOUT:
-        return "browser_handler_timeout_expired"
-    if failure_code == BROWSER_EXTENSION_COMMAND_TIMEOUT:
-        return "surf_extension_command_timeout_retry_same_binding_after_extension_reload"
-    if failure_code == BROWSER_COMPOSER_INTERACTION_FAILED:
-        return "browser_composer_requires_fresh_tab_or_composer_recovery"
-    if failure_code == ENVIRONMENT_DEPENDENCY_INSTALL_FAILED:
-        return "local_python_environment_requires_repair"
-    if failure_code == BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED:
-        return "browser_attachment_contract_requires_single_bundle"
-    if failure_code == SURF_BROWSER_LOCK_TIMEOUT:
-        return "surf_browser_lock_owner_still_running"
-    if failure_code == SURF_BROWSER_CONNECTION_UNAVAILABLE:
-        return "surf_browser_connection_must_recover"
+    failure_meta = _browser_failure_code(failure_code)
+    if failure_meta.auto_retry_blocked_reason:
+        return failure_meta.auto_retry_blocked_reason
     if not bundle_paths:
         return "missing_local_readable_bundle"
     if not can_attach:
@@ -2728,6 +2925,7 @@ def _auto_retry_blocked_reason(
 
 
 def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bool, handler: str) -> str:
+    payload_policy = _payload_policy(handler)
     if failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
         return (
             "Do not wait or retry in the same conversation. Rebind browser-oracle to a fresh ChatGPT "
@@ -2797,6 +2995,41 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "Confirm the Surf native host and /tmp/surf.sock are available, then run next_command. "
             "Do not treat this local transport failure as provider throttling."
         )
+    if failure_code == PROMPT_TOO_LARGE_OR_STALLED:
+        if payload_policy.handler == "webkimi":
+            return (
+                f"Write the target material to {payload_policy.preferred_bundle} and rerun with a short prompt "
+                "plus --attach-file <path>. Do not use a zip file for Kimi and do not keep retrying the "
+                "large inline composer path. The measured prompt size is in evidence.measured_prompt_chars."
+            )
+        if not payload_policy.can_attach and "deepseek" in payload_policy.handler:
+            return (
+                "DeepSeek has no attachment path. Reduce the request to a bounded inline prompt, or choose "
+                "a different handler for local evidence review. The measured prompt size is in "
+                "evidence.measured_prompt_chars."
+            )
+        return (
+            "Write the target material to a local readable bundle and rerun passing it with "
+            "--attach-file <path> on tau-dag run or compete, instead of inlining a large prompt. "
+            "The measured prompt size is in evidence.measured_prompt_chars."
+        )
+    if failure_code == BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED:
+        if payload_policy.handler == "webkimi":
+            return (
+                f"Combine the evidence into {payload_policy.preferred_bundle} and rerun with a single "
+                "--attach-file. Do not zip the Kimi bundle and do not inline a large review packet; "
+                "Surf rejected the arguments before any browser work, so the prompt and tab are not implicated."
+            )
+        if not payload_policy.can_attach and "deepseek" in payload_policy.handler:
+            return (
+                "DeepSeek does not accept attachments or zip files. Rerun with a short inline prompt only, "
+                "or route the evidence bundle to a browser handler that supports attachments."
+            )
+        return (
+            "Combine the evidence into one bundle or zip and rerun with a single --attach-file, "
+            "or route it to a handler whose transport accepts several attachments. Surf rejected "
+            "the arguments before any browser work, so the prompt and tab are not implicated."
+        )
     if has_bundle and not can_attach:
         return (
             f"Do not auto-retry {handler}: the current Surf transport does not expose --attach-file for this handler. "
@@ -2804,16 +3037,10 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         )
     if has_bundle and can_attach:
         return "Run the next_command; it resubmits a concise prompt with the readable local bundle attached."
-    if failure_code == "repo_access_blocked":
+    if failure_code == REPO_ACCESS_BLOCKED:
         return (
             "Create a local readable review bundle, or grant/add the repository through the browser provider's GitHub integration, "
             "then rerun the next_command with the bundle path in the request."
-        )
-    if failure_code == BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED:
-        return (
-            "Combine the evidence into one bundle or zip and rerun with a single --attach-file, "
-            "or route it to a handler whose transport accepts several attachments. Surf rejected "
-            "the arguments before any browser work, so the prompt and tab are not implicated."
         )
     if failure_code == ENVIRONMENT_DEPENDENCY_INSTALL_FAILED:
         return (
@@ -2826,41 +3053,13 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "Open and bind a fresh provider tab, then rerun only this lane. The composer refused focus or "
             "typing, so shrinking the prompt or moving it into a bundle does not address the failure."
         )
-    if failure_code == "prompt_too_large_or_stalled":
-        return (
-            "Write the target material to a local readable bundle and rerun passing it with "
-            "--attach-file <path> on tau-dag run or compete, instead of inlining a large prompt. "
-            "The measured prompt size is in evidence.measured_prompt_chars."
-        )
-    if failure_code == "stale_raw_capture":
+    if failure_code == STALE_RAW_CAPTURE:
         return "Refresh or rebind the browser-oracle tab, then rerun the next_command; do not reuse the stale raw capture."
     return "Rerun only after the browser tab is responsive or a local readable bundle is available."
 
 
 def _requires_local_readable_bundle(failure_code: str) -> bool:
-    return failure_code not in {
-        WEBGPT_CONVERSATION_FULL_BLOCKER,
-        WEBGPT_BINDING_STALE_BLOCKER,
-        BROWSER_TAB_IDENTITY_MISMATCH,
-        BROWSER_TAB_READ_TIMEOUT,
-        BROWSER_ACCESS_BLOCKED,
-        BROWSER_PROVIDER_RATE_LIMITED,
-        BROWSER_PROVIDER_SETUP_FAILED,
-        BROWSER_SUBMIT_NOT_ACCEPTED,
-        BROWSER_TOOL_UNSUPPORTED,
-        BROWSER_ATTACHMENT_UNAVAILABLE,
-        BROWSER_CLEAN_OUTPUT_CONTAMINATED,
-        BROWSER_SENTINEL_TRAILING_CONTENT,
-        WEBGPT_UNVERIFIED_CLEAN_OUTPUT,
-        BROWSER_HANDLER_TIMEOUT,
-        BROWSER_EXTENSION_COMMAND_TIMEOUT,
-        BROWSER_COMPOSER_INTERACTION_FAILED,
-        ENVIRONMENT_DEPENDENCY_INSTALL_FAILED,
-        BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED,
-        SURF_BROWSER_LOCK_TIMEOUT,
-        SURF_BROWSER_CONNECTION_UNAVAILABLE,
-        "stale_raw_capture",
-    }
+    return _browser_failure_code(failure_code).requires_local_readable_bundle
 
 
 def _handler_failure_recovery_packet(
@@ -2924,6 +3123,10 @@ def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[s
         "http 401" in haystack
         or "invalid api key" in haystack
         or "authentication_error" in haystack
+        or "provider_auth_error" in haystack
+        or "provider_auth_failed" in haystack
+        or "token_revoked" in haystack
+        or "invalidated oauth token" in haystack
         or "autherror" in haystack
         or "please pass a valid api key" in haystack
     ):

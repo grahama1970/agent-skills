@@ -316,9 +316,9 @@ if after:
     )
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" "${attach_file_abs:-}" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, retry_count, retry_attempts, cooldown_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, retry_count, retry_attempts, cooldown_s, requested_attachment = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -326,6 +326,7 @@ tab_id = None
 tab_id_source = None
 activated = None
 tab_was_created = None
+attachment = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -337,8 +338,18 @@ for line in reversed(stderr_text.splitlines()):
         activated = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TabWasCreated:") and tab_was_created is None:
         tab_was_created = line.split(":", 1)[1].strip() == "true"
-    if tab_id is not None and activated is not None and tab_was_created is not None:
-        break
+    elif line.startswith("Attachment:") and attachment is None:
+        try:
+            attachment = json.loads(line.split(":", 1)[1].strip())
+        except Exception:
+            attachment = {"attached": False, "parse_error": line.split(":", 1)[1].strip()}
+if attachment is None and requested_attachment:
+    attachment = {
+        "attached": False,
+        "path": requested_attachment,
+        "name": pathlib.Path(requested_attachment).name,
+        "missing_native_metadata": True,
+    }
 if tab_id is None and requested_tab_id:
     tab_id = requested_tab_id
     tab_id_source = "requested_tab_id_fallback"
@@ -380,6 +391,7 @@ no_activate = no_activate_s == "1"
 
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
 activation_violation = no_activate and activated is True
+attachment_missing = bool(requested_attachment and not (isinstance(attachment, dict) and attachment.get("attached") is True))
 status = "completed" if (
     tab_id
     and not tab_mismatch
@@ -387,6 +399,7 @@ status = "completed" if (
     and (sentinel in raw_text or "StableResponseWithoutSentinel: true" in stderr_text)
     and sentinel not in out_text
     and not activation_violation
+    and not attachment_missing
 ) else "failed"
 if status == "completed":
     failure = None
@@ -394,6 +407,8 @@ elif activation_violation:
     failure = "focus_stolen_despite_no_activate"
 elif tab_mismatch:
     failure = "controlled_tab_id_mismatch"
+elif attachment_missing:
+    failure = "attachment_missing"
 else:
     failure = "missing_controlled_tab_id_or_contaminated_clean_output"
 pathlib.Path(meta).write_text(json.dumps({
@@ -432,6 +447,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "tab_was_created": tab_was_created,
     "activated": activated,
     "activation_violation": activation_violation,
+    "attachment": attachment,
+    "attachment_missing": attachment_missing,
     "focused_window_before": focus_before["focusedWindowId"],
     "focused_window_after": focus_after["focusedWindowId"],
     "active_tab_before": focus_before["activeTabId"],

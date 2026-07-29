@@ -140,6 +140,23 @@ Attachment delivery needs an extension build that handles
 `AI_UPLOAD_FILE_TO_TAB`; older extensions reject the upload and the lane reports
 `browser_submit_not_accepted` with that message.
 
+Browser providers do not share one payload contract. Before building or
+repairing a browser roundtable packet, apply this matrix:
+
+| Handler | Preferred review payload | Attachment rule | Explicit gotcha |
+| --- | --- | --- | --- |
+| `webgpt` | Short prompt plus one readable bundle | One attachment only; zip is allowed when the task needs a bundle | Multiple attachments fail before submission. Do not infer file creation from prose; download and verify generated artifacts. |
+| `webgemini` | Short prompt plus one readable Markdown/text bundle | Ask inlines Markdown/text bundles for current Gemini tabs; do not rely on upload unless Surf records attachment metadata | Current Gemini UI may expose `Upload & tools` without an `input[type=file]`; stale page text can look like a response if sentinel capture is not strict. |
+| `webkimi` | Short prompt plus one plain readable Markdown/text bundle | One attachment only; do not use zip | Large inline prompts can be truncated or scrambled by the Kimi composer. Kimi and DeepSeek must not receive zip bundles. |
+| `webclaude` | Prompt plus readable files | Multiple attachments are supported | Claude can stage a prompt without submitting it; require submit-acceptance and sentinel proof, not only a prepared prompt file. |
+| `webdeepseek` / `deepseek` | Inline text or short prompt only | Attachments and zip files are unsupported | If local evidence is required, route through another handler or summarize the evidence into the prompt within size limits. |
+
+Do not automatically convert every evidence set into a zip. For one-attachment
+providers, choose the provider-compatible single file: usually Markdown for
+Kimi and README/code review packets, and inline Markdown/text for Gemini when
+the current tab lacks a file input; zip only when the provider is
+known to accept it and the task actually needs an archive.
+
 Browser lanes queue on the shared Surf browser lock. Ask derives the wait from
 handler count and topology; pass `--browser-lock-timeout <seconds>` on `tau-dag
 run` or `compete` to widen it for a busy browser. The resolved value is recorded
