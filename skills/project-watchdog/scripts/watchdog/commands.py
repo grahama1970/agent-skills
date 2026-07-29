@@ -160,6 +160,28 @@ def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
         release_lock()
 
 
+#: State keys a tick owns. Everything else in the document belongs to the
+#: operator and must survive a tick that started before they changed it.
+_TICK_OWNED_STATE_KEYS = ("last_served_project", "closure_audit_attempts",
+                          "completion_attested_at")
+
+
+def _persist_tick_state(state: dict[str, Any]) -> None:
+    """Write back only the keys a tick owns, merged onto what is on disk now.
+
+    A tick reads state at the start and used to write the whole document at the
+    end, so any operator change landing in between was silently reverted:
+    `set-state project active --project watchdog-probe` reported UPDATED and the
+    project was simply absent afterwards, because a tick already in flight wrote
+    its stale copy over it. The project then never dispatched.
+    """
+    current = load_json(config.state_path())
+    for key in _TICK_OWNED_STATE_KEYS:
+        if key in state:
+            current[key] = state[key]
+    write_json(config.state_path(), current)
+
+
 def _audit_one_closure(
     run_id: str,
     receipt_dir: Path,
@@ -230,7 +252,7 @@ def _audit_one_closure(
             attempts.pop(key, None)  # answered: no reason to hold it back
         else:
             attempts[key] = now
-        write_json(config.state_path(), state)
+        _persist_tick_state(state)
     return audited
 
 
@@ -288,7 +310,7 @@ def _attest_completion(
         # reopen the seven tickets it had named.
         if apply:
             attested[cid] = {"at": now, "answered": bool(result.get("verdict"))}
-            write_json(config.state_path(), state)
+            _persist_tick_state(state)
         return result
     return None
 
@@ -487,7 +509,7 @@ def _tick_locked(
     # Record who was served so the next tick starts after them, not at the head.
     state.setdefault("last_served_project", None)
     state["last_served_project"] = project_id
-    write_json(config.state_path(), state)
+    _persist_tick_state(state)
     streaks.clear_idle(project_id)
 
     receipt["scanned_issues"] = issues
@@ -562,6 +584,13 @@ def set_state(scope: str, state_value: str, *, project_id: str, reason: str) -> 
         state.setdefault("projects", {}).setdefault(project_id, {})["state"] = state_value
         state["projects"][project_id]["reason"] = reason
     state["updated_at"] = datetime.now(UTC).date().isoformat()
+    # Re-read and merge for the same reason the tick does: a tick running
+    # concurrently owns last_served_project and the audit/attestation cooldowns,
+    # and writing the whole document back would revert them.
+    current = load_json(config.state_path())
+    for key in _TICK_OWNED_STATE_KEYS:
+        if key in current:
+            state[key] = current[key]
     write_json(config.state_path(), state)
     receipt = {
         "schema": "agent_skills.project_watchdog.state_change_receipt.v1",

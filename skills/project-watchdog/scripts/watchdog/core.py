@@ -15,10 +15,10 @@ Outputs
     - ``receipt.json`` files under ``config.receipt_root()/<run_id>/``.
 
 Failure modes
-    - ``run_cmd`` never raises on a non-zero exit; it returns the exit code and
-      captured streams so the caller can record them in a receipt. It *does*
-      propagate ``subprocess.TimeoutExpired`` and ``FileNotFoundError``, which
-      are programming or environment errors rather than command results.
+    - ``run_cmd`` never raises on a non-zero exit or timeout; it returns the
+      exit code and captured streams so the caller can record them in a receipt.
+      It *does* propagate ``FileNotFoundError``, which is a programming or
+      environment error rather than a command result.
     - ``acquire_lock`` returns ``False`` when another tick holds the lock. Locks
       older than ``config.LOCK_STALE_SECONDS`` are reclaimed and the takeover is
       logged at WARNING.
@@ -98,16 +98,34 @@ def run_cmd(
     env = os.environ.copy()
     uv_parent = str(Path(config.resolve_uv_bin()).parent)
     env["PATH"] = f"{uv_parent}:{env.get('PATH', '')}"
-    result = subprocess.run(
-        command,
-        cwd=str(cwd) if cwd else None,
-        env=env,
-        input=input_text,
-        text=True,
-        capture_output=True,
-        timeout=timeout_s,
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            command,
+            cwd=str(cwd) if cwd else None,
+            env=env,
+            input=input_text,
+            text=True,
+            capture_output=True,
+            timeout=timeout_s,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout or ""
+        stderr = exc.stderr or ""
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode(errors="replace")
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode(errors="replace")
+        return {
+            "command": command,
+            "cwd": str(cwd) if cwd else None,
+            "exit_code": 124,
+            "stdout": stdout,
+            "stderr": stderr,
+            "duration_seconds": (datetime.now(UTC) - started).total_seconds(),
+            "timed_out": True,
+            "timeout_seconds": timeout_s,
+        }
     return {
         "command": command,
         "cwd": str(cwd) if cwd else None,

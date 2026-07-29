@@ -1,0 +1,23 @@
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from watchdog.core import run_cmd  # noqa: E402
+
+
+def test_run_cmd_returns_timeout_result_instead_of_raising():
+    result = run_cmd(
+        [
+            sys.executable,
+            "-c",
+            "import time; print('started', flush=True); time.sleep(5)",
+        ],
+        timeout_s=1,
+    )
+
+    assert result["exit_code"] == 124
+    assert result["timed_out"] is True
+    assert result["timeout_seconds"] == 1
+    assert "started" in result["stdout"]
