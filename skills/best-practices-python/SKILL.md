@@ -83,6 +83,11 @@ Use this skill whenever you:
 - `correctness-validate-boundaries`
 - `io-httpx-timeout-status`
 - `security-subprocess-no-shell-true`
+- `security-no-unsafe-deserialization`
+- `security-no-dynamic-exec`
+- `security-no-hardcoded-secrets`
+- `correctness-no-runtime-assert`
+- `packaging-no-sys-path-surgery`
 - `style-pathlib-paths`
 - `correctness-utc-aware-timestamps`
 - `conventions-loguru`
@@ -281,6 +286,95 @@ payload = TaskPayload.model_validate(response.json())
 ```
 
 Do not pass raw provider dictionaries across multiple modules. Convert them into a named model at the boundary, then pass the typed object.
+
+## Security and Runtime Gates
+
+### Rule: `security-no-unsafe-deserialization`
+
+Do not load untrusted or user-modifiable data with `pickle`, `marshal`, or unsafe YAML loaders. `pickle` can execute code during loading, and `yaml.load()` has historically allowed arbitrary object construction.
+
+**Wrong:**
+```python
+model = pickle.load(open(path, "rb"))
+config = yaml.load(text, Loader=yaml.Loader)
+```
+
+**Right:**
+```python
+config = yaml.safe_load(text)
+payload = ConfigPayload.model_validate(config)
+```
+
+Use JSON, TOML, safe YAML, SQLite, Parquet, or a signed/hashed internal artifact instead. If a trusted model artifact truly requires pickle/joblib, document the trust boundary, verify the artifact path or digest, and never accept that path from external input.
+
+### Rule: `security-no-dynamic-exec`
+
+Do not use `eval()`, `exec()`, dynamic imports from untrusted strings, or generated Python code as a parser, router, validator, or repair mechanism.
+
+**Wrong:**
+```python
+value = eval(user_expression)
+exec(generated_fix)
+```
+
+**Right:**
+```python
+value = ast.literal_eval(user_expression)
+```
+
+Prefer structured schemas, command registries, `Enum` dispatch, or purpose-built parsers. If executing generated code is the explicit product behavior, isolate it in a sandboxed runner with a receipt and no ambient credentials.
+
+### Rule: `security-no-hardcoded-secrets`
+
+Never hardcode API keys, tokens, passwords, proxy credentials, or plausible secret defaults in source. Do not log secrets, request headers, full environment dumps, or provider payloads that may contain secrets.
+
+**Wrong:**
+```python
+api_key = os.getenv("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
+logger.info("headers={}", headers)
+```
+
+**Right:**
+```python
+api_key = os.environ["SCILLM_PROXY_KEY"]
+logger.info("calling provider auth=present")
+```
+
+Example keys used only in tests or documentation must be obvious placeholders such as `example-key-not-secret`, and production code must fail closed when a required secret is absent.
+
+### Rule: `correctness-no-runtime-assert`
+
+Do not use `assert` for runtime validation, security checks, user input checks, artifact gates, or provider response validation. Python can remove assertions in optimized mode.
+
+**Wrong:**
+```python
+assert receipt["ok"] is True
+```
+
+**Right:**
+```python
+if receipt.get("ok") is not True:
+    raise ValueError("receipt did not pass validation")
+```
+
+`assert` is fine in tests. For smoke commands embedded in documentation, prefer explicit `raise SystemExit(...)` or a small checker script when the command is used as proof.
+
+### Rule: `packaging-no-sys-path-surgery`
+
+Do not scatter `sys.path.insert()` or `PYTHONPATH` hacks through project code. Package import paths through `pyproject.toml`, `uv run --project`, editable installs, or a single documented CLI bootstrap.
+
+**Wrong:**
+```python
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from common import memory_client
+```
+
+**Right:**
+```python
+from agent_skills.common import memory_client
+```
+
+A short source-tree bootstrap is acceptable only in a CLI entry file that documents why package execution is unavailable. Do not put path mutation inside libraries, reusable helpers, or modules imported by tests.
 
 ## HTTP, Subprocess, Path, and Time Hygiene
 
