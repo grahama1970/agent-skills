@@ -73,7 +73,7 @@ table below is checked against it by
 | Chatterbox voice | Live `/synthesize-batch` render of the mood envelope, strict ASR WER 0.0, durable WAV snapshots | Perceived emotion, naturalness, human acceptance |
 | Speaker recognition | Long 4.68-6.0s session-mood renders pass resemblyzer identity/adversarial scoring with separation 0.208427 | Human listener recognition, perceived emotion, naturalness, cross-mood identity |
 | Joined live chain | One fresh cycle id, `live_chain_20260729t130950z`, joins accepted dream evidence -> Watch binding -> journal -> ledger delta -> pre-turn session mood -> three live Chatterbox turns -> Embry recognition, with 13/13 negative controls blocked | Production conversation-service authority; perceived emotion |
-| Session arc bias | `session_arc_bias.v1` publishes bounded deltas from the latest ledger arc, `intensity_delta=0.18`, `valence_delta=-0.18`, with no tone category and 7/7 negative controls blocked | SPARTA consumption; per-turn tone classification; perceived emotion |
+| Session arc bias | `session_arc_bias.v1` publishes bounded deltas from the latest ledger arc, `intensity_delta=0.18`, `valence_delta=-0.18`, with no tone category; `sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json` binds the SPARTA consumer contract | SPARTA production consumption; per-turn tone classification; perceived emotion |
 | Reliability pilot | Five fresh live-chain cycles passed in `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`: 5 attempted, 5 completed, 5 passed, duplicate accepted effects 0, Wilson 95% lower bound 0.565509 | Production reliability; larger campaign; restart/recovery study |
 | Blinded listener study | Four preregistered Chatterbox stimuli are restored, hash-matched, and live-ASR verified at WER 0.0 in `blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json` | Human responses remain 0/20; no perceptual emotion or naturalness result |
 | Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
@@ -82,11 +82,13 @@ table below is checked against it by
 **The active gate** is no longer producing the first joined live-chain receipt
 or the five-cycle engineering pilot; both now exist. The next gate is
 production conversation-service authority plus perceptual Chatterbox evidence:
-hand the published `session_arc_bias.v1` artifact to the SPARTA-owned production
-conversation consumer, then collect the human responses for the blinded listener
-study of dream-derived emotion, Embry identity, and naturalness. Persona Dream does not own SPARTA
-service edits. Do not expand PCTOM-R, generate a new Kling clip, or run another
-broad assessment before that gate unless the operator explicitly reprioritizes.
+route the validated
+`sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json` target to the
+SPARTA-owned production conversation lane, then collect the human responses for
+the blinded listener study of dream-derived emotion, Embry identity, and
+naturalness. Persona Dream does not own SPARTA service edits. Do not expand
+PCTOM-R, generate a new Kling clip, or run another broad assessment before that
+gate unless the operator explicitly reprioritizes.
 
 ## PCTOM-R, and why its numbers are not a result
 

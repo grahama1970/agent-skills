@@ -1,0 +1,88 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "SPARTA production conversation-service consumption",
+      "human-perceived emotion",
+      "human listener recognition of Embry",
+      "a closed immutable Persona Dream goal"
+    ],
+    "proves": [
+      "Persona Dream has published a machine-checkable SPARTA consumer contract for the current session_arc_bias artifact",
+      "the handoff artifact is bounded to numeric intensity/valence deltas and cannot replace SPARTA per-turn tone classification"
+    ]
+  },
+  "composition_contract": {
+    "allowed_output_change": [
+      "voice_delivery.intensity",
+      "voice_delivery.valence"
+    ],
+    "forbidden_output_change": [
+      "canonical_answer_text",
+      "voice_delivery.tone",
+      "identity_core"
+    ],
+    "input_from_persona_dream": {
+      "emits_tone": false,
+      "intensity_delta": 0.18,
+      "valence_delta": -0.18
+    },
+    "input_from_sparta": {
+      "canonical_answer_text": "required; must be preserved byte-for-byte before voice rendering",
+      "per_turn_intensity": "required numeric base before slow arc bias",
+      "per_turn_tone_category": "required; produced by SPARTA or Memory intent classifier",
+      "per_turn_valence": "required numeric base before slow arc bias"
+    },
+    "neutral_fallback": "If this artifact is absent, stale, blocked, or hash-mismatched, SPARTA must record no_arc_bias_applied and continue with per-turn tone only."
+  },
+  "consumer_boundary": {
+    "owned_surface": "production conversation service session/turn state and per-turn tone composition",
+    "owner": "grahama1970/sparta",
+    "persona_dream_role": "publish bounded arc-bias deltas with provenance; do not classify per-turn tone",
+    "sparta_receipt_required_before_goal_credit": true
+  },
+  "created_at": "2026-07-29T14:08:55Z",
+  "live": false,
+  "mocked": false,
+  "required_sparta_receipt_fields": [
+    "schema",
+    "status",
+    "mocked",
+    "live",
+    "session_id",
+    "turn_ids",
+    "arc_bias_artifact_path",
+    "arc_bias_artifact_sha256",
+    "arc_bias_file_sha256",
+    "arc_bias_applied_before_first_turn",
+    "same_arc_bias_artifact_all_turns",
+    "canonical_answer_text_sha256_before",
+    "canonical_answer_text_sha256_after",
+    "answer_text_unchanged",
+    "tone_category_source",
+    "tone_category_unchanged_by_arc_bias",
+    "voice_delivery_before_arc_bias",
+    "voice_delivery_after_arc_bias",
+    "neutral_fallback_checked",
+    "claims"
+  ],
+  "schema": "persona_dream.sparta_arc_bias_handoff.v1",
+  "source_artifact": {
+    "artifact_sha256": "sha256:c2063f3c0062c7e2deea6514cf4ec965945350074f9bcbd1ca8c003bbd0d07b6",
+    "file_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
+    "path": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+    "persona_id": "embry",
+    "schema": "persona_dream.session_arc_bias.v1",
+    "source": {
+      "arc_delta_id": "arc_1_55a79f6ef25f",
+      "arc_delta_idempotency_key": "dream_cycle:55a79f6ef25f388ad399c09b",
+      "identity_core_sha256": "2288b4e4c1aa8aedb753a8c1f787d7ae74e5462f65752c1c4e4f91d1b6ebfb66",
+      "ledger_epoch": 2,
+      "ledger_path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
+      "ledger_sha256": "sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b",
+      "source_dream_cycle_id": "live_chain_20260729t130950z",
+      "source_journal_id": "journal_live_chain_20260729t130950z"
+    },
+    "status": "PASS_SESSION_ARC_BIAS_PUBLISHED"
+  },
+  "status": "PASS_SPARTA_ARC_BIAS_HANDOFF_READY"
+}

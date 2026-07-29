@@ -1,8 +1,40 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + N=5 reliability pilot PASS; listener stimuli ready; SPARTA/human responses next) by Codex
+**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener stimuli ready; SPARTA/human responses next) by Codex
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
+
+## 2026-07-29 — SPARTA arc-bias handoff contract PASS; production consumption still absent
+
+Persona Dream now publishes a machine-checkable handoff contract for the
+SPARTA-owned production conversation-service lane:
+
+- Receipt:
+  `reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json`
+  - SHA-256: `sha256:722c0b605c39611df553b354593fb0867275aa4780e1d0b04dc9c6404ea6530c`
+  - status: `PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT`
+  - `mocked: false`, `live: false`
+  - negative controls: `7/7 PASS_NEGATIVE_BLOCKED`
+- Contract:
+  `reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json`
+  - SHA-256: `sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df`
+  - binds source artifact
+    `reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json`
+    at SHA-256
+    `sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152`
+  - declares that Persona Dream contributes numeric `intensity_delta` and
+    `valence_delta` only;
+  - forbids changing `canonical_answer_text`, `identity_core`, or
+    `tone_category`;
+  - requires SPARTA to own per-turn tone classification and to emit a separate
+    production receipt before the immutable goal gets credit for production
+    conversation-service consumption.
+
+Boundary: this is a Persona Dream handoff proof, not a SPARTA production proof.
+The next SPARTA-owned artifact must show the production conversation service
+reading this exact contract/source hash before the first turn, applying the same
+artifact across turns, preserving answer text, and keeping the per-turn tone
+category independent of arc bias. No such SPARTA receipt exists yet.
 
 ## 2026-07-29 — #1058 deterministic readiness PASS; human listener responses still missing
 
@@ -76,11 +108,12 @@ What this does not prove:
 
 Current next implementation order:
 
-1. Hand `session_arc_bias.v1` to the SPARTA-owned production conversation
-   consumer; do not edit SPARTA from Persona Dream unless the operator routes
-   that work in the SPARTA lane.
-2. Run the blinded Chatterbox listener study for dream-derived emotion, Embry
-   identity, and naturalness.
+1. Route
+   `reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json`
+   to the SPARTA-owned production conversation consumer; do not edit SPARTA
+   from Persona Dream unless the operator routes that work in the SPARTA lane.
+2. Collect the blinded Chatterbox listener-study responses for dream-derived
+   emotion, Embry identity, and naturalness.
 3. Return to PCTOM-R condition-benefit work only after the operator explicitly
    prioritizes the research workstream or the voice/perception gate is
    receipted.

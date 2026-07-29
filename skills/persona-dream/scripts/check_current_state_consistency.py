@@ -145,6 +145,18 @@ STAGES = (
         status_pin="continuity_state.latest_session_arc_bias_receipt_sha256",
     ),
     Stage(
+        stage_id="P2_sparta_arc_bias_handoff",
+        receipt="reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json",
+        accepted_prefix="PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT",
+        contradiction_markers=(
+            "write the sparta consumer contract",
+            "publish a machine-checkable sparta consumer contract",
+            "sparta arc-bias handoff missing",
+            "sparta_arc_bias_handoff receipt missing",
+        ),
+        status_pin="continuity_state.latest_sparta_arc_bias_handoff_receipt_sha256",
+    ),
+    Stage(
         stage_id="P2_five_cycle_reliability_pilot",
         receipt="reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
         accepted_prefix="PASS_LIVE_CHAIN_RELIABILITY_PILOT",
