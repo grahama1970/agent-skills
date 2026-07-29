@@ -51,6 +51,7 @@ from visual_evidence import (
     write_findings_jsonl,
 )
 from discovery import discover_live_dom, write_discovery_artifacts
+from ticket_integration import run_ticket_integration
 
 try:
     from dotenv import load_dotenv
@@ -604,6 +605,47 @@ def discover(
         cdp.close()
     paths = write_discovery_artifacts(result, output_dir, manifest_output=manifest_output)
     logger.info("Discovery artifacts written: {}", paths)
+
+
+@app.command("ticket-findings")
+def ticket_findings(
+    repo: str = typer.Option(..., help="Target GitHub repository, owner/name"),
+    output_dir: Path = typer.Option(Path("./ticket-findings"), help="Output directory for candidates, previews, and apply/readback receipts"),
+    target: str = typer.Option("skills/test-interactions", help="Concrete target path or skill for filed tickets"),
+    policy: str = typer.Option("preview", help="Ticket policy: off, preview, deterministic-only, high-confidence, apply-confirmed"),
+    results: Optional[Path] = typer.Option(None, help="results.json from run stage"),
+    visual_findings: Optional[Path] = typer.Option(None, help="visual-findings.jsonl from #1095 structured visual findings"),
+    discovery_findings: Optional[Path] = typer.Option(None, help="discovery-findings.jsonl from #1096 live discovery"),
+    replay_command: str = typer.Option(..., help="Exact command that replays the source interaction/finding"),
+    ticket_skill: Path = typer.Option(Path("skills/ticket/run.sh"), help="Delegated ticket runtime entrypoint"),
+    confidence_threshold: float = typer.Option(0.85, help="Minimum visual confidence for high-confidence policy"),
+    max_apply: int = typer.Option(1, help="Maximum issues to create in apply-confirmed mode"),
+):
+    """Normalize findings and preview/apply repair tickets through skills/ticket."""
+    try:
+        result = run_ticket_integration(
+            repo=repo,
+            target=target,
+            policy=policy,
+            output_dir=output_dir,
+            ticket_skill=ticket_skill,
+            replay_command=replay_command,
+            results=results,
+            visual_findings=visual_findings,
+            discovery_findings=discovery_findings,
+            threshold=confidence_threshold,
+            max_apply=max_apply,
+        )
+    except Exception as exc:  # noqa: BLE001
+        output_dir.mkdir(parents=True, exist_ok=True)
+        failure_path = output_dir / "ticket-failure.json"
+        failure_path.write_text(json.dumps({"error": str(exc), "mocked": False, "live": policy == "apply-confirmed"}, indent=2) + "\n")
+        logger.error("Ticket integration failed; wrote {}", failure_path)
+        raise typer.Exit(1)
+    logger.info(
+        "Ticket integration wrote {} candidate(s), {} preview(s), {} duplicate comment(s), {} created issue(s) to {}",
+        result["candidate_count"], result["preview_count"], result["duplicate_count"], result["created_count"], output_dir,
+    )
 
 
 def _preprocess_screenshots(captures_dir: Path):

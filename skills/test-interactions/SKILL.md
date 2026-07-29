@@ -115,6 +115,49 @@ element, interaction step, QID when available, finding kind, confidence,
 observed state, expected state, reproduction, deterministic status, and evidence
 paths. The deterministic status field is copied for context only.
 
+## Ticket Finding Integration
+
+`ticket-findings` normalizes deterministic failures, live discovery findings,
+and schema-valid visual findings into preview-first ticket candidates. It
+delegates all GitHub mutation to `skills/ticket/run.sh`; this skill does not
+close, lease, block, release, or otherwise change issue lifecycle state.
+
+Policies:
+
+- `off` writes report-only candidates and performs no ticket work.
+- `preview` is the default; it searches open issues by stable fingerprint and
+  emits ticket previews or duplicate evidence-comment artifacts only.
+- `deterministic-only` permits deterministic run/discovery findings and
+  excludes visual-only candidates.
+- `high-confidence` permits only schema-valid visual findings above the
+  configured threshold with reproduction and evidence paths.
+- `apply-confirmed` is the only mutating mode. It calls `skills/ticket/run.sh`
+  with `--apply`, creates at most `--max-apply` issues, and independently reads
+  each created GitHub issue back.
+
+Fingerprints are derived from repository, target, surface/state, QID or
+missing-QID identity, finding kind, and normalized expected outcome. Run IDs,
+timestamps, and screenshot file names are not part of the fingerprint.
+
+```bash
+./run.sh ticket-findings \
+  --repo grahama1970/agent-skills \
+  --policy preview \
+  --discovery-findings ./discovery/discovery-findings.jsonl \
+  --replay-command "./run.sh discover --url http://localhost:3000 --output-dir ./discovery"
+
+./run.sh ticket-findings \
+  --repo grahama1970/agent-skills \
+  --policy apply-confirmed \
+  --max-apply 1 \
+  --discovery-findings ./discovery/discovery-findings.jsonl \
+  --replay-command "./run.sh discover --url http://localhost:3000 --output-dir ./discovery"
+```
+
+Outputs include `ticket-candidates.json`, `ticket-previews.json`,
+`ticket-duplicate-comments.json`, `ticket-apply-result.json`, and
+`ticket-failure.json` on fail-closed errors.
+
 ## Critical Rules
 
 ### 1. All selectors MUST be [data-qid]
@@ -173,6 +216,9 @@ XPath, or positional selector fallbacks.
 
 # Run the manifest — deterministic CDP + assertions → PASS/FAIL
 ./run.sh run --manifest manifest.json --output-dir ./captures/
+
+# Preview repair tickets from deterministic or schema-valid findings
+./run.sh ticket-findings --repo owner/repo --policy preview --results ./captures/results.json --replay-command "./run.sh run --manifest manifest.json"
 
 # Review captures — PERSONA REQUIRED
 ./run.sh review --captures ./captures/ --persona brandon-bailey

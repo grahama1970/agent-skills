@@ -1,0 +1,48 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1097,
+  "mocked": false,
+  "live": true,
+  "status": "pass",
+  "unit": {
+    "command": "uv run --project skills/test-interactions python -m unittest discover -s skills/test-interactions/tests -v && skills/test-interactions/sanity.sh",
+    "exit_code": 0,
+    "passed": 18
+  },
+  "e2e": {
+    "command": "skills/test-interactions/run.sh discover --url http://127.0.0.1:8775/discovery_defects.html --output-dir /tmp/test-interactions-1097-live-20260729T125800Z/discovery --manifest-output /tmp/test-interactions-1097-live-20260729T125800Z/manifest.generated.json --max-depth 1 --max-states 4 --max-actions 12 && head -n 1 /tmp/test-interactions-1097-live-20260729T125800Z/discovery/discovery-findings.jsonl > /tmp/test-interactions-1097-live-20260729T125800Z/one-finding.jsonl && skills/test-interactions/run.sh ticket-findings --repo grahama1970/agent-skills --output-dir /tmp/test-interactions-1097-live-20260729T125800Z/preview2 --target skills/test-interactions --policy preview --discovery-findings /tmp/test-interactions-1097-live-20260729T125800Z/one-finding.jsonl --replay-command \"skills/test-interactions/run.sh discover --url http://127.0.0.1:8775/discovery_defects.html --output-dir /tmp/test-interactions-1097-live-20260729T125800Z/discovery --manifest-output /tmp/test-interactions-1097-live-20260729T125800Z/manifest.generated.json --max-depth 1 --max-states 4 --max-actions 12\" && skills/test-interactions/run.sh ticket-findings --repo grahama1970/agent-skills --output-dir /tmp/test-interactions-1097-live-20260729T125800Z/apply --target skills/test-interactions --policy apply-confirmed --max-apply 1 --discovery-findings /tmp/test-interactions-1097-live-20260729T125800Z/one-finding.jsonl --replay-command \"skills/test-interactions/run.sh discover --url http://127.0.0.1:8775/discovery_defects.html --output-dir /tmp/test-interactions-1097-live-20260729T125800Z/discovery --manifest-output /tmp/test-interactions-1097-live-20260729T125800Z/manifest.generated.json --max-depth 1 --max-states 4 --max-actions 12\" && skills/test-interactions/run.sh ticket-findings --repo grahama1970/agent-skills --output-dir /tmp/test-interactions-1097-live-20260729T125800Z/duplicate-after-apply2 --target skills/test-interactions --policy preview --discovery-findings /tmp/test-interactions-1097-live-20260729T125800Z/one-finding.jsonl --replay-command \"skills/test-interactions/run.sh discover --url http://127.0.0.1:8775/discovery_defects.html --output-dir /tmp/test-interactions-1097-live-20260729T125800Z/discovery --manifest-output /tmp/test-interactions-1097-live-20260729T125800Z/manifest.generated.json --max-depth 1 --max-states 4 --max-actions 12\"",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "skills/test-interactions/proofs/issue-1097/receipt.json"
+  },
+  "live_gate": {
+    "preview": {
+      "candidate_count": 1,
+      "preview_count": 1,
+      "created_count": 0
+    },
+    "apply_confirmed": {
+      "created_count": 1,
+      "created_issue": 1098,
+      "created_url": "https://github.com/grahama1970/agent-skills/issues/1098",
+      "readback_verified": true,
+      "fingerprint": "c4d0f09bbe52e68ec88f77f4"
+    },
+    "duplicate_suppression": {
+      "duplicate_count": 1,
+      "preview_count": 0,
+      "created_count": 0
+    }
+  },
+  "artifacts": {
+    "receipt": "skills/test-interactions/proofs/issue-1097/receipt.json",
+    "preview": "skills/test-interactions/proofs/issue-1097/preview-result.json",
+    "apply": "skills/test-interactions/proofs/issue-1097/apply-result.json",
+    "duplicate": "skills/test-interactions/proofs/issue-1097/duplicate-result.json",
+    "created_issue_readback": "skills/test-interactions/proofs/issue-1097/created-issue-1098-readback.json",
+    "duplicate_comments": "skills/test-interactions/proofs/issue-1097/ticket-duplicate-comments.json",
+    "cdp_screenshot": "skills/test-interactions/proofs/issue-1097/cdp-screenshot.png",
+    "cdp_read": "skills/test-interactions/proofs/issue-1097/cdp-read.json"
+  }
+}
