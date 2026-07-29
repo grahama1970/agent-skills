@@ -132,7 +132,14 @@ DEFAULT_REPAIR_CREATOR = "codex"
 #: `gpt-5.5-xhigh` resolves to `codex exec --model ...`, the same family the
 #: creator runs, so it shared the creator's blind spots and was a second pass
 #: rather than a second opinion.
-DEFAULT_REPAIR_REVIEWER = "claude-opus-4-8"
+#:
+#: A browser handler rather than an API model. `tau doctor` reports the
+#: anthropic provider as credential=missing, so every scillm-routed Claude seat
+#: returns `scillm_auth_invalid_api_key` -- and scillm will not cross-vendor
+#: fall back, correctly: answering an opus request with GPT would void the
+#: independence the second seat exists for. webclaude routes through surf, so it
+#: is a different family AND a different transport, and needs no Anthropic key.
+DEFAULT_REPAIR_REVIEWER = "webclaude"
 
 
 def repair_creator(project: dict[str, Any] | None = None) -> str:
@@ -301,7 +308,7 @@ NOOP_ESCALATION_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS
 #: a single model that systematically over-accepts would both pass bad repairs
 #: and uphold bad closures, and nothing downstream would catch it. Two seats
 #: make that require two models to fail the same way at once.
-DEFAULT_CLOSURE_AUDITORS = ("claude-opus-4-8", "gpt-5.5-xhigh")
+DEFAULT_CLOSURE_AUDITORS = ("webclaude", "gpt-5.5-xhigh")
 
 
 def closure_auditors(project: dict[str, Any] | None = None) -> list[str]:

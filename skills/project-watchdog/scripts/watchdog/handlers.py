@@ -1249,9 +1249,28 @@ def handle_closure_audit(
                 ),
             )
         )
-        result["commands"].append(
-            github.issue_edit(repo, issue_number, add=[config.CLOSURE_VERIFIED_LABEL])
-        )
+        # The label is what stops this closure being re-audited every tick, so a
+        # failed edit is not cosmetic. Observed: `closure-verified` existed in no
+        # repo and was absent from ensure-labels, so the first unanimous PASS
+        # marked nothing.
+        mark = github.issue_edit(repo, issue_number, add=[config.CLOSURE_VERIFIED_LABEL])
+        result["commands"].append(mark)
+        if mark.get("exit_code") != 0:
+            result.update(
+                {
+                    "ok": False,
+                    "status": "NEEDS_ATTENTION",
+                    "summary": (
+                        f"closure of {repo}#{issue_number} was upheld but "
+                        f"{config.CLOSURE_VERIFIED_LABEL!r} could not be applied: "
+                        f"{str(mark.get('stderr'))[:160]}. Without it the same closure is "
+                        f"re-audited every tick. Run: skills/ticket/run.sh ensure-labels "
+                        f"--repo {repo}"
+                    ),
+                }
+            )
+            log_event(run_id, "closure_verified_label_failed", issue=issue_number)
+            return result
         result.update(
             {
                 "ok": True,

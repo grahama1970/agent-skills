@@ -25,6 +25,7 @@ Usage:
   gh-ticket-tools.sh lease ISSUE --agent AGENT [--assign-me] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh comment ISSUE --body FILE [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh block ISSUE --reason FILE [--release] [--repo owner/name] [--dry-run]
+  gh-ticket-tools.sh unblock ISSUE --reason FILE [--agent AGENT] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh release ISSUE --agent AGENT --reason FILE [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh close ISSUE --proof FILE [--review FILE] [--reason completed|not-planned] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh close-duplicate ISSUE --duplicate-of ISSUE --proof FILE [--review FILE] [--repo owner/name] [--dry-run]
@@ -37,13 +38,14 @@ Agent workflow:
   3. Show the ticket and read body/comments before acting.
   4. Lease exactly one ticket before work.
   5. Comment progress, blockers, review, or proof from files.
-  6. Close only with a non-empty proof file.
-  7. If blocked, add maintainer-blocked + needs-human and either keep or release the lease explicitly.
+  6. Close only with a non-empty proof file, after `lease --agent` set maintainer-active. --reason is completed|not-planned.
+  7. If blocked, `block` adds maintainer-blocked + needs-human (keep or --release the lease).
+  8. When the blocker clears, `unblock ISSUE --reason FILE [--agent NAME]` removes both labels (and re-leases with --agent) so you can close. block --release does NOT clear the labels.
 
 Rules:
   - Never close without a proof file.
   - Never work two leased tickets at once.
-  - Never lease or close tickets labeled needs-human or external-owner.
+  - Never lease or close tickets labeled needs-human or external-owner. To close a resolved-but-blocked ticket, `unblock` it first (do not raw `gh issue edit`).
   - Use --dry-run before first mutation in a new repo.
   - Common flags --repo/-R and --dry-run are valid anywhere after the command.
   - The last output line for successful mutations is machine-readable JSON.
@@ -344,6 +346,38 @@ cmd_block() {
     json_ok block issue "$issue" reason "$reason" released "$release"
 }
 
+cmd_unblock() {
+    # Inverse of block: clears maintainer-blocked + needs-human so a resolved
+    # ticket can be closed via the tool. Pass --agent to re-lease (adds
+    # maintainer-active) so the caller can close in one step. Without this a
+    # blocked ticket cannot be closed except by a raw `gh issue edit`.
+    [[ $# -ge 1 ]] || die "unblock requires ISSUE"
+    local issue="$1"; shift
+    local reason=""
+    local agent=""
+    while [[ $# -gt 0 ]]; do
+        parse_common_flag "$@"
+        if [[ "$PARSED" -gt 0 ]]; then shift "$PARSED"; continue; fi
+        case "$1" in
+            --reason)
+                [[ $# -ge 2 ]] || die "--reason requires a file"
+                reason="$2"; shift 2 ;;
+            --agent)
+                [[ $# -ge 2 ]] || die "--agent requires a value"
+                agent="$2"; shift 2 ;;
+            *) die "unknown unblock arg: $1" ;;
+        esac
+    done
+    [[ -n "$reason" ]] || die "unblock requires --reason FILE"
+    require_file "reason" "$reason"
+    run_gh gh issue edit "$issue" "${repo_args[@]}" --remove-label maintainer-blocked --remove-label needs-human
+    if [[ -n "$agent" ]]; then
+        run_gh gh issue edit "$issue" "${repo_args[@]}" --add-label maintainer-active
+    fi
+    run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$reason"
+    json_ok unblock issue "$issue" agent "$agent" reason "$reason"
+}
+
 cmd_release() {
     [[ $# -ge 1 ]] || die "release requires ISSUE"
     local issue="$1"; shift
@@ -484,7 +518,33 @@ cmd_ensure_labels() {
         "maintainer-blocked|b60205|Progress is blocked"
         "needs-human|d93f0b|Human input or authority required"
         "external-owner|6f42c1|Owner is outside this repository"
+        "agent-work|0052cc|Ticket is routable to a cron-dispatched repair agent"
+        # project-watchdog's own routing vocabulary. Without these, `gh issue
+        # edit --add-label` fails and the lease silently does not happen, so the
+        # in-flight guard sees nothing and the watchdog works ahead.
+        "agent-active|0052cc|A repair agent holds this ticket"
+        "agent-blocked|b60205|A repair attempt failed; needs a decision before retry"
+        "agent-done|0e8a16|A repair agent finished this ticket"
+        # Without this the closure audit's PASS silently fails to mark the
+        # ticket and the same closure is re-audited forever.
+        "closure-verified|0e8a16|Closure was reviewed by the audit panel and upheld"
         "route:backend_python_or_skill_runtime|1d76db|Maintainer route: backend Python or skill runtime"
+        "route:design_or_ux|1d76db|Maintainer route: design or UX"
+        "route:frontend_code|1d76db|Maintainer route: frontend code"
+        "route:rust_or_binary|1d76db|Maintainer route: Rust or binary"
+        "route:ops_or_scheduler|1d76db|Maintainer route: ops or scheduler"
+        "route:documentation_or_report|1d76db|Maintainer route: documentation or report"
+        "route:security_or_compliance|1d76db|Maintainer route: security or compliance"
+        # Concurrency lanes. These are scheduling facts, not documentation:
+        # project-watchdog will not dispatch two tickets in the same lane at
+        # once, and treats a ticket with no lane as unschedulable while any
+        # other ticket is in flight.
+        "lane:fe|c2e0c6|Concurrency lane: frontend"
+        "lane:be|c2e0c6|Concurrency lane: backend"
+        "lane:data|c2e0c6|Concurrency lane: data"
+        "lane:docs|c2e0c6|Concurrency lane: docs"
+        "lane:ops|c2e0c6|Concurrency lane: ops"
+        "lane:sec|c2e0c6|Concurrency lane: security"
         "agent:agent-skill-maintainer|5319e7|Requested repair agent: agent-skill-maintainer"
     )
     local item name color description
@@ -518,6 +578,7 @@ case "$cmd" in
     lease) cmd_lease "$@" ;;
     comment) cmd_comment "$@" ;;
     block) cmd_block "$@" ;;
+    unblock) cmd_unblock "$@" ;;
     release) cmd_release "$@" ;;
     close) cmd_close "$@" ;;
     close-duplicate) cmd_close_duplicate "$@" ;;
