@@ -29,7 +29,18 @@ AUDIT_ROOT="$(mktemp -d)"
 AUDIT_OUT=""
 APPLY_OUT=""
 trap 'rm -f "$OUT" "$AUDIT_OUT" "$APPLY_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
-mkdir -p "$AUDIT_ROOT/covered/fixtures" "$AUDIT_ROOT/missing"
+mkdir -p \
+  "$AUDIT_ROOT/covered/fixtures" \
+  "$AUDIT_ROOT/missing" \
+  "$AUDIT_ROOT/static-missing" \
+  "$AUDIT_ROOT/best-practices-skills/scripts"
+cat > "$AUDIT_ROOT/best-practices-skills/scripts/validate_skill.py" <<'EOF'
+#!/usr/bin/env python3
+import json
+
+print(json.dumps([]))
+EOF
+chmod +x "$AUDIT_ROOT/best-practices-skills/scripts/validate_skill.py"
 cat > "$AUDIT_ROOT/covered/SKILL.md" <<'EOF'
 ---
 name: covered
@@ -70,6 +81,22 @@ cat > "$AUDIT_ROOT/missing/run.sh" <<'EOF'
 exit 0
 EOF
 chmod +x "$AUDIT_ROOT/missing/run.sh"
+cat > "$AUDIT_ROOT/static-missing/SKILL.md" <<'EOF'
+---
+name: static-missing
+description: >
+  Temporary non-executable orchestration skill without an eval posture.
+triggers:
+  - static missing eval fixture
+provides:
+  - task-orchestration
+composes: []
+complies:
+  - best-practices-skills
+---
+
+# static-missing
+EOF
 AUDIT_OUT="$(mktemp)"
 "$SCRIPT_DIR/run.sh" audit-skills "$AUDIT_ROOT" --output "$AUDIT_OUT" >/dev/null
 uv run --project "$SCRIPT_DIR" python - "$AUDIT_OUT" <<'PY'
@@ -78,13 +105,16 @@ import sys
 
 report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "agentic_evals.skill_posture_audit.v1"
-assert report["summary"]["skills_checked"] == 2
-assert report["summary"]["eval001_count"] == 1
+assert report["summary"]["skills_checked"] == 3
+assert report["summary"]["eval001_count"] == 2
 assert report["summary"]["recommended_action_counts"]["scaffold_fixture"] == 1
+assert report["summary"]["recommended_action_counts"]["scaffold_static_validation_fixture"] == 1
 assert report["summary"]["posture_counts"]["agentic_fixture"] == 1
-assert report["summary"]["posture_counts"]["missing"] == 1
+assert report["summary"]["posture_counts"]["missing"] == 2
 missing = next(item for item in report["skills"] if item["skill"] == "missing")
 assert missing["recommended_action"] == "scaffold_fixture"
+static_missing = next(item for item in report["skills"] if item["skill"] == "static-missing")
+assert static_missing["recommended_action"] == "scaffold_static_validation_fixture"
 PY
 
 SCAFFOLD_OUT="$AUDIT_ROOT/missing/fixtures/agentic_eval.json"
@@ -111,6 +141,8 @@ report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "agentic_evals.scaffold_apply_report.v1"
 assert report["mocked"] is False
 assert report["live"] is False
-assert report["summary"]["eligible"] == 0
-assert report["summary"]["created"] == 0
+assert report["summary"]["eligible"] == 1
+assert report["summary"]["created"] == 1
+assert report["results"][0]["case"] == "skill-contract-validation"
 PY
+"$SCRIPT_DIR/run.sh" run "$AUDIT_ROOT/static-missing/fixtures/agentic_eval.json" >/dev/null

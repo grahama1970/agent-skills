@@ -280,12 +280,19 @@ def recommended_action_for(skill_dir: Path, posture: str, eval_required: bool) -
         return "strengthen_existing_eval"
     if (skill_dir / "sanity.sh").exists() or (skill_dir / "run.sh").exists():
         return "scaffold_fixture"
-    return "document_eval_not_required_or_add_custom_eval"
+    return "scaffold_static_validation_fixture"
 
 
 def _entrypoint_command(fixture_dir: Path, entrypoint: Path, *args: str) -> list[str]:
     rel_entrypoint = os.path.relpath(entrypoint, start=fixture_dir)
     return ["bash", rel_entrypoint, *args]
+
+
+def _validator_command(fixture_dir: Path, skill_dir: Path) -> list[str]:
+    validator = skill_dir.parent / "best-practices-skills" / "scripts" / "validate_skill.py"
+    rel_validator = os.path.relpath(validator, start=fixture_dir)
+    rel_skill = os.path.relpath(skill_dir, start=fixture_dir)
+    return ["python3", rel_validator, rel_skill, "--json"]
 
 
 def scaffold_manifest(skill_dir: Path, fixture_dir: Path) -> dict[str, Any]:
@@ -305,15 +312,25 @@ def scaffold_manifest(skill_dir: Path, fixture_dir: Path) -> dict[str, Any]:
             "expected": {"exit_code": 0},
         }
     else:
-        raise typer.BadParameter("skill needs sanity.sh or run.sh to scaffold a fixture")
+        case = {
+            "name": "skill-contract-validation",
+            "type": "positive",
+            "command": _validator_command(fixture_dir, skill_dir),
+            "expected": {"exit_code": 0},
+        }
 
+    entrypoint_backed = case["name"] in {"sanity", "run-help"}
     return {
         "version": 2,
         "skill": skill_name,
         "trials": 3,
-        "proof_scope": "fixture wiring smoke",
+        "proof_scope": "fixture wiring smoke" if entrypoint_backed else "static skill contract validation",
         "claims": {
-            "proves": "the existing skill entrypoint exits with the expected status",
+            "proves": (
+                "the existing skill entrypoint exits with the expected status"
+                if entrypoint_backed
+                else "the skill contract can be parsed and checked by the best-practices-skills validator"
+            ),
             "does_not_prove": "semantic correctness, live service behavior, or full skill readiness",
         },
         "cases": [case],
@@ -353,7 +370,7 @@ def apply_scaffolds_report(
     eligible = [
         item
         for item in audit["skills"]
-        if item["recommended_action"] == "scaffold_fixture"
+        if item["recommended_action"] in {"scaffold_fixture", "scaffold_static_validation_fixture"}
     ]
     selected = eligible[:limit] if limit is not None else eligible
     results = []

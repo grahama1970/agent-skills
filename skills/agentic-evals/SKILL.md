@@ -61,7 +61,13 @@ unless the fixture commands themselves exercise those live paths.
 ```json
 {
   "version": 2,
+  "skill": "example-skill",
   "trials": 3,
+  "proof_scope": "fixture wiring smoke",
+  "claims": {
+    "proves": "the declared command exits with the expected status",
+    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+  },
   "cases": [
     {
       "name": "happy-path",
@@ -112,7 +118,10 @@ generated fixture proves wiring only until a human or maintainer adds
 skill-specific positive, negative, and adversarial cases.
 
 Use `apply-scaffolds` to apply that first mechanical posture across all
-currently scaffoldable `EVAL001` skills. It writes only missing
-`fixtures/agentic_eval.json` files unless `--force` is passed and emits a JSON
-receipt. This reduces missing eval posture; it does not establish semantic
-coverage.
+currently scaffoldable `EVAL001` skills. For skills with `sanity.sh` or
+`run.sh`, it creates an entrypoint-backed fixture. For skills without an
+entrypoint, it creates a static contract-validation fixture that runs the
+`best-practices-skills` validator from the skill's `fixtures/` directory. It
+writes only missing `fixtures/agentic_eval.json` files unless `--force` is
+passed and emits a JSON receipt. This reduces missing eval posture; it does not
+establish semantic coverage.
