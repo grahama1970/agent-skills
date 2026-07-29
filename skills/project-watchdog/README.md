@@ -52,5 +52,15 @@ Exit codes: `0` success or deliberate refusal, `1` operational failure,
 - Report a tick that serviced nothing as success when the reason will not clear
   on its own.
 
+## Evaluation
+
+    ./sanity.sh                                              # 45 behavioural gates
+    uv run pytest tests -q                                   # 154 unit tests
+    ~/.claude/skills/agentic-evals/run.sh run fixtures/agentic_eval.json
+
+The eval fixture is regression-first: every adversarial case reproduces a defect
+that actually happened, and each was verified by mutation to fail when its
+defect is reintroduced.
+
 See `SKILL.md` for the routing contract and `PROJECT_KNOWLEDGE.md` for current
 state, decisions, and open questions.

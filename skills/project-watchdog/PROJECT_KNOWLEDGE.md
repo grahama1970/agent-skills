@@ -66,6 +66,23 @@
 
 ## Verification
 
-`./sanity.sh` — 45 behavioural gates. `uv run pytest tests -q` — 154 tests.
-Neither proves a lane works: only a live receipt read back from the produced
-artifact does.
+| Gate | What it is |
+|------|------------|
+| `./sanity.sh` | 45 behavioural gates against the real CLI |
+| `uv run pytest tests -q` | 154 unit tests |
+| `fixtures/agentic_eval.json` | 14 agentic-eval cases, 3 trials each |
+
+The eval fixture is regression-first: every adversarial case reproduces a defect
+that actually occurred in live operation, so the suite has teeth rather than
+restating the implementation. Verified by mutation — reintroducing a defect
+fails exactly its own case:
+
+| Mutation | Case that caught it |
+|----------|---------------------|
+| drop the `agent-done` routability guard | `finished-repair-stops-being-routable` |
+| restore the destructive worktree reset | `worktree-holding-unmerged-work-is-not-reset` |
+| tick writes the whole state document | `tick-does-not-revert-an-operator-state-change` |
+
+None of these prove a lane works end to end. A repair, closure audit, or
+completion attestation is proven only by a live receipt read back from the
+produced artifact.
