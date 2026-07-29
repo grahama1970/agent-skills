@@ -75,6 +75,10 @@ def validate_production_readiness(
         check["id"] == "production_websocket" and check["status"] == "PASS"
         for check in external_checks
     )
+    swarm_passed = any(
+        check["id"] == "unbounded_swarm" and check["status"] == "PASS"
+        for check in external_checks
+    )
     receipt = {
         "schema": "battle.production_readiness_contract.v1",
         "status": status,
@@ -101,8 +105,19 @@ def validate_production_readiness(
                 ]
                 if websocket_passed
                 else []
+            )
+            + (
+                [
+                    "A Docker-backed dynamic swarm receipt proves 12 isolated no-network workers with a recorded concurrency envelope."
+                ]
+                if swarm_passed
+                else []
             ),
-            "does_not_prove": _does_not_prove(blockers=blockers, websocket_passed=websocket_passed),
+            "does_not_prove": _does_not_prove(
+                blockers=blockers,
+                websocket_passed=websocket_passed,
+                swarm_passed=swarm_passed,
+            ),
         },
         "created_at": _now_utc(),
     }
@@ -211,15 +226,23 @@ def _package_source_commit(receipt: dict[str, Any]) -> str | None:
     return value if isinstance(value, str) and value else None
 
 
-def _does_not_prove(*, blockers: list[dict[str, str]], websocket_passed: bool) -> list[str]:
+def _does_not_prove(
+    *,
+    blockers: list[dict[str, str]],
+    websocket_passed: bool,
+    swarm_passed: bool,
+) -> list[str]:
     if not blockers:
         return []
     claims = [
         "Production infrastructure is deployed.",
         "Cloud, Kubernetes, DNS, certificate, ingress, or secret-management behavior.",
-        "Unbounded swarm execution works.",
         "Battle or RelayForge is production ready.",
     ]
+    if not swarm_passed:
+        claims.insert(-1, "Unbounded swarm execution works.")
+    else:
+        claims.insert(-1, "Mathematically infinite swarm execution or production cluster autoscaling.")
     if websocket_passed:
         claims.insert(
             2,
