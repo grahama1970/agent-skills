@@ -1,0 +1,29 @@
+{
+  "services": {
+    "web": {
+      "command": null,
+      "entrypoint": null,
+      "environment": {
+        "HACK_FIXTURE": "safe"
+      },
+      "image": "nginx:1.25-alpine",
+      "ports": [
+        {
+          "host_ip": "127.0.0.1",
+          "mode": "ingress",
+          "protocol": "tcp",
+          "published": 80,
+          "target": 80
+        }
+      ],
+      "volumes": [
+        {
+          "read_only": true,
+          "source": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/hack/fixtures/compose-policy/safe/public",
+          "target": "/usr/share/nginx/html",
+          "type": "bind"
+        }
+      ]
+    }
+  }
+}

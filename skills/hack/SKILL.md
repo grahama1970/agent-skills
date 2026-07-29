@@ -340,6 +340,27 @@ CIDRs, ports, actions, probe classes, runtime modes, resource budgets, and
 denied behavior. It is not a legal opinion and does not prove Docker isolation,
 source truth, exploitability, patch effectiveness, or Battle readiness.
 
+### Compose Policy Gate
+
+Repository-provided Compose files are untrusted target input. Before
+`session-audit` can launch a target stack, Hack compiles the selected Compose
+file through a fail-closed policy gate:
+
+```bash
+./run.sh compose-policy fixtures/compose-policy/safe/docker-compose.yml \
+  --authorization-manifest fixtures/authorization/valid-local.json \
+  --out /tmp/hack-sanitized-compose.yml \
+  --receipt-out /tmp/hack-compose-policy-receipt.json
+```
+
+The policy path invokes `docker compose config --format json` with a sterile
+environment, rejects privileged containers, host namespaces, Docker/Podman
+socket mounts, broad host binds, writable source binds, unapproved capabilities,
+devices, unsafe service fields, public published ports, and paths that escape
+the target/session boundary. `session-audit` then runs `docker compose up` only
+against the Hack-generated sanitized Compose artifact and records
+`hack.compose_policy_receipt.v1` in the session reports.
+
 ### Proof Authority Boundary
 
 Hack probe output is split into observation and validation authorities:

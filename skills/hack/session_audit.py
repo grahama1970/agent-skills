@@ -8,7 +8,7 @@ import re
 import shutil
 import subprocess
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable
 from urllib.parse import urlparse
@@ -17,6 +17,7 @@ import typer
 from rich.console import Console
 
 from common.security_authorization import require_target_authorization
+from hack.compose_policy import compile_compose_policy, mark_execution_started
 from hack.proof_authority import (
     build_probe_observation,
     file_sha256 as proof_file_sha256,
@@ -85,6 +86,8 @@ class TargetLaunchPlan:
     port: str
     source: str
     reason: str
+    source_compose_path: Path | None = None
+    compose_policy_receipt_path: Path | None = None
 
 
 def create_session_audit_command() -> Callable[..., None]:
@@ -291,11 +294,31 @@ def run_session_audit(
     )
     target_url = launch_plan.target_url
     port = launch_plan.port
-    write_target_launch_plan(paths, launch_plan)
     target_compose_env = materialize_target_compose_env(
         paths=paths,
         launch_plan=launch_plan,
     )
+    if launch_plan.compose_path.exists():
+        policy_out = paths.session_dir / "target-launch" / "docker-compose.sanitized.yml"
+        policy_receipt = paths.reports_dir / "compose-policy-receipt.json"
+        policy_result = compile_compose_policy(
+            source_compose_path=launch_plan.compose_path,
+            authorization_manifest=authorization_manifest,
+            sanitized_compose_path=policy_out,
+            receipt_out=policy_receipt,
+            source_root=paths.repo_dir,
+            session_root=paths.session_dir,
+        )
+        if policy_result.status != "PASS" or policy_result.sanitized_compose_path is None:
+            raise RuntimeError(f"target compose rejected by Hack policy; see {policy_receipt}")
+        launch_plan = replace(
+            launch_plan,
+            compose_path=policy_result.sanitized_compose_path,
+            source_compose_path=launch_plan.compose_path,
+            compose_policy_receipt_path=policy_receipt,
+            reason=f"{launch_plan.reason}; sanitized by Hack Compose policy",
+        )
+    write_target_launch_plan(paths, launch_plan)
     compose_path = launch_plan.compose_path
     probe_config = probe_config or ProbeRunConfig(
         enabled=False,
@@ -305,6 +328,8 @@ def run_session_audit(
 
     try:
         if compose_path.exists():
+            if launch_plan.compose_policy_receipt_path is not None:
+                mark_execution_started(launch_plan.compose_policy_receipt_path)
             compose_up_result = run_logged(
                 [
                     "docker",
@@ -530,7 +555,7 @@ def resolve_target_launch_plan(
             target_url=target_url,
             port=inferred_port,
             source="generated-dockerfile-compose",
-            reason="requested compose file missing; generated host-network compose from root Dockerfile",
+            reason="requested compose file missing; generated loopback-port compose from root Dockerfile",
         )
 
     return TargetLaunchPlan(
@@ -635,7 +660,7 @@ def materialize_dockerfile_target_compose(
     paths: SessionPaths,
     target_port: str,
 ) -> Path:
-    """Write a host-network compose file for repos that ship a root Dockerfile."""
+    """Write a loopback-port compose file for repos that ship a root Dockerfile."""
 
     launch_dir = paths.session_dir / "target-launch"
     launch_dir.mkdir(parents=True, exist_ok=True)
@@ -646,7 +671,8 @@ def materialize_dockerfile_target_compose(
     build:
       context: {paths.repo_dir}
       dockerfile: Dockerfile
-    network_mode: host
+    ports:
+      - "127.0.0.1:{target_port}:{target_port}"
     environment:
       OPENCLAW_GATEWAY_PORT: "{target_port}"
       OPENCLAW_GATEWAY_HOST: "127.0.0.1"
@@ -663,6 +689,8 @@ def write_target_launch_plan(paths: SessionPaths, launch_plan: TargetLaunchPlan)
 
     payload = {
         "compose_path": str(launch_plan.compose_path),
+        "source_compose_path": str(launch_plan.source_compose_path or launch_plan.compose_path),
+        "compose_policy_receipt_path": str(launch_plan.compose_policy_receipt_path) if launch_plan.compose_policy_receipt_path else None,
         "target_url": launch_plan.target_url,
         "port": launch_plan.port,
         "source": launch_plan.source,
