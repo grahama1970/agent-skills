@@ -521,3 +521,52 @@ def test_an_answered_attestation_holds_for_the_full_interval(tmp_path, monkeypat
 def test_a_bare_timestamp_from_older_state_still_works(tmp_path, monkeypatch):
     state = {"projects": {"p": {"state": "active"}}, "completion_attested_at": {"p": 0.0}}
     assert _attest_state(tmp_path, monkeypatch, {"verdict": "PASS"}, state) is not None
+
+
+# --- a tick must not revert an operator's state change -----------------------
+
+
+def test_a_tick_does_not_revert_a_concurrent_operator_change(tmp_path, monkeypatch):
+    """`set-state project active --project watchdog-probe` reported UPDATED and
+    the project was absent afterwards: a tick already in flight wrote its stale
+    copy of the whole document over it, and the project never dispatched."""
+    import json as _json
+
+    from watchdog import commands, config  # noqa: PLC0415
+
+    path = tmp_path / "state.json"
+    monkeypatch.setattr(config, "state_path", lambda: path)
+    path.write_text(_json.dumps({"projects": {"tau": {"state": "active"}}}))
+
+    # A tick read state before the operator added a project.
+    stale = {"projects": {"tau": {"state": "active"}}, "last_served_project": "tau"}
+
+    # Operator registers a new project while that tick is still running.
+    live = _json.loads(path.read_text())
+    live["projects"]["watchdog-probe"] = {"state": "active"}
+    path.write_text(_json.dumps(live))
+
+    commands._persist_tick_state(stale)
+
+    after = _json.loads(path.read_text())
+    assert "watchdog-probe" in after["projects"], "the operator's change must survive"
+    assert after["last_served_project"] == "tau", "the tick's own key is still written"
+
+
+def test_an_operator_change_does_not_revert_tick_cooldowns(tmp_path, monkeypatch):
+    import json as _json
+
+    from watchdog import commands, config  # noqa: PLC0415
+
+    path = tmp_path / "state.json"
+    monkeypatch.setattr(config, "state_path", lambda: path)
+    path.write_text(_json.dumps({
+        "projects": {"tau": {"state": "active"}},
+        "closure_audit_attempts": {"o/r#7": 123.0},
+    }))
+    monkeypatch.setattr(commands, "finish", lambda *a, **k: 0)
+    commands.set_state("project", "paused", project_id="tau", reason="probe")
+
+    after = _json.loads(path.read_text())
+    assert after["projects"]["tau"]["state"] == "paused"
+    assert after["closure_audit_attempts"] == {"o/r#7": 123.0}, "cooldowns survive"
