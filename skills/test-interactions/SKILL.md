@@ -140,11 +140,36 @@ Available personas:
 If it's in the DOM and it's interactive (button, link, input, select, tab),
 it must appear in a manifest and have assertions against it.
 
+### 4. Discovery is live, bounded, and QID-only
+
+`generate` and `discover` use a real CDP browser session to inventory rendered
+semantic controls, interactive ARIA roles, `data-qid`, `data-qs-action`, visible
+state, enabled state, bounding boxes, and reachable overlay/menu/dialog states.
+Source grep is not discovery.
+
+Discovery prevents loops with a stable state fingerprint plus `--max-depth`,
+`--max-states`, and `--max-actions`. It writes:
+
+- `discovery-inventory.json` for observed states and element evidence.
+- `discovery-findings.jsonl` for deterministic live-DOM findings.
+- `state-graph.json` for QID action transitions.
+- A replayable generated manifest containing only `[data-qid='...']`
+  executable selectors.
+
+Missing QIDs, duplicate QIDs, absent `data-qs-action`, absent `title`, manifest
+coverage gaps, keyboard-unreachable controls, inert actions, URL drift,
+console exceptions, failed network requests, and overlay focus-return defects
+are findings. They are not permission to invent `nth-child`, class, ID, text,
+XPath, or positional selector fallbacks.
+
 ## Commands
 
 ```bash
 # Generate an interaction manifest from a URL
 ./run.sh generate --url "http://localhost:3000" --output manifest.json
+
+# Explore live DOM state and write inventory/findings/state graph plus manifest
+./run.sh discover --url "http://localhost:3000" --output-dir ./discovery --manifest-output manifest.json
 
 # Run the manifest — deterministic CDP + assertions → PASS/FAIL
 ./run.sh run --manifest manifest.json --output-dir ./captures/

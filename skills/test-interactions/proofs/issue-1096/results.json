@@ -1,0 +1,326 @@
+{
+  "app": "test-interactions discovery defects fixture",
+  "run_id": "test-interactions-20260729T124215441224Z",
+  "total": 11,
+  "passed": 11,
+  "failed": 0,
+  "warned": 0,
+  "skipped": 0,
+  "interactions": [
+    {
+      "surface": "discovered-main",
+      "element": "fixture-open-dialog",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:open-dialog",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Open dialog'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0001_fixture-open-dialog_click.png",
+      "duration_ms": 676,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:open-dialog'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:open-dialog'])",
+          "status": "PASS",
+          "evidence": "title='Open dialog'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:open-dialog'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_OPEN_DIALOG'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-duplicate",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:duplicate",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Duplicate A'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0002_fixture-duplicate_click.png",
+      "duration_ms": 661,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:duplicate'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:duplicate'])",
+          "status": "PASS",
+          "evidence": "title='Duplicate A'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:duplicate'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_DUP_A'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-throws",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:throws",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Throw'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0003_fixture-throws_click.png",
+      "duration_ms": 666,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:throws'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:throws'])",
+          "status": "PASS",
+          "evidence": "title='Throw error'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:throws'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_THROW'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-fetch-fails",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:fetch-fails",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Fetch fails'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0004_fixture-fetch-fails_click.png",
+      "duration_ms": 704,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:fetch-fails'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:fetch-fails'])",
+          "status": "PASS",
+          "evidence": "title='Fetch fails'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:fetch-fails'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_FETCH_FAILS'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-inert",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:inert",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Inert'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0005_fixture-inert_click.png",
+      "duration_ms": 687,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:inert'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:inert'])",
+          "status": "PASS",
+          "evidence": "title='Inert button'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:inert'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_INERT'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-no-title",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:no-title",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'No title'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0006_fixture-no-title_click.png",
+      "duration_ms": 684,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:no-title'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:no-title'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_NO_TITLE'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-no-action",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:no-action",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'No action'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0007_fixture-no-action_click.png",
+      "duration_ms": 670,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:no-action'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:no-action'])",
+          "status": "PASS",
+          "evidence": "title='No action id'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-keyboard-miss",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:keyboard-miss",
+      "status": "PASS",
+      "evidence": "clicked <DIV> 'Keyboard miss'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0008_fixture-keyboard-miss_click.png",
+      "duration_ms": 668,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:keyboard-miss'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:keyboard-miss'])",
+          "status": "PASS",
+          "evidence": "title='Keyboard miss'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:keyboard-miss'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_KEYBOARD_MISS'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-url-drift",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:url-drift",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'URL drift'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0009_fixture-url-drift_click.png",
+      "duration_ms": 685,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:url-drift'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:url-drift'])",
+          "status": "PASS",
+          "evidence": "title='URL drift'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:url-drift'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_URL_DRIFT'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-dialog-control",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:dialog-control",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Dialog control'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0010_fixture-dialog-control_click.png",
+      "duration_ms": 695,
+      "assertions": [
+        {
+          "check": "assert_visible([data-qid='fixture:dialog-control'])",
+          "status": "PASS",
+          "evidence": "visible"
+        },
+        {
+          "check": "assert_title([data-qid='fixture:dialog-control'])",
+          "status": "PASS",
+          "evidence": "title='Dialog control'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:dialog-control'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_DIALOG_CONTROL'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    },
+    {
+      "surface": "discovered-main",
+      "element": "fixture-close-dialog",
+      "action": "click",
+      "description": "Discovered live interaction: fixture:close-dialog",
+      "status": "PASS",
+      "evidence": "clicked <BUTTON> 'Close'",
+      "screenshot": "/tmp/test-interactions-1096-live-20260729T124520Z/captures/discovered-main/0011_fixture-close-dialog_click.png",
+      "duration_ms": 676,
+      "assertions": [
+        {
+          "check": "assert_title([data-qid='fixture:close-dialog'])",
+          "status": "PASS",
+          "evidence": "title='Close dialog'"
+        },
+        {
+          "check": "assert_qs_action([data-qid='fixture:close-dialog'])",
+          "status": "PASS",
+          "evidence": "data-qs-action='FIXTURE_CLOSE_DIALOG'"
+        }
+      ],
+      "visual_evidence": {},
+      "animation_evidence": {},
+      "visual_findings": []
+    }
+  ]
+}

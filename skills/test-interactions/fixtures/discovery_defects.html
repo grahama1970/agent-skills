@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>test-interactions discovery defects fixture</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 32px; color: #172033; }
+      button, [role="button"] { min-width: 48px; min-height: 44px; margin: 6px; }
+      .dialog-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.24); }
+      .dialog-backdrop.open { display: block; }
+      .dialog {
+        width: 360px;
+        margin: 80px auto;
+        padding: 18px;
+        background: white;
+        border: 2px solid #334155;
+      }
+      .missing-qid { border: 2px dashed #b91c1c; }
+    </style>
+  </head>
+  <body>
+    <main data-qid="fixture:discovery:surface">
+      <h1>Discovery defects fixture</h1>
+      <button
+        data-qid="fixture:open-dialog"
+        data-qs-action="FIXTURE_OPEN_DIALOG"
+        title="Open dialog"
+        onclick="document.querySelector('[data-qid=&quot;fixture:dialog-backdrop&quot;]').classList.add('open'); document.querySelector('[data-qid=&quot;fixture:dialog-control&quot;]').focus();"
+      >Open dialog</button>
+
+      <button data-qid="fixture:duplicate" data-qs-action="FIXTURE_DUP_A" title="Duplicate A">Duplicate A</button>
+      <button data-qid="fixture:duplicate" data-qs-action="FIXTURE_DUP_B" title="Duplicate B">Duplicate B</button>
+      <button class="missing-qid" onclick="document.body.dataset.missingClicked='1'">Missing QID</button>
+      <button data-qid="fixture:throws" data-qs-action="FIXTURE_THROW" title="Throw error" onclick="throw new Error('seeded discovery exception')">Throw</button>
+      <button data-qid="fixture:fetch-fails" data-qs-action="FIXTURE_FETCH_FAILS" title="Fetch fails" onclick="fetch('/missing-discovery-resource.json')">Fetch fails</button>
+      <button data-qid="fixture:inert" data-qs-action="FIXTURE_INERT" title="Inert button">Inert</button>
+      <button data-qid="fixture:no-title" data-qs-action="FIXTURE_NO_TITLE">No title</button>
+      <button data-qid="fixture:no-action" title="No action id">No action</button>
+      <div role="button" data-qid="fixture:keyboard-miss" data-qs-action="FIXTURE_KEYBOARD_MISS" title="Keyboard miss">Keyboard miss</div>
+      <button data-qid="fixture:url-drift" data-qs-action="FIXTURE_URL_DRIFT" title="URL drift" onclick="history.pushState({}, '', '?drift=1')">URL drift</button>
+
+      <div class="dialog-backdrop" data-qid="fixture:dialog-backdrop">
+        <section class="dialog" role="dialog" aria-modal="true" data-qid="fixture:dialog">
+          <h2>Dialog</h2>
+          <button
+            data-qid="fixture:dialog-control"
+            data-qs-action="FIXTURE_DIALOG_CONTROL"
+            title="Dialog control"
+            onclick="document.querySelector('[data-qid=&quot;fixture:dialog-state&quot;]').textContent='dialog clicked';"
+          >Dialog control</button>
+          <button
+            data-qid="fixture:close-dialog"
+            data-qs-action="FIXTURE_CLOSE_DIALOG"
+            title="Close dialog"
+            onclick="document.querySelector('[data-qid=&quot;fixture:dialog-backdrop&quot;]').classList.remove('open'); document.body.focus();"
+          >Close</button>
+          <p data-qid="fixture:dialog-state">dialog ready</p>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

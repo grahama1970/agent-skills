@@ -43,6 +43,7 @@ class CDPClient:
         self.browser_process = None
         self.user_data_dir = None
         self.owns_browser = False
+        self.events: list[dict] = []
 
     def _free_port(self) -> int:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -164,6 +165,8 @@ class CDPClient:
                 if "error" in resp:
                     raise RuntimeError(f"CDP error: {resp['error']}")
                 return resp.get("result", {})
+            if resp.get("method"):
+                self.events.append(resp)
 
     def evaluate(self, js: str):
         result = self.send("Runtime.evaluate", {
@@ -182,6 +185,24 @@ class CDPClient:
 
     def current_url(self) -> str:
         return self.evaluate("window.location.href") or ""
+
+    def enable_observers(self):
+        """Enable console/network event streams for discovery diagnostics."""
+        for method in ("Runtime.enable", "Log.enable", "Network.enable"):
+            try:
+                self.send(method)
+            except RuntimeError:
+                pass
+
+    def drain_events(self) -> list[dict]:
+        """Flush pending protocol events by issuing a cheap Runtime call."""
+        try:
+            self.evaluate("void 0")
+        except RuntimeError:
+            pass
+        events = list(self.events)
+        self.events.clear()
+        return events
 
     def viewport(self) -> dict:
         return self.evaluate(

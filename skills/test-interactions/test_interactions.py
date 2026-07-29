@@ -50,6 +50,7 @@ from visual_evidence import (
     validate_visual_finding,
     write_findings_jsonl,
 )
+from discovery import discover_live_dom, write_discovery_artifacts
 
 try:
     from dotenv import load_dotenv
@@ -553,25 +554,56 @@ def run(
 def generate(
     url: str = typer.Option(..., help="Target URL to analyze"),
     output: Path = typer.Option(Path("manifest.json"), help="Output manifest path"),
+    output_dir: Path = typer.Option(Path("./discovery"), help="Directory for discovery inventory/findings/state graph"),
+    max_depth: int = typer.Option(2, help="Maximum state exploration depth"),
+    max_states: int = typer.Option(12, help="Maximum unique states to visit"),
+    max_actions: int = typer.Option(40, help="Maximum QID actions to execute during discovery"),
 ):
-    """Generate an interaction manifest from a URL."""
+    """Generate a replayable QID-only interaction manifest from the live DOM."""
     cdp = CDPClient()
     cdp.connect()
     try:
-        cdp.navigate(url)
-        title = cdp.evaluate("document.title") or url
-        manifest = {
-            "version": 1, "app": title, "base_url": url,
-            "surfaces": [{
-                "name": "main", "path": "/",
-                "elements": [{"name": "full-page", "selector": "body",
-                    "interactions": [{"action": "screenshot", "description": f"Full page of {url}"}]}],
-            }],
-        }
+        result = discover_live_dom(
+            cdp,
+            url=url,
+            max_depth=max_depth,
+            max_states=max_states,
+            max_actions=max_actions,
+        )
     finally:
         cdp.close()
-    output.write_text(json.dumps(manifest, indent=2))
-    logger.info("Manifest written to {}", output)
+    paths = write_discovery_artifacts(result, output_dir, manifest_output=output)
+    logger.info(
+        "Manifest written to {} from {} discovered state(s), {} action(s), {} finding(s)",
+        output, result["states_seen"], result["actions_run"], len(result.get("findings") or []),
+    )
+    logger.info("Discovery artifacts: {}", paths)
+
+
+@app.command()
+def discover(
+    url: str = typer.Option(..., help="Target URL to explore via live CDP"),
+    output_dir: Path = typer.Option(Path("./discovery"), help="Output directory for discovery artifacts"),
+    manifest_output: Path = typer.Option(Path("./manifest.generated.json"), help="Generated replayable manifest path"),
+    max_depth: int = typer.Option(2, help="Maximum state exploration depth"),
+    max_states: int = typer.Option(12, help="Maximum unique states to visit"),
+    max_actions: int = typer.Option(40, help="Maximum QID actions to execute during discovery"),
+):
+    """Explore live DOM states and write inventory, findings, state graph, and manifest."""
+    cdp = CDPClient()
+    cdp.connect()
+    try:
+        result = discover_live_dom(
+            cdp,
+            url=url,
+            max_depth=max_depth,
+            max_states=max_states,
+            max_actions=max_actions,
+        )
+    finally:
+        cdp.close()
+    paths = write_discovery_artifacts(result, output_dir, manifest_output=manifest_output)
+    logger.info("Discovery artifacts written: {}", paths)
 
 
 def _preprocess_screenshots(captures_dir: Path):

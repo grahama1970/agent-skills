@@ -1,0 +1,71 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1096,
+  "mocked": false,
+  "live": true,
+  "status": "pass",
+  "commit": "included_in_current_task_commit",
+  "unit": {
+    "command": "uv run --project skills/test-interactions python -m unittest discover -s skills/test-interactions/tests -v && skills/test-interactions/sanity.sh",
+    "exit_code": 0,
+    "passed": 10
+  },
+  "e2e": {
+    "command": "skills/test-interactions/run.sh discover --url http://127.0.0.1:8775/discovery_defects.html --output-dir /tmp/test-interactions-1096-live-20260729T124520Z/discovery --manifest-output /tmp/test-interactions-1096-live-20260729T124520Z/manifest.generated.json --max-depth 2 --max-states 12 --max-actions 40 && skills/test-interactions/run.sh run --manifest /tmp/test-interactions-1096-live-20260729T124520Z/manifest.generated.json --output-dir /tmp/test-interactions-1096-live-20260729T124520Z/captures",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "skills/test-interactions/proofs/issue-1096/receipt.json"
+  },
+  "deterministic_gates": {
+    "py_compile": "pass",
+    "unittest": {
+      "status": "pass",
+      "tests": 10
+    },
+    "sanity": "pass",
+    "validate_skill": "pass_with_warning",
+    "mock_evidence_claims": "pass"
+  },
+  "live_gate": {
+    "discovery": {
+      "states_seen": 4,
+      "actions_run": 40,
+      "bounds": {
+        "max_depth": 2,
+        "max_states": 12,
+        "max_actions": 40
+      }
+    },
+    "generated_manifest_run": {
+      "passed": 11,
+      "failed": 0,
+      "warned": 0,
+      "total": 11
+    },
+    "finding_kinds": [
+      "console_error",
+      "console_exception",
+      "duplicate_qid",
+      "focus_return_defect",
+      "inert_interaction",
+      "keyboard_unreachable",
+      "manifest_uncovered_interactive",
+      "missing_qid",
+      "network_failure",
+      "qs_action_missing",
+      "title_missing",
+      "unexpected_url_drift"
+    ]
+  },
+  "artifacts": {
+    "receipt": "skills/test-interactions/proofs/issue-1096/receipt.json",
+    "inventory": "skills/test-interactions/proofs/issue-1096/discovery-inventory.json",
+    "findings": "skills/test-interactions/proofs/issue-1096/discovery-findings.jsonl",
+    "state_graph": "skills/test-interactions/proofs/issue-1096/state-graph.json",
+    "manifest": "skills/test-interactions/proofs/issue-1096/manifest.generated.json",
+    "results": "skills/test-interactions/proofs/issue-1096/results.json",
+    "cdp_screenshot": "skills/test-interactions/proofs/issue-1096/cdp-screenshot.png",
+    "cdp_read": "skills/test-interactions/proofs/issue-1096/cdp-read.json"
+  }
+}
