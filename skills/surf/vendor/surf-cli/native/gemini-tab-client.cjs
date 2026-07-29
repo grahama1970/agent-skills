@@ -288,7 +288,7 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     throw new Error(`File not found: ${absolutePath}`);
   }
 
-  // Wait for a file input to appear. ChatGPT lazily mounts the hidden
+  // Wait for a file input to appear. Gemini lazily mounts the hidden
   // <input type="file"> when the composer attach button is interactable;
   // recent revs mount it unconditionally, but we poll defensively.
   const selectorJson = JSON.stringify(SELECTORS.fileInput);
@@ -307,7 +307,7 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
   }
   if (!found) {
     throw new Error(
-      "ChatGPT file input (input[type=\"file\"]) not present in the DOM; ChatGPT may have moved or hidden the attach control.",
+      "Gemini file input (input[type=\"file\"]) not present in the DOM; Gemini may have moved or hidden the attach control.",
     );
   }
 
@@ -324,14 +324,14 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     selector: SELECTORS.fileInput,
   });
   if (!node || !node.nodeId) {
-    throw new Error("DOM.querySelector returned no nodeId for the ChatGPT file input");
+    throw new Error("DOM.querySelector returned no nodeId for the Gemini file input");
   }
   await inputCdp("DOM.setFileInputFiles", {
     files: [absolutePath],
     nodeId: node.nodeId,
   });
 
-  // Give ChatGPT a moment to process the file (it reads, hashes, sometimes
+  // Give Gemini a moment to process the file (it reads, hashes, sometimes
   // uploads). If the attachment is not yet visible after a brief wait we
   // surface the failure so the caller can decide to retry rather than send
   // a prompt that references a missing attachment.
@@ -358,8 +358,9 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     }
     await delay(250);
   }
-  // No preview shown, but the input file was set. Proceed; ChatGPT often
-  // accepts files without a visible thumbnail (especially text/markdown).
+  // No preview shown, but the input file was set. Proceed and report the
+  // weaker metadata; gemini-submit.sh fails closed for attachment lanes unless
+  // it can read back a visible attachment preview.
   log(`File attachment set (no preview detected within 20s; proceeding)`);
   return { attached: true, previewVisible: false };
 }
@@ -730,6 +731,7 @@ async function query(options) {
   
   const cdp = (expr) => cdpEvaluate(tabId, expr);
   const inputCdp = (method, params) => cdpCommand(tabId, method, params);
+  let attachment = null;
   
   try {
     await waitForPageLoad(cdp);
@@ -740,6 +742,10 @@ async function query(options) {
     }
     log("Prompt ready");
     const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
+    if (file) {
+      attachment = await attachFile(cdp, inputCdp, file, log);
+      log(`File attached: ${file}`);
+    }
     const baselineUrl = await evaluate(cdp, "window.location.href").catch(() => "");
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
@@ -783,6 +789,7 @@ async function query(options) {
       activated: tabInfo.activated === true,
       tabWasCreated: tabInfo.tabWasCreated === true,
       noActivate: noActivate === true,
+      attachment,
     };
   } finally {
     if (!keepTab) {

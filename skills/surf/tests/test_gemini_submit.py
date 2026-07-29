@@ -10,6 +10,19 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GEMINI_SUBMIT = REPO_ROOT / "skills/surf/scripts/gemini-submit.sh"
+GEMINI_TAB_CLIENT = REPO_ROOT / "skills/surf/vendor/surf-cli/native/gemini-tab-client.cjs"
+
+
+def test_gemini_tab_client_attaches_file_before_submit() -> None:
+    source = GEMINI_TAB_CLIENT.read_text(encoding="utf-8")
+
+    attach_index = source.index("attachment = await attachFile(cdp, inputCdp, file, log);")
+    type_index = source.index("await typePrompt(cdp, inputCdp, prompt);")
+    send_index = source.index("await clickSend(cdp, inputCdp);")
+    return_index = source.index("attachment,")
+
+    assert attach_index < type_index < send_index
+    assert send_index < return_index
 
 
 def test_gemini_submit_uses_requested_tab_id_when_upstream_omits_metadata(
@@ -148,6 +161,153 @@ esac
     assert payload["raw_contains_sentinel"] is False
     assert payload["stable_response_without_sentinel"] is True
     assert payload["proof_status"] == "response_proven_without_sentinel"
+
+
+def test_gemini_submit_records_attachment_metadata_when_present(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    attachment = tmp_path / "bundle.md"
+    fake_run = tmp_path / "surf-run.sh"
+
+    request.write_text("Use the attached bundle and reply with exactly: gemini attachment smoke\n", encoding="utf-8")
+    attachment.write_text("# Evidence\n\nReadable attachment text.\n", encoding="utf-8")
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  focus.state)
+    printf '{"focusedWindowId":1,"activeTabId":837361258}\\n'
+    ;;
+  gemini_tab)
+    printf 'gemini attachment smoke<<<GEMINI_DONE:test>>>\\n'
+    echo 'ControlledTabID: 837361258' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'Attachment: {"attached":true,"previewVisible":true}' >&2
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "bash",
+            str(GEMINI_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--meta-output",
+            str(meta),
+            "--sentinel",
+            "<<<GEMINI_DONE:test>>>",
+            "--tab-id",
+            "837361258",
+            "--no-activate",
+            "--stable-polls",
+            "0",
+            "--timeout",
+            "5",
+            "--attach-file",
+            str(attachment),
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "completed"
+    assert payload["attach_file"] == str(attachment.resolve())
+    assert payload["attachment"] == {"attached": True, "previewVisible": True}
+    assert payload["attachment_missing"] is False
+    assert payload["attachment_preview_missing"] is False
+
+
+def test_gemini_submit_fails_closed_when_attachment_metadata_is_missing(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    attachment = tmp_path / "bundle.md"
+    fake_run = tmp_path / "surf-run.sh"
+
+    request.write_text("Use the attached bundle and reply with exactly: gemini attachment smoke\n", encoding="utf-8")
+    attachment.write_text("# Evidence\n\nReadable attachment text.\n", encoding="utf-8")
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  focus.state)
+    printf '{"focusedWindowId":1,"activeTabId":837361258}\\n'
+    ;;
+  gemini_tab)
+    printf 'gemini attachment smoke<<<GEMINI_DONE:test>>>\\n'
+    echo 'ControlledTabID: 837361258' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "bash",
+            str(GEMINI_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--meta-output",
+            str(meta),
+            "--sentinel",
+            "<<<GEMINI_DONE:test>>>",
+            "--tab-id",
+            "837361258",
+            "--no-activate",
+            "--stable-polls",
+            "0",
+            "--timeout",
+            "5",
+            "--attach-file",
+            str(attachment),
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 5
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert payload["failure"] == "attachment_metadata_missing"
+    assert payload["attach_file"] == str(attachment.resolve())
+    assert payload["attachment"] is None
+    assert payload["attachment_missing"] is True
 
 
 @pytest.mark.parametrize(

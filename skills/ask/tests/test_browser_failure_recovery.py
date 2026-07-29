@@ -100,6 +100,30 @@ def test_repo_access_blocked_fails_closed_without_local_readable_bundle(tmp_path
     assert "$ticket to $ask at agent-skills@main" in packet["ticket_instruction"]
 
 
+def test_gemini_attachment_metadata_missing_is_attachment_unavailable(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgemini",
+        failure="Gemini submit failed after response readback",
+        response_text="gemini attachment smoke",
+        raw_text="gemini attachment smoke<<<GEMINI_DONE:test>>>",
+        prompt_text="Use the attached evidence bundle.",
+        submit_meta={
+            "status": "failed",
+            "failure": "attachment_metadata_missing",
+            "attach_file": "/tmp/evidence-bundle.zip",
+            "attachment": None,
+            "attachment_missing": True,
+            "proof_status": "response_proven",
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UNAVAILABLE
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_transport_must_be_repaired"
+    assert "attachment transport" in packet["fallback_instruction"].lower()
+
+
 def test_prompt_too_large_or_stalled_allows_retry_only_with_attachable_bundle(tmp_path: Path) -> None:
     bundle = tmp_path / "review-bundle.md"
     bundle.write_text("# Bundle\n\nReadable local target.", encoding="utf-8")

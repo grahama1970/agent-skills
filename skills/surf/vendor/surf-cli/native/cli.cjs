@@ -3854,7 +3854,7 @@ async function handleResponse(response) {
     if (data.timeoutError) {
       console.error(`TimeoutError: ${data.timeoutError}`);
     }
-    if (tool === "kimi_tab" && data.attachment) {
+    if ((tool === "kimi_tab" || tool === "gemini_tab") && data.attachment) {
       console.error(`Attachment: ${JSON.stringify(data.attachment)}`);
     }
     console.error(`\n[${data.model || 'unknown'} | ${((data.tookMs || 0) / 1000).toFixed(1)}s]`);

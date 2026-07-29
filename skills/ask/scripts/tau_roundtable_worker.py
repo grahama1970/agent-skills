@@ -1613,7 +1613,11 @@ def _classify_browser_failure(
         return BROWSER_SUBMIT_NOT_ACCEPTED
     if _looks_browser_tool_unsupported(haystack):
         return BROWSER_TOOL_UNSUPPORTED
-    if BROWSER_ATTACHMENT_UNAVAILABLE in haystack or _response_denies_attachment_access(response_text):
+    if (
+        BROWSER_ATTACHMENT_UNAVAILABLE in haystack
+        or _browser_attachment_missing_in_meta(submit_meta)
+        or _response_denies_attachment_access(response_text)
+    ):
         return BROWSER_ATTACHMENT_UNAVAILABLE
     if _looks_webgpt_unverified_clean_output(handler, haystack, submit_meta):
         return WEBGPT_UNVERIFIED_CLEAN_OUTPUT
@@ -1717,6 +1721,17 @@ def _response_denies_attachment_access(text: str) -> bool:
         "file was not provided or rendered",
     )
     return any(marker in normalized for marker in markers)
+
+
+def _browser_attachment_missing_in_meta(meta: dict[str, Any]) -> bool:
+    if not isinstance(meta, dict):
+        return False
+    failure = str(meta.get("failure") or "").lower()
+    return (
+        meta.get("attachment_missing") is True
+        or meta.get("attachment_preview_missing") is True
+        or failure in {"attachment_metadata_missing", "attachment_preview_missing"}
+    )
 
 
 def _match_text(value: Any) -> str:

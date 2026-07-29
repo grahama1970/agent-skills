@@ -50,6 +50,7 @@ tab_id=""
 target_url=""
 no_activate=0
 attach_files=()
+attach_file_abs=""
 tab_state_file="${SURF_GEMINI_TAB_STATE:-/tmp/surf-gemini-controlled-tab-id}"
 stall_retry_attempts="${SURF_GEMINI_STALL_RETRY_ATTEMPTS:-1}"
 stall_cooldown_s="${SURF_GEMINI_STALL_COOLDOWN_SECONDS:-120}"
@@ -239,9 +240,9 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" "$attach_file_abs" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, retry_count, retry_attempts, cooldown_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, retry_count, retry_attempts, cooldown_s, attach_file = sys.argv[1:]
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
@@ -253,6 +254,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "attach_file": attach_file or None,
+    "attachment": None,
+    "attachment_missing": bool(attach_file),
+    "attachment_preview_missing": False,
     "stall_retry_count": int(retry_count),
     "stall_retry_attempts": int(retry_attempts),
     "stall_cooldown_seconds": int(cooldown_s),
@@ -316,9 +321,9 @@ if after:
     )
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" "$attach_file_abs" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, retry_count, retry_attempts, cooldown_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, retry_count, retry_attempts, cooldown_s, attach_file = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -326,6 +331,7 @@ tab_id = None
 tab_id_source = None
 activated = None
 tab_was_created = None
+attachment = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -337,7 +343,13 @@ for line in reversed(stderr_text.splitlines()):
         activated = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TabWasCreated:") and tab_was_created is None:
         tab_was_created = line.split(":", 1)[1].strip() == "true"
-    if tab_id is not None and activated is not None and tab_was_created is not None:
+    elif line.startswith("Attachment:") and attachment is None:
+        payload = line.split(":", 1)[1].strip()
+        try:
+            attachment = json.loads(payload)
+        except Exception:
+            attachment = {"parse_error": True, "raw": payload}
+    if tab_id is not None and activated is not None and tab_was_created is not None and (not attach_file or attachment is not None):
         break
 if tab_id is None and requested_tab_id:
     tab_id = requested_tab_id
@@ -380,6 +392,8 @@ no_activate = no_activate_s == "1"
 
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
 activation_violation = no_activate and activated is True
+attachment_missing = bool(attach_file) and not attachment
+attachment_preview_missing = bool(attach_file) and bool(attachment) and attachment.get("previewVisible") is False
 status = "completed" if (
     tab_id
     and not tab_mismatch
@@ -387,6 +401,8 @@ status = "completed" if (
     and (sentinel in raw_text or "StableResponseWithoutSentinel: true" in stderr_text)
     and sentinel not in out_text
     and not activation_violation
+    and not attachment_missing
+    and not attachment_preview_missing
 ) else "failed"
 if status == "completed":
     failure = None
@@ -394,6 +410,10 @@ elif activation_violation:
     failure = "focus_stolen_despite_no_activate"
 elif tab_mismatch:
     failure = "controlled_tab_id_mismatch"
+elif attachment_missing:
+    failure = "attachment_metadata_missing"
+elif attachment_preview_missing:
+    failure = "attachment_preview_missing"
 else:
     failure = "missing_controlled_tab_id_or_contaminated_clean_output"
 pathlib.Path(meta).write_text(json.dumps({
@@ -407,6 +427,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "attach_file": attach_file or None,
+    "attachment": attachment,
+    "attachment_missing": attachment_missing,
+    "attachment_preview_missing": attachment_preview_missing,
     "stall_retry_count": int(retry_count),
     "stall_retry_attempts": int(retry_attempts),
     "stall_cooldown_seconds": int(cooldown_s),
