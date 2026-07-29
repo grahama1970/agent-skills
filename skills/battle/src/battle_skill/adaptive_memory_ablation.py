@@ -2090,7 +2090,7 @@ def _execute_live_trial(
             genomes=genomes,
         )
     except Exception as exc:
-        raise TrialBlocked("artifact_pipeline", str(exc), retryable=False) from exc
+        raise TrialBlocked("artifact_pipeline", str(exc)) from exc
     try:
         judge = _judge_reviewed_generation(
             generation_dir=generation_dir,

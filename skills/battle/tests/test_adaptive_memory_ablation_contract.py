@@ -343,6 +343,45 @@ def test_run_experiment_fresh_mode_rejects_existing_terminal_receipt(
         )
 
 
+def test_retryable_trial_blocker_uses_two_attempts(tmp_path, monkeypatch) -> None:
+    plan, plan_path, _plan_file_sha256 = _write_test_plan(tmp_path)
+    experiment_root = tmp_path / "run"
+
+    monkeypatch.setattr(
+        ablation,
+        "preflight_experiment",
+        lambda **_kwargs: {"approval": "APPROVED_FOR_LIVE"},
+    )
+
+    def fake_execute_live_trial(**_kwargs):
+        raise ablation.TrialBlocked(
+            "artifact_pipeline", "provider materialization was malformed"
+        )
+
+    monkeypatch.setattr(ablation, "_execute_live_trial", fake_execute_live_trial)
+
+    summary = ablation.run_experiment(
+        plan_path=plan_path,
+        source_root=tmp_path / "source",
+        out_dir=experiment_root,
+        memory_base_url="http://127.0.0.1:8601",
+        scillm_base_url="http://localhost:4001",
+        tau_root=tmp_path / "tau",
+    )
+
+    first_trial = sorted(
+        plan["trials"], key=lambda item: (item["replicate"], item["order_index"])
+    )[0]
+    receipt = json.loads(
+        (
+            experiment_root / first_trial["output_relpath"] / "trial-receipt.json"
+        ).read_text()
+    )
+    assert summary["status"] == "BLOCKED"
+    assert [attempt["attempt"] for attempt in receipt["attempts"]] == [1, 2]
+    assert receipt["failure"]["family"] == "artifact_pipeline"
+
+
 class _MemoryResponse:
     def __init__(self, payload: dict) -> None:
         self.payload = payload
