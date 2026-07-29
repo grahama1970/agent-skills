@@ -1470,3 +1470,20 @@ def test_a_worktree_holding_unmerged_work_is_not_reset(tmp_path, monkeypatch) ->
     assert "unmerged" in out and out["unmerged"]
     assert "lose that work" in out["error"]
     assert not any("remove" in c for c in calls), "must not remove a worktree holding work"
+
+
+def test_a_panel_that_could_not_reach_a_provider_names_the_cause(tmp_path) -> None:
+    """A revoked Claude OAuth token surfaced only as "no usable panel verdict";
+    the operator had to dig through recovery packets to find it."""
+    node = tmp_path / "run" / "node-artifacts" / "handler-claude-opus-4-8"
+    node.mkdir(parents=True)
+    (node / "node-receipt.json").write_text(json.dumps(
+        {"node_id": "handler-claude-opus-4-8", "status": "NEEDS_ATTENTION",
+         "failure_code": "scillm_auth_invalid_api_key"}))
+    ok = tmp_path / "run" / "node-artifacts" / "handler-gpt-5-5-xhigh"
+    ok.mkdir(parents=True)
+    (ok / "node-receipt.json").write_text(json.dumps({"node_id": "x", "status": "PASS"}))
+
+    failures = handlers.read_seat_failures(tmp_path)
+
+    assert failures == {"handler-claude-opus-4-8": "scillm_auth_invalid_api_key"}
