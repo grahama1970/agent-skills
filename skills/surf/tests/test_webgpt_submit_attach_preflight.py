@@ -121,6 +121,39 @@ def test_prompt_preflight_does_not_treat_tilde_digit_approximation_as_path(tmp_p
     assert payload["browser_submit_allowed"] is True
 
 
+def test_prompt_preflight_does_not_treat_double_slash_comments_as_paths(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    request.write_text(
+        "Review this TypeScript snippet:\n"
+        "```ts\n"
+        "// This is a comment, not a filesystem path.\n"
+        "const url = 'https://example.test/path'; // keep this URL\n"
+        "```\n",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        [
+            "python3",
+            str(WEBGPT_PROMPT_PREFLIGHT),
+            "--input",
+            str(request),
+            "--json",
+        ],
+        cwd=tmp_path,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["status"] == "pass"
+    assert payload["local_paths"] == []
+    assert payload["browser_submit_allowed"] is True
+
+
 def test_webgpt_submit_allows_warn_preflight_and_records_metadata(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
