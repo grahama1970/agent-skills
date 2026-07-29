@@ -227,12 +227,14 @@ def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: flo
         posture = classify_eval_posture(skill_dir)
         skill_findings = run_validator(skill_dir, skills_root, validator, timeout_seconds)
         eval_findings = [finding for finding in skill_findings if finding.get("rule") == "EVAL001"]
+        recommended_action = recommended_action_for(skill_dir, posture, bool(eval_findings))
         findings.extend(skill_findings)
         skill_reports.append(
             {
                 "skill": skill_dir.name,
                 "eval_posture": posture,
                 "eval_required": bool(eval_findings),
+                "recommended_action": recommended_action,
                 "eval_findings": eval_findings,
             }
         )
@@ -241,6 +243,10 @@ def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: flo
     for item in skill_reports:
         posture = item["eval_posture"]
         posture_counts[posture] = posture_counts.get(posture, 0) + 1
+    action_counts: dict[str, int] = {}
+    for item in skill_reports:
+        action = item["recommended_action"]
+        action_counts[action] = action_counts.get(action, 0) + 1
 
     eval001 = [finding for finding in findings if finding.get("rule") == "EVAL001"]
     return {
@@ -259,11 +265,22 @@ def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: flo
             "total_findings": len(findings),
             "eval001_count": len(eval001),
             "posture_counts": posture_counts,
+            "recommended_action_counts": action_counts,
             "eval001_skills": sorted({finding["skill"] for finding in eval001}),
         },
         "skills": skill_reports,
         "findings": findings,
     }
+
+
+def recommended_action_for(skill_dir: Path, posture: str, eval_required: bool) -> str:
+    if not eval_required:
+        return "none"
+    if posture != "missing":
+        return "strengthen_existing_eval"
+    if (skill_dir / "sanity.sh").exists() or (skill_dir / "run.sh").exists():
+        return "scaffold_fixture"
+    return "document_eval_not_required_or_add_custom_eval"
 
 
 def _entrypoint_command(fixture_dir: Path, entrypoint: Path, *args: str) -> list[str]:

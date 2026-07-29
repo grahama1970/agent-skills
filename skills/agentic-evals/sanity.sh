@@ -79,8 +79,11 @@ report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "agentic_evals.skill_posture_audit.v1"
 assert report["summary"]["skills_checked"] == 2
 assert report["summary"]["eval001_count"] == 1
+assert report["summary"]["recommended_action_counts"]["scaffold_fixture"] == 1
 assert report["summary"]["posture_counts"]["agentic_fixture"] == 1
 assert report["summary"]["posture_counts"]["missing"] == 1
+missing = next(item for item in report["skills"] if item["skill"] == "missing")
+assert missing["recommended_action"] == "scaffold_fixture"
 PY
 
 SCAFFOLD_OUT="$AUDIT_ROOT/missing/fixtures/agentic_eval.json"
