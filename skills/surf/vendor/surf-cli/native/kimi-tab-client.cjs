@@ -74,6 +74,75 @@ function textLooksKimiProviderBusy(text) {
   );
 }
 
+async function setPromptInComposerDom(cdp, prompt) {
+  const encodedPrompt = JSON.stringify(prompt);
+  return await evaluate(
+    cdp,
+    `(() => {
+      ${buildClickDispatcher()}
+      const prompt = ${encodedPrompt};
+      const selectors = [
+        '.chat-input-editor[role="textbox"]',
+        '.chat-input-editor',
+        'textarea[placeholder*="Ask anything"]',
+        'textarea[placeholder*="follow-up"]',
+        'textarea[placeholder*="Add a follow-up"]',
+        'div[class*="editorContentEditable"]',
+        '[role="textbox"]',
+        '[contenteditable="true"]',
+      ];
+      const visible = (node) => {
+        if (!node) return false;
+        const rect = node.getBoundingClientRect();
+        const style = window.getComputedStyle(node);
+        return rect.width > 0
+          && rect.height > 0
+          && style.visibility !== 'hidden'
+          && style.display !== 'none';
+      };
+      const textOf = (node) => node.innerText || node.textContent || node.value || '';
+      const promptStart = prompt.slice(0, 80);
+      const promptEnd = prompt.slice(-80);
+      for (const selector of selectors) {
+        const nodes = Array.from(document.querySelectorAll(selector));
+        for (const node of nodes) {
+          if (!visible(node) || node.hasAttribute('disabled')) continue;
+          dispatchClickSequence(node);
+          if (typeof node.focus === 'function') node.focus();
+          if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
+            const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
+              || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+            if (setter) setter.call(node, '');
+            else node.value = '';
+            node.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
+            if (setter) setter.call(node, prompt);
+            else node.value = prompt;
+            node.dispatchEvent(new InputEvent('input', { bubbles: true, data: prompt, inputType: 'insertFromPaste' }));
+          } else {
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('delete', false, null);
+            const inserted = document.execCommand('insertText', false, prompt);
+            if (!inserted || !textOf(node).includes(promptStart) || !textOf(node).includes(promptEnd)) {
+              node.textContent = prompt;
+              node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, data: prompt, inputType: 'insertFromPaste' }));
+              node.dispatchEvent(new InputEvent('input', { bubbles: true, data: prompt, inputType: 'insertFromPaste' }));
+            }
+          }
+          const text = textOf(node);
+          if (text.includes(promptStart) && text.includes(promptEnd)) {
+            return { ok: true, selector, length: text.length, mode: 'dom_fallback' };
+          }
+        }
+      }
+      return { ok: false };
+    })()`,
+  );
+}
+
 const assistantSnapshotExpression = (sentinel) => {
   const sentinelLiteral = JSON.stringify(sentinel || null);
   return `(() => {
@@ -778,7 +847,10 @@ async function typePrompt(cdp, inputCdp, prompt) {
   if (typed.mode === "focused_editable") {
     await clearFocusedEditor(inputCdp);
     await insertPromptText(inputCdp, prompt);
-    const verified = await verifyPromptInComposer(cdp, prompt);
+    let verified = await verifyPromptInComposer(cdp, prompt);
+    if (!verified?.ok) {
+      verified = await setPromptInComposerDom(cdp, prompt);
+    }
     if (!verified?.ok) {
       throw new Error("Kimi prompt composer did not receive inserted text");
     }
