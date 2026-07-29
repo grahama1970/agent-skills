@@ -63,6 +63,7 @@ from hack.hack_scan_request import create_validate_scan_request_command
 from hack.target_authorization import create_authorization_preflight_command
 from hack.proof_authority import create_prove_proof_authority_command
 from hack.compose_policy import create_compose_policy_command, create_compose_policy_matrix_command
+from hack.target_environment import create_prove_sterile_target_environment_command
 
 from rich.console import Console
 
@@ -130,6 +131,7 @@ app.command(name="authorization-preflight")(create_authorization_preflight_comma
 app.command(name="prove-proof-authority")(create_prove_proof_authority_command())
 app.command(name="compose-policy")(create_compose_policy_command())
 app.command(name="compose-policy-matrix")(create_compose_policy_matrix_command())
+app.command(name="prove-sterile-target-environment")(create_prove_sterile_target_environment_command())
 
 
 @app.command()

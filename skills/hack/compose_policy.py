@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -84,6 +85,7 @@ def normalize_compose_with_docker(
 ) -> dict[str, Any]:
     """Normalize Compose through ``docker compose config --format json``."""
 
+    compose_path = compose_path.resolve()
     with tempfile.NamedTemporaryFile(prefix="hack-compose-empty-", suffix=".env") as empty_env:
         empty_env_file = Path(empty_env.name)
         command = [
@@ -122,6 +124,8 @@ def compile_compose_policy(
     receipt_out: Path,
     source_root: Path | None = None,
     session_root: Path | None = None,
+    compose_env: dict[str, str] | None = None,
+    allowed_variable_names: set[str] | None = None,
     normalizer: Callable[[Path], dict[str, Any]] | None = None,
 ) -> ComposePolicyResult:
     """Compile, evaluate, and materialize a sanitized Compose file."""
@@ -140,8 +144,8 @@ def compile_compose_policy(
     sanitized_hash: str | None = None
 
     try:
-        errors.extend(raw_compose_rejections(source_compose_path))
-        normalized_model = normalizer(source_compose_path) if normalizer else normalize_compose_with_docker(source_compose_path)
+        errors.extend(raw_compose_rejections(source_compose_path, allowed_variable_names=allowed_variable_names or set()))
+        normalized_model = normalizer(source_compose_path) if normalizer else normalize_compose_with_docker(source_compose_path, env=compose_env)
         normalized_hash = json_sha256(normalized_model)
         sanitized_model, allowed_features, model_errors = sanitize_compose_model(
             normalized_model,
@@ -241,9 +245,10 @@ def sanitize_compose_model(
     return {"services": sanitized_services}, allowed, errors
 
 
-def raw_compose_rejections(compose_path: Path) -> list[dict[str, str]]:
+def raw_compose_rejections(compose_path: Path, *, allowed_variable_names: set[str] | None = None) -> list[dict[str, str]]:
     """Reject source constructs that Compose normalization can erase."""
 
+    allowed_variable_names = allowed_variable_names or set()
     text = compose_path.read_text(encoding="utf-8", errors="replace")
     checks = {
         "env_file": "ENV_FILE_DENIED",
@@ -254,9 +259,18 @@ def raw_compose_rejections(compose_path: Path) -> list[dict[str, str]]:
     for key, code in checks.items():
         if re_search_key(text, key):
             errors.append(reject("", key, code, f"{key} is denied before Compose normalization"))
-    if "${" in text:
-        errors.append(reject("", "interpolation", "SHELL_INTERPOLATION_DENIED", "shell interpolation is denied in target Compose input"))
+    for variable in sorted(extract_variable_references(text) - allowed_variable_names):
+        errors.append(reject("", "interpolation", "UNDECLARED_VARIABLE_REFERENCE", f"{variable} is not declared for target Compose interpolation"))
     return errors
+
+
+def extract_variable_references(text: str) -> set[str]:
+    """Return Compose-style ``${VAR}`` interpolation references."""
+
+    refs: set[str] = set()
+    for match in re.finditer(r"\$\{([^}:?+-]+)(?::?[-+?][^}]*)?\}", text):
+        refs.add(match.group(1))
+    return refs
 
 
 def re_search_key(text: str, key: str) -> bool:

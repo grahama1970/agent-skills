@@ -361,6 +361,28 @@ the target/session boundary. `session-audit` then runs `docker compose up` only
 against the Hack-generated sanitized Compose artifact and records
 `hack.compose_policy_receipt.v1` in the session reports.
 
+### Sterile Target Environment Gate
+
+Target-controlled Compose and container launches must not inherit the operator
+environment. Hack builds a separate target-runtime environment from an empty map
+and adds only generated non-secret variables needed by the authorized local
+scenario.
+
+```bash
+HACK_TEST_SECRET='must-not-cross-boundary' \
+OPENAI_API_KEY='must-not-cross-boundary' \
+./run.sh prove-sterile-target-environment \
+  --authorization-manifest fixtures/authorization/valid-local.json \
+  --compose fixtures/sterile-environment/safe/docker-compose.yml \
+  --out /tmp/hack-sterile-env-proof
+```
+
+The proof writes `hack.target_environment_receipt.v1`, normalized and sanitized
+Compose artifacts, target container environment readback, target-state config
+readback, and sentinel checks proving secret-looking parent process names and
+values did not cross the target boundary. Compose references to undeclared
+variables fail closed before target launch through the Compose policy gate.
+
 ### Proof Authority Boundary
 
 Hack probe output is split into observation and validation authorities:

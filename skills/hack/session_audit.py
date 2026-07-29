@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import time
 from dataclasses import dataclass, replace
+from hashlib import sha256
 from pathlib import Path
 from typing import Callable
 from urllib.parse import urlparse
@@ -26,6 +27,12 @@ from hack.proof_authority import (
     write_json as write_authority_json,
 )
 from hack.self_improve_loop import ARTIFACT_ROOT
+from hack.target_environment import (
+    build_sterile_target_environment,
+    redaction_pairs,
+    redact_text,
+    write_target_environment_receipt,
+)
 
 console = Console()
 
@@ -308,6 +315,8 @@ def run_session_audit(
             receipt_out=policy_receipt,
             source_root=paths.repo_dir,
             session_root=paths.session_dir,
+            compose_env=target_compose_env,
+            allowed_variable_names=set(target_compose_env),
         )
         if policy_result.status != "PASS" or policy_result.sanitized_compose_path is None:
             raise RuntimeError(f"target compose rejected by Hack policy; see {policy_receipt}")
@@ -317,6 +326,22 @@ def run_session_audit(
             source_compose_path=launch_plan.compose_path,
             compose_policy_receipt_path=policy_receipt,
             reason=f"{launch_plan.reason}; sanitized by Hack Compose policy",
+        )
+        write_target_environment_receipt(
+            receipt_out=paths.reports_dir / "target-environment-receipt.json",
+            authorization_manifest=authorization_manifest,
+            sanitized_compose_path=policy_result.sanitized_compose_path,
+            compose_source_path=launch_plan.source_compose_path or launch_plan.compose_path,
+            target_env=target_compose_env,
+            metadata={
+                "generated_value_hashes": {
+                    key: sha256(value.encode("utf-8")).hexdigest()
+                    for key, value in target_compose_env.items()
+                    if key != "PATH"
+                }
+            },
+            rejected_variable_references=[],
+            redaction_count=0,
         )
     write_target_launch_plan(paths, launch_plan)
     compose_path = launch_plan.compose_path
@@ -706,32 +731,17 @@ def materialize_target_compose_env(
     paths: SessionPaths,
     launch_plan: TargetLaunchPlan,
 ) -> dict[str, str]:
-    """Create a sanitized compose environment with per-session target state."""
+    """Create a sterile compose environment with per-session target state."""
 
-    target_state = paths.session_dir / "target-state"
-    home_dir = target_state / "home"
-    config_dir = target_state / "config"
-    workspace_dir = target_state / "workspace"
-    for directory in (home_dir, config_dir, workspace_dir):
-        directory.mkdir(parents=True, exist_ok=True)
-    seed_openclaw_hardening_config(config_dir, workspace_dir, gateway_port=launch_plan.port)
-
-    env = {
-        key: value
-        for key, value in os.environ.items()
-        if key not in {"VIRTUAL_ENV", "HOME"}
-    }
-    env.update(
-        {
-            "HOME": str(home_dir),
-            "OPENCLAW_CONFIG_DIR": str(config_dir),
-            "OPENCLAW_WORKSPACE_DIR": str(workspace_dir),
-            "OPENCLAW_GATEWAY_PORT": launch_plan.port,
-            "OPENCLAW_BRIDGE_PORT": str(int(launch_plan.port) + 1) if launch_plan.port.isdigit() else "18790",
-            "OPENCLAW_GATEWAY_HOST": "127.0.0.1",
-            "OPENCLAW_GATEWAY_BIND": "lan",
-            "OPENCLAW_HACK_HARDENING_VALIDATION": "1",
-        }
+    env, _metadata = build_sterile_target_environment(
+        session_dir=paths.session_dir,
+        gateway_port=launch_plan.port,
+        inherited_environment=dict(os.environ),
+    )
+    seed_openclaw_hardening_config(
+        Path(env["OPENCLAW_CONFIG_DIR"]),
+        Path(env["OPENCLAW_WORKSPACE_DIR"]),
+        gateway_port=launch_plan.port,
     )
     write_target_compose_env_report(paths, env)
     return env
@@ -1401,13 +1411,18 @@ def run_logged(
         cwd=str(cwd) if cwd is not None else None,
         check=False,
     )
+    secret_pairs = redaction_pairs()
+    rendered_command, command_redactions = redact_text(" ".join(command), secret_pairs)
+    rendered_stdout, stdout_redactions = redact_text(result.stdout, secret_pairs)
+    rendered_stderr, stderr_redactions = redact_text(result.stderr, secret_pairs)
     log_path.write_text(
-        "$ " + " ".join(command) + "\n\n"
+        "$ " + rendered_command + "\n\n"
         + "## stdout\n"
-        + result.stdout
+        + rendered_stdout
         + "\n## stderr\n"
-        + result.stderr
+        + rendered_stderr
         + f"\n## exit_code\n{result.returncode}\n"
+        + f"## redaction_count\n{command_redactions + stdout_redactions + stderr_redactions}\n"
     )
     command_result = CommandResult(
         command=tuple(command),
