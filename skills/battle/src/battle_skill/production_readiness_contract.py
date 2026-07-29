@@ -11,8 +11,13 @@ from .packaged_deployment_smoke import _now_utc
 
 REQUIRED_EXTERNAL_RECEIPTS = {
     "production_infrastructure": "Production infrastructure deployment receipt is missing or not PASS.",
-    "production_websocket": "Production WebSocket TLS/auth/fanout/reconnect receipt is missing or not PASS.",
+    "production_websocket": "Production-shaped WebSocket auth/fanout/reconnect receipt is missing or not PASS.",
     "unbounded_swarm": "Unbounded swarm execution receipt is missing or not PASS.",
+}
+EXPECTED_EXTERNAL_SCHEMAS = {
+    "production_infrastructure": "battle.production_infrastructure_deployment_proof.v1",
+    "production_websocket": "battle.production_websocket_transport_proof.v1",
+    "unbounded_swarm": "battle.unbounded_swarm_execution_proof.v1",
 }
 
 
@@ -66,6 +71,10 @@ def validate_production_readiness(
             )
 
     status = "FAIL" if errors else "BLOCKED" if blockers else "PASS"
+    websocket_passed = any(
+        check["id"] == "production_websocket" and check["status"] == "PASS"
+        for check in external_checks
+    )
     receipt = {
         "schema": "battle.production_readiness_contract.v1",
         "status": status,
@@ -85,16 +94,15 @@ def validate_production_readiness(
             "proves": [
                 "Local Battle frontend/backend container receipt is structurally present and fail-closed checked.",
                 "Production readiness remains blocked unless external production receipts are supplied.",
-            ],
-            "does_not_prove": [
-                "Production infrastructure is deployed.",
-                "Production WebSocket TLS, auth, fanout, compression, or reconnect behavior.",
-                "Cloud, Kubernetes, DNS, certificate, ingress, or secret-management behavior.",
-                "Unbounded swarm execution works.",
-                "Battle or RelayForge is production ready.",
             ]
-            if blockers
-            else [],
+            + (
+                [
+                    "A production-shaped local WebSocket receipt proves auth rejection, reconnect resume, and two-client fanout on the local adapter."
+                ]
+                if websocket_passed
+                else []
+            ),
+            "does_not_prove": _does_not_prove(blockers=blockers, websocket_passed=websocket_passed),
         },
         "created_at": _now_utc(),
     }
@@ -171,12 +179,20 @@ def _external_check(name: str, path: Path | None) -> dict[str, Any]:
     if path is None:
         return {"id": name, "status": "MISSING", "path": None}
     receipt = _load_receipt(path)
-    status = "PASS" if receipt.get("status") == "PASS" and receipt.get("mocked") is False else "BLOCKED"
+    expected_schema = EXPECTED_EXTERNAL_SCHEMAS[name]
+    status = (
+        "PASS"
+        if receipt.get("schema") == expected_schema
+        and receipt.get("status") == "PASS"
+        and receipt.get("mocked") is False
+        else "BLOCKED"
+    )
     return {
         "id": name,
         "status": status,
         "path": str(path.resolve()),
         "schema": receipt.get("schema"),
+        "expected_schema": expected_schema,
         "mocked": receipt.get("mocked"),
     }
 
@@ -193,3 +209,25 @@ def _package_source_commit(receipt: dict[str, Any]) -> str | None:
     package = receipt.get("package") if isinstance(receipt.get("package"), dict) else {}
     value = package.get("source_commit")
     return value if isinstance(value, str) and value else None
+
+
+def _does_not_prove(*, blockers: list[dict[str, str]], websocket_passed: bool) -> list[str]:
+    if not blockers:
+        return []
+    claims = [
+        "Production infrastructure is deployed.",
+        "Cloud, Kubernetes, DNS, certificate, ingress, or secret-management behavior.",
+        "Unbounded swarm execution works.",
+        "Battle or RelayForge is production ready.",
+    ]
+    if websocket_passed:
+        claims.insert(
+            2,
+            "Production TLS/certificate-backed WebSocket deployment or production-scale fanout capacity.",
+        )
+    else:
+        claims.insert(
+            2,
+            "Production-shaped WebSocket auth, fanout, compression, or reconnect behavior.",
+        )
+    return claims

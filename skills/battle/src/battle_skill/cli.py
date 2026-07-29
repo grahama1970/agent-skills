@@ -2029,6 +2029,41 @@ def prove_live_transport_server(
     console.print_json(data=receipt)
 
 
+@app.command("prove-production-websocket-transport")
+def prove_production_websocket_transport(
+    fixture: Path = typer.Option(
+        ...,
+        "--fixture",
+        help="Normalized UX fixture for the production-shaped WebSocket proof.",
+    ),
+    battle_id: str = typer.Option(
+        "battle-004",
+        "--battle-id",
+        help="Battle id for the production-shaped WebSocket proof.",
+    ),
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the production-shaped WebSocket proof receipt.",
+    ),
+    auth_token: str = typer.Option(
+        "battle-local-production-websocket-proof-token",
+        "--auth-token",
+        help="Local proof token. Stored only as SHA-256 in the receipt.",
+    ),
+):
+    """Prove local WebSocket auth, reconnect, and fanout gates."""
+    from .live_transport_server import prove_production_websocket_transport as _prove
+
+    receipt = _prove(
+        fixture_path=fixture,
+        battle_id=battle_id,
+        out_dir=out,
+        auth_token=auth_token,
+    )
+    console.print_json(data=receipt)
+
+
 @app.command("prove-packaged-deployment-smoke")
 def prove_packaged_deployment_smoke(
     out: Path = typer.Option(

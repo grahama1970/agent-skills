@@ -1,0 +1,50 @@
+{
+  "auth": {
+    "bad_token_rejection_code": 1008,
+    "mode": "bearer_header_or_access_token_query",
+    "token_sha256": "ec423bfd5979319b36afb644b152de52efb78b6e90db832117bc9e7509168938",
+    "unauthenticated_rejection_code": 1008
+  },
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "does_not_prove": [
+      "Production infrastructure is deployed.",
+      "Production TLS, certificates, DNS, ingress, or secret management are configured.",
+      "Production-scale fanout capacity or load behavior.",
+      "Browser session identity, OAuth, cookie, CSRF, or tenant authorization.",
+      "Unbounded swarm execution works.",
+      "Battle or RelayForge is production ready."
+    ],
+    "proves": [
+      "The local Battle WebSocket adapter can require authorization before emitting Battle data.",
+      "The local Battle WebSocket adapter rejects missing and bad authorization before emitting Battle data.",
+      "The local Battle WebSocket adapter supports snapshot-first reconnect with Last-Event-ID resume.",
+      "The local Battle WebSocket adapter fails closed on impossible future Last-Event-ID values.",
+      "Two concurrent authorized clients receive identical snapshot/event streams."
+    ]
+  },
+  "errors": [],
+  "event_count": 36,
+  "fanout": {
+    "client_count": 2,
+    "identical_streams": true
+  },
+  "fixture_ref": "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json",
+  "last_seq": 36,
+  "live": "local_authenticated_websocket_fanout_reconnect_adapter",
+  "mocked": false,
+  "query_token_matches_bearer": true,
+  "reconnect": {
+    "bad_resume_rejection_code": 1008,
+    "resume_from_last_event_id": 2,
+    "resumed_event_count": 34,
+    "snapshot_first_after_resume": true
+  },
+  "run_id": "arena-parent-spawn-20260707T220426Z",
+  "schema": "battle.production_websocket_transport_proof.v1",
+  "status": "PASS",
+  "websocket_endpoint": "/battle/live/battle-004/ws",
+  "websocket_matches_source_events": true,
+  "websocket_snapshot_first": true,
+  "websocket_url": "ws://127.0.0.1:33315/battle/live/battle-004/ws"
+}

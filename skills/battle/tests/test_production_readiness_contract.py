@@ -43,9 +43,18 @@ def test_production_readiness_fails_on_bad_local_container_receipt(tmp_path: Pat
 
 def test_production_readiness_passes_with_all_required_receipts(tmp_path: Path) -> None:
     containerized = _write_containerized_receipt(tmp_path / "containerized.json")
-    infrastructure = _write_external_receipt(tmp_path / "infrastructure.json")
-    websocket = _write_external_receipt(tmp_path / "websocket.json")
-    swarm = _write_external_receipt(tmp_path / "swarm.json")
+    infrastructure = _write_external_receipt(
+        tmp_path / "infrastructure.json",
+        schema="battle.production_infrastructure_deployment_proof.v1",
+    )
+    websocket = _write_external_receipt(
+        tmp_path / "websocket.json",
+        schema="battle.production_websocket_transport_proof.v1",
+    )
+    swarm = _write_external_receipt(
+        tmp_path / "swarm.json",
+        schema="battle.unbounded_swarm_execution_proof.v1",
+    )
 
     receipt = validate_production_readiness(
         out_dir=tmp_path / "out",
@@ -59,6 +68,26 @@ def test_production_readiness_passes_with_all_required_receipts(tmp_path: Path) 
     assert receipt["status"] == "PASS"
     assert receipt["blockers"] == []
     assert [check["status"] for check in receipt["external_checks"]] == ["PASS", "PASS", "PASS"]
+
+
+def test_production_readiness_blocks_wrong_external_schema(tmp_path: Path) -> None:
+    containerized = _write_containerized_receipt(tmp_path / "containerized.json")
+    websocket = _write_external_receipt(
+        tmp_path / "websocket.json",
+        schema="example.external_proof.v1",
+    )
+
+    receipt = validate_production_readiness(
+        out_dir=tmp_path / "out",
+        repo_root=Path.cwd().parents[1],
+        containerized_receipt=containerized,
+        production_websocket_receipt=websocket,
+    )
+
+    websocket_check = next(check for check in receipt["external_checks"] if check["id"] == "production_websocket")
+    assert receipt["status"] == "BLOCKED"
+    assert websocket_check["status"] == "BLOCKED"
+    assert websocket_check["expected_schema"] == "battle.production_websocket_transport_proof.v1"
 
 
 def _write_containerized_receipt(path: Path, *, status: str = "PASS") -> Path:
@@ -90,11 +119,11 @@ def _write_containerized_receipt(path: Path, *, status: str = "PASS") -> Path:
     return path
 
 
-def _write_external_receipt(path: Path) -> Path:
+def _write_external_receipt(path: Path, *, schema: str) -> Path:
     path.write_text(
         json.dumps(
             {
-                "schema": "example.external_proof.v1",
+                "schema": schema,
                 "status": "PASS",
                 "mocked": False,
             }

@@ -8,13 +8,14 @@ runtime directories; the source of truth remains the normalized fixture.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
 from websockets.exceptions import ConnectionClosed
@@ -186,16 +187,35 @@ def create_live_websocket_transport_server(
     source: LiveTransportSource,
     host: str = "127.0.0.1",
     port: int = 0,
+    auth_token: str | None = None,
 ) -> WebSocketServer:
     """Create a WebSocket server for snapshot-first Battle live transport."""
 
     def handler(connection: ServerConnection) -> None:
-        request_path = urlsplit(connection.request.path).path
+        request = urlsplit(connection.request.path)
+        request_path = request.path
         if request_path != source.websocket_endpoint:
             connection.close(code=1008, reason="unsupported battle live websocket path")
             return
+        if auth_token is not None and not _websocket_authorized(
+            request_path=connection.request.path,
+            headers=connection.request.headers,
+            token=auth_token,
+        ):
+            connection.close(code=1008, reason="battle live websocket authorization failed")
+            return
+        try:
+            start_after = _parse_last_event_id(
+                connection.request.headers.get("Last-Event-ID"),
+                last_seq=len(source.events),
+            )
+        except ValueError as exc:
+            connection.close(code=1008, reason=str(exc))
+            return
         connection.send(json.dumps(source.snapshot, sort_keys=True))
         for event in source.events:
+            if event["seq"] <= start_after:
+                continue
             connection.send(json.dumps(event, sort_keys=True))
         connection.close(code=1000, reason="battle live websocket stream complete")
 
@@ -381,6 +401,165 @@ def prove_live_transport_server(
     return receipt
 
 
+def prove_production_websocket_transport(
+    *,
+    fixture_path: Path,
+    battle_id: str,
+    out_dir: Path,
+    host: str = "127.0.0.1",
+    auth_token: str = "battle-local-production-websocket-proof-token",
+) -> dict[str, Any]:
+    """Prove production-shaped WebSocket auth, resume, and fanout gates locally."""
+
+    source = build_live_transport_source(fixture_path=fixture_path, battle_id=battle_id)
+    websocket_server = create_live_websocket_transport_server(
+        source=source,
+        host=host,
+        port=0,
+        auth_token=auth_token,
+    )
+    websocket_port = int(websocket_server.socket.getsockname()[1])
+    websocket_thread = threading.Thread(
+        target=websocket_server.serve_forever,
+        name="battle-production-websocket-proof",
+        daemon=True,
+    )
+    websocket_thread.start()
+    websocket_url = f"ws://{host}:{websocket_port}{source.websocket_endpoint}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        authorized_payloads = _websocket_payloads_with_headers(
+            websocket_url,
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        query_authorized_payloads = _websocket_payloads_with_headers(
+            f"{websocket_url}?access_token={auth_token}",
+            headers=None,
+        )
+        resumed_payloads = _websocket_payloads_with_headers(
+            websocket_url,
+            headers={
+                "Authorization": f"Bearer {auth_token}",
+                "Last-Event-ID": "2",
+            },
+        )
+        unauthenticated_rejection = _websocket_rejection_code(websocket_url, headers=None)
+        bad_token_rejection = _websocket_rejection_code(
+            websocket_url,
+            headers={"Authorization": "Bearer wrong-token"},
+        )
+        bad_resume_rejection = _websocket_rejection_code(
+            websocket_url,
+            headers={
+                "Authorization": f"Bearer {auth_token}",
+                "Last-Event-ID": str(len(source.events) + 10),
+            },
+        )
+        fanout_payloads = _concurrent_websocket_payloads(
+            websocket_url=websocket_url,
+            headers={"Authorization": f"Bearer {auth_token}"},
+            client_count=2,
+        )
+    finally:
+        websocket_server.shutdown()
+        websocket_thread.join(timeout=5)
+
+    authorized_snapshot = authorized_payloads[0] if authorized_payloads else {}
+    authorized_events = authorized_payloads[1:]
+    resumed_snapshot = resumed_payloads[0] if resumed_payloads else {}
+    resumed_events = resumed_payloads[1:]
+    query_authorized_events = query_authorized_payloads[1:]
+    _assert_no_raw_path_leak(authorized_snapshot, authorized_events)
+    _assert_no_raw_path_leak(resumed_snapshot, resumed_events)
+
+    errors: list[str] = []
+    if authorized_snapshot != source.snapshot:
+        errors.append("authorized WebSocket first message did not match source snapshot")
+    if authorized_events != source.events:
+        errors.append("authorized WebSocket events did not match source events")
+    if query_authorized_payloads != authorized_payloads:
+        errors.append("query-token authorized WebSocket payloads did not match bearer-token payloads")
+    if resumed_snapshot != source.snapshot:
+        errors.append("resumed WebSocket first message did not match source snapshot")
+    if resumed_events != source.events[2:]:
+        errors.append("resumed WebSocket did not skip Last-Event-ID acknowledged events")
+    if unauthenticated_rejection != 1008:
+        errors.append("unauthenticated WebSocket connection did not fail closed with policy violation")
+    if bad_token_rejection != 1008:
+        errors.append("bad-token WebSocket connection did not fail closed with policy violation")
+    if bad_resume_rejection != 1008:
+        errors.append("bad Last-Event-ID WebSocket connection did not fail closed with policy violation")
+    if len(fanout_payloads) != 2:
+        errors.append("fanout proof did not collect two client streams")
+    elif fanout_payloads[0] != authorized_payloads or fanout_payloads[1] != authorized_payloads:
+        errors.append("fanout clients did not receive identical snapshot/event streams")
+
+    receipt = {
+        "schema": "battle.production_websocket_transport_proof.v1",
+        "status": "PASS" if not errors else "FAIL",
+        "mocked": False,
+        "live": "local_authenticated_websocket_fanout_reconnect_adapter",
+        "battle_id": battle_id,
+        "run_id": source.run_id,
+        "fixture_ref": source.fixture_path,
+        "websocket_endpoint": source.websocket_endpoint,
+        "websocket_url": websocket_url,
+        "auth": {
+            "mode": "bearer_header_or_access_token_query",
+            "token_sha256": hashlib.sha256(auth_token.encode("utf-8")).hexdigest(),
+            "unauthenticated_rejection_code": unauthenticated_rejection,
+            "bad_token_rejection_code": bad_token_rejection,
+        },
+        "reconnect": {
+            "resume_from_last_event_id": 2,
+            "resumed_event_count": len(resumed_events),
+            "bad_resume_rejection_code": bad_resume_rejection,
+            "snapshot_first_after_resume": resumed_snapshot == source.snapshot,
+        },
+        "fanout": {
+            "client_count": len(fanout_payloads),
+            "identical_streams": len(fanout_payloads) == 2
+            and all(payloads == authorized_payloads for payloads in fanout_payloads),
+        },
+        "event_count": len(authorized_events),
+        "last_seq": source.snapshot.get("last_seq"),
+        "websocket_snapshot_first": authorized_snapshot == source.snapshot,
+        "websocket_matches_source_events": authorized_events == source.events,
+        "query_token_matches_bearer": query_authorized_payloads == authorized_payloads,
+        "errors": errors,
+        "claim_boundary": {
+            "proves": [
+                "The local Battle WebSocket adapter can require authorization before emitting Battle data.",
+                "The local Battle WebSocket adapter rejects missing and bad authorization before emitting Battle data.",
+                "The local Battle WebSocket adapter supports snapshot-first reconnect with Last-Event-ID resume.",
+                "The local Battle WebSocket adapter fails closed on impossible future Last-Event-ID values.",
+                "Two concurrent authorized clients receive identical snapshot/event streams.",
+            ],
+            "does_not_prove": [
+                "Production infrastructure is deployed.",
+                "Production TLS, certificates, DNS, ingress, or secret management are configured.",
+                "Production-scale fanout capacity or load behavior.",
+                "Browser session identity, OAuth, cookie, CSRF, or tenant authorization.",
+                "Unbounded swarm execution works.",
+                "Battle or RelayForge is production ready.",
+            ],
+        },
+    }
+    _write_json(out_dir / "production-websocket-transport-proof.json", receipt)
+    _write_json(out_dir / "authorized-snapshot-response.json", authorized_snapshot)
+    (out_dir / "authorized-events.jsonl").write_text(
+        "".join(json.dumps(event, sort_keys=True) + "\n" for event in authorized_events),
+        encoding="utf-8",
+    )
+    (out_dir / "resumed-events.jsonl").write_text(
+        "".join(json.dumps(event, sort_keys=True) + "\n" for event in resumed_events),
+        encoding="utf-8",
+    )
+    if errors:
+        raise ValueError("\n".join(errors))
+    return receipt
+
+
 def _validate_ordered_events(*, events: list[dict[str, Any]], battle_id: str) -> None:
     if not events:
         raise ValueError("live transport source must contain at least one event")
@@ -435,8 +614,22 @@ def _parse_sse_events(text: str) -> list[dict[str, Any]]:
 
 
 def _websocket_payloads(url: str) -> list[dict[str, Any]]:
+    return _websocket_payloads_with_headers(url, headers=None)
+
+
+def _websocket_payloads_with_headers(
+    url: str,
+    *,
+    headers: dict[str, str] | None,
+) -> list[dict[str, Any]]:
     payloads: list[dict[str, Any]] = []
-    with websocket_connect(url, open_timeout=10, close_timeout=5, max_size=4 * 1024 * 1024) as connection:
+    with websocket_connect(
+        url,
+        additional_headers=headers,
+        open_timeout=10,
+        close_timeout=5,
+        max_size=4 * 1024 * 1024,
+    ) as connection:
         while True:
             try:
                 message = connection.recv(timeout=10)
@@ -446,6 +639,61 @@ def _websocket_payloads(url: str) -> list[dict[str, Any]]:
                 raise ValueError("Battle WebSocket transport only accepts JSON text frames")
             payloads.append(json.loads(message))
     return payloads
+
+
+def _websocket_authorized(*, request_path: str, headers: Any, token: str) -> bool:
+    authorization = headers.get("Authorization")
+    if authorization == f"Bearer {token}":
+        return True
+    query = parse_qs(urlsplit(request_path).query)
+    return token in query.get("access_token", [])
+
+
+def _websocket_rejection_code(url: str, *, headers: dict[str, str] | None) -> int | None:
+    with websocket_connect(
+        url,
+        additional_headers=headers,
+        open_timeout=10,
+        close_timeout=5,
+        max_size=4 * 1024 * 1024,
+    ) as connection:
+        try:
+            message = connection.recv(timeout=10)
+        except ConnectionClosed as exc:
+            return exc.rcvd.code if exc.rcvd is not None else None
+        raise ValueError(f"expected WebSocket rejection, received payload: {message!r}")
+
+
+def _concurrent_websocket_payloads(
+    *,
+    websocket_url: str,
+    headers: dict[str, str],
+    client_count: int,
+) -> list[list[dict[str, Any]]]:
+    barrier = threading.Barrier(client_count)
+    results: list[list[dict[str, Any]] | None] = [None] * client_count
+    errors: list[BaseException] = []
+
+    def worker(index: int) -> None:
+        try:
+            barrier.wait(timeout=10)
+            results[index] = _websocket_payloads_with_headers(websocket_url, headers=headers)
+        except BaseException as exc:  # noqa: BLE001 - propagate worker error after join
+            errors.append(exc)
+
+    threads = [
+        threading.Thread(target=worker, args=(index,), name=f"battle-ws-fanout-{index}", daemon=True)
+        for index in range(client_count)
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=30)
+    if errors:
+        raise errors[0]
+    if any(result is None for result in results):
+        raise TimeoutError("timed out waiting for WebSocket fanout clients")
+    return [result for result in results if result is not None]
 
 
 def _assert_no_raw_path_leak(snapshot: dict[str, Any], events: list[dict[str, Any]]) -> None:

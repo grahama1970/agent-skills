@@ -130,11 +130,33 @@ New bounded receipts on `main`:
      `production_websocket_missing_or_not_pass`,
      `unbounded_swarm_missing_or_not_pass`
 
+6. Production-shaped local WebSocket proof:
+   `skills/battle/local/production-websocket-transport-20260729-next1/production-websocket-transport-proof.json`
+   - `status`: `PASS`
+   - `mocked`: `false`
+   - `live`: `local_authenticated_websocket_fanout_reconnect_adapter`
+   - missing auth rejection: `1008`
+   - bad token rejection: `1008`
+   - reconnect from `Last-Event-ID: 2`: `34` events
+   - impossible future `Last-Event-ID` rejection: `1008`
+   - fanout: `2` clients with identical streams
+
+7. Updated fail-closed production-readiness contract with WebSocket proof attached:
+   `skills/battle/local/production-readiness-contract-20260729-next2/production-readiness-contract.json`
+   - `status`: `BLOCKED`
+   - `mocked`: `false`
+   - local working frontend/backend status: `PASS`
+   - production WebSocket receipt status: `PASS`
+   - remaining blockers:
+     `production_infrastructure_missing_or_not_pass`,
+     `unbounded_swarm_missing_or_not_pass`
+
 The containerized proof may claim only local Docker container packaging and
 mapped local frontend/backend execution. It still must not claim production
-infrastructure, TLS/auth/fanout/reconnect behavior, cloud/Kubernetes/DNS/secret
-management, unbounded swarm execution, Battle/RelayForge production readiness,
-six-trial qualification, factorial effects, or cross-target generalization.
+infrastructure, TLS/certificate/ingress/secret management, production-scale
+fanout capacity, unbounded swarm execution, Battle/RelayForge production
+readiness, six-trial qualification, factorial effects, or cross-target
+generalization.
 
 ## Proof Receipts
 
