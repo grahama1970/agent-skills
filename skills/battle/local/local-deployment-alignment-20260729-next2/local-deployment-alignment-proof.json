@@ -1,0 +1,36 @@
+{
+  "activated": true,
+  "authorized_by": "graham_prior_goal_permission_20260729",
+  "branch": "main",
+  "claim_boundary": {
+    "does_not_prove": [
+      "Cloud, Kubernetes, DNS, certificate, ingress, or secret-management behavior.",
+      "Production TLS/certificate-backed WebSocket deployment or production-scale fanout capacity.",
+      "Mathematically infinite swarm execution or production cluster autoscaling.",
+      "Battle or RelayForge is production ready."
+    ],
+    "proves": [
+      "A local filesystem release was cut from the origin/main commit.",
+      "The deployment-root current symlink resolves to that local release.",
+      "The active local release tree digest matches a fresh git archive extraction of the same commit."
+    ]
+  },
+  "commit": "d85b13e7998b1cd7d9a9945b0d63aa1fd3c016b0",
+  "created_at": "2026-07-29T22:12:54Z",
+  "current_digest": "d74d5718682849557e82bf5344c258c3103e14567989ed198da1b5065d24561b",
+  "current_symlink": "/mnt/storage12tb/deployments/agent-skills/current",
+  "current_symlink_raw_before": "/mnt/storage12tb/deployments/agent-skills/releases/995ea0ad8",
+  "current_symlink_resolved_after": "/mnt/storage12tb/deployments/agent-skills/releases/d85b13e7998b",
+  "current_symlink_resolved_before": "/mnt/storage12tb/deployments/agent-skills/releases/995ea0ad8",
+  "deployment_root": "/mnt/storage12tb/deployments/agent-skills",
+  "errors": [],
+  "expected_digest": "d74d5718682849557e82bf5344c258c3103e14567989ed198da1b5065d24561b",
+  "live": "local_filesystem_release_cut_and_symlink_readback",
+  "mocked": false,
+  "origin_main": "d85b13e7998b1cd7d9a9945b0d63aa1fd3c016b0",
+  "release_digest": "d74d5718682849557e82bf5344c258c3103e14567989ed198da1b5065d24561b",
+  "release_dir": "/mnt/storage12tb/deployments/agent-skills/releases/d85b13e7998b",
+  "repo_root": "/home/graham/workspace/experiments/agent-skills-main-clean",
+  "schema": "battle.local_deployment_alignment_proof.v1",
+  "status": "PASS"
+}

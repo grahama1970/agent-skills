@@ -1,6 +1,6 @@
 # Battle Handoff - main branch only
 
-Timestamp: 2026-07-29T21:55Z
+Timestamp: 2026-07-29T22:16Z
 
 Branch rule: work only in `/home/graham/workspace/experiments/agent-skills-main-clean`
 on branch `main`. Do not continue old Battle feature branches, detached
@@ -73,7 +73,7 @@ Immutable Goal: NOT_MET
 Source commit under the newest deployment proof:
 
 ```text
-ab622a7d47c138ce1769beb308c1644e9187ed91
+d85b13e7998b1cd7d9a9945b0d63aa1fd3c016b0
 ```
 
 New bounded receipts on `main`:
@@ -203,14 +203,66 @@ New bounded receipts on `main`:
     - remaining blocker:
       `production_infrastructure_missing_or_not_pass`
 
-The containerized, WebSocket, and swarm receipts may claim only local Docker
-container packaging, mapped local frontend/backend execution, local authenticated
-WebSocket auth/reconnect/two-client fanout behavior, and 12 isolated no-network
-Docker swarm workers. They still must not claim production infrastructure,
-TLS/certificate/ingress/secret management, production-scale fanout capacity,
-mathematically infinite swarm execution, production cluster autoscaling,
-Battle/RelayForge production readiness, six-trial qualification, factorial
-effects, or cross-target generalization.
+12. Ask competition for the production-infrastructure MVP:
+    `/mnt/storage12tb/skills/ask/outputs/battle-production-infrastructure-mvp-20260729/ask-tau-using-the-attached-battle-produc-b58b63b17d9a`
+    - `webclaude`: `PASS`
+    - `webgemini`: `PASS`
+    - `webkimi`: `PASS`
+    - `webgpt`: `PASS`
+    - `webgrok`: `NEEDS_ATTENTION`, `browser_provider_rate_limited`
+      / X.com login required
+    - Usable candidate consensus: implement local deployment alignment as a
+      separate receipt and keep true production infrastructure blocked.
+
+13. Local deployment alignment proof:
+    `skills/battle/local/local-deployment-alignment-20260729-next2/local-deployment-alignment-proof.json`
+    - `status`: `PASS`
+    - `mocked`: `false`
+    - `live`: `local_filesystem_release_cut_and_symlink_readback`
+    - commit and `origin/main`:
+      `d85b13e7998b1cd7d9a9945b0d63aa1fd3c016b0`
+    - previous `current` symlink target:
+      `/mnt/storage12tb/deployments/agent-skills/releases/995ea0ad8`
+    - active `current` symlink target:
+      `/mnt/storage12tb/deployments/agent-skills/releases/d85b13e7998b`
+    - release/current/expected digest:
+      `d74d5718682849557e82bf5344c258c3103e14567989ed198da1b5065d24561b`
+
+14. Fresh containerized local frontend/backend deployment smoke after local
+    deployment-alignment source changes:
+    `skills/battle/local/containerized-deployment-smoke-20260729-next7/containerized-deployment-smoke.json`
+    - `status`: `PASS`
+    - `mocked`: `false`
+    - `live`: `containerized_http_sse_websocket_adapter_plus_vite_preview`
+    - source commit: `d85b13e7998b1cd7d9a9945b0d63aa1fd3c016b0`
+    - PR8: `33 total / 0 failed`
+    - `$test-interactions`: `38 passed / 0 failed / 0 warned`
+    - visual findings: `0`
+    - screenshot inspected:
+      `skills/battle/local/containerized-deployment-smoke-20260729-next7/frontend-pr8/01-live-sse-adapter.png`
+
+15. Current fail-closed production-readiness contract with local deployment
+    alignment attached:
+    `skills/battle/local/production-readiness-contract-20260729-next6/production-readiness-contract.json`
+    - `status`: `BLOCKED`
+    - `mocked`: `false`
+    - `live`: `receipt_contract_validation`
+    - local working frontend/backend status: `PASS`
+    - local deployment alignment status: `PASS`
+    - production WebSocket receipt status: `PASS`
+    - Docker-backed dynamic swarm receipt status: `PASS`
+    - remaining blocker:
+      `production_infrastructure_missing_or_not_pass`
+
+The containerized, WebSocket, swarm, and local deployment-alignment receipts may
+claim only local Docker container packaging, mapped local frontend/backend
+execution, local authenticated WebSocket auth/reconnect/two-client fanout
+behavior, 12 isolated no-network Docker swarm workers, and local filesystem
+release/symlink alignment. They still must not claim cloud production
+infrastructure, TLS/certificate/ingress/secret management, production-scale
+fanout capacity, mathematically infinite swarm execution, production cluster
+autoscaling, Battle/RelayForge production readiness, six-trial qualification,
+factorial effects, or cross-target generalization.
 
 ## Proof Receipts
 
