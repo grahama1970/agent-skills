@@ -208,6 +208,12 @@ def main() -> int:
     parser.add_argument("--out-dir", type=Path,
                         default=SKILL_DIR / "reports" / f"backend-eval-{_utc_stamp()}")
     parser.add_argument(
+        "--receipt-out",
+        type=Path,
+        default=None,
+        help="Write a copy of the backend eval receipt to this exact JSON path.",
+    )
+    parser.add_argument(
         "--allow-live",
         action="store_true",
         help=(
@@ -222,10 +228,14 @@ def main() -> int:
     receipt = run_eval(out_dir, allow_live=args.allow_live)
     receipt_path = out_dir / "receipt.json"
     receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
+    if args.receipt_out is not None:
+        args.receipt_out.parent.mkdir(parents=True, exist_ok=True)
+        args.receipt_out.write_text(json.dumps(receipt, indent=2) + "\n")
 
     print(json.dumps({
         "status": receipt["status"],
         "receipt_path": str(receipt_path),
+        "receipt_out": str(args.receipt_out) if args.receipt_out is not None else None,
         "summary": receipt["summary"],
     }, indent=2))
     return 0 if receipt["status"] == "passed" else 1

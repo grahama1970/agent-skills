@@ -240,6 +240,11 @@ For non-git directories. Creates simple file copies for each team.
 # Run the deterministic Battle v0 fixture proof
 ./run.sh battle-fixture battle-001 --out /tmp/battle-001
 
+# Run the reactive Blue + independent Judge Docker proof
+./run.sh prove-reactive-judge-round \
+  --authorization-manifest skills/battle/fixtures/reactive-judge/authorization.json \
+  --out /tmp/battle-reactive-judge-round
+
 # Run canonical BATTLE-004 with parent-spawn lineage requested
 ./run.sh arena-parent-spawn-proof battle-004 --out /tmp/battle-004-parent-spawn --red-workers 2 --blue-workers 2
 ```
@@ -275,6 +280,50 @@ fixture only. It does not prove real Red or Blue agent behavior, scillm,
 OpenCode, anvil, code-runner, memory learning, Docker, QEMU, or multi-round
 campaign readiness. See `docs/BATTLE_V0.md` for the validation commands and
 artifact-backed monitor proof path.
+
+## Reactive Judge Round Proof
+
+`prove-reactive-judge-round` is the deterministic local Docker proof rung for
+the default Battle round authority boundary. It runs a small authorized fixture
+with one command-injection behavior and one candidate patch:
+
+```text
+mocked: no
+live: local_docker_fixture
+agentic: false
+models_used: []
+```
+
+The proof emits:
+
+- `authorization-validation.json`
+- `immutable-baseline-manifest.json`
+- `event-ledger.json`
+- `red-hack-observation.json`
+- `judge-1/judge-1-receipt.json`
+- `blue/proactive-blue-input.json`
+- `blue/reactive-blue-input.json`
+- `blue/candidate-patch-receipt.json`
+- `judge-2/judge-2-receipt.json`
+- `scorekeeper-receipt.json`
+- `round-receipt.json`
+- `artifact-hash-manifest.json`
+
+The required phase order is authorization, immutable baseline, concurrent Red
+and proactive Blue, Red observation, Judge #1 confirmation, reactive Blue,
+candidate patch, Judge #2 replay, scorekeeper, and round receipt. Proactive Blue
+must receive no private Red finding. Reactive Blue may receive only the
+Judge-confirmed finding and replay contract. The scorekeeper derives Red/Blue
+scores only from Judge receipts; Blue `verified`, `success`, and
+`functionality_preserved` fields are advisory and not score authority.
+
+The ordinary in-process `battle` round now fails closed at this same authority
+boundary: it preserves proactive overlap, dispatches reactive Blue only for
+Judge-confirmed findings, and does not award Blue score without a Judge #2
+success verdict. The local Docker proof is the executable receipt path for the
+complete reactive/Judge behavior. It does not prove provider-driven Red/Blue
+quality, arbitrary target exploitability, production deployment readiness, or
+overnight scheduler readiness.
 
 ## Scoring System (AIxCC-style)
 

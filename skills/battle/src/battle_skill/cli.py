@@ -266,6 +266,33 @@ def battle_fixture(
     run_battle_fixture_command(fixture, out)
 
 
+@app.command("prove-reactive-judge-round")
+def prove_reactive_judge_round(
+    authorization_manifest: Path = typer.Option(
+        ...,
+        "--authorization-manifest",
+        help="security.target_authorization.v1 manifest for the local Docker fixture.",
+    ),
+    out: Path = typer.Option(..., "--out", help="Artifact output directory."),
+):
+    """Run the local Docker reactive Blue + independent Judge round proof."""
+    from .reactive_judge_round import run_reactive_judge_round
+
+    manifest = authorization_manifest
+    if not manifest.exists() and not manifest.is_absolute():
+        repo_relative = Path(__file__).resolve().parents[4] / manifest
+        if repo_relative.exists():
+            manifest = repo_relative
+
+    result = run_reactive_judge_round(
+        authorization_manifest=manifest,
+        out_dir=out,
+    )
+    console.print_json(data=result)
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command("arena-subagent-proof")
 def arena_subagent_proof(
     battle_id: str = typer.Argument(

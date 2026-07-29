@@ -1,0 +1,146 @@
+{
+  "battle_id": "battle-reactive-judge-001",
+  "events": [
+    {
+      "actor": "battle",
+      "data": {},
+      "elapsed_seconds": 0.00034,
+      "phase": "authorization_validated",
+      "receipt": "local/reactive-judge-round-1115-20260729/authorization-validation.json",
+      "seq": 1
+    },
+    {
+      "actor": "battle",
+      "data": {},
+      "elapsed_seconds": 0.023244,
+      "phase": "baseline_materialized",
+      "receipt": "local/reactive-judge-round-1115-20260729/immutable-baseline-manifest.json",
+      "seq": 2
+    },
+    {
+      "actor": "red",
+      "data": {},
+      "elapsed_seconds": 0.023598,
+      "phase": "red_started",
+      "receipt": null,
+      "seq": 3
+    },
+    {
+      "actor": "blue",
+      "data": {},
+      "elapsed_seconds": 0.02414,
+      "phase": "proactive_blue_started",
+      "receipt": null,
+      "seq": 4
+    },
+    {
+      "actor": "blue",
+      "data": {},
+      "elapsed_seconds": 0.124687,
+      "phase": "proactive_blue_terminal",
+      "receipt": "local/reactive-judge-round-1115-20260729/blue/proactive-blue-input.json",
+      "seq": 5
+    },
+    {
+      "actor": "red",
+      "data": {},
+      "elapsed_seconds": 0.395721,
+      "phase": "red_observation_received",
+      "receipt": "local/reactive-judge-round-1115-20260729/red-hack-observation.json",
+      "seq": 6
+    },
+    {
+      "actor": "judge",
+      "data": {},
+      "elapsed_seconds": 0.395863,
+      "phase": "judge1_started",
+      "receipt": null,
+      "seq": 7
+    },
+    {
+      "actor": "judge",
+      "data": {},
+      "elapsed_seconds": 0.773748,
+      "phase": "judge1_terminal",
+      "receipt": "local/reactive-judge-round-1115-20260729/judge-1/judge-1-receipt.json",
+      "seq": 8
+    },
+    {
+      "actor": "blue",
+      "data": {},
+      "elapsed_seconds": 0.773795,
+      "phase": "reactive_blue_started",
+      "receipt": null,
+      "seq": 9
+    },
+    {
+      "actor": "blue",
+      "data": {
+        "input_receipt": "local/reactive-judge-round-1115-20260729/blue/reactive-blue-input.json"
+      },
+      "elapsed_seconds": 0.774508,
+      "phase": "candidate_patch_received",
+      "receipt": "local/reactive-judge-round-1115-20260729/blue/candidate-patch-receipt.json",
+      "seq": 10
+    },
+    {
+      "actor": "judge",
+      "data": {},
+      "elapsed_seconds": 0.775516,
+      "phase": "judge2_started",
+      "receipt": null,
+      "seq": 11
+    },
+    {
+      "actor": "judge",
+      "data": {},
+      "elapsed_seconds": 1.465569,
+      "phase": "judge2_terminal",
+      "receipt": "local/reactive-judge-round-1115-20260729/judge-2/judge-2-receipt.json",
+      "seq": 12
+    },
+    {
+      "actor": "scorekeeper",
+      "data": {},
+      "elapsed_seconds": 1.465581,
+      "phase": "scorekeeper_started",
+      "receipt": null,
+      "seq": 13
+    },
+    {
+      "actor": "scorekeeper",
+      "data": {},
+      "elapsed_seconds": 1.465768,
+      "phase": "scorekeeper_terminal",
+      "receipt": "local/reactive-judge-round-1115-20260729/scorekeeper-receipt.json",
+      "seq": 14
+    },
+    {
+      "actor": "battle",
+      "data": {},
+      "elapsed_seconds": 1.465774,
+      "phase": "round_terminal",
+      "receipt": null,
+      "seq": 15
+    }
+  ],
+  "legal_phase_order": [
+    "authorization_validated",
+    "baseline_materialized",
+    "red_started",
+    "proactive_blue_started",
+    "proactive_blue_terminal",
+    "red_observation_received",
+    "judge1_started",
+    "judge1_terminal",
+    "reactive_blue_started",
+    "candidate_patch_received",
+    "judge2_started",
+    "judge2_terminal",
+    "scorekeeper_started",
+    "scorekeeper_terminal",
+    "round_terminal"
+  ],
+  "schema": "battle.reactive_judge_event_ledger.v1",
+  "status": "PASS"
+}

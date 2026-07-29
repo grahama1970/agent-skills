@@ -168,6 +168,65 @@ class BattleOrchestrator:
                 self.state.blue_active = False
                 self.state.blue_action = "idle"
 
+    def judge_red_findings(self, findings: list[Finding], round_num: int) -> list[Finding]:
+        """Return findings confirmed by an independent Judge boundary.
+
+        The legacy agent path has no Docker replay receipt yet, so it fails
+        closed unless a finding already carries an explicit exploit proof and is
+        not tagged as rejected. The deterministic #1115 proof runner exercises
+        the full local Docker Judge path.
+        """
+        confirmed: list[Finding] = []
+        for finding in findings:
+            if finding.exploit_proof and "judge:rejected" not in finding.tags:
+                finding.tags = sorted(set(finding.tags + ["judge:confirmed"]))
+                confirmed.append(finding)
+        return confirmed
+
+    def judge_patch_verdicts(
+        self,
+        patches: list[Patch],
+        confirmed_findings: list[Finding],
+        round_num: int,
+    ) -> dict[str, str]:
+        """Return Judge #2 verdicts for candidate patches.
+
+        Without a Battle-owned replay receipt, Blue advisory fields are not
+        sufficient for score. This default path therefore records
+        INSUFFICIENT_EVIDENCE; deterministic Docker proof is provided by
+        prove-reactive-judge-round.
+        """
+        return {patch.id: "INSUFFICIENT_EVIDENCE" for patch in patches}
+
+    def score_judged_round(
+        self,
+        confirmed_findings: list[Finding],
+        patches: list[Patch],
+        patch_verdicts: dict[str, str],
+        round_num: int,
+    ) -> tuple[float, float]:
+        """Score only Judge-confirmed findings and Judge-successful patches."""
+        red_score = sum(Scorer.score_finding(f, round_num) for f in confirmed_findings)
+        blue_score = 0.0
+        if confirmed_findings:
+            for patch in patches:
+                if patch_verdicts.get(patch.id) != "BLUE_SUCCESS":
+                    continue
+                matching_finding = next(
+                    (f for f in confirmed_findings if f.id == patch.finding_id),
+                    confirmed_findings[0],
+                )
+                base_verified = patch.verified
+                base_functionality = patch.functionality_preserved
+                patch.verified = True
+                patch.functionality_preserved = True
+                try:
+                    blue_score += Scorer.score_patch(patch, matching_finding, round_num)
+                finally:
+                    patch.verified = base_verified
+                    patch.functionality_preserved = base_functionality
+        return red_score, blue_score
+
     def run_round_concurrent(self, round_num: int) -> RoundResult:
         start_time = time.time()
         executor = cf.ThreadPoolExecutor(max_workers=2, thread_name_prefix="battle")
@@ -207,7 +266,19 @@ class BattleOrchestrator:
                 console.print(f"[red]Blue team error: {e}[/red]")
                 patches = []
 
-            if patches:
+            confirmed_findings = self.judge_red_findings(findings, round_num)
+            reactive_patches: list[Patch] = []
+            if confirmed_findings:
+                try:
+                    reactive_patches = self.blue_team_worker(confirmed_findings, round_num)
+                except Exception as e:
+                    console.print(f"[red]Reactive Blue team error: {e}[/red]")
+                    reactive_patches = []
+
+            patches = reactive_patches
+            patch_verdicts = self.judge_patch_verdicts(patches, confirmed_findings, round_num)
+
+            if patches and any(verdict == "BLUE_SUCCESS" for verdict in patch_verdicts.values()):
                 try:
                     self.digital_twin.sync_blue_to_arena()
                 except Exception as e:
@@ -215,13 +286,18 @@ class BattleOrchestrator:
         finally:
             executor.shutdown(wait=False, cancel_futures=True)
 
-        red_score, blue_score = score_round(findings, patches, round_num)
+        red_score, blue_score = self.score_judged_round(
+            confirmed_findings,
+            patches,
+            patch_verdicts,
+            round_num,
+        )
         with self.state._lock:
             self.state.red_total_score += red_score
             self.state.blue_total_score += blue_score
             self.state.current_round = round_num
-        self._update_termination_tracking(findings, red_score, blue_score)
-        result = RoundResult(round_number=round_num, red_findings=findings, blue_patches=patches,
+        self._update_termination_tracking(confirmed_findings, red_score, blue_score)
+        result = RoundResult(round_number=round_num, red_findings=confirmed_findings, blue_patches=patches,
                              red_score=red_score, blue_score=blue_score, duration_seconds=time.time() - start_time)
         with self.state._lock:
             self.state.rounds.append(result)

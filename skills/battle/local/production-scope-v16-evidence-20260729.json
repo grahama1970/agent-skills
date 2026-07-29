@@ -32,16 +32,27 @@
     },
     "packaged_deployment_smoke_1112": "skills/battle/local/packaged-deployment-smoke-1112-20260729/packaged-deployment-smoke.json",
     "packaged_deployment_screenshot_1112": "skills/battle/local/packaged-deployment-smoke-1112-20260729/frontend-pr8/01-live-sse-adapter.png",
-    "packaged_deployment_counts_1112": {
-      "pr8_total": 33,
-      "pr8_failed": 0,
-      "test_interactions_total": 38,
-      "test_interactions_passed": 38,
-      "test_interactions_failed": 0,
-      "test_interactions_warned": 0,
-      "visual_findings": 0
-    }
-  },
+        "packaged_deployment_counts_1112": {
+            "pr8_total": 33,
+            "pr8_failed": 0,
+            "test_interactions_total": 38,
+            "test_interactions_passed": 38,
+            "test_interactions_failed": 0,
+            "test_interactions_warned": 0,
+            "visual_findings": 0
+        },
+        "packaged_deployment_smoke_1115": "skills/battle/local/packaged-deployment-smoke-1115-20260729/packaged-deployment-smoke.json",
+        "packaged_deployment_screenshot_1115": "skills/battle/local/packaged-deployment-smoke-1115-20260729/frontend-pr8/01-live-sse-adapter.png",
+        "packaged_deployment_counts_1115": {
+            "pr8_total": 33,
+            "pr8_failed": 0,
+            "test_interactions_total": 38,
+            "test_interactions_passed": 38,
+            "test_interactions_failed": 0,
+            "test_interactions_warned": 0,
+            "visual_findings": 0
+        }
+    },
   "backend": {
     "memory_chain_qualification": "skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/memory-chain-qualification.json",
     "memory_chain_status": "PASS",
@@ -59,11 +70,25 @@
       "observed_unconfirmed_receipt": "skills/hack/local/proof-authority-1112-20260729/observed-unconfirmed/attacks/probe-observation.json",
       "confirmed_receipt": "skills/hack/local/proof-authority-1112-20260729/confirmed/attacks/proof-validation-receipt.json",
       "mutation_count": 10,
-      "mocked": false,
-      "live": "local_deterministic_receipt_validation",
-      "ticket": "https://github.com/grahama1970/agent-skills/issues/1112"
-    }
-  },
+            "mocked": false,
+            "live": "local_deterministic_receipt_validation",
+            "ticket": "https://github.com/grahama1970/agent-skills/issues/1112"
+        },
+        "reactive_judge_round_1115": {
+            "status": "PASS",
+            "verdict": "BLUE_SUCCESS",
+            "round_receipt": "skills/battle/local/reactive-judge-round-1115-20260729/round-receipt.json",
+            "event_ledger": "skills/battle/local/reactive-judge-round-1115-20260729/event-ledger.json",
+            "judge_1_receipt": "skills/battle/local/reactive-judge-round-1115-20260729/judge-1/judge-1-receipt.json",
+            "judge_2_receipt": "skills/battle/local/reactive-judge-round-1115-20260729/judge-2/judge-2-receipt.json",
+            "scorekeeper_receipt": "skills/battle/local/reactive-judge-round-1115-20260729/scorekeeper-receipt.json",
+            "backend_eval": "skills/battle/local/reactive-judge-round-1115-20260729/backend-eval.json",
+            "mocked": false,
+            "live": "local_docker_fixture",
+            "agentic": false,
+            "ticket": "https://github.com/grahama1970/agent-skills/issues/1115"
+        }
+    },
   "transport_safety": {
     "receipt": "skills/battle/local/transport-safety-smoke-20260729/transport-safety-smoke.json",
     "backend_event_count": 36,
@@ -129,19 +154,20 @@
     "The Battle spectator renders the live local HTTP SSE adapter with EventSource transport, mocked=false, and seq 36/36.",
     "$test-interactions exercises 38 live QID interactions with 0 failures and 0 warnings.",
     "A Git-archived local Battle package launches the existing backend live HTTP/SSE adapter and source-built spectator, passes PR8 33/33, and passes $test-interactions 38/38 with zero visual findings.",
-    "The existing local HTTP/SSE transport fails closed on invalid Last-Event-ID values, resumes without replaying acknowledged events, and the spectator reducer/parser passes 14 focused transport tests.",
-    "Hack #1112 proof-authority MVP now keeps Hack observations unconfirmed until an independent validation receipt binds target/auth/runtime/probe/scan/observation/replay hashes.",
-    "The fresh packaged Battle frontend/backend smoke for the #1112 slice passed PR8 33/33 and $test-interactions 38/38 with zero visual findings."
-  ],
-  "remaining_not_proven": [
-    "Production infrastructure deployment.",
-    "WebSocket transport.",
-    "Unbounded swarm execution.",
-    "Battle or RelayForge production readiness.",
-    "Default Battle round #1115 reactive Blue and independent Judge replay.",
-    "Six-trial qualification.",
-    "Factorial effects.",
-    "Cross-target generalization."
+        "The existing local HTTP/SSE transport fails closed on invalid Last-Event-ID values, resumes without replaying acknowledged events, and the spectator reducer/parser passes 14 focused transport tests.",
+        "Hack #1112 proof-authority MVP now keeps Hack observations unconfirmed until an independent validation receipt binds target/auth/runtime/probe/scan/observation/replay hashes.",
+        "The fresh packaged Battle frontend/backend smoke for the #1112 slice passed PR8 33/33 and $test-interactions 38/38 with zero visual findings.",
+        "Battle #1115 reactive Judge proof runs a local Docker fixture with proactive Blue, Red observation, Judge #1 confirmation, reactive Blue, Judge #2 replay, and scorekeeper-from-Judge-only receipts.",
+        "The fresh packaged Battle frontend/backend smoke for the #1115 slice passed PR8 33/33 and $test-interactions 38/38 with zero visual findings."
+    ],
+    "remaining_not_proven": [
+        "Production infrastructure deployment.",
+        "WebSocket transport.",
+        "Unbounded swarm execution.",
+        "Battle or RelayForge production readiness.",
+        "Six-trial qualification.",
+        "Factorial effects.",
+        "Cross-target generalization."
   ],
   "created_at": "2026-07-29T17:05:39Z"
 }

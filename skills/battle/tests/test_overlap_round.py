@@ -75,7 +75,63 @@ def test_run_round_concurrent_starts_red_and_proactive_blue_before_await(
 
     result = orchestrator.run_round_concurrent(1)
 
-    assert len(result.red_findings) == 1
+    assert result.red_findings == []
     assert blue_inputs == [[]]
     assert _event(events, "blue_start") < _event(events, "red_terminal")
     assert _event(events, "red_start") < _event(events, "blue_terminal")
+
+
+def test_run_round_concurrent_dispatches_reactive_blue_only_after_confirmation(
+    tmp_path: Path,
+) -> None:
+    class _ConfirmedRedAgent(_RedAgent):
+        def attack(self, round_num: int) -> list[Finding]:
+            finding = super().attack(round_num)[0]
+            finding.exploit_proof = "judge-confirmed-fixture"
+            return [finding]
+
+    class _JudgedOrchestrator(BattleOrchestrator):
+        def judge_patch_verdicts(self, patches, confirmed_findings, round_num):
+            return {patch.id: "BLUE_SUCCESS" for patch in patches}
+
+    class _ReactiveBlueAgent(_BlueAgent):
+        def defend(self, findings: list[Finding], round_num: int):
+            super().defend(findings, round_num)
+            if findings:
+                from battle_skill.state import DefenseType, Patch
+
+                return [
+                    Patch(
+                        id=f"patch-{round_num}",
+                        finding_id=findings[0].id,
+                        type=DefenseType.PATCH,
+                        diff="fixture",
+                        verified=False,
+                        functionality_preserved=False,
+                    )
+                ]
+            return []
+
+    orchestrator = _JudgedOrchestrator.__new__(_JudgedOrchestrator)
+    events: list[tuple[str, float]] = []
+    blue_inputs: list[list[Finding]] = []
+    orchestrator.battle_id = "test-reactive"
+    orchestrator.worker_timeout = 2
+    orchestrator.red_agent = _ConfirmedRedAgent(events)
+    orchestrator.blue_agent = _ReactiveBlueAgent(events, blue_inputs)
+    orchestrator.digital_twin = _Twin()
+    orchestrator.state = BattleState(
+        battle_id="test-reactive",
+        target_path=str(tmp_path),
+        max_rounds=1,
+    )
+    orchestrator.null_rounds = 0
+    orchestrator.stable_rounds = 0
+    orchestrator.last_scores = (0.0, 0.0)
+
+    result = orchestrator.run_round_concurrent(1)
+
+    assert [len(call) for call in blue_inputs] == [0, 1]
+    assert result.red_findings[0].tags == ["judge:confirmed"]
+    assert result.blue_patches[0].verified is False
+    assert result.blue_score > 0
