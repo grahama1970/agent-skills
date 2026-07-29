@@ -1749,6 +1749,24 @@ for line in reversed(stderr_text.splitlines()):
         chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
         chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
+identity_tab = identity.get("tab") if isinstance(identity, dict) else {}
+if not isinstance(identity_tab, dict):
+    identity_tab = {}
+identity_tab_id = str(identity.get("tab_id") or identity_tab.get("id") or "").strip() if isinstance(identity, dict) else ""
+identity_tab_url = str(identity_tab.get("url") or "").strip()
+identity_ok_for_requested_tab = (
+    isinstance(identity, dict)
+    and identity.get("ok") is True
+    and bool(requested_tab_id)
+    and identity_tab_id == str(requested_tab_id)
+)
+if not tab_id and identity_ok_for_requested_tab:
+    tab_id = str(requested_tab_id)
+    current_url = current_url or identity_tab_url or None
+    if not conversation_url and identity_tab_url and "/c/" in identity_tab_url:
+        conversation_url = identity_tab_url
+tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
+tab_was_created = False if identity_ok_for_requested_tab and tab_id == str(requested_tab_id) else None
 empty_response_after_submit = (
     not raw_text.strip()
     and not conversation_max_length_detected
@@ -1798,6 +1816,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight_output_dir": roundtrip_dir or None,
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
+    "controlled_tab_id_mismatch": tab_mismatch,
+    "tab_was_created": tab_was_created,
     "conversation_url": conversation_url,
     "current_url": current_url or conversation_url,
     "tab_url": current_url or conversation_url,
@@ -1950,6 +1970,24 @@ for line in reversed(stderr_text.splitlines()):
         chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
         chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
+identity_tab = identity.get("tab") if isinstance(identity, dict) else {}
+if not isinstance(identity_tab, dict):
+    identity_tab = {}
+identity_tab_id = str(identity.get("tab_id") or identity_tab.get("id") or "").strip() if isinstance(identity, dict) else ""
+identity_tab_url = str(identity_tab.get("url") or "").strip()
+identity_ok_for_requested_tab = (
+    isinstance(identity, dict)
+    and identity.get("ok") is True
+    and bool(requested_tab_id)
+    and identity_tab_id == str(requested_tab_id)
+)
+if not tab_id and identity_ok_for_requested_tab:
+    tab_id = str(requested_tab_id)
+    current_url = current_url or identity_tab_url or None
+    if not conversation_url and identity_tab_url and "/c/" in identity_tab_url:
+        conversation_url = identity_tab_url
+tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
+tab_was_created = False if identity_ok_for_requested_tab and tab_id == str(requested_tab_id) else None
 empty_response_after_submit = (
     not raw_text.strip()
     and not conversation_max_length_detected
@@ -1987,6 +2025,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight_output_dir": roundtrip_dir or None,
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
+    "controlled_tab_id_mismatch": tab_mismatch,
+    "tab_was_created": tab_was_created,
     "conversation_url": conversation_url,
     "current_url": current_url or conversation_url,
     "tab_url": current_url or conversation_url,
@@ -2395,6 +2435,8 @@ if not tab_id and identity_ok_for_requested_tab and sentinel in raw_text and sen
         conversation_url = identity_tab_url
 
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
+if tab_was_created is None and identity_ok_for_requested_tab and tab_id == str(requested_tab_id):
+    tab_was_created = False
 focus_stolen_mid = focus_stolen_mid_s == "1"
 focus_violation = no_activate and (focus_changed or focus_stolen_mid)
 response_integrity_ok = (

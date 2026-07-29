@@ -1077,6 +1077,10 @@ esac
     assert meta["recommended_action"] == "wait_for_chatgpt_rate_limit_cooldown_before_retry"
     assert meta["proof_status"] == "rate_limited"
     assert meta["chatgpt_too_many_requests_detected"] is True
+    assert meta["requested_tab_id"] == "837352334"
+    assert meta["controlled_tab_id"] == "837352334"
+    assert meta["controlled_tab_id_mismatch"] is False
+    assert meta["tab_was_created"] is False
     assert meta["chatgpt_rate_limit"]["error"] == "retry_failed_exit_42"
     assert chatgpt_count_file.read_text(encoding="utf-8") == "2"
 
@@ -1628,6 +1632,7 @@ esac
     assert meta["proof_status"] == "response_proven"
     assert meta["controlled_tab_id"] == "837352334"
     assert meta["controlled_tab_id_mismatch"] is False
+    assert meta["tab_was_created"] is False
     assert meta["raw_contains_sentinel"] is True
     assert meta["clean_contains_sentinel"] is False
     assert meta["focus_changed"] is True
@@ -1693,6 +1698,8 @@ esac
     assert meta["proof_status"] == "response_proven"
     assert meta["response_proof_status"] == "response_proven"
     assert meta["controlled_tab_id"] == "837352334"
+    assert meta["controlled_tab_id_mismatch"] is False
+    assert meta["tab_was_created"] is False
     assert meta["conversation_url"] == "https://chatgpt.com/c/example"
     assert meta["raw_contains_sentinel"] is True
     assert meta["clean_contains_sentinel"] is False
