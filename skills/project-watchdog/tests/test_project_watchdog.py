@@ -1487,3 +1487,33 @@ def test_a_panel_that_could_not_reach_a_provider_names_the_cause(tmp_path) -> No
     failures = handlers.read_seat_failures(tmp_path)
 
     assert failures == {"handler-claude-opus-4-8": "scillm_auth_invalid_api_key"}
+
+
+def test_an_upheld_closure_that_cannot_be_marked_is_not_reported_clean(tmp_path) -> None:
+    """`closure-verified` existed in no repo and was absent from ensure-labels,
+    so the first unanimous PASS marked nothing and the closure would be
+    re-audited every tick."""
+    result, calls = _run_audit(
+        tmp_path, {"handler-a": "VERDICT: PASS", "handler-b": "VERDICT: PASS"}
+    )
+    assert result["verdict"] == "PASS" and result["status"] == "COMPLETED"
+
+    with (
+        mock.patch.object(handlers.github, "issue_comments", return_value=[]),
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github, "issue_edit",
+            return_value={"exit_code": 1, "stderr": "label 'closure-verified' not found"},
+        ),
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+        mock.patch.object(
+            handlers, "_read_ask_responses_by_node",
+            return_value={"a": "VERDICT: PASS", "b": "VERDICT: PASS"},
+        ),
+    ):
+        blocked = handlers.handle_closure_audit(
+            "run", tmp_path, {"project_id": "p", "repo": TAU_REPO, "worktree": str(tmp_path)},
+            _closed(9, labels=["agent-work"], closed_at="2026-07-29T00:00:00Z"), apply=True,
+        )
+    assert blocked["status"] == "NEEDS_ATTENTION"
+    assert "re-audited every tick" in blocked["summary"]
