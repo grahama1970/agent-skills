@@ -109,12 +109,17 @@
     "provider_live": true,
     "provider_route_bound": true,
     "provider_route_match": true,
+    "provider_call_count": 1,
+    "provider_request_id_present": true,
+    "provider_response_id_present": true,
     "provider_run_id_present": true,
     "provider_run_ref_sha256": "sha256:d90297948e0fe269ae14cf9391af0f13180c50d7a9ffdbabe7d3c538a3f24464",
     "provider_session_id_present": true,
     "requested_model": null,
     "requested_provider": "scillm",
-    "status": "PASS"
+    "status": "PASS",
+    "transport_source_hash_bound": true,
+    "transport_source_hash_matches": true
   },
   "provider_live": true,
   "receipt_refs": [

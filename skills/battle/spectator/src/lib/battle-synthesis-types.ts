@@ -54,6 +54,9 @@ export type BattleNormalizedSynthesisFixtureV1 = {
 		requested_model?: string | null;
 		provider_run_id_present: boolean;
 		provider_session_id_present: boolean;
+		provider_request_id_present: boolean;
+		provider_response_id_present: boolean;
+		provider_call_count: number;
 		provider_run_ref_sha256?: string;
 		code_sha256: string;
 		code_bytes: number;

@@ -77,6 +77,15 @@ export function validateSynthesisSemantics(fixture: BattleNormalizedSynthesisFix
 	if (!fixture.provider_authorship?.provider_live) {
 		return contractFailed("provider_authorship.provider_live must be true.");
 	}
+	if (fixture.provider_authorship.provider_request_id_present !== true) {
+		return contractFailed("provider_authorship.provider_request_id_present must be true.");
+	}
+	if (fixture.provider_authorship.provider_response_id_present !== true) {
+		return contractFailed("provider_authorship.provider_response_id_present must be true.");
+	}
+	if (fixture.provider_authorship.provider_call_count !== 1) {
+		return contractFailed("provider_authorship.provider_call_count must be exactly 1.");
+	}
 
 	for (const [nodeId, expected] of Object.entries(REQUIRED_PR3C_NODE_STATUS)) {
 		const actual = fixture.node_status?.[nodeId];

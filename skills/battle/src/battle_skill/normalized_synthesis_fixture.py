@@ -298,7 +298,12 @@ def _fixture(
     node_verdict = {node_id: node_receipts[node_id].get("verdict") for node_id in PR3C_NODES}
     run_identity = "|".join(
         value
-        for value in [authorship.get("provider_run_id"), authorship.get("provider_session_id")]
+        for value in [
+            authorship.get("provider_run_id"),
+            authorship.get("provider_session_id"),
+            authorship.get("provider_request_id"),
+            authorship.get("provider_response_id"),
+        ]
         if isinstance(value, str) and value
     )
     return {
@@ -341,6 +346,9 @@ def _fixture(
             "provider_route_match": bool(authorship.get("validation", {}).get("provider_route_bound")),
             "provider_run_id_present": bool(authorship.get("provider_run_id")),
             "provider_session_id_present": bool(authorship.get("provider_session_id")),
+            "provider_request_id_present": bool(authorship.get("provider_request_id")),
+            "provider_response_id_present": bool(authorship.get("provider_response_id")),
+            "provider_call_count": authorship.get("provider_call_count"),
             "provider_run_ref_sha256": _sha256_text(run_identity) if run_identity else None,
             "code_sha256": code_sha,
             "code_bytes": code_bytes,
@@ -348,6 +356,8 @@ def _fixture(
             "provider_route_bound": bool(authorship.get("validation", {}).get("provider_route_bound")),
             "output_declared_by_worker": bool(authorship.get("validation", {}).get("output_declared_by_worker")),
             "output_hash_bound": bool(authorship.get("validation", {}).get("output_hash_bound")),
+            "transport_source_hash_bound": bool(authorship.get("validation", {}).get("transport_source_hash_bound")),
+            "transport_source_hash_matches": bool(authorship.get("validation", {}).get("transport_source_hash_matches")),
             "output_inside_allowed_root": bool(authorship.get("validation", {}).get("output_inside_allowed_root")),
             "private_reference_scan_passed": bool(authorship.get("validation", {}).get("private_reference_scan_passed")),
             "claim_boundary_passed": bool(authorship.get("validation", {}).get("claim_boundary_passed")),
@@ -429,6 +439,17 @@ def _validate_source_boundary(
         errors.append("observed provider/model are required")
     if not (authorship.get("provider_run_id") or authorship.get("provider_session_id")):
         errors.append("provider run or session id is required in source receipt")
+    if not authorship.get("provider_request_id"):
+        errors.append("provider request id is required in source receipt")
+    if not authorship.get("provider_response_id"):
+        errors.append("provider response id is required in source receipt")
+    if authorship.get("provider_call_count") != 1:
+        errors.append("provider call count must be exactly 1")
+    if authorship.get("transport_source_sha256") != code_sha:
+        errors.append("transport source hash must match code hash")
+    validation = authorship.get("validation") if isinstance(authorship.get("validation"), dict) else {}
+    if validation.get("transport_source_hash_matches") is not True:
+        errors.append("transport source hash match flag must be true")
     hashes = {
         authorship.get("code_artifact_sha256"),
         artifact_validation.get("code_artifact_sha256"),

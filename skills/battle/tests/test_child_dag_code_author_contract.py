@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -243,21 +244,22 @@ def test_code_author_passes_only_with_provider_bound_output(
     tmp_path: Path, monkeypatch
 ) -> None:
     combiner_response = _run_to_method_combiner(tmp_path, monkeypatch)
+    source = "print('generated candidate')\n"
+    source_sha = f"sha256:{hashlib.sha256(source.encode('utf-8')).hexdigest()}"
 
     def fake_launch(*, work_order_path: Path, out_path: Path, **_: object) -> dict:
         work_order = json.loads(work_order_path.read_text(encoding="utf-8"))
         repo = Path(work_order["repo"])
         outputs = repo / "outputs"
         outputs.mkdir(parents=True, exist_ok=True)
-        (outputs / "exploit_specimen.py").write_text(
-            "print('generated candidate')\n", encoding="utf-8"
-        )
+        (outputs / "exploit_specimen.py").write_text(source, encoding="utf-8")
         result = {
             "schema": "tau.scillm_worker_result.v1",
             "status": "PASS",
             "goal_hash": work_order["goal_hash"],
             "changed_files": ["outputs/exploit_specimen.py"],
             "artifacts": ["outputs/exploit_specimen.py"],
+            "source_sha256": source_sha,
             "tests_run": [],
             "findings": [],
         }
@@ -271,6 +273,9 @@ def test_code_author_passes_only_with_provider_bound_output(
             "provider_live": True,
             "run_id": "run-test",
             "session_id": "session-test",
+            "provider_request_id": "request-test",
+            "provider_response_id": "response-test",
+            "provider_call_count": 1,
             "scillm_run_status": "completed",
             "model_provider_route": {
                 "surface": "opencode_serve",
@@ -291,6 +296,10 @@ def test_code_author_passes_only_with_provider_bound_output(
             "status": "PASS",
             "live": True,
             "provider_live": True,
+            "provider_request_id": "request-test",
+            "provider_response_id": "response-test",
+            "provider_call_count": 1,
+            "source_sha256": source_sha,
             "goal_hash": work_order["goal_hash"],
             "result_artifacts": ["outputs/exploit_specimen.py"],
             "model_provider_route": {
@@ -338,6 +347,70 @@ def test_code_author_passes_only_with_provider_bound_output(
     jsonschema.validate(specimen, _schema("battle.exploit_specimen.v2.schema.json"))
     assert specimen["compile_status"] == "NOT_RUN"
     assert "The code compiles." in authorship["claims"]["does_not_prove"]
+    assert authorship["provider_request_id"] == "request-test"
+    assert authorship["provider_response_id"] == "response-test"
+    assert authorship["provider_call_count"] == 1
+    assert authorship["transport_source_sha256"] == source_sha
+    assert authorship["validation"]["transport_source_hash_matches"] is True
+
+
+def test_provider_authorship_blocks_without_transport_response_id(
+    tmp_path: Path,
+) -> None:
+    receipt = _provider_authorship_probe(
+        tmp_path,
+        launch_receipt={"provider_request_id": "request-test", "provider_call_count": 1},
+        worker_validation={"provider_request_id": "request-test", "provider_call_count": 1},
+    )
+
+    assert receipt["status"] == "BLOCKED"
+    assert "PROVIDER_RESPONSE_ID_MISSING" in receipt["errors"]
+    assert receipt["claims"]["proves"] == []
+
+
+def test_provider_authorship_blocks_multiple_provider_calls(
+    tmp_path: Path,
+) -> None:
+    receipt = _provider_authorship_probe(
+        tmp_path,
+        launch_receipt={
+            "provider_request_id": "request-test",
+            "provider_response_id": "response-test",
+            "provider_call_count": 2,
+        },
+        worker_validation={
+            "provider_request_id": "request-test",
+            "provider_response_id": "response-test",
+            "provider_call_count": 2,
+        },
+    )
+
+    assert receipt["status"] == "BLOCKED"
+    assert "PROVIDER_CALL_COUNT_INVALID" in receipt["errors"]
+    assert receipt["validation"]["provider_call_count_bound"] is False
+
+
+def test_provider_authorship_blocks_transport_source_hash_mismatch(
+    tmp_path: Path,
+) -> None:
+    receipt = _provider_authorship_probe(
+        tmp_path,
+        launch_receipt={
+            "provider_request_id": "request-test",
+            "provider_response_id": "response-test",
+            "provider_call_count": 1,
+        },
+        worker_validation={
+            "provider_request_id": "request-test",
+            "provider_response_id": "response-test",
+            "provider_call_count": 1,
+            "source_sha256": "sha256:" + "2" * 64,
+        },
+    )
+
+    assert receipt["status"] == "BLOCKED"
+    assert "PROVIDER_SOURCE_HASH_MISMATCH" in receipt["errors"]
+    assert receipt["validation"]["transport_source_hash_matches"] is False
 
 
 def test_scillm_validation_command_binds_launch_receipt(
@@ -401,3 +474,48 @@ def test_provider_authorship_distinguishes_validation_block_from_missing_attesta
     assert receipt["provider_live"] is True
     assert "TAU_WORKER_VALIDATION_BLOCKED" in receipt["errors"]
     assert "PROVIDER_EXECUTION_ATTESTATION_MISSING" not in receipt["errors"]
+
+
+def _provider_authorship_probe(
+    tmp_path: Path,
+    *,
+    launch_receipt: dict[str, object],
+    worker_validation: dict[str, object],
+) -> dict[str, object]:
+    code_sha = "sha256:" + "1" * 64
+    launch = {
+        "status": "PASS",
+        "live": True,
+        "provider_live": True,
+        "observed_provider": "opencode-go",
+        "observed_model": "opencode-go/kimi-k2.6",
+        **launch_receipt,
+    }
+    validation = {
+        "status": "PASS",
+        "provider_live": True,
+        "source_sha256": code_sha,
+        **worker_validation,
+    }
+    return build_provider_authorship_receipt(
+        out_path=tmp_path / "provider-authorship.json",
+        battle_id="battle-004",
+        dag_id="dag-1",
+        node_id="exploit-code-author",
+        child_lane_id="child-1",
+        goal_hash="sha256:goal",
+        battle_work_order_path=tmp_path / "battle-work-order.json",
+        tau_work_order_path=tmp_path / "tau-work-order.json",
+        launch_receipt_path=tmp_path / "launch.json",
+        worker_result_path=tmp_path / "result.json",
+        worker_validation_path=tmp_path / "validation.json",
+        artifact_validation={
+            "status": "PASS",
+            "code_artifact_sha256": code_sha,
+            "code_artifact_bytes": 24,
+            "errors": [],
+        },
+        launch_receipt=launch,
+        worker_result={"artifacts": ["outputs/exploit_specimen.py"]},
+        worker_validation=validation,
+    )
