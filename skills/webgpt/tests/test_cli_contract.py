@@ -294,6 +294,30 @@ def test_project_submit_preserves_browser_oracle_tab_and_desktop_metadata(
     assert meta["browser_oracle_kde_desktop_index"] == 2
 
 
+def test_submit_failure_summary_promotes_surf_lock_meta(tmp_path: Path, capsys) -> None:
+    meta = tmp_path / "response.meta.json"
+    meta.write_text(
+        json.dumps(
+            {
+                "failure": "browser_cdp_lock_timeout",
+                "browser_lock_blocked": True,
+                "agent_diagnosis": "Surf could not run the CDP pre-submit probe because the shared browser lock was held.",
+                "agent_action": "Wait for the lock owner to finish.",
+                "cdp_retry_stderr": "SURF_BROWSER_LOCK_BLOCKED owner_pid=123",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    webgpt_cli._emit_submit_failure_summary(meta)
+
+    captured = capsys.readouterr()
+    assert "BLOCKED_WEBGPT_BROWSER_CDP_LOCK_TIMEOUT" in captured.err
+    assert "shared browser lock was held" in captured.err
+    assert "Wait for the lock owner to finish." in captured.err
+    assert "SURF_BROWSER_LOCK_BLOCKED" in captured.err
+
+
 def test_explicit_tab_url_assertion_fails_before_oracle(monkeypatch) -> None:
     monkeypatch.setattr(
         webgpt_cli,

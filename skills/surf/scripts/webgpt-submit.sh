@@ -388,6 +388,10 @@ elif failure == "stale_cdp_on_explicit_tab":
     proof_status = "not_submitted"
     diagnosis = "Surf could not attach CDP to the explicitly requested tab in no-activate mode."
     action = "Release the existing debugger attachment or reload Surf, then retry the same explicit tab."
+elif failure == "browser_cdp_lock_timeout":
+    proof_status = "not_submitted"
+    diagnosis = "Surf could not run the CDP pre-submit probe because the shared browser lock was held."
+    action = "Wait for the lock owner to finish, inspect SURF_BROWSER_LOCK_BLOCKED owner metadata, or use a separate Surf socket/profile for this lane."
 elif failure == "concurrent_submit_same_tab":
     proof_status = "not_submitted"
     diagnosis = "Another Surf WebGPT submit is already controlling the requested tab."
@@ -1320,8 +1324,38 @@ focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 if [[ -n "${requested_tab_id:-}" ]]; then
   no_activate=1
   cdp_probe_err="$(mktemp "${TMPDIR:-/tmp}/surf-webgpt-cdp-probe.XXXXXX.log")"
-  cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>"$cdp_probe_err" || true)"
-  if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' ]]; then
+  cdp_lock_timeout_s=$(( (surf_lock_wait_ms + 999) / 1000 ))
+  if [[ "$cdp_lock_timeout_s" -lt 1 ]]; then
+    cdp_lock_timeout_s=1
+  fi
+  cdp_probe_hard_timeout_s="${SURF_WEBGPT_CDP_PROBE_TIMEOUT_SECONDS:-$(( cdp_lock_timeout_s + 20 ))}"
+  if ! [[ "$cdp_probe_hard_timeout_s" =~ ^[0-9]+$ ]] || [[ "$cdp_probe_hard_timeout_s" -lt 1 ]]; then
+    cdp_probe_hard_timeout_s=$(( cdp_lock_timeout_s + 20 ))
+  fi
+  run_cdp_probe() {
+    local err_path="$1"
+    local out status
+    if command -v timeout >/dev/null 2>&1; then
+      set +e
+      out="$(timeout "${cdp_probe_hard_timeout_s}s" "$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" --lock-timeout "$cdp_lock_timeout_s" 2>>"$err_path")"
+      status=$?
+      set -e
+      if [[ "$status" -eq 124 ]]; then
+        echo "SURF_CDP_PROBE_TIMEOUT after ${cdp_probe_hard_timeout_s}s for tab ${requested_tab_id}" >>"$err_path"
+      fi
+      printf '%s' "$out"
+      return 0
+    fi
+    "$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" --lock-timeout "$cdp_lock_timeout_s" 2>>"$err_path" || true
+  }
+  cdp_ok="$(run_cdp_probe "$cdp_probe_err")"
+  cdp_browser_lock_blocked=0
+  cdp_retry_attempted=0
+  if grep -q 'SURF_BROWSER_LOCK_BLOCKED' "$cdp_probe_err" 2>/dev/null; then
+    cdp_browser_lock_blocked=1
+  fi
+  if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' && "$cdp_browser_lock_blocked" -eq 0 ]]; then
+    cdp_retry_attempted=1
     cdp_retry_err="$(mktemp "${TMPDIR:-/tmp}/surf-webgpt-cdp-retry.XXXXXX.log")"
     "$RUN_SH" extension.reload >/dev/null 2>"$cdp_retry_err" || true
     for _surf_ping_attempt in $(seq 1 30); do
@@ -1330,16 +1364,22 @@ if [[ -n "${requested_tab_id:-}" ]]; then
       fi
       sleep 0.5
     done
-    cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>>"$cdp_retry_err" || true)"
+    cdp_ok="$(run_cdp_probe "$cdp_retry_err")"
+    if grep -q 'SURF_BROWSER_LOCK_BLOCKED' "$cdp_retry_err" 2>/dev/null; then
+      cdp_browser_lock_blocked=1
+    fi
   fi
   if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' ]]; then
+    if grep -q 'SURF_BROWSER_LOCK_BLOCKED' "$cdp_probe_err" 2>/dev/null || { [[ -n "${cdp_retry_err:-}" ]] && grep -q 'SURF_BROWSER_LOCK_BLOCKED' "$cdp_retry_err" 2>/dev/null; }; then
+      cdp_browser_lock_blocked=1
+    fi
     failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$requested_tab_id" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$cdp_probe_err" "${cdp_retry_err:-}" "$failed_at" <<'PY'
+    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$requested_tab_id" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$cdp_probe_err" "${cdp_retry_err:-}" "$failed_at" "$cdp_browser_lock_blocked" "$cdp_retry_attempted" <<'PY'
 import json, pathlib, sys
 (
     meta, inp, submitted, out, raw, err, sentinel, requested_tab_id,
     target_url, model, reasoning, identity_s, probe_path_s, retry_path_s,
-    failed_at,
+    failed_at, browser_lock_blocked_s, retry_attempted_s,
 ) = sys.argv[1:]
 try:
     identity = json.loads(identity_s) if identity_s else None
@@ -1348,9 +1388,11 @@ except Exception:
 def read(path_s):
     path = pathlib.Path(path_s) if path_s else None
     return path.read_text(encoding="utf-8", errors="replace") if path and path.exists() else ""
+browser_lock_blocked = browser_lock_blocked_s == "1"
+retry_attempted = retry_attempted_s == "1"
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
-    "failure": "stale_cdp_on_explicit_tab",
+    "failure": "browser_cdp_lock_timeout" if browser_lock_blocked else "stale_cdp_on_explicit_tab",
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -1363,8 +1405,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_reasoning": reasoning or None,
     "tab_identity_preflight": identity,
     "cdp_probe_stderr": read(probe_path_s),
-    "cdp_retry_attempted": True,
+    "cdp_retry_attempted": retry_attempted,
     "cdp_retry_stderr": read(retry_path_s),
+    "browser_lock_blocked": browser_lock_blocked,
     "submitted_to_chatgpt": False,
     "started_at": failed_at,
     "finished_at": failed_at,
@@ -1372,7 +1415,11 @@ pathlib.Path(meta).write_text(json.dumps({
 PY
     enrich_agent_diagnosis
     rm -f -- "$cdp_probe_err" "${cdp_retry_err:-}"
-    echo "webgpt.submit blocked: stale CDP on explicit tab $requested_tab_id after same-tab extension reload retry; no prompt submitted and no fallback tab created." >&2
+    if [[ "$cdp_browser_lock_blocked" -eq 1 ]]; then
+      echo "webgpt.submit blocked: Surf browser lock blocked CDP probe for explicit tab $requested_tab_id; no prompt submitted and no fallback tab created." >&2
+    else
+      echo "webgpt.submit blocked: stale CDP on explicit tab $requested_tab_id after same-tab extension reload retry; no prompt submitted and no fallback tab created." >&2
+    fi
     exit 6
   fi
   rm -f -- "$cdp_probe_err" "${cdp_retry_err:-}"
