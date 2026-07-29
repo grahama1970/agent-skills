@@ -93,8 +93,9 @@ def validate(
         checks.append(_check(response_path.is_file() and bool(response_text.strip()), f"{handler}_response_present"))
         for text in expect_text:
             checks.append(_check(text in response_text, f"{handler}_response_contains_{_slug(text)}"))
-        checks.append(_check(_has_sentinel(raw_text), f"{handler}_raw_contains_sentinel"))
-        checks.append(_check(not _has_sentinel(response_text), f"{handler}_clean_response_strips_sentinel"))
+        sentinel = str(meta.get("sentinel") or "")
+        checks.append(_check(_has_sentinel(raw_text, sentinel), f"{handler}_raw_contains_sentinel"))
+        checks.append(_check(not _has_sentinel(response_text, sentinel), f"{handler}_clean_response_strips_sentinel"))
         requested = str(meta.get("requested_tab_id") or "")
         controlled = str(meta.get("controlled_tab_id") or "")
         if handler == "webgpt" and not controlled and meta.get("controlled_tab_id_inferred_from_requested") is True:
@@ -200,7 +201,9 @@ def _check(ok: bool, name: str, detail: Any = "") -> dict[str, Any]:
     return item
 
 
-def _has_sentinel(text: str) -> bool:
+def _has_sentinel(text: str, sentinel: str = "") -> bool:
+    if sentinel:
+        return sentinel in text
     return "<<<" in text and "_DONE:" in text and ">>>" in text
 
 

@@ -61,11 +61,13 @@ def test_validate_live_browser_workflow_accepts_complete_compete_lifecycle_recei
             {
                 "requested_tab_id": tab["tab_id"],
                 "controlled_tab_id": tab["tab_id"],
+                "sentinel": "<<<ASK_DONE:test>>>",
             },
         )
         (node_dir / "response.raw.md").write_text("PING_RESULT: 4\n<<<ASK_DONE:test>>>\n", encoding="utf-8")
         (node_dir / "response.md").write_text(
-            "PING_RESULT: 4\nVERIFIED_FEATURE: fixture feature\n",
+            "PING_RESULT: 4\nVERIFIED_FEATURE: fixture feature\n"
+            "The terminal marker format is ^<<<ASK_DONE:<id>>>$.\n",
             encoding="utf-8",
         )
     join_dir = run_dir / "node-artifacts" / "join"
