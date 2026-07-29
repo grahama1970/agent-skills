@@ -24,6 +24,9 @@ export type SynthesisViewModel = {
 		authoredBy: string;
 		runIdPresent: boolean;
 		sessionIdPresent: boolean;
+		requestIdPresent: boolean;
+		responseIdPresent: boolean;
+		callCount: number;
 		runRefSha256: string;
 		codeSha256: string;
 		codeBytes: number;
@@ -95,6 +98,9 @@ export function buildSynthesisViewModel(fixture: BattleNormalizedSynthesisFixtur
 			authoredBy: fixture.provider_authorship.authored_by,
 			runIdPresent: fixture.provider_authorship.provider_run_id_present,
 			sessionIdPresent: fixture.provider_authorship.provider_session_id_present,
+			requestIdPresent: fixture.provider_authorship.provider_request_id_present,
+			responseIdPresent: fixture.provider_authorship.provider_response_id_present,
+			callCount: fixture.provider_authorship.provider_call_count,
 			runRefSha256: String(fixture.provider_authorship.provider_run_ref_sha256 ?? "not emitted"),
 			codeSha256: fixture.provider_authorship.code_sha256,
 			codeBytes: fixture.provider_authorship.code_bytes,

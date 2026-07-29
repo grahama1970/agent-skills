@@ -86,6 +86,9 @@
         "observed_model",
         "provider_run_id_present",
         "provider_session_id_present",
+        "provider_request_id_present",
+        "provider_response_id_present",
+        "provider_call_count",
         "code_sha256",
         "code_bytes"
       ],
@@ -98,6 +101,9 @@
         "observed_model": { "type": "string", "minLength": 1 },
         "provider_run_id_present": { "type": "boolean" },
         "provider_session_id_present": { "type": "boolean" },
+        "provider_request_id_present": { "const": true },
+        "provider_response_id_present": { "const": true },
+        "provider_call_count": { "const": 1 },
         "code_sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
         "code_bytes": { "type": "integer", "minimum": 1 }
       },

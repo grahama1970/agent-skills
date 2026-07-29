@@ -1,0 +1,63 @@
+{
+  "schema": "battle.mvp_provider_authorship_proof_summary.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "implemented_slice": "PR3c provider-authored specimen receipts require transport request id, transport response id, exactly one provider call, and a transport source hash matching the materialized exploit_specimen.py artifact.",
+  "does_not_prove": [
+    "live provider availability",
+    "exploit specimen compile success",
+    "runtime target contact",
+    "Judge-verified exploit success",
+    "all Battle tickets closed"
+  ],
+  "commands": [
+    {
+      "command": "uv run pytest tests/test_child_dag_code_author_contract.py tests/test_normalized_synthesis_fixture_contract.py -q",
+      "cwd": "skills/battle",
+      "exit_code": 0,
+      "result": "12 passed"
+    },
+    {
+      "command": "npm test -- --run src/lib/battle-synthesis.test.ts",
+      "cwd": "skills/battle/spectator",
+      "exit_code": 0,
+      "result": "1 test file passed; 8 tests passed"
+    },
+    {
+      "command": "BATTLE_SPECTATOR_PROOF_ID=mvp-provider-authorship-20260729T1238 ./run.sh prove-spectator-source-build",
+      "cwd": "skills/battle",
+      "exit_code": 0,
+      "result": "BATTLE_SPECTATOR_SOURCE_BUILD_PASS; 12 PASS / 0 FAIL / 0 WARN / 12 total"
+    },
+    {
+      "command": "./run.sh backend-eval --out-dir local/backend-eval-20260729T1238-mvp-provider-authorship",
+      "cwd": "skills/battle",
+      "exit_code": 0,
+      "result": "status=passed; 14 passed / 0 failed / 14 total"
+    },
+    {
+      "command": "BATTLE_BACKEND_GOAL_PROOF_DIR=local/backend-goal-proof-20260729T1238-mvp-provider-authorship ./run.sh prove-backend-goal",
+      "cwd": "skills/battle",
+      "exit_code": 0,
+      "result": "BATTLE_PROVE_BACKEND_GOAL_PASS; backend contract pytest 99 passed; lifecycle pytest 17 passed; combiner pytest 6 passed; spawn architect pytest 4 passed; mock evidence guard OK checked 569 files"
+    }
+  ],
+  "receipt_artifacts": {
+    "source_build_proof": "skills/battle/local/spectator-source-build-mvp-provider-authorship-20260729T1238/proof.json",
+    "source_build_interactions": "skills/battle/local/spectator-source-build-mvp-provider-authorship-20260729T1238/captures/results.json",
+    "source_build_screenshot": "skills/battle/local/spectator-source-build-mvp-provider-authorship-20260729T1238/captures/battle-receipt-controls/0012_pane-controls_screenshot.png",
+    "backend_eval_receipt": "skills/battle/local/backend-eval-20260729T1238-mvp-provider-authorship/receipt.json",
+    "backend_goal_proof_dir": "skills/battle/local/backend-goal-proof-20260729T1238-mvp-provider-authorship",
+    "backend_goal_combiner_receipt": "skills/battle/local/backend-goal-proof-20260729T1238-mvp-provider-authorship/battle-004-combiner/combiner-proof-receipt.json",
+    "backend_goal_spawn_receipt": "skills/battle/local/backend-goal-proof-20260729T1238-mvp-provider-authorship/battle-004-spawn-architect/spawn-architect-receipt.json"
+  },
+  "visual_inspection": {
+    "screenshot": "skills/battle/local/spectator-source-build-mvp-provider-authorship-20260729T1238/captures/battle-receipt-controls/0012_pane-controls_screenshot.png",
+    "observed": "Battle source-built route rendered with search controls, filter buttons, scoreboard, live events pane, timeline controls, and collapsed evidence/detail pane controls visible."
+  },
+  "next_blocker": {
+    "name": "live provider canary receipt",
+    "reason": "The implemented contract rejects missing transport identity, but the remaining MVP blocker is producing a real non-mocked Tau/SciLLM provider-authored PR3c receipt that naturally carries provider_request_id, provider_response_id, provider_call_count=1, and transport_source_sha256 before compile/Judge work resumes."
+  }
+}

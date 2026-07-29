@@ -61,6 +61,9 @@ describe("synthesis view-model", () => {
 		]);
 		expect(model.nodes.every((node) => node.status === "PASS")).toBe(true);
 		expect(model.provider.providerLive).toBe(true);
+		expect(model.provider.requestIdPresent).toBe(true);
+		expect(model.provider.responseIdPresent).toBe(true);
+		expect(model.provider.callCount).toBe(1);
 		expect(model.specimen.previewLines.length).toBeGreaterThan(0);
 		expect(model.banners.map((b) => b.label)).toEqual([
 			"PROVIDER-AUTHORED SPECIMEN",
