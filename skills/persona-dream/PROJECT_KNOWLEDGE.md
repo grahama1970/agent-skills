@@ -1,8 +1,44 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener rater page ready and analysis false-green gated; SPARTA/human responses next) by Codex
+**Last updated:** 2026-07-29 UTC (issue #1117 live-chain receipt truthfulness repaired; joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener rater page ready and analysis false-green gated; SPARTA/human responses next) by Codex
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
+
+## 2026-07-29 — Issue #1117 receipt truthfulness repair
+
+Issue #1117 repaired two current-surface truthfulness wrinkles without changing
+the immutable-goal boundary:
+
+- Joined live-chain receipt:
+  `reports/goal_v5/continuity/live_chain/RECEIPT.json`
+  - SHA-256: `sha256:e414712551e43d727996b065ca250b2221bbbf60824d6fbbeae3a177e144e2fd`
+  - `session_mood_live_chatterbox.selected_before_first_turn` is now derived
+    from the sequence gate (`mood_bound_seq=0`, `first_turn_seq=1`) rather than
+    strict second-granularity timestamp comparison.
+  - The same stage preserves timestamp evidence separately:
+    `selected_before_first_turn_by_timestamp=false`, with an explicit note that
+    the sequence gate is authoritative when timestamps are equal within one
+    second.
+  - Chatterbox service-health evidence paths are normalized to repo-relative
+    `skills/persona-dream/...` paths instead of checkout-specific absolute
+    paths.
+- Durable sanity evidence copies:
+  - `reports/goal_v5/continuity/sanity_evidence/agentic_eval.json`
+    - SHA-256: `sha256:b2778f3004b75716060da048c190e3ffbe1c7b0d646a5e92f6761c6d2ee2da70`
+  - `reports/goal_v5/continuity/sanity_evidence/rater_page_ui_cdp_20260729T151347Z.png`
+    - SHA-256: `sha256:cc7bfb5cf11fc77972ab319431f91bc4cdeb6bf5672978489009ca5d3d0c879c`
+
+Proof:
+
+- `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_live_chain_receipt.py -q`
+  -> `9 passed`
+- `./skills/persona-dream/run.sh check-current-state-consistency --strict --json`
+  -> `PASS_CURRENT_STATE_CONSISTENT`, `mismatch_count=0`
+
+Boundary: this is a receipt/status truthfulness repair. It does not create
+SPARTA production consumption, human listener responses, perceived-emotion
+evidence, larger reliability evidence, PCTOM-R benefit, or immutable-goal
+completion.
 
 ## 2026-07-29 — Listener-study rater page ready; still no perceptual conclusion
 
@@ -34,11 +70,12 @@ Proof on the rebased tree:
   -> `PASS_BLINDED_LISTENER_RATER_PAGE_READY`
 - `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_render_blinded_listener_rater_page.py skills/persona-dream/tests/test_validate_blinded_listener_study.py skills/persona-dream/tests/test_analyze_blinded_listener_study.py -q`
   -> `10 passed`
-- `./skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.json --output /tmp/persona-dream-agentic-eval.json`
+- Durable copy of the agentic-eval fixture output:
+  `reports/goal_v5/continuity/sanity_evidence/agentic_eval.json`
   -> `READY`, 2 cases, 6 trials
 - `~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:8876/rater_page.html --name persona-dream-listener-rater`
-  -> `.codex/ui-verification/latest.json`, screenshot
-  `/tmp/codex-ui-verification/agent-skills-persona-dream-next-obvious-20260729/persona-dream-listener-rater/20260729T151347Z.png`
+  -> `.codex/ui-verification/latest.json`; durable screenshot copy:
+  `reports/goal_v5/continuity/sanity_evidence/rater_page_ui_cdp_20260729T151347Z.png`
 - `rg -n "stimuli/(control|dream|adversarial|baseline)\.wav|>control<|>dream<|>adversarial<|>baseline<|\"condition\"" skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html`
   -> no matches
 

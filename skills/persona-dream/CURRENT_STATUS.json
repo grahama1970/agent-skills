@@ -44,7 +44,7 @@
       "production reliability beyond an N=5 pilot"
     ],
     "latest_live_chain_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
-    "latest_live_chain_receipt_sha256": "sha256:436075e6635ff9a6e643a46c624ace9a9eb0cd201130baea242742efdaf7919f",
+    "latest_live_chain_receipt_sha256": "sha256:e414712551e43d727996b065ca250b2221bbbf60824d6fbbeae3a177e144e2fd",
     "latest_live_chain_chatterbox_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
     "latest_live_chain_chatterbox_receipt_sha256": "sha256:7947ecdce50c0ddab47301bfda37225683dfcf2196a1dfed0e75d6321e9e43fb",
     "latest_live_chain_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
@@ -303,31 +303,34 @@
         "result": "10 passed"
       },
       {
-        "command": "./skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.json --output /tmp/persona-dream-agentic-eval.json",
+        "command": "durably copy agentic-eval fixture output into Persona Dream report evidence",
         "result": "READY",
         "case_count": 2,
         "trial_count": 6,
-        "boundary": "fixture-backed mechanical collection workflow only"
+        "boundary": "fixture-backed mechanical collection workflow only",
+        "durable_output": "skills/persona-dream/reports/goal_v5/continuity/sanity_evidence/agentic_eval.json",
+        "durable_output_sha256": "sha256:b2778f3004b75716060da048c190e3ffbe1c7b0d646a5e92f6761c6d2ee2da70"
       },
       {
         "command": "~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:8876/rater_page.html --name persona-dream-listener-rater",
         "result": "UI marker written",
         "marker": ".codex/ui-verification/latest.json",
-        "screenshot": "/tmp/codex-ui-verification/agent-skills-persona-dream-next-obvious-20260729/persona-dream-listener-rater/20260729T151347Z.png"
+        "screenshot": "skills/persona-dream/reports/goal_v5/continuity/sanity_evidence/rater_page_ui_cdp_20260729T151347Z.png",
+        "screenshot_sha256": "sha256:cc7bfb5cf11fc77972ab319431f91bc4cdeb6bf5672978489009ca5d3d0c879c"
       },
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_arc_bias.py skills/persona-dream/tests/test_live_chain_receipt.py skills/persona-dream/tests/test_current_state_consistency.py skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_session_mood_chatterbox_live.py skills/persona-dream/tests/test_session_mood_voice_recognition_preflight.py -q",
-        "result": "46 passed"
+        "result": "48 passed"
       },
       {
         "command": "./skills/persona-dream/sanity.sh",
-        "result": "583 passed, 9 subtests passed",
+        "result": "587 passed, 9 subtests passed",
         "current_state_stage_count": 8
       }
     ],
     "full_sanity_command": "./skills/persona-dream/sanity.sh",
     "full_sanity_status": "PASS",
-    "full_sanity_result": "583 passed, 9 subtests passed",
+    "full_sanity_result": "587 passed, 9 subtests passed",
     "full_sanity_notes": [
       "static dream fixture produced 10 required artifacts and 6 frame prompts",
       "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
