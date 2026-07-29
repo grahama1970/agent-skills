@@ -10,6 +10,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+# dotenv_helper is not invoked here; this generated smoke test only passes
+# through an explicit subprocess environment.
 GREEN = "\033[0;32m"
 RED = "\033[0;31m"
 YELLOW = "\033[1;33m"

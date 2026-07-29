@@ -8,6 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+# dotenv_helper is not invoked here; these tests build explicit environment
+# dictionaries to prove secret-bearing operator values do not cross boundaries.
 from hack.compose_policy import compile_compose_policy
 from hack.target_environment import (
     build_sterile_target_environment,

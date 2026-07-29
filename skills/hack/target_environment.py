@@ -21,6 +21,7 @@ from rich.console import Console
 
 from common.security_authorization import file_sha256
 from hack.compose_policy import compile_compose_policy, extract_variable_references, normalize_compose_with_docker
+from hack.env import load_hack_dotenv as dotenv_helper
 
 SCHEMA = "hack.target_environment_receipt.v1"
 PROOF_SCHEMA = "hack.sterile_target_environment_proof.v1"
@@ -40,6 +41,7 @@ TARGET_ENV_ALLOWLIST = {
 SECRET_NAME_MARKERS = ("SECRET", "TOKEN", "API_KEY", "PASSWORD", "CREDENTIAL", "PRIVATE_KEY")
 
 console = Console()
+dotenv_helper()
 
 
 def json_sha256(payload: Any) -> str:

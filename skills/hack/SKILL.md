@@ -26,6 +26,12 @@ composes:
   - task-monitor
   - code-runner
 
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-security
+runtime_self_improvement: basic
+
 taxonomy:
   - security
   - corruption
@@ -49,6 +55,27 @@ All security operations run in **isolated Docker containers** - no tools execute
 
 - **Docker Engine** must be installed and running
 - The security container image will be built automatically on first use
+
+## Compliance and Readiness State
+
+Current readiness is `USABLE_WITH_GAPS`: Hack has an executable `run.sh`, Docker
+isolation, authorization-bound target workflows, fixtures, schemas, tests, and a
+`sanity.sh` smoke check. It is not yet a fully self-maintaining substantial
+runtime skill.
+
+Required next-step updates before declaring `runtime_self_improvement:
+substantial`:
+
+- Add `./run.sh verify` as a non-destructive verifier that emits a durable
+  receipt under the skill artifact root.
+- Add a maintainer ticket/plan that references that verifier and its receipt.
+- Add an `agents/hack/AGENTS.md` maintainer contract for post-run inspection,
+  evidence triage, and safe repair routing.
+- Split oversized modules, starting with `session_audit.py` and
+  `evolutionary_campaign.py`, into focused modules under the 800-line Python
+  hygiene limit.
+- Remove bootstrap `sys.path` surgery after packaging/import boundaries are
+  normalized.
 
 ## Commands
 

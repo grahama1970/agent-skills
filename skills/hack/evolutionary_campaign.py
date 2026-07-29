@@ -25,10 +25,12 @@ from rich.console import Console
 
 from common.security_authorization import require_target_authorization
 from hack.chaos_campaign import is_local_or_private_target, summarize_seed_file
+from hack.env import load_hack_dotenv as dotenv_helper
 from hack.self_improve_loop import ARTIFACT_ROOT
 from hack.session_audit import safe_slug
 
 console = Console()
+dotenv_helper()
 
 LANE_IDS = (
     "api_protocol",

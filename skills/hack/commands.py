@@ -38,8 +38,10 @@ from hack.utils import (
     memory_store,
     show_memory_context,
 )
+from hack.env import load_hack_dotenv as dotenv_helper
 
 console = Console()
+dotenv_helper()
 
 
 def create_learn_command() -> Callable[..., None]:

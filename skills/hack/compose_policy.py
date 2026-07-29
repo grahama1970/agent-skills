@@ -24,12 +24,14 @@ import typer
 from rich.console import Console
 
 from common.security_authorization import file_sha256
+from hack.env import load_hack_dotenv as dotenv_helper
 
 SCHEMA = "hack.compose_policy_receipt.v1"
 POLICY_VERSION = "hack.compose-policy.v1"
 COMPOSE_CONFIG_TIMEOUT_SECONDS = 20
 
 console = Console()
+dotenv_helper()
 
 
 @dataclass(frozen=True)

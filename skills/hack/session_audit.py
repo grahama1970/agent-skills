@@ -19,6 +19,7 @@ from rich.console import Console
 
 from common.security_authorization import require_target_authorization
 from hack.compose_policy import compile_compose_policy, mark_execution_started
+from hack.env import load_hack_dotenv as dotenv_helper
 from hack.proof_authority import (
     build_probe_observation,
     file_sha256 as proof_file_sha256,
@@ -35,6 +36,7 @@ from hack.target_environment import (
 )
 
 console = Console()
+dotenv_helper()
 
 DEFAULT_NUCLEI_VERSION = "3.4.10"
 
