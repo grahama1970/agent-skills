@@ -153,9 +153,21 @@ def test_probe_degrades_but_does_not_block_when_one_provider_tab_reads_cleanly(m
     )
 
     assert report["status"] == "AVAILABLE_PREFLIGHT"
+    assert report["degraded_providers"] == ["webkimi"]
+    assert "webkimi" in report["provider_probe_recovery_packets"]
     assert report["providers"]["webkimi"]["probe_degraded"] is True
     assert report["providers"]["webkimi"]["probe_failed"] is False
     assert report["providers"]["webkimi"]["failure_code"] == "browser_provider_probe_timeout"
+    packet = report["providers"]["webkimi"]["provider_probe_recovery_packet"]
+    assert packet["schema"] == "ask.browser_provider_probe_recovery_packet.v1"
+    assert packet["status"] == "DEGRADED"
+    assert packet["failure_code"] == "browser_provider_probe_timeout"
+    assert packet["checked_tab_ids"] == ["777", "666"]
+    assert packet["auto_retry_allowed"] is False
+    assert packet["next_command"].startswith("cd skills/ask && ./run.sh browser-availability --provider webkimi")
+    assert "--tab-id webkimi=777" in packet["next_command"]
+    assert "$ticket to $ask at agent-skills@main" in packet["ticket_instruction"]
+    assert "skills/ticket/run.sh bug" in packet["ticket_command"]
 
 
 def test_probe_degrades_without_blocking_when_all_tab_reads_time_out(monkeypatch, tmp_path: Path) -> None:
@@ -189,10 +201,16 @@ def test_probe_degrades_without_blocking_when_all_tab_reads_time_out(monkeypatch
 
     assert report["status"] == "AVAILABLE_PREFLIGHT"
     assert "error" not in report
+    assert report["degraded_providers"] == ["webgpt"]
+    assert "webgpt" in report["provider_probe_recovery_packets"]
     assert report["providers"]["webgpt"]["probe_degraded"] is True
     assert report["providers"]["webgpt"]["probe_failed"] is False
     assert report["providers"]["webgpt"]["failure_code"] == "browser_provider_probe_timeout"
     assert report["providers"]["webgpt"]["checked_tabs"][0]["timed_out"] is True
+    packet = report["providers"]["webgpt"]["provider_probe_recovery_packet"]
+    assert packet["status"] == "DEGRADED"
+    assert packet["fallback_instruction"].startswith("Do not block healthy roundtable")
+    assert "browser-provider-availability.json" in packet["ticket_instruction"]
 
 
 def test_probe_reports_error_when_all_tab_reads_fail_non_timeout(monkeypatch, tmp_path: Path) -> None:

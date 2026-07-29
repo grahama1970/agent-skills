@@ -152,6 +152,14 @@ def probe(
             explicit_tab_ids=explicit_tabs.get(provider, []),
         )
 
+    report["degraded_providers"] = [
+        name for name, payload in report["providers"].items() if payload.get("probe_degraded")
+    ]
+    report["provider_probe_recovery_packets"] = {
+        name: payload["provider_probe_recovery_packet"]
+        for name, payload in report["providers"].items()
+        if isinstance(payload.get("provider_probe_recovery_packet"), dict)
+    }
     report["status"] = (
         "NEEDS_ATTENTION"
         if any(payload.get("provider_limited") for payload in report["providers"].values())
@@ -178,7 +186,7 @@ def _probe_provider(
     checked = []
     for tab_id_value in _candidate_tab_ids(provider_tabs, explicit_tab_ids, max_tabs):
         checked.append(_check_tab(surf_run=surf_run, tab_id=tab_id_value, pattern=config.limited_pattern))
-    return {
+    payload = {
         "provider": provider,
         "tab_count": len(provider_tabs),
         "tabs": provider_tabs[:25],
@@ -189,6 +197,13 @@ def _probe_provider(
         "failure_code": _provider_probe_failure_code(checked),
         "read_only": True,
     }
+    if payload["probe_degraded"]:
+        packet = _provider_probe_recovery_packet(provider=provider, checked=checked, payload=payload)
+        payload["provider_probe_recovery_packet"] = packet
+        payload["next_command"] = packet["next_command"]
+        payload["ticket_command"] = packet["ticket_command"]
+        payload["ticket_instruction"] = packet["ticket_instruction"]
+    return payload
 
 
 def _parse_tab_list_stdout(stdout: str) -> tuple[list[Any], str | None]:
@@ -352,6 +367,83 @@ def _provider_probe_failed(checked: list[dict[str, Any]]) -> bool:
     if all(item.get("timed_out") is True for item in failures):
         return False
     return len(failures) == len(checked)
+
+
+def _provider_probe_recovery_packet(
+    *,
+    provider: str,
+    checked: list[dict[str, Any]],
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    failure_code = str(payload.get("failure_code") or "browser_provider_probe_degraded")
+    checked_tab_ids = [str(item.get("tab_id")) for item in checked if item.get("tab_id")]
+    next_command_parts = [
+        "cd skills/ask && ./run.sh browser-availability",
+        f"--provider {provider}",
+        *[f"--tab-id {provider}={tab_id}" for tab_id in checked_tab_ids],
+        f"--output /tmp/ask-browser-availability-{provider}.json",
+        "--json",
+    ]
+    repro_command = " ".join(next_command_parts)
+    observed = (
+        f"{provider} provider availability probe degraded with {failure_code}; "
+        f"checked tabs: {', '.join(checked_tab_ids) if checked_tab_ids else 'none'}"
+    )
+    proof = (
+        "Non-mocked browser-availability receipt showing the provider either reads cleanly, "
+        "is visibly provider-limited, or emits this recovery packet without blocking healthy providers."
+    )
+    ticket_command = (
+        "skills/ticket/run.sh bug "
+        + json.dumps(f"Ask browser availability probe degraded for {provider}")
+        + " --target skills/ask"
+        + " --observed "
+        + json.dumps(observed)
+        + " --expected "
+        + json.dumps(
+            "The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet."
+        )
+        + " --repro "
+        + json.dumps(repro_command)
+        + " --proof "
+        + json.dumps(proof)
+        + " --apply"
+    )
+    return {
+        "schema": "ask.browser_provider_probe_recovery_packet.v1",
+        "status": "NEEDS_ATTENTION" if payload.get("probe_failed") else "DEGRADED",
+        "provider": provider,
+        "failure_code": failure_code,
+        "provider_limited": bool(payload.get("provider_limited")),
+        "probe_failed": bool(payload.get("probe_failed")),
+        "probe_degraded": bool(payload.get("probe_degraded")),
+        "checked_tab_ids": checked_tab_ids,
+        "cooldown_seconds": 600 if payload.get("provider_limited") else 0,
+        "auto_retry_allowed": False,
+        "auto_retry_blocked_reason": (
+            "provider_probe_uncertain_requires_readback"
+            if not payload.get("provider_limited")
+            else "browser_provider_rate_limit_requires_backoff"
+        ),
+        "next_command": repro_command,
+        "fallback_instruction": (
+            "Do not block healthy roundtable or competition participants on this probe. "
+            "Rerun only this provider availability probe, or use Ask's browser provider selection "
+            "to replace this lane when enough alternatives are available."
+        ),
+        "ticket_target": "$ask at agent-skills@main",
+        "ticket_instruction": (
+            "If this provider remains degraded after rerunning next_command, if the provider is needed "
+            "for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket "
+            "to $ask at agent-skills@main with browser-provider-availability.json and the provider entry."
+        ),
+        "ticket_command": ticket_command,
+        "evidence": {
+            "checked_tabs": checked,
+            "tab_count": payload.get("tab_count"),
+            "provider_tabs": payload.get("tabs"),
+        },
+    }
 
 
 def _candidate_tab_ids(provider_tabs: list[dict[str, Any]], explicit_tab_ids: list[str], max_tabs: int) -> list[str]:
