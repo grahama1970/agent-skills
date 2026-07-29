@@ -265,6 +265,38 @@ def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: flo
     }
 
 
+def scaffold_manifest(skill_dir: Path) -> dict[str, Any]:
+    skill_name = skill_dir.name
+    if (skill_dir / "sanity.sh").exists():
+        case = {
+            "name": "sanity",
+            "type": "positive",
+            "command": ["bash", "../sanity.sh"],
+            "expected": {"exit_code": 0},
+        }
+    elif (skill_dir / "run.sh").exists():
+        case = {
+            "name": "run-help",
+            "type": "positive",
+            "command": ["bash", "../run.sh", "--help"],
+            "expected": {"exit_code": 0},
+        }
+    else:
+        raise typer.BadParameter("skill needs sanity.sh or run.sh to scaffold a fixture")
+
+    return {
+        "version": 2,
+        "skill": skill_name,
+        "trials": 3,
+        "proof_scope": "fixture wiring smoke",
+        "claims": {
+            "proves": "the existing skill entrypoint exits with the expected status",
+            "does_not_prove": "semantic correctness, live service behavior, or full skill readiness",
+        },
+        "cases": [case],
+    }
+
+
 @app.command("run")
 def run(
     manifest: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
@@ -277,6 +309,23 @@ def run(
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(payload + "\n", encoding="utf-8")
+    typer.echo(payload)
+
+
+@app.command("scaffold-fixture")
+def scaffold_fixture(
+    skill_dir: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Path for the generated fixture."),
+    force: bool = typer.Option(False, "--force", help="Overwrite an existing fixture."),
+) -> None:
+    """Create a first-pass agentic eval fixture from a skill entrypoint."""
+    manifest = scaffold_manifest(skill_dir.resolve())
+    target = output or (skill_dir / "fixtures" / "agentic_eval.json")
+    if target.exists() and not force:
+        raise typer.BadParameter(f"{target} already exists; pass --force to overwrite")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(manifest, indent=2) + "\n"
+    target.write_text(payload, encoding="utf-8")
     typer.echo(payload)
 
 

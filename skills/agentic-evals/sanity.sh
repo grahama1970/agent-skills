@@ -26,6 +26,7 @@ assert all(case["pass_rate"] == 1.0 for case in report["cases"])
 PY
 
 AUDIT_ROOT="$(mktemp -d)"
+AUDIT_OUT=""
 trap 'rm -f "$OUT" "$AUDIT_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
 mkdir -p "$AUDIT_ROOT/covered/fixtures" "$AUDIT_ROOT/missing"
 cat > "$AUDIT_ROOT/covered/SKILL.md" <<'EOF'
@@ -80,4 +81,18 @@ assert report["summary"]["skills_checked"] == 2
 assert report["summary"]["eval001_count"] == 1
 assert report["summary"]["posture_counts"]["agentic_fixture"] == 1
 assert report["summary"]["posture_counts"]["missing"] == 1
+PY
+
+SCAFFOLD_OUT="$AUDIT_ROOT/missing/fixtures/agentic_eval.json"
+"$SCRIPT_DIR/run.sh" scaffold-fixture "$AUDIT_ROOT/missing" --output "$SCAFFOLD_OUT" >/dev/null
+"$SCRIPT_DIR/run.sh" run "$SCAFFOLD_OUT" >/dev/null
+uv run --project "$SCRIPT_DIR" python - "$SCAFFOLD_OUT" <<'PY'
+import json
+import sys
+
+fixture = json.load(open(sys.argv[1], encoding="utf-8"))
+assert fixture["version"] == 2
+assert fixture["trials"] == 3
+assert fixture["cases"][0]["name"] == "run-help"
+assert fixture["cases"][0]["expected"]["exit_code"] == 0
 PY
