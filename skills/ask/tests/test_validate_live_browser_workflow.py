@@ -132,7 +132,7 @@ def test_validate_live_browser_workflow_rejects_clean_contamination_markers(tmp_
             "requested_tab_id": "222",
             "controlled_tab_id": "222",
             "sentinel": "<<<CLAUDE_DONE:test>>>",
-            "clean_contamination_markers": ["What can we tackle together?"],
+            "clean_contamination_markers": [],
         },
     )
     (node_dir / "response.raw.md").write_text("What can we tackle together?\n<<<CLAUDE_DONE:test>>>\n", encoding="utf-8")

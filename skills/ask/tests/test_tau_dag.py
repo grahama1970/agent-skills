@@ -4143,6 +4143,39 @@ def test_kimi_clean_output_contamination_is_not_tab_identity_mismatch() -> None:
     assert summary["clean_contains_sentinel"] is True
 
 
+def test_claude_page_prompt_echo_is_clean_output_contamination() -> None:
+    meta = {
+        "status": "failed",
+        "failure": "missing_sentinel_or_contaminated_clean_output",
+        "raw_contains_sentinel": True,
+        "clean_contains_sentinel": False,
+        "requested_tab_id": "837364427",
+        "controlled_tab_id": "837364427",
+        "controlled_tab_id_mismatch": False,
+        "output": "/tmp/response.md",
+        "raw_output": "/tmp/response.raw.md",
+    }
+    response_text = (
+        "Title: New chat - Claude\n"
+        "URL: https://claude.ai/new\n"
+        "@keyframes look-around { 0%, 16.6%, 100% { transform: translateX(-1.5px); } }\n"
+        "What can we tackle together?"
+        "Automation-only instruction: answer the user's request normally.\n"
+    )
+
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webclaude",
+        failure=json.dumps(meta),
+        response_text=response_text,
+        raw_text=response_text + "\n<<<CLAUDE_DONE:test>>>",
+        prompt_text="Roundtable request",
+        submit_meta=meta,
+        commands=[],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_CLEAN_OUTPUT_CONTAMINATED
+
+
 def test_browser_oracle_existing_venv_setup_failure_is_not_missing_sentinel() -> None:
     failure = """Using CPython 3.14.3
 Creating virtual environment at: .venv

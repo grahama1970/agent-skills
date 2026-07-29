@@ -98,9 +98,9 @@ def validate(
         checks.append(_check(not _has_sentinel(response_text, sentinel), f"{handler}_clean_response_strips_sentinel"))
         checks.append(
             _check(
-                not meta.get("clean_contamination_markers"),
+                not meta.get("clean_contamination_markers") and not _clean_response_contamination_markers(response_text),
                 f"{handler}_clean_response_uncontaminated",
-                meta.get("clean_contamination_markers"),
+                meta.get("clean_contamination_markers") or _clean_response_contamination_markers(response_text),
             )
         )
         requested = str(meta.get("requested_tab_id") or "")
@@ -212,6 +212,17 @@ def _has_sentinel(text: str, sentinel: str = "") -> bool:
     if sentinel:
         return sentinel in text
     return "<<<" in text and "_DONE:" in text and ">>>" in text
+
+
+def _clean_response_contamination_markers(text: str) -> list[str]:
+    markers = (
+        "What can we tackle together?",
+        "@keyframes",
+        "Automation-only instruction:",
+        "After your complete answer, append a final line containing only this exact marker:",
+        "Do not print anything after that marker.",
+    )
+    return [marker for marker in markers if marker in text]
 
 
 def _slug(text: str) -> str:

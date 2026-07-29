@@ -2432,6 +2432,11 @@ def _looks_clean_output_contaminated(text: str, meta: dict[str, Any]) -> bool:
         "clean response contains sentinel",
         "contaminated clean output",
         "sentinel remained in clean output",
+        "what can we tackle together?",
+        "@keyframes",
+        "automation-only instruction:",
+        "after your complete answer, append a final line containing only this exact marker:",
+        "do not print anything after that marker.",
     )
     return any(marker in text for marker in markers)
 
