@@ -321,9 +321,9 @@ if after:
     )
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" "$attach_file_abs" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" "${attach_file_abs:-}" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, retry_count, retry_attempts, cooldown_s, attach_file = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, retry_count, retry_attempts, cooldown_s, requested_attachment = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -348,9 +348,16 @@ for line in reversed(stderr_text.splitlines()):
         try:
             attachment = json.loads(payload)
         except Exception:
-            attachment = {"parse_error": True, "raw": payload}
-    if tab_id is not None and activated is not None and tab_was_created is not None and (not attach_file or attachment is not None):
+            attachment = {"attached": False, "parse_error": payload}
+    if tab_id is not None and activated is not None and tab_was_created is not None and (not requested_attachment or attachment is not None):
         break
+if attachment is None and requested_attachment:
+    attachment = {
+        "attached": False,
+        "path": requested_attachment,
+        "name": pathlib.Path(requested_attachment).name,
+        "missing_native_metadata": True,
+    }
 if tab_id is None and requested_tab_id:
     tab_id = requested_tab_id
     tab_id_source = "requested_tab_id_fallback"
@@ -392,8 +399,13 @@ no_activate = no_activate_s == "1"
 
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
 activation_violation = no_activate and activated is True
-attachment_missing = bool(attach_file) and not attachment
-attachment_preview_missing = bool(attach_file) and bool(attachment) and attachment.get("previewVisible") is False
+attachment_missing = bool(requested_attachment and not (isinstance(attachment, dict) and attachment.get("attached") is True))
+attachment_preview_missing = bool(
+    requested_attachment
+    and isinstance(attachment, dict)
+    and attachment.get("attached") is True
+    and attachment.get("previewVisible") is False
+)
 status = "completed" if (
     tab_id
     and not tab_mismatch
@@ -427,7 +439,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
-    "attach_file": attach_file or None,
+    "attach_file": requested_attachment or None,
     "attachment": attachment,
     "attachment_missing": attachment_missing,
     "attachment_preview_missing": attachment_preview_missing,

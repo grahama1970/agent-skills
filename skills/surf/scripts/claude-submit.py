@@ -190,11 +190,12 @@ def main() -> int:
             raw_path.write_text(raw_text, encoding="utf-8")
         except Exception:
             raw_path.write_text("", encoding="utf-8")
-        if sentinel in raw_text:
+        if _raw_text_has_response_sentinel(raw_text, sentinel):
             try:
                 clean_text = _clean_response(raw_text, sentinel)
                 output_path.write_text(clean_text, encoding="utf-8")
                 focus_after = _focus_state()
+                recovered_attachments = _recovered_attachment_metadata(attach_files)
                 meta = _success_meta(
                     args=args,
                     input_path=input_path,
@@ -210,7 +211,7 @@ def main() -> int:
                     clean_text=clean_text,
                     raw_text=raw_text,
                     attach_files=attach_files,
-                    attachments=[],
+                    attachments=recovered_attachments,
                     content_script_recovery=content_script_recovery,
                     tab_identity_preflight=tab_identity_preflight,
                 )
@@ -375,12 +376,50 @@ def _submit_prompt(tab_id: str, prompt: str) -> None:
         raise SubmitFailure("Claude prompt textbox not found")
     _surf(["click", textbox_ref, "--tab-id", tab_id], timeout=60)
     _surf(["type", prompt, "--ref", textbox_ref, "--tab-id", tab_id], timeout=60)
+    if not _wait_for_claude_prompt_text(tab_id, prompt, timeout_seconds=10):
+        raise SubmitFailure("Claude prompt composer did not receive inserted text")
     read_after = _surf(["read", "--tab-id", tab_id], timeout=60).stdout
     send_ref = _find_ref(read_after, r'button "Send message" \[(e\d+)\]')
     if send_ref:
         _surf(["click", send_ref, "--tab-id", tab_id], timeout=60)
     else:
         _surf(["key", "Enter", "--tab-id", tab_id], timeout=60)
+    if not _wait_for_claude_submission_acceptance(tab_id, prompt, timeout_seconds=10):
+        raise SubmitFailure("Claude prompt was staged but not submitted")
+
+
+def _wait_for_claude_prompt_text(tab_id: str, prompt: str, *, timeout_seconds: int) -> bool:
+    start = _normalize_visible_text(prompt[:80])
+    end = _normalize_visible_text(prompt[-80:])
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        text = _normalize_visible_text(_page_text(tab_id, timeout=30))
+        if start in text and end in text:
+            return True
+        time.sleep(0.5)
+    return False
+
+
+def _wait_for_claude_submission_acceptance(tab_id: str, prompt: str, *, timeout_seconds: int) -> bool:
+    start = _normalize_visible_text(prompt[:80])
+    end = _normalize_visible_text(prompt[-80:])
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        text = _normalize_visible_text(_page_text(tab_id, timeout=30))
+        prompt_still_staged = start in text and end in text
+        responding = "Claude is responding" in text or "Stop response" in text
+        if responding or not prompt_still_staged:
+            return True
+        time.sleep(0.5)
+    return False
+
+
+def _normalize_visible_text(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _raw_text_has_response_sentinel(raw_text: str, sentinel: str) -> bool:
+    return "Claude responded:" in raw_text and sentinel in _latest_claude_response(raw_text)
 
 
 def _normalize_attach_files(values: list[str], comma_separated: str) -> list[Path]:
@@ -569,6 +608,21 @@ def _success_meta(
         "started_at": started_at,
         "finished_at": finished_at,
     }
+
+
+def _recovered_attachment_metadata(attach_files: list[Path]) -> list[dict[str, Any]]:
+    attachments: list[dict[str, Any]] = []
+    for attach_file in attach_files:
+        attachments.append(
+            {
+                "attached": True,
+                "path": str(attach_file.resolve()),
+                "name": attach_file.name,
+                "preview_visible": None,
+                "source": "post_failure_sentinel_recovery_attach_file",
+            }
+        )
+    return attachments
 
 
 def _write_failed_meta(

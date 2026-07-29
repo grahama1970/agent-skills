@@ -1,7 +1,7 @@
 const KIMI_TAB_URL = "https://www.kimi.com/";
 
 const SELECTORS = {
-  promptTextarea: 'textarea[placeholder*="Ask anything"], textarea[placeholder*="follow-up"], textarea[placeholder*="Add a follow-up"], div[class*="editorContentEditable"], [contenteditable="true"][role="textbox"], [contenteditable="true"]',
+  promptTextarea: 'textarea[placeholder*="Ask anything"], textarea[placeholder*="follow-up"], textarea[placeholder*="Add a follow-up"], .chat-input-editor[role="textbox"], .chat-input-editor, div[class*="editorContentEditable"], [contenteditable="true"][role="textbox"], [contenteditable="true"]',
   sendButton: '#send-button, button[id="send-button"], [class*="send-btn"], [class*="send-button"], button[aria-label*="Send"], button[aria-label*="send"], button[type="submit"]:not([disabled])',
   stopButton: 'button[aria-label*="Stop"], button[aria-label*="Cancel"], button[aria-label*="stop"], button[aria-label*="Stop generation"]',
   assistantMessage: '[class*="markdown"], [class*="Markdown"], .markdown-body, .prose, [data-role="assistant"], article, [class*="assistant"]',
@@ -59,6 +59,14 @@ function withTimeout(promise, timeoutMs, label) {
     timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
+async function insertTextInChunks(inputCdp, text, chunkSize = 4000) {
+  const value = String(text || "");
+  for (let index = 0; index < value.length; index += chunkSize) {
+    await inputCdp("Input.insertText", { text: value.slice(index, index + chunkSize) });
+    await delay(20);
+  }
 }
 
 function textLooksKimiProviderBusy(text) {
@@ -640,13 +648,97 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     }
     if (previewState === "visible") {
       log(`File attachment preview visible`);
-      return { attached: true };
+      return {
+        attached: true,
+        path: absolutePath,
+        name: path.basename(absolutePath),
+        previewVisible: true,
+      };
     }
     await delay(250);
   }
   throw new Error("Kimi attachment upload did not become ready within 20s");
 }
 
+
+async function verifyPromptInComposer(cdp, prompt, timeoutMs = 4000) {
+  const promptStart = JSON.stringify(String(prompt || "").slice(0, 80));
+  const promptEnd = JSON.stringify(String(prompt || "").slice(-80));
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const verified = await evaluate(
+      cdp,
+      `(() => {
+        const selectors = [
+          '.chat-input-editor[role="textbox"]',
+          '.chat-input-editor',
+          'textarea[placeholder*="Ask anything"]',
+          'textarea[placeholder*="follow-up"]',
+          'textarea[placeholder*="Add a follow-up"]',
+          'div[class*="editorContentEditable"]',
+          '[role="textbox"]',
+          '[contenteditable="true"]',
+        ];
+        const visible = (node) => {
+          if (!node) return false;
+          const rect = node.getBoundingClientRect();
+          const style = window.getComputedStyle(node);
+          return rect.width > 0
+            && rect.height > 0
+            && style.visibility !== 'hidden'
+            && style.display !== 'none';
+        };
+        for (const selector of selectors) {
+          const nodes = Array.from(document.querySelectorAll(selector));
+          for (const node of nodes) {
+            if (!visible(node)) continue;
+            const text = node.innerText || node.textContent || node.value || '';
+            if (text.includes(${promptStart}) && text.includes(${promptEnd})) {
+              return { ok: true, selector, length: text.length };
+            }
+          }
+        }
+        return { ok: false };
+      })()`,
+    );
+    if (verified?.ok) return verified;
+    await delay(100);
+  }
+  return { ok: false };
+}
+
+async function clearFocusedEditor(inputCdp) {
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "a",
+    code: "KeyA",
+    windowsVirtualKeyCode: 65,
+    nativeVirtualKeyCode: 65,
+    modifiers: 2,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "a",
+    code: "KeyA",
+    windowsVirtualKeyCode: 65,
+    nativeVirtualKeyCode: 65,
+    modifiers: 2,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Backspace",
+    code: "Backspace",
+    windowsVirtualKeyCode: 8,
+    nativeVirtualKeyCode: 8,
+  });
+  await inputCdp("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Backspace",
+    code: "Backspace",
+    windowsVirtualKeyCode: 8,
+    nativeVirtualKeyCode: 8,
+  });
+}
 
 async function typePrompt(cdp, inputCdp, prompt) {
   const encodedPrompt = JSON.stringify(prompt);
@@ -677,15 +769,8 @@ async function typePrompt(cdp, inputCdp, prompt) {
           node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
           return { ok: true, mode: 'value' };
         }
-        if (node.isContentEditable) {
-          try {
-            document.execCommand('selectAll', false, null);
-            document.execCommand('insertText', false, ${encodedPrompt});
-          } catch (e) {
-            node.textContent = ${encodedPrompt};
-          }
-          node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertText' }));
-          return { ok: true, mode: 'contenteditable' };
+        if (node.isContentEditable || node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
+          return { ok: true, mode: 'focused_editable' };
         }
         if (node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
           return { ok: true, mode: 'focused_custom_textbox' };
@@ -697,47 +782,17 @@ async function typePrompt(cdp, inputCdp, prompt) {
   if (!typed?.ok) {
     throw new Error("Failed to focus/type Kimi prompt composer");
   }
-  if (typed.mode === "focused_custom_textbox") {
-    await inputCdp("Input.dispatchKeyEvent", {
-      type: "keyDown",
-      key: "a",
-      code: "KeyA",
-      windowsVirtualKeyCode: 65,
-      nativeVirtualKeyCode: 65,
-      modifiers: 2,
-    });
-    await inputCdp("Input.dispatchKeyEvent", {
-      type: "keyUp",
-      key: "a",
-      code: "KeyA",
-      windowsVirtualKeyCode: 65,
-      nativeVirtualKeyCode: 65,
-      modifiers: 2,
-    });
-    await inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Backspace", code: "Backspace", windowsVirtualKeyCode: 8, nativeVirtualKeyCode: 8 });
-    await inputCdp("Input.dispatchKeyEvent", { type: "keyUp", key: "Backspace", code: "Backspace", windowsVirtualKeyCode: 8, nativeVirtualKeyCode: 8 });
-    await inputCdp("Input.insertText", { text: prompt });
-    const promptStart = JSON.stringify(prompt.slice(0, 80));
-    const promptEnd = JSON.stringify(prompt.slice(-80));
-    const verified = await evaluate(
-      cdp,
-      `(() => {
-        const selectors = [
-          '.chat-input-editor[role="textbox"]',
-          '.chat-input-editor',
-          '[role="textbox"]',
-          '[contenteditable="true"]',
-        ];
-        for (const selector of selectors) {
-          const node = document.querySelector(selector);
-          const text = node ? (node.innerText || node.textContent || node.value || '') : '';
-          if (text.includes(${promptStart}) && text.includes(${promptEnd})) return true;
-        }
-        return false;
-      })()`,
-    );
-    if (!verified) {
+  if (typed.mode === "focused_editable") {
+    await clearFocusedEditor(inputCdp);
+    await insertTextInChunks(inputCdp, prompt);
+    const verified = await verifyPromptInComposer(cdp, prompt);
+    if (!verified?.ok) {
       throw new Error("Kimi prompt composer did not receive inserted text");
+    }
+  } else if (typed.mode === "value") {
+    const verified = await verifyPromptInComposer(cdp, prompt);
+    if (!verified?.ok) {
+      throw new Error("Kimi textarea composer did not retain inserted text");
     }
   }
   await delay(300);

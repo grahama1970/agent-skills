@@ -196,6 +196,9 @@ def test_prompt_too_large_or_stalled_allows_retry_only_with_attachable_bundle(tm
     assert "--tab-id" in packet["next_command"]
     assert packet["next_command"][packet["next_command"].index("--tab-id") + 1] == "837359704"
     assert (tmp_path / "artifacts" / "retry-with-local-bundle.md").is_file()
+    instruction = packet["fallback_instruction"].lower()
+    assert "plain markdown or text bundle" in instruction
+    assert "do not use a zip file for kimi" in instruction
 
 
 def test_browser_tab_read_timeout_rebinds_instead_of_bundle_retry(tmp_path: Path) -> None:
@@ -329,6 +332,60 @@ def test_stale_raw_capture_takes_precedence_over_missing_sentinel(tmp_path: Path
 
     assert packet["failure_code"] == "stale_raw_capture"
     assert "stale" in packet["fallback_instruction"]
+
+
+def test_gemini_missing_source_attachment_response_is_attachment_unavailable(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgemini",
+        response_text=(
+            "Position NEEDS_ATTENTION\n"
+            "A definitive position cannot be granted because the designated "
+            "source-of-truth attachment was not provided. No attachment or README "
+            "text was included in the request context."
+        ),
+        prompt_text="Use ATTACHMENT_1 as the source-of-truth review bundle.",
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UNAVAILABLE
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_transport_must_be_repaired"
+
+
+def test_gemini_attachment_missing_metadata_is_attachment_unavailable(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgemini",
+        failure="attachment_missing",
+        prompt_text="Use ATTACHMENT_1 as the source-of-truth review bundle.",
+        submit_meta={"status": "failed", "failure": "attachment_missing", "attachment_missing": True},
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_UNAVAILABLE
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "attachment_transport_must_be_repaired"
+
+
+def test_webgemini_inlines_markdown_bundle_instead_of_attaching(tmp_path: Path) -> None:
+    prompt = tmp_path / "prompt.md"
+    bundle = tmp_path / "review-bundle.md"
+    prompt.write_text("Review the provided source bundle.\n", encoding="utf-8")
+    bundle.write_text("# README Bundle\n\nCurrent README text.\n", encoding="utf-8")
+
+    submit_prompt, attachment_paths, preflight = tau_roundtable_worker._prepare_browser_submit_payload(
+        handler="webgemini",
+        prompt_path=prompt,
+        request_payload={"request": "Review the bundle."},
+        attachment_paths=[str(bundle)],
+    )
+
+    assert attachment_paths == []
+    assert preflight["status"] == "PASS"
+    assert preflight["attached_file_count"] == 0
+    assert preflight["inlined_file_count"] == 1
+    text = submit_prompt.read_text(encoding="utf-8")
+    assert "### INLINE_1: review-bundle.md" in text
+    assert "Current README text." in text
 
 
 def test_webclaude_auto_retry_uses_readable_bundle_when_transport_supports_attach_file(
@@ -1162,6 +1219,35 @@ def test_attachment_contract_packet_asks_for_one_bundle(tmp_path: Path) -> None:
     instruction = packet["fallback_instruction"].lower()
     assert "one bundle or zip" in instruction
     assert "single --attach-file" in instruction
+
+
+def test_kimi_attachment_contract_packet_rejects_zip_guidance(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure=_ATTACH_CONTRACT_STDERR,
+        submit_meta={},
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED
+    instruction = packet["fallback_instruction"].lower()
+    assert "plain markdown or text bundle" in instruction
+    assert "do not zip the kimi bundle" in instruction
+    assert "bundle or zip" not in instruction
+
+
+def test_deepseek_attachment_contract_packet_rejects_attachments_and_zip(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="deepseek",
+        failure=_ATTACH_CONTRACT_STDERR,
+        submit_meta={},
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_ATTACHMENT_ARGUMENT_CONTRACT_FAILED
+    instruction = packet["fallback_instruction"].lower()
+    assert "does not accept attachments or zip files" in instruction
+    assert "short inline prompt only" in instruction
 
 
 # agent-skills#1081: a recovery packet that echoes the failing prompt verbatim

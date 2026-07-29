@@ -2952,6 +2952,16 @@ if ((tool === "js" || tool === "frame.js") && toolArgs.file) {
   }
 }
 
+if ((tool === "gemini_tab" || tool === "kimi_tab") && toolArgs["query-file"]) {
+  try {
+    toolArgs.query = fs.readFileSync(toolArgs["query-file"], "utf8");
+    delete toolArgs["query-file"];
+  } catch (e) {
+    console.error(`Error: Failed to read query file: ${e.message}`);
+    process.exit(1);
+  }
+}
+
 if (tool === "batch" && toolArgs.file) {
   try {
     const parsed = JSON.parse(fs.readFileSync(toolArgs.file, "utf8"));

@@ -836,11 +836,28 @@ only for debugging the native Grok path. The proof metadata records
 
 All browser submit wrappers accept `--attach-file PATH` and `--attach-files
 PATH[,PATH...]` for one simple project-agent contract. Prefer one local bundle.
-Claude can upload multiple files directly. WebGPT, Gemini, and Kimi currently
-send one attachment and fail closed if multiple files are passed. Grok uploads
+Claude can upload multiple files directly. WebGPT and Kimi currently send one
+attachment and fail closed if multiple files are passed. Current Gemini tabs may
+not expose an upload file input; Ask inlines Markdown/text bundles for
+WebGemini instead of relying on `gemini.submit --attach-file`. Grok uploads
 through its visible file input when available; if Grok exposes no upload input
 or no preview appears, `grok.submit` fails with attachment evidence instead of
 pretending the file was attached.
+
+Provider payload rules are part of the Surf contract:
+
+| Command | Prompt payload | Attachments | Do not do |
+| --- | --- | --- | --- |
+| `webgpt.submit` | Text prompt through the ChatGPT composer | Exactly one attachment; zip is allowed when a real archive is needed | Do not pass multiple files. Do not treat assistant prose about a downloadable file as local proof. |
+| `gemini.submit` | Text prompt through the Gemini page composer | Upload is available only when the current UI exposes a file input; Ask should inline Markdown/text review bundles for WebGemini | Do not assume `Upload & tools` means a usable `input[type=file]` exists. Do not accept stale page text or prompt echo as a response. |
+| `kimi.submit` | Text prompt through the Kimi composer; large prompts must fail closed if start/end verification fails | Exactly one attachment; use plain readable Markdown/text for evidence bundles | Do not send zip files to Kimi. Do not inline large review bundles when a single Markdown attachment can carry the evidence. |
+| `claude.submit` | Text prompt through the Claude composer with submit-acceptance verification | Multiple attachments are supported | Do not accept a staged draft, `.submitted.md`, or prompt echo as proof of submission. |
+| `deepseek.submit` | Inline text prompt only | Unsupported | Do not pass attachments or zip files to DeepSeek. |
+| `grok.submit` | Text prompt through the Grok composer | Attachment support depends on the visible file input and preview proof | Do not continue if no upload input or preview appears. |
+
+If a provider-specific rule conflicts with a generic project-agent bundle plan,
+the provider rule wins. Repair the packet shape before retrying; do not add
+timing delays or retries around a payload contract mismatch.
 
 If a provider says `System is currently busy`, `capacity is busy`, or a similar
 provider-capacity message, only that submit wrapper waits. Kimi and Grok use
