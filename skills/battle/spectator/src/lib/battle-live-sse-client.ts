@@ -20,9 +20,9 @@ export type BattleLiveSseClientState = {
 	error: string | null;
 	endpoint: string | null;
 	baseUrl: string | null;
-	live: "contract_only" | "local_http_sse_adapter" | null;
+	live: "contract_only" | "local_http_sse_adapter" | "local_http_websocket_adapter" | null;
 	/** How the stream is opened once serve-live-transport is up. */
-	transportMode: "none" | "event_source" | "fetch_last_event_id";
+	transportMode: "none" | "event_source" | "fetch_last_event_id" | "websocket";
 };
 
 export function createIdleLiveSseClientState(): BattleLiveSseClientState {
@@ -35,6 +35,36 @@ export function createIdleLiveSseClientState(): BattleLiveSseClientState {
 		baseUrl: null,
 		live: null,
 		transportMode: "none",
+	};
+}
+
+export function planLiveWebSocketClient(
+	contract: BattleLiveTransportContractV1,
+	options?: { adapterAvailable?: boolean; baseUrl?: string | null },
+): BattleLiveSseClientState {
+	const endpoint = contract.websocket?.endpoint ?? null;
+	if (!endpoint || !options?.adapterAvailable) {
+		return {
+			status: "contract_only_blocked",
+			lastSeq: 0,
+			lastEventId: null,
+			error:
+				"contract_only_blocked until ./run.sh serve-live-transport advertises a WebSocket endpoint from healthz.",
+			endpoint,
+			baseUrl: options?.baseUrl ?? null,
+			live: "contract_only",
+			transportMode: "none",
+		};
+	}
+	return {
+		status: "connecting",
+		lastSeq: 0,
+		lastEventId: null,
+		error: null,
+		endpoint,
+		baseUrl: options?.baseUrl ?? null,
+		live: "local_http_websocket_adapter",
+		transportMode: "websocket",
 	};
 }
 
@@ -101,4 +131,11 @@ export function shouldOpenEventSource(
 	options?: { adapterAvailable?: boolean },
 ): boolean {
 	return Boolean(options?.adapterAvailable) && contract.transport.kind === "sse";
+}
+
+export function shouldOpenWebSocket(
+	contract: BattleLiveTransportContractV1,
+	options?: { adapterAvailable?: boolean; websocketAvailable?: boolean },
+): boolean {
+	return Boolean(options?.adapterAvailable) && Boolean(options?.websocketAvailable) && contract.websocket?.kind === "websocket";
 }

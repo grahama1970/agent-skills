@@ -12,7 +12,12 @@ from typing import Any
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from .live_transport_server import build_live_transport_source, create_live_transport_server
+from .live_transport_server import (
+    _websocket_payloads,
+    build_live_transport_source,
+    create_live_transport_server,
+    create_live_websocket_transport_server,
+)
 
 
 DEFAULT_FIXTURE = Path(
@@ -39,13 +44,28 @@ def prove_transport_safety_smoke(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     source = build_live_transport_source(fixture_path=fixture_path, battle_id=battle_id)
-    server = create_live_transport_server(source=source, host="127.0.0.1", port=0)
+    websocket_server = create_live_websocket_transport_server(source=source, host="127.0.0.1", port=0)
+    websocket_port = int(websocket_server.socket.getsockname()[1])
+    server = create_live_transport_server(
+        source=source,
+        host="127.0.0.1",
+        port=0,
+        websocket_port=websocket_port,
+    )
     port = int(server.server_address[1])
     thread = threading.Thread(target=server.serve_forever, name="battle-transport-safety-smoke", daemon=True)
+    websocket_thread = threading.Thread(
+        target=websocket_server.serve_forever,
+        name="battle-websocket-transport-safety-smoke",
+        daemon=True,
+    )
+    websocket_thread.start()
     thread.start()
     base_url = f"http://127.0.0.1:{port}"
+    websocket_url = f"ws://127.0.0.1:{websocket_port}{source.websocket_endpoint}"
     try:
         health = _http_json(f"{base_url}/healthz")
+        full_sse = _http_text(f"{base_url}{source.events_endpoint}", accept="text/event-stream")
         resume_after_two = _http_text(
             f"{base_url}{source.events_endpoint}",
             accept="text/event-stream",
@@ -65,27 +85,38 @@ def prove_transport_safety_smoke(
                 headers={"Last-Event-ID": "-1"},
             ),
         }
+        websocket_payloads = _websocket_payloads(websocket_url)
     finally:
         server.shutdown()
         server.server_close()
+        websocket_server.shutdown()
         thread.join(timeout=5)
+        websocket_thread.join(timeout=5)
 
     frontend = _run_frontend_transport_tests(spectator_root=spectator_root)
+    sse_events = _parse_sse_events(full_sse)
     resume_events = _parse_sse_events(resume_after_two)
+    websocket_snapshot = websocket_payloads[0] if websocket_payloads else {}
+    websocket_events = websocket_payloads[1:]
     errors = _receipt_errors(
         health=health,
         event_count=len(source.events),
+        source_snapshot=source.snapshot,
+        sse_events=sse_events,
         resume_events=resume_events,
         bad_resume_statuses=bad_resume_statuses,
+        websocket_snapshot=websocket_snapshot,
+        websocket_events=websocket_events,
         frontend=frontend,
     )
     receipt = {
         "schema": "battle.transport_safety_smoke.v1",
         "status": "PASS" if not errors else "FAIL",
         "mocked": False,
-        "live": "local_http_sse_adapter_plus_frontend_transport_tests",
+        "live": "local_http_sse_websocket_adapter_plus_frontend_transport_tests",
         "battle_id": battle_id,
         "base_url": base_url,
+        "websocket_url": websocket_url,
         "backend": {
             "health": health,
             "event_count": len(source.events),
@@ -99,18 +130,26 @@ def prove_transport_safety_smoke(
                 "Non-integer Last-Event-ID fails closed with HTTP 400.",
                 "Negative Last-Event-ID fails closed with HTTP 400.",
             ],
+            "websocket": {
+                "endpoint": source.websocket_endpoint,
+                "event_count": len(websocket_events),
+                "snapshot_first": websocket_snapshot.get("schema") == "battle.snapshot.v1",
+                "matches_sse_payloads": websocket_events == sse_events,
+            },
         },
         "frontend": frontend,
         "claim_boundary": {
             "proves": [
                 "The existing local HTTP/SSE backend fails closed on invalid Last-Event-ID inputs.",
                 "The existing local HTTP/SSE backend resumes from Last-Event-ID without replaying acknowledged events.",
+                "The local WebSocket backend emits battle.snapshot.v1 first, then ordered battle.live_event.v1 payloads.",
+                "The local WebSocket backend event payloads match the HTTP/SSE event payloads.",
                 "The spectator transport reducer deduplicates events and enters gap_recovery on sequence gaps.",
                 "The spectator SSE parser rejects malformed payloads without applying them.",
             ],
             "does_not_prove": [
                 "Production infrastructure is deployed.",
-                "A WebSocket endpoint exists.",
+                "Production WebSocket TLS, auth, fanout, compression, or reconnect behavior.",
                 "Browser EventSource reconnect timing under network failure.",
                 "Unbounded swarm execution.",
                 "Battle or RelayForge production readiness.",
@@ -123,7 +162,16 @@ def prove_transport_safety_smoke(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    (out_dir / "events.sse").write_text(full_sse.rstrip() + "\n", encoding="utf-8")
     (out_dir / "resume-after-2.sse").write_text(resume_after_two.rstrip() + "\n", encoding="utf-8")
+    (out_dir / "websocket-snapshot-response.json").write_text(
+        json.dumps(websocket_snapshot, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (out_dir / "websocket-events.jsonl").write_text(
+        "".join(json.dumps(event, sort_keys=True) + "\n" for event in websocket_events),
+        encoding="utf-8",
+    )
     (out_dir / "frontend-transport-tests.stdout").write_text(frontend["stdout_tail"], encoding="utf-8")
     (out_dir / "frontend-transport-tests.stderr").write_text(frontend["stderr_tail"], encoding="utf-8")
     if errors:
@@ -169,13 +217,25 @@ def _receipt_errors(
     *,
     health: dict[str, Any],
     event_count: int,
+    source_snapshot: dict[str, Any],
+    sse_events: list[dict[str, Any]],
     resume_events: list[dict[str, Any]],
     bad_resume_statuses: dict[str, int],
+    websocket_snapshot: dict[str, Any],
+    websocket_events: list[dict[str, Any]],
     frontend: dict[str, Any],
 ) -> list[str]:
     errors: list[str] = []
     if health.get("status") != "PASS":
         errors.append("backend health did not return PASS")
+    if not health.get("websocket_endpoint") or not health.get("websocket_port"):
+        errors.append("backend health did not advertise WebSocket endpoint and port")
+    if websocket_snapshot != source_snapshot:
+        errors.append("WebSocket first frame did not match source snapshot")
+    if websocket_events != sse_events:
+        errors.append("WebSocket events did not match SSE payloads")
+    if [event.get("seq") for event in websocket_events] != list(range(1, event_count + 1)):
+        errors.append("WebSocket event seq values are not contiguous")
     if len(resume_events) != max(event_count - 2, 0):
         errors.append("resume-after-2 returned unexpected event count")
     if resume_events and min(int(event.get("seq", 0)) for event in resume_events) <= 2:

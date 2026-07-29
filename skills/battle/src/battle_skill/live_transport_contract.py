@@ -18,6 +18,7 @@ SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "battle.live_tra
 FIXTURE_ID = "battle-004-pr8-live-transport"
 SNAPSHOT_ENDPOINT = "/battle/live/battle-004/snapshot"
 SSE_ENDPOINT = "/battle/live/battle-004/events"
+WEBSOCKET_ENDPOINT = "/battle/live/battle-004/ws"
 FRONTEND_ROUTE = "#battle/live?engine=pixi&battle=battle-004"
 GENETIC_EVENT_TYPES = [
     "research_started",
@@ -67,6 +68,7 @@ SECRET_PATTERNS = (
 MAY_CLAIM = [
     "backend_live_transport_contract_published",
     "sse_endpoint_shape_defined",
+    "websocket_endpoint_shape_defined",
     "initial_snapshot_endpoint_shape_defined",
     "event_ordering_semantics_defined",
     "reconnect_semantics_defined",
@@ -133,6 +135,15 @@ def validate_live_transport_contract(contract: dict[str, Any]) -> dict[str, Any]
         errors.append("transport.kind must be sse")
     if transport.get("endpoint") != SSE_ENDPOINT:
         errors.append("transport.endpoint must match the documented SSE endpoint")
+    websocket = contract.get("websocket") if isinstance(contract.get("websocket"), dict) else {}
+    if websocket.get("kind") != "websocket":
+        errors.append("websocket.kind must be websocket")
+    if websocket.get("endpoint") != WEBSOCKET_ENDPOINT:
+        errors.append("websocket.endpoint must match the documented WebSocket endpoint")
+    if websocket.get("first_message_schema") != "battle.snapshot.v1":
+        errors.append("websocket.first_message_schema must be battle.snapshot.v1")
+    if websocket.get("event_schema") != "battle.live_event.v1":
+        errors.append("websocket.event_schema must be battle.live_event.v1")
     snapshot = contract.get("initial_snapshot") if isinstance(contract.get("initial_snapshot"), dict) else {}
     if snapshot.get("endpoint") != SNAPSHOT_ENDPOINT:
         errors.append("initial_snapshot.endpoint must match the documented snapshot endpoint")
@@ -190,6 +201,7 @@ def validate_live_transport_contract(contract: dict[str, Any]) -> dict[str, Any]
         "transport": transport.get("kind"),
         "snapshot_endpoint": snapshot.get("endpoint"),
         "sse_endpoint": transport.get("endpoint"),
+        "websocket_endpoint": websocket.get("endpoint"),
         "genetic_event_type_count": len(event_stream.get("genetic_event_types_when_live", [])),
         "live": contract.get("live"),
         "mocked": contract.get("mocked"),
@@ -218,6 +230,15 @@ def _contract(*, generated_at: str | None) -> dict[str, Any]:
                 "event": "battle.live_event",
                 "data": "battle.live_event.v1 JSON",
             },
+        },
+        "websocket": {
+            "kind": "websocket",
+            "endpoint": WEBSOCKET_ENDPOINT,
+            "event_schema": "battle.live_event.v1",
+            "first_message_schema": "battle.snapshot.v1",
+            "message_order": "snapshot_first_then_ordered_events",
+            "resume_semantics": "not_implemented_in_local_mvp_refetch_snapshot_then_reconnect",
+            "content_type": "application/json",
         },
         "initial_snapshot": {
             "method": "GET",
@@ -281,7 +302,8 @@ def _contract(*, generated_at: str | None) -> dict[str, Any]:
             "route": FRONTEND_ROUTE,
             "snapshot_endpoint": SNAPSHOT_ENDPOINT,
             "sse_endpoint": SSE_ENDPOINT,
-            "stop_condition": "frontend can implement SSE client against this contract without reading raw backend runtime paths",
+            "websocket_endpoint": WEBSOCKET_ENDPOINT,
+            "stop_condition": "frontend can implement SSE or WebSocket clients against this contract without reading raw backend runtime paths",
         },
         "source_contracts": {
             "file_backed_manifest_schema": "battle.transport_manifest.v1",

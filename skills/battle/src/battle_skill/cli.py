@@ -1952,8 +1952,13 @@ def serve_live_transport(
     ),
     host: str = typer.Option("127.0.0.1", "--host", help="HTTP bind host."),
     port: int = typer.Option(8765, "--port", help="HTTP bind port."),
+    websocket_port: int = typer.Option(
+        8766,
+        "--websocket-port",
+        help="Paired loopback WebSocket bind port advertised from /healthz.",
+    ),
 ):
-    """Serve executable UX8 snapshot/SSE endpoints from a normalized fixture."""
+    """Serve executable UX8 snapshot/SSE/WebSocket endpoints from a normalized fixture."""
     from .live_transport_server import (
         build_live_transport_source,
         serve_live_transport as _serve,
@@ -1965,18 +1970,20 @@ def serve_live_transport(
             "schema": "battle.live_transport_server_start.v1",
             "status": "SERVING",
             "mocked": False,
-            "live": "local_http_sse_adapter",
+            "live": "local_http_sse_websocket_adapter",
             "battle_id": battle_id,
             "run_id": source.run_id,
             "snapshot_endpoint": source.snapshot_endpoint,
             "sse_endpoint": source.events_endpoint,
+            "websocket_endpoint": source.websocket_endpoint,
             "event_count": len(source.events),
             "host": host,
             "port": port,
+            "websocket_port": websocket_port,
             "claim_boundary": {
                 "does_not_prove": [
                     "production deployment",
-                    "WebSocket support",
+                    "production WebSocket TLS/auth/fanout/reconnect behavior",
                     "exploit success",
                     "Blue outcome",
                     "Judge success",
@@ -1984,7 +1991,13 @@ def serve_live_transport(
             },
         }
     )
-    _serve(fixture_path=fixture, battle_id=battle_id, host=host, port=port)
+    _serve(
+        fixture_path=fixture,
+        battle_id=battle_id,
+        host=host,
+        port=port,
+        websocket_port=websocket_port,
+    )
 
 
 @app.command("prove-live-transport-server")
