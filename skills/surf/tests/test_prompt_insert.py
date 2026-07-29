@@ -107,5 +107,7 @@ def test_kimi_has_dom_fallback_for_lexical_composer() -> None:
     source = (NATIVE_DIR / "kimi-tab-client.cjs").read_text(encoding="utf-8")
 
     assert "setPromptInComposerDom" in source
+    assert "clickComposerCenter" in source
+    assert "Input.dispatchMouseEvent" in source
     assert "document.execCommand('insertText', false, prompt)" in source
     assert "node.textContent = prompt" in source

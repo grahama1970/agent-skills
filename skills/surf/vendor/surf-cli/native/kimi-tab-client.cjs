@@ -802,6 +802,25 @@ async function clearFocusedEditor(inputCdp) {
   });
 }
 
+async function clickComposerCenter(inputCdp, target) {
+  if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.y)) return;
+  await inputCdp("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    x: target.x,
+    y: target.y,
+    button: "left",
+    clickCount: 1,
+  });
+  await inputCdp("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    x: target.x,
+    y: target.y,
+    button: "left",
+    clickCount: 1,
+  });
+  await delay(100);
+}
+
 async function typePrompt(cdp, inputCdp, prompt) {
   const encodedPrompt = JSON.stringify(prompt);
   const typed = await evaluate(
@@ -823,19 +842,23 @@ async function typePrompt(cdp, inputCdp, prompt) {
         if (!node || node.hasAttribute('disabled')) continue;
         dispatchClickSequence(node);
         if (typeof node.focus === 'function') node.focus();
+        const rect = node.getBoundingClientRect();
+        const target = rect.width > 0 && rect.height > 0
+          ? { x: rect.left + Math.min(rect.width / 2, Math.max(12, rect.width - 12)), y: rect.top + Math.min(rect.height / 2, Math.max(12, rect.height - 12)) }
+          : null;
         if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
           const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
             || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
           if (setter) setter.call(node, ${encodedPrompt});
           else node.value = ${encodedPrompt};
           node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
-          return { ok: true, mode: 'value' };
+          return { ok: true, mode: 'value', target };
         }
         if (node.isContentEditable || node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
-          return { ok: true, mode: 'focused_editable' };
+          return { ok: true, mode: 'focused_editable', target };
         }
         if (node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
-          return { ok: true, mode: 'focused_custom_textbox' };
+          return { ok: true, mode: 'focused_custom_textbox', target };
         }
       }
       return { ok: false };
@@ -845,6 +868,7 @@ async function typePrompt(cdp, inputCdp, prompt) {
     throw new Error("Failed to focus/type Kimi prompt composer");
   }
   if (typed.mode === "focused_editable") {
+    await clickComposerCenter(inputCdp, typed.target);
     await clearFocusedEditor(inputCdp);
     await insertPromptText(inputCdp, prompt);
     let verified = await verifyPromptInComposer(cdp, prompt);
