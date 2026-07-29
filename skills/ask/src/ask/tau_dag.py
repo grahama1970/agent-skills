@@ -2554,7 +2554,7 @@ def _roundtable_handler_prompt_contract(
     prior_nodes = prior_nodes or []
     requires_verdict = bool(prior_nodes) and _roundtable_requires_verdict(input.request)
     if input.workflow_mode == "compete":
-        return {
+        contract = {
             "schema": "ask.tau_dag_prompt_contract.v1",
             "system": "You are an isolated Tau-managed competitor. Do not rely on other candidates.",
             "user_template": (
@@ -2573,6 +2573,10 @@ def _roundtable_handler_prompt_contract(
             "verdict_schema": None,
             "isolation_required": True,
         }
+        if handler == "webclaude":
+            contract["model_preference"] = COMPETE_WEBCLAUDE_MODEL
+            contract["model_preference_scope"] = "ask_compete_default"
+        return contract
     return {
         "schema": "ask.tau_dag_prompt_contract.v1",
         "system": "You are a Tau-managed roundtable handler. Return receipt-backed findings only.",

@@ -3437,6 +3437,12 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         fatal_blockers.append("no_explicit_verified_features_to_promote")
     if transport_blockers:
         blockers.append("competition_transport_degraded")
+    if (
+        handler_receipts
+        and len(transport_blockers) == len(handler_receipts)
+        and not any(candidate["ok"] is True for candidate in handler_receipts)
+    ):
+        blockers.append("competition_transport_blocked")
     blockers.extend(fatal_blockers)
     status = "PASS" if candidate_winner_handler and not blockers else "NEEDS_ATTENTION"
     ok = status == "PASS"

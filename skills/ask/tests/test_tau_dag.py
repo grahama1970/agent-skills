@@ -3058,6 +3058,7 @@ def test_run_tau_dag_bundle_synthesizes_compete_join_when_all_browser_lanes_need
         "browser_provider_rate_limited": 1,
         "repo_access_blocked": 1,
     }
+    assert "competition_transport_blocked" in scorecard["blockers"]
     assert len(scorecard["degradation_analysis"]["recovery_commands"]) == 2
 
 
