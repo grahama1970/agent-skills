@@ -104,6 +104,28 @@ def test_kimi_provider_capacity_busy_fails_fast() -> None:
     assert 'key: "Enter"' in source
 
 
+def test_kimi_prompt_ready_requires_real_composer_node() -> None:
+    source = KIMI_CLIENT.read_text(encoding="utf-8")
+    helper = source.split("async function waitForPromptReady", 1)[1].split(
+        "function normalizePreferenceLabel", 1
+    )[0]
+
+    assert "document.querySelector(selector)" in helper
+    assert "node && !node.hasAttribute('disabled')" in helper
+    assert '.chat-input-editor[role="textbox"]' in helper
+    assert ".chat-input-editor" in helper
+    assert "body.includes('ask anything')" not in helper
+    assert "body.includes('follow-up')" not in helper
+    assert "return false;" in helper
+
+    type_prompt = source.split("async function typePrompt", 1)[1].split(
+        "async function clickSend", 1
+    )[0]
+    assert "focused_custom_textbox" in type_prompt
+    assert 'Input.insertText' in type_prompt
+    assert "Kimi prompt composer did not receive inserted text" in type_prompt
+
+
 def test_kimi_formatter_emits_controlled_tab_metadata() -> None:
     source = CLI.read_text(encoding="utf-8")
     formatter = source.split('tool === "kimi_tab"', 1)[1].split('tool === "aistudio"', 1)[0]

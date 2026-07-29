@@ -280,6 +280,8 @@ async function waitForPromptReady(cdp, timeoutMs = 45000) {
   const selectors = [
     'textarea[placeholder*="Ask anything"]',
     'textarea[placeholder*="follow-up"]',
+    '.chat-input-editor[role="textbox"]',
+    '.chat-input-editor',
     'div[class*="editorContentEditable"]',
     '[contenteditable="true"][role="textbox"]',
     '[contenteditable="true"]',
@@ -293,8 +295,7 @@ async function waitForPromptReady(cdp, timeoutMs = 45000) {
           const node = document.querySelector(selector);
           if (node && !node.hasAttribute('disabled')) return true;
         }
-        const body = (document.body?.innerText || '').toLowerCase();
-        return body.includes('ask anything') || body.includes('follow-up');
+        return false;
       })()`
     );
     if (found) return true;
@@ -657,6 +658,8 @@ async function typePrompt(cdp, inputCdp, prompt) {
         'textarea[placeholder*="Ask anything"]',
         'textarea[placeholder*="follow-up"]',
         'textarea[placeholder*="Add a follow-up"]',
+        '.chat-input-editor[role="textbox"]',
+        '.chat-input-editor',
         'div[class*="editorContentEditable"]',
         '[contenteditable="true"][role="textbox"]',
         '[contenteditable="true"]',
@@ -684,12 +687,58 @@ async function typePrompt(cdp, inputCdp, prompt) {
           node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertText' }));
           return { ok: true, mode: 'contenteditable' };
         }
+        if (node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
+          return { ok: true, mode: 'focused_custom_textbox' };
+        }
       }
       return { ok: false };
     })()`
   );
   if (!typed?.ok) {
     throw new Error("Failed to focus/type Kimi prompt composer");
+  }
+  if (typed.mode === "focused_custom_textbox") {
+    await inputCdp("Input.dispatchKeyEvent", {
+      type: "keyDown",
+      key: "a",
+      code: "KeyA",
+      windowsVirtualKeyCode: 65,
+      nativeVirtualKeyCode: 65,
+      modifiers: 2,
+    });
+    await inputCdp("Input.dispatchKeyEvent", {
+      type: "keyUp",
+      key: "a",
+      code: "KeyA",
+      windowsVirtualKeyCode: 65,
+      nativeVirtualKeyCode: 65,
+      modifiers: 2,
+    });
+    await inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Backspace", code: "Backspace", windowsVirtualKeyCode: 8, nativeVirtualKeyCode: 8 });
+    await inputCdp("Input.dispatchKeyEvent", { type: "keyUp", key: "Backspace", code: "Backspace", windowsVirtualKeyCode: 8, nativeVirtualKeyCode: 8 });
+    await inputCdp("Input.insertText", { text: prompt });
+    const promptStart = JSON.stringify(prompt.slice(0, 80));
+    const promptEnd = JSON.stringify(prompt.slice(-80));
+    const verified = await evaluate(
+      cdp,
+      `(() => {
+        const selectors = [
+          '.chat-input-editor[role="textbox"]',
+          '.chat-input-editor',
+          '[role="textbox"]',
+          '[contenteditable="true"]',
+        ];
+        for (const selector of selectors) {
+          const node = document.querySelector(selector);
+          const text = node ? (node.innerText || node.textContent || node.value || '') : '';
+          if (text.includes(${promptStart}) && text.includes(${promptEnd})) return true;
+        }
+        return false;
+      })()`,
+    );
+    if (!verified) {
+      throw new Error("Kimi prompt composer did not receive inserted text");
+    }
   }
   await delay(300);
 }
