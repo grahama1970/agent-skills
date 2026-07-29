@@ -70,6 +70,55 @@ def test_production_readiness_passes_with_all_required_receipts(tmp_path: Path) 
     assert [check["status"] for check in receipt["external_checks"]] == ["PASS", "PASS", "PASS"]
 
 
+def test_production_readiness_records_local_alignment_without_closing_production_gate(tmp_path: Path) -> None:
+    containerized = _write_containerized_receipt(tmp_path / "containerized.json")
+    alignment = _write_alignment_receipt(tmp_path / "alignment.json")
+    websocket = _write_external_receipt(
+        tmp_path / "websocket.json",
+        schema="battle.production_websocket_transport_proof.v1",
+    )
+    swarm = _write_external_receipt(
+        tmp_path / "swarm.json",
+        schema="battle.unbounded_swarm_execution_proof.v1",
+    )
+
+    receipt = validate_production_readiness(
+        out_dir=tmp_path / "out",
+        repo_root=Path.cwd().parents[1],
+        containerized_receipt=containerized,
+        local_deployment_alignment_receipt=alignment,
+        production_websocket_receipt=websocket,
+        unbounded_swarm_receipt=swarm,
+    )
+
+    assert receipt["status"] == "BLOCKED"
+    assert receipt["local_deployment_alignment_status"] == "PASS"
+    assert {blocker["id"] for blocker in receipt["blockers"]} == {
+        "production_infrastructure_missing_or_not_pass"
+    }
+    assert any(check["id"] == "local_deployment_alignment" for check in receipt["local_checks"])
+
+
+def test_production_readiness_rejects_local_alignment_as_production_infrastructure(tmp_path: Path) -> None:
+    containerized = _write_containerized_receipt(tmp_path / "containerized.json")
+    alignment = _write_alignment_receipt(tmp_path / "alignment.json")
+
+    receipt = validate_production_readiness(
+        out_dir=tmp_path / "out",
+        repo_root=Path.cwd().parents[1],
+        containerized_receipt=containerized,
+        production_infrastructure_receipt=alignment,
+    )
+
+    infrastructure_check = next(
+        check for check in receipt["external_checks"] if check["id"] == "production_infrastructure"
+    )
+    assert receipt["status"] == "BLOCKED"
+    assert infrastructure_check["status"] == "BLOCKED"
+    assert infrastructure_check["schema"] == "battle.local_deployment_alignment_proof.v1"
+    assert infrastructure_check["expected_schema"] == "battle.production_infrastructure_deployment_proof.v1"
+
+
 def test_production_readiness_blocks_wrong_external_schema(tmp_path: Path) -> None:
     containerized = _write_containerized_receipt(tmp_path / "containerized.json")
     websocket = _write_external_receipt(
@@ -126,6 +175,29 @@ def _write_external_receipt(path: Path, *, schema: str) -> Path:
                 "schema": schema,
                 "status": "PASS",
                 "mocked": False,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _write_alignment_receipt(path: Path) -> Path:
+    path.write_text(
+        json.dumps(
+            {
+                "schema": "battle.local_deployment_alignment_proof.v1",
+                "status": "PASS",
+                "mocked": False,
+                "live": "local_filesystem_release_cut_and_symlink_readback",
+                "commit": "abc",
+                "origin_main": "abc",
+                "release_dir": "/deploy/releases/abc",
+                "current_symlink_resolved_after": "/deploy/releases/abc",
+                "release_digest": "digest",
+                "expected_digest": "digest",
+                "current_digest": "digest",
             }
         )
         + "\n",

@@ -2167,6 +2167,11 @@ def validate_production_readiness(
         "--packaged-receipt",
         help="Optional battle.packaged_deployment_smoke.v1 receipt.",
     ),
+    local_deployment_alignment_receipt: Optional[Path] = typer.Option(
+        None,
+        "--local-deployment-alignment-receipt",
+        help="Optional battle.local_deployment_alignment_proof.v1 receipt.",
+    ),
     production_infrastructure_receipt: Optional[Path] = typer.Option(
         None,
         "--production-infrastructure-receipt",
@@ -2201,6 +2206,7 @@ def validate_production_readiness(
         repo_root=repo_root,
         containerized_receipt=containerized_receipt,
         packaged_receipt=packaged_receipt,
+        local_deployment_alignment_receipt=local_deployment_alignment_receipt,
         production_infrastructure_receipt=production_infrastructure_receipt,
         production_websocket_receipt=production_websocket_receipt,
         unbounded_swarm_receipt=unbounded_swarm_receipt,
@@ -2210,6 +2216,53 @@ def validate_production_readiness(
         raise typer.Exit(1)
     if fail_on_blocked and receipt.get("status") == "BLOCKED":
         raise typer.Exit(2)
+
+
+@app.command("prove-local-deployment-alignment")
+def prove_local_deployment_alignment(
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output directory for the local deployment alignment receipt.",
+    ),
+    repo_root: Path = typer.Option(
+        Path(__file__).resolve().parents[4],
+        "--repo-root",
+        help="agent-skills repository root.",
+    ),
+    deployment_root: Path = typer.Option(
+        Path("/mnt/storage12tb/deployments/agent-skills"),
+        "--deployment-root",
+        help="Local deployment root containing releases/ and current.",
+    ),
+    commit: str = typer.Option(
+        "HEAD",
+        "--commit",
+        help="Git commit/ref to cut and align. Must match origin/main.",
+    ),
+    activate: bool = typer.Option(
+        False,
+        "--activate/--no-activate",
+        help="Atomically repoint deployment-root/current to the cut release.",
+    ),
+    authorized_by: Optional[str] = typer.Option(
+        None,
+        "--authorized-by",
+        help="Required authorization string when --activate is used.",
+    ),
+):
+    """Prove local deployment release alignment without claiming production infra."""
+    from .deployment_alignment_proof import prove_local_deployment_alignment as _prove
+
+    receipt = _prove(
+        out_dir=out,
+        repo_root=repo_root,
+        deployment_root=deployment_root,
+        commit=commit,
+        activate=activate,
+        authorized_by=authorized_by,
+    )
+    console.print_json(data=receipt)
 
 
 @app.command("prove-unbounded-swarm-execution")

@@ -27,6 +27,7 @@ def validate_production_readiness(
     repo_root: Path,
     containerized_receipt: Path,
     packaged_receipt: Path | None = None,
+    local_deployment_alignment_receipt: Path | None = None,
     production_infrastructure_receipt: Path | None = None,
     production_websocket_receipt: Path | None = None,
     unbounded_swarm_receipt: Path | None = None,
@@ -49,6 +50,17 @@ def validate_production_readiness(
     if packaged_receipt is not None:
         packaged = _load_receipt(packaged_receipt)
         local_checks.append(_local_packaged_check(packaged_receipt.resolve(), packaged))
+        if local_checks[-1]["status"] != "PASS":
+            errors.extend(local_checks[-1]["errors"])
+
+    if local_deployment_alignment_receipt is not None:
+        deployment_alignment = _load_receipt(local_deployment_alignment_receipt)
+        local_checks.append(
+            _local_deployment_alignment_check(
+                local_deployment_alignment_receipt.resolve(),
+                deployment_alignment,
+            )
+        )
         if local_checks[-1]["status"] != "PASS":
             errors.extend(local_checks[-1]["errors"])
 
@@ -90,6 +102,10 @@ def validate_production_readiness(
             "packaged_package": _package_source_commit(packaged) if packaged_receipt is not None else None,
         },
         "local_working_frontend_backend_status": "PASS" if not errors else "FAIL",
+        "local_deployment_alignment_status": _local_check_status(
+            local_checks,
+            "local_deployment_alignment",
+        ),
         "local_checks": local_checks,
         "external_checks": external_checks,
         "blockers": blockers,
@@ -97,6 +113,7 @@ def validate_production_readiness(
         "claim_boundary": {
             "proves": [
                 "Local Battle frontend/backend container receipt is structurally present and fail-closed checked.",
+                "Local deployment alignment is recorded separately from production infrastructure.",
                 "Production readiness remains blocked unless external production receipts are supplied.",
             ]
             + (
@@ -190,6 +207,32 @@ def _local_packaged_check(path: Path, receipt: dict[str, Any]) -> dict[str, Any]
     }
 
 
+def _local_deployment_alignment_check(path: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    if receipt.get("schema") != "battle.local_deployment_alignment_proof.v1":
+        errors.append("local deployment alignment receipt schema mismatch")
+    if receipt.get("status") != "PASS":
+        errors.append("local deployment alignment receipt status is not PASS")
+    if receipt.get("mocked") is not False:
+        errors.append("local deployment alignment receipt must be mocked=false")
+    if receipt.get("live") != "local_filesystem_release_cut_and_symlink_readback":
+        errors.append("local deployment alignment live mode mismatch")
+    if receipt.get("commit") != receipt.get("origin_main"):
+        errors.append("local deployment alignment commit does not match origin_main")
+    if receipt.get("release_digest") != receipt.get("expected_digest"):
+        errors.append("local deployment alignment release digest mismatch")
+    if receipt.get("current_digest") != receipt.get("expected_digest"):
+        errors.append("local deployment alignment current digest mismatch")
+    if receipt.get("current_symlink_resolved_after") != receipt.get("release_dir"):
+        errors.append("local deployment alignment current symlink target mismatch")
+    return {
+        "id": "local_deployment_alignment",
+        "status": "PASS" if not errors else "FAIL",
+        "path": str(path),
+        "errors": errors,
+    }
+
+
 def _external_check(name: str, path: Path | None) -> dict[str, Any]:
     if path is None:
         return {"id": name, "status": "MISSING", "path": None}
@@ -224,6 +267,14 @@ def _package_source_commit(receipt: dict[str, Any]) -> str | None:
     package = receipt.get("package") if isinstance(receipt.get("package"), dict) else {}
     value = package.get("source_commit")
     return value if isinstance(value, str) and value else None
+
+
+def _local_check_status(checks: list[dict[str, Any]], check_id: str) -> str | None:
+    for check in checks:
+        if check.get("id") == check_id:
+            status = check.get("status")
+            return status if isinstance(status, str) else None
+    return None
 
 
 def _does_not_prove(
