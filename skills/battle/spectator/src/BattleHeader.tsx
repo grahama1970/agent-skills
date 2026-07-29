@@ -204,9 +204,10 @@ function EventIcon({ event }: { event: BattleEvent }) {
 }
 
 function ReceiptLiveEventText({ event }: { event: BattleEvent }) {
-  const prefix = event.ui.notification_prefix;
-  const highlight = event.ui.notification_highlight;
-  const tone = event.ui.notification_highlight_tone ?? (event.team === "blue" ? "blue" : event.team === "red" ? "red" : "green");
+  const ui = event.ui ?? {};
+  const prefix = ui.notification_prefix;
+  const highlight = ui.notification_highlight;
+  const tone = ui.notification_highlight_tone ?? (event.team === "blue" ? "blue" : event.team === "red" ? "red" : "green");
   if (prefix && highlight) {
     return (
       <span className="min-w-0 truncate">
@@ -215,7 +216,7 @@ function ReceiptLiveEventText({ event }: { event: BattleEvent }) {
       </span>
     );
   }
-  return <span className="min-w-0 truncate">{event.ui.notification ?? event.summary}</span>;
+  return <span className="min-w-0 truncate">{ui.notification ?? event.summary}</span>;
 }
 
 
