@@ -1,7 +1,7 @@
 """Packaged local deployment smoke for Battle frontend/backend.
 
 This proof creates a Git-archived source package and launches the existing
-Battle live HTTP/SSE adapter plus spectator preview from that packaged tree.
+Battle live HTTP/SSE/WebSocket adapter plus spectator preview from that packaged tree.
 """
 
 from __future__ import annotations
@@ -89,6 +89,7 @@ def prove_packaged_deployment_smoke(
     _run_capture(["npm", "run", "build"], cwd=package_spectator)
 
     adapter_port = _free_port()
+    adapter_websocket_port = _free_port()
     preview_port = _free_port()
     adapter_base = f"http://127.0.0.1:{adapter_port}"
     preview_base = f"http://127.0.0.1:{preview_port}"
@@ -105,6 +106,8 @@ def prove_packaged_deployment_smoke(
             "127.0.0.1",
             "--port",
             str(adapter_port),
+            "--websocket-port",
+            str(adapter_websocket_port),
         ],
         cwd=package_battle,
         env=_package_env(package_root, package_storage),
@@ -174,7 +177,7 @@ def prove_packaged_deployment_smoke(
         "schema": "battle.packaged_deployment_smoke.v1",
         "status": "PASS" if not errors else "FAIL",
         "mocked": False,
-        "live": "packaged_local_http_sse_adapter_plus_vite_preview",
+        "live": "packaged_local_http_sse_websocket_adapter_plus_vite_preview",
         "battle_id": battle_id,
         "package": {
             "source_ref": package_ref,
@@ -185,7 +188,8 @@ def prove_packaged_deployment_smoke(
             "included_paths": ["skills/battle", "skills/common"],
         },
         "launch": {
-            "adapter_command": "./run.sh serve-live-transport --fixture <packaged-fixture> --battle-id battle-004 --host 127.0.0.1 --port <port>",
+            "adapter_command": "./run.sh serve-live-transport --fixture <packaged-fixture> --battle-id battle-004 --host 127.0.0.1 --port <port> --websocket-port <port>",
+            "adapter_websocket_port": adapter_websocket_port,
             "spectator_command": "npm run preview -- --port <port>",
             "adapter_base": adapter_base,
             "spectator_base": preview_base,
@@ -212,13 +216,14 @@ def prove_packaged_deployment_smoke(
         "claim_boundary": {
             "proves": [
                 "A Git-archived local Battle package can launch the existing backend live HTTP/SSE adapter.",
+                "The packaged backend advertises and proves the paired local WebSocket endpoint.",
                 "A Git-archived local Battle package can build and preview the spectator frontend.",
                 "The packaged frontend consumed the packaged adapter through the PR8 live transport proof.",
-                "$test-interactions exercised the packaged frontend/backend route with zero failures and zero warnings.",
+                "$test-interactions exercised the packaged frontend/backend WebSocket route with zero failures and zero warnings.",
             ],
             "does_not_prove": [
                 "Production infrastructure is deployed.",
-                "A WebSocket endpoint exists.",
+                "Production WebSocket TLS, auth, fanout, compression, or reconnect behavior.",
                 "Unbounded swarm execution works.",
                 "Battle or RelayForge is production ready.",
                 "Six-trial qualification, factorial effects, or cross-target generalization.",
@@ -362,6 +367,8 @@ def _rewrite_interaction_manifest(
                 _old, suffix = rest.split("&", 1)
                 suffix = "&" + suffix
             path = f"{prefix}liveBase={encoded}{suffix}"
+        if path.startswith("/live?") and "transport=" not in path:
+            path = path.replace("/live?", "/live?transport=websocket&", 1)
         surface["path"] = path
     dest.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
