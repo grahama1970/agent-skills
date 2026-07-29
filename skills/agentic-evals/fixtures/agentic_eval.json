@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "trials": 3,
+  "cases": [
+    {
+      "name": "happy-path",
+      "type": "positive",
+      "command": ["echo", "success"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["success"]
+      }
+    },
+    {
+      "name": "negative",
+      "type": "negative",
+      "command": ["false"],
+      "expected": {
+        "exit_code": 1
+      }
+    }
+  ]
+}
