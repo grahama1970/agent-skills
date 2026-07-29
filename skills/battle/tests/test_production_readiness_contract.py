@@ -43,10 +43,7 @@ def test_production_readiness_fails_on_bad_local_container_receipt(tmp_path: Pat
 
 def test_production_readiness_passes_with_all_required_receipts(tmp_path: Path) -> None:
     containerized = _write_containerized_receipt(tmp_path / "containerized.json")
-    infrastructure = _write_external_receipt(
-        tmp_path / "infrastructure.json",
-        schema="battle.production_infrastructure_deployment_proof.v1",
-    )
+    infrastructure = _write_production_infrastructure_receipt(tmp_path / "infrastructure.json")
     websocket = _write_external_receipt(
         tmp_path / "websocket.json",
         schema="battle.production_websocket_transport_proof.v1",
@@ -68,6 +65,30 @@ def test_production_readiness_passes_with_all_required_receipts(tmp_path: Path) 
     assert receipt["status"] == "PASS"
     assert receipt["blockers"] == []
     assert [check["status"] for check in receipt["external_checks"]] == ["PASS", "PASS", "PASS"]
+
+
+def test_production_readiness_blocks_thin_production_infrastructure_receipt(tmp_path: Path) -> None:
+    containerized = _write_containerized_receipt(tmp_path / "containerized.json")
+    infrastructure = _write_external_receipt(
+        tmp_path / "infrastructure.json",
+        schema="battle.production_infrastructure_deployment_proof.v1",
+    )
+
+    receipt = validate_production_readiness(
+        out_dir=tmp_path / "out",
+        repo_root=Path.cwd().parents[1],
+        containerized_receipt=containerized,
+        production_infrastructure_receipt=infrastructure,
+    )
+
+    infrastructure_check = next(
+        check for check in receipt["external_checks"] if check["id"] == "production_infrastructure"
+    )
+    assert receipt["status"] == "BLOCKED"
+    assert infrastructure_check["status"] == "BLOCKED"
+    assert "production infrastructure live mode mismatch" in infrastructure_check["errors"]
+    assert "production infrastructure target object missing" in infrastructure_check["errors"]
+    assert "production infrastructure evidence object missing" in infrastructure_check["errors"]
 
 
 def test_production_readiness_records_local_alignment_without_closing_production_gate(tmp_path: Path) -> None:
@@ -117,6 +138,7 @@ def test_production_readiness_rejects_local_alignment_as_production_infrastructu
     assert infrastructure_check["status"] == "BLOCKED"
     assert infrastructure_check["schema"] == "battle.local_deployment_alignment_proof.v1"
     assert infrastructure_check["expected_schema"] == "battle.production_infrastructure_deployment_proof.v1"
+    assert "local deployment proof cannot satisfy production infrastructure" in infrastructure_check["errors"]
 
 
 def test_production_readiness_blocks_wrong_external_schema(tmp_path: Path) -> None:
@@ -175,6 +197,39 @@ def _write_external_receipt(path: Path, *, schema: str) -> Path:
                 "schema": schema,
                 "status": "PASS",
                 "mocked": False,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _write_production_infrastructure_receipt(path: Path) -> Path:
+    path.write_text(
+        json.dumps(
+            {
+                "schema": "battle.production_infrastructure_deployment_proof.v1",
+                "status": "PASS",
+                "mocked": False,
+                "live": "production_infrastructure_deployment",
+                "target": {
+                    "environment": "production",
+                    "frontend_url": "https://battle.example.com",
+                    "backend_health_url": "https://battle.example.com/health",
+                    "websocket_url": "wss://battle.example.com/live",
+                    "commit": "abc123",
+                    "release_id": "release-abc123",
+                },
+                "evidence": {
+                    "frontend_https_response": {"status_code": 200},
+                    "backend_health_response": {"status_code": 200},
+                    "websocket_connectivity": {"connected": True},
+                    "tls_certificate": {"valid": True},
+                    "dns_resolution": {"resolves": True},
+                    "ingress_route": {"status": "PASS"},
+                    "secret_configuration": {"source": "production-secret-manager"},
+                },
             }
         )
         + "\n",

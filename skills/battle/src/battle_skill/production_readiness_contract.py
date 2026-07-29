@@ -7,6 +7,10 @@ from pathlib import Path
 from typing import Any
 
 from .packaged_deployment_smoke import _now_utc
+from .production_infrastructure_contract import (
+    EXPECTED_SCHEMA as EXPECTED_PRODUCTION_INFRASTRUCTURE_SCHEMA,
+    validate_production_infrastructure_receipt,
+)
 
 
 REQUIRED_EXTERNAL_RECEIPTS = {
@@ -15,7 +19,7 @@ REQUIRED_EXTERNAL_RECEIPTS = {
     "unbounded_swarm": "Unbounded swarm execution receipt is missing or not PASS.",
 }
 EXPECTED_EXTERNAL_SCHEMAS = {
-    "production_infrastructure": "battle.production_infrastructure_deployment_proof.v1",
+    "production_infrastructure": EXPECTED_PRODUCTION_INFRASTRUCTURE_SCHEMA,
     "production_websocket": "battle.production_websocket_transport_proof.v1",
     "unbounded_swarm": "battle.unbounded_swarm_execution_proof.v1",
 }
@@ -238,13 +242,8 @@ def _external_check(name: str, path: Path | None) -> dict[str, Any]:
         return {"id": name, "status": "MISSING", "path": None}
     receipt = _load_receipt(path)
     expected_schema = EXPECTED_EXTERNAL_SCHEMAS[name]
-    status = (
-        "PASS"
-        if receipt.get("schema") == expected_schema
-        and receipt.get("status") == "PASS"
-        and receipt.get("mocked") is False
-        else "BLOCKED"
-    )
+    errors = _external_receipt_errors(name, receipt, expected_schema)
+    status = "PASS" if not errors else "BLOCKED"
     return {
         "id": name,
         "status": status,
@@ -252,7 +251,26 @@ def _external_check(name: str, path: Path | None) -> dict[str, Any]:
         "schema": receipt.get("schema"),
         "expected_schema": expected_schema,
         "mocked": receipt.get("mocked"),
+        "live": receipt.get("live"),
+        "errors": errors,
     }
+
+
+def _external_receipt_errors(
+    name: str,
+    receipt: dict[str, Any],
+    expected_schema: str,
+) -> list[str]:
+    if name == "production_infrastructure":
+        return validate_production_infrastructure_receipt(receipt)
+    errors: list[str] = []
+    if receipt.get("schema") != expected_schema:
+        errors.append(f"{name} receipt schema mismatch")
+    if receipt.get("status") != "PASS":
+        errors.append(f"{name} receipt status is not PASS")
+    if receipt.get("mocked") is not False:
+        errors.append(f"{name} receipt must be mocked=false")
+    return errors
 
 
 def _load_receipt(path: Path) -> dict[str, Any]:
