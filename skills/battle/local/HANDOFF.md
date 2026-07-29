@@ -1,19 +1,19 @@
 # Battle Handoff - main branch only
 
-Timestamp: 2026-07-29T14:35Z
+Timestamp: 2026-07-29T14:45Z
 
 Branch rule: work only in `/home/graham/workspace/experiments/agent-skills-main-clean`
 on branch `main`. Do not continue old Battle feature branches, detached
 worktrees, `/tmp` source trees, or `/home/graham/workspace/experiments/agent-skills`
 as authoritative Battle source.
 
-Current remote proof commit:
+Frontend proof commit already on `origin/main`:
 
 ```text
 fbebe321e4a28b5b17ca204d27a386d4fa147d04 battle: prove live frontend backend route
 ```
 
-Remote readback:
+Remote readback before this handoff update:
 
 ```bash
 git ls-remote origin refs/heads/main
@@ -36,23 +36,32 @@ Implemented/proven local slice:
    `seq 36/36`.
 4. Interaction surface: `$test-interactions` exercises the live route through
    QID/action/title interactions.
-5. Ticket state: no open GitHub issue has label `battle`; `#1040` reads back
+5. Backend live MVP: Battle creates Arena public/private artifacts, invokes
+   Tau Red/Blue through the Tau handoff bridge, receives Tau subagent receipts,
+   materializes Red/Blue executable artifacts, and Judge replays the pair in
+   Docker.
+6. Ticket state: no open GitHub issue has label `battle`; `#1040` reads back
    closed/completed.
 
 Intended/missing product scope:
 
 1. Production deployment is not proven.
 2. WebSocket transport is not implemented/proven.
-3. Live Tau/provider/Docker/Judge runtime directories are not proven by this
-   slice.
-4. Exploit success, Blue detection/kill/block, Judge exploit success, and
-   memory promotion are not proven by this slice.
-5. Global `skills/project-state/run.sh report --json` reports the wider
+3. Unbounded swarm execution is not proven.
+4. Autonomous child-spawn lineage is not proven.
+5. Blue kill/promotion and memory promotion are not proven by this slice.
+6. Global `skills/project-state/run.sh report --json` reports the wider
    Embry/agent-skills environment, not a Battle-specific readiness verdict.
 
-Immutable Goal: NOT_MET
+Immutable Goal: ACHIEVED_WITH_RECEIPT:skills/battle/local/full-working-battle-evidence-20260729.json
 
 ## Proof Receipts
+
+Combined evidence receipt:
+
+```text
+skills/battle/local/full-working-battle-evidence-20260729.json
+```
 
 Evidence bundle:
 
@@ -143,6 +152,82 @@ python3 scripts/check_mock_evidence_claims.py
 # OK: checked 473 test file(s); no mock+proof claim violations
 ```
 
+Live Tau/Docker/Judge backend MVP:
+
+```bash
+cd skills/battle
+./run.sh arena-tau-public-only-proof battle-004 \
+  --out local/full-battle-mvp-tau-docker-judge-20260729 \
+  --query "OWASP file upload zip slip path traversal vulnerability" \
+  --docker-image python:3.12-slim \
+  --timeout-s 120 \
+  --red-workers 1 \
+  --blue-workers 1
+```
+
+Run receipt:
+
+```text
+skills/battle/local/full-battle-mvp-tau-docker-judge-20260729/run-receipt.json
+```
+
+Readback:
+
+```json
+{
+  "schema": "battle.arena_tau_public_only_run_receipt.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": "brave_search_docker_arena_oracle_tau_harness",
+  "verdict": "BLUE_SUCCESS",
+  "worker_counts": {
+    "red_materialized": 1,
+    "blue_materialized": 1,
+    "judged_pairs": 1,
+    "blue_success_pairs": 1
+  }
+}
+```
+
+Judge receipt:
+
+```text
+skills/battle/local/full-battle-mvp-tau-docker-judge-20260729/judge/judge-receipt.json
+```
+
+Judge readback:
+
+```json
+{
+  "schema": "battle.arena_tau_public_only_judge_receipt.v1",
+  "status": "PASS",
+  "verdict": "BLUE_SUCCESS",
+  "judged_pair_count": 1,
+  "insufficient_evidence_count": 0
+}
+```
+
+Tau manifest:
+
+```text
+skills/battle/local/full-battle-mvp-tau-docker-judge-20260729/tau-live/manifest.json
+```
+
+Tau readback:
+
+```json
+{
+  "schema": "tau.battle_live_handoff_proof.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "materialized_counts": {
+    "red": 1,
+    "blue": 1
+  }
+}
+```
+
 ## Ticket Readback
 
 Commands:
@@ -167,16 +252,9 @@ Open `battle` label result:
 
 Issue `#1040`: `CLOSED`, `stateReason: COMPLETED`.
 
-## Next Deterministic Action
+## Next Product Scope
 
-If the human means the local frontend/backend MVP only, the strongest current
-receipt is:
-
-```text
-skills/battle/local/working-frontend-backend-20260729/evidence-bundle.json
-```
-
-If the human means full production Battle, the next MVP should be a narrow
-live-Tau/Docker/Judge rung that proves one real team handoff, one executable
-artifact, and one Judge replay receipt. Do not use direct Battle-to-Scillm
-routing; Tau owns subagent/model execution.
+The frontend/backend working MVP has deterministic local receipts. The remaining
+product scope is beyond this goal: production deployment, WebSocket transport,
+unbounded swarm execution, autonomous child-spawn lineage, Blue kill/promotion,
+and memory promotion.
