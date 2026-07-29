@@ -861,6 +861,13 @@ If a provider-specific rule conflicts with a generic project-agent bundle plan,
 the provider rule wins. Repair the packet shape before retrying; do not add
 timing delays or retries around a payload contract mismatch.
 
+Provider submit wrappers must make failure receipts explicit. On nonzero exits
+or missing sentinels, metadata should record requested and controlled tab ids
+when known, `submitted_to_<provider>`, raw/clean sentinel booleans, attachment
+path, attachment-delivery proof, provider-capacity state, and a stable failure
+code. Do not make callers infer these from stderr or from the existence of a
+`.submitted.md` file.
+
 If a provider says `System is currently busy`, `capacity is busy`, or a similar
 provider-capacity message, only that submit wrapper waits. Kimi and Grok use
 bounded lane-local cooldowns by default

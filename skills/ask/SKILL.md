@@ -128,8 +128,10 @@ per requested browser handler, binds temporary browser-oracle projects, runs
 Tau, and closes only that Ask-created window. The project agent does not need to
 pre-create tabs or pass `--handler-project` for normal web seats. Use
 `--browser-tab-lifecycle fresh-keep` only when a human needs to inspect the tabs
-after the run. Use `--browser-tab-lifecycle reuse-bound` only for an
-intentionally known-good existing browser-oracle project.
+after the run. Use `--browser-tab-lifecycle reuse-bound` only when the human
+intentionally wants the same long-lived provider tabs to keep their conversation
+context across the whole roundtable or competition; preflight every named tab
+before submission and keep the same binding for every round.
 
 Pass local evidence a browser seat must actually see with `--attach-file <path>`
 (repeatable) on `tau-dag run` or `compete`. Ask forwards each file to Surf as
@@ -156,6 +158,13 @@ providers, choose the provider-compatible single file: usually Markdown for
 Kimi and README/code review packets, and inline Markdown/text for Gemini when
 the current tab lacks a file input; zip only when the provider is known to
 accept it and the task actually needs an archive.
+
+Failure classification must use the Ask browser failure-code registry in
+`scripts/tau_roundtable_worker.py`, not bespoke prose. A lane is usable only
+when its node receipt has `ok: true`, a non-empty response, and provider-specific
+sentinel/attachment proof in metadata. `.submitted.md`, prepared prompts,
+scheduler `node_completed`, and an Ask/Tau process exit code are not provider
+acceptance proof.
 
 Browser lanes queue on the shared Surf browser lock. Ask derives the wait from
 handler count and topology; pass `--browser-lock-timeout <seconds>` on `tau-dag

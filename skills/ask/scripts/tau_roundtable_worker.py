@@ -1703,6 +1703,11 @@ def _browser_failure_recovery_packet(
     bound_tab_id = str(browser_oracle.get("tab_id") or "").strip()
     bound_tab_open = tab_still_open(str(getattr(args, "surf_run", "") or ""), bound_tab_id)
     lock_owner = surf_lock_owner()
+    lock_snapshot = {
+        "owner": lock_owner,
+        "observed_after_failure": True,
+        "causal_only_when_surf_lock_blocker_present": bool(surf_lock_blocker),
+    }
     next_command = _recovery_next_command(
         args,
         request_payload=request_payload,
@@ -1751,6 +1756,7 @@ def _browser_failure_recovery_packet(
             ),
             "stale_binding": stale_binding,
             "surf_lock_blocker": surf_lock_blocker,
+            "surf_lock_snapshot": lock_snapshot,
             "surf_lock_owner": lock_owner,
             "bound_tab_open": bound_tab_open,
             "recovery_prompt": recovery_prompt,
@@ -2964,6 +2970,56 @@ def _recovery_next_command(
             command.extend(["--tab-id", tab_id])
         if url:
             command.extend(["--expect-url" if str(args.handler) == "webgpt" else "--url", url])
+        if args.no_activate:
+            command.append("--no-activate")
+        return command
+    policy = _payload_policy(str(args.handler))
+    inline_retry_paths = _inline_text_bundle_paths([bundle_path]) if bundle_path and policy.inline_text_attachments else []
+    if inline_retry_paths:
+        retry_prompt = prompt_path.with_name("retry-with-local-bundle.md")
+        bundle = Path(inline_retry_paths[0])
+        bundle_text = bundle.read_text(encoding="utf-8", errors="replace")
+        retry_prompt.write_text(
+            "\n".join(
+                [
+                    "Use the inlined local bundle as the source of truth.",
+                    "Do not rely on bare private GitHub URLs or local paths not present in this prompt.",
+                    "Answer the original request using the inlined bundle and state any remaining access gaps.",
+                    "",
+                    "Original request:",
+                    str(request_payload.get("request") or ""),
+                    "",
+                    f"Browser failure class that triggered this retry packet: {failure_code}",
+                    "",
+                    f"### INLINE_1: {bundle.name}",
+                    "",
+                    "```text",
+                    bundle_text.rstrip(),
+                    "```",
+                    "",
+                    "Use INLINE_1 as source material; it replaces local filesystem attachment paths for this provider.",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        command = [
+            str(args.surf_run),
+            HANDLER_SUBMIT_COMMANDS[str(args.handler)],
+            "--input",
+            str(retry_prompt),
+            "--output",
+            str(response_path.with_name("response.retry.md")),
+            "--raw-output",
+            str(raw_path.with_name("response.retry.raw.md")),
+            "--meta-output",
+            str(meta_path.with_name("response.retry.meta.json")),
+            "--timeout",
+            str(args.timeout),
+            "--stable-polls",
+            str(args.stable_polls),
+        ]
+        _append_browser_lock_timeout(command, args)
+        append_browser_identity(command)
         if args.no_activate:
             command.append("--no-activate")
         return command
