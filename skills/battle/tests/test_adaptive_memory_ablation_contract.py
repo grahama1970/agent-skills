@@ -381,12 +381,17 @@ class _MemoryClient:
             )
         if path == "/recall":
             assert self.document is not None
+            noisy_candidate = {
+                key: value for key, value in self.document.items() if key != "kind"
+            }
+            unrelated_candidate = {
+                "_key": "unrelated-blue-memory",
+                "team": "blue",
+                "tags": ["team:blue", "battle:other"],
+            }
             if json["tags"] == self.document["tags"]:
-                recalled = {
-                    key: value for key, value in self.document.items() if key != "kind"
-                }
-                return _MemoryResponse({"items": [recalled]})
-            return _MemoryResponse({"items": []})
+                return _MemoryResponse({"items": [noisy_candidate]})
+            return _MemoryResponse({"items": [noisy_candidate, unrelated_candidate]})
         raise AssertionError(f"unexpected Memory path: {path}")
 
 
