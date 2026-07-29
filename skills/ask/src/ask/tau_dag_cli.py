@@ -223,6 +223,8 @@ def run(
             input_payload,
             run_dir=Path(str(bundle["run_dir"])),
         )
+        browser_availability = _annotate_browser_availability_cooldown(browser_availability)
+        _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
         if not _browser_availability_blocks(browser_availability):
             lifecycle = _provision_browser_lifecycle(
                 input_payload,
@@ -464,6 +466,8 @@ def compete(
             input_payload,
             run_dir=Path(str(bundle["run_dir"])),
         )
+        browser_availability = _annotate_browser_availability_cooldown(browser_availability)
+        _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
         if not _browser_availability_blocks(browser_availability):
             lifecycle = _provision_browser_lifecycle(
                 input_payload,
@@ -667,12 +671,49 @@ def _probe_browser_provider_availability(
 
 
 def _browser_availability_blocks(report: dict[str, Any]) -> bool:
-    if report.get("status") in {"NEEDS_ATTENTION", "ERROR"}:
+    if report.get("status") == "ERROR":
         return True
+    if report.get("status") == "NEEDS_ATTENTION" and not _browser_availability_limited_providers(report):
+        return True
+    return False
+
+
+def _browser_availability_limited_providers(report: dict[str, Any]) -> list[str]:
     providers = report.get("providers")
     if isinstance(providers, dict):
-        return any(isinstance(payload, dict) and payload.get("provider_limited") is True for payload in providers.values())
-    return False
+        return [
+            name
+            for name, payload in providers.items()
+            if isinstance(payload, dict) and payload.get("provider_limited") is True
+        ]
+    return []
+
+
+def _annotate_browser_availability_cooldown(report: dict[str, Any]) -> dict[str, Any]:
+    limited = _browser_availability_limited_providers(report)
+    if not limited:
+        return report
+    annotated = dict(report)
+    annotated["limited_providers"] = limited
+    annotated["cooldown_policy"] = {
+        "schema": "ask.browser_provider_cooldown_policy.v1",
+        "status": "LANE_LOCAL_RETRY",
+        "limited_providers": limited,
+        "retry_after_seconds": 300,
+        "retry_attempts": 1,
+        "continues_with_available_providers": True,
+        "surf_env": {
+            "SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS": "300",
+            "SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS": "1",
+        }
+        if "webgpt" in limited
+        else {},
+        "message": (
+            "Ask treats provider cooldowns as lane-local. Executed handler DAGs continue with peer "
+            "providers, and cooled-down WebGPT lanes opt into Surf's bounded 300-second retry."
+        ),
+    }
+    return annotated
 
 
 def browser_availability_blocked_execution(report: dict[str, Any]) -> dict[str, Any]:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import pytest
 import sys
 from pathlib import Path
@@ -719,6 +720,17 @@ def test_webgpt_submit_command_still_expects_specific_conversation_url(tmp_path:
 
     assert "--expect-url" in command
     assert command[command.index("--expect-url") + 1] == "https://chatgpt.com/c/6a6749ed-7924-83ea-abda-93d6e2570b04"
+
+
+def test_webgpt_worker_opts_into_single_rate_limit_retry(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.delenv("SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS", raising=False)
+    monkeypatch.delenv("SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS", raising=False)
+    args = _args(tmp_path, handler="webgpt")
+
+    tau_roundtable_worker._configure_browser_runtime_environment(args)
+
+    assert os.environ["SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS"] == "300"
+    assert os.environ["SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS"] == "1"
 
 
 def test_worker_parses_mixed_stdout_large_tab_list_for_live_url() -> None:

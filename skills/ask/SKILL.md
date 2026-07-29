@@ -167,10 +167,14 @@ Before launching a costly live browser panel, Ask now runs a standard read-only
 provider availability probe automatically. It inspects existing provider tabs
 for visible rate-limit or capacity banners and writes
 `<run_dir>/browser-provider-availability.json`; it does not submit prompts. If
-the report is `NEEDS_ATTENTION` or `ERROR`, Ask exits before creating fresh
-browser tabs or dispatching Tau, with `blocked_reason:
-browser_provider_unavailable_preflight`, `failure_code`, `limited_providers`,
-and `next_command` in the top-level execution receipt.
+the report is `ERROR`, or `NEEDS_ATTENTION` without specific provider cooldown
+metadata, Ask exits before creating fresh browser tabs or dispatching Tau, with
+`blocked_reason: browser_provider_unavailable_preflight`, `failure_code`, and
+`next_command` in the top-level execution receipt. If `NEEDS_ATTENTION` names
+provider-limited lanes, Ask treats that as lane-local: it records
+`limited_providers` and `cooldown_policy` in the availability artifact, then
+continues browser lifecycle/Tau execution for available peer handlers. WebGPT
+cooldowns opt the WebGPT worker into one bounded Surf retry after 300 seconds.
 
 Project agents can also run the same probe manually before a planned panel:
 
@@ -184,10 +188,11 @@ Project agents can also run the same probe manually before a planned panel:
   --json
 ```
 
-If the report is `NEEDS_ATTENTION`, treat the named provider as currently
-unavailable for new roundtable or competition lanes unless the human explicitly
-asks to try it anyway. This preflight is not completion proof; it only prevents
-obvious provider-throttle loops before a live DAG starts.
+If the report is `NEEDS_ATTENTION` with `cooldown_policy.status:
+LANE_LOCAL_RETRY`, do not cancel healthy peers. Treat only the named providers
+as cooling down, preserve the policy, and inspect the resulting lane receipts.
+This preflight is not completion proof; it only prevents obvious provider
+throttle loops from becoming whole-panel failures.
 
 Failures must be non-silent. A failed browser/API/subagent lane must expose
 `failure_code`, `recovery_packet_path`, `next_command` or an explicit
@@ -352,13 +357,13 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `browser-provider-availability.json`. Ask writes this before browser tab
   lifecycle provisioning for executed browser roundtables and competitions. A
   visible WebGPT "Too many requests", WebGrok limit countdown, Kimi/Grok
-  "System is currently busy", or similar provider banner blocks the launch
-  before any prompt is submitted. That provider is unavailable for this run;
-  rerun the availability probe after the cooldown and continue with available
-  participants when the workflow allows it. Stale or background old-tab read
-  timeouts appear as `probe_degraded`; they are diagnostic, not proof of
-  provider cooldown. Surf tab-list failure or non-timeout probe failures remain
-  `ERROR`.
+  "System is currently busy", or similar provider banner is a lane-local
+  cooldown, not a whole-panel launch block. Ask records `limited_providers` plus
+  `cooldown_policy.status: LANE_LOCAL_RETRY`, continues with available
+  participants, and lets the affected WebGPT lane use Surf's bounded
+  300-second retry. Stale or background old-tab read timeouts appear as
+  `probe_degraded`; they are diagnostic, not proof of provider cooldown. Surf
+  tab-list failure or non-timeout probe failures remain `ERROR`.
 - **Surf lock behavior**: Tau may launch browser handler workers concurrently,
   but Surf browser operations share `/tmp/surf.sock` and must wait on the Surf
   lock. Ask emits long `--browser-lock-timeout` / `--lock-timeout` envelopes so
@@ -640,9 +645,9 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   Surf's provider-throttle cooldown path. Surf waits
   `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`) before it clicks
   **Got it**, because dismissing the modal during the throttle restarts the
-  limit window, and retries only when the caller
-  deliberately opts in with `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS>0`; default
-  Ask/SURF behavior is no automatic WebGPT resubmit after this modal. Do not
+  limit window. Ask browser workers opt WebGPT into one automatic retry by
+  setting `SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS=1`; raw Surf defaults still do
+  not retry unless their caller opts in. Do not
   reclassify it as a reviewer failure, browser-oracle mismatch, download
   failure, or sentinel parser defect. Mark only that browser handler node
   `NEEDS_ATTENTION` or rate-limited, preserve the throttle metadata, continue

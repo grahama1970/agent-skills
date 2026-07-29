@@ -135,11 +135,7 @@ def main() -> int:
     parser.add_argument("--subagent-reasoning-effort", default="")
     parser.add_argument("--subagent-requested-model", default="")
     args = parser.parse_args()
-    if args.handler in HANDLER_SUBMIT_COMMANDS:
-        if args.browser_lock_timeout > 0:
-            os.environ["SURF_LOCK_TIMEOUT_MS"] = str(args.browser_lock_timeout * 1000)
-        else:
-            os.environ.setdefault("SURF_LOCK_TIMEOUT_MS", "1800000")
+    _configure_browser_runtime_environment(args)
 
     start = _read_stdin_handoff()
     artifact_dir = Path(args.artifact_dir)
@@ -150,6 +146,18 @@ def main() -> int:
         result = _run_handler(args, start, artifact_dir)
     print(json.dumps(result["handoff"], sort_keys=True))
     return int(result["exit_code"])
+
+
+def _configure_browser_runtime_environment(args: argparse.Namespace) -> None:
+    if args.handler in HANDLER_SUBMIT_COMMANDS:
+        browser_lock_timeout = int(getattr(args, "browser_lock_timeout", 0) or 0)
+        if browser_lock_timeout > 0:
+            os.environ["SURF_LOCK_TIMEOUT_MS"] = str(browser_lock_timeout * 1000)
+        else:
+            os.environ.setdefault("SURF_LOCK_TIMEOUT_MS", "1800000")
+    if args.handler == "webgpt":
+        os.environ.setdefault("SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS", "300")
+        os.environ.setdefault("SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS", "1")
 
 
 def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
@@ -1841,6 +1849,17 @@ def _looks_browser_submit_not_accepted(text: str, meta: dict[str, Any]) -> bool:
     return any(marker in text for marker in markers)
 
 
+def _submit_not_accepted_can_retry_same_identity(handler: str, meta: dict[str, Any]) -> bool:
+    if handler != "webgpt":
+        return False
+    if str(meta.get("failure") or "").strip().lower() != "tab_identity_preflight_failed":
+        return False
+    identity = meta.get("tab_identity_preflight")
+    if not isinstance(identity, dict):
+        return False
+    return str(identity.get("error") or "").strip().lower() == "unverified_tab_id_with_multiple_chatgpt_tabs"
+
+
 def _timeout_diagnostic_markers(meta: dict[str, Any]) -> dict[str, Any]:
     diagnostics = meta.get("ask_timeout_diagnostics")
     if not isinstance(diagnostics, dict):
@@ -2536,29 +2555,41 @@ def _recovery_next_command(
             or submit_meta.get("requested_url")
             or ""
         ).strip()
+        if _submit_not_accepted_can_retry_same_identity(str(args.handler), submit_meta):
+            command = [
+                str(args.surf_run),
+                HANDLER_SUBMIT_COMMANDS[str(args.handler)],
+                "--input",
+                str(prompt_path),
+                "--output",
+                str(response_path.with_name("response.identity-retry.md")),
+                "--raw-output",
+                str(raw_path.with_name("response.identity-retry.raw.md")),
+                "--meta-output",
+                str(meta_path.with_name("response.identity-retry.meta.json")),
+                "--timeout",
+                str(args.timeout),
+                "--stable-polls",
+                str(args.stable_polls),
+            ]
+            _append_browser_lock_timeout(command, args)
+            append_browser_identity(command)
+            if not any(item in {"--tab-id", "--url"} for item in command):
+                project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
+                command.extend(["--project", project])
+            if args.no_activate:
+                command.append("--no-activate")
+            return command
         command = [
-            str(args.surf_run),
-            HANDLER_SUBMIT_COMMANDS[str(args.handler)],
-            "--input",
-            str(prompt_path),
-            "--output",
-            str(response_path.with_name("response.identity-retry.md")),
-            "--raw-output",
-            str(raw_path.with_name("response.identity-retry.raw.md")),
-            "--meta-output",
-            str(meta_path.with_name("response.identity-retry.meta.json")),
-            "--timeout",
-            str(args.timeout),
-            "--stable-polls",
-            str(args.stable_polls),
+            str(args.browser_oracle_run),
+            "open-bind",
+            str(args.browser_oracle_project or browser_oracle.get("project") or args.handler),
+            "--backend",
+            HANDLER_BACKENDS[str(args.handler)],
         ]
-        _append_browser_lock_timeout(command, args)
-        append_browser_identity(command)
-        if not any(item in {"--tab-id", "--url"} for item in command):
-            project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
-            command.extend(["--project", project])
-        if args.no_activate:
-            command.append("--no-activate")
+        if url:
+            command.extend(["--url", url])
+        command.extend(["--manual", "--json"])
         return command
     if failure_code == BROWSER_PROVIDER_SETUP_FAILED:
         command = [
