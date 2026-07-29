@@ -56,6 +56,7 @@ from hack.session_audit import create_session_audit_command
 from hack.chaos_campaign import create_chaos_campaign_command
 from hack.battle_mode import create_battle_command
 from hack.evolutionary_campaign import create_evolve_campaign_command, create_validate_seed_command
+from hack.hack_scan_request import create_validate_scan_request_command
 
 from rich.console import Console
 
@@ -118,6 +119,7 @@ app.command(name="chaos-campaign", hidden=True)(create_chaos_campaign_command())
 app.command(name="evolve-campaign")(create_evolve_campaign_command())
 app.command(name="battle")(create_battle_command())
 app.command(name="validate-seed")(create_validate_seed_command())
+app.command(name="validate-scan-request")(create_validate_scan_request_command())
 
 
 @app.command()

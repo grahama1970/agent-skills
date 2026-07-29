@@ -303,6 +303,24 @@ Example:
 ./run.sh update-exploits --source github
 ```
 
+### Dogpile Scan Request Validation
+
+Dogpile can hand Hack a bounded scan-request packet for future execution
+planning:
+
+```bash
+./run.sh validate-scan-request fixtures/hack-scan-request/valid.json \
+  --expected-target fixture-target@sha256:fixture \
+  --receipt-out /tmp/hack-scan-request-validation.json
+```
+
+This command only validates the `dogpile.hack_scan_request.v1` data contract and
+writes `hack.scan_request_validation_receipt.v1`. It does not invoke Docker,
+subprocess scanners, network probes, target launch, exploit execution, patching,
+or Battle scoring. A valid request is research design input only; it is not
+target authorization and cannot be executed until the authorization-manifest,
+Compose-policy, sterile-environment, and independent-proof-authority gates exist.
+
 ## Architecture
 
 ```

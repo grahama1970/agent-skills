@@ -1,0 +1,41 @@
+{
+  "schema": "dogpile.hack_scan_request.v1",
+  "request_id": "fixture-hack-scan-request",
+  "created_at": "2026-07-29T00:00:00Z",
+  "expires_at": "2099-01-01T00:00:00Z",
+  "target": {
+    "kind": "repository",
+    "canonical_id": "fixture-target",
+    "immutable_ref": "sha256:fixture",
+    "target_url": "file:///fixtures/fixture-target"
+  },
+  "source_packet": {
+    "schema": "dogpile.security_research_packet.v1",
+    "artifact_path": "source-packet.json",
+    "sha256": "0500099f88c3106048349bf6ddcbbe42dca8bbad3201ff30db44e854749a0ed1"
+  },
+  "selected_source_evidence": [
+    {
+      "evidence_id": "src-1",
+      "provider": "brave",
+      "source_type": "web_page",
+      "url": "https://example.com/security/fixture",
+      "retrieval_artifact": "evidence/web-result.md",
+      "content_sha256": "b4b004188a1d1a27e78e559e61cdcca7c29b0ae8018c09832040f142991a1cc0",
+      "retrieved_at": "2026-07-29T00:00:00Z",
+      "source_bearing": true
+    }
+  ],
+  "requested_scan": {
+    "lanes": ["sast", "sca"],
+    "profile": "hobbyist"
+  },
+  "execution_mode": "no_docker_validation_only",
+  "non_claims": [
+    "research_design_input_only",
+    "no_scan_executed",
+    "no_docker_invoked",
+    "no_authorization_proof",
+    "no_exploit_or_patch_proof"
+  ]
+}

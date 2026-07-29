@@ -164,6 +164,16 @@ feed hits as automatic block decisions, alerts, or proof of compromise unless
 the project workflow adds high-confidence environmental corroboration. The
 default rule is: block on certainty, hunt on suspicion, enrich everything else.
 
+Dogpile-to-Hack handoff starts with the `dogpile.hack_scan_request.v1` contract.
+That packet is a hash-bound design input describing a target identity, source
+packet artifact, selected source-bearing evidence, requested scan lanes, and
+explicit non-claims. Hack validates it with `./skills/hack/run.sh
+validate-scan-request ...`; validation does not authorize or execute a scan,
+does not invoke Docker, and does not prove source truth, exploitability, patch
+effectiveness, or Battle readiness. Live Hack consumption remains gated by the
+separate authorization, Compose policy, sterile environment, and proof-authority
+tickets.
+
 ### Fetcher Boundary
 
 `fetcher` is part of Dogpile as a fetch/deep-extraction primitive, not as a

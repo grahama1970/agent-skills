@@ -15,4 +15,8 @@ dependencies = [
     "httpx>=0.24.0",
     "loguru>=0.7.0,<0.7.3",
     "pydantic>=2.0",
+    "pytest>=8.0",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = [".."]
