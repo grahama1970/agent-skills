@@ -23,6 +23,7 @@ from rich.table import Table
 from dogpile.config import console
 from dogpile.utils import log_status
 from dogpile.error_hints import get_error_hint
+from dogpile.security_research_packet import make_run_id, utc_now
 from dogpile.codex import search_codex, search_codex_knowledge
 from dogpile.brave import (
     build_brave_question_queries,
@@ -160,14 +161,26 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
 class PartialResultsPublisher:
     """Persist partial Dogpile results and emit machine-readable progress events."""
 
-    def __init__(self, requested_query: str, request_context: Optional[Dict[str, Any]] = None):
-        self.path = PARTIAL_RESULTS_PATH
+    def __init__(
+        self,
+        requested_query: str,
+        request_context: Optional[Dict[str, Any]] = None,
+        output_dir: Optional[Path] = None,
+        run_id: Optional[str] = None,
+    ):
+        run_id = run_id or make_run_id(requested_query)
+        self.output_dir = (output_dir or (_SCRIPT_DIR / "local" / "search-runs" / run_id)).resolve()
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.path = self.output_dir / "dogpile_partial_results.json"
         request_context = request_context or {}
         self.state: Dict[str, Any] = {
+            "run_id": run_id,
             "requested_query": requested_query,
             "effective_query": requested_query,
             "status": "starting",
+            "started_at": utc_now(),
             "updated_at": time.time(),
+            "output_dir": str(self.output_dir),
             "partial_results_path": str(self.path),
             "request_context": request_context,
             "tailored_queries": {},
@@ -191,6 +204,13 @@ class PartialResultsPublisher:
         tmp_path = self.path.with_suffix(".tmp")
         tmp_path.write_text(json.dumps(self.state, indent=2, ensure_ascii=False))
         tmp_path.replace(self.path)
+        if self.path != PARTIAL_RESULTS_PATH:
+            latest = {
+                "latest_run_id": self.state.get("run_id"),
+                "partial_results_path": str(self.path),
+                "updated_at": self.state["updated_at"],
+            }
+            PARTIAL_RESULTS_PATH.write_text(json.dumps(latest, indent=2, sort_keys=True) + "\n")
 
     def emit(self, event: Dict[str, Any]) -> None:
         payload = {**event, "partial_results_path": str(self.path), "ts": time.time()}
@@ -239,6 +259,7 @@ class PartialResultsPublisher:
 
     def complete(self, success: bool, error: Optional[str] = None) -> None:
         self.state["status"] = "completed" if success else "failed"
+        self.state["ended_at"] = utc_now()
         if error:
             self.state["error"] = error
         self.emit(

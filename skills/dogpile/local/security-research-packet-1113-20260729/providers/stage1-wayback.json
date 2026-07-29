@@ -1,0 +1,4 @@
+{
+  "hint": "Pass --with-wayback when historical snapshots are intentionally required.",
+  "skipped": "Wayback archive lookup is disabled by default."
+}

@@ -1,0 +1,4 @@
+{
+  "hint": "Pass --with-readarr when local Readarr/ingest-book search is intentionally required.",
+  "skipped": "Readarr/Usenet is disabled by default."
+}

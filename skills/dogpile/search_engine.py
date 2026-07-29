@@ -40,6 +40,7 @@ from dogpile.search_stages import (
     _generate_auto_synthesis,
     _format_request_context,
 )
+from dogpile.security_research_packet import build_security_research_packet
 
 # Memory integration (graceful degradation)
 try:
@@ -71,6 +72,8 @@ def _run_search(
     read_n: int = 1,
     with_ip_discovery: bool = False,
     ip_limit: int = 5,
+    security_packet_out: Optional[Path] = None,
+    target_context: Optional[Dict[str, Any]] = None,
 ):
     """Internal search implementation."""
     # Pre-hook: Recall prior research on this topic to avoid redundant API calls
@@ -332,6 +335,29 @@ def _run_search(
         typer.echo(f"[dogpile] HTML report: {report_path}", err=True)
     if publisher:
         publisher.publish_report(final_report, report_path=report_path)
+        packet_result = build_security_research_packet(
+            requested_query=publisher.state.get("requested_query", query),
+            effective_query=publisher.state.get("effective_query", query),
+            request_context=request_context,
+            tailored_queries=publisher.state.get("tailored_queries", {}),
+            stage1_results=stage1_results,
+            stage2_results=stage2_results,
+            final_report=final_report,
+            output_dir=Path(publisher.state["output_dir"]),
+            packet_out=security_packet_out,
+            run_id=publisher.state.get("run_id"),
+            started_at=publisher.state.get("started_at"),
+            target_context=target_context,
+            mocked=False,
+            live="dogpile_provider_search",
+        )
+        publisher.state["security_research_packet"] = {
+            "artifact_path": packet_result["packet_path"],
+            "status": packet_result["validation"]["status"],
+            "source_bearing_evidence_count": packet_result["packet"]["source_bearing_evidence_count"],
+        }
+        publisher._write()
+        typer.echo(f"[dogpile] security packet: {packet_result['packet_path']}", err=True)
 
     # Print the report
     # When piped (non-TTY), output raw markdown for machine parsing.
@@ -377,4 +403,3 @@ def _run_search(
                 console.print("[yellow dim]Memory learn returned 0 entries — check /memory service.[/yellow dim]")
         except Exception as e:
             console.print(f"[dim]Memory learn skipped: {e}[/dim]")
-

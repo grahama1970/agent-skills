@@ -72,6 +72,11 @@ def search(
     read_n: int = typer.Option(1, "--read-n", min=1, max=15, help="Deep-read the top-N domain-diverse Brave sources into synthesis (Deep-Research style); 1 keeps the single best-of-top-3 pick"),
     with_ip_discovery: bool = typer.Option(False, "--with-ip-discovery", help="Discover IP-only/domainless hosts via Shodan/Censys and deep-read them (opt-in, key-gated; degrades if no key/plan)"),
     ip_limit: int = typer.Option(5, "--ip-limit", min=1, max=25, help="Max IP hosts to discover when --with-ip-discovery is used"),
+    output_dir: Optional[Path] = typer.Option(None, "--output-dir", help="Per-run artifact directory for partial results, packet, report, and adapter outputs."),
+    security_packet_out: Optional[Path] = typer.Option(None, "--security-packet-out", help="Write dogpile.security_research_packet.v1 JSON to this path."),
+    target_canonical_id: str = typer.Option("fixture-target", "--target-canonical-id", help="Target canonical id for downstream adapter metadata."),
+    target_immutable_ref: str = typer.Option("sha256:fixture", "--target-immutable-ref", help="Target immutable ref for downstream adapter metadata."),
+    target_url: str = typer.Option("file:///fixtures/fixture-target", "--target-url", help="Target URL for downstream adapter metadata."),
 ):
     """Aggregate search results from multiple sources."""
 
@@ -92,7 +97,7 @@ def search(
     # Initialize error tracking, task-monitor, and execution collector
     session_id = start_error_session(query)
     monitor = start_monitor(query, name=f"dogpile-{session_id[-8:]}")
-    publisher = PartialResultsPublisher(query, request_context=request_context)
+    publisher = PartialResultsPublisher(query, request_context=request_context, output_dir=output_dir)
 
     from dogpile.utils import init_execution_collector
     init_execution_collector(session_id)
@@ -121,6 +126,13 @@ def search(
             read_n=read_n,
             with_ip_discovery=with_ip_discovery,
             ip_limit=ip_limit,
+            security_packet_out=security_packet_out,
+            target_context={
+                "kind": "repository",
+                "canonical_id": target_canonical_id,
+                "immutable_ref": target_immutable_ref,
+                "target_url": target_url,
+            },
         )
         search_success = True
     except Exception as e:

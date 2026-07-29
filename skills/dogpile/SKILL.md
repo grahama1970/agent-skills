@@ -594,6 +594,7 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | Command | Description |
 |---------|-------------|
 | `./run.sh search "query"` | Run a search |
+| `./run.sh search "query" --output-dir DIR --security-packet-out DIR/dogpile-security-packet.json` | Run a search with per-run artifacts and emit `dogpile.security_research_packet.v1` |
 | `./run.sh search "query" --html-report --open-report` | Launch a self-contained HTML/CSS report for clearer review |
 | `./run.sh search "query" --preset NAME` | Search with a preset |
 | `./run.sh search "query" --with-readarr` | Include local Readarr/Usenet book search |
@@ -620,6 +621,55 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh extract <url>` | Fetch paper, extract QRAs, store to /memory |
 | `./run.sh extract <url> --scope NAME` | Extract to specific memory scope |
 | `./run.sh extract <url> --dry-run` | Extract without storing |
+
+## Security Research Packet
+
+For Hack and Battle consumers, Dogpile emits the typed packet
+`dogpile.security_research_packet.v1` instead of requiring downstream code to
+scrape Markdown reports or trust provider `ok=true` summaries.
+
+```bash
+./run.sh search \
+  "bounded software security scanning evidence contracts" \
+  --no-interactive \
+  --output-dir /tmp/dogpile-security-packet-run \
+  --security-packet-out /tmp/dogpile-security-packet.json
+```
+
+The per-run output directory contains:
+
+- `dogpile_partial_results.json` for that run, not the legacy fixed global file.
+- `providers/*.json` with raw stage results and hashes.
+- `evidence/*.json` with source-bearing retrieval artifacts.
+- `dogpile-security-packet.json` or the caller's `--security-packet-out`.
+- `packet-validation-receipt.json`.
+- `hack-scan-request.json`, a no-Docker adapter for
+  `dogpile.hack_scan_request.v1`.
+- `adapter-output-manifest.json` with adapter artifact hashes.
+
+Packet boundaries:
+
+- `retrieval_evidence[]` contains only URL/ref/identity-bearing retrieved
+  sources with bound local artifact hashes.
+- `model_synthesis` is structurally separate and always
+  `source_bearing=false`.
+- Failed and skipped providers remain visible in `provider_statuses`,
+  `negative_evidence`, and `weak_coverage`.
+- GitHub repository candidates are source-bearing only when a `github-search`
+  evaluation receipt is present; otherwise they stay visible as rejected
+  candidates.
+- `source_bearing_provider_count` and `source_bearing_evidence_count` are
+  traceability counts only. They do not prove exploitability, patch
+  effectiveness, tool safety, or source correctness.
+
+Downstream Hack validation:
+
+```bash
+../hack/run.sh validate-scan-request \
+  /tmp/dogpile-security-packet-run/hack-scan-request.json \
+  --expected-target fixture-target@sha256:fixture \
+  --receipt-out /tmp/dogpile-hack-adapter-validation.json
+```
 
 ## Usage
 
