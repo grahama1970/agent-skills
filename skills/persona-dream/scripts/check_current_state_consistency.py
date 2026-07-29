@@ -116,6 +116,61 @@ STAGES = (
         contradiction_markers=("render session mood through chatterbox",),
         status_pin="continuity_state.latest_session_mood_chatterbox_live_receipt_sha256",
     ),
+    Stage(
+        stage_id="P2_live_chain_receipt",
+        receipt="reports/goal_v5/continuity/live_chain/RECEIPT.json",
+        accepted_prefix="PASS_PERSONA_DREAM_LIVE_CHAIN",
+        contradiction_markers=(
+            "joined live-chain receipt does not exist",
+            "joined live chain missing",
+            "produce the full accepted-dream to live-chain proof",
+            "produce reports/goal_v5/continuity/live_chain/receipt.json",
+            "write reports/goal_v5/continuity/live_chain/receipt.json",
+            "the full joined live-chain receipt has not been produced",
+            "current blocker: the joined live-chain receipt",
+        ),
+        status_pin="continuity_state.latest_live_chain_receipt_sha256",
+    ),
+    Stage(
+        stage_id="P2_session_arc_bias",
+        receipt="reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
+        accepted_prefix="PASS_SESSION_ARC_BIAS_RECEIPT",
+        contradiction_markers=(
+            "publish the persona arc-bias artifact",
+            "derive an arc bias from the continuity ledger",
+            "session arc bias missing",
+            "publish it under a stable schema",
+            "session_arc_bias.v1 artifact missing",
+        ),
+        status_pin="continuity_state.latest_session_arc_bias_receipt_sha256",
+    ),
+    Stage(
+        stage_id="P2_sparta_arc_bias_handoff",
+        receipt="reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json",
+        accepted_prefix="PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT",
+        contradiction_markers=(
+            "write the sparta consumer contract",
+            "publish a machine-checkable sparta consumer contract",
+            "sparta arc-bias handoff missing",
+            "sparta_arc_bias_handoff receipt missing",
+        ),
+        status_pin="continuity_state.latest_sparta_arc_bias_handoff_receipt_sha256",
+    ),
+    Stage(
+        stage_id="P2_five_cycle_reliability_pilot",
+        receipt="reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
+        accepted_prefix="PASS_LIVE_CHAIN_RELIABILITY_PILOT",
+        contradiction_markers=(
+            "five-cycle repeated full dream-pipeline reliability",
+            "no five-cycle campaign exists",
+            "run the five-cycle engineering reliability campaign",
+            "run five fresh continuity-chain cycles",
+            "run five fresh continuity chain cycles",
+            "repeated full dream-pipeline reliability is not proven",
+            "five-cycle reliability campaign with distinct cycle ids",
+        ),
+        status_pin="continuity_state.latest_reliability_aggregate_receipt_sha256",
+    ),
 )
 
 

@@ -1,0 +1,1150 @@
+{
+  "campaign_id": "live_chain_reliability_20260729t133501z",
+  "claims": {
+    "does_not_prove": [
+      "production reliability",
+      "perceived emotion or naturalness",
+      "PCTOM-R planning benefit",
+      "paid provider/video repeatability"
+    ],
+    "proves": [
+      "N=5 pilot outcomes are preserved without hiding failed cycles",
+      "every cycle receipt is bound by recomputed SHA-256",
+      "raw pilot success proportion and Wilson interval are reported"
+    ]
+  },
+  "counts": {
+    "attempted": 5,
+    "blocked": 0,
+    "blocked_by_systemic_failure": 0,
+    "completed": 5,
+    "errored": 0,
+    "not_run": 0,
+    "passed": 5
+  },
+  "created_at": "2026-07-29T13:36:54Z",
+  "cycles": [
+    {
+      "content_invariance": {
+        "asr_ok_count": 3,
+        "engines": [
+          "chatterbox_base"
+        ],
+        "turn_count": 3
+      },
+      "cycle_index": 1,
+      "dream_cycle_id": "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_001",
+      "elapsed_seconds": 41.806,
+      "first_divergent_gate": null,
+      "input_manifest_sha256": "sha256:f4b683dfc2ce046b3be0876166b82044eefcdc1966cba869bdb6f7a54f1637e9",
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_001/RECEIPT.json",
+      "receipt_sha256": "sha256:77ab4d73cf376cf7532d828ca251adcb244b96ee1e5df1a91a2720aef1c35437",
+      "recognition": {
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_001/voice_recognition/RECEIPT.json",
+        "sha256": "sha256:cb9da3bafedeaa6cddb07b7b58ecede7528ef75806472b01cbe7434926409427",
+        "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      "retry_count": 0,
+      "retry_reasons": [],
+      "service_availability": {
+        "after": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.016
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.014
+          }
+        },
+        "before": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.015
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.015
+          }
+        }
+      },
+      "side_effect_counters": {
+        "duplicate_accepted_effect_count": 0,
+        "exact_key_counts": {
+          "accepted_dream_memory": 1,
+          "journal_memory": 1,
+          "watch_evidence": 1
+        },
+        "known_accepted_effect_count": 3
+      },
+      "stage_counts": {
+        "BLOCKED": 0,
+        "ERROR": 0,
+        "FAIL": 0,
+        "OTHER": 0,
+        "PASS": 6
+      },
+      "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+    },
+    {
+      "content_invariance": {
+        "asr_ok_count": 3,
+        "engines": [
+          "chatterbox_base"
+        ],
+        "turn_count": 3
+      },
+      "cycle_index": 2,
+      "dream_cycle_id": "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_002",
+      "elapsed_seconds": 18.778,
+      "first_divergent_gate": null,
+      "input_manifest_sha256": "sha256:3254ee7ed7b712982acc9b90a16c43c8b222f2a3ba73fab07daee5eb7a809fbf",
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_002/RECEIPT.json",
+      "receipt_sha256": "sha256:1b8d338850b43d2edfcab455836376ed015ccef09d3376648af4bcfdb6580c16",
+      "recognition": {
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_002/voice_recognition/RECEIPT.json",
+        "sha256": "sha256:d42c66ebd6c2f1a2567510b1fa4dcfea8b1160db22dbd44d8395dce835cb9ca2",
+        "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      "retry_count": 0,
+      "retry_reasons": [],
+      "service_availability": {
+        "after": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.016
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.012
+          }
+        },
+        "before": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.019
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.013
+          }
+        }
+      },
+      "side_effect_counters": {
+        "duplicate_accepted_effect_count": 0,
+        "exact_key_counts": {
+          "accepted_dream_memory": 1,
+          "journal_memory": 1,
+          "watch_evidence": 1
+        },
+        "known_accepted_effect_count": 3
+      },
+      "stage_counts": {
+        "BLOCKED": 0,
+        "ERROR": 0,
+        "FAIL": 0,
+        "OTHER": 0,
+        "PASS": 6
+      },
+      "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+    },
+    {
+      "content_invariance": {
+        "asr_ok_count": 3,
+        "engines": [
+          "chatterbox_base"
+        ],
+        "turn_count": 3
+      },
+      "cycle_index": 3,
+      "dream_cycle_id": "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_003",
+      "elapsed_seconds": 16.393,
+      "first_divergent_gate": null,
+      "input_manifest_sha256": "sha256:a52cabd5a534034f75738f161bef3d4b87a655f24b48442f5575d7be0be933b1",
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_003/RECEIPT.json",
+      "receipt_sha256": "sha256:2544988bed01b419ed22222d677ec637f5c2b2198d33ec4ed6ed2ef529c1f5d1",
+      "recognition": {
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_003/voice_recognition/RECEIPT.json",
+        "sha256": "sha256:89e3b3f6c7386fa83a4ffce37ad6fe3aa86005916cb05a8a9fd88f3fb4a76335",
+        "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      "retry_count": 0,
+      "retry_reasons": [],
+      "service_availability": {
+        "after": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.017
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.018
+          }
+        },
+        "before": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.016
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.009
+          }
+        }
+      },
+      "side_effect_counters": {
+        "duplicate_accepted_effect_count": 0,
+        "exact_key_counts": {
+          "accepted_dream_memory": 1,
+          "journal_memory": 1,
+          "watch_evidence": 1
+        },
+        "known_accepted_effect_count": 3
+      },
+      "stage_counts": {
+        "BLOCKED": 0,
+        "ERROR": 0,
+        "FAIL": 0,
+        "OTHER": 0,
+        "PASS": 6
+      },
+      "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+    },
+    {
+      "content_invariance": {
+        "asr_ok_count": 3,
+        "engines": [
+          "chatterbox_base"
+        ],
+        "turn_count": 3
+      },
+      "cycle_index": 4,
+      "dream_cycle_id": "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_004",
+      "elapsed_seconds": 16.887,
+      "first_divergent_gate": null,
+      "input_manifest_sha256": "sha256:7c5f7d3f02b809525c5fc1d63ea57d00508878114af26bfdab31b284a97e01bd",
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_004/RECEIPT.json",
+      "receipt_sha256": "sha256:85f36a690c10c16d3f53bbf659d9ea21ea4e4cafd7c687fda6bbb55c28c5b3d1",
+      "recognition": {
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_004/voice_recognition/RECEIPT.json",
+        "sha256": "sha256:f9bc99ea40b001297aac7b569634e60ac05fa976515e7e37f350ed61b10017df",
+        "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      "retry_count": 0,
+      "retry_reasons": [],
+      "service_availability": {
+        "after": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.019
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.019
+          }
+        },
+        "before": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.015
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.011
+          }
+        }
+      },
+      "side_effect_counters": {
+        "duplicate_accepted_effect_count": 0,
+        "exact_key_counts": {
+          "accepted_dream_memory": 1,
+          "journal_memory": 1,
+          "watch_evidence": 1
+        },
+        "known_accepted_effect_count": 3
+      },
+      "stage_counts": {
+        "BLOCKED": 0,
+        "ERROR": 0,
+        "FAIL": 0,
+        "OTHER": 0,
+        "PASS": 6
+      },
+      "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+    },
+    {
+      "content_invariance": {
+        "asr_ok_count": 3,
+        "engines": [
+          "chatterbox_base"
+        ],
+        "turn_count": 3
+      },
+      "cycle_index": 5,
+      "dream_cycle_id": "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_005",
+      "elapsed_seconds": 18.238,
+      "first_divergent_gate": null,
+      "input_manifest_sha256": "sha256:53ceefbbcef2b5d57df28727fafeda28dc2c89bade04644df5e9a34b1daa0ec1",
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_005/RECEIPT.json",
+      "receipt_sha256": "sha256:8cac02308458c2c6fd64150e59fbbdf070579440a491bfb2a54a3f8a7f55ecf3",
+      "recognition": {
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/cycle_005/voice_recognition/RECEIPT.json",
+        "sha256": "sha256:5142387b698eb66141dc5da4f328333c9331a9f850a023b0b582471405952643",
+        "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      "retry_count": 0,
+      "retry_reasons": [],
+      "service_availability": {
+        "after": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.015
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.017
+          }
+        },
+        "before": {
+          "chatterbox": {
+            "available": true,
+            "body": {
+              "device": "cuda",
+              "engine": "chatterbox_turbo",
+              "ignored_turbo_params": [
+                "cfg_weight",
+                "exaggeration",
+                "min_p"
+              ],
+              "live": true,
+              "mocked": false,
+              "model_load_seconds": 9.848,
+              "model_loaded": true,
+              "nvidia_smi": {
+                "cmd": [
+                  "nvidia-smi",
+                  "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+                  "--format=csv,noheader"
+                ],
+                "returncode": 255,
+                "stderr": "",
+                "stdout": "Failed to initialize NVML: Unknown Error\n"
+              },
+              "ok": true,
+              "reference_audio_roots": [
+                "/data",
+                "/voices",
+                "/work"
+              ],
+              "stage_preset_affect_status": {
+                "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+                "evidence": {
+                  "duration_s_flat_spread": 1.36,
+                  "f0_range_hz_flat_spread": 60.85,
+                  "f0_sd_hz_flat_spread": 21.21,
+                  "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+                },
+                "schema": "chatterbox.stage_preset_affect_status.v1",
+                "status": "not_validated_as_affect_channel",
+                "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+              },
+              "started_at_utc": "2026-07-29T02:34:15Z",
+              "supported_params": [
+                "norm_loudness",
+                "repetition_penalty",
+                "temperature",
+                "top_k",
+                "top_p"
+              ],
+              "tag_handling": {
+                "accepted_tags": [],
+                "applied_tags": [],
+                "dedicated_tag_channel": "unsupported",
+                "inline_text_tag_behavior": "synthesized_as_literal_text",
+                "schema": "chatterbox.tag_handling.v1",
+                "tags_interpreted": false,
+                "unknown_tag_behavior": "ignored"
+              },
+              "torch": {
+                "cuda_available": true,
+                "cuda_version": "12.4",
+                "device_count": 1,
+                "device_name": "NVIDIA RTX A5000",
+                "version": "2.6.0+cu124"
+              },
+              "voice_conditioning_cache_size": 0
+            },
+            "elapsed_seconds": 0.02
+          },
+          "memory": {
+            "available": true,
+            "body": {
+              "conversation_classifier_device": "cuda",
+              "conversation_classifier_ok": true,
+              "intent_mapper_ok": true,
+              "memory_db_connected": true,
+              "ok": true,
+              "sparta_controls_count": 12492,
+              "sparta_corpus_ok": true,
+              "sparta_corpus_required": true,
+              "status": "ok"
+            },
+            "elapsed_seconds": 0.014
+          }
+        }
+      },
+      "side_effect_counters": {
+        "duplicate_accepted_effect_count": 0,
+        "exact_key_counts": {
+          "accepted_dream_memory": 1,
+          "journal_memory": 1,
+          "watch_evidence": 1
+        },
+        "known_accepted_effect_count": 3
+      },
+      "stage_counts": {
+        "BLOCKED": 0,
+        "ERROR": 0,
+        "FAIL": 0,
+        "OTHER": 0,
+        "PASS": 6
+      },
+      "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+    }
+  ],
+  "duplicate_accepted_effect_count": 0,
+  "duplicate_dream_cycle_ids": [],
+  "every_failure_deterministically_classified": true,
+  "input_manifest_hashes": [
+    "sha256:f4b683dfc2ce046b3be0876166b82044eefcdc1966cba869bdb6f7a54f1637e9",
+    "sha256:3254ee7ed7b712982acc9b90a16c43c8b222f2a3ba73fab07daee5eb7a809fbf",
+    "sha256:a52cabd5a534034f75738f161bef3d4b87a655f24b48442f5575d7be0be933b1",
+    "sha256:7c5f7d3f02b809525c5fc1d63ea57d00508878114af26bfdab31b284a97e01bd",
+    "sha256:53ceefbbcef2b5d57df28727fafeda28dc2c89bade04644df5e9a34b1daa0ec1"
+  ],
+  "live": true,
+  "mocked": false,
+  "per_gate_counts": {
+    "all_stages": {
+      "BLOCKED": 0,
+      "ERROR": 0,
+      "FAIL": 0,
+      "OTHER": 0,
+      "PASS": 30
+    }
+  },
+  "receipt_hash_readback": {
+    "all_cycle_receipts_recomputed": true,
+    "cycle_receipt_count": 5
+  },
+  "schema": "persona_dream.live_chain_reliability_aggregate.v1",
+  "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
+  "success_interval": {
+    "lower": 0.565509,
+    "method": "Wilson score interval, 95%, N=5 pilot if cycles=5",
+    "n": 5,
+    "proportion": 1.0,
+    "successes": 5,
+    "upper": 1.0
+  },
+  "unique_dream_cycle_ids": [
+    "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_001",
+    "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_002",
+    "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_003",
+    "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_004",
+    "live_chain_reliability_live_chain_reliability_20260729t133501z_cycle_005"
+  ]
+}

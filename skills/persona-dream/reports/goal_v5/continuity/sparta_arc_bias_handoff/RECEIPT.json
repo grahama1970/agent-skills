@@ -1,0 +1,96 @@
+{
+  "arc_bias_artifact": {
+    "bytes": 2097,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+    "sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152"
+  },
+  "claims": {
+    "does_not_prove": [
+      "SPARTA production conversation-service consumption",
+      "human-perceived emotion",
+      "human listener recognition of Embry",
+      "a closed immutable Persona Dream goal"
+    ],
+    "proves": [
+      "Persona Dream has published a machine-checkable SPARTA consumer contract for the current session_arc_bias artifact",
+      "the handoff artifact is bounded to numeric intensity/valence deltas and cannot replace SPARTA per-turn tone classification"
+    ]
+  },
+  "contract": {
+    "bytes": 3604,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json",
+    "sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df"
+  },
+  "created_at": "2026-07-29T14:08:55Z",
+  "failed_gates": [],
+  "live": false,
+  "mocked": false,
+  "negative_controls": [
+    {
+      "errors": [
+        "arc_bias_artifact_sha256_mismatch",
+        "arc_bias_must_not_emit_tone"
+      ],
+      "expected_token": "arc_bias_must_not_emit_tone",
+      "name": "arc_bias_emits_tone_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "errors": [
+        "arc_bias_artifact_sha256_mismatch",
+        "consumer_contract_allowed_fields_invalid"
+      ],
+      "expected_token": "consumer_contract_allowed_fields_invalid",
+      "name": "answer_text_modification_contract_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "errors": [
+        "arc_bias_artifact_sha256_mismatch",
+        "arc_bias_source_missing:ledger_sha256"
+      ],
+      "expected_token": "arc_bias_source_missing:ledger_sha256",
+      "name": "missing_ledger_source_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "errors": [
+        "arc_bias_artifact_sha256_mismatch",
+        "arc_bias_delta_out_of_bounds:intensity_delta"
+      ],
+      "expected_token": "arc_bias_delta_out_of_bounds:intensity_delta",
+      "name": "out_of_bounds_delta_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "errors": [
+        "arc_bias_artifact_sha256_mismatch",
+        "claims_must_not_prove_sparta_consumption"
+      ],
+      "expected_token": "claims_must_not_prove_sparta_consumption",
+      "name": "production_consumption_claim_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "errors": [
+        "arc_bias_expected_sha256_mismatch"
+      ],
+      "expected_token": "arc_bias_expected_sha256_mismatch",
+      "name": "stale_expected_artifact_hash_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "errors": [
+        "arc_bias_artifact_sha256_mismatch",
+        "arc_bias_delta_out_of_bounds:valence_delta"
+      ],
+      "expected_token": "arc_bias_artifact_sha256_mismatch",
+      "name": "tampered_artifact_hash_blocks",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    }
+  ],
+  "schema": "persona_dream.sparta_arc_bias_handoff_receipt.v1",
+  "status": "PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT"
+}

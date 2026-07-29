@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-28T14:12:32Z",
+  "updated_at": "2026-07-29T15:14:39Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:a67eeca95951f1a0e2d514ea57093b2ece9510c853780afc1a6d24dcbf8d9b8a",
@@ -21,27 +21,116 @@
   "continuity_state": {
     "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
     "mocked": false,
-    "live": false,
-    "status": "LEDGER_HARDENED_SESSION_MOOD_BOUND_LIVE_CHATTERBOX_RENDERED_NOT_RECOGNITION",
+    "live": true,
+    "status": "LIVE_CHAIN_SESSION_ARC_BIAS_SPARTA_HANDOFF_AND_N5_RELIABILITY_PILOT_PASSED_NOT_PRODUCTION_OR_PERCEPTUAL",
     "latest_authority_receipt": "skills/persona-dream/reports/goal_v5/continuity/ledger_hardening/RECEIPT.json",
     "latest_authority_receipt_sha256": "sha256:02f866e0b208c531902129cff2cd385ba29b28d6170d3ea027993fea01f7502b",
     "latest_session_mood_binding_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
     "latest_session_mood_binding_receipt_sha256": "sha256:5ad61984b0f77022b8d62a57d2791d11eb800bf5509320dbb82b42f51f218edc",
     "latest_session_mood_chatterbox_live_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
     "latest_session_mood_chatterbox_live_receipt_sha256": "sha256:4827cb0ff7ebeb74363ff0ee9d6d3d62fe487caecf3c3802c15eb8f4e6e97260",
+    "latest_session_mood_chatterbox_long_identity_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json",
+    "latest_session_mood_chatterbox_long_identity_receipt_sha256": "sha256:b7ddbfd0592fc9376ca2e01c4cbb2caeae5222b519ac5f9287edd0d880846875",
     "latest_voice_recognition_preflight_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_preflight/RECEIPT.json",
     "latest_voice_recognition_preflight_receipt_sha256": "sha256:f0cf2723f7d04486a1277c191d000e7e9ad822480d71d04b19693e177beaf941",
     "latest_voice_recognition_preflight_runtime": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the report directory, and a passing speaker-recognition backend preflight resolved by running under the chatterbox voice lane interpreter, which supplies resemblyzer",
+    "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json",
+    "latest_voice_recognition_receipt_sha256": "sha256:9a1e6de22b0b608570d0458394b64746be8737154d886f8a91dc9cf4c2e159bd",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; SPARTA arc-bias handoff contract publication with hash-bound session_arc_bias source, explicit consumer fields, no tone emission, no answer-text authority, and 7/7 fail-closed negative controls; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256; blinded-listener study stimuli restored from exact preregistered Chatterbox WAV hashes, response schema and rater instructions are present, response validation rejects empty/malformed rater rows, live ASR validates all four stimuli with WER 0.0, and a static blinded rater page now copies those WAVs into stimulus-id filenames S01-S04 without condition-labelled audio paths in the HTML; the separate listener-study analysis guard writes BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS until human_responses_complete and signed_human_interpretation_missing are cleared; valid human responses remain 0/20",
     "unverified": [
-      "persisted as authoritative runtime state",
-      "live Memory and Watch reread in a full accepted-dream chain",
-      "stable session mood inside the production conversation service rather than the deterministic receipt runner",
-      "recognition check across moods"
-    ]
+      "SPARTA production conversation-service consumption of the session_arc_bias artifact; Persona Dream handoff contract exists, but no SPARTA-owned production receipt exists",
+      "perceived target emotion, naturalness, or human listener acceptance; blinded listener responses remain 0/20 even though the static rater page is ready, and the analysis receipt blocks without signed human interpretation",
+      "recognition check across multiple moods",
+      "production reliability beyond an N=5 pilot"
+    ],
+    "latest_live_chain_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "latest_live_chain_receipt_sha256": "sha256:436075e6635ff9a6e643a46c624ace9a9eb0cd201130baea242742efdaf7919f",
+    "latest_live_chain_chatterbox_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
+    "latest_live_chain_chatterbox_receipt_sha256": "sha256:7947ecdce50c0ddab47301bfda37225683dfcf2196a1dfed0e75d6321e9e43fb",
+    "latest_live_chain_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
+    "latest_live_chain_voice_recognition_receipt_sha256": "sha256:b034c4c5520676cfe263af3c618638a9d17317eb51be7bfa1c0973cb2992689e",
+    "latest_live_chain_dream_cycle_id": "live_chain_20260729t130950z",
+    "latest_live_chain_session_mood_id": "session_mood:f65062c26b4b30d507f793f9",
+    "latest_session_arc_bias_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
+    "latest_session_arc_bias_receipt_sha256": "sha256:3949f62a8306e5a6040b66fd6982d396748e239745e665bc66a357ab3337d3d3",
+    "latest_session_arc_bias_artifact": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+    "latest_session_arc_bias_artifact_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
+    "latest_session_arc_bias": {
+      "status": "PASS_SESSION_ARC_BIAS_RECEIPT",
+      "source_dream_cycle_id": "live_chain_20260729t130950z",
+      "ledger_epoch": 2,
+      "ledger_sha256": "sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b",
+      "arc_delta_id": "arc_1_55a79f6ef25f",
+      "intensity_delta": 0.18,
+      "valence_delta": -0.18,
+      "emits_tone": false,
+      "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED"
+    },
+    "latest_sparta_arc_bias_handoff_receipt": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json",
+    "latest_sparta_arc_bias_handoff_receipt_sha256": "sha256:722c0b605c39611df553b354593fb0867275aa4780e1d0b04dc9c6404ea6530c",
+    "latest_sparta_arc_bias_handoff_contract": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json",
+    "latest_sparta_arc_bias_handoff_contract_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
+    "latest_sparta_arc_bias_handoff": {
+      "status": "PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT",
+      "source_artifact_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
+      "contract_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
+      "mocked": false,
+      "live": false,
+      "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED",
+      "boundary": "proves Persona Dream's machine-checkable handoff only; does not prove SPARTA production consumption"
+    },
+    "latest_reliability_aggregate_receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
+    "latest_reliability_aggregate_receipt_sha256": "sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f",
+    "latest_reliability_pilot": {
+      "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
+      "campaign_id": "live_chain_reliability_20260729t133501z",
+      "attempted": 5,
+      "completed": 5,
+      "passed": 5,
+      "blocked": 0,
+      "errored": 0,
+      "duplicate_accepted_effect_count": 0,
+      "wilson_95_lower": 0.565509,
+      "cycle_receipts": [
+        "sha256:77ab4d73cf376cf7532d828ca251adcb244b96ee1e5df1a91a2720aef1c35437",
+        "sha256:1b8d338850b43d2edfcab455836376ed015ccef09d3376648af4bcfdb6580c16",
+        "sha256:2544988bed01b419ed22222d677ec637f5c2b2198d33ec4ed6ed2ef529c1f5d1",
+        "sha256:85f36a690c10c16d3f53bbf659d9ea21ea4e4cafd7c687fda6bbb55c28c5b3d1",
+        "sha256:8cac02308458c2c6fd64150e59fbbdf070579440a491bfb2a54a3f8a7f55ecf3"
+      ]
+    },
+    "latest_blinded_listener_study_validation_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json",
+    "latest_blinded_listener_study_validation_receipt_sha256": "sha256:c5d6c01e4f4db0fb7f1a4a5c1535c316d666665c541753b6c4f8db46f162e7fa",
+    "latest_blinded_listener_study_readiness": {
+      "status": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
+      "stimulus_hashes_matched": "4/4",
+      "stimulus_asr_wer": "0.0/0.0/0.0/0.0",
+      "response_schema_sha256": "sha256:21e51f2392ab9a9c4d6bfb8d15907fa36eb292f443cbc2861c61be2d4650850e",
+      "rater_instructions_sha256": "sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5",
+      "rater_page": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html",
+      "rater_page_sha256": "sha256:64b2f992a28c5d98c327212832f0be6d96e45b683eefd39323ea51c9ff4a2b85",
+      "rater_page_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json",
+      "rater_page_receipt_sha256": "sha256:8026000a080add6f63df81cf90c9b8522bed442c0f28b91647555ca2bed67bce",
+      "rater_page_status": "PASS_BLINDED_LISTENER_RATER_PAGE_READY",
+      "human_responses": "0/20 valid",
+      "remaining_failed_gate": "human_responses_complete"
+    },
+    "latest_blinded_listener_study_analysis_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
+    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89",
+    "latest_blinded_listener_study_analysis": {
+      "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
+      "mocked": false,
+      "live": false,
+      "valid_human_responses": "0/20",
+      "failed_gates": [
+        "human_responses_complete",
+        "signed_human_interpretation_missing"
+      ],
+      "boundary": "analysis false-green guard only; does not supply human ratings or perceptual evidence"
+    }
   },
   "latest_voice_proof": {
-    "path": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
+    "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
     "mocked": false,
     "live": true,
     "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
@@ -54,18 +143,32 @@
       0.0,
       0.0
     ],
+    "durations_seconds": [
+      5.32,
+      5.24,
+      4.64
+    ],
     "audio_snapshots": [
-      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_001_finished_response.wav",
-      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_002_finished_response.wav",
-      "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/turn_003_finished_response.wav"
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_001_finished_response.wav",
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_002_finished_response.wav",
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_003_finished_response.wav"
     ],
     "source": "continuity_session_mood",
-    "exercised": "session-derived voice_delivery survived ASR batch rendering for three turns, used chatterbox_base, passed strict WER 0.0 ASR checks, and preserved durable report-local WAV snapshots",
+    "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
+    "voice_recognition_status": "PASS_SESSION_MOOD_VOICE_RECOGNITION",
+    "voice_recognition_engine": "resemblyzer",
+    "voice_recognition_similarity_to_embry": [
+      0.850468,
+      0.872958,
+      0.793123
+    ],
+    "voice_recognition_separation": 0.159977,
+    "exercised": "live-chain session-derived voice_delivery survived ASR batch rendering for three turns, used chatterbox_base, passed strict WER 0.0 ASR checks, preserved durable report-local WAV snapshots, and passed resemblyzer speaker-recognition/adversarial scoring",
     "unverified": [
       "perceived target emotion",
       "naturalness",
-      "speaker similarity",
-      "stable Embry identity",
+      "human listener recognition",
+      "recognition across multiple moods",
       "browser and microphone path",
       "durable dream-derived session mood"
     ]
@@ -108,11 +211,123 @@
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_mood_voice_recognition_preflight.py skills/persona-dream/tests/test_session_mood_chatterbox_live.py skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
         "result": "29 passed"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_mood_chatterbox_live.py skills/persona-dream/tests/test_session_mood_voice_recognition_preflight.py skills/persona-dream/tests/test_embry_voice_reference.py skills/persona-dream/tests/test_current_state_consistency.py -q",
+        "result": "25 passed"
+      },
+      {
+        "command": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python skills/persona-dream/scripts/session_mood_voice_recognition.py --live-receipt skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json --out skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json --json",
+        "result": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh live-chain --json",
+        "result": "PASS_PERSONA_DREAM_LIVE_CHAIN",
+        "dream_cycle_id": "live_chain_20260729t130950z",
+        "negative_controls": "13/13 PASS_NEGATIVE_BLOCKED",
+        "receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_live_chain_receipt.py skills/persona-dream/tests/test_current_state_consistency.py skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_session_mood_chatterbox_live.py skills/persona-dream/tests/test_session_mood_voice_recognition_preflight.py -q",
+        "result": "41 passed"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh check-current-state-consistency --strict --json",
+        "result": "PASS_CURRENT_STATE_CONSISTENT",
+        "stage_count": 5,
+        "mismatch_count": 0
+      },
+      {
+        "command": "python3 scripts/check_mock_evidence_claims.py",
+        "result": "OK: checked 476 test file(s); no mock+proof claim violations"
+      },
+      {
+        "command": "git diff --check -- skills/persona-dream",
+        "result": "PASS"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh session-arc-bias --json",
+        "result": "PASS_SESSION_ARC_BIAS_RECEIPT",
+        "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED",
+        "artifact": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_arc_bias.py -q",
+        "result": "4 passed"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh validate-sparta-arc-bias-handoff --json",
+        "result": "PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT",
+        "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED",
+        "contract": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_sparta_arc_bias_handoff.py skills/persona-dream/tests/test_session_arc_bias.py -q",
+        "result": "8 passed"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_validate_blinded_listener_study.py -q",
+        "result": "4 passed"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh analyze-blinded-listener-study --json",
+        "result": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
+        "failed_gates": [
+          "human_responses_complete",
+          "signed_human_interpretation_missing"
+        ],
+        "valid_human_responses": "0/20"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_analyze_blinded_listener_study.py skills/persona-dream/tests/test_validate_blinded_listener_study.py skills/persona-dream/tests/test_current_state_consistency.py -q",
+        "result": "21 passed"
+      },
+      {
+        "command": "WHISPER_API_KEY=<redacted> ./skills/persona-dream/run.sh validate-blinded-listener-study --asr --json",
+        "result": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
+        "failed_gates": [
+          "human_responses_complete"
+        ],
+        "valid_human_responses": "0/20",
+        "stimulus_asr_wer": "0.0/0.0/0.0/0.0"
+      },
+      {
+        "command": "./skills/persona-dream/run.sh render-blinded-listener-rater-page --json",
+        "result": "PASS_BLINDED_LISTENER_RATER_PAGE_READY",
+        "page": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html",
+        "receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json",
+        "boundary": "static collection UX only; does not provide human ratings or perceptual proof"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_render_blinded_listener_rater_page.py skills/persona-dream/tests/test_validate_blinded_listener_study.py skills/persona-dream/tests/test_analyze_blinded_listener_study.py -q",
+        "result": "10 passed"
+      },
+      {
+        "command": "./skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.json --output /tmp/persona-dream-agentic-eval.json",
+        "result": "READY",
+        "case_count": 2,
+        "trial_count": 6,
+        "boundary": "fixture-backed mechanical collection workflow only"
+      },
+      {
+        "command": "~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:8876/rater_page.html --name persona-dream-listener-rater",
+        "result": "UI marker written",
+        "marker": ".codex/ui-verification/latest.json",
+        "screenshot": "/tmp/codex-ui-verification/agent-skills-persona-dream-next-obvious-20260729/persona-dream-listener-rater/20260729T151347Z.png"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_arc_bias.py skills/persona-dream/tests/test_live_chain_receipt.py skills/persona-dream/tests/test_current_state_consistency.py skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_session_mood_chatterbox_live.py skills/persona-dream/tests/test_session_mood_voice_recognition_preflight.py -q",
+        "result": "46 passed"
+      },
+      {
+        "command": "./skills/persona-dream/sanity.sh",
+        "result": "583 passed, 9 subtests passed",
+        "current_state_stage_count": 8
       }
     ],
     "full_sanity_command": "./skills/persona-dream/sanity.sh",
     "full_sanity_status": "PASS",
-    "full_sanity_result": "513 passed, 9 subtests passed",
+    "full_sanity_result": "583 passed, 9 subtests passed",
     "full_sanity_notes": [
       "static dream fixture produced 10 required artifacts and 6 frame prompts",
       "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
@@ -121,19 +336,19 @@
     ]
   },
   "active_blockers": [
-    "Continuity ledger is not yet proven as the runtime authority across real sessions.",
-    "Chatterbox proof is transport/content-preservation evidence, not perceptual emotion or identity evidence.",
-    "P2.4 speaker recognition is unscored: the preflight now passes under the Chatterbox voice-lane interpreter with resemblyzer available, but no speaker-similarity or adversarial Embry-recognition score has been computed for the session-mood renders (#1037).",
+    "SPARTA production conversation service has not yet consumed the Persona Dream session_arc_bias artifact; Persona Dream now publishes a machine-checkable SPARTA consumer handoff contract, but the SPARTA-owned production receipt is still absent.",
+    "Blinded Chatterbox listener-study stimuli are present, ASR-verified, and available through a static blinded rater page; the analysis guard still blocks without enough valid human rows plus signed human interpretation, so no perceptual emotion, naturalness, or human listener acceptance claim is available.",
+    "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
-    "Repeated full dream-pipeline reliability is not proven.",
-    "PCTOM-R archived evidence now has durable local custody, but PCTOM-R still does not prove confidence-bounded planning advantage."
+    "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
   ],
   "next_step": {
-    "default": "Score the durable session-mood WAV snapshots for speaker similarity and adversarial Embry recognition using the reachable resemblyzer backend, then produce the full accepted-dream to live-chain proof.",
-    "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "default": "Route the validated SPARTA arc-bias consumer contract to the SPARTA-owned production conversation-service lane, then use the static rater page to collect the blinded Chatterbox listener-study responses and signed interpretation.",
+    "receipt_target": "SPARTA-owned production conversation-service receipt plus skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
     "ordered_steps": [
-      "Add speaker-similarity and adversarial Embry recognition checks for the live session-mood Chatterbox outputs (#1037).",
-      "Write skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain and required negative controls (#1039)."
+      "Use skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json as the SPARTA implementation target; SPARTA production consumption still belongs to the SPARTA ticket lane.",
+      "Use skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html to collect the 20 blinded Chatterbox listener-study responses for dream-derived emotion, Embry identity, and naturalness, then add signed human interpretation; do not substitute LLM/self-ratings.",
+      "Defer PCTOM-R condition-benefit expansion until continuity runtime reliability has deterministic evidence or the operator explicitly reprioritizes the research workstream."
     ]
   }
 }

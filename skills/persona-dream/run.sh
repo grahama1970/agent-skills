@@ -161,6 +161,11 @@ Commands:
   check-tom-belief-revision  Validate PCTOM-R Gate 7 non-destructive belief revision
   run-reliability-surface  Validate PCTOM-R Gate 8 repeated, perturbed, and fault-injected reliability surface
   run-causal-replay  Validate PCTOM-R Gate 9 causal replay and failure localization
+  live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
+  render-blinded-listener-rater-page Render the static blinded listener-study rater page
+  validate-blinded-listener-study  Validate stimulus hashes/ASR and human-response readiness
+  analyze-blinded-listener-study  Analyze completed human listener responses with signed interpretation
+  validate-sparta-arc-bias-handoff Validate the SPARTA consumer contract for session_arc_bias
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -724,6 +729,27 @@ case "$COMMAND" in
     ;;
   check-dream-observation-packet)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dream_observation_packet.py" "$@"
+    ;;
+  live-chain)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_receipt.py" "$@"
+    ;;
+  live-chain-reliability)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_reliability.py" "$@"
+    ;;
+  render-blinded-listener-rater-page)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/render_blinded_listener_rater_page.py" "$@"
+    ;;
+  validate-blinded-listener-study)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_blinded_listener_study.py" "$@"
+    ;;
+  analyze-blinded-listener-study)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/analyze_blinded_listener_study.py" "$@"
+    ;;
+  validate-sparta-arc-bias-handoff)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_sparta_arc_bias_handoff.py" "$@"
+    ;;
+  session-arc-bias)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/session_arc_bias.py" "$@"
     ;;
   session-mood-voice-recognition)
     # Speaker-identity gate over the durable session-mood renders. Needs a

@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent.parent
 LIVE_DIR = ROOT / "reports" / "goal_v5" / "continuity" / "session_mood_chatterbox_live"
 DEFAULT_LIVE_RECEIPT = LIVE_DIR / "RECEIPT.json"
 VOICE_REFS = Path("/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs")
@@ -114,9 +115,16 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def receipt_path(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(REPO_ROOT.resolve()))
+    except ValueError:
+        return str(path)
+
+
 def artifact(path: Path) -> dict[str, Any]:
     return {
-        "path": str(path),
+        "path": receipt_path(path),
         "exists": path.is_file(),
         "bytes": path.stat().st_size if path.is_file() else 0,
         "sha256": sha256_file(path) if path.is_file() else None,

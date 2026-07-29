@@ -1012,6 +1012,28 @@ def _extract_verdict(text: str) -> str | None:
     return None
 
 
+def read_seat_failures(run_root: Path) -> dict[str, str]:
+    """Per-seat failure codes from an $ask run, for the summary.
+
+    Without these a panel that could not reach a provider reported only "no
+    usable panel verdict", and the operator had to dig through recovery packets
+    to find `scillm_auth_invalid_api_key`. The cause belongs in the receipt.
+    """
+    failures: dict[str, str] = {}
+    for receipt in sorted(run_root.glob("*/node-artifacts/*/node-receipt.json")):
+        if receipt.parent.name == "join":
+            continue
+        try:
+            data = json.loads(receipt.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            logger.error("could not read node receipt {}: {}", receipt, exc)
+            continue
+        code = data.get("failure_code")
+        if code:
+            failures[receipt.parent.name] = str(code)
+    return failures
+
+
 def _read_ask_responses_by_node(run_root: Path) -> dict[str, str]:
     """Each handler seat's cleaned answer, keyed by node id.
 
@@ -1165,6 +1187,8 @@ def handle_closure_audit(
     result["artifacts"].append(str(ask_run_dir))
 
     by_node = _read_ask_responses_by_node(ask_run_dir)
+    seat_failures = read_seat_failures(ask_run_dir)
+    result["seat_failures"] = seat_failures
     seat_verdicts = {node: _extract_verdict(text) for node, text in by_node.items()}
     result["seat_verdicts"] = seat_verdicts
     answered = [v for v in seat_verdicts.values() if v]
@@ -1195,8 +1219,9 @@ def handle_closure_audit(
                 "status": "NEEDS_ATTENTION",
                 "summary": (
                     f"closure audit of {repo}#{issue_number} produced no usable panel verdict "
-                    f"(exit {audit.get('exit_code')}, seats {seat_verdicts}). The closure is "
-                    f"unreviewed, not accepted."
+                    f"(exit {audit.get('exit_code')}, seats {seat_verdicts}"
+                    + (f", failures {seat_failures}" if seat_failures else "")
+                    + "). The closure is unreviewed, not accepted."
                 ),
             }
         )

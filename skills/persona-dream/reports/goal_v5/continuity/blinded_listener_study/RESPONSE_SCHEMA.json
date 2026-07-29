@@ -1,0 +1,116 @@
+{
+  "schema": "persona_dream.blinded_listener_response_schema.v1",
+  "append_only_file": "responses.jsonl",
+  "required_raters": 20,
+  "row_contract": {
+    "rater_id": "stable anonymous human rater id; required; one row per rater",
+    "created_at": "ISO-8601 UTC timestamp; optional but recommended",
+    "responses": "array with exactly one object for each stimulus_id in the presentation manifest"
+  },
+  "response_object_contract": {
+    "stimulus_id": {
+      "required": true,
+      "allowed_values": [
+        "S01",
+        "S02",
+        "S03",
+        "S04"
+      ],
+      "condition_labels_forbidden": true
+    },
+    "target_emotion_choice": {
+      "required": true,
+      "allowed_values": [
+        "neutral",
+        "careful_concerned",
+        "firm_boundary",
+        "cheerful"
+      ]
+    },
+    "embry_identity": {
+      "required": true,
+      "allowed_values": [
+        true,
+        false,
+        "yes",
+        "no"
+      ]
+    },
+    "identity_confidence": {
+      "required": true,
+      "integer_range": [
+        1,
+        5
+      ]
+    },
+    "naturalness": {
+      "required": true,
+      "integer_range": [
+        1,
+        5
+      ]
+    },
+    "content_equivalent": {
+      "required": true,
+      "allowed_values": [
+        true,
+        false,
+        "yes",
+        "no"
+      ]
+    },
+    "preference_rank": {
+      "required": true,
+      "integer_range": [
+        1,
+        4
+      ],
+      "must_form_permutation_per_rater": true
+    }
+  },
+  "forbidden_fields": [
+    "condition"
+  ],
+  "example_row": {
+    "rater_id": "human_001",
+    "created_at": "2026-07-29T00:00:00Z",
+    "responses": [
+      {
+        "stimulus_id": "S01",
+        "target_emotion_choice": "neutral",
+        "embry_identity": "yes",
+        "identity_confidence": 4,
+        "naturalness": 4,
+        "content_equivalent": "yes",
+        "preference_rank": 2
+      },
+      {
+        "stimulus_id": "S02",
+        "target_emotion_choice": "firm_boundary",
+        "embry_identity": "yes",
+        "identity_confidence": 4,
+        "naturalness": 3,
+        "content_equivalent": "yes",
+        "preference_rank": 1
+      },
+      {
+        "stimulus_id": "S03",
+        "target_emotion_choice": "cheerful",
+        "embry_identity": "no",
+        "identity_confidence": 3,
+        "naturalness": 3,
+        "content_equivalent": "yes",
+        "preference_rank": 4
+      },
+      {
+        "stimulus_id": "S04",
+        "target_emotion_choice": "careful_concerned",
+        "embry_identity": "yes",
+        "identity_confidence": 3,
+        "naturalness": 4,
+        "content_equivalent": "yes",
+        "preference_rank": 3
+      }
+    ]
+  }
+}

@@ -73,6 +73,42 @@ def test_next_step_naming_accepted_stage_blocks(tmp_path):
     assert "next_step_names_accepted_stage" in _rules(got)
 
 
+def test_next_step_reopening_live_chain_receipt_blocks(tmp_path):
+    doc = _status_doc()
+    doc["next_step"]["ordered_steps"].insert(
+        0, "Write reports/goal_v5/continuity/live_chain/RECEIPT.json with the positive chain."
+    )
+
+    got = _run(tmp_path, doc)
+
+    assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
+    assert "next_step_names_accepted_stage" in _rules(got)
+
+
+def test_next_step_reopening_session_arc_bias_blocks(tmp_path):
+    doc = _status_doc()
+    doc["next_step"]["ordered_steps"].insert(
+        0, "Publish the persona arc-bias artifact under session_arc_bias.v1."
+    )
+
+    got = _run(tmp_path, doc)
+
+    assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
+    assert "next_step_names_accepted_stage" in _rules(got)
+
+
+def test_next_step_reopening_five_cycle_reliability_blocks(tmp_path):
+    doc = _status_doc()
+    doc["next_step"]["ordered_steps"].insert(
+        0, "Run the five-cycle engineering reliability campaign with distinct cycle ids."
+    )
+
+    got = _run(tmp_path, doc)
+
+    assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
+    assert "next_step_names_accepted_stage" in _rules(got)
+
+
 def test_receipt_hash_mismatch_blocks(tmp_path):
     doc = _status_doc()
     doc["continuity_state"]["latest_voice_recognition_preflight_receipt_sha256"] = "sha256:" + "0" * 64

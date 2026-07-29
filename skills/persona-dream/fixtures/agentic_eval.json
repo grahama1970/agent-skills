@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 3,
+  "proof_scope": "fixture wiring plus blinded listener-study collection surface smoke",
+  "claims": {
+    "proves": "the existing skill entrypoints exit with the expected status and the listener rater page renderer can produce a blinded static collection artifact",
+    "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
+  },
+  "cases": [
+    {
+      "name": "render-blinded-listener-rater-page",
+      "type": "positive",
+      "command": [
+        "bash",
+        "../run.sh",
+        "render-blinded-listener-rater-page",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_BLINDED_LISTENER_RATER_PAGE_READY"
+        ]
+      }
+    },
+    {
+      "name": "rater-page-contract-tests",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_render_blinded_listener_rater_page.py ../tests/test_validate_blinded_listener_study.py ../tests/test_analyze_blinded_listener_study.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "10 passed"
+        ]
+      }
+    }
+  ]
+}

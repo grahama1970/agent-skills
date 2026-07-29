@@ -1,0 +1,38 @@
+{
+  "command_required_by_issue": "git cherry main battle-adaptive-lineage-goal",
+  "comparison_command": "git cherry origin/main battle-adaptive-lineage-goal",
+  "counts_by_disposition": {
+    "deliberately_dropped_from_main_for_issue_1040_wrong_lane_branch_only": 195,
+    "merged_to_main_patch_equivalent": 50
+  },
+  "counts_by_git_cherry_mark": {
+    "+": 195,
+    "-": 50
+  },
+  "generated_at": "2026-07-28T17:45:00-04:00",
+  "proof_boundary": {
+    "does_not_exercise": "Battle frontend/backend runtime, providers, Docker, browser UI, or deletion of the old branch",
+    "exercised": "local Git object database and GitHub issue lease only",
+    "live": false,
+    "mocked": false
+  },
+  "refs": {
+    "battle_branch": "1b6f164b82a4d5c7edeeb13c64d4eef5c2359bfe",
+    "head": "f7f0399a9301b71677f43d1489bac08c1304b58a",
+    "main": "f7f0399a9301b71677f43d1489bac08c1304b58a",
+    "origin_battle_branch": "7604741f2c6548f1936621810564e280e0566094",
+    "origin_main": "58bf218ad329e43b444f93fd3e819b986ff5256e"
+  },
+  "repo": "/home/graham/workspace/experiments/agent-skills",
+  "schema": "agent_skills.issue_1040.branch_triage.v1",
+  "top_paths_by_mark": {
+    "+": {
+      ".codex": 29,
+      "skills": 1295
+    },
+    "-": {
+      "skills": 232
+    }
+  },
+  "total_entries": 245
+}
