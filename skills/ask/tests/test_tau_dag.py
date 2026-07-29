@@ -8,6 +8,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from typing import Any
 
 from typer.testing import CliRunner
 
@@ -870,6 +871,159 @@ def test_browser_command_specs_use_long_provider_timeout_envelope(tmp_path: Path
         command = specs[node]["command"]
         assert command[command.index("--timeout") + 1] == "900"
         assert command[command.index("--browser-lock-timeout") + 1] == "3600"
+
+
+def test_browser_command_specs_cap_executed_browser_workers_to_requested_budget(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Compete webgpt, webclaude, webkimi, webgrok, and webgemini on timeout budgets.",
+        repo="local/ask",
+        target="issue-1032-timeout-budgets",
+        immutable_goal="Every browser worker is bounded by the requested execution budget.",
+        handlers=["webgpt", "webclaude", "webkimi", "webgrok", "webgemini"],
+        workflow_mode="compete",
+        output_root=tmp_path,
+        execution_timeout_seconds=900,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    for node in ("handler-webgpt", "handler-webclaude", "handler-webkimi", "handler-webgrok", "handler-webgemini"):
+        spec = json.loads(
+            Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
+        )
+        command = spec["command"]
+        assert spec["timeout_s"] == 900 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+        assert command[command.index("--timeout") + 1] == "900"
+        assert command[command.index("--command-timeout-budget") + 1] == "900"
+
+
+def test_browser_submit_timeout_budget_caps_nested_surf_watchdog(monkeypatch) -> None:
+    monkeypatch.setenv("SURF_LOCK_TIMEOUT_MS", str(3600 * 1000))
+
+    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 900, command_timeout_budget=900) == 900
+    assert tau_roundtable_worker._browser_submit_timeout("webgrok", 900, command_timeout_budget=900) == 900
+    assert tau_roundtable_worker._browser_submit_timeout("webclaude", 900, command_timeout_budget=900) == 900
+    assert tau_roundtable_worker._browser_submit_timeout("webgpt", 900, command_timeout_budget=900) == 900
+    assert tau_roundtable_worker._browser_submit_timeout("webgemini", 900, command_timeout_budget=900) == 900
+
+
+def test_compete_cli_execute_passes_poll_timeout_to_browser_worker_budget(monkeypatch, tmp_path: Path) -> None:
+    captured: dict[str, Any] = {}
+
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "_probe_browser_provider_availability",
+        lambda *args, **kwargs: {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "AVAILABLE_PREFLIGHT",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "providers": {},
+        },
+    )
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "_provision_browser_lifecycle",
+        lambda *args, **kwargs: {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"},
+    )
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "probe_browser_compete_handler_gate",
+        lambda *args, **kwargs: {"schema": "ask.browser_compete_handler_gate.v1", "skipped": True},
+    )
+
+    def fake_run_tau_dag_bundle(bundle: dict[str, Any], **kwargs) -> dict[str, Any]:
+        captured["bundle"] = bundle
+        return {
+            "schema": "ask.tau_dag_execution.v1",
+            "status": "NEEDS_ATTENTION",
+            "ok": False,
+            "mocked": False,
+            "live": True,
+            "provider_live": False,
+        }
+
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_run_tau_dag_bundle)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "compete",
+            "Each candidate must answer PING_RESULT: 4.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "issue-1032-cli-budget",
+            "--immutable-goal",
+            "Every browser worker is bounded by the requested poll timeout.",
+            "--handler",
+            "webgpt",
+            "--handler",
+            "webclaude",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--poll-timeout-seconds",
+            "900",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 4
+    bundle = captured["bundle"]
+    for node in ("handler-webgpt", "handler-webclaude"):
+        spec = json.loads(
+            Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
+        )
+        command = spec["command"]
+        assert spec["timeout_s"] == 900 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+        assert command[command.index("--command-timeout-budget") + 1] == "900"
+
+
+def test_browser_compete_gate_timeout_kills_process_group(tmp_path: Path) -> None:
+    marker = tmp_path / "gate-child-survived.txt"
+    child_code = (
+        "import pathlib, time; "
+        "time.sleep(2); "
+        f"pathlib.Path({str(marker)!r}).write_text('survived', encoding='utf-8')"
+    )
+    parent_code = (
+        "import subprocess, sys, time; "
+        f"subprocess.Popen([sys.executable, '-c', {child_code!r}]); "
+        "time.sleep(10)"
+    )
+
+    result = tau_dag._run_gate_command([sys.executable, "-c", parent_code], cwd=tmp_path, timeout_seconds=1)
+
+    assert result["returncode"] == 124
+    assert result["timed_out"] is True
+    assert "killed process group" in result["stderr"]
+    time.sleep(2.5)
+    assert not marker.exists()
+
+
+def test_browser_lifecycle_timeout_kills_process_group(tmp_path: Path) -> None:
+    marker = tmp_path / "lifecycle-child-survived.txt"
+    child_code = (
+        "import pathlib, time; "
+        "time.sleep(2); "
+        f"pathlib.Path({str(marker)!r}).write_text('survived', encoding='utf-8')"
+    )
+    parent_code = (
+        "import subprocess, sys, time; "
+        f"subprocess.Popen([sys.executable, '-c', {child_code!r}]); "
+        "time.sleep(10)"
+    )
+
+    result = tau_dag_cli._lifecycle_command([sys.executable, "-c", parent_code], cwd=tmp_path, timeout_seconds=1)
+
+    assert result["returncode"] == 124
+    assert result["timed_out"] is True
+    assert "killed process group" in result["stderr"]
+    time.sleep(2.5)
+    assert not marker.exists()
 
 
 def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_path: Path) -> None:
@@ -2927,6 +3081,30 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
     assert ["bind", "fresh-browser-lifecycle-webclaude", "--backend", "webclaude", "--tab-id", "102", "--url", "https://claude.ai/new", "--auto", "--json"] in logged
     assert ["bind", "fresh-browser-lifecycle-webkimi", "--backend", "webkimi", "--tab-id", "103", "--url", "https://www.kimi.com/", "--auto", "--json"] in logged
     assert (Path(str(bundle["run_dir"])) / "browser-tab-lifecycle.json").is_file()
+
+    log_path.write_text("", encoding="utf-8")
+    tab_counter.write_text("201", encoding="utf-8")
+    capped_lifecycle = tau_dag_cli._provision_browser_lifecycle(
+        request,
+        mode="auto",
+        run_dir=Path(str(bundle["run_dir"])),
+        timeout_budget_seconds=900,
+        surf_run=surf,
+        browser_oracle_run=browser_oracle,
+    )
+
+    capped_logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    assert capped_lifecycle["status"] == "READY"
+    assert capped_lifecycle["lock_timeout_seconds"] == 900
+    assert capped_lifecycle["command_timeout_seconds"] == 900 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+    assert capped_logged[0] == [
+        "window.new",
+        "https://chatgpt.com/",
+        "--json",
+        "--unfocused",
+        "--lock-timeout",
+        "900",
+    ]
 
 
 def test_browser_tab_lifecycle_auto_skips_non_browser_dag(tmp_path: Path) -> None:

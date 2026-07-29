@@ -4,6 +4,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -13,6 +14,30 @@ assert SPEC and SPEC.loader
 probe_browser_provider_availability = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = probe_browser_provider_availability
 SPEC.loader.exec_module(probe_browser_provider_availability)
+
+
+def test_probe_run_timeout_kills_process_group(tmp_path: Path) -> None:
+    marker = tmp_path / "child-survived.txt"
+    child_code = (
+        "import pathlib, time; "
+        "time.sleep(2); "
+        f"pathlib.Path({str(marker)!r}).write_text('survived', encoding='utf-8')"
+    )
+    parent_code = (
+        "import subprocess, sys, time; "
+        f"subprocess.Popen([sys.executable, '-c', {child_code!r}]); "
+        "time.sleep(10)"
+    )
+
+    result = probe_browser_provider_availability._run(
+        [sys.executable, "-c", parent_code],
+        timeout=1,
+    )
+
+    assert result.returncode == 124
+    assert "killed process group" in result.stderr
+    time.sleep(2.5)
+    assert not marker.exists()
 
 
 def test_probe_detects_webgpt_too_many_requests_without_submission(tmp_path: Path) -> None:

@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import signal
 import subprocess
 import time
 from dataclasses import dataclass
@@ -405,17 +407,55 @@ def _decode_surf_js_stdout(stdout: str) -> Any:
 
 
 def _run(command: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
+    proc: subprocess.Popen[str] | None = None
     try:
-        return subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=timeout)
+        proc = subprocess.Popen(
+            command,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
+        stdout, stderr = proc.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=proc.returncode,
+            stdout=stdout,
+            stderr=stderr,
+        )
     except subprocess.TimeoutExpired as exc:
+        if proc is not None:
+            _terminate_process_group(proc.pid)
+            try:
+                stdout, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                _kill_process_group(proc.pid)
+                stdout, stderr = proc.communicate()
+        else:
+            stdout = str(exc.stdout or "")
+            stderr = str(exc.stderr or "")
         return subprocess.CompletedProcess(
             args=command,
             returncode=124,
-            stdout=str(exc.stdout or ""),
-            stderr=str(exc.stderr or f"command timed out after {timeout}s"),
+            stdout=stdout or "",
+            stderr=(stderr or "") + f"\n[provider-availability] command timed out after {timeout}s; killed process group\n",
         )
     except OSError as exc:
         return subprocess.CompletedProcess(args=command, returncode=127, stdout="", stderr=str(exc))
+
+
+def _terminate_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+
+
+def _kill_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
 
 
 def _proc_summary(proc: subprocess.CompletedProcess[str]) -> dict[str, Any]:

@@ -120,6 +120,7 @@ def main() -> int:
     parser.add_argument("--scillm-api-key", default="")
     parser.add_argument("--prior-node", action="append", default=[])
     parser.add_argument("--timeout", type=int, default=300)
+    parser.add_argument("--command-timeout-budget", type=int, default=0)
     parser.add_argument("--browser-lock-timeout", type=int, default=0)
     parser.add_argument("--stable-polls", type=int, default=2)
     parser.add_argument("--no-activate", action="store_true")
@@ -291,7 +292,11 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             submit = _run_cmd(
                 submit_cmd,
                 cwd=Path(args.surf_run).parent,
-                timeout=_browser_submit_timeout(handler, args.timeout),
+                timeout=_browser_submit_timeout(
+                    handler,
+                    args.timeout,
+                    command_timeout_budget=args.command_timeout_budget,
+                ),
             )
             commands.append(submit.summary())
             if meta_path.is_file():
@@ -881,7 +886,11 @@ def _retry_browser_stale_binding(
         retry = _run_cmd(
             retry_cmd,
             cwd=Path(args.surf_run).parent,
-            timeout=_browser_submit_timeout(handler, args.timeout),
+            timeout=_browser_submit_timeout(
+                handler,
+                args.timeout,
+                command_timeout_budget=args.command_timeout_budget,
+            ),
         )
         retry_summary = retry.summary()
         retry_summary["recovery_attempt"] = f"{handler}_stale_binding_submit_existing_tab"
@@ -949,7 +958,11 @@ def _retry_browser_stale_binding(
     retry = _run_cmd(
         retry_cmd,
         cwd=Path(args.surf_run).parent,
-        timeout=_browser_submit_timeout(handler, args.timeout),
+        timeout=_browser_submit_timeout(
+            handler,
+            args.timeout,
+            command_timeout_budget=args.command_timeout_budget,
+        ),
     )
     retry_summary = retry.summary()
     retry_summary["recovery_attempt"] = f"{handler}_stale_binding_submit_after_new_tab_rebind"
@@ -3810,7 +3823,12 @@ class CmdResult:
         }
 
 
-def _browser_submit_timeout(handler: str, provider_timeout: int) -> int:
+def _browser_submit_timeout(
+    handler: str,
+    provider_timeout: int,
+    *,
+    command_timeout_budget: int = 0,
+) -> int:
     try:
         lock_wait_ms = (
             os.environ["SURF_LOCK_TIMEOUT_MS"]
@@ -3831,17 +3849,27 @@ def _browser_submit_timeout(handler: str, provider_timeout: int) -> int:
     if handler == "webgpt":
         # webgpt-submit permits three default 300-second rate-limit cooldowns
         # before the final provider observation.
-        return max(provider_timeout + (3 * 300) + lock_wait_seconds + 150, 180)
+        timeout = max(provider_timeout + (3 * 300) + lock_wait_seconds + 150, 180)
+        return _cap_browser_command_timeout(timeout, command_timeout_budget)
     if handler == "webgemini":
         # gemini-submit permits two provider observations separated by its
         # default 120-second stalled-response cooldown.
-        return max((2 * (provider_timeout + 60)) + 120 + lock_wait_seconds + 30, 180)
+        timeout = max((2 * (provider_timeout + 60)) + 120 + lock_wait_seconds + 30, 180)
+        return _cap_browser_command_timeout(timeout, command_timeout_budget)
     # Claude, Kimi, and Grok receive the provider timeout as a Surf argument.
     # The worker watchdog must be longer than that provider timeout, otherwise
     # Ask kills Surf at the moment Surf should be writing its provider timeout
     # metadata. Keep the grace proportional so tiny debug timeouts remain fast.
     grace_seconds = min(45, max(2, int(provider_timeout * 0.15)))
-    return provider_timeout + lock_wait_seconds + grace_seconds
+    timeout = provider_timeout + lock_wait_seconds + grace_seconds
+    return _cap_browser_command_timeout(timeout, command_timeout_budget)
+
+
+def _cap_browser_command_timeout(timeout: int, command_timeout_budget: int) -> int:
+    budget = max(0, int(command_timeout_budget or 0))
+    if budget <= 0:
+        return timeout
+    return max(1, min(timeout, budget))
 
 
 def _browser_timeout_diagnostics(

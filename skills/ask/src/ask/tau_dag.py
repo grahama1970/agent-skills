@@ -8,6 +8,7 @@ import os
 import re
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -228,6 +229,7 @@ class TauDagCompileInput:
     scillm_api_key: str = DEFAULT_SCILLM_API_KEY
     tau_project_root: Path = DEFAULT_TAU_PROJECT_ROOT
     browser_lock_timeout: int = 0
+    execution_timeout_seconds: int = 0
     attachments: tuple[str, ...] = ()
 
 
@@ -254,6 +256,7 @@ def infer_compile_input(
     scillm_api_key: str = DEFAULT_SCILLM_API_KEY,
     tau_project_root: Path = DEFAULT_TAU_PROJECT_ROOT,
     browser_lock_timeout: int = 0,
+    execution_timeout_seconds: int = 0,
     attachments: list[str] | None = None,
 ) -> TauDagCompileInput:
     """Merge explicit CLI fields with conservative request-text inference."""
@@ -316,6 +319,7 @@ def infer_compile_input(
         scillm_api_key=scillm_api_key or default_scillm_api_key(),
         tau_project_root=tau_project_root,
         browser_lock_timeout=max(0, int(browser_lock_timeout or 0)),
+        execution_timeout_seconds=max(0, int(execution_timeout_seconds or 0)),
         attachments=tuple(str(item) for item in (attachments or [])),
     )
 
@@ -1633,30 +1637,41 @@ def _is_browser_handler(handler: str) -> bool:
 
 def _run_gate_command(command: list[str], *, cwd: Path, timeout_seconds: float) -> dict[str, Any]:
     started = time.time()
+    proc: subprocess.Popen[str] | None = None
     try:
-        completed = subprocess.run(
+        proc = subprocess.Popen(
             command,
             cwd=str(cwd),
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=timeout_seconds,
-            check=False,
+            start_new_session=True,
         )
+        stdout, stderr = proc.communicate(timeout=timeout_seconds)
         return {
             "command": command,
-            "returncode": completed.returncode,
-            "stdout": completed.stdout[:20000],
-            "stderr": completed.stderr[:8000],
+            "returncode": proc.returncode,
+            "stdout": stdout[:20000],
+            "stderr": stderr[:8000],
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": False,
         }
     except subprocess.TimeoutExpired as exc:
+        if proc is not None:
+            _terminate_process_group(proc.pid)
+            try:
+                stdout, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                _kill_process_group(proc.pid)
+                stdout, stderr = proc.communicate()
+        else:
+            stdout = str(exc.stdout or "")
+            stderr = str(exc.stderr or "")
         return {
             "command": command,
             "returncode": 124,
-            "stdout": str(exc.stdout or "")[:20000],
-            "stderr": str(exc.stderr or "command timed out")[:8000],
+            "stdout": (stdout or "")[:20000],
+            "stderr": ((stderr or "") + "\n[ask-gate] command timed out; killed process group\n")[:8000],
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": True,
         }
@@ -1669,6 +1684,20 @@ def _run_gate_command(command: list[str], *, cwd: Path, timeout_seconds: float) 
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": False,
         }
+
+
+def _terminate_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+
+
+def _kill_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
 
 
 def _parse_tab_list_payload(text: str) -> list[dict[str, Any]] | None:
@@ -2108,6 +2137,14 @@ def _write_roundtable_command_spec(
     node_id = str(node["id"])
     handler = str(handler_policy.get("id") or node.get("agent") or node_id)
     is_subagent_handler = str(handler_policy.get("transport") or "") == "subagent-runner.codex_exec"
+    browser_handler = _is_browser_handler(handler)
+    lock_timeout_s = _browser_lock_timeout_seconds(input) if browser_handler else 0
+    worker_provider_timeout_s = (
+        "5400"
+        if handler == "codex"
+        else ("1500" if is_subagent_handler else ("900" if browser_handler else "300"))
+    )
+    command_timeout_budget_s = _browser_command_timeout_budget_seconds(input) if browser_handler else 0
     command = [
         sys.executable,
         str(worker_path),
@@ -2137,13 +2174,13 @@ def _write_roundtable_command_spec(
         # codex coder orders carry mandatory finish sequences (wheel build +
         # fixture suite + gate-document extractions + cargo test) that alone
         # take ~20 min; 3000s starved a real repair mid-flight (2026-07-22).
-        "5400"
-        if handler == "codex"
-        else ("1500" if is_subagent_handler else ("900" if _is_browser_handler(handler) else "300")),
+        worker_provider_timeout_s,
         "--stable-polls",
         "2",
         "--no-activate",
     ]
+    if command_timeout_budget_s:
+        command.extend(["--command-timeout-budget", str(command_timeout_budget_s)])
     prior_nodes = _roundtable_prior_nodes(input, node_id)
     if node_id == "join":
         prior_nodes = _handler_node_ids(input.handlers)
@@ -2151,7 +2188,6 @@ def _write_roundtable_command_spec(
         command.extend(["--prior-node", prior_node])
     if handler in ROUNDTABLE_HANDLERS and handler != "codex":
         command.extend(["--browser-oracle-project", _handler_project(input, handler)])
-        lock_timeout_s = _browser_lock_timeout_seconds(input)
         if lock_timeout_s:
             command.extend(["--browser-lock-timeout", str(lock_timeout_s)])
         # Local evidence a browser seat must actually see (agent-skills#1062).
@@ -2192,7 +2228,8 @@ def _write_roundtable_command_spec(
         "timeout_s": _roundtable_command_timeout(
             handler,
             is_subagent_handler=is_subagent_handler,
-            lock_timeout_s=_browser_lock_timeout_seconds(input) if _is_browser_handler(handler) else 0,
+            lock_timeout_s=lock_timeout_s,
+            execution_timeout_s=int(getattr(input, "execution_timeout_seconds", 0) or 0),
         ),
         "requires_network": node_id != "join",
         "mutates": handler == "codex",
@@ -2211,6 +2248,7 @@ def _roundtable_command_timeout(
     *,
     is_subagent_handler: bool,
     lock_timeout_s: int = 0,
+    execution_timeout_s: int = 0,
 ) -> int:
     if handler == "codex":
         return 6000
@@ -2223,12 +2261,16 @@ def _roundtable_command_timeout(
             + BROWSER_COMMAND_GRACE_SECONDS
         )
         if handler == "webgpt":
-            return max(3900, browser_envelope)
-        if handler == "webgemini":
-            return max(4200, browser_envelope)
-        if handler in {"webclaude", "webkimi", "webgrok"}:
-            return max(3000, browser_envelope)
-        return browser_envelope
+            base_timeout = max(3900, browser_envelope)
+        elif handler == "webgemini":
+            base_timeout = max(4200, browser_envelope)
+        elif handler in {"webclaude", "webkimi", "webgrok"}:
+            base_timeout = max(3000, browser_envelope)
+        else:
+            base_timeout = browser_envelope
+        if execution_timeout_s > 0:
+            return min(base_timeout, execution_timeout_s + BROWSER_COMMAND_GRACE_SECONDS)
+        return base_timeout
     if handler == "webgpt":
         return 3900
     if handler == "webgemini":
@@ -2236,6 +2278,13 @@ def _roundtable_command_timeout(
     if handler in {"webclaude", "webkimi", "webgrok"}:
         return 3000
     return 420
+
+
+def _browser_command_timeout_budget_seconds(input: TauDagCompileInput) -> int:
+    execution_timeout_s = int(getattr(input, "execution_timeout_seconds", 0) or 0)
+    if execution_timeout_s <= 0:
+        return 0
+    return max(30, execution_timeout_s)
 
 
 def _browser_handler_count(input: TauDagCompileInput) -> int:
