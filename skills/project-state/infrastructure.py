@@ -32,6 +32,17 @@ from constants import (
 load_dotenv()
 
 
+NON_SKILL_DIR_NAMES = {
+    "_shared",
+    "common",
+    "consume_common",
+    "sanity",
+    "create-claude",
+    "subagent-service",
+    "webgpt-engagement",
+}
+
+
 def collect_daemons() -> dict[str, Any]:
     """Check daemon health via Unix sockets."""
     if not is_embry_project():
@@ -193,13 +204,19 @@ def collect_skills() -> dict[str, Any]:
     candidate_roots = [
         PROJECT_ROOT / ".skills" / "skills",
         PROJECT_ROOT / "skills",
+        PI_SKILLS,
     ]
-    if is_embry_project():
+    if is_embry_project() and PI_SKILLS not in candidate_roots:
         candidate_roots.append(PI_SKILLS)
-    skills_root = next((path for path in candidate_roots if path.exists()), PI_SKILLS)
+    skills_root = next((_normalize_skills_root(path) for path in candidate_roots if path.exists()), PI_SKILLS)
     if not skills_root.exists():
         return {"total": 0, "path": str(skills_root), "missing_skill_md": [], "missing_sanity": []}
-    dirs = sorted([d for d in skills_root.iterdir() if d.is_dir() and not d.name.startswith(".")])
+    dirs = sorted(
+        [
+            d for d in skills_root.iterdir()
+            if d.is_dir() and not d.name.startswith(".") and d.name not in NON_SKILL_DIR_NAMES
+        ]
+    )
     missing_skill_md = [d.name for d in dirs if not (d / "SKILL.md").exists()]
     missing_sanity = [d.name for d in dirs if not (d / "sanity.sh").exists() and (d / "SKILL.md").exists()]
     return {
@@ -210,6 +227,32 @@ def collect_skills() -> dict[str, Any]:
         "missing_sanity": missing_sanity[:10],
         "missing_sanity_count": len(missing_sanity),
     }
+
+
+def _normalize_skills_root(path: Path) -> Path:
+    """Return the concrete directory that contains skill folders."""
+
+    nested = path / "skills"
+    if not nested.is_dir():
+        return path
+
+    root_skill_count = _count_skill_dirs(path)
+    nested_skill_count = _count_skill_dirs(nested)
+    return nested if nested_skill_count > root_skill_count else path
+
+
+def _count_skill_dirs(path: Path) -> int:
+    """Count child directories that contain skill metadata."""
+
+    try:
+        return sum(
+            1
+            for child in path.iterdir()
+            if child.is_dir() and not child.name.startswith(".") and (child / "SKILL.md").is_file()
+        )
+    except OSError as exc:
+        logger.error("failed to inspect skills root {}: {}", path, exc)
+        return 0
 
 
 def collect_frontend() -> dict[str, Any]:
