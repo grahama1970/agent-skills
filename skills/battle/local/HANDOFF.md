@@ -1,6 +1,6 @@
 # Battle Handoff - main branch only
 
-Timestamp: 2026-07-29T15:33Z
+Timestamp: 2026-07-29T21:55Z
 
 Branch rule: work only in `/home/graham/workspace/experiments/agent-skills-main-clean`
 on branch `main`. Do not continue old Battle feature branches, detached
@@ -54,9 +54,11 @@ Implemented/proven local slice:
 
 Intended/missing product scope:
 
-1. Production deployment is not proven.
-2. WebSocket transport is not implemented/proven.
-3. Unbounded swarm execution is not proven.
+1. Production infrastructure deployment is not proven.
+2. Production TLS/certificate-backed WebSocket deployment and production-scale
+   fanout capacity are not proven.
+3. Mathematically infinite swarm execution and production cluster autoscaling
+   are not proven.
 4. Blue kill/promotion and memory-improved Judge outcome are not proven by this
    slice.
 5. Global `skills/project-state/run.sh report --json` reports the wider
@@ -71,7 +73,7 @@ Immutable Goal: NOT_MET
 Source commit under the newest deployment proof:
 
 ```text
-69d65110f503170fc2a8e39b345a61398a110f41
+ab622a7d47c138ce1769beb308c1644e9187ed91
 ```
 
 New bounded receipts on `main`:
@@ -177,12 +179,38 @@ New bounded receipts on `main`:
    - max observed concurrency: `12`
    - network mode: `none`
 
-The containerized proof may claim only local Docker container packaging and
-mapped local frontend/backend execution. It still must not claim production
-infrastructure, TLS/certificate/ingress/secret management, production-scale
-fanout capacity, unbounded swarm execution, Battle/RelayForge production
-readiness, six-trial qualification, factorial effects, or cross-target
-generalization.
+10. Fresh containerized local frontend/backend deployment smoke after readiness
+    claim-boundary refinement:
+    `skills/battle/local/containerized-deployment-smoke-20260729-next6/containerized-deployment-smoke.json`
+    - `status`: `PASS`
+    - `mocked`: `false`
+    - `live`: `containerized_http_sse_websocket_adapter_plus_vite_preview`
+    - source commit: `ab622a7d47c138ce1769beb308c1644e9187ed91`
+    - PR8: `33 total / 0 failed`
+    - `$test-interactions`: `38 passed / 0 failed / 0 warned`
+    - visual findings: `0`
+    - screenshot inspected:
+      `skills/battle/local/containerized-deployment-smoke-20260729-next6/frontend-pr8/01-live-sse-adapter.png`
+
+11. Current fail-closed production-readiness contract:
+    `skills/battle/local/production-readiness-contract-20260729-next5/production-readiness-contract.json`
+    - `status`: `BLOCKED`
+    - `mocked`: `false`
+    - `live`: `receipt_contract_validation`
+    - local working frontend/backend status: `PASS`
+    - production WebSocket receipt status: `PASS`
+    - Docker-backed dynamic swarm receipt status: `PASS`
+    - remaining blocker:
+      `production_infrastructure_missing_or_not_pass`
+
+The containerized, WebSocket, and swarm receipts may claim only local Docker
+container packaging, mapped local frontend/backend execution, local authenticated
+WebSocket auth/reconnect/two-client fanout behavior, and 12 isolated no-network
+Docker swarm workers. They still must not claim production infrastructure,
+TLS/certificate/ingress/secret management, production-scale fanout capacity,
+mathematically infinite swarm execution, production cluster autoscaling,
+Battle/RelayForge production readiness, six-trial qualification, factorial
+effects, or cross-target generalization.
 
 ## Proof Receipts
 
