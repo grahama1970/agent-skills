@@ -1,129 +1,182 @@
-# Battle Handoff - main branch proof path
+# Battle Handoff - main branch only
 
-Timestamp: 2026-07-28T20:32Z
-Branch rule: work only on `agent-skills@main`. Do not resume old Battle feature branches.
+Timestamp: 2026-07-29T14:35Z
+
+Branch rule: work only in `/home/graham/workspace/experiments/agent-skills-main-clean`
+on branch `main`. Do not continue old Battle feature branches, detached
+worktrees, `/tmp` source trees, or `/home/graham/workspace/experiments/agent-skills`
+as authoritative Battle source.
+
+Current remote proof commit:
+
+```text
+fbebe321e4a28b5b17ca204d27a386d4fa147d04 battle: prove live frontend backend route
+```
+
+Remote readback:
+
+```bash
+git ls-remote origin refs/heads/main
+# fbebe321e4a28b5b17ca204d27a386d4fa147d04 refs/heads/main
+```
 
 ## Current Slice
 
-Objective: inventory the existing Battle backend proof path, patch the obvious failures directly, and prove it without spending a reviewer competition.
+Objective: deliver and prove a local Battle frontend plus backend path without
+using stale feature branches or reviewer output as closure proof.
 
-Deterministic path found:
+Implemented/proven local slice:
 
-```bash
-cd skills/battle
-./run.sh backend-eval --out-dir <out>
-./run.sh prove-backend-goal
-./run.sh prove-spectator-source-build
-```
+1. Backend: local HTTP SSE adapter serves `battle.snapshot.v1` and
+   `battle.live_event.v1` for `battle-004`.
+2. Frontend: source-built Vite Battle spectator renders `#battle/live` against
+   that adapter.
+3. Pixi/live route: `#battle/live?engine=pixi&battle=battle-004&liveBase=...`
+   shows the live adapter state, EventSource transport, `MOCKED: NO`, and
+   `seq 36/36`.
+4. Interaction surface: `$test-interactions` exercises the live route through
+   QID/action/title interactions.
+5. Ticket state: no open GitHub issue has label `battle`; `#1040` reads back
+   closed/completed.
 
-## Repairs In This Slice
+Intended/missing product scope:
 
-- Kill-shot Pixi replay remains retired/fail-closed on current `main`; the obsolete normalized kill-shot fixture must stay absent until a real Judge-backed producer emits `blue.kill_confirmed`, `red.killed`, or `tau.killed`.
-- Outcome validator now allows kill attribution only when the canonical terminal event is present while preserving the no-inference guard for future terminal fixtures.
-- Backend goal proof no longer assumes Battle is served from SPARTA's `:3002`; spectator proof starts its own Battle preview port.
-- Spectator proof avoids unnecessary `npm install` when `node_modules` is already usable.
-- Parent-spawn lifecycle enrichment now uses the fresh combiner artifact directory before the Vite build copies public fixtures.
-- Adaptive lineage V13 proof no longer depends on `/tmp` source artifacts and samples the Pixi canvas for mobile visibility.
-- Adaptive lineage validator supports depth-N spawn lineages while retaining the V14 memory boundary.
-- Battle standalone Vite source-build path is wired for `$test-interactions`.
+1. Production deployment is not proven.
+2. WebSocket transport is not implemented/proven.
+3. Live Tau/provider/Docker/Judge runtime directories are not proven by this
+   slice.
+4. Exploit success, Blue detection/kill/block, Judge exploit success, and
+   memory promotion are not proven by this slice.
+5. Global `skills/project-state/run.sh report --json` reports the wider
+   Embry/agent-skills environment, not a Battle-specific readiness verdict.
+
+Immutable Goal: NOT_MET
 
 ## Proof Receipts
 
-Backend eval:
-
-```bash
-cd skills/battle
-./run.sh backend-eval --out-dir local/backend-eval-20260728T-rebased
-```
-
-Receipt: `skills/battle/local/backend-eval-20260728T-rebased/receipt.json`
-
-Result:
-
-```json
-{
-  "mocked": false,
-  "live": false,
-  "summary": {
-    "passed": 13,
-    "failed": 0,
-    "total": 13,
-    "channels": [
-      "adaptive_lineage_fixtures",
-      "deterministic_contracts",
-      "genetic_lifecycle_fixtures",
-      "live_transport",
-      "race_replay_fixtures"
-    ]
-  }
-}
-```
-
-Full backend goal proof:
-
-```bash
-cd skills/battle
-BATTLE_BACKEND_GOAL_PROOF_DIR=$PWD/local/backend-goal-proof-20260728T-rebased ./run.sh prove-backend-goal
-```
-
-Log: `skills/battle/local/prove-backend-goal-20260728T-rebased-r2.log`
-Receipt directory: `skills/battle/local/backend-goal-proof-20260728T-rebased/`
-Result markers:
+Evidence bundle:
 
 ```text
-BATTLE_PROVE_SPECTATOR_PASS
-OK: checked 566 test file(s); no mock+proof claim violations
-BATTLE_PROVE_BACKEND_GOAL_PASS
+skills/battle/local/working-frontend-backend-20260729/evidence-bundle.json
 ```
 
-Source-built Battle interaction proof:
+Result summary:
+
+```json
+{
+  "schema": "battle.working_frontend_backend_evidence.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": "local_http_sse_adapter_plus_vite_preview",
+  "branch": "main"
+}
+```
+
+Integrated frontend/backend proof:
 
 ```bash
-cd skills/battle
-./run.sh prove-spectator-source-build
+cd skills/battle/spectator
+BATTLE_HOST=http://127.0.0.1:3016 \
+BATTLE_LIVE_TRANSPORT_BASE=http://127.0.0.1:18766 \
+BATTLE_LIVE_TRANSPORT_PROOF_DIR=/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/working-frontend-backend-20260729/pr8-integrated-main-after-ui-fallback \
+npm run prove:pr8-live-transport
 ```
 
-Proof: `skills/battle/local/spectator-source-build-source-build-20260728T205752Z/proof.json`
-Interaction results: `skills/battle/local/spectator-source-build-source-build-20260728T205752Z/captures/results.json`
-Screenshot: `skills/battle/local/spectator-source-build-source-build-20260728T205752Z/captures/battle-receipt-controls/0012_pane-controls_screenshot.png`
+Receipt:
 
-Result:
+```text
+skills/battle/local/working-frontend-backend-20260729/pr8-integrated-main-after-ui-fallback/summary.json
+```
+
+Readback:
 
 ```json
 {
   "mocked": false,
-  "live": true,
-  "interaction_counts": {
-    "total": 12,
-    "passed": 12,
-    "failed": 0,
-    "warned": 0,
-    "skipped": 0
-  }
+  "live": "local_http_sse_adapter",
+  "checks_total": 33,
+  "failed": []
 }
 ```
 
-Visual inspection note: the screenshot visibly shows the source-built Battle header, roster search with `red`, selected timeline lane, zoom controls, live-events panel, and left/right pane toggles after the interaction sequence.
+Screenshot inspected:
 
-Focused code checks:
-
-```bash
-cd skills/battle
-uv run pytest tests/test_battle_event_adapter_contract.py -q
-# 99 passed
-
-cd skills/battle/spectator
-npm run test -- src/lib/battle-adaptive-lineage.test.ts src/lib/battle-adaptive-lineage-depth3.test.ts
-# 8 passed
-
-npm run typecheck
-# exit 0
+```text
+skills/battle/local/working-frontend-backend-20260729/pr8-integrated-main-after-ui-fallback/01-live-sse-adapter.png
 ```
 
-## Honest Scope
+Visible state observed: live adapter banner, `LIVE: LOCAL HTTP SSE`,
+`MOCKED: NO`, `TRANSPORT: EVENTSOURCE`, `seq 36/36`, and the claim boundary.
 
-This slice proves the existing MVP backend proof path and the source-built interaction path. It does not prove production hosting, long-running provider reliability, audible playback, or that every future Battle product goal has been accepted by the human.
+`$test-interactions` proof:
 
-Any future UI claim must include `$test-interactions` output and an inspected screenshot. Any future backend readiness claim must include a fresh `prove-backend-goal` receipt or a narrower receipt that states exactly what it proves and does not prove.
+```bash
+skills/test-interactions/run.sh run \
+  --manifest skills/battle/local/working-frontend-backend-20260729/test-interactions-live-after-patch/live-route-unique-hash-manifest.json \
+  --output-dir skills/battle/local/working-frontend-backend-20260729/test-interactions-live-after-patch/captures-live-route-unique-hash \
+  --max-retries 1
+```
 
-Immutable Goal: NOT_MET
+Receipt:
+
+```text
+skills/battle/local/working-frontend-backend-20260729/test-interactions-live-after-patch/captures-live-route-unique-hash/results.json
+```
+
+Readback:
+
+```json
+{
+  "run_id": "test-interactions-20260729T142159889006Z",
+  "total": 38,
+  "passed": 38,
+  "failed": 0,
+  "warned": 0,
+  "skipped": 0
+}
+```
+
+Mechanical mock-claim check:
+
+```bash
+python3 scripts/check_mock_evidence_claims.py
+# OK: checked 473 test file(s); no mock+proof claim violations
+```
+
+## Ticket Readback
+
+Commands:
+
+```bash
+skills/best-practices-github-ticket/scripts/gh-ticket-tools.sh doctor --repo grahama1970/agent-skills
+gh issue list --repo grahama1970/agent-skills --state open --label battle --limit 100 --json number,title,state,labels,updatedAt,url
+skills/best-practices-github-ticket/scripts/gh-ticket-tools.sh show 1040 --repo grahama1970/agent-skills
+```
+
+Readback:
+
+```json
+{"ok":true,"action":"doctor","status":"ok","missing_label_count":"0"}
+```
+
+Open `battle` label result:
+
+```json
+[]
+```
+
+Issue `#1040`: `CLOSED`, `stateReason: COMPLETED`.
+
+## Next Deterministic Action
+
+If the human means the local frontend/backend MVP only, the strongest current
+receipt is:
+
+```text
+skills/battle/local/working-frontend-backend-20260729/evidence-bundle.json
+```
+
+If the human means full production Battle, the next MVP should be a narrow
+live-Tau/Docker/Judge rung that proves one real team handoff, one executable
+artifact, and one Judge replay receipt. Do not use direct Battle-to-Scillm
+routing; Tau owns subagent/model execution.
