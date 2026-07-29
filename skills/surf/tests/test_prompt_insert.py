@@ -91,6 +91,7 @@ def test_every_browser_client_uses_the_shared_helper() -> None:
     clients = [
         "chatgpt-client.cjs",
         "gemini-tab-client.cjs",
+        "kimi-tab-client.cjs",
         "grok-client.cjs",
         "perplexity-client.cjs",
         "aistudio-client.cjs",

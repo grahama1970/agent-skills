@@ -1,4 +1,5 @@
 const KIMI_TAB_URL = "https://www.kimi.com/";
+const { insertPromptText } = require("./prompt-insert.cjs");
 
 const SELECTORS = {
   promptTextarea: 'textarea[placeholder*="Ask anything"], textarea[placeholder*="follow-up"], textarea[placeholder*="Add a follow-up"], .chat-input-editor[role="textbox"], .chat-input-editor, div[class*="editorContentEditable"], [contenteditable="true"][role="textbox"], [contenteditable="true"]',
@@ -59,14 +60,6 @@ function withTimeout(promise, timeoutMs, label) {
     timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
-}
-
-async function insertTextInChunks(inputCdp, text, chunkSize = 4000) {
-  const value = String(text || "");
-  for (let index = 0; index < value.length; index += chunkSize) {
-    await inputCdp("Input.insertText", { text: value.slice(index, index + chunkSize) });
-    await delay(20);
-  }
 }
 
 function textLooksKimiProviderBusy(text) {
@@ -784,7 +777,7 @@ async function typePrompt(cdp, inputCdp, prompt) {
   }
   if (typed.mode === "focused_editable") {
     await clearFocusedEditor(inputCdp);
-    await insertTextInChunks(inputCdp, prompt);
+    await insertPromptText(inputCdp, prompt);
     const verified = await verifyPromptInComposer(cdp, prompt);
     if (!verified?.ok) {
       throw new Error("Kimi prompt composer did not receive inserted text");
