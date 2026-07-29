@@ -96,6 +96,13 @@ def validate(
         sentinel = str(meta.get("sentinel") or "")
         checks.append(_check(_has_sentinel(raw_text, sentinel), f"{handler}_raw_contains_sentinel"))
         checks.append(_check(not _has_sentinel(response_text, sentinel), f"{handler}_clean_response_strips_sentinel"))
+        checks.append(
+            _check(
+                not meta.get("clean_contamination_markers"),
+                f"{handler}_clean_response_uncontaminated",
+                meta.get("clean_contamination_markers"),
+            )
+        )
         requested = str(meta.get("requested_tab_id") or "")
         controlled = str(meta.get("controlled_tab_id") or "")
         if handler == "webgpt" and not controlled and meta.get("controlled_tab_id_inferred_from_requested") is True:

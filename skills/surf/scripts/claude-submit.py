@@ -21,6 +21,16 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 RUN_SH = Path(os.environ.get("SURF_RUN_SH", str(SKILL_DIR / "run.sh")))
 TAB_STATE_FILE = Path(os.environ.get("SURF_CLAUDE_TAB_STATE", "/tmp/surf-claude-controlled-tab-id"))
+CLAUDE_CLEAN_CONTAMINATION_MARKERS = (
+    "Skip to content",
+    "Chat history",
+    "Write your prompt to Claude",
+    "What can we tackle together?",
+    "@keyframes",
+    "Automation-only instruction:",
+    "After your complete answer, append a final line containing only this exact marker:",
+    "Do not print anything after that marker.",
+)
 
 
 class SubmitFailure(RuntimeError):
@@ -535,15 +545,7 @@ def _success_meta(
     content_script_recovery: list[dict[str, Any]] | None = None,
     tab_identity_preflight: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    contamination = [
-        needle
-        for needle in [
-            "Skip to content",
-            "Chat history",
-            "Write your prompt to Claude",
-        ]
-        if needle in clean_text
-    ]
+    contamination = _clean_contamination_markers(clean_text)
     focus_changed = (
         focus_before.get("focusedWindowId") != focus_after.get("focusedWindowId")
         or focus_before.get("activeTabId") != focus_after.get("activeTabId")
@@ -608,6 +610,10 @@ def _success_meta(
         "started_at": started_at,
         "finished_at": finished_at,
     }
+
+
+def _clean_contamination_markers(clean_text: str) -> list[str]:
+    return [needle for needle in CLAUDE_CLEAN_CONTAMINATION_MARKERS if needle in clean_text]
 
 
 def _recovered_attachment_metadata(attach_files: list[Path]) -> list[dict[str, Any]]:

@@ -90,6 +90,70 @@ def test_validate_live_browser_workflow_accepts_complete_compete_lifecycle_recei
     assert not report["failed_checks"]
 
 
+def test_validate_live_browser_workflow_rejects_clean_contamination_markers(tmp_path: Path) -> None:
+    run_dir = tmp_path / "ask-live-roundtable-contaminated-fixture"
+    handler = "webclaude"
+    _write_json(
+        run_dir / "browser-tab-lifecycle.json",
+        {
+            "schema": "ask.browser_tab_lifecycle.v1",
+            "status": "READY",
+            "mode": "fresh-temporary",
+            "window_id": "999",
+            "created_tabs": [{"handler": handler, "tab_id": "222", "project": f"{run_dir.name}-{handler}"}],
+            "cleanup_status": "attempted",
+            "cleanup": [{"returncode": 0}],
+        },
+    )
+    _write_json(
+        run_dir / "tau-receipts" / "dag-receipt.json",
+        {
+            "ok": True,
+            "status": "PASS",
+            "mocked": False,
+            "live": True,
+            "max_observed_concurrency": 1,
+        },
+    )
+    node_dir = run_dir / "node-artifacts" / f"handler-{handler}"
+    _write_json(
+        node_dir / "node-receipt.json",
+        {
+            "ok": True,
+            "status": "PASS",
+            "mocked": False,
+            "live": True,
+            "provider_live": True,
+        },
+    )
+    _write_json(
+        node_dir / "response.meta.json",
+        {
+            "requested_tab_id": "222",
+            "controlled_tab_id": "222",
+            "sentinel": "<<<CLAUDE_DONE:test>>>",
+            "clean_contamination_markers": ["What can we tackle together?"],
+        },
+    )
+    (node_dir / "response.raw.md").write_text("What can we tackle together?\n<<<CLAUDE_DONE:test>>>\n", encoding="utf-8")
+    (node_dir / "response.md").write_text("What can we tackle together?\n", encoding="utf-8")
+    join_dir = run_dir / "node-artifacts" / "join"
+    _write_json(join_dir / "node-receipt.json", {"ok": True, "status": "PASS"})
+    (join_dir / "roundtable-summary.md").write_text("summary\n", encoding="utf-8")
+
+    report = validate_live_browser_workflow.validate(
+        run_dir,
+        workflow_mode="roundtable",
+        handlers=[handler],
+        expect_text=[],
+        min_concurrency=1,
+        require_cleanup=True,
+    )
+
+    assert report["ok"] is False
+    assert any(item["name"] == "webclaude_clean_response_uncontaminated" for item in report["failed_checks"])
+
+
 def _write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
