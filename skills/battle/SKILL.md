@@ -73,6 +73,11 @@ Required production invariants:
   own subagent execution and use `scillm` as the LLM/model caller. Battle owns
   team selection, persona assignment, Docker runtimes, scorekeeping, artifacts,
   and memory promotion.
+- SciLLM is a Tau-owned provider sidecar. Battle operators and project agents
+  must not call `$scillm`, `/scillm`, `http://localhost:4001`,
+  `/v1/chat/completions`, or `/v1/scillm/*` directly for Battle proof work.
+  Express provider work as Tau DAGs, Tau command-loop nodes, or Tau skill nodes,
+  then consume Tau receipts and node outputs.
 - Model choice is strategic but routed through Tau/loop: SOTA models for
   planning, small fast models for high-throughput mutation generation and
   triage, specialist models for language/security niches, and batch calls for

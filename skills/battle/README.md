@@ -106,6 +106,12 @@ That harness uses `$scillm` as the LLM/model caller, giving teams access to SOTA
 models, small/fast low-parameter models, and narrow specialist models without
 making Battle a direct provider router.
 
+SciLLM is internal to Tau. Battle operators and project agents must not call
+`$scillm`, `/scillm`, `http://localhost:4001`, `/v1/chat/completions`, or
+`/v1/scillm/*` directly for Battle proof work. Route provider/model work through
+Tau DAGs, Tau command-loop nodes, or Tau skill nodes, and consume the resulting
+Tau receipts.
+
 Hard invariants:
 
 - Host code is control plane only: schedule, dispatch, mount/copy, collect,
