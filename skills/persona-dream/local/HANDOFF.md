@@ -1,6 +1,6 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-29T13:58:00Z
+**Timestamp:** 2026-07-29T14:32:32Z
 **Active Agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target Branch:** `main`
@@ -53,6 +53,12 @@
   four, the rater response schema/instructions are present, empty/malformed
   rater rows are rejected, and the remaining failed gate is
   `human_responses_complete`.
+- **Blinded listener-study analysis guard:** The analysis receipt at
+  `reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json` now fails
+  closed with `BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS` until
+  `human_responses_complete` and `signed_human_interpretation_missing` are
+  cleared. Receipt SHA-256:
+  `sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89`.
 - **Status boundary:** P2.4 recognition proof does not prove perceived emotion,
   naturalness, human listener recognition, production conversation-service
   binding, production reliability beyond an N=5 pilot, or PCTOM-R benefit.
@@ -132,7 +138,7 @@
   production receipt.
 - **Perception not proven:** The listener-study stimuli are ready, but
   `responses.jsonl` has 0/20 valid human responses and there is no signed human
-  interpretation record.
+  interpretation record. The analysis receipt now enforces that boundary.
 - **PCTOM-R benefit unproven:** The machinery remains strong, but no
   confidence-bounded counterfactual-dreaming planning advantage has been shown.
 - **Reliability boundary:** The five-cycle engineering pilot passed, but this is
@@ -145,8 +151,9 @@
    `reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json`
    to the SPARTA-owned production conversation consumer; do not edit SPARTA
    from Persona Dream unless the operator routes that work in the SPARTA lane.
-2. Collect the 20 human responses for the blinded Chatterbox listener study and
-   append them to `responses.jsonl`; do not substitute an LLM/self-rating.
+2. Collect the 20 human responses for the blinded Chatterbox listener study,
+   append them to `responses.jsonl`, and add `SIGNED_INTERPRETATION.json`; do
+   not substitute an LLM/self-rating.
 3. Return to PCTOM-R condition-benefit work such as issue `#1008` only after an
    explicit operator reprioritization or after the voice/perception gate is
    receipted.
@@ -167,6 +174,7 @@
 - **SPARTA arc-bias handoff receipt:** `skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json`
 - **Reliability aggregate receipt:** `skills/persona-dream/reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`
 - **Listener-study readiness receipt:** `skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
+- **Listener-study analysis receipt:** `skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json`
 
 Use this claim boundary:
 

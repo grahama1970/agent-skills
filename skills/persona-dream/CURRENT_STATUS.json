@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-29T14:08:55Z",
+  "updated_at": "2026-07-29T14:32:32Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:a67eeca95951f1a0e2d514ea57093b2ece9510c853780afc1a6d24dcbf8d9b8a",
@@ -36,10 +36,10 @@
     "latest_voice_recognition_preflight_runtime": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
     "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json",
     "latest_voice_recognition_receipt_sha256": "sha256:9a1e6de22b0b608570d0458394b64746be8737154d886f8a91dc9cf4c2e159bd",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; SPARTA arc-bias handoff contract publication with hash-bound session_arc_bias source, explicit consumer fields, no tone emission, no answer-text authority, and 7/7 fail-closed negative controls; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256; blinded-listener study stimuli restored from exact preregistered Chatterbox WAV hashes, response schema and rater instructions are present, response validation rejects empty/malformed rater rows, and live ASR validates all four stimuli with WER 0.0, but valid human responses remain 0/20",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; SPARTA arc-bias handoff contract publication with hash-bound session_arc_bias source, explicit consumer fields, no tone emission, no answer-text authority, and 7/7 fail-closed negative controls; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256; blinded-listener study stimuli restored from exact preregistered Chatterbox WAV hashes, response schema and rater instructions are present, response validation rejects empty/malformed rater rows, and live ASR validates all four stimuli with WER 0.0; the separate listener-study analysis guard writes BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS until human_responses_complete and signed_human_interpretation_missing are cleared; valid human responses remain 0/20",
     "unverified": [
       "SPARTA production conversation-service consumption of the session_arc_bias artifact; Persona Dream handoff contract exists, but no SPARTA-owned production receipt exists",
-      "perceived target emotion, naturalness, or human listener acceptance; blinded listener responses remain 0/20",
+      "perceived target emotion, naturalness, or human listener acceptance; blinded listener responses remain 0/20 and the analysis receipt blocks without signed human interpretation",
       "recognition check across multiple moods",
       "production reliability beyond an N=5 pilot"
     ],
@@ -109,6 +109,19 @@
       "rater_instructions_sha256": "sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5",
       "human_responses": "0/20 valid",
       "remaining_failed_gate": "human_responses_complete"
+    },
+    "latest_blinded_listener_study_analysis_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
+    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89",
+    "latest_blinded_listener_study_analysis": {
+      "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
+      "mocked": false,
+      "live": false,
+      "valid_human_responses": "0/20",
+      "failed_gates": [
+        "human_responses_complete",
+        "signed_human_interpretation_missing"
+      ],
+      "boundary": "analysis false-green guard only; does not supply human ratings or perceptual evidence"
     }
   },
   "latest_voice_proof": {
@@ -221,7 +234,7 @@
       },
       {
         "command": "python3 scripts/check_mock_evidence_claims.py",
-        "result": "OK: checked 475 test file(s); no mock+proof claim violations"
+        "result": "OK: checked 476 test file(s); no mock+proof claim violations"
       },
       {
         "command": "git diff --check -- skills/persona-dream",
@@ -252,6 +265,19 @@
         "result": "4 passed"
       },
       {
+        "command": "./skills/persona-dream/run.sh analyze-blinded-listener-study --json",
+        "result": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
+        "failed_gates": [
+          "human_responses_complete",
+          "signed_human_interpretation_missing"
+        ],
+        "valid_human_responses": "0/20"
+      },
+      {
+        "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_analyze_blinded_listener_study.py skills/persona-dream/tests/test_validate_blinded_listener_study.py skills/persona-dream/tests/test_current_state_consistency.py -q",
+        "result": "21 passed"
+      },
+      {
         "command": "WHISPER_API_KEY=<redacted> ./skills/persona-dream/run.sh validate-blinded-listener-study --asr --json",
         "result": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
         "failed_gates": [
@@ -266,13 +292,13 @@
       },
       {
         "command": "./skills/persona-dream/sanity.sh",
-        "result": "579 passed, 9 subtests passed",
+        "result": "583 passed, 9 subtests passed",
         "current_state_stage_count": 8
       }
     ],
     "full_sanity_command": "./skills/persona-dream/sanity.sh",
     "full_sanity_status": "PASS",
-    "full_sanity_result": "579 passed, 9 subtests passed",
+    "full_sanity_result": "583 passed, 9 subtests passed",
     "full_sanity_notes": [
       "static dream fixture produced 10 required artifacts and 6 frame prompts",
       "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
@@ -282,17 +308,17 @@
   },
   "active_blockers": [
     "SPARTA production conversation service has not yet consumed the Persona Dream session_arc_bias artifact; Persona Dream now publishes a machine-checkable SPARTA consumer handoff contract, but the SPARTA-owned production receipt is still absent.",
-    "Blinded Chatterbox listener-study stimuli are present and ASR-verified, but valid human listener responses remain 0/20; empty or malformed rater rows do not count, and no perceptual emotion, naturalness, or human listener acceptance claim is available.",
+    "Blinded Chatterbox listener-study stimuli are present and ASR-verified, and the analysis guard now blocks without enough valid human rows plus signed human interpretation; valid human listener responses remain 0/20, so no perceptual emotion, naturalness, or human listener acceptance claim is available.",
     "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
     "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
   ],
   "next_step": {
-    "default": "Route the validated SPARTA arc-bias consumer contract to the SPARTA-owned production conversation-service lane, then collect the blinded Chatterbox listener-study responses.",
+    "default": "Route the validated SPARTA arc-bias consumer contract to the SPARTA-owned production conversation-service lane, then collect the blinded Chatterbox listener-study responses and signed interpretation.",
     "receipt_target": "SPARTA-owned production conversation-service receipt plus skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
     "ordered_steps": [
       "Use skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json as the SPARTA implementation target; SPARTA production consumption still belongs to the SPARTA ticket lane.",
-      "Collect the 20 blinded Chatterbox listener-study responses for dream-derived emotion, Embry identity, and naturalness; do not substitute LLM/self-ratings.",
+      "Collect the 20 blinded Chatterbox listener-study responses for dream-derived emotion, Embry identity, and naturalness, then add signed human interpretation; do not substitute LLM/self-ratings.",
       "Defer PCTOM-R condition-benefit expansion until continuity runtime reliability has deterministic evidence or the operator explicitly reprioritizes the research workstream."
     ]
   }

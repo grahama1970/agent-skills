@@ -1,8 +1,47 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener stimuli ready; SPARTA/human responses next) by Codex
+**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener stimuli ready and analysis false-green gated; SPARTA/human responses next) by Codex
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
+
+## 2026-07-29 — #1058 analysis guard BLOCKED; no perceptual conclusion without humans
+
+The blinded listener study now has a separate deterministic analysis receipt
+that fails closed until both human response collection and signed human
+interpretation exist:
+
+- Analysis receipt:
+  `reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json`
+  - SHA-256: `sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89`
+  - status: `BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS`
+  - `mocked: false`, `live: false`
+  - failed gates: `human_responses_complete`,
+    `signed_human_interpretation_missing`
+  - response state: `0/20` valid human responses.
+- Analyzer:
+  `scripts/analyze_blinded_listener_study.py`
+  - computes raw counts and Wilson intervals only from valid human response
+    rows;
+  - applies the preregistered adversarial attention exclusion rule;
+  - requires `SIGNED_INTERPRETATION.json` with human-rater/no-LLM/no-self-rating
+    acknowledgements before analysis can pass.
+- Runner:
+  `./run.sh analyze-blinded-listener-study --json`
+
+Proof on the rebased tree:
+
+- `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_analyze_blinded_listener_study.py skills/persona-dream/tests/test_validate_blinded_listener_study.py skills/persona-dream/tests/test_current_state_consistency.py -q`
+  -> `21 passed`
+- `./skills/persona-dream/run.sh check-current-state-consistency --strict --json`
+  -> `PASS_CURRENT_STATE_CONSISTENT`, mismatch count `0`
+- `python3 scripts/check_mock_evidence_claims.py`
+  -> `OK: checked 476 test file(s); no mock+proof claim violations`
+- `./skills/persona-dream/sanity.sh`
+  -> `583 passed, 9 subtests passed`
+
+Boundary: this prevents a future false PASS for #1058. It does not create human
+ratings, signed interpretation, perceived-emotion evidence, or immutable-goal
+completion.
 
 ## 2026-07-29 — SPARTA arc-bias handoff contract PASS; production consumption still absent
 
