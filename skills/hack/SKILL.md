@@ -340,6 +340,33 @@ CIDRs, ports, actions, probe classes, runtime modes, resource budgets, and
 denied behavior. It is not a legal opinion and does not prove Docker isolation,
 source truth, exploitability, patch effectiveness, or Battle readiness.
 
+### Proof Authority Boundary
+
+Hack probe output is split into observation and validation authorities:
+
+```bash
+./run.sh prove-proof-authority \
+  --fixture fixtures/proof-authority \
+  --out /tmp/hack-proof-authority
+```
+
+`hack.probe_observation.v1` records what a bounded Hack probe observed. It
+binds target identity, authorization-manifest hash, runtime hash, scan/probe
+hashes, executor identity, exit code, signal type, and sanitized evidence
+artifacts. It always sets `exploit_confirmed=false`.
+
+`hack.proof_validation_receipt.v1` is the only Hack-side receipt that can set a
+session status to `CONFIRMED`, and only when an independent validator binds the
+exact observation artifact hash, target/auth/runtime/probe/scan hashes, replay
+spec hash, replay receipt hash, and validator identity. The validator identity
+must differ from the Hack executor. In Battle workflows this validator is the
+Battle Judge.
+
+Reports and memory payloads use the closed status vocabulary
+`NOT_ATTEMPTED`, `OBSERVED_UNCONFIRMED`, `CONFIRMED`, `REJECTED`, and
+`VALIDATION_ERROR`. A file named `proof.*`, a zero exit code, or a Hack-authored
+artifact is never sufficient to set `exploit_proven=true`.
+
 ## Architecture
 
 ```

@@ -61,6 +61,7 @@ from hack.battle_mode import create_battle_command
 from hack.evolutionary_campaign import create_evolve_campaign_command, create_validate_seed_command
 from hack.hack_scan_request import create_validate_scan_request_command
 from hack.target_authorization import create_authorization_preflight_command
+from hack.proof_authority import create_prove_proof_authority_command
 
 from rich.console import Console
 
@@ -125,6 +126,7 @@ app.command(name="battle")(create_battle_command())
 app.command(name="validate-seed")(create_validate_seed_command())
 app.command(name="validate-scan-request")(create_validate_scan_request_command())
 app.command(name="authorization-preflight")(create_authorization_preflight_command())
+app.command(name="prove-proof-authority")(create_prove_proof_authority_command())
 
 
 @app.command()
