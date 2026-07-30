@@ -799,7 +799,6 @@ async function query(options) {
       log(`File attached: ${file}`);
     }
     const baselineUrl = await evaluate(cdp, "window.location.href").catch(() => "");
-    const attachment = file ? await attachFile(cdp, inputCdp, file, log) : null;
     if (attachment?.attached) {
       log(`Attached file ${attachment.name}`);
     }

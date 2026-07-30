@@ -28,6 +28,7 @@ def test_gemini_tab_client_attaches_file_before_submit() -> None:
     send_index = source.index("await clickSend(cdp, inputCdp);")
     return_index = source.index("attachment,")
 
+    assert source.count("attachFile(cdp, inputCdp, file, log)") == 1
     assert attach_index < type_index < send_index
     assert send_index < return_index
 
