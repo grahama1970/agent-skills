@@ -20,6 +20,7 @@ from cleanup_core import (
     log_error, log_info, log_warning, run_command, read_file_content,
     get_all_tracked_files, is_cleanup_output,
 )
+from cleanup_watchdog import scan_project_watchdog_context
 
 
 def _top_path(path: str) -> str:
@@ -232,5 +233,4 @@ def generate_worktree_audit_markdown(audit: Dict[str, Any]) -> str:
     )
     lines.append("")
     return "\n".join(lines)
-
 
