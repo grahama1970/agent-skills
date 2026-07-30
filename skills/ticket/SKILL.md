@@ -49,6 +49,19 @@ between monitor/reporting skills and Tau-backed repair workers. Monitors may
 draft or explicitly create tickets; maintainers lease one ticket at a time;
 reviewers/verifiers attach deterministic proof before closure.
 
+Worktree retention is part of the ticket lifecycle. A resolver must not create
+ad hoc implementation worktrees before leasing the ticket, and must not leave a
+secondary worktree behind silently. Use the shared audit before release, block
+with release, close, or handoff whenever a secondary worktree was used:
+
+```bash
+skills/best-practices-github-ticket/scripts/audit-worktrees.sh --repo /path/to/repo --json
+```
+
+The audit fails on `/tmp` worktrees, prunable registrations, and dirty secondary
+worktrees. It does not delete anything; the resolver must commit, remove, or
+explicitly retain each flagged path in the ticket proof.
+
 ## Use
 
 ```bash
@@ -154,6 +167,9 @@ context on every dispatch.
 - **Close requires an active `--agent` lease.** Run `lease ISSUE --agent NAME`
   first (a bare `lease ISSUE` does not set `maintainer-active`); otherwise
   `close` fails with `not leased with maintainer-active`.
+- **Worktrees are lease state.** Ticket work must use the live repository or a
+  ticket-bound worktree with a recorded path. Run the worktree audit before
+  release or close; do not park implementation work under `/tmp`.
 - **`--reason` on `block`/`unblock`/`release` is a FILE path, not free text.**
   Point it at a markdown blocker/rationale file.
 - **`close --reason` accepts only `completed` or `not-planned`.** Any other value

@@ -158,11 +158,51 @@ The resolver must:
 6. Read every named skill `SKILL.md` fully before using, modifying, or verifying it.
 7. Read the target skill's `complies:` list and run matching best-practices checks.
 8. Preserve unrelated worktree changes and avoid broad refactors.
-9. Produce repair, verification, and review receipts before closure.
+9. Run the worktree retention audit before release or closure when any worktree
+   was created or when the repository has more than one registered worktree.
+10. Produce repair, verification, and review receipts before closure.
 
 If issue metadata is contradictory, record the conflict and choose the narrowest
 route that can verify the reported failure. Escalate to `needs-human` only when
 repository evidence cannot resolve the conflict.
+
+## Worktree Retention Contract
+
+Forgotten worktrees are work-loss defects, not cosmetic cleanup. Agents have
+repeatedly created detached `/tmp` worktrees, lost track of the live source tree,
+and stranded hours of uncommitted work outside the ticket that caused it.
+
+Required behavior:
+
+- Do not create an ad hoc worktree before leasing the ticket that requires it.
+- Worktrees created for a ticket must be ticket-bound and discoverable from the
+  ticket or proof, using a stable path such as
+  `.worktrees/<repo>/issue-123-<slug>` or another project-approved worktree root.
+- `/tmp` is allowed for disposable evidence only. It is not an implementation
+  worktree for a live repository.
+- Detached worktrees must be short-lived integration sandboxes and must be named
+  in the proof if retained after release or closure.
+- Before `release`, `block --release`, `close`, or handoff, run:
+
+```bash
+skills/best-practices-github-ticket/scripts/audit-worktrees.sh --repo /path/to/repo --json
+```
+
+- A failing audit is a retention blocker until each path is either committed,
+  removed with `git worktree remove` after confirming it is clean, or explicitly
+  retained in the ticket with path, branch/HEAD, owner, and reason.
+- Never use broad `git worktree prune` as a convenience cleanup while user work
+  may exist. Prune only after the audit identifies prunable registrations and
+  dirty secondary worktrees have been handled.
+
+The audit script fails closed on prunable registrations, `/tmp` worktrees, and
+dirty secondary worktrees. It never deletes anything.
+
+The guarded GitHub helper runs this audit automatically for live `release`,
+`block --release`, `close`, and `close-duplicate` operations when invoked from
+inside a Git worktree. `--dry-run` is unaffected. Emergency bypass requires the
+caller to set `GH_TICKET_SKIP_WORKTREE_AUDIT=1`, which emits a warning and must
+be justified in the ticket proof.
 
 ## Orientation For A Cron-Dispatched Agent
 
@@ -353,7 +393,10 @@ Agent workflow:
 4. Run `show` and read the ticket body/comments before acting.
 5. Run `lease` for exactly one ticket before work.
 6. Use `comment`, `block`, or `release` as state changes require.
-7. Run `close` or `close-duplicate` only when the ticket is leased with
+7. Run `scripts/audit-worktrees.sh --repo /path/to/repo --json` before releasing
+   or closing any ticket that used a secondary worktree, or when the repo has
+   multiple registered worktrees.
+8. Run `close` or `close-duplicate` only when the ticket is leased with
    `maintainer-active` and a non-empty proof file exists.
 
 ```bash
@@ -432,6 +475,8 @@ skills/best-practices-github-ticket/scripts/gh-ticket-tools.sh close-duplicate 1
 - Terminal helper dry-runs, leases, blocks, unblocks, releases, comments, and closes issues with proof gates.
 - Terminal helper refuses live close/duplicate close unless `maintainer-active`
   is present, and refuses close while `needs-human` is set.
+- Worktree audit script exists and fails closed on `/tmp`, prunable, or dirty
+  secondary worktrees without deleting anything.
 - `block` adds `maintainer-blocked` + `needs-human`; `unblock ISSUE --reason FILE
   [--agent NAME]` removes both (and re-leases with `--agent`) so a resolved
   ticket can be closed via the tool. `block --release` only frees the lease.
