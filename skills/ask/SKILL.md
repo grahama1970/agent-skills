@@ -166,6 +166,14 @@ sentinel/attachment proof in metadata. `.submitted.md`, prepared prompts,
 scheduler `node_completed`, and an Ask/Tau process exit code are not provider
 acceptance proof.
 
+Provider recovery must also be provider-specific. Ask must never turn a failed
+browser lane into a generic `surf read`, `surf text`, page-text scrape, or
+cross-provider extractor. If a submitted WebGrok lane misses the sentinel, the
+recovery packet must name `surf grok.extract`; WebGPT uses
+`surf webgpt.extract`; Gemini uses `surf gemini.extract` where applicable.
+Handlers without a provider-owned extractor must fail closed with a ticket
+instruction instead of pretending a generic page read is equivalent.
+
 Browser lanes queue on the shared Surf browser lock. Ask derives the wait from
 handler count and topology; pass `--browser-lock-timeout <seconds>` on `tau-dag
 run` or `compete` to widen it for a busy browser. The resolved value is recorded

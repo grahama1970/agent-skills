@@ -179,6 +179,7 @@ def build_payload() -> dict[str, Any]:
         "commands": {
             "diagnostics": ["setup", "sanity", "doctor", "capabilities", "vendor.status", "extension.fresh"],
             "provider_submits": ["webgpt.submit", "claude.submit", "gemini.submit", "kimi.submit", "grok.submit"],
+            "provider_extracts": ["webgpt.extract", "gemini.extract", "grok.extract"],
             "provider_result_tools": ["meta.normalize"],
             "browser_core": ["tab.list", "tab.new", "go", "read", "text", "click", "type", "key", "snap", "scroll"],
         },
@@ -236,6 +237,7 @@ def provider_contracts() -> dict[str, Any]:
             "state_env": "SURF_WEBGPT_TAB_STATE",
             "supports": {
                 "sentinel_completion": True,
+                "provider_specific_extract": True,
                 "no_activate": True,
                 "auto_download": True,
                 "conversation_max_length_rollover": True,
@@ -249,6 +251,7 @@ def provider_contracts() -> dict[str, Any]:
             "state_env": "SURF_CLAUDE_TAB_STATE",
             "supports": {
                 "sentinel_completion": True,
+                "provider_specific_extract": False,
                 "stale_binding_repair": True,
                 "browser_oracle_rebind": True,
             },
@@ -259,6 +262,7 @@ def provider_contracts() -> dict[str, Any]:
             "state_env": "SURF_GEMINI_TAB_STATE",
             "supports": {
                 "sentinel_completion": True,
+                "provider_specific_extract": True,
                 "stale_binding_repair": True,
                 "model_selection": True,
             },
@@ -271,6 +275,7 @@ def provider_contracts() -> dict[str, Any]:
             "default_reasoning": "High",
             "supports": {
                 "sentinel_completion": True,
+                "provider_specific_extract": False,
                 "stale_binding_repair": True,
                 "reasoning_selection": True,
                 "provider_capacity_detection": True,
@@ -282,6 +287,7 @@ def provider_contracts() -> dict[str, Any]:
             "state_env": "SURF_GROK_TAB_STATE",
             "supports": {
                 "sentinel_completion": True,
+                "provider_specific_extract": True,
                 "stale_binding_repair": True,
                 "provider_backend": True,
             },
@@ -305,7 +311,7 @@ def recovery_features() -> dict[str, list[str]]:
         "claude": common + ["browser_oracle_rebind", "read_timeout_classification"],
         "gemini": common + ["browser_oracle_rebind", "invalid_tab_rebind"],
         "kimi": common + ["instant_high_default", "capacity_backoff_classification"],
-        "grok": common + ["provider_backend_presence_check"],
+        "grok": common + ["provider_backend_presence_check", "provider_specific_extract"],
     }
 
 

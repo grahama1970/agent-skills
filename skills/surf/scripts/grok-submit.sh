@@ -52,6 +52,7 @@ attach_files=()
 tab_state_file="${SURF_GROK_TAB_STATE:-/tmp/surf-grok-controlled-tab-id}"
 provider_busy_cooldown_s="${SURF_GROK_PROVIDER_BUSY_COOLDOWN_SECONDS:-120}"
 provider_busy_retry_attempts="${SURF_GROK_PROVIDER_BUSY_RETRY_ATTEMPTS:-1}"
+generic_fallback_allowed="${SURF_GROK_ALLOW_GENERIC_FALLBACK:-0}"
 
 add_attach_files_arg() {
   local value="$1"
@@ -265,6 +266,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "proof_status": "provider_blocked",
     "browser_provider_rate_limited": True,
     "provider_unavailable": True,
+    "submitted_to_grok": False,
     "rate_limit_text": match.group(0) if match else None,
     "input": inp,
     "submitted_output": submitted,
@@ -308,7 +310,7 @@ if [[ "${#attach_file_abs[@]}" -gt 0 ]]; then
 fi
 
 attempt=0
-if [[ -n "$requested_tab_id" && "${SURF_GROK_NATIVE_EXACT_TAB_FIRST:-1}" != "1" ]]; then
+if [[ -n "$requested_tab_id" && "$generic_fallback_allowed" == "1" && "${SURF_GROK_GENERIC_FALLBACK_FIRST:-0}" == "1" ]]; then
   fallback_args=(
     python3 "${SCRIPT_DIR}/grok_generic_fallback.py"
     --surf-run "$RUN_SH"
@@ -362,7 +364,7 @@ while true; do
   status=$?
   set -e
   haystack="$(cat "$stderr_log" "$raw_tmp" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
-  if [[ $status -ne 0 && -n "$requested_tab_id" && ( "$haystack" == *"unknown message type: grok_evaluate"* || "$status" -eq 124 || "$status" -eq 137 ) ]]; then
+  if [[ $status -ne 0 && -n "$requested_tab_id" && "$generic_fallback_allowed" == "1" && ( "$haystack" == *"unknown message type: grok_evaluate"* || "$status" -eq 124 || "$status" -eq 137 ) ]]; then
     fallback_args=(
       python3 "${SCRIPT_DIR}/grok_generic_fallback.py"
       --surf-run "$RUN_SH"
@@ -446,6 +448,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "proof_status": proof_status,
     "browser_provider_rate_limited": failure == "grok_provider_rate_limited",
     "provider_unavailable": failure in {"grok_provider_rate_limited", "grok_provider_capacity_busy"},
+    "submitted_to_grok": bool((fallback or {}).get("submit_confirmed")),
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -487,6 +490,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "proof_status": "provider_blocked" if limited else ("provider_capacity_limited" if busy else "submitted_no_response_proof"),
     "browser_provider_rate_limited": limited,
     "provider_unavailable": limited or busy,
+    "submitted_to_grok": not (limited or busy),
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -535,6 +539,7 @@ out_text = pathlib.Path(out).read_text()
 pathlib.Path(meta).write_text(json.dumps({
     "status": "completed",
     "proof_status": "response_proven",
+    "submitted_to_grok": True,
     "input": inp,
     "submitted_output": submitted,
     "output": out,

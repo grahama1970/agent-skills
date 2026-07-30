@@ -1,0 +1,150 @@
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+GROK_EXTRACT = REPO_ROOT / "skills/surf/scripts/grok-extract.sh"
+RUN_SH = REPO_ROOT / "skills/surf/run.sh"
+
+
+def write_fake_surf(path: Path, snapshot: dict) -> None:
+    path.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  js)
+    printf '%s\\n' {json.dumps(json.dumps(snapshot))}
+    ;;
+  *)
+    echo "unexpected fake surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    path.chmod(0o755)
+
+
+def run_grok_extract(tmp_path: Path, fake_surf: Path, *extra: str) -> subprocess.CompletedProcess[str]:
+    output = tmp_path / "response.md"
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_surf)
+    return subprocess.run(
+        [
+            "bash",
+            str(GROK_EXTRACT),
+            "--tab-id",
+            "123",
+            "--output",
+            str(output),
+            "--sentinel",
+            "<<<GROK_DONE:TEST>>>",
+            *extra,
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+        check=False,
+    )
+
+
+def test_run_sh_routes_grok_extract_help() -> None:
+    proc = subprocess.run(
+        [str(RUN_SH), "grok.extract", "--help"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0
+    assert "surf grok.extract --tab-id ID --output RESPONSE.md" in proc.stdout
+
+
+def test_grok_extract_uses_provider_turn_not_generic_page_text(tmp_path: Path) -> None:
+    fake_surf = tmp_path / "surf"
+    write_fake_surf(
+        fake_surf,
+        {
+            "provider": "grok",
+            "providerSpecificExtractor": True,
+            "genericPageTextFallbackUsed": False,
+            "url": "https://grok.com/",
+            "title": "Grok",
+            "bodyContainsSentinel": True,
+            "providerRateLimited": False,
+            "providerCapacityBusy": False,
+            "candidateCount": 2,
+            "sentinelCandidateCount": 1,
+            "selected": {
+                "tag": "ARTICLE",
+                "role": "",
+                "testId": "",
+                "text": "PONG\n<<<GROK_DONE:TEST>>>",
+                "textChars": 26,
+                "containsSentinel": True,
+                "score": 3000,
+            },
+        },
+    )
+
+    proc = run_grok_extract(tmp_path, fake_surf)
+
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == "PONG\n"
+    meta = json.loads((tmp_path / "response.md.meta.json").read_text(encoding="utf-8"))
+    assert meta["provider_specific_extractor"] is True
+    assert meta["generic_page_text_fallback_used"] is False
+    assert meta["response_source"] == "grok-provider-dom"
+    assert meta["proof_status"] == "response_proven"
+
+
+def test_grok_extract_fails_when_sentinel_is_only_page_wide(tmp_path: Path) -> None:
+    fake_surf = tmp_path / "surf"
+    write_fake_surf(
+        fake_surf,
+        {
+            "provider": "grok",
+            "providerSpecificExtractor": True,
+            "genericPageTextFallbackUsed": False,
+            "url": "https://grok.com/",
+            "title": "Grok",
+            "bodyContainsSentinel": True,
+            "providerRateLimited": False,
+            "providerCapacityBusy": False,
+            "candidateCount": 1,
+            "sentinelCandidateCount": 0,
+            "selected": {
+                "tag": "ARTICLE",
+                "role": "",
+                "testId": "",
+                "text": "old visible answer without current marker",
+                "textChars": 39,
+                "containsSentinel": False,
+                "score": 1000,
+            },
+        },
+    )
+
+    proc = run_grok_extract(tmp_path, fake_surf)
+
+    assert proc.returncode == 4
+    meta = json.loads((tmp_path / "response.md.meta.json").read_text(encoding="utf-8"))
+    assert meta["failure"] == "grok_extract_missing_sentinel"
+    assert meta["proof_status"] == "submitted_no_response_proof"
+    assert meta["body_contains_sentinel"] is True
+    assert meta["generic_page_text_fallback_used"] is False
+
+
+def test_grok_extract_source_does_not_call_generic_text_or_read() -> None:
+    source = GROK_EXTRACT.read_text(encoding="utf-8")
+
+    assert '"$RUN_SH" js --file "$js_file" --tab-id "$requested_tab_id"' in source
+    assert '"$RUN_SH" text --tab-id' not in source
+    assert '"$RUN_SH" read --tab-id' not in source

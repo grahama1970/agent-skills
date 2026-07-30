@@ -42,6 +42,12 @@ HANDLER_SUBMIT_COMMANDS = {
     "webgrok": "grok.submit",
     "webdeepseek": "deepseek.submit",
 }
+HANDLER_EXTRACT_COMMANDS = {
+    "webgpt": "webgpt.extract",
+    "webgemini": "gemini.extract",
+    "webgrok": "grok.extract",
+}
+HANDLER_EXTRACT_WAIT_SUPPORTED = {"webgpt", "webgrok"}
 
 
 @dataclass(frozen=True)
@@ -167,6 +173,7 @@ BROWSER_PROVIDER_SETUP_FAILED = "browser_provider_setup_failed"
 BROWSER_SUBMIT_NOT_ACCEPTED = "browser_submit_not_accepted"
 BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
 BROWSER_ATTACHMENT_UI_MISSING = "attachment_ui_missing"
+KIMI_CONVERSATION_TOO_LONG_BLOCKER = "BLOCKED_KIMI_CONVERSATION_TOO_LONG"
 BROWSER_ATTACHMENT_UNAVAILABLE = "browser_attachment_unavailable"
 BROWSER_CLEAN_OUTPUT_CONTAMINATED = "browser_clean_output_contaminated"
 BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
@@ -233,6 +240,12 @@ BROWSER_FAILURE_CODES: dict[str, BrowserFailureCode] = {
         BROWSER_ATTACHMENT_UI_MISSING,
         "The provider attachment UI or file input was not available before prompt submission.",
         auto_retry_blocked_reason="attachment_ui_missing_requires_transport_repair",
+    ),
+    KIMI_CONVERSATION_TOO_LONG_BLOCKER: BrowserFailureCode(
+        KIMI_CONVERSATION_TOO_LONG_BLOCKER,
+        "Kimi ended the controlled thread for context length and asked for a new session; "
+        "surf already rotated the tab into a fresh chat once and Kimi refused again.",
+        auto_retry_blocked_reason="conversation_too_long_requires_fresh_kimi_chat",
     ),
     BROWSER_ATTACHMENT_UNAVAILABLE: BrowserFailureCode(
         BROWSER_ATTACHMENT_UNAVAILABLE,
@@ -1866,6 +1879,11 @@ def _classify_browser_failure(
         return SURF_BROWSER_LOCK_TIMEOUT
     if _looks_surf_browser_connection_unavailable(haystack):
         return SURF_BROWSER_CONNECTION_UNAVAILABLE
+    # Kimi's context-limit notice also says "try again", so it must be tested
+    # before the rate-limit heuristic or it gets misread as throttling and the
+    # lane waits out a cooldown that can never clear it.
+    if _looks_kimi_conversation_too_long(haystack, submit_meta):
+        return KIMI_CONVERSATION_TOO_LONG_BLOCKER
     if _looks_browser_provider_rate_limited(haystack, submit_meta):
         return BROWSER_PROVIDER_RATE_LIMITED
     if _looks_browser_provider_setup_failed(haystack, submit_meta):
@@ -2105,6 +2123,33 @@ def _looks_browser_access_blocked(text: str, meta: dict[str, Any]) -> bool:
         "browser_access_blocked",
     )
     return any(marker in text for marker in markers)
+
+
+def _looks_kimi_conversation_too_long(text: str, meta: dict[str, Any]) -> bool:
+    """Kimi refused the round because the thread hit its context budget.
+
+    This is not throttling and not an attachment fault: the thread is spent, so
+    the round has to go into a new chat. Surf's kimi client rotates once on its
+    own, so reaching this code means a fresh chat still could not take the
+    payload and the round needs to be split or shortened.
+    """
+    if meta.get("kimi_conversation_too_long") is True:
+        return True
+    if str(meta.get("failure") or "") == "kimi_conversation_too_long":
+        return True
+    if str(meta.get("blocker") or "") == KIMI_CONVERSATION_TOO_LONG_BLOCKER:
+        return True
+    if str(meta.get("proof_status") or "") == "conversation_length_limited":
+        return True
+    normalized = re.sub(r"\s+", " ", text.lower())
+    if KIMI_CONVERSATION_TOO_LONG_BLOCKER.lower() in normalized:
+        return True
+    if "kimi conversation too long" in normalized:
+        return True
+    return (
+        ("getting too long" in normalized or "is too long" in normalized)
+        and ("new session" in normalized or "new chat" in normalized)
+    )
 
 
 def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> bool:
@@ -2833,7 +2878,9 @@ def _recovery_next_command(
             command.extend(["--url", live_url])
         command.extend(["--manual", "--json"])
         return command
-    if failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
+    # Both providers end a thread the same way — the round has to move into a
+    # fresh conversation, so they share one resubmit command.
+    if failure_code in {WEBGPT_CONVERSATION_FULL_BLOCKER, KIMI_CONVERSATION_TOO_LONG_BLOCKER}:
         command = [
             str(args.surf_run),
             HANDLER_SUBMIT_COMMANDS[str(args.handler)],
@@ -2852,8 +2899,14 @@ def _recovery_next_command(
             "--create-tab",
         ]
         _append_browser_lock_timeout(command, args)
-        if args.browser_oracle_project:
+        # kimi.submit takes no --project; passing it fails argument parsing
+        # before any browser work, which would hide the real blocker.
+        if args.browser_oracle_project and failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
             command.extend(["--project", str(args.browser_oracle_project)])
+        # The fresh chat has none of the prior thread's context, so the round's
+        # own attachment has to be re-sent with it.
+        for attachment_path in list(getattr(args, "attach_files", []) or []):
+            command.extend(["--attach-file", str(attachment_path)])
         if args.no_activate:
             command.append("--no-activate")
         return command
@@ -2973,6 +3026,17 @@ def _recovery_next_command(
         if args.no_activate:
             command.append("--no-activate")
         return command
+    extract_command = _browser_provider_extract_command(
+        args,
+        failure_code=failure_code,
+        browser_oracle=browser_oracle,
+        submit_meta=submit_meta,
+        response_path=response_path,
+        raw_path=raw_path,
+        meta_path=meta_path,
+    )
+    if extract_command:
+        return extract_command
     policy = _payload_policy(str(args.handler))
     inline_retry_paths = _inline_text_bundle_paths([bundle_path]) if bundle_path and policy.inline_text_attachments else []
     if inline_retry_paths:
@@ -3093,6 +3157,63 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
     return ""
 
 
+def _browser_provider_extract_command(
+    args: argparse.Namespace,
+    *,
+    failure_code: str,
+    browser_oracle: dict[str, Any],
+    submit_meta: dict[str, Any],
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+) -> list[str]:
+    """Return a provider-owned extraction command, never a generic page read."""
+    handler = str(args.handler)
+    extract_command = HANDLER_EXTRACT_COMMANDS.get(handler)
+    if not extract_command:
+        return []
+    if failure_code not in {MISSING_SENTINEL, BROWSER_HANDLER_TIMEOUT}:
+        return []
+    sentinel = str(submit_meta.get("sentinel") or "").strip()
+    if not sentinel:
+        return []
+    submitted_field = f"submitted_to_{HANDLER_BACKENDS.get(handler, handler).replace('web', '')}"
+    submitted = submit_meta.get(submitted_field) is True
+    if handler == "webgpt":
+        submitted = submitted or submit_meta.get("submitted_to_chatgpt") is True
+    if handler == "webgrok":
+        submitted = submitted or submit_meta.get("submitted_to_grok") is True
+    if not submitted and str(submit_meta.get("status") or "") != "missing_sentinel":
+        return []
+    tab_id = str(
+        submit_meta.get("controlled_tab_id")
+        or browser_oracle.get("controlled_tab_id")
+        or browser_oracle.get("tab_id")
+        or ""
+    ).strip()
+    if not tab_id:
+        return []
+    command = [
+        str(args.surf_run),
+        extract_command,
+        "--tab-id",
+        tab_id,
+        "--sentinel",
+        sentinel,
+        "--output",
+        str(response_path.with_name("response.extract.md")),
+        "--raw-output",
+        str(raw_path.with_name("response.extract.raw.md")),
+        "--meta-output",
+        str(meta_path.with_name("response.extract.meta.json")),
+        "--timeout",
+        str(args.timeout),
+    ]
+    if handler in HANDLER_EXTRACT_WAIT_SUPPORTED:
+        command.extend(["--wait", "--stable-polls", str(args.stable_polls)])
+    return command
+
+
 def _recovery_reason(failure_code: str) -> str:
     return _browser_failure_code(failure_code).reason
 
@@ -3116,6 +3237,12 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return (
             "Do not wait or retry in the same conversation. Rebind browser-oracle to a fresh ChatGPT "
             "conversation, then rerun the Tau DAG node."
+        )
+    if failure_code == KIMI_CONVERSATION_TOO_LONG_BLOCKER:
+        return (
+            "Do not resubmit into the same Kimi thread and do not treat this as throttling. The next_command "
+            "resubmits this round into a fresh Kimi chat; if Kimi refuses again, split the round payload "
+            "(attach the bundle instead of inlining it, or carry less prior-round text) before rerunning."
         )
     if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
         return "Run the next_command to rebind browser-oracle to the live ChatGPT tab URL, then rerun the Tau DAG node."

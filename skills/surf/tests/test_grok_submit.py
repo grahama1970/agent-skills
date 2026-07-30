@@ -83,12 +83,15 @@ def test_grok_submit_dispatches_from_run_sh_help() -> None:
 
     assert proc.returncode == 0
     assert "surf grok.submit --input request.md --output response.md" in proc.stdout
+    assert "surf grok.extract --tab-id ID --output response.md" in proc.stdout
 
 
 def test_grok_submit_defaults_to_atomic_native_exact_tab_transport() -> None:
     source = GROK_SUBMIT.read_text(encoding="utf-8")
 
-    assert '${SURF_GROK_NATIVE_EXACT_TAB_FIRST:-1}' in source
+    assert 'generic_fallback_allowed="${SURF_GROK_ALLOW_GENERIC_FALLBACK:-0}"' in source
+    assert 'SURF_GROK_GENERIC_FALLBACK_FIRST:-0' in source
+    assert '&& "$generic_fallback_allowed" == "1" &&' in source
 
 
 def test_grok_submit_routes_attachments_through_exact_tab_native_transport() -> None:
