@@ -75,8 +75,9 @@ PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
         can_attach=True,
         max_attachments=1,
         zip_allowed=True,
-        preferred_bundle="one readable bundle; zip allowed when an archive is required",
-        gotcha="multiple attachments fail before submission",
+        preferred_bundle="inline small Markdown/text bundles; use one attachment or zip only when an archive is required",
+        gotcha="attachments can stall at ChatGPT acceptance; inline small readable bundles and reserve upload for large/archive payloads",
+        inline_text_attachments=True,
     ),
     "webclaude": ProviderPayloadPolicy(
         handler="webclaude",
@@ -544,7 +545,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 timeout=_browser_submit_timeout(
                     handler,
                     args.timeout,
-                    command_timeout_budget=args.command_timeout_budget,
+                    command_timeout_budget=int(getattr(args, "command_timeout_budget", 0) or 0),
                 ),
             )
             commands.append(submit.summary())
@@ -967,7 +968,10 @@ def _prepare_browser_submit_payload(
     readable_bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
     combined_attachments = _unique_existing_files([*attachment_paths, *readable_bundle_paths])
     policy = _payload_policy(handler)
-    inline_paths = _inline_text_bundle_paths(combined_attachments) if policy.inline_text_attachments else []
+    inline_candidates = combined_attachments
+    if handler == "webgpt":
+        inline_candidates = _unique_existing_files(attachment_paths)
+    inline_paths = _inline_text_bundle_paths(inline_candidates) if policy.inline_text_attachments else []
     inline_by_resolved = {str(Path(path).resolve()): index + 1 for index, path in enumerate(inline_paths)}
     submit_attachments = [path for path in combined_attachments if str(Path(path).resolve()) not in inline_by_resolved]
     if not local_candidates and not inline_paths and not submit_attachments:
@@ -1184,7 +1188,7 @@ def _retry_browser_stale_binding(
             timeout=_browser_submit_timeout(
                 handler,
                 args.timeout,
-                command_timeout_budget=args.command_timeout_budget,
+                command_timeout_budget=int(getattr(args, "command_timeout_budget", 0) or 0),
             ),
         )
         retry_summary = retry.summary()
@@ -1256,7 +1260,7 @@ def _retry_browser_stale_binding(
         timeout=_browser_submit_timeout(
             handler,
             args.timeout,
-            command_timeout_budget=args.command_timeout_budget,
+            command_timeout_budget=int(getattr(args, "command_timeout_budget", 0) or 0),
         ),
     )
     retry_summary = retry.summary()
