@@ -371,8 +371,38 @@ Health command coverage (`monitor-sparta health`):
 11. Formalizability coverage
 12. QRA evidence coverage (missing/empty evidence_case + version)
 13. QRA reasoning coverage
+13b. QRA reasoning uniqueness
 14. Crosswalk edge coverage
 15. Crosswalk-chain schema discipline
+
+### QRA reasoning invariants
+
+Reasoning is the field that shows why an answer follows from its evidence. Two
+invariants govern it, and neither is a coverage percentage to be traded off.
+
+**No reasoning may restate its own source text.** A QRA whose reasoning is
+copied from the source control's description is well-formed, long, and
+grammatical. It passes every emptiness and length test while carrying no
+reasoning at all. Length is not a proxy for reasoning. `qra_reasoning_coverage`
+reports this as `duplicates_source` in its breakdown, compared
+whitespace-normalized and case-insensitive against `evidence_case.glossary`.
+
+**No two QRAs may share an identical reasoning string.** Distinct questions
+require distinct reasoning; a string reused across QRAs is boilerplate or a
+copied field, not reasoning about any of them. `qra_reasoning_uniqueness`
+enforces this with no tolerance threshold — any duplicate group fails the check.
+It catches reuse regardless of where the text came from, including QRAs with no
+evidence case, so it is the broader of the two.
+
+Observed 2026-07-30 on AC-11.1: three different questions carried one identical
+16-token reasoning string, itself a verbatim copy of the control description.
+Sixteen tokens cleared the previous 5-token floor with room to spare, so the
+monitor reported the dimension healthy. Both invariants above exist because that
+defect was structurally invisible to a length-and-emptiness test.
+
+Repair belongs to the review-gated lane: backfilling or regenerating reasoning
+is a mutating operation and requires approved patch artifacts and rollback
+manifests, per the read-only default below.
 
 Read-only default:
 
@@ -394,7 +424,8 @@ Former automatic remediation lanes are now review-gated:
 - Backfill missing mind taxonomy tags
 - Backfill embedding gaps
 - Backfill QRA `evidence_case` fields (spans/glossary/version)
-- Backfill missing/invalid QRA reasoning
+- Backfill missing/invalid QRA reasoning, including reasoning that restates its
+  source text or is shared verbatim with another QRA
 
 Each mutating lane requires approved patch artifacts and rollback manifests
 before `SPARTA_MONITOR_MUTATION_ENABLED=1` may be used.
