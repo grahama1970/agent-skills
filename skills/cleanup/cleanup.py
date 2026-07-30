@@ -2029,6 +2029,18 @@ def _load_skills_ci_scanners(skills_root: Optional[Path] = None):
         sys.path.insert(0, str(ci_dir))
     try:
         import scanners  # type: ignore
+        # The rule scanners are spread across four modules. Attach the ones this
+        # gate uses onto a single namespace so callers ask for a rule by name
+        # rather than knowing which file it happens to live in.
+        for module_name in ("quality_scanners", "style_scanners", "runtime_scanners"):
+            try:
+                extra = __import__(module_name)
+            except Exception as exc:
+                log_warning(f"best-practices scanner module {module_name} unavailable: {exc}")
+                continue
+            for attr in dir(extra):
+                if attr.startswith("scan_") and not hasattr(scanners, attr):
+                    setattr(scanners, attr, getattr(extra, attr))
         return scanners
     except Exception as exc:
         # correctness-no-silent-fallback: a gate that cannot load its scanners
@@ -2072,6 +2084,24 @@ def run_best_practices_checks(
             except Exception as exc:  # scanner failure is reported, never swallowed
                 results["executed"][skill] = {"status": "scanner_error", "error": str(exc)}
                 continue
+            # The rest of the Python rule set. Running only the file-length and
+            # import checks would under-report a skill whose rules also cover
+            # regex misuse, __init__ bloat, mock-only tests, and blocking
+            # subprocess calls in async code.
+            for extra_scanner in (
+                "scan_regex_classifier",
+                "scan_style_thin_init_py",
+                "scan_mock_only_tests",
+                "scan_subprocess_hygiene",
+            ):
+                fn = getattr(scanners, extra_scanner, None)
+                if fn is None:
+                    log_warning(f"python rule scanner missing: {extra_scanner}")
+                    continue
+                try:
+                    violations.extend(fn(Path.cwd()))
+                except Exception as exc:
+                    log_error(f"python rule scanner {extra_scanner} failed: {exc}")
             relevant = [
                 {"rule": v.rule, "severity": v.severity, "path": v.path, "message": v.message}
                 for v in violations
