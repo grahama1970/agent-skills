@@ -1240,3 +1240,12 @@ def test_no_verdict_ever_proposes_deletion():
         assert "remove" not in p["verdict"]
         if p["proposed_path"]:
             assert p["proposed_path"].startswith("docs/")
+
+
+def test_tool_resolved_root_docs_are_protected():
+    """PROJECT_KNOWLEDGE.md is read by /project-knowledge at cwd; never move it."""
+    proposals = cleanup.scan_doc_organization(
+        tracked={"PROJECT_KNOWLEDGE.md"}, commit_times={}, now=0.0
+    )
+    assert proposals[0]["verdict"] == "keep_root_conventional"
+    assert proposals[0]["proposed_path"] is None

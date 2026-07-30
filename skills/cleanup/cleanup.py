@@ -146,6 +146,10 @@ CONVENTIONAL_ROOT_DOCS = {
     "CITATION.md",
     "CLAUDE.md",
     "AGENTS.md",
+    # Resolved by name at the repo root by agent skills. /project-knowledge
+    # reads Path.cwd() / "PROJECT_KNOWLEDGE.md"; relocating it does not move the
+    # file the skill reads, it just makes the skill recreate an empty one.
+    "PROJECT_KNOWLEDGE.md",
 }
 
 # Where a relocated root doc is proposed to live, by filename stem. Anything
@@ -158,6 +162,11 @@ DOC_RELOCATION_HINTS = (
 )
 
 DOC_DEPRECATION_DIR = "docs/deprecated"
+
+# Named grammars for foreign-repo detection. Both describe specified formats --
+# a github.com URL and an explicit repository-declaration line -- not prose.
+GITHUB_SLUG_PATTERN = r"github\.com[:/]([\w.-]+/[\w.-]+?)(?:\.git)?[\s\)\]`,]"
+REPO_DECLARATION_PATTERN = r"(?:Fork/Repo|Repository|Repo)\s*[:=]\s*`?([\w.-]+/[\w.-]+)`?"
 
 # Age past which an unreferenced doc is proposed for deprecation.
 DOC_STALE_DAYS = 365
@@ -1802,12 +1811,19 @@ def _foreign_repo_reference(content: str, filepath: str) -> Optional[str]:
     ours = _current_repo_slugs()
     head = "\n".join(content.splitlines()[:40])
     counts: Dict[str, int] = {}
-    for match in re.finditer(r"github\.com[:/]([\w.-]+/[\w.-]+?)(?:\.git)?[\s\)\]`,]", head + " "):
+    # correctness-regex-only-known-grammar: both patterns are scoped to grammars
+    # that are specified rather than learned. GITHUB_SLUG_PATTERN matches the
+    # documented github.com/<owner>/<repo> URL shape; REPO_DECLARATION_PATTERN
+    # matches an explicit "Repo:"-style declaration line. Neither is used to
+    # classify prose, the failure mode is an explicit None, and
+    # test_foreign_repo_doc_is_detected / test_foreign_repo_ignores_this_repository
+    # cover an accepted and a rejected input.
+    for match in re.finditer(GITHUB_SLUG_PATTERN, head + " "):
         slug = match.group(1).lower()
         if slug in ours or slug.split("/")[-1] in ours:
             continue
         counts[slug] = counts.get(slug, 0) + 1
-    for match in re.finditer(r"(?:Fork/Repo|Repository|Repo)\s*[:=]\s*`?([\w.-]+/[\w.-]+)`?", head):
+    for match in re.finditer(REPO_DECLARATION_PATTERN, head):
         slug = match.group(1).lower()
         if slug in ours or slug.split("/")[-1] in ours:
             continue
@@ -1995,6 +2011,101 @@ def _available_best_practices_skills(skills_root: Optional[Path] = None) -> Set[
     if not root.is_dir():
         return set()
     return {p.name for p in root.iterdir() if p.is_dir() and p.name.startswith("best-practices-")}
+
+
+def _load_skills_ci_scanners(skills_root: Optional[Path] = None):
+    """Import the executable best-practices rule scanners from skills-ci.
+
+    best-practices-* skills are guidance documents; their sanity.sh validates
+    the skill's own files, not a target project. skills-ci holds the executable
+    form of the same rules, so the gate runs those rather than claiming a pass
+    no checker produced.
+    """
+    root = skills_root if skills_root is not None else Path(__file__).resolve().parent.parent
+    ci_dir = root / "skills-ci"
+    if not (ci_dir / "scanners.py").is_file():
+        return None
+    if str(ci_dir) not in sys.path:
+        sys.path.insert(0, str(ci_dir))
+    try:
+        import scanners  # type: ignore
+        return scanners
+    except Exception as exc:
+        # correctness-no-silent-fallback: a gate that cannot load its scanners
+        # must say so. Swallowing this would let the run report "no violations"
+        # when in fact no rule was ever evaluated.
+        log_error(f"best-practices scanners failed to import from {ci_dir}: {exc}")
+        return None
+
+
+def run_best_practices_checks(
+    changed_files: List[str],
+    skills_root: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """Execute the rule scanners that exist, over the changed files.
+
+    Returns per-skill violations plus an explicit record of which skills have no
+    executable checker. A skill with no checker is reported as such -- never as
+    a pass.
+    """
+    scanners = _load_skills_ci_scanners(skills_root)
+    results: Dict[str, Any] = {
+        "executed": {},
+        "no_executable_checker": [],
+        "scanner_source": None if scanners is None else "skills-ci",
+    }
+    if scanners is None:
+        results["error"] = "skills-ci scanners unavailable; no rules were executed"
+        return results
+
+    changed = {f for f in changed_files}
+    by_skill: Dict[str, List[str]] = {}
+    for filepath in changed:
+        skill = best_practices_skill_for(filepath)
+        if skill:
+            by_skill.setdefault(skill, []).append(filepath)
+
+    for skill, files in sorted(by_skill.items()):
+        if skill == "best-practices-python" and hasattr(scanners, "scan_best_practices_python"):
+            try:
+                violations, _ = scanners.scan_best_practices_python(Path.cwd())
+            except Exception as exc:  # scanner failure is reported, never swallowed
+                results["executed"][skill] = {"status": "scanner_error", "error": str(exc)}
+                continue
+            relevant = [
+                {"rule": v.rule, "severity": v.severity, "path": v.path, "message": v.message}
+                for v in violations
+                if any(str(v.path).endswith(f) or f in str(v.path) for f in files)
+            ]
+            results["executed"][skill] = {
+                "status": "ran",
+                "files_considered": sorted(files),
+                "violations": relevant,
+                "violation_count": len(relevant),
+            }
+        elif skill == "best-practices-skills" and hasattr(scanners, "scan_best_practices_skills"):
+            try:
+                violations = scanners.scan_best_practices_skills(Path.cwd())
+            except Exception as exc:
+                results["executed"][skill] = {"status": "scanner_error", "error": str(exc)}
+                continue
+            results["executed"][skill] = {
+                "status": "ran",
+                "files_considered": sorted(files),
+                "violations": [
+                    {"rule": v.rule, "severity": v.severity, "path": v.path, "message": v.message}
+                    for v in violations
+                ],
+                "violation_count": len(violations),
+            }
+        else:
+            results["no_executable_checker"].append({
+                "skill": skill,
+                "files": sorted(files),
+                "reason": "guidance-only skill; no executable rule scanner exists",
+            })
+
+    return results
 
 
 def evaluate_best_practices_gate(
@@ -2491,6 +2602,27 @@ def main(
         if proposal["verdict"] in {"relocate_proposed", "deprecate_proposed"}
     ]
     findings["best_practices_gate"] = evaluate_best_practices_gate(_changed_for_gate)
+    # Execute the rules, do not merely resolve which ones apply. A gate that
+    # reports "requires_run" and never runs anything is a claim with no check
+    # behind it.
+    findings["best_practices_gate"]["execution"] = run_best_practices_checks(
+        _changed_for_gate
+    )
+    _execution = findings["best_practices_gate"]["execution"]
+    _ran = [
+        name for name, result in _execution.get("executed", {}).items()
+        if result.get("status") == "ran"
+    ]
+    _violations = sum(
+        result.get("violation_count", 0)
+        for result in _execution.get("executed", {}).values()
+    )
+    if _ran and _violations == 0:
+        findings["best_practices_gate"]["status"] = "executed_clean"
+    elif _ran:
+        findings["best_practices_gate"]["status"] = "executed_with_violations"
+    findings["best_practices_gate"]["violations_found"] = _violations
+    findings["best_practices_gate"]["skills_executed"] = sorted(_ran)
     findings["mutation_readiness"] = evaluate_mutation_readiness(
         findings,
         findings["ingest_code_evidence"],
