@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import os
 import re
@@ -463,6 +464,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     surf_provider_result: dict[str, Any] = {}
     surf_provider_result_path: Path | None = None
     binding_refresh: dict[str, Any] | None = None
+    browser_transport_queue_path = artifact_dir / "browser-transport-queue.json"
     submit_prompt_path = prompt_path
     browser_attachment_paths: list[str] = []
     browser_local_path_preflight: dict[str, Any] | None = None
@@ -562,7 +564,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 url=url,
                 attachment_paths=browser_attachment_paths,
             )
-            submit = _run_cmd(
+            submit = _run_browser_transport_cmd(
                 submit_cmd,
                 cwd=Path(args.surf_run).parent,
                 timeout=_browser_submit_timeout(
@@ -570,6 +572,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                     args.timeout,
                     command_timeout_budget=int(getattr(args, "command_timeout_budget", 0) or 0),
                 ),
+                handler=handler,
+                artifact_dir=artifact_dir,
+                queue_path=browser_transport_queue_path,
+                browser_lock_timeout=int(getattr(args, "browser_lock_timeout", 0) or 0),
             )
             commands.append(submit.summary())
             if meta_path.is_file():
@@ -797,6 +803,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "raw_response_path": str(raw_path),
         "meta_path": str(meta_path),
         "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
+        "browser_transport_queue_path": str(browser_transport_queue_path) if browser_transport_queue_path.is_file() else None,
         "webgpt_transport_summary": transport_summary or None,
         "prompt_path": str(prompt_path),
         "browser_prompt_path": str(submit_prompt_path) if submit_prompt_path != prompt_path else None,
@@ -895,6 +902,15 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 "success": surf_provider_result.get("success") if isinstance(surf_provider_result, dict) else None,
             }
         )
+    if browser_transport_queue_path.is_file():
+        evidence.append(
+            {
+                "kind": "browser_transport_queue",
+                "node_id": args.node_id,
+                "handler": handler,
+                "path": str(browser_transport_queue_path),
+            }
+        )
     if prior_receipts:
         evidence.append(
             {
@@ -934,7 +950,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 "binding_path": binding_refresh.get("binding_path"),
             }
         )
-    artifacts = [receipt_path, prompt_path, response_path, raw_path, meta_path, recovery_packet_path]
+    artifacts = [receipt_path, prompt_path, response_path, raw_path, meta_path, recovery_packet_path, browser_transport_queue_path]
     if transport_summary_path:
         artifacts.append(transport_summary_path)
     handoff = _handoff(
@@ -4633,6 +4649,153 @@ def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:
             + f"\n[tau-worker] command timed out after {timeout}s; killed process group rooted at pid {proc.pid}\n"
         )
         return CmdResult(command, 124, stdout or "", stderr, time.time() - started)
+
+
+def _run_browser_transport_cmd(
+    command: list[str],
+    *,
+    cwd: Path,
+    timeout: int,
+    handler: str,
+    artifact_dir: Path,
+    queue_path: Path,
+    browser_lock_timeout: int,
+) -> CmdResult:
+    """Serialize Surf provider submits across Ask workers.
+
+    Surf provider commands can use different tab-scoped locks while still
+    sharing one extension/native-host socket. Ask keeps the Tau nodes alive but
+    queues the actual browser transport so concurrent roundtables do not wedge
+    each other in the native host.
+    """
+    if os.environ.get("ASK_BROWSER_TRANSPORT_SERIAL", "1").lower() in {"0", "false", "no"}:
+        return _run_cmd(command, cwd=cwd, timeout=timeout)
+
+    lock_path = Path(os.environ.get("ASK_BROWSER_TRANSPORT_LOCK_FILE", "/tmp/ask-surf-browser-transport.lock"))
+    owner_path = Path(str(lock_path) + ".owner.json")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    wait_limit = _browser_transport_wait_limit(browser_lock_timeout=browser_lock_timeout, timeout=timeout)
+    started = time.time()
+    pid = os.getpid()
+    queue_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with lock_path.open("w", encoding="utf-8") as lock_file:
+        while True:
+            try:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                elapsed = time.time() - started
+                owner = _read_json(owner_path)
+                _write_browser_queue_state(
+                    queue_path,
+                    status="WAITING",
+                    handler=handler,
+                    lock_path=lock_path,
+                    owner=owner,
+                    wait_seconds=elapsed,
+                    wait_limit_seconds=wait_limit,
+                    pid=pid,
+                    artifact_dir=artifact_dir,
+                )
+                if elapsed >= wait_limit:
+                    stderr = (
+                        f"surf_browser_lock_timeout: Ask timed out after {wait_limit}s waiting for "
+                        f"browser transport lock at {lock_path}. owner={json.dumps(owner, sort_keys=True)}\n"
+                    )
+                    _write_browser_queue_state(
+                        queue_path,
+                        status="TIMEOUT",
+                        handler=handler,
+                        lock_path=lock_path,
+                        owner=owner,
+                        wait_seconds=elapsed,
+                        wait_limit_seconds=wait_limit,
+                        pid=pid,
+                        artifact_dir=artifact_dir,
+                    )
+                    return CmdResult(command, 75, "", stderr, time.time() - started)
+                time.sleep(min(0.25, max(0.05, wait_limit - elapsed)))
+
+        acquired_at = time.time()
+        owner_payload = {
+            "schema": "ask.browser_transport_lock_owner.v1",
+            "pid": pid,
+            "handler": handler,
+            "artifact_dir": str(artifact_dir),
+            "lock_path": str(lock_path),
+            "acquired_at": _now(),
+            "command": command[:8],
+        }
+        owner_path.write_text(json.dumps(owner_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        _write_browser_queue_state(
+            queue_path,
+            status="ACQUIRED",
+            handler=handler,
+            lock_path=lock_path,
+            owner=owner_payload,
+            wait_seconds=acquired_at - started,
+            wait_limit_seconds=wait_limit,
+            pid=pid,
+            artifact_dir=artifact_dir,
+        )
+        try:
+            result = _run_cmd(command, cwd=cwd, timeout=timeout)
+        finally:
+            try:
+                current_owner = _read_json(owner_path)
+                if str(current_owner.get("pid") or "") == str(pid):
+                    owner_path.unlink(missing_ok=True)
+            finally:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+    waited = acquired_at - started
+    stderr = result.stderr
+    if waited >= 0.1:
+        stderr = (
+            stderr
+            + f"\n[tau-worker] waited {waited:.3f}s for Ask browser transport lock at {lock_path}\n"
+        )
+    return CmdResult(result.command, result.returncode, result.stdout, stderr, result.duration + waited)
+
+
+def _browser_transport_wait_limit(*, browser_lock_timeout: int, timeout: int) -> int:
+    env_value = os.environ.get("ASK_BROWSER_TRANSPORT_LOCK_TIMEOUT_SECONDS", "").strip()
+    if env_value:
+        try:
+            return max(1, int(env_value))
+        except ValueError:
+            return 2400
+    if browser_lock_timeout > 0:
+        return max(1, browser_lock_timeout)
+    return max(60, min(timeout, 2400))
+
+
+def _write_browser_queue_state(
+    path: Path,
+    *,
+    status: str,
+    handler: str,
+    lock_path: Path,
+    owner: dict[str, Any],
+    wait_seconds: float,
+    wait_limit_seconds: int,
+    pid: int,
+    artifact_dir: Path,
+) -> None:
+    payload = {
+        "schema": "ask.browser_transport_queue.v1",
+        "updated_at": _now(),
+        "status": status,
+        "handler": handler,
+        "pid": pid,
+        "lock_path": str(lock_path),
+        "wait_seconds": round(wait_seconds, 3),
+        "wait_limit_seconds": wait_limit_seconds,
+        "owner": owner or None,
+        "artifact_dir": str(artifact_dir),
+    }
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _terminate_process_group(pid: int) -> None:
