@@ -212,8 +212,21 @@ If zero pairs are generated:
   Include relevant identifiers (CWE-XXX, T1XXX, AC-XX) when present in the source.
 
 - reasoning:
-  1-2 sentences, maximum 50 words.
-  Explain why the pair is grounded and what source text supports it.
+  Reason about the subject matter. State why the answer follows for THIS
+  document passage specifically: the mechanism, condition, or consequence that makes it
+  true.
+  Be precise, concise, and comprehensive. Precise: no hedging or filler.
+  Concise: no words that carry nothing. Comprehensive: nothing load-bearing
+  omitted.
+  There is no minimum and no maximum length. Satisfying all three may take six
+  words or six paragraphs; let the document passage decide, and stop when the reasoning
+  is complete. Never pad to look thorough, and never truncate a real
+  explanation to look tight.
+  Do NOT explain provenance, grounding, validity, or which field you read.
+  evidence_quotes already carries that.
+  Never restate the document passage description verbatim.
+  The reasoning must be specific enough that it could not be copied onto a
+  different document passage. If it would read identically for another entry, it is wrong.
 
 - answer:
   1-4 sentences, maximum 150 words.

@@ -139,8 +139,22 @@ If zero pairs are generated:
   For tactic_context, also include the exact parent tactic name.
 
 - reasoning:
-  1-2 sentences, maximum 60 words.
-  Explain only why the pair is grounded and why the selected pair_type is valid.
+  Reason about the subject matter. State why the answer follows for THIS
+  technique specifically: the mechanism, condition, or consequence that makes it
+  true.
+  State why the selected pair_type fits.
+  Be precise, concise, and comprehensive. Precise: no hedging or filler.
+  Concise: no words that carry nothing. Comprehensive: nothing load-bearing
+  omitted.
+  There is no minimum and no maximum length. Satisfying all three may take six
+  words or six paragraphs; let the technique decide, and stop when the reasoning
+  is complete. Never pad to look thorough, and never truncate a real
+  explanation to look tight.
+  Do NOT explain provenance, grounding, validity, or which field you read.
+  evidence_quotes already carries that.
+  Never restate the technique description verbatim.
+  The reasoning must be specific enough that it could not be copied onto a
+  different technique. If it would read identically for another entry, it is wrong.
 
 - answer:
   1-4 sentences, maximum 170 words.
