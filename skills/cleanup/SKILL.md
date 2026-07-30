@@ -23,6 +23,7 @@ composes: [ingest-code, task-monitor, project-watchdog]
 complies:
   - best-practices-skills
   - best-practices-python
+  - best-practices-report
 ---
 
 # Cleanup Skill
@@ -47,6 +48,15 @@ This skill performs a deep assessment of the codebase to identify technical debt
   `phase_receipt` instead of writing it; `--worktree-audit` produces its own
   audit artifacts and no phase receipt
 - **Doc staleness**: Flags docs with TODO/FIXME or >365 days without changes
+- **Script scanability**: Flags tracked script-like files that are hard for a
+  human or agent to scan because they lack useful file-purpose, usage,
+  side-effect, function, or class documentation. This is readability debt, not
+  unused-code evidence.
+- **Evidence-first Markdown report**: `--plan` writes a prose-first cleanup
+  report that follows `$best-practices-report`: summary, scope,
+  source-of-truth inventory, finding index, outstanding/unknowns,
+  plan-ready next actions, and non-claims. It must not present cleanup counts as
+  dashboard health or readiness claims.
 - **Worktree triage**: Classifies dirty git entries into commit/archive/review
   buckets before any attempt to clean or commit a large mixed worktree
 - **Dependency-safe quarantine**: Treats untracked source/config files as
@@ -93,6 +103,7 @@ Each mutation class carries its own evidence requirement:
 |---|---|---|
 | `junk_untracked_removal` | untracked status + junk pattern + no literal reference from a tracked file | allowed when candidates clear provenance |
 | `tracked_file_mutation` | per-candidate evidence from `.cleanup-evidence.json` + project-native before/after readiness proof | blocked until both are present |
+| `script_scanability_repair` | explicit readability cleanup request + parse/compile + script `--help` or narrow sanity proof | non-mutating assessment by default; repair as separate slice |
 | `root_stray_mutation` | human owner decision | review-only |
 | `artifact_archive` | human owner decision | review-only |
 
@@ -152,9 +163,14 @@ never per-file safety evidence. Every run states these limits explicitly:
    - Tracked files with no lexical references → non-mutating review candidates,
      each joined against per-candidate dependency evidence
    - Outdated documentation files
-2. **Planning** (`--plan`): Generate a **Cleanup Plan** markdown file that shows
-   phase states, proof limits, marker warnings, and one verdict row per
-   candidate.
+   - Script scanability gaps → non-mutating readability candidates for
+     file-purpose, usage, side-effect, function, or class documentation
+2. **Planning** (`--plan`): Generate a **Cleanup Report** markdown file that
+   complies with `$best-practices-report`: top summary, scope,
+   source-of-truth inventory, finding index, detailed evidence sections,
+   outstanding/broken/unknowns, plan-ready next actions, and non-claims. The
+   report shows phase states, proof limits, marker warnings, and one verdict row
+   per candidate, including script scanability repair rows.
 3. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown ownership/risk
    buckets for dirty files so agents do not blindly stage unrelated work.
 4. **Repo-of-record declaration**: Identify the live project checkout, branch,
@@ -179,7 +195,15 @@ never per-file safety evidence. Every run states these limits explicitly:
      (`--force` skips the prompt, not the provenance check)
    - Keep root strays, artifacts, and tracked candidates review-only
    - Log all actions to `local/CLEANUP_LOG.md` and the phase receipt
-9. **Post-cleanup proof**: Rerun the same sanity command and relevant
+9. **Script scanability repair**: When the requested cleanup slice is explicitly
+   readability repair, add only non-behavioral documentation such as module
+   docstrings, usage notes, side-effect notes, and useful function/class
+   docstrings. Do not change script control flow, flags, imports, IO behavior,
+   network behavior, or destructive actions while doing this slice. Prove the
+   slice with parse/compile plus each touched script's `--help`, entrypoint
+   smoke, or narrow sanity command, then commit separately from deletion or
+   archive cleanup.
+10. **Post-cleanup proof**: Rerun the same sanity command and relevant
    `best-practices-*` checks for changed files, then commit/push only the
    coherent cleanup slice.
 
@@ -189,13 +213,15 @@ never per-file safety evidence. Every run states these limits explicitly:
 2. Run `bash .pi/skills/cleanup/run.sh --dry-run` to see JSON findings. This
    works with no index present; the phase receipt records what was unavailable.
 3. Run `bash .pi/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
-4. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
-5. If a clean worktree is needed for commit isolation, record both paths in the
+4. Run `bash .pi/skills/cleanup/run.sh --script-scanability` to run only the
+   non-mutating script readability pass.
+5. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
+6. If a clean worktree is needed for commit isolation, record both paths in the
    plan: the live repo of record and the temporary commit worktree.
-6. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
-7. Use `--force` only to skip the confirmation prompt for junk removal. It
+7. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
+8. Use `--force` only to skip the confirmation prompt for junk removal. It
    cannot bypass per-path provenance or authorize any other mutation class.
-8. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
+9. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
    with `--receipt`) to see which phase blocked and how to resume it.
 
 ## Environment
@@ -220,6 +246,14 @@ cleanup does not edit `.gitignore`.
 
 - **Lexical absence never authorizes deletion**: The skill reports tracked files
   with no lexical reference as review candidates and never deletes them.
+- **Script scanability is readability debt**: Missing useful file-purpose,
+  usage, side-effect, function, or class documentation makes a script a
+  readability repair candidate. It never proves the script is unused, stale,
+  removable, or safe to archive.
+- **Script scanability repair is explicit and non-behavioral**: Cleanup may fix
+  scanability gaps only as an explicit readability slice. Repairs add useful
+  docstrings/comments and CLI descriptions without changing code behavior, and
+  must be proven with parse/compile plus script help or a narrow sanity command.
 - **Root artifacts are review-only**: Binary/media files at project root may be
   runtime inputs and are never moved automatically.
 - **Evidence must match the mutation**: A mutation class is authorized only by
@@ -283,8 +317,9 @@ cleanup does not edit `.gitignore`.
 | Option | Description |
 |---|---|
 | `--dry-run` | Print JSON findings without making changes |
-| `--plan` | Generate a Cleanup Plan markdown file |
+| `--plan` | Generate a `$best-practices-report`-style Cleanup Report markdown file |
 | `--worktree-audit` | Generate JSON + Markdown dirty-worktree buckets for commit-safe triage |
+| `--script-scanability` | Run only the non-mutating script readability scan |
 | `--execute` | Remove untracked junk paths that cleared per-path provenance |
 | `--force` | Skip the junk confirmation prompt only; cannot bypass provenance or authorize another class |
 | `--output <file>` | Specify output file for plan (default: CLEANUP_PLAN.md) |

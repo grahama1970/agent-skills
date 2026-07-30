@@ -67,7 +67,7 @@ from cleanup_evidence import (
 from cleanup_docs import *  # noqa: F401,F403
 from cleanup_docs import (
     scan_for_outdated_docs, scan_doc_organization, find_markdown_inbound_links,
-    get_last_commit_times,
+    get_last_commit_times, scan_script_scanability, append_cleanup_report_preamble,
     DOC_STALE_DAYS, DOC_DEPRECATION_DIR, CONVENTIONAL_ROOT_DOCS,
     GITHUB_SLUG_PATTERN, REPO_DECLARATION_PATTERN,
     _foreign_repo_reference, _current_repo_slugs, _doc_relocation_target,
@@ -82,10 +82,19 @@ from cleanup_bp import (
 
 def generate_cleanup_plan(findings: Dict) -> str:
     plan = []
-    plan.append("# Cleanup Plan")
+    plan.append("# Cleanup Report")
     plan.append("")
     plan.append(f"Generated: {datetime.now().isoformat()}")
     plan.append("")
+    append_cleanup_report_preamble(plan, findings)
+
+    organization = findings.get("doc_organization") or []
+    actionable = [
+        p for p in organization
+        if p["verdict"] in {"relocate_proposed", "deprecate_proposed"}
+    ]
+    scanability = findings.get("script_scanability") or []
+    evidence_status = (findings.get("cleanup_evidence_artifact") or {}).get("status", "missing")
 
     ingest_evidence = findings.get("ingest_code_evidence", {})
     plan.append("## Ingest-Code Evidence")
@@ -223,8 +232,6 @@ def generate_cleanup_plan(findings: Dict) -> str:
         plan.append("")
 
     # Doc organization proposals
-    organization = findings.get("doc_organization") or []
-    actionable = [p for p in organization if p["verdict"] in {"relocate_proposed", "deprecate_proposed"}]
     if actionable:
         plan.append("## Documentation Organization (Proposed)")
         plan.append("")
@@ -250,6 +257,68 @@ def generate_cleanup_plan(findings: Dict) -> str:
                     f"`{r}`" for r in p["inbound_references"][:10]
                 ))
         plan.append("")
+
+    if scanability:
+        plan.append("## Script Scanability (Readability Repair)")
+        plan.append("")
+        plan.append(
+            "These script files are hard for humans or agents to scan quickly. "
+            "This finding is not unused-code evidence and does not authorize "
+            "deletion, quarantine, or archival. Repairs must be a separate "
+            "readability-only slice that adds useful purpose, usage, side-effect, "
+            "function, or class notes without changing behavior."
+        )
+        plan.append("")
+        plan.append("| Script | Missing scanability evidence | Repair class |")
+        plan.append("| --- | --- | --- |")
+        for item in scanability:
+            missing = ", ".join(f"`{gap}`" for gap in item.get("missing", []))
+            plan.append(
+                f"| `{item['path']}` | {missing} | `{item['repair_class']}` |"
+            )
+        plan.append("")
+        plan.append(
+            "Proof for a repair slice: parse/compile the touched scripts and run "
+            "each script's `--help`, entrypoint smoke, or narrow sanity command."
+        )
+        plan.append("")
+
+    uncommitted_count = len(findings.get("uncommitted_changes", []))
+    root_strays_count = len(findings.get("root_strays", []))
+
+    plan.append("## Outstanding / Broken / Unknown")
+    plan.append("")
+    if evidence_status != "complete":
+        plan.append(
+            f"- `Blocked`: tracked-file mutation evidence is `{evidence_status}`; "
+            "tracked moves/removals remain unauthorized."
+        )
+    if uncommitted_count:
+        plan.append("- `Needs Changes`: dirty worktree entries need owner-safe triage.")
+    if root_strays_count:
+        plan.append("- `Needs Decision`: root strays need human owner disposition.")
+    if scanability:
+        plan.append("- `Needs Changes`: script scanability repairs are unimplemented.")
+    if not any([evidence_status != "complete", uncommitted_count, root_strays_count, scanability]):
+        plan.append("- No outstanding cleanup blocker was detected by this report scope.")
+    plan.append("")
+
+    plan.append("## Plan-Ready Next Actions")
+    plan.append("")
+    plan.append("| Action ID | Related Finding | Action | Owner Persona | Primary Object | Acceptance Check | Dependencies | Priority |")
+    plan.append("|---|---|---|---|---|---|---|---|")
+    plan.append("| A-001 | F-001 | Classify dirty entries with `--worktree-audit` | project agent | git worktree | JSON and Markdown audit exist | none | P0 |")
+    plan.append("| A-002 | F-003 | Refresh per-candidate cleanup evidence | project agent | `.cleanup-evidence.json` | artifact schema loads and candidate verdicts are present | ingest-code available | P1 |")
+    plan.append("| A-003 | F-004 | Add readability-only script docstrings/comments | project agent | listed script files | parse/compile plus help or narrow sanity proof passes | explicit readability slice | P2 |")
+    plan.append("")
+
+    plan.append("## Non-Claims")
+    plan.append("")
+    plan.append("- This report does not prove that lexically unreferenced files are unused.")
+    plan.append("- This report does not prove that root artifacts or root strays are safe to archive.")
+    plan.append("- This report does not prove runtime, release, UI, compliance, or production readiness.")
+    plan.append("- Script scanability findings do not prove behavior is wrong; they identify readability debt for humans and agents.")
+    plan.append("")
 
     # Best-practices gate
     gate = findings.get("best_practices_gate") or {}
@@ -284,6 +353,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append(f"- Lexically unreferenced review candidates: {len(findings.get('dead_files', []))}")
     plan.append(f"- Potentially outdated docs: {len(findings.get('outdated_docs', []))}")
     plan.append(f"- Doc relocations proposed: {len(actionable)}")
+    plan.append(f"- Script scanability repairs proposed: {len(scanability)}")
     gate_counts = (gate or {}).get("counts", {})
     plan.append(
         f"- Best-practices gate: {gate_counts.get('checked', 0)} to check, "
@@ -426,9 +496,10 @@ app = typer.Typer(help="Cleanup Skill - Deep codebase assessment and technical d
 @app.command()
 def main(
     dry_run: bool = typer.Option(False, "--dry-run", help="Print findings without making changes (JSON output)"),
-    plan: bool = typer.Option(False, "--plan", help="Generate a Cleanup Plan markdown file"),
+    plan: bool = typer.Option(False, "--plan", help="Generate a Cleanup Report markdown file"),
     execute: bool = typer.Option(False, "--execute", help="Perform cleanup actions (with confirmation)"),
     worktree_audit: bool = typer.Option(False, "--worktree-audit", help="Write a commit-safe dirty worktree ownership/risk audit"),
+    script_scanability: bool = typer.Option(False, "--script-scanability", help="Run only the non-mutating script scanability pass"),
     force: bool = typer.Option(False, "--force", help="Skip confirmation prompts for junk removal only; cannot authorize any other mutation class"),
     output: str = typer.Option("CLEANUP_PLAN.md", "--output", help="Output file for plan"),
     receipt: str = typer.Option(DEFAULT_RECEIPT_PATH, "--receipt", help="Path for the resumable phase receipt"),
@@ -449,6 +520,18 @@ def main(
         log_info(f"Worktree audit Markdown written to: {md_path}")
         if audit["summary"].get("high_risk", 0):
             log_warning(f"High-risk dirty entries: {audit['summary']['high_risk']}")
+        return
+
+    if script_scanability:
+        print(json.dumps({
+            "script_scanability": scan_script_scanability(),
+            "mutation": "not_authorized",
+            "repair_contract": (
+                "readability-only edits are allowed only as an explicit cleanup "
+                "slice and must be proven with parse/compile plus script help "
+                "or a narrow sanity command"
+            ),
+        }, indent=2, default=str))
         return
 
     log_info("Starting assessment...")
@@ -473,6 +556,7 @@ def main(
         "dead_files": scan_for_dead_files(reference_index),
         "outdated_docs": scan_for_outdated_docs(),
         "doc_organization": scan_doc_organization(),
+        "script_scanability": scan_script_scanability(),
         "ingest_code_evidence": scan_ingest_code_evidence(),
         "cleanup_evidence_artifact": scan_cleanup_evidence_artifact(),
         "project_watchdog": scan_project_watchdog_context(),
@@ -622,6 +706,7 @@ def main(
         log_info(f"Untracked files:           {len(findings['untracked_files'])}")
         log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
         log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
+        log_info(f"Script scanability repairs: {len(findings['script_scanability'])}")
         log_info("=" * 50)
 
         log_info("Starting cleanup...")
@@ -647,6 +732,7 @@ def main(
     log_info(f"Untracked files:           {len(findings['untracked_files'])}")
     log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
     log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
+    log_info(f"Script scanability repairs: {len(findings['script_scanability'])}")
     log_info("=" * 50)
     for phase_name, state in findings["mutation_readiness"]["phases"].items():
         log_info(f"{phase_name}: {state}")
@@ -656,6 +742,7 @@ def main(
     log_info("Use --dry-run for JSON output")
     log_info("Use --plan to generate a cleanup plan")
     log_info("Use --worktree-audit to classify dirty worktree entries before commit")
+    log_info("Use --script-scanability to run only the script readability pass")
     log_info("Use --execute to remove cleared untracked junk (with confirmation)")
     log_info("Use --execute --force to skip junk confirmation prompts")
     log_info("Root artifacts, root strays, and tracked candidates are review-only")

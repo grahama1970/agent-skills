@@ -203,7 +203,11 @@ class TestCleanup(EvidenceCasesMixin):
         
         plan = cleanup.generate_cleanup_plan(findings)
         
-        self.assert_in("# Cleanup Plan", plan, "Plan should have header")
+        self.assert_in("# Cleanup Report", plan, "Plan should have report header")
+        self.assert_in("Report Summary", plan, "Plan should have report summary")
+        self.assert_in("Source-of-Truth Inventory", plan, "Plan should list sources")
+        self.assert_in("Plan-Ready Next Actions", plan, "Plan should include actions")
+        self.assert_in("Non-Claims", plan, "Plan should state non-claims")
         self.assert_in("Uncommitted Changes", plan, "Plan should have uncommitted changes section")
         self.assert_in("Untracked Files", plan, "Plan should have untracked files section")
         self.assert_in(
@@ -627,5 +631,4 @@ if __name__ == "__main__":
 # ---------------------------------------------------------------------------
 # Documentation organization + best-practices gate
 # ---------------------------------------------------------------------------
-
 

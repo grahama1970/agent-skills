@@ -154,3 +154,43 @@ def test_tool_resolved_root_docs_are_protected():
     )
     assert proposals[0]["verdict"] == "keep_root_conventional"
     assert proposals[0]["proposed_path"] is None
+
+
+def test_script_scanability_flags_missing_script_docstrings(tmp_path, monkeypatch):
+    script = tmp_path / "scripts" / "repair.py"
+    script.parent.mkdir()
+    script.write_text("def repair(path):\n    return path\n")
+    monkeypatch.chdir(tmp_path)
+
+    findings = cleanup.scan_script_scanability(tracked={"scripts/repair.py"})
+
+    assert findings[0]["verdict"] == "script_scanability_repair"
+    assert findings[0]["repair_class"] == "readability_only"
+    assert findings[0]["automatic_cleanup_mutation_allowed"] is False
+    assert "missing_file_purpose_docstring" in findings[0]["missing"]
+    assert "missing_public_function_docstring:repair" in findings[0]["missing"]
+
+
+def test_script_scanability_accepts_useful_python_docstrings(tmp_path, monkeypatch):
+    script = tmp_path / "scripts" / "repair.py"
+    script.parent.mkdir()
+    script.write_text(
+        '"""Repair one fixture record after the operator selects the target."""\n\n'
+        "def repair(path):\n"
+        '    """Return the selected path without changing behavior in this fixture."""\n'
+        "    return path\n"
+    )
+    monkeypatch.chdir(tmp_path)
+
+    assert cleanup.scan_script_scanability(tracked={"scripts/repair.py"}) == []
+
+
+def test_script_scanability_flags_shell_header_and_function_comments(tmp_path, monkeypatch):
+    script = tmp_path / "run.sh"
+    script.write_text("#!/usr/bin/env bash\nset -e\nrun() {\n  true\n}\n")
+    monkeypatch.chdir(tmp_path)
+
+    findings = cleanup.scan_script_scanability(tracked={"run.sh"})
+
+    assert "missing_file_purpose_comment" in findings[0]["missing"]
+    assert "missing_function_comment:run" in findings[0]["missing"]
