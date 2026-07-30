@@ -45,6 +45,7 @@ Agent workflow:
 Rules:
   - Never close without a proof file.
   - Never work two leased tickets at once.
+  - Live release/close paths audit registered worktrees before removing a lease.
   - Never lease or close tickets labeled needs-human or external-owner. To close a resolved-but-blocked ticket, `unblock` it first (do not raw `gh issue edit`).
   - Use --dry-run before first mutation in a new repo.
   - Common flags --repo/-R and --dry-run are valid anywhere after the command.
@@ -106,6 +107,22 @@ require_file() {
     local file="$2"
     [[ -f "$file" ]] || die "$label file not found: $file"
     [[ -s "$file" ]] || die "$label file is empty: $file"
+}
+
+audit_worktrees_for_retention() {
+    [[ "$DRY_RUN" == "1" ]] && return 0
+    if [[ "${GH_TICKET_SKIP_WORKTREE_AUDIT:-}" == "1" ]]; then
+        echo "WARN skipping worktree retention audit because GH_TICKET_SKIP_WORKTREE_AUDIT=1" >&2
+        return 0
+    fi
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "WARN not inside a git worktree; worktree retention audit skipped" >&2
+        return 0
+    fi
+    local repo_root
+    repo_root="$(git rev-parse --show-toplevel)"
+    "$SCRIPT_DIR/audit-worktrees.sh" --repo "$repo_root" --json >&2 || die \
+        "worktree retention audit failed; commit, remove, or explicitly retain flagged secondary worktrees before releasing/closing the ticket"
 }
 
 issue_label_names() {
@@ -330,6 +347,9 @@ cmd_block() {
     if [[ "${#blocked_by[@]}" -gt 0 ]]; then
         run_gh gh issue edit "$issue" "${repo_args[@]}" --add-label blocked:upstream
     fi
+    if [[ "$release" == "1" ]]; then
+        audit_worktrees_for_retention
+    fi
     run_gh gh issue edit "$issue" "${repo_args[@]}" --add-label maintainer-blocked --add-label needs-human
     if [[ "$release" == "1" ]]; then
         run_gh gh issue edit "$issue" "${repo_args[@]}" --remove-label maintainer-active
@@ -399,6 +419,7 @@ cmd_release() {
     [[ -n "$agent" ]] || die "release requires --agent"
     [[ -n "$reason" ]] || die "release requires --reason FILE"
     require_file "reason" "$reason"
+    audit_worktrees_for_retention
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$reason"
     run_gh gh issue edit "$issue" "${repo_args[@]}" --remove-label maintainer-active
     json_ok release issue "$issue" agent "$agent" reason "$reason"
@@ -444,6 +465,7 @@ cmd_close() {
     require_file "proof" "$proof"
     [[ -z "$review" ]] || require_file "review" "$review"
     assert_ticket_closable "$issue"
+    audit_worktrees_for_retention
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$proof"
     if [[ -n "$review" ]]; then
         run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$review"
@@ -480,6 +502,7 @@ cmd_close_duplicate() {
     require_file "proof" "$proof"
     [[ -z "$review" ]] || require_file "review" "$review"
     assert_ticket_closable "$issue"
+    audit_worktrees_for_retention
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$proof"
     if [[ -n "$review" ]]; then
         run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$review"

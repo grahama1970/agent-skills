@@ -11,6 +11,7 @@ for path in \
     "$SCRIPT_DIR/SKILL.md" \
     "$SCRIPT_DIR/references/ticket_contract.yml" \
     "$SCRIPT_DIR/scripts/gh-ticket-tools.sh" \
+    "$SCRIPT_DIR/scripts/audit-worktrees.sh" \
     "$SCRIPT_DIR/templates/proof.md" \
     "$SCRIPT_DIR/templates/blocker.md" \
     "$SCRIPT_DIR/templates/progress.md" \
@@ -89,7 +90,33 @@ if "$SCRIPT_DIR/scripts/gh-ticket-tools.sh" close 123 --dry-run >/dev/null 2>&1;
 fi
 echo "PASS"
 
-echo -n "Check 6 - common flag order and workflow commands: "
+echo -n "Check 6 - worktree audit detects forgotten /tmp worktrees: "
+audit_repo="$tmpdir/audit-repo"
+git init "$audit_repo" >/dev/null
+git -C "$audit_repo" config user.email audit@example.test
+git -C "$audit_repo" config user.name "Audit Test"
+printf 'base\n' > "$audit_repo/README.md"
+git -C "$audit_repo" add README.md
+git -C "$audit_repo" commit -m initial >/dev/null
+"$SCRIPT_DIR/scripts/audit-worktrees.sh" --repo "$audit_repo" --json > "$tmpdir/audit-clean.json"
+grep -q '"ok":true' "$tmpdir/audit-clean.json"
+tmp_worktree="$tmpdir/audit-worktree"
+git -C "$audit_repo" worktree add --detach "$tmp_worktree" HEAD >/dev/null
+if "$SCRIPT_DIR/scripts/audit-worktrees.sh" --repo "$audit_repo" --json > "$tmpdir/audit-dirty.json"; then
+    echo "FAIL: /tmp secondary worktree passed audit"
+    exit 1
+fi
+grep -q '"ok":false' "$tmpdir/audit-dirty.json"
+grep -q '"tmp":1' "$tmpdir/audit-dirty.json"
+printf 'Release blocked by worktree audit.\n' > "$tmpdir/release-reason.md"
+if (cd "$audit_repo" && "$SCRIPT_DIR/scripts/gh-ticket-tools.sh" release 123 --agent tester --reason "$tmpdir/release-reason.md" --repo owner/repo) > "$tmpdir/release-live.out" 2>&1; then
+    echo "FAIL: live release bypassed dirty worktree audit"
+    exit 1
+fi
+grep -q 'worktree retention audit failed' "$tmpdir/release-live.out"
+echo "PASS"
+
+echo -n "Check 7 - common flag order and workflow commands: "
 printf 'Blocked: missing decision.\n' > "$tmpdir/blocker.md"
 printf 'Progress: reproduced failure.\n' > "$tmpdir/progress.md"
 "$SCRIPT_DIR/scripts/gh-ticket-tools.sh" search --repo owner/repo --label skill-bug --dry-run --search 'sort:updated-asc' > "$tmpdir/search.out"
