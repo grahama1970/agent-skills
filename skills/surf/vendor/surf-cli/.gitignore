@@ -4,6 +4,7 @@ dist/
 *.log
 .env
 .env.local
+.ensure-surf-cli-build.lock
 
 # Test coverage
 coverage/
