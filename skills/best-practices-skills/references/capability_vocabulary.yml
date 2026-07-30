@@ -46,6 +46,39 @@ capabilities:
   project-state-readiness-pattern:
     providers:
       - best-practices-skills
+  animation-vocabulary:
+    providers:
+      - animation-vocabulary
+  apple-interface-design-guidance:
+    providers:
+      - apple-design
+  fluid-motion-guidance:
+    providers:
+      - apple-design
+  design-engineering-guidance:
+    providers:
+      - emil-design-eng
+  ui-polish-guidance:
+    providers:
+      - emil-design-eng
+  animation-opportunity-audit:
+    providers:
+      - find-animation-opportunities
+  animation-audit:
+    providers:
+      - improve-animations
+  animation-improvement-plan:
+    providers:
+      - improve-animations
+  ui-library-selection:
+    providers:
+      - pick-ui-library
+  ui-variant-prototyping:
+    providers:
+      - prototype
+  animation-review:
+    providers:
+      - review-animations
   skill-evaluation:
     providers:
       - eval-skills
