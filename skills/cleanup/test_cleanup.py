@@ -1101,3 +1101,84 @@ if __name__ == "__main__":
     tester = TestCleanup()
     success = tester.run_all()
     sys.exit(0 if success else 1)
+
+
+# ---------------------------------------------------------------------------
+# Documentation organization + best-practices gate
+# ---------------------------------------------------------------------------
+
+
+def test_conventional_root_docs_are_never_relocated():
+    tracked = {"README.md", "LICENSE.md", "SECURITY.md", "CONTRIBUTING.md"}
+    proposals = cleanup.scan_doc_organization(
+        tracked=tracked, commit_times={}, now=0.0
+    )
+    assert {p["verdict"] for p in proposals} == {"keep_root_conventional"}
+    assert all(p["proposed_path"] is None for p in proposals)
+
+
+def test_root_doc_is_proposed_into_a_docs_home():
+    tracked = {"DESIGN.md"}
+    proposals = cleanup.scan_doc_organization(
+        tracked=tracked, commit_times={}, now=0.0
+    )
+    assert proposals[0]["verdict"] == "relocate_proposed"
+    assert proposals[0]["proposed_path"] == "docs/architecture/DESIGN.md"
+
+
+def test_unknown_root_doc_lands_in_plain_docs_dir():
+    proposals = cleanup.scan_doc_organization(
+        tracked={"WEIRDNAME.md"}, commit_times={}, now=0.0
+    )
+    assert proposals[0]["proposed_path"] == "docs/WEIRDNAME.md"
+
+
+def test_stale_unreferenced_doc_is_proposed_for_deprecation():
+    now = 100_000_000.0
+    old = now - (cleanup.DOC_STALE_DAYS + 10) * 86400
+    proposals = cleanup.scan_doc_organization(
+        tracked={"docs/OLD.md"}, commit_times={"docs/OLD.md": old}, now=now
+    )
+    assert proposals[0]["verdict"] == "deprecate_proposed"
+    assert proposals[0]["proposed_path"] == "docs/historical/OLD.md"
+
+
+def test_doc_already_under_docs_is_kept():
+    now = 100_000_000.0
+    proposals = cleanup.scan_doc_organization(
+        tracked={"docs/CURRENT.md"}, commit_times={"docs/CURRENT.md": now}, now=now
+    )
+    assert proposals[0]["verdict"] == "keep"
+
+
+def test_best_practices_mapping_by_suffix_and_path():
+    assert cleanup.best_practices_skill_for("src/app.py") == "best-practices-python"
+    assert cleanup.best_practices_skill_for("ui/Button.tsx") == "best-practices-react"
+    assert cleanup.best_practices_skill_for("core/lib.rs") == "best-practices-rust"
+    assert cleanup.best_practices_skill_for("skills/foo/SKILL.md") == "best-practices-skills"
+    assert cleanup.best_practices_skill_for("data/blob.bin") is None
+
+
+def test_best_practices_gate_counts_and_status(tmp_path):
+    skills_root = tmp_path / "skills"
+    (skills_root / "best-practices-python").mkdir(parents=True)
+    gate = cleanup.evaluate_best_practices_gate(
+        ["a.py", "b.tsx", "c.bin"], skills_root=skills_root
+    )
+    assert gate["status"] == "requires_run"
+    assert gate["counts"]["not_applicable"] == 1
+    assert "best-practices-python" in gate["required_skills"]
+    # react is mapped but not installed in this fixture
+    assert "best-practices-react" in gate["unavailable_skills"]
+
+
+def test_best_practices_gate_is_satisfied_with_no_changed_files():
+    gate = cleanup.evaluate_best_practices_gate([])
+    assert gate["status"] == "satisfied"
+    assert gate["counts"]["checked"] == 0
+
+
+def test_best_practices_gate_never_claims_a_run_happened():
+    gate = cleanup.evaluate_best_practices_gate(["a.py"])
+    assert "mapping_only" in gate["proof_limit"]
+    assert gate["counts"]["failed"] == 0

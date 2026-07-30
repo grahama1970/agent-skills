@@ -125,6 +125,61 @@ IGNORE_CONFIG_BASENAMES = {
 CLEANUP_EVIDENCE_FILENAME = ".cleanup-evidence.json"
 CLEANUP_EVIDENCE_CONTRACT = "cleanup.evidence.v1"
 CLEANUP_RECEIPT_CONTRACT = "cleanup.phase_receipt.v1"
+
+# Root-level markdown that GitHub and package tooling resolve by exact name.
+# Moving any of these breaks a convention a reader or tool depends on, so doc
+# organization never proposes relocating them.
+CONVENTIONAL_ROOT_DOCS = {
+    "README.md",
+    "LICENSE.md",
+    "LICENCE.md",
+    "COPYING.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "SUPPORT.md",
+    "CHANGELOG.md",
+    "GOVERNANCE.md",
+    "MAINTAINERS.md",
+    "AUTHORS.md",
+    "NOTICE.md",
+    "CITATION.md",
+    "CLAUDE.md",
+    "AGENTS.md",
+}
+
+# Where a relocated root doc is proposed to live, by filename stem. Anything
+# unmatched is proposed under docs/ rather than guessed into a subdirectory.
+DOC_RELOCATION_HINTS = (
+    ({"design", "architecture", "adr", "rfc", "spec"}, "docs/architecture"),
+    ({"goal", "goals", "roadmap", "plan", "product", "vision"}, "docs/product"),
+    ({"knowledge", "context", "notes", "research"}, "docs/research"),
+    ({"deploy", "deployment", "install", "setup", "operations", "runbook"}, "docs/operations"),
+)
+
+DOC_DEPRECATION_DIR = "docs/historical"
+
+# Age past which an unreferenced doc is proposed for deprecation.
+DOC_STALE_DAYS = 365
+
+# File-extension -> best-practices skill. A cleanup that changes a file is
+# expected to run the skill that governs that file type.
+BEST_PRACTICES_BY_SUFFIX = {
+    ".py": "best-practices-python",
+    ".rs": "best-practices-rust",
+    ".tsx": "best-practices-react",
+    ".jsx": "best-practices-react",
+    ".ts": "best-practices-react",
+    ".js": "best-practices-react",
+    ".md": "best-practices-readme",
+}
+
+# Path-shape rules that win over the extension map, most specific first.
+BEST_PRACTICES_BY_PATH = (
+    ("SKILL.md", "best-practices-skills"),
+    ("skills/", "best-practices-skills"),
+    ("README.md", "best-practices-readme"),
+)
 DEFAULT_RECEIPT_PATH = "artifacts/cleanup/cleanup_receipt.json"
 PROJECT_WATCHDOG_READY_LABEL = "agent-work"
 PROJECT_WATCHDOG_HOLD_LABELS = [
@@ -1618,7 +1673,16 @@ def build_phase_receipt(
             "untracked_files": len(findings.get("untracked_files", [])),
             "lexical_review_candidates": len(findings.get("dead_files", [])),
             "outdated_docs": len(findings.get("outdated_docs", [])),
+            "doc_relocations_proposed": sum(
+                1 for p in findings.get("doc_organization", [])
+                if p.get("verdict") == "relocate_proposed"
+            ),
+            "doc_deprecations_proposed": sum(
+                1 for p in findings.get("doc_organization", [])
+                if p.get("verdict") == "deprecate_proposed"
+            ),
         },
+        "best_practices_gate": findings.get("best_practices_gate", {}),
         "actions_taken": actions_taken or [],
         "unusable_evidence": unusable_evidence_errors(findings),
         "resume_commands": [
@@ -1700,6 +1764,189 @@ def scan_for_outdated_docs() -> List[Dict[str, str]]:
             })
 
     return outdated
+
+
+def _doc_relocation_target(filepath: str) -> str:
+    """Propose a docs/ home for a root-level doc, from its filename stem."""
+    stem = Path(filepath).stem.lower()
+    tokens = set(re.split(r"[^a-z0-9]+", stem)) - {""}
+    for keywords, target_dir in DOC_RELOCATION_HINTS:
+        if tokens & keywords:
+            return f"{target_dir}/{Path(filepath).name}"
+    return f"docs/{Path(filepath).name}"
+
+
+def find_markdown_inbound_links(target: str, tracked: Set[str]) -> List[str]:
+    """Return tracked files that reference `target` by path or filename.
+
+    A relocation that silently breaks these links trades one kind of mess for a
+    worse one, so every proposal carries the list it would have to rewrite.
+    """
+    name = Path(target).name
+    inbound = []
+    for candidate in tracked:
+        if candidate == target:
+            continue
+        if Path(candidate).suffix not in {".md", ".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".yaml", ".yml", ".toml", ".sh"}:
+            continue
+        content = read_file_content(candidate)
+        if not content:
+            continue
+        if target in content or f"({name})" in content or f"]({name}" in content:
+            inbound.append(candidate)
+    return sorted(inbound)
+
+
+def scan_doc_organization(
+    tracked: Optional[Set[str]] = None,
+    commit_times: Optional[Dict[str, int]] = None,
+    now: Optional[float] = None,
+) -> List[Dict[str, Any]]:
+    """Propose a home or a deprecation for every tracked markdown doc.
+
+    Detection alone leaves the reader with a list and no decision. This emits a
+    verdict per doc with the evidence behind it: where it would go, what links
+    to it, how stale it is. Proposals are never executed without an explicit
+    opt-in flag, and conventional root files are never proposed at all.
+    """
+    tracked = get_all_tracked_files() if tracked is None else tracked
+    commit_times = get_last_commit_times() if commit_times is None else commit_times
+    now = datetime.now().timestamp() if now is None else now
+
+    docs = sorted(f for f in tracked if f.endswith(".md"))
+    proposals: List[Dict[str, Any]] = []
+
+    for filepath in docs:
+        name = Path(filepath).name
+        is_root = "/" not in filepath
+        timestamp = commit_times.get(filepath)
+        age_days = int((now - timestamp) / 86400) if timestamp else None
+        content = read_file_content(filepath)
+        has_markers = bool(content) and ("TODO" in content or "FIXME" in content)
+
+        if is_root and name in CONVENTIONAL_ROOT_DOCS:
+            proposals.append({
+                "path": filepath,
+                "verdict": "keep_root_conventional",
+                "reason": f"{name} is resolved by name by GitHub or package tooling",
+                "proposed_path": None,
+                "inbound_references": [],
+                "age_days": age_days,
+                "has_todo_markers": has_markers,
+            })
+            continue
+
+        inbound = find_markdown_inbound_links(filepath, tracked)
+        stale = age_days is not None and age_days > DOC_STALE_DAYS
+
+        if stale and not inbound:
+            verdict = "deprecate_proposed"
+            proposed = f"{DOC_DEPRECATION_DIR}/{name}"
+            reason = f"Unreferenced and unmodified for {age_days} days"
+        elif is_root:
+            verdict = "relocate_proposed"
+            proposed = _doc_relocation_target(filepath)
+            reason = "Root-level doc outside the conventional root set"
+        else:
+            verdict = "keep"
+            proposed = None
+            reason = "Already filed under a docs path"
+
+        proposals.append({
+            "path": filepath,
+            "verdict": verdict,
+            "reason": reason,
+            "proposed_path": proposed,
+            "inbound_references": inbound,
+            "age_days": age_days,
+            "has_todo_markers": has_markers,
+        })
+
+    return proposals
+
+
+def best_practices_skill_for(filepath: str) -> Optional[str]:
+    """Return the best-practices skill governing a file, or None."""
+    for marker, skill in BEST_PRACTICES_BY_PATH:
+        if filepath.endswith(marker) or marker in filepath:
+            return skill
+    return BEST_PRACTICES_BY_SUFFIX.get(Path(filepath).suffix)
+
+
+def _available_best_practices_skills(skills_root: Optional[Path] = None) -> Set[str]:
+    """Names of best-practices-* skills installed alongside this one."""
+    root = skills_root if skills_root is not None else Path(__file__).resolve().parent.parent
+    if not root.is_dir():
+        return set()
+    return {p.name for p in root.iterdir() if p.is_dir() and p.name.startswith("best-practices-")}
+
+
+def evaluate_best_practices_gate(
+    changed_files: List[str],
+    previous_receipt: Optional[Dict[str, Any]] = None,
+    skills_root: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """Resolve which best-practices skills a cleanup slice must run.
+
+    SKILL.md has required this gate and required the receipt to report it since
+    before any code existed for it. This computes the mapping and the per-skill
+    counts; it reports what must run rather than claiming a run happened.
+    """
+    available = _available_best_practices_skills(skills_root)
+    baseline = {}
+    if previous_receipt:
+        baseline = (previous_receipt.get("best_practices_gate") or {}).get("file_digests") or {}
+
+    per_skill: Dict[str, Dict[str, Any]] = {}
+    not_applicable: List[str] = []
+    file_digests: Dict[str, str] = {}
+
+    for filepath in sorted(set(changed_files)):
+        skill = best_practices_skill_for(filepath)
+        if skill is None:
+            not_applicable.append(filepath)
+            continue
+
+        digest = _working_tree_sha256(filepath)
+        if digest:
+            file_digests[filepath] = digest
+
+        entry = per_skill.setdefault(skill, {
+            "skill": skill,
+            "available": skill in available,
+            "checked": [],
+            "skipped_unchanged": [],
+            "failed": [],
+        })
+
+        if digest and baseline.get(filepath) == digest:
+            entry["skipped_unchanged"].append(filepath)
+        else:
+            entry["checked"].append(filepath)
+
+    unavailable = sorted(s for s, e in per_skill.items() if not e["available"])
+    required = sorted(s for s, e in per_skill.items() if e["checked"])
+
+    return {
+        "contract": "cleanup.best_practices_gate.v1",
+        "status": "requires_run" if required else "satisfied",
+        "required_skills": required,
+        "unavailable_skills": unavailable,
+        "per_skill": [per_skill[s] for s in sorted(per_skill)],
+        "not_applicable": not_applicable,
+        "counts": {
+            "checked": sum(len(e["checked"]) for e in per_skill.values()),
+            "skipped_unchanged": sum(len(e["skipped_unchanged"]) for e in per_skill.values()),
+            "failed": sum(len(e["failed"]) for e in per_skill.values()),
+            "not_applicable": len(not_applicable),
+        },
+        "file_digests": file_digests,
+        "proof_limit": (
+            "mapping_only: this resolves which skills govern the changed files and "
+            "which files changed since the last receipt. It does not execute the "
+            "skills, and never reports a pass the skill did not produce."
+        ),
+    }
 
 
 def generate_cleanup_plan(findings: Dict) -> str:
@@ -1844,6 +2091,59 @@ def generate_cleanup_plan(findings: Dict) -> str:
             plan.append(f"- `{file_info['path']}` - {file_info['status']}: {file_info['reason']}")
         plan.append("")
 
+    # Doc organization proposals
+    organization = findings.get("doc_organization") or []
+    actionable = [p for p in organization if p["verdict"] in {"relocate_proposed", "deprecate_proposed"}]
+    if actionable:
+        plan.append("## Documentation Organization (Proposed)")
+        plan.append("")
+        plan.append(
+            "Each row names where the doc would go and what links to it. A move is "
+            "only safe once every inbound reference is rewritten, so the reference "
+            "list is part of the proposal, not a footnote. Conventional root files "
+            "(README, LICENSE, CONTRIBUTING, SECURITY, ...) are never proposed."
+        )
+        plan.append("")
+        plan.append("| Doc | Verdict | Proposed path | Inbound refs | Age (days) |")
+        plan.append("| --- | --- | --- | --- | --- |")
+        for p in actionable:
+            refs = len(p["inbound_references"])
+            age = p["age_days"] if p["age_days"] is not None else "-"
+            plan.append(
+                f"| `{p['path']}` | {p['verdict']} | `{p['proposed_path']}` | {refs} | {age} |"
+            )
+        plan.append("")
+        for p in actionable:
+            if p["inbound_references"]:
+                plan.append(f"- `{p['path']}` is referenced by: " + ", ".join(
+                    f"`{r}`" for r in p["inbound_references"][:10]
+                ))
+        plan.append("")
+
+    # Best-practices gate
+    gate = findings.get("best_practices_gate") or {}
+    if gate:
+        plan.append("## Best-Practices Gate")
+        plan.append("")
+        plan.append(f"Status: **{gate.get('status')}**. {gate.get('proof_limit', '')}")
+        plan.append("")
+        if gate.get("per_skill"):
+            plan.append("| Skill | Available | Checked | Skipped (unchanged) | Failed |")
+            plan.append("| --- | --- | --- | --- | --- |")
+            for entry in gate["per_skill"]:
+                plan.append(
+                    f"| `{entry['skill']}` | {'yes' if entry['available'] else 'MISSING'} | "
+                    f"{len(entry['checked'])} | {len(entry['skipped_unchanged'])} | "
+                    f"{len(entry['failed'])} |"
+                )
+            plan.append("")
+        if gate.get("unavailable_skills"):
+            plan.append(
+                "Unavailable skills, which must be installed before the gate can pass: "
+                + ", ".join(f"`{s}`" for s in gate["unavailable_skills"])
+            )
+            plan.append("")
+
     # Summary
     plan.append("## Summary")
     plan.append("")
@@ -1852,6 +2152,13 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append(f"- Untracked files: {len(findings.get('untracked_files', []))}")
     plan.append(f"- Lexically unreferenced review candidates: {len(findings.get('dead_files', []))}")
     plan.append(f"- Potentially outdated docs: {len(findings.get('outdated_docs', []))}")
+    plan.append(f"- Doc relocations proposed: {len(actionable)}")
+    gate_counts = (gate or {}).get("counts", {})
+    plan.append(
+        f"- Best-practices gate: {gate_counts.get('checked', 0)} to check, "
+        f"{gate_counts.get('skipped_unchanged', 0)} unchanged, "
+        f"{gate_counts.get('not_applicable', 0)} not applicable"
+    )
     plan.append("")
 
     return "\n".join(plan)
@@ -2034,6 +2341,7 @@ def main(
         "own_cleanup_outputs": own_outputs,
         "dead_files": scan_for_dead_files(reference_index),
         "outdated_docs": scan_for_outdated_docs(),
+        "doc_organization": scan_doc_organization(),
         "ingest_code_evidence": scan_ingest_code_evidence(),
         "cleanup_evidence_artifact": scan_cleanup_evidence_artifact(),
         "project_watchdog": scan_project_watchdog_context(),
@@ -2053,6 +2361,20 @@ def main(
     findings["ingest_proof_limits"] = describe_ingest_proof_limits(
         findings["ingest_code_evidence"]
     )
+    # The best-practices gate covers what this cleanup slice would change:
+    # every dirty tracked path, plus any doc the organization pass proposes to
+    # move. A file nobody is touching needs no re-check.
+    _changed_for_gate = [
+        entry["path"]
+        for entry in parse_porcelain_status(findings["uncommitted_changes"])
+        if entry.get("path")
+    ]
+    _changed_for_gate += [
+        proposal["path"]
+        for proposal in findings["doc_organization"]
+        if proposal["verdict"] in {"relocate_proposed", "deprecate_proposed"}
+    ]
+    findings["best_practices_gate"] = evaluate_best_practices_gate(_changed_for_gate)
     findings["mutation_readiness"] = evaluate_mutation_readiness(
         findings,
         findings["ingest_code_evidence"],
