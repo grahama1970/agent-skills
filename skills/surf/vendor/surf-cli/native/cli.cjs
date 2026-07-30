@@ -2923,6 +2923,9 @@ if (tool === "click" && firstArg) {
     toolArgs.x = parseInt(firstArg, 10);
     toolArgs.y = parseInt(positional[2], 10);
     firstArg = undefined;
+  } else if (toolArgs.selector === undefined) {
+    toolArgs.selector = firstArg;
+    firstArg = undefined;
   }
 }
 
