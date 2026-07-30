@@ -1140,7 +1140,7 @@ def test_stale_unreferenced_doc_is_proposed_for_deprecation():
         tracked={"docs/OLD.md"}, commit_times={"docs/OLD.md": old}, now=now
     )
     assert proposals[0]["verdict"] == "deprecate_proposed"
-    assert proposals[0]["proposed_path"] == "docs/historical/OLD.md"
+    assert proposals[0]["proposed_path"] == "docs/deprecated/OLD.md"
 
 
 def test_doc_already_under_docs_is_kept():
@@ -1182,3 +1182,61 @@ def test_best_practices_gate_never_claims_a_run_happened():
     gate = cleanup.evaluate_best_practices_gate(["a.py"])
     assert "mapping_only" in gate["proof_limit"]
     assert gate["counts"]["failed"] == 0
+
+
+def test_empty_doc_is_flagged_and_never_deleted():
+    import tempfile, os
+    with tempfile.TemporaryDirectory() as d:
+        cwd = os.getcwd()
+        try:
+            os.chdir(d)
+            open("EMPTY.md", "w").close()
+            proposals = cleanup.scan_doc_organization(
+                tracked={"EMPTY.md"}, commit_times={}, now=0.0
+            )
+        finally:
+            os.chdir(cwd)
+    assert proposals[0]["verdict"] == "empty_doc"
+    # the only disposition is a move into docs/deprecated
+    assert proposals[0]["proposed_path"] == "docs/deprecated/EMPTY.md"
+
+
+def test_copy_artifact_filename_is_flagged():
+    proposals = cleanup.scan_doc_organization(
+        tracked={"docs/thing copy.md"}, commit_times={}, now=0.0
+    )
+    assert proposals[0]["verdict"] == "duplicate_copy"
+    assert proposals[0]["proposed_path"].startswith("docs/deprecated/")
+
+
+def test_foreign_repo_doc_is_detected():
+    content = "# Request\n\n* Fork/Repo: `someoneelse/otherproject`\n"
+    slug = cleanup._foreign_repo_reference(content, "docs/REQ.md")
+    assert slug == "someoneelse/otherproject"
+
+
+def test_foreign_repo_ignores_this_repository():
+    ours = list(cleanup._current_repo_slugs())[0]
+    content = f"# Doc\n\nSee https://github.com/{ours} for details.\n"
+    assert cleanup._foreign_repo_reference(content, "docs/X.md") is None
+
+
+def test_no_verdict_ever_proposes_deletion():
+    """Every disposition is a move; the skill has no delete path for docs."""
+    import tempfile, os
+    with tempfile.TemporaryDirectory() as d:
+        cwd = os.getcwd()
+        try:
+            os.chdir(d)
+            open("EMPTY.md", "w").close()
+            proposals = cleanup.scan_doc_organization(
+                tracked={"EMPTY.md", "docs/a copy.md", "DESIGN.md"},
+                commit_times={}, now=0.0,
+            )
+        finally:
+            os.chdir(cwd)
+    for p in proposals:
+        assert "delete" not in p["verdict"]
+        assert "remove" not in p["verdict"]
+        if p["proposed_path"]:
+            assert p["proposed_path"].startswith("docs/")

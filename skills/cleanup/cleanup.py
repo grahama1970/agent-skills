@@ -157,10 +157,21 @@ DOC_RELOCATION_HINTS = (
     ({"deploy", "deployment", "install", "setup", "operations", "runbook"}, "docs/operations"),
 )
 
-DOC_DEPRECATION_DIR = "docs/historical"
+DOC_DEPRECATION_DIR = "docs/deprecated"
 
 # Age past which an unreferenced doc is proposed for deprecation.
 DOC_STALE_DAYS = 365
+
+# Filename shapes produced by a copy rather than authored deliberately.
+DOC_DUPLICATE_PATTERNS = (
+    " copy",
+    " copy 2",
+    " (copy)",
+    " (1)",
+    "-copy",
+    ".orig",
+    ".bak",
+)
 
 # File-extension -> best-practices skill. A cleanup that changes a file is
 # expected to run the skill that governs that file type.
@@ -1766,6 +1777,46 @@ def scan_for_outdated_docs() -> List[Dict[str, str]]:
     return outdated
 
 
+def _current_repo_slugs() -> Set[str]:
+    """Repository identifiers that legitimately name this project."""
+    slugs = {Path.cwd().resolve().name.lower()}
+    success, output = run_command(["git", "remote", "get-url", "origin"], check=False)
+    if success and output.strip():
+        match = re.search(r"[:/]([^/:]+/[^/]+?)(?:\.git)?$", output.strip())
+        if match:
+            slug = match.group(1).lower()
+            slugs.add(slug)
+            slugs.add(slug.split("/")[-1])
+    return slugs
+
+
+def _foreign_repo_reference(content: str, filepath: str) -> Optional[str]:
+    """Return another repo slug this doc is about, if it is about one.
+
+    A document describing a different repository is not documentation of this
+    project; it travelled here. It is never deleted -- it is proposed for
+    docs/deprecated so the history survives and the reader is not misled.
+    """
+    if not content:
+        return None
+    ours = _current_repo_slugs()
+    head = "\n".join(content.splitlines()[:40])
+    counts: Dict[str, int] = {}
+    for match in re.finditer(r"github\.com[:/]([\w.-]+/[\w.-]+?)(?:\.git)?[\s\)\]`,]", head + " "):
+        slug = match.group(1).lower()
+        if slug in ours or slug.split("/")[-1] in ours:
+            continue
+        counts[slug] = counts.get(slug, 0) + 1
+    for match in re.finditer(r"(?:Fork/Repo|Repository|Repo)\s*[:=]\s*`?([\w.-]+/[\w.-]+)`?", head):
+        slug = match.group(1).lower()
+        if slug in ours or slug.split("/")[-1] in ours:
+            continue
+        counts[slug] = counts.get(slug, 0) + 2
+    if not counts:
+        return None
+    return max(counts, key=counts.get)
+
+
 def _doc_relocation_target(filepath: str) -> str:
     """Propose a docs/ home for a root-level doc, from its filename stem."""
     stem = Path(filepath).stem.lower()
@@ -1838,6 +1889,71 @@ def scan_doc_organization(
 
         inbound = find_markdown_inbound_links(filepath, tracked)
         stale = age_days is not None and age_days > DOC_STALE_DAYS
+
+        # Content-shape defects. These do not depend on age: an empty doc or a
+        # stray copy is wrong the day it lands, and waiting a year to say so
+        # leaves a reader trusting a file with nothing in it.
+        stem = Path(filepath).stem
+        is_duplicate = any(pattern in stem for pattern in DOC_DUPLICATE_PATTERNS)
+        # Content verdicts require the file to be present in the working tree.
+        # A tracked path that is absent is a deletion under review, not an
+        # empty document, and must not be reported as one.
+        present = Path(filepath).is_file()
+        body = (content or "").strip()
+        is_empty = present and len(body) == 0
+        heading_only = present and bool(body) and all(
+            not line.strip() or line.lstrip().startswith("#")
+            for line in body.splitlines()
+        )
+        foreign_repo = _foreign_repo_reference(content, filepath) if present else None
+
+        if is_duplicate:
+            proposals.append({
+                "path": filepath,
+                "verdict": "duplicate_copy",
+                "reason": "Filename matches a copy artifact, not a deliberate name",
+                "proposed_path": f"{DOC_DEPRECATION_DIR}/{name}",
+                "inbound_references": inbound,
+                "age_days": age_days,
+                "has_todo_markers": has_markers,
+            })
+            continue
+
+        if is_empty:
+            proposals.append({
+                "path": filepath,
+                "verdict": "empty_doc",
+                "reason": "Tracked document has no content",
+                "proposed_path": f"{DOC_DEPRECATION_DIR}/{name}",
+                "inbound_references": inbound,
+                "age_days": age_days,
+                "has_todo_markers": has_markers,
+            })
+            continue
+
+        if foreign_repo:
+            proposals.append({
+                "path": filepath,
+                "verdict": "foreign_repo_doc",
+                "reason": f"Documents another repository ({foreign_repo}), not this one",
+                "proposed_path": f"{DOC_DEPRECATION_DIR}/{name}",
+                "inbound_references": inbound,
+                "age_days": age_days,
+                "has_todo_markers": has_markers,
+            })
+            continue
+
+        if heading_only:
+            proposals.append({
+                "path": filepath,
+                "verdict": "stub_doc",
+                "reason": "Headings only, no prose — a placeholder that reads as documentation",
+                "proposed_path": f"{DOC_DEPRECATION_DIR}/{name}",
+                "inbound_references": inbound,
+                "age_days": age_days,
+                "has_todo_markers": has_markers,
+            })
+            continue
 
         if stale and not inbound:
             verdict = "deprecate_proposed"
