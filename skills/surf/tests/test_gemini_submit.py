@@ -619,3 +619,78 @@ esac
     payload = json.loads(meta.read_text(encoding="utf-8"))
     assert payload["status"] == "completed"
     assert payload["proof_status"] == "response_proven"
+
+
+def test_gemini_submit_sigterm_preserves_requested_tab_metadata(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    raw = tmp_path / "response.raw.md"
+    meta = tmp_path / "response.meta.json"
+    fake_run = tmp_path / "surf-run.sh"
+
+    request.write_text("Return transport status after waiting.\n", encoding="utf-8")
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  focus.state)
+    printf '{"focusedWindowId":1,"activeTabId":837360924}\\n'
+    ;;
+  gemini_tab)
+    sleep 30
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "timeout",
+            "--kill-after=2s",
+            "1s",
+            "bash",
+            str(GEMINI_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--raw-output",
+            str(raw),
+            "--meta-output",
+            str(meta),
+            "--sentinel",
+            "<<<GEMINI_DONE:test>>>",
+            "--tab-id",
+            "837360925",
+            "--url",
+            "https://gemini.google.com/app/test",
+            "--no-activate",
+            "--stable-polls",
+            "0",
+            "--timeout",
+            "30",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode in {124, -9}
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] in {"running", "interrupted"}
+    assert payload["proof_status"] in {"pending", "interrupted"}
+    assert payload["requested_tab_id"] == "837360925"
+    assert payload["requested_url"] == "https://gemini.google.com/app/test"
+    assert payload["submitted_output"] == str(response) + ".submitted.md"
+    assert payload["sentinel"] == "<<<GEMINI_DONE:test>>>"
