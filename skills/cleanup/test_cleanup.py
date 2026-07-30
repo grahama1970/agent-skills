@@ -202,7 +202,11 @@ class TestCleanup:
         
         plan = cleanup.generate_cleanup_plan(findings)
         
-        self.assert_in("# Cleanup Plan", plan, "Plan should have header")
+        self.assert_in("# Cleanup Report", plan, "Plan should have report header")
+        self.assert_in("Report Summary", plan, "Plan should have report summary")
+        self.assert_in("Source-of-Truth Inventory", plan, "Plan should list sources")
+        self.assert_in("Plan-Ready Next Actions", plan, "Plan should include actions")
+        self.assert_in("Non-Claims", plan, "Plan should state non-claims")
         self.assert_in("Uncommitted Changes", plan, "Plan should have uncommitted changes section")
         self.assert_in("Untracked Files", plan, "Plan should have untracked files section")
         self.assert_in(
@@ -1024,6 +1028,70 @@ class TestCleanup:
             "Out-of-scope candidates should be distinct from dependency blockers",
         )
 
+    def test_script_scanability_flags_missing_script_docstrings(self):
+        """Script readability debt must be detectable without authorizing mutation."""
+        print("\nTesting script scanability missing docstrings...")
+
+        Path("scripts").mkdir(exist_ok=True)
+        Path("scripts/repair.py").write_text("def repair(path):\n    return path\n")
+
+        findings = cleanup.scan_script_scanability(tracked={"scripts/repair.py"})
+
+        self.assert_equal(
+            findings[0]["verdict"],
+            "script_scanability_repair",
+            "Script should be reported as a scanability repair candidate",
+        )
+        self.assert_equal(
+            findings[0]["automatic_cleanup_mutation_allowed"],
+            False,
+            "Scanability findings must not authorize cleanup mutation",
+        )
+        self.assert_in(
+            "missing_file_purpose_docstring",
+            findings[0]["missing"],
+            "Script file should need a purpose docstring",
+        )
+        self.assert_in(
+            "missing_public_function_docstring:repair",
+            findings[0]["missing"],
+            "Public script function should need a useful docstring",
+        )
+
+    def test_script_scanability_accepts_useful_python_docstrings(self):
+        """Useful script and public function docstrings satisfy scanability."""
+        print("\nTesting script scanability accepts useful docs...")
+
+        Path("scripts").mkdir(exist_ok=True)
+        Path("scripts/readable.py").write_text(
+            '"""Repair one fixture record after the operator selects the target."""\n\n'
+            "def repair(path):\n"
+            '    """Return the selected path without changing behavior in this fixture."""\n'
+            "    return path\n"
+        )
+
+        findings = cleanup.scan_script_scanability(tracked={"scripts/readable.py"})
+        self.assert_equal(findings, [], "Useful script docstrings should pass")
+
+    def test_script_scanability_flags_shell_header_and_function_comments(self):
+        """Shell scripts need a useful header and function comments."""
+        print("\nTesting shell script scanability...")
+
+        Path("run.sh").write_text("#!/usr/bin/env bash\nset -e\nrun() {\n  true\n}\n")
+
+        findings = cleanup.scan_script_scanability(tracked={"run.sh"})
+
+        self.assert_in(
+            "missing_file_purpose_comment",
+            findings[0]["missing"],
+            "Shell entrypoint should need a purpose comment",
+        )
+        self.assert_in(
+            "missing_function_comment:run",
+            findings[0]["missing"],
+            "Shell function should need its own comment",
+        )
+
     def test_log_cleanup(self):
         """Test logging cleanup actions"""
         print("\nTesting log_cleanup...")
@@ -1085,6 +1153,9 @@ class TestCleanup:
             self.test_confirm_action_declines_without_a_terminal()
             self.test_phase_receipt_is_resumable()
             self.test_tracked_mutation_reasons_distinguish_verdict_classes()
+            self.test_script_scanability_flags_missing_script_docstrings()
+            self.test_script_scanability_accepts_useful_python_docstrings()
+            self.test_script_scanability_flags_shell_header_and_function_comments()
             self.test_log_cleanup()
             
         finally:
