@@ -149,6 +149,53 @@ def test_kimi_attachment_ui_missing_gets_specific_recovery_packet(tmp_path: Path
     assert "next_command" in packet and packet["next_command"]
 
 
+def test_kimi_conversation_too_long_resubmits_the_round_into_a_fresh_chat(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure=(
+            "Error: Kimi conversation too long: Kimi asked for a new session before answering this round. "
+            "Your conversation with Kimi is getting too long. Try starting a new session."
+        ),
+        prompt_text="Round 3 of the roundtable; use the attached shared packet.",
+        submit_meta={
+            "status": "failed",
+            "failure": "kimi_conversation_too_long",
+            "blocker": "BLOCKED_KIMI_CONVERSATION_TOO_LONG",
+            "proof_status": "conversation_length_limited",
+            "kimi_conversation_too_long": True,
+            "conversation_rotated": True,
+        },
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.KIMI_CONVERSATION_TOO_LONG_BLOCKER
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "conversation_too_long_requires_fresh_kimi_chat"
+    assert "--create-tab" in packet["next_command"]
+    # kimi.submit rejects unknown flags before touching the browser.
+    assert "--project" not in packet["next_command"]
+    assert "fresh Kimi chat" in packet["fallback_instruction"]
+
+
+def test_kimi_conversation_too_long_is_not_misread_as_provider_throttling(tmp_path: Path) -> None:
+    """Kimi's notice also says "try again", which the rate-limit heuristic matches."""
+    haystack = (
+        "your conversation with kimi is getting too long. try starting a new session. please try again later."
+    )
+
+    assert tau_roundtable_worker._looks_kimi_conversation_too_long(haystack, {}) is True
+
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure=haystack,
+        prompt_text="Round 3 of the roundtable.",
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.KIMI_CONVERSATION_TOO_LONG_BLOCKER
+    assert packet["failure_code"] != tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED
+
+
 def test_kimi_attachment_metadata_missing_gets_upload_ui_recovery_packet(tmp_path: Path) -> None:
     bundle = tmp_path / "evidence-bundle.zip"
     bundle.write_bytes(b"PK\x05\x06" + b"\0" * 18)
@@ -255,6 +302,34 @@ def test_missing_sentinel_classification_uses_submit_metadata(tmp_path: Path) ->
     assert packet["auto_retry_allowed"] is False
     assert packet["auto_retry_blocked_reason"] == "missing_local_readable_bundle"
     assert "completion sentinel" in packet["reason"]
+
+
+def test_webgrok_missing_sentinel_recovery_uses_grok_extract_not_generic_page_text(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgrok",
+        failure="Grok response did not contain sentinel: <<<GROK_DONE:TEST>>>",
+        prompt_text="Answer with the sentinel at the end.",
+        submit_meta={
+            "status": "missing_sentinel",
+            "sentinel": "<<<GROK_DONE:TEST>>>",
+            "submitted_to_grok": True,
+            "controlled_tab_id": "837361240",
+        },
+        browser_oracle={"tab_id": "837361240", "conversation_url": "https://grok.com/"},
+    )
+
+    command = packet["next_command"]
+    assert packet["failure_code"] == "missing_sentinel"
+    assert command[:4] == [
+        str(tmp_path / "skills" / "surf" / "run.sh"),
+        "grok.extract",
+        "--tab-id",
+        "837361240",
+    ]
+    assert "--wait" in command
+    assert "surf read" not in " ".join(command)
+    assert "surf text" not in " ".join(command)
 
 
 def test_stale_webgpt_binding_classification_returns_rebind_command(tmp_path: Path) -> None:

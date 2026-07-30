@@ -550,6 +550,10 @@ if [[ "$1" == "grok.submit" ]]; then
     exec "$SKILL_DIR/scripts/grok-submit.sh" "${@:2}"
 fi
 
+if [[ "$1" == "grok.extract" ]]; then
+    exec "$SKILL_DIR/scripts/grok-extract.sh" "${@:2}"
+fi
+
 if [[ "$1" == "claude.submit" ]]; then
     exec python3 "$SKILL_DIR/scripts/claude-submit.py" "${@:2}"
 fi
@@ -660,6 +664,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf webgpt.submit --input request.md --output response.md"
     echo "  surf claude.submit --input request.md --output response.md"
     echo "  surf grok.submit --input request.md --output response.md"
+    echo "  surf grok.extract --tab-id ID --output response.md"
     echo "  surf deepseek.submit --input request.md --output response.md  (Expert mode by default)"
     echo "  surf webgpt.extract --tab-id ID --output response.md"
     echo "  surf webgpt.prompt-preflight --input FILE --json  Block unreadable local-path prompts"
