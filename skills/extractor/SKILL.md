@@ -41,9 +41,9 @@ runtime_self_improvement: basic
 
 # Extractor
 
-This skill is a thin wrapper over the Extractor project. Give it one supported
-file and it delegates route selection, PDF handling, provider choice, artifact
-validation, and terminal status to Extractor.
+This skill is a thin, zero-choice wrapper over the Extractor project. Give it
+one supported file and it delegates route selection, PDF handling, provider
+choice, artifact validation, and terminal status to Extractor.
 
 ## Quick Start
 
@@ -71,7 +71,7 @@ output. Human progress and errors belong on stderr.
 
 Do not choose engines, presets, providers, models, OCR strategy, or pipeline
 stages from this skill. Extractor owns those decisions behind its application
-facade.
+facade and returns `extractor.result.v1` for JSON extraction results.
 
 ## Maintainer Commands
 
