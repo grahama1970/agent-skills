@@ -402,8 +402,8 @@ def test_budget_within_envelope() -> None:
 
 def test_budget_overrun_detected_with_reasons() -> None:
     budget = al.AdaptiveLineageBudget()
-    budget.record_primary_scillm_call(7)
-    budget.record_http_completion(9)
+    budget.record_primary_scillm_call(11)
+    budget.record_http_completion(15)
     budget.record_red_specimen(5)
     budget.record_descendant_generation(3)
     budget.record_blue_artifact(2)
