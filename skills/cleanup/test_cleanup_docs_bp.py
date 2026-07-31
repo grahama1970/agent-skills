@@ -1,0 +1,357 @@
+"""Pytest cases for documentation organization and the best-practices gate.
+
+Split out of test_cleanup.py to keep every file under the 800-line rule from
+/best-practices-python. sanity.sh runs test_cleanup.py's behavioral suite; these
+run under pytest.
+"""
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import cleanup  # noqa: E402
+
+import cleanup_quality  # noqa: E402
+
+def test_conventional_root_docs_are_never_relocated():
+    tracked = {"README.md", "LICENSE.md", "SECURITY.md", "CONTRIBUTING.md"}
+    proposals = cleanup.scan_doc_organization(
+        tracked=tracked, commit_times={}, now=0.0
+    )
+    assert {p["verdict"] for p in proposals} == {"keep_root_conventional"}
+    assert all(p["proposed_path"] is None for p in proposals)
+
+
+def test_root_doc_is_proposed_into_a_docs_home():
+    tracked = {"DESIGN.md"}
+    proposals = cleanup.scan_doc_organization(
+        tracked=tracked, commit_times={}, now=0.0
+    )
+    assert proposals[0]["verdict"] == "relocate_proposed"
+    assert proposals[0]["proposed_path"] == "docs/architecture/DESIGN.md"
+
+
+def test_unknown_root_doc_lands_in_plain_docs_dir():
+    proposals = cleanup.scan_doc_organization(
+        tracked={"WEIRDNAME.md"}, commit_times={}, now=0.0
+    )
+    assert proposals[0]["proposed_path"] == "docs/WEIRDNAME.md"
+
+
+def test_stale_unreferenced_doc_is_proposed_for_deprecation():
+    now = 100_000_000.0
+    old = now - (cleanup.DOC_STALE_DAYS + 10) * 86400
+    proposals = cleanup.scan_doc_organization(
+        tracked={"docs/OLD.md"}, commit_times={"docs/OLD.md": old}, now=now
+    )
+    assert proposals[0]["verdict"] == "deprecate_proposed"
+    assert proposals[0]["proposed_path"] == "docs/deprecated/OLD.md"
+
+
+def test_doc_already_under_docs_is_kept():
+    now = 100_000_000.0
+    proposals = cleanup.scan_doc_organization(
+        tracked={"docs/CURRENT.md"}, commit_times={"docs/CURRENT.md": now}, now=now
+    )
+    assert proposals[0]["verdict"] == "keep"
+
+
+def test_best_practices_mapping_by_suffix_and_path():
+    assert cleanup.best_practices_skill_for("src/app.py") == "best-practices-python"
+    assert cleanup.best_practices_skill_for("ui/Button.tsx") == "best-practices-react"
+    assert cleanup.best_practices_skill_for("core/lib.rs") == "best-practices-rust"
+    assert cleanup.best_practices_skill_for("skills/foo/SKILL.md") == "best-practices-skills"
+    assert cleanup.best_practices_skill_for("data/blob.bin") is None
+
+
+def test_best_practices_gate_counts_and_status(tmp_path):
+    skills_root = tmp_path / "skills"
+    (skills_root / "best-practices-python").mkdir(parents=True)
+    gate = cleanup.evaluate_best_practices_gate(
+        ["a.py", "b.tsx", "c.bin"], skills_root=skills_root
+    )
+    assert gate["status"] == "requires_run"
+    assert gate["counts"]["not_applicable"] == 1
+    assert "best-practices-python" in gate["required_skills"]
+    # react is mapped but not installed in this fixture
+    assert "best-practices-react" in gate["unavailable_skills"]
+
+
+def test_best_practices_gate_is_satisfied_with_no_changed_files():
+    gate = cleanup.evaluate_best_practices_gate([])
+    assert gate["status"] == "satisfied"
+    assert gate["counts"]["checked"] == 0
+
+
+def test_best_practices_gate_never_claims_a_run_happened():
+    gate = cleanup.evaluate_best_practices_gate(["a.py"])
+    assert "mapping_only" in gate["proof_limit"]
+    assert gate["counts"]["failed"] == 0
+
+
+def test_empty_doc_is_flagged_and_never_deleted():
+    import tempfile, os
+    with tempfile.TemporaryDirectory() as d:
+        cwd = os.getcwd()
+        try:
+            os.chdir(d)
+            open("EMPTY.md", "w").close()
+            proposals = cleanup.scan_doc_organization(
+                tracked={"EMPTY.md"}, commit_times={}, now=0.0
+            )
+        finally:
+            os.chdir(cwd)
+    assert proposals[0]["verdict"] == "empty_doc"
+    # the only disposition is a move into docs/deprecated
+    assert proposals[0]["proposed_path"] == "docs/deprecated/EMPTY.md"
+
+
+def test_copy_artifact_filename_is_flagged():
+    proposals = cleanup.scan_doc_organization(
+        tracked={"docs/thing copy.md"}, commit_times={}, now=0.0
+    )
+    assert proposals[0]["verdict"] == "duplicate_copy"
+    assert proposals[0]["proposed_path"].startswith("docs/deprecated/")
+
+
+def test_foreign_repo_doc_is_detected():
+    content = "# Request\n\n* Fork/Repo: `someoneelse/otherproject`\n"
+    slug = cleanup._foreign_repo_reference(content, "docs/REQ.md")
+    assert slug == "someoneelse/otherproject"
+
+
+def test_foreign_repo_ignores_this_repository():
+    ours = list(cleanup._current_repo_slugs())[0]
+    content = f"# Doc\n\nSee https://github.com/{ours} for details.\n"
+    assert cleanup._foreign_repo_reference(content, "docs/X.md") is None
+
+
+def test_no_verdict_ever_proposes_deletion():
+    """Every disposition is a move; the skill has no delete path for docs."""
+    import tempfile, os
+    with tempfile.TemporaryDirectory() as d:
+        cwd = os.getcwd()
+        try:
+            os.chdir(d)
+            open("EMPTY.md", "w").close()
+            proposals = cleanup.scan_doc_organization(
+                tracked={"EMPTY.md", "docs/a copy.md", "DESIGN.md"},
+                commit_times={}, now=0.0,
+            )
+        finally:
+            os.chdir(cwd)
+    for p in proposals:
+        assert "delete" not in p["verdict"]
+        assert "remove" not in p["verdict"]
+        if p["proposed_path"]:
+            assert p["proposed_path"].startswith("docs/")
+
+
+def test_tool_resolved_root_docs_are_protected():
+    """PROJECT_KNOWLEDGE.md is read by /project-knowledge at cwd; never move it."""
+    proposals = cleanup.scan_doc_organization(
+        tracked={"PROJECT_KNOWLEDGE.md"}, commit_times={}, now=0.0
+    )
+    assert proposals[0]["verdict"] == "keep_root_conventional"
+    assert proposals[0]["proposed_path"] is None
+
+
+def test_script_scanability_flags_missing_script_docstrings(tmp_path, monkeypatch):
+    script = tmp_path / "scripts" / "repair.py"
+    script.parent.mkdir()
+    script.write_text("def repair(path):\n    return path\n")
+    monkeypatch.chdir(tmp_path)
+
+    findings = cleanup.scan_script_scanability(tracked={"scripts/repair.py"})
+
+    assert findings[0]["verdict"] == "script_scanability_repair"
+    assert findings[0]["repair_class"] == "readability_only"
+    assert findings[0]["automatic_cleanup_mutation_allowed"] is False
+    assert "missing_file_purpose_docstring" in findings[0]["missing"]
+    assert "missing_public_function_docstring:repair" in findings[0]["missing"]
+
+
+def test_script_scanability_accepts_useful_python_docstrings(tmp_path, monkeypatch):
+    script = tmp_path / "scripts" / "repair.py"
+    script.parent.mkdir()
+    script.write_text(
+        '"""Repair one fixture record after the operator selects the target."""\n\n'
+        "def repair(path):\n"
+        '    """Return the selected path without changing behavior in this fixture."""\n'
+        "    return path\n"
+    )
+    monkeypatch.chdir(tmp_path)
+
+    assert cleanup.scan_script_scanability(tracked={"scripts/repair.py"}) == []
+
+
+def test_script_scanability_flags_shell_header_and_function_comments(tmp_path, monkeypatch):
+    script = tmp_path / "run.sh"
+    script.write_text("#!/usr/bin/env bash\nset -e\nrun() {\n  true\n}\n")
+    monkeypatch.chdir(tmp_path)
+
+    findings = cleanup.scan_script_scanability(tracked={"run.sh"})
+
+    assert "missing_file_purpose_comment" in findings[0]["missing"]
+    assert "missing_function_comment:run" in findings[0]["missing"]
+
+
+def test_public_readiness_synthetic_generic_api_key_still_blocks_triage():
+    item = cleanup.classify_gitleaks_finding(
+        {
+            "RuleID": "generic-api-key",
+            "File": "tests/fixtures/test_keys.py",
+            "StartLine": 12,
+            "Match": 'expected_key = "synthetic"',
+            "Fingerprint": "abc123",
+        },
+        "history",
+    )
+
+    assert item["classification"] == "synthetic_secret_candidate"
+    assert item["blocker"] == "needs_explicit_triage_or_allowlist"
+    assert "allowlist" in item["valid_next_action"]
+
+
+def test_public_readiness_flags_noisy_working_directory_scan(tmp_path, monkeypatch):
+    public_dir = tmp_path / "artifacts" / "cleanup" / "public_readiness"
+    public_dir.mkdir(parents=True)
+    (public_dir / "gitleaks-history.json").write_text("[]")
+    (public_dir / "gitleaks-dir.json").write_text(
+        '[{"RuleID":"generic-api-key","File":"local/runtime/state.json",'
+        '"StartLine":1,"Match":"api_key","Fingerprint":"noise"}]'
+    )
+    monkeypatch.chdir(tmp_path)
+
+    readiness = cleanup.scan_public_readiness(run_scans=False)
+    blocker_ids = {item["id"] for item in readiness["blockers"]}
+
+    assert readiness["status"] == "blocked"
+    assert "scan_scope_noisy" in blocker_ids
+    assert "gitleaks_working_directory_scan_noisy" in blocker_ids
+    assert "github_settings_review_not_established" in blocker_ids
+
+
+def test_cleanup_report_surfaces_public_readiness_blockers():
+    findings = {
+        "root_strays": [],
+        "uncommitted_changes": [],
+        "untracked_files": [],
+        "dead_files": [],
+        "outdated_docs": [],
+        "doc_organization": [],
+        "script_scanability": [],
+        "cleanup_evidence_artifact": {"status": "complete"},
+        "ingest_code_evidence": {},
+        "mutation_readiness": {},
+        "candidate_dependency_evidence": [],
+        "project_watchdog": {},
+        "public_readiness": {
+            "status": "blocked",
+            "public_flip": "blocked",
+            "gitleaks": {
+                "history": {"finding_count": 10},
+                "working_directory": {"finding_count": 30},
+            },
+            "github_settings": {
+                "artifact": "artifacts/cleanup/public_readiness/github-settings.json",
+            },
+            "blockers": [
+                {
+                    "id": "needs_explicit_triage_or_allowlist",
+                    "evidence": "generic-api-key at tests/foo.py:1",
+                    "valid_next_action": "Triage or allowlist synthetic fixture key.",
+                }
+            ],
+            "closure_criteria": ["Fresh gitleaks history receipt exists."],
+        },
+    }
+
+    report = cleanup.generate_cleanup_plan(findings)
+
+    assert "F-005" in report
+    assert "Public-Readiness / Security Cleanup" in report
+    assert "needs_explicit_triage_or_allowlist" in report
+    assert "Fresh gitleaks history receipt exists." in report
+
+
+def test_quality_gate_flags_python_parse_and_configured_ruff(tmp_path, monkeypatch):
+    script = tmp_path / "scripts" / "bad.py"
+    script.parent.mkdir()
+    script.write_text("def broken(:\n    pass\n")
+    (tmp_path / "pyproject.toml").write_text("[tool.ruff]\nline-length = 100\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cleanup_quality,
+        "get_all_tracked_files",
+        lambda: {"scripts/bad.py", "pyproject.toml"},
+    )
+
+    quality = cleanup.scan_quality_gates(run_checks=False)
+    gates = {gate["id"]: gate for gate in quality["gates"]}
+
+    assert quality["status"] == "blocked"
+    assert gates["python_parse"]["status"] == "failed"
+    assert gates["ruff_check"]["status"] in {
+        "missing_required_tool",
+        "not_established",
+    }
+    assert quality["counts"]["blockers"] >= 2
+
+
+def test_quality_gate_runs_bash_syntax_when_selected(tmp_path, monkeypatch):
+    script = tmp_path / "run.sh"
+    script.write_text("#!/usr/bin/env bash\nif true; then\n  echo ok\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(cleanup_quality, "get_all_tracked_files", lambda: {"run.sh"})
+
+    quality = cleanup.scan_quality_gates(run_checks=True)
+    bash_gate = next(gate for gate in quality["gates"] if gate["id"] == "bash_syntax")
+
+    assert bash_gate["status"] == "failed"
+    assert quality["status"] == "blocked"
+
+
+def test_cleanup_report_surfaces_quality_gate_blockers():
+    findings = {
+        "root_strays": [],
+        "uncommitted_changes": [],
+        "untracked_files": [],
+        "dead_files": [],
+        "outdated_docs": [],
+        "doc_organization": [],
+        "script_scanability": [],
+        "cleanup_evidence_artifact": {"status": "complete"},
+        "ingest_code_evidence": {},
+        "mutation_readiness": {},
+        "candidate_dependency_evidence": [],
+        "project_watchdog": {},
+        "public_readiness": {"blockers": []},
+        "quality_gate": {
+            "status": "blocked",
+            "run_checks": False,
+            "counts": {"required": 1, "blockers": 1},
+            "gates": [
+                {
+                    "id": "ruff_check",
+                    "family": "python",
+                    "status": "not_established",
+                    "required": True,
+                    "command": ["ruff", "check", "--no-cache", "."],
+                }
+            ],
+            "blockers": [
+                {
+                    "id": "quality_gate_ruff_check_not_established",
+                    "valid_next_action": "Run the selected quality gate.",
+                }
+            ],
+        },
+    }
+
+    report = cleanup.generate_cleanup_plan(findings)
+
+    assert "F-006" in report
+    assert "Quality Gate Cleanup" in report
+    assert "quality_gate_ruff_check_not_established" in report

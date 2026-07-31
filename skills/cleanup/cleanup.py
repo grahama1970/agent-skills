@@ -40,6 +40,25 @@ from typing import Any, List, Dict, Set, Tuple, Optional
 from dotenv import load_dotenv
 import typer
 
+from cleanup_memory_index import run_memory_indexing
+from cleanup_bp import best_practices_skill_for, evaluate_best_practices_gate
+from cleanup_docs import (
+    DOC_STALE_DAYS,
+    _current_repo_slugs,
+    _foreign_repo_reference,
+    scan_doc_organization,
+)
+from cleanup_public import (
+    append_public_readiness_markdown,
+    classify_gitleaks_finding,
+    scan_public_readiness,
+)
+from cleanup_quality import append_quality_gate_markdown, scan_quality_gates
+from cleanup_worktree import (
+    build_registered_worktree_audit,
+    write_registered_worktree_audit_outputs,
+)
+
 
 load_dotenv(override=False)
 
@@ -2022,6 +2041,10 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
     evidence_status = artifact.get("status", "missing")
     agentic_eval_gate = findings.get("agentic_evals_gate") or {}
     agentic_eval_status = agentic_eval_gate.get("status", "not_applicable")
+    public_readiness = findings.get("public_readiness") or {}
+    public_blockers = public_readiness.get("blockers", [])
+    quality_gate = findings.get("quality_gate") or {}
+    quality_blockers = quality_gate.get("blockers", [])
 
     risk_items = []
     if uncommitted_count:
@@ -2032,14 +2055,19 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         risk_items.append("`[F-003]` Tracked-file candidates lack complete dependency evidence")
     if scanability:
         risk_items.append("`[F-004]` Script scanability gaps make maintenance harder")
+    if public_blockers:
+        risk_items.append("`[F-005]` Public-readiness security blockers prevent a public release claim")
+    if quality_blockers:
+        risk_items.append("`[F-006]` Quality-gate blockers prevent a proven cleanup slice")
     if agentic_eval_status == "blocked":
-        risk_items.append("`[F-005]` Target skill agentic eval is missing or not READY")
+        risk_items.append("`[F-007]` Target skill agentic eval is missing or not READY")
     if not risk_items:
         risk_items.append("No high-risk cleanup finding was produced by this assessment.")
 
     has_findings = any([
         root_strays_count, uncommitted_count, untracked_count, dead_count,
-        outdated_count, scanability, agentic_eval_status == "blocked",
+        outdated_count, scanability, public_blockers, quality_blockers,
+        agentic_eval_status == "blocked",
     ])
     overall = "Needs Changes" if has_findings else "Partially Verified"
 
@@ -2054,14 +2082,18 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
             "execution is limited to untracked junk paths that clear provenance; "
             "tracked files, root strays, artifacts, documentation findings, and "
             "script scanability repairs require explicit review or a separate "
-            "repair slice."
+            "repair slice. Public-readiness findings require deterministic "
+            "gitleaks and maintainer-setting receipts before a public-release "
+            "claim, and quality-gate findings require scoped parse/lint/type/test "
+            "receipts before a cleanup slice is treated as proven."
         ),
         "",
         (
             "**Evidence Basis:** The report uses git status, tracked/untracked "
             "file inventory, lexical reference scans, cleanup evidence artifacts, "
             "ingest markers, project-watchdog state, documentation scans, and "
-            "script scanability checks where available."
+            "script scanability, public-readiness, and quality-gate checks where "
+            "available."
         ),
         "",
         "**Highest-Risk Issues:**",
@@ -2076,17 +2108,19 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         "1. `[A-001]` Run or review `--worktree-audit` before mutating a dirty repository.",
         "2. `[A-002]` Refresh `.cleanup-evidence.json` before proposing tracked-file moves.",
         "3. `[A-003]` Handle script scanability as readability-only documentation repair.",
+        "4. `[A-004]` Resolve public-readiness blockers before making a public-release claim.",
+        "5. `[A-005]` Run selected quality gates for the cleanup slice.",
         "",
         (
             "**Non-Claims:** This report does not prove unused code, runtime "
-            "safety, release readiness, semantic correctness, or that any tracked "
-            "file is safe to delete."
+            "safety, public-release readiness, semantic correctness, or that any "
+            "tracked file is safe to delete."
         ),
         "",
         "## Scope",
         "",
-        "- Reviewed: repository file inventory, cleanup candidates, evidence states, documentation staleness, script scanability, and mutation authority.",
-        "- Not reviewed: product correctness, full runtime behavior, external service health, semantic code ownership, and human acceptance of moves or repairs.",
+        "- Reviewed: repository file inventory, cleanup candidates, evidence states, documentation staleness, script scanability, public-readiness blockers, quality-gate blockers, and mutation authority.",
+        "- Not reviewed: product correctness, full runtime behavior, external service health, semantic code ownership, maintainer acceptance of GitHub settings, and human acceptance of moves or repairs.",
         "- Mutation policy: only untracked junk with per-path provenance may be removed by `--execute`; all other classes require explicit review or a separate repair slice.",
         "",
         "## Source-of-Truth Inventory",
@@ -2100,6 +2134,8 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         "| S-005 | `.ingest-code.json` | aggregate ingest marker | status shown below | context only | Aggregate counters are not per-file safety evidence |",
         "| S-006 | documentation and script scans | local static scan | fresh for this run | doc/readability findings | Findings require review before repair |",
         "| S-007 | `$agentic-evals` report | local fixture runner | fresh for this run | target skill eval readiness | Fixture smoke does not prove semantic correctness or live service behavior |",
+        "| S-008 | gitleaks/GitHub readiness receipts | local security/readiness artifacts | status shown below | public-readiness blockers | Missing receipts block release claims |",
+        "| S-009 | project-native quality gates | local validation commands | status shown below | parse/lint/type/test blockers | Missing selected receipts block cleanup proof |",
         "",
         "## Finding Index",
         "",
@@ -2109,7 +2145,9 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         f"| F-002 | {'Needs Decision' if root_strays_count else 'Partially Verified'} | `{root_strays_count}` root strays | Ask owner before moving or archiving | Does not authorize mutation |",
         f"| F-003 | {'Blocked' if dead_count and evidence_status != 'complete' else 'Partially Verified'} | `{dead_count}` lexical candidates; evidence `{evidence_status}` | Refresh per-candidate evidence and run readiness checks | Does not prove unused code |",
         f"| F-004 | {'Needs Changes' if scanability else 'Partially Verified'} | `{len(scanability)}` script scanability candidates | Apply readability-only repair slice | Does not prove behavior is wrong |",
-        f"| F-005 | {'Blocked' if agentic_eval_status == 'blocked' else 'Partially Verified'} | agentic eval `{agentic_eval_status}`; readiness `{agentic_eval_gate.get('readiness', 'n/a')}` | Run or repair `fixtures/agentic_eval.json` with `$agentic-evals` | Does not prove full release readiness |",
+        f"| F-005 | {'Blocked' if public_blockers else 'Partially Verified'} | `{len(public_blockers)}` public-readiness blockers | Triage gitleaks findings and maintainer settings receipts | Does not prove public release safety |",
+        f"| F-006 | {'Blocked' if quality_blockers else 'Partially Verified'} | `{len(quality_blockers)}` quality-gate blockers | Run `--quality-gate` or mark missing gates not applicable with rationale | Does not replace full CI |",
+        f"| F-007 | {'Blocked' if agentic_eval_status == 'blocked' else 'Partially Verified'} | agentic eval `{agentic_eval_status}`; readiness `{agentic_eval_gate.get('readiness', 'n/a')}` | Run or repair `fixtures/agentic_eval.json` with `$agentic-evals` | Does not prove semantic readiness |",
         "",
     ])
 
@@ -2123,6 +2161,8 @@ def generate_cleanup_plan(findings: Dict) -> str:
     append_cleanup_report_preamble(plan, findings)
 
     scanability = findings.get("script_scanability") or []
+    public_readiness = findings.get("public_readiness") or {}
+    quality_gate = findings.get("quality_gate") or {}
     evidence_status = (findings.get("cleanup_evidence_artifact") or {}).get("status", "missing")
 
     ingest_evidence = findings.get("ingest_code_evidence", {})
@@ -2314,6 +2354,9 @@ def generate_cleanup_plan(findings: Dict) -> str:
         )
         plan.append("")
 
+    append_public_readiness_markdown(plan, public_readiness)
+    append_quality_gate_markdown(plan, quality_gate)
+
     uncommitted_count = len(findings.get("uncommitted_changes", []))
     root_strays_count = len(findings.get("root_strays", []))
 
@@ -2334,12 +2377,18 @@ def generate_cleanup_plan(findings: Dict) -> str:
         plan.append(
             "- `Blocked`: target skill agentic eval is missing or did not reach `READY`."
         )
+    if public_readiness.get("blockers"):
+        plan.append("- `Blocked`: public-readiness security triage has unresolved blockers.")
+    if quality_gate.get("blockers"):
+        plan.append("- `Blocked`: selected quality gates are missing, failed, or not established.")
     if not any([
         evidence_status != "complete",
         uncommitted_count,
         root_strays_count,
         scanability,
         agentic_eval_gate.get("status") == "blocked",
+        public_readiness.get("blockers"),
+        quality_gate.get("blockers"),
     ]):
         plan.append("- No outstanding cleanup blocker was detected by this report scope.")
     plan.append("")
@@ -2352,6 +2401,8 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append("| A-002 | F-003 | Refresh per-candidate cleanup evidence | project agent | `.cleanup-evidence.json` | artifact schema loads and candidate verdicts are present | ingest-code available | P1 |")
     plan.append("| A-003 | F-004 | Add readability-only script docstrings/comments | project agent | listed script files | parse/compile plus help or narrow sanity proof passes | explicit readability slice | P2 |")
     plan.append("| A-004 | F-005 | Repair or add `fixtures/agentic_eval.json` and rerun `$agentic-evals` | project agent | target skill eval fixture | agentic eval report readiness is `READY` | agentic-evals available | P0 |")
+    plan.append("| A-005 | Public-readiness | Triage gitleaks and GitHub settings blockers | maintainer/project agent | public-release evidence | findings are triaged or allowlisted with maintainer settings receipt | explicit public-readiness slice | P0 |")
+    plan.append("| A-006 | Quality gate | Run or establish project-native parse/lint/type/test gates | project agent | quality receipt | selected gates pass or blockers are explicit | explicit quality-gate slice | P0 |")
     plan.append("")
 
     plan.append("## Non-Claims")
@@ -2361,6 +2412,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append("- This report does not prove runtime, release, UI, compliance, or production readiness.")
     plan.append("- Script scanability findings do not prove behavior is wrong; they identify readability debt for humans and agents.")
     plan.append("- Agentic eval fixture success proves local declared command expectations only; it is not semantic or live-service proof.")
+    plan.append("- Public-readiness and quality-gate findings are scoped evidence; they do not change GitHub visibility or claim full CI readiness.")
     plan.append("")
 
     # Summary
@@ -2373,6 +2425,8 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append(f"- Potentially outdated docs: {len(findings.get('outdated_docs', []))}")
     plan.append(f"- Script scanability repairs proposed: {len(scanability)}")
     plan.append(f"- Agentic eval gate: {agentic_eval_gate.get('status', 'not_applicable')}")
+    plan.append(f"- Public-readiness blockers: {len(public_readiness.get('blockers', []))}")
+    plan.append(f"- Quality-gate blockers: {len(quality_gate.get('blockers', []))}")
     plan.append("")
 
     return "\n".join(plan)
@@ -2512,7 +2566,11 @@ def main(
     plan: bool = typer.Option(False, "--plan", help="Generate a Cleanup Report markdown file"),
     execute: bool = typer.Option(False, "--execute", help="Perform cleanup actions (with confirmation)"),
     worktree_audit: bool = typer.Option(False, "--worktree-audit", help="Write a commit-safe dirty worktree ownership/risk audit"),
+    registered_worktree_audit: bool = typer.Option(False, "--registered-worktree-audit", help="Write an all-registered-worktree rescue/prune audit"),
     script_scanability: bool = typer.Option(False, "--script-scanability", help="Run only the non-mutating script scanability pass"),
+    public_readiness: bool = typer.Option(False, "--public-readiness", help="Run only the non-mutating public-readiness/security cleanup lane"),
+    quality_gate: bool = typer.Option(False, "--quality-gate", help="Run only the non-mutating project-native quality gate lane"),
+    memory_index: bool = typer.Option(False, "--memory-index", help="Run ingest-code --treesitter and write a local indexing receipt"),
     force: bool = typer.Option(False, "--force", help="Skip confirmation prompts for junk removal only; cannot authorize any other mutation class"),
     output: str = typer.Option("CLEANUP_PLAN.md", "--output", help="Output file for plan"),
     receipt: str = typer.Option(DEFAULT_RECEIPT_PATH, "--receipt", help="Path for the resumable phase receipt"),
@@ -2541,6 +2599,15 @@ def main(
             log_warning(f"High-risk dirty entries: {audit['summary']['high_risk']}")
         return
 
+    if registered_worktree_audit:
+        audit = build_registered_worktree_audit()
+        paths = write_registered_worktree_audit_outputs(audit, output)
+        log_info(f"Registered worktree audit JSON written to: {paths['json']}")
+        log_info(f"Registered worktree audit Markdown written to: {paths['markdown']}")
+        if audit["summary"].get("blockers", 0):
+            log_warning(f"Registered worktree blockers: {audit['summary']['blockers']}")
+        return
+
     if script_scanability:
         print(json.dumps({
             "script_scanability": scan_script_scanability(),
@@ -2551,6 +2618,19 @@ def main(
                 "or a narrow sanity command"
             ),
         }, indent=2, default=str))
+        return
+
+    if public_readiness:
+        print(json.dumps(scan_public_readiness(run_scans=True), indent=2, default=str))
+        return
+
+    if quality_gate:
+        print(json.dumps(scan_quality_gates(run_checks=True), indent=2, default=str))
+        return
+
+    if memory_index:
+        receipt_data = run_memory_indexing(dry_run=dry_run, output=output)
+        print(json.dumps(receipt_data, indent=2, default=str))
         return
 
     log_info("Starting assessment...")
@@ -2574,7 +2654,10 @@ def main(
         "own_cleanup_outputs": own_outputs,
         "dead_files": scan_for_dead_files(reference_index),
         "outdated_docs": scan_for_outdated_docs(),
+        "doc_organization": scan_doc_organization(),
         "script_scanability": scan_script_scanability(),
+        "public_readiness": scan_public_readiness(run_scans=False),
+        "quality_gate": scan_quality_gates(run_checks=False),
         "ingest_code_evidence": scan_ingest_code_evidence(),
         "cleanup_evidence_artifact": scan_cleanup_evidence_artifact(),
         "project_watchdog": scan_project_watchdog_context(),
@@ -2695,6 +2778,8 @@ def main(
         log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
         log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
         log_info(f"Script scanability repairs: {len(findings['script_scanability'])}")
+        log_info(f"Public-readiness blockers: {len(findings['public_readiness'].get('blockers', []))}")
+        log_info(f"Quality-gate blockers: {len(findings['quality_gate'].get('blockers', []))}")
         log_info("=" * 50)
 
         log_info("Starting cleanup...")
@@ -2721,6 +2806,8 @@ def main(
     log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
     log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
     log_info(f"Script scanability repairs: {len(findings['script_scanability'])}")
+    log_info(f"Public-readiness blockers: {len(findings['public_readiness'].get('blockers', []))}")
+    log_info(f"Quality-gate blockers: {len(findings['quality_gate'].get('blockers', []))}")
     log_info("=" * 50)
     for phase_name, state in findings["mutation_readiness"]["phases"].items():
         log_info(f"{phase_name}: {state}")
@@ -2730,7 +2817,11 @@ def main(
     log_info("Use --dry-run for JSON output")
     log_info("Use --plan to generate a cleanup plan")
     log_info("Use --worktree-audit to classify dirty worktree entries before commit")
+    log_info("Use --registered-worktree-audit to audit every registered secondary worktree")
     log_info("Use --script-scanability to run only the script readability pass")
+    log_info("Use --public-readiness to run only the security/public-readiness pass")
+    log_info("Use --quality-gate to run only selected parse/lint/type/test checks")
+    log_info("Use --memory-index to refresh ingest-code search artifacts")
     log_info("Use --execute to remove cleared untracked junk (with confirmation)")
     log_info("Use --execute --force to skip junk confirmation prompts")
     log_info("Root artifacts, root strays, and tracked candidates are review-only")

@@ -52,13 +52,22 @@ This skill performs a deep assessment of the codebase to identify technical debt
   human or agent to scan because they lack useful file-purpose, usage,
   side-effect, function, or class documentation. This is readability debt, not
   unused-code evidence.
+- **Public-readiness/security cleanup**: `--public-readiness` preserves
+  gitleaks and GitHub settings blockers for maintainer triage without changing
+  repository visibility or allowlists automatically.
+- **Quality-gate cleanup**: `--quality-gate` runs selected project-native
+  parse, lint, type, and test gates when available and reports missing or
+  unestablished gates as scoped blockers.
+- **Memory-index cleanup**: `--memory-index` invokes `$ingest-code --treesitter`
+  and writes a local searchability/offline-artifact receipt for project agents.
 - **Evidence-first Markdown report**: `--plan` writes a prose-first cleanup
   report that follows `$best-practices-report`: summary, scope,
   source-of-truth inventory, finding index, outstanding/unknowns,
   plan-ready next actions, and non-claims. It must not present cleanup counts as
   dashboard health or readiness claims.
-- **Worktree triage**: Classifies dirty git entries into commit/archive/review
-  buckets before any attempt to clean or commit a large mixed worktree
+- **Worktree triage**: Classifies current dirty git entries into
+  commit/archive/review buckets, and `--registered-worktree-audit` enumerates
+  every `git worktree list` registration for rescue/prune planning
 - **Dependency-safe quarantine**: Treats untracked source/config files as
   possible runtime dependencies of tracked code until import/readiness checks
   prove otherwise
@@ -109,6 +118,10 @@ Each mutation class carries its own evidence requirement:
 | `junk_untracked_removal` | untracked status + junk pattern + no literal reference from a tracked file | allowed when candidates clear provenance |
 | `tracked_file_mutation` | per-candidate evidence from `.cleanup-evidence.json` + project-native before/after readiness proof | blocked until both are present |
 | `script_scanability_repair` | explicit readability cleanup request + parse/compile + script `--help` or narrow sanity proof | non-mutating assessment by default; repair as separate slice |
+| `public_readiness_security_triage` | explicit public-readiness request + gitleaks history receipt + per-finding triage/allowlist + narrowed working-dir scan + maintainer GitHub settings inventory | non-mutating assessment by default; blocks public-release claims until receipts exist |
+| `quality_gate_validation` | explicit quality-gate request + scoped project-native parse/lint/type/test receipts | non-mutating assessment by default; blocks proof claims until selected gates run |
+| `memory_index_refresh` | explicit memory-index request + ingest-code receipt + `.ingest-code.json` + local artifact paths | non-cleanup mutation; indexes for project-agent recall/search |
+| `registered_worktree_rescue_prune` | explicit rescue/prune request + dirty secondary audit + active-process exclusion + pushed rescue branch receipt + clean status proof before remove | non-mutating audit by default; blocks prune/remove until rescue proof exists |
 | `agentic_evaluation` | target skill `fixtures/agentic_eval.json` run through `$agentic-evals` with `readiness: READY` | complete, blocked, or not_applicable |
 | `root_stray_mutation` | human owner decision | review-only |
 | `artifact_archive` | human owner decision | review-only |
@@ -179,36 +192,41 @@ never per-file safety evidence. Every run states these limits explicitly:
    per candidate, including script scanability repair rows.
 3. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown ownership/risk
    buckets for dirty files so agents do not blindly stage unrelated work.
-4. **Repo-of-record declaration**: Identify the live project checkout, branch,
+4. **Registered worktree rescue audit** (`--registered-worktree-audit`):
+   Enumerate all worktree registrations, mark `/tmp`, detached, prunable,
+   active, dirty, and clean removal candidates, and emit rescue/prune commands.
+5. **Repo-of-record declaration**: Identify the live project checkout, branch,
    dirty inventory, and any secondary clean worktree used only for commit
    isolation.
-5. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
+6. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
    run the project's easy sanity command before moving source-like files.
-6. **Project-watchdog coordination** (`$project-watchdog`): Read the shared
+7. **Project-watchdog coordination** (`$project-watchdog`): Read the shared
    watchdog registry and state. If the current repo is registered and both the
    global and project state are `active`, cleanup execution is blocked until
    watchdog dispatch/routing state is coordinated or paused by an authorized
    operator. This check is read-only; cleanup must not query or resolve GitHub
    issues, acquire leases, or run watchdog ticks.
-7. **Code evidence** (`$ingest-code`): Only required to unblock tracked-file
-   mutation, never to run assessment. Run
-   `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
+8. **Code evidence / searchability** (`$ingest-code`): Only required to unblock
+   tracked-file mutation, never to run assessment. Run `--memory-index` to
+   invoke `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`,
+   refreshing `.ingest-code.json`, `.cleanup-evidence.json`, and code-symbol
+   JSONL artifacts where supported.
    If this leaves a completed marker with zero scanned files or a disabled code
    index, treat the marker as degraded and rely on `.cleanup-evidence.json` for
    local dependency analysis only.
-8. **Agentic eval gate** (`$agentic-evals`): When cleanup is invoked from a
+9. **Agentic eval gate** (`$agentic-evals`): When cleanup is invoked from a
    skill directory, run `fixtures/agentic_eval.json` through `$agentic-evals`
    before reporting completion. A missing fixture, invalid report, non-zero
    runner exit, or readiness other than `READY` is a blocked cleanup state.
    Writing modes store the eval report under
    `artifacts/cleanup/agentic-evals/<skill>.json`; `--dry-run` returns the same
    gate data inline without writing the receipt file.
-9. **Execution** (`--execute`): Perform authorized mutations with confirmation:
+10. **Execution** (`--execute`): Perform authorized mutations with confirmation:
    - Remove only untracked junk paths that cleared per-path provenance
      (`--force` skips the prompt, not the provenance check)
    - Keep root strays, artifacts, and tracked candidates review-only
    - Log all actions to `local/CLEANUP_LOG.md` and the phase receipt
-10. **Script scanability repair**: When the requested cleanup slice is explicitly
+11. **Script scanability repair**: When the requested cleanup slice is explicitly
    readability repair, add only non-behavioral documentation such as module
    docstrings, usage notes, side-effect notes, and useful function/class
    docstrings. Do not change script control flow, flags, imports, IO behavior,
@@ -216,7 +234,16 @@ never per-file safety evidence. Every run states these limits explicitly:
    slice with parse/compile plus each touched script's `--help`, entrypoint
    smoke, or narrow sanity command, then commit separately from deletion or
    archive cleanup.
-11. **Post-cleanup proof**: Rerun the same sanity command, the target skill's
+12. **Public-readiness/security triage**: For an explicit public-readiness
+   slice, run `--public-readiness`, preserve artifacts, triage gitleaks history
+   findings, narrow noisy working-directory scans, and require maintainer
+   review for GitHub visibility/security/reporting settings. See
+   `references/public-readiness-security.md`.
+13. **Quality-gate validation**: For an explicit validation slice, run
+   `--quality-gate` and preserve the receipt. Missing configured tools,
+   unexecuted required gates, or failed gates remain blockers. See
+   `references/quality-gates.md`.
+14. **Post-cleanup proof**: Rerun the same sanity command, the target skill's
    `$agentic-evals` fixture, and relevant `best-practices-*` checks for changed
    files, then commit/push only the coherent cleanup slice.
 
@@ -228,15 +255,23 @@ never per-file safety evidence. Every run states these limits explicitly:
 3. Run `bash .pi/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
 4. Run `bash .pi/skills/cleanup/run.sh --script-scanability` to run only the
    non-mutating script readability pass.
-5. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
-6. If a clean worktree is needed for commit isolation, record both paths in the
+5. Run `bash .pi/skills/cleanup/run.sh --public-readiness` to run only the
+   non-mutating public-readiness/security lane.
+6. Run `bash .pi/skills/cleanup/run.sh --quality-gate` for the selected
+   non-mutating quality-gate lane.
+7. Run `bash .pi/skills/cleanup/run.sh --memory-index` for Memory
+   searchability and local offline code-symbol artifacts.
+8. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
+9. Use `--registered-worktree-audit` for stray secondary worktrees; review the
+   audit before rescue/prune.
+10. If a clean worktree is needed for commit isolation, record both paths in the
    plan: the live repo of record and the temporary commit worktree.
-7. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
-8. Use `--force` only to skip the confirmation prompt for junk removal. It
+11. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
+12. Use `--force` only to skip the confirmation prompt for junk removal. It
    cannot bypass per-path provenance or authorize any other mutation class.
-9. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
+13. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
    with `--receipt`) to see which phase blocked and how to resume it.
-10. For a skill target, read
+14. For a skill target, read
     `artifacts/cleanup/agentic-evals/<skill>.json` to inspect the `$agentic-evals`
     report that made `agentic_evaluation` complete or blocked.
 
@@ -270,6 +305,17 @@ cleanup does not edit `.gitignore`.
   scanability gaps only as an explicit readability slice. Repairs add useful
   docstrings/comments and CLI descriptions without changing code behavior, and
   must be proven with parse/compile plus script help or a narrow sanity command.
+- **Public-readiness is blocked until proven**: Cleanup may report public-review
+  preparation, but must not claim a repository is safe to make public until
+  gitleaks history findings, noisy dir scans, and GitHub settings review have
+  deterministic receipts. Cleanup never changes GitHub visibility or remote
+  settings without explicit maintainer authority.
+- **Quality gates are scoped proof**: Cleanup may run selected parse, lint,
+  format-check, typecheck, and test gates, but must not claim full CI or release
+  readiness from a narrower quality-gate receipt.
+- **Registered worktree rescue is fail-closed**: Dirty secondary worktrees block
+  prune/remove until a pushed rescue branch and fresh status/removal receipt
+  exist. Active cwd ownership excludes that worktree from automation.
 - **Root artifacts are review-only**: Binary/media files at project root may be
   runtime inputs and are never moved automatically.
 - **Evidence must match the mutation**: A mutation class is authorized only by
@@ -341,7 +387,11 @@ cleanup does not edit `.gitignore`.
 | `--dry-run` | Print JSON findings without making changes |
 | `--plan` | Generate a `$best-practices-report`-style Cleanup Report markdown file |
 | `--worktree-audit` | Generate JSON + Markdown dirty-worktree buckets for commit-safe triage |
+| `--registered-worktree-audit` | Generate JSON + Markdown all-registered-worktree rescue/prune plan |
 | `--script-scanability` | Run only the non-mutating script readability scan |
+| `--public-readiness` | Run only the non-mutating public-readiness/security lane |
+| `--quality-gate` | Run only the non-mutating project-native quality-gate lane |
+| `--memory-index` | Run `$ingest-code --treesitter` and write `artifacts/cleanup/memory-index-receipt.json` |
 | `--execute` | Remove untracked junk paths that cleared per-path provenance |
 | `--force` | Skip the junk confirmation prompt only; cannot bypass provenance or authorize another class |
 | `--output <file>` | Specify output file for plan (default: CLEANUP_PLAN.md) |

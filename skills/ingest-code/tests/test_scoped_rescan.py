@@ -158,10 +158,21 @@ def test_treesitter_store_resolves_relative_scan_roots(monkeypatch, tmp_path: Pa
     monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
 
     samples: list[dict[str, str]] = []
-    stored = ingest_code._store_treesitter_symbols_for_directory(Path("repo"), Path("repo"), "test", samples)
+    artifact = tmp_path / "symbols.jsonl"
+    artifact.write_text("")
+    stored = ingest_code._store_treesitter_symbols_for_directory(
+        Path("repo"),
+        Path("repo"),
+        "test",
+        samples,
+        local_artifact_path=artifact,
+    )
 
     assert stored == 1
     assert samples[0]["name"] == "app"
+    local_records = [json.loads(line) for line in artifact.read_text().splitlines()]
+    assert local_records[0]["symbol_name"] == "app"
+    assert local_records[0]["problem"] == "What is app in app.py?"
 
 
 def test_rescan_writes_fresh_marker_with_treesitter(monkeypatch, tmp_path: Path) -> None:
@@ -177,7 +188,9 @@ def test_rescan_writes_fresh_marker_with_treesitter(monkeypatch, tmp_path: Path)
     monkeypatch.setattr(
         ingest_code,
         "_store_treesitter_symbols_for_directory",
-        lambda scan_root, codebase_root, scope, verification_samples: 2,
+        lambda scan_root, codebase_root, scope, verification_samples, local_artifact_path=None: (
+            local_artifact_path.write_text('{"symbol_name": "app"}\n'), 2
+        )[1],
     )
 
     ingest_code.rescan(
@@ -200,3 +213,5 @@ def test_rescan_writes_fresh_marker_with_treesitter(monkeypatch, tmp_path: Path)
     assert status["code_index"]["treesitter"] is True
     assert status["code_index"]["symbols_stored"] == 2
     assert status["completed_scan_roots"] == [str(repo.resolve())]
+    assert status["local_artifacts"]["code_symbols_written"] == 1
+    assert status["local_artifacts"]["code_symbols_jsonl"].endswith("code-symbols.jsonl")
