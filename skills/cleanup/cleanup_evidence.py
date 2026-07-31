@@ -660,6 +660,10 @@ def build_phase_receipt(
                 1 for p in findings.get("doc_organization", [])
                 if p.get("verdict") == "deprecate_proposed"
             ),
+            "script_scanability_candidates": len(findings.get("script_scanability", [])),
+            "public_readiness_blockers": len(
+                (findings.get("public_readiness") or {}).get("blockers", [])
+            ),
         },
         "best_practices_gate": findings.get("best_practices_gate", {}),
         "actions_taken": actions_taken or [],
@@ -677,5 +681,4 @@ def write_phase_receipt(receipt: Dict[str, Any], receipt_path: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(receipt, indent=2, default=str))
     return path
-
 

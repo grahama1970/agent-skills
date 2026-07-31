@@ -24,6 +24,7 @@ complies:
   - best-practices-skills
   - best-practices-python
   - best-practices-report
+  - best-practices-security
 ---
 
 # Cleanup Skill
@@ -52,6 +53,9 @@ This skill performs a deep assessment of the codebase to identify technical debt
   human or agent to scan because they lack useful file-purpose, usage,
   side-effect, function, or class documentation. This is readability debt, not
   unused-code evidence.
+- **Public-readiness/security cleanup**: Flags unresolved gitleaks history,
+  noisy working-directory scans, and missing GitHub settings review before any
+  public-release claim. Details: `references/public-readiness-security.md`.
 - **Evidence-first Markdown report**: `--plan` writes a prose-first cleanup
   report that follows `$best-practices-report`: summary, scope,
   source-of-truth inventory, finding index, outstanding/unknowns,
@@ -104,6 +108,7 @@ Each mutation class carries its own evidence requirement:
 | `junk_untracked_removal` | untracked status + junk pattern + no literal reference from a tracked file | allowed when candidates clear provenance |
 | `tracked_file_mutation` | per-candidate evidence from `.cleanup-evidence.json` + project-native before/after readiness proof | blocked until both are present |
 | `script_scanability_repair` | explicit readability cleanup request + parse/compile + script `--help` or narrow sanity proof | non-mutating assessment by default; repair as separate slice |
+| `public_readiness_security_triage` | explicit public-readiness request + gitleaks history receipt + per-finding triage/allowlist + narrowed working-dir scan + maintainer GitHub settings inventory | non-mutating assessment by default; blocks public-release claims until receipts exist |
 | `root_stray_mutation` | human owner decision | review-only |
 | `artifact_archive` | human owner decision | review-only |
 
@@ -165,6 +170,9 @@ never per-file safety evidence. Every run states these limits explicitly:
    - Outdated documentation files
    - Script scanability gaps → non-mutating readability candidates for
      file-purpose, usage, side-effect, function, or class documentation
+   - Public-readiness blockers → non-mutating security/readiness candidates for
+     gitleaks history triage, noisy working-directory scans, and GitHub
+     visibility/security/reporting review
 2. **Planning** (`--plan`): Generate a **Cleanup Report** markdown file that
    complies with `$best-practices-report`: top summary, scope,
    source-of-truth inventory, finding index, detailed evidence sections,
@@ -203,7 +211,12 @@ never per-file safety evidence. Every run states these limits explicitly:
    slice with parse/compile plus each touched script's `--help`, entrypoint
    smoke, or narrow sanity command, then commit separately from deletion or
    archive cleanup.
-10. **Post-cleanup proof**: Rerun the same sanity command and relevant
+10. **Public-readiness/security triage**: For an explicit public-readiness
+   slice, run `--public-readiness`, preserve artifacts, triage gitleaks history
+   findings, narrow noisy working-directory scans, and require maintainer review
+   for GitHub visibility/security/reporting settings. See
+   `references/public-readiness-security.md`.
+11. **Post-cleanup proof**: Rerun the same sanity command and relevant
    `best-practices-*` checks for changed files, then commit/push only the
    coherent cleanup slice.
 
@@ -215,32 +228,28 @@ never per-file safety evidence. Every run states these limits explicitly:
 3. Run `bash .pi/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
 4. Run `bash .pi/skills/cleanup/run.sh --script-scanability` to run only the
    non-mutating script readability pass.
-5. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
-6. If a clean worktree is needed for commit isolation, record both paths in the
+5. Run `bash .pi/skills/cleanup/run.sh --public-readiness` to run only the
+   non-mutating public-readiness/security lane.
+6. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
+7. If a clean worktree is needed for commit isolation, record both paths in the
    plan: the live repo of record and the temporary commit worktree.
-7. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
-8. Use `--force` only to skip the confirmation prompt for junk removal. It
+8. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
+9. Use `--force` only to skip the confirmation prompt for junk removal. It
    cannot bypass per-path provenance or authorize any other mutation class.
-9. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
+10. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
    with `--receipt`) to see which phase blocked and how to resume it.
 
 ## Environment
 
-The skill reads no environment variables. `CLEANUP_ARCHIVE_ROOT` and
-`--archive-root` were removed: archiving became review-only, which left the
-archive mover with no callers, and the knobs configured a code path that could
-not run. Archiving a root artifact is a human decision, made with `mv`.
+The skill reads no environment variables. Archiving is review-only; root
+artifact moves are human decisions made with `mv`.
 
 ## Own Output Paths
 
-Cleanup excludes what it and its evidence producer write — `.cleanup-evidence.json`,
-`.ingest-code.json`, `artifacts/cleanup/`, `local/CLEANUP_LOG*`, `CLEANUP_PLAN.md`
-— from root strays and untracked findings, and lists them separately under
-`own_cleanup_outputs`. Without this a successful run leaves artifacts that the
-next run reports as work, so cleanup manufactures findings for itself.
-
-They are excluded, not hidden. Add them to the project's `.gitignore` as well;
-cleanup does not edit `.gitignore`.
+Cleanup excludes its own outputs (`.cleanup-evidence.json`, `.ingest-code.json`,
+`artifacts/cleanup/`, `local/CLEANUP_LOG*`, `CLEANUP_PLAN.md`) from findings and
+lists them under `own_cleanup_outputs`. They are excluded, not hidden; add them
+to `.gitignore` separately because cleanup does not edit `.gitignore`.
 
 ## Safety Features
 
@@ -254,6 +263,11 @@ cleanup does not edit `.gitignore`.
   scanability gaps only as an explicit readability slice. Repairs add useful
   docstrings/comments and CLI descriptions without changing code behavior, and
   must be proven with parse/compile plus script help or a narrow sanity command.
+- **Public-readiness is blocked until proven**: Cleanup may report public-review
+  preparation, but must not claim a repository is safe to make public until
+  gitleaks history findings, noisy dir scans, and GitHub settings review have
+  deterministic receipts. Cleanup never changes GitHub visibility or remote
+  settings without explicit maintainer authority.
 - **Root artifacts are review-only**: Binary/media files at project root may be
   runtime inputs and are never moved automatically.
 - **Evidence must match the mutation**: A mutation class is authorized only by
@@ -320,6 +334,7 @@ cleanup does not edit `.gitignore`.
 | `--plan` | Generate a `$best-practices-report`-style Cleanup Report markdown file |
 | `--worktree-audit` | Generate JSON + Markdown dirty-worktree buckets for commit-safe triage |
 | `--script-scanability` | Run only the non-mutating script readability scan |
+| `--public-readiness` | Run only the non-mutating public-readiness/security lane |
 | `--execute` | Remove untracked junk paths that cleared per-path provenance |
 | `--force` | Skip the junk confirmation prompt only; cannot bypass provenance or authorize another class |
 | `--output <file>` | Specify output file for plan (default: CLEANUP_PLAN.md) |
@@ -463,19 +478,11 @@ Forbidden outcomes:
 
 ## Maintenance-State Findings
 
-Cleanup often exercises Docker rebuilds, service restarts, migrations, and
-health checks. When a UI or caller reports degraded status during such a window,
-classify the event before calling it an outage:
-
-- `expected_maintenance`: rebuild, restart, migration, or dependency startup is
-  in progress and operators know the service is temporarily unavailable.
-- `unexpected_degradation`: 5xx, timeout, failed health, or import/runtime error
-  outside a declared maintenance window.
-- `healthcheck_mismatch`: the service works through its API, but an orchestrator
-  such as Docker reports unhealthy.
-
+When cleanup observes rebuilds, restarts, migrations, health checks, or
+dependency startup, classify the result as `expected_maintenance`,
+`unexpected_degradation`, or `healthcheck_mismatch` before calling it an outage.
 Project-state output should recommend a first-class maintenance/rebuild status
-when clients otherwise collapse expected maintenance into a generic 502 banner.
+when clients would otherwise collapse expected work into a generic 502 banner.
 
 ## Nightly Subagent Commit Boundary
 
@@ -487,9 +494,6 @@ make the branch look clean.
 
 ## Artifact Extensions Detected
 
-Audio: `.wav .mp3 .flac .ogg .m4a .aac .wma .opus`
-Video: `.mp4 .avi .mkv .mov .webm .wmv .flv`
-Models: `.bin .pt .pth .ckpt .safetensors .gguf .onnx`
-Archives: `.tar .tar.gz .tgz .zip .7z .rar`
-Data: `.parquet .arrow .h5 .hdf5 .npy .npz`
-Images: `.tif .tiff .bmp .raw`
+Audio/video/model/archive/data/image artifacts include `.wav`, `.mp4`, `.pt`,
+`.ckpt`, `.safetensors`, `.gguf`, `.zip`, `.parquet`, `.npy`, `.tif`, and related
+binary formats.

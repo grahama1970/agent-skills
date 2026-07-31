@@ -11,6 +11,7 @@ focused modules so every file stays under the 800-line rule from
     cleanup_worktree   dirty-worktree triage buckets
     cleanup_evidence   ingest markers, dependency verdicts, mutation readiness
     cleanup_docs       documentation organization proposals
+    cleanup_public     public-readiness and security-disclosure blockers
     cleanup_bp         best-practices gate and rule execution
 
 The workflow:
@@ -72,6 +73,8 @@ from cleanup_docs import (
     GITHUB_SLUG_PATTERN, REPO_DECLARATION_PATTERN,
     _foreign_repo_reference, _current_repo_slugs, _doc_relocation_target,
 )
+from cleanup_public import *  # noqa: F401,F403
+from cleanup_public import scan_public_readiness, append_public_readiness_markdown
 from cleanup_bp import *  # noqa: F401,F403
 from cleanup_bp import (
     best_practices_skill_for, evaluate_best_practices_gate,
@@ -94,6 +97,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
         if p["verdict"] in {"relocate_proposed", "deprecate_proposed"}
     ]
     scanability = findings.get("script_scanability") or []
+    public_readiness = findings.get("public_readiness") or {}
     evidence_status = (findings.get("cleanup_evidence_artifact") or {}).get("status", "missing")
 
     ingest_evidence = findings.get("ingest_code_evidence", {})
@@ -283,6 +287,8 @@ def generate_cleanup_plan(findings: Dict) -> str:
         )
         plan.append("")
 
+    append_public_readiness_markdown(plan, public_readiness)
+
     uncommitted_count = len(findings.get("uncommitted_changes", []))
     root_strays_count = len(findings.get("root_strays", []))
 
@@ -299,7 +305,15 @@ def generate_cleanup_plan(findings: Dict) -> str:
         plan.append("- `Needs Decision`: root strays need human owner disposition.")
     if scanability:
         plan.append("- `Needs Changes`: script scanability repairs are unimplemented.")
-    if not any([evidence_status != "complete", uncommitted_count, root_strays_count, scanability]):
+    if public_readiness.get("blockers"):
+        plan.append("- `Blocked`: public-readiness/security cleanup has unresolved blockers.")
+    if not any([
+        evidence_status != "complete",
+        uncommitted_count,
+        root_strays_count,
+        scanability,
+        public_readiness.get("blockers"),
+    ]):
         plan.append("- No outstanding cleanup blocker was detected by this report scope.")
     plan.append("")
 
@@ -310,6 +324,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append("| A-001 | F-001 | Classify dirty entries with `--worktree-audit` | project agent | git worktree | JSON and Markdown audit exist | none | P0 |")
     plan.append("| A-002 | F-003 | Refresh per-candidate cleanup evidence | project agent | `.cleanup-evidence.json` | artifact schema loads and candidate verdicts are present | ingest-code available | P1 |")
     plan.append("| A-003 | F-004 | Add readability-only script docstrings/comments | project agent | listed script files | parse/compile plus help or narrow sanity proof passes | explicit readability slice | P2 |")
+    plan.append("| A-004 | F-005 | Triage public-readiness security blockers | maintainer + project agent | gitleaks/GitHub readiness receipts | history findings triaged, noisy dir scan narrowed, GitHub settings inventoried | maintainer authority | P0 |")
     plan.append("")
 
     plan.append("## Non-Claims")
@@ -318,6 +333,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append("- This report does not prove that root artifacts or root strays are safe to archive.")
     plan.append("- This report does not prove runtime, release, UI, compliance, or production readiness.")
     plan.append("- Script scanability findings do not prove behavior is wrong; they identify readability debt for humans and agents.")
+    plan.append("- Public-readiness findings do not prove the repository is safe to make public until every blocker has a deterministic receipt.")
     plan.append("")
 
     # Best-practices gate
@@ -354,6 +370,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append(f"- Potentially outdated docs: {len(findings.get('outdated_docs', []))}")
     plan.append(f"- Doc relocations proposed: {len(actionable)}")
     plan.append(f"- Script scanability repairs proposed: {len(scanability)}")
+    plan.append(f"- Public-readiness blockers: {len(public_readiness.get('blockers', []))}")
     gate_counts = (gate or {}).get("counts", {})
     plan.append(
         f"- Best-practices gate: {gate_counts.get('checked', 0)} to check, "
@@ -500,6 +517,7 @@ def main(
     execute: bool = typer.Option(False, "--execute", help="Perform cleanup actions (with confirmation)"),
     worktree_audit: bool = typer.Option(False, "--worktree-audit", help="Write a commit-safe dirty worktree ownership/risk audit"),
     script_scanability: bool = typer.Option(False, "--script-scanability", help="Run only the non-mutating script scanability pass"),
+    public_readiness: bool = typer.Option(False, "--public-readiness", help="Run only the non-mutating public-readiness/security cleanup lane"),
     force: bool = typer.Option(False, "--force", help="Skip confirmation prompts for junk removal only; cannot authorize any other mutation class"),
     output: str = typer.Option("CLEANUP_PLAN.md", "--output", help="Output file for plan"),
     receipt: str = typer.Option(DEFAULT_RECEIPT_PATH, "--receipt", help="Path for the resumable phase receipt"),
@@ -534,6 +552,10 @@ def main(
         }, indent=2, default=str))
         return
 
+    if public_readiness:
+        print(json.dumps(scan_public_readiness(run_scans=True), indent=2, default=str))
+        return
+
     log_info("Starting assessment...")
 
     all_untracked = get_untracked_files()
@@ -557,6 +579,7 @@ def main(
         "outdated_docs": scan_for_outdated_docs(),
         "doc_organization": scan_doc_organization(),
         "script_scanability": scan_script_scanability(),
+        "public_readiness": scan_public_readiness(run_scans=False),
         "ingest_code_evidence": scan_ingest_code_evidence(),
         "cleanup_evidence_artifact": scan_cleanup_evidence_artifact(),
         "project_watchdog": scan_project_watchdog_context(),
@@ -707,6 +730,7 @@ def main(
         log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
         log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
         log_info(f"Script scanability repairs: {len(findings['script_scanability'])}")
+        log_info(f"Public-readiness blockers: {len(findings['public_readiness'].get('blockers', []))}")
         log_info("=" * 50)
 
         log_info("Starting cleanup...")
@@ -733,6 +757,7 @@ def main(
     log_info(f"Lexical review candidates: {len(findings['dead_files'])}")
     log_info(f"Potentially outdated docs: {len(findings['outdated_docs'])}")
     log_info(f"Script scanability repairs: {len(findings['script_scanability'])}")
+    log_info(f"Public-readiness blockers: {len(findings['public_readiness'].get('blockers', []))}")
     log_info("=" * 50)
     for phase_name, state in findings["mutation_readiness"]["phases"].items():
         log_info(f"{phase_name}: {state}")
@@ -743,6 +768,7 @@ def main(
     log_info("Use --plan to generate a cleanup plan")
     log_info("Use --worktree-audit to classify dirty worktree entries before commit")
     log_info("Use --script-scanability to run only the script readability pass")
+    log_info("Use --public-readiness to run only the public-readiness/security lane")
     log_info("Use --execute to remove cleared untracked junk (with confirmation)")
     log_info("Use --execute --force to skip junk confirmation prompts")
     log_info("Root artifacts, root strays, and tracked candidates are review-only")

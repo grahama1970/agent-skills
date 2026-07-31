@@ -194,3 +194,82 @@ def test_script_scanability_flags_shell_header_and_function_comments(tmp_path, m
 
     assert "missing_file_purpose_comment" in findings[0]["missing"]
     assert "missing_function_comment:run" in findings[0]["missing"]
+
+
+def test_public_readiness_synthetic_generic_api_key_still_blocks_triage():
+    item = cleanup.classify_gitleaks_finding(
+        {
+            "RuleID": "generic-api-key",
+            "File": "tests/fixtures/test_keys.py",
+            "StartLine": 12,
+            "Match": 'expected_key = "synthetic"',
+            "Fingerprint": "abc123",
+        },
+        "history",
+    )
+
+    assert item["classification"] == "synthetic_secret_candidate"
+    assert item["blocker"] == "needs_explicit_triage_or_allowlist"
+    assert "allowlist" in item["valid_next_action"]
+
+
+def test_public_readiness_flags_noisy_working_directory_scan(tmp_path, monkeypatch):
+    public_dir = tmp_path / "artifacts" / "cleanup" / "public_readiness"
+    public_dir.mkdir(parents=True)
+    (public_dir / "gitleaks-history.json").write_text("[]")
+    (public_dir / "gitleaks-dir.json").write_text(
+        '[{"RuleID":"generic-api-key","File":"local/runtime/state.json",'
+        '"StartLine":1,"Match":"api_key","Fingerprint":"noise"}]'
+    )
+    monkeypatch.chdir(tmp_path)
+
+    readiness = cleanup.scan_public_readiness(run_scans=False)
+    blocker_ids = {item["id"] for item in readiness["blockers"]}
+
+    assert readiness["status"] == "blocked"
+    assert "scan_scope_noisy" in blocker_ids
+    assert "gitleaks_working_directory_scan_noisy" in blocker_ids
+    assert "github_settings_review_not_established" in blocker_ids
+
+
+def test_cleanup_report_surfaces_public_readiness_blockers():
+    findings = {
+        "root_strays": [],
+        "uncommitted_changes": [],
+        "untracked_files": [],
+        "dead_files": [],
+        "outdated_docs": [],
+        "doc_organization": [],
+        "script_scanability": [],
+        "cleanup_evidence_artifact": {"status": "complete"},
+        "ingest_code_evidence": {},
+        "mutation_readiness": {},
+        "candidate_dependency_evidence": [],
+        "project_watchdog": {},
+        "public_readiness": {
+            "status": "blocked",
+            "public_flip": "blocked",
+            "gitleaks": {
+                "history": {"finding_count": 10},
+                "working_directory": {"finding_count": 30},
+            },
+            "github_settings": {
+                "artifact": "artifacts/cleanup/public_readiness/github-settings.json",
+            },
+            "blockers": [
+                {
+                    "id": "needs_explicit_triage_or_allowlist",
+                    "evidence": "generic-api-key at tests/foo.py:1",
+                    "valid_next_action": "Triage or allowlist synthetic fixture key.",
+                }
+            ],
+            "closure_criteria": ["Fresh gitleaks history receipt exists."],
+        },
+    }
+
+    report = cleanup.generate_cleanup_plan(findings)
+
+    assert "F-005" in report
+    assert "Public-Readiness / Security Cleanup" in report
+    assert "needs_explicit_triage_or_allowlist" in report
+    assert "Fresh gitleaks history receipt exists." in report

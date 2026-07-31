@@ -221,6 +221,8 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         if p["verdict"] in {"relocate_proposed", "deprecate_proposed"}
     ]
     scanability = findings.get("script_scanability") or []
+    public_readiness = findings.get("public_readiness") or {}
+    public_blockers = public_readiness.get("blockers", [])
     artifact = findings.get("cleanup_evidence_artifact") or {}
     evidence_status = artifact.get("status", "missing")
 
@@ -233,12 +235,14 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         risk_items.append("`[F-003]` Tracked-file candidates lack complete dependency evidence")
     if scanability:
         risk_items.append("`[F-004]` Script scanability gaps make maintenance harder")
+    if public_blockers:
+        risk_items.append("`[F-005]` Public-readiness security blockers prevent a public release claim")
     if not risk_items:
         risk_items.append("No high-risk cleanup finding was produced by this assessment.")
 
     has_findings = any([
         root_strays_count, uncommitted_count, untracked_count, dead_count,
-        outdated_count, actionable, scanability,
+        outdated_count, actionable, scanability, public_blockers,
     ])
     overall = "Needs Changes" if has_findings else "Partially Verified"
 
@@ -253,14 +257,16 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
             "execution is limited to untracked junk paths that clear provenance; "
             "tracked files, root strays, artifacts, documentation moves, and "
             "script scanability repairs require explicit review or a separate "
-            "repair slice."
+            "repair slice. Public-readiness/security findings require "
+            "deterministic gitleaks and maintainer-setting receipts before any "
+            "public release claim."
         ),
         "",
         (
             "**Evidence Basis:** The report uses git status, tracked/untracked "
             "file inventory, lexical reference scans, cleanup evidence artifacts, "
             "ingest markers, project-watchdog state, documentation scans, and "
-            "best-practices gate mapping where available."
+            "public-readiness receipts where available."
         ),
         "",
         "**Highest-Risk Issues:**",
@@ -275,17 +281,18 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         "1. `[A-001]` Run or review `--worktree-audit` before mutating a dirty repository.",
         "2. `[A-002]` Refresh `.cleanup-evidence.json` before proposing tracked-file moves.",
         "3. `[A-003]` Handle script scanability as readability-only documentation repair.",
+        "4. `[A-004]` Resolve public-readiness blockers before making the repository public.",
         "",
         (
             "**Non-Claims:** This report does not prove unused code, runtime "
-            "safety, release readiness, semantic correctness, or that any tracked "
-            "file is safe to delete."
+            "safety, public-release readiness, semantic correctness, or that any "
+            "tracked file is safe to delete."
         ),
         "",
         "## Scope",
         "",
-        "- Reviewed: repository file inventory, cleanup candidates, evidence states, documentation organization, script scanability, and mutation authority.",
-        "- Not reviewed: product correctness, full runtime behavior, external service health, semantic code ownership, and human acceptance of moves or repairs.",
+        "- Reviewed: repository file inventory, cleanup candidates, evidence states, documentation organization, script scanability, public-readiness receipts, and mutation authority.",
+        "- Not reviewed: product correctness, full runtime behavior, external service health, semantic code ownership, maintainer acceptance of GitHub settings, and human acceptance of moves or repairs.",
         "- Mutation policy: only untracked junk with per-path provenance may be removed by `--execute`; all other classes require explicit review or a separate repair slice.",
         "",
         "## Source-of-Truth Inventory",
@@ -299,6 +306,7 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         "| S-005 | `.ingest-code.json` | aggregate ingest marker | status shown below | context only | Aggregate counters are not per-file safety evidence |",
         "| S-006 | documentation and script scans | local static scan | fresh for this run | doc/readability findings | Findings require review before repair |",
         "| S-007 | best-practices gate mapping | local rule mapping | fresh for this run | changed-file proof planning | Mapping is not proof unless checks execute |",
+        "| S-008 | gitleaks/GitHub readiness receipts | local security/readiness artifacts | status shown below | public-readiness blockers | Missing receipts block release claims |",
         "",
         "## Finding Index",
         "",
@@ -308,6 +316,7 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         f"| F-002 | {'Needs Decision' if root_strays_count else 'Partially Verified'} | `{root_strays_count}` root strays | Ask owner before moving or archiving | Does not authorize mutation |",
         f"| F-003 | {'Blocked' if dead_count and evidence_status != 'complete' else 'Partially Verified'} | `{dead_count}` lexical candidates; evidence `{evidence_status}` | Refresh per-candidate evidence and run readiness checks | Does not prove unused code |",
         f"| F-004 | {'Needs Changes' if scanability else 'Partially Verified'} | `{len(scanability)}` script scanability candidates | Apply readability-only repair slice | Does not prove behavior is wrong |",
+        f"| F-005 | {'Blocked' if public_blockers else 'Partially Verified'} | `{len(public_blockers)}` public-readiness blockers | Triage gitleaks findings and maintainer settings receipts | Does not prove public release safety |",
         "",
     ])
 
