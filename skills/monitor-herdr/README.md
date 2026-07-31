@@ -99,6 +99,7 @@ Open a workspace file in the installed Herdr file viewer:
 ```bash
 skills/monitor-herdr/run.sh open-file /path/to/workspace/file.py
 skills/monitor-herdr/run.sh open-file src/file.py:42
+skills/monitor-herdr/run.sh open-file src/file.py:42-58
 skills/monitor-herdr/run.sh open-file --query "prompt builder" --root /path/to/workspace
 ```
 
@@ -106,6 +107,60 @@ Exact paths must resolve to files under the workspace root. If the target is a
 plain query, `open-file` fuzzy-matches the workspace file list, fails closed on
 tied top matches, and opens a Files split on the resolved file using
 `herdr-file-viewer --open`.
+
+## Project Agent File Viewer Contract
+
+Project agents should treat requests like "show the file",
+"open `/path/to/workspace/file.py`", "jump to `src/app.py:42`", or "show the
+failing test in Files" as requests to open the installed Herdr file viewer, not
+as requests to paste a path back into chat.
+
+This is especially important on iPhone, iPad, and other small-screen sessions.
+On mobile, a raw path or long pasted snippet is a poor inspection surface: the
+human needs the file opened in a navigable Files pane with the tree, line
+numbers, diff/markdown/code rendering, and the requested line already in view.
+When the user says "show me that file", the useful outcome is a viewer pane, not
+more text in the chat transcript.
+
+The agent workflow is:
+
+1. Resolve the request to an existing file under the workspace root. Prefer the
+   exact path from the user, traceback, grep result, test output, or copied
+   `path:line` reference.
+2. Preserve line and range suffixes when known: `src/app.py`, `src/app.py:42`,
+   or `src/app.py:42-58`.
+3. Run `monitor-herdr`:
+
+```bash
+skills/monitor-herdr/run.sh open-file /path/to/workspace/file.py
+skills/monitor-herdr/run.sh open-file src/app.py:42 --root /path/to/workspace
+skills/monitor-herdr/run.sh open-file --query "prompt builder" --root /path/to/workspace
+```
+
+`open-file` is the agent-facing wrapper around the installed
+`herdr-file-viewer` plugin. It launches a fresh Files split with a documented
+open target instead of driving the viewer with fuzzy-finder keystrokes. The
+underlying viewer contract is:
+
+```bash
+herdr plugin pane open \
+  --plugin herdr-file-viewer \
+  --entrypoint file-viewer \
+  --placement split \
+  --focus \
+  --env HERDR_FILE_VIEWER_OPEN=src/app.py:42
+```
+
+Outside Herdr, the equivalent launch target is:
+
+```bash
+herdr-file-viewer --open src/app.py:42
+HERDR_FILE_VIEWER_OPEN=src/app.py:42 herdr-file-viewer
+```
+
+For ambiguous natural-language targets, use `--query` with the workspace root.
+The command records the candidate matches in its receipt and fails closed on
+tied top matches so the agent does not open the wrong file silently.
 
 Generate the exact prompt text for one pane without sending it:
 
