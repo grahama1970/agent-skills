@@ -796,17 +796,27 @@ function mapToolToMessage(tool, args, tabId) {
     case "tab.new":
       return { type: "NEW_TAB", url: a.url, urls: a.urls, active: a.background !== true };
     case "tab.switch": {
-      const id = a.id || a.tab_id || a.tabId;
+      const id = a.id || a.tab_id || a.tabId || tabId;
       if (typeof id === "string" && !/^\d+$/.test(id)) {
         return { type: "NAMED_TAB_SWITCH", name: id };
       }
       return { type: "SWITCH_TAB", tabId: id };
     }
     case "tab.close": {
-      const id = a.id || a.tab_id || a.tabId;
+      // --tab-id arrives as the envelope tabId, not a tool arg; without this
+      // fallback CLOSE_TAB went out with tabId undefined and the extension
+      // closed an unrelated tab (or errored) instead of the requested one.
+      const id = a.id || a.tab_id || a.tabId || tabId;
       const ids = a.ids || a.tab_ids || a.tabIds;
       if (typeof id === "string" && !/^\d+$/.test(id)) {
         return { type: "NAMED_TAB_CLOSE", name: id };
+      }
+      if (id === undefined && (ids === undefined || (Array.isArray(ids) && ids.length === 0))) {
+        return {
+          type: "UNSUPPORTED_ACTION",
+          action: "tab.close",
+          message: "tab.close requires a tab id (positional, --tab-id, or --ids); refusing to close an unspecified tab",
+        };
       }
       return { type: "CLOSE_TAB", tabId: id, tabIds: ids };
     }
