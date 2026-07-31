@@ -18,13 +18,17 @@ from statistics import mean
 from typing import Any
 
 import typer
+from dotenv import load_dotenv
 from loguru import logger
+
+load_dotenv(override=False)
 
 app = typer.Typer(no_args_is_help=True)
 
 VALID_CASE_TYPES = {"positive", "negative", "adversarial"}
 EVAL_FIXTURES = ("fixtures/agentic_eval.json", "fixtures/eval.json")
 EVAL_PROVIDER_SKILLS = {"agentic-evals", "eval-skills"}
+TRIAL_ENV_SCRUB_KEYS = ("UV_PROJECT_ENVIRONMENT", "VIRTUAL_ENV", "PYTHONPYCACHEPREFIX")
 
 
 def load_manifest(path: Path) -> dict[str, Any]:
@@ -68,6 +72,14 @@ def _stream_text(value: str | bytes | None) -> str:
     return value
 
 
+def trial_environment() -> dict[str, str]:
+    """Return an environment for evaluated commands without runner venv leakage."""
+    env = os.environ.copy()
+    for key in TRIAL_ENV_SCRUB_KEYS:
+        env.pop(key, None)
+    return env
+
+
 def run_trial(command: list[str], cwd: Path, timeout_seconds: float) -> dict[str, Any]:
     started = time.monotonic()
     try:
@@ -75,6 +87,7 @@ def run_trial(command: list[str], cwd: Path, timeout_seconds: float) -> dict[str
             command,
             capture_output=True,
             cwd=cwd,
+            env=trial_environment(),
             text=True,
             timeout=timeout_seconds,
             check=False,

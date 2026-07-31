@@ -19,7 +19,7 @@ metadata:
 
 provides:
   - cleanup
-composes: [ingest-code, task-monitor, project-watchdog]
+composes: [ingest-code, task-monitor, project-watchdog, agentic-evals]
 complies:
   - best-practices-skills
   - best-practices-python
@@ -79,18 +79,23 @@ This skill performs a deep assessment of the codebase to identify technical debt
   planning, auditing, or executing. Cleanup never ticks the watchdog, leases an
   issue, relabels an issue, closes an issue, or treats open GitHub issues as
   cleanup candidates.
+- **Agentic eval gate**: For skill cleanup, runs the target skill's
+  `fixtures/agentic_eval.json` through `$agentic-evals`. Cleanup records the
+  eval report, requires `readiness: READY`, and blocks the cleanup state when
+  the fixture is missing or non-READY.
 
 ## Evidence Model
 
 Indexing failures never stop non-mutating work. `--dry-run`, `--plan`, and
 `--worktree-audit` always run. `--plan`, `--execute`, and the default summary
-write a phase receipt with four independent states (`--dry-run` returns it
+write a phase receipt with five independent states (`--dry-run` returns it
 inline under `phase_receipt`):
 
 ```
 local_dependency_analysis: complete | incomplete | unavailable
 memory_indexing:           complete | blocked | unknown
 assessment:                complete
+agentic_evaluation:        complete | blocked | not_applicable
 mutation:                  allowed_limited | no_authorized_mutations
 ```
 
@@ -104,6 +109,7 @@ Each mutation class carries its own evidence requirement:
 | `junk_untracked_removal` | untracked status + junk pattern + no literal reference from a tracked file | allowed when candidates clear provenance |
 | `tracked_file_mutation` | per-candidate evidence from `.cleanup-evidence.json` + project-native before/after readiness proof | blocked until both are present |
 | `script_scanability_repair` | explicit readability cleanup request + parse/compile + script `--help` or narrow sanity proof | non-mutating assessment by default; repair as separate slice |
+| `agentic_evaluation` | target skill `fixtures/agentic_eval.json` run through `$agentic-evals` with `readiness: READY` | complete, blocked, or not_applicable |
 | `root_stray_mutation` | human owner decision | review-only |
 | `artifact_archive` | human owner decision | review-only |
 
@@ -190,12 +196,19 @@ never per-file safety evidence. Every run states these limits explicitly:
    If this leaves a completed marker with zero scanned files or a disabled code
    index, treat the marker as degraded and rely on `.cleanup-evidence.json` for
    local dependency analysis only.
-8. **Execution** (`--execute`): Perform authorized mutations with confirmation:
+8. **Agentic eval gate** (`$agentic-evals`): When cleanup is invoked from a
+   skill directory, run `fixtures/agentic_eval.json` through `$agentic-evals`
+   before reporting completion. A missing fixture, invalid report, non-zero
+   runner exit, or readiness other than `READY` is a blocked cleanup state.
+   Writing modes store the eval report under
+   `artifacts/cleanup/agentic-evals/<skill>.json`; `--dry-run` returns the same
+   gate data inline without writing the receipt file.
+9. **Execution** (`--execute`): Perform authorized mutations with confirmation:
    - Remove only untracked junk paths that cleared per-path provenance
      (`--force` skips the prompt, not the provenance check)
    - Keep root strays, artifacts, and tracked candidates review-only
    - Log all actions to `local/CLEANUP_LOG.md` and the phase receipt
-9. **Script scanability repair**: When the requested cleanup slice is explicitly
+10. **Script scanability repair**: When the requested cleanup slice is explicitly
    readability repair, add only non-behavioral documentation such as module
    docstrings, usage notes, side-effect notes, and useful function/class
    docstrings. Do not change script control flow, flags, imports, IO behavior,
@@ -203,9 +216,9 @@ never per-file safety evidence. Every run states these limits explicitly:
    slice with parse/compile plus each touched script's `--help`, entrypoint
    smoke, or narrow sanity command, then commit separately from deletion or
    archive cleanup.
-10. **Post-cleanup proof**: Rerun the same sanity command and relevant
-   `best-practices-*` checks for changed files, then commit/push only the
-   coherent cleanup slice.
+11. **Post-cleanup proof**: Rerun the same sanity command, the target skill's
+   `$agentic-evals` fixture, and relevant `best-practices-*` checks for changed
+   files, then commit/push only the coherent cleanup slice.
 
 ## How to Use
 
@@ -223,6 +236,9 @@ never per-file safety evidence. Every run states these limits explicitly:
    cannot bypass per-path provenance or authorize any other mutation class.
 9. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
    with `--receipt`) to see which phase blocked and how to resume it.
+10. For a skill target, read
+    `artifacts/cleanup/agentic-evals/<skill>.json` to inspect the `$agentic-evals`
+    report that made `agentic_evaluation` complete or blocked.
 
 ## Environment
 
@@ -282,6 +298,12 @@ cleanup does not edit `.gitignore`.
   the project-native command that answers "is this project basically working?"
   If none exists, add one before broad cleanup. Store receipts under an ignored
   artifact path and document the command in `README.md` and project knowledge.
+- **Every skill needs a working agentic eval**: A skill cleanup must not finish
+  from fixture presence alone. The target skill's `fixtures/agentic_eval.json`
+  must run through `$agentic-evals`, produce a parseable
+  `agentic_evals.report.v1` report, and reach `readiness: READY`. Missing or
+  non-READY evals are blocked cleanup states with resume commands in the
+  receipt.
 - **Every project needs a browser-oracle registry**: Resolve
   `.ask/browser-oracles.yaml` with `$browser-oracle`. If the registry is missing,
   add it. If the machine-local tab binding is stale, report the stale binding
@@ -324,6 +346,7 @@ cleanup does not edit `.gitignore`.
 | `--force` | Skip the junk confirmation prompt only; cannot bypass provenance or authorize another class |
 | `--output <file>` | Specify output file for plan (default: CLEANUP_PLAN.md) |
 | `--receipt <file>` | Phase receipt path (default: artifacts/cleanup/cleanup_receipt.json) |
+| `--agentic-eval-timeout <seconds>` | Per-trial timeout passed to `$agentic-evals` for the target skill fixture (default: 120) |
 
 ## Worktree Triage Contract
 
@@ -424,7 +447,10 @@ Use the previous cleanup receipt as the baseline:
   update `complies`, and run the skill's `sanity.sh` or scoped tests.
 
 The final cleanup receipt must list `checked`, `skipped_unchanged`,
-`failed`, and `not_applicable` counts by best-practices skill.
+`failed`, and `not_applicable` counts by best-practices skill and for the
+`agentic_evaluation` gate. For skill targets, `checked: 1` and `readiness:
+READY` are required before cleanup can be reported as complete; `--dry-run`
+may return the report inline instead of writing the receipt file.
 
 ## Browser Reviewer And Oracle Blockers
 
@@ -433,33 +459,12 @@ shared external resources. If `/ask` no longer routes WebGPT, a browser-oracle
 binding is stale, or Surf reports an active browser lock, write a blocker receipt
 instead of improvising a substitute.
 
-Required blocker receipt fields:
-
-- requested reviewer backend and project binding.
-- request bundle path.
-- command attempted.
-- stderr/status excerpt.
-- active lock path, owner pid, owner command, and created timestamp when Surf
-  reports a browser lock.
-- whether any prompt was actually submitted.
-- resume command to rerun after the lock clears.
-
-Allowed outcomes:
-
-- `review_complete`: clean/raw/meta reviewer artifacts exist and match the
-  sentinel or reviewer schema.
-- `review_blocked_external`: no prompt submitted, or completion proof missing
-  because of a browser/provider/tool lock.
-- `review_not_applicable`: the project has no reviewable surface and the
-  cleanup plan explains why.
-
-Forbidden outcomes:
-
-- Do not use low-level browser typing/clicking as a substitute for the
-  documented reviewer runtime.
-- Do not kill another active browser-handler process to free a lock.
-- Do not claim WebGPT review completion from a prepared prompt, stale tab text,
-  or missing clean/raw/meta artifacts.
+The blocker receipt must name the requested reviewer, binding, request bundle,
+command, stderr/status excerpt, lock owner details if present, whether a prompt
+was submitted, and the resume command. Valid outcomes are `review_complete`,
+`review_blocked_external`, and `review_not_applicable`. Do not use low-level
+browser typing, kill another lock owner, or claim review completion from a
+prepared prompt, stale tab text, or missing clean/raw/meta artifacts.
 
 ## Maintenance-State Findings
 
@@ -485,11 +490,5 @@ cleanup slice: sanity runner, documentation, browser-oracle registry, and
 reviewed moves/restores. Do not stage unrelated dirty worktree entries just to
 make the branch look clean.
 
-## Artifact Extensions Detected
-
-Audio: `.wav .mp3 .flac .ogg .m4a .aac .wma .opus`
-Video: `.mp4 .avi .mkv .mov .webm .wmv .flv`
-Models: `.bin .pt .pth .ckpt .safetensors .gguf .onnx`
-Archives: `.tar .tar.gz .tgz .zip .7z .rar`
-Data: `.parquet .arrow .h5 .hdf5 .npy .npz`
-Images: `.tif .tiff .bmp .raw`
+Artifact extension sets live in `cleanup.py` and include audio, video, model,
+archive, data, and large-image formats.

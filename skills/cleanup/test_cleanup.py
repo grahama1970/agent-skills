@@ -950,6 +950,86 @@ class TestCleanup:
         finally:
             sys.stdin = original
 
+    def test_agentic_eval_gate_blocks_missing_fixture(self):
+        """A skill cleanup must not pass without an agentic eval fixture."""
+        print("\nTesting agentic eval missing fixture gate...")
+
+        Path("SKILL.md").write_text("---\nname: demo\n---\n# Demo\n")
+        gate = cleanup.run_agentic_eval_gate(write_receipt=False)
+
+        self.assert_equal(gate["status"], "blocked", "Missing fixture must block the gate")
+        self.assert_equal(gate["failed"], 1, "Missing fixture counts as failed")
+        self.assert_equal(
+            gate["readiness"],
+            "NOT_ESTABLISHED",
+            "Missing fixture should report NOT_ESTABLISHED readiness",
+        )
+
+    def test_agentic_eval_gate_requires_ready_report(self):
+        """Cleanup should parse $agentic-evals readiness, not just exit status."""
+        print("\nTesting agentic eval readiness parsing...")
+
+        Path("SKILL.md").write_text("---\nname: demo\n---\n# Demo\n")
+        fixture = Path("fixtures/agentic_eval.json")
+        fixture.parent.mkdir(exist_ok=True)
+        fixture.write_text(json.dumps({"version": 2, "skill": "demo", "cases": []}))
+        runner = Path("fake-agentic-evals.sh")
+        runner.write_text(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            f"[[ \"${{UV_PROJECT_ENVIRONMENT:-}}\" == \"{cleanup.AGENTIC_EVAL_UV_ENVIRONMENT}\" ]]\n"
+            "out=''\n"
+            "while [[ $# -gt 0 ]]; do\n"
+            "  case \"$1\" in\n"
+            "    --output) out=\"$2\"; shift 2 ;;\n"
+            "    *) shift ;;\n"
+            "  esac\n"
+            "done\n"
+            "payload='{\"schema\":\"agentic_evals.report.v1\",\"readiness\":\"READY\"}'\n"
+            "if [[ -n \"$out\" ]]; then mkdir -p \"$(dirname \"$out\")\"; printf '%s\\n' \"$payload\" > \"$out\"; fi\n"
+            "printf '%s\\n' \"$payload\"\n"
+        )
+        runner.chmod(0o755)
+
+        gate = cleanup.run_agentic_eval_gate(
+            receipt_dir=Path("artifacts/cleanup"),
+            write_receipt=True,
+            timeout_seconds=1,
+            runner_path=runner.resolve(),
+        )
+
+        self.assert_equal(gate["status"], "complete", "READY report should complete the gate")
+        self.assert_equal(gate["readiness"], "READY", "Readiness should be parsed from report")
+        self.assert_true(Path(gate["receipt"]).exists(), "Agentic eval receipt should be written")
+
+    def test_agentic_eval_gate_blocks_non_ready_report(self):
+        """A zero exit code is insufficient when readiness is not READY."""
+        print("\nTesting agentic eval non-ready gate...")
+
+        Path("SKILL.md").write_text("---\nname: demo\n---\n# Demo\n")
+        fixture = Path("fixtures/agentic_eval.json")
+        fixture.parent.mkdir(exist_ok=True)
+        fixture.write_text(json.dumps({"version": 2, "skill": "demo", "cases": []}))
+        runner = Path("fake-agentic-evals-gap.sh")
+        runner.write_text(
+            "#!/usr/bin/env bash\n"
+            "printf '%s\\n' '{\"schema\":\"agentic_evals.report.v1\",\"readiness\":\"USABLE_WITH_GAPS\"}'\n"
+        )
+        runner.chmod(0o755)
+
+        gate = cleanup.run_agentic_eval_gate(
+            write_receipt=False,
+            timeout_seconds=1,
+            runner_path=runner.resolve(),
+        )
+
+        self.assert_equal(gate["status"], "blocked", "Non-READY report must block")
+        self.assert_equal(gate["failed"], 1, "Non-READY report must count as failed")
+        self.assert_true(
+            "requires READY" in gate["reason"],
+            "Blocked reason should state the READY requirement",
+        )
+
     def test_phase_receipt_is_resumable(self):
         """The receipt must record phase states and how to resume them."""
         print("\nTesting phase receipt...")
@@ -978,6 +1058,7 @@ class TestCleanup:
             "local_dependency_analysis",
             "memory_indexing",
             "assessment",
+            "agentic_evaluation",
             "mutation",
         ):
             self.assert_in(phase, stored["phases"], f"Receipt must record {phase}")
@@ -1151,6 +1232,9 @@ class TestCleanup:
             self.test_last_commit_times_match_per_file_git_log()
             self.test_cleanup_does_not_report_its_own_outputs()
             self.test_confirm_action_declines_without_a_terminal()
+            self.test_agentic_eval_gate_blocks_missing_fixture()
+            self.test_agentic_eval_gate_requires_ready_report()
+            self.test_agentic_eval_gate_blocks_non_ready_report()
             self.test_phase_receipt_is_resumable()
             self.test_tracked_mutation_reasons_distinguish_verdict_classes()
             self.test_script_scanability_flags_missing_script_docstrings()

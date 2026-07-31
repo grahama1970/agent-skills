@@ -8,10 +8,12 @@ mkdir -p "$(dirname "$UV_PROJECT_ENVIRONMENT")"
 OUT="$(mktemp)"
 TIMEOUT_FIXTURE="$(mktemp)"
 TIMEOUT_OUT="$(mktemp)"
+ENV_FIXTURE="$(mktemp)"
+ENV_OUT="$(mktemp)"
 AUDIT_ROOT="$(mktemp -d)"
 AUDIT_OUT=""
 APPLY_OUT=""
-trap 'rm -f "$OUT" "$TIMEOUT_FIXTURE" "$TIMEOUT_OUT" "$AUDIT_OUT" "$APPLY_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
+trap 'rm -f "$OUT" "$TIMEOUT_FIXTURE" "$TIMEOUT_OUT" "$ENV_FIXTURE" "$ENV_OUT" "$AUDIT_OUT" "$APPLY_OUT"; rm -rf "$AUDIT_ROOT"' EXIT
 
 "$SCRIPT_DIR/run.sh" run "$SCRIPT_DIR/fixtures/agentic_eval.json" --output "$OUT" >/dev/null
 
@@ -62,6 +64,39 @@ assert report["readiness"] == "NOT_READY"
 assert trial["timed_out"] is True
 assert isinstance(trial["stdout"], str)
 assert "partial-output" in trial["stdout"]
+PY
+
+cat > "$ENV_FIXTURE" <<'EOF'
+{
+  "version": 2,
+  "skill": "agentic-evals-env-scrub",
+  "trials": 1,
+  "proof_scope": "trial environment isolation",
+  "claims": {
+    "proves": "runner uv environment variables are not inherited by evaluated commands",
+    "does_not_prove": "skill semantic correctness"
+  },
+  "cases": [
+    {
+      "name": "uv-env-scrubbed",
+      "type": "positive",
+      "command": ["bash", "-c", "test -z \"${UV_PROJECT_ENVIRONMENT:-}\" && test -z \"${VIRTUAL_ENV:-}\" && test -z \"${PYTHONPYCACHEPREFIX:-}\""],
+      "expected": {"exit_code": 0}
+    }
+  ]
+}
+EOF
+UV_PROJECT_ENVIRONMENT=/tmp/poison-agentic-evals-env \
+VIRTUAL_ENV=/tmp/poison-virtual-env \
+PYTHONPYCACHEPREFIX=/tmp/poison-pycache \
+  "$SCRIPT_DIR/run.sh" run "$ENV_FIXTURE" --output "$ENV_OUT" >/dev/null
+uv run --project "$SCRIPT_DIR" python - "$ENV_OUT" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["readiness"] == "READY"
+assert report["cases"][0]["passed_trials"] == 1
 PY
 
 mkdir -p \

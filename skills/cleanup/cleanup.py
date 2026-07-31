@@ -126,7 +126,11 @@ IGNORE_CONFIG_BASENAMES = {
 CLEANUP_EVIDENCE_FILENAME = ".cleanup-evidence.json"
 CLEANUP_EVIDENCE_CONTRACT = "cleanup.evidence.v1"
 CLEANUP_RECEIPT_CONTRACT = "cleanup.phase_receipt.v1"
+AGENTIC_EVAL_GATE_CONTRACT = "cleanup.agentic_eval_gate.v1"
 DEFAULT_RECEIPT_PATH = "artifacts/cleanup/cleanup_receipt.json"
+DEFAULT_AGENTIC_EVAL_TIMEOUT_SECONDS = 120.0
+AGENTIC_EVAL_UV_ENVIRONMENT = "/tmp/agentic-evals-skill-venv"
+AGENTIC_EVAL_PYCACHEPREFIX = "/tmp/agentic-evals-skill-pycache"
 PROJECT_WATCHDOG_READY_LABEL = "agent-work"
 PROJECT_WATCHDOG_HOLD_LABELS = [
     "agent-active",
@@ -1145,6 +1149,155 @@ def _working_tree_sha256(filepath: str) -> Optional[str]:
         return None
 
 
+def find_current_skill_dir(cwd: Optional[Path] = None) -> Optional[Path]:
+    """Return the nearest enclosing skill directory, if this cleanup targets one."""
+    path = (cwd or Path.cwd()).resolve()
+    for candidate in [path, *path.parents]:
+        if (candidate / "SKILL.md").is_file():
+            return candidate
+    return None
+
+
+def _agentic_evals_runner_path() -> Path:
+    return Path(__file__).resolve().parents[1] / "agentic-evals" / "run.sh"
+
+
+def run_agentic_eval_gate(
+    cwd: Optional[Path] = None,
+    *,
+    receipt_dir: Optional[Path] = None,
+    write_receipt: bool = True,
+    timeout_seconds: float = DEFAULT_AGENTIC_EVAL_TIMEOUT_SECONDS,
+    runner_path: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """Run the target skill's agentic eval fixture and summarize readiness."""
+    skill_dir = find_current_skill_dir(cwd)
+    base: Dict[str, Any] = {
+        "contract": AGENTIC_EVAL_GATE_CONTRACT,
+        "generated_at": datetime.now().isoformat(),
+        "mocked": False,
+        "live": False,
+        "checked": 0,
+        "skipped_unchanged": 0,
+        "failed": 0,
+        "not_applicable": 0,
+        "what_was_exercised": "the nearest skill fixtures/agentic_eval.json via $agentic-evals",
+        "what_remains_unverified": (
+            "semantic correctness, live services, LLM judge behavior, and release readiness"
+        ),
+    }
+    if skill_dir is None:
+        return {
+            **base,
+            "status": "not_applicable",
+            "not_applicable": 1,
+            "reason": "current working directory is not inside a skill directory",
+        }
+
+    fixture = skill_dir / "fixtures" / "agentic_eval.json"
+    skill_name = skill_dir.name
+    base.update({
+        "skill": skill_name,
+        "skill_dir": str(skill_dir),
+        "fixture": str(fixture),
+        "checked": 1,
+    })
+    if not fixture.is_file():
+        return {
+            **base,
+            "status": "blocked",
+            "failed": 1,
+            "readiness": "NOT_ESTABLISHED",
+            "reason": "missing fixtures/agentic_eval.json",
+            "resume_command": (
+                f"bash {_agentic_evals_runner_path()} scaffold-fixture {skill_dir} "
+                f"--output {fixture}"
+            ),
+        }
+
+    runner = runner_path or _agentic_evals_runner_path()
+    if not runner.is_file():
+        return {
+            **base,
+            "status": "blocked",
+            "failed": 1,
+            "readiness": "NOT_ESTABLISHED",
+            "reason": f"$agentic-evals runner not found at {runner}",
+        }
+
+    receipt_path: Optional[Path] = None
+    cmd = [
+        str(runner),
+        "run",
+        str(fixture),
+        "--timeout-seconds",
+        str(timeout_seconds),
+    ]
+    if write_receipt:
+        target_dir = receipt_dir or Path(DEFAULT_RECEIPT_PATH).parent
+        if not target_dir.is_absolute():
+            target_dir = Path.cwd() / target_dir
+        receipt_path = target_dir / "agentic-evals" / f"{skill_name}.json"
+        cmd.extend(["--output", str(receipt_path)])
+
+    try:
+        env = os.environ.copy()
+        env["UV_PROJECT_ENVIRONMENT"] = AGENTIC_EVAL_UV_ENVIRONMENT
+        env["PYTHONPYCACHEPREFIX"] = AGENTIC_EVAL_PYCACHEPREFIX
+        completed = subprocess.run(
+            cmd,
+            cwd=str(skill_dir),
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=max(60.0, timeout_seconds * 5),
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            **base,
+            "status": "blocked",
+            "failed": 1,
+            "readiness": "NOT_READY",
+            "command": cmd,
+            "reason": f"$agentic-evals timed out after {exc.timeout} seconds",
+        }
+
+    report: Optional[Dict[str, Any]] = None
+    parse_error: Optional[str] = None
+    try:
+        if receipt_path is not None and receipt_path.exists():
+            report = json.loads(receipt_path.read_text(encoding="utf-8"))
+        else:
+            report = json.loads(completed.stdout)
+    except Exception as exc:  # noqa: BLE001 - receipt parsing errors are reported data.
+        parse_error = str(exc)
+
+    readiness = report.get("readiness") if isinstance(report, dict) else "NOT_ESTABLISHED"
+    passed = completed.returncode == 0 and readiness == "READY"
+    result: Dict[str, Any] = {
+        **base,
+        "status": "complete" if passed else "blocked",
+        "failed": 0 if passed else 1,
+        "readiness": readiness,
+        "command": cmd,
+        "returncode": completed.returncode,
+        "stdout_tail": completed.stdout[-2000:],
+        "stderr_tail": completed.stderr[-2000:],
+    }
+    if receipt_path is not None:
+        result["receipt"] = str(receipt_path)
+    if report is not None:
+        result["report"] = report
+    if parse_error:
+        result["parse_error"] = parse_error
+        result["reason"] = "agentic eval report could not be parsed"
+    elif not passed:
+        result["reason"] = (
+            f"agentic eval readiness is {readiness}; cleanup requires READY"
+        )
+    return result
+
+
 def scan_cleanup_evidence_artifact(
     artifact_path: str = CLEANUP_EVIDENCE_FILENAME,
 ) -> Dict[str, Any]:
@@ -1396,6 +1549,8 @@ def evaluate_mutation_readiness(
     artifact_status = evidence_artifact.get("status", "missing")
     marker_complete = ingest_evidence.get("status") == "complete"
     marker_claimed_complete = ingest_evidence.get("marker_claimed_complete") is True
+    agentic_eval_gate = findings.get("agentic_evals_gate", {})
+    agentic_eval_status = agentic_eval_gate.get("status", "not_applicable")
 
     if artifact_status == "complete":
         local_analysis = "complete"
@@ -1459,6 +1614,20 @@ def evaluate_mutation_readiness(
                 "read-only project-watchdog registry/state observation; cleanup "
                 "must not tick, lease, relabel, close, or dispatch GitHub issues"
             ),
+        },
+        "agentic_evaluation": {
+            "status": agentic_eval_status,
+            "evidence_required": (
+                "target skill fixtures/agentic_eval.json run through $agentic-evals "
+                "with readiness READY"
+            ),
+            "checked": agentic_eval_gate.get("checked", 0),
+            "skipped_unchanged": agentic_eval_gate.get("skipped_unchanged", 0),
+            "failed": agentic_eval_gate.get("failed", 0),
+            "not_applicable": agentic_eval_gate.get("not_applicable", 0),
+            "receipt": agentic_eval_gate.get("receipt"),
+            "readiness": agentic_eval_gate.get("readiness"),
+            "reason": agentic_eval_gate.get("reason"),
         },
     }
 
@@ -1542,6 +1711,7 @@ def evaluate_mutation_readiness(
             "local_dependency_analysis": local_analysis,
             "memory_indexing": memory_indexing,
             "assessment": "complete",
+            "agentic_evaluation": agentic_eval_status,
             "mutation": mutation,
         },
         "mutation_classes": classes,
@@ -1596,6 +1766,7 @@ def build_phase_receipt(
     """Build the resumable phase receipt for this cleanup invocation."""
     ingest_evidence = findings.get("ingest_code_evidence", {})
     evidence_artifact = findings.get("cleanup_evidence_artifact", {})
+    agentic_eval_gate = findings.get("agentic_evals_gate", {})
     return {
         "contract": CLEANUP_RECEIPT_CONTRACT,
         "generated_at": datetime.now().isoformat(),
@@ -1617,6 +1788,21 @@ def build_phase_receipt(
                 "status": evidence_artifact.get("status"),
                 "scan_failures": evidence_artifact.get("scan_failures", []),
             },
+            "agentic_evals": {
+                "skill": agentic_eval_gate.get("skill"),
+                "fixture": agentic_eval_gate.get("fixture"),
+                "status": agentic_eval_gate.get("status"),
+                "readiness": agentic_eval_gate.get("readiness"),
+                "receipt": agentic_eval_gate.get("receipt"),
+                "reason": agentic_eval_gate.get("reason"),
+                "command": agentic_eval_gate.get("command"),
+                "counts": {
+                    "checked": agentic_eval_gate.get("checked", 0),
+                    "skipped_unchanged": agentic_eval_gate.get("skipped_unchanged", 0),
+                    "failed": agentic_eval_gate.get("failed", 0),
+                    "not_applicable": agentic_eval_gate.get("not_applicable", 0),
+                },
+            },
             "project_watchdog": findings.get("project_watchdog", {}),
         },
         "counts": {
@@ -1631,6 +1817,7 @@ def build_phase_receipt(
         "resume_commands": [
             evidence_artifact.get("producer_command", ""),
             ingest_evidence.get("recommended_command", ""),
+            agentic_eval_gate.get("resume_command", ""),
         ],
     }
 
@@ -1833,6 +2020,8 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
     scanability = findings.get("script_scanability") or []
     artifact = findings.get("cleanup_evidence_artifact") or {}
     evidence_status = artifact.get("status", "missing")
+    agentic_eval_gate = findings.get("agentic_evals_gate") or {}
+    agentic_eval_status = agentic_eval_gate.get("status", "not_applicable")
 
     risk_items = []
     if uncommitted_count:
@@ -1843,12 +2032,14 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         risk_items.append("`[F-003]` Tracked-file candidates lack complete dependency evidence")
     if scanability:
         risk_items.append("`[F-004]` Script scanability gaps make maintenance harder")
+    if agentic_eval_status == "blocked":
+        risk_items.append("`[F-005]` Target skill agentic eval is missing or not READY")
     if not risk_items:
         risk_items.append("No high-risk cleanup finding was produced by this assessment.")
 
     has_findings = any([
         root_strays_count, uncommitted_count, untracked_count, dead_count,
-        outdated_count, scanability,
+        outdated_count, scanability, agentic_eval_status == "blocked",
     ])
     overall = "Needs Changes" if has_findings else "Partially Verified"
 
@@ -1908,6 +2099,7 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         "| S-004 | `.cleanup-evidence.json` | dependency evidence artifact | status shown below | tracked candidate verdicts | Missing or stale evidence blocks tracked mutation |",
         "| S-005 | `.ingest-code.json` | aggregate ingest marker | status shown below | context only | Aggregate counters are not per-file safety evidence |",
         "| S-006 | documentation and script scans | local static scan | fresh for this run | doc/readability findings | Findings require review before repair |",
+        "| S-007 | `$agentic-evals` report | local fixture runner | fresh for this run | target skill eval readiness | Fixture smoke does not prove semantic correctness or live service behavior |",
         "",
         "## Finding Index",
         "",
@@ -1917,6 +2109,7 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         f"| F-002 | {'Needs Decision' if root_strays_count else 'Partially Verified'} | `{root_strays_count}` root strays | Ask owner before moving or archiving | Does not authorize mutation |",
         f"| F-003 | {'Blocked' if dead_count and evidence_status != 'complete' else 'Partially Verified'} | `{dead_count}` lexical candidates; evidence `{evidence_status}` | Refresh per-candidate evidence and run readiness checks | Does not prove unused code |",
         f"| F-004 | {'Needs Changes' if scanability else 'Partially Verified'} | `{len(scanability)}` script scanability candidates | Apply readability-only repair slice | Does not prove behavior is wrong |",
+        f"| F-005 | {'Blocked' if agentic_eval_status == 'blocked' else 'Partially Verified'} | agentic eval `{agentic_eval_status}`; readiness `{agentic_eval_gate.get('readiness', 'n/a')}` | Run or repair `fixtures/agentic_eval.json` with `$agentic-evals` | Does not prove full release readiness |",
         "",
     ])
 
@@ -1954,6 +2147,35 @@ def generate_cleanup_plan(findings: Dict) -> str:
     )
     plan.append(
         f"- Refresh command: `{ingest_evidence.get('recommended_command', 'not available')}`"
+    )
+    plan.append("")
+
+    agentic_eval_gate = findings.get("agentic_evals_gate", {})
+    plan.append("## Agentic Eval Gate")
+    plan.append("")
+    plan.append(f"- Status: `{agentic_eval_gate.get('status', 'not_applicable')}`")
+    plan.append(f"- Skill: `{agentic_eval_gate.get('skill', 'not_applicable')}`")
+    plan.append(f"- Fixture: `{agentic_eval_gate.get('fixture', 'not_applicable')}`")
+    plan.append(f"- Readiness: `{agentic_eval_gate.get('readiness', 'not_applicable')}`")
+    if agentic_eval_gate.get("receipt"):
+        plan.append(f"- Receipt: `{agentic_eval_gate['receipt']}`")
+    if agentic_eval_gate.get("command"):
+        plan.append(
+            "- Command: `"
+            + " ".join(str(part) for part in agentic_eval_gate["command"])
+            + "`"
+        )
+    if agentic_eval_gate.get("reason"):
+        plan.append(f"- Reason: {agentic_eval_gate['reason']}")
+    plan.append(
+        "- Counts: "
+        f"checked `{agentic_eval_gate.get('checked', 0)}`, "
+        f"skipped_unchanged `{agentic_eval_gate.get('skipped_unchanged', 0)}`, "
+        f"failed `{agentic_eval_gate.get('failed', 0)}`, "
+        f"not_applicable `{agentic_eval_gate.get('not_applicable', 0)}`"
+    )
+    plan.append(
+        "- Does not prove: semantic correctness, live services, LLM judge behavior, or release readiness."
     )
     plan.append("")
 
@@ -2108,7 +2330,17 @@ def generate_cleanup_plan(findings: Dict) -> str:
         plan.append("- `Needs Decision`: root strays need human owner disposition.")
     if scanability:
         plan.append("- `Needs Changes`: script scanability repairs are unimplemented.")
-    if not any([evidence_status != "complete", uncommitted_count, root_strays_count, scanability]):
+    if agentic_eval_gate.get("status") == "blocked":
+        plan.append(
+            "- `Blocked`: target skill agentic eval is missing or did not reach `READY`."
+        )
+    if not any([
+        evidence_status != "complete",
+        uncommitted_count,
+        root_strays_count,
+        scanability,
+        agentic_eval_gate.get("status") == "blocked",
+    ]):
         plan.append("- No outstanding cleanup blocker was detected by this report scope.")
     plan.append("")
 
@@ -2119,6 +2351,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append("| A-001 | F-001 | Classify dirty entries with `--worktree-audit` | project agent | git worktree | JSON and Markdown audit exist | none | P0 |")
     plan.append("| A-002 | F-003 | Refresh per-candidate cleanup evidence | project agent | `.cleanup-evidence.json` | artifact schema loads and candidate verdicts are present | ingest-code available | P1 |")
     plan.append("| A-003 | F-004 | Add readability-only script docstrings/comments | project agent | listed script files | parse/compile plus help or narrow sanity proof passes | explicit readability slice | P2 |")
+    plan.append("| A-004 | F-005 | Repair or add `fixtures/agentic_eval.json` and rerun `$agentic-evals` | project agent | target skill eval fixture | agentic eval report readiness is `READY` | agentic-evals available | P0 |")
     plan.append("")
 
     plan.append("## Non-Claims")
@@ -2127,6 +2360,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append("- This report does not prove that root artifacts or root strays are safe to archive.")
     plan.append("- This report does not prove runtime, release, UI, compliance, or production readiness.")
     plan.append("- Script scanability findings do not prove behavior is wrong; they identify readability debt for humans and agents.")
+    plan.append("- Agentic eval fixture success proves local declared command expectations only; it is not semantic or live-service proof.")
     plan.append("")
 
     # Summary
@@ -2138,6 +2372,7 @@ def generate_cleanup_plan(findings: Dict) -> str:
     plan.append(f"- Lexically unreferenced review candidates: {len(findings.get('dead_files', []))}")
     plan.append(f"- Potentially outdated docs: {len(findings.get('outdated_docs', []))}")
     plan.append(f"- Script scanability repairs proposed: {len(scanability)}")
+    plan.append(f"- Agentic eval gate: {agentic_eval_gate.get('status', 'not_applicable')}")
     plan.append("")
 
     return "\n".join(plan)
@@ -2281,6 +2516,12 @@ def main(
     force: bool = typer.Option(False, "--force", help="Skip confirmation prompts for junk removal only; cannot authorize any other mutation class"),
     output: str = typer.Option("CLEANUP_PLAN.md", "--output", help="Output file for plan"),
     receipt: str = typer.Option(DEFAULT_RECEIPT_PATH, "--receipt", help="Path for the resumable phase receipt"),
+    agentic_eval_timeout: float = typer.Option(
+        DEFAULT_AGENTIC_EVAL_TIMEOUT_SECONDS,
+        "--agentic-eval-timeout",
+        min=0.1,
+        help="Per-trial timeout passed to $agentic-evals for the target skill fixture",
+    ),
 ) -> None:
     """Deep codebase assessment and technical debt cleanup."""
     if worktree_audit:
@@ -2338,6 +2579,11 @@ def main(
         "cleanup_evidence_artifact": scan_cleanup_evidence_artifact(),
         "project_watchdog": scan_project_watchdog_context(),
     }
+    findings["agentic_evals_gate"] = run_agentic_eval_gate(
+        receipt_dir=Path(receipt).parent,
+        write_receipt=not dry_run,
+        timeout_seconds=agentic_eval_timeout,
+    )
 
     # Join each candidate against per-file dependency evidence. Assessment
     # never depends on Memory: a blocked index degrades the verdicts, it does
