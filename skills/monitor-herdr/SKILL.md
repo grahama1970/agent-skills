@@ -12,9 +12,8 @@ triggers:
   - codex space monitor
   - lost agent monitor
 provides:
-  - stalled-agent-monitoring
   - progress-tracking
-  - agent-unblock-probe
+  - task-orchestration
 composes:
   - brave-search
   - ticket

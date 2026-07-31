@@ -11,8 +11,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from dotenv import find_dotenv, load_dotenv
 import typer
 
+load_dotenv(find_dotenv(usecwd=True), override=False)
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 PLUGIN_DIR = SKILL_DIR / "herdr-plugin"

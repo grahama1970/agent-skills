@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from dotenv import find_dotenv, load_dotenv
 from loguru import logger
 import typer
 
@@ -25,6 +26,8 @@ from goal_discovery import discover_immutable_goal, path_is_relative_to, project
 from herdr_terminal_control import herdr_bin_path, pane_run_submit, wait_for_agent_idle
 from prompt_builder import build_prompt
 from transcript_classifier import completion_claim_present, exhausted_blocker_claim, goal_allows_stop, latest_transcript_region, transcript_goal_claim, valid_attempt_value
+
+load_dotenv(find_dotenv(usecwd=True), override=False)
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 STATE_ROOT = Path.home() / ".local" / "state" / "monitor-herdr"
