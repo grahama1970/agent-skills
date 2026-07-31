@@ -1,0 +1,293 @@
+{
+  "analysis": {
+    "primary": "Intention-to-treat: every valid rater row is included in the primary analysis regardless of any judgment it contains. Report raw counts per condition per measure with Wilson 95% intervals. No LLM judge; no self-rating by the agent.",
+    "retention": "Included and excluded rater ids, exclusion reasons, and both denominators are retained in the analysis receipt.",
+    "sensitivity_only": "A separately labeled sensitivity analysis may exclude raters who fail the independent attention check. It is never the primary result."
+  },
+  "attention_check": {
+    "correct_answer": "morning",
+    "field": "attention_final_word",
+    "independence": "The check reads only this field. It never reads target_emotion_choice, embry_identity, identity_confidence, naturalness, or preference_rank, so it cannot select raters on the primary outcome.",
+    "question": "Type the final word of the spoken sentence (same sentence in every clip).",
+    "type": "content_recall"
+  },
+  "blinding": "Condition labels are absent from stimulus filenames presented to raters; use stimulus_id. This file contains the key and must not be shown to raters.",
+  "claims": {
+    "does_not_prove": [
+      "anything at all until human raters respond",
+      "that any embedding score corresponds to perception",
+      "any tone profile or renderer policy beyond these four exact WAV files"
+    ],
+    "proves": []
+  },
+  "created_at": "2026-07-31T18:34:05Z",
+  "hypothesis": "Listeners recognize the dream-derived session mood above chance, and rate the dream condition as recognizably Embry at parity with control.",
+  "live": true,
+  "measures_in_order": [
+    "target-emotion recognition (forced choice among the four tone labels)",
+    "Embry identity recognition (yes/no + confidence 1-5)",
+    "naturalness (1-5)",
+    "content equivalence (does the sentence mean the same thing? yes/no)",
+    "preference (secondary, reported but not used for the primary claim)"
+  ],
+  "mocked": false,
+  "presentation": {
+    "fixture_20_rater_orders": {
+      "R01": [
+        "S03",
+        "S04",
+        "S02",
+        "S01"
+      ],
+      "R02": [
+        "S04",
+        "S01",
+        "S03",
+        "S02"
+      ],
+      "R03": [
+        "S01",
+        "S02",
+        "S04",
+        "S03"
+      ],
+      "R04": [
+        "S02",
+        "S03",
+        "S01",
+        "S04"
+      ],
+      "R05": [
+        "S03",
+        "S04",
+        "S02",
+        "S01"
+      ],
+      "R06": [
+        "S04",
+        "S01",
+        "S03",
+        "S02"
+      ],
+      "R07": [
+        "S01",
+        "S02",
+        "S04",
+        "S03"
+      ],
+      "R08": [
+        "S02",
+        "S03",
+        "S01",
+        "S04"
+      ],
+      "R09": [
+        "S03",
+        "S04",
+        "S02",
+        "S01"
+      ],
+      "R10": [
+        "S01",
+        "S02",
+        "S04",
+        "S03"
+      ],
+      "R11": [
+        "S04",
+        "S01",
+        "S03",
+        "S02"
+      ],
+      "R12": [
+        "S03",
+        "S04",
+        "S02",
+        "S01"
+      ],
+      "R13": [
+        "S02",
+        "S03",
+        "S01",
+        "S04"
+      ],
+      "R14": [
+        "S01",
+        "S02",
+        "S04",
+        "S03"
+      ],
+      "R15": [
+        "S04",
+        "S01",
+        "S03",
+        "S02"
+      ],
+      "R16": [
+        "S03",
+        "S04",
+        "S02",
+        "S01"
+      ],
+      "R17": [
+        "S02",
+        "S03",
+        "S01",
+        "S04"
+      ],
+      "R18": [
+        "S01",
+        "S02",
+        "S04",
+        "S03"
+      ],
+      "R19": [
+        "S04",
+        "S01",
+        "S03",
+        "S02"
+      ],
+      "R20": [
+        "S04",
+        "S01",
+        "S03",
+        "S02"
+      ]
+    },
+    "note": "The rater page derives the same order client-side from the typed rater id; no fixed global order exists in v2.",
+    "order_hash": "FNV-1a 32-bit over 'salt:rater_id', modulo 4, selecting one Williams sequence",
+    "order_salt": "persona-dream-blinded-v2",
+    "rule": "per-rater counterbalanced order",
+    "stimulus_ids_in_slot_order": [
+      "S01",
+      "S02",
+      "S03",
+      "S04"
+    ],
+    "williams_square_slots": [
+      [
+        0,
+        1,
+        3,
+        2
+      ],
+      [
+        1,
+        2,
+        0,
+        3
+      ],
+      [
+        2,
+        3,
+        1,
+        0
+      ],
+      [
+        3,
+        0,
+        2,
+        1
+      ]
+    ]
+  },
+  "presentation_manifest": [
+    {
+      "condition": "control",
+      "slot": 1,
+      "stimulus_id": "S01"
+    },
+    {
+      "condition": "dream",
+      "slot": 2,
+      "stimulus_id": "S02"
+    },
+    {
+      "condition": "adversarial",
+      "slot": 3,
+      "stimulus_id": "S03"
+    },
+    {
+      "condition": "baseline",
+      "slot": 4,
+      "stimulus_id": "S04"
+    }
+  ],
+  "primary_measure": "target-emotion recognition accuracy for the dream condition (intention-to-treat)",
+  "responses_path": "reports/goal_v5/continuity/blinded_listener_study/responses_v2.jsonl",
+  "schema": "persona_dream.blinded_listener_study.v2",
+  "scope_statement": "Four stimuli x 20 raters is a four-WAV feasibility pilot over these exact preregistered files. It does not validate any tone profile, rendering policy, or renderer across texts, seeds, or repeated synthesis.",
+  "status": "BLOCKED_AWAITING_HUMAN_RATERS",
+  "stimuli": [
+    {
+      "asr_wer": null,
+      "audio": "reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
+      "bytes": 261198,
+      "condition": "control",
+      "engine": "chatterbox_base",
+      "normalized_tone": "neutral_warm",
+      "sha256": "sha256:3c61c23200701563ae8eda0a6b51107109b0d0547d2a1ce7491e5961ccbea52f",
+      "voice_delivery": {
+        "intensity": 0.0,
+        "tone": "neutral",
+        "valence": 0.0
+      }
+    },
+    {
+      "asr_wer": null,
+      "audio": "reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
+      "bytes": 228558,
+      "condition": "baseline",
+      "engine": "chatterbox_base",
+      "normalized_tone": "careful_concerned",
+      "sha256": "sha256:6a1ec8962e74e0866979834e5162563fbf3efa0940b34e3a5a4ca5c763cae2e2",
+      "voice_delivery": {
+        "intensity": 0.4,
+        "tone": "careful_concerned",
+        "valence": -0.1
+      }
+    },
+    {
+      "asr_wer": null,
+      "audio": "reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
+      "bytes": 224718,
+      "condition": "dream",
+      "engine": "chatterbox_base",
+      "normalized_tone": "firm_boundary",
+      "sha256": "sha256:e5a421c3d0dad45710404fc56a1047c2c062d1faefe03bdebdac3f3a1fb8fbaa",
+      "voice_delivery": {
+        "intensity": 0.72,
+        "tone": "firm_boundary",
+        "valence": -0.25
+      }
+    },
+    {
+      "asr_wer": null,
+      "audio": "reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
+      "bytes": 362958,
+      "condition": "adversarial",
+      "engine": "chatterbox_base",
+      "normalized_tone": "neutral_warm",
+      "sha256": "sha256:8657c873f59428c65b633136309d8e73a2d29d54b7b69b1d8f139ef3b51dfc00",
+      "voice_delivery": {
+        "intensity": 0.95,
+        "tone": "cheerful",
+        "valence": 0.9
+      }
+    }
+  ],
+  "stimulus_source": {
+    "answer_text": "I need you to wait before you commit to that plan, because the constraint changed this morning.",
+    "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+    "engine": "chatterbox_base",
+    "note": "Identical answer text and identical speaker reference across all four conditions; only voice_delivery differs. That is what makes the comparison matched.",
+    "reference": "/data/embry_ref.wav -> voice_clone_candidates/embry_kling_clone_candidate.wav"
+  },
+  "stopping_rule": "Fixed n=20 raters. No interim analysis, no extension after seeing results. A null or negative result is a valid outcome.",
+  "supersedes": {
+    "note": "v1 is preserved unmodified as a historical artifact; its fixed global order and outcome-dependent exclusion are superseded by this file.",
+    "path": "reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
+    "sha256": "sha256:745f7dfc19aada4563bbd7f0b1a0ba234cecdeb787d9ed6e4312218e79ffdbef"
+  },
+  "v1_response_isolation": "v1 responses.jsonl rows (if any ever existed) are never mixed into v2 analysis; v2 reads responses_v2.jsonl only."
+}

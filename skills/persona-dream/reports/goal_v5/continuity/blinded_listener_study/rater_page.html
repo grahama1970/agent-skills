@@ -133,6 +133,9 @@
       <label>Rater ID
         <input id="rater-id" autocomplete="off" placeholder="human_001">
       </label>
+      <label id="attention-wrap" hidden>Final word of the sentence
+        <input id="attention-word" autocomplete="off" placeholder="one word">
+      </label>
     </header>
     <div class="stimuli">
       
@@ -352,7 +355,7 @@
       </details>
     </aside>
   </main>
-  <script type="application/json" id="study-config">{&quot;stimuli&quot;: [{&quot;audio_src&quot;: &quot;blinded_stimuli/S01.wav&quot;, &quot;slot&quot;: 1, &quot;stimulus_id&quot;: &quot;S01&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S02.wav&quot;, &quot;slot&quot;: 2, &quot;stimulus_id&quot;: &quot;S02&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S03.wav&quot;, &quot;slot&quot;: 3, &quot;stimulus_id&quot;: &quot;S03&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S04.wav&quot;, &quot;slot&quot;: 4, &quot;stimulus_id&quot;: &quot;S04&quot;}], &quot;tones&quot;: [&quot;neutral&quot;, &quot;careful_concerned&quot;, &quot;firm_boundary&quot;, &quot;cheerful&quot;]}</script>
+  <script type="application/json" id="study-config">{&quot;stimuli&quot;: [{&quot;audio_src&quot;: &quot;blinded_stimuli/S01.wav&quot;, &quot;slot&quot;: 1, &quot;stimulus_id&quot;: &quot;S01&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S02.wav&quot;, &quot;slot&quot;: 2, &quot;stimulus_id&quot;: &quot;S02&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S03.wav&quot;, &quot;slot&quot;: 3, &quot;stimulus_id&quot;: &quot;S03&quot;}, {&quot;audio_src&quot;: &quot;blinded_stimuli/S04.wav&quot;, &quot;slot&quot;: 4, &quot;stimulus_id&quot;: &quot;S04&quot;}], &quot;tones&quot;: [&quot;neutral&quot;, &quot;careful_concerned&quot;, &quot;firm_boundary&quot;, &quot;cheerful&quot;], &quot;v2&quot;: {&quot;attention_question&quot;: &quot;Type the final word of the spoken sentence (same sentence in every clip).&quot;, &quot;orders&quot;: [[&quot;S01&quot;, &quot;S02&quot;, &quot;S04&quot;, &quot;S03&quot;], [&quot;S02&quot;, &quot;S03&quot;, &quot;S01&quot;, &quot;S04&quot;], [&quot;S03&quot;, &quot;S04&quot;, &quot;S02&quot;, &quot;S01&quot;], [&quot;S04&quot;, &quot;S01&quot;, &quot;S03&quot;, &quot;S02&quot;]], &quot;salt&quot;: &quot;persona-dream-blinded-v2&quot;}}</script>
   <script>
     const config = JSON.parse(document.getElementById("study-config").textContent);
     const statusEl = document.getElementById("status");
@@ -368,10 +371,45 @@
       statusEl.classList.toggle("error", isError);
     }
 
+    function fnv1a32(text) {
+      let value = 0x811c9dc5;
+      for (const byte of new TextEncoder().encode(text)) {
+        value ^= byte;
+        value = Math.imul(value, 0x01000193) >>> 0;
+      }
+      return value >>> 0;
+    }
+
+    function appliedOrder(raterId) {
+      if (!config.v2 || !raterId) return null;
+      const sequences = config.v2.orders;
+      return sequences[fnv1a32(config.v2.salt + ":" + raterId) % sequences.length];
+    }
+
+    function reorderStimuli() {
+      const raterId = document.getElementById("rater-id").value.trim();
+      const order = appliedOrder(raterId);
+      if (!order) return;
+      const container = document.querySelector(".stimuli");
+      order.forEach((stimulusId) => {
+        const section = container.querySelector(`[data-stimulus-id="${stimulusId}"]`);
+        if (section) container.appendChild(section);
+      });
+    }
+
+    if (config.v2) {
+      document.getElementById("attention-wrap").hidden = false;
+      document.getElementById("rater-id").addEventListener("input", reorderStimuli);
+    }
+
     function buildRow() {
       const raterId = document.getElementById("rater-id").value.trim();
       const errors = [];
       if (!raterId) errors.push("rater_id");
+      const attentionWord = config.v2
+        ? document.getElementById("attention-word").value.trim()
+        : null;
+      if (config.v2 && !attentionWord) errors.push("attention_final_word");
       const responses = [];
       document.querySelectorAll(".stimulus").forEach((section) => {
         const response = { stimulus_id: section.dataset.stimulusId };
@@ -406,6 +444,10 @@
         created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
         responses
       };
+      if (config.v2) {
+        row.attention_final_word = attentionWord;
+        row.presentation_order = appliedOrder(raterId);
+      }
       outputEl.value = JSON.stringify(row);
       setStatus(errors.length ? `Missing or invalid: ${errors.join(", ")}` : "Ready to append.", errors.length > 0);
       return errors.length === 0 ? row : null;

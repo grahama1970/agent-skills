@@ -108,15 +108,15 @@
       "response_schema_sha256": "sha256:21e51f2392ab9a9c4d6bfb8d15907fa36eb292f443cbc2861c61be2d4650850e",
       "rater_instructions_sha256": "sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5",
       "rater_page": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html",
-      "rater_page_sha256": "sha256:64b2f992a28c5d98c327212832f0be6d96e45b683eefd39323ea51c9ff4a2b85",
+      "rater_page_sha256": "sha256:aaf80e065138bee35f28751c8fa36c7951d7b276f40ae96efaec8b8ea6b92450",
       "rater_page_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json",
-      "rater_page_receipt_sha256": "sha256:8026000a080add6f63df81cf90c9b8522bed442c0f28b91647555ca2bed67bce",
+      "rater_page_receipt_sha256": "sha256:f190e9d641e7f3926d211212374ed509b4c7fa2194916e259dfb2e3073436e1c",
       "rater_page_status": "PASS_BLINDED_LISTENER_RATER_PAGE_READY",
       "human_responses": "0/20 valid",
       "remaining_failed_gate": "human_responses_complete"
     },
     "latest_blinded_listener_study_analysis_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
-    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89",
+    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:241b32edbf0ca854907338454497ca76f7e6caaa7483927ee36a9844a89025a5",
     "latest_blinded_listener_study_analysis": {
       "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
       "mocked": false,
@@ -127,6 +127,14 @@
         "signed_human_interpretation_missing"
       ],
       "boundary": "analysis false-green guard only; does not supply human ratings or perceptual evidence"
+    },
+    "latest_blinded_listener_study_design_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STUDY_DESIGN_RECEIPT_V2.json",
+    "latest_blinded_listener_study_design_receipt_sha256": "sha256:937600b2f01c2022ee1143f45d13612182f589d82bd0d1a46b6eb529c66ff636",
+    "latest_blinded_listener_study_design": {
+      "status": "PASS_BLINDED_LISTENER_STUDY_DESIGN_V2",
+      "preregistration_v2": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json",
+      "preregistration_v2_sha256": "sha256:3348a10b5242c63cf4ae30f92451fb21821d1004953882d6d0f87ff108758ef0",
+      "boundary": "v2 design repair only (#1126): per-rater counterbalanced order, intention-to-treat primary, independent attention check; provides no human perceptual evidence"
     }
   },
   "latest_voice_proof": {
@@ -241,16 +249,16 @@
     },
     "human_perceived_emotion_and_identity": {
       "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
-      "scope": "blinded human listener study of dream-derived emotion, Embry identity, and naturalness",
+      "scope": "blinded human listener study of dream-derived emotion, Embry identity, and naturalness; v2 design (per-rater counterbalancing, intention-to-treat primary, independent attention check) preregistered under #1126",
       "receipt": "reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
-      "receipt_sha256": "sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89",
+      "receipt_sha256": "sha256:241b32edbf0ca854907338454497ca76f7e6caaa7483927ee36a9844a89025a5",
       "valid_human_responses": "0/20",
       "sample_count": 0,
       "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
       "does_not_prove": "any perceptual emotion, naturalness, or human identity result; WER 0.0 and embedding separations are machine evidence and cannot substitute",
-      "successor_issue": "grahama1970/agent-skills#1126",
+      "successor_issue": "grahama1970/agent-skills#1127",
       "successor_resolved": false,
-      "surface_token": "#1126"
+      "surface_token": "#1127"
     },
     "pctom_apparatus_integrity": {
       "status": "PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE",

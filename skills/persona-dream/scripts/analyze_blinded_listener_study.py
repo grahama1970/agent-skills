@@ -228,10 +228,126 @@ def summarize_responses(
     }
 
 
+#: v2 (#1126): the primary analysis is intention-to-treat. The only permitted
+#: rater flag is an attention check that never reads an emotion judgment.
+ATTENTION_FIELD = "attention_final_word"
+
+
+def attention_flags(rows: list[dict[str, Any]], expected_word: str) -> dict[str, bool]:
+    """True means the rater failed the independent content-recall check.
+
+    Reads ONLY ``attention_final_word``. Emotion, identity, naturalness, and
+    preference judgments must never influence this flag; #1126 exists because
+    the v1 rule excluded raters on the primary outcome itself.
+    """
+    expected = expected_word.strip().lower().strip(".,!?")
+    flags: dict[str, bool] = {}
+    for row in rows:
+        rater_id = str(row.get("rater_id") or "")
+        if not rater_id:
+            continue
+        answer = str(row.get(ATTENTION_FIELD) or "").strip().lower().strip(".,!?")
+        flags[rater_id] = answer != expected
+    return flags
+
+
+def summarize_responses_v2(
+    rows: list[dict[str, Any]],
+    *,
+    prereg: dict[str, Any],
+    valid_row_indexes: set[int],
+) -> dict[str, Any]:
+    """v2 analysis: every valid rater is in the primary denominator.
+
+    The v1 adversarial-tone exclusion was outcome-dependent selection — a rater
+    who hears the cheerful adversarial file as the dream tone is evidence the
+    affect channel is weak, not a discardable row. Attention-check exclusion is
+    reported as a separately labeled sensitivity analysis only.
+    """
+    expected_word = str(
+        ((prereg.get("attention_check") or {}).get("correct_answer")) or ""
+    )
+    valid_rows = [row for idx, row in enumerate(rows, start=1) if idx in valid_row_indexes]
+    flags = attention_flags(valid_rows, expected_word) if expected_word else {}
+    failed_ids = sorted(rid for rid, failed in flags.items() if failed)
+
+    primary_rows = valid_rows
+    sensitivity_rows = [row for row in valid_rows if not flags.get(str(row.get("rater_id") or ""), False)]
+    primary_conditions = _itt_conditions(primary_rows, prereg)
+    sensitivity_conditions = _itt_conditions(sensitivity_rows, prereg)
+    return {
+        "analysis_policy": "intention_to_treat_primary_v2",
+        "valid_human_raters": len({str(row.get("rater_id")) for row in valid_rows if row.get("rater_id")}),
+        "primary": {
+            "label": "PRIMARY intention-to-treat: all valid raters included; no outcome-based exclusion",
+            "included_rater_ids": sorted(
+                {str(row.get("rater_id")) for row in primary_rows if row.get("rater_id")}
+            ),
+            "excluded_rater_ids": [],
+            "denominator": len({str(row.get("rater_id")) for row in primary_rows if row.get("rater_id")}),
+            "by_condition": primary_conditions,
+            "primary_measure": {
+                "condition": "dream",
+                "measure": "target_emotion_recognition",
+                "result": primary_conditions.get("dream", {}).get("target_emotion_recognition"),
+            },
+        },
+        "sensitivity_attention_check_only": {
+            "label": "SENSITIVITY ONLY: attention-check failures excluded; never the primary result",
+            "attention_check_field": ATTENTION_FIELD,
+            "expected_answer_normalized": expected_word.strip().lower().strip(".,!?"),
+            "excluded_rater_ids": failed_ids,
+            "exclusion_reasons": {rid: "attention_check_failed" for rid in failed_ids},
+            "denominator": len({str(row.get("rater_id")) for row in sensitivity_rows if row.get("rater_id")}),
+            "by_condition": sensitivity_conditions,
+        },
+    }
+
+
+def _itt_conditions(rows: list[dict[str, Any]], prereg: dict[str, Any]) -> dict[str, Any]:
+    """Per-condition summaries over the given rows with no exclusions."""
+    manifest_by_id = {
+        str(item["stimulus_id"]): str(item["condition"])
+        for item in prereg.get("presentation_manifest") or []
+        if item.get("stimulus_id") and item.get("condition")
+    }
+    tone_by_condition = {
+        str(stimulus["condition"]): str((stimulus.get("voice_delivery") or {}).get("tone"))
+        for stimulus in prereg.get("stimuli") or []
+        if stimulus.get("condition")
+    }
+    condition_rows: dict[str, list[dict[str, Any]]] = {condition: [] for condition in tone_by_condition}
+    for row in rows:
+        by_stimulus = response_by_stimulus(row)
+        for stimulus_id, condition in manifest_by_id.items():
+            response = by_stimulus.get(stimulus_id)
+            if response:
+                condition_rows.setdefault(condition, []).append(response)
+    by_condition: dict[str, Any] = {}
+    for condition, responses in sorted(condition_rows.items()):
+        expected_tone = tone_by_condition.get(condition)
+        n = len(responses)
+        target_success = sum(
+            1
+            for response in responses
+            if response.get("target_emotion_choice", response.get("target_emotion")) == expected_tone
+        )
+        identity_yes = sum(1 for response in responses if yes(response.get("embry_identity")))
+        by_condition[condition] = {
+            "n": n,
+            "expected_tone": expected_tone,
+            "target_emotion_recognition": wilson_interval(target_success, n),
+            "embry_identity_yes": wilson_interval(identity_yes, n),
+        }
+    return by_condition
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     study_dir = args.study_dir
-    prereg_path = study_dir / "PREREGISTRATION.json"
-    responses_path = study_dir / "responses.jsonl"
+    prereg_v2_path = study_dir / "PREREGISTRATION_V2.json"
+    v2_mode = prereg_v2_path.is_file()
+    prereg_path = prereg_v2_path if v2_mode else study_dir / "PREREGISTRATION.json"
+    responses_path = study_dir / ("responses_v2.jsonl" if v2_mode else "responses.jsonl")
     stimulus_validation_path = study_dir / "STIMULUS_VALIDATION_RECEIPT.json"
     signed_path = args.signed_interpretation or (study_dir / "SIGNED_INTERPRETATION.json")
     failed_gates: list[str] = []
@@ -281,7 +397,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         if not row_errors and row.get("rater_id"):
             valid_row_indexes.add(line_no)
 
-    response_analysis = summarize_responses(responses, prereg=prereg, valid_row_indexes=valid_row_indexes)
+    if v2_mode:
+        response_analysis = summarize_responses_v2(
+            responses, prereg=prereg, valid_row_indexes=valid_row_indexes
+        )
+    else:
+        response_analysis = summarize_responses(responses, prereg=prereg, valid_row_indexes=valid_row_indexes)
     signed_doc, signed_errors = validate_signed_interpretation(signed_path, receipt_path=args.out)
     failed_gates.extend(signed_errors)
 
@@ -293,6 +414,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "mocked": False,
         "live": False,
         "study_dir": rel(study_dir),
+        "design_version": "v2" if v2_mode else "v1",
         "preregistration": artifact(prereg_path),
         "stimulus_validation_receipt": artifact(stimulus_validation_path),
         "responses": artifact(responses_path),

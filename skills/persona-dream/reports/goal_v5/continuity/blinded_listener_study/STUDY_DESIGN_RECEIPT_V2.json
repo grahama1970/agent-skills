@@ -1,0 +1,49 @@
+{
+  "blocks": "grahama1970/agent-skills#1058 human collection until this receipt is PASS",
+  "checks": {
+    "attention_flag_catches_wrong_word": true,
+    "attention_flag_ignores_emotion_judgments": true,
+    "attention_flags": {
+      "catch_fail": true,
+      "itt_attentive": false,
+      "itt_confused": false
+    },
+    "distinct_counterbalanced_orders": 4,
+    "fixture_rater_count": 20,
+    "primary_denominator": 3,
+    "primary_excluded_rater_ids": [],
+    "primary_includes_adversarial_confused_rater": true,
+    "rater_page_condition_leaks": [],
+    "retention_fields_present": true,
+    "sensitivity_denominator": 2,
+    "v1_valid_human_responses": 0,
+    "v1_zero_responses_before_activation": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "perceived emotion, Embry identity, or naturalness",
+      "anything about human raters until responses_v2.jsonl fills",
+      "any tone profile or renderer policy beyond the four preregistered WAVs"
+    ],
+    "proves": [
+      "per-rater counterbalanced orders exist and are reproducible from the preregistration alone",
+      "the primary analysis is intention-to-treat and cannot exclude on target_emotion_choice",
+      "the attention check is independent of every emotion judgment",
+      "no v1 human response is mixed into the v2 design"
+    ]
+  },
+  "created_at": "2026-07-31T18:34:05Z",
+  "failed_gates": [],
+  "issue": "grahama1970/agent-skills#1126",
+  "live": false,
+  "mocked": false,
+  "preregistration_v1_preserved": {
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
+    "sha256": "sha256:745f7dfc19aada4563bbd7f0b1a0ba234cecdeb787d9ed6e4312218e79ffdbef"
+  },
+  "preregistration_v2": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json",
+  "preregistration_v2_sha256": "sha256:3348a10b5242c63cf4ae30f92451fb21821d1004953882d6d0f87ff108758ef0",
+  "schema": "persona_dream.blinded_listener_study_design_receipt.v2",
+  "status": "PASS_BLINDED_LISTENER_STUDY_DESIGN_V2",
+  "study_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study"
+}

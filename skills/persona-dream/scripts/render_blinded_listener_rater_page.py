@@ -122,7 +122,13 @@ def build_blinded_stimuli(study_dir: Path, prereg: dict[str, Any]) -> tuple[list
     return rows, failed_gates
 
 
-def render_html(*, stimuli: list[dict[str, Any]], tones: list[str], schema: dict[str, Any]) -> str:
+def render_html(
+    *,
+    stimuli: list[dict[str, Any]],
+    tones: list[str],
+    schema: dict[str, Any],
+    v2: dict[str, Any] | None = None,
+) -> str:
     page_stimuli = [
         {
             "stimulus_id": row["stimulus_id"],
@@ -131,7 +137,10 @@ def render_html(*, stimuli: list[dict[str, Any]], tones: list[str], schema: dict
         }
         for row in stimuli
     ]
-    config_json = json.dumps({"stimuli": page_stimuli, "tones": tones}, sort_keys=True)
+    config: dict[str, Any] = {"stimuli": page_stimuli, "tones": tones}
+    if v2:
+        config["v2"] = v2
+    config_json = json.dumps(config, sort_keys=True)
     sample_schema = json.dumps(schema.get("example_row") or {}, indent=2, sort_keys=True)
     tone_options = "\n".join(
         f'<option value="{html.escape(tone)}">{html.escape(tone.replace("_", " "))}</option>' for tone in tones
@@ -315,6 +324,9 @@ def render_html(*, stimuli: list[dict[str, Any]], tones: list[str], schema: dict
       <label>Rater ID
         <input id="rater-id" autocomplete="off" placeholder="human_001">
       </label>
+      <label id="attention-wrap" hidden>Final word of the sentence
+        <input id="attention-word" autocomplete="off" placeholder="one word">
+      </label>
     </header>
     <div class="stimuli">
       {cards_html}
@@ -350,10 +362,45 @@ def render_html(*, stimuli: list[dict[str, Any]], tones: list[str], schema: dict
       statusEl.classList.toggle("error", isError);
     }}
 
+    function fnv1a32(text) {{
+      let value = 0x811c9dc5;
+      for (const byte of new TextEncoder().encode(text)) {{
+        value ^= byte;
+        value = Math.imul(value, 0x01000193) >>> 0;
+      }}
+      return value >>> 0;
+    }}
+
+    function appliedOrder(raterId) {{
+      if (!config.v2 || !raterId) return null;
+      const sequences = config.v2.orders;
+      return sequences[fnv1a32(config.v2.salt + ":" + raterId) % sequences.length];
+    }}
+
+    function reorderStimuli() {{
+      const raterId = document.getElementById("rater-id").value.trim();
+      const order = appliedOrder(raterId);
+      if (!order) return;
+      const container = document.querySelector(".stimuli");
+      order.forEach((stimulusId) => {{
+        const section = container.querySelector(`[data-stimulus-id="${{stimulusId}}"]`);
+        if (section) container.appendChild(section);
+      }});
+    }}
+
+    if (config.v2) {{
+      document.getElementById("attention-wrap").hidden = false;
+      document.getElementById("rater-id").addEventListener("input", reorderStimuli);
+    }}
+
     function buildRow() {{
       const raterId = document.getElementById("rater-id").value.trim();
       const errors = [];
       if (!raterId) errors.push("rater_id");
+      const attentionWord = config.v2
+        ? document.getElementById("attention-word").value.trim()
+        : null;
+      if (config.v2 && !attentionWord) errors.push("attention_final_word");
       const responses = [];
       document.querySelectorAll(".stimulus").forEach((section) => {{
         const response = {{ stimulus_id: section.dataset.stimulusId }};
@@ -388,6 +435,10 @@ def render_html(*, stimuli: list[dict[str, Any]], tones: list[str], schema: dict
         created_at: new Date().toISOString().replace(/\\.\\d{{3}}Z$/, "Z"),
         responses
       }};
+      if (config.v2) {{
+        row.attention_final_word = attentionWord;
+        row.presentation_order = appliedOrder(raterId);
+      }}
       outputEl.value = JSON.stringify(row);
       setStatus(errors.length ? `Missing or invalid: ${{errors.join(", ")}}` : "Ready to append.", errors.length > 0);
       return errors.length === 0 ? row : null;
@@ -436,7 +487,22 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     tones = allowed_tones(response_schema, prereg)
     if not tones:
         failed_gates.append("allowed_tones_present")
-    html_text = render_html(stimuli=stimuli, tones=tones, schema=response_schema)
+    prereg_v2_path = study_dir / "PREREGISTRATION_V2.json"
+    v2cfg = None
+    if prereg_v2_path.is_file():
+        prereg_v2 = load_json(prereg_v2_path)
+        presentation = prereg_v2.get("presentation") or {}
+        slot_ids = presentation.get("stimulus_ids_in_slot_order") or []
+        v2cfg = {
+            "salt": presentation.get("order_salt"),
+            "orders": [
+                [slot_ids[slot] for slot in row]
+                for row in presentation.get("williams_square_slots") or []
+                if all(isinstance(slot, int) and slot < len(slot_ids) for slot in row)
+            ],
+            "attention_question": (prereg_v2.get("attention_check") or {}).get("question"),
+        }
+    html_text = render_html(stimuli=stimuli, tones=tones, schema=response_schema, v2=v2cfg)
     forbidden_condition_labels = sorted(
         {
             str(item.get("condition"))
@@ -468,10 +534,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "mocked": False,
         "live": False,
         "study_dir": rel(study_dir),
+        "design_version": "v2" if v2cfg else "v1",
         "page": artifact(args.out),
         "preregistration": artifact(prereg_path),
+        "preregistration_v2": artifact(prereg_v2_path) if v2cfg else None,
         "response_schema": artifact(schema_path),
-        "responses_target": rel(study_dir / "responses.jsonl"),
+        "responses_target": rel(study_dir / ("responses_v2.jsonl" if v2cfg else "responses.jsonl")),
         "blinded_stimuli": stimuli,
         "failed_gates": failed_gates,
         "claims": {

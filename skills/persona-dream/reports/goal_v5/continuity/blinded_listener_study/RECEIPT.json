@@ -9,7 +9,8 @@
     ],
     "proves": []
   },
-  "created_at": "2026-07-29T14:28:18Z",
+  "created_at": "2026-07-31T18:34:58Z",
+  "design_version": "v2",
   "failed_gates": [
     "human_responses_complete",
     "signed_human_interpretation_missing"
@@ -17,130 +18,104 @@
   "live": false,
   "mocked": false,
   "preregistration": {
-    "bytes": 4746,
+    "bytes": 8339,
     "exists": true,
-    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
-    "sha256": "sha256:745f7dfc19aada4563bbd7f0b1a0ba234cecdeb787d9ed6e4312218e79ffdbef"
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json",
+    "sha256": "sha256:3348a10b5242c63cf4ae30f92451fb21821d1004953882d6d0f87ff108758ef0"
   },
   "response_analysis": {
-    "attention_rule": "Exclude a rater only if the adversarial condition is judged as the target emotion of the dream condition.",
-    "by_condition": {
-      "adversarial": {
-        "content_equivalent_yes": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
+    "analysis_policy": "intention_to_treat_primary_v2",
+    "primary": {
+      "by_condition": {
+        "adversarial": {
+          "embry_identity_yes": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          },
+          "expected_tone": "cheerful",
           "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
+          "target_emotion_recognition": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          }
         },
-        "embry_identity_yes": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
+        "baseline": {
+          "embry_identity_yes": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          },
+          "expected_tone": "careful_concerned",
           "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
+          "target_emotion_recognition": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          }
         },
-        "expected_tone": "cheerful",
-        "identity_confidence_mean": null,
-        "n": 0,
-        "naturalness_mean": null,
-        "preference_rank_counts": {},
-        "target_emotion_recognition": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
+        "control": {
+          "embry_identity_yes": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          },
+          "expected_tone": "neutral",
           "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
+          "target_emotion_recognition": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          }
+        },
+        "dream": {
+          "embry_identity_yes": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          },
+          "expected_tone": "firm_boundary",
+          "n": 0,
+          "target_emotion_recognition": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          }
         }
       },
-      "baseline": {
-        "content_equivalent_yes": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
-          "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
-        },
-        "embry_identity_yes": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
-          "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
-        },
-        "expected_tone": "careful_concerned",
-        "identity_confidence_mean": null,
-        "n": 0,
-        "naturalness_mean": null,
-        "preference_rank_counts": {},
-        "target_emotion_recognition": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
-          "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
-        }
-      },
-      "control": {
-        "content_equivalent_yes": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
-          "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
-        },
-        "embry_identity_yes": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
-          "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
-        },
-        "expected_tone": "neutral",
-        "identity_confidence_mean": null,
-        "n": 0,
-        "naturalness_mean": null,
-        "preference_rank_counts": {},
-        "target_emotion_recognition": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
-          "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
-        }
-      },
-      "dream": {
-        "content_equivalent_yes": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
-          "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
-        },
-        "embry_identity_yes": {
-          "lower": null,
-          "method": "Wilson score interval, 95%",
-          "n": 0,
-          "proportion": null,
-          "successes": 0,
-          "upper": null
-        },
-        "expected_tone": "firm_boundary",
-        "identity_confidence_mean": null,
-        "n": 0,
-        "naturalness_mean": null,
-        "preference_rank_counts": {},
-        "target_emotion_recognition": {
+      "denominator": 0,
+      "excluded_rater_ids": [],
+      "included_rater_ids": [],
+      "label": "PRIMARY intention-to-treat: all valid raters included; no outcome-based exclusion",
+      "primary_measure": {
+        "condition": "dream",
+        "measure": "target_emotion_recognition",
+        "result": {
           "lower": null,
           "method": "Wilson score interval, 95%",
           "n": 0,
@@ -150,19 +125,95 @@
         }
       }
     },
-    "excluded_by_preregistered_attention_rule": [],
-    "included_human_raters": 0,
-    "primary_measure": {
-      "condition": "dream",
-      "measure": "target_emotion_recognition",
-      "result": {
-        "lower": null,
-        "method": "Wilson score interval, 95%",
-        "n": 0,
-        "proportion": null,
-        "successes": 0,
-        "upper": null
-      }
+    "sensitivity_attention_check_only": {
+      "attention_check_field": "attention_final_word",
+      "by_condition": {
+        "adversarial": {
+          "embry_identity_yes": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          },
+          "expected_tone": "cheerful",
+          "n": 0,
+          "target_emotion_recognition": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          }
+        },
+        "baseline": {
+          "embry_identity_yes": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          },
+          "expected_tone": "careful_concerned",
+          "n": 0,
+          "target_emotion_recognition": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          }
+        },
+        "control": {
+          "embry_identity_yes": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          },
+          "expected_tone": "neutral",
+          "n": 0,
+          "target_emotion_recognition": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          }
+        },
+        "dream": {
+          "embry_identity_yes": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          },
+          "expected_tone": "firm_boundary",
+          "n": 0,
+          "target_emotion_recognition": {
+            "lower": null,
+            "method": "Wilson score interval, 95%",
+            "n": 0,
+            "proportion": null,
+            "successes": 0,
+            "upper": null
+          }
+        }
+      },
+      "denominator": 0,
+      "excluded_rater_ids": [],
+      "exclusion_reasons": {},
+      "expected_answer_normalized": "morning",
+      "label": "SENSITIVITY ONLY: attention-check failures excluded; never the primary result"
     },
     "valid_human_raters": 0
   },
@@ -191,7 +242,7 @@
   "responses": {
     "bytes": 0,
     "exists": true,
-    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/responses.jsonl",
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/responses_v2.jsonl",
     "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "schema": "persona_dream.blinded_listener_study_analysis.v1",

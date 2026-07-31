@@ -736,6 +736,9 @@ case "$COMMAND" in
   live-chain-reliability)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_reliability.py" "$@"
     ;;
+  preregister-blinded-listener-study-v2)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/preregister_blinded_listener_study_v2.py" "$@"
+    ;;
   render-blinded-listener-rater-page)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/render_blinded_listener_rater_page.py" "$@"
     ;;

@@ -208,7 +208,7 @@ def test_superseded_marker_exempts_the_historical_p24_section(tmp_path, monkeypa
     marked.write_text(
         "# Project Knowledge: persona-dream\n\n"
         "## CURRENT NEXT STEP\n\n"
-        "1. #1037 recognition gate; successors #1128, #1126, #1131.\n\n"
+        "1. #1037 recognition gate; successors #1128, #1126, #1127, #1131.\n\n"
         "## SUPERSEDED - P2.4 voice-recognition preflight blocks on missing backend\n\n"
         "> SUPERSEDED 2026-07-28. Retained as the record of the failed attempts.\n",
         encoding="utf-8",
