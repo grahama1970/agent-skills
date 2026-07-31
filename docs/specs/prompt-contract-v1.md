@@ -331,6 +331,38 @@ Gating (Gemini's skill-scoped model): report-only for legacy debt; but a PR
 touching a skill requires THAT skill's contracts current with zero new
 `unregistered` — repo-wide gates only after the denominator is controlled.
 
+### 10.1 Composed refresh lane (`prompt_receipt_refresh`)
+
+Following cleanup's existing composition precedent (`--memory-index` invokes
+`$ingest-code` and writes a receipt), cleanup adds `agentic-evals` and `tau`
+to its `composes` list and gains an explicit opt-in lane:
+
+```
+--prompt-receipt-refresh [--contract <id> | --stale-only | --skill <skill>]
+```
+
+Evidence-model row (mirrors `memory_index_refresh`):
+
+| Class | Evidence required | Default status |
+|---|---|---|
+| `prompt_receipt_refresh` | explicit refresh request + agentic-evals fixture for each targeted contract + Tau eval-DAG execution receipt + new attestation read back from `receipts/current.json` | non-mutating projection by default; refresh only on explicit request |
+
+Division of authority is unchanged and load-bearing:
+
+- Cleanup ORCHESTRATES: selects stale/missing-receipt contracts from the
+  projection, invokes `$agentic-evals` (which invokes the Tau eval DAG), and
+  reports the resulting attestation state with a read-back.
+- Cleanup never JUDGES or SIGNS: pass/fail comes from the agentic-evals gate
+  policy; the attestation signer remains the Tau/CI harness. If cleanup both
+  produced and reported the verdict it would be self-attested — the trust
+  hole this spec exists to eliminate.
+- Contracts with no fixture cannot be refreshed; the lane reports them
+  `fixture_state: missing` with the scaffold command
+  (`agentic-evals scaffold-fixture`) as the next action — it does not invent
+  fixtures, because fixture expected-outputs are governed materials (§7).
+- A refresh that fails stays failed in the report (`eval_verdict: fail`);
+  cleanup must not retry-until-green (spray-and-pray guard).
+
 ## 11. Rollout order
 
 1. Fix the Ask↔Tau contract skew (agent-skills#1123) — contract stamping is
