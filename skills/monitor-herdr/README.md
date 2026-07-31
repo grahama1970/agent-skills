@@ -94,6 +94,19 @@ skills/monitor-herdr/run.sh status
 Status distinguishes the latest receipt from the latest cron-sourced receipt.
 That matters because a manual live eval should not make cron look healthy.
 
+Open a workspace file in the installed Herdr file viewer:
+
+```bash
+skills/monitor-herdr/run.sh open-file /path/to/workspace/file.py
+skills/monitor-herdr/run.sh open-file src/file.py:42
+skills/monitor-herdr/run.sh open-file --query "prompt builder" --root /path/to/workspace
+```
+
+Exact paths must resolve to files under the workspace root. If the target is a
+plain query, `open-file` fuzzy-matches the workspace file list, fails closed on
+tied top matches, and opens a Files split on the resolved file using
+`herdr-file-viewer --open`.
+
 Generate the exact prompt text for one pane without sending it:
 
 ```bash

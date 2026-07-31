@@ -28,3 +28,9 @@ id = "probe-current-pane"
 title = "Monitor Herdr Probe Current Pane"
 contexts = ["pane"]
 command = ["bash", "bin/monitor-herdr-plugin", "probe-current-pane"]
+
+[[actions]]
+id = "open-file"
+title = "Open File In Files"
+contexts = ["pane", "workspace"]
+command = ["bash", "bin/monitor-herdr-plugin", "open-file"]

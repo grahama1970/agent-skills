@@ -49,6 +49,10 @@ skills/monitor-herdr/run.sh tick --space codex
 skills/monitor-herdr/run.sh tick --space codex --min-stopped-seconds 600
 skills/monitor-herdr/run.sh tick --space codex --apply
 skills/monitor-herdr/run.sh status
+skills/monitor-herdr/run.sh open-file /path/to/workspace/file.py
+skills/monitor-herdr/run.sh open-file src/app.py:42
+skills/monitor-herdr/run.sh open-file --query "monitor herdr prompt builder" --root /path/to/workspace
+skills/monitor-herdr/run.sh open-file --query "prompt builder" --dry-run
 skills/monitor-herdr/run.sh install-cron
 skills/monitor-herdr/run.sh install-cron --space codex --apply
 skills/monitor-herdr/run.sh probe-text --pane-id w11:pG --agent codex --reason early_stop
@@ -130,6 +134,39 @@ Receipts include `invocation_source`. Normal manual runs use `cli`, plugin
 ticks use `herdr_plugin`, and installed cron uses `cron`. Scheduler health
 looks for cron receipts specifically, so a manual live eval cannot hide a bad
 scheduled job.
+
+## File Viewer Control
+
+When the human asks a project agent to "show", "open", or "jump to" a file in
+Files / the file viewer, the agent should use this skill's `open-file` command
+instead of pasting the path back into chat.
+
+Exact path examples:
+
+```bash
+skills/monitor-herdr/run.sh open-file /path/to/workspace/file.py
+skills/monitor-herdr/run.sh open-file src/file.py:120
+skills/monitor-herdr/run.sh open-file src/file.py:120-140
+```
+
+Fuzzy path examples:
+
+```bash
+skills/monitor-herdr/run.sh open-file --query "prompt builder" --root /path/to/workspace
+skills/monitor-herdr/run.sh open-file "prompt builder" --root /path/to/workspace
+```
+
+`open-file` resolves the target under the workspace root, writes a receipt, then
+opens the installed `herdr-file-viewer` in a Herdr split pane with the documented
+`--open` / `HERDR_FILE_VIEWER_OPEN` target. It does not key-script the viewer
+TUI. If the target is not an exact file, the command performs deterministic
+fuzzy matching over the workspace file list, fails closed on tied top matches,
+and records the top matches in the receipt.
+
+The installed file viewer plugin is expected to provide version `1.14.0` or
+newer so launch targets work. The monitor opens the viewer binary from the
+installed plugin root in a pane whose cwd is the resolved workspace root; it
+does not rely on the plugin manifest pane cwd.
 
 ## Candidate Selection And Immutable Goal Gate
 
