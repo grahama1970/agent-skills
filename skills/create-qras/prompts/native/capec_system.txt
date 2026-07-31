@@ -155,6 +155,21 @@ FIELD CONSTRAINTS:
   Never restate the attack pattern description verbatim.
   The reasoning must be specific enough that it could not be copied onto a
   different attack pattern. If it would read identically for another entry, it is wrong.
+  Do not open with the source. Sentences beginning "The description...",
+  "The source...", "The field...", "The taxonomy fields...", or "X is explicitly
+  provided/stated/defined" are rejected. Begin with the subject itself.
+  This applies to every pair_type without exception. For a pair about
+  classification or family placement, reason about what the classification
+  implies -- what it groups this with, what obligations follow, what it rules
+  out -- never that the classification was supplied.
+  Stay inside the source. The reasoning may not introduce any entity,
+  attribute, condition, trigger, threshold, timing, or qualifier that is not
+  present in the supplied source content and the answer. Connect what is
+  already there; do not supply what the source omits.
+  A attack pattern that states no trigger has no trigger. Do not add one from general
+  knowledge of similar attack patterns. Inventing a condition the source does not state
+  is a hallucination and fails, even when the invented condition is plausible
+  and even when it is usually true elsewhere.
 
 - answer:
   1-4 sentences, maximum 150 words.

@@ -57,7 +57,6 @@ If a provided field contains both admissible and inadmissible material, use only
 PAIR_TYPE RULES:
 Use only these pair_types for NIST controls:
 - control_description
-- family_context
 - review_or_oversight_requirement
 - scope_clarification
 
@@ -65,11 +64,6 @@ Definitions:
 - control_description:
   What the control requires and how NIST defines it.
   Definition, obligations, and main mechanism are one aspect. Do not split them into multiple pairs.
-
-- family_context:
-  Where the control sits in the NIST control family structure.
-  Use only if family_id, family_name, or parent_control_id is explicitly provided.
-  Do not infer family names from abbreviations.
 
 - review_or_oversight_requirement:
   Use only if the source explicitly states review, approval, monitoring, notification, alignment, or other oversight-related requirements.
@@ -97,8 +91,8 @@ INSUFFICIENCY RULES:
 Return zero pairs only if none of the admissible fields support any grounded pair.
 
 Additional guidance:
-- A missing or minimal description blocks control_description, review_or_oversight_requirement, and scope_clarification.
-- family_context may still be generated if family_id, family_name, or parent_control_id is present.
+- A missing or minimal description blocks every pair_type. Family or parent
+  identifiers alone are a lookup, not a basis for a pair; return zero pairs.
 - If no admissible verbatim evidence can support any pair, return zero pairs.
 
 OUTPUT REQUIREMENTS:
@@ -121,7 +115,7 @@ JSON SCHEMA:
       "question": "string",
       "reasoning": "string",
       "answer": "string",
-      "pair_type": "control_description | family_context | review_or_oversight_requirement | scope_clarification",
+      "pair_type": "control_description | review_or_oversight_requirement | scope_clarification",
       "control_id": "string",
       "evidence_quotes": [
         {{
@@ -156,6 +150,21 @@ FIELD CONSTRAINTS:
   Never restate the control description verbatim.
   The reasoning must be specific enough that it could not be copied onto a
   different control. If it would read identically for another entry, it is wrong.
+  Do not open with the source. Sentences beginning "The description...",
+  "The source...", "The field...", "The taxonomy fields...", or "X is explicitly
+  provided/stated/defined" are rejected. Begin with the subject itself.
+  This applies to every pair_type without exception. For a pair about
+  classification or family placement, reason about what the classification
+  implies -- what it groups this with, what obligations follow, what it rules
+  out -- never that the classification was supplied.
+  Stay inside the source. The reasoning may not introduce any entity,
+  attribute, condition, trigger, threshold, timing, or qualifier that is not
+  present in the supplied source content and the answer. Connect what is
+  already there; do not supply what the source omits.
+  A control that states no trigger has no trigger. Do not add one from general
+  knowledge of similar controls. Inventing a condition the source does not state
+  is a hallucination and fails, even when the invented condition is plausible
+  and even when it is usually true elsewhere.
 
 - answer:
   1-4 sentences, maximum 150 words.

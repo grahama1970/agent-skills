@@ -309,7 +309,7 @@ def _get_scillm_client() -> httpx.Client:
     return httpx.Client(
         base_url="http://localhost:4001",
         headers={
-            "Authorization": "Bearer sk-dev-proxy-123",
+            "Authorization": f"Bearer {_scillm_auth_token()}",
             "x-caller-skill": "create-qras",
         },
         timeout=900.0,  # Server-side QRA pool may queue and run up to 600s per lane
@@ -321,7 +321,7 @@ def _get_async_scillm_client() -> httpx.AsyncClient:
     return httpx.AsyncClient(
         base_url="http://localhost:4001",
         headers={
-            "Authorization": "Bearer sk-dev-proxy-123",
+            "Authorization": f"Bearer {_scillm_auth_token()}",
             "x-caller-skill": "create-qras",
         },
         timeout=900.0,  # Server-side QRA pool may queue and run up to 600s per lane
@@ -404,6 +404,31 @@ def _get_async_memory_client() -> httpx.AsyncClient:
     return httpx.AsyncClient(base_url=_memory_base_url(), timeout=60.0)
 
 
+def _scillm_auth_token() -> str:
+    """Resolve the scillm proxy token at runtime.
+
+    The proxy authorizes SCILLM_MASTER_KEY. The previous hardcoded
+    "sk-dev-proxy-123" is rejected by the running proxy and produced 401s.
+    """
+    for var in ("SCILLM_MASTER_KEY", "SCILLM_API_KEY"):
+        token = os.environ.get(var)
+        if token:
+            return token
+    raise RuntimeError(
+        "SCILLM_MASTER_KEY is not set; cannot authenticate to the scillm proxy"
+    )
+
+
+class EvidenceCaseUnavailable(RuntimeError):
+    """Raised when /create-evidence-case cannot adjudicate a question.
+
+    Every answer must pass /create-evidence-case. A transport or daemon
+    failure means the gate did not run, which is not the same as a QRA with
+    no crosswalk chains, so the run must stop rather than store an ungated
+    record.
+    """
+
+
 async def _create_evidence_case_async(
     client: httpx.AsyncClient,
     question: str,
@@ -421,7 +446,13 @@ async def _create_evidence_case_async(
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
-        return {"error": str(e), "glossary": [], "crosswalk_chains": []}
+        # Fail closed. Every answer must pass /create-evidence-case, so a
+        # failed call is a missing gate, not a QRA with an empty evidence case.
+        # Returning {"glossary": [], "crosswalk_chains": []} here let ungated
+        # QRAs into the corpus whenever the daemon was unreachable.
+        raise EvidenceCaseUnavailable(
+            f"/create-evidence-case failed for question {question!r}: {e}"
+        ) from e
 
 
 def _get_provider_concurrency(model: str = "text") -> int:
@@ -436,7 +467,7 @@ def _get_provider_concurrency(model: str = "text") -> int:
             resp = client.get(
                 f"http://localhost:4001/v1/scillm/concurrency?model={model}",
                 headers={
-                    "Authorization": "Bearer sk-dev-proxy-123",
+                    "Authorization": f"Bearer {_scillm_auth_token()}",
                     "X-Caller-Skill": "create-qras",
                 },
             )
@@ -473,7 +504,10 @@ def _create_evidence_case(client: httpx.Client, question: str) -> dict[str, Any]
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
-        return {"error": str(e), "glossary": [], "crosswalk_chains": []}
+        # Fail closed; see _create_evidence_case_async.
+        raise EvidenceCaseUnavailable(
+            f"/create-evidence-case failed for question {question!r}: {e}"
+        ) from e
 
 
 def _check_relationship_gates(evidence: dict) -> tuple[bool, str]:
@@ -3618,14 +3652,41 @@ def _json_safe_copy(value: Any, *, _seen: set[int] | None = None) -> Any:
         return str(value)
 
 
-def _store_qra(client: httpx.Client, qra: dict, collection: str | None = None) -> bool:
-    """Store QRA to v2 collection through memory's canonical upsert path.
+def _qra_content_hash(qra: dict) -> str:
+    """Canonical content hash over the reviewable fields.
 
-    v2 architecture:
-    - sparta_qra_canonical: native QRAs (about one control)
-    - sparta_qra_relationship: relationship QRAs (why two controls relate)
+    Promotion after human review must compare-and-swap against this hash so an
+    approval receipt always attests to the exact content that was reviewed.
     """
-    # Determine target collection from qra_type if not specified
+    material = json.dumps(
+        {
+            "question": qra.get("question"),
+            "reasoning": qra.get("reasoning"),
+            "answer": qra.get("answer"),
+            "evidence_quotes": qra.get("evidence_quotes"),
+        },
+        sort_keys=True,
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+def _store_qra(client: httpx.Client, qra: dict, collection: str | None = None) -> bool:
+    """Store a generated QRA as a CANDIDATE awaiting human review.
+
+    Generated QRAs are proposals. The model attempts the answer; a human
+    blesses it. Nothing between those two steps certifies correctness, so the
+    default path writes to sparta_qra_candidates with the intended target
+    recorded, and never directly into an answer-authorizing collection.
+    Promotion happens only through the candidate lifecycle
+    (promote_candidate_qra) after a human APPROVE or EDIT.
+
+    Direct writes into active collections previously happened here with no
+    candidate step and no blessing; that is how 7,608 degenerate records
+    entered sparta_qra_canonical. CREATE_QRAS_ALLOW_DIRECT_ACTIVE_WRITE=1
+    restores the old behavior for promotion tooling only.
+    """
+    # Determine the INTENDED active collection from qra_type
     if collection is None:
         qra_type = qra.get("qra_type", "")
         if qra_type in ("relationship", "sparta_context"):
@@ -3634,9 +3695,18 @@ def _store_qra(client: httpx.Client, qra: dict, collection: str | None = None) -
             # native, independent, standalone → canonical
             collection = "sparta_qra_canonical"
 
+    direct_active = os.environ.get("CREATE_QRAS_ALLOW_DIRECT_ACTIVE_WRITE") == "1"
+
     qra_doc = _json_safe_copy(qra)
     for field in ("_id", "_rev", "embedding", "embeddings", "embedding_multimodal"):
         qra_doc.pop(field, None)
+
+    if not direct_active:
+        qra_doc["candidate_status"] = "pending_review"
+        qra_doc["human_approved"] = False
+        qra_doc["intended_collection"] = collection
+        qra_doc["content_hash"] = _qra_content_hash(qra_doc)
+        collection = "sparta_qra_candidates"
 
     try:
         payload = {"documents": [qra_doc], "collection": collection, "skip_embedding": False}
