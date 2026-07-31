@@ -1067,11 +1067,72 @@ def _provision_browser_lifecycle(
     return lifecycle
 
 
+_RECOVERABLE_LANE_FAILURE_CODES = {
+    "browser_handler_timeout",
+    "missing_sentinel",
+    "webgpt_missing_sentinel",
+}
+
+
+def _lanes_pending_recovery(run_dir: Path) -> list[dict[str, Any]]:
+    """Lanes whose in-tab state may still hold the provider response.
+
+    A lane pends recovery when its node receipt is absent or non-PASS and
+    either its recovery packet names a recoverable failure class or its
+    heartbeat proves the prompt was actually submitted. Closing the lane's
+    tab in that state destroys the only copy of the response.
+    """
+    pending: list[dict[str, Any]] = []
+    for lane_dir in sorted((run_dir / "node-artifacts").glob("handler-*")):
+        receipt = _read_json_file(lane_dir / "node-receipt.json")
+        if isinstance(receipt, dict) and str(receipt.get("status") or "") == "PASS":
+            continue
+        packet = _read_json_file(lane_dir / "browser-recovery-packet.json")
+        heartbeat = _read_json_file(lane_dir / "webgpt_heartbeat.json")
+        failure_code = str(packet.get("failure_code") or "") if isinstance(packet, dict) else ""
+        submitted = bool(isinstance(heartbeat, dict) and heartbeat.get("submitted_at"))
+        if failure_code in _RECOVERABLE_LANE_FAILURE_CODES or submitted:
+            pending.append(
+                {
+                    "lane": lane_dir.name,
+                    "failure_code": failure_code or None,
+                    "heartbeat_submitted_at": (heartbeat or {}).get("submitted_at")
+                    if isinstance(heartbeat, dict)
+                    else None,
+                    "next_command": (packet or {}).get("next_command")
+                    if isinstance(packet, dict)
+                    else None,
+                }
+            )
+    return pending
+
+
+def _read_json_file(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
 def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
     if lifecycle.get("cleanup_status") == "attempted":
         return
     if lifecycle.get("status") not in {"READY", "BLOCKED"} or lifecycle.get("mode") != "fresh-temporary":
         return
+    run_dir = Path(str(lifecycle.get("run_dir") or ""))
+    if run_dir.is_dir():
+        pending = _lanes_pending_recovery(run_dir)
+        if pending:
+            lifecycle["cleanup"] = []
+            lifecycle["cleanup_status"] = "skipped_pending_recovery"
+            lifecycle["pending_recovery_lanes"] = pending
+            lifecycle["cleanup_policy_note"] = (
+                "Created window/tabs were kept open: one or more lanes failed in a "
+                "state whose response may only exist in-tab. Run each lane's "
+                "recovery next_command (or the provider extract) before closing."
+            )
+            _write_lifecycle(run_dir, lifecycle)
+            return
     surf_run = Path(str(lifecycle.get("surf_run") or (Path(__file__).resolve().parents[2].parent / "surf" / "run.sh")))
     cleanup: list[dict[str, Any]] = []
     window_id = str(lifecycle.get("window_id") or "")

@@ -3199,10 +3199,18 @@ def _browser_provider_extract_command(
         submitted = submitted or submit_meta.get("submitted_to_chatgpt") is True
     if handler == "webgrok":
         submitted = submitted or submit_meta.get("submitted_to_grok") is True
+    if not submitted:
+        # A submit killed at the worker timeout leaves meta status "failed"
+        # even when the prompt went in; the heartbeat's submitted_at is the
+        # durable acceptance proof in that case.
+        heartbeat = _read_json(meta_path.parent / "webgpt_heartbeat.json")
+        if isinstance(heartbeat, dict) and heartbeat.get("submitted_at"):
+            submitted = True
     if not submitted and str(submit_meta.get("status") or "") != "missing_sentinel":
         return []
     tab_id = str(
         submit_meta.get("controlled_tab_id")
+        or submit_meta.get("requested_tab_id")
         or browser_oracle.get("controlled_tab_id")
         or browser_oracle.get("tab_id")
         or ""

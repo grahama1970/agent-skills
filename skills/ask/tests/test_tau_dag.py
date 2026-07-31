@@ -3317,6 +3317,47 @@ print(json.dumps({"ok": True}))
     assert (tmp_path / "run" / "browser-tab-lifecycle.json").is_file()
 
 
+def test_browser_tab_lifecycle_keeps_window_for_recoverable_failed_lane(tmp_path: Path) -> None:
+    log_path = tmp_path / "commands.jsonl"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json, sys
+from pathlib import Path
+log = Path(sys.argv[0]).with_name("commands.jsonl")
+with log.open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(sys.argv[1:]) + "\\n")
+print(json.dumps({"ok": True}))
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    run_dir = tmp_path / "run"
+    lane = run_dir / "node-artifacts" / "handler-webgpt"
+    lane.mkdir(parents=True)
+    (lane / "browser-recovery-packet.json").write_text(
+        json.dumps({"failure_code": "browser_handler_timeout", "next_command": []}),
+        encoding="utf-8",
+    )
+    lifecycle = {
+        "schema": "ask.browser_tab_lifecycle.v1",
+        "status": "READY",
+        "mode": "fresh-temporary",
+        "run_dir": str(run_dir),
+        "window_id": "900",
+        "created_tabs": [{"tab_id": "101"}],
+        "surf_run": str(surf),
+    }
+
+    tau_dag_cli._cleanup_browser_lifecycle(lifecycle)
+
+    assert not log_path.exists()
+    assert lifecycle["cleanup_status"] == "skipped_pending_recovery"
+    assert lifecycle["pending_recovery_lanes"][0]["lane"] == "handler-webgpt"
+    receipt = json.loads((run_dir / "browser-tab-lifecycle.json").read_text(encoding="utf-8"))
+    assert receipt["cleanup_status"] == "skipped_pending_recovery"
+
+
 def test_browser_tab_lifecycle_extracts_surf_window_text_output() -> None:
     output = "Window 837362456 (tab 837362457)\nUse --window-id 837362456 to target this window"
 
