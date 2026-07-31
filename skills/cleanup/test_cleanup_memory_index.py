@@ -58,3 +58,172 @@ def test_memory_index_receipt_captures_local_artifacts(monkeypatch, tmp_path):
     assert result["status"] == "passed"
     assert result["local_artifacts"]["code_symbols_jsonl"].endswith("code-symbols.jsonl")
     assert json.loads(receipt.read_text())["dry_run"] is True
+
+
+# ── #1125: backup-freshness + monitor-health pre-mutation gate ──────────────
+
+import cleanup_memory_gate  # noqa: E402
+from datetime import datetime, timedelta, timezone  # noqa: E402
+
+NOW = datetime(2026, 7, 31, 12, 0, tzinfo=timezone.utc)
+
+
+def _write_backup_receipt(tmp_path, *, age_hours, with_dir=True):
+    completed = (NOW - timedelta(hours=age_hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    backup_dir = tmp_path / "backup-dir"
+    if with_dir:
+        backup_dir.mkdir(exist_ok=True)
+    path = tmp_path / "latest_backup_receipt.json"
+    path.write_text(json.dumps({
+        "schema": "arangodb_backup_receipt.v1",
+        "completed_at": completed,
+        "backup_dir": str(backup_dir),
+    }))
+    return path
+
+
+def _write_health_receipt(tmp_path, *, age_hours, failing=None):
+    updated = (NOW - timedelta(hours=age_hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    state = {"status": "running", "last_updated": updated}
+    for category in failing or []:
+        state[category] = {"status": "failed"}
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps(state))
+    return path
+
+
+def _gate(tmp_path, *, backup_age, health_age, failing=None, allowed=None):
+    return cleanup_memory_gate.evaluate_memory_mutation_gate(
+        backup_receipt_path=str(_write_backup_receipt(tmp_path, age_hours=backup_age)),
+        health_receipt_path=str(_write_health_receipt(tmp_path, age_hours=health_age, failing=failing)),
+        allowed_failing_categories=allowed,
+        now=NOW,
+    )
+
+
+def test_gate_stale_backup_blocks_with_named_blocker(tmp_path):
+    gate = _gate(tmp_path, backup_age=72, health_age=1)
+    assert gate["allowed"] is False
+    blockers = {b["blocker"]: b for b in gate["blockers"]}
+    assert set(blockers) == {"memory_backup_stale"}
+    assert "ops-arango/run.sh dump" in blockers["memory_backup_stale"]["remediation"]
+
+
+def test_gate_missing_backup_receipt_blocks(tmp_path):
+    gate = cleanup_memory_gate.evaluate_memory_mutation_gate(
+        backup_receipt_path=str(tmp_path / "missing.json"),
+        health_receipt_path=str(_write_health_receipt(tmp_path, age_hours=1)),
+        now=NOW,
+    )
+    assert [b["blocker"] for b in gate["blockers"]] == ["memory_backup_stale"]
+
+
+def test_gate_stale_health_receipt_blocks(tmp_path):
+    gate = _gate(tmp_path, backup_age=6, health_age=48)
+    assert [b["blocker"] for b in gate["blockers"]] == ["memory_health_stale"]
+    assert "monitor-sparta/run.sh health" in gate["blockers"][0]["remediation"]
+
+
+def test_gate_fresh_failing_health_blocks(tmp_path):
+    gate = _gate(tmp_path, backup_age=6, health_age=1, failing=["qra_evidence_health"])
+    assert [b["blocker"] for b in gate["blockers"]] == ["memory_health_failing"]
+    assert "qra_evidence_health" in gate["blockers"][0]["detail"]
+
+
+def test_gate_declared_irrelevant_category_does_not_block(tmp_path):
+    gate = _gate(
+        tmp_path, backup_age=6, health_age=1,
+        failing=["qra_evidence_health"], allowed=["qra_evidence_health"],
+    )
+    assert gate["allowed"] is True
+
+
+def test_gate_fresh_backup_and_health_skips_backup_request(tmp_path):
+    gate = _gate(tmp_path, backup_age=6, health_age=1)
+    assert gate["allowed"] is True
+    assert gate["backup_request_invocations"] == 0
+    assert gate["backup"]["fresh"] is True
+    assert gate["health"]["passing"] is True
+
+
+def _gate_env(monkeypatch, tmp_path, *, backup_age, health_age, failing=None):
+    monkeypatch.setenv(
+        "CLEANUP_ARANGO_BACKUP_RECEIPT",
+        str(_write_backup_receipt(tmp_path, age_hours=backup_age)),
+    )
+    monkeypatch.setenv(
+        "CLEANUP_MONITOR_HEALTH_RECEIPT",
+        str(_write_health_receipt(tmp_path, age_hours=health_age, failing=failing)),
+    )
+
+
+def test_memory_index_blocked_lane_exits_clean_without_ingest(monkeypatch, tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.chdir(repo)
+    _gate_env(monkeypatch, tmp_path, backup_age=200, health_age=1)
+    calls = []
+    monkeypatch.setattr(
+        cleanup_memory_index.subprocess, "run",
+        lambda *a, **k: calls.append(a) or SimpleNamespace(returncode=0, stdout="", stderr=""),
+    )
+
+    result = cleanup_memory_index.run_memory_indexing(
+        dry_run=False, output=str(tmp_path / "receipt.json")
+    )
+
+    assert result["status"] == "blocked"
+    assert result["memory_indexing"] == "blocked"
+    assert [b["blocker"] for b in result["blockers"]] == ["memory_backup_stale"]
+    assert result["ingest_invoked"] is False
+    assert calls == []  # no ingest-code invocation
+    phase = json.loads((repo / "artifacts/cleanup/cleanup_receipt.json").read_text())
+    assert phase["phases"]["memory_indexing"] == "blocked"
+    assert phase["memory_index"]["blockers"][0]["blocker"] == "memory_backup_stale"
+
+
+def test_memory_index_fresh_receipts_proceed_and_cite_both_paths(monkeypatch, tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    runner = tmp_path / "run.sh"
+    runner.write_text("#!/usr/bin/env bash\n")
+    monkeypatch.chdir(repo)
+    _gate_env(monkeypatch, tmp_path, backup_age=6, health_age=1)
+    monkeypatch.setattr(cleanup_memory_index, "find_ingest_code_runner", lambda: runner)
+    monkeypatch.setattr(
+        cleanup_memory_index.subprocess, "run",
+        lambda *a, **k: SimpleNamespace(returncode=0, stdout="ok", stderr=""),
+    )
+    monkeypatch.setattr(
+        cleanup_memory_index, "scan_ingest_code_evidence",
+        lambda: {"status": "complete", "marker_path": ".ingest-code.json"},
+    )
+    monkeypatch.setattr(
+        cleanup_memory_index, "scan_cleanup_evidence_artifact",
+        lambda: {"status": "complete", "artifact_path": ".cleanup-evidence.json"},
+    )
+
+    result = cleanup_memory_index.run_memory_indexing(
+        dry_run=False, output=str(tmp_path / "receipt.json")
+    )
+
+    assert result["status"] == "passed"
+    assert result["ingest_invoked"] is True
+    gate = result["memory_mutation_gate"]
+    assert gate["allowed"] is True
+    assert gate["backup_request_invocations"] == 0
+    phase = json.loads((repo / "artifacts/cleanup/cleanup_receipt.json").read_text())
+    assert phase["phases"]["memory_indexing"] == "complete"
+    assert phase["memory_index"]["backup_receipt_path"].endswith("latest_backup_receipt.json")
+    assert phase["memory_index"]["health_receipt_path"].endswith("state.json")
+
+
+def test_health_receipt_epoch_last_updated_is_parsed(tmp_path):
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps({
+        "status": "running",
+        "last_updated": (NOW - timedelta(hours=50)).timestamp(),
+    }))
+    result = cleanup_memory_gate.check_monitor_health(path, now=NOW)
+    assert result["fresh"] is False
+    assert "50.0h old" in result["detail"]

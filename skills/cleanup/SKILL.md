@@ -54,6 +54,7 @@ This skill performs a deep assessment of the codebase to identify technical debt
 - **Public-readiness/security cleanup**: Flags gitleaks, dir-scan, and GitHub settings blockers.
 - **Quality-gate cleanup**: Runs or reports scoped parse, lint, format, type, and test gates.
 - **Memory-index cleanup**: `--memory-index` runs `$ingest-code --treesitter` and writes a local searchability/offline-artifact receipt.
+- **Pre-mutation receipt gate** (#1125): before any memory-mutating lane (`--memory-index`, future `prompt_receipt_refresh`) executes for real, cleanup consumes the `$ops-arango` backup receipt (`/mnt/storage12tb/backups/arangodb/latest_backup_receipt.json`, threshold 48h) and the owning monitor's health receipt (`monitor-sparta` `state.json`, threshold 24h). Check-then-skip: fresh receipts are cited as-is in the phase receipt; cleanup never runs `arangodump` or re-implements monitor checks. Stale/failing evidence fails the lane closed (exit 0, no ingest invocation) with blockers `memory_backup_stale`, `memory_health_stale`, or `memory_health_failing`, each naming the exact producer command to re-run. Overrides: `CLEANUP_ARANGO_BACKUP_RECEIPT`, `CLEANUP_MONITOR_HEALTH_RECEIPT`, `CLEANUP_BACKUP_MAX_AGE_HOURS`, `CLEANUP_HEALTH_MAX_AGE_HOURS`, `CLEANUP_HEALTH_ALLOWED_FAILING`.
 - **Evidence-first Markdown report**: `--plan` writes a prose-first
   `$best-practices-report` cleanup report with summary, scope, source inventory,
   finding index, next actions, and non-claims.
