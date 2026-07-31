@@ -121,6 +121,39 @@ def test_prompt_preflight_does_not_treat_tilde_digit_approximation_as_path(tmp_p
     assert payload["browser_submit_allowed"] is True
 
 
+def test_prompt_preflight_does_not_treat_double_slash_comments_as_paths(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    request.write_text(
+        "Review this TypeScript snippet:\n"
+        "```ts\n"
+        "// This is a comment, not a filesystem path.\n"
+        "const url = 'https://example.test/path'; // keep this URL\n"
+        "```\n",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        [
+            "python3",
+            str(WEBGPT_PROMPT_PREFLIGHT),
+            "--input",
+            str(request),
+            "--json",
+        ],
+        cwd=tmp_path,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["status"] == "pass"
+    assert payload["local_paths"] == []
+    assert payload["browser_submit_allowed"] is True
+
+
 def test_webgpt_submit_allows_warn_preflight_and_records_metadata(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
@@ -275,6 +308,113 @@ esac
     assert "tab.new" not in invocations
     assert "chatgpt" not in invocations
     assert not list(tmp_path.glob("surf-webgpt-cdp-*.log"))
+
+
+def test_webgpt_submit_cdp_probe_lock_timeout_is_not_stale_cdp(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    invocation_log = tmp_path / "surf-invocations.log"
+    fake_run = f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(invocation_log)!r}
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tAgentic Research - Boris Loop\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    echo 'SURF_BROWSER_LOCK_BLOCKED {{"schema":"surf.browser_lock_blocker.v1","blocker":"surf_browser_lock_timeout","owner":{{"pid":3290346}}}}' >&2
+    echo 'Error: Timed out waiting for browser lock after 2s. owner_pid=3290346 owner_socket=unix:/tmp/surf.sock lock_dir=/tmp/surf-lock-example.' >&2
+    exit 1
+    ;;
+  extension.reload|extension.ping|tab.new|chatgpt)
+    echo "forbidden fallback/submission command: $*" >&2
+    exit 42
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        env_overrides={"SURF_LOCK_TIMEOUT_MS": "2000"},
+    )
+
+    assert proc.returncode == 6
+    assert "Surf browser lock blocked CDP probe" in proc.stderr
+    log = invocation_log.read_text(encoding="utf-8")
+    assert "--lock-timeout 2" in log
+    assert "extension.reload" not in log
+    assert "chatgpt" not in log
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "browser_cdp_lock_timeout"
+    assert meta["proof_status"] == "not_submitted"
+    assert meta["submitted_to_chatgpt"] is False
+    assert meta["browser_lock_blocked"] is True
+    assert meta["cdp_retry_attempted"] is False
+    assert "SURF_BROWSER_LOCK_BLOCKED" in meta["cdp_probe_stderr"]
+    assert meta["agent_diagnosis"] == (
+        "Surf could not run the CDP pre-submit probe because the shared browser lock was held."
+    )
+
+
+def test_webgpt_submit_cdp_probe_timeout_writes_failure_meta(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf '837352334\\tAgentic Research - Boris Loop\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{"active_tab_id":"123","active_window_id":"456"}\\n'
+    ;;
+  js)
+    sleep 5
+    ;;
+  extension.reload|extension.ping)
+    printf 'connected\\n'
+    ;;
+  tab.new|chatgpt)
+    echo "forbidden fallback/submission command: $*" >&2
+    exit 42
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        env_overrides={"SURF_WEBGPT_CDP_PROBE_TIMEOUT_SECONDS": "1"},
+    )
+
+    assert proc.returncode == 6
+    assert "same-tab extension reload retry" in proc.stderr
+    meta_path = tmp_path / "response.meta.json"
+    assert meta_path.is_file()
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "stale_cdp_on_explicit_tab"
+    assert meta["proof_status"] == "not_submitted"
+    assert meta["submitted_to_chatgpt"] is False
+    assert meta["browser_lock_blocked"] is False
+    assert meta["cdp_retry_attempted"] is True
+    assert "SURF_CDP_PROBE_TIMEOUT after 1s" in meta["cdp_probe_stderr"]
+    assert "SURF_CDP_PROBE_TIMEOUT after 1s" in meta["cdp_retry_stderr"]
 
 
 def test_webgpt_submit_blocks_concurrent_submit_to_same_tab(tmp_path: Path) -> None:
@@ -970,6 +1110,10 @@ esac
     assert meta["recommended_action"] == "wait_for_chatgpt_rate_limit_cooldown_before_retry"
     assert meta["proof_status"] == "rate_limited"
     assert meta["chatgpt_too_many_requests_detected"] is True
+    assert meta["requested_tab_id"] == "837352334"
+    assert meta["controlled_tab_id"] == "837352334"
+    assert meta["controlled_tab_id_mismatch"] is False
+    assert meta["tab_was_created"] is False
     assert meta["chatgpt_rate_limit"]["error"] == "retry_failed_exit_42"
     assert chatgpt_count_file.read_text(encoding="utf-8") == "2"
 
@@ -1521,6 +1665,7 @@ esac
     assert meta["proof_status"] == "response_proven"
     assert meta["controlled_tab_id"] == "837352334"
     assert meta["controlled_tab_id_mismatch"] is False
+    assert meta["tab_was_created"] is False
     assert meta["raw_contains_sentinel"] is True
     assert meta["clean_contains_sentinel"] is False
     assert meta["focus_changed"] is True
@@ -1586,6 +1731,8 @@ esac
     assert meta["proof_status"] == "response_proven"
     assert meta["response_proof_status"] == "response_proven"
     assert meta["controlled_tab_id"] == "837352334"
+    assert meta["controlled_tab_id_mismatch"] is False
+    assert meta["tab_was_created"] is False
     assert meta["conversation_url"] == "https://chatgpt.com/c/example"
     assert meta["raw_contains_sentinel"] is True
     assert meta["clean_contains_sentinel"] is False

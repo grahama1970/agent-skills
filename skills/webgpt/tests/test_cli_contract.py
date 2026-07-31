@@ -210,6 +210,114 @@ def test_explicit_tab_resolution_uses_live_url_and_oracle_backend(monkeypatch) -
     assert (transport, tab_id, url) == ("kimi", "837357145", kimi_url)
 
 
+def test_project_submit_preserves_browser_oracle_tab_and_desktop_metadata(
+    tmp_path: Path, monkeypatch
+) -> None:
+    bundle = tmp_path / "bundle.md"
+    bundle.write_text("ping\n", encoding="utf-8")
+    calls: list[tuple[str, ...]] = []
+    binding = {
+        "readiness": "ready",
+        "project": "battle",
+        "name": "battle",
+        "backend": "webgpt",
+        "tab_id": "837356871",
+        "conversation_url": "https://chatgpt.com/c/battle",
+        "human_name": "battle",
+        "kde_desktop_index": 2,
+    }
+
+    def fake_run_browser_oracle(*args: str) -> subprocess.CompletedProcess:
+        calls.append(("browser-oracle", *args))
+        return subprocess.CompletedProcess(args, 0, json.dumps(binding), "")
+
+    def fake_surf(*args: str | int, **kwargs) -> subprocess.CompletedProcess:
+        str_args = tuple(str(arg) for arg in args)
+        calls.append(("surf", *str_args))
+        if str_args[0] == "webgpt.preflight":
+            return subprocess.CompletedProcess(str_args, 0, '{"ok":true}\n', "")
+        if str_args[0] == "webgpt.submit":
+            meta_path = Path(str_args[str_args.index("--meta-output") + 1])
+            output_path = Path(str_args[str_args.index("--output") + 1])
+            raw_path = Path(str_args[str_args.index("--raw-output") + 1])
+            receipt_path = Path(str_args[str_args.index("--receipt-output") + 1])
+            meta_path.write_text(
+                json.dumps(
+                    {
+                        "requested_tab_id": "837356871",
+                        "controlled_tab_id": "837356871",
+                        "controlled_tab_id_mismatch": False,
+                        "tab_was_created": False,
+                        "browser_oracle_human_name": binding["human_name"],
+                        "browser_oracle_kde_desktop_index": binding["kde_desktop_index"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            output_path.write_text("PONG\n", encoding="utf-8")
+            raw_path.write_text("PONG\n", encoding="utf-8")
+            receipt_path.write_text('{"ok":true}\n', encoding="utf-8")
+            return subprocess.CompletedProcess(str_args, 0, "ok\n", "")
+        raise AssertionError(f"unexpected surf call: {str_args}")
+
+    monkeypatch.setattr(webgpt_cli, "_run_browser_oracle", fake_run_browser_oracle)
+    monkeypatch.setattr(webgpt_cli, "_surf", fake_surf)
+
+    webgpt_cli.submit(
+        bundle=str(bundle),
+        project="battle",
+        repo_root=str(tmp_path),
+        output_contract="none",
+        tab_id_override="",
+        expected_url_override="",
+        source_paths=[],
+        timeout=900,
+    )
+
+    doctor_call = calls[0]
+    assert doctor_call[:2] == ("browser-oracle", "doctor")
+    assert "--project" in doctor_call and "battle" in doctor_call
+    preflight_call = next(call for call in calls if call[:2] == ("surf", "webgpt.preflight"))
+    submit_call = next(call for call in calls if call[:2] == ("surf", "webgpt.submit"))
+    for call in (preflight_call, submit_call):
+        assert "--tab-id" in call
+        assert call[call.index("--tab-id") + 1] == "837356871"
+        assert "--expect-url" in call
+        assert call[call.index("--expect-url") + 1] == "https://chatgpt.com/c/battle"
+        assert "--no-activate" in call
+        assert "--create-tab" not in call
+    assert "--no-remember" in submit_call
+    meta = json.loads((tmp_path / "bundle-response.meta.json").read_text(encoding="utf-8"))
+    assert meta["controlled_tab_id"] == binding["tab_id"]
+    assert meta["controlled_tab_id_mismatch"] is False
+    assert meta["browser_oracle_human_name"] == "battle"
+    assert meta["browser_oracle_kde_desktop_index"] == 2
+
+
+def test_submit_failure_summary_promotes_surf_lock_meta(tmp_path: Path, capsys) -> None:
+    meta = tmp_path / "response.meta.json"
+    meta.write_text(
+        json.dumps(
+            {
+                "failure": "browser_cdp_lock_timeout",
+                "browser_lock_blocked": True,
+                "agent_diagnosis": "Surf could not run the CDP pre-submit probe because the shared browser lock was held.",
+                "agent_action": "Wait for the lock owner to finish.",
+                "cdp_retry_stderr": "SURF_BROWSER_LOCK_BLOCKED owner_pid=123",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    webgpt_cli._emit_submit_failure_summary(meta)
+
+    captured = capsys.readouterr()
+    assert "BLOCKED_WEBGPT_BROWSER_CDP_LOCK_TIMEOUT" in captured.err
+    assert "shared browser lock was held" in captured.err
+    assert "Wait for the lock owner to finish." in captured.err
+    assert "SURF_BROWSER_LOCK_BLOCKED" in captured.err
+
+
 def test_explicit_tab_url_assertion_fails_before_oracle(monkeypatch) -> None:
     monkeypatch.setattr(
         webgpt_cli,
