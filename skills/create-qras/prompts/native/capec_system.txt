@@ -140,36 +140,8 @@ FIELD CONSTRAINTS:
   Must explicitly contain both the exact control ID and the attack pattern name.
 
 - reasoning:
-  Reason about the subject matter. State why the answer follows for THIS
-  attack pattern specifically: the mechanism, condition, or consequence that makes it
-  true.
-  Be precise, concise, and comprehensive. Precise: no hedging or filler.
-  Concise: no words that carry nothing. Comprehensive: nothing load-bearing
-  omitted.
-  There is no minimum and no maximum length. Satisfying all three may take six
-  words or six paragraphs; let the attack pattern decide, and stop when the reasoning
-  is complete. Never pad to look thorough, and never truncate a real
-  explanation to look tight.
-  Do NOT explain provenance, grounding, validity, or which field you read.
-  evidence_quotes already carries that.
-  Never restate the attack pattern description verbatim.
-  The reasoning must be specific enough that it could not be copied onto a
-  different attack pattern. If it would read identically for another entry, it is wrong.
-  Do not open with the source. Sentences beginning "The description...",
-  "The source...", "The field...", "The taxonomy fields...", or "X is explicitly
-  provided/stated/defined" are rejected. Begin with the subject itself.
-  This applies to every pair_type without exception. For a pair about
-  classification or family placement, reason about what the classification
-  implies -- what it groups this with, what obligations follow, what it rules
-  out -- never that the classification was supplied.
-  Stay inside the source. The reasoning may not introduce any entity,
-  attribute, condition, trigger, threshold, timing, or qualifier that is not
-  present in the supplied source content and the answer. Connect what is
-  already there; do not supply what the source omits.
-  A attack pattern that states no trigger has no trigger. Do not add one from general
-  knowledge of similar attack patterns. Inventing a condition the source does not state
-  is a hallucination and fails, even when the invented condition is plausible
-  and even when it is usually true elsewhere.
+  1-2 sentences, maximum 50 words.
+  Explain why the pair is grounded and valid.
 
 - answer:
   1-4 sentences, maximum 150 words.

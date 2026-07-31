@@ -1,5 +1,0 @@
-{
-  "description": "Based on these insights, we present the design and implementation of, a bounded model checker based on symbolic execution which provides a precise model of the Ethereum network. We demonstrate its capabilities in a series of experiments. First, we compare against the eight aforementioned tools, showing that even relatively simple toy examples can obstruct other analyzers. Further proving that precise modeling is indispensable, we leverage ETHBmc capabilities for automatic vulnerability scanning.",
-  "title": "ETHBMC: A Bounded Model Checker for Smart Contracts | USENIX",
-  "url": "https://www.usenix.org/conference/usenixsecurity20/presentation/frank"
-}

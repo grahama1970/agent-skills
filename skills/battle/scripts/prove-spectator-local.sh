@@ -170,7 +170,4 @@ echo "XX/XX PR8 live transport proof"
 echo "XX/XX V13 adaptive lineage Pixi proof"
 (cd "$SPECTATOR_DIR" && npm run prove:adaptive-lineage-v13)
 
-echo "XX/XX Adaptive lineage panel source-binding proof"
-(cd "$SPECTATOR_DIR" && npm run prove:adaptive-lineage-panel-source)
-
 echo "BATTLE_PROVE_SPECTATOR_PASS"

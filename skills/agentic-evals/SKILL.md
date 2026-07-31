@@ -51,9 +51,6 @@ unless the fixture commands themselves exercise those live paths.
 ```bash
 ./run.sh run fixtures/agentic_eval.json
 ./run.sh run fixtures/agentic_eval.json --output /tmp/agentic-evals-report.json
-./run.sh audit-skills ../ --output /tmp/agentic-evals-baseline-gap-report.json
-./run.sh scaffold-fixture ../some-skill --output ../some-skill/fixtures/agentic_eval.json
-./run.sh apply-scaffolds ../ --write --output /tmp/agentic-evals-apply-scaffolds.json
 ```
 
 ## Fixture Contract
@@ -61,13 +58,7 @@ unless the fixture commands themselves exercise those live paths.
 ```json
 {
   "version": 2,
-  "skill": "example-skill",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the declared command exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
-  },
   "cases": [
     {
       "name": "happy-path",
@@ -108,20 +99,6 @@ repository fixture schema and broad skill regression checks; use
 `agentic-evals` when the evaluation needs repeated trials, trajectory-oriented
 case typing, and readiness-state output.
 
-Use `audit-skills` after changing `best-practices-skills` eval rules. The audit
-does not prove per-skill behavior; it proves the repository's current eval
-posture by recording which skills already have fixtures, delegate to eval
-skills, document `eval_not_required`, or still emit `EVAL001`.
-
-Use `scaffold-fixture` only as the first mechanical eval posture for a skill. A
-generated fixture proves wiring only until a human or maintainer adds
-skill-specific positive, negative, and adversarial cases.
-
-Use `apply-scaffolds` to apply that first mechanical posture across all
-currently scaffoldable `EVAL001` skills. For skills with `sanity.sh` or
-`run.sh`, it creates an entrypoint-backed fixture. For skills without an
-entrypoint, it creates a static contract-validation fixture that runs the
-`best-practices-skills` validator from the skill's `fixtures/` directory. It
-writes only missing `fixtures/agentic_eval.json` files unless `--force` is
-passed and emits a JSON receipt. This reduces missing eval posture; it does not
-establish semantic coverage.
+The next useful composition into `best-practices-skills` is to add an
+"agentic evaluation readiness" subsection and a rule recommending this skill
+for complex skills that claim durable agent behavior beyond simple CLI output.

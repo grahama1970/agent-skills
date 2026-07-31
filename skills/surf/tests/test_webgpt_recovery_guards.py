@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 from pathlib import Path
@@ -8,7 +7,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 EXTRACT = REPO_ROOT / "skills/surf/scripts/webgpt-extract.sh"
-RECOVER = REPO_ROOT / "skills/surf/scripts/webgpt-recover.sh"
 SUBMIT = REPO_ROOT / "skills/surf/scripts/webgpt-submit.sh"
 CLI = REPO_ROOT / "skills/surf/vendor/surf-cli/native/cli.cjs"
 HOST = REPO_ROOT / "skills/surf/vendor/surf-cli/native/host.cjs"
@@ -102,28 +100,6 @@ def test_kimi_provider_capacity_busy_fails_fast() -> None:
     assert "waitForSubmissionAcceptance" in source
     assert 'type: "keyDown"' in source
     assert 'key: "Enter"' in source
-
-
-def test_kimi_prompt_ready_requires_real_composer_node() -> None:
-    source = KIMI_CLIENT.read_text(encoding="utf-8")
-    helper = source.split("async function waitForPromptReady", 1)[1].split(
-        "function normalizePreferenceLabel", 1
-    )[0]
-
-    assert "document.querySelector(selector)" in helper
-    assert "node && !node.hasAttribute('disabled')" in helper
-    assert '.chat-input-editor[role="textbox"]' in helper
-    assert ".chat-input-editor" in helper
-    assert "body.includes('ask anything')" not in helper
-    assert "body.includes('follow-up')" not in helper
-    assert "return false;" in helper
-
-    type_prompt = source.split("async function typePrompt", 1)[1].split(
-        "async function clickSend", 1
-    )[0]
-    assert "focused_custom_textbox" in type_prompt
-    assert 'Input.insertText' in type_prompt
-    assert "Kimi prompt composer did not receive inserted text" in type_prompt
 
 
 def test_kimi_formatter_emits_controlled_tab_metadata() -> None:
@@ -297,109 +273,3 @@ esac
     assert "chatgpt.extract" in invocation_text
     assert "tab.new" not in invocation_text
     assert "key Enter" not in invocation_text
-
-
-def test_recover_finalize_does_not_overwrite_existing_raw_on_extract_timeout(tmp_path: Path) -> None:
-    sentinel = "<<<WEBGPT_DONE:recover-timeout>>>"
-    artifact_dir = tmp_path / "round"
-    artifact_dir.mkdir()
-    output = artifact_dir / "response.md"
-    raw = artifact_dir / "response.raw.md"
-    meta = artifact_dir / "response.meta.json"
-    receipt = artifact_dir / "response.md.receipt.json"
-    inflight = artifact_dir / "webgpt_inflight.json"
-    calls = tmp_path / "calls.log"
-    fake_run = tmp_path / "run.sh"
-    output.write_text("previous clean response\n", encoding="utf-8")
-    raw.write_text("previous raw response without current sentinel\n", encoding="utf-8")
-    meta.write_text(
-        json.dumps(
-            {
-                "status": "missing_sentinel",
-                "failure": "missing_sentinel",
-                "output": str(output),
-                "raw_output": str(raw),
-                "meta_output": str(meta),
-                "sentinel": sentinel,
-                "requested_tab_id": "837363742",
-                "controlled_tab_id": "837363742",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    receipt.write_text(
-        json.dumps(
-            {
-                "status": "submitted_to_chatgpt",
-                "submitted_to_chatgpt": True,
-                "requested_tab_id": "837363742",
-                "sentinel": sentinel,
-                "output": str(output),
-                "raw_output": str(raw),
-                "meta_output": str(meta),
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    inflight.write_text(
-        json.dumps(
-            {
-                "status": "submitted_to_chatgpt",
-                "submitted_to_chatgpt": True,
-                "requested_tab_id": "837363742",
-                "sentinel": sentinel,
-                "output": str(output),
-                "raw_output": str(raw),
-                "meta_output": str(meta),
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    fake_run.write_text(
-        f'''#!/usr/bin/env bash
-set -euo pipefail
-printf '%s\n' "$*" >> {str(calls)!r}
-case "${{1:-}}" in
-  chatgpt.extract)
-    printf 'Response timeout while waiting for sentinel\\n' >&2
-    exit 124
-    ;;
-  *)
-    printf 'unexpected command: %s\\n' "$*" >&2
-    exit 99
-    ;;
-esac
-''',
-        encoding="utf-8",
-    )
-    fake_run.chmod(0o755)
-    env = os.environ.copy()
-    env["SURF_RUN_SH"] = str(fake_run)
-
-    proc = subprocess.run(
-        ["bash", str(RECOVER), "--artifact-dir", str(artifact_dir), "--finalize", "--timeout", "1"],
-        cwd=tmp_path,
-        env=env,
-        text=True,
-        capture_output=True,
-        timeout=30,
-        check=False,
-    )
-
-    assert proc.returncode == 124
-    payload = json.loads(proc.stdout)
-    assert payload["finalize_attempted"] is True
-    assert payload["finalize_exit_code"] == 124
-    assert payload["finalize_preserved_existing_outputs"] is True
-    assert raw.read_text(encoding="utf-8") == "previous raw response without current sentinel\n"
-    assert meta.read_text(encoding="utf-8").startswith('{"status": "missing_sentinel"')
-    attempt = payload["finalize_attempt_artifacts"]
-    assert Path(attempt["raw_output"]).exists()
-    assert Path(attempt["meta_output"]).exists()
-    assert "Response timeout" in Path(attempt["stderr_log"]).read_text(encoding="utf-8")
-    invocation_text = calls.read_text(encoding="utf-8")
-    assert "chatgpt.extract" in invocation_text
-    assert "webgpt.submit" not in invocation_text

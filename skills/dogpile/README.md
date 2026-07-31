@@ -31,7 +31,6 @@ the human/operator guide.
 | GitHub | Code, issues, pull requests, and repo evidence |
 | ArXiv | Papers and research leads |
 | YouTube | Video metadata and transcript-oriented leads |
-| Context7 | Optional current library/API documentation for named code dependencies |
 | Feed packs | Optional fresh security/code enrichment; public RSS packs need no API keys |
 | Fetcher | Internal deep-fetch primitive after a URL is selected |
 | Wayback | Optional archived pages when live pages drift |
@@ -45,17 +44,6 @@ behind Tau. Brave `web` and `local` use the free key by default. The paid Brave
 key is used only when the caller explicitly requests `context`, `summarize`, or
 `web --summary-key`; a paid key does not prove Summarizer, Answers, or LLM
 Context entitlement.
-Use Context7 only when a code-related question depends on current docs for a
-known library or Context7 library ID:
-
-```bash
-./run.sh search "FastAPI dependency injection security scopes" \
-  --with-context7 \
-  --context7-library fastapi
-```
-
-Context7 requires `CONTEXT7_API_KEY`, is skipped by default, and does not prove
-runtime behavior, exploitability, patch effectiveness, or repository safety.
 
 ## What It Writes
 
@@ -94,7 +82,6 @@ and preserve local partial results instead of treating the research as lost.
 | Calling model/provider APIs directly | Route model work through Tau |
 | Returning uncited prose | Keep citations attached to claims |
 | Treating paid Brave key as summary proof | Request the summary lane explicitly, then report `skipped_no_summary_key` or `OPTION_NOT_IN_PLAN` honestly |
-| Using Context7 for broad research | Use it only after a library/API target is known; use Brave/GitHub/ArXiv/YouTube for discovery |
 | Running security repos on the host | Use `$github-search` isolated evaluation and only escalate to containers for bounded lab-safe checks |
 
 ## References

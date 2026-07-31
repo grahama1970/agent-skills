@@ -103,24 +103,6 @@ export function validateLiveTransportContract(
 			error: fail("CONTRACT_VALIDATION_FAILED", "CONTRACT VALIDATION FAILED", "transport.event_schema mismatch."),
 		};
 	}
-	const websocket = asRecord(record.websocket);
-	if (
-		!websocket ||
-		websocket.kind !== "websocket" ||
-		websocket.event_schema !== "battle.live_event.v1" ||
-		websocket.first_message_schema !== "battle.snapshot.v1"
-	) {
-		return {
-			ok: false,
-			error: fail("CONTRACT_VALIDATION_FAILED", "CONTRACT VALIDATION FAILED", "websocket endpoint shape required."),
-		};
-	}
-	if (typeof websocket.endpoint !== "string" || !websocket.endpoint.startsWith("/")) {
-		return {
-			ok: false,
-			error: fail("CONTRACT_VALIDATION_FAILED", "CONTRACT VALIDATION FAILED", "websocket.endpoint must be an absolute path."),
-		};
-	}
 
 	const snapshot = asRecord(record.initial_snapshot);
 	if (!snapshot || snapshot.schema !== "battle.snapshot.v1" || typeof snapshot.endpoint !== "string") {

@@ -19,15 +19,6 @@ export type BattleLiveTransportContractV1 = {
 			data?: string;
 		};
 	};
-	websocket?: {
-		kind: "websocket";
-		endpoint: string;
-		event_schema: "battle.live_event.v1";
-		first_message_schema: "battle.snapshot.v1";
-		message_order?: string;
-		resume_semantics?: string;
-		content_type?: "application/json";
-	};
 	initial_snapshot: {
 		endpoint: string;
 		method?: string;
@@ -72,7 +63,6 @@ export type BattleLiveTransportContractV1 = {
 		route: string;
 		snapshot_endpoint: string;
 		sse_endpoint: string;
-		websocket_endpoint?: string;
 		stop_condition?: string;
 	};
 	source_contracts?: Record<string, string>;
@@ -96,7 +86,6 @@ export type BattleLiveTransportContractViewModel = {
 	mocked: false;
 	transportKind: "sse";
 	sseEndpoint: string;
-	webSocketEndpoint: string | null;
 	snapshotEndpoint: string;
 	contentType: string;
 	geneticEventTypes: string[];

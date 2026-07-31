@@ -1,6 +1,0 @@
-services:
-  envcheck:
-    image: python:3.12-slim
-    command: ["env"]
-    environment:
-      LEAK_ME: "${UNAPPROVED_TARGET_VAR}"

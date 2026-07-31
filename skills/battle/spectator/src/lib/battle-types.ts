@@ -1,10 +1,3 @@
-import type {
-	BattleNormalizedAdaptiveLineageFixtureV1,
-	CanonicalDualTeamContract,
-	CanonicalDualTeamMechanicsTrees,
-	CanonicalDualTeamScoreboard,
-} from "./battle-adaptive-lineage-types";
-
 export type Team = "red" | "blue" | "judge" | "system";
 
 // ---------------------------------------------------------------------------
@@ -1003,13 +996,7 @@ export type BattleSpriteThemeV1 = {
 export type BattleNormalizedUxFixture = {
 	schema: "battle.normalized_ux_fixture.v1";
 	battle_id: string;
-	fixture_id?: string;
-	run_id?: string;
 	source_proof_dir?: string;
-	source_proof_id?: string;
-	source_schema?: string;
-	source_fixture_sha256?: string;
-	source_fixture_url?: string;
 	proof_mode: ProofMode;
 	generated_at: string;
 	mocked?: boolean;
@@ -1122,24 +1109,6 @@ export type BattleNormalizedUxFixture = {
 	lanes: Lane[];
 	events: BattleEvent[];
 	genetic_lifecycle?: import("./battle-genetic-lifecycle").GeneticLifecycleBlock;
-	adaptive_lineage_panel_source?: {
-		schema: "battle.adaptive_lineage_panel_source.v1";
-		status: "PASS" | "UNAVAILABLE";
-		reason?: string;
-		fixture_id: string;
-		battle_id: string;
-		run_id: string;
-		source_proof_id: string;
-		source_schema: BattleNormalizedAdaptiveLineageFixtureV1["schema"];
-		source_fixture_sha256?: string;
-		source_fixture_url?: string;
-		projection_kind?: string;
-		live_source: string;
-		proves_live: false;
-		mechanics_trees?: CanonicalDualTeamMechanicsTrees;
-		scoreboard?: CanonicalDualTeamScoreboard;
-		canonical_dual_team_contract?: CanonicalDualTeamContract;
-	};
 	leaderboard: LeaderboardEntry[];
 	receipts: BattleReceiptRef[];
 	bluePatchActions?: BluePatchAction[];

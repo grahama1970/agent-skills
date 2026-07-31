@@ -63,68 +63,6 @@ export type AdaptiveLineageEvent = {
 	payload: Record<string, unknown>;
 };
 
-export type CanonicalDualTeamMechanicsNode = {
-	lane_id: string;
-	team: AdaptiveTeam;
-	generation: number;
-	role: "parent" | "child" | string;
-	parent_lane_id: string | null;
-	mutation_operator: string | null;
-	selection_disposition: string;
-	observation_receipt_ref?: AdaptiveReceiptRef | null;
-	fitness_receipt_ref?: AdaptiveReceiptRef | null;
-	genome_delta_receipt_ref?: AdaptiveReceiptRef | null;
-	selection_receipt_ref?: AdaptiveReceiptRef | null;
-};
-
-export type CanonicalDualTeamMechanicsEdge = {
-	edge_id: string;
-	team: AdaptiveTeam;
-	parent_lane_id: string;
-	child_lane_id: string;
-	visible_from_elapsed_seconds: number;
-	requested_receipt_ref?: AdaptiveReceiptRef;
-	authorized_receipt_ref?: AdaptiveReceiptRef;
-};
-
-export type CanonicalDualTeamMechanicsTrees = {
-	schema: "battle.canonical_dual_team_mechanics_trees.v1";
-	isolation: {
-		status: string;
-		edge_policy: string;
-		cross_team_edge_count: number;
-		opponent_private_projection_reference_count: number;
-	};
-	teams: Record<AdaptiveTeam, {
-		team: AdaptiveTeam;
-		nodes: CanonicalDualTeamMechanicsNode[];
-		edges: CanonicalDualTeamMechanicsEdge[];
-	}>;
-};
-
-export type CanonicalDualTeamScoreboard = {
-	schema: "battle.canonical_dual_team_scoreboard.v1";
-	status: string;
-	policy_id: string;
-	red_score: number;
-	blue_score: number;
-	inputs: Array<Record<string, unknown>>;
-	claims?: { proves?: string[]; does_not_prove?: string[] };
-};
-
-export type CanonicalDualTeamContract = {
-	schema: "battle.canonical_dual_team_contract.v1";
-	status: string;
-	red_node_count: number;
-	blue_node_count: number;
-	red_edge_count: number;
-	blue_edge_count: number;
-	cross_team_edge_count: number;
-	source_run_count: number;
-	resolved_reference_count: number;
-	score_status: string;
-};
-
 export type BattleNormalizedAdaptiveLineageFixtureV1 = {
 	schema: "battle.normalized_adaptive_lineage_fixture.v1";
 	fixture_id: string;
@@ -178,7 +116,4 @@ export type BattleNormalizedAdaptiveLineageFixtureV1 = {
 	};
 	memory_lifecycle?: Record<string, unknown>;
 	source_campaign?: Record<string, unknown>;
-	mechanics_trees?: CanonicalDualTeamMechanicsTrees;
-	scoreboard?: CanonicalDualTeamScoreboard;
-	canonical_dual_team_contract?: CanonicalDualTeamContract;
 };

@@ -1,8 +1,0 @@
-{
-  "public_target": "fixture/target/app.py",
-  "received_red_exploit_artifact": false,
-  "received_red_finding": false,
-  "scenario_id": "overlap-zip-slip-deterministic",
-  "schema": "battle.blue_first_action_input.v1",
-  "target_sha256": "d332b8a7aad66d36d653450f0899e0fc2ea38d802d77591d06b05b78dab89b97"
-}

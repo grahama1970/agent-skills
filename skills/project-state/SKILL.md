@@ -1,8 +1,8 @@
 ---
 name: project-state
 description: >
-  Project state and readiness reporting in one command for arbitrary project
-  checkouts, Embry-style project checkouts, and cleanup tails. Runs infrastructure metrics, /memory
+  Project state and readiness reporting in one command for Embry-style
+  project checkouts and cleanup tails. Runs infrastructure metrics, /memory
   recall, doc-code drift, best-practices audit, current external research
   via /brave-search and /github-search, ingest-code cleanup evidence checks,
   project-knowledge/memory sync checks, gap analysis, and post-cleanup
@@ -55,9 +55,7 @@ taxonomy:
 
 # /project-state
 
-Project state and readiness reporting for arbitrary project checkouts. Embry
-OS cascade and daemon sections are reported only when the target checkout has
-Embry-style structure such as `embry.yaml`.
+Project state and readiness reporting for Embry-style project checkouts.
 
 This skill is a reporter and readiness receipt generator. It does not delete
 files, move files, rewrite code, authorize cleanup removals, or turn skipped
@@ -80,9 +78,6 @@ checks into success.
 ```bash
 # Standard report (infrastructure + memory + drift + best practices + gaps)
 ./run.sh report
-
-# Report on an explicit checkout
-PROJECT_STATE_ROOT=/path/to/project ./run.sh report --json
 
 # Quick infrastructure-only report
 ./run.sh report --quick
@@ -171,12 +166,8 @@ reported as `needs_attention` with a safe default. Use environment variables,
 not hardcoded paths, when adapting this skill:
 
 ```bash
-PROJECT_STATE_ROOT=/path/to/project
-PROJECT_STATE_NAME=project-name
-PI_SKILLS_ROOT=/path/to/skills
-
-# Legacy Embry alias, still accepted for existing callers:
 EMBRY_OS_ROOT=/path/to/project
+PI_SKILLS_ROOT=/path/to/skills
 ```
 
 ## What It Reports
@@ -185,14 +176,14 @@ EMBRY_OS_ROOT=/path/to/project
 
 | Section | Source | Data |
 |---------|--------|------|
-| **Daemons** | Unix socket health checks | Status of Embry services when target is Embry-style; otherwise not applicable |
-| **Tests** | pytest --collect-only over `tests/`, `services/tests/`, or `test/` | Total count |
-| **Cascade** | model_registry.json + shadow.jsonl | Tier status, trained models, shadow entries when target is Embry-style; otherwise not applicable |
+| **Daemons** | Unix socket health checks | Status of all 7 services |
+| **Tests** | pytest --collect-only | Total count |
+| **Cascade** | model_registry.json + shadow.jsonl | Tier status, trained models, shadow entries |
 | **Training Pipeline** | ~/.pi/assistant/training_data/ | Labels per task, classifiers on disk |
-| **Skills** | target `.skills/skills`, target `skills/`, or configured skills root | Total count, SKILL.md/sanity.sh compliance |
-| **Frontend** | `frontend/`, `apps/embry-ui/`, or `prototypes/tabbed/html/` | TSX component count, Rust file count |
-| **Deploy** | `services/systemd/`, Containerfile, compose files | Deployment artifact counts |
-| **Cascade Wiring** | services/*-daemon/main.py | Which daemons have cascade integration when target is Embry-style |
+| **Skills** | .pi/skills/ directory | Total count, SKILL.md/sanity.sh compliance |
+| **Frontend** | apps/embry-ui/ | TSX component count, Rust file count |
+| **Deploy** | services/systemd/ | Systemd unit count |
+| **Cascade Wiring** | services/*-daemon/main.py | Which daemons have cascade integration |
 
 ### Phase 2: Memory Recall (standard + full)
 

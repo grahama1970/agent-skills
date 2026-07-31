@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shlex
 import sys
 from pathlib import Path
 from typing import Any
@@ -157,33 +156,6 @@ def _degraded_focus_response_available(
     return True
 
 
-def _attachment_paths(meta: dict[str, Any], receipt: dict[str, Any]) -> list[str]:
-    paths: list[str] = []
-    for source in (meta, receipt):
-        if not isinstance(source, dict):
-            continue
-        for key in ("attach_file", "attachment_path", "attached_file"):
-            value = str(source.get(key) or "").strip()
-            if value and value not in paths:
-                paths.append(value)
-        for key in ("attachment_paths", "attach_files", "attached_files", "requested_attachment_paths"):
-            value = source.get(key)
-            if isinstance(value, str):
-                candidates = [value]
-            elif isinstance(value, list):
-                candidates = [str(item or "").strip() for item in value]
-            else:
-                candidates = []
-            for candidate in candidates:
-                if candidate and candidate not in paths:
-                    paths.append(candidate)
-    return paths
-
-
-def _attach_file_args(meta: dict[str, Any], receipt: dict[str, Any]) -> str:
-    return "".join(f" --attach-file {shlex.quote(path)}" for path in _attachment_paths(meta, receipt))
-
-
 def _transport_state(meta: dict[str, Any], receipt: dict[str, Any], raw_path: Path | None, meta_path: Path | None) -> str:
     status = str(meta.get("status") or "")
     failure = str(meta.get("failure") or "")
@@ -284,7 +256,6 @@ def build_recovery(
     reason = str(meta.get("agent_diagnosis") or "")
     next_command = ""
     do_not_do: list[str] = []
-    attach_args = _attach_file_args(meta, receipt)
 
     if state == "completed":
         reason = reason or "Transport completed with current sentinel-bearing response."
@@ -302,7 +273,6 @@ def build_recovery(
             f"surf webgpt.preflight {tab_args} && "
             f"surf webgpt.submit --input {submitted_path or directory / 'submitted.md'} "
             f"--output {directory / '02_response.md'}"
-            f"{attach_args}"
         )
         do_not_do.append("do_not_treat_prepared_prompt_as_completion_proof")
     elif state == "submitted_only":

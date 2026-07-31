@@ -54,49 +54,49 @@ echo "--- Import Checks ---"
 
 # Check that modules can be imported without circular import errors
 cd "$SCRIPT_DIR/.."
-if uv run --project "$SCRIPT_DIR" python -c "import hack.config" 2>/dev/null; then
+if python3 -c "import hack.config" 2>/dev/null; then
     echo "  [PASS] hack.config imports successfully"
 else
     echo "  [FAIL] hack.config import failed"
     exit 1
 fi
 
-if uv run --project "$SCRIPT_DIR" python -c "import hack.utils" 2>/dev/null; then
+if python3 -c "import hack.utils" 2>/dev/null; then
     echo "  [PASS] hack.utils imports successfully"
 else
     echo "  [FAIL] hack.utils import failed"
     exit 1
 fi
 
-if uv run --project "$SCRIPT_DIR" python -c "import hack.container_manager" 2>/dev/null; then
+if python3 -c "import hack.container_manager" 2>/dev/null; then
     echo "  [PASS] hack.container_manager imports successfully"
 else
     echo "  [FAIL] hack.container_manager import failed"
     exit 1
 fi
 
-if uv run --project "$SCRIPT_DIR" python -c "import hack.tools.nmap" 2>/dev/null; then
+if python3 -c "import hack.tools.nmap" 2>/dev/null; then
     echo "  [PASS] hack.tools.nmap imports successfully"
 else
     echo "  [FAIL] hack.tools.nmap import failed"
     exit 1
 fi
 
-if uv run --project "$SCRIPT_DIR" python -c "import hack.tools.semgrep" 2>/dev/null; then
+if python3 -c "import hack.tools.semgrep" 2>/dev/null; then
     echo "  [PASS] hack.tools.semgrep imports successfully"
 else
     echo "  [FAIL] hack.tools.semgrep import failed"
     exit 1
 fi
 
-if uv run --project "$SCRIPT_DIR" python -c "import hack.tools.nuclei" 2>/dev/null; then
+if python3 -c "import hack.tools.nuclei" 2>/dev/null; then
     echo "  [PASS] hack.tools.nuclei imports successfully"
 else
     echo "  [FAIL] hack.tools.nuclei import failed"
     exit 1
 fi
 
-if uv run --project "$SCRIPT_DIR" python -c "import hack.commands" 2>/dev/null; then
+if python3 -c "import hack.commands" 2>/dev/null; then
     echo "  [PASS] hack.commands imports successfully"
 else
     echo "  [FAIL] hack.commands import failed"

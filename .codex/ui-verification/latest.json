@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-07-29T15:13:53.290268+00:00",
-  "cwd": "/home/graham/workspace/experiments/agent-skills-persona-dream-next-obvious-20260729",
-  "root": "/home/graham/workspace/experiments/agent-skills-persona-dream-next-obvious-20260729",
-  "output_root": "/tmp/codex-ui-verification/agent-skills-persona-dream-next-obvious-20260729",
-  "url": "http://127.0.0.1:8876/rater_page.html",
-  "name": "persona-dream-listener-rater",
+  "verified_at": "2026-07-27T13:52:45.964559+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills-persona-dream-next",
+  "root": "/home/graham/workspace/experiments/agent-skills-persona-dream-next",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-persona-dream-next",
+  "url": "http://127.0.0.1:8881/persona-dream-project-knowledge-p21.html",
+  "name": "persona-dream-project-knowledge-p21",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills-persona-dream-next-obvious-20260729/persona-dream-listener-rater/20260729T151347Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills-persona-dream-next-obvious-20260729/persona-dream-listener-rater/20260729T151347Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-persona-dream-next/persona-dream-project-knowledge-p21/20260727T135240Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-persona-dream-next/persona-dream-project-knowledge-p21/20260727T135240Z.read.json"
 }

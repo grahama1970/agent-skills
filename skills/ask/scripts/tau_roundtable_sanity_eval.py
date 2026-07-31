@@ -17,11 +17,6 @@ BROWSER_ORACLE_RUN = ASK_DIR.parent / "browser-oracle" / "run.sh"
 SCHEMA = "ask.tau_roundtable_sanity_eval.v1"
 HANDLERS = ("webclaude", "webkimi", "webgemini", "webgpt")
 DEFAULT_WEBGPT_PROJECT = "tau"
-IMMUTABLE_GOAL = (
-    "Every live browser participant returns a fresh sentinel-proven response to "
-    "the same bounded task, the join artifact indexes each lane, and the run "
-    "records browser-tab-lifecycle plus per-lane transport receipts."
-)
 
 
 def main() -> int:
@@ -31,35 +26,19 @@ def main() -> int:
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--webgpt-project", default=DEFAULT_WEBGPT_PROJECT)
     parser.add_argument("--timeout-seconds", type=int, default=1800)
-    parser.add_argument("--min-active-handlers", type=int, default=4)
-    parser.add_argument("--browser-tab-lifecycle", default="fresh-keep")
-    parser.add_argument("--attach-file", action="append", default=[], dest="attach_files")
-    parser.add_argument("--attachment-sentinel", default="")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    attachment_sentinel = args.attachment_sentinel or _infer_attachment_sentinel(args.attach_files)
 
     output_root = args.output_root or Path(tempfile.mkdtemp(prefix="ask-tau-roundtable-eval-"))
     output_root.mkdir(parents=True, exist_ok=True)
     if args.plan_only:
-        summary = build_plan(
-            output_root=output_root,
-            webgpt_project=args.webgpt_project,
-            min_active_handlers=args.min_active_handlers,
-            browser_tab_lifecycle=args.browser_tab_lifecycle,
-            attach_files=args.attach_files,
-            attachment_sentinel=attachment_sentinel,
-        )
+        summary = build_plan(output_root=output_root, webgpt_project=args.webgpt_project)
     else:
         summary = run_eval(
             output_root=output_root,
             allow_live=args.allow_live,
             webgpt_project=args.webgpt_project,
             timeout_seconds=args.timeout_seconds,
-            min_active_handlers=args.min_active_handlers,
-            browser_tab_lifecycle=args.browser_tab_lifecycle,
-            attach_files=args.attach_files,
-            attachment_sentinel=attachment_sentinel,
         )
     report_path = output_root / "tau-roundtable-sanity-result.json"
     report_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -78,21 +57,13 @@ def main() -> int:
     return 0 if args.plan_only or summary["ok"] else 1
 
 
-def build_plan(
-    *,
-    output_root: Path,
-    webgpt_project: str,
-    min_active_handlers: int = 4,
-    browser_tab_lifecycle: str = "fresh-keep",
-    attach_files: list[str] | None = None,
-    attachment_sentinel: str = "",
-) -> dict[str, Any]:
+def build_plan(*, output_root: Path, webgpt_project: str) -> dict[str, Any]:
     cases = [
         _planned_case("browser_oracle_bindings", "Resolve configured browser-oracle projects for webclaude, webkimi, webgemini, and webgpt."),
         _planned_case("compile_concurrent_all_handlers", "Compile a concurrent Tau roundtable DAG for all four handlers."),
-        _planned_case("compile_compete_all_handlers", "Compile a Tau compete DAG for all four handlers."),
-        _planned_case("live_four_handler_concurrent_roundtable", "Execute a live concurrent Tau roundtable over four browser handlers, then join."),
-        _planned_case("live_four_handler_concurrent_compete", "Execute a live concurrent Tau competition over four browser handlers, then score."),
+        _planned_case("compile_sequential_all_handlers", "Compile a sequential Tau roundtable DAG for all four handlers."),
+        _planned_case("live_two_handler_smoke", "Execute a live Tau roundtable over webkimi and webgemini."),
+        _planned_case("live_four_handler_sequential", "Execute a live Tau roundtable over webclaude, webkimi, webgemini, webgpt, then join."),
     ]
     return {
         "schema": SCHEMA,
@@ -104,10 +75,6 @@ def build_plan(
         "created_at": _now(),
         "output_root": str(output_root),
         "webgpt_project": webgpt_project,
-        "min_active_handlers": min_active_handlers,
-        "browser_tab_lifecycle": browser_tab_lifecycle,
-        "attach_files": [str(item) for item in (attach_files or [])],
-        "attachment_sentinel": attachment_sentinel or None,
         "cases": cases,
         "what_was_exercised": [],
         "what_remains_unverified": ["plan-only: no Tau or browser handler command was executed"],
@@ -120,50 +87,36 @@ def run_eval(
     allow_live: bool,
     webgpt_project: str,
     timeout_seconds: int,
-    min_active_handlers: int,
-    browser_tab_lifecycle: str,
-    attach_files: list[str] | None = None,
-    attachment_sentinel: str = "",
 ) -> dict[str, Any]:
     cases = [
         _case_browser_oracle_bindings(webgpt_project),
-        _case_compile_roundtable(output_root, topology="concurrent", webgpt_project=webgpt_project, handlers=list(HANDLERS)),
-        _case_compile_compete(output_root, webgpt_project=webgpt_project, handlers=list(HANDLERS)),
+        _case_compile_roundtable(output_root, topology="concurrent", webgpt_project=webgpt_project),
+        _case_compile_roundtable(output_root, topology="sequential", webgpt_project=webgpt_project),
     ]
     if allow_live:
         cases.append(
-            _case_live_workflow(
+            _case_live_roundtable(
                 output_root,
-                case_id="live-four-handler-concurrent-roundtable",
-                workflow="roundtable",
-                prompt="Live Ask roundtable sanity. Answer with exactly one line: PROVIDER_STATUS: <your provider> READY.",
-                handlers=list(HANDLERS),
+                case_id="live-two-handler-smoke",
+                prompt="Roundtable webkimi and webgemini sequentially. Each handler should identify itself and one browser orchestration risk.",
+                handlers=["webkimi", "webgemini"],
                 webgpt_project=webgpt_project,
                 timeout_seconds=min(timeout_seconds, 900),
-                min_active_handlers=min_active_handlers,
-                browser_tab_lifecycle=browser_tab_lifecycle,
-                attach_files=attach_files or [],
-                attachment_sentinel=attachment_sentinel,
             )
         )
         cases.append(
-            _case_live_workflow(
+            _case_live_roundtable(
                 output_root,
-                case_id="live-four-handler-concurrent-compete",
-                workflow="compete",
-                prompt="Live Ask competition sanity. Propose the shortest reliable invariant for browser-provider orchestration in one paragraph.",
+                case_id="live-four-handler-sequential",
+                prompt="Roundtable webclaude, webkimi, webgemini, and webgpt sequentially. Each handler should identify itself and one browser orchestration risk.",
                 handlers=list(HANDLERS),
                 webgpt_project=webgpt_project,
                 timeout_seconds=timeout_seconds,
-                min_active_handlers=min_active_handlers,
-                browser_tab_lifecycle=browser_tab_lifecycle,
-                attach_files=attach_files or [],
-                attachment_sentinel=attachment_sentinel,
             )
         )
     else:
-        cases.append(_not_run_case("live-four-handler-concurrent-roundtable", "live checks require --allow-live"))
-        cases.append(_not_run_case("live-four-handler-concurrent-compete", "live checks require --allow-live"))
+        cases.append(_not_run_case("live-two-handler-smoke", "live checks require --allow-live"))
+        cases.append(_not_run_case("live-four-handler-sequential", "live checks require --allow-live"))
 
     ok = all(case["ok"] for case in cases)
     provider_live = any(case.get("provider_live") is True for case in cases)
@@ -177,17 +130,12 @@ def run_eval(
         "created_at": _now(),
         "output_root": str(output_root),
         "webgpt_project": webgpt_project,
-        "min_active_handlers": min_active_handlers,
-        "browser_tab_lifecycle": browser_tab_lifecycle,
-        "attach_files": [str(item) for item in (attach_files or [])],
-        "attachment_sentinel": attachment_sentinel or None,
         "cases": cases,
         "what_was_exercised": [
             "browser-oracle resolve for webclaude, webkimi, webgemini, and webgpt",
             "/ask run.sh tau-dag concurrent roundtable compile path",
-            "/ask run.sh compete concurrent competition compile path",
+            "/ask run.sh tau-dag sequential roundtable compile path",
             "real Tau CLI dag-run plus Surf browser submits" if allow_live else "live Tau browser submits were intentionally not run",
-            "real attachment forwarding and attachment-sentinel response checks" if allow_live and attach_files else "attachment forwarding was not requested",
         ],
         "what_remains_unverified": _remaining_unverified(allow_live=allow_live, provider_live=provider_live),
     }
@@ -220,7 +168,7 @@ def _case_browser_oracle_bindings(webgpt_project: str) -> dict[str, Any]:
     return _case("browser-oracle-bindings", checks, commands=commands)
 
 
-def _case_compile_roundtable(output_root: Path, *, topology: str, webgpt_project: str, handlers: list[str]) -> dict[str, Any]:
+def _case_compile_roundtable(output_root: Path, *, topology: str, webgpt_project: str) -> dict[str, Any]:
     prompt = f"Roundtable webclaude, webkimi, webgemini, and webgpt {topology}, then join the answers."
     run_root = output_root / f"compile-{topology}"
     cmd = [
@@ -231,10 +179,6 @@ def _case_compile_roundtable(output_root: Path, *, topology: str, webgpt_project
         "local/agent-skills",
         "--target",
         f"roundtable-{topology}",
-        "--immutable-goal",
-        IMMUTABLE_GOAL,
-        "--dag-template",
-        "roundtable",
         "--topology",
         topology,
         "--handler-project",
@@ -243,8 +187,6 @@ def _case_compile_roundtable(output_root: Path, *, topology: str, webgpt_project
         str(run_root),
         "--json",
     ]
-    for handler in handlers:
-        cmd.extend(["--handler", handler])
     completed = subprocess.run(cmd, cwd=ASK_DIR, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
     payload = _json_or_error(completed.stdout)
     bundle = payload.get("bundle") if isinstance(payload.get("bundle"), dict) else {}
@@ -256,7 +198,7 @@ def _case_compile_roundtable(output_root: Path, *, topology: str, webgpt_project
         _check("status_ready", bundle.get("status") == "READY", {"status": bundle.get("status")}),
         _check("handler_neutral", dag.get("context", {}).get("transport_adapter") == "handler_neutral_adapter", {"context": dag.get("context")}),
         _check("provider_not_required", dag.get("provider_sensitive") is False and dag.get("requires_provider_route") is False, {}),
-        _check("all_handlers_present", set(node_ids) >= {f"handler-{handler}" for handler in handlers} | {"join"}, {"node_ids": node_ids}),
+        _check("all_handlers_present", set(node_ids) >= {f"handler-{handler}" for handler in HANDLERS} | {"join"}, {"node_ids": node_ids}),
         _check("entry_is_first_handler", dag.get("entry_node") == "handler-webclaude", {"entry_node": dag.get("entry_node")}),
         _check("no_empty_join_command_args", _join_command_has_no_empty_args(command_spec_root), {"command_spec_root": str(command_spec_root)}),
     ]
@@ -267,71 +209,28 @@ def _case_compile_roundtable(output_root: Path, *, topology: str, webgpt_project
     return _case(f"compile-{topology}-all-handlers", checks, commands=[_command_summary(cmd, completed)], payload_paths=_payload_paths(bundle))
 
 
-def _case_compile_compete(output_root: Path, *, webgpt_project: str, handlers: list[str]) -> dict[str, Any]:
-    run_root = output_root / "compile-compete"
-    cmd = [
-        str(ASK_DIR / "run.sh"),
-        "compete",
-        "Compile-only competition sanity.",
-        "--repo",
-        "local/agent-skills",
-        "--target",
-        "compete-compile",
-        "--immutable-goal",
-        IMMUTABLE_GOAL,
-        "--handler-project",
-        f"webgpt={webgpt_project}",
-        "--criterion",
-        "fresh sentinel-proven response",
-        "--run-output-root",
-        str(run_root),
-        "--json",
-    ]
-    for handler in handlers:
-        cmd.extend(["--handler", handler])
-    completed = subprocess.run(cmd, cwd=ASK_DIR, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
-    payload = _json_or_error(completed.stdout)
-    bundle = payload.get("bundle") if isinstance(payload.get("bundle"), dict) else {}
-    dag = bundle.get("dag") if isinstance(bundle.get("dag"), dict) else {}
-    node_ids = [node.get("id") for node in dag.get("nodes", []) if isinstance(node, dict)]
-    checks = [
-        _check("returncode", completed.returncode == 0, {"returncode": completed.returncode}),
-        _check("status_ready", bundle.get("status") == "READY", {"status": bundle.get("status")}),
-        _check("workflow_mode_compete", dag.get("context", {}).get("workflow_mode") == "compete", {"context": dag.get("context")}),
-        _check("all_handlers_present", set(node_ids) >= {f"handler-{handler}" for handler in handlers} | {"join"}, {"node_ids": node_ids}),
-    ]
-    return _case("compile-compete-all-handlers", checks, commands=[_command_summary(cmd, completed)], payload_paths=_payload_paths(bundle))
-
-
-def _case_live_workflow(
+def _case_live_roundtable(
     output_root: Path,
     *,
     case_id: str,
-    workflow: str,
     prompt: str,
     handlers: list[str],
     webgpt_project: str,
     timeout_seconds: int,
-    min_active_handlers: int,
-    browser_tab_lifecycle: str,
-    attach_files: list[str],
-    attachment_sentinel: str,
 ) -> dict[str, Any]:
     run_root = output_root / case_id
     cmd = [
         str(ASK_DIR / "run.sh"),
-        "tau-dag" if workflow == "roundtable" else "compete",
+        "tau-dag",
         prompt,
         "--repo",
         "local/agent-skills",
         "--target",
         case_id,
-        "--immutable-goal",
-        IMMUTABLE_GOAL,
+        "--topology",
+        "sequential",
         "--handler-project",
         f"webgpt={webgpt_project}",
-        "--browser-tab-lifecycle",
-        browser_tab_lifecycle,
         "--run-output-root",
         str(run_root),
         "--execute",
@@ -341,51 +240,22 @@ def _case_live_workflow(
         "2",
         "--json",
     ]
-    if workflow == "roundtable":
-        cmd.extend(["--dag-template", "roundtable", "--topology", "concurrent"])
-    else:
-        cmd.extend(["--criterion", "fresh sentinel-proven response"])
-    for attach_file in attach_files:
-        cmd.extend(["--attach-file", str(attach_file)])
-    for handler in handlers:
-        cmd.extend(["--handler", handler])
     completed = subprocess.run(cmd, cwd=ASK_DIR, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=timeout_seconds + 120)
     payload = _json_or_error(completed.stdout)
     bundle = payload.get("bundle") if isinstance(payload.get("bundle"), dict) else {}
     execution = payload.get("execution") if isinstance(payload.get("execution"), dict) else {}
     run_dir = Path(str(bundle.get("run_dir") or ""))
-    lifecycle = _read_json(run_dir / "browser-tab-lifecycle.json")
     node_receipts = _node_receipts(run_dir)
     expected_nodes = {f"handler-{handler}" for handler in handlers} | {"join"}
-    usable_handlers = [
-        handler
-        for handler in handlers
-        if node_receipts.get(f"handler-{handler}", {}).get("ok") is True
-        and node_receipts.get(f"handler-{handler}", {}).get("provider_live") is True
-    ]
-    queue_receipts = [
-        str(run_dir / "node-artifacts" / f"handler-{handler}" / "browser-transport-queue.json")
-        for handler in handlers
-        if (run_dir / "node-artifacts" / f"handler-{handler}" / "browser-transport-queue.json").is_file()
-    ]
-    attachment_checks = _attachment_checks(
-        run_dir,
-        handlers=handlers,
-        node_receipts=node_receipts,
-        attach_files=attach_files,
-        attachment_sentinel=attachment_sentinel,
-    )
     checks = [
         _check("returncode", completed.returncode == 0, {"returncode": completed.returncode}),
         _check("execution_pass", execution.get("status") == "PASS" and execution.get("ok") is True, {"status": execution.get("status"), "ok": execution.get("ok")}),
         _check("tau_receipt_exists", Path(str(execution.get("receipt_path") or "")).is_file(), {"receipt_path": execution.get("receipt_path")}),
-        _check("fresh_browser_window_ready", lifecycle.get("status") == "READY" and bool(lifecycle.get("window_id")), {"lifecycle": lifecycle}),
         _check("all_node_receipts_present", set(node_receipts) >= expected_nodes, {"node_receipts": sorted(node_receipts)}),
-        _check("minimum_handlers_provider_live", len(usable_handlers) >= min_active_handlers, {"usable_handlers": usable_handlers, "min_active_handlers": min_active_handlers, "statuses": _receipt_statuses(node_receipts)}),
-        _check("browser_transport_queue_receipts_present", len(queue_receipts) >= min_active_handlers, {"queue_receipts": queue_receipts}),
-        _check("join_artifact_exists", _join_artifact_exists(run_dir, workflow), {"run_dir": str(run_dir), "workflow": workflow}),
+        _check("all_expected_nodes_pass", all(node_receipts.get(node, {}).get("ok") is True for node in expected_nodes), {"statuses": _receipt_statuses(node_receipts)}),
+        _check("all_handlers_provider_live", all(node_receipts.get(f"handler-{handler}", {}).get("provider_live") is True for handler in handlers), {"statuses": _receipt_statuses(node_receipts)}),
+        _check("join_summary_exists", (run_dir / "node-artifacts" / "join" / "roundtable-summary.md").is_file(), {"run_dir": str(run_dir)}),
     ]
-    checks.extend(attachment_checks)
     return _case(
         case_id,
         checks,
@@ -456,71 +326,6 @@ def _receipt_statuses(receipts: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return {key: {"status": value.get("status"), "ok": value.get("ok"), "provider_live": value.get("provider_live")} for key, value in receipts.items()}
 
 
-def _join_artifact_exists(run_dir: Path, workflow: str) -> bool:
-    join_dir = run_dir / "node-artifacts" / "join"
-    if workflow == "compete":
-        return (join_dir / "compete-scorecard.json").is_file()
-    return (join_dir / "roundtable-summary.md").is_file()
-
-
-def _attachment_checks(
-    run_dir: Path,
-    *,
-    handlers: list[str],
-    node_receipts: dict[str, dict[str, Any]],
-    attach_files: list[str],
-    attachment_sentinel: str,
-) -> list[dict[str, Any]]:
-    if not attach_files:
-        return []
-    requested = [str(Path(item).expanduser().resolve()) for item in attach_files]
-    checks: list[dict[str, Any]] = []
-    for handler in handlers:
-        receipt = node_receipts.get(f"handler-{handler}", {})
-        receipt_requested = [str(Path(item).expanduser().resolve()) for item in receipt.get("requested_attachment_paths", [])]
-        delivered = [str(Path(item).expanduser().resolve()) for item in receipt.get("browser_attachment_paths", [])]
-        preflight = receipt.get("browser_local_path_preflight") if isinstance(receipt.get("browser_local_path_preflight"), dict) else {}
-        response_path = Path(str(receipt.get("response_path") or run_dir / "node-artifacts" / f"handler-{handler}" / "response.md"))
-        response_text = response_path.read_text(encoding="utf-8", errors="replace") if response_path.is_file() else ""
-        inlined_count = int(preflight.get("inlined_file_count") or 0)
-        attached_count = int(preflight.get("attached_file_count") or 0)
-        checks.append(
-            _check(
-                f"{handler}_requested_attachment_recorded",
-                all(item in receipt_requested for item in requested),
-                {
-                    "requested": requested,
-                    "receipt_requested_attachment_paths": receipt_requested,
-                    "response_path": str(response_path),
-                },
-            )
-        )
-        checks.append(
-            _check(
-                f"{handler}_attachment_delivered_or_inlined",
-                bool(delivered) or inlined_count > 0 or attached_count > 0,
-                {
-                    "browser_attachment_paths": delivered,
-                    "browser_local_path_preflight": preflight,
-                    "response_path": str(response_path),
-                },
-            )
-        )
-        if attachment_sentinel:
-            checks.append(
-                _check(
-                    f"{handler}_attachment_sentinel_in_response",
-                    attachment_sentinel in response_text,
-                    {
-                        "attachment_sentinel": attachment_sentinel,
-                        "response_path": str(response_path),
-                        "response_chars": len(response_text),
-                    },
-                )
-            )
-    return checks
-
-
 def _payload_paths(bundle: dict[str, Any], execution: dict[str, Any] | None = None) -> dict[str, str | None]:
     execution = execution or {}
     return {
@@ -555,27 +360,13 @@ def _json_or_error(text: str) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {"_json_error": True, "raw_tail": text[-4000:]}
 
 
-def _infer_attachment_sentinel(paths: list[str]) -> str:
-    for item in paths:
-        path = Path(item).expanduser()
-        try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        for line in text.splitlines():
-            if line.startswith("ASK_LIVE_ATTACHMENT_SENTINEL="):
-                return line.split("=", 1)[1].strip()
-    return ""
-
-
 def _remaining_unverified(*, allow_live: bool, provider_live: bool) -> list[str]:
     items = ["Semantic quality of handler prose beyond receipt/schema checks."]
     if not allow_live:
         items.append("Live browser submit behavior because --allow-live was not used.")
     if allow_live and not provider_live:
         items.append("At least one live handler did not produce provider_live receipts.")
-    if not allow_live:
-        items.append("Concurrent live roundtable and competition execution because --allow-live was not used.")
+    items.append("Concurrent live execution is compile-checked but not run by default to avoid browser focus contention.")
     return items
 
 

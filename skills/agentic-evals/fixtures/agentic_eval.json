@@ -1,12 +1,6 @@
 {
   "version": 2,
-  "skill": "agentic-evals",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the agentic-evals runner can execute positive and negative command expectations from a local fixture",
-    "does_not_prove": "per-skill semantic correctness, live service behavior, or full repository eval readiness"
-  },
   "cases": [
     {
       "name": "happy-path",

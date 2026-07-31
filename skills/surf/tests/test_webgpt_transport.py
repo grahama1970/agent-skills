@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import shlex
 import shutil
 import subprocess
 from pathlib import Path
@@ -95,32 +94,6 @@ def test_transport_summary_submitted_only() -> None:
     assert "webgpt.extract" in summary["next_command"]
     recover = run_recover(round_dir)
     assert recover["state"] == "submitted_only"
-    assert recover["next_command"] == summary["next_command"]
-
-
-def test_transport_summary_prepared_prompt_preserves_attachment_in_retry(tmp_path: Path) -> None:
-    bundle = tmp_path / "evidence bundle.zip"
-    bundle.write_text("bundle bytes", encoding="utf-8")
-    round_dir = write_round(
-        tmp_path,
-        meta={},
-        receipt={
-            "status": "prepared_prompt",
-            "submitted_to_chatgpt": False,
-            "requested_tab_id": "837363305",
-            "submitted_output": "response.md.submitted.md",
-            "attach_file": str(bundle),
-            "attachment_paths": [str(bundle)],
-        },
-    )
-
-    summary = write_summary(round_dir)
-
-    assert summary["final_transport_state"] == "prepared_prompt_only"
-    assert summary["submitted_to_chatgpt"] is False
-    assert "--attach-file" in summary["next_command"]
-    assert shlex.quote(str(bundle)) in summary["next_command"]
-    recover = run_recover(round_dir)
     assert recover["next_command"] == summary["next_command"]
 
 

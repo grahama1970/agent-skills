@@ -3766,22 +3766,15 @@ def _worker_blocker_from_manifest_item(*, proof_root: Path, item: dict[str, Any]
     if not error and _first_str(status).upper() == "PASS" and (not isinstance(http_status, int) or 200 <= http_status < 300):
         return None
     message = _first_str(error.get("message"), receipt.get("error"), receipt.get("parse_error"), status)
-    kind = _first_str(error.get("type"), details.get("error_type"), status, "worker_blocked")
-    project_agent_message = details.get("project_agent_message")
-    if kind == "provider_auth_error":
-        project_agent_message = (
-            "Use the Tau-owned provider auth/preflight receipt and Tau retry path; "
-            "do not call SciLLM endpoints directly from Battle or project-agent workflows."
-        )
     return {
         "schema": "battle.worker_blocker.v1",
-        "kind": kind,
+        "kind": _first_str(error.get("type"), details.get("error_type"), status, "worker_blocked"),
         "message": message,
         "http_status": http_status,
         "provider": details.get("provider"),
         "provider_auth_status": details.get("provider_auth_status"),
         "model_requested": details.get("model_requested") or receipt.get("model"),
-        "project_agent_message": project_agent_message,
+        "project_agent_message": details.get("project_agent_message"),
         "receipt_path": str(path),
         "proof_mode": PROOF_MODE,
     }

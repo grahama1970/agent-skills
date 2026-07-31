@@ -1,7 +1,6 @@
 import { generatedBattleFixture } from "./battle-data.generated";
 import { isBattleDesignView, mockupDesignLanes } from "./battle-mockup-lanes";
 import { isBattleReceiptReplayView } from "./battle-receipt-replay";
-import { isBattleLiveView } from "./battle-transport-registry";
 import { adaptReceiptLanesForDesignPartition } from "./receipt-mockup-adapter";
 import { hasGeneticLifecycle, lanesWithGeneticLifecycleEvents } from "./battle-genetic-lifecycle";
 import type {
@@ -66,7 +65,7 @@ const EMPTY_RECEIPT_FIXTURE: GeneratedBattleFixture = {
 };
 
 export function activeBattleFixture(receiptFixture?: GeneratedBattleFixture | null): GeneratedBattleFixture {
-	if (isBattleReceiptReplayView() || isBattleLiveView()) {
+	if (isBattleReceiptReplayView()) {
 		return receiptFixture ?? EMPTY_RECEIPT_FIXTURE;
 	}
 	return legacyReceiptBackedFixture;

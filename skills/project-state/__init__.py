@@ -1,4 +1,4 @@
-"""project-state: Comprehensive project state assessment.
+"""project-state: Comprehensive Embry OS project state assessment.
 
 Exposes the full 6-phase assessment pipeline as importable modules:
   - constants: Shared paths and configuration

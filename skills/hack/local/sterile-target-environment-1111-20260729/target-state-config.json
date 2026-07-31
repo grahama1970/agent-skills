@@ -1,5 +1,0 @@
-{
-  "OPENCLAW_GATEWAY_HOST": "127.0.0.1",
-  "OPENCLAW_GATEWAY_PORT": "80",
-  "schema": "hack.sterile_target_environment_state_fixture.v1"
-}

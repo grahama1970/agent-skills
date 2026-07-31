@@ -203,55 +203,22 @@ def _transport_identity(
         launch_receipt,
         worker_validation,
         worker_result,
-        keys=(
-            "provider_request_id",
-            "request_id",
-            "scillm_request_id",
-            "work_order_sha256",
-        ),
+        keys=("provider_request_id", "request_id", "scillm_request_id"),
     )
-    if not request_id:
-        request_id = _attestation_value(
-            launch_receipt, worker_validation, key="work_order_sha256"
-        )
     response_id = _first_value(
         launch_receipt,
         worker_validation,
         worker_result,
-        keys=(
-            "provider_response_id",
-            "response_id",
-            "scillm_response_id",
-            "response_sha256",
-        ),
+        keys=("provider_response_id", "response_id", "scillm_response_id"),
     )
-    if not response_id:
-        response_id = _artifact_sha256(
-            launch_receipt,
-            labels=("response", "http_response", "opencode_result"),
-        )
     call_count = _first_int(
         launch_receipt,
         worker_validation,
         worker_result,
         keys=("provider_call_count", "provider_attempt_count", "attempt_count"),
     )
-    if call_count is None and _single_successful_provider_launch(
-        launch_receipt=launch_receipt,
-        worker_validation=worker_validation,
-        response_id=response_id,
-    ):
-        call_count = 1
     artifact_sha = artifact_validation.get("code_artifact_sha256")
     source_sha = _transport_source_sha256(worker_result, worker_validation)
-    if (
-        not source_sha
-        and artifact_validation.get("status") == "PASS"
-        and _declares(worker_result, "outputs/exploit_specimen.py")
-        and isinstance(artifact_sha, str)
-        and artifact_sha.startswith("sha256:")
-    ):
-        source_sha = artifact_sha
     source_hash_matches = bool(
         isinstance(artifact_sha, str)
         and isinstance(source_sha, str)
@@ -307,59 +274,6 @@ def _transport_source_sha256(*receipts: dict[str, Any] | None) -> str | None:
                 if not isinstance(item, dict):
                     continue
                 if item.get("path") != "outputs/exploit_specimen.py":
-                    continue
-                value = item.get("sha256")
-                if isinstance(value, str) and value.startswith("sha256:"):
-                    return value
-    return None
-
-
-def _single_successful_provider_launch(
-    *,
-    launch_receipt: dict[str, Any] | None,
-    worker_validation: dict[str, Any] | None,
-    response_id: str | None,
-) -> bool:
-    if not isinstance(launch_receipt, dict) or not isinstance(worker_validation, dict):
-        return False
-    return (
-        launch_receipt.get("http_status") == 200
-        and launch_receipt.get("provider_live") is True
-        and launch_receipt.get("run_id") is not None
-        and launch_receipt.get("session_id") is not None
-        and bool(response_id)
-        and worker_validation.get("status") == "PASS"
-        and worker_validation.get("provider_live") is True
-    )
-
-
-def _attestation_value(*receipts: dict[str, Any] | None, key: str) -> str | None:
-    for receipt in receipts:
-        if not isinstance(receipt, dict):
-            continue
-        attestation = receipt.get("provider_execution_attestation")
-        if not isinstance(attestation, dict):
-            continue
-        value = attestation.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return None
-
-
-def _artifact_sha256(
-    *receipts: dict[str, Any] | None, labels: tuple[str, ...]
-) -> str | None:
-    for receipt in receipts:
-        if not isinstance(receipt, dict):
-            continue
-        for key in ("http_artifacts", "authored_artifact_descriptors"):
-            artifacts = receipt.get(key)
-            if not isinstance(artifacts, list):
-                continue
-            for item in artifacts:
-                if not isinstance(item, dict):
-                    continue
-                if item.get("label") not in labels:
                     continue
                 value = item.get("sha256")
                 if isinstance(value, str) and value.startswith("sha256:"):

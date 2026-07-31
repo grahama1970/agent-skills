@@ -31,8 +31,6 @@ RECEIPTS = {
     "voice_expression": RR / "voice_expression/voice_expression_evaluation_receipt.v1.json",
     "live_chain": SKILL / "reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "session_arc_bias": SKILL / "reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
-    "sparta_arc_bias_consumption": SKILL
-    / "reports/goal_v5/continuity/sparta_arc_bias_consumption/RECEIPT.json",
     "reliability": SKILL / "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
 }
 
@@ -59,7 +57,6 @@ def render() -> str:
     voice = _load(RECEIPTS["voice_expression"])
     live_chain = _load(RECEIPTS["live_chain"])
     arc_bias = _load(RECEIPTS["session_arc_bias"])
-    sparta_consumption = _load(RECEIPTS["sparta_arc_bias_consumption"])
     reliability = _load(RECEIPTS["reliability"])
 
     dur = ret.get("ffprobe", {}).get("format", {}).get("duration", "?")
@@ -98,14 +95,6 @@ def render() -> str:
             "session_arc_bias",
         ),
         (
-            "SPARTA arc-bias consumption",
-            f"{sparta_consumption.get('status')} "
-            f"pre_turn={sparta_consumption.get('arc_bias_applied_before_first_turn')} "
-            f"same_artifact={sparta_consumption.get('same_arc_bias_artifact_all_turns')} "
-            f"answer_text_unchanged={sparta_consumption.get('answer_text_unchanged')}",
-            "sparta_arc_bias_consumption",
-        ),
-        (
             "Five-cycle reliability pilot",
             f"{reliability.get('status')} passed={reliability.get('counts', {}).get('passed')}/{reliability.get('counts', {}).get('attempted')} "
             f"wilson_lower={reliability.get('success_interval', {}).get('lower')}",
@@ -132,8 +121,8 @@ def render() -> str:
         "Not proven (from the receipts' own does_not_prove sets): human",
         "subjective acceptance of the dream video; perceived emotional fidelity",
         "and lip-sync quality of the voice lane (canary proves the route only);",
-        "production reliability beyond an N=5 pilot; deployed production behavior beyond the local live SPARTA API receipt;",
-        "human-perceived effect of the session arc-bias artifact;",
+        "production reliability beyond an N=5 pilot; production conversation-service authority;",
+        "SPARTA consumption of the session arc-bias artifact;",
         "whole-clip embedding-certified identity.",
         "",
     ]

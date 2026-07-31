@@ -59,24 +59,23 @@ function liveEventIcon(event: BattleEvent): MockupLiveEvent["icon"] {
 /** Map receipt-backed battle events to mockup live-event row shape (newest first). */
 export function liveEventsFromBattleEvents(events: BattleEvent[], limit = 3): MockupLiveEvent[] {
 	return events
-		.filter((event) => event.ui?.importance !== "background")
+		.filter((event) => event.ui.importance !== "background")
 		.slice(-limit)
 		.reverse()
 		.map((event) => {
-			const ui = event.ui ?? {};
 			const ticker =
-				ui.notification_prefix && ui.notification_highlight
+				event.ui.notification_prefix && event.ui.notification_highlight
 					? {
-							prefix: ui.notification_prefix,
-							highlight: ui.notification_highlight,
-							highlightTone: ui.notification_highlight_tone ?? "green",
+							prefix: event.ui.notification_prefix,
+							highlight: event.ui.notification_highlight,
+							highlightTone: event.ui.notification_highlight_tone ?? "green",
 						}
 					: event.event_type === "replay.killed"
 						? hungerGamesNotification("killed", { id: event.actor_id, name: event.actor_id, payloadId: event.actor_id, generation: 1, team: "red", xStart: 0, xEnd: 0, runnerX: 0, runnerState: "advance", lineColor: "red", terminal: "killed", events: [] })
 					: event.event_type === "replay.blocked" || event.event_type === "blue.blocked_red"
 						? hungerGamesNotification("blocked", { id: event.red_lane_id ?? event.actor_id, name: event.red_lane_id ?? event.actor_id, payloadId: event.red_lane_id ?? event.actor_id, generation: 1, team: "red", xStart: 0, xEnd: 0, runnerX: 0, runnerState: "advance", lineColor: "red", terminal: "blocked", events: [] })
 					: null;
-			const summary = ui.notification ?? event.summary;
+			const summary = event.ui.notification ?? event.summary;
 			const highlightMatch = summary.match(/\b([A-Z][A-Z0-9_ ]{3,})\b/);
 			const highlight = ticker?.highlight ?? highlightMatch?.[1] ?? summary.split(" ").slice(-2).join(" ").toUpperCase();
 			const prefix = ticker?.prefix ?? (highlightMatch ? summary.slice(0, summary.indexOf(highlightMatch[0])) : `${summary.slice(0, 24)} `);

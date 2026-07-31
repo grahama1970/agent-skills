@@ -1,7 +1,0 @@
-services:
-  bad:
-    image: alpine:3.20
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/kvm:/dev/kvm

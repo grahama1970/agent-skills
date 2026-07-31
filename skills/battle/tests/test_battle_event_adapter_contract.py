@@ -2569,7 +2569,7 @@ def test_tau_public_only_blocked_workers_expose_scillm_auth_blocker(tmp_path: Pa
         "provider": "codex-oauth",
         "provider_auth_status": "not_configured_or_expired",
         "model_requested": "gpt-5.5",
-        "project_agent_message": "Use the Tau-owned provider auth/preflight receipt and Tau retry path; do not call SciLLM endpoints directly from Battle or project-agent workflows.",
+        "project_agent_message": "Run `codex login` on the host, ensure ~/.codex/auth.json is mounted into the scillm proxy, then check GET /v1/scillm/auth before retrying.",
         "receipt_path": str(proof_dir / "tau-live" / "red" / "scillm-call-receipt.json"),
         "proof_mode": "receipt_backed_fixture",
     }

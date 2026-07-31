@@ -21,7 +21,6 @@ Based on research into:
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -29,7 +28,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from common.security_authorization import validate_target_authorization
 from .config import (
     BATTLES_DIR,
     REPORTS_DIR,
@@ -97,21 +95,6 @@ def battle(
     model: str = typer.Option(
         "gpt-5.2-codex", help="AI model to use for research and brainstorming"
     ),
-    authorization_manifest: Optional[Path] = typer.Option(
-        None,
-        "--authorization-manifest",
-        help="security.target_authorization.v1 manifest required before Battle execution.",
-    ),
-    authorization_target: Optional[str] = typer.Option(
-        None,
-        "--authorization-target",
-        help="Expected authorization target identity. Defaults to resolved target path or docker image.",
-    ),
-    expected_manifest_sha256: Optional[str] = typer.Option(
-        None,
-        "--expected-manifest-sha256",
-        help="Expected authorization manifest SHA-256.",
-    ),
 ):
     """
     Start a Red vs Blue team battle.
@@ -158,27 +141,11 @@ def battle(
     # Handle Docker image as target
     if docker_image and target == ".":
         target_path = Path.cwd()
-        requested_identity = authorization_target or docker_image
     else:
         target_path = Path(target).resolve()
-        requested_identity = authorization_target or str(target_path)
         if not target_path.exists():
             console.print(f"[red]Target not found: {target}[/red]")
             raise typer.Exit(1)
-
-    requested_runtime_mode = mode or ("docker" if docker_image else "git_worktree")
-    authorization_receipt = validate_target_authorization(
-        authorization_manifest,
-        expected_target=requested_identity,
-        requested_action="battle",
-        requested_runtime_mode=requested_runtime_mode,
-        expected_manifest_sha256=expected_manifest_sha256,
-    )
-    if authorization_receipt["status"] != "PASS":
-        console.print("[red]Authorization preflight failed[/red]")
-        for error in authorization_receipt["errors"]:
-            console.print(f"- {error}")
-        raise typer.Exit(2)
 
     # Pre-hook: Recall prior battle findings for this target
     if _HAS_MEMORY_INTEGRATION:
@@ -265,33 +232,6 @@ def battle_fixture(
 ):
     """Run one deterministic Battle fixture with Red/Blue/Judge receipts."""
     run_battle_fixture_command(fixture, out)
-
-
-@app.command("prove-reactive-judge-round")
-def prove_reactive_judge_round(
-    authorization_manifest: Path = typer.Option(
-        ...,
-        "--authorization-manifest",
-        help="security.target_authorization.v1 manifest for the local Docker fixture.",
-    ),
-    out: Path = typer.Option(..., "--out", help="Artifact output directory."),
-):
-    """Run the local Docker reactive Blue + independent Judge round proof."""
-    from .reactive_judge_round import run_reactive_judge_round
-
-    manifest = authorization_manifest
-    if not manifest.exists() and not manifest.is_absolute():
-        repo_relative = Path(__file__).resolve().parents[4] / manifest
-        if repo_relative.exists():
-            manifest = repo_relative
-
-    result = run_reactive_judge_round(
-        authorization_manifest=manifest,
-        out_dir=out,
-    )
-    console.print_json(data=result)
-    if result.get("status") != "PASS":
-        raise typer.Exit(1)
 
 
 @app.command("arena-subagent-proof")
@@ -1953,13 +1893,8 @@ def serve_live_transport(
     ),
     host: str = typer.Option("127.0.0.1", "--host", help="HTTP bind host."),
     port: int = typer.Option(8765, "--port", help="HTTP bind port."),
-    websocket_port: int = typer.Option(
-        8766,
-        "--websocket-port",
-        help="Paired loopback WebSocket bind port advertised from /healthz.",
-    ),
 ):
-    """Serve executable UX8 snapshot/SSE/WebSocket endpoints from a normalized fixture."""
+    """Serve executable UX8 snapshot/SSE endpoints from a normalized fixture."""
     from .live_transport_server import (
         build_live_transport_source,
         serve_live_transport as _serve,
@@ -1971,20 +1906,18 @@ def serve_live_transport(
             "schema": "battle.live_transport_server_start.v1",
             "status": "SERVING",
             "mocked": False,
-            "live": "local_http_sse_websocket_adapter",
+            "live": "local_http_sse_adapter",
             "battle_id": battle_id,
             "run_id": source.run_id,
             "snapshot_endpoint": source.snapshot_endpoint,
             "sse_endpoint": source.events_endpoint,
-            "websocket_endpoint": source.websocket_endpoint,
             "event_count": len(source.events),
             "host": host,
             "port": port,
-            "websocket_port": websocket_port,
             "claim_boundary": {
                 "does_not_prove": [
                     "production deployment",
-                    "production WebSocket TLS/auth/fanout/reconnect behavior",
+                    "WebSocket support",
                     "exploit success",
                     "Blue outcome",
                     "Judge success",
@@ -1992,13 +1925,7 @@ def serve_live_transport(
             },
         }
     )
-    _serve(
-        fixture_path=fixture,
-        battle_id=battle_id,
-        host=host,
-        port=port,
-        websocket_port=websocket_port,
-    )
+    _serve(fixture_path=fixture, battle_id=battle_id, host=host, port=port)
 
 
 @app.command("prove-live-transport-server")
@@ -2027,401 +1954,6 @@ def prove_live_transport_server(
     from .live_transport_server import prove_live_transport_server as _prove
 
     receipt = _prove(fixture_path=fixture, battle_id=battle_id, out_dir=out)
-    console.print_json(data=receipt)
-
-
-@app.command("prove-production-websocket-transport")
-def prove_production_websocket_transport(
-    fixture: Path = typer.Option(
-        ...,
-        "--fixture",
-        help="Normalized UX fixture for the production-shaped WebSocket proof.",
-    ),
-    battle_id: str = typer.Option(
-        "battle-004",
-        "--battle-id",
-        help="Battle id for the production-shaped WebSocket proof.",
-    ),
-    out: Path = typer.Option(
-        ...,
-        "--out",
-        help="Output directory for the production-shaped WebSocket proof receipt.",
-    ),
-    auth_token: str = typer.Option(
-        "battle-local-production-websocket-proof-token",
-        "--auth-token",
-        help="Local proof token. Stored only as SHA-256 in the receipt.",
-    ),
-):
-    """Prove local WebSocket auth, reconnect, and fanout gates."""
-    from .live_transport_server import prove_production_websocket_transport as _prove
-
-    receipt = _prove(
-        fixture_path=fixture,
-        battle_id=battle_id,
-        out_dir=out,
-        auth_token=auth_token,
-    )
-    console.print_json(data=receipt)
-
-
-@app.command("prove-packaged-deployment-smoke")
-def prove_packaged_deployment_smoke(
-    out: Path = typer.Option(
-        ...,
-        "--out",
-        help="Output directory for the packaged local deployment smoke receipt.",
-    ),
-    repo_root: Path = typer.Option(
-        Path(__file__).resolve().parents[4],
-        "--repo-root",
-        help="agent-skills repository root to archive from.",
-    ),
-    fixture: Path = typer.Option(
-        Path(
-            "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"
-        ),
-        "--fixture",
-        help="Fixture path relative to packaged skills/battle.",
-    ),
-    interaction_manifest: Path = typer.Option(
-        Path(
-            "local/working-frontend-backend-20260729/test-interactions-live-after-patch/live-route-unique-hash-manifest.json"
-        ),
-        "--interaction-manifest",
-        help="Interaction manifest path relative to the live skills/battle root.",
-    ),
-    battle_id: str = typer.Option(
-        "battle-004", "--battle-id", help="Battle id for the packaged smoke."
-    ),
-):
-    """Prove a Git-archived local package can launch Battle frontend/backend."""
-    from .packaged_deployment_smoke import prove_packaged_deployment_smoke as _prove
-
-    receipt = _prove(
-        out_dir=out,
-        repo_root=repo_root,
-        fixture=fixture,
-        interaction_manifest=interaction_manifest,
-        battle_id=battle_id,
-    )
-    console.print_json(data=receipt)
-
-
-@app.command("prove-containerized-deployment-smoke")
-def prove_containerized_deployment_smoke(
-    out: Path = typer.Option(
-        ...,
-        "--out",
-        help="Output directory for the containerized local deployment smoke receipt.",
-    ),
-    repo_root: Path = typer.Option(
-        Path(__file__).resolve().parents[4],
-        "--repo-root",
-        help="agent-skills repository root to archive from.",
-    ),
-    fixture: Path = typer.Option(
-        Path(
-            "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"
-        ),
-        "--fixture",
-        help="Fixture path relative to packaged skills/battle.",
-    ),
-    interaction_manifest: Path = typer.Option(
-        Path(
-            "local/working-frontend-backend-20260729/test-interactions-live-after-patch/live-route-unique-hash-manifest.json"
-        ),
-        "--interaction-manifest",
-        help="Interaction manifest path relative to the live skills/battle root.",
-    ),
-    battle_id: str = typer.Option(
-        "battle-004", "--battle-id", help="Battle id for the containerized smoke."
-    ),
-):
-    """Prove a Git-archived Battle package can run frontend/backend in Docker."""
-    from .containerized_deployment_smoke import prove_containerized_deployment_smoke as _prove
-
-    receipt = _prove(
-        out_dir=out,
-        repo_root=repo_root,
-        fixture=fixture,
-        interaction_manifest=interaction_manifest,
-        battle_id=battle_id,
-    )
-    console.print_json(data=receipt)
-
-
-@app.command("validate-production-readiness")
-def validate_production_readiness(
-    out: Path = typer.Option(
-        ...,
-        "--out",
-        help="Output directory for the fail-closed production readiness contract receipt.",
-    ),
-    containerized_receipt: Path = typer.Option(
-        ...,
-        "--containerized-receipt",
-        help="Required battle.containerized_deployment_smoke.v1 receipt.",
-    ),
-    packaged_receipt: Optional[Path] = typer.Option(
-        None,
-        "--packaged-receipt",
-        help="Optional battle.packaged_deployment_smoke.v1 receipt.",
-    ),
-    local_deployment_alignment_receipt: Optional[Path] = typer.Option(
-        None,
-        "--local-deployment-alignment-receipt",
-        help="Optional battle.local_deployment_alignment_proof.v1 receipt.",
-    ),
-    production_infrastructure_receipt: Optional[Path] = typer.Option(
-        None,
-        "--production-infrastructure-receipt",
-        help="Optional external production infrastructure deployment receipt.",
-    ),
-    production_websocket_receipt: Optional[Path] = typer.Option(
-        None,
-        "--production-websocket-receipt",
-        help="Optional production WebSocket TLS/auth/fanout/reconnect receipt.",
-    ),
-    unbounded_swarm_receipt: Optional[Path] = typer.Option(
-        None,
-        "--unbounded-swarm-receipt",
-        help="Optional unbounded swarm execution receipt.",
-    ),
-    repo_root: Path = typer.Option(
-        Path(__file__).resolve().parents[4],
-        "--repo-root",
-        help="agent-skills repository root.",
-    ),
-    fail_on_blocked: bool = typer.Option(
-        True,
-        "--fail-on-blocked/--no-fail-on-blocked",
-        help="Exit nonzero when production readiness is blocked.",
-    ),
-):
-    """Fail closed unless local and external production readiness receipts exist."""
-    from .production_readiness_contract import validate_production_readiness as _validate
-
-    receipt = _validate(
-        out_dir=out,
-        repo_root=repo_root,
-        containerized_receipt=containerized_receipt,
-        packaged_receipt=packaged_receipt,
-        local_deployment_alignment_receipt=local_deployment_alignment_receipt,
-        production_infrastructure_receipt=production_infrastructure_receipt,
-        production_websocket_receipt=production_websocket_receipt,
-        unbounded_swarm_receipt=unbounded_swarm_receipt,
-    )
-    console.print_json(data=receipt)
-    if receipt.get("status") == "FAIL":
-        raise typer.Exit(1)
-    if fail_on_blocked and receipt.get("status") == "BLOCKED":
-        raise typer.Exit(2)
-
-
-@app.command("prove-production-infrastructure-deployment")
-def prove_production_infrastructure_deployment(
-    out: Path = typer.Option(
-        ...,
-        "--out",
-        help="Output directory for the production infrastructure deployment receipt.",
-    ),
-    frontend_url: str = typer.Option(
-        ...,
-        "--frontend-url",
-        help="Production HTTPS frontend URL.",
-    ),
-    backend_health_url: str = typer.Option(
-        ...,
-        "--backend-health-url",
-        help="Production HTTPS backend health URL.",
-    ),
-    websocket_url: str = typer.Option(
-        ...,
-        "--websocket-url",
-        help="Production WSS Battle live WebSocket URL.",
-    ),
-    commit: str = typer.Option(
-        ...,
-        "--commit",
-        help="Deployed git commit.",
-    ),
-    release_id: str = typer.Option(
-        ...,
-        "--release-id",
-        help="Production release or deployment identifier.",
-    ),
-    secret_source: str = typer.Option(
-        ...,
-        "--secret-source",
-        help="Secret manager/config source name, not the secret value.",
-    ),
-    websocket_bearer_token_env: Optional[str] = typer.Option(
-        None,
-        "--websocket-bearer-token-env",
-        help="Optional environment variable containing the WebSocket bearer token.",
-    ),
-    timeout_s: float = typer.Option(
-        5.0,
-        "--timeout-s",
-        min=1.0,
-        max=60.0,
-        help="Network timeout for production probes.",
-    ),
-    allow_private_targets: bool = typer.Option(
-        False,
-        "--allow-private-targets/--reject-private-targets",
-        help="Allow private network targets. Disabled by default for production proof.",
-    ),
-    fail_on_blocked: bool = typer.Option(
-        True,
-        "--fail-on-blocked/--no-fail-on-blocked",
-        help="Exit nonzero when the production infrastructure probe is blocked.",
-    ),
-):
-    """Probe production HTTPS/WSS infrastructure and emit a fail-closed receipt."""
-    from .production_infrastructure_probe import prove_production_infrastructure_deployment as _prove
-
-    websocket_bearer_token = (
-        os.environ.get(websocket_bearer_token_env) if websocket_bearer_token_env else None
-    )
-    receipt = _prove(
-        out_dir=out,
-        frontend_url=frontend_url,
-        backend_health_url=backend_health_url,
-        websocket_url=websocket_url,
-        commit=commit,
-        release_id=release_id,
-        secret_source=secret_source,
-        websocket_bearer_token=websocket_bearer_token,
-        timeout_s=timeout_s,
-        allow_private_targets=allow_private_targets,
-    )
-    console.print_json(data=receipt)
-    if fail_on_blocked and receipt.get("status") != "PASS":
-        raise typer.Exit(2)
-
-
-@app.command("prove-local-deployment-alignment")
-def prove_local_deployment_alignment(
-    out: Path = typer.Option(
-        ...,
-        "--out",
-        help="Output directory for the local deployment alignment receipt.",
-    ),
-    repo_root: Path = typer.Option(
-        Path(__file__).resolve().parents[4],
-        "--repo-root",
-        help="agent-skills repository root.",
-    ),
-    deployment_root: Path = typer.Option(
-        Path("/mnt/storage12tb/deployments/agent-skills"),
-        "--deployment-root",
-        help="Local deployment root containing releases/ and current.",
-    ),
-    commit: str = typer.Option(
-        "HEAD",
-        "--commit",
-        help="Git commit/ref to cut and align. Must match origin/main.",
-    ),
-    activate: bool = typer.Option(
-        False,
-        "--activate/--no-activate",
-        help="Atomically repoint deployment-root/current to the cut release.",
-    ),
-    authorized_by: Optional[str] = typer.Option(
-        None,
-        "--authorized-by",
-        help="Required authorization string when --activate is used.",
-    ),
-):
-    """Prove local deployment release alignment without claiming production infra."""
-    from .deployment_alignment_proof import prove_local_deployment_alignment as _prove
-
-    receipt = _prove(
-        out_dir=out,
-        repo_root=repo_root,
-        deployment_root=deployment_root,
-        commit=commit,
-        activate=activate,
-        authorized_by=authorized_by,
-    )
-    console.print_json(data=receipt)
-
-
-@app.command("prove-unbounded-swarm-execution")
-def prove_unbounded_swarm_execution(
-    out: Path = typer.Option(
-        ...,
-        "--out",
-        help="Output directory for the Docker-backed swarm execution proof.",
-    ),
-    worker_count: int = typer.Option(
-        12,
-        "--worker-count",
-        help="Number of local Docker swarm workers to execute.",
-    ),
-    min_concurrent_observed: int = typer.Option(
-        4,
-        "--min-concurrent-observed",
-        help="Minimum observed concurrent workers required for PASS.",
-    ),
-    docker_image: str = typer.Option(
-        "python:3.12-slim",
-        "--docker-image",
-        help="Docker image used for each isolated swarm worker.",
-    ),
-    per_worker_timeout_s: int = typer.Option(
-        30,
-        "--per-worker-timeout-s",
-        help="Per-worker Docker timeout in seconds.",
-    ),
-):
-    """Prove a dynamic Docker-backed Battle swarm envelope beyond fixed 2 workers."""
-    from .swarm_execution_proof import prove_unbounded_swarm_execution as _prove
-
-    receipt = _prove(
-        out_dir=out,
-        worker_count=worker_count,
-        docker_image=docker_image,
-        per_worker_timeout_s=per_worker_timeout_s,
-        min_concurrent_observed=min_concurrent_observed,
-    )
-    console.print_json(data=receipt)
-
-
-@app.command("prove-transport-safety-smoke")
-def prove_transport_safety_smoke(
-    out: Path = typer.Option(
-        ...,
-        "--out",
-        help="Output directory for the local transport safety smoke receipt.",
-    ),
-    battle_root: Path = typer.Option(
-        Path(__file__).resolve().parents[2],
-        "--battle-root",
-        help="skills/battle directory containing spectator and fixtures.",
-    ),
-    fixture: Path = typer.Option(
-        Path(
-            "spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json"
-        ),
-        "--fixture",
-        help="Fixture path relative to skills/battle.",
-    ),
-    battle_id: str = typer.Option(
-        "battle-004", "--battle-id", help="Battle id for the transport safety smoke."
-    ),
-):
-    """Prove existing local HTTP/SSE transport safety gates and frontend reducers."""
-    from .transport_safety_smoke import prove_transport_safety_smoke as _prove
-
-    receipt = _prove(
-        out_dir=out,
-        battle_root=battle_root,
-        fixture=fixture,
-        battle_id=battle_id,
-    )
     console.print_json(data=receipt)
 
 

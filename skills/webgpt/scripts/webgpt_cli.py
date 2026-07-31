@@ -21,11 +21,7 @@ import typer
 
 app = typer.Typer()
 BINDING_DIR = Path.home() / ".pi" / "webgpt-projects"
-SURF = Path(
-    os.path.expandvars(
-        os.environ.get("SURF_RUN_SH", "${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh")
-    )
-).expanduser()
+SURF = Path(os.path.expandvars("${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh"))
 BROWSER_ORACLE = Path(__file__).resolve().parents[2] / "browser-oracle" / "run.sh"
 DEFAULT_WEBGPT_TIMEOUT_SECONDS = 2400
 
@@ -1071,29 +1067,6 @@ def _raise_deliverable_missing(mode: str, bp: Path, binding: dict) -> None:
     raise typer.Exit(4)
 
 
-def _emit_submit_failure_summary(meta_path: Path) -> None:
-    try:
-        meta = json.loads(meta_path.read_text())
-    except (OSError, json.JSONDecodeError):
-        typer.echo("Submit failed", err=True)
-        return
-
-    failure = str(meta.get("failure") or "unknown")
-    typer.echo(f"BLOCKED_WEBGPT_{failure.upper()}", err=True)
-    diagnosis = str(meta.get("agent_diagnosis") or "").strip()
-    action = str(meta.get("agent_action") or "").strip()
-    if diagnosis:
-        typer.echo(f"Diagnosis: {diagnosis}", err=True)
-    if action:
-        typer.echo(f"Recovery: {action}", err=True)
-    if meta.get("browser_lock_blocked") is True:
-        for key in ("cdp_probe_stderr", "cdp_retry_stderr", "stderr_log"):
-            value = str(meta.get(key) or "")
-            if "SURF_BROWSER_LOCK_BLOCKED" in value:
-                typer.echo("Transport: SURF_BROWSER_LOCK_BLOCKED", err=True)
-                break
-
-
 def _submit_stage(
     bp: Path,
     mode: str,
@@ -1177,7 +1150,7 @@ def _submit_stage(
         _report_failure(
             f"submit-{transport}", result, binding=b, bundle=str(bp), timeout=str(timeout)
         )
-        _emit_submit_failure_summary(meta_path)
+        typer.echo("Submit failed", err=True)
         raise typer.Exit(result.returncode)
 
     try:

@@ -14,7 +14,7 @@ Parent ID: {parent_id}
   "pairs": [
     {{
       "question": "What is CAPEC-115 Authentication Bypass according to MITRE CAPEC?",
-      "reasoning": "Bypass succeeds because the mechanism trusts a credential-equivalent artifact it never re-validates, so possession of the artifact substitutes for proof of identity.",
+      "reasoning": "The description explicitly defines Authentication Bypass by stating the attacker's goal and method.",
       "answer": "CAPEC-115 Authentication Bypass is an attack pattern where an attacker gains access to an application, service, or device with the privileges of an authorized or privileged user by evading or circumventing an authentication mechanism.",
       "pair_type": "attack_description",
       "control_id": "CAPEC-115",
@@ -29,7 +29,7 @@ Parent ID: {parent_id}
     }},
     {{
       "question": "What prerequisites are required for CAPEC-115 Authentication Bypass?",
-      "reasoning": "The attack requires an authentication outcome carried in client-modifiable state; without that, there is nothing for the attacker to forge.",
+      "reasoning": "The description explicitly states the conditions needed for this attack.",
       "answer": "CAPEC-115 requires that the target system uses an authentication mechanism that contains a flaw.",
       "pair_type": "prerequisites",
       "control_id": "CAPEC-115",

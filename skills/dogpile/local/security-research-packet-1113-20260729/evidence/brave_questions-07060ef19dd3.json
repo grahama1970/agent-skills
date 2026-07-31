@@ -1,5 +1,0 @@
-{
-  "description": "Further proving that precise modeling is indispensable, we leverage ETHBMC capabilities for automatic vulnerability scanning. We perform a large-scale analysis of roughly 2.2 million accounts currently active on the blockchain and automatically generate 5,905 valid inputs which trigger a vulnerability. From these, 1,989 can destroy a contract at will (so called suicidal contracts) and the rest can be used by an adversary to arbitrarily extract money.",
-  "title": "ETHBMC | Proceedings of the 29th USENIX Conference on Security Symposium",
-  "url": "https://dl.acm.org/doi/10.5555/3489212.3489367"
-}

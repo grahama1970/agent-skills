@@ -50,7 +50,6 @@ tab_id=""
 target_url=""
 no_activate=0
 attach_files=()
-attach_file_abs=""
 tab_state_file="${SURF_GEMINI_TAB_STATE:-/tmp/surf-gemini-controlled-tab-id}"
 stall_retry_attempts="${SURF_GEMINI_STALL_RETRY_ATTEMPTS:-1}"
 stall_cooldown_s="${SURF_GEMINI_STALL_COOLDOWN_SECONDS:-120}"
@@ -198,75 +197,6 @@ focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 stall_retry_count=0
-write_interrupted_meta() {
-  local signal_name="${1:-TERM}"
-  local finished
-  finished="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  cp "$raw_tmp" "$raw_output" 2>/dev/null || true
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished" "${requested_tab_id:-}" "$target_url" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" "${attach_file_abs:-}" "$signal_name" <<'PY'
-import json, pathlib, sys
-(
-    meta, inp, submitted, out, raw, err, sentinel, started, finished,
-    requested_tab_id, target_url, retry_count, retry_attempts, cooldown_s,
-    requested_attachment, signal_name,
-) = sys.argv[1:]
-raw_text = pathlib.Path(raw).read_text(errors="replace") if pathlib.Path(raw).exists() else ""
-pathlib.Path(meta).write_text(json.dumps({
-    "status": "interrupted",
-    "failure": "submit_interrupted_before_completion",
-    "blocker": "BROWSER_HANDLER_TIMEOUT",
-    "proof_status": "interrupted",
-    "exit_signal": signal_name,
-    "input": inp,
-    "submitted_output": submitted,
-    "output": out,
-    "raw_output": raw,
-    "stderr_log": err,
-    "sentinel": sentinel,
-    "requested_tab_id": requested_tab_id or None,
-    "controlled_tab_id": None,
-    "requested_url": target_url or None,
-    "attach_file": requested_attachment or None,
-    "attachment": None,
-    "attachment_missing": bool(requested_attachment),
-    "attachment_preview_missing": False,
-    "attachment_delivery_proven": False,
-    "stall_retry_count": int(retry_count),
-    "stall_retry_attempts": int(retry_attempts),
-    "stall_cooldown_seconds": int(cooldown_s),
-    "raw_contains_sentinel": sentinel in raw_text,
-    "clean_contains_sentinel": False,
-    "raw_chars": len(raw_text),
-    "clean_chars": 0,
-    "started_at": started,
-    "finished_at": finished,
-}, indent=2) + "\n")
-PY
-  exit 124
-}
-trap 'write_interrupted_meta TERM' TERM
-trap 'write_interrupted_meta INT' INT
-trap 'write_interrupted_meta HUP' HUP
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "${requested_tab_id:-}" "$target_url" "${attach_file_abs:-}" <<'PY'
-import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, requested_tab_id, target_url, requested_attachment = sys.argv[1:]
-pathlib.Path(meta).write_text(json.dumps({
-    "status": "running",
-    "proof_status": "pending",
-    "input": inp,
-    "submitted_output": submitted,
-    "output": out,
-    "raw_output": raw,
-    "stderr_log": err,
-    "sentinel": sentinel,
-    "requested_tab_id": requested_tab_id or None,
-    "controlled_tab_id": None,
-    "requested_url": target_url or None,
-    "attach_file": requested_attachment or None,
-    "attachment_delivery_proven": False,
-    "started_at": started,
-}, indent=2) + "\n")
-PY
 while true; do
   set +e
   if command -v timeout >/dev/null 2>&1; then
@@ -302,7 +232,6 @@ while true; do
   fi
 done
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-trap - TERM INT HUP
 
 # Post-run focus snapshot for proof.
 focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
@@ -310,9 +239,9 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" "$attach_file_abs" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$stall_retry_count" "$stall_retry_attempts" "$stall_cooldown_s" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, retry_count, retry_attempts, cooldown_s, attach_file = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, retry_count, retry_attempts, cooldown_s = sys.argv[1:]
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
@@ -324,10 +253,6 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
-    "attach_file": attach_file or None,
-    "attachment": None,
-    "attachment_missing": bool(attach_file),
-    "attachment_preview_missing": False,
     "stall_retry_count": int(retry_count),
     "stall_retry_attempts": int(retry_attempts),
     "stall_cooldown_seconds": int(cooldown_s),
@@ -414,13 +339,10 @@ for line in reversed(stderr_text.splitlines()):
     elif line.startswith("TabWasCreated:") and tab_was_created is None:
         tab_was_created = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("Attachment:") and attachment is None:
-        payload = line.split(":", 1)[1].strip()
         try:
-            attachment = json.loads(payload)
+            attachment = json.loads(line.split(":", 1)[1].strip())
         except Exception:
-            attachment = {"attached": False, "parse_error": payload}
-    if tab_id is not None and activated is not None and tab_was_created is not None and (not requested_attachment or attachment is not None):
-        break
+            attachment = {"attached": False, "parse_error": line.split(":", 1)[1].strip()}
 if attachment is None and requested_attachment:
     attachment = {
         "attached": False,
@@ -470,12 +392,6 @@ no_activate = no_activate_s == "1"
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
 activation_violation = no_activate and activated is True
 attachment_missing = bool(requested_attachment and not (isinstance(attachment, dict) and attachment.get("attached") is True))
-attachment_preview_missing = bool(
-    requested_attachment
-    and isinstance(attachment, dict)
-    and attachment.get("attached") is True
-    and attachment.get("previewVisible") is False
-)
 status = "completed" if (
     tab_id
     and not tab_mismatch
@@ -484,7 +400,6 @@ status = "completed" if (
     and sentinel not in out_text
     and not activation_violation
     and not attachment_missing
-    and not attachment_preview_missing
 ) else "failed"
 if status == "completed":
     failure = None
@@ -493,9 +408,7 @@ elif activation_violation:
 elif tab_mismatch:
     failure = "controlled_tab_id_mismatch"
 elif attachment_missing:
-    failure = "attachment_metadata_missing"
-elif attachment_preview_missing:
-    failure = "attachment_preview_missing"
+    failure = "attachment_missing"
 else:
     failure = "missing_controlled_tab_id_or_contaminated_clean_output"
 pathlib.Path(meta).write_text(json.dumps({
@@ -509,10 +422,6 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
-    "attach_file": requested_attachment or None,
-    "attachment": attachment,
-    "attachment_missing": attachment_missing,
-    "attachment_preview_missing": attachment_preview_missing,
     "stall_retry_count": int(retry_count),
     "stall_retry_attempts": int(retry_attempts),
     "stall_cooldown_seconds": int(cooldown_s),
@@ -538,6 +447,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "tab_was_created": tab_was_created,
     "activated": activated,
     "activation_violation": activation_violation,
+    "attachment": attachment,
+    "attachment_missing": attachment_missing,
     "focused_window_before": focus_before["focusedWindowId"],
     "focused_window_after": focus_after["focusedWindowId"],
     "active_tab_before": focus_before["activeTabId"],

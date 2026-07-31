@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Comprehensive project state report.
+"""Comprehensive Embry OS project state report.
 
 Full assessment pipeline:
   Phase 1: Infrastructure -- daemons, tests, cascade, classifiers, skills
-  Phase 1b: Component Projects -- health of registered helper repos when configured
+  Phase 1b: Component Projects -- health of registered helper repos (embry.yaml)
   Phase 2: Memory -- query /memory for known features, architecture, status
   Phase 3: Doc-Code Drift -- compare doc claims vs actual codebase
   Phase 4: Best Practices -- scan for anti-patterns (Python, React, Skills)
-  Phase 5: Competitive Landscape -- external research (--full only)
+  Phase 5: Competitive Landscape -- /dogpile for external research (--full only)
   Phase 6: Gap Analysis -- synthesize all phases into actionable gaps
 
 Usage:
@@ -63,8 +63,6 @@ from constants import (  # noqa: F401
     GITHUB_SEARCH_SKILL,
     MEMORY_SKILL,
     PI_SKILLS,
-    PROJECT_NAME,
-    PROJECT_ROOT,
     REGISTRY_PATH,
     SHADOW_JSONL,
     TRAINING_DIR,
@@ -104,8 +102,6 @@ def _find_checkpoint_path() -> Optional[Path]:
 
 def _detect_project_name() -> str:
     """Derive project name from git remote or directory name."""
-    if PROJECT_NAME:
-        return PROJECT_NAME
     try:
         result = subprocess.run(
             ["git", "remote", "get-url", "origin"],
@@ -982,7 +978,7 @@ def cmd_config_doctor(
     """Report missing non-secret configuration without prompting."""
     checks = []
     for label, path in (
-        ("PROJECT_STATE_ROOT", PROJECT_ROOT),
+        ("EMBRY_OS_ROOT", EMBRY_OS),
         ("PI_SKILLS_ROOT", PI_SKILLS),
         ("memory_run_sh", MEMORY_SKILL),
         ("brave_search_run_sh", BRAVE_SEARCH_SKILL),

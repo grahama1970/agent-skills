@@ -6,7 +6,7 @@ requires-python = ">=3.10,<3.13"
 dependencies = [
     "typer",
     "rich",
-    "python-dotenv>=1.0.0",
+    "requests",
     "python-nmap",
     "scapy",
     "bandit",
@@ -15,8 +15,4 @@ dependencies = [
     "httpx>=0.24.0",
     "loguru>=0.7.0,<0.7.3",
     "pydantic>=2.0",
-    "pytest>=8.0",
 ]
-
-[tool.pytest.ini_options]
-pythonpath = ["..", "../.."]

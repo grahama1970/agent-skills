@@ -1,6 +1,6 @@
 # Project Knowledge: agent-skills
 
-**Last updated:** 2026-07-31 00:00 by agent
+**Last updated:** 2026-07-29 08:46 by agent
 
 ## watch subagent
 
@@ -30,22 +30,6 @@
 
 ## Current Understanding
 
-- 2026-07-31 /cleanup main contract: cleanup is an evidence-first assessment
-  and selected-slice repair skill, not a broad deletion or repository-publication
-  tool. Current selected lanes are `--script-scanability`, `--public-readiness`,
-  `--quality-gate`, `--memory-index`, `--worktree-audit`, and
-  `--registered-worktree-audit`. Script scanability findings mean a script is
-  hard for agents/humans to scan, not that it is broken or removable; repairs
-  must be readability-only docstring/comment/CLI-description edits with
-  parse/compile plus `--help` or narrow sanity proof. Public-readiness findings
-  preserve gitleaks/history/dir-scan/GitHub-settings blockers for maintainer
-  triage and do not change repository visibility. Registered worktree rescue is
-  audit-only until each dirty secondary worktree has active-process exclusion,
-  pushed rescue branch proof, and fresh status/removal receipts. `--memory-index`
-  invokes ingest-code for Memory/searchability and local offline artifacts, but
-  indexing does not authorize file deletion or tracked mutation; tracked
-  mutation still requires per-candidate `.cleanup-evidence.json` plus
-  before/after project-native readiness proof.
 - 2026-07-21 Persona Dream PCTOM-R sealed-test statistical-confidence rung:
   implemented `run-sealed-test-statistical-confidence`, expanded the
   deterministic social-world generator to 16 variants per family, and repaired
@@ -154,7 +138,6 @@
 | 2026-06-21 | Route Orpheus training via Unsloth handoff DAG | orpheus-tts-voice-trainer now composes unsloth-studio and requires agents/orpheus-tts-trainer to produce an unsloth-handoff-dag.yaml only after voice-segment-selector export-orpheus writes a dataset receipt. agents/orpheus-tts-trainer remains candidate-generation owner and denies direct training; agents/unsloth-studio consumes the handoff DAG for train/eval/export. Proof: skills/best-practices-subagent/run.sh lint agents/orpheus-tts-trainer/persona.yaml returned PASS; validate_skill for skills/orpheus-tts-voice-trainer and skills/best-practices-subagent returned warnings only. |
 | 2026-07-21 | Use herdr pane run as monitor-herdr primary submit transport | Installed Herdr 0.7.1 documents pane run as text plus Enter, while the older send_text plus send_keys path could paste prompts without executing them; monitor-herdr still fails closed unless post-submit evidence appears. |
 | 2026-07-27 | Dogpile research must have a durable structured Memory projection | Markdown and HTML reports are for humans; future project agents need automatic JSON recall from the dogpile_research collection, while local partial results remain the fallback when /memory is unavailable. |
-| 2026-07-31 | Keep cleanup selected lanes explicit and fail-closed | Project agents need to run targeted cleanup slices without converting scan counts into mutation authority. Public-readiness, quality-gate, memory-index, and registered-worktree rescue lanes produce receipts/audits first; deletion, GitHub visibility changes, branch rescue, and pruning require separate proof and authority. |
 
 ## Open Questions
 
@@ -166,12 +149,6 @@
 | File | Purpose |
 |------|---------|
 | PROJECT_KNOWLEDGE.md | Shared project knowledge |
-| skills/cleanup/SKILL.md | Authoritative /cleanup contract, including selected lanes, evidence limits, and mutation authority |
-| skills/cleanup/cleanup.py | /cleanup CLI entrypoint; preserves origin/main agentic-eval and script-scanability behavior while wiring selected lanes |
-| skills/cleanup/cleanup_public.py | Public-readiness/security lane for gitleaks, working-dir noise, and GitHub settings blockers |
-| skills/cleanup/cleanup_quality.py | Project-native quality-gate lane for parse/lint/type/test receipts |
-| skills/cleanup/cleanup_worktree.py | Dirty worktree triage plus all-registered-worktree rescue/prune audit helpers |
-| skills/cleanup/cleanup_memory_index.py | /cleanup selected lane that invokes ingest-code and writes `cleanup.memory_index.v1` receipts |
 | skills/hack/docs/HACK_EVOLVE_PIPELINE.md | /hack workflow chart documentation and rendered image references |
 | skills/hack/docs/HACK_EVOLVE_PIPELINE.png | superseded evolve-campaign-only rendered image |
 | skills/hack/docs/HACK_SYSTEM_WORKFLOW.png | implementation-grounded /hack exploit-proof and hardening feedback chart |

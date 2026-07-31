@@ -24,7 +24,7 @@ Output:
   "pairs": [
     {{
       "question": "What is T1595 Active Scanning according to MITRE ATT&CK?",
-      "reasoning": "Probing an exposed surface reveals which services answer without exercising any flaw, so the activity yields target-selection data while staying within traffic a host is built to accept.",
+      "reasoning": "The description defines Active Scanning as reconnaissance via network probing.",
       "answer": "T1595 Active Scanning is a reconnaissance technique where adversaries may execute active reconnaissance scans to gather information that can be used during targeting. Active scans are those where the adversary probes victim infrastructure via network traffic, as opposed to other forms of reconnaissance that do not involve direct interaction.",
       "pair_type": "threat_description",
       "control_id": "T1595",
@@ -37,7 +37,7 @@ Output:
     }},
     {{
       "question": "How can T1595 Active Scanning be detected?",
-      "reasoning": "Scanning produces connection attempts matching no normal client pattern, so the detectable signal is flow shape and volume rather than payload content.",
+      "reasoning": "Detection section describes monitoring for uncommon network data flows.",
       "answer": "Detect T1595 Active Scanning by monitoring network data for uncommon data flows. Processes utilizing the network that do not normally have network communication or have never been seen before are suspicious.",
       "pair_type": "detection_method",
       "control_id": "T1595",
@@ -105,7 +105,7 @@ If sources conflict, use the higher-precedence source. Ignore GitHub and other i
   "pairs": [
     {{
       "question": "string — must include {control_id} and technique name",
-      "reasoning": "string — subject-matter reasoning specific to this technique; no length limit",
+      "reasoning": "string — 1-2 sentences explaining why this Q&A is valid, max 50 words",
       "answer": "string — 1-4 sentences grounded in source, max 150 words",
       "pair_type": "one of: threat_description | detection_method | mitigation_guidance | scope_clarification | risk_context",
       "control_id": "{control_id}",

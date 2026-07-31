@@ -23,14 +23,11 @@ from typing import Any, Callable, Iterable
 import typer
 from rich.console import Console
 
-from common.security_authorization import require_target_authorization
 from hack.chaos_campaign import is_local_or_private_target, summarize_seed_file
-from hack.env import load_hack_dotenv as dotenv_helper
 from hack.self_improve_loop import ARTIFACT_ROOT
 from hack.session_audit import safe_slug
 
 console = Console()
-dotenv_helper()
 
 LANE_IDS = (
     "api_protocol",
@@ -1669,9 +1666,6 @@ def create_evolve_campaign_command() -> Callable[..., None]:
         allow_unverified_seed_paths: bool = typer.Option(False, "--allow-unverified-seed-paths", help="Accept validation results not produced with --verify-paths."),
         allow_nonlocal: bool = typer.Option(False, "--allow-nonlocal", help="Allow explicitly authorized nonlocal targets."),
         dry_run: bool = typer.Option(False, "--dry-run", help="Do not send network probes; write deterministic synthetic artifacts."),
-        authorization_manifest: Path | None = typer.Option(None, "--authorization-manifest", help="security.target_authorization.v1 manifest required for live execution."),
-        authorization_target: str | None = typer.Option(None, "--authorization-target", help="Expected authorization target identity."),
-        expected_manifest_sha256: str | None = typer.Option(None, "--expected-manifest-sha256", help="Expected authorization manifest SHA-256."),
     ) -> None:
         campaign_dir = run_evolutionary_campaign(
             target_url=target_url,
@@ -1692,9 +1686,6 @@ def create_evolve_campaign_command() -> Callable[..., None]:
             require_verified_seed_paths=not allow_unverified_seed_paths,
             allow_nonlocal=allow_nonlocal,
             dry_run=dry_run,
-            authorization_manifest=authorization_manifest,
-            authorization_target=authorization_target,
-            expected_manifest_sha256=expected_manifest_sha256,
         )
         console.print(f"[green]Evolutionary campaign artifacts:[/green] {campaign_dir}")
 
@@ -1721,20 +1712,7 @@ def run_evolutionary_campaign(
     require_verified_seed_paths: bool = True,
     allow_nonlocal: bool = False,
     dry_run: bool = False,
-    authorization_manifest: Path | None = None,
-    authorization_target: str | None = None,
-    expected_manifest_sha256: str | None = None,
 ) -> Path:
-    if not dry_run:
-        require_target_authorization(
-            manifest_path=authorization_manifest,
-            expected_target=authorization_target or target_url,
-            requested_action="evolve-campaign",
-            requested_target_url=target_url,
-            requested_probe_class="config_review",
-            requested_runtime_mode="session-audit",
-            expected_manifest_sha256=expected_manifest_sha256,
-        )
     if not dry_run and not shutil.which("docker"):
         raise RuntimeError("Docker is required for live /hack evolve-campaign")
     if not allow_nonlocal and not is_local_or_private_target(target_url):

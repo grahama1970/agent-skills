@@ -7,8 +7,25 @@ echo "=== Cleanup Skill Sanity ==="
 [[ -f "$SCRIPT_DIR/SKILL.md" ]] && echo "  [PASS] SKILL.md exists" || { echo "  [FAIL] SKILL.md missing"; exit 1; }
 [[ -f "$SCRIPT_DIR/cleanup.py" ]] && echo "  [PASS] cleanup.py exists" || { echo "  [FAIL] cleanup.py missing"; exit 1; }
 # Syntax check
-uv run --project "$SCRIPT_DIR" python -m py_compile "$SCRIPT_DIR/cleanup.py" \
-  && echo "  [PASS] cleanup.py compiles" || { echo "  [FAIL] cleanup.py syntax error"; exit 1; }
+uv run --project "$SCRIPT_DIR" python -m py_compile \
+  "$SCRIPT_DIR/cleanup.py" "$SCRIPT_DIR/cleanup_core.py" "$SCRIPT_DIR/cleanup_watchdog.py" \
+  "$SCRIPT_DIR/cleanup_worktree.py" "$SCRIPT_DIR/cleanup_evidence.py" \
+  "$SCRIPT_DIR/cleanup_docs.py" "$SCRIPT_DIR/cleanup_public.py" \
+  "$SCRIPT_DIR/cleanup_quality.py" "$SCRIPT_DIR/cleanup_memory_index.py" \
+  "$SCRIPT_DIR/cleanup_bp.py" \
+  && echo "  [PASS] all cleanup modules compile" || { echo "  [FAIL] cleanup module syntax error"; exit 1; }
+# Every module stays under the 800-line rule from /best-practices-python.
+OVERSIZE=""
+for f in "$SCRIPT_DIR"/cleanup*.py "$SCRIPT_DIR"/test_cleanup*.py; do
+  [[ -f "$f" ]] || continue
+  n=$(wc -l < "$f")
+  if [[ "$n" -gt 800 ]]; then OVERSIZE="$OVERSIZE $(basename "$f"):$n"; fi
+done
+if [[ -z "$OVERSIZE" ]]; then
+  echo "  [PASS] no module exceeds 800 lines"
+else
+  echo "  [FAIL] files over 800 lines:$OVERSIZE"; exit 1
+fi
 # CLI smoke
 uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/cleanup.py" --help > /dev/null 2>&1 \
   && echo "  [PASS] --help works" || { echo "  [FAIL] --help failed"; exit 1; }

@@ -5,13 +5,10 @@ Provides web search via Brave Search API with rate limiting protection.
 """
 import json
 import re
-import shutil
 import sys
-import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from urllib.parse import urlparse
 from typing import Dict, Any, List, Tuple
 from loguru import logger
 
@@ -258,112 +255,32 @@ def deep_extract_url(url: str, title: str = "") -> Dict[str, Any]:
     if not fetcher_dir.exists():
         return {"error": "fetcher skill not found", "url": url}
 
-    out_dir = Path(tempfile.mkdtemp(prefix="dogpile_brave_"))
     try:
-        # fetcher's CLI requires the `get` subcommand and writes content to an
-        # --out directory (stdout is only a summary report). Calling
-        # `run.sh <url>` errors with a usage message and extracts nothing.
-        fetch_cmd = ["bash", "run.sh", "get", url, "--out", str(out_dir)]
+        fetch_cmd = ["bash", "run.sh", url]
         fetch_output = run_command(fetch_cmd, cwd=fetcher_dir)
-        if isinstance(fetch_output, str) and fetch_output.startswith("Error:"):
-            return {"url": url, "title": title, "extracted": False, "error": fetch_output[:300], "content_verdict": "error"}
 
-        # Read the fetcher's content verdict from consumer_summary.json.
-        verdict = None
-        summary_path = out_dir / "consumer_summary.json"
-        if summary_path.exists():
-            try:
-                items = (json.loads(summary_path.read_text()) or {}).get("items") or []
-                if items:
-                    verdict = items[0].get("verdict") or items[0].get("paywall_verdict")
-            except Exception as e:
-                logger.warning("could not parse fetcher summary for {}: {}", url, e)
-
-        # Extracted content lands under markdown/ (preferred) or extracted_text/.
-        content = ""
-        for sub in ("markdown", "extracted_text"):
-            sub_dir = out_dir / sub
-            files = sorted(sub_dir.glob("*")) if sub_dir.exists() else []
-            if files:
-                content = files[0].read_text(errors="replace")
-                break
-
-        if not content.strip():
-            return {"url": url, "title": title, "extracted": False, "content": "", "content_verdict": verdict or "empty"}
+        if fetch_output.startswith("Error:"):
+            return {"error": fetch_output, "url": url}
 
         log_status("URL extraction finished.", provider="brave", status="DONE")
         return {
             "url": url,
             "title": title,
-            "content": content[:8000],  # Limit to 8k chars
-            "content_verdict": verdict or "ok",
+            "content": fetch_output[:8000],  # Limit to 8k chars
             "extracted": True,
         }
 
     except Exception as e:
-        logger.error("deep extract failed for {}: {}", url, e)
-        return {"url": url, "title": title, "extracted": False, "error": str(e)}
-    finally:
-        shutil.rmtree(out_dir, ignore_errors=True)
+        return {"error": str(e), "url": url}
 
 
-def _select_domain_diverse(web_results: List[Dict[str, Any]], n: int) -> List[Dict[str, Any]]:
-    """Pick up to n results preferring distinct domains, preserving Brave rank order."""
-    selected: List[Dict[str, Any]] = []
-    seen_domains: set = set()
-    # First pass: one per domain, in rank order.
-    for r in web_results:
-        if len(selected) >= n:
-            break
-        domain = urlparse(r.get("url", "")).netloc
-        if domain and domain not in seen_domains:
-            seen_domains.add(domain)
-            selected.append(r)
-    # Second pass: backfill from remaining rank order if under n.
-    if len(selected) < n:
-        for r in web_results:
-            if len(selected) >= n:
-                break
-            if r not in selected:
-                selected.append(r)
-    return selected
-
-
-def _deep_read_urls(web_results: List[Dict[str, Any]], read_n: int) -> List[Dict[str, Any]]:
-    """Deep-read up to read_n domain-diverse Brave URLs concurrently (Deep-Research style)."""
-    selected = _select_domain_diverse(web_results, read_n)
-    if not selected:
-        return []
-    log_status(
-        f"Brave Stage 2: deep-reading {len(selected)} sources (read_n={read_n})...",
-        provider="brave", status="EXTRACTING",
-    )
-    deep: List[Dict[str, Any]] = []
-    with ThreadPoolExecutor(max_workers=min(len(selected), 5)) as ex:
-        futures = {
-            ex.submit(deep_extract_url, r.get("url", ""), r.get("title", "")): r
-            for r in selected if r.get("url")
-        }
-        for fut in as_completed(futures):
-            try:
-                dr = fut.result()
-                if dr.get("extracted"):
-                    deep.append(dr)
-            except Exception as e:
-                logger.warning("brave deep-read failed for one source: {}", e)
-    log_status(f"Brave Stage 2 deep-read finished ({len(deep)} extracted).", provider="brave", status="DONE")
-    return deep
-
-
-def run_stage2_brave(brave_res: Dict[str, Any], query: str, search_codex_fn, read_n: int = 1) -> List[Dict]:
-    """Stage 2: Brave URL deep extraction.
+def run_stage2_brave(brave_res: Dict[str, Any], query: str, search_codex_fn) -> List[Dict]:
+    """Stage 2: Brave URL deep extraction for most relevant result.
 
     Args:
         brave_res: Stage 1 Brave search results
         query: Original search query
         search_codex_fn: Function to call Codex for evaluation
-        read_n: When >1, deep-read the top-N domain-diverse URLs concurrently
-            (Deep-Research style). When <=1, keep the single best-of-top-3 pick.
 
     Returns:
         List of deep extracted content
@@ -373,10 +290,6 @@ def run_stage2_brave(brave_res: Dict[str, Any], query: str, search_codex_fn, rea
     brave_deep = []
 
     if brave_res and isinstance(brave_res, dict) and "web" in brave_res:
-        if read_n and read_n > 1:
-            all_web = brave_res.get("web", {}).get("results", []) or []
-            return _deep_read_urls(all_web, read_n)
-
         web_results = brave_res.get("web", {}).get("results", [])[:3]
 
         if web_results:

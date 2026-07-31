@@ -1,9 +1,0 @@
-{
-  "battle_id": "battle-reactive-judge-001",
-  "phase": "proactive",
-  "private_red_findings": [],
-  "replay_contract": null,
-  "round_number": 1,
-  "schema": "battle.blue_input_receipt.v1",
-  "status": "PASS"
-}

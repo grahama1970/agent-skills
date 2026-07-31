@@ -24,11 +24,8 @@ import typer
 
 # Ensure hack package is importable
 SCRIPT_DIR = Path(__file__).parent.resolve()
-PROJECT_ROOT = SCRIPT_DIR.parents[1]
 if str(SCRIPT_DIR.parent) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR.parent))
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import from modular components
 from hack.container_manager import display_tools_status
@@ -59,11 +56,6 @@ from hack.session_audit import create_session_audit_command
 from hack.chaos_campaign import create_chaos_campaign_command
 from hack.battle_mode import create_battle_command
 from hack.evolutionary_campaign import create_evolve_campaign_command, create_validate_seed_command
-from hack.hack_scan_request import create_validate_scan_request_command
-from hack.target_authorization import create_authorization_preflight_command
-from hack.proof_authority import create_prove_proof_authority_command
-from hack.compose_policy import create_compose_policy_command, create_compose_policy_matrix_command
-from hack.target_environment import create_prove_sterile_target_environment_command
 
 from rich.console import Console
 
@@ -126,12 +118,6 @@ app.command(name="chaos-campaign", hidden=True)(create_chaos_campaign_command())
 app.command(name="evolve-campaign")(create_evolve_campaign_command())
 app.command(name="battle")(create_battle_command())
 app.command(name="validate-seed")(create_validate_seed_command())
-app.command(name="validate-scan-request")(create_validate_scan_request_command())
-app.command(name="authorization-preflight")(create_authorization_preflight_command())
-app.command(name="prove-proof-authority")(create_prove_proof_authority_command())
-app.command(name="compose-policy")(create_compose_policy_command())
-app.command(name="compose-policy-matrix")(create_compose_policy_matrix_command())
-app.command(name="prove-sterile-target-environment")(create_prove_sterile_target_environment_command())
 
 
 @app.command()

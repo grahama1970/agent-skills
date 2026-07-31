@@ -69,28 +69,26 @@ table below is checked against it by
 | Lane | Implemented and receipted | Not proven |
 |---|---|---|
 | Continuity ledger | Atomic writes, epoch compare-and-set, cycle idempotency, identity-core hash guard, read-time validation | Runtime authority across real sessions |
-| Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Deployed production behavior beyond local live receipts |
+| Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Binding inside the production conversation service |
 | Chatterbox voice | Live `/synthesize-batch` render of the mood envelope, strict ASR WER 0.0, durable WAV snapshots | Perceived emotion, naturalness, human acceptance |
 | Speaker recognition | Long 4.68-6.0s session-mood renders pass resemblyzer identity/adversarial scoring with separation 0.208427 | Human listener recognition, perceived emotion, naturalness, cross-mood identity |
-| Joined live chain | One fresh cycle id, `live_chain_20260729t130950z`, joins accepted dream evidence -> Watch binding -> journal -> ledger delta -> pre-turn session mood -> three live Chatterbox turns -> Embry recognition, with 13/13 negative controls blocked | Perceived emotion; deployed production behavior beyond local live receipts |
-| Session arc bias | `session_arc_bias.v1` publishes bounded deltas from the latest ledger arc, `intensity_delta=0.18`, `valence_delta=-0.18`, with no tone category; `sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json` binds the SPARTA consumer contract; `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716` locally consumed that artifact before turn 1 and preserved answer text/tone category across three turns | Human-perceived emotion; deployed production behavior beyond the local live API receipt |
+| Joined live chain | One fresh cycle id, `live_chain_20260729t130950z`, joins accepted dream evidence -> Watch binding -> journal -> ledger delta -> pre-turn session mood -> three live Chatterbox turns -> Embry recognition, with 13/13 negative controls blocked | Production conversation-service authority; perceived emotion |
+| Session arc bias | `session_arc_bias.v1` publishes bounded deltas from the latest ledger arc, `intensity_delta=0.18`, `valence_delta=-0.18`, with no tone category; `sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json` binds the SPARTA consumer contract | SPARTA production consumption; per-turn tone classification; perceived emotion |
 | Reliability pilot | Five fresh live-chain cycles passed in `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`: 5 attempted, 5 completed, 5 passed, duplicate accepted effects 0, Wilson 95% lower bound 0.565509 | Production reliability; larger campaign; restart/recovery study |
 | Blinded listener study | Four preregistered Chatterbox stimuli are restored, hash-matched, live-ASR verified at WER 0.0, and paired with a rater response schema that rejects empty/malformed rows | Valid human responses remain 0/20; no perceptual emotion or naturalness result |
 | Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
 | PCTOM-R | Strong deterministic receipt machinery, live Tau slices | Confidence-bounded planning advantage |
 
-**The active gate** is no longer producing the first joined live-chain receipt,
-the five-cycle engineering pilot, or the SPARTA arc-bias consumer handoff. Those
-now exist. SPARTA has a local live API receipt at
-`grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716` showing the
-current Persona Dream `session_arc_bias.v1` artifact was applied before turn 1,
-reused across three turns, preserved answer text and tone category, and fell
-back to neutral when no artifact was supplied. The next gate is perceptual
-Chatterbox evidence: collect the human responses for the blinded listener study
-of dream-derived emotion, Embry identity, and naturalness, then add the signed
-human interpretation. Do not substitute LLM/self-ratings, expand PCTOM-R,
-generate a new Kling clip, or run another broad assessment before that gate
-unless the operator explicitly reprioritizes.
+**The active gate** is no longer producing the first joined live-chain receipt
+or the five-cycle engineering pilot; both now exist. The next gate is
+production conversation-service authority plus perceptual Chatterbox evidence:
+route the validated
+`sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json` target to the
+SPARTA-owned production conversation lane, then collect the human responses for
+the blinded listener study of dream-derived emotion, Embry identity, and
+naturalness. Persona Dream does not own SPARTA service edits. Do not expand
+PCTOM-R, generate a new Kling clip, or run another broad assessment before that
+gate unless the operator explicitly reprioritizes.
 
 ## PCTOM-R, and why its numbers are not a result
 
@@ -120,7 +118,7 @@ error rate, speaker-embedding score, or volume of receipts establishes any of
 them:
 
 - end-to-end pipeline reliability across repeated cycles;
-- deployed production behavior beyond the local live SPARTA API receipt;
+- dream-derived mood binding inside the production conversation service;
 - perceived emotion, naturalness, or human acceptance of synthesized speech;
 - that a human listener recognizes Embry;
 - a confidence-bounded PCTOM-R planning advantage;

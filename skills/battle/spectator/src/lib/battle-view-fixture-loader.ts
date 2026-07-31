@@ -22,22 +22,7 @@ import {
 } from "./battle-view-fixture";
 import { battleFixtureRegistryEntry, expectedSchemaForViewKind } from "./battle-view-fixture-registry";
 
-type BattleFixtureJsonFetchResult = BattleFixtureLoadResult<BattleViewFixture> | {
-	ok: true;
-	data: unknown;
-	sourceSha256?: string;
-	sourceUrl: string;
-};
-
-async function sha256Hex(text: string): Promise<string | undefined> {
-	const subtle = globalThis.crypto?.subtle;
-	if (!subtle) return undefined;
-	const data = new TextEncoder().encode(text);
-	const digest = await subtle.digest("SHA-256", data);
-	return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-export async function fetchBattleFixtureJson(url: string): Promise<BattleFixtureJsonFetchResult> {
+export async function fetchBattleFixtureJson(url: string): Promise<BattleFixtureLoadResult<BattleViewFixture> | { ok: true; data: unknown }> {
 	let response: Response;
 	try {
 		response = await fetch(url);
@@ -64,9 +49,8 @@ export async function fetchBattleFixtureJson(url: string): Promise<BattleFixture
 	}
 
 	try {
-		const text = await response.text();
-		const data: unknown = JSON.parse(text);
-		return { ok: true, data, sourceSha256: await sha256Hex(text), sourceUrl: url };
+		const data: unknown = await response.json();
+		return { ok: true, data };
 	} catch {
 		return {
 			ok: false,
@@ -281,32 +265,20 @@ export async function loadBattleViewFixture(
 	const fetched = await fetchBattleFixtureJson(url);
 	if (!fetched.ok) return fetched;
 	if (!("data" in fetched)) return fetched;
-	const result = discriminateBattleViewFixture(fetched.data, expectedViewKind);
-	if (!result.ok) return result;
-	return { ...result, sourceSha256: fetched.sourceSha256, sourceUrl: fetched.sourceUrl };
+	return discriminateBattleViewFixture(fetched.data, expectedViewKind);
 }
 
 export async function loadBattleRaceFixture(url: string): Promise<BattleFixtureLoadResult<BattleNormalizedUxFixture>> {
 	const result = await loadBattleViewFixture(url, "race");
 	if (!result.ok) return result;
 	const fixture = result.schema === BATTLE_VIEW_FIXTURE_SCHEMAS.ADAPTIVE_LINEAGE
-		? adaptiveLineageToRaceFixture(result.fixture as BattleNormalizedAdaptiveLineageFixtureV1, {
-				sourceSha256: result.sourceSha256,
-				sourceUrl: result.sourceUrl,
-			})
-		: {
-				...result.fixture as BattleNormalizedUxFixture,
-				source_fixture_sha256: result.sourceSha256,
-				source_fixture_url: result.sourceUrl,
-				source_schema: result.schema,
-			};
+		? adaptiveLineageToRaceFixture(result.fixture as BattleNormalizedAdaptiveLineageFixtureV1)
+		: result.fixture as BattleNormalizedUxFixture;
 	return {
 		ok: true,
 		fixture,
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.RACE,
 		viewKind: "race",
-		sourceSha256: result.sourceSha256,
-		sourceUrl: result.sourceUrl,
 	};
 }
 

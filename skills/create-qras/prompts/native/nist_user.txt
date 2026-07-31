@@ -15,7 +15,7 @@ family_name: {family_name}
   "pairs": [
     {{
       "question": "What does AC-2 Account Management require according to NIST SP 800-53?",
-      "reasoning": "Account management is framed as a lifecycle because authorization granted at creation decays as roles change, so account type, manager, membership, and access each need a named owner.",
+      "reasoning": "The description explicitly states the main account management obligations, including account type definition, account manager assignment, membership criteria, and access specification.",
       "answer": "AC-2 Account Management requires organizations to define and document the types of accounts allowed and specifically prohibited for use within the system, assign account managers, require [Assignment: organization-defined prerequisites and criteria] for group and role membership, and specify authorized users, group and role membership, and access authorizations for each account.",
       "pair_type": "control_description",
       "control_id": "AC-2",
@@ -42,7 +42,7 @@ family_name: {family_name}
     }},
     {{
       "question": "What review or oversight requirements are included in AC-2 Account Management?",
-      "reasoning": "An account stays valid until someone acts, so approval, monitoring, notification, and review are the events that can revoke standing access before it is misused.",
+      "reasoning": "The description explicitly includes approval, monitoring, notification, review, and process-alignment obligations.",
       "answer": "AC-2 Account Management requires approvals by [Assignment: organization-defined personnel or roles] for requests to create accounts, monitoring of account use, notification to account managers and [Assignment: organization-defined personnel or roles] within defined time periods for specified account changes, review of accounts for compliance with account management requirements [Assignment: organization-defined frequency], and alignment of account management processes with personnel termination and transfer processes.",
       "pair_type": "review_or_oversight_requirement",
       "control_id": "AC-2",
@@ -70,8 +70,27 @@ family_name: {family_name}
       ],
       "confidence": "high",
       "actionable_for": "audit"
+    }},
+    {{
+      "question": "What control family context is provided for AC-2 Account Management?",
+      "reasoning": "The source explicitly provides the control family identifier and name.",
+      "answer": "AC-2 Account Management is in the AC control family, Access Control.",
+      "pair_type": "family_context",
+      "control_id": "AC-2",
+      "evidence_quotes": [
+        {{
+          "quote": "AC",
+          "relevance": "Value of family_id."
+        }},
+        {{
+          "quote": "Access Control",
+          "relevance": "Value of family_name."
+        }}
+      ],
+      "confidence": "high",
+      "actionable_for": "training"
     }}
-    ],
+  ],
   "skipped_reason": null
 }}
 
@@ -149,7 +168,11 @@ The source uses a bracketed placeholder and does not specify "30 days." The plac
 ### Invalid Example 6: Inferred family name
 {{
   "pairs": [
-    ],
+    {{
+      "pair_type": "family_context",
+      "answer": "AC-2 is part of the Access Control family."
+    }}
+  ],
   "skipped_reason": null
 }}
 WHY INVALID:

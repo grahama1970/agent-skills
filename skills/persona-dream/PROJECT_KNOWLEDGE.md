@@ -1,95 +1,8 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (SPARTA local live arc-bias consumption receipted; listener rater page ready and analysis false-green gated; human responses next) by Codex
+**Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener rater page ready and analysis false-green gated; SPARTA/human responses next) by Codex
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
-
-## 2026-07-29 — SPARTA local live arc-bias consumption PASS; human perception still missing
-
-The non-human SPARTA bridge now has a SPARTA-owned local live API receipt. This
-supersedes the earlier "handoff contract only" status for the conversation
-consumer, while preserving the boundary that Persona Dream still has no human
-perceptual evidence and no deployed-production claim.
-
-- External repository: `grahama1970/sparta`
-- Commit on `main`: `2fe1a67221da4b5f07d32b9136f4578f38d4e716`
-- Receipt:
-  `artifacts/persona_dream_arc_bias_consumer/20260729T180334Z/RECEIPT.json`
-  - SHA-256: `sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813`
-  - status: `PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED`
-  - `mocked: false`, `live: true`
-  - API root used for proof: `http://127.0.0.1:3011`
-  - session id: `persona-dream-arc-bias-1785348214041`
-  - source arc-bias artifact SHA-256:
-    `sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152`
-  - handoff contract SHA-256:
-    `sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df`
-
-What the SPARTA receipt proves:
-
-- SPARTA's local live `/api/projects/embry-voice/live-turn` path read the
-  current Persona Dream `session_arc_bias.v1` artifact before turn 1.
-- The same arc-bias artifact remained bound across three turns without
-  resupplying it after the first request.
-- SPARTA preserved canonical answer text while applying only numeric
-  `intensity_delta` and `valence_delta`.
-- SPARTA preserved the per-turn tone category rather than letting Persona Dream
-  emit tone authority.
-- SPARTA fell back to neutral arc bias when no Persona Dream artifact was
-  supplied.
-
-Proof:
-
-- `npm test -- --run server/spartaChat/answerabilityGate.test.ts server/spartaChat/voiceParity.test.ts`
-  -> `2 passed`, `93 passed`
-- `node explorer/scripts/prove-persona-dream-arc-bias-consumer.mjs --api-root http://127.0.0.1:3011 --contract /home/graham/workspace/experiments/agent-skills-issue1117-persona-dream-main/skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json --arc-bias-artifact /home/graham/workspace/experiments/agent-skills-issue1117-persona-dream-main/skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json`
-  -> `PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED`
-- `git -C /home/graham/workspace/experiments/sparta-persona-dream-arc-bias-consumer ls-remote origin refs/heads/main`
-  -> `2fe1a67221da4b5f07d32b9136f4578f38d4e716 refs/heads/main`
-
-Boundary: this is non-mocked local live API proof, not human-perceived emotion,
-human listener recognition, deployed SPARTA production behavior beyond that
-local receipt, PCTOM-R benefit, or immutable-goal completion. The next gate is
-still the blinded listener study: 20 valid human response rows plus
-`SIGNED_INTERPRETATION.json`, followed by
-`./run.sh analyze-blinded-listener-study --json`.
-
-## 2026-07-29 — Issue #1117 receipt truthfulness repair
-
-Issue #1117 repaired two current-surface truthfulness wrinkles without changing
-the immutable-goal boundary:
-
-- Joined live-chain receipt:
-  `reports/goal_v5/continuity/live_chain/RECEIPT.json`
-  - SHA-256: `sha256:e414712551e43d727996b065ca250b2221bbbf60824d6fbbeae3a177e144e2fd`
-  - `session_mood_live_chatterbox.selected_before_first_turn` is now derived
-    from the sequence gate (`mood_bound_seq=0`, `first_turn_seq=1`) rather than
-    strict second-granularity timestamp comparison.
-  - The same stage preserves timestamp evidence separately:
-    `selected_before_first_turn_by_timestamp=false`, with an explicit note that
-    the sequence gate is authoritative when timestamps are equal within one
-    second.
-  - Chatterbox service-health evidence paths are normalized to repo-relative
-    `skills/persona-dream/...` paths instead of checkout-specific absolute
-    paths.
-- Durable sanity evidence copies:
-  - `reports/goal_v5/continuity/sanity_evidence/agentic_eval.json`
-    - SHA-256: `sha256:b2778f3004b75716060da048c190e3ffbe1c7b0d646a5e92f6761c6d2ee2da70`
-  - `reports/goal_v5/continuity/sanity_evidence/rater_page_ui_cdp_20260729T151347Z.png`
-    - SHA-256: `sha256:cc7bfb5cf11fc77972ab319431f91bc4cdeb6bf5672978489009ca5d3d0c879c`
-
-Proof:
-
-- `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_live_chain_receipt.py -q`
-  -> `9 passed`
-- `./skills/persona-dream/run.sh check-current-state-consistency --strict --json`
-  -> `PASS_CURRENT_STATE_CONSISTENT`, `mismatch_count=0`
-
-Boundary: this is a receipt/status truthfulness repair. It did not itself create
-SPARTA consumption, human listener responses, perceived-emotion evidence, larger
-reliability evidence, PCTOM-R benefit, or immutable-goal completion. The SPARTA
-local live consumption proof was added later in `grahama1970/sparta` commit
-`2fe1a67221da4b5f07d32b9136f4578f38d4e716`.
 
 ## 2026-07-29 — Listener-study rater page ready; still no perceptual conclusion
 
@@ -121,19 +34,17 @@ Proof on the rebased tree:
   -> `PASS_BLINDED_LISTENER_RATER_PAGE_READY`
 - `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_render_blinded_listener_rater_page.py skills/persona-dream/tests/test_validate_blinded_listener_study.py skills/persona-dream/tests/test_analyze_blinded_listener_study.py -q`
   -> `10 passed`
-- Durable copy of the agentic-eval fixture output:
-  `reports/goal_v5/continuity/sanity_evidence/agentic_eval.json`
+- `./skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.json --output /tmp/persona-dream-agentic-eval.json`
   -> `READY`, 2 cases, 6 trials
 - `~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:8876/rater_page.html --name persona-dream-listener-rater`
-  -> `.codex/ui-verification/latest.json`; durable screenshot copy:
-  `reports/goal_v5/continuity/sanity_evidence/rater_page_ui_cdp_20260729T151347Z.png`
+  -> `.codex/ui-verification/latest.json`, screenshot
+  `/tmp/codex-ui-verification/agent-skills-persona-dream-next-obvious-20260729/persona-dream-listener-rater/20260729T151347Z.png`
 - `rg -n "stimuli/(control|dream|adversarial|baseline)\.wav|>control<|>dream<|>adversarial<|>baseline<|\"condition\"" skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html`
   -> no matches
 
 Boundary: this answers the UX question for evaluation collection. It does not
 create human ratings, signed interpretation, perceived-emotion evidence,
-deployed SPARTA production evidence beyond the separate local live API receipt,
-or immutable-goal completion.
+SPARTA production consumption, or immutable-goal completion.
 
 ## 2026-07-29 — #1058 analysis guard BLOCKED; no perceptual conclusion without humans
 
@@ -174,7 +85,7 @@ Boundary: this prevents a future false PASS for #1058. It does not create human
 ratings, signed interpretation, perceived-emotion evidence, or immutable-goal
 completion.
 
-## 2026-07-29 — SPARTA arc-bias handoff contract PASS; superseded by later local live consumption proof
+## 2026-07-29 — SPARTA arc-bias handoff contract PASS; production consumption still absent
 
 Persona Dream now publishes a machine-checkable handoff contract for the
 SPARTA-owned production conversation-service lane:
@@ -200,15 +111,11 @@ SPARTA-owned production conversation-service lane:
     production receipt before the immutable goal gets credit for production
     conversation-service consumption.
 
-Boundary at time of creation: this was a Persona Dream handoff proof, not a
-SPARTA production proof. Supersession note: `grahama1970/sparta` commit
-`2fe1a67221da4b5f07d32b9136f4578f38d4e716` later emitted a SPARTA-owned local
-live API receipt showing the conversation consumer reading this exact
-contract/source hash before turn 1, applying the same artifact across turns,
-preserving answer text, keeping the per-turn tone category independent of arc
-bias, and using neutral fallback without the artifact. That later receipt still
-does not prove human-perceived emotion or deployed production behavior beyond
-the local live API.
+Boundary: this is a Persona Dream handoff proof, not a SPARTA production proof.
+The next SPARTA-owned artifact must show the production conversation service
+reading this exact contract/source hash before the first turn, applying the same
+artifact across turns, preserving answer text, and keeping the per-turn tone
+category independent of arc bias. No such SPARTA receipt exists yet.
 
 ## 2026-07-29 — #1058 deterministic readiness PASS; human listener responses still missing
 
@@ -280,15 +187,19 @@ What this does not prove:
 - production reliability;
 - restart/recovery behavior;
 - perceptual emotion, naturalness, or human listener acceptance;
-- deployed SPARTA production behavior beyond the local live API receipt;
+- SPARTA production conversation-service consumption;
 - PCTOM-R confidence-bounded planning advantage;
 - paid provider/video repeatability.
 
 Current next implementation order:
 
-1. Collect the blinded Chatterbox listener-study responses for dream-derived
+1. Route
+   `reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json`
+   to the SPARTA-owned production conversation consumer; do not edit SPARTA
+   from Persona Dream unless the operator routes that work in the SPARTA lane.
+2. Collect the blinded Chatterbox listener-study responses for dream-derived
    emotion, Embry identity, and naturalness.
-2. Return to PCTOM-R condition-benefit work only after the operator explicitly
+3. Return to PCTOM-R condition-benefit work only after the operator explicitly
    prioritizes the research workstream or the voice/perception gate is
    receipted.
 
@@ -325,10 +236,10 @@ Negative controls block:
 - unbound arc delta;
 - non-live-chain source.
 
-Boundary: this closes the Persona Dream half of #1057 only. SPARTA consumption
-is separately receipted in `grahama1970/sparta` commit
-`2fe1a67221da4b5f07d32b9136f4578f38d4e716`. The artifact emits numeric deltas
-only; tone category belongs to the consumer's per-turn intent classifier.
+Boundary: this closes the Persona Dream half of #1057 only. SPARTA must still
+consume this artifact in its production conversation lane, and that remains
+outside Persona Dream ownership. The artifact emits numeric deltas only; tone
+category belongs to the consumer's per-turn intent classifier.
 
 ## 2026-07-29 — P2 joined live-chain receipt PASS; immutable goal still NOT_MET
 

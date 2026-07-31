@@ -1,4 +1,5 @@
-# /extractor skill policy - enforced by local skill policy hooks where enabled.
+# /extractor skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: PyMuPDF (AGPL), unbounded concurrency, wrong mode
 
 name: extractor
 slash_command: /extractor
@@ -8,11 +9,18 @@ required_reads:
 
 forbidden_use:
   any_of:
+    # PyMuPDF is AGPL-licensed — use extract-pdf (MIT) or the extractor pipeline instead
     - import: fitz
-      reason: "The wrapper must not implement PDF extraction. Delegate to Extractor."
+      reason: "PyMuPDF (fitz) is AGPL-licensed. Use /extractor pipeline or /extract-pdf (MIT-licensed pdf_oxide)."
     - import: pymupdf
-      reason: "The wrapper must not implement PDF extraction. Delegate to Extractor."
+      reason: "PyMuPDF is AGPL-licensed. Use /extractor pipeline or /extract-pdf (MIT-licensed pdf_oxide)."
+
+    # Unbounded concurrency (Common Mistakes: 79+ processes, 141GB RAM incident)
+    - pattern: "for.*pdf.*subprocess\\.run.*extractor"
+      reason: "Don't spawn extractors in a loop without concurrency limit. Enforce MAX_CONCURRENT=4 to avoid system swap death."
+    - pattern: "for.*glob.*run\\.sh.*--accurate"
+      reason: "Don't run --accurate on all PDFs in a loop. Use --fast first pass, --accurate only on high-value docs."
+
+    # Wrong HTTP client
     - import: requests
-      reason: "Use httpx for HTTP in Python code; this wrapper should not need HTTP."
-    - pattern: "engine|model|provider|preset"
-      reason: "The normal wrapper surface must not expose internal routing controls."
+      reason: "Use httpx, not requests."

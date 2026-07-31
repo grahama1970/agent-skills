@@ -27,8 +27,6 @@ export type BattleLiveAdapterProbe =
 			eventCount: number;
 			lastSeq: number;
 			live: "local_http_sse_adapter";
-			webSocketEndpoint: string | null;
-			webSocketPort: number | null;
 	  }
 	| { ok: false; error: BattleTransportLoadError };
 
@@ -110,21 +108,6 @@ export function absoluteLiveTransportUrl(baseUrl: string, endpoint: string): str
 	return `${trimBase(baseUrl)}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 }
 
-export function absoluteLiveWebSocketTransportUrl(args: {
-	baseUrl: string;
-	endpoint: string;
-	webSocketPort?: number | null;
-}): string {
-	if (args.endpoint.startsWith("ws://") || args.endpoint.startsWith("wss://")) return args.endpoint;
-	const base = new URL(trimBase(args.baseUrl));
-	base.protocol = base.protocol === "https:" ? "wss:" : "ws:";
-	if (args.webSocketPort != null) base.port = String(args.webSocketPort);
-	base.pathname = args.endpoint.startsWith("/") ? args.endpoint : `/${args.endpoint}`;
-	base.search = "";
-	base.hash = "";
-	return base.toString();
-}
-
 export async function probeBattleLiveTransportAdapter(args: {
 	baseUrl: string;
 	battleId: string;
@@ -153,8 +136,6 @@ export async function probeBattleLiveTransportAdapter(args: {
 			eventCount: Number(health.event_count ?? 0),
 			lastSeq: Number(health.last_seq ?? 0),
 			live: "local_http_sse_adapter",
-			webSocketEndpoint: typeof health.websocket_endpoint === "string" ? health.websocket_endpoint : null,
-			webSocketPort: typeof health.websocket_port === "number" ? health.websocket_port : null,
 		};
 	} catch (error) {
 		return {
@@ -224,29 +205,6 @@ export function buildLiveSseTransportPackage(args: {
 		events,
 		streamBaseUrl: trimBase(args.baseUrl),
 		companionFixtureUrl: args.companionFixtureUrl,
-	};
-}
-
-/** Build a transport package shell from a WebSocket snapshot so the reducer can apply live events. */
-export function buildLiveWebSocketTransportPackage(args: {
-	snapshot: BattleSnapshotV1Full;
-	baseUrl: string;
-	companionFixtureUrl: string;
-	events?: BattleLiveEventV1[];
-}): BattleTransportPackage {
-	const pack = buildLiveSseTransportPackage(args);
-	return {
-		...pack,
-		manifest: {
-			...pack.manifest,
-			mode: "live_websocket_adapter",
-			live_source: "local_http_websocket_adapter",
-			stream_contract: {
-				...pack.manifest.stream_contract,
-				transport: "websocket",
-				phase: "local_http_websocket_adapter",
-			},
-		},
 	};
 }
 
@@ -431,102 +389,6 @@ export function openBattleLiveSseStreamWithFetch(args: {
 		close: () => controller.abort(),
 		done,
 	};
-}
-
-export function openBattleLiveWebSocketStream(args: {
-	baseUrl: string;
-	webSocketEndpoint: string;
-	webSocketPort?: number | null;
-	onSnapshot: (snapshot: BattleSnapshotV1Full) => void;
-	onEvent: (event: BattleLiveEventV1) => void;
-	onError?: (error: string) => void;
-	onOpen?: () => void;
-	signal?: AbortSignal;
-}): BattleLiveSseStreamHandle {
-	const url = absoluteLiveWebSocketTransportUrl({
-		baseUrl: args.baseUrl,
-		endpoint: args.webSocketEndpoint,
-		webSocketPort: args.webSocketPort,
-	});
-	let closed = false;
-	let sawSnapshot = false;
-	let socket: WebSocket | null = null;
-	let settle!: () => void;
-	const done = new Promise<void>((resolve) => {
-		settle = resolve;
-	});
-
-	const close = () => {
-		if (closed) return;
-		closed = true;
-		if (socket && socket.readyState === WebSocket.OPEN) socket.close(1000, "battle live websocket closed");
-		socket = null;
-		settle();
-	};
-
-	if (args.signal) {
-		if (args.signal.aborted) {
-			close();
-			return { close, done };
-		}
-		args.signal.addEventListener("abort", close, { once: true });
-	}
-
-	try {
-		socket = new WebSocket(url);
-	} catch (error) {
-		args.onError?.(error instanceof Error ? error.message : "WebSocket open failed.");
-		close();
-		return { close, done };
-	}
-
-	socket.onopen = () => args.onOpen?.();
-	socket.onmessage = (message) => {
-		if (typeof message.data !== "string") {
-			args.onError?.("WebSocket frame was not JSON text; fail-closed.");
-			close();
-			return;
-		}
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(message.data);
-		} catch {
-			args.onError?.("WebSocket frame was not valid JSON; fail-closed.");
-			close();
-			return;
-		}
-		if (!sawSnapshot) {
-			const snapshot = validateSnapshot(parsed);
-			if (!snapshot.ok) {
-				args.onError?.(`WebSocket first frame was not battle.snapshot.v1: ${snapshot.error.detail}`);
-				close();
-				return;
-			}
-			sawSnapshot = true;
-			args.onSnapshot(snapshot.snapshot);
-			return;
-		}
-		const parsedEvent = parseSseLiveEventData(JSON.stringify(parsed));
-		if (!parsedEvent) {
-			args.onError?.("WebSocket frame was not battle.live_event.v1; fail-closed.");
-			close();
-			return;
-		}
-		const validated = validateLiveEvent(parsedEvent);
-		if (!validated.ok) {
-			args.onError?.(validated.error.detail);
-			close();
-			return;
-		}
-		args.onEvent(validated.event);
-	};
-	socket.onerror = () => {
-		args.onError?.(`WebSocket stream failed at ${url}.`);
-		close();
-	};
-	socket.onclose = () => close();
-
-	return { close, done };
 }
 
 export function contractAllowsLiveAdapterExecution(contract: BattleLiveTransportContractV1): boolean {

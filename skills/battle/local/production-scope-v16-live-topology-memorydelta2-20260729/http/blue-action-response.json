@@ -1,7 +1,0 @@
-{
-  "boundary_id": "extractor-object-identity",
-  "enabled": true,
-  "policy": "FINAL_IDENTITY_MUST_REMAIN_WITHIN_WORKSPACE",
-  "schema": "battle.v16.relayforge.extractor_identity_policy.v1",
-  "target_id": "battle-v16-relayforge-a"
-}

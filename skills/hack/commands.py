@@ -12,9 +12,7 @@ This module contains secondary commands that integrate with other skills:
 from __future__ import annotations
 
 import os
-import json
 import subprocess
-import tempfile
 from pathlib import Path
 from typing import Callable
 
@@ -38,10 +36,8 @@ from hack.utils import (
     memory_store,
     show_memory_context,
 )
-from hack.env import load_hack_dotenv as dotenv_helper
 
 console = Console()
-dotenv_helper()
 
 
 def create_learn_command() -> Callable[..., None]:
@@ -177,7 +173,6 @@ def create_research_command() -> Callable[..., None]:
         skill: str = typer.Option("dogpile", help="Skill to use"),
         model: str = typer.Option("gpt-5.2-codex", help="AI model to use for research"),
         silent: bool = typer.Option(False, "--silent", help="Run non-interactively"),
-        output_dir: Path | None = typer.Option(None, "--output-dir", help="Directory for Dogpile packet artifacts."),
     ):
         """Leverage other agent skills for deep research."""
         if not silent:
@@ -195,60 +190,20 @@ def create_research_command() -> Callable[..., None]:
             return
         
         if skill == "dogpile":
-            packet_dir = output_dir or Path(tempfile.mkdtemp(prefix="hack-dogpile-research-"))
-            packet_out = packet_dir / "dogpile-security-packet.json"
-            cmd = [
-                str(skill_script),
-                "search",
-                topic,
-                "--no-interactive",
-                "--output-dir",
-                str(packet_dir),
-                "--security-packet-out",
-                str(packet_out),
-            ]
+            cmd = [str(skill_script), "search", topic, "--model", model]
         elif skill == "arxiv":
             cmd = [str(skill_script), "search", "--query", topic]
         else:
             cmd = [str(skill_script), "run", topic, "--model", model]
             
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
+        if silent:
+            subprocess.run(cmd, capture_output=True, text=True,
             env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
-        )
-        if not silent and result.stdout:
-            console.print(result.stdout)
-        if result.returncode != 0:
-            if not silent:
-                console.print(f"[red]Research command failed with exit code {result.returncode}[/red]")
-                if result.stderr:
-                    console.print(result.stderr[-1200:])
-            raise typer.Exit(result.returncode)
-
-        if skill == "dogpile":
-            packet_path = packet_out
-            hack_request = packet_dir / "hack-scan-request.json"
-            if not packet_path.exists() or not hack_request.exists():
-                if not silent:
-                    console.print("[red]Dogpile did not produce required security packet artifacts[/red]")
-                raise typer.Exit(2)
-            try:
-                packet = json.loads(packet_path.read_text())
-            except Exception as exc:
-                if not silent:
-                    console.print(f"[red]Dogpile security packet is unreadable: {exc}[/red]")
-                raise typer.Exit(2)
-            if int(packet.get("source_bearing_evidence_count") or 0) < 1:
-                if not silent:
-                    console.print("[red]Dogpile packet has no source-bearing evidence[/red]")
-                raise typer.Exit(2)
-            if not silent:
-                console.print(
-                    "[green]Dogpile source-bearing packet ready:[/green] "
-                    f"{packet_path} ({packet.get('source_bearing_evidence_count')} evidence items)"
-                )
+            )
+        else:
+            subprocess.run(cmd,
+            env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
+            )
 
     return research
 

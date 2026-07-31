@@ -1,5 +1,0 @@
-services:
-  bad:
-    image: alpine:3.20
-    extra_hosts:
-      - "metadata:169.254.169.254"

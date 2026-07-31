@@ -1,1 +1,0 @@
-{"candidate_id": "red-g2-p0", "generation": 2, "role": "red", "schema": "battle.verified_primitive_docker_judge_probe.v1", "verdict": "RED_SUCCESS"}

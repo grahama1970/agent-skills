@@ -4,18 +4,11 @@ import { describe, expect, it } from "vitest";
 import {
 	battleLiveTransportBattleId,
 	battleLiveTransportMode,
-	battleLiveRuntimeTransport,
 	isBattleLiveView,
 } from "./battle-transport-registry";
 import { validateLiveTransportContract } from "./battle-live-transport-contract-validator";
 import { liveTransportContractViewModel } from "./battle-live-transport-contract-loader";
-import {
-	planLiveSseClient,
-	planLiveWebSocketClient,
-	shouldOpenEventSource,
-	shouldOpenWebSocket,
-	parseSseLiveEventData,
-} from "./battle-live-sse-client";
+import { planLiveSseClient, shouldOpenEventSource, parseSseLiveEventData } from "./battle-live-sse-client";
 import type { BattleLiveTransportContractV1 } from "./battle-live-transport-contract-types";
 
 const contractPath = resolve(
@@ -33,8 +26,6 @@ describe("UX8 live transport contract", () => {
 		expect(isBattleLiveView(hash)).toBe(true);
 		expect(battleLiveTransportBattleId(hash)).toBe("battle-004");
 		expect(battleLiveTransportMode(hash)).toBe("contract");
-		expect(battleLiveRuntimeTransport(`${hash}&transport=websocket`)).toBe("websocket");
-		expect(battleLiveRuntimeTransport(hash)).toBe("sse");
 		expect(battleLiveTransportMode("#battle/live?fixture=battle-004-parent-spawn")).toBe("file_backed");
 	});
 
@@ -45,8 +36,6 @@ describe("UX8 live transport contract", () => {
 		expect(contract.live).toBe("contract_only");
 		expect(contract.mocked).toBe(false);
 		expect(contract.transport.kind).toBe("sse");
-		expect(contract.websocket?.kind).toBe("websocket");
-		expect(contract.websocket?.endpoint).toBe("/battle/live/battle-004/ws");
 		expect(contract.event_stream.genetic_event_types_when_live).toHaveLength(16);
 		expect(contract.claim_boundary.must_not_claim).toEqual(
 			expect.arrayContaining([
@@ -68,12 +57,8 @@ describe("UX8 live transport contract", () => {
 		expect(planned.transportMode).toBe("none");
 		expect(planned.error).toMatch(/serve-live-transport/);
 		expect(planned.endpoint).toBe("/battle/live/battle-004/events");
-		const websocketPlanned = planLiveWebSocketClient(contract);
-		expect(websocketPlanned.status).toBe("contract_only_blocked");
-		expect(websocketPlanned.endpoint).toBe("/battle/live/battle-004/ws");
 		const model = liveTransportContractViewModel(contract);
 		expect(model.sseClientConnected).toBe(false);
-		expect(model.webSocketEndpoint).toBe("/battle/live/battle-004/ws");
 		expect(model.endpointExecutionClaimed).toBe(false);
 		expect(model.geneticEventCount).toBe(16);
 	});
@@ -113,8 +98,6 @@ describe("UX8 live transport contract", () => {
 	it("arms EventSource planner only when serve-live-transport probe passes", () => {
 		const contract = loadContract();
 		expect(shouldOpenEventSource(contract, { adapterAvailable: true })).toBe(true);
-		expect(shouldOpenWebSocket(contract, { adapterAvailable: true, websocketAvailable: true })).toBe(true);
-		expect(shouldOpenWebSocket(contract, { adapterAvailable: true, websocketAvailable: false })).toBe(false);
 		const planned = planLiveSseClient(contract, {
 			adapterAvailable: true,
 			baseUrl: "http://127.0.0.1:18765",
@@ -123,13 +106,6 @@ describe("UX8 live transport contract", () => {
 		expect(planned.live).toBe("local_http_sse_adapter");
 		expect(planned.transportMode).toBe("event_source");
 		expect(planned.baseUrl).toBe("http://127.0.0.1:18765");
-		const websocketPlanned = planLiveWebSocketClient(contract, {
-			adapterAvailable: true,
-			baseUrl: "http://127.0.0.1:18765",
-		});
-		expect(websocketPlanned.status).toBe("connecting");
-		expect(websocketPlanned.live).toBe("local_http_websocket_adapter");
-		expect(websocketPlanned.transportMode).toBe("websocket");
 	});
 
 	it("resolves liveBase from hash", async () => {

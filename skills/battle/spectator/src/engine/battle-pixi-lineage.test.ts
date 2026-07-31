@@ -10,7 +10,7 @@ describe("syncPixiLineage", () => {
 	it("draws a branch for parent spawn fixture", async () => {
 		const fixture = JSON.parse(
 			await readFile(
-				resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json"),
+				resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json"),
 				"utf8",
 			),
 		);

@@ -1,9 +1,0 @@
-{
-  "repos": [
-    {
-      "description": "tool",
-      "fullName": "example/tool",
-      "url": "https://github.com/example/tool"
-    }
-  ]
-}

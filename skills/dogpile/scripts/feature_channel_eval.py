@@ -63,8 +63,6 @@ def _front_matter(markdown: str) -> dict[str, Any]:
 def run_eval() -> dict[str, Any]:
     skill_md = _read(SKILL_DIR / "SKILL.md")
     cli_py = _read(SKILL_DIR / "cli.py")
-    search_engine_py = _read(SKILL_DIR / "search_engine.py")
-    search_stages_py = _read(SKILL_DIR / "search_stages.py")
     github_skill = _read(SKILLS_DIR / "github-search" / "SKILL.md")
     github_meta = _front_matter(github_skill)
     github_compose = set(github_meta.get("composes") or [])
@@ -77,9 +75,6 @@ def run_eval() -> dict[str, Any]:
     github_cli = _read(SKILLS_DIR / "github-search" / "github_search.py")
     github_evaluate_repos = _read(SKILLS_DIR / "github-search" / "evaluate_repos.py")
     dogpile_youtube = _read(SKILL_DIR / "youtube_search.py")
-    dogpile_context7 = _read(SKILL_DIR / "context7_docs.py")
-    context7_skill = _read(SKILLS_DIR / "context7" / "SKILL.md")
-    context7_cli = _read(SKILLS_DIR / "context7" / "context7.py")
     ingest_youtube_skill = _read(SKILLS_DIR / "ingest-youtube" / "SKILL.md")
     ingest_youtube_cli = _read(SKILLS_DIR / "ingest-youtube" / "cli.py")
     ops_darpa_skill = _read(SKILLS_DIR / "ops-darpa" / "SKILL.md")
@@ -116,7 +111,7 @@ def run_eval() -> dict[str, Any]:
     cases.append(_case(
         "brave_questions_replace_perplexity",
         "brave_questions",
-        "Concurrent Brave question lanes" in skill_md and "search_brave_questions" in search_stages_py,
+        "Concurrent Brave question lanes" in skill_md and "search_brave_questions" in cli_py,
         "Perplexity replacement uses concurrent Brave question fan-out.",
         "Live Brave search result quality.",
     ))
@@ -124,7 +119,7 @@ def run_eval() -> dict[str, Any]:
     cases.append(_case(
         "perplexity_retired_default_off",
         "perplexity",
-        "with_perplexity: bool = typer.Option(False" in cli_py and "never calls the paid API" in cli_py,
+        "with_perplexity: bool = False" in cli_py and "never calls the paid API" in cli_py,
         "Perplexity is default-off and the deprecated flag is documented as skip-only.",
         "Historical Perplexity API behavior.",
     ))
@@ -205,7 +200,7 @@ def run_eval() -> dict[str, Any]:
     cases.append(_case(
         "arxiv_channel_documented",
         "arxiv",
-        "ArXiv" in skill_md and "run_stage2_arxiv" in search_stages_py,
+        "ArXiv" in skill_md and "run_stage2_arxiv" in cli_py,
         "ArXiv has a documented Dogpile channel and stage-2 hook.",
         "Live ArXiv availability or full PDF extraction.",
     ))
@@ -247,26 +242,9 @@ def run_eval() -> dict[str, Any]:
     ))
 
     cases.append(_case(
-        "context7_library_docs_opt_in",
-        "context7",
-        "  - context7" in skill_md
-        and "Context7 library documentation" in skill_md
-        and "### Optional Context7 Library Documentation Lane" in skill_md
-        and "with_context7: bool = typer.Option(False" in cli_py
-        and "--context7-library" in cli_py
-        and "CONTEXT7_API_KEY" in dogpile_context7
-        and "Context7 is disabled until a library name or Context7 library ID is provided" in dogpile_context7
-        and "_search_libs" in context7_cli
-        and "_get_context" in context7_cli
-        and "When to Use" in context7_skill,
-        "Context7 is documented and wired as an opt-in library/API documentation lane for code-related questions.",
-        "Live Context7 credential validity, quota, or documentation relevance.",
-    ))
-
-    cases.append(_case(
         "feeds_default_off_and_no_key_packs",
         "feeds",
-        "with_feeds: bool = typer.Option(False" in cli_py and "Feed Credential Requirements" in skill_md,
+        "with_feeds: bool = False" in cli_py and "Feed Credential Requirements" in skill_md,
         "Feeds are default-off and Dogpile documents credential requirements.",
         "Live RSS freshness or parsing for every source.",
     ))
@@ -431,7 +409,7 @@ def run_eval() -> dict[str, Any]:
     cases.append(_case(
         "wayback_default_off",
         "wayback",
-        "with_wayback: bool = typer.Option(False" in cli_py and "Wayback Machine" in skill_md,
+        "with_wayback: bool = False" in cli_py and "Wayback Machine" in skill_md,
         "Wayback is default-off and documented as an optional archive lane.",
         "Live Wayback availability for a target URL.",
     ))
@@ -439,7 +417,7 @@ def run_eval() -> dict[str, Any]:
     cases.append(_case(
         "readarr_default_off",
         "readarr",
-        "with_readarr: bool = typer.Option(False" in cli_py and "Readarr / books / Usenet" in skill_md,
+        "with_readarr: bool = False" in cli_py and "Readarr / books / Usenet" in skill_md,
         "Readarr is default-off and documented as an optional book/Usenet lane.",
         "Readarr/NZB credential validity.",
     ))
@@ -471,7 +449,7 @@ def run_eval() -> dict[str, Any]:
         and "\"query\": query" in memory_integration
         and "\"sources_searched\": sources_searched or []" in memory_integration
         and "\"key_urls\": (key_urls or [])[:20]" in memory_integration
-        and "Memory learn returned 0 entries" in search_engine_py,
+        and "Memory learn returned 0 entries" in cli_py,
         "Dogpile documents and implements automatic structured JSON storage to the dogpile_research Memory collection when Memory is reachable.",
         "Live Memory daemon reachability or successful storage for the current machine.",
     ))

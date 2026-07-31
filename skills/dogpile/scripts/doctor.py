@@ -77,7 +77,6 @@ API_RESOURCES = {
     },
     "greynoise": {
         "registry_name": "GreyNoise",
-        "registry_file": "security",
         "env_var": "GREYNOISE_API_KEY",
         "api_url": "https://api.greynoise.io/v3/",
         "docs": ["https://docs.greynoise.io/reference/getcommunityip"],
@@ -86,18 +85,6 @@ API_RESOURCES = {
         "accepted_status_codes": [200, 404],
         "success_proves": "The GreyNoise Community API request reached the configured endpoint and returned a documented response; HTTP 404 means no record for the probe IP, not an API outage.",
         "plan_note": "GreyNoise Community API supports quick IP lookups; free-tier and enterprise access differ, and Community probe success does not prove GNQL or enterprise entitlement.",
-    },
-    "context7": {
-        "registry_name": "Context7",
-        "registry_file": "default",
-        "env_var": "CONTEXT7_API_KEY",
-        "api_url": "https://context7.com/api/v2",
-        "docs": ["https://context7.com/api/v2/libs/search", "https://context7.com/api/v2/context"],
-        "probe_url": "https://context7.com/api/v2/libs/search",
-        "headers": lambda key: {"Authorization": f"Bearer {key}", "Accept": "application/json"},
-        "query_params": lambda key: {"libraryName": "python", "query": "typing"},
-        "success_proves": "The visible CONTEXT7_API_KEY can call Context7 library search and receive a documented response.",
-        "plan_note": "Context7 is optional library/API documentation enrichment for code-related questions; do not spend it in default health checks.",
     },
 }
 
@@ -151,15 +138,15 @@ def _check_interactive_zsh_env(name: str) -> dict[str, Any]:
     }
 
 
-def _load_resources(resource_file: str) -> list[dict[str, Any]]:
-    path = SKILL_DIR / "resources" / f"{resource_file}.yaml"
+def _load_security_resources() -> list[dict[str, Any]]:
+    path = SKILL_DIR / "resources" / "security.yaml"
     data = yaml.safe_load(path.read_text()) or {}
     return list(data.get("resources") or [])
 
 
 def _check_api_registry(resource_key: str) -> dict[str, Any]:
     resource = API_RESOURCES[resource_key]
-    resources = _load_resources(str(resource.get("registry_file", "security")))
+    resources = _load_security_resources()
     entry = next((item for item in resources if item.get("name") == resource["registry_name"]), None)
     ok = bool(entry and entry.get("api_url") == resource["api_url"] and entry.get("auth_required") is True)
     return {
@@ -261,14 +248,13 @@ def main() -> int:
     parser.add_argument("--with-shodan", action="store_true", help="Spend one Shodan API info request to validate SHODAN_API_KEY")
     parser.add_argument("--with-censys", action="store_true", help="Spend one Censys Platform API host lookup to validate CENSYS_API_KEY")
     parser.add_argument("--with-greynoise", action="store_true", help="Spend one GreyNoise Community API IP lookup to validate GREYNOISE_API_KEY")
-    parser.add_argument("--with-context7", action="store_true", help="Spend one Context7 library search request to validate CONTEXT7_API_KEY")
     parser.add_argument("--timeout-s", type=float, default=20.0)
     parser.add_argument("--out-dir", type=Path, default=REPORTS_DIR / f"doctor-{_utc_stamp()}")
     args = parser.parse_args()
 
     started = time.time()
     checks: list[dict[str, Any]] = []
-    for resource_key in ("virustotal", "anyrun", "hybrid_analysis", "shodan", "censys", "greynoise", "context7"):
+    for resource_key in ("virustotal", "anyrun", "hybrid_analysis", "shodan", "censys", "greynoise"):
         env_var = str(API_RESOURCES[resource_key]["env_var"])
         checks.extend([
             _check_env_var(env_var),
@@ -337,18 +323,6 @@ def main() -> int:
             "does_not_prove": "GREYNOISE_API_KEY validity, weekly lookup budget, GNQL access, enterprise entitlement, or endpoint health.",
             "metadata": {"run_with": "./run.sh doctor --with-greynoise"},
         })
-    if args.with_context7:
-        checks.append(_check_api_probe("context7", args.timeout_s))
-    else:
-        checks.append({
-            "name": "context7_api_probe",
-            "family": "credentialed_api",
-            "status": "skipped_not_requested",
-            "what_was_exercised": "Context7 live probe opt-in guard.",
-            "proves": "No Context7 API request was spent by the default doctor run.",
-            "does_not_prove": "CONTEXT7_API_KEY validity, account plan, quota, endpoint health, or documentation relevance.",
-            "metadata": {"run_with": "./run.sh doctor --with-context7"},
-        })
 
     failed = [check for check in checks if check["status"] == "failed"]
     skipped = [check for check in checks if str(check["status"]).startswith("skipped")]
@@ -357,7 +331,7 @@ def main() -> int:
     receipt = {
         "schema": "dogpile.doctor.v1",
         "mocked": False,
-        "live": bool(args.with_virustotal or args.with_hybrid_analysis or args.with_shodan or args.with_censys or args.with_greynoise or args.with_context7),
+        "live": bool(args.with_virustotal or args.with_hybrid_analysis or args.with_shodan or args.with_censys or args.with_greynoise),
         "duration_s": round(time.time() - started, 2),
         "summary": {
             "passed": len(passed),
@@ -376,8 +350,6 @@ def main() -> int:
             "shodan_rest_api": "https://developer.shodan.io/api",
             "censys_platform_api": "https://docs.censys.com/reference/get-started",
             "greynoise_community_api": "https://docs.greynoise.io/reference/getcommunityip",
-            "context7_library_search": "https://context7.com/api/v2/libs/search",
-            "context7_context": "https://context7.com/api/v2/context",
         },
         "checks": checks,
         "status": status,

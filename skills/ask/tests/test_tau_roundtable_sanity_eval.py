@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import multiprocessing
-import os
 import sys
 from types import SimpleNamespace
 from pathlib import Path
@@ -38,102 +36,16 @@ def test_plan_lists_roundtable_eval_cases(tmp_path: Path) -> None:
     assert {case["id"] for case in result["cases"]} == {
         "browser_oracle_bindings",
         "compile_concurrent_all_handlers",
-        "compile_compete_all_handlers",
-        "live_four_handler_concurrent_roundtable",
-        "live_four_handler_concurrent_compete",
+        "compile_sequential_all_handlers",
+        "live_two_handler_smoke",
+        "live_four_handler_sequential",
     }
-    assert result["min_active_handlers"] == 4
-    assert result["browser_tab_lifecycle"] == "fresh-keep"
     assert "plan-only" in result["what_remains_unverified"][0]
 
 
 def test_worker_declares_webgrok_browser_submit_transport() -> None:
     assert tau_roundtable_worker.HANDLER_BACKENDS["webgrok"] == "webgrok"
     assert tau_roundtable_worker.HANDLER_SUBMIT_COMMANDS["webgrok"] == "grok.submit"
-
-
-def _browser_transport_lock_worker(
-    command: list[str],
-    cwd: str,
-    lock_file: str,
-    artifact_dir: str,
-    result_path: str,
-) -> None:
-    os.environ["ASK_BROWSER_TRANSPORT_LOCK_FILE"] = lock_file
-    result = tau_roundtable_worker._run_browser_transport_cmd(
-        command,
-        cwd=Path(cwd),
-        timeout=10,
-        handler="webgpt",
-        artifact_dir=Path(artifact_dir),
-        queue_path=Path(artifact_dir) / "browser-transport-queue.json",
-        browser_lock_timeout=10,
-    )
-    Path(result_path).write_text(
-        json.dumps({"returncode": result.returncode, "stderr": result.stderr, "duration": result.duration}),
-        encoding="utf-8",
-    )
-
-
-def test_worker_serializes_browser_transport_commands(tmp_path: Path) -> None:
-    state_dir = tmp_path / "state"
-    state_dir.mkdir()
-    (state_dir / "active").write_text("0\n", encoding="utf-8")
-    (state_dir / "max_active").write_text("0\n", encoding="utf-8")
-    command_script = tmp_path / "browser-command.sh"
-    command_script.write_text(
-        f"""#!/usr/bin/env bash
-set -euo pipefail
-state="{state_dir}"
-(
-  flock 200
-  active="$(cat "$state/active")"
-  active=$((active + 1))
-  printf '%s\\n' "$active" > "$state/active"
-  max_active="$(cat "$state/max_active")"
-  if [[ "$active" -gt "$max_active" ]]; then
-    printf '%s\\n' "$active" > "$state/max_active"
-  fi
-) 200>"$state/active.lock"
-sleep 0.2
-(
-  flock 200
-  active="$(cat "$state/active")"
-  active=$((active - 1))
-  printf '%s\\n' "$active" > "$state/active"
-) 200>"$state/active.lock"
-""",
-        encoding="utf-8",
-    )
-    command_script.chmod(0o755)
-    lock_file = str(tmp_path / "ask-browser.lock")
-    procs = []
-    for index in range(4):
-        artifact_dir = tmp_path / f"lane-{index}"
-        artifact_dir.mkdir()
-        proc = multiprocessing.Process(
-            target=_browser_transport_lock_worker,
-            args=(
-                [str(command_script)],
-                str(tmp_path),
-                lock_file,
-                str(artifact_dir),
-                str(artifact_dir / "result.json"),
-            ),
-        )
-        proc.start()
-        procs.append((proc, artifact_dir))
-    for proc, _artifact_dir in procs:
-        proc.join(10)
-        assert proc.exitcode == 0
-
-    assert (state_dir / "max_active").read_text(encoding="utf-8").strip() == "1"
-    for _proc, artifact_dir in procs:
-        result = json.loads((artifact_dir / "result.json").read_text(encoding="utf-8"))
-        assert result["returncode"] == 0
-        queue = json.loads((artifact_dir / "browser-transport-queue.json").read_text(encoding="utf-8"))
-        assert queue["schema"] == "ask.browser_transport_queue.v1"
-        assert queue["status"] == "ACQUIRED"
 
 
 def test_join_command_checker_rejects_empty_args(tmp_path: Path) -> None:
@@ -178,40 +90,6 @@ def test_node_receipts_collects_statuses(tmp_path: Path) -> None:
     assert tau_roundtable_sanity_eval._receipt_statuses(receipts) == {
         "handler-webkimi": {"status": "PASS", "ok": True, "provider_live": True}
     }
-
-
-def test_live_eval_attachment_checks_require_recorded_path_and_sentinel(tmp_path: Path) -> None:
-    attachment = tmp_path / "evidence.md"
-    attachment.write_text(
-        "ASK_LIVE_ATTACHMENT_SENTINEL=attachment-visible-test\n",
-        encoding="utf-8",
-    )
-    response_dir = tmp_path / "node-artifacts" / "handler-webkimi"
-    response_dir.mkdir(parents=True)
-    response = response_dir / "response.md"
-    response.write_text("I can see attachment-visible-test.\n", encoding="utf-8")
-    receipts = {
-        "handler-webkimi": {
-            "requested_attachment_paths": [str(attachment)],
-            "browser_attachment_paths": [str(attachment)],
-            "browser_local_path_preflight": {
-                "attached_file_count": 1,
-                "inlined_file_count": 0,
-            },
-            "response_path": str(response),
-        }
-    }
-
-    checks = tau_roundtable_sanity_eval._attachment_checks(
-        tmp_path,
-        handlers=["webkimi"],
-        node_receipts=receipts,
-        attach_files=[str(attachment)],
-        attachment_sentinel="attachment-visible-test",
-    )
-
-    assert [check["ok"] for check in checks] == [True, True, True]
-    assert tau_roundtable_sanity_eval._infer_attachment_sentinel([str(attachment)]) == "attachment-visible-test"
 
 
 def test_worker_prompt_includes_prior_receipts_and_verdict_contract(tmp_path: Path) -> None:

@@ -1,5 +1,0 @@
-services:
-  bad:
-    image: alpine:3.20
-    env_file:
-      - /etc/passwd

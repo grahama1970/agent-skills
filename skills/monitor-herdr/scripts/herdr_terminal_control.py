@@ -16,10 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from dotenv import find_dotenv, load_dotenv
 from loguru import logger
-
-load_dotenv(find_dotenv(usecwd=True), override=False)
 
 DEFAULT_HERDR_BIN = Path.home() / ".local" / "share" / "mise" / "installs" / "herdr" / "latest" / "herdr"
 

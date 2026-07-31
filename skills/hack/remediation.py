@@ -23,10 +23,7 @@ from typing import Any
 from rich.console import Console
 from rich.table import Table
 
-from hack.env import load_hack_dotenv as dotenv_helper
-
 console = Console()
-dotenv_helper()
 
 
 class Finding:

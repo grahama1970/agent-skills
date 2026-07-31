@@ -1,4 +1,0 @@
-services:
-  bad:
-    image: alpine:3.20
-    privileged: true

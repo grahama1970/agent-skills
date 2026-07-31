@@ -25,7 +25,7 @@ FINDINGS = f"{ROOT}/session-unit/evidence/findings.json"
 
 class DecideNextActionTests(unittest.TestCase):
     def test_success_stops_successfully(self) -> None:
-        config = loop.LoopConfig(session_id="unit", authorized_scope_confirmed=True)
+        config = loop.LoopConfig(session_id="unit")
         attempts = [loop.AttemptRecord("a1", "plan-1", loop.AttemptStatus.SUCCESS, (EVIDENCE,))]
 
         decision = loop.decide_next_action(config, attempts)
@@ -35,7 +35,7 @@ class DecideNextActionTests(unittest.TestCase):
         self.assertFalse(decision.retry_same_plan)
 
     def test_transient_retries_same_plan_with_separate_budget(self) -> None:
-        config = loop.LoopConfig(session_id="unit", max_plan_revisions=0, max_transient_retries_per_plan=2, authorized_scope_confirmed=True)
+        config = loop.LoopConfig(session_id="unit", max_plan_revisions=0, max_transient_retries_per_plan=2)
         attempts = [
             loop.AttemptRecord("a1", "plan-1", loop.AttemptStatus.TRANSIENT_INFRA_FAILURE, (EVIDENCE,)),
             loop.AttemptRecord("a2", "plan-1", loop.AttemptStatus.TRANSIENT_INFRA_FAILURE, (FINDINGS,)),
@@ -50,7 +50,7 @@ class DecideNextActionTests(unittest.TestCase):
         self.assertEqual(decision.next_plan_id_hint, "plan-1")
 
     def test_transient_budget_exhaustion_stops_infra_unreachable(self) -> None:
-        config = loop.LoopConfig(session_id="unit", max_transient_retries_per_plan=1, authorized_scope_confirmed=True)
+        config = loop.LoopConfig(session_id="unit", max_transient_retries_per_plan=1)
         attempts = [
             loop.AttemptRecord("a1", "plan-1", loop.AttemptStatus.TRANSIENT_INFRA_FAILURE, (EVIDENCE,)),
             loop.AttemptRecord("a2", "plan-1", loop.AttemptStatus.TRANSIENT_INFRA_FAILURE, (FINDINGS,)),
@@ -64,7 +64,6 @@ class DecideNextActionTests(unittest.TestCase):
     def test_strategy_failure_requires_complete_plan_revision_context(self) -> None:
         config = loop.LoopConfig(
             session_id="unit",
-            authorized_scope_confirmed=True,
             max_plan_revisions=2,
             dogpile_context=("prior dogpile synthesis pointer",),
             memory_context=("prior memory summary",),
@@ -98,7 +97,7 @@ class DecideNextActionTests(unittest.TestCase):
         self.assertTrue(context.strategy_change.strip())
 
     def test_strategy_failure_without_evidence_is_ambiguous(self) -> None:
-        config = loop.LoopConfig(session_id="unit", authorized_scope_confirmed=True)
+        config = loop.LoopConfig(session_id="unit")
         attempts = [loop.AttemptRecord("a1", "plan-1", loop.AttemptStatus.STRATEGY_FAILURE)]
 
         decision = loop.decide_next_action(config, attempts)
@@ -107,7 +106,7 @@ class DecideNextActionTests(unittest.TestCase):
         self.assertTrue(decision.stop)
 
     def test_strategy_revision_budget_stops_max_retries(self) -> None:
-        config = loop.LoopConfig(session_id="unit", max_plan_revisions=1, authorized_scope_confirmed=True)
+        config = loop.LoopConfig(session_id="unit", max_plan_revisions=1)
         attempts = [
             loop.AttemptRecord("a1", "plan-1", loop.AttemptStatus.STRATEGY_FAILURE, (EVIDENCE,)),
             loop.AttemptRecord("a2", "plan-2", loop.AttemptStatus.SECURITY_FAILURE, (FINDINGS,)),
@@ -124,16 +123,16 @@ class DecideNextActionTests(unittest.TestCase):
             loop.DecisionOutcome.STOP_UNSAFE_SCOPE,
         )
         self.assertEqual(
-            loop.decide_next_action(loop.LoopConfig(session_id="unit", authorized_scope_confirmed=True, ambiguous_scope=True), []).outcome,
+            loop.decide_next_action(loop.LoopConfig(session_id="unit", ambiguous_scope=True), []).outcome,
             loop.DecisionOutcome.STOP_AMBIGUOUS,
         )
         self.assertEqual(
-            loop.decide_next_action(loop.LoopConfig(session_id="unit", authorized_scope_confirmed=True, infrastructure_reachable=False), []).outcome,
+            loop.decide_next_action(loop.LoopConfig(session_id="unit", infrastructure_reachable=False), []).outcome,
             loop.DecisionOutcome.STOP_INFRA_UNREACHABLE,
         )
         self.assertEqual(
             loop.decide_next_action(
-                loop.LoopConfig(session_id="unit", authorized_scope_confirmed=True, require_test_lab_preflight=True, test_lab_reachable=False),
+                loop.LoopConfig(session_id="unit", require_test_lab_preflight=True, test_lab_reachable=False),
                 [],
             ).outcome,
             loop.DecisionOutcome.STOP_INFRA_UNREACHABLE,
@@ -144,7 +143,6 @@ class BuilderTests(unittest.TestCase):
     def test_docker_launch_spec_materializes_session_files_policy_mounts_and_evidence(self) -> None:
         config = loop.LoopConfig(
             session_id="unit",
-            authorized_scope_confirmed=True,
             docker_network_policy=loop.NetworkPolicy.NONE,
             environment={"SAFE_MODE": "1"},
             target_mounts=(loop.MountSpec("/authorized/target", "/target", loop.MountMode.READ_ONLY),),
@@ -163,7 +161,7 @@ class BuilderTests(unittest.TestCase):
         self.assertTrue(all(path.startswith(f"{ROOT}/session-unit/evidence/") for path in spec.evidence_paths.values()))
 
     def test_memory_and_project_knowledge_records_use_artifact_pointers_only(self) -> None:
-        config = loop.LoopConfig(session_id="unit", authorized_scope_confirmed=True)
+        config = loop.LoopConfig(session_id="unit")
         attempts = [loop.AttemptRecord("a1", "plan-1", loop.AttemptStatus.SUCCESS, (EVIDENCE,))]
         decision = loop.decide_next_action(config, attempts)
 
@@ -178,7 +176,7 @@ class BuilderTests(unittest.TestCase):
             loop.MemoryRecord("unit", "bad", "raw log inline", ("hack",), ("inline raw log text",))
 
     def test_research_requirement_covers_all_required_sources_and_synthesizes_next_plan(self) -> None:
-        config = loop.LoopConfig(session_id="unit", authorized_scope_confirmed=True, include_books_sites_research=True)
+        config = loop.LoopConfig(session_id="unit", include_books_sites_research=True)
         context = loop.PlanRevisionContext(
             prior_failure_evidence=(EVIDENCE,),
             previous_plan_id="plan-1",

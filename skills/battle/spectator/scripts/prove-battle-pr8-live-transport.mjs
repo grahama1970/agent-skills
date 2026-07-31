@@ -138,7 +138,7 @@ const blocked = await page.evaluate(() => ({
   noEndpoint: document.querySelector('[data-qid="battle:live:banner:no-endpoint"]')?.textContent ?? '',
   sseClient: document.querySelector('[data-qid="battle:live:sse-client"]')?.textContent ?? '',
 }))
-record('27-fallback-contract-only', /LIVE CONTRACT/i.test(blocked.mode) && /CONTRACT ONLY/i.test(blocked.contractOnly), JSON.stringify(blocked))
+record('27-fallback-contract-only', /SSE CONTRACT/i.test(blocked.mode) && /CONTRACT ONLY/i.test(blocked.contractOnly), JSON.stringify(blocked))
 record('28-fallback-not-executed', /NOT EXECUTED/i.test(blocked.noEndpoint), blocked.noEndpoint)
 record('29-fallback-client-blocked', /contract_only_blocked/i.test(blocked.sseClient), blocked.sseClient)
 

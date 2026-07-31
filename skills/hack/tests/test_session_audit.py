@@ -27,7 +27,6 @@ from hack.session_audit import (  # noqa: E402
     safe_slug,
     write_command_injection_probe_task,
     write_memory_payload,
-    write_probe_observation,
     write_report,
 )
 from hack.chaos_campaign import (  # noqa: E402
@@ -150,11 +149,11 @@ class SessionAuditPlanTests(unittest.TestCase):
 
         self.assertIn("## Answer", text)
         self.assertIn("- Proven exploit found: `false`", text)
-        self.assertIn("- Exploit proof status: `NOT_ATTEMPTED`", text)
+        self.assertIn("- Exploit proof status: `not_attempted`", text)
         self.assertIn("Command execution candidate", text)
         self.assertIn("Treat this as a vulnerability assessment report.", text)
 
-    def test_report_keeps_legacy_proof_unconfirmed(self) -> None:
+    def test_report_promotes_successful_proof(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             paths = SessionPaths(
@@ -224,9 +223,9 @@ class SessionAuditPlanTests(unittest.TestCase):
 
             text = report.read_text()
 
-        self.assertIn("- Proven exploit found: `false`", text)
-        self.assertIn("- Exploit proof status: `OBSERVED_UNCONFIRMED`", text)
-        self.assertIn("unconfirmed probe observation report", text)
+        self.assertIn("- Proven exploit found: `true`", text)
+        self.assertIn("- Exploit proof status: `attempted_success`", text)
+        self.assertIn("successful exploitation proof report", text)
         self.assertIn("## What Code-Runner Did", text)
         self.assertIn("- Task: `probe-command-injection`", text)
         self.assertIn("  - DoD passed: `true`", text)
@@ -235,7 +234,7 @@ class SessionAuditPlanTests(unittest.TestCase):
         self.assertIn("- Did `$hack` run the exploit in Docker? `true`", text)
         self.assertIn("- Probe executed: `true`", text)
         self.assertIn("- Exit code: `0`", text)
-        self.assertIn("unconfirmed legacy probe artifact", text)
+        self.assertIn("operating-system identity output", text)
         self.assertNotIn("uid=0(root)", text)
 
     def test_command_injection_probe_candidate_detection(self) -> None:
@@ -333,64 +332,18 @@ class SessionAuditPlanTests(unittest.TestCase):
                 paths.session_dir / "attacks",
             ):
                 directory.mkdir(parents=True)
-            (paths.session_dir / "attacks" / "proof.command-injection.json").write_text('{"status":"proved"}')
+            (paths.session_dir / "attacks" / "proof.command-injection.json").write_text(
+                '{"status":"proved"}'
+            )
             report = paths.reports_dir / "HACK_REPORT.md"
             report.write_text("# report\n")
 
             write_memory_payload(paths, report)
             payload = json.loads((paths.reports_dir / "memory-payload.json").read_text())
 
-        self.assertFalse(payload["exploit_proven"])
-        self.assertEqual(payload["exploit_status"], "OBSERVED_UNCONFIRMED")
-        self.assertEqual(payload["proof_status"], "OBSERVED_UNCONFIRMED")
-        self.assertIn("proof_authority", payload)
+        self.assertTrue(payload["exploit_proven"])
+        self.assertEqual(payload["exploit_status"], "attempted_success")
         self.assertIn(str(paths.session_dir / "attacks"), payload["artifacts"])
-
-    def test_probe_observation_writer_keeps_probe_unconfirmed(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            paths = SessionPaths(
-                session_dir=root,
-                scanner_dir=root / "scanner",
-                target_dir=root / "target",
-                repo_dir=root / "target" / "repo",
-                reports_dir=root / "reports",
-                logs_dir=root / "logs",
-                templates_dir=root / "nuclei-templates",
-            )
-            for directory in (
-                paths.scanner_dir,
-                paths.target_dir,
-                paths.repo_dir,
-                paths.reports_dir,
-                paths.logs_dir,
-                paths.templates_dir,
-                paths.session_dir / "attacks",
-                paths.session_dir / "attack-workspace" / "attacks",
-            ):
-                directory.mkdir(parents=True, exist_ok=True)
-            (paths.reports_dir / "target-launch-plan.json").write_text(
-                '{"source":"fixture","target_url":"http://127.0.0.1"}\n'
-            )
-            (paths.reports_dir / "semgrep.json").write_text('{"results":[]}\n')
-            proof = paths.session_dir / "attacks" / "proof.command-injection.json"
-            proof.write_text('{"status":"proved","indicator":"fixture_signal"}\n')
-            probe = paths.session_dir / "attack-workspace" / "attacks" / "probe_command_injection.py"
-            probe.write_text("print('fixture')\n")
-
-            observation_path = write_probe_observation(
-                paths=paths,
-                proof_path=proof,
-                probe_path=probe,
-                probe_exit_code=0,
-                authorization_manifest_sha256="a" * 64,
-            )
-            observation = json.loads(observation_path.read_text())
-
-        self.assertEqual(observation["schema"], "hack.probe_observation.v1")
-        self.assertFalse(observation["exploit_confirmed"])
-        self.assertEqual(observation["signal_type"], "probe_artifact_written")
-        self.assertEqual(observation["finding_class"], "fixture_signal")
 
     def test_openclaw_style_dockerfile_generates_launch_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

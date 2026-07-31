@@ -11,7 +11,6 @@ from typing import Any
 
 from best_practices import collect_best_practices
 from components import collect_components
-from constants import PROJECT_NAME, PROJECT_PROFILE, PROJECT_ROOT
 from doc_drift import collect_doc_drift
 from gap_analysis import compute_gaps
 from infrastructure import (
@@ -41,9 +40,7 @@ def generate_report(quick: bool = False, full: bool = False) -> dict[str, Any]:
     components_data = collect_components()
 
     report = {
-        "project": PROJECT_NAME,
-        "project_root": str(PROJECT_ROOT),
-        "project_profile": PROJECT_PROFILE,
+        "project": "Embry OS",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "mode": "quick" if quick else ("full" if full else "standard"),
         "phase_1_infrastructure": {
@@ -97,9 +94,7 @@ def format_markdown(report: dict) -> str:
     lines = []
     ts = report["timestamp"]
     mode = report.get("mode", "standard")
-    project = report.get("project", "Project")
-    profile = report.get("project_profile", "generic")
-    lines.append(f"# {project} Project State -- {ts[:10]} ({mode} mode, {profile} profile)")
+    lines.append(f"# Embry OS Project State -- {ts[:10]} ({mode} mode)")
     lines.append("")
 
     infra = report["phase_1_infrastructure"]
@@ -108,19 +103,15 @@ def format_markdown(report: dict) -> str:
     d = infra["daemons"]
     lines.append("## Phase 1: Infrastructure")
     lines.append("")
-    if d.get("applicable", True):
-        lines.append(f"### Daemons ({d['up']}/{d['total']} up)")
-        lines.append("")
-        lines.append("| Daemon | Status |")
-        lines.append("|--------|--------|")
-        for name, info in d["daemons"].items():
-            status = info["status"]
-            icon = "OK" if status in ("ok", "healthy") else "DOWN"
-            lines.append(f"| {name} | {icon} |")
-        lines.append("")
-    else:
-        lines.append(f"### Daemons: not applicable ({d.get('reason', 'generic project')})")
-        lines.append("")
+    lines.append(f"### Daemons ({d['up']}/{d['total']} up)")
+    lines.append("")
+    lines.append("| Daemon | Status |")
+    lines.append("|--------|--------|")
+    for name, info in d["daemons"].items():
+        status = info["status"]
+        icon = "OK" if status in ("ok", "healthy") else "DOWN"
+        lines.append(f"| {name} | {icon} |")
+    lines.append("")
 
     # Tests
     t = infra["tests"]
@@ -129,33 +120,29 @@ def format_markdown(report: dict) -> str:
 
     # Cascade
     c = infra["cascade"]
-    if c.get("applicable", True):
-        lines.append("### 3-Tier Cascade")
-        lines.append("")
-        lines.append("| Tier | Status |")
-        lines.append("|------|--------|")
-        for tier, status in c["tier_status"].items():
-            label = tier.replace("_", " ").replace("tier ", "Tier ").title()
-            lines.append(f"| {label} | {status} |")
-        lines.append("")
+    lines.append("### 3-Tier Cascade")
+    lines.append("")
+    lines.append("| Tier | Status |")
+    lines.append("|------|--------|")
+    for tier, status in c["tier_status"].items():
+        label = tier.replace("_", " ").replace("tier ", "Tier ").title()
+        lines.append(f"| {label} | {status} |")
+    lines.append("")
 
-        r = c["registry"]
-        lines.append(f"**Model Registry**: {r['validators']}V / {r['classifiers']}C / {r['regressors']}R / {r['gpts']}G")
-        s = c["shadow"]
-        lines.append(f"**Shadow Entries**: {s['usable']} usable / {s['total']} total")
-        lines.append("")
-    else:
-        lines.append(f"### 3-Tier Cascade: not applicable ({c.get('reason', 'generic project')})")
-        lines.append("")
+    r = c["registry"]
+    lines.append(f"**Model Registry**: {r['validators']}V / {r['classifiers']}C / {r['regressors']}R / {r['gpts']}G")
+    s = c["shadow"]
+    lines.append(f"**Shadow Entries**: {s['usable']} usable / {s['total']} total")
+    lines.append("")
 
-    if c.get("training_data"):
+    if c["training_data"]:
         lines.append("| Task | Labels |")
         lines.append("|------|--------|")
         for task, count in sorted(c["training_data"].items()):
             lines.append(f"| {task} | {count} |")
         lines.append("")
 
-    if c.get("classifiers_on_disk"):
+    if c["classifiers_on_disk"]:
         lines.append("**Classifiers on disk**: " + ", ".join(
             f"{clf['name']} ({clf['size_kb']}KB)" for clf in c["classifiers_on_disk"]
         ))
@@ -163,12 +150,9 @@ def format_markdown(report: dict) -> str:
 
     # Daemon wiring
     wiring = infra["daemon_cascade_wiring"]
-    if wiring.get("applicable", True):
-        lines.append("### Cascade Wiring: " + ", ".join(
-            f"{n}={'YES' if w else 'NO'}" for n, w in wiring.items()
-        ))
-    else:
-        lines.append(f"### Cascade Wiring: not applicable ({wiring.get('reason', 'generic project')})")
+    lines.append("### Cascade Wiring: " + ", ".join(
+        f"{n}={'YES' if w else 'NO'}" for n, w in wiring.items()
+    ))
     lines.append("")
 
     # Skills

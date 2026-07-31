@@ -372,7 +372,6 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   }, [visibleLanes, zoom, collapsed]);
 
   const scoreboard = fixture.scoreboard;
-  const lineageSource = fixture.adaptive_lineage_panel_source;
   const blockCount = useMemo(() => lanes.filter((lane) => lane.events.some((event) => event.kind === "blocked" || event.kind === "blue_blast")).length, [lanes]);
 
   const mockupBlue = mockupBlueStripStats();
@@ -586,19 +585,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     return <div className={shellClass}>{providerBody}</div>;
   }
 
-  return (
-    <Card
-      className={shellClass}
-      data-qid="battle:race:source"
-      data-battle-id={lineageSource?.battle_id ?? fixture.battle_id}
-      data-run-id={lineageSource?.run_id ?? fixture.run_id ?? ""}
-      data-source-proof-id={lineageSource?.source_proof_id ?? fixture.source_proof_id ?? ""}
-      data-source-fixture-id={lineageSource?.fixture_id ?? fixture.fixture_id ?? ""}
-      data-source-fixture-sha256={lineageSource?.source_fixture_sha256 ?? fixture.source_fixture_sha256 ?? ""}
-    >
-      {providerBody}
-    </Card>
-  );
+  return <Card className={shellClass}>{providerBody}</Card>;
 }
 
 function BattleTimelineCanvas({ contentWidth, children, designView = false }: { contentWidth: number; children: ReactNode; designView?: boolean }) {

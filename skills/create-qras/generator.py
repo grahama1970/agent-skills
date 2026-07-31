@@ -404,6 +404,17 @@ def _get_async_memory_client() -> httpx.AsyncClient:
     return httpx.AsyncClient(base_url=_memory_base_url(), timeout=60.0)
 
 
+def _qra_model() -> str:
+    """Model profile for single/control smoke calls.
+
+    The broad alias "text" is deprecated for QRA work (cross-family fallback
+    changes prompt/response behavior) and the running proxy rejects it with
+    400. SKILL.md names oc-deepseek as a family-specific smoke profile, and
+    the running proxy catalog confirms it (chutes-deepseek is not registered).
+    """
+    return os.environ.get("CREATE_QRAS_MODEL", "oc-deepseek")
+
+
 def _scillm_auth_token() -> str:
     """Resolve the scillm proxy token at runtime.
 
@@ -1173,7 +1184,7 @@ def _generate_native_qra(
         resp = scillm.post(
             "/v1/chat/completions",
             json={
-                "model": "text",  # Use stable model
+                "model": _qra_model(),  # Use stable model
                 "messages": messages,
                 "response_format": {"type": "json_object"},
                 "temperature": 0.1,
@@ -1485,7 +1496,7 @@ def _run_gate_stage(
         resp = scillm.post(
             "/v1/chat/completions",
             json={
-                "model": "text",
+                "model": _qra_model(),
                 "messages": messages,
                 "response_format": {"type": "json_object"},
             },
@@ -1559,7 +1570,7 @@ def _run_generate_stage(
         resp = scillm.post(
             "/v1/chat/completions",
             json={
-                "model": "text",
+                "model": _qra_model(),
                 "messages": messages,
                 "response_format": {"type": "json_object"},
             },
@@ -1792,7 +1803,7 @@ def _generate_relationship_qra(
         resp = scillm.post(
             "/v1/chat/completions",
             json={
-                "model": "text",
+                "model": _qra_model(),
                 "messages": messages,
                 "response_format": {"type": "json_object"},
             },
@@ -1903,7 +1914,7 @@ async def _generate_relationship_qra_async(
 
         try:
             request_body = {
-                "model": "text",
+                "model": _qra_model(),
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt},
@@ -2016,7 +2027,7 @@ async def _generate_relationship_qra_async(
 
     try:
         request_body = {
-            "model": "text",
+            "model": _qra_model(),
             "messages": [{"role": "user", "content": prompt}],
             "response_format": {"type": "json_object"},
         }
@@ -2500,7 +2511,7 @@ def _generate_independent_qra(
         resp = scillm.post(
             "/v1/chat/completions",
             json={
-                "model": "text",
+                "model": _qra_model(),
                 "messages": [{"role": "user", "content": prompt}],
                 "response_format": {"type": "json_object"},
             },
@@ -2688,6 +2699,17 @@ def _build_independent_qra_messages(
     control_id = control.get("control_id", control.get("_key"))
     raw_framework = control.get("source_framework") or _detect_framework(control_id) or "UNKNOWN"
     framework = FRAMEWORK_PROMPT_MAP.get(raw_framework, raw_framework)
+    # Live corpus carries lowercase framework variants (e.g. 524 records with
+    # source_framework "attack") that worksheets.yaml does not map; alias them
+    # onto the existing branches instead of falling through to the missing
+    # generic template.
+    _CASE_ALIASES = {"attack": "ATT&CK", "att_ck_enterprise": "ATT&CK",
+                     "att_ck_mobile": "ATT&CK", "att_ck_ics": "ATT&CK",
+                     "att&ck": "ATT&CK", "cwe": "CWE", "nist": "NIST",
+                     "sparta": "SPARTA", "capec": "CAPEC", "d3fend": "D3FEND",
+                     "esa": "ESA", "esa_shield": "ESA", "nvd": "NVD"}
+    if framework not in ("CWE", "CAPEC", "ATT&CK", "D3FEND", "NIST", "SPARTA", "ESA", "NVD"):
+        framework = _CASE_ALIASES.get(str(framework).lower(), framework)
     system_prompt = ""
 
     if framework == "CWE":
@@ -2750,7 +2772,7 @@ def _build_independent_qra_messages(
             control_id=control_id,
             control_name=control_name,
             control_details=control_details,
-            family=family or "(Unknown)",
+            parent_id=family or control.get("parent_id", "") or "(Unknown)",
             family_name=family_name or "(Unknown)",
         )
     elif framework == "SPARTA":
@@ -3537,7 +3559,7 @@ def _generate_standalone_qra(
         resp = scillm.post(
             "/v1/chat/completions",
             json={
-                "model": "text",
+                "model": _qra_model(),
                 "messages": messages,
                 "response_format": {"type": "json_object"},
             },

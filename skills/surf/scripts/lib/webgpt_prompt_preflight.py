@@ -19,8 +19,6 @@ def extract_path_tokens(text: str) -> list[str]:
     out: list[str] = []
     for match in _PATH_TOKEN_RE.finditer(text):
         token = match.group(1).rstrip(".,;:)>")
-        if token.startswith("//"):
-            continue
         if token.startswith("~") and "/" not in token[1:]:
             continue
         if token.startswith("/") and "/" not in token[1:]:

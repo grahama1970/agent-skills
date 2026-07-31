@@ -375,38 +375,6 @@ def test_execute_ask_dag_continues_when_failed_node_allows_failure(monkeypatch, 
     assert not any(event["event"] == "dag_layer_failed" for event in status["event_tail"])
 
 
-def test_generated_memory_first_timeout_degrades_to_empty_context(monkeypatch, tmp_path):
-    def fake_memory_recall(_query, _scope, **_kwargs):
-        return {"returncode": -2, "stdout": "", "stderr": "Skill memory timed out (15s)"}
-
-    def fake_oracle_node(node, **_kwargs):
-        return {
-            "id": node["id"],
-            "type": node["type"],
-            "ok": True,
-            "context_items": [{"problem": "analysis", "solution": "continued after memory timeout"}],
-        }
-
-    monkeypatch.setattr(ask_dag, "run_memory_recall", fake_memory_recall)
-    monkeypatch.setattr(ask_dag, "_execute_oracle_node", fake_oracle_node)
-    run = AskRunState("memory-timeout-degrades-dag", output_root=tmp_path)
-    run.write_request({"command": "ask", "question": "use $memory and $scillm to analyze this", "scope": "ask"})
-    dag = ask_dag.draft_ask_dag_from_question("Use $memory and $scillm to analyze this")
-
-    result = ask_dag.execute_ask_dag(dag, question="use $memory and $scillm to analyze this", scope="ask", run_state=run)
-    memory_node = next(node for node in result["nodes"] if node["id"] == "memory_first")
-    analysis_node = next(node for node in result["nodes"] if node["id"] == "analysis")
-
-    assert memory_node["ok"] is False
-    assert memory_node["returncode"] == -2
-    assert memory_node["stderr"] == "Skill memory timed out (15s)"
-    assert analysis_node["ok"] is True
-    assert result["context_items"]
-    status = read_status("memory-timeout-degrades-dag", tail_events=30, output_root=tmp_path)
-    assert not any(event["event"] == "dag_layer_failed" for event in status["event_tail"])
-    assert (tmp_path / "memory-timeout-degrades-dag" / "dag" / "analysis.json").exists()
-
-
 
 def test_cli_dag_json_records_normalized_request_and_passes_dag(monkeypatch, tmp_path):
     captured = {}

@@ -1,4 +1,0 @@
-{
-  "probe": "fixture non-destructive signal probe",
-  "expected_signal": "fixture_reflected_signal"
-}

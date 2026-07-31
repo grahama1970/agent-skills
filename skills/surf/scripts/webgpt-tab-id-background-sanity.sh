@@ -24,7 +24,6 @@ Options:
 
 Environment:
   SURF_WEBGPT_SANITY_TAB_ID   Default --tab-id (also used by ./sanity.sh)
-  SURF_TAB_ID_BACKGROUND_SANITY_TIMEOUT_SECONDS  Per-operation timeout. Default: 15
 
 Exit: 0 PASS | 2 usage | 3 SKIP | 5 FAIL
 EOF
@@ -101,30 +100,10 @@ if [[ "$tab_id" == "$active_before" ]]; then
 fi
 
 set +e
-operation_timeout_s="${SURF_TAB_ID_BACKGROUND_SANITY_TIMEOUT_SECONDS:-15}"
-if ! [[ "$operation_timeout_s" =~ ^[0-9]+$ ]] || [[ "$operation_timeout_s" -lt 1 ]]; then
-  operation_timeout_s=15
-fi
-if command -v timeout >/dev/null 2>&1; then
-  js_out="$(timeout "${operation_timeout_s}s" "$RUN_SH" js 'return JSON.stringify({ title: document.title, url: location.href, host: location.hostname })' --tab-id "$tab_id" 2>>"$log")"
-  js_status=$?
-  if [[ "$js_status" -eq 124 ]]; then
-    echo "js_timeout_after=${operation_timeout_s}s" >>"$log"
-  fi
-else
-  js_out="$("$RUN_SH" js 'return JSON.stringify({ title: document.title, url: location.href, host: location.hostname })' --tab-id "$tab_id" 2>>"$log")"
-  js_status=$?
-fi
-if command -v timeout >/dev/null 2>&1; then
-  click_out="$(timeout "${operation_timeout_s}s" "$RUN_SH" click --selector body --tab-id "$tab_id" --no-screenshot 2>>"$log")"
-  click_status=$?
-  if [[ "$click_status" -eq 124 ]]; then
-    echo "click_timeout_after=${operation_timeout_s}s" >>"$log"
-  fi
-else
-  click_out="$("$RUN_SH" click --selector body --tab-id "$tab_id" --no-screenshot 2>>"$log")"
-  click_status=$?
-fi
+js_out="$("$RUN_SH" js --tab-id "$tab_id" 'return JSON.stringify({ title: document.title, url: location.href, host: location.hostname })' 2>>"$log")"
+js_status=$?
+click_out="$("$RUN_SH" click --selector body --tab-id "$tab_id" --no-screenshot 2>>"$log")"
+click_status=$?
 set -e
 
 focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || echo '{}')"

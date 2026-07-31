@@ -30,13 +30,7 @@
 
       <button data-qid="fixture:duplicate" data-qs-action="FIXTURE_DUP_A" title="Duplicate A">Duplicate A</button>
       <button data-qid="fixture:duplicate" data-qs-action="FIXTURE_DUP_B" title="Duplicate B">Duplicate B</button>
-      <button
-        class="missing-qid"
-        data-qid="fixture:missing-qid"
-        data-qs-action="FIXTURE_MISSING_QID"
-        title="Exercise repaired QID control"
-        onclick="document.body.dataset.missingClicked='1'"
-      >Missing QID</button>
+      <button class="missing-qid" onclick="document.body.dataset.missingClicked='1'">Missing QID</button>
       <button data-qid="fixture:throws" data-qs-action="FIXTURE_THROW" title="Throw error" onclick="throw new Error('seeded discovery exception')">Throw</button>
       <button data-qid="fixture:fetch-fails" data-qs-action="FIXTURE_FETCH_FAILS" title="Fetch fails" onclick="fetch('/missing-discovery-resource.json')">Fetch fails</button>
       <button data-qid="fixture:inert" data-qs-action="FIXTURE_INERT" title="Inert button">Inert</button>

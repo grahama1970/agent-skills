@@ -1,5 +1,0 @@
-{
-  "description": "Because they manage large amounts of digital assets111As of this writing, Ethereum smart contracts hold over USD 90 billion in cryptocurrency (defillama). and their code is public, smart contracts have been repeatedly targeted, resulting in multi-billion-dollar losses (crypto-crimes-2024; eth-vulnerabilities; eth-bugs), making them a critical area of security research. A large ecosystem of tools aims to detect vulnerabilities and verify safety of smart contracts. Surveys catalogue extensive literature, with a recent survey listing more than ninety tools (vidalVulnerabilityDetectionTechniques2024). Common techniques largely fall into the following categories: static analysis of source or bytecode (e.g. (ethainter)); symbolic execution (e.g. (manticore)) and bounded model checking (e.g.",
-  "title": "A Bounded Game Semantics Checker for Precise Smart Contract Analysis",
-  "url": "https://arxiv.org/html/2512.22417"
-}

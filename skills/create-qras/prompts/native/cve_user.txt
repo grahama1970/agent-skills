@@ -22,7 +22,7 @@ Output:
   "pairs": [
     {{
       "question": "What is CVE-2025-14905 according to NVD?",
-      "reasoning": "The flaw arises because attacker-supplied input reaches a privileged operation with no intervening check, so the trust boundary is crossed at the point of use rather than at input.",
+      "reasoning": "The description explicitly defines the vulnerability and its mechanism.",
       "answer": "CVE-2025-14905 is a heap buffer overflow vulnerability in the 389-ds-base server. It exists in the `schema_attr_enum_callback` function within the `schema.c` file, where the code incorrectly calculates buffer size by summing alias string lengths without accounting for additional formatting characters.",
       "pair_type": "vulnerability_description",
       "cve_id": "CVE-2025-14905",
@@ -41,7 +41,7 @@ Output:
     }},
     {{
       "question": "What impact does CVE-2025-14905 potentially have?",
-      "reasoning": "Consequences stay hedged because exploitation depends on configuration and reachability that vary per deployment, making impact possible rather than assured.",
+      "reasoning": "The description explicitly states the possible consequences and preserves hedged modality.",
       "answer": "CVE-2025-14905 could potentially allow a remote attacker to cause a Denial of Service (DoS) or achieve Remote Code Execution (RCE).",
       "pair_type": "impact_description",
       "cve_id": "CVE-2025-14905",
@@ -56,7 +56,7 @@ Output:
     }},
     {{
       "question": "What CWE classification is assigned to CVE-2025-14905?",
-      "reasoning": "The weakness class is path traversal rather than injection because the input steers file resolution instead of being executed as code.",
+      "reasoning": "The weaknesses field explicitly provides the CWE ID.",
       "answer": "CVE-2025-14905 is mapped to CWE-122 in the provided NVD weakness data.",
       "pair_type": "weakness_context",
       "cve_id": "CVE-2025-14905",

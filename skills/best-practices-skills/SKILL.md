@@ -483,40 +483,6 @@ include Docker deployment:
 - Use retrieval language: `found`, `observed`, `executed`, `not established`.
 - Surface missing human decisions as `needs_attention`, not inferred defaults.
 
-## Agentic Evaluation Gate
-
-All skills in `agent-skills` default to an explicit evaluation posture. A skill
-must either provide an eval fixture, delegate to an evaluation skill, or state
-why an eval is not required.
-
-Use `/agentic-evals` as the default gate when a skill claims durable agent
-behavior beyond one-shot CLI output. This includes skills that orchestrate
-agents, call multiple downstream skills, manage long-running workflow state,
-score or review outputs, make readiness claims, or declare
-`runtime_self_improvement: substantial`.
-
-The minimum agentic eval contract is:
-
-- A committed fixture such as `fixtures/agentic_eval.json`.
-- At least three trials for non-trivial behavior.
-- Positive, negative, and adversarial cases when the behavior has a safety or
-  routing boundary.
-- Deterministic assertions before optional LLM judges.
-- A machine-readable receipt with `mocked`, `live`, `proof_scope`,
-  `claims.proves`, and `claims.does_not_prove`.
-- A readiness state using `READY`, `USABLE_WITH_GAPS`, `NOT_READY`, or
-  `NOT_ESTABLISHED`.
-
-Simple one-shot skills may opt out only by documenting an explicit
-`eval_not_required` rationale in `SKILL.md` or project knowledge. The rationale
-must be concrete, for example "static prompt template only; covered by
-frontmatter validation and fixture-free import check". Absence of an eval
-fixture is not an opt-out.
-
-`best-practices-skills` does not list `agentic-evals` in `composes:` because it
-does not call that skill at runtime. The binding is a standards and CI
-recommendation, represented in `references/rules.yml`.
-
 ## Checklist (creation/review)
 
 - Frontmatter is valid YAML (no markdown fences).
@@ -541,9 +507,6 @@ recommendation, represented in `references/rules.yml`.
   entrypoints, persist machine-readable proof artifacts, and fail closed when a
   required downstream receipt is missing. A generated request file is not a live
   proof.
-- Skills that require evals provide `fixtures/agentic_eval.json` or delegate to
-  an evaluation skill such as `agentic-evals`; skills that do not require evals
-  document a concrete `eval_not_required` rationale.
 - Complex, high-risk, UI-facing, security, compliance, orchestration, or
   subagent skills include `.ask/browser-oracles.yaml` so `$browser-oracle`
   can resolve the correct WebGPT review project by directory walk-up.

@@ -156,7 +156,7 @@
   position: sticky;
   left: 0;
   pointer-events: auto;
-  z-index: 18;
+  z-index: 13;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
@@ -229,8 +229,8 @@
   z-index: 5;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 20px;
+  height: 20px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.35);

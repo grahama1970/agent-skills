@@ -388,10 +388,6 @@ elif failure == "stale_cdp_on_explicit_tab":
     proof_status = "not_submitted"
     diagnosis = "Surf could not attach CDP to the explicitly requested tab in no-activate mode."
     action = "Release the existing debugger attachment or reload Surf, then retry the same explicit tab."
-elif failure == "browser_cdp_lock_timeout":
-    proof_status = "not_submitted"
-    diagnosis = "Surf could not run the CDP pre-submit probe because the shared browser lock was held."
-    action = "Wait for the lock owner to finish, inspect SURF_BROWSER_LOCK_BLOCKED owner metadata, or use a separate Surf socket/profile for this lane."
 elif failure == "concurrent_submit_same_tab":
     proof_status = "not_submitted"
     diagnosis = "Another Surf WebGPT submit is already controlling the requested tab."
@@ -616,14 +612,14 @@ write_submit_receipt() {
   local status="$1"
   local receipt_at="$2"
   local accepted="${3:-false}"
-  python3 - "$receipt_output" "$status" "$receipt_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$attach_file_abs" <<'PY'
+  python3 - "$receipt_output" "$status" "$receipt_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
 import json
 import pathlib
 import sys
 
 (
     receipt, status, receipt_at, accepted_s, inp, submitted, out, raw, meta,
-    sentinel, requested_tab_id, target_url, model, reasoning, attach_file,
+    sentinel, requested_tab_id, target_url, model, reasoning,
 ) = sys.argv[1:]
 pathlib.Path(receipt).write_text(json.dumps({
     "schema": "surf.webgpt_submit_receipt.v1",
@@ -640,8 +636,6 @@ pathlib.Path(receipt).write_text(json.dumps({
     "requested_url": target_url or None,
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
-    "attach_file": attach_file or None,
-    "attachment_paths": [attach_file] if attach_file else [],
     "receipt_at": receipt_at,
 }, indent=2) + "\n", encoding="utf-8")
 PY
@@ -651,7 +645,7 @@ write_inflight_marker() {
   local status="$1"
   local marker_at="$2"
   local accepted="${3:-false}"
-  python3 - "$inflight_output" "$status" "$marker_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$receipt_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$attach_file_abs" "$$" <<'PY'
+  python3 - "$inflight_output" "$status" "$marker_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$receipt_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$$" <<'PY'
 import json
 import os
 import pathlib
@@ -660,7 +654,7 @@ import tempfile
 
 (
     marker, status, marker_at, accepted_s, inp, submitted, out, raw, meta, receipt,
-    sentinel, requested_tab_id, target_url, model, reasoning, attach_file, pid,
+    sentinel, requested_tab_id, target_url, model, reasoning, pid,
 ) = sys.argv[1:]
 payload = {
     "schema": "surf.webgpt_inflight.v1",
@@ -678,8 +672,6 @@ payload = {
     "requested_url": target_url or None,
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
-    "attach_file": attach_file or None,
-    "attachment_paths": [attach_file] if attach_file else [],
     "submit_pid": int(pid),
     "updated_at": marker_at,
     "recovery_command": (
@@ -1324,38 +1316,8 @@ focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 if [[ -n "${requested_tab_id:-}" ]]; then
   no_activate=1
   cdp_probe_err="$(mktemp "${TMPDIR:-/tmp}/surf-webgpt-cdp-probe.XXXXXX.log")"
-  cdp_lock_timeout_s=$(( (surf_lock_wait_ms + 999) / 1000 ))
-  if [[ "$cdp_lock_timeout_s" -lt 1 ]]; then
-    cdp_lock_timeout_s=1
-  fi
-  cdp_probe_hard_timeout_s="${SURF_WEBGPT_CDP_PROBE_TIMEOUT_SECONDS:-$(( cdp_lock_timeout_s + 20 ))}"
-  if ! [[ "$cdp_probe_hard_timeout_s" =~ ^[0-9]+$ ]] || [[ "$cdp_probe_hard_timeout_s" -lt 1 ]]; then
-    cdp_probe_hard_timeout_s=$(( cdp_lock_timeout_s + 20 ))
-  fi
-  run_cdp_probe() {
-    local err_path="$1"
-    local out status
-    if command -v timeout >/dev/null 2>&1; then
-      set +e
-      out="$(timeout "${cdp_probe_hard_timeout_s}s" "$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" --lock-timeout "$cdp_lock_timeout_s" 2>>"$err_path")"
-      status=$?
-      set -e
-      if [[ "$status" -eq 124 ]]; then
-        echo "SURF_CDP_PROBE_TIMEOUT after ${cdp_probe_hard_timeout_s}s for tab ${requested_tab_id}" >>"$err_path"
-      fi
-      printf '%s' "$out"
-      return 0
-    fi
-    "$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" --lock-timeout "$cdp_lock_timeout_s" 2>>"$err_path" || true
-  }
-  cdp_ok="$(run_cdp_probe "$cdp_probe_err")"
-  cdp_browser_lock_blocked=0
-  cdp_retry_attempted=0
-  if grep -q 'SURF_BROWSER_LOCK_BLOCKED' "$cdp_probe_err" 2>/dev/null; then
-    cdp_browser_lock_blocked=1
-  fi
-  if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' && "$cdp_browser_lock_blocked" -eq 0 ]]; then
-    cdp_retry_attempted=1
+  cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>"$cdp_probe_err" || true)"
+  if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' ]]; then
     cdp_retry_err="$(mktemp "${TMPDIR:-/tmp}/surf-webgpt-cdp-retry.XXXXXX.log")"
     "$RUN_SH" extension.reload >/dev/null 2>"$cdp_retry_err" || true
     for _surf_ping_attempt in $(seq 1 30); do
@@ -1364,22 +1326,16 @@ if [[ -n "${requested_tab_id:-}" ]]; then
       fi
       sleep 0.5
     done
-    cdp_ok="$(run_cdp_probe "$cdp_retry_err")"
-    if grep -q 'SURF_BROWSER_LOCK_BLOCKED' "$cdp_retry_err" 2>/dev/null; then
-      cdp_browser_lock_blocked=1
-    fi
+    cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>>"$cdp_retry_err" || true)"
   fi
   if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' ]]; then
-    if grep -q 'SURF_BROWSER_LOCK_BLOCKED' "$cdp_probe_err" 2>/dev/null || { [[ -n "${cdp_retry_err:-}" ]] && grep -q 'SURF_BROWSER_LOCK_BLOCKED' "$cdp_retry_err" 2>/dev/null; }; then
-      cdp_browser_lock_blocked=1
-    fi
     failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$requested_tab_id" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$cdp_probe_err" "${cdp_retry_err:-}" "$failed_at" "$cdp_browser_lock_blocked" "$cdp_retry_attempted" <<'PY'
+    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$requested_tab_id" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$cdp_probe_err" "${cdp_retry_err:-}" "$failed_at" <<'PY'
 import json, pathlib, sys
 (
     meta, inp, submitted, out, raw, err, sentinel, requested_tab_id,
     target_url, model, reasoning, identity_s, probe_path_s, retry_path_s,
-    failed_at, browser_lock_blocked_s, retry_attempted_s,
+    failed_at,
 ) = sys.argv[1:]
 try:
     identity = json.loads(identity_s) if identity_s else None
@@ -1388,11 +1344,9 @@ except Exception:
 def read(path_s):
     path = pathlib.Path(path_s) if path_s else None
     return path.read_text(encoding="utf-8", errors="replace") if path and path.exists() else ""
-browser_lock_blocked = browser_lock_blocked_s == "1"
-retry_attempted = retry_attempted_s == "1"
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
-    "failure": "browser_cdp_lock_timeout" if browser_lock_blocked else "stale_cdp_on_explicit_tab",
+    "failure": "stale_cdp_on_explicit_tab",
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -1405,9 +1359,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_reasoning": reasoning or None,
     "tab_identity_preflight": identity,
     "cdp_probe_stderr": read(probe_path_s),
-    "cdp_retry_attempted": retry_attempted,
+    "cdp_retry_attempted": True,
     "cdp_retry_stderr": read(retry_path_s),
-    "browser_lock_blocked": browser_lock_blocked,
     "submitted_to_chatgpt": False,
     "started_at": failed_at,
     "finished_at": failed_at,
@@ -1415,11 +1368,7 @@ pathlib.Path(meta).write_text(json.dumps({
 PY
     enrich_agent_diagnosis
     rm -f -- "$cdp_probe_err" "${cdp_retry_err:-}"
-    if [[ "$cdp_browser_lock_blocked" -eq 1 ]]; then
-      echo "webgpt.submit blocked: Surf browser lock blocked CDP probe for explicit tab $requested_tab_id; no prompt submitted and no fallback tab created." >&2
-    else
-      echo "webgpt.submit blocked: stale CDP on explicit tab $requested_tab_id after same-tab extension reload retry; no prompt submitted and no fallback tab created." >&2
-    fi
+    echo "webgpt.submit blocked: stale CDP on explicit tab $requested_tab_id after same-tab extension reload retry; no prompt submitted and no fallback tab created." >&2
     exit 6
   fi
   rm -f -- "$cdp_probe_err" "${cdp_retry_err:-}"
@@ -1749,24 +1698,6 @@ for line in reversed(stderr_text.splitlines()):
         chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
         chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
-identity_tab = identity.get("tab") if isinstance(identity, dict) else {}
-if not isinstance(identity_tab, dict):
-    identity_tab = {}
-identity_tab_id = str(identity.get("tab_id") or identity_tab.get("id") or "").strip() if isinstance(identity, dict) else ""
-identity_tab_url = str(identity_tab.get("url") or "").strip()
-identity_ok_for_requested_tab = (
-    isinstance(identity, dict)
-    and identity.get("ok") is True
-    and bool(requested_tab_id)
-    and identity_tab_id == str(requested_tab_id)
-)
-if not tab_id and identity_ok_for_requested_tab:
-    tab_id = str(requested_tab_id)
-    current_url = current_url or identity_tab_url or None
-    if not conversation_url and identity_tab_url and "/c/" in identity_tab_url:
-        conversation_url = identity_tab_url
-tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
-tab_was_created = False if identity_ok_for_requested_tab and tab_id == str(requested_tab_id) else None
 empty_response_after_submit = (
     not raw_text.strip()
     and not conversation_max_length_detected
@@ -1816,8 +1747,6 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight_output_dir": roundtrip_dir or None,
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
-    "controlled_tab_id_mismatch": tab_mismatch,
-    "tab_was_created": tab_was_created,
     "conversation_url": conversation_url,
     "current_url": current_url or conversation_url,
     "tab_url": current_url or conversation_url,
@@ -1970,24 +1899,6 @@ for line in reversed(stderr_text.splitlines()):
         chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
         chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
-identity_tab = identity.get("tab") if isinstance(identity, dict) else {}
-if not isinstance(identity_tab, dict):
-    identity_tab = {}
-identity_tab_id = str(identity.get("tab_id") or identity_tab.get("id") or "").strip() if isinstance(identity, dict) else ""
-identity_tab_url = str(identity_tab.get("url") or "").strip()
-identity_ok_for_requested_tab = (
-    isinstance(identity, dict)
-    and identity.get("ok") is True
-    and bool(requested_tab_id)
-    and identity_tab_id == str(requested_tab_id)
-)
-if not tab_id and identity_ok_for_requested_tab:
-    tab_id = str(requested_tab_id)
-    current_url = current_url or identity_tab_url or None
-    if not conversation_url and identity_tab_url and "/c/" in identity_tab_url:
-        conversation_url = identity_tab_url
-tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
-tab_was_created = False if identity_ok_for_requested_tab and tab_id == str(requested_tab_id) else None
 empty_response_after_submit = (
     not raw_text.strip()
     and not conversation_max_length_detected
@@ -2025,8 +1936,6 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight_output_dir": roundtrip_dir or None,
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
-    "controlled_tab_id_mismatch": tab_mismatch,
-    "tab_was_created": tab_was_created,
     "conversation_url": conversation_url,
     "current_url": current_url or conversation_url,
     "tab_url": current_url or conversation_url,
@@ -2435,8 +2344,6 @@ if not tab_id and identity_ok_for_requested_tab and sentinel in raw_text and sen
         conversation_url = identity_tab_url
 
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
-if tab_was_created is None and identity_ok_for_requested_tab and tab_id == str(requested_tab_id):
-    tab_was_created = False
 focus_stolen_mid = focus_stolen_mid_s == "1"
 focus_violation = no_activate and (focus_changed or focus_stolen_mid)
 response_integrity_ok = (

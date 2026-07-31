@@ -13,16 +13,6 @@ tracks rounds, scores, termination conditions, and reports.
 Agents must treat [`SKILL.md`](SKILL.md) as the runtime contract. This README is
 the human/operator guide.
 
-## Current Battle State
-
-Authoritative current-state notes for the adaptive-lineage goal live in
-[`GOAL_ADAPTIVE_LINEAGE.md`](GOAL_ADAPTIVE_LINEAGE.md#current-state-addendum-2026-07-28).
-The original 2026-07-18 four-specimen adaptive-lineage goal remains accepted as
-`MET`. The later dual-team co-evolution amendment is separate and remains
-`NOT_MET` until #1048 and #1064 close with deterministic backend and frontend
-proof. Related active work is tracked in #1063, #1065, #1066, and the broader
-async scheduler epic #46.
-
 ## How Battle Works
 
 Battle is a stochastic exploit-code evolution system wrapped in deterministic
@@ -105,12 +95,6 @@ Tau-style handoffs. Tau and the loop/agentic harness own subagent execution.
 That harness uses `$scillm` as the LLM/model caller, giving teams access to SOTA
 models, small/fast low-parameter models, and narrow specialist models without
 making Battle a direct provider router.
-
-SciLLM is internal to Tau. Battle operators and project agents must not call
-`$scillm`, `/scillm`, `http://localhost:4001`, `/v1/chat/completions`, or
-`/v1/scillm/*` directly for Battle proof work. Route provider/model work through
-Tau DAGs, Tau command-loop nodes, or Tau skill nodes, and consume the resulting
-Tau receipts.
 
 Hard invariants:
 
@@ -504,7 +488,7 @@ fixtures.
 |---|---|---|---|
 | BATTLE-004 spectator replay (parent spawn) | `spectator/public/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-spectator-replay.webp` | `cd spectator && npm run prove:receipt-replay` |
 | Lifecycle evidence cockpit (fail-closed) | same fixture; agent pane `data-qid="battle:agent-pane:lifecycle-evidence"` | `docs/assets/screenshots/battle-004-lifecycle-cockpit.webp` | `cd spectator && npm run prove:receipt-replay` (check 7) |
-| Retired kill-shot route (fail-closed) | `spectator/public/battle-fixtures/battle-004-kill-shot-pixi-replay/unsupported.json` | n/a | `cd spectator && npm run prove:kill-shot-pixi` |
+| Kill-shot impact + HG death card | `spectator/public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json` | `docs/assets/screenshots/battle-004-kill-shot-impact.webp` | `cd spectator && npm run prove:kill-shot-pixi` |
 | Spawn/block receipt beats (Pixi VFX) | parent-spawn fixture frozen at `pixiSeconds=99.4` | `docs/assets/screenshots/battle-004-spawn-block-vfx.webp` | `cd spectator && npm run prove:receipt-director-spawn-block` |
 | PR3b research/genome proof card | `spectator/public/battle-fixtures/battle-004-pr3b-proof-card/battle.normalized_proof_card_fixture.json` | `docs/assets/screenshots/battle-004-pr3b-proof-card.webp` | `cd spectator && npm run prove:pr3b-proof-card` |
 | PR3d compile fixture | `spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json` | planned | `./run.sh validate-compile-fixture spectator/public/battle-fixtures/battle-004-pr3d-compile/battle.normalized_compile_fixture.json` |
@@ -522,6 +506,8 @@ cd .. && python3 scripts/compress-readme-screenshots.py
 ![BATTLE-004 spectator replay](docs/assets/screenshots/battle-004-spectator-replay.webp)
 
 ![Lifecycle evidence cockpit](docs/assets/screenshots/battle-004-lifecycle-cockpit.webp)
+
+![Kill-shot impact replay](docs/assets/screenshots/battle-004-kill-shot-impact.webp)
 
 ![Spawn/block receipt beats](docs/assets/screenshots/battle-004-spawn-block-vfx.webp)
 

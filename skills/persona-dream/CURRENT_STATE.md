@@ -15,14 +15,13 @@ runs in the test suite and fails on drift.
 | Phase 16 evaluation | `PASS` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json` (sha:297854aea32cbca4) |
 | Pilot protocol | `frozen sha:483fb1706141c738` | `contracts/pilot_c_vs_f_frozen_protocol.v3.md` (sha:483fb1706141c738) |
 | Voice expression | `text=PASS audio=PASS lipsync=output_ready` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/voice_expression_evaluation_receipt.v1.json` (sha:daf82c1e1a6db43b) |
-| Joined live chain | `PASS_PERSONA_DREAM_LIVE_CHAIN cycle=live_chain_20260729t130950z negative_controls=13/13` | `reports/goal_v5/continuity/live_chain/RECEIPT.json` (sha:e414712551e43d72) |
+| Joined live chain | `PASS_PERSONA_DREAM_LIVE_CHAIN cycle=live_chain_20260729t130950z negative_controls=13/13` | `reports/goal_v5/continuity/live_chain/RECEIPT.json` (sha:436075e6635ff9a6) |
 | Session arc bias | `PASS_SESSION_ARC_BIAS_RECEIPT negative_controls=7/7` | `reports/goal_v5/continuity/session_arc_bias/RECEIPT.json` (sha:3949f62a8306e5a6) |
-| SPARTA arc-bias consumption | `PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED pre_turn=True same_artifact=True answer_text_unchanged=True` | `reports/goal_v5/continuity/sparta_arc_bias_consumption/RECEIPT.json` (sha:ca05bb17feb508e5) |
 | Five-cycle reliability pilot | `PASS_LIVE_CHAIN_RELIABILITY_PILOT passed=5/5 wilson_lower=0.565509` | `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` (sha:9ca2bc211fc12cb6) |
 
 Not proven (from the receipts' own does_not_prove sets): human
 subjective acceptance of the dream video; perceived emotional fidelity
 and lip-sync quality of the voice lane (canary proves the route only);
-production reliability beyond an N=5 pilot; deployed production behavior beyond the local live SPARTA API receipt;
-human-perceived effect of the session arc-bias artifact;
+production reliability beyond an N=5 pilot; production conversation-service authority;
+SPARTA consumption of the session arc-bias artifact;
 whole-clip embedding-certified identity.

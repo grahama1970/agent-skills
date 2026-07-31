@@ -10,13 +10,11 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
-(
-  flock 9
-  if [[ ! -d "$SCRIPT_DIR/.venv" ]]; then
-    uv venv "$SCRIPT_DIR/.venv"
-  fi
-  uv sync --project "$SCRIPT_DIR" >/dev/null
-) 9>"$SCRIPT_DIR/.venv.lock"
+if [[ ! -d "$SCRIPT_DIR/.venv" ]]; then
+  uv venv "$SCRIPT_DIR/.venv"
+fi
+
+uv sync --project "$SCRIPT_DIR" >/dev/null
 
 # Preserve caller cwd for default --from . (do not cd into skill dir before CLI).
 export BROWSER_ORACLE_CALLER_CWD="$CALLER_PWD"

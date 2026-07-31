@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from constants import DOC_FILES, PI_SKILLS, PROJECT_ROOT, REQUIRED_DOC_FILES, is_embry_project
+from constants import DOC_FILES, EMBRY_OS, PI_SKILLS
 
 
 def _extract_claims(text: str) -> list[str]:
@@ -45,10 +45,9 @@ def collect_doc_drift() -> dict[str, Any]:
     drift_items = []
 
     for doc_rel in DOC_FILES:
-        doc_path = PROJECT_ROOT / doc_rel
+        doc_path = EMBRY_OS / doc_rel
         if not doc_path.exists():
-            if doc_rel in REQUIRED_DOC_FILES or is_embry_project():
-                drift_items.append({"file": doc_rel, "issue": "MISSING", "severity": "high"})
+            drift_items.append({"file": doc_rel, "issue": "MISSING", "severity": "high"})
             continue
 
         text = doc_path.read_text()
@@ -76,14 +75,14 @@ def collect_doc_drift() -> dict[str, Any]:
 
     # Check for stale references to removed files
     for doc_rel in DOC_FILES:
-        doc_path = PROJECT_ROOT / doc_rel
+        doc_path = EMBRY_OS / doc_rel
         if not doc_path.exists():
             continue
         text = doc_path.read_text()
         # Find file path references
         refs = re.findall(r'`([a-zA-Z0-9_/.-]+\.[a-z]{1,4})`', text)
         for ref in refs:
-            ref_path = PROJECT_ROOT / ref
+            ref_path = EMBRY_OS / ref
             if not ref_path.exists() and not (PI_SKILLS.parent.parent.parent / ref).exists():
                 # Only flag .py/.ts/.rs files; skip .sh (run.sh exists everywhere in skills)
                 if ref.endswith(('.py', '.ts', '.tsx', '.rs')):
@@ -96,7 +95,7 @@ def collect_doc_drift() -> dict[str, Any]:
 
     return {
         "docs_checked": len(DOC_FILES),
-        "docs_found": sum(1 for d in DOC_FILES if (PROJECT_ROOT / d).exists()),
+        "docs_found": sum(1 for d in DOC_FILES if (EMBRY_OS / d).exists()),
         "drift_items": drift_items,
         "drift_count": len(drift_items),
     }

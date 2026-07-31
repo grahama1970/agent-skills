@@ -28,7 +28,6 @@ export function liveTransportContractViewModel(
 		mocked: false,
 		transportKind: "sse",
 		sseEndpoint: contract.transport.endpoint,
-		webSocketEndpoint: contract.websocket?.endpoint ?? null,
 		snapshotEndpoint: contract.initial_snapshot.endpoint,
 		contentType: contract.transport.content_type,
 		geneticEventTypes: contract.event_stream.genetic_event_types_when_live,

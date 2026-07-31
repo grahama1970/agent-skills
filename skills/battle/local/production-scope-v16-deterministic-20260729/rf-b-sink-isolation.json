@@ -1,9 +1,0 @@
-{
-  "defended_all_sinks_unchanged": true,
-  "schema": "battle.v16.relayforge.rf_b_sink_isolation.v1",
-  "status": "PASS",
-  "vulnerable_all_sink_hashes_unchanged": true,
-  "vulnerable_rf_a_unchanged": true,
-  "vulnerable_rf_b_canary_disclosed": true,
-  "vulnerable_rf_c_unchanged": true
-}

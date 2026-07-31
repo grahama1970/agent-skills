@@ -157,21 +157,6 @@ STAGES = (
         status_pin="continuity_state.latest_sparta_arc_bias_handoff_receipt_sha256",
     ),
     Stage(
-        stage_id="P2_sparta_arc_bias_consumption",
-        receipt="reports/goal_v5/continuity/sparta_arc_bias_consumption/RECEIPT.json",
-        accepted_prefix="PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED",
-        contradiction_markers=(
-            "sparta production conversation service has not yet consumed",
-            "no sparta-owned production receipt exists",
-            "sparta production consumption still belongs",
-            "route the validated sparta arc-bias consumer contract",
-            "route reports/goal_v5/continuity/sparta_arc_bias_handoff/sparta_consumer_contract.json",
-            "sparta consumption of the session arc-bias artifact",
-            "sparta production consumption",
-        ),
-        status_pin="continuity_state.latest_sparta_arc_bias_consumption_receipt.local_mirror_sha256",
-    ),
-    Stage(
         stage_id="P2_five_cycle_reliability_pilot",
         receipt="reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
         accepted_prefix="PASS_LIVE_CHAIN_RELIABILITY_PILOT",

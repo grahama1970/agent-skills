@@ -118,15 +118,15 @@ class RedAgent:
         result = self.memory.research(query)
 
         if result.get("success"):
-            source_bearing = result.get("source_bearing_providers") or []
-            note = f"Researched ({result.get('elapsed_s')}s, {len(source_bearing)} source-bearing providers"
+            productive = result.get("productive_providers") or []
+            note = f"Researched ({result.get('elapsed_s')}s, {len(productive)} providers"
             if result.get("timed_out"):
                 note += ", partial"
             self.round_actions.append(f"{note}): {query}")
             self.memory.learn(
                 problem=f"Research for round {self.current_round}: {query}",
                 solution=result.get("results", "")[:2000],
-                tags=["research", f"round_{self.current_round}"] + source_bearing
+                tags=["research", f"round_{self.current_round}"] + productive
             )
         else:
             self.round_actions.append(f"Research failed: {result.get('error')}")

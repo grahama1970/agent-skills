@@ -49,9 +49,4 @@ describe("kimi-tab-client", () => {
     ).toBe(false);
   });
 
-  it("exports a bounded composer insertion retry timeout", () => {
-    expect(kimiClient.COMPOSER_INSERT_TIMEOUT_MS).toBeGreaterThanOrEqual(1000);
-    expect(kimiClient.COMPOSER_INSERT_TIMEOUT_MS).toBeLessThanOrEqual(120000);
-  });
-
 });

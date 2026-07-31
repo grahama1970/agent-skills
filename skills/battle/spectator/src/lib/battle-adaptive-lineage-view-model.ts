@@ -299,23 +299,12 @@ function edgeVisibilityReceipt(edge: BattleNormalizedAdaptiveLineageFixtureV1["l
 	return edge.edge_kind === "memory_continuation" ? edge.promoted_receipt_ref : edge.authorized_receipt_ref;
 }
 
-export function adaptiveLineageToRaceFixture(
-	source: BattleNormalizedAdaptiveLineageFixtureV1,
-	binding: { sourceSha256?: string; sourceUrl?: string } = {},
-): BattleNormalizedUxFixture {
+export function adaptiveLineageToRaceFixture(source: BattleNormalizedAdaptiveLineageFixtureV1): BattleNormalizedUxFixture {
 	const duration = source.campaign.elapsed_seconds;
 	const lanes = source.lanes.map((lane) => toLane(lane, source));
-	const hasMechanics = source.mechanics_trees?.schema === "battle.canonical_dual_team_mechanics_trees.v1" &&
-		source.canonical_dual_team_contract?.status === "PASS";
 	return {
 		schema: "battle.normalized_ux_fixture.v1",
 		battle_id: source.battle_id,
-		fixture_id: source.fixture_id,
-		run_id: source.run_id,
-		source_proof_id: source.provenance.source_proof_id,
-		source_schema: source.schema,
-		source_fixture_sha256: binding.sourceSha256,
-		source_fixture_url: binding.sourceUrl,
 		proof_mode: "receipt_backed_fixture",
 		generated_at: "source-receipt-time-not-published",
 		mocked: false,
@@ -361,26 +350,6 @@ export function adaptiveLineageToRaceFixture(
 		sprite_theme: source.sprite_theme,
 		lanes,
 		events: source.events.map((event) => toBattleEvent(event, source)),
-		adaptive_lineage_panel_source: {
-			schema: "battle.adaptive_lineage_panel_source.v1",
-			status: hasMechanics ? "PASS" : "UNAVAILABLE",
-			reason: hasMechanics
-				? undefined
-				: "Loaded adaptive fixture does not emit canonical dual-team mechanics_trees.",
-			fixture_id: source.fixture_id,
-			battle_id: source.battle_id,
-			run_id: source.run_id,
-			source_proof_id: source.provenance.source_proof_id,
-			source_schema: source.schema,
-			source_fixture_sha256: binding.sourceSha256,
-			source_fixture_url: binding.sourceUrl,
-			projection_kind: source.provenance.projection_kind,
-			live_source: source.live_source,
-			proves_live: false,
-			mechanics_trees: source.mechanics_trees,
-			scoreboard: source.scoreboard,
-			canonical_dual_team_contract: source.canonical_dual_team_contract,
-		},
 		leaderboard: [],
 		receipts: source.receipt_refs.map((receipt) => ({ receipt_id: receipt.receipt_id ?? `${receipt.schema}:${receipt.sha256.slice(0, 12)}`, receipt_type: receipt.schema, artifact_ref: `sha256:${receipt.sha256}`, summary: receipt.verdict ?? receipt.status ?? "receipt", proof_mode: "receipt_backed_fixture" })),
 		validation: { schema: "battle.adaptive_lineage_frontend_projection.v1", fail_closed: true, source_schema: source.schema, renderer_contract: source.renderer_contract },

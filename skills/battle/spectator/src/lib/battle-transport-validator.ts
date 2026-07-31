@@ -31,18 +31,10 @@ export function validateTransportManifest(
 			error: fail("UNSUPPORTED_SCHEMA", "UNSUPPORTED SCHEMA", "Expected battle.transport_manifest.v1."),
 		};
 	}
-	if (
-		record.mode !== "file_backed_replay_stream" &&
-		record.mode !== "live_sse_adapter" &&
-		record.mode !== "live_websocket_adapter"
-	) {
+	if (record.mode !== "file_backed_replay_stream" && record.mode !== "live_sse_adapter") {
 		return {
 			ok: false,
-			error: fail(
-				"CONTRACT_VALIDATION_FAILED",
-				"CONTRACT VALIDATION FAILED",
-				"Only file_backed_replay_stream, live_sse_adapter, or live_websocket_adapter modes are supported.",
-			),
+			error: fail("CONTRACT_VALIDATION_FAILED", "CONTRACT VALIDATION FAILED", "Only file_backed_replay_stream or live_sse_adapter modes are supported."),
 		};
 	}
 	const stream = asRecord(record.stream_contract);

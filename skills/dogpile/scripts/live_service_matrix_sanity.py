@@ -378,49 +378,6 @@ def _check_feeds(checks: list[dict[str, Any]], pack: str, timeout_s: int) -> Non
     )
 
 
-def _check_context7(checks: list[dict[str, Any]], query: str, timeout_s: int, strict_optional: bool) -> None:
-    has_key = _has_env_after_dogpile_config("CONTEXT7_API_KEY")
-    if not has_key:
-        _add_check(
-            checks,
-            name="context7_library_docs",
-            family="library_documentation",
-            required=strict_optional,
-            status="skipped_missing_credentials",
-            what_was_exercised="Credential preflight for Context7 library documentation lookup.",
-            proves="Context7 live docs lookup was not run because CONTEXT7_API_KEY is absent.",
-            does_not_prove="Context7 API health, account plan, quota, or documentation relevance.",
-            metadata={"credential_present": False, "required_when_strict_optional": True},
-        )
-        return
-    expr = (
-        "(__import__('dogpile.context7_docs', fromlist=['search_context7_docs'])"
-        f".search_context7_docs({query!r}, library='python', tokens=800, limit=1))"
-    )
-    _, data, error = _run_json_expr(expr, timeout_s=timeout_s)
-    context_chars = int(data.get("context_chars") or 0) if isinstance(data, dict) else 0
-    provider_error = error or (data.get("error") if isinstance(data, dict) else f"unexpected result: {type(data).__name__}")
-    if isinstance(data, dict) and data.get("skipped"):
-        provider_error = data.get("skipped")
-    status = "passed" if context_chars > 0 and not provider_error else "failed"
-    _add_check(
-        checks,
-        name="context7_library_docs",
-        family="library_documentation",
-        required=strict_optional,
-        status=status,
-        what_was_exercised="Optional Context7 library documentation lookup for Python typing docs.",
-        proves="Context7 can resolve a library docs request and return documentation context for a code-related query.",
-        does_not_prove="Correctness for every library, account quota, or that Context7 should be used for non-code research.",
-        error=None if status == "passed" else provider_error,
-        metadata={
-            "credential_present": True,
-            "selected_library_id": data.get("selected_library_id") if isinstance(data, dict) else None,
-            "context_chars": context_chars,
-        },
-    )
-
-
 def _check_wayback(checks: list[dict[str, Any]], timeout_s: int) -> None:
     expr = "(__import__('dogpile.wayback', fromlist=['search_wayback']).search_wayback('http://example.com'))"
     _, data, error = _run_json_expr(expr, timeout_s=timeout_s)
@@ -557,7 +514,6 @@ def main() -> int:
         lambda: _check_fetcher(checks, out_dir, args.timeout_s),
         lambda: _check_feeds(checks, "security_code", args.timeout_s),
         lambda: _check_feeds(checks, "security_code_extended", args.timeout_s),
-        lambda: _check_context7(checks, args.query, args.timeout_s, args.strict_optional),
         lambda: _check_wayback(checks, args.timeout_s),
         lambda: _check_readarr(checks, args.timeout_s, args.strict_optional),
         lambda: _check_ingest_website(checks, out_dir, args.timeout_s),
@@ -629,7 +585,6 @@ def main() -> int:
             "rss_feed_packs_require_api_keys": False,
             "raw_or_vendor_threat_intel_feeds_may_require_api_keys": True,
             "readarr_nzb_search_requires_one_of": ["NZBGEEK_API_KEY", "NZBD_GEEK_API_KEY"],
-            "context7_library_docs_requires": "CONTEXT7_API_KEY",
         },
         "checks": checks,
         "status": status,

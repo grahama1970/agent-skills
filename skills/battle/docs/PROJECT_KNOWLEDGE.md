@@ -3,17 +3,6 @@
 **Last updated:** 2026-07-12 16:34 by agent
 **Status:** Active development
 
-## Current State Addendum (2026-07-28)
-
-Authoritative status: see
-[`../GOAL_ADAPTIVE_LINEAGE.md`](../GOAL_ADAPTIVE_LINEAGE.md#current-state-addendum-2026-07-28).
-The 2026-07-18 four-specimen adaptive-lineage goal remains `MET`; older
-pre-sprite and single-atlas notes in this knowledge file are historical unless
-they are restated in that addendum as current. The later dual-team co-evolution
-amendment remains `NOT_MET` and is tracked by #1048 for backend fixture truth
-and #1064 for frontend consumption. Current blockers and adjacent proof tickets
-are #1063, #1065, #1066, and parent epic #46.
-
 ## Current Understanding
 
 - Battle is a Red vs Blue security competition skill with a long-running

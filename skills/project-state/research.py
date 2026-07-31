@@ -15,14 +15,7 @@ from typing import Any
 
 from loguru import logger
 
-from constants import (
-    ARXIV_SKILL,
-    BRAVE_SEARCH_SKILL,
-    DOGPILE_SKILL,
-    GITHUB_SEARCH_SKILL,
-    PROJECT_NAME,
-    PROJECT_PROFILE,
-)
+from constants import ARXIV_SKILL, BRAVE_SEARCH_SKILL, DOGPILE_SKILL, GITHUB_SEARCH_SKILL
 
 
 def _build_research_queries(cascade: dict, daemons: dict,
@@ -30,21 +23,15 @@ def _build_research_queries(cascade: dict, daemons: dict,
     """Build targeted research queries from Phase 1-4 findings."""
     queries: list[dict[str, str]] = []
 
-    if PROJECT_PROFILE == "embry":
-        queries.append({
-            "source": "brave-search",
-            "query": "defense manufacturing compliance AI agentic 2026",
-            "reason": "core competitive landscape",
-        })
-    else:
-        queries.append({
-            "source": "brave-search",
-            "query": f"{PROJECT_NAME} python project extraction pipeline best practices",
-            "reason": "target-project technical landscape",
-        })
+    # Always: competitive landscape (core domain)
+    queries.append({
+        "source": "brave-search",
+        "query": "defense manufacturing compliance AI agentic 2026",
+        "reason": "core competitive landscape",
+    })
 
     # Gap-driven queries
-    if cascade.get("applicable", True) and cascade["tier_status"]["tier_1_5_gpt"] == "NOT_TRAINED":
+    if cascade["tier_status"]["tier_1_5_gpt"] == "NOT_TRAINED":
         queries.append({
             "source": "arxiv",
             "query": "QLoRA knowledge distillation",
@@ -52,7 +39,7 @@ def _build_research_queries(cascade: dict, daemons: dict,
         })
 
     shadow = cascade.get("shadow", {})
-    if cascade.get("applicable", True) and shadow.get("usable", 0) < shadow.get("total", 1) * 0.5:
+    if shadow.get("usable", 0) < shadow.get("total", 1) * 0.5:
         queries.append({
             "source": "arxiv",
             "query": "knowledge distillation teacher student",
@@ -61,14 +48,14 @@ def _build_research_queries(cascade: dict, daemons: dict,
 
     # Classifier quality -- look for better approaches if classifiers exist
     classifiers = cascade.get("classifiers_on_disk", [])
-    if cascade.get("applicable", True) and len(classifiers) >= 5:
+    if len(classifiers) >= 5:
         queries.append({
             "source": "arxiv",
             "query": "text classification small data",
             "reason": "classifier improvement with limited labels",
         })
 
-    if full and PROJECT_PROFILE == "embry":
+    if full:
         queries.append({
             "source": "brave-search",
             "query": "MES digital twin manufacturing compliance drift detection",
@@ -95,18 +82,6 @@ def _build_research_queries(cascade: dict, daemons: dict,
             "query": "voice assistant ambient display aging accessibility manufacturing",
             "reason": "UX research for factory floor",
             "categories": "cs.HC",
-        })
-    elif full:
-        queries.append({
-            "source": "brave-search",
-            "query": f"{PROJECT_NAME} GitHub issues python extraction validation",
-            "reason": "current implementation and issue landscape",
-        })
-        queries.append({
-            "source": "arxiv",
-            "query": "document extraction validation layout parsing Python",
-            "reason": "target-project technical approach validation",
-            "categories": "cs.AI,cs.SE",
         })
 
     return queries

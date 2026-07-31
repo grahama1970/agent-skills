@@ -11,7 +11,7 @@ echo "=== project-state sanity check ==="
 
 # Check Python files are valid syntax.
 for py_file in "$SCRIPT_DIR"/*.py; do
-    uv run --project "$SCRIPT_DIR" python -m py_compile "$py_file"
+    python3 -m py_compile "$py_file"
 done
 echo "PASS: Python files compile"
 
@@ -32,7 +32,7 @@ else
 fi
 
 # Check best-practices-skills frontmatter/rule validator.
-uv run --project "$SCRIPT_DIR" python "$REPO_ROOT/skills/best-practices-skills/scripts/validate_skill.py" "$SCRIPT_DIR" --skills-root "$REPO_ROOT/skills"
+python3 "$REPO_ROOT/skills/best-practices-skills/scripts/validate_skill.py" "$SCRIPT_DIR" --skills-root "$REPO_ROOT/skills"
 echo "PASS: best-practices-skills validator passed"
 
 # Assert required frontmatter contract fields.
@@ -56,42 +56,6 @@ echo "PASS: SKILL.md declares compliance metadata"
 OUTPUT=$("$SCRIPT_DIR/run.sh" report --quick --json)
 printf '%s' "$OUTPUT" | uv run --project "$SCRIPT_DIR" python -c "import json,sys; d=json.load(sys.stdin); assert 'project' in d and 'phase_1_infrastructure' in d"
 echo "PASS: quick JSON report generated with required fields"
-
-# Generic-project positive control: no Embry labels or Embry-only gaps.
-GENERIC_ROOT="$SANITY_TMP/generic-project"
-mkdir -p "$GENERIC_ROOT/tests"
-cat > "$GENERIC_ROOT/pyproject.toml" <<'TOML'
-[project]
-name = "generic-fixture"
-version = "0.1.0"
-requires-python = ">=3.12,<3.13"
-dependencies = ["pytest>=8.0"]
-TOML
-printf '# Generic Fixture\n' > "$GENERIC_ROOT/README.md"
-cat > "$GENERIC_ROOT/tests/test_smoke.py" <<'PY'
-def test_smoke():
-    assert True
-PY
-GENERIC_JSON="$SANITY_TMP/generic-project-state.json"
-PROJECT_STATE_ROOT="$GENERIC_ROOT" "$SCRIPT_DIR/run.sh" report --quick --json --output "$GENERIC_JSON"
-uv run --project "$SCRIPT_DIR" python - "$GENERIC_JSON" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-report = json.loads(Path(sys.argv[1]).read_text())
-infra = report["phase_1_infrastructure"]
-gaps = report["phase_6_gaps"]["gaps"]
-assert report["project"] == "generic-fixture"
-assert report["project_profile"] == "generic"
-assert infra["tests"]["total"] == 1
-assert infra["daemons"]["applicable"] is False
-assert infra["cascade"]["applicable"] is False
-assert infra["daemon_cascade_wiring"]["applicable"] is False
-assert not any(gap.get("category") == "cascade" for gap in gaps)
-assert not any("Embry OS" in json.dumps(section) for section in (report, gaps))
-PY
-echo "PASS: generic project target is not hard-wired to Embry OS"
 
 # Config doctor is non-interactive and machine-readable.
 CONFIG_OUTPUT=$("$SCRIPT_DIR/run.sh" config doctor --json)

@@ -35,7 +35,6 @@ export const BATTLE_LIVE_TRANSPORT_STREAMS = {
 
 export type BattleLiveTransportFixtureKey = keyof typeof BATTLE_LIVE_TRANSPORT_STREAMS;
 export type BattleLiveTransportMode = "contract" | "file_backed" | "unsupported";
-export type BattleLiveRuntimeTransport = "sse" | "websocket";
 
 export function battleHashPath(hash = typeof window !== "undefined" ? window.location.hash : ""): string {
 	return hash.split("?")[0] ?? "";
@@ -81,12 +80,6 @@ export function battleLiveTransportMode(
 	if (battleLiveTransportBattleId(hash)) return "contract";
 	if (battleLiveTransportFixtureKey(hash)) return "file_backed";
 	return "unsupported";
-}
-
-export function battleLiveRuntimeTransport(
-	hash = typeof window !== "undefined" ? window.location.hash : "",
-): BattleLiveRuntimeTransport {
-	return battleHashSearchParams(hash).get("transport") === "websocket" ? "websocket" : "sse";
 }
 
 export function battleLiveTransportStreamBaseUrl(hash = typeof window !== "undefined" ? window.location.hash : ""): string | null {

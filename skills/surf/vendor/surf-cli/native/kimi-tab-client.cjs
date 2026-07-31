@@ -8,28 +8,7 @@ const SELECTORS = {
   assistantMessage: '[class*="markdown"], [class*="Markdown"], .markdown-body, .prose, [data-role="assistant"], article, [class*="assistant"]',
   conversationTurn: '[class*="message"], [class*="Message"], article',
   fileInput: 'input[type="file"]',
-  toolkitTrigger: '.toolkit-trigger-btn, [class*="toolkit-trigger"], [aria-label*="Attach"], [aria-label*="Upload"], [aria-label*="Add file"], [title*="Attach"], [title*="Upload"], [title*="Add file"]',
-  toolkitPopover: '.toolkit-popover, .toolkit-container, .toolkit-trigger-btn.active',
-  toolkitItem: '.toolkit-item, .toolkit-item-content, [role="menuitem"]',
 };
-
-// Kimi mounts its hidden <input type="file"> only when the composer toolkit
-// popover opens, and the popover only opens once Vue has hydrated the composer.
-// A freshly created tab reports readyState "interactive" with a contenteditable
-// already in the DOM seconds before hydration finishes, so a single click on the
-// toolkit trigger can land on a node with no listener attached and silently do
-// nothing (agent-skills: kimi attachment failed 2.1s after tab open, succeeded
-// 15s after tab open on the same UI build). Keep re-clicking until the popover
-// is observed rather than trusting one dispatch.
-const ATTACH_MOUNT_TIMEOUT_MS = Number.isFinite(Number(process.env.SURF_KIMI_ATTACH_MOUNT_TIMEOUT_MS))
-  && Number(process.env.SURF_KIMI_ATTACH_MOUNT_TIMEOUT_MS) > 0
-  ? Number(process.env.SURF_KIMI_ATTACH_MOUNT_TIMEOUT_MS)
-  : 25000;
-
-const COMPOSER_INSERT_TIMEOUT_MS = Number.isFinite(Number(process.env.SURF_KIMI_COMPOSER_INSERT_TIMEOUT_MS))
-  && Number(process.env.SURF_KIMI_COMPOSER_INSERT_TIMEOUT_MS) > 0
-  ? Number(process.env.SURF_KIMI_COMPOSER_INSERT_TIMEOUT_MS)
-  : 60000;
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -93,56 +72,6 @@ function textLooksKimiProviderBusy(text) {
       || lower.includes("high demand")
     )
   );
-}
-
-// Kimi refuses to continue a thread once it grows past its context budget:
-// "Your conversation with Kimi is getting too long. Try starting a new session."
-// The thread is unusable from that point, so retrying in place can only fail.
-// The fix is to rotate the controlled tab to a fresh chat and resubmit the
-// current round; every round already carries its own full shared context, so a
-// fresh chat loses nothing.
-function textLooksKimiConversationTooLong(text) {
-  const lower = String(text || "").toLowerCase().replace(/\s+/g, " ");
-  const tooLong = lower.includes("conversation with kimi is getting too long")
-    || lower.includes("conversation is getting too long")
-    || lower.includes("conversation is too long")
-    || lower.includes("chat is getting too long");
-  if (!tooLong) return false;
-  return lower.includes("new session")
-    || lower.includes("new chat")
-    || lower.includes("start a new")
-    || lower.includes("starting a new");
-}
-
-function shouldRotateForConversationTooLong(snapshot, hasSentinel = false) {
-  if (!snapshot || hasSentinel) return false;
-  return snapshot.conversationTooLongInResponse === true
-    || snapshot.conversationTooLongInPage === true;
-}
-
-function conversationTooLongError() {
-  const error = new Error(
-    "Kimi conversation too long: Kimi asked for a new session before answering this round",
-  );
-  error.code = "KIMI_CONVERSATION_TOO_LONG";
-  return error;
-}
-
-// Rotate the same controlled tab to a fresh Kimi chat. The tab id is what
-// browser-oracle binds, so navigating in place keeps the binding valid.
-async function rotateToNewKimiChat(cdp, log = () => {}) {
-  const before = await evaluate(cdp, "window.location.href").catch(() => null);
-  await evaluate(cdp, `(() => { window.location.href = ${JSON.stringify(KIMI_TAB_URL)}; return true; })()`)
-    .catch(() => null);
-  await delay(1000);
-  await waitForPageLoad(cdp);
-  const ready = await waitForPromptReady(cdp);
-  if (!ready) {
-    throw new Error("Kimi conversation rotation failed: composer not ready in the new chat");
-  }
-  const after = await evaluate(cdp, "window.location.href").catch(() => null);
-  log(`Rotated Kimi conversation to a new chat (${before || "unknown"} -> ${after || KIMI_TAB_URL})`);
-  return { previousUrl: before || null, newUrl: after || KIMI_TAB_URL };
 }
 
 async function setPromptInComposerDom(cdp, prompt) {
@@ -442,24 +371,6 @@ const assistantSnapshotExpression = (sentinel) => {
       lowerPageText.lastIndexOf('high demand'),
     );
     const providerBusyAfterPrompt = promptSentinelIndex >= 0 && busyMarkerIndex > promptSentinelIndex;
-    // Kimi's context-limit notice. Guard against our own prompt echoing the
-    // phrase back: only count it when it is not part of the submitted prompt.
-    const looksConversationTooLong = (value) => {
-      const normalized = String(value || '').toLowerCase().replace(/\\s+/g, ' ');
-      const tooLong = normalized.includes('conversation with kimi is getting too long')
-        || normalized.includes('conversation is getting too long')
-        || normalized.includes('conversation is too long')
-        || normalized.includes('chat is getting too long');
-      if (!tooLong) return false;
-      return normalized.includes('new session')
-        || normalized.includes('new chat')
-        || normalized.includes('start a new')
-        || normalized.includes('starting a new');
-    };
-    const promptEchoLooksTooLong = lowerResponseText.includes('kimi conversation too long')
-      || lowerResponseText.includes('conversation-too-long');
-    const conversationTooLongInPage = looksConversationTooLong(pageText);
-    const conversationTooLongInResponse = !promptEchoLooksTooLong && looksConversationTooLong(text);
     return {
       text,
       stopVisible,
@@ -468,8 +379,6 @@ const assistantSnapshotExpression = (sentinel) => {
       providerBusyInPage,
       providerBusyInResponse,
       providerBusyAfterPrompt,
-      conversationTooLongInPage,
-      conversationTooLongInResponse,
       source,
       pageTextContainsSentinel,
       sentinelMatch,
@@ -787,82 +696,6 @@ async function selectPreference(cdp, kind, requested, timeoutMs = 8000) {
   return result;
 }
 
-async function mountKimiFileInput(cdp, log = () => {}) {
-  const fileInputJson = JSON.stringify(SELECTORS.fileInput);
-  const triggerJson = JSON.stringify(SELECTORS.toolkitTrigger);
-  const popoverJson = JSON.stringify(SELECTORS.toolkitPopover);
-  const itemJson = JSON.stringify(SELECTORS.toolkitItem);
-  const deadline = Date.now() + ATTACH_MOUNT_TIMEOUT_MS;
-  let triggerSeen = false;
-  let triggerClicks = 0;
-  let popoverSeen = false;
-  let itemClicked = false;
-
-  while (Date.now() < deadline) {
-    const state = await evaluate(
-      cdp,
-      `(() => {
-        ${buildClickDispatcher()}
-        if (document.querySelector(${fileInputJson})) return { input: true };
-        const popover = document.querySelector(${popoverJson});
-        const trigger = document.querySelector(${triggerJson});
-        if (popover) {
-          if (${JSON.stringify(itemClicked)}) {
-            return { input: false, popoverOpen: true, triggerPresent: Boolean(trigger) };
-          }
-          const item = Array.from(document.querySelectorAll(${itemJson}))
-            .find((el) => /add files|photos|upload|attach|file/i.test(el.textContent || ''));
-          if (item && dispatchClickSequence(item)) {
-            return {
-              input: false,
-              popoverOpen: true,
-              triggerPresent: Boolean(trigger),
-              clickedItem: (item.textContent || '').trim().slice(0, 40),
-            };
-          }
-          return { input: false, popoverOpen: true, triggerPresent: Boolean(trigger) };
-        }
-        if (trigger && dispatchClickSequence(trigger)) {
-          return { input: false, popoverOpen: false, triggerPresent: true, clickedTrigger: true };
-        }
-        return { input: false, popoverOpen: false, triggerPresent: Boolean(trigger) };
-      })()`,
-    );
-    if (state?.input) {
-      return {
-        found: true,
-        triggerClicks,
-        popoverSeen: popoverSeen || triggerClicks > 0,
-        itemClicked,
-      };
-    }
-    if (state?.triggerPresent) triggerSeen = true;
-    if (state?.popoverOpen && !popoverSeen) {
-      popoverSeen = true;
-      log("Kimi attachment toolkit popover open");
-    }
-    if (state?.clickedTrigger) {
-      triggerClicks += 1;
-      if (triggerClicks === 1) log("Clicked Kimi attachment toolkit trigger");
-    }
-    if (state?.clickedItem) {
-      itemClicked = true;
-      log(`Clicked Kimi toolkit item "${state.clickedItem}"`);
-    }
-    await delay(250);
-  }
-
-  let diagnosis;
-  if (!triggerSeen) {
-    diagnosis = `composer attachment trigger (${SELECTORS.toolkitTrigger.split(",")[0]}) never appeared, so the composer never finished mounting`;
-  } else if (!popoverSeen) {
-    diagnosis = `attachment trigger was clicked ${triggerClicks} time(s) but the toolkit popover never opened, so the composer never became interactive`;
-  } else {
-    diagnosis = `toolkit popover opened${itemClicked ? " and the add-files item was clicked" : ""} but Kimi never mounted a file input, so the upload control has moved or been removed`;
-  }
-  return { found: false, diagnosis, triggerClicks, popoverSeen, itemClicked };
-}
-
 async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
   const fs = require("fs");
   const path = require("path");
@@ -871,17 +704,57 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     throw new Error(`File not found: ${absolutePath}`);
   }
 
-  // Drive the composer toolkit until Kimi actually mounts its file input.
-  // Every iteration re-reads composer state and only escalates one step:
-  //   no popover  -> (re)click the toolkit trigger
-  //   popover open -> click "Add files & photos" once
-  //   input mounted -> done
-  // Re-clicking is what survives the hydration race; the popover/trigger
-  // observations are what let the failure name a cause instead of guessing.
-  const mount = await mountKimiFileInput(cdp, log);
-  if (!mount.found) {
+  const openedToolkit = await evaluate(
+    cdp,
+    `(() => {
+      ${buildClickDispatcher()}
+      if (document.querySelector(${JSON.stringify(SELECTORS.fileInput)})) {
+        return { inputPresent: true, clicked: false };
+      }
+      const selectors = [
+        '.toolkit-trigger-btn',
+        '[class*="toolkit-trigger"]',
+        '[aria-label*="Attach"]',
+        '[aria-label*="Upload"]',
+        '[aria-label*="Add file"]',
+        '[title*="Attach"]',
+        '[title*="Upload"]',
+        '[title*="Add file"]',
+      ];
+      for (const selector of selectors) {
+        const node = document.querySelector(selector);
+        if (node && dispatchClickSequence(node)) {
+          return { inputPresent: false, clicked: true, selector };
+        }
+      }
+      return { inputPresent: false, clicked: false };
+    })()`,
+  );
+  if (openedToolkit?.clicked) {
+    log(`Opened Kimi attachment toolkit with ${openedToolkit.selector}`);
+    await delay(500);
+  }
+
+  // Wait for Kimi's file input to appear. Kimi usually mounts it with the
+  // composer toolkit popover; if it is absent, the caller must not send a
+  // prompt that claims an attachment exists.
+  const selectorJson = JSON.stringify(SELECTORS.fileInput);
+  const deadline = Date.now() + 5000;
+  let found = false;
+  while (Date.now() < deadline) {
+    const probe = await evaluate(
+      cdp,
+      `(() => !!document.querySelector(${selectorJson}))()`,
+    );
+    if (probe) {
+      found = true;
+      break;
+    }
+    await delay(150);
+  }
+  if (!found) {
     throw new Error(
-      `Kimi file input (input[type="file"]) not present in the DOM after ${Math.round(ATTACH_MOUNT_TIMEOUT_MS / 1000)}s: ${mount.diagnosis}`,
+      "Kimi file input (input[type=\"file\"]) not present in the DOM; Kimi may require opening the attachment menu first.",
     );
   }
 
@@ -1048,104 +921,71 @@ async function clickComposerCenter(inputCdp, target) {
 
 async function typePrompt(cdp, inputCdp, prompt) {
   const encodedPrompt = JSON.stringify(prompt);
-  const deadline = Date.now() + COMPOSER_INSERT_TIMEOUT_MS;
-  let attempts = 0;
-  let lastFailure = "composer not attempted";
-  while (Date.now() < deadline) {
-    attempts += 1;
-    const typed = await evaluate(
-      cdp,
-      `(() => {
-        ${buildClickDispatcher()}
-        const selectors = [
-          'textarea[placeholder*="Ask anything"]',
-          'textarea[placeholder*="follow-up"]',
-          'textarea[placeholder*="Add a follow-up"]',
-          '.chat-input-editor[role="textbox"]',
-          '.chat-input-editor',
-          'div[class*="editorContentEditable"]',
-          '[contenteditable="true"][role="textbox"]',
-          '[contenteditable="true"]',
-        ];
-        const visible = (node) => {
-          if (!node) return false;
-          const rect = node.getBoundingClientRect();
-          const style = window.getComputedStyle(node);
-          return rect.width > 0
-            && rect.height > 0
-            && style.visibility !== 'hidden'
-            && style.display !== 'none';
-        };
-        for (const selector of selectors) {
-          const nodes = Array.from(document.querySelectorAll(selector));
-          for (const node of nodes) {
-            if (!visible(node) || node.hasAttribute('disabled')) continue;
-            dispatchClickSequence(node);
-            if (typeof node.focus === 'function') node.focus();
-            const rect = node.getBoundingClientRect();
-            const target = rect.width > 0 && rect.height > 0
-              ? { x: rect.left + Math.min(rect.width / 2, Math.max(12, rect.width - 12)), y: rect.top + Math.min(rect.height / 2, Math.max(12, rect.height - 12)) }
-              : null;
-            if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
-              const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
-                || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-              if (setter) setter.call(node, ${encodedPrompt});
-              else node.value = ${encodedPrompt};
-              node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
-              return { ok: true, mode: 'value', target, selector };
-            }
-            if (node.isContentEditable || node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
-              return { ok: true, mode: 'focused_editable', target, selector };
-            }
-            if (node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
-              return { ok: true, mode: 'focused_custom_textbox', target, selector };
-            }
-          }
+  const typed = await evaluate(
+    cdp,
+    `(() => {
+      ${buildClickDispatcher()}
+      const selectors = [
+        'textarea[placeholder*="Ask anything"]',
+        'textarea[placeholder*="follow-up"]',
+        'textarea[placeholder*="Add a follow-up"]',
+        '.chat-input-editor[role="textbox"]',
+        '.chat-input-editor',
+        'div[class*="editorContentEditable"]',
+        '[contenteditable="true"][role="textbox"]',
+        '[contenteditable="true"]',
+      ];
+      for (const selector of selectors) {
+        const node = document.querySelector(selector);
+        if (!node || node.hasAttribute('disabled')) continue;
+        dispatchClickSequence(node);
+        if (typeof node.focus === 'function') node.focus();
+        const rect = node.getBoundingClientRect();
+        const target = rect.width > 0 && rect.height > 0
+          ? { x: rect.left + Math.min(rect.width / 2, Math.max(12, rect.width - 12)), y: rect.top + Math.min(rect.height / 2, Math.max(12, rect.height - 12)) }
+          : null;
+        if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
+          const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
+            || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+          if (setter) setter.call(node, ${encodedPrompt});
+          else node.value = ${encodedPrompt};
+          node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+          return { ok: true, mode: 'value', target };
         }
-        return { ok: false };
-      })()`
-    ).catch((err) => {
-      lastFailure = err?.message || String(err);
-      return null;
-    });
-    if (!typed?.ok) {
-      lastFailure = lastFailure || "composer selector not ready";
-      await delay(500);
-      continue;
-    }
-    if (typed.mode === "focused_editable") {
-      await clickComposerCenter(inputCdp, typed.target);
-      await clearFocusedEditor(inputCdp).catch((err) => {
-        lastFailure = err?.message || String(err);
-      });
-      await clearPromptInComposerDom(cdp);
-      let verified = await setPromptInComposerDom(cdp, prompt);
-      if (!verified?.ok) {
-        await clearFocusedEditor(inputCdp).catch((err) => {
-          lastFailure = err?.message || String(err);
-        });
-        await clearPromptInComposerDom(cdp);
-        await insertPromptText(inputCdp, prompt);
-        verified = await verifyPromptInComposer(cdp, prompt);
+        if (node.isContentEditable || node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
+          return { ok: true, mode: 'focused_editable', target };
+        }
+        if (node.getAttribute('role') === 'textbox' || String(node.className || '').includes('chat-input-editor')) {
+          return { ok: true, mode: 'focused_custom_textbox', target };
+        }
       }
-      if (verified?.ok) {
-        await delay(300);
-        return { attempts, mode: typed.mode, selector: verified.selector || typed.selector };
-      }
-      lastFailure = `editable composer did not verify after insert attempt ${attempts}`;
-    } else if (typed.mode === "value") {
-      const verified = await verifyPromptInComposer(cdp, prompt);
-      if (verified?.ok) {
-        await delay(300);
-        return { attempts, mode: typed.mode, selector: verified.selector || typed.selector };
-      }
-      lastFailure = `textarea composer did not retain inserted text after attempt ${attempts}`;
-    }
-    await delay(500);
-  }
-  throw new Error(
-    `Kimi prompt composer did not receive inserted text after ${attempts} attempt(s) over ${COMPOSER_INSERT_TIMEOUT_MS}ms: ${lastFailure}`,
+      return { ok: false };
+    })()`
   );
+  if (!typed?.ok) {
+    throw new Error("Failed to focus/type Kimi prompt composer");
+  }
+  if (typed.mode === "focused_editable") {
+    await clickComposerCenter(inputCdp, typed.target);
+    await clearFocusedEditor(inputCdp);
+    await clearPromptInComposerDom(cdp);
+    let verified = await setPromptInComposerDom(cdp, prompt);
+    if (!verified?.ok) {
+      await clearFocusedEditor(inputCdp);
+      await clearPromptInComposerDom(cdp);
+      await insertPromptText(inputCdp, prompt);
+      verified = await verifyPromptInComposer(cdp, prompt);
+    }
+    if (!verified?.ok) {
+      throw new Error("Kimi prompt composer did not receive inserted text");
+    }
+  } else if (typed.mode === "value") {
+    const verified = await verifyPromptInComposer(cdp, prompt);
+    if (!verified?.ok) {
+      throw new Error("Kimi textarea composer did not retain inserted text");
+    }
+  }
+  await delay(300);
 }
 
 async function clickSend(cdp, inputCdp) {
@@ -1312,9 +1152,6 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
     if (shouldAbortForProviderBusy(snapshot, baselineText, hasSentinel)) {
       throw new Error("Kimi provider capacity busy: system is currently busy; capacity is busy");
     }
-    if (shouldRotateForConversationTooLong(snapshot, hasSentinel)) {
-      throw conversationTooLongError();
-    }
     if (hasSentinel) {
       const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
       const finishedVisible = snapshot.finished;
@@ -1421,9 +1258,6 @@ async function query(options) {
   const inputCdp = (method, params) => cdpCommand(tabId, method, params);
   let attachment = null;
   
-  let conversationRotations = 0;
-  let conversationRotation = null;
-
   try {
     await waitForPageLoad(cdp);
     log("Page loaded");
@@ -1436,60 +1270,28 @@ async function query(options) {
     if (model) log(`Kimi model selection: ${modelSelection.status} ${modelSelection.label || model}`);
     const reasoningSelection = reasoning ? await selectPreference(cdp, "reasoning", reasoning) : { status: "skipped" };
     if (reasoning) log(`Kimi reasoning selection: ${reasoningSelection.status} ${reasoningSelection.label || reasoning}`);
-
-    // A bound tab can already be sitting on a thread Kimi has declared too
-    // long. Submitting into it burns the round, so check before typing.
-    const preSubmit = await assistantSnapshot(cdp, null).catch(() => null);
-    if (shouldRotateForConversationTooLong(preSubmit)) {
-      log("Kimi conversation already too long before submit; rotating to a new chat");
-      conversationRotation = await rotateToNewKimiChat(cdp, log);
-      conversationRotations += 1;
+    const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
+    if (file) {
+      attachment = await attachFile(cdp, inputCdp, file, log);
+      log(`File attached: ${file}`);
     }
-
-    const runAttempt = async () => {
-      const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
-      if (file) {
-        attachment = await attachFile(cdp, inputCdp, file, log);
-        log(`File attached: ${file}`);
-      }
-      const typed = await typePrompt(cdp, inputCdp, prompt);
-      log(`Prompt typed (${typed.attempts} composer attempt${typed.attempts === 1 ? "" : "s"})`);
-      const submitted = await clickSend(cdp, inputCdp);
-      if (!submitted) {
-        throw new Error("Kimi prompt submission was not accepted: composer still contains draft");
-      }
-      log("Prompt sent, waiting for response...");
-      const genDeadline = Date.now() + 20000;
-      while (Date.now() < genDeadline) {
-        const snap = await assistantSnapshot(cdp, null).catch(() => null);
-        if (snap?.stopVisible) break;
-        if (shouldRotateForConversationTooLong(snap)) throw conversationTooLongError();
-        await delay(250);
-      }
-      return await waitForResponse(cdp, timeout, { sentinel, stablePolls, baselineText: baseline?.text || "" });
-    };
-
-    let response;
-    try {
-      response = await runAttempt();
-    } catch (err) {
-      // Kimi ended the thread mid-round. Rotate once and resubmit this same
-      // round into the fresh chat; a second refusal is a real blocker.
-      if (err?.code !== "KIMI_CONVERSATION_TOO_LONG" || conversationRotations > 0) {
-        throw err;
-      }
-      log("Kimi asked for a new session; rotating to a new chat and resubmitting this round");
-      conversationRotation = await rotateToNewKimiChat(cdp, log);
-      conversationRotations += 1;
-      attachment = null;
-      response = await runAttempt();
+    await typePrompt(cdp, inputCdp, prompt);
+    log("Prompt typed");
+    const submitted = await clickSend(cdp, inputCdp);
+    if (!submitted) {
+      throw new Error("Kimi prompt submission was not accepted: composer still contains draft");
     }
+    log("Prompt sent, waiting for response...");
+    const genDeadline = Date.now() + 20000;
+    while (Date.now() < genDeadline) {
+      const snap = await assistantSnapshot(cdp, null).catch(() => null);
+      if (snap?.stopVisible) break;
+      await delay(250);
+    }
+    const response = await waitForResponse(cdp, timeout, { sentinel, stablePolls, baselineText: baseline?.text || "" });
     const conversationUrl = await evaluate(cdp, "window.location.href").catch(() => null);
     log(`Response received (${response.text.length} chars)`);
     return {
-      conversationRotated: conversationRotations > 0,
-      conversationRotations,
-      conversationRotation,
       response: response.text,
       model: modelSelection?.label || model || "current",
       requestedModel: model || null,
@@ -1517,20 +1319,4 @@ async function query(options) {
   }
 }
 
-module.exports = {
-  query,
-  extractAssistantResponse,
-  KIMI_TAB_URL,
-  preferenceTargets,
-  shouldAbortForProviderBusy,
-  textLooksKimiProviderBusy,
-  mountKimiFileInput,
-  ATTACH_MOUNT_TIMEOUT_MS,
-  COMPOSER_INSERT_TIMEOUT_MS,
-  textLooksKimiConversationTooLong,
-  shouldRotateForConversationTooLong,
-  rotateToNewKimiChat,
-  // Exported so tests can evaluate the real injected snapshot script against a
-  // page instead of re-implementing its detection rules.
-  assistantSnapshotExpression,
-};
+module.exports = { query, extractAssistantResponse, KIMI_TAB_URL, preferenceTargets, shouldAbortForProviderBusy, textLooksKimiProviderBusy };
