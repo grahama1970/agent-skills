@@ -527,6 +527,7 @@ def main(
     plan: bool = typer.Option(False, "--plan", help="Generate a Cleanup Report markdown file"),
     execute: bool = typer.Option(False, "--execute", help="Perform cleanup actions (with confirmation)"),
     worktree_audit: bool = typer.Option(False, "--worktree-audit", help="Write a commit-safe dirty worktree ownership/risk audit"),
+    registered_worktree_audit: bool = typer.Option(False, "--registered-worktree-audit", help="Write an all-registered-worktree rescue/prune audit"),
     script_scanability: bool = typer.Option(False, "--script-scanability", help="Run only the non-mutating script scanability pass"),
     public_readiness: bool = typer.Option(False, "--public-readiness", help="Run only the non-mutating public-readiness/security cleanup lane"),
     quality_gate: bool = typer.Option(False, "--quality-gate", help="Run only the non-mutating project-native quality gate lane"),
@@ -537,19 +538,20 @@ def main(
     """Deep codebase assessment and technical debt cleanup."""
     if worktree_audit:
         audit = build_worktree_audit()
-        output_path = Path(output)
-        if output_path.suffix.lower() not in {".json", ".md"}:
-            output_path = output_path.with_suffix(".json")
-        json_path = output_path if output_path.suffix.lower() == ".json" else output_path.with_suffix(".json")
-        md_path = output_path if output_path.suffix.lower() == ".md" else output_path.with_suffix(".md")
-        json_path.parent.mkdir(parents=True, exist_ok=True)
-        md_path.parent.mkdir(parents=True, exist_ok=True)
-        json_path.write_text(json.dumps(audit, indent=2, default=str))
-        md_path.write_text(generate_worktree_audit_markdown(audit))
-        log_info(f"Worktree audit JSON written to: {json_path}")
-        log_info(f"Worktree audit Markdown written to: {md_path}")
+        paths = write_worktree_audit_outputs(audit, output)
+        log_info(f"Worktree audit JSON written to: {paths['json']}")
+        log_info(f"Worktree audit Markdown written to: {paths['markdown']}")
         if audit["summary"].get("high_risk", 0):
             log_warning(f"High-risk dirty entries: {audit['summary']['high_risk']}")
+        return
+
+    if registered_worktree_audit:
+        audit = build_registered_worktree_audit()
+        paths = write_registered_worktree_audit_outputs(audit, output)
+        log_info(f"Registered worktree audit JSON written to: {paths['json']}")
+        log_info(f"Registered worktree audit Markdown written to: {paths['markdown']}")
+        if audit.get("blockers"):
+            log_warning(f"Registered worktree blockers: {len(audit['blockers'])}")
         return
 
     if script_scanability:

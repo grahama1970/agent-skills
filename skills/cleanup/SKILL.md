@@ -51,16 +51,14 @@ This skill performs a deep assessment of the codebase to identify technical debt
 - **Doc staleness**: Flags docs with TODO/FIXME or >365 days without changes
 - **Script scanability**: Flags tracked script-like files that are hard for a
   human or agent to scan; readability debt, not unused-code evidence.
-- **Public-readiness/security cleanup**: Flags gitleaks, working-directory
-  scan, and GitHub settings blockers. Details:
-  `references/public-readiness-security.md`.
-- **Quality-gate cleanup**: Runs or reports scoped project-native parse, lint,
-  format-check, typecheck, and test gates. Details: `references/quality-gates.md`.
+- **Public-readiness/security cleanup**: Flags gitleaks, dir-scan, and GitHub settings blockers.
+- **Quality-gate cleanup**: Runs or reports scoped parse, lint, format, type, and test gates.
 - **Evidence-first Markdown report**: `--plan` writes a prose-first
   `$best-practices-report` cleanup report with summary, scope, source inventory,
   finding index, next actions, and non-claims.
-- **Worktree triage**: Classifies dirty git entries into commit/archive/review
-  buckets before any attempt to clean or commit a large mixed worktree
+- **Worktree triage**: Classifies current dirty entries, and
+  `--registered-worktree-audit` enumerates every `git worktree list`
+  registration for rescue/prune planning
 - **Dependency-safe quarantine**: Treats untracked source/config files as
   possible runtime dependencies of tracked code until import/readiness checks
   prove otherwise
@@ -106,6 +104,7 @@ Each mutation class carries its own evidence requirement:
 | `script_scanability_repair` | explicit readability cleanup request + parse/compile + script `--help` or narrow sanity proof | non-mutating assessment by default; repair as separate slice |
 | `public_readiness_security_triage` | explicit public-readiness request + gitleaks history receipt + per-finding triage/allowlist + narrowed working-dir scan + maintainer GitHub settings inventory | non-mutating assessment by default; blocks public-release claims until receipts exist |
 | `quality_gate_validation` | explicit quality-gate request + scoped project-native parse/lint/type/test receipts | non-mutating assessment by default; blocks proof claims until selected gates run |
+| `registered_worktree_rescue_prune` | explicit rescue/prune request + dirty secondary audit + active-process exclusion + pushed rescue branch receipt + clean status proof before remove | non-mutating audit by default; blocks prune/remove until rescue proof exists |
 | `root_stray_mutation` | human owner decision | review-only |
 | `artifact_archive` | human owner decision | review-only |
 
@@ -126,8 +125,7 @@ is recorded in the phase receipt, and exits `0`. Automation should read
 `mutation_classes` in the receipt rather than inferring intent from the exit
 code alone.
 
-`$ingest-code scan` writes `.cleanup-evidence.json` in Phase 0, from local
-analysis, before any Memory write — so a Memory outage yields
+`$ingest-code scan` writes `.cleanup-evidence.json` in Phase 0 before Memory writes, so a Memory outage yields
 `local_dependency_analysis: complete` with `memory_indexing: blocked` rather than
 losing the analysis. See `references/cleanup-evidence-contract.md` for the
 `cleanup.evidence.v1` schema and per-candidate verdict semantics.
@@ -178,29 +176,33 @@ never per-file safety evidence. Every run states these limits explicitly:
    outstanding/broken/unknowns, plan-ready next actions, and non-claims. The
    report shows phase states, proof limits, marker warnings, and one verdict row
    per candidate, including script scanability repair rows.
-3. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown ownership/risk
-   buckets for dirty files so agents do not blindly stage unrelated work.
-4. **Repo-of-record declaration**: Identify the live project checkout, branch,
+3. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown
+   ownership/risk buckets for dirty files so agents do not blindly stage
+   unrelated work.
+4. **Registered worktree rescue audit** (`--registered-worktree-audit`):
+   Enumerate all worktree registrations, mark `/tmp`, detached, prunable,
+   active, dirty, and clean removal candidates, and emit rescue/prune commands.
+5. **Repo-of-record declaration**: Identify the live project checkout, branch,
    dirty inventory, and any secondary clean worktree used only for commit
    isolation.
-5. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
+6. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
    run the project's easy sanity command before moving source-like files.
-6. **Project-watchdog coordination** (`$project-watchdog`): Read watchdog
+7. **Project-watchdog coordination** (`$project-watchdog`): Read watchdog
    registry/state. Active registered repos block cleanup execution until
    dispatch/routing state is coordinated. This is read-only; cleanup never
    queries, leases, relabels, resolves, or ticks issues.
-7. **Code evidence** (`$ingest-code`): Only required to unblock tracked-file
+8. **Code evidence** (`$ingest-code`): Only required to unblock tracked-file
    mutation, never to run assessment. Run
    `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
    If this leaves a completed marker with zero scanned files or a disabled code
    index, treat the marker as degraded and rely on `.cleanup-evidence.json` for
    local dependency analysis only.
-8. **Execution** (`--execute`): Perform authorized mutations with confirmation:
+9. **Execution** (`--execute`): Perform authorized mutations with confirmation:
    - Remove only untracked junk paths that cleared per-path provenance
      (`--force` skips the prompt, not the provenance check)
    - Keep root strays, artifacts, and tracked candidates review-only
    - Log all actions to `local/CLEANUP_LOG.md` and the phase receipt
-9. **Script scanability repair**: When the requested cleanup slice is explicitly
+10. **Script scanability repair**: When the requested cleanup slice is explicitly
    readability repair, add only non-behavioral documentation such as module
    docstrings, usage notes, side-effect notes, and useful function/class
    docstrings. Do not change script control flow, flags, imports, IO behavior,
@@ -208,16 +210,16 @@ never per-file safety evidence. Every run states these limits explicitly:
    slice with parse/compile plus each touched script's `--help`, entrypoint
    smoke, or narrow sanity command, then commit separately from deletion or
    archive cleanup.
-10. **Public-readiness/security triage**: For an explicit public-readiness
+11. **Public-readiness/security triage**: For an explicit public-readiness
    slice, run `--public-readiness`, preserve artifacts, triage gitleaks history
    findings, narrow noisy working-directory scans, and require maintainer review
    for GitHub visibility/security/reporting settings. See
    `references/public-readiness-security.md`.
-11. **Quality-gate validation**: For an explicit validation slice, run
+12. **Quality-gate validation**: For an explicit validation slice, run
    `--quality-gate` and preserve the receipt. Missing configured tools,
    unexecuted required gates, or failed gates remain blockers. See
    `references/quality-gates.md`.
-12. **Post-cleanup proof**: Rerun the same sanity command and relevant
+13. **Post-cleanup proof**: Rerun the same sanity command and relevant
    `best-practices-*` checks for changed files, then commit/push only the
    coherent cleanup slice.
 
@@ -233,9 +235,8 @@ never per-file safety evidence. Every run states these limits explicitly:
    non-mutating public-readiness/security lane.
 6. Run `bash .pi/skills/cleanup/run.sh --quality-gate` for the selected
    non-mutating quality-gate lane.
-7. Use `--worktree-audit` for dirty trees, then review the plan/audit before
-   `--execute`; `--force` skips only junk confirmation, never provenance or
-   other mutation authority.
+7. Use `--worktree-audit` for dirty trees and `--registered-worktree-audit` for
+   stray secondary worktrees; review the audit before `--execute`.
 8. Read `artifacts/cleanup/cleanup_receipt.json` (or `--receipt`) to see which
    phase blocked and how to resume it.
 
@@ -270,6 +271,9 @@ to `.gitignore` separately because cleanup does not edit `.gitignore`.
 - **Quality gates are scoped proof**: Cleanup may run selected parse, lint,
   format-check, typecheck, and test gates, but must not claim full CI or release
   readiness from a narrower quality-gate receipt.
+- **Registered worktree rescue is fail-closed**: Dirty secondary worktrees block
+  prune/remove until a pushed rescue branch and fresh status/removal receipt
+  exist. Active cwd ownership excludes that worktree from automation.
 - **Root artifacts are review-only**: Binary/media files at project root may be
   runtime inputs and are never moved automatically.
 - **Evidence must match the mutation**: A mutation class is authorized only by
@@ -335,6 +339,7 @@ to `.gitignore` separately because cleanup does not edit `.gitignore`.
 | `--dry-run` | Print JSON findings without making changes |
 | `--plan` | Generate a `$best-practices-report`-style Cleanup Report markdown file |
 | `--worktree-audit` | Generate JSON + Markdown dirty-worktree buckets for commit-safe triage |
+| `--registered-worktree-audit` | Generate JSON + Markdown all-registered-worktree rescue/prune plan |
 | `--script-scanability` | Run only the non-mutating script readability scan |
 | `--public-readiness` | Run only the non-mutating public-readiness/security lane |
 | `--quality-gate` | Run only the non-mutating project-native quality-gate lane |

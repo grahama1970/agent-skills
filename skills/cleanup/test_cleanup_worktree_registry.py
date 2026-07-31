@@ -1,0 +1,112 @@
+"""Tests for registered-worktree rescue audit planning."""
+
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import cleanup_worktree  # noqa: E402
+
+
+def test_parse_registered_worktrees_tracks_detached_and_prunable():
+    records = cleanup_worktree.parse_registered_worktrees(
+        """
+worktree /repo
+HEAD abc
+branch refs/heads/main
+
+worktree /tmp/agent-tree
+HEAD def
+detached
+prunable gitdir file points to non-existent location
+""".strip()
+    )
+
+    assert records[0]["path"] == "/repo"
+    assert records[0]["branch"] == "refs/heads/main"
+    assert records[1]["detached"] is True
+    assert records[1]["prunable"] is True
+    assert "non-existent" in records[1]["prunable_reason"]
+
+
+def test_registered_worktree_audit_blocks_dirty_secondary(monkeypatch):
+    calls = []
+
+    def fake_run_command(cmd, check=True):
+        calls.append(cmd)
+        if cmd[:3] == ["git", "rev-parse", "--show-toplevel"]:
+            return True, "/repo\n"
+        if cmd[:3] == ["git", "worktree", "list"]:
+            return True, """
+worktree /repo
+HEAD abc
+branch refs/heads/main
+
+worktree /tmp/agent-tree
+HEAD def
+branch refs/heads/feature
+""".strip()
+        return False, ""
+
+    def fake_status(path, prunable):
+        if path == "/tmp/agent-tree":
+            return {
+                "available": True,
+                "entries": [
+                    {"xy": "??", "path": "src/new_file.py"},
+                    {"xy": " M", "path": "README.md"},
+                ],
+                "error": "",
+            }
+        return {"available": True, "entries": [], "error": ""}
+
+    monkeypatch.setattr(cleanup_worktree, "run_command", fake_run_command)
+    monkeypatch.setattr(cleanup_worktree, "_worktree_status", fake_status)
+    monkeypatch.setattr(cleanup_worktree, "_active_cwd_processes", lambda path: [])
+    monkeypatch.setattr(cleanup_worktree, "get_project_name", lambda: "demo")
+
+    audit = cleanup_worktree.build_registered_worktree_audit()
+    dirty = next(item for item in audit["worktrees"] if item["path"] == "/tmp/agent-tree")
+
+    assert audit["schema"] == "cleanup.registered_worktrees.v1"
+    assert audit["status"] == "blocked"
+    assert audit["summary"]["dirty_secondary"] == 1
+    assert dirty["bucket"] == "dirty_secondary_rescue_required"
+    assert dirty["rescue_branch"].startswith("cleanup-rescue/demo/")
+    assert "push origin" in dirty["commands"]["rescue_branch"][-1]
+    assert audit["blockers"][0]["id"] == "dirty_secondary_worktree_requires_rescue"
+
+
+def test_registered_worktree_markdown_contains_non_claims():
+    audit = {
+        "generated_at": "2026-07-31T00:00:00",
+        "status": "blocked",
+        "mutation": "no_authorized_mutations",
+        "repo_root": "/repo",
+        "summary": {"total": 1, "dirty_secondary": 1, "by_bucket": {"dirty_secondary_rescue_required": 1}},
+        "worktrees": [
+            {
+                "path": "/tmp/agent-tree",
+                "bucket": "dirty_secondary_rescue_required",
+                "risk": "high",
+                "dirty_count": 1,
+                "active_processes": [],
+                "recommended_action": "rescue_to_branch_before_remove",
+                "rescue_branch": "cleanup-rescue/demo/20260731/abc123",
+                "commands": {"rescue_branch": ["git -C /tmp/agent-tree add -A"]},
+            }
+        ],
+        "blockers": [
+            {
+                "id": "dirty_secondary_worktree_requires_rescue",
+                "path": "/tmp/agent-tree",
+                "valid_next_action": "Commit to the proposed rescue branch.",
+            }
+        ],
+    }
+
+    markdown = cleanup_worktree.generate_registered_worktree_audit_markdown(audit)
+
+    assert "# Registered Worktree Rescue Audit" in markdown
+    assert "cleanup-rescue/demo/20260731/abc123" in markdown
+    assert "does not remove worktrees" in markdown
