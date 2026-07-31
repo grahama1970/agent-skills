@@ -736,7 +736,19 @@ def _operator_guidance(operator: str) -> str:
             "Keep the archive construction, traversal path, and success oracle "
             "IDENTICAL to the parent. Do NOT merely wrap the call in a helper "
             "function or rename variables — that is NOT a method replacement and will "
-            f"be rejected. Allowed dimensions: {allowed}."
+            f"be rejected. Allowed dimensions: {allowed}.\n"
+            "REQUIRED TEMPLATE — the parent imports the app statically; your child "
+            "MUST load it dynamically instead. Transform:\n"
+            "    # parent (static import)\n"
+            "    from app import import_zip\n"
+            "  into EXACTLY this shape (dynamic load = the app_load_mode change):\n"
+            "    import importlib.util\n"
+            "    _spec = importlib.util.spec_from_file_location('app', 'app.py')\n"
+            "    _mod = importlib.util.module_from_spec(_spec)\n"
+            "    _spec.loader.exec_module(_mod)\n"
+            "    import_zip = _mod.import_zip\n"
+            "This changes ONLY app_load_mode. Do not add try/except and do not touch "
+            "any other line."
         )
     if operator == "oracle_or_parameter_mutation":
         return (

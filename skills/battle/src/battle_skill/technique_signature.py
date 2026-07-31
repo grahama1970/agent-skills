@@ -72,6 +72,11 @@ OPERATOR_DIMENSIONS: dict[str, frozenset[str]] = {
 }
 CROSSOVER_MIN_NOVELTY = 2
 
+# Dimensions that do not define the exploit technique. A change limited to one of
+# these (e.g. an added try/except wrapper) is tolerated alongside an operator's
+# required substantive change, but never satisfies an operator on its own.
+INCIDENTAL_DIMENSIONS: frozenset[str] = frozenset({"exception_handling"})
+
 
 def _sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
@@ -300,23 +305,37 @@ def _operator_consistent(
         return False, f"operator '{operator}' is not in the allowed vocabulary"
     if novelty_distance < 1 or not changed:
         return False, "no dimensions changed, so the operator cannot be consistent"
+    # exception_handling (an added try/except wrapper) is INCIDENTAL: it does not
+    # change the exploit technique, so it neither satisfies nor violates an
+    # operator on its own. A specimen is consistent when it makes the operator's
+    # required SUBSTANTIVE change; an extra incidental try/except is tolerated,
+    # but an incidental-ONLY change is not a real mutation and still fails.
+    substantive = set(changed) - INCIDENTAL_DIMENSIONS
     if operator == "failure_guided_crossover":
-        if novelty_distance >= CROSSOVER_MIN_NOVELTY:
-            return True, "crossover moved at least two dimensions"
+        if len(substantive) >= CROSSOVER_MIN_NOVELTY:
+            return True, "crossover moved at least two substantive dimensions"
         return (
             False,
             "failure_guided_crossover requires >= "
-            f"{CROSSOVER_MIN_NOVELTY} changed dimensions, got {novelty_distance}",
+            f"{CROSSOVER_MIN_NOVELTY} substantive changed dimensions, got "
+            f"{len(substantive)} (exception_handling does not count)",
         )
     allowed = OPERATOR_DIMENSIONS[operator]
-    outside = sorted(set(changed) - allowed)
+    outside = sorted(substantive - allowed)
     if outside:
         return (
             False,
             f"operator '{operator}' cannot change dimensions {outside}; "
-            f"allowed: {sorted(allowed)}",
+            f"allowed: {sorted(allowed)} (exception_handling tolerated as incidental)",
         )
-    return True, f"all changed dimensions are allowed for operator '{operator}'"
+    if not (substantive & allowed):
+        return (
+            False,
+            f"operator '{operator}' made no substantive change in its allowed "
+            f"dimensions {sorted(allowed)}; only incidental changes were made "
+            f"({sorted(set(changed) & INCIDENTAL_DIMENSIONS)})",
+        )
+    return True, f"all substantive changed dimensions are allowed for operator '{operator}'"
 
 
 def validate_technique_delta(
