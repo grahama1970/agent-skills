@@ -55,7 +55,7 @@ def check_embeddings(
         embedding_service: URL of embedding service (required for fix)
         scope: Filter collections by prefix (e.g., "sparta" for sparta_*)
     """
-    results = {"missing": [], "total": 0, "fixed": 0}
+    results = {"missing": [], "missing_count": 0, "total": 0, "fixed": 0}
 
     # Collections that should have embeddings and their text fields
     # Format: {collection: (text_fields, preview_field)}
@@ -80,27 +80,65 @@ def check_embeddings(
 
         coll = db.collection(coll_name)
 
-        # Query for documents without embeddings
-        query = """
+        # Count server-side; never pull full documents for a report. The old
+        # RETURN doc full scan shipped whole collections (233K+ QRAs) over the
+        # wire and blew the 60s client timeout every nightly check.
+        count_query = """
         FOR doc IN @@collection
             FILTER doc.embedding == null OR !HAS(doc, "embedding")
-            RETURN doc
+            COLLECT WITH COUNT INTO missing_count
+            RETURN missing_count
         """
-        cursor = db.aql.execute(query, bind_vars={"@collection": coll_name})
-        missing = list(cursor)
+        missing_count = next(
+            db.aql.execute(count_query, bind_vars={"@collection": coll_name})
+        )
+        results["missing_count"] += missing_count
 
         results["total"] += coll.count()
-        for doc in missing:
-            preview = str(doc.get(preview_field, ""))[:50] if preview_field else ""
-            results["missing"].append({
-                "collection": coll_name,
-                "_key": doc["_key"],
-                "preview": preview,
-            })
+        if missing_count:
+            sample_query = """
+            FOR doc IN @@collection
+                FILTER doc.embedding == null OR !HAS(doc, "embedding")
+                LIMIT @sample
+                RETURN {_key: doc._key, preview: doc.@preview_field}
+            """
+            for doc in db.aql.execute(sample_query, bind_vars={
+                "@collection": coll_name,
+                "sample": 25,
+                "preview_field": preview_field or "_key",
+            }):
+                results["missing"].append({
+                    "collection": coll_name,
+                    "_key": doc["_key"],
+                    "preview": str(doc.get("preview") or "")[:50],
+                })
 
-        if fix and missing and embedding_service:
+        if fix and missing_count and embedding_service:
             import httpx
             http = httpx.Client(timeout=30)
+            # Fix mode fetches only the text fields it needs, in bounded pages,
+            # so no single request can outlive the client timeout.
+            fix_query = """
+            FOR doc IN @@collection
+                FILTER doc.embedding == null OR !HAS(doc, "embedding")
+                FILTER doc._key > @last_key
+                SORT doc._key
+                LIMIT @page
+                RETURN KEEP(doc, APPEND(["_key"], @fields))
+            """
+            missing = []
+            last_key = ""
+            while True:
+                page = list(db.aql.execute(fix_query, bind_vars={
+                    "@collection": coll_name,
+                    "last_key": last_key,
+                    "page": 500,
+                    "fields": text_fields,
+                }))
+                if not page:
+                    break
+                missing.extend(page)
+                last_key = page[-1]["_key"]
             for doc in missing:
                 try:
                     # Concatenate all text fields, handling None values
@@ -726,12 +764,12 @@ def check():
 
     emb = check_embeddings(db)
     report.checks["embeddings"] = {
-        "missing": len(emb["missing"]),
+        "missing": emb["missing_count"],
         "total": emb["total"]
     }
-    if emb["missing"]:
+    if emb["missing_count"]:
         report.status = "warning"
-        report.recommendations.append(f"Run 'embeddings --fix' to fix {len(emb['missing'])} missing embeddings")
+        report.recommendations.append(f"Run 'embeddings --fix' to fix {emb['missing_count']} missing embeddings")
 
     dups = check_duplicates(db)
     report.checks["duplicates"] = {
@@ -771,7 +809,7 @@ def check():
         print(f"\nStatus: {report.status.upper()}")
         print(f"Documents: {stats['total_documents']}")
         print(f"Size: {round(stats['total_size_bytes'] / 1024 / 1024, 2)} MB")
-        print(f"Missing embeddings: {len(emb['missing'])}")
+        print(f"Missing embeddings: {emb['missing_count']}")
         print(f"Duplicate clusters: {len(dups['clusters'])}")
         print(f"Orphaned edges: {len(orphs['orphaned_edges'])}")
         print(f"Integrity errors: {len(integ['errors'])}")
@@ -802,7 +840,7 @@ def embeddings(
         print(json.dumps(result, indent=2))
     else:
         print(f"Total documents: {result['total']}")
-        print(f"Missing embeddings: {len(result['missing'])}")
+        print(f"Missing embeddings: {result['missing_count']}")
         if fix:
             print(f"Fixed: {result['fixed']}")
         if result["missing"] and not fix:
