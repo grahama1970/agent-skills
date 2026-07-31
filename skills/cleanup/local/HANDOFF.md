@@ -12,10 +12,10 @@
   unreferenced tracked files, stale docs, script scanability debt,
   public-readiness blockers, quality-gate blockers, Memory/indexing state, and
   registered worktree rescue/prune risks.
-- **Repo-of-record for this handoff**:
-  `/home/graham/workspace/experiments/agent-skills-cleanup-handoff-20260731`,
-  based on `origin/main` at
-  `8ee4b20ef185cb3475ea6704b3d8bb2504cf6489`.
+- **Repo-of-record for this handoff**: `origin/main`. The report was generated
+  from a temporary clean commit worktree based on
+  `8ee4b20ef185cb3475ea6704b3d8bb2504cf6489` so unrelated dirty live-checkout
+  files were not included.
 
 ## 2. Current State (Doc-Code Alignment)
 
@@ -45,7 +45,8 @@
 - `bash skills/cleanup/sanity.sh` passed on this handoff branch.
 - `python3 skills/cleanup/cleanup.py --help` renders the selected lane options.
 - Recent pushed main commit `8ee4b20ef` added cleanup selected lanes, project
-  knowledge, ingest-code local artifacts, and focused test coverage.
+  knowledge, ingest-code local artifacts, and focused test coverage. This
+  handoff file was added afterward as a cleanup-local context artifact.
 - Root `PROJECT_KNOWLEDGE.md` now has a cleanup entry explaining that indexing
   does not authorize deletion and that registered worktree rescue is audit-only
   until rescue/push/removal receipts exist.
@@ -103,4 +104,3 @@
   - `49d165dc5 Add cleanup script scanability report`
   - `ea906ae0f Add default agentic eval scaffolds`
   - `c0ee38f3d Update Ask recovery knowledge`
-
