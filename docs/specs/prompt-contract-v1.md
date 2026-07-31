@@ -331,6 +331,27 @@ Gating (Gemini's skill-scoped model): report-only for legacy debt; but a PR
 touching a skill requires THAT skill's contracts current with zero new
 `unregistered` — repo-wide gates only after the denominator is controlled.
 
+### 10.0 Composition-only rule (operator, 2026-07-31)
+
+Every capability in cleanup's prompt lanes is COMPOSED from the pre-existing
+owning skill; cleanup implements no bespoke functionality:
+
+| Need | Owning skill cleanup composes | Cleanup's role |
+|---|---|---|
+| Prompt execution / eval transport | `$tau` (via `$agentic-evals`) | invoke, read receipt |
+| Fixture definition + trials + verdict | `$agentic-evals` | invoke, read report |
+| Static prompt review | `$review-prompt` / `$best-practices-prompt` | read receipt |
+| Code indexing / dependency evidence | `$ingest-code` | invoke, read marker |
+| Memory DB backup freshness | `$ops-arango` (#1125) | gate on receipt |
+| Memory/system health | `$monitor-sparta` / `$monitor-memory` (#1125) | gate on latest receipt, never re-run checks |
+| Work-item routing for findings | `$ticket` / `$project-watchdog` | emit next actions, never lease/resolve |
+
+One owner per capability. If a needed check has no owning skill, the fix is
+to add it to (or create) the owning skill — never to inline it in cleanup.
+Cadence assumption: cleanup runs ~weekly; freshness thresholds are tuned to
+each producer's own cadence (nightly backup <48h, monitor health <24h), and
+every blocker names the exact producer command to re-run out-of-band.
+
 ### 10.1 Composed refresh lane (`prompt_receipt_refresh`)
 
 Following cleanup's existing composition precedent (`--memory-index` invokes
