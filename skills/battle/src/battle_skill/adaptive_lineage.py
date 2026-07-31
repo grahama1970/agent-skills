@@ -120,15 +120,22 @@ def _judge_outcome(specimen: dict[str, Any]) -> dict[str, Any]:
 class AdaptiveLineageBudget:
     """Fail-closed budget accounting for one adaptive-lineage qualification.
 
-    Enforces the canonical envelope: <=6 primary SciLLM calls, <=8 HTTP
-    completions (including JSON-repair retries), <=4 Red specimens, <=2
-    descendant generations, exactly 1 fixed Blue artifact, <=1200 wall seconds,
-    and no red-3 (third descendant generation). The run stops after the G2 Judge
-    regardless of outcome.
+    Enforces the canonical envelope: <=10 primary SciLLM calls, <=14 HTTP
+    completions (including JSON-repair retries and bounded operator-consistency
+    regenerations), <=4 Red specimens, <=2 descendant generations, exactly 1
+    fixed Blue artifact, <=1200 wall seconds, and no red-3 (third descendant
+    generation). The run stops after the G2 Judge regardless of outcome.
+
+    The SciLLM/HTTP caps allow up to two operator-consistency retries per
+    descendant (creator->reviewer loop): a spawned specimen whose changed AST
+    dimensions are inconsistent with its mutation operator is regenerated with
+    the validator reason fed back, so retries cost real SciLLM/HTTP calls but do
+    NOT add specimens or descendant generations (the lineage shape stays G0,
+    G1-A, G1-B, G2).
     """
 
-    max_primary_scillm_calls: int = 6
-    max_http_completions: int = 8
+    max_primary_scillm_calls: int = 10
+    max_http_completions: int = 14
     max_red_specimens: int = 4
     max_descendant_generations: int = 2
     fixed_blue_artifacts: int = 1
@@ -911,47 +918,140 @@ class LiveTauSpecimenProvider:
             "parent_subagent_receipt"
         )
 
-        # 1. augmented battle context: parent evidence packet + operator steering.
-        aug_context_path = self._write_descendant_context(
-            stage=stage,
-            stage_dir=stage_dir,
-            operator=operator,
-            parent_specimen=parent_specimen,
-            context=context,
-        )
+        # Bounded creator->reviewer retry: spawn, validate the technique delta
+        # against the parent, and if the changed AST dimensions are inconsistent
+        # with the mutation operator (e.g. an incidental try/except the model
+        # added), feed the exact validator reason back and regenerate. Retries
+        # cost real SciLLM/HTTP budget but never add specimens or generations.
+        # The strict validator is unchanged: a specimen is only accepted when it
+        # is genuinely operator-consistent (or when retries/budget are exhausted,
+        # in which case the orchestrator gate still fails the run honestly).
+        max_operator_retries = int(self._cfg("max_operator_retries", 2))
+        parent_source = parent_specimen.get("exploit_py", "") or ""
+        parent_signature = technique_signature(parent_source) if parent_source else None
 
-        # 2. spawn the descendant WITH the inherited parent Tau subagent receipt.
-        spawn_manifest_path = alb._run_tau_spawn_child(
-            out_dir=stage_dir,
-            battle_id=self._require("battle_id"),
-            run_id=self._require("run_id"),
-            scenario_id=self._require("scenario_id"),
-            context_path=aug_context_path,
-            parent_subagent_receipt=(
-                Path(parent_receipt)
-                if parent_receipt
-                else stage_dir / "missing-parent-subagent-receipt.json"
-            ),
-            red_persona=self._cfg("red_persona", "battle-red-public-auditor"),
-            model=self._cfg("model", "gpt-5.5"),
-            scillm_base_url=self._cfg("scillm_base_url", "http://localhost:4001"),
-            timeout_s=float(self._cfg("timeout_s", 900.0)),
-        )
-        if budget is not None:
-            budget.record_primary_scillm_call()
-            budget.record_http_completion()
-            # Generation accounting is owned by the orchestrator
-            # (run_adaptive_lineage_qualification): generation 1 = the G1 pair,
-            # generation 2 = G2. The provider must not also count per-descendant.
-        if spawn_manifest_path is None:
-            raise RuntimeError(f"Tau spawn for {stage} did not produce a manifest")
+        feedback: dict[str, Any] | None = None
+        child: dict[str, Any] = {}
+        exploit_py = ""
+        source_sha256 = ""
+        declared_delta = ""
+        spawn_manifest_path: str | None = None
+        attempt = 0
+        while True:
+            attempt_dir = stage_dir if attempt == 0 else stage_dir / f"retry-{attempt}"
+            attempt_dir.mkdir(parents=True, exist_ok=True)
 
-        manifest = json.loads(Path(spawn_manifest_path).read_text(encoding="utf-8"))
-        red_entries = alb._materialized_entries(manifest, "red")
-        if not red_entries:
-            raise RuntimeError(f"Tau spawn for {stage} produced no Red materialized artifact")
-        child = red_entries[-1]
-        exploit_py, source_sha256, _declared_op, declared_delta = self._extract_red(child)
+            aug_context_path = self._write_descendant_context(
+                stage=stage,
+                stage_dir=attempt_dir,
+                operator=operator,
+                parent_specimen=parent_specimen,
+                context=context,
+                feedback=feedback,
+            )
+
+            spawn_manifest_path = alb._run_tau_spawn_child(
+                out_dir=attempt_dir,
+                battle_id=self._require("battle_id"),
+                run_id=self._require("run_id"),
+                scenario_id=self._require("scenario_id"),
+                context_path=aug_context_path,
+                parent_subagent_receipt=(
+                    Path(parent_receipt)
+                    if parent_receipt
+                    else attempt_dir / "missing-parent-subagent-receipt.json"
+                ),
+                red_persona=self._cfg("red_persona", "battle-red-public-auditor"),
+                model=self._cfg("model", "gpt-5.5"),
+                scillm_base_url=self._cfg("scillm_base_url", "http://localhost:4001"),
+                timeout_s=float(self._cfg("timeout_s", 900.0)),
+            )
+            if budget is not None:
+                budget.record_primary_scillm_call()
+                budget.record_http_completion()
+                # Generation accounting is owned by the orchestrator
+                # (run_adaptive_lineage_qualification): generation 1 = the G1 pair,
+                # generation 2 = G2. The provider must not also count per-descendant.
+            if spawn_manifest_path is None:
+                raise RuntimeError(f"Tau spawn for {stage} did not produce a manifest")
+
+            manifest = json.loads(Path(spawn_manifest_path).read_text(encoding="utf-8"))
+            red_entries = alb._materialized_entries(manifest, "red")
+            if not red_entries:
+                raise RuntimeError(
+                    f"Tau spawn for {stage} produced no Red materialized artifact"
+                )
+            child = red_entries[-1]
+            exploit_py, source_sha256, _declared_op, declared_delta = self._extract_red(child)
+
+            # Validate operator-consistency with the SAME strict validator the
+            # orchestrator fitness gate uses.
+            if parent_signature is None:
+                break
+            delta = validate_technique_delta(
+                parent_signature=parent_signature,
+                child_signature=technique_signature(exploit_py),
+                mutation_operator=operator,
+                battle_id=self._require("battle_id"),
+                run_id=self._require("run_id"),
+            )
+            (attempt_dir / "operator-consistency-check.json").write_text(
+                json.dumps(delta, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            if delta.get("operator_consistent") and delta.get("status") == "PASS":
+                break
+
+            # Would another retry fit the budget envelope? Stop if not.
+            headroom = True
+            if budget is not None:
+                over, _ = budget.overrun()
+                headroom = (
+                    not over
+                    and budget.primary_scillm_calls < budget.max_primary_scillm_calls
+                    and budget.http_completions < budget.max_http_completions
+                )
+            if attempt >= max_operator_retries or not headroom:
+                break
+
+            allowed_dims = sorted(OPERATOR_DIMENSIONS.get(operator, frozenset()))
+            changed_dims = list(delta.get("changed_dimensions", []))
+            outside_dims = sorted(set(changed_dims) - set(allowed_dims))
+            changed_required = sorted(set(changed_dims) & set(allowed_dims))
+            missing_required = not changed_required
+            feedback = {
+                "rejected_attempt": attempt,
+                "delta_status": delta.get("status"),
+                "reasons": delta.get("reasons", []),
+                "changed_dimensions": changed_dims,
+                "out_of_vocabulary_changes": outside_dims,
+                "allowed_dimensions": allowed_dims,
+                "required_change_made": not missing_required,
+                # Re-inject the concrete how-to so the model gets the POSITIVE
+                # instruction, not just "remove the extra change".
+                "operator_how_to": _operator_guidance(operator),
+                "instruction": (
+                    f"Your previous exploit was REJECTED: {delta.get('reasons')}. "
+                    + (
+                        (
+                            "You did NOT change any of the required dimensions "
+                            f"{allowed_dims} (you changed {changed_dims or 'NOTHING'}). "
+                            "You MUST make exactly the structural change described in "
+                            "operator_how_to below, and change NOTHING else. Do not "
+                            "return the parent unchanged."
+                        )
+                        if missing_required
+                        else (
+                            f"You correctly changed {changed_required}, but you ALSO "
+                            f"changed forbidden dimensions {outside_dims} (in particular "
+                            "an incidental try/except is the 'exception_handling' "
+                            "dimension). Regenerate: keep the "
+                            f"{changed_required} change, REMOVE the {outside_dims} "
+                            "change, and keep every other dimension IDENTICAL to the parent."
+                        )
+                    )
+                ),
+            }
+            attempt += 1
 
         judge = self._judge(
             stage=stage, red_entry=child, blue_entry=self._blue_entry, out_dir=out_dir, budget=budget
@@ -967,6 +1067,7 @@ class LiveTauSpecimenProvider:
             or self._evidence_packet_ref(parent_id or "G0"),
             "judge_outcome": judge,
             "judge_attempts": 1,
+            "operator_retries": attempt,
         }
         if stage == "G2":
             specimen["inputs"] = self._g2_bindings(context=context)
@@ -1046,6 +1147,7 @@ class LiveTauSpecimenProvider:
         operator: str,
         parent_specimen: dict[str, Any],
         context: dict[str, Any],
+        feedback: dict[str, Any] | None = None,
     ) -> Path:
         base_context: dict[str, Any] = {}
         base_path = self._live_config.get("context_path")
@@ -1074,7 +1176,7 @@ class LiveTauSpecimenProvider:
 
         augmented = dict(base_context)
         augmented["battle.parent_evidence_packet.v1"] = packet
-        augmented["mutation_guidance"] = {
+        mutation_guidance: dict[str, Any] = {
             "stage": stage,
             "mutation_operator": operator,
             "operator_guidance": guidance,
@@ -1083,6 +1185,13 @@ class LiveTauSpecimenProvider:
                 CROSSOVER_MIN_NOVELTY if operator == "failure_guided_crossover" else 1
             ),
         }
+        if feedback is not None:
+            # Reviewer feedback from the previous rejected attempt. The prior
+            # exploit changed AST dimensions inconsistent with the operator; steer
+            # the regeneration to change ONLY the allowed dimensions and drop the
+            # out-of-vocabulary changes (e.g. an incidental try/except wrapper).
+            mutation_guidance["reviewer_feedback"] = feedback
+        augmented["mutation_guidance"] = mutation_guidance
 
         path = stage_dir / f"battle-context-{stage}.json"
         path.write_text(json.dumps(augmented, indent=2, sort_keys=True) + "\n", encoding="utf-8")
