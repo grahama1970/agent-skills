@@ -148,15 +148,48 @@ node carries contract id + goal hash + one receipt; scillm executes the
 batch under it (rolling-window scheduler as today). `create-qras`-style
 direct batch calls are the first ratchet targets.
 
-### 5.5 Eval runs ARE Tau DAGs
+### 5.5 Eval runs ARE Tau DAGs; `/agentic-evals` is the eval front-end
 An executed-eval attestation is produced by a Tau DAG:
 fixture-render node → provider node (through the SAME production
 renderer/adapters — tests the production request by construction) →
 deterministic validator node(s) → optional calibrated-judge node → attestation
-join. `/agentic-evals` and `/prompt-lab` define fixtures and trial policy;
-Tau executes and signs. The signer is the trusted harness/CI policy engine,
-never a model. Local developer runs are marked `self_attested` and never
-satisfy release gates.
+join. The signer is the trusted harness/CI policy engine, never a model.
+Local developer runs are marked `self_attested` and never satisfy release
+gates.
+
+Skill roles and dependency direction (one-way, no cycles):
+
+```
+/agentic-evals  →  defines & judges  (fixture contract, trial policy, readiness verdict)
+      ↓ invokes
+/tau            →  executes & signs  (eval DAG via production renderer; node receipts; attestation)
+      ↓ emits
+/cleanup        →  projects          (reads indexes + attestations; never runs anything)
+```
+
+- `/agentic-evals` is the canonical eval front-end. Its existing fixture
+  contract (multi-trial, `positive`/`negative`/`adversarial` case types,
+  `proof_scope` + `proves`/`does_not_prove` claims) extends with
+  `prompt_contract_id` and the §7 gate fields (`severity`,
+  `aggregation: all_trials | case_rate`). Its case types map onto the §7
+  fixture families (golden→positive, no-answer→negative,
+  adversarial→adversarial).
+- Its readiness states map onto the §10 `eval_verdict` column:
+  `READY`→`pass`, `USABLE_WITH_GAPS`→`fail` (critical) or partial soft-rate
+  input, `NOT_READY`→`fail`, `NOT_ESTABLISHED`→`not_run`.
+- `/agentic-evals` remains a deterministic argv runner and NEVER calls
+  providers directly: for prompt contracts its fixture `command` invokes the
+  Tau eval DAG (or the contract's render-for-eval + validator step). This
+  keeps the single-transport rule intact — evals exercise the production
+  path and cannot become a second direct-call hole in the §5.3 ratchet.
+- The signed `prompt.attestation.v1` wraps the agentic-evals trial report
+  plus Tau node receipts (rendered_request_hash, model_resolved). An
+  agentic-evals JSON alone is `self_attested` and gates nothing.
+- Forbidden couplings: `/cleanup` never triggers evals; `/agentic-evals`
+  never bypasses Tau to reach a provider; Tau never consults the cleanup
+  report to decide execution; `/prompt-lab` stays out of the authorization
+  path entirely (development sandbox; its receipts are `self_attested` by
+  definition).
 
 ## 6. Discovery: closed-world, receipted denominator
 
