@@ -1,0 +1,50 @@
+# gitleaks config for agent-skills
+#
+# Principle (reviewer, 2026-07-31): NO path-based exclusions. A path exclusion
+# blinds the scanner to a whole file, so a real credential pasted there can
+# never be found. Every allowlist entry below is a VALUE/CONTEXT pattern that
+# describes a specific known-non-secret shape, verified against the
+# 2026-07-31 public-readiness scan (88,062 findings, >99% ArangoDB document
+# key identifier fields — spot-checked raw values like
+# "_key": "cs_5c2a3fa721636f69ecadbbff36a4de719b769331").
+#
+# regexTarget is "line" because gitleaks' generic-api-key match text starts
+# mid-field-name (e.g. `_key": "...`) and omits the opening quote; the quote
+# anchor is what guarantees "api_key"/"secret_key" can NEVER be allowlisted
+# (a quote must appear immediately before the enumerated field name).
+# Line-target caveat: if a real secret shares a line with an allowlisted
+# identifier field it would be hidden; JSON artifact lines here are
+# one-field-per-line, and the periodic full-default rescan in the
+# public-readiness lane is the backstop.
+#
+# Deliberately NOT allowlisted (require per-finding manual triage):
+#   - jwt rule hits (browser tab_list.json artifacts may embed live tokens)
+#   - token= URL query parameters
+#   - curl-auth-header / curl-auth-user findings
+#   - github-pat / gcp-api-key / algolia-api-key rule hits
+#   - monitor_token and any *_token field
+#   - any api_key / secret / access / private field
+
+title = "agent-skills gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Value/context allowlists for known non-secret identifier shapes; never path excludes"
+regexTarget = "line"
+regexes = [
+  # ArangoDB reserved document-key field: "_key": "<identifier>"
+  # (quote immediately before _key: cannot match "api_key"/"secret_key")
+  '''"_key"\s*:\s*"[A-Za-z0-9][A-Za-z0-9_.:@%-]{3,120}"''',
+  # Document-reference / identifier key fields observed in scan evidence:
+  # source_key, evidence_section_key, staging_key, tom_edge_key,
+  # source_qra_key, cache_key, render_cache_key, top_key, idempotency_key,
+  # *_export_key, dream_key, memory_key_sha256
+  '''"[a-z0-9_]*(source|section|staging|edge|qra|cache|top|idempotency|export|dream)_key"\s*:\s*"[A-Za-z0-9][A-Za-z0-9_.:@%-]{3,120}"''',
+  '''"memory_key_sha256"\s*:\s*"[0-9a-fA-F]{64}"''',
+  # Content-addressed digests
+  '''sha(1|256|512):[0-9a-fA-F]{8,128}''',
+  # Documentation placeholders
+  '''(?i)(YOUR_API_KEY|CHANGEME|<api[-_]?key>|xxxxxxxxxxxx)''',
+]
