@@ -1861,7 +1861,10 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                 if handler in ROUNDTABLE_HANDLERS
             },
             "browser_transport_serialized": False,
-            "browser_transport_lock_queued": input.topology == "concurrent"
+            "browser_transport_lock_queued": os.environ.get(
+                "ASK_BROWSER_TRANSPORT_SERIAL", "0"
+            ).lower() not in {"0", "false", "no"}
+            and input.topology == "concurrent"
             and len(browser_resource_chain) > 1,
             "browser_transport_chain": browser_resource_chain,
         },

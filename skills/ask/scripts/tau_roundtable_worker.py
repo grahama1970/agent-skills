@@ -4572,12 +4572,13 @@ def _run_browser_transport_cmd(
 ) -> CmdResult:
     """Serialize Surf provider submits across Ask workers.
 
-    Surf provider commands can use different tab-scoped locks while still
-    sharing one extension/native-host socket. Ask keeps the Tau nodes alive but
-    queues the actual browser transport so concurrent roundtables do not wedge
-    each other in the native host.
+    Concurrent by default: each roundtable lane submits to its own tab, and
+    Surf serializes per tab at both the file-lock and host-lease layers, so
+    lanes do not wedge each other. Set ASK_BROWSER_TRANSPORT_SERIAL=1 to
+    restore the global one-submit-at-a-time queue (a whole submit-and-capture
+    cycle per seat, which turns a concurrent panel into a serial one).
     """
-    if os.environ.get("ASK_BROWSER_TRANSPORT_SERIAL", "1").lower() in {"0", "false", "no"}:
+    if os.environ.get("ASK_BROWSER_TRANSPORT_SERIAL", "0").lower() in {"0", "false", "no"}:
         return _run_cmd(command, cwd=cwd, timeout=timeout)
 
     lock_path = Path(os.environ.get("ASK_BROWSER_TRANSPORT_LOCK_FILE", "/tmp/ask-surf-browser-transport.lock"))

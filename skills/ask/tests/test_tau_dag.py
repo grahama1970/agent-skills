@@ -190,7 +190,7 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
     assert {"from": "handler-webgpt", "to": "join"} in dag["edges"]
     assert {"from": "handler-webgemini", "to": "join"} in dag["edges"]
     assert dag["context"]["browser_transport_serialized"] is False
-    assert dag["context"]["browser_transport_lock_queued"] is True
+    assert dag["context"]["browser_transport_lock_queued"] is False
     assert dag["context"]["browser_transport_chain"] == [
         "handler-webkimi",
         "handler-webclaude",
@@ -1111,7 +1111,7 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
         {"from": "join", "to": "human"},
     ]
     assert dag["context"]["browser_transport_serialized"] is False
-    assert dag["context"]["browser_transport_lock_queued"] is True
+    assert dag["context"]["browser_transport_lock_queued"] is False
     candidates = [node for node in dag["nodes"] if str(node["id"]).startswith("handler-")]
     assert candidates
     assert all(node["context"]["workflow_mode"] == "compete" for node in candidates)
