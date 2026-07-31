@@ -1,0 +1,32 @@
+{
+  "artifacts": {
+    "arena_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-receipt.json",
+    "handoff": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-handoff.json",
+    "hidden_ground_truth": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/hidden-ground-truth.json",
+    "oracle": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/exploit_check.py",
+    "research_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-research-receipt.json",
+    "scenario": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/scenario.json",
+    "target_app": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/app.py",
+    "tau_subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/tau-subagent-receipt.json",
+    "tau_validation": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/tau-subagent-validation.json"
+  },
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Red or Blue can discover or patch the scenario.",
+      "Multi-round Battle orchestration.",
+      "Production scenario diversity."
+    ],
+    "proves": [
+      "Arena can use Brave-backed research to select one scenario.",
+      "Arena can create a public entrypoint and hidden exploit oracle.",
+      "Arena can prove the hidden bug with Docker-only execution.",
+      "Arena can emit a Tau-shaped subagent receipt."
+    ]
+  },
+  "live": "brave_search_and_docker_oracle",
+  "mocked": false,
+  "run_id": "issue-116-adaptive-canary-20260726-g1-arena",
+  "schema": "battle.arena_subagent_run_receipt.v1",
+  "status": "PASS"
+}

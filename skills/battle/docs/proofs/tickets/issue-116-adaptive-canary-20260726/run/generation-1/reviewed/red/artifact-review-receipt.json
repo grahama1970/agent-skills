@@ -1,0 +1,21 @@
+{
+  "checks": {
+    "docker_compile_passed": true,
+    "private_reference_scan_passed": true,
+    "role_interface_preserved": false,
+    "selected_hash_bound": true
+  },
+  "compile_receipt_sha256": "557023ad2239d0b32434856d3197d1e40e90626147a8f1a82fd5285564d83e97",
+  "created_at": "2026-07-26T12:29:51Z",
+  "descriptor_sha256": "766133d2e60c44a62b7f639f80d027d8719d35f351e991b8bdb5952961004ead",
+  "errors": [
+    "red artifact does not bind the public app import interface"
+  ],
+  "generation": 1,
+  "provider_receipt_sha256": "6b45e053d31f5d45cc86210ffb979f0648aef8e283b92cad94e2bbe54eec9188",
+  "schema": "battle.team_artifact_review_receipt.v1",
+  "selected_artifact_sha256": "fbc7e9226f35da76e301e26fca09683eff993f13a5ca454f999edd82fddb6423",
+  "status": "BLOCKED",
+  "target_identity_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+  "team": "red"
+}

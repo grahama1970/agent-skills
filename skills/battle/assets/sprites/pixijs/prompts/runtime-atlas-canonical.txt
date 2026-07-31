@@ -1,0 +1,126 @@
+Use the uploaded reference image as the ONLY character reference.
+
+Create a production-ready PixiJS v8 sprite atlas for an original BATTLE race-engine character.
+
+The output must be a clean runtime sprite sheet, not a presentation sheet.
+
+CHARACTER REQUIREMENTS
+- Preserve the uploaded character's silhouette, proportions, colors, face/head shape, armor/clothing/creature details, weapon/tool shapes, and most recognizable visual traits.
+- Convert the character into original 16-bit side-view pixel art.
+- Character always faces RIGHT.
+- Keep scale consistent in every frame.
+- Feet/body baseline must align consistently in every frame.
+- Do not change the character into a different creature, soldier, faction, or archetype.
+- Do not add logos, readable text, faction symbols, copyrighted insignia, labels, UI panels, borders, titles, or metadata inside the image.
+
+PIXEL ART STYLE
+- 16-bit early-console side-scroller pixel art.
+- Crisp hard pixel edges.
+- Nearest-neighbor look.
+- Limited palette.
+- Strong readable silhouette.
+- No painterly blur.
+- No anti-aliased soft edges.
+- No realistic rendering.
+- No shadows outside each frame except a tiny pixel-art contact shadow if it stays inside the cell.
+
+ATLAS FORMAT
+- Transparent background.
+- Frames only.
+- No labels.
+- No text.
+- No side panel.
+- No row names.
+- No decorative background.
+- No checkerboard background.
+- No visible grid lines in the final image.
+- Strict grid layout.
+- 8 columns.
+- 14 rows.
+- Every cell must be exactly the same size.
+- Every frame must be centered inside its cell.
+- Empty cells must be fully transparent.
+- Do not let effects, weapons, tails, particles, or projectiles cross cell boundaries.
+- Do not overlap neighboring frames.
+- Do not vary the spacing between frames.
+- Keep all animation rows horizontally aligned.
+
+FRAME SIZE
+- Use 64x64 pixel cells for humanoid characters.
+- Use 96x64 pixel cells for wide slug, tail, beast, or long-body characters.
+- Choose one fixed cell size and use it for the entire sheet.
+- The final atlas should be exactly:
+  - 512x896 if using 64x64 cells
+  - 768x896 if using 96x64 cells
+
+ROW LAYOUT
+Each row is one animation. Use exactly this order:
+
+Row 0: idle — 4 frames, then 4 transparent empty cells
+Row 1: walk — 6 frames, then 2 transparent empty cells
+Row 2: run — 8 frames
+Row 3: research — 6 frames, then 2 transparent empty cells
+Row 4: payload — 6 frames, then 2 transparent empty cells
+Row 5: mutate — 6 frames, then 2 transparent empty cells
+Row 6: handoff — 6 frames, then 2 transparent empty cells
+Row 7: spawn — 8 frames
+Row 8: blocked — 6 frames, then 2 transparent empty cells
+Row 9: hit — 3 frames, then 5 transparent empty cells
+Row 10: killed — 8 frames
+Row 11: victory — 8 frames
+Row 12: promoted — 8 frames
+Row 13: fastest_crash — 8 frames
+
+ANIMATION DESCRIPTIONS
+idle:
+Subtle breathing, small body bob, weapon or hands steady.
+
+walk:
+Readable side-view walking cycle. Heavy, deliberate movement.
+
+run:
+Fast side-view run cycle. More forward lean and stronger leg/arm motion than walk.
+
+research:
+Scanning or analyzing action. Small purple/cyan signal effect contained inside the cell.
+
+payload:
+Attack or payload action. Weapon, spell, spit, claw, or tool fires forward. Muzzle flash or projectile start must stay inside the cell.
+
+mutate:
+Corrupted green/purple energy around the character. The body changes slightly but remains the same character.
+
+handoff:
+Character extends a signal, object, hand, weapon, or energy forward as if passing context to a child agent.
+
+spawn:
+Purple materialization sequence. Start with particles/silhouette and end as the fully formed character.
+
+blocked:
+Blue shield impact against the character. Shield effect must stay inside the cell.
+
+hit:
+Short stagger or recoil. No terminal destruction.
+
+killed:
+Character collapses, breaks apart, melts, explodes, or becomes debris. Must remain readable as this same character.
+
+victory:
+Triumphant celebration, raised weapon, roar, cheer, or proud pose.
+
+promoted:
+Green survivor aura / shield elevation / upgrade glow. Character stays recognizable.
+
+fastest_crash:
+Green rocket-like dash or crash streak. Character lunges forward with green speed trail contained inside each cell.
+
+IMPORTANT CONSISTENCY RULES
+- Same character in every row.
+- Same costume/body/helmet/head/weapon identity in every row.
+- Same side-view direction in every row.
+- Same baseline in every row.
+- Same frame size in every row.
+- Same pixel-art style in every row.
+- No row can become a different character.
+- No decorative labels or presentation layout.
+- This must be usable as a PixiJS spritesheet atlas.

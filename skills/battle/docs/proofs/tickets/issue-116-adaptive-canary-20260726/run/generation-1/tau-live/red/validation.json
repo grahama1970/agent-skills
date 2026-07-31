@@ -1,0 +1,16 @@
+{
+  "battle_id": "battle-004",
+  "checks": {
+    "handoff_written": true,
+    "materialization_status": "PASS",
+    "scillm_call_receipt_written": true,
+    "subagent_receipt_written": true
+  },
+  "live": true,
+  "mocked": false,
+  "run_id": "issue-116-adaptive-canary-20260726-g1",
+  "schema": "tau.battle_handoff_validation.v1",
+  "status": "PASS",
+  "team": "red",
+  "worker_id": "red-0"
+}

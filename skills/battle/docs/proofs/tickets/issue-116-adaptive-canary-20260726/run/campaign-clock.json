@@ -1,0 +1,8 @@
+{
+  "battle_id": "battle-004",
+  "campaign_clock_id": "issue-116-adaptive-canary-20260726-clock",
+  "monotonic_epoch_process_id": 876809,
+  "run_id": "issue-116-adaptive-canary-20260726",
+  "schema": "battle.campaign_clock.v1",
+  "started_at": "2026-07-26T12:29:03Z"
+}

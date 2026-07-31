@@ -1,0 +1,43 @@
+{
+  "context": {
+    "artifacts": [],
+    "battle": {
+      "battle_id": "battle-004",
+      "output_dir": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena",
+      "research_query": "OWASP file upload zip slip path traversal vulnerability",
+      "run_id": "issue-116-adaptive-canary-20260726-g1-arena",
+      "team": "arena"
+    },
+    "summary": "Arena must select the next Battle scenario using score history and Brave-backed vulnerability research."
+  },
+  "github": {
+    "repo": "grahama1970/tau",
+    "target": "local"
+  },
+  "goal": {
+    "goal_hash": "sha256:988d969b0e8e56e6ced975e45c191739e8e046f5b1caa202baa033b5dd0655c6",
+    "goal_id": "goal-battle-battle-004-arena",
+    "goal_version": 1
+  },
+  "next_agent": {
+    "executor": "local",
+    "name": "battle-arena",
+    "reason": "Create researched scenario, public entrypoint, hidden exploit, and oracle."
+  },
+  "previous_subagent": "battle-orchestrator",
+  "rationale": "Battle needs an adaptive hidden-bug scenario before Red/Blue run.",
+  "required_evidence": [
+    "arena-research-receipt.json",
+    "scenario.json",
+    "hidden-ground-truth.json",
+    "arena-receipt.json",
+    "Docker oracle stdout/stderr"
+  ],
+  "result": {
+    "evidence": [],
+    "status": "READY",
+    "summary": "Arena scenario-selection turn is ready."
+  },
+  "schema": "tau.agent_handoff.v1",
+  "stop_condition": "Arena Docker oracle proves the hidden vulnerability exists."
+}

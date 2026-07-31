@@ -1,0 +1,35 @@
+{
+  "artifact_dir": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena",
+  "commands_run": [
+    {
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/brave-search/brave_search.py",
+        "web",
+        "OWASP file upload zip slip path traversal vulnerability",
+        "--count",
+        "5",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stderr_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena/brave-search.stderr.txt",
+      "stdout_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena/brave-search.stdout.json"
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "query": "OWASP file upload zip slip path traversal vulnerability",
+  "result_count": 5,
+  "schema": "battle.arena_research_receipt.v1",
+  "selected_result_titles": [
+    "Arbitrary File Write via Archive Extraction (Zip Slip)- OWASP Juiceshop #1 | by DebianHat | Medium",
+    "wstg/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files.md at master \u00b7 OWASP/wstg",
+    "WSTG - Latest | OWASP Foundation"
+  ],
+  "selected_result_urls": [
+    "https://debianhat.medium.com/arbitrary-file-write-via-archive-extraction-zip-slip-owasp-juiceshop-1-a79164b291b2",
+    "https://github.com/OWASP/wstg/blob/master/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files.md",
+    "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files"
+  ],
+  "status": "PASS"
+}

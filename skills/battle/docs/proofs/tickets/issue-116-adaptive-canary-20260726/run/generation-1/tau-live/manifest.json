@@ -1,0 +1,146 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Battle Docker scorekeeper PASS unless Battle consumes this manifest and Judge receipts.",
+      "Unbounded Battle swarm execution.",
+      "Child-spawn lineage; this rung uses bounded independent workers.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Tau consumed bounded Battle Red and Blue handoffs.",
+      "Tau attempted Scillm chat-completions calls for each requested worker.",
+      "Tau wrote tau.subagent_receipt.v1 artifacts for each requested worker.",
+      "Each worker has its own materialization receipt."
+    ]
+  },
+  "duration_seconds": 44.967262,
+  "handoff_topology": "bounded_worker_matrix",
+  "live": true,
+  "materialized_counts": {
+    "blue": 1,
+    "red": 1
+  },
+  "mocked": false,
+  "model": "gpt-5.5",
+  "requested_workers": {
+    "blue": 1,
+    "red": 1
+  },
+  "run_id": "issue-116-adaptive-canary-20260726-g1",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_live_handoff_proof.v1",
+  "scillm_auth_preflight": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/scillm-auth-preflight.json",
+  "scillm_base_url": "http://localhost:4001",
+  "status": "PASS",
+  "surface": "scillm.chat_completions",
+  "teams": [
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/red/handoff.json",
+      "http_status": 200,
+      "lane_id": "payload-857-receipt",
+      "materialized": {
+        "artifact_bytes": 3802,
+        "artifact_sha256": "fbc7e9226f35da76e301e26fca09683eff993f13a5ca454f999edd82fddb6423",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/red/red_exploit_submission.py",
+        "rationale": "The public app.py joins each zip member name directly to the destination and writes it without canonical path validation. A zip entry named ../arena_escape.txt therefore escapes the intended extraction directory. The exploit locally imports import_zip, feeds it such an archive, and confirms the escaped file contents.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "d4989a4422fb9c647ee568dbf4afc2d4562f465cc15fa941df298ca870cc0db5",
+        "status": "PASS",
+        "strategy_genome_sha256": "e7a1927b856d1141862d109670495a2a231653e6087099ffa0a9cca9ab44e14a"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 3802,
+        "artifact_sha256": "fbc7e9226f35da76e301e26fca09683eff993f13a5ca454f999edd82fddb6423",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/red/red_exploit_submission.py",
+        "rationale": "The public app.py joins each zip member name directly to the destination and writes it without canonical path validation. A zip entry named ../arena_escape.txt therefore escapes the intended extraction directory. The exploit locally imports import_zip, feeds it such an archive, and confirms the escaped file contents.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "d4989a4422fb9c647ee568dbf4afc2d4562f465cc15fa941df298ca870cc0db5",
+        "status": "PASS",
+        "strategy_genome_sha256": "e7a1927b856d1141862d109670495a2a231653e6087099ffa0a9cca9ab44e14a"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-red-public-auditor",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/red/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/red/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "red",
+      "validation": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/red/validation.json",
+      "validation_ok": true,
+      "worker_id": "red-0",
+      "worker_index": 0
+    },
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/handoff.json",
+      "http_status": 200,
+      "lane_id": null,
+      "materialized": {
+        "artifact_bytes": 2581,
+        "artifact_sha256": "b709e34d68305a73f041ea50fcd9187ba3213c34b9756fab3546bd6a6f471530",
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/app.py",
+        "rationale": "Hardens archive extraction by canonicalizing each member path against the destination and rejecting entries that could escape the workspace, including ../ traversal, absolute paths, Windows drive or UNC forms, backslash traversal, and symlink entries. It preserves the import_zip API and normal extraction behavior for safe files.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "fd9f66345905f9f3b38431f27dc6e17deaca2c54831c422fddee15ba8d70948b",
+        "status": "PASS",
+        "strategy_genome_sha256": "a8f81c8ac35f1bee5fa98af6195052ec7700728d747c1a7f9bd51863d674a381"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 2581,
+        "artifact_sha256": "b709e34d68305a73f041ea50fcd9187ba3213c34b9756fab3546bd6a6f471530",
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/app.py",
+        "rationale": "Hardens archive extraction by canonicalizing each member path against the destination and rejecting entries that could escape the workspace, including ../ traversal, absolute paths, Windows drive or UNC forms, backslash traversal, and symlink entries. It preserves the import_zip API and normal extraction behavior for safe files.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "fd9f66345905f9f3b38431f27dc6e17deaca2c54831c422fddee15ba8d70948b",
+        "status": "PASS",
+        "strategy_genome_sha256": "a8f81c8ac35f1bee5fa98af6195052ec7700728d747c1a7f9bd51863d674a381"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-blue-public-hardener",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "blue",
+      "validation": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/validation.json",
+      "validation_ok": true,
+      "worker_id": "blue-0",
+      "worker_index": 0
+    }
+  ],
+  "timing": {
+    "initial_tau_ended_elapsed_seconds": 47.449297,
+    "initial_tau_started_elapsed_seconds": 1.837929,
+    "source": "battle_control_plane_perf_counter"
+  }
+}
