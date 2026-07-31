@@ -8,6 +8,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from typing import Any
 
 from typer.testing import CliRunner
 
@@ -197,7 +198,8 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
         "handler-webgemini",
     ]
     join = dag["nodes"][-1]
-    assert join["join"]["requires_completed"] == [
+    assert "join" not in join
+    assert join["context"]["join_semantics"]["requires_completed"] == [
         "handler-webkimi",
         "handler-webclaude",
         "handler-webgpt",
@@ -902,6 +904,159 @@ def test_browser_command_specs_use_long_provider_timeout_envelope(tmp_path: Path
         assert command[command.index("--browser-lock-timeout") + 1] == "3600"
 
 
+def test_browser_command_specs_cap_executed_browser_workers_to_requested_budget(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Compete webgpt, webclaude, webkimi, webgrok, and webgemini on timeout budgets.",
+        repo="local/ask",
+        target="issue-1032-timeout-budgets",
+        immutable_goal="Every browser worker is bounded by the requested execution budget.",
+        handlers=["webgpt", "webclaude", "webkimi", "webgrok", "webgemini"],
+        workflow_mode="compete",
+        output_root=tmp_path,
+        execution_timeout_seconds=900,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    for node in ("handler-webgpt", "handler-webclaude", "handler-webkimi", "handler-webgrok", "handler-webgemini"):
+        spec = json.loads(
+            Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
+        )
+        command = spec["command"]
+        assert spec["timeout_s"] == 900 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+        assert command[command.index("--timeout") + 1] == "900"
+        assert command[command.index("--command-timeout-budget") + 1] == "900"
+
+
+def test_browser_submit_timeout_budget_caps_nested_surf_watchdog(monkeypatch) -> None:
+    monkeypatch.setenv("SURF_LOCK_TIMEOUT_MS", str(3600 * 1000))
+
+    assert tau_roundtable_worker._browser_submit_timeout("webkimi", 900, command_timeout_budget=900) == 900
+    assert tau_roundtable_worker._browser_submit_timeout("webgrok", 900, command_timeout_budget=900) == 900
+    assert tau_roundtable_worker._browser_submit_timeout("webclaude", 900, command_timeout_budget=900) == 900
+    assert tau_roundtable_worker._browser_submit_timeout("webgpt", 900, command_timeout_budget=900) == 900
+    assert tau_roundtable_worker._browser_submit_timeout("webgemini", 900, command_timeout_budget=900) == 900
+
+
+def test_compete_cli_execute_passes_poll_timeout_to_browser_worker_budget(monkeypatch, tmp_path: Path) -> None:
+    captured: dict[str, Any] = {}
+
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "_probe_browser_provider_availability",
+        lambda *args, **kwargs: {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "AVAILABLE_PREFLIGHT",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "providers": {},
+        },
+    )
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "_provision_browser_lifecycle",
+        lambda *args, **kwargs: {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"},
+    )
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "probe_browser_compete_handler_gate",
+        lambda *args, **kwargs: {"schema": "ask.browser_compete_handler_gate.v1", "skipped": True},
+    )
+
+    def fake_run_tau_dag_bundle(bundle: dict[str, Any], **kwargs) -> dict[str, Any]:
+        captured["bundle"] = bundle
+        return {
+            "schema": "ask.tau_dag_execution.v1",
+            "status": "NEEDS_ATTENTION",
+            "ok": False,
+            "mocked": False,
+            "live": True,
+            "provider_live": False,
+        }
+
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_run_tau_dag_bundle)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "compete",
+            "Each candidate must answer PING_RESULT: 4.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "issue-1032-cli-budget",
+            "--immutable-goal",
+            "Every browser worker is bounded by the requested poll timeout.",
+            "--handler",
+            "webgpt",
+            "--handler",
+            "webclaude",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--poll-timeout-seconds",
+            "900",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 4
+    bundle = captured["bundle"]
+    for node in ("handler-webgpt", "handler-webclaude"):
+        spec = json.loads(
+            Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
+        )
+        command = spec["command"]
+        assert spec["timeout_s"] == 900 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+        assert command[command.index("--command-timeout-budget") + 1] == "900"
+
+
+def test_browser_compete_gate_timeout_kills_process_group(tmp_path: Path) -> None:
+    marker = tmp_path / "gate-child-survived.txt"
+    child_code = (
+        "import pathlib, time; "
+        "time.sleep(2); "
+        f"pathlib.Path({str(marker)!r}).write_text('survived', encoding='utf-8')"
+    )
+    parent_code = (
+        "import subprocess, sys, time; "
+        f"subprocess.Popen([sys.executable, '-c', {child_code!r}]); "
+        "time.sleep(10)"
+    )
+
+    result = tau_dag._run_gate_command([sys.executable, "-c", parent_code], cwd=tmp_path, timeout_seconds=1)
+
+    assert result["returncode"] == 124
+    assert result["timed_out"] is True
+    assert "killed process group" in result["stderr"]
+    time.sleep(2.5)
+    assert not marker.exists()
+
+
+def test_browser_lifecycle_timeout_kills_process_group(tmp_path: Path) -> None:
+    marker = tmp_path / "lifecycle-child-survived.txt"
+    child_code = (
+        "import pathlib, time; "
+        "time.sleep(2); "
+        f"pathlib.Path({str(marker)!r}).write_text('survived', encoding='utf-8')"
+    )
+    parent_code = (
+        "import subprocess, sys, time; "
+        f"subprocess.Popen([sys.executable, '-c', {child_code!r}]); "
+        "time.sleep(10)"
+    )
+
+    result = tau_dag_cli._lifecycle_command([sys.executable, "-c", parent_code], cwd=tmp_path, timeout_seconds=1)
+
+    assert result["returncode"] == 124
+    assert result["timed_out"] is True
+    assert "killed process group" in result["stderr"]
+    time.sleep(2.5)
+    assert not marker.exists()
+
+
 def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_path: Path) -> None:
     request = infer_compile_input(
         "Roundtable webgpt and webkimi.",
@@ -973,7 +1128,8 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
     assert join["context"]["role"] == "compete_evaluator"
     assert "compete_scorecard" in join["required_evidence"]
     assert "winner_continuation_request" in join["required_evidence"]
-    assert join["join"]["fail_closed_on_tie"] is True
+    assert "join" not in join
+    assert join["context"]["join_semantics"]["fail_closed_on_tie"] is True
     command_spec = json.loads(
         Path(bundle["command_spec_root"], "handler-webgpt", "tau-dispatch-command.json").read_text(
             encoding="utf-8"
@@ -1486,6 +1642,123 @@ raise SystemExit(2)
     assert receipt["recovery_packet_path"] == str(artifact_dir / "browser-recovery-packet.json")
     assert recovery["status"] == "NEEDS_ATTENTION"
     assert recovery["next_command"]
+
+
+def test_webgpt_identity_failure_recovery_resubmits_with_expected_url(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Compete with a fresh WebGPT tab while many ChatGPT tabs are open."}) + "\n",
+        encoding="utf-8",
+    )
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    surf_log = tmp_path / "surf-commands.jsonl"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        f"""#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+with Path({str(surf_log)!r}).open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(args) + "\\n")
+if args[:1] == ["webgpt.submit"]:
+    raw = Path(args[args.index("--raw-output") + 1])
+    meta = Path(args[args.index("--meta-output") + 1])
+    raw.write_text("")
+    meta.write_text(json.dumps({{
+        "status": "failed",
+        "failure": "tab_identity_preflight_failed",
+        "submitted_to_chatgpt": False,
+        "requested_tab_id": "837362433",
+        "requested_url": None,
+        "tab_identity_preflight": {{
+            "ok": False,
+            "error": "unverified_tab_id_with_multiple_chatgpt_tabs",
+            "expected_url": None,
+            "tab": {{"id": "837362433", "url": "https://chatgpt.com/", "title": "ChatGPT"}},
+            "chatgpt_tabs_count": 23,
+        }},
+    }}) + "\\n")
+    print("unverified_tab_id_with_multiple_chatgpt_tabs", file=sys.stderr)
+    raise SystemExit(2)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+args = sys.argv[1:]
+if args[:1] == ["resolve"]:
+    print(json.dumps({
+        "backend": "webgpt",
+        "project": "pdf-oxide-mvp-retry-20260727T1315Z-webgpt",
+        "tab_id": "837362433",
+        "conversation_url": "https://chatgpt.com/",
+        "status": "ok",
+    }))
+    raise SystemExit(0)
+raise SystemExit(2)
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-webgpt",
+            "--handler",
+            "webgpt",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            str(surf),
+            "--browser-oracle-run",
+            str(browser_oracle),
+            "--browser-oracle-project",
+            "pdf-oxide-mvp-retry-20260727T1315Z-webgpt",
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    submitted = [json.loads(line) for line in surf_log.read_text(encoding="utf-8").splitlines()]
+    webgpt_submit = next(item for item in submitted if item[:1] == ["webgpt.submit"])
+    assert webgpt_submit[0] == "webgpt.submit"
+    assert webgpt_submit[webgpt_submit.index("--tab-id") + 1] == "837362433"
+    assert webgpt_submit[webgpt_submit.index("--expect-url") + 1] == "https://chatgpt.com/"
+
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["failure_code"] == "browser_submit_not_accepted"
+    assert recovery["failure_code"] == "browser_submit_not_accepted"
+    assert recovery["next_command"][1] == "webgpt.submit"
+    assert "open-bind" not in recovery["next_command"]
+    assert recovery["next_command"][recovery["next_command"].index("--tab-id") + 1] == "837362433"
+    assert recovery["next_command"][recovery["next_command"].index("--expect-url") + 1] == "https://chatgpt.com/"
 
 
 def test_browser_lane_sanitizes_local_paths_and_attaches_bundle_before_submit(tmp_path: Path) -> None:
@@ -2425,6 +2698,258 @@ def test_run_tau_dag_bundle_synthesizes_missing_browser_timeout_receipt_and_join
     assert "DO NOT IMPORT" not in summary
 
 
+def test_run_tau_dag_bundle_synthesizes_webgpt_recovery_from_orphaned_submit_artifacts(
+    monkeypatch, tmp_path: Path
+) -> None:
+    request = infer_compile_input(
+        "Ask webgpt for a tiny attached-bundle review.",
+        repo="local/agent-skills",
+        target="issue-1094-orphaned-webgpt",
+        immutable_goal="WebGPT lane emits terminal artifacts when submit was accepted but no receipt was written.",
+        handlers=["webgpt"],
+        dag_template="single-call",
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    artifacts = run_dir / "node-artifacts"
+    node_dir = artifacts / "handler-webgpt"
+    node_dir.mkdir(parents=True, exist_ok=True)
+    (node_dir / "prompt.md").write_text("Prompt submitted to WebGPT.\n", encoding="utf-8")
+    (node_dir / "response.md.submitted.md").write_text("Prompt submitted to WebGPT.\n", encoding="utf-8")
+    sentinel = "<<<WEBGPT_DONE:20260729T121500Z:1094>>>>"
+    (node_dir / "response.md.receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_submit_receipt.v1",
+                "status": "submitted_to_chatgpt",
+                "submitted_to_chatgpt": True,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363669",
+                "output": str(node_dir / "response.md"),
+                "raw_output": str(node_dir / "response.raw.md"),
+                "meta_output": str(node_dir / "response.meta.json"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (node_dir / "webgpt_inflight.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_inflight.v1",
+                "status": "submitted_to_chatgpt",
+                "submitted_to_chatgpt": True,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363669",
+                "recovery_command": f"surf webgpt.recover --artifact-dir {node_dir} --finalize",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (node_dir / "webgpt_heartbeat.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_heartbeat.v1",
+                "phase": "generating",
+                "page_state": "waiting_for_sentinel",
+                "next_expected_artifact": str(node_dir / "response.raw.md"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "handler died before receipt", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    execution = run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    receipt = json.loads((node_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((node_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert execution["status"] == "NEEDS_ATTENTION"
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["synthesized_missing_receipt"] is True
+    assert receipt["failure_code"] == "browser_handler_timeout"
+    assert recovery["failure_code"] == "browser_handler_timeout"
+    assert recovery["auto_retry_blocked_reason"] == "browser_submitted_no_response_proof_requires_recover"
+    assert recovery["evidence"]["submit_receipt_path"] == str(node_dir / "response.md.receipt.json")
+    assert recovery["evidence"]["inflight_path"] == str(node_dir / "webgpt_inflight.json")
+    assert recovery["evidence"]["heartbeat_path"] == str(node_dir / "webgpt_heartbeat.json")
+    assert recovery["evidence"]["inflight_submitted_to_chatgpt"] is True
+    assert recovery["next_command"] == [
+        "surf",
+        "webgpt.recover",
+        "--artifact-dir",
+        str(node_dir),
+        "--finalize",
+    ]
+    assert "$ticket to $ask at agent-skills@main" in recovery["ticket_instruction"]
+    join = json.loads((artifacts / "join" / "node-receipt.json").read_text(encoding="utf-8"))
+    assert join["status"] == "NEEDS_ATTENTION"
+    failed = next(item for item in join["handler_response_index"] if item["handler"] == "webgpt")
+    assert failed["recovery_packet_path"] == str(node_dir / "browser-recovery-packet.json")
+
+
+def test_run_tau_dag_bundle_preserves_attachment_for_prepared_webgpt_orphan(
+    monkeypatch, tmp_path: Path
+) -> None:
+    attached_bundle = tmp_path / "compact evidence bundle.zip"
+    attached_bundle.write_text("bundle bytes", encoding="utf-8")
+    request = infer_compile_input(
+        "Ask webgpt for a tiny attached-bundle review.",
+        repo="local/agent-skills",
+        target="issue-1093-prepared-webgpt-attachment",
+        immutable_goal="Prepared WebGPT prompt recovery preserves the original local attachment path.",
+        handlers=["webgpt"],
+        dag_template="single-call",
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    spec_path = run_dir / "command-specs" / "handler-webgpt" / "tau-dispatch-command.json"
+    command_spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    command_spec["command"].extend(["--attach-file", str(attached_bundle)])
+    spec_path.write_text(json.dumps(command_spec, indent=2) + "\n", encoding="utf-8")
+
+    artifacts = run_dir / "node-artifacts"
+    node_dir = artifacts / "handler-webgpt"
+    node_dir.mkdir(parents=True, exist_ok=True)
+    (node_dir / "prompt.md").write_text("Prompt prepared for WebGPT.\n", encoding="utf-8")
+    (node_dir / "response.md.submitted.md").write_text("Prompt prepared for WebGPT.\n", encoding="utf-8")
+    sentinel = "<<<WEBGPT_DONE:20260729T131500Z:1093>>>>"
+    (node_dir / "response.md.receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_submit_receipt.v1",
+                "status": "prepared_prompt",
+                "submitted_to_chatgpt": False,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363305",
+                "output": str(node_dir / "response.md"),
+                "raw_output": str(node_dir / "response.raw.md"),
+                "meta_output": str(node_dir / "response.meta.json"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (node_dir / "webgpt_inflight.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_inflight.v1",
+                "status": "prepared_prompt",
+                "submitted_to_chatgpt": False,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363305",
+                "recovery_command": f"surf webgpt.recover --artifact-dir {node_dir} --finalize",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (node_dir / "webgpt_heartbeat.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_heartbeat.v1",
+                "phase": "prompt_prepared",
+                "page_state": "waiting_for_submit",
+                "next_expected_artifact": str(node_dir / "response.raw.md"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "worker exited after prompt preparation", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    execution = run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    receipt = json.loads((node_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((node_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert execution["status"] == "NEEDS_ATTENTION"
+    assert receipt["failure_code"] == "browser_submit_not_accepted"
+    assert recovery["failure_code"] == "browser_submit_not_accepted"
+    assert recovery["auto_retry_blocked_reason"] == "browser_prepared_prompt_requires_attachment_preserving_resubmit"
+    assert recovery["evidence"]["requested_attachment_paths"] == [str(attached_bundle)]
+    assert recovery["requested_attachment_paths"] == [str(attached_bundle)]
+    assert recovery["next_command"][1] == "webgpt.submit"
+    assert "--attach-file" in recovery["next_command"]
+    attach_index = recovery["next_command"].index("--attach-file")
+    assert recovery["next_command"][attach_index + 1] == str(attached_bundle)
+    assert "--tab-id" in recovery["next_command"]
+    assert recovery["next_command"][recovery["next_command"].index("--tab-id") + 1] == "837363305"
+
+
+def test_run_tau_dag_bundle_reclassifies_orphaned_webgpt_rate_limit_metadata(
+    monkeypatch, tmp_path: Path
+) -> None:
+    request = infer_compile_input(
+        "Ask webgpt while ChatGPT is rate limited.",
+        repo="local/agent-skills",
+        target="issue-1094-rate-limited-webgpt",
+        immutable_goal="WebGPT provider throttling is terminal lane-local evidence.",
+        handlers=["webgpt"],
+        dag_template="single-call",
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    run_dir = Path(bundle["run_dir"])
+    node_dir = run_dir / "node-artifacts" / "handler-webgpt"
+    node_dir.mkdir(parents=True, exist_ok=True)
+    (node_dir / "prompt.md").write_text("Prompt submitted to WebGPT.\n", encoding="utf-8")
+    (node_dir / "response.md.submitted.md").write_text("Prompt submitted to WebGPT.\n", encoding="utf-8")
+    (node_dir / "response.meta.json").write_text(
+        json.dumps(
+            {
+                "status": "failed",
+                "proof_status": "rate_limited",
+                "submitted_to_chatgpt": False,
+                "chatgpt_too_many_requests_detected": True,
+                "chatgpt_rate_limit": {"exhausted": True, "wait_seconds": 300},
+                "blocker": "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT",
+                "requested_tab_id": "837363698",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    real_run_command = tau_dag._run_command
+
+    def fake_run_command(command: list[str], *, cwd: Path) -> dict[str, object]:
+        if "dag-run" in command:
+            return {"returncode": 1, "stdout": "provider throttle before receipt", "stderr": ""}
+        return real_run_command(command, cwd=cwd)
+
+    monkeypatch.setattr(tau_dag, "_run_command", fake_run_command)
+
+    run_tau_dag_bundle(bundle, tau_project_root=tmp_path, poll=False)
+
+    receipt = json.loads((node_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((node_dir / "browser-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["failure_code"] == "browser_provider_rate_limited"
+    assert recovery["failure_code"] == "browser_provider_rate_limited"
+    assert recovery["auto_retry_blocked_reason"] == "browser_provider_rate_limit_requires_backoff"
+    assert recovery["evidence"]["provider_throttle"] is True
+    assert recovery["fallback_instruction"].startswith("Treat only this browser lane as provider-rate-limited")
+
+
 def test_run_tau_dag_bundle_synthesizes_compete_join_when_all_browser_lanes_need_attention(
     monkeypatch, tmp_path: Path
 ) -> None:
@@ -2535,6 +3060,7 @@ def test_run_tau_dag_bundle_synthesizes_compete_join_when_all_browser_lanes_need
         "browser_provider_rate_limited": 1,
         "repo_access_blocked": 1,
     }
+    assert "competition_transport_blocked" in scorecard["blockers"]
     assert len(scorecard["degradation_analysis"]["recovery_commands"]) == 2
 
 
@@ -2706,6 +3232,30 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
     assert ["bind", "fresh-browser-lifecycle-webkimi", "--backend", "webkimi", "--tab-id", "103", "--url", "https://www.kimi.com/", "--auto", "--json"] in logged
     assert (Path(str(bundle["run_dir"])) / "browser-tab-lifecycle.json").is_file()
 
+    log_path.write_text("", encoding="utf-8")
+    tab_counter.write_text("201", encoding="utf-8")
+    capped_lifecycle = tau_dag_cli._provision_browser_lifecycle(
+        request,
+        mode="auto",
+        run_dir=Path(str(bundle["run_dir"])),
+        timeout_budget_seconds=900,
+        surf_run=surf,
+        browser_oracle_run=browser_oracle,
+    )
+
+    capped_logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    assert capped_lifecycle["status"] == "READY"
+    assert capped_lifecycle["lock_timeout_seconds"] == 900
+    assert capped_lifecycle["command_timeout_seconds"] == 900 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+    assert capped_logged[0] == [
+        "window.new",
+        "https://chatgpt.com/",
+        "--json",
+        "--unfocused",
+        "--lock-timeout",
+        "900",
+    ]
+
 
 def test_browser_tab_lifecycle_auto_skips_non_browser_dag(tmp_path: Path) -> None:
     request = infer_compile_input(
@@ -2836,7 +3386,9 @@ def test_browser_tab_lifecycle_failure_blocks_tau_execution(monkeypatch, tmp_pat
     assert payload["execution"]["no_tau_execution"] is True
 
 
-def test_roundtable_browser_availability_selects_fallback_and_continues(monkeypatch, tmp_path: Path) -> None:
+def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch, tmp_path: Path) -> None:
+    captured: dict[str, Any] = {}
+
     def fake_availability(*args, **kwargs):
         return {
             "schema": "ask.browser_provider_availability.v1",
@@ -2852,17 +3404,17 @@ def test_roundtable_browser_availability_selects_fallback_and_continues(monkeypa
             "path": str(tmp_path / "runs" / "browser-provider-availability.json"),
         }
 
-    seen: dict[str, object] = {}
-
     def fake_lifecycle(input_payload, *args, **kwargs):
-        seen["lifecycle_handlers"] = list(input_payload.handlers)
+        captured["lifecycle_started"] = True
+        captured["lifecycle_handlers"] = list(input_payload.handlers)
         return {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"}
 
-    def fake_tau_execution(bundle, *args, **kwargs):
+    def fake_tau_execution(bundle: dict[str, Any], **kwargs):
+        captured["bundle"] = bundle
         dag = json.loads(Path(bundle["dag_path"]).read_text(encoding="utf-8"))
-        seen["dag_handlers"] = dag["context"]["handlers"]
+        captured["dag_handlers"] = dag["context"]["handlers"]
         claude = next(node for node in dag["nodes"] if node["context"].get("handler") == "webclaude")
-        seen["claude_model_preference"] = claude["context"]["handler_policy"].get("model_preference")
+        captured["claude_model_preference"] = claude["context"]["handler_policy"].get("model_preference")
         return {
             "schema": "ask.tau_dag_execution.v1",
             "status": "PASS",
@@ -2884,9 +3436,9 @@ def test_roundtable_browser_availability_selects_fallback_and_continues(monkeypa
             "--repo",
             "local/agent-skills",
             "--target",
-            "fallback-browser-availability",
+            "blocked-browser-availability",
             "--immutable-goal",
-            "Record provider cooldown and continue the roundtable with the best available replacement.",
+            "Do not submit browser prompts while a requested provider is rate limited.",
             "--handler",
             "webgpt",
             "--handler",
@@ -2903,7 +3455,19 @@ def test_roundtable_browser_availability_selects_fallback_and_continues(monkeypa
     payload = json.loads(result.stdout)
     assert payload["status"] == "PASS"
     assert payload["live"] is True
+    assert captured["lifecycle_started"] is True
+    assert captured["bundle"]["status"] == "READY"
+    assert captured["lifecycle_handlers"] == ["webclaude", "webgemini"]
+    assert captured["dag_handlers"] == ["webclaude", "webgemini"]
+    assert captured["claude_model_preference"] == "Fable 5 High"
     assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
+    assert payload["browser_provider_availability"]["limited_providers"] == ["webgpt"]
+    assert payload["browser_provider_availability"]["cooldown_policy"]["status"] == "LANE_LOCAL_RETRY"
+    assert payload["browser_provider_availability"]["cooldown_policy"]["retry_after_seconds"] == 300
+    assert payload["browser_provider_availability"]["cooldown_policy"]["surf_env"] == {
+        "SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS": "1",
+        "SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS": "300",
+    }
     selection = payload["browser_provider_selection"]
     assert selection["status"] == "ADJUSTED"
     assert selection["limited_providers"] == ["webgpt"]
@@ -2912,12 +3476,13 @@ def test_roundtable_browser_availability_selects_fallback_and_continues(monkeypa
     assert selection["active_handlers"] == ["webclaude", "webgemini"]
     assert selection["cooldown_seconds"] == 600
     assert "skills/ticket/run.sh bug" in selection["ticket_command"]
-    assert seen["lifecycle_handlers"] == ["webclaude", "webgemini"]
-    assert seen["dag_handlers"] == ["webclaude", "webgemini"]
-    assert seen["claude_model_preference"] == "Fable 5 High"
+    assert payload["execution"]["status"] == "PASS"
+    assert "no_tau_execution" not in payload["execution"]
 
 
-def test_compete_browser_availability_selects_fallback_and_continues(monkeypatch, tmp_path: Path) -> None:
+def test_compete_browser_availability_rate_limit_continues_to_tau(monkeypatch, tmp_path: Path) -> None:
+    captured: dict[str, Any] = {}
+
     def fake_availability(*args, **kwargs):
         return {
             "schema": "ask.browser_provider_availability.v1",
@@ -2932,17 +3497,17 @@ def test_compete_browser_availability_selects_fallback_and_continues(monkeypatch
             },
         }
 
-    seen: dict[str, object] = {}
-
     def fake_lifecycle(input_payload, *args, **kwargs):
-        seen["lifecycle_handlers"] = list(input_payload.handlers)
+        captured["lifecycle_started"] = True
+        captured["lifecycle_handlers"] = list(input_payload.handlers)
         return {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": "auto"}
 
-    def fake_tau_execution(bundle, *args, **kwargs):
+    def fake_tau_execution(bundle: dict[str, Any], **kwargs):
+        captured["bundle"] = bundle
         dag = json.loads(Path(bundle["dag_path"]).read_text(encoding="utf-8"))
-        seen["dag_handlers"] = dag["context"]["handlers"]
+        captured["dag_handlers"] = dag["context"]["handlers"]
         claude = next(node for node in dag["nodes"] if node["context"].get("handler") == "webclaude")
-        seen["claude_model_preference"] = claude["context"]["handler_policy"].get("model_preference")
+        captured["claude_model_preference"] = claude["context"]["handler_policy"].get("model_preference")
         return {
             "schema": "ask.tau_dag_execution.v1",
             "status": "PASS",
@@ -2964,9 +3529,9 @@ def test_compete_browser_availability_selects_fallback_and_continues(monkeypatch
             "--repo",
             "local/agent-skills",
             "--target",
-            "fallback-compete-browser-availability",
+            "blocked-compete-browser-availability",
             "--immutable-goal",
-            "Record provider cooldown and continue the competition with the best available replacement.",
+            "Do not submit competition browser prompts while a requested provider is rate limited.",
             "--handler",
             "webgpt",
             "--handler",
@@ -2982,16 +3547,22 @@ def test_compete_browser_availability_selects_fallback_and_continues(monkeypatch
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
     assert payload["status"] == "PASS"
+    assert captured["lifecycle_started"] is True
+    assert captured["bundle"]["status"] == "READY"
+    assert captured["lifecycle_handlers"] == ["webkimi", "webclaude"]
+    assert captured["dag_handlers"] == ["webkimi", "webclaude"]
+    assert captured["claude_model_preference"] == "Opus 5 High"
     assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
+    assert payload["browser_provider_availability"]["limited_providers"] == ["webgpt"]
+    assert payload["browser_provider_availability"]["cooldown_policy"]["retry_after_seconds"] == 300
     selection = payload["browser_provider_selection"]
     assert selection["status"] == "ADJUSTED"
     assert selection["limited_providers"] == ["webgpt"]
     assert selection["active_handlers"] == ["webkimi", "webclaude"]
     assert selection["fallback_handlers"] == ["webclaude"]
     assert "skills/ticket/run.sh bug" in selection["ticket_command"]
-    assert seen["lifecycle_handlers"] == ["webkimi", "webclaude"]
-    assert seen["dag_handlers"] == ["webkimi", "webclaude"]
-    assert seen["claude_model_preference"] == "Opus 5 High"
+    assert payload["execution"]["status"] == "PASS"
+    assert "no_tau_execution" not in payload["execution"]
 
 
 def test_browser_availability_blocks_when_not_enough_available_participants(monkeypatch, tmp_path: Path) -> None:
@@ -3572,7 +4143,67 @@ def test_kimi_clean_output_contamination_is_not_tab_identity_mismatch() -> None:
     assert summary["transport_failure_kind"] == "browser_clean_output_contaminated"
     assert summary["raw_contains_sentinel"] is True
     assert summary["clean_contains_sentinel"] is True
-    assert summary["controlled_tab_id_mismatch"] is False
+
+
+def test_claude_page_prompt_echo_is_clean_output_contamination() -> None:
+    meta = {
+        "status": "failed",
+        "failure": "missing_sentinel_or_contaminated_clean_output",
+        "raw_contains_sentinel": True,
+        "clean_contains_sentinel": False,
+        "requested_tab_id": "837364427",
+        "controlled_tab_id": "837364427",
+        "controlled_tab_id_mismatch": False,
+        "output": "/tmp/response.md",
+        "raw_output": "/tmp/response.raw.md",
+    }
+    response_text = (
+        "Title: New chat - Claude\n"
+        "URL: https://claude.ai/new\n"
+        "@keyframes look-around { 0%, 16.6%, 100% { transform: translateX(-1.5px); } }\n"
+        "What can we tackle together?"
+        "Automation-only instruction: answer the user's request normally.\n"
+    )
+
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webclaude",
+        failure=json.dumps(meta),
+        response_text=response_text,
+        raw_text=response_text + "\n<<<CLAUDE_DONE:test>>>",
+        prompt_text="Roundtable request",
+        submit_meta=meta,
+        commands=[],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_CLEAN_OUTPUT_CONTAMINATED
+
+
+def test_browser_oracle_existing_venv_setup_failure_is_not_missing_sentinel() -> None:
+    failure = """Using CPython 3.14.3
+Creating virtual environment at: .venv
+error: Failed to create virtual environment
+  Caused by: A virtual environment already exists at `/tmp/askmain/skills/browser-oracle/.venv`. Use `--clear` to replace it
+"""
+    commands = [
+        {
+            "command": ["skills/browser-oracle/run.sh", "resolve", "--backend", "webkimi", "--project", "webkimi", "--json"],
+            "returncode": 2,
+            "stderr_excerpt": failure,
+            "stdout_excerpt": "",
+        }
+    ]
+
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        handler="webkimi",
+        failure=failure,
+        response_text="",
+        raw_text="",
+        prompt_text="Roundtable request",
+        submit_meta={},
+        commands=commands,
+    )
+
+    assert failure_code == tau_roundtable_worker.ENVIRONMENT_DEPENDENCY_INSTALL_FAILED
 
 
 def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -> None:

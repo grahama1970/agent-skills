@@ -1783,13 +1783,13 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "handler_response_index",
             "unresolved_gaps",
         ],
-        "join": {
-            "requires_completed": [node["id"] for node in handler_nodes],
-            "reconciles_evidence": True,
-            "topology": input.topology,
-        },
         "context": {
             "role": "compete_evaluator" if is_compete else "roundtable_join",
+            "join_semantics": {
+                "requires_completed": [node["id"] for node in handler_nodes],
+                "reconciles_evidence": True,
+                "topology": input.topology,
+            },
             "workflow_mode": input.workflow_mode,
             **_dag_template_context(input),
             "prompt_contract": _roundtable_join_prompt_contract(input),
@@ -1806,7 +1806,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "winner_continuation_request",
             "unresolved_gaps",
         ]
-        join_node["join"] = {
+        join_node["context"]["join_semantics"] = {
             "requires_completed": [node["id"] for node in handler_nodes],
             "reconciles_evidence": True,
             "topology": input.topology,
