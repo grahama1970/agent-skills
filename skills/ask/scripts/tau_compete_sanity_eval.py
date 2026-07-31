@@ -35,6 +35,8 @@ def main() -> int:
         "local/agent-skills",
         "--target",
         "ask-compete-sanity",
+        "--immutable-goal",
+        "Compile a compete DAG with isolated candidates, explicit scorecard evidence, and fail-closed transport-blocker accounting.",
         "--handler",
         "webgpt",
         "--handler",
@@ -94,7 +96,7 @@ def _summarize(
         _check("concurrent_candidate_edges", _has_compete_edges(dag), {"edges": dag.get("edges")}),
         _check("mixed_handlers_present", set(dag.get("context", {}).get("handlers") or []) == {"webgpt", "webclaude", "gpt-5.5-high"}, {"handlers": dag.get("context", {}).get("handlers")}),
         _check("join_requires_scorecard", "compete_scorecard" in (join.get("required_evidence") or []), {"join": join}),
-        _check("join_requires_revision_request", "winner_revision_request" in (join.get("required_evidence") or []), {"join": join}),
+        _check("join_requires_continuation_request", "winner_continuation_request" in (join.get("required_evidence") or []), {"join": join}),
         _check("command_specs_exist", _command_specs_exist(command_root), {"command_spec_root": str(command_root) if command_root else None}),
         _check("command_specs_mark_compete", _command_specs_mark_compete(command_root), {"command_spec_root": str(command_root) if command_root else None}),
         _check("webclaude_compete_model_policy", _webclaude_model_policy(dag), {"node": _node(dag, "handler-webclaude")}),
@@ -295,7 +297,7 @@ def _run_controlled_transport_blocker_join(output_root: Path) -> dict[str, Any]:
     scorecard = _read_json(scorecard_path)
     transport_blockers = scorecard.get("transport_blockers") if isinstance(scorecard.get("transport_blockers"), list) else []
     ok = (
-        completed.returncode == 1
+        completed.returncode == 0
         and scorecard.get("status") == "NEEDS_ATTENTION"
         and scorecard.get("failure_kind") == "transport"
         and "competition_transport_blocked" in (scorecard.get("blockers") or [])

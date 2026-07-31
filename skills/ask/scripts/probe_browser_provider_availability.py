@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import signal
 import subprocess
 import time
 from dataclasses import dataclass
@@ -150,6 +152,14 @@ def probe(
             explicit_tab_ids=explicit_tabs.get(provider, []),
         )
 
+    report["degraded_providers"] = [
+        name for name, payload in report["providers"].items() if payload.get("probe_degraded")
+    ]
+    report["provider_probe_recovery_packets"] = {
+        name: payload["provider_probe_recovery_packet"]
+        for name, payload in report["providers"].items()
+        if isinstance(payload.get("provider_probe_recovery_packet"), dict)
+    }
     report["status"] = (
         "NEEDS_ATTENTION"
         if any(payload.get("provider_limited") for payload in report["providers"].values())
@@ -176,7 +186,7 @@ def _probe_provider(
     checked = []
     for tab_id_value in _candidate_tab_ids(provider_tabs, explicit_tab_ids, max_tabs):
         checked.append(_check_tab(surf_run=surf_run, tab_id=tab_id_value, pattern=config.limited_pattern))
-    return {
+    payload = {
         "provider": provider,
         "tab_count": len(provider_tabs),
         "tabs": provider_tabs[:25],
@@ -187,6 +197,13 @@ def _probe_provider(
         "failure_code": _provider_probe_failure_code(checked),
         "read_only": True,
     }
+    if payload["probe_degraded"]:
+        packet = _provider_probe_recovery_packet(provider=provider, checked=checked, payload=payload)
+        payload["provider_probe_recovery_packet"] = packet
+        payload["next_command"] = packet["next_command"]
+        payload["ticket_command"] = packet["ticket_command"]
+        payload["ticket_instruction"] = packet["ticket_instruction"]
+    return payload
 
 
 def _parse_tab_list_stdout(stdout: str) -> tuple[list[Any], str | None]:
@@ -197,13 +214,26 @@ def _parse_tab_list_stdout(stdout: str) -> tuple[list[Any], str | None]:
     surf_tab_list_invalid_json (agent-skills#1061).
     """
     text = stdout.strip()
-    for candidate in (text, text[text.find("[") :] if "[" in text else ""):
-        if not candidate:
-            continue
-        try:
-            value = json.loads(candidate)
-        except json.JSONDecodeError:
-            continue
+    if not text:
+        return [], "surf_tab_list_invalid_json"
+    decoder = json.JSONDecoder()
+    try:
+        value, end = decoder.raw_decode(text)
+    except json.JSONDecodeError:
+        value = None
+    else:
+        if text[end:].strip():
+            value = None
+    if value is None:
+        for index, char in enumerate(text):
+            if char not in "[{":
+                continue
+            try:
+                value, _ = decoder.raw_decode(text[index:])
+            except json.JSONDecodeError:
+                continue
+            break
+    if value is not None:
         if isinstance(value, dict):
             value = value.get("tabs")
         if isinstance(value, list):
@@ -233,12 +263,15 @@ def throttle_match(text: str, pattern: str) -> dict[str, Any]:
 def _check_tab(*, surf_run: Path, tab_id: str, pattern: str) -> dict[str, Any]:
     js = (
         "const main = document.querySelector('main') || document.querySelector('[role=\"main\"]');"
+        "const modal = document.querySelector('[role=\"dialog\"], [role=\"alertdialog\"], [aria-modal=\"true\"]');"
         "const body = document.body && document.body.innerText || '';"
         "const scoped = main && main.innerText ? main.innerText : '';"
+        "const modalText = modal && modal.innerText ? modal.innerText : '';"
         "return JSON.stringify({"
         "href: location.href,"
         "title: document.title,"
         "scoped_text: scoped.slice(0, 8000),"
+        "modal_text: modalText.slice(0, 4000),"
         "body_text: body.slice(0, 8000),"
         "has_main: !!main"
         "});"
@@ -251,22 +284,71 @@ def _check_tab(*, surf_run: Path, tab_id: str, pattern: str) -> dict[str, Any]:
     if not isinstance(decoded, dict):
         return payload
     scoped = str(decoded.get("scoped_text") or "")
+    modal = str(decoded.get("modal_text") or "")
     body = str(decoded.get("body_text") or "")
     # Sidebar conversation titles live in body text, so a bare page whose
     # history mentions a throttle would otherwise read as throttled. Judge the
-    # main region when the app exposes one.
-    decision_text = scoped if decoded.get("has_main") and scoped else body
+    # main region when the app exposes one, but let explicit modal/dialog text
+    # and modal-shaped body fallback override clean main text.
+    decision_text, match_source = _provider_decision_text(
+        scoped=scoped,
+        modal=modal,
+        body=body,
+        has_main=bool(decoded.get("has_main")),
+        pattern=pattern,
+    )
     verdict = throttle_match(decision_text, pattern)
     payload.update(
         {
             "href": decoded.get("href"),
             "title": decoded.get("title"),
-            "match_source": "main" if (decoded.get("has_main") and scoped) else "body",
+            "match_source": match_source,
             "text_excerpt": decision_text[:600],
             **verdict,
         }
     )
     return payload
+
+
+def _provider_decision_text(
+    *,
+    scoped: str,
+    modal: str,
+    body: str,
+    has_main: bool,
+    pattern: str,
+) -> tuple[str, str]:
+    if throttle_match(modal, pattern)["limited"]:
+        return modal, "modal"
+    if has_main and scoped:
+        body_verdict = throttle_match(body, pattern)
+        scoped_verdict = throttle_match(scoped, pattern)
+        if (
+            body_verdict["limited"]
+            and not scoped_verdict["limited"]
+            and _body_has_modal_throttle_shape(body)
+        ):
+            return body, "body_modal_like"
+        return scoped, "main"
+    return body, "body"
+
+
+def _body_has_modal_throttle_shape(body: str) -> bool:
+    lowered = (body or "").lower()
+    marker_count = sum(
+        marker in lowered
+        for marker in (
+            "got it",
+            "please wait",
+            "temporarily limited access",
+            "protect your data",
+            "upgrade now",
+            "wait or upgrade",
+            "before limit is gone",
+            "system is currently busy",
+        )
+    )
+    return marker_count >= 1
 
 
 def _provider_probe_failure_code(checked: list[dict[str, Any]]) -> str | None:
@@ -285,6 +367,83 @@ def _provider_probe_failed(checked: list[dict[str, Any]]) -> bool:
     if all(item.get("timed_out") is True for item in failures):
         return False
     return len(failures) == len(checked)
+
+
+def _provider_probe_recovery_packet(
+    *,
+    provider: str,
+    checked: list[dict[str, Any]],
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    failure_code = str(payload.get("failure_code") or "browser_provider_probe_degraded")
+    checked_tab_ids = [str(item.get("tab_id")) for item in checked if item.get("tab_id")]
+    next_command_parts = [
+        "cd skills/ask && ./run.sh browser-availability",
+        f"--provider {provider}",
+        *[f"--tab-id {provider}={tab_id}" for tab_id in checked_tab_ids],
+        f"--output /tmp/ask-browser-availability-{provider}.json",
+        "--json",
+    ]
+    repro_command = " ".join(next_command_parts)
+    observed = (
+        f"{provider} provider availability probe degraded with {failure_code}; "
+        f"checked tabs: {', '.join(checked_tab_ids) if checked_tab_ids else 'none'}"
+    )
+    proof = (
+        "Non-mocked browser-availability receipt showing the provider either reads cleanly, "
+        "is visibly provider-limited, or emits this recovery packet without blocking healthy providers."
+    )
+    ticket_command = (
+        "skills/ticket/run.sh bug "
+        + json.dumps(f"Ask browser availability probe degraded for {provider}")
+        + " --target skills/ask"
+        + " --observed "
+        + json.dumps(observed)
+        + " --expected "
+        + json.dumps(
+            "The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet."
+        )
+        + " --repro "
+        + json.dumps(repro_command)
+        + " --proof "
+        + json.dumps(proof)
+        + " --apply"
+    )
+    return {
+        "schema": "ask.browser_provider_probe_recovery_packet.v1",
+        "status": "NEEDS_ATTENTION" if payload.get("probe_failed") else "DEGRADED",
+        "provider": provider,
+        "failure_code": failure_code,
+        "provider_limited": bool(payload.get("provider_limited")),
+        "probe_failed": bool(payload.get("probe_failed")),
+        "probe_degraded": bool(payload.get("probe_degraded")),
+        "checked_tab_ids": checked_tab_ids,
+        "cooldown_seconds": 600 if payload.get("provider_limited") else 0,
+        "auto_retry_allowed": False,
+        "auto_retry_blocked_reason": (
+            "provider_probe_uncertain_requires_readback"
+            if not payload.get("provider_limited")
+            else "browser_provider_rate_limit_requires_backoff"
+        ),
+        "next_command": repro_command,
+        "fallback_instruction": (
+            "Do not block healthy roundtable or competition participants on this probe. "
+            "Rerun only this provider availability probe, or use Ask's browser provider selection "
+            "to replace this lane when enough alternatives are available."
+        ),
+        "ticket_target": "$ask at agent-skills@main",
+        "ticket_instruction": (
+            "If this provider remains degraded after rerunning next_command, if the provider is needed "
+            "for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket "
+            "to $ask at agent-skills@main with browser-provider-availability.json and the provider entry."
+        ),
+        "ticket_command": ticket_command,
+        "evidence": {
+            "checked_tabs": checked,
+            "tab_count": payload.get("tab_count"),
+            "provider_tabs": payload.get("tabs"),
+        },
+    }
 
 
 def _candidate_tab_ids(provider_tabs: list[dict[str, Any]], explicit_tab_ids: list[str], max_tabs: int) -> list[str]:
@@ -353,17 +512,55 @@ def _decode_surf_js_stdout(stdout: str) -> Any:
 
 
 def _run(command: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
+    proc: subprocess.Popen[str] | None = None
     try:
-        return subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=timeout)
+        proc = subprocess.Popen(
+            command,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
+        stdout, stderr = proc.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=proc.returncode,
+            stdout=stdout,
+            stderr=stderr,
+        )
     except subprocess.TimeoutExpired as exc:
+        if proc is not None:
+            _terminate_process_group(proc.pid)
+            try:
+                stdout, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                _kill_process_group(proc.pid)
+                stdout, stderr = proc.communicate()
+        else:
+            stdout = str(exc.stdout or "")
+            stderr = str(exc.stderr or "")
         return subprocess.CompletedProcess(
             args=command,
             returncode=124,
-            stdout=str(exc.stdout or ""),
-            stderr=str(exc.stderr or f"command timed out after {timeout}s"),
+            stdout=stdout or "",
+            stderr=(stderr or "") + f"\n[provider-availability] command timed out after {timeout}s; killed process group\n",
         )
     except OSError as exc:
         return subprocess.CompletedProcess(args=command, returncode=127, stdout="", stderr=str(exc))
+
+
+def _terminate_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+
+
+def _kill_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
 
 
 def _proc_summary(proc: subprocess.CompletedProcess[str]) -> dict[str, Any]:

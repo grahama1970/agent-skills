@@ -201,7 +201,7 @@ All QRAs share a common schema, with mode-specific fields:
   "run_id": "skill_create_qras_native_1712836800",
   
   "question": "What is T1595 Active Scanning according to MITRE ATT&CK?",
-  "reasoning": "The ATT&CK description defines Active Scanning as...",
+  "reasoning": "Scanning is classed as reconnaissance rather than access because it probes an exposed surface without exercising a vulnerability, so it precedes and informs later technique selection.",
   "answer": "T1595 Active Scanning is a reconnaissance technique...",
   "evidence_quotes": [
     {"quote": "Adversaries may execute active reconnaissance scans...", "relevance": "Primary definition"}
@@ -243,12 +243,22 @@ Every generated QRA is validated:
 | Gate | Criteria | Required |
 |------|----------|----------|
 | `has_question` | Question field exists | Yes |
-| `has_reasoning` | Reasoning > 10 words | Yes |
+| `has_reasoning` | Reasoning present and non-empty | Yes |
+| `reasoning_not_source` | Reasoning is not a verbatim copy of the source description | Yes |
+| `reasoning_unique` | Reasoning is not byte-identical to another QRA's reasoning | Yes |
 | `has_answer` | Answer > 5 words | Yes |
 | `has_evidence` | At least 1 evidence quote | Yes |
 | `grounding_verified` | Quotes appear in source | Score >= 0.5 |
 
 QRAs failing gates get `verdict: NEEDS_REVIEW` and should not be used.
+
+`has_reasoning` used to require only "> 10 words". Word count is not a proxy for
+reasoning: a fluent provenance sentence clears any length floor while explaining
+nothing. On 2026-07-30 that gate passed 2,579 QRAs sharing the single string
+"the weaknesses field explicitly provides the cwe id." Reasoning prompts now ask
+for subject-matter reasoning with no length cap, and the two gates above test
+the properties that actually matter — that the reasoning is not the source text,
+and not another QRA's.
 
 ## LLM Backend
 

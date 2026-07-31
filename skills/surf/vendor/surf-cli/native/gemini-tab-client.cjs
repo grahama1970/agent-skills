@@ -410,8 +410,9 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     }
     await delay(250);
   }
-  // No preview shown, but the input file was set. Proceed; Gemini often
-  // accepts files without a visible thumbnail (especially text/markdown).
+  // No preview shown, but the input file was set. Proceed and report the
+  // weaker metadata; gemini-submit.sh fails closed for attachment lanes unless
+  // it can read back a visible attachment preview.
   log(`File attachment set (no preview detected within 20s; proceeding)`);
   return { attached: true, path: absolutePath, name, previewVisible: false };
 }
@@ -782,6 +783,7 @@ async function query(options) {
   
   const cdp = (expr) => cdpEvaluate(tabId, expr);
   const inputCdp = (method, params) => cdpCommand(tabId, method, params);
+  let attachment = null;
   
   try {
     await waitForPageLoad(cdp);
@@ -792,8 +794,11 @@ async function query(options) {
     }
     log("Prompt ready");
     const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
+    if (file) {
+      attachment = await attachFile(cdp, inputCdp, file, log);
+      log(`File attached: ${file}`);
+    }
     const baselineUrl = await evaluate(cdp, "window.location.href").catch(() => "");
-    const attachment = file ? await attachFile(cdp, inputCdp, file, log) : null;
     if (attachment?.attached) {
       log(`Attached file ${attachment.name}`);
     }

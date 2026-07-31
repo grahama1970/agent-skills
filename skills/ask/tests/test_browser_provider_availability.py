@@ -4,6 +4,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -13,6 +14,30 @@ assert SPEC and SPEC.loader
 probe_browser_provider_availability = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = probe_browser_provider_availability
 SPEC.loader.exec_module(probe_browser_provider_availability)
+
+
+def test_probe_run_timeout_kills_process_group(tmp_path: Path) -> None:
+    marker = tmp_path / "child-survived.txt"
+    child_code = (
+        "import pathlib, time; "
+        "time.sleep(2); "
+        f"pathlib.Path({str(marker)!r}).write_text('survived', encoding='utf-8')"
+    )
+    parent_code = (
+        "import subprocess, sys, time; "
+        f"subprocess.Popen([sys.executable, '-c', {child_code!r}]); "
+        "time.sleep(10)"
+    )
+
+    result = probe_browser_provider_availability._run(
+        [sys.executable, "-c", parent_code],
+        timeout=1,
+    )
+
+    assert result.returncode == 124
+    assert "killed process group" in result.stderr
+    time.sleep(2.5)
+    assert not marker.exists()
 
 
 def test_probe_detects_webgpt_too_many_requests_without_submission(tmp_path: Path) -> None:
@@ -128,9 +153,21 @@ def test_probe_degrades_but_does_not_block_when_one_provider_tab_reads_cleanly(m
     )
 
     assert report["status"] == "AVAILABLE_PREFLIGHT"
+    assert report["degraded_providers"] == ["webkimi"]
+    assert "webkimi" in report["provider_probe_recovery_packets"]
     assert report["providers"]["webkimi"]["probe_degraded"] is True
     assert report["providers"]["webkimi"]["probe_failed"] is False
     assert report["providers"]["webkimi"]["failure_code"] == "browser_provider_probe_timeout"
+    packet = report["providers"]["webkimi"]["provider_probe_recovery_packet"]
+    assert packet["schema"] == "ask.browser_provider_probe_recovery_packet.v1"
+    assert packet["status"] == "DEGRADED"
+    assert packet["failure_code"] == "browser_provider_probe_timeout"
+    assert packet["checked_tab_ids"] == ["777", "666"]
+    assert packet["auto_retry_allowed"] is False
+    assert packet["next_command"].startswith("cd skills/ask && ./run.sh browser-availability --provider webkimi")
+    assert "--tab-id webkimi=777" in packet["next_command"]
+    assert "$ticket to $ask at agent-skills@main" in packet["ticket_instruction"]
+    assert "skills/ticket/run.sh bug" in packet["ticket_command"]
 
 
 def test_probe_degrades_without_blocking_when_all_tab_reads_time_out(monkeypatch, tmp_path: Path) -> None:
@@ -164,10 +201,16 @@ def test_probe_degrades_without_blocking_when_all_tab_reads_time_out(monkeypatch
 
     assert report["status"] == "AVAILABLE_PREFLIGHT"
     assert "error" not in report
+    assert report["degraded_providers"] == ["webgpt"]
+    assert "webgpt" in report["provider_probe_recovery_packets"]
     assert report["providers"]["webgpt"]["probe_degraded"] is True
     assert report["providers"]["webgpt"]["probe_failed"] is False
     assert report["providers"]["webgpt"]["failure_code"] == "browser_provider_probe_timeout"
     assert report["providers"]["webgpt"]["checked_tabs"][0]["timed_out"] is True
+    packet = report["providers"]["webgpt"]["provider_probe_recovery_packet"]
+    assert packet["status"] == "DEGRADED"
+    assert packet["fallback_instruction"].startswith("Do not block healthy roundtable")
+    assert "browser-provider-availability.json" in packet["ticket_instruction"]
 
 
 def test_probe_reports_error_when_all_tab_reads_fail_non_timeout(monkeypatch, tmp_path: Path) -> None:
@@ -211,15 +254,18 @@ def _fake_surf(
     tabs: list[dict[str, object]],
     tab_text: dict[str, str],
     tab_main_text: dict[str, str] | None = None,
+    tab_modal_text: dict[str, str] | None = None,
 ) -> Path:
     script = tmp_path / "surf-run.sh"
     cases = []
     for tab_id, text in tab_text.items():
         scoped = (tab_main_text or {}).get(tab_id, text)
+        modal = (tab_modal_text or {}).get(tab_id, "")
         payload = json.dumps({
             "href": f"https://example.test/{tab_id}",
             "title": f"tab {tab_id}",
             "scoped_text": scoped,
+            "modal_text": modal,
             "body_text": text,
             "has_main": True,
         })
@@ -305,7 +351,11 @@ def test_real_throttle_banner_is_flagged_with_its_snippet() -> None:
 
 
 def test_tab_list_survives_a_vendored_build_banner() -> None:
-    contaminated = 'Building vendored surf-cli at /x/y...\n[{"id": 1, "url": "https://chatgpt.com/"}]'
+    contaminated = (
+        "Building vendored surf-cli at /x/y...\n"
+        "\x1b[33m[INEFFECTIVE_DYNAMIC_IMPORT]\x1b[0m src/native/port-manager.ts is dynamically imported\n"
+        '[{"id": 1, "url": "https://chatgpt.com/"}]'
+    )
 
     tabs, error = probe_browser_provider_availability._parse_tab_list_stdout(contaminated)
 
@@ -339,6 +389,54 @@ def test_throttle_phrase_in_sidebar_only_does_not_block_the_provider(tmp_path: P
     checked = webgpt["checked_tabs"][0]
     assert checked["match_source"] == "main"
     assert checked["matched_snippet"] is None
+
+
+def test_chatgpt_rate_limit_modal_in_body_overrides_clean_main_region(tmp_path: Path) -> None:
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[{"id": 777, "windowId": 3, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True}],
+        tab_text={
+            "777": (
+                "What's on the agenda today?\n\nExtra High\n"
+                "Too many requests\n"
+                "You're making requests too quickly. We've temporarily limited access to your conversations "
+                "to protect your data.\n"
+                "Please wait a few minutes before trying again.\n"
+                "Got it"
+            )
+        },
+        tab_main_text={"777": "What's on the agenda today?\n\nExtra High"},
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"], surf_run=surf, max_tabs_per_provider=1, explicit_tabs={},
+    )
+
+    checked = report["providers"]["webgpt"]["checked_tabs"][0]
+    assert report["status"] == "NEEDS_ATTENTION"
+    assert report["providers"]["webgpt"]["provider_limited"] is True
+    assert checked["match_source"] == "body_modal_like"
+    assert checked["matched_text"].lower() == "too many requests"
+    assert "making requests too quickly" in checked["matched_snippet"].lower()
+
+
+def test_explicit_dialog_text_overrides_clean_main_region(tmp_path: Path) -> None:
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[{"id": 778, "windowId": 3, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True}],
+        tab_text={"778": "New chat\nAsk anything"},
+        tab_main_text={"778": "Ask anything"},
+        tab_modal_text={"778": "Too many requests\nPlease wait a few minutes before trying again.\nGot it"},
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"], surf_run=surf, max_tabs_per_provider=1, explicit_tabs={},
+    )
+
+    checked = report["providers"]["webgpt"]["checked_tabs"][0]
+    assert report["providers"]["webgpt"]["provider_limited"] is True
+    assert checked["match_source"] == "modal"
+    assert "please wait" in checked["matched_snippet"].lower()
 
 
 def test_limited_verdict_carries_the_snippet_it_was_made_from(tmp_path: Path) -> None:

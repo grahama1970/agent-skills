@@ -1,0 +1,60 @@
+{
+  "backend": {
+    "bad_resume_statuses": {
+      "future_last_event_id": 400,
+      "negative_last_event_id": 400,
+      "non_integer_last_event_id": 400
+    },
+    "event_count": 36,
+    "health": {
+      "battle_id": "battle-004",
+      "event_count": 36,
+      "last_seq": 36,
+      "run_id": "arena-parent-spawn-20260707T220426Z",
+      "schema": "battle.live_transport_health.v1",
+      "status": "PASS"
+    },
+    "last_seq": 36,
+    "resume_from_last_event_id": 2,
+    "resumed_event_count": 34,
+    "safety_cases": [
+      "Last-Event-ID resume excludes already acknowledged events.",
+      "Future Last-Event-ID fails closed with HTTP 400.",
+      "Non-integer Last-Event-ID fails closed with HTTP 400.",
+      "Negative Last-Event-ID fails closed with HTTP 400."
+    ]
+  },
+  "base_url": "http://127.0.0.1:40259",
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "does_not_prove": [
+      "Production infrastructure is deployed.",
+      "A WebSocket endpoint exists.",
+      "Browser EventSource reconnect timing under network failure.",
+      "Unbounded swarm execution.",
+      "Battle or RelayForge production readiness."
+    ],
+    "proves": [
+      "The existing local HTTP/SSE backend fails closed on invalid Last-Event-ID inputs.",
+      "The existing local HTTP/SSE backend resumes from Last-Event-ID without replaying acknowledged events.",
+      "The spectator transport reducer deduplicates events and enters gap_recovery on sequence gaps.",
+      "The spectator SSE parser rejects malformed payloads without applying them."
+    ]
+  },
+  "created_at": "2026-07-29T16:37:19Z",
+  "errors": [],
+  "frontend": {
+    "command": "npm run test -- src/lib/battle-transport-reducer.test.ts src/lib/battle-live-sse-runtime.test.ts src/lib/battle-live-transport-contract.test.ts",
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "\n> @agent-skills/battle-spectator@0.1.0 test\n> vitest run src/lib/battle-transport-reducer.test.ts src/lib/battle-live-sse-runtime.test.ts src/lib/battle-live-transport-contract.test.ts\n\n\n RUN  v4.1.10 /home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/spectator\n\n\n Test Files  3 passed (3)\n      Tests  14 passed (14)\n   Start at  12:37:18\n   Duration  836ms (transform 639ms, setup 0ms, import 950ms, tests 33ms, environment 0ms)\n\n",
+    "test_files_passed": 3,
+    "test_files_total": 3,
+    "tests_passed": 14,
+    "tests_total": 14
+  },
+  "live": "local_http_sse_adapter_plus_frontend_transport_tests",
+  "mocked": false,
+  "schema": "battle.transport_safety_smoke.v1",
+  "status": "PASS"
+}

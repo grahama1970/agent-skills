@@ -1,0 +1,32 @@
+{
+  "after": {
+    "exit_code": 1,
+    "stderr_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/judge/replays/red-0__blue-0/judge-red-exploit-patched.stderr.txt",
+    "stderr_sha256": "25f6bfee647db0198e1b1e66f24344405e852eebb64e2574cbe3ed13d0347865",
+    "stdout_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/judge/replays/red-0__blue-0/judge-red-exploit-patched.stdout.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "battle_id": "battle-004",
+  "before": {
+    "exit_code": 0,
+    "stderr_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/judge/replays/red-0__blue-0/judge-red-exploit-original.stderr.txt",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/judge/replays/red-0__blue-0/judge-red-exploit-original.stdout.txt",
+    "stdout_sha256": "f14ac99734a447243011863a81c4a6a5a8b9de120099130dd55d6dc1f09cd2f9"
+  },
+  "blue_action_id": "blue-blue-0-patch",
+  "blue_worker_id": "blue-0",
+  "exploit_blocked_after_patch": true,
+  "exploit_confirmed_before_patch": true,
+  "observed_elapsed_seconds": 71.097327,
+  "pair_id": "red-0__blue-0",
+  "parent_lane_id": "payload-857-receipt",
+  "parent_terminal_confirmed": false,
+  "parent_worker_id": "red-0",
+  "receipt_id": "prekill-pressure:red-0__blue-0",
+  "run_id": "arena-prekill-survival-20260728T170820Z",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "battle.prekill_parent_pressure_receipt.v1",
+  "status": "PASS",
+  "timing_source": "battle_control_plane_perf_counter"
+}

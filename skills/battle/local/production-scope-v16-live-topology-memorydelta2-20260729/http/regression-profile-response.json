@@ -1,0 +1,7 @@
+{
+  "job_id": "v16-reg-rfc",
+  "profile": "summary-safe",
+  "render_sha256": "8cc094b713695abab0508f271a5d928b4aebbf9d685b5e9ce399ba27d609d5bd",
+  "schema": "battle.v16.relayforge.profile_result.v1",
+  "target_id": "battle-v16-relayforge-a"
+}

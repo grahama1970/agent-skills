@@ -413,6 +413,71 @@ def test_provider_authorship_blocks_transport_source_hash_mismatch(
     assert receipt["validation"]["transport_source_hash_matches"] is False
 
 
+def test_provider_authorship_accepts_tau_attestation_shape(tmp_path: Path) -> None:
+    code_sha = "sha256:" + "1" * 64
+    response_sha = "sha256:" + "2" * 64
+    work_order_sha = "sha256:" + "3" * 64
+    attestation = {
+        "schema": "tau.provider_execution_attestation.v1",
+        "run_id": "oc-test",
+        "session_id": "ses-test",
+        "work_order_sha256": work_order_sha,
+        "result_sha256": "sha256:" + "4" * 64,
+        "completion_status": "completed",
+        "observed_provider": "opencode-go",
+        "observed_model": "opencode-go/kimi-k2.6",
+    }
+
+    receipt = build_provider_authorship_receipt(
+        out_path=tmp_path / "provider-authorship.json",
+        battle_id="battle-004",
+        dag_id="dag-1",
+        node_id="exploit-code-author",
+        child_lane_id="child-1",
+        goal_hash="sha256:goal",
+        battle_work_order_path=tmp_path / "battle-work-order.json",
+        tau_work_order_path=tmp_path / "tau-work-order.json",
+        launch_receipt_path=tmp_path / "launch.json",
+        worker_result_path=tmp_path / "result.json",
+        worker_validation_path=tmp_path / "validation.json",
+        artifact_validation={
+            "status": "PASS",
+            "code_artifact_sha256": code_sha,
+            "code_artifact_bytes": 24,
+            "errors": [],
+        },
+        launch_receipt={
+            "schema": "tau.scillm_worker_launch_receipt.v1",
+            "status": "PASS",
+            "live": True,
+            "provider_live": True,
+            "http_status": 200,
+            "run_id": "oc-test",
+            "session_id": "ses-test",
+            "response_sha256": response_sha,
+            "provider_execution_attestation": attestation,
+            "model_provider_route": {
+                "surface": "opencode_serve",
+                "provider": "scillm",
+            },
+        },
+        worker_result={"artifacts": ["outputs/exploit_specimen.py"]},
+        worker_validation={
+            "schema": "tau.scillm_worker_receipt.v1",
+            "status": "PASS",
+            "provider_live": True,
+            "provider_execution_attestation": attestation,
+        },
+    )
+
+    assert receipt["status"] == "PASS"
+    assert receipt["provider_request_id"] == work_order_sha
+    assert receipt["provider_response_id"] == response_sha
+    assert receipt["provider_call_count"] == 1
+    assert receipt["transport_source_sha256"] == code_sha
+    assert receipt["validation"]["transport_source_hash_matches"] is True
+
+
 def test_scillm_validation_command_binds_launch_receipt(
     tmp_path: Path, monkeypatch
 ) -> None:

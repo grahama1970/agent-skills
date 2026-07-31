@@ -1,0 +1,208 @@
+{
+  "schema": "sparta.persona_dream.arc_bias_consumer_receipt.v1",
+  "status": "PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED",
+  "mocked": false,
+  "live": true,
+  "created_at": "2026-07-29T18:04:11.055Z",
+  "api_root": "http://127.0.0.1:3011",
+  "session_id": "persona-dream-arc-bias-1785348214041",
+  "turn_ids": [
+    "persona-dream-arc-bias-1785348214041:turn-001",
+    "persona-dream-arc-bias-1785348214041:turn-002",
+    "persona-dream-arc-bias-1785348214041:turn-003"
+  ],
+  "arc_bias_artifact_path": "/home/graham/workspace/experiments/agent-skills-issue1117-persona-dream-main/skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+  "arc_bias_artifact_sha256": "sha256:c2063f3c0062c7e2deea6514cf4ec965945350074f9bcbd1ca8c003bbd0d07b6",
+  "arc_bias_file_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
+  "contract_path": "/home/graham/workspace/experiments/agent-skills-issue1117-persona-dream-main/skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json",
+  "contract_file_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
+  "arc_bias_applied_before_first_turn": true,
+  "same_arc_bias_artifact_all_turns": true,
+  "canonical_answer_text_sha256_before": [
+    "sha256:a912bdabfee8efe0e5bba22a5a918efa8b2762ebff396e3405f4fa2f7d12668e",
+    "sha256:1dd7bcdaceaa24c2c671300ac7fc2a743e96f9861c26abeb7743df5cd94f68bb",
+    "sha256:a912bdabfee8efe0e5bba22a5a918efa8b2762ebff396e3405f4fa2f7d12668e"
+  ],
+  "canonical_answer_text_sha256_after": [
+    "sha256:a912bdabfee8efe0e5bba22a5a918efa8b2762ebff396e3405f4fa2f7d12668e",
+    "sha256:1dd7bcdaceaa24c2c671300ac7fc2a743e96f9861c26abeb7743df5cd94f68bb",
+    "sha256:a912bdabfee8efe0e5bba22a5a918efa8b2762ebff396e3405f4fa2f7d12668e"
+  ],
+  "answer_text_unchanged": true,
+  "tone_category_source": [
+    "memory.intent",
+    "memory.intent",
+    "memory.intent"
+  ],
+  "tone_category_unchanged_by_arc_bias": true,
+  "voice_delivery_before_arc_bias": [
+    {
+      "tone": "deflect_calm",
+      "intensity": 0.55,
+      "valence": -0.15
+    },
+    {
+      "tone": "deflect_calm",
+      "intensity": 0.55,
+      "valence": -0.15
+    },
+    {
+      "tone": "careful_concerned",
+      "intensity": 0.55,
+      "valence": -0.2
+    }
+  ],
+  "voice_delivery_after_arc_bias": [
+    {
+      "tone": "deflect_calm",
+      "intensity": 0.73,
+      "valence": -0.33
+    },
+    {
+      "tone": "deflect_calm",
+      "intensity": 0.73,
+      "valence": -0.33
+    },
+    {
+      "tone": "careful_concerned",
+      "intensity": 0.73,
+      "valence": -0.38
+    }
+  ],
+  "neutral_fallback_checked": true,
+  "failures": [],
+  "turns": [
+    {
+      "name": "first_turn_with_artifact",
+      "http_status": 200,
+      "status": "ok",
+      "session_id": "persona-dream-arc-bias-1785348214041",
+      "turn_id": "persona-dream-arc-bias-1785348214041:turn-001",
+      "source_text": "What is the capital of France?",
+      "answer_authority": "wikipedia_rest",
+      "arc_bias_artifact_supplied": true,
+      "arc_bias": {
+        "schema": "sparta.embry_voice.session_arc_bias.v1",
+        "session_id": "persona-dream-arc-bias-1785348214041",
+        "source": "persona_arc_bias_artifact",
+        "source_artifact": "/home/graham/workspace/experiments/agent-skills-issue1117-persona-dream-main/skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+        "intensity_delta": 0.18,
+        "valence_delta": -0.18
+      },
+      "tone_category_source": "memory.intent",
+      "tone_category_unchanged_by_arc_bias": true,
+      "canonical_answer_text_sha256_before": "sha256:a912bdabfee8efe0e5bba22a5a918efa8b2762ebff396e3405f4fa2f7d12668e",
+      "canonical_answer_text_sha256_after": "sha256:a912bdabfee8efe0e5bba22a5a918efa8b2762ebff396e3405f4fa2f7d12668e",
+      "answer_text_unchanged": true,
+      "voice_delivery_before_arc_bias": {
+        "tone": "deflect_calm",
+        "intensity": 0.55,
+        "valence": -0.15
+      },
+      "voice_delivery_after_arc_bias": {
+        "tone": "deflect_calm",
+        "intensity": 0.73,
+        "valence": -0.33
+      },
+      "voice_receipt_path": "/tmp/chatterbox-fork-agent-out/ux-lab-embry-direct/2026-07-29T18-03-34-931Z-a912bdabfee8.json",
+      "voice_receipt_sha256": "sha256:ee4394de658ce5bdc4a8bc28e8a5913ca6ced1da4d0f8cb7f10a2132dfb2b5c0"
+    },
+    {
+      "name": "second_turn_without_artifact",
+      "http_status": 200,
+      "status": "ok",
+      "session_id": "persona-dream-arc-bias-1785348214041",
+      "turn_id": "persona-dream-arc-bias-1785348214041:turn-002",
+      "source_text": "I am frustrated. What is the capital of France?",
+      "answer_authority": "wikipedia_rest",
+      "arc_bias_artifact_supplied": false,
+      "arc_bias": {
+        "schema": "sparta.embry_voice.session_arc_bias.v1",
+        "session_id": "persona-dream-arc-bias-1785348214041",
+        "source": "persona_arc_bias_artifact",
+        "source_artifact": "/home/graham/workspace/experiments/agent-skills-issue1117-persona-dream-main/skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+        "intensity_delta": 0.18,
+        "valence_delta": -0.18
+      },
+      "tone_category_source": "memory.intent",
+      "tone_category_unchanged_by_arc_bias": true,
+      "canonical_answer_text_sha256_before": "sha256:1dd7bcdaceaa24c2c671300ac7fc2a743e96f9861c26abeb7743df5cd94f68bb",
+      "canonical_answer_text_sha256_after": "sha256:1dd7bcdaceaa24c2c671300ac7fc2a743e96f9861c26abeb7743df5cd94f68bb",
+      "answer_text_unchanged": true,
+      "voice_delivery_before_arc_bias": {
+        "tone": "deflect_calm",
+        "intensity": 0.55,
+        "valence": -0.15
+      },
+      "voice_delivery_after_arc_bias": {
+        "tone": "deflect_calm",
+        "intensity": 0.73,
+        "valence": -0.33
+      },
+      "voice_receipt_path": "/tmp/chatterbox-fork-agent-out/ux-lab-embry-direct/2026-07-29T18-03-41-279Z-1dd7bcdaceaa.json",
+      "voice_receipt_sha256": "sha256:0fc6fe0bf0cc4fc1f93523719ed5966568ece6174afc1ef67e6a181400c0d450"
+    },
+    {
+      "name": "third_turn_without_artifact",
+      "http_status": 200,
+      "status": "ok",
+      "session_id": "persona-dream-arc-bias-1785348214041",
+      "turn_id": "persona-dream-arc-bias-1785348214041:turn-003",
+      "source_text": "I am sorry. What is the capital of France?",
+      "answer_authority": "wikipedia_rest",
+      "arc_bias_artifact_supplied": false,
+      "arc_bias": {
+        "schema": "sparta.embry_voice.session_arc_bias.v1",
+        "session_id": "persona-dream-arc-bias-1785348214041",
+        "source": "persona_arc_bias_artifact",
+        "source_artifact": "/home/graham/workspace/experiments/agent-skills-issue1117-persona-dream-main/skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+        "intensity_delta": 0.18,
+        "valence_delta": -0.18
+      },
+      "tone_category_source": "memory.intent",
+      "tone_category_unchanged_by_arc_bias": true,
+      "canonical_answer_text_sha256_before": "sha256:a912bdabfee8efe0e5bba22a5a918efa8b2762ebff396e3405f4fa2f7d12668e",
+      "canonical_answer_text_sha256_after": "sha256:a912bdabfee8efe0e5bba22a5a918efa8b2762ebff396e3405f4fa2f7d12668e",
+      "answer_text_unchanged": true,
+      "voice_delivery_before_arc_bias": {
+        "tone": "careful_concerned",
+        "intensity": 0.55,
+        "valence": -0.2
+      },
+      "voice_delivery_after_arc_bias": {
+        "tone": "careful_concerned",
+        "intensity": 0.73,
+        "valence": -0.38
+      },
+      "voice_receipt_path": "/tmp/chatterbox-fork-agent-out/ux-lab-embry-direct/2026-07-29T18-04-00-419Z-a912bdabfee8.json",
+      "voice_receipt_sha256": "sha256:ee572d7682aebab835501cf712fffdf06dd921e67d7b6467794ba42b66aaa92b"
+    }
+  ],
+  "neutral_fallback": {
+    "http_status": 200,
+    "status": "ok",
+    "session_id": "persona-dream-arc-neutral-1785348245428",
+    "arc_bias": {
+      "schema": "sparta.embry_voice.session_arc_bias.v1",
+      "session_id": "persona-dream-arc-neutral-1785348245428",
+      "source": "neutral_default_pending_continuity_ledger",
+      "intensity_delta": 0,
+      "valence_delta": 0
+    },
+    "pass": true
+  },
+  "claims": {
+    "proves": [
+      "SPARTA production live-turn reads the current Persona Dream session_arc_bias artifact before the first turn.",
+      "SPARTA retains the same arc-bias artifact across three turns without resupplying it.",
+      "SPARTA preserves canonical answer text and the per-turn tone category while applying only numeric intensity/valence deltas.",
+      "SPARTA falls back to neutral arc bias when no Persona Dream artifact is supplied."
+    ],
+    "does_not_prove": [
+      "human-perceived emotion",
+      "human listener recognition of Embry",
+      "SPARTA production deployment beyond the local live API",
+      "a closed immutable Persona Dream goal"
+    ]
+  }
+}

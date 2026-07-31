@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "security.target_authorization.v1.schema.json",
+  "title": "Security Target Authorization v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "authorization_id",
+    "issuer",
+    "approver",
+    "issued_at",
+    "expires_at",
+    "target",
+    "allowed_target_urls",
+    "allowed_cidrs",
+    "allowed_ports",
+    "runtime_modes",
+    "allowed_actions",
+    "allowed_probe_classes",
+    "denied_probe_classes",
+    "network_policy",
+    "egress_policy",
+    "limits",
+    "permissions",
+    "artifact_root",
+    "redaction_policy",
+    "legal_non_opinion_ack"
+  ],
+  "properties": {
+    "schema": {"const": "security.target_authorization.v1"},
+    "authorization_id": {"type": "string", "minLength": 1},
+    "issuer": {"type": "string", "minLength": 1},
+    "approver": {"type": "string", "minLength": 1},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "canonical_id", "immutable_ref"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "canonical_id": {"type": "string", "minLength": 1},
+        "immutable_ref": {"type": "string", "minLength": 1},
+        "repository_url": {"type": "string"},
+        "commit": {"type": "string"},
+        "image": {"type": "string"},
+        "digest": {"type": "string"},
+        "firmware_hash": {"type": "string"}
+      }
+    },
+    "allowed_target_urls": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "allowed_cidrs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "allowed_ports": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1, "maximum": 65535}},
+    "runtime_modes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "allowed_actions": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "allowed_probe_classes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "denied_probe_classes": {"type": "array", "items": {"type": "string"}},
+    "network_policy": {"type": "string", "minLength": 1},
+    "egress_policy": {"type": "string", "minLength": 1},
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requests_per_second", "max_concurrency", "duration_seconds", "cpu", "memory_mb", "storage_mb"],
+      "properties": {
+        "requests_per_second": {"type": "number", "exclusiveMinimum": 0},
+        "max_concurrency": {"type": "number", "exclusiveMinimum": 0},
+        "duration_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "cpu": {"type": "number", "exclusiveMinimum": 0},
+        "memory_mb": {"type": "number", "exclusiveMinimum": 0},
+        "storage_mb": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destructive", "persistence", "credential", "denial_of_service", "nonlocal"],
+      "properties": {
+        "destructive": {"type": "boolean"},
+        "persistence": {"type": "boolean"},
+        "credential": {"type": "boolean"},
+        "denial_of_service": {"type": "boolean"},
+        "nonlocal": {"type": "boolean"}
+      }
+    },
+    "artifact_root": {"type": "string", "minLength": 1},
+    "redaction_policy": {"type": "string", "minLength": 1},
+    "legal_non_opinion_ack": {"const": true}
+  }
+}

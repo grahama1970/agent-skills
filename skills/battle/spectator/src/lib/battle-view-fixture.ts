@@ -46,7 +46,7 @@ export type BattleFixtureLoadError = {
 };
 
 export type BattleFixtureLoadResult<T extends BattleViewFixture = BattleViewFixture> =
-	| { ok: true; fixture: T; schema: T["schema"]; viewKind: BattleViewKind }
+	| { ok: true; fixture: T; schema: T["schema"]; viewKind: BattleViewKind; sourceSha256?: string; sourceUrl?: string }
 	| { ok: false; error: BattleFixtureLoadError };
 
 export function readFixtureSchema(data: unknown): string | null {

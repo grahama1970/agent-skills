@@ -1,0 +1,5 @@
+{
+  "hint": "Use Dogpile's concurrent Brave question lane for free web-backed research.",
+  "replacement": "brave_questions",
+  "skipped": "Perplexity is retired for Dogpile; API calls are disabled."
+}

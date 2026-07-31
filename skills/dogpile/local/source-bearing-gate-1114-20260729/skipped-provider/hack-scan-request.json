@@ -1,0 +1,33 @@
+{
+  "created_at": "2026-07-29T00:00:01Z",
+  "execution_mode": "no_docker_validation_only",
+  "expires_at": "2026-07-30T18:36:38Z",
+  "non_claims": [
+    "research_design_input_only",
+    "no_scan_executed",
+    "no_docker_invoked",
+    "no_authorization_proof",
+    "no_exploit_or_patch_proof"
+  ],
+  "request_id": "source-bearing-skipped-fixture-hack-scan-request",
+  "requested_scan": {
+    "lanes": [
+      "sast",
+      "sca"
+    ],
+    "profile": "hobbyist"
+  },
+  "schema": "dogpile.hack_scan_request.v1",
+  "selected_source_evidence": [],
+  "source_packet": {
+    "artifact_path": "dogpile-security-packet.json",
+    "schema": "dogpile.security_research_packet.v1",
+    "sha256": "72f45a36290eafa92324c564838a87688f3e65178fe7ecd1f42a7db86266191d"
+  },
+  "target": {
+    "canonical_id": "fixture-target",
+    "immutable_ref": "sha256:fixture",
+    "kind": "repository",
+    "target_url": "file:///fixtures/fixture-target"
+  }
+}

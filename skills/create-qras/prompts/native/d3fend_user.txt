@@ -15,7 +15,7 @@ mind: {mind}
   "pairs": [
     {{
       "question": "What is D3-AI Asset Inventory according to D3FEND?",
-      "reasoning": "The description explicitly defines Asset Inventory by stating what it identifies, records, and enriches.",
+      "reasoning": "Inventory is a prerequisite defense because controls cannot be applied to assets the defender cannot enumerate, so coverage gaps track inventory gaps directly.",
       "answer": "D3-AI Asset Inventory is a defensive technique in which asset inventorying identifies and records the organization's assets and enriches each inventory item with knowledge about their vulnerabilities.",
       "pair_type": "defense_description",
       "control_id": "D3-AI",
@@ -30,7 +30,7 @@ mind: {mind}
     }},
     {{
       "question": "Where does D3-AI Asset Inventory fit in the D3FEND taxonomy?",
-      "reasoning": "The taxonomy fields explicitly place the technique under the Model parent category and Model tactic.",
+      "reasoning": "It sits under Model rather than Detect because it builds the reference picture other techniques compare against, without itself observing adversary activity.",
       "answer": "D3-AI Asset Inventory is placed under the Model parent category and the Model tactic in D3FEND.",
       "pair_type": "taxonomy_context",
       "control_id": "D3-AI",

@@ -198,8 +198,7 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
         "handler-webgemini",
     ]
     join = dag["nodes"][-1]
-    assert "join" not in join
-    assert join["context"]["join_semantics"]["requires_completed"] == [
+    assert join["join"]["requires_completed"] == [
         "handler-webkimi",
         "handler-webclaude",
         "handler-webgpt",
@@ -1128,8 +1127,7 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
     assert join["context"]["role"] == "compete_evaluator"
     assert "compete_scorecard" in join["required_evidence"]
     assert "winner_continuation_request" in join["required_evidence"]
-    assert "join" not in join
-    assert join["context"]["join_semantics"]["fail_closed_on_tie"] is True
+    assert join["join"]["fail_closed_on_tie"] is True
     command_spec = json.loads(
         Path(bundle["command_spec_root"], "handler-webgpt", "tau-dispatch-command.json").read_text(
             encoding="utf-8"

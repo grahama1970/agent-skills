@@ -1,0 +1,6 @@
+{
+  "judge_verdict": "RED_SUCCESS",
+  "schema": "battle.overlap_scorekeeper_receipt.v1",
+  "status": "PASS",
+  "winner": "red"
+}

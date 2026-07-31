@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 2411,
+  "artifact_sha256": "d25a6f0974bee84295e4d127c16b50ccaa49d370ac567606ddae037420a8c3d1",
+  "artifact_type": "red_exploit",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-zipadapter-20260729/providers/tau-live/red/red_exploit_submission.py",
+  "rationale": "Directly exercises the public handoff requirement: create a ZIP containing a ../ traversal member, invoke local app.import_zip without network dependencies, and confirm that the file is written outside the extraction destination.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "2fdbe9bf78b3509eb57ccf8d178f381c80a9e0ffc45becf9b880f607c7885926",
+  "status": "PASS",
+  "strategy_genome_sha256": "f0ea2679db28df2ceba3cd8449c50759e10dab83acf0f554ad81f59e1bbef817"
+}

@@ -1,0 +1,4 @@
+{
+  "hint": "Pass --with-feeds to run configured consume-feed RSS monitors as a dry-run lane.",
+  "skipped": "Feed monitors are disabled by default."
+}

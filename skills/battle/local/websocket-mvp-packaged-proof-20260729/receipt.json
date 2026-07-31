@@ -1,0 +1,49 @@
+{
+  "schema": "battle.websocket_mvp_packaged_receipt.v1",
+  "status": "PASS",
+  "mocked": false,
+  "source_commit": "6cb2a9d13d3f7b5ef1c7c356d95de7458f9583da",
+  "archive_sha256": "4af6db5d7bae23ff5831fa37712afd29b4dafd59eeba4fb5e3ec1a7d89a165ec",
+  "health": {
+    "battle_id": "battle-004",
+    "event_count": 36,
+    "last_seq": 36,
+    "run_id": "arena-parent-spawn-20260707T220426Z",
+    "schema": "battle.live_transport_health.v1",
+    "status": "PASS",
+    "websocket_endpoint": "/battle/live/battle-004/ws",
+    "websocket_port": 60955
+  },
+  "counts": {
+    "pr8_failed": 0,
+    "pr8_total": 33,
+    "test_interactions_failed": 0,
+    "test_interactions_passed": 38,
+    "test_interactions_total": 38,
+    "test_interactions_warned": 0,
+    "visual_findings": 0
+  },
+  "proofs": {
+    "packaged": "packaged-deployment-smoke.json",
+    "backend": "live-transport-server-proof.json",
+    "pr8": "pr8-summary.json",
+    "test_interactions": "test-interactions-results.json",
+    "visual_findings": "test-interactions-visual-findings.jsonl"
+  },
+  "claim_boundary": {
+    "does_not_prove": [
+      "Production infrastructure is deployed.",
+      "Production WebSocket TLS, auth, fanout, compression, or reconnect behavior.",
+      "Unbounded swarm execution works.",
+      "Battle or RelayForge is production ready.",
+      "Six-trial qualification, factorial effects, or cross-target generalization."
+    ],
+    "proves": [
+      "A Git-archived local Battle package can launch the existing backend live HTTP/SSE adapter.",
+      "The packaged backend advertises and proves the paired local WebSocket endpoint.",
+      "A Git-archived local Battle package can build and preview the spectator frontend.",
+      "The packaged frontend consumed the packaged adapter through the PR8 live transport proof.",
+      "$test-interactions exercised the packaged frontend/backend WebSocket route with zero failures and zero warnings."
+    ]
+  }
+}

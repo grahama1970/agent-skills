@@ -1,0 +1,10 @@
+{
+  "battle_sanity_command": "skills/battle/sanity.sh",
+  "battle_sanity_result": "exit 0; Result: PASS; informational backend eval 13/14 with known fixture_valid::battle-004-kill-shot-pixi-replay",
+  "issue1040_proof": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/issue-1040-branch-triage-20260728/issue-1040-proof.md",
+  "issue1040_summary": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/issue-1040-branch-triage-20260728/summary.json",
+  "packet": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/roundtable-full-battle-arena-20260728/shared-packet.md",
+  "schema": "battle.roundtable.evidence_index.v1",
+  "test_interactions_results": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/test-interactions-20260728-roundtable-battle3015/captures/results.json",
+  "test_interactions_screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/test-interactions-20260728-roundtable-battle3015/captures/battle-receipt-controls/0012_pane-controls_screenshot.png"
+}

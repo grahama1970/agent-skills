@@ -11,6 +11,7 @@ Orchestrates searches across:
 - GitHub (Repos & Issues)
 - ArXiv (Papers)
 - YouTube (Videos)
+- Context7 (Library docs, opt-in)
 - Readarr (Books/Usenet, opt-in)
 - Wayback Machine (Archives, opt-in)
 """
@@ -46,6 +47,7 @@ from dogpile.task_monitor_integration import (
     end_search as end_monitor,
 )
 from dogpile.search_engine import PartialResultsPublisher, _run_search
+from dogpile.security_research_packet import run_source_bearing_fixture_eval
 
 
 @app.command()
@@ -62,6 +64,9 @@ def search(
     with_feeds: bool = typer.Option(False, "--with-feeds", help="Include configured consume-feed RSS monitor dry-run"),
     feed_limit: int = typer.Option(3, "--feed-limit", min=1, max=25, help="Max feed items per source when --with-feeds is used"),
     feed_pack: str = typer.Option("security_code", "--feed-pack", help="Dogpile feed pack to use with --with-feeds; empty string uses consume-feed config"),
+    with_context7: bool = typer.Option(False, "--with-context7", help="Include Context7 current library/API documentation lookup"),
+    context7_library: Optional[str] = typer.Option(None, "--context7-library", help="Library name or Context7 library ID for --with-context7, e.g. react or /facebook/react"),
+    context7_tokens: int = typer.Option(3000, "--context7-tokens", min=500, max=10000, help="Max Context7 documentation tokens to request"),
     html_report: bool = typer.Option(False, "--html-report", help="Write a self-contained HTML/CSS report"),
     open_report: bool = typer.Option(False, "--open-report", help="Open the HTML report in your browser"),
     report_file: Optional[Path] = typer.Option(None, "--report-file", help="Write the HTML report to a specific path"),
@@ -69,6 +74,14 @@ def search(
     rationale: Optional[str] = typer.Option(None, "--rationale", help="Why the dogpile is being run now, including blocker context"),
     context: Optional[str] = typer.Option(None, "--context", help="Concrete problem context and constraints"),
     context_file: Optional[Path] = typer.Option(None, "--context-file", help="Additional context read from a local file"),
+    read_n: int = typer.Option(1, "--read-n", min=1, max=15, help="Deep-read the top-N domain-diverse Brave sources into synthesis (Deep-Research style); 1 keeps the single best-of-top-3 pick"),
+    with_ip_discovery: bool = typer.Option(False, "--with-ip-discovery", help="Discover IP-only/domainless hosts via Shodan/Censys and deep-read them (opt-in, key-gated; degrades if no key/plan)"),
+    ip_limit: int = typer.Option(5, "--ip-limit", min=1, max=25, help="Max IP hosts to discover when --with-ip-discovery is used"),
+    output_dir: Optional[Path] = typer.Option(None, "--output-dir", help="Per-run artifact directory for partial results, packet, report, and adapter outputs."),
+    security_packet_out: Optional[Path] = typer.Option(None, "--security-packet-out", help="Write dogpile.security_research_packet.v1 JSON to this path."),
+    target_canonical_id: str = typer.Option("fixture-target", "--target-canonical-id", help="Target canonical id for downstream adapter metadata."),
+    target_immutable_ref: str = typer.Option("sha256:fixture", "--target-immutable-ref", help="Target immutable ref for downstream adapter metadata."),
+    target_url: str = typer.Option("file:///fixtures/fixture-target", "--target-url", help="Target URL for downstream adapter metadata."),
 ):
     """Aggregate search results from multiple sources."""
 
@@ -89,7 +102,7 @@ def search(
     # Initialize error tracking, task-monitor, and execution collector
     session_id = start_error_session(query)
     monitor = start_monitor(query, name=f"dogpile-{session_id[-8:]}")
-    publisher = PartialResultsPublisher(query, request_context=request_context)
+    publisher = PartialResultsPublisher(query, request_context=request_context, output_dir=output_dir)
 
     from dogpile.utils import init_execution_collector
     init_execution_collector(session_id)
@@ -110,11 +123,24 @@ def search(
             with_feeds=with_feeds,
             feed_limit=feed_limit,
             feed_pack=feed_pack,
+            with_context7=with_context7,
+            context7_library=context7_library,
+            context7_tokens=context7_tokens,
             html_report=html_report,
             open_report=open_report,
             report_file=report_file,
             publisher=publisher,
             request_context=request_context,
+            read_n=read_n,
+            with_ip_discovery=with_ip_discovery,
+            ip_limit=ip_limit,
+            security_packet_out=security_packet_out,
+            target_context={
+                "kind": "repository",
+                "canonical_id": target_canonical_id,
+                "immutable_ref": target_immutable_ref,
+                "target_url": target_url,
+            },
         )
         search_success = True
     except Exception as e:
@@ -164,6 +190,17 @@ def search(
                     console.print(f"    {provider}: {count}x → {hint_text}")
 
             console.print(f"\n  [dim]Total errors: {session.get('error_count', 0)} | Log: dogpile_errors.json[/dim]")
+
+
+@app.command()
+def source_bearing_fixture_eval(
+    out: Path = typer.Option(..., "--out", help="Output directory for deterministic source-bearing gate fixtures."),
+):
+    """Write deterministic source-bearing gate fixtures and a receipt."""
+    receipt = run_source_bearing_fixture_eval(out)
+    console.print(json.dumps(receipt, indent=2, sort_keys=True))
+    if receipt.get("status") != "PASS":
+        raise typer.Exit(2)
 
 
 @app.command()

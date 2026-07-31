@@ -89,7 +89,97 @@ from pathlib import Path
 source = Path(sys.argv[1])
 target = Path(sys.argv[2])
 url = sys.argv[3]
-data = json.loads(source.read_text())
+if source.exists():
+    data = json.loads(source.read_text())
+else:
+    def min_size(selector):
+        return {"selector": selector, "min_width": 44, "min_height": 44}
+
+    def click(target, description, **extra):
+        item = {
+            "action": "click",
+            "target": target,
+            "description": description,
+            "assert_title": target,
+            "assert_qs_action": target,
+            "assert_min_size": min_size(target),
+        }
+        item.update(extra)
+        return item
+
+    data = {
+        "version": 1,
+        "app": "Battle Spectator",
+        "base_url": url,
+        "surfaces": [
+            {
+                "name": "battle-receipt-controls",
+                "path": "/",
+                "wait_ready": "[data-qid='battle:roster:search']",
+                "wait_ready_timeout_ms": 20000,
+                "qid_compliance": False,
+                "elements": [
+                    {
+                        "name": "agent-search-and-selection",
+                        "interactions": [
+                            {
+                                "action": "type",
+                                "target": "[data-qid='battle:roster:search']",
+                                "value": "red",
+                                "description": "Filter Battle agents",
+                                "assert_value": {"selector": "[data-qid='battle:roster:search']", "value": "red"},
+                                "assert_title": "[data-qid='battle:roster:search']",
+                                "assert_qs_action": "[data-qid='battle:roster:search']",
+                                "assert_min_size": min_size("[data-qid='battle:roster:search']"),
+                            },
+                            click(
+                                "[data-qid='battle:leaderboard:item:payload-857-red-1']",
+                                "Select red child lane from roster",
+                                assert_selector="[data-qid='battle:agent-pane:payload-857-red-1']",
+                            ),
+                        ],
+                    },
+                    {
+                        "name": "timeline-zoom",
+                        "interactions": [
+                            click("[data-qid='battle:timeline:zoom:in']", "Zoom Battle timeline in"),
+                            click("[data-qid='battle:timeline:zoom:out']", "Zoom Battle timeline out"),
+                            click("[data-qid='battle:timeline:zoom:fit']", "Reset Battle timeline zoom"),
+                        ],
+                    },
+                    {
+                        "name": "agent-detail-tabs",
+                        "interactions": [
+                            click(
+                                "[data-qid='battle:agent-pane:tab:live']",
+                                "Open Live tab",
+                                assert_attribute={"selector": "[data-qid='battle:agent-pane:tab:live']", "attribute": "data-state", "value": "active"},
+                            ),
+                            click(
+                                "[data-qid='battle:agent-pane:tab:logs']",
+                                "Open Logs tab",
+                                assert_attribute={"selector": "[data-qid='battle:agent-pane:tab:logs']", "attribute": "data-state", "value": "active"},
+                            ),
+                            click(
+                                "[data-qid='battle:agent-pane:tab:summary']",
+                                "Return to Summary tab",
+                                assert_attribute={"selector": "[data-qid='battle:agent-pane:tab:summary']", "attribute": "data-state", "value": "active"},
+                            ),
+                        ],
+                    },
+                    {
+                        "name": "pane-controls",
+                        "interactions": [
+                            click("[data-qid='battle:agent-pane:lifecycle-toggle']", "Toggle lifecycle evidence"),
+                            click("[data-qid='battle:pane:right-toggle']", "Collapse right detail pane"),
+                            click("[data-qid='battle:pane:left-toggle']", "Collapse left evidence pane"),
+                            {"action": "screenshot", "description": "Battle spectator after targeted control interactions"},
+                        ],
+                    },
+                ],
+            }
+        ],
+    }
 data["base_url"] = url
 target.write_text(json.dumps(data, indent=2) + "\n")
 PY

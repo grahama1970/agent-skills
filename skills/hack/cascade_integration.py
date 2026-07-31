@@ -35,6 +35,8 @@ except ImportError:
     HAS_CASCADE = False
     logger.warning("common.cascade not available; cascade validation disabled")
 
+from hack.env import load_hack_dotenv as dotenv_helper
+
 # Paths
 SKILL_DIR = Path(__file__).parent
 ASSISTANT_SKILL = SKILLS_DIR / "assistant"
@@ -42,6 +44,7 @@ SCILLM_SKILL = SKILLS_DIR / "scillm"
 TREESITTER_SKILL = SKILLS_DIR / "treesitter"
 
 # Configuration
+dotenv_helper()
 SWARM_MAX_WORKERS = int(os.getenv("HACK_SWARM_WORKERS", "10"))
 SWARM_TIMEOUT = int(os.getenv("HACK_SWARM_TIMEOUT", "60"))
 

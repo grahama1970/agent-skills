@@ -43,6 +43,14 @@ HANDLER_SUBMIT_COMMANDS = {
     "webgrok": "grok.submit",
     "webdeepseek": "deepseek.submit",
 }
+SURF_PROVIDER_RESULT_PROVIDERS = {
+    "webgpt": "webgpt",
+    "webclaude": "claude",
+    "webkimi": "kimi",
+    "webgemini": "gemini",
+    "webgrok": "grok",
+    "webdeepseek": "unknown",
+}
 HANDLER_EXTRACT_COMMANDS = {
     "webgpt": "webgpt.extract",
     "webgemini": "gemini.extract",
@@ -82,8 +90,9 @@ PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
         can_attach=True,
         max_attachments=1,
         zip_allowed=True,
-        preferred_bundle="one readable bundle; zip allowed when an archive is required",
-        gotcha="multiple attachments fail before submission",
+        preferred_bundle="inline small Markdown/text bundles; use one attachment or zip only when an archive is required",
+        gotcha="attachments can stall at ChatGPT acceptance; inline small readable bundles and reserve upload for large/archive payloads",
+        inline_text_attachments=True,
     ),
     "webclaude": ProviderPayloadPolicy(
         handler="webclaude",
@@ -452,6 +461,8 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     submit_meta: dict[str, Any] = {}
     transport_summary: dict[str, Any] = {}
     transport_summary_path: Path | None = None
+    surf_provider_result: dict[str, Any] = {}
+    surf_provider_result_path: Path | None = None
     binding_refresh: dict[str, Any] | None = None
     browser_transport_queue_path = artifact_dir / "browser-transport-queue.json"
     submit_prompt_path = prompt_path
@@ -634,6 +645,14 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                     if degraded_response_recovered:
                         submit_meta = _read_json(meta_path)
                     transport_summary_path, transport_summary = _load_webgpt_transport_summary(artifact_dir)
+            surf_provider_result_path, surf_provider_result = _write_surf_provider_result(
+                args,
+                handler=handler,
+                meta_path=meta_path,
+                submit=submit,
+                artifact_dir=artifact_dir,
+                commands=commands,
+            )
             if submit.returncode != 0 and not degraded_response_recovered:
                 raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
             response_text = response_path.read_text(encoding="utf-8")
@@ -797,6 +816,8 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "browser_oracle_binding_refresh": binding_refresh,
         "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
         "submit_meta": submit_meta,
+        "surf_provider_result_path": str(surf_provider_result_path) if surf_provider_result_path else None,
+        "surf_provider_result": surf_provider_result or None,
         "commands": commands,
         "prior_nodes": list(args.prior_node),
         "prior_handler_receipts": prior_receipts,
@@ -824,6 +845,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "requested_model": submit_meta.get("requested_handler") if handler not in HANDLER_SUBMIT_COMMANDS else None,
             "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
             "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
+            "surf_provider_result_path": str(surf_provider_result_path) if surf_provider_result_path else None,
         },
     }
     receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -865,6 +887,19 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 "path": str(transport_summary_path),
                 "final_transport_state": transport_summary.get("final_transport_state"),
                 "next_command": transport_summary.get("next_command"),
+            }
+        )
+    if surf_provider_result_path:
+        evidence.append(
+            {
+                "kind": "surf_provider_result",
+                "node_id": args.node_id,
+                "handler": handler,
+                "path": str(surf_provider_result_path),
+                "schema": surf_provider_result.get("schema") if isinstance(surf_provider_result, dict) else None,
+                "status": surf_provider_result.get("status") if isinstance(surf_provider_result, dict) else None,
+                "proof_status": surf_provider_result.get("proof_status") if isinstance(surf_provider_result, dict) else None,
+                "success": surf_provider_result.get("success") if isinstance(surf_provider_result, dict) else None,
             }
         )
     if browser_transport_queue_path.is_file():
@@ -996,7 +1031,10 @@ def _prepare_browser_submit_payload(
     readable_bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
     combined_attachments = _unique_existing_files([*attachment_paths, *readable_bundle_paths])
     policy = _payload_policy(handler)
-    inline_paths = _inline_text_bundle_paths(combined_attachments) if policy.inline_text_attachments else []
+    inline_candidates = combined_attachments
+    if handler == "webgpt":
+        inline_candidates = _unique_existing_files(attachment_paths)
+    inline_paths = _inline_text_bundle_paths(inline_candidates) if policy.inline_text_attachments else []
     inline_by_resolved = {str(Path(path).resolve()): index + 1 for index, path in enumerate(inline_paths)}
     submit_attachments = [path for path in combined_attachments if str(Path(path).resolve()) not in inline_by_resolved]
     if not local_candidates and not inline_paths and not submit_attachments:
@@ -1213,7 +1251,7 @@ def _retry_browser_stale_binding(
             timeout=_browser_submit_timeout(
                 handler,
                 args.timeout,
-                command_timeout_budget=args.command_timeout_budget,
+                command_timeout_budget=int(getattr(args, "command_timeout_budget", 0) or 0),
             ),
         )
         retry_summary = retry.summary()
@@ -1285,7 +1323,7 @@ def _retry_browser_stale_binding(
         timeout=_browser_submit_timeout(
             handler,
             args.timeout,
-            command_timeout_budget=args.command_timeout_budget,
+            command_timeout_budget=int(getattr(args, "command_timeout_budget", 0) or 0),
         ),
     )
     retry_summary = retry.summary()
@@ -1417,6 +1455,70 @@ def _normalize_degraded_webgpt_response(
             meta["conversation_url"] = tab_url
     meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return True
+
+
+def _write_surf_provider_result(
+    args: argparse.Namespace,
+    *,
+    handler: str,
+    meta_path: Path,
+    submit: CmdResult,
+    artifact_dir: Path,
+    commands: list[dict[str, Any]],
+) -> tuple[Path | None, dict[str, Any]]:
+    if handler not in HANDLER_SUBMIT_COMMANDS or not meta_path.is_file():
+        return None, {}
+    provider = SURF_PROVIDER_RESULT_PROVIDERS.get(handler, "unknown")
+    stdout_path = artifact_dir / "submit.stdout.txt"
+    stderr_path = artifact_dir / "submit.stderr.txt"
+    result_path = artifact_dir / "response.provider_result.json"
+    stdout_path.write_text(submit.stdout or "", encoding="utf-8")
+    stderr_path.write_text(submit.stderr or "", encoding="utf-8")
+    command = [
+        str(args.surf_run),
+        "meta.normalize",
+        "--meta",
+        str(meta_path),
+        "--provider",
+        provider,
+        "--json",
+        "--return-code",
+        str(submit.returncode),
+        "--duration-seconds",
+        f"{submit.duration:.3f}",
+        "--command-stdout-file",
+        str(stdout_path),
+        "--command-stderr-file",
+        str(stderr_path),
+    ]
+    result = _run_cmd(command, cwd=Path(args.surf_run).parent, timeout=30)
+    commands.append(result.summary())
+    if result.returncode != 0:
+        payload = {
+            "schema": "surf.provider_result.v1",
+            "provider": provider,
+            "status": "failed",
+            "proof_status": "normalization_failed",
+            "success": False,
+            "normalizer_command": result.summary(),
+            "source_meta": str(meta_path),
+        }
+    else:
+        try:
+            payload = _parse_json_object(result.stdout)
+        except (json.JSONDecodeError, RuntimeError) as exc:
+            payload = {
+                "schema": "surf.provider_result.v1",
+                "provider": provider,
+                "status": "failed",
+                "proof_status": "normalization_parse_failed",
+                "success": False,
+                "error": str(exc),
+                "normalizer_command": result.summary(),
+                "source_meta": str(meta_path),
+            }
+    result_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return result_path, payload
 
 
 def _is_degraded_webgpt_response_available(meta: dict[str, Any], *, raw_text: str, clean_text: str) -> bool:
@@ -4311,17 +4413,6 @@ def _handoff(
     artifacts: list[Path],
     evidence: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    goal = start.get("goal", {})
-    goal_hash = goal.get("goal_hash") if isinstance(goal, dict) else None
-    if goal_hash:
-        # Tau blocks with evidence_goal_hash_missing unless every evidence
-        # item carries the contract's immutable goal hash.
-        evidence = [
-            {**item, "goal_hash": item.get("goal_hash", goal_hash)}
-            if isinstance(item, dict)
-            else item
-            for item in evidence
-        ]
     return {
         "schema": "tau.agent_handoff.v1",
         "github": start.get("github", {"repo": "unknown", "target": "unknown"}),

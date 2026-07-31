@@ -1,0 +1,5 @@
+{
+  "description": "Note when analyzing big contracts you might have to increase Rusts stack size, see here. EthBMC 1.0.0 EthBMC: A Bounded Model Checker for Smart Contracts USAGE: ethbmc [FLAGS] [OPTIONS] &lt;INPUT&gt; FLAGS: -x, --acc The input is an Ethereum account address, must be used with parity backend, mainnet only --concrete-copy Use concrete calldatacopy -d, --debug-grap Dump debug graph after analysis --no-optimizations Disable all optimizations --dump-solver Dump all solver queries to ./queries -h, --help Prints help information --json Output json without logging --list The input is a list of Ethereum account address, writes the result to a csv file in the output folder --no-verify Skip verification phase.",
+  "title": "GitHub - RUB-SysSec/EthBMC: The code repository for the 2020 Usenix Security paper \"EthBMC: A Bounded Model Checker for Smart Contracts\"",
+  "url": "https://github.com/RUB-SysSec/EthBMC"
+}

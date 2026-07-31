@@ -1,0 +1,39 @@
+{
+  "allowlisted_variable_names": [
+    "HACK_TARGET_STATE_DIR",
+    "HOME",
+    "OPENCLAW_BRIDGE_PORT",
+    "OPENCLAW_CONFIG_DIR",
+    "OPENCLAW_GATEWAY_BIND",
+    "OPENCLAW_GATEWAY_HOST",
+    "OPENCLAW_GATEWAY_PORT",
+    "OPENCLAW_HACK_HARDENING_VALIDATION",
+    "OPENCLAW_WORKSPACE_DIR",
+    "PATH"
+  ],
+  "authorization_manifest_sha256": "7038fe4320d75e0d10c52a942b260af996345978513c660ada1cf80ec4b29455",
+  "compose_source_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/hack/fixtures/sterile-environment/safe/docker-compose.yml",
+  "compose_source_sha256": "5d4f97098085a8a85b85f202ee3216a8e7af6c2d0ee2c1382ffbfe1ccdf6d93a",
+  "created_at": "2026-07-29T18:02:09.381209+00:00",
+  "environment_version": "hack.target-environment.v1",
+  "generated_value_hashes": {
+    "HACK_TARGET_STATE_DIR": "cd6053c01d8e80789234fa8a9589b89f9fbf62a4024f9895b5e0e08cef0b6bdc",
+    "HOME": "913b39e17ac9242b72eb9c8c4eba90edc9aad57435aae31eee0ca8d72cc52fd3",
+    "OPENCLAW_BRIDGE_PORT": "5316ca1c5ddca8e6ceccfce58f3b8540e540ee22f6180fb89492904051b3d531",
+    "OPENCLAW_CONFIG_DIR": "a53e380cebae0539fbdcf7c4d019147bcd4080170d8cc740677116daa2c24079",
+    "OPENCLAW_GATEWAY_BIND": "094a367b026246fb64649c4f868a45d8187821d16a973141436fd9cd2acfdb4a",
+    "OPENCLAW_GATEWAY_HOST": "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0",
+    "OPENCLAW_GATEWAY_PORT": "48449a14a4ff7d79bb7a1b6f3d488eba397c36ef25634c111b49baf362511afc",
+    "OPENCLAW_HACK_HARDENING_VALIDATION": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+    "OPENCLAW_WORKSPACE_DIR": "2f9c4ff5c7e3a937c106a72c1c13394c3f12fa2b6915df7e8100782619dd420c"
+  },
+  "inherited_operator_environment": false,
+  "live": "local_docker_compose_sterile_environment",
+  "mocked": false,
+  "redaction_count": 0,
+  "rejected_variable_references": [],
+  "sanitized_compose_path": "/tmp/hack-sterile-env-proof/sanitized-compose.yml",
+  "sanitized_compose_sha256": "d19353557537fa01db64fb8614fcc5db256a048e30f22431a8d077d5da93844d",
+  "schema": "hack.target_environment_receipt.v1",
+  "status": "PASS"
+}

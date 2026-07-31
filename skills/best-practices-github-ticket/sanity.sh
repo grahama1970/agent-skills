@@ -126,6 +126,7 @@ grep -q -- '--label skill-bug' "$tmpdir/search.out"
 grep -q -- 'gh label create type:feature' "$tmpdir/labels.out"
 grep -q -- 'gh label create monitor-skill-health' "$tmpdir/labels.out"
 grep -q -- 'gh label create agent-maintenance' "$tmpdir/labels.out"
+grep -q -- 'gh label create agent:skill-maintainer' "$tmpdir/labels.out"
 grep -q -- 'gh label create agent:agent-skill-maintainer' "$tmpdir/labels.out"
 if grep -q -- 'gh label create type --repo' "$tmpdir/labels.out"; then
     echo "FAIL: colon label was split incorrectly"

@@ -1,0 +1,617 @@
+{
+  "schema": "test-interactions.discovery-result.v1",
+  "run_id": "test-interactions-discovery-20260729T185020357409Z",
+  "url": "http://127.0.0.1:8775/discovery_defects.html",
+  "bounds": {
+    "max_depth": 1,
+    "max_states": 4,
+    "max_actions": 12
+  },
+  "states_seen": 2,
+  "actions_run": 11,
+  "inventory": [
+    {
+      "url": "http://127.0.0.1:8775/discovery_defects.html",
+      "title": "test-interactions discovery defects fixture",
+      "bodyText": "Discovery defects fixture\nOpen dialog Duplicate A Duplicate B Missing QID Throw Fetch fails Inert No title No action\nKeyboard miss\nURL drift",
+      "interactives": [
+        {
+          "index": 0,
+          "qid": "fixture:open-dialog",
+          "selector": "[data-qid='fixture:open-dialog']",
+          "tag": "button",
+          "role": "",
+          "title": "Open dialog",
+          "qsAction": "FIXTURE_OPEN_DIALOG",
+          "visible": true,
+          "enabled": true,
+          "text": "Open dialog",
+          "bbox": {
+            "x": 38,
+            "y": 96.4375,
+            "width": 87.890625,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 1,
+          "qid": "fixture:duplicate",
+          "selector": "[data-qid='fixture:duplicate']",
+          "tag": "button",
+          "role": "",
+          "title": "Duplicate A",
+          "qsAction": "FIXTURE_DUP_A",
+          "visible": true,
+          "enabled": true,
+          "text": "Duplicate A",
+          "bbox": {
+            "x": 142.34375,
+            "y": 96.4375,
+            "width": 83.421875,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 2,
+          "qid": "fixture:duplicate",
+          "selector": "[data-qid='fixture:duplicate']",
+          "tag": "button",
+          "role": "",
+          "title": "Duplicate B",
+          "qsAction": "FIXTURE_DUP_B",
+          "visible": true,
+          "enabled": true,
+          "text": "Duplicate B",
+          "bbox": {
+            "x": 242.21875,
+            "y": 96.4375,
+            "width": 84.171875,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 3,
+          "qid": "fixture:missing-qid",
+          "selector": "[data-qid='fixture:missing-qid']",
+          "tag": "button",
+          "role": "",
+          "title": "Exercise repaired QID control",
+          "qsAction": "FIXTURE_MISSING_QID",
+          "visible": true,
+          "enabled": true,
+          "text": "Missing QID",
+          "bbox": {
+            "x": 342.84375,
+            "y": 96.4375,
+            "width": 88.578125,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 4,
+          "qid": "fixture:throws",
+          "selector": "[data-qid='fixture:throws']",
+          "tag": "button",
+          "role": "",
+          "title": "Throw error",
+          "qsAction": "FIXTURE_THROW",
+          "visible": true,
+          "enabled": true,
+          "text": "Throw",
+          "bbox": {
+            "x": 447.875,
+            "y": 96.4375,
+            "width": 53.03125,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 5,
+          "qid": "fixture:fetch-fails",
+          "selector": "[data-qid='fixture:fetch-fails']",
+          "tag": "button",
+          "role": "",
+          "title": "Fetch fails",
+          "qsAction": "FIXTURE_FETCH_FAILS",
+          "visible": true,
+          "enabled": true,
+          "text": "Fetch fails",
+          "bbox": {
+            "x": 517.359375,
+            "y": 96.4375,
+            "width": 76.75,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 6,
+          "qid": "fixture:inert",
+          "selector": "[data-qid='fixture:inert']",
+          "tag": "button",
+          "role": "",
+          "title": "Inert button",
+          "qsAction": "FIXTURE_INERT",
+          "visible": true,
+          "enabled": true,
+          "text": "Inert",
+          "bbox": {
+            "x": 610.5625,
+            "y": 96.4375,
+            "width": 48,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 7,
+          "qid": "fixture:no-title",
+          "selector": "[data-qid='fixture:no-title']",
+          "tag": "button",
+          "role": "",
+          "title": "",
+          "qsAction": "FIXTURE_NO_TITLE",
+          "visible": true,
+          "enabled": true,
+          "text": "No title",
+          "bbox": {
+            "x": 675.015625,
+            "y": 96.4375,
+            "width": 57.484375,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 8,
+          "qid": "fixture:no-action",
+          "selector": "[data-qid='fixture:no-action']",
+          "tag": "button",
+          "role": "",
+          "title": "No action id",
+          "qsAction": "",
+          "visible": true,
+          "enabled": true,
+          "text": "No action",
+          "bbox": {
+            "x": 748.953125,
+            "y": 96.4375,
+            "width": 72.3125,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 9,
+          "qid": "fixture:keyboard-miss",
+          "selector": "[data-qid='fixture:keyboard-miss']",
+          "tag": "div",
+          "role": "button",
+          "title": "Keyboard miss",
+          "qsAction": "FIXTURE_KEYBOARD_MISS",
+          "visible": true,
+          "enabled": true,
+          "text": "Keyboard miss",
+          "bbox": {
+            "x": 38,
+            "y": 152.4375,
+            "width": 1524,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>div",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 10,
+          "qid": "fixture:url-drift",
+          "selector": "[data-qid='fixture:url-drift']",
+          "tag": "button",
+          "role": "",
+          "title": "URL drift",
+          "qsAction": "FIXTURE_URL_DRIFT",
+          "visible": true,
+          "enabled": true,
+          "text": "URL drift",
+          "bbox": {
+            "x": 38,
+            "y": 208.4375,
+            "width": 68.09375,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 11,
+          "qid": "fixture:dialog-control",
+          "selector": "[data-qid='fixture:dialog-control']",
+          "tag": "button",
+          "role": "",
+          "title": "Dialog control",
+          "qsAction": "FIXTURE_DIALOG_CONTROL",
+          "visible": false,
+          "enabled": true,
+          "text": "Dialog control",
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "body>main>div>section>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 12,
+          "qid": "fixture:close-dialog",
+          "selector": "[data-qid='fixture:close-dialog']",
+          "tag": "button",
+          "role": "",
+          "title": "Close dialog",
+          "qsAction": "FIXTURE_CLOSE_DIALOG",
+          "visible": false,
+          "enabled": true,
+          "text": "Close",
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "body>main>div>section>button",
+          "expectedKeyboard": true
+        }
+      ],
+      "dialogs": [],
+      "state_fingerprint": "5cc98dc0b811f7c9",
+      "captured_at": "2026-07-29T18:50:21.573159+00:00"
+    },
+    {
+      "url": "http://127.0.0.1:8775/discovery_defects.html?drift=1",
+      "title": "test-interactions discovery defects fixture",
+      "bodyText": "Discovery defects fixture\nOpen dialog Duplicate A Duplicate B Missing QID Throw Fetch fails Inert No title No action\nKeyboard miss\nURL drift\nDialog\nDialog control Close\n\ndialog ready",
+      "interactives": [
+        {
+          "index": 0,
+          "qid": "fixture:open-dialog",
+          "selector": "[data-qid='fixture:open-dialog']",
+          "tag": "button",
+          "role": "",
+          "title": "Open dialog",
+          "qsAction": "FIXTURE_OPEN_DIALOG",
+          "visible": true,
+          "enabled": true,
+          "text": "Open dialog",
+          "bbox": {
+            "x": 38,
+            "y": 96.4375,
+            "width": 87.890625,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 1,
+          "qid": "fixture:duplicate",
+          "selector": "[data-qid='fixture:duplicate']",
+          "tag": "button",
+          "role": "",
+          "title": "Duplicate A",
+          "qsAction": "FIXTURE_DUP_A",
+          "visible": true,
+          "enabled": true,
+          "text": "Duplicate A",
+          "bbox": {
+            "x": 142.34375,
+            "y": 96.4375,
+            "width": 83.421875,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 2,
+          "qid": "fixture:duplicate",
+          "selector": "[data-qid='fixture:duplicate']",
+          "tag": "button",
+          "role": "",
+          "title": "Duplicate B",
+          "qsAction": "FIXTURE_DUP_B",
+          "visible": true,
+          "enabled": true,
+          "text": "Duplicate B",
+          "bbox": {
+            "x": 242.21875,
+            "y": 96.4375,
+            "width": 84.171875,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 3,
+          "qid": "fixture:missing-qid",
+          "selector": "[data-qid='fixture:missing-qid']",
+          "tag": "button",
+          "role": "",
+          "title": "Exercise repaired QID control",
+          "qsAction": "FIXTURE_MISSING_QID",
+          "visible": true,
+          "enabled": true,
+          "text": "Missing QID",
+          "bbox": {
+            "x": 342.84375,
+            "y": 96.4375,
+            "width": 88.578125,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 4,
+          "qid": "fixture:throws",
+          "selector": "[data-qid='fixture:throws']",
+          "tag": "button",
+          "role": "",
+          "title": "Throw error",
+          "qsAction": "FIXTURE_THROW",
+          "visible": true,
+          "enabled": true,
+          "text": "Throw",
+          "bbox": {
+            "x": 447.875,
+            "y": 96.4375,
+            "width": 53.03125,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 5,
+          "qid": "fixture:fetch-fails",
+          "selector": "[data-qid='fixture:fetch-fails']",
+          "tag": "button",
+          "role": "",
+          "title": "Fetch fails",
+          "qsAction": "FIXTURE_FETCH_FAILS",
+          "visible": true,
+          "enabled": true,
+          "text": "Fetch fails",
+          "bbox": {
+            "x": 517.359375,
+            "y": 96.4375,
+            "width": 76.75,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 6,
+          "qid": "fixture:inert",
+          "selector": "[data-qid='fixture:inert']",
+          "tag": "button",
+          "role": "",
+          "title": "Inert button",
+          "qsAction": "FIXTURE_INERT",
+          "visible": true,
+          "enabled": true,
+          "text": "Inert",
+          "bbox": {
+            "x": 610.5625,
+            "y": 96.4375,
+            "width": 48,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 7,
+          "qid": "fixture:no-title",
+          "selector": "[data-qid='fixture:no-title']",
+          "tag": "button",
+          "role": "",
+          "title": "",
+          "qsAction": "FIXTURE_NO_TITLE",
+          "visible": true,
+          "enabled": true,
+          "text": "No title",
+          "bbox": {
+            "x": 675.015625,
+            "y": 96.4375,
+            "width": 57.484375,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 8,
+          "qid": "fixture:no-action",
+          "selector": "[data-qid='fixture:no-action']",
+          "tag": "button",
+          "role": "",
+          "title": "No action id",
+          "qsAction": "",
+          "visible": true,
+          "enabled": true,
+          "text": "No action",
+          "bbox": {
+            "x": 748.953125,
+            "y": 96.4375,
+            "width": 72.3125,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 9,
+          "qid": "fixture:keyboard-miss",
+          "selector": "[data-qid='fixture:keyboard-miss']",
+          "tag": "div",
+          "role": "button",
+          "title": "Keyboard miss",
+          "qsAction": "FIXTURE_KEYBOARD_MISS",
+          "visible": true,
+          "enabled": true,
+          "text": "Keyboard miss",
+          "bbox": {
+            "x": 38,
+            "y": 152.4375,
+            "width": 1524,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>div",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 10,
+          "qid": "fixture:url-drift",
+          "selector": "[data-qid='fixture:url-drift']",
+          "tag": "button",
+          "role": "",
+          "title": "URL drift",
+          "qsAction": "FIXTURE_URL_DRIFT",
+          "visible": true,
+          "enabled": true,
+          "text": "URL drift",
+          "bbox": {
+            "x": 38,
+            "y": 208.4375,
+            "width": 68.09375,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "html>body>main>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 11,
+          "qid": "fixture:dialog-control",
+          "selector": "[data-qid='fixture:dialog-control']",
+          "tag": "button",
+          "role": "",
+          "title": "Dialog control",
+          "qsAction": "FIXTURE_DIALOG_CONTROL",
+          "visible": true,
+          "enabled": true,
+          "text": "Dialog control",
+          "bbox": {
+            "x": 626,
+            "y": 173.8125,
+            "width": 97.5,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "body>main>div>section>button",
+          "expectedKeyboard": true
+        },
+        {
+          "index": 12,
+          "qid": "fixture:close-dialog",
+          "selector": "[data-qid='fixture:close-dialog']",
+          "tag": "button",
+          "role": "",
+          "title": "Close dialog",
+          "qsAction": "FIXTURE_CLOSE_DIALOG",
+          "visible": true,
+          "enabled": true,
+          "text": "Close",
+          "bbox": {
+            "x": 739.953125,
+            "y": 173.8125,
+            "width": 50.078125,
+            "height": 44
+          },
+          "ariaExpanded": "",
+          "ariaControls": "",
+          "cssPath": "body>main>div>section>button",
+          "expectedKeyboard": true
+        }
+      ],
+      "dialogs": [
+        {
+          "qid": "fixture:dialog",
+          "role": "dialog",
+          "bbox": {
+            "x": 600,
+            "y": 80,
+            "width": 400,
+            "height": 213.8125
+          }
+        }
+      ],
+      "state_fingerprint": "e57cfff539cf3787",
+      "captured_at": "2026-07-29T18:50:26.621140+00:00"
+    }
+  ]
+}

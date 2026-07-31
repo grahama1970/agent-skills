@@ -7,6 +7,7 @@
     "may_claim": [
       "backend_live_transport_contract_published",
       "sse_endpoint_shape_defined",
+      "websocket_endpoint_shape_defined",
       "initial_snapshot_endpoint_shape_defined",
       "event_ordering_semantics_defined",
       "reconnect_semantics_defined",
@@ -64,7 +65,8 @@
     "route": "#battle/live?engine=pixi&battle=battle-004",
     "snapshot_endpoint": "/battle/live/battle-004/snapshot",
     "sse_endpoint": "/battle/live/battle-004/events",
-    "stop_condition": "frontend can implement SSE client against this contract without reading raw backend runtime paths"
+    "stop_condition": "frontend can implement SSE or WebSocket clients against this contract without reading raw backend runtime paths",
+    "websocket_endpoint": "/battle/live/battle-004/ws"
   },
   "gap_semantics": {
     "client_must_not_interpolate_missing_events": true,
@@ -72,7 +74,7 @@
     "gap_response": "fail_closed_and_refetch_snapshot",
     "snapshot_resync_required": true
   },
-  "generated_at": "2026-07-11T01:30:00Z",
+  "generated_at": "2026-07-29T19:18:13Z",
   "initial_snapshot": {
     "endpoint": "/battle/live/battle-004/snapshot",
     "method": "GET",
@@ -125,5 +127,14 @@
       "id": "seq"
     },
     "method": "GET"
+  },
+  "websocket": {
+    "content_type": "application/json",
+    "endpoint": "/battle/live/battle-004/ws",
+    "event_schema": "battle.live_event.v1",
+    "first_message_schema": "battle.snapshot.v1",
+    "kind": "websocket",
+    "message_order": "snapshot_first_then_ordered_events",
+    "resume_semantics": "not_implemented_in_local_mvp_refetch_snapshot_then_reconnect"
   }
 }

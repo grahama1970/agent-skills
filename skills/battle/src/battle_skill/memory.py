@@ -291,6 +291,7 @@ class BattleMemory:
         providers: dict[str, Any] = {}
         stdout_chunks: list[str] = []
         finish_status: str | None = None
+        model_synthesis_present = False
 
         def on_stderr(line: str) -> None:
             if not line.startswith(DOGPILE_EVENT_PREFIX):
@@ -303,7 +304,10 @@ class BattleMemory:
             if name == "partial_result":
                 provider = event.get("provider")
                 if provider:
-                    providers[provider] = event.get("summary") or {}
+                    summary = event.get("summary") or {}
+                    providers[provider] = summary
+                    nonlocal model_synthesis_present
+                    model_synthesis_present = model_synthesis_present or bool(summary.get("model_synthesis_present"))
             elif name == "search_finished":
                 nonlocal finish_status
                 finish_status = event.get("status")
@@ -338,31 +342,53 @@ class BattleMemory:
                 pass
 
         elapsed = round(time.time() - started, 2)
-        # A provider counts as knowledge only when it reported ok; dogpile can
-        # exit 0 with every lane skipped or errored.
+        # A provider can be productive without being source-bearing. Battle may
+        # read model synthesis only when at least one source-bearing item landed.
         productive = sorted(p for p, s in providers.items() if isinstance(s, dict) and s.get("ok"))
+        source_bearing = sorted(
+            p
+            for p, s in providers.items()
+            if isinstance(s, dict) and int(s.get("source_bearing_evidence_count") or 0) > 0
+        )
+        source_bearing_evidence_count = sum(
+            int(s.get("source_bearing_evidence_count") or 0)
+            for s in providers.values()
+            if isinstance(s, dict)
+        )
         knowledge = "\n".join(stdout_chunks)
+        research_evidence_sufficient = source_bearing_evidence_count > 0
 
         result: dict[str, Any] = {
-            "success": bool(productive),
+            "success": research_evidence_sufficient,
             "query": query,
             "preset": self.dogpile_preset,
             "results": knowledge,
             "providers": providers,
             "productive_providers": productive,
             "provider_count": len(productive),
+            "productive_provider_count": len(productive),
+            "source_bearing_providers": source_bearing,
+            "source_bearing_provider_count": len(source_bearing),
+            "source_bearing_evidence_count": source_bearing_evidence_count,
+            "model_synthesis_present": model_synthesis_present,
+            "research_evidence_sufficient": research_evidence_sufficient,
             "complete": finish_status == "completed" and not timed_out,
             "timed_out": timed_out,
             "returncode": proc.returncode,
             "elapsed_s": elapsed,
             "budget_remaining": remaining,
         }
-        if not productive:
-            result["error"] = "no productive providers" if not timed_out else f"deadline {deadline_s}s hit before any provider landed"
+        if not research_evidence_sufficient:
+            result["error"] = (
+                "research_degraded_no_sources"
+                if not timed_out
+                else f"deadline {deadline_s}s hit before any source-bearing provider landed"
+            )
 
         console.print(
             f"[dim]Research {'partial' if timed_out else 'complete'} in {elapsed}s — "
-            f"{len(productive)} productive provider(s): {', '.join(productive) or 'none'}[/dim]"
+            f"{len(productive)} productive provider(s), "
+            f"{len(source_bearing)} source-bearing provider(s): {', '.join(source_bearing) or 'none'}[/dim]"
         )
         return result
 

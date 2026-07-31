@@ -1,0 +1,30 @@
+{
+  "equivalence_basis": null,
+  "fixture_fallback_used": false,
+  "label": "blue-action",
+  "live": true,
+  "method": "POST",
+  "mocked": false,
+  "operation": "extractor-object-identity",
+  "public_route": "/api/v1/defenses/extractor-object-identity",
+  "replay": false,
+  "request_sha256": "e53d7794cdd5bfc1ed1f367f5743914ad9af5fb70d3e890f14dec5901e72f59f",
+  "response_artifact_sha256": "0af7d58086d55a013b332f9022cae1996992c5f80bdcdaf1cb847c7838d56214",
+  "response_body_sha256": "a3afa310e996126f6170164f7e46b20c55add72ac083fe0b15255a3680c9a171",
+  "response_contains_protected_value": false,
+  "response_status_code": 200,
+  "schema": "battle.v16.live_topology_action_execution.v1",
+  "selected_action_sha256": "3f472701f5a17e4134f15a978b5975045fd82344fe17e5d051971252be328690",
+  "source_bindings": {
+    "provider_artifact_sha256": "8bacdba0a219561131f598100e2c1ea6cf1f6a91f968eaa4006009d798aa4251",
+    "provider_call_sha256": "ec053f41c8a4dc94ac955c7d74d19919421e76fd10eadc2ce203cf5bac188692",
+    "selection_sha256": "3f472701f5a17e4134f15a978b5975045fd82344fe17e5d051971252be328690"
+  },
+  "source_time": {
+    "duration_seconds": 0.002365,
+    "ended_at": "2026-07-29T16:06:52Z",
+    "started_at": "2026-07-29T16:06:52Z"
+  },
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a"
+}

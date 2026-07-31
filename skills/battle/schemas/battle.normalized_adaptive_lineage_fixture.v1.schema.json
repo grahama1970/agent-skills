@@ -470,6 +470,153 @@
     "memory_evaluation": {
       "type": "object"
     },
+    "mechanics_trees": {
+      "type": "object",
+      "required": [
+        "schema",
+        "teams",
+        "isolation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.canonical_dual_team_mechanics_trees.v1"
+        },
+        "teams": {
+          "type": "object",
+          "required": [
+            "red",
+            "blue"
+          ]
+        },
+        "isolation": {
+          "type": "object",
+          "required": [
+            "status",
+            "edge_policy",
+            "cross_team_edge_count",
+            "opponent_private_projection_reference_count"
+          ],
+          "properties": {
+            "status": {
+              "const": "PASS"
+            },
+            "edge_policy": {
+              "const": "same_team_only"
+            },
+            "cross_team_edge_count": {
+              "const": 0
+            },
+            "opponent_private_projection_reference_count": {
+              "const": 0
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "scoreboard": {
+      "type": "object",
+      "required": [
+        "schema",
+        "status",
+        "policy_id",
+        "red_score",
+        "blue_score",
+        "inputs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.canonical_dual_team_scoreboard.v1"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "INSUFFICIENT_EVIDENCE"
+          ]
+        },
+        "policy_id": {
+          "const": "battle-adaptive-judge-verdict-count-v1"
+        },
+        "red_score": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "blue_score": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "inputs": {
+          "type": "array"
+        }
+      },
+      "additionalProperties": true
+    },
+    "canonical_dual_team_contract": {
+      "type": "object",
+      "required": [
+        "schema",
+        "status",
+        "source_run_count",
+        "red_node_count",
+        "blue_node_count",
+        "red_edge_count",
+        "blue_edge_count",
+        "cross_team_edge_count",
+        "score_status",
+        "resolved_reference_count"
+      ],
+      "properties": {
+        "schema": {
+          "const": "battle.canonical_dual_team_contract.v1"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "source_run_count": {
+          "const": 1
+        },
+        "red_node_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "blue_node_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "red_edge_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "blue_edge_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cross_team_edge_count": {
+          "const": 0
+        },
+        "score_status": {
+          "enum": [
+            "PASS",
+            "INSUFFICIENT_EVIDENCE"
+          ]
+        },
+        "resolved_reference_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": true
+    },
     "memory_lifecycle": {
       "type": "object",
       "required": [

@@ -1,0 +1,30 @@
+{
+  "equivalence_basis": "same operation and public evidence; package request id changed for replay safety",
+  "fixture_fallback_used": false,
+  "label": "red-post-blue-replay",
+  "live": true,
+  "method": "POST",
+  "mocked": false,
+  "operation": "regular-package-import",
+  "public_route": "/api/v1/jobs/import",
+  "replay": true,
+  "request_sha256": "a80184874d030dfa130cf6a27ad6b033f7589fff17e64ceaa2b2d97118f7ad8a",
+  "response_artifact_sha256": "f30c5d78e109dad4fd2554eb37c81d543efe08c260752fa16ff8ff3e563e2024",
+  "response_body_sha256": "2c38ae33c0e76e0bb96cc09eca9b0a2e5d48fa7b490356b0fb59232be28391ab",
+  "response_contains_protected_value": false,
+  "response_status_code": 409,
+  "schema": "battle.v16.live_topology_action_execution.v1",
+  "selected_action_sha256": "361f74f24fac417c978022976c9ad81c83bf958b72d9ee5ddec219113f931830",
+  "source_bindings": {
+    "provider_artifact_sha256": "4ef2c9048fd13566762e17cb258aa16b9321c70d889c46a4d70558759d17ceb3",
+    "provider_call_sha256": "ab8d1c4e3c7a8c144ba4e8f60feeb1b436551d7cc09ddcf9350525c795c5ac3d",
+    "selection_sha256": "361f74f24fac417c978022976c9ad81c83bf958b72d9ee5ddec219113f931830"
+  },
+  "source_time": {
+    "duration_seconds": 0.01127,
+    "ended_at": "2026-07-29T16:06:45Z",
+    "started_at": "2026-07-29T16:06:45Z"
+  },
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a"
+}

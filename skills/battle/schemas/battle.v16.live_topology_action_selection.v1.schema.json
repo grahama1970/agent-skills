@@ -15,8 +15,13 @@
     "selected_proposal": {"type": "object"},
     "selected_proposal_sha256": {"$ref": "#/$defs/sha"},
     "rejected_proposals": {"type": "array", "items": {"type": "object"}},
-    "eligible_proposal_count": {"type": "integer", "minimum": 1, "maximum": 2},
-    "selection_policy": {"const": "lowest_provider_rank_among_schema_valid_evidence_satisfied_actions"},
+    "eligible_proposal_count": {"type": "integer", "minimum": 1, "maximum": 3},
+    "selection_policy": {
+      "enum": [
+        "lowest_provider_rank_among_schema_valid_evidence_satisfied_actions",
+        "memory_strategy_target_alignment_then_lowest_provider_rank"
+      ]
+    },
     "private_judge_read_during_selection": {"const": false},
     "mocked": {"const": false},
     "live": {"const": true},

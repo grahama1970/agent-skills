@@ -11,7 +11,7 @@ export const BATTLE_RECEIPT_REPLAY_FIXTURE_URLS = {
 	"battle-005-ssrf-metadata": "/battle-fixtures/battle-005-ssrf-metadata-pixi-replay/battle.normalized_ux_fixture.json",
 	"battle-006-pickle-deserialization": "/battle-fixtures/battle-006-pickle-deserialization-pixi-replay/battle.normalized_ux_fixture.json",
 	"battle-007-file-upload": "/battle-fixtures/battle-007-file-upload-pixi-replay/battle.normalized_ux_fixture.json",
-	"battle-004-kill-shot": "/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json",
+	"battle-004-kill-shot": "/battle-fixtures/battle-004-kill-shot-pixi-replay/unsupported.json",
 	"battle-004-parent-spawn-lifecycle": "/battle-fixtures/battle-004-parent-spawn-lifecycle-pixi-replay/battle.normalized_ux_fixture.json",
 	"battle-004-pr6-genetic-pixi": "/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json",
 	"battle-004-adaptive-lineage-v13": "/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",

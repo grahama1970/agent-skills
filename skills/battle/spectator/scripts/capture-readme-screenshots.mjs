@@ -24,12 +24,6 @@ const shots = [
     clipSelector: '[data-qid="battle:agent-pane:lifecycle-evidence"]',
   },
   {
-    id: 'battle-004-kill-shot-impact',
-    url: `${host}/#battle/receipt?engine=pixi&fixture=battle-004-kill-shot&pixiTest=1&pixiSeconds=99`,
-    waitFor: '[data-battle-pixi-engine="animated-sprites"]',
-    clipSelector: '.battle-mockup-shell',
-  },
-  {
     id: 'battle-004-spawn-block-vfx',
     url: `${host}/#battle/receipt?engine=pixi&fixture=battle-004-parent-spawn&pixiTest=1&pixiSeconds=99.4`,
     waitFor: '[data-battle-pixi-engine="animated-sprites"]',

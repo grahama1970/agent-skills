@@ -79,6 +79,26 @@
         }
       }
     },
+    "websocket": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "endpoint", "event_schema", "first_message_schema"],
+      "properties": {
+        "kind": {
+          "const": "websocket"
+        },
+        "endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_schema": {
+          "const": "battle.live_event.v1"
+        },
+        "first_message_schema": {
+          "const": "battle.snapshot.v1"
+        }
+      }
+    },
     "event_stream": {
       "type": "object",
       "additionalProperties": true,
@@ -198,6 +218,10 @@
           "minLength": 1
         },
         "sse_endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "websocket_endpoint": {
           "type": "string",
           "minLength": 1
         },

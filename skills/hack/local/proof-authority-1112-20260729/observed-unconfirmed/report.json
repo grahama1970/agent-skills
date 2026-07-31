@@ -1,0 +1,12 @@
+{
+  "artifact": "skills/hack/local/proof-authority-1112-20260729/observed-unconfirmed/attacks/probe-observation.json",
+  "evidence_summary": "fixture observed a bounded signal; independent replay is required",
+  "finding": "fixture command signal",
+  "indicator": "fixture_reflected_signal",
+  "observation_artifact": "skills/hack/local/proof-authority-1112-20260729/observed-unconfirmed/attacks/probe-observation.json",
+  "proven": false,
+  "reason": "Hack observation has no independent validation receipt.",
+  "status": "OBSERVED_UNCONFIRMED",
+  "target_summary": "fixture local target identity",
+  "validation_errors": []
+}

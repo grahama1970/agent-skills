@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "skill": "ux-lab",
+  "trials": 3,
+  "proof_scope": "fixture wiring smoke",
+  "claims": {
+    "proves": "the existing skill entrypoint exits with the expected status",
+    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+  },
+  "cases": [
+    {
+      "name": "sanity",
+      "type": "positive",
+      "command": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    }
+  ]
+}

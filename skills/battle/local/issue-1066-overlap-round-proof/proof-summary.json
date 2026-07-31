@@ -1,0 +1,43 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "The broader multi-round production scheduler epic is complete.",
+      "A multi-worker swarm.",
+      "Provider-routed Battle execution."
+    ],
+    "proves": [
+      "Exactly one Red worker and one proactive Blue worker started before either future was awaited to completion.",
+      "Blue's first action used only public scenario/target input.",
+      "Judge derived the winner from runtime event receipts."
+    ]
+  },
+  "docker_image": "python:3.12-slim",
+  "live": true,
+  "mocked": false,
+  "out_dir": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof",
+  "overlap": {
+    "blue_started_at_ns": 689297295092925,
+    "blue_terminal_at_ns": 689297825998117,
+    "red_started_at_ns": 689297294811772,
+    "red_terminal_at_ns": 689298095926445
+  },
+  "pass_checks": {
+    "blue_first_input_has_no_red_artifact": true,
+    "blue_started_before_red_terminal": true,
+    "judge_replay_present": true,
+    "one_blue_worker": true,
+    "one_red_worker": true,
+    "red_started_before_blue_terminal": true,
+    "scorekeeper_present": true
+  },
+  "receipts": {
+    "blue_first_action_input": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof/blue-first-action-input.json",
+    "blue_worker": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof/blue-worker-receipt.json",
+    "event_ledger": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof/event-ledger.json",
+    "judge": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof/judge-receipt.json",
+    "red_worker": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof/red-worker-receipt.json",
+    "scorekeeper": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof/scorekeeper-receipt.json"
+  },
+  "schema": "battle.issue_1066_overlap_round_proof.v1",
+  "status": "PASS"
+}

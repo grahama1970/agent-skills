@@ -1,0 +1,33 @@
+{
+  "collection": "battle_experiment_memory",
+  "created_at": "2026-07-29T15:19:05Z",
+  "cross_team_items_absent": true,
+  "exact_match_count": 1,
+  "fixture_fallback_used": false,
+  "live": true,
+  "memory_content_sha256": "bca9772fed610e30a54a8e9cf297061e470369ae66dae31c5ce6e91d40d3fffd",
+  "memory_key": "battle-v16-relayforge-a:memory-chain:blue:b781345bc7367f6a76cfafc4",
+  "memory_write_receipt_sha256": "460a7fed78a043fe364509d6f0c2c84bf4767e044541221f15a64b9e2ca7c024",
+  "mocked": false,
+  "negative_item_counts": {
+    "cross_team": 0,
+    "wrong_key": 0,
+    "wrong_source_hash": 0
+  },
+  "negative_response_sha256": {
+    "cross_team": "5ae841a6859018fb77db369e84ba2493f3e7a6020318a0671daec15000176a45",
+    "wrong_key": "5ae841a6859018fb77db369e84ba2493f3e7a6020318a0671daec15000176a45",
+    "wrong_source_hash": "5ae841a6859018fb77db369e84ba2493f3e7a6020318a0671daec15000176a45"
+  },
+  "query_sha256": "08ec5592e6712188cc9cd3837ba8895d65701ebbaf007da9ea43d1d844ae4e1f",
+  "recalled_document_sha256": "14cf93313a2e6ed5b323dc72d18c6d3ae47b672339dcbfd6c8e588dfa2bdfc3c",
+  "recalled_solution_sha256": "45b9c1b01d9e52ee78f21f431b6204b63a2c049c30c5750aa4aeea853d6f6283",
+  "schema": "battle.v16.memory_chain_recall.v1",
+  "service_response_sha256": "dd553cdaa742fb5670df5f1ebaa12344d097389e622d7b5f001fa48500f9891f",
+  "source_observation_receipt_sha256": "b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f",
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "team": "blue",
+  "wrong_key_items_absent": true,
+  "wrong_source_hash_items_absent": true
+}

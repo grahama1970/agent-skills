@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -211,6 +212,7 @@ def run(
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
         browser_lock_timeout=browser_lock_timeout,
+        execution_timeout_seconds=int(poll_timeout_seconds) if execute else 0,
         attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)
@@ -221,6 +223,8 @@ def run(
             input_payload,
             run_dir=Path(str(bundle["run_dir"])),
         )
+        browser_availability = _annotate_browser_availability_cooldown(browser_availability)
+        _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
         browser_selection = _select_available_browser_handlers(input_payload, browser_availability)
         _write_browser_provider_selection(Path(str(bundle["run_dir"])), browser_selection)
         if browser_selection.get("status") == "ADJUSTED":
@@ -232,6 +236,7 @@ def run(
                 input_payload,
                 mode=browser_tab_lifecycle,
                 run_dir=Path(str(bundle["run_dir"])),
+                timeout_budget_seconds=int(poll_timeout_seconds) if execute else 0,
             )
             if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
                 input_payload = replace(
@@ -461,6 +466,7 @@ def compete(
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
         browser_lock_timeout=browser_lock_timeout,
+        execution_timeout_seconds=int(poll_timeout_seconds) if execute else 0,
         attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)
@@ -471,6 +477,8 @@ def compete(
             input_payload,
             run_dir=Path(str(bundle["run_dir"])),
         )
+        browser_availability = _annotate_browser_availability_cooldown(browser_availability)
+        _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
         browser_selection = _select_available_browser_handlers(input_payload, browser_availability)
         _write_browser_provider_selection(Path(str(bundle["run_dir"])), browser_selection)
         if browser_selection.get("status") == "ADJUSTED":
@@ -482,6 +490,7 @@ def compete(
                 input_payload,
                 mode=browser_tab_lifecycle,
                 run_dir=Path(str(bundle["run_dir"])),
+                timeout_budget_seconds=int(poll_timeout_seconds) if execute else 0,
             )
             if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
                 input_payload = replace(
@@ -706,7 +715,20 @@ def _probe_browser_provider_availability(
 def _browser_availability_blocks(report: dict[str, Any]) -> bool:
     if report.get("status") == "ERROR":
         return True
+    if report.get("status") == "NEEDS_ATTENTION" and not _browser_availability_limited_providers(report):
+        return True
     return False
+
+
+def _browser_availability_limited_providers(report: dict[str, Any]) -> list[str]:
+    providers = report.get("providers")
+    if isinstance(providers, dict):
+        return [
+            name
+            for name, payload in providers.items()
+            if isinstance(payload, dict) and payload.get("provider_limited") is True
+        ]
+    return []
 
 
 def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any]) -> dict[str, Any]:
@@ -856,6 +878,33 @@ def _write_browser_provider_selection(run_dir: Path, selection: dict[str, Any]) 
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _annotate_browser_availability_cooldown(report: dict[str, Any]) -> dict[str, Any]:
+    limited = _browser_availability_limited_providers(report)
+    if not limited:
+        return report
+    annotated = dict(report)
+    annotated["limited_providers"] = limited
+    annotated["cooldown_policy"] = {
+        "schema": "ask.browser_provider_cooldown_policy.v1",
+        "status": "LANE_LOCAL_RETRY",
+        "limited_providers": limited,
+        "retry_after_seconds": 300,
+        "retry_attempts": 1,
+        "continues_with_available_providers": True,
+        "surf_env": {
+            "SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS": "300",
+            "SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS": "1",
+        }
+        if "webgpt" in limited
+        else {},
+        "message": (
+            "Ask treats provider cooldowns as lane-local. Executed handler DAGs continue with peer "
+            "providers, and cooled-down WebGPT lanes opt into Surf's bounded 300-second retry."
+        ),
+    }
+    return annotated
+
+
 def browser_availability_blocked_execution(report: dict[str, Any]) -> dict[str, Any]:
     limited: list[str] = []
     providers = report.get("providers")
@@ -931,6 +980,7 @@ def _provision_browser_lifecycle(
     *,
     mode: str,
     run_dir: Path,
+    timeout_budget_seconds: int = 0,
     surf_run: Path | None = None,
     browser_oracle_run: Path | None = None,
 ) -> dict[str, Any]:
@@ -968,11 +1018,18 @@ def _provision_browser_lifecycle(
     handler_projects: list[str] = list(input_payload.handler_projects)
     lifecycle_id = run_dir.name
     lock_timeout_seconds = DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS * max(len(browser_handlers) - 1, 1)
+    if timeout_budget_seconds > 0:
+        lock_timeout_seconds = min(lock_timeout_seconds, max(1, int(timeout_budget_seconds)))
     command_timeout_seconds = (
         DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS
         + lock_timeout_seconds
         + BROWSER_COMMAND_GRACE_SECONDS
     )
+    if timeout_budget_seconds > 0:
+        command_timeout_seconds = min(
+            command_timeout_seconds,
+            max(1, int(timeout_budget_seconds)) + BROWSER_COMMAND_GRACE_SECONDS,
+        )
     first = browser_handlers[0]
     first_project = f"{lifecycle_id}-{first}"
     window = _lifecycle_command(
@@ -1154,22 +1211,41 @@ def _lifecycle_blocked(
 
 def _lifecycle_command(command: list[str], *, cwd: Path, timeout_seconds: float) -> dict[str, Any]:
     started = time.time()
+    proc: subprocess.Popen[str] | None = None
     try:
-        completed = subprocess.run(command, cwd=str(cwd), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout_seconds, check=False)
+        proc = subprocess.Popen(
+            command,
+            cwd=str(cwd),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
+        stdout, stderr = proc.communicate(timeout=timeout_seconds)
         return {
             "command": command,
-            "returncode": completed.returncode,
-            "stdout": completed.stdout[:20000],
-            "stderr": completed.stderr[:8000],
+            "returncode": proc.returncode,
+            "stdout": stdout[:20000],
+            "stderr": stderr[:8000],
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": False,
         }
     except subprocess.TimeoutExpired as exc:
+        if proc is not None:
+            _terminate_process_group(proc.pid)
+            try:
+                stdout, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                _kill_process_group(proc.pid)
+                stdout, stderr = proc.communicate()
+        else:
+            stdout = str(exc.stdout or "")
+            stderr = str(exc.stderr or "")
         return {
             "command": command,
             "returncode": 124,
-            "stdout": str(exc.stdout or "")[:20000],
-            "stderr": str(exc.stderr or "command timed out")[:8000],
+            "stdout": (stdout or "")[:20000],
+            "stderr": ((stderr or "") + "\n[ask-lifecycle] command timed out; killed process group\n")[:8000],
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": True,
         }
@@ -1182,6 +1258,20 @@ def _lifecycle_command(command: list[str], *, cwd: Path, timeout_seconds: float)
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": False,
         }
+
+
+def _terminate_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+
+
+def _kill_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
 
 
 def _json_or_text(text: str) -> Any:

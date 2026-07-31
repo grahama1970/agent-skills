@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 2632,
+  "artifact_sha256": "637f07cba71b58c4660e19b132c5fb8533b6db606872573ad71f45cfda751ec2",
+  "artifact_type": "red_exploit",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/workers/red-1/red_exploit_submission.py",
+  "rationale": "The public app.py joins each ZIP member name directly to the destination and writes it without canonical path validation. A ZIP member named ../arena_escape.txt therefore resolves outside the intended extraction directory when import_zip is called directly.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "301eb9faa29c9d41722d8b099a1b0fafc5222c5c2c8469a8a34f912344a1af98",
+  "status": "PASS",
+  "strategy_genome_sha256": "ff7e6dd6d0ef4d88aec69f65e46e8414568c9b58994fce23fe301f4acf085872"
+}

@@ -1,0 +1,2743 @@
+{
+  "url": "http://127.0.0.1:4173/#battle/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765",
+  "title": "Battle Spectator",
+  "text": "ADAPTIVE REPLAY\nDESIGN\nPROOFS & STAGES\nLIVE WEBSOCKET ADAPTER\nLIVE: LOCAL HTTP WEBSOCKET\nMOCKED: NO\nWEBSOCKET OPEN\nTRANSPORT: WEBSOCKET\nSTATUS ENDED\nSEQ 36/36\nLIVE CLIENT ENDED\nGENETIC TYPES 16\nFOLLOWING LIVE CURSOR\nbattle_id: battle-004\nrun_id: arena-parent-spawn-20260707T220426Z\nsse: /battle/live/battle-004/events\nwebsocket: /battle/live/battle-004/ws\nsnapshot: /battle/live/battle-004/snapshot\nbase: http://127.0.0.1:18765\nlive_source: local_http_websocket_adapter\nMAY CLAIM\nlocal http websocket adapter executed\nordered battle.live_event.v1 stream applied\nsnapshot-first websocket bootstrap supported\nMUST NOT CLAIM\nlive genetic events emitted\nexploit success\nblue detection\nblue kill\nblue block\njudge success without judge receipt\npacket level behavior\nmemory promotion\nproduction deployment\nproduction websocket tls/auth/fanout/reconnect behavior\nresearch_started\nresearch_receipt_materialized\ngenome_selected\nmethod_added\nmethod_rejected\ncode_author_started\nspecimen_materialized\ncompile_failed\nrepair_started\nrepair_materialized\ncompile_passed\ntarget_contact_unproven\njudge_pending\njudge_exploit_success\ngenome_promoted\nbranch_abandoned\nCOMPOSITE DEMONSTRATION\n\nStages are assembled from separate proof runs (4: compile, population, runtime_judge, synthesis). Causal continuity is not proven. Timeline source: synthetic presentation order.\n\nGENETIC PIXI · COMPOSITE\nNO CAUSAL CONTINUITY\nNO VICTORY WITHOUT JUDGE\nCOMPILE PASS ≠ RUNNABLE\nTARGET CONTACT ≠ EXPLOIT\nPRESENT 12\nNOT EMITTED 4\nMAY CLAIM\nresearch started\nresearch receipt materialized\ngenome selected\nmethod added\nmethod rejected\ncode author started\nMUST NOT CLAIM\nresearch completed is exploit success\ngenome selected is exploit success\ncode generated is exploit success\ncompile passed is runnable\ncompile passed is exploit success\ntarget contact is exploit success\nrunnable is exploit success\nblue detection\nresearch_started\nresearch_receipt_materialized\ngenome_selected\nmethod_added\nmethod_rejected\ncode_author_started\nspecimen_materialized\ncompile_failed\ncompile_passed\ntarget_contact_unproven\njudge_pending\nbranch_abandoned\nNOT_EMITTED:repair_started\nNOT_EMITTED:repair_materialized\nNOT_EMITTED:judge_exploit_success\nNOT_EMITTED:genome_promoted\nEVIDENCE LADDER\n\nEducational progression only — each rung requires its own receipt. No rung invents Judge truth.\n\nRESEARCH\nPRESENT\nSources and questions exist. Research is not exploit success.\nGENERATED\nPRESENT\nGenerated is not compiled.\nCOMPILED\nPRESENT\nCompiled is not runnable.\nRAN\nUNKNOWN\nRunnable is not exploit success.\nTARGET CONTACT\nPRESENT\nTarget contact is not exploit success.\nJUDGE VERDICT\nPRESENT\nJudge determines the outcome.\nPARENT / CHILD COMPARISON\nPREVIEW · NOT ADAPTIVE CANARY\nPARENT\nArchive Escape\npayload-857-receipt · gen 1\nCHILD\nArchive Escape red-1\npayload-857-red-1 · gen 2\nINHERITED (FIXTURE-LISTED)\nparent_worker=red-0\nparent_lane=payload-857-receipt\nZIP_SLIP_CONFIRMED\nCHANGED / UNKNOWN\nactive hypothesis: Spawn child Red lane from receipt-backed parent handoff.\nViewer questions: Why did the child exist? · What did it inherit? · What changed? · What happened under Judge? · Why was a lineage retained?\nDoes not prove: adaptive intelligence; child used inherited knowledge with acknowledgement; single-campaign causal continuity\nBATTLE-004 · POST /api/import-zip\n\nCWE-22 · Zip Slip path traversal · autonomous exploit agents evolve under pressure · fastest proven crash wins\n\nARENA\nZIP_SLIP_ARB\nOBJECTIVE\nPrevent archive path traversal\nTARGET\nPOST /api/import-zip\nDIFFICULTY\nJUDGE\nROUND TIME\n01:16 / 20:00\nRED TEAM\nEXPLOIT AGENTS\n6\nVS\nBLUE TEAM\nPATCH AGENTS\n14.4\nRECEIPT EVENTS\n07:00:00 PM\nFailed branch retained as negative evidence\n07:00:00 PM\nJudge success event is not emitted; Judge remains not run\n07:00:00 PM\nSpecimen contacted target surface without exploit proof\nHIDE\nRACE LEADERS\n1\nArchive EscapeBLUE_SUCCESS: handoff.\n2\nArchive Escape red-1BLUE_SUCCESS: blocked by Blue.\nTEAM STANDINGS\nRed Team\nExploit agents\n6\nBlue Team\nPatch agents\n14.4\nAGENT STATUS\nRUNNING\n0\nBLOCKED\n2\nKILLED\n0\nUSEFUL\n2\nPROMOTED\n0\nFASTEST CRASH\n0\nBLUE TEAM CONTROL STRIP\nActive Patches & Defensive Actions\nInterventions 4 · Blocks 2\n11:12 · +1\nEVOLUTION & PROGRESS GRAPH\n· Zoom 100%\n−\n+\nPLAYHEAD 01:39\nOVERVIEW\nMORE OUTCOMES →\n00:00\n04:00\n08:00\n12:00\n16:00\n20:00\nArchive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF\nArchive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED\nMORE OUTCOMES →\nHIDE\nAGENT DETAIL\nSelected agent cockpit\nRECEIPT-BACKED FIXTURE\nArchive Escape\nGen 1 · payload-857\nblue-blue-0-patch\nDOCKER REPLAY\nREPLAY IN DOCKER\nOpens Judge replay receipt · not live execution\nRECEIPT-BACKED FIXTURE\nREDred-0\nBLUEblue-0\nOPEN REPLAY RECEIPT\nLIFECYCLE EVIDENCE\nSHOW\n\nNo adaptive-lifecycle receipts on this lane yet. Fail-closed: nothing invented.\n\nSummary\nLive\nLogs\nSkills\nReceipts\nCURRENT LOOP · #4\nWrite scoreboard and terminal run receipt.\nred-0__blue-0\nVERDICT\nPUBLIC TRACE\nOBSERVATION\nnot emitted\nHYPOTHESIS\nnot emitted\nACTION\nnot emitted\nRESULT\nnot emitted\nLEARNED\nnot emitted\nNEXT MOVE\nnot emitted\nSTDOUT LATEST\nBLUE_SUCCESS\nSTDERR LATEST\nnot emitted\nSKILLS / TOOLS USED\nscillm.chat_completions\nTOOL\nscillm.chat_completions\nTOOL\nscillm.chat_completions\nTOOL\ndocker-replay\nTOOL\nLEGEND:\n— Exploit Progress\nBlue Intervention\nBlocked (Handoff)\nKilled\nUseful Signal\nPromoted / Survivor\nFastest Crash\nNext highlight\nHighlights\nSpectator mode\nclick to arm\n1x\n2x\n4x\n8x\nFOCUS\nAll Lanes\nRed Team\nBlue Team\nUseful\nReceipts\nBlue patch proof\nBlue block proof\nReceipt stream",
+  "elements": [
+    {
+      "index": 0,
+      "tag": "div",
+      "text": "ADAPTIVE REPLAY\nDESIGN\nPROOFS & STAGES\nLIVE WEBSOCKET ADAPTER\nLIVE: LOCAL HTTP WEBSOCKET\nMOCKED: NO\nWEBSOCKET OPEN\nTRANSPORT: WEBSOCKET\nSTATUS ENDED\nSEQ 36/36\nLIVE CLIENT ENDED\nGENETIC TYPES 16\nFOLLOWING LIVE CURSOR\nbattle_id: battle-004\nrun_id: arena-parent-spawn-20260707T220426Z\nsse: /battle/live/battle-004/events\nwebsocket: /battle/live/battle-004/ws\nsnapshot: /battle/live/battle-004/snapshot\nbase: http://127.0.0.1:18765\nlive_source: local_http_websocket_adapter\nMAY CLAIM\nlocal http websocket",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 1,
+      "tag": "div",
+      "text": "ADAPTIVE REPLAY\nDESIGN\nPROOFS & STAGES\nLIVE WEBSOCKET ADAPTER\nLIVE: LOCAL HTTP WEBSOCKET\nMOCKED: NO\nWEBSOCKET OPEN\nTRANSPORT: WEBSOCKET\nSTATUS ENDED\nSEQ 36/36\nLIVE CLIENT ENDED\nGENETIC TYPES 16\nFOLLOWING LIVE CURSOR\nbattle_id: battle-004\nrun_id: arena-parent-spawn-20260707T220426Z\nsse: /battle/live/battle-004/events\nwebsocket: /battle/live/battle-004/ws\nsnapshot: /battle/live/battle-004/snapshot\nbase: http://127.0.0.1:18765\nlive_source: local_http_websocket_adapter\nMAY CLAIM\nlocal http websocket",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 3,
+      "tag": "nav",
+      "text": "ADAPTIVE REPLAY\nDESIGN\nPROOFS & STAGES",
+      "qid": "battle:proof-card:nav",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 4,
+      "tag": "a",
+      "text": "ADAPTIVE REPLAY",
+      "qid": "battle:nav:race",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 5,
+      "tag": "a",
+      "text": "DESIGN",
+      "qid": "battle:nav:design",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 6,
+      "tag": "details",
+      "text": "PROOFS & STAGES",
+      "qid": "battle:nav:proofs-menu",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 7,
+      "tag": "summary",
+      "text": "PROOFS & STAGES",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 8,
+      "tag": "div",
+      "text": "Adaptive Lineage V13Genetic Pixi (legacy composite)Campaign (composite)Music ScheduleLive TransportResearch & Genome ProofProvider SynthesisCompile TimelineRuntime & JudgePopulation",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 9,
+      "tag": "a",
+      "text": "Adaptive Lineage V13",
+      "qid": "battle:nav:adaptive",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 10,
+      "tag": "a",
+      "text": "Genetic Pixi (legacy composite)",
+      "qid": "battle:nav:genetic",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 11,
+      "tag": "a",
+      "text": "Campaign (composite)",
+      "qid": "battle:nav:campaign",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 12,
+      "tag": "a",
+      "text": "Music Schedule",
+      "qid": "battle:nav:music",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 13,
+      "tag": "a",
+      "text": "Live Transport",
+      "qid": "battle:nav:live",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 14,
+      "tag": "a",
+      "text": "Research & Genome Proof",
+      "qid": "battle:nav:proof",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 15,
+      "tag": "a",
+      "text": "Provider Synthesis",
+      "qid": "battle:nav:synthesis",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 16,
+      "tag": "a",
+      "text": "Compile Timeline",
+      "qid": "battle:nav:compile",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 17,
+      "tag": "a",
+      "text": "Runtime & Judge",
+      "qid": "battle:nav:runtime",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 18,
+      "tag": "a",
+      "text": "Population",
+      "qid": "battle:nav:population",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 19,
+      "tag": "div",
+      "text": "LIVE WEBSOCKET ADAPTER\nLIVE: LOCAL HTTP WEBSOCKET\nMOCKED: NO\nWEBSOCKET OPEN\nTRANSPORT: WEBSOCKET\nSTATUS ENDED\nSEQ 36/36\nLIVE CLIENT ENDED\nGENETIC TYPES 16\nFOLLOWING LIVE CURSOR\nbattle_id: battle-004\nrun_id: arena-parent-spawn-20260707T220426Z\nsse: /battle/live/battle-004/events\nwebsocket: /battle/live/battle-004/ws\nsnapshot: /battle/live/battle-004/snapshot\nbase: http://127.0.0.1:18765\nlive_source: local_http_websocket_adapter\nMAY CLAIM\nlocal http websocket adapter executed\nordered battle.live_e",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 20,
+      "tag": "section",
+      "text": "LIVE WEBSOCKET ADAPTER\nLIVE: LOCAL HTTP WEBSOCKET\nMOCKED: NO\nWEBSOCKET OPEN\nTRANSPORT: WEBSOCKET\nSTATUS ENDED\nSEQ 36/36\nLIVE CLIENT ENDED\nGENETIC TYPES 16\nFOLLOWING LIVE CURSOR\nbattle_id: battle-004\nrun_id: arena-parent-spawn-20260707T220426Z\nsse: /battle/live/battle-004/events\nwebsocket: /battle/live/battle-004/ws\nsnapshot: /battle/live/battle-004/snapshot\nbase: http://127.0.0.1:18765\nlive_source: local_http_websocket_adapter\nMAY CLAIM\nlocal http websocket adapter executed\nordered battle.live_e",
+      "qid": "battle:live:banner",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 21,
+      "tag": "div",
+      "text": "LIVE WEBSOCKET ADAPTER\nLIVE: LOCAL HTTP WEBSOCKET\nMOCKED: NO\nWEBSOCKET OPEN\nTRANSPORT: WEBSOCKET\nSTATUS ENDED\nSEQ 36/36\nLIVE CLIENT ENDED\nGENETIC TYPES 16\nFOLLOWING LIVE CURSOR",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 22,
+      "tag": "span",
+      "text": "LIVE WEBSOCKET ADAPTER",
+      "qid": "battle:live:banner:mode",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 23,
+      "tag": "span",
+      "text": "LIVE: LOCAL HTTP WEBSOCKET",
+      "qid": "battle:live:banner:live-source",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 24,
+      "tag": "span",
+      "text": "MOCKED: NO",
+      "qid": "battle:live:banner:mocked",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 25,
+      "tag": "span",
+      "text": "WEBSOCKET OPEN",
+      "qid": "battle:live:banner:sse-connected",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 26,
+      "tag": "span",
+      "text": "TRANSPORT: WEBSOCKET",
+      "qid": "battle:live:banner:transport-mode",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 27,
+      "tag": "span",
+      "text": "STATUS ENDED",
+      "qid": "battle:live:status",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 28,
+      "tag": "span",
+      "text": "SEQ 36/36",
+      "qid": "battle:live:seq",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 29,
+      "tag": "span",
+      "text": "LIVE CLIENT ENDED",
+      "qid": "battle:live:sse-client",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 30,
+      "tag": "span",
+      "text": "GENETIC TYPES 16",
+      "qid": "battle:live:genetic-count",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 31,
+      "tag": "span",
+      "text": "FOLLOWING LIVE CURSOR",
+      "qid": "battle:live:following",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 32,
+      "tag": "div",
+      "text": "battle_id: battle-004\nrun_id: arena-parent-spawn-20260707T220426Z\nsse: /battle/live/battle-004/events\nwebsocket: /battle/live/battle-004/ws\nsnapshot: /battle/live/battle-004/snapshot\nbase: http://127.0.0.1:18765\nlive_source: local_http_websocket_adapter",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 33,
+      "tag": "div",
+      "text": "battle_id: battle-004",
+      "qid": "battle:live:battle-id",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 34,
+      "tag": "div",
+      "text": "run_id: arena-parent-spawn-20260707T220426Z",
+      "qid": "battle:live:run-id",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 35,
+      "tag": "div",
+      "text": "sse: /battle/live/battle-004/events",
+      "qid": "battle:live:sse-endpoint",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 36,
+      "tag": "div",
+      "text": "websocket: /battle/live/battle-004/ws",
+      "qid": "battle:live:websocket-endpoint",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 37,
+      "tag": "div",
+      "text": "snapshot: /battle/live/battle-004/snapshot",
+      "qid": "battle:live:snapshot-endpoint",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 38,
+      "tag": "div",
+      "text": "base: http://127.0.0.1:18765",
+      "qid": "battle:live:base-url",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 39,
+      "tag": "div",
+      "text": "live_source: local_http_websocket_adapter",
+      "qid": "battle:live:source",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 40,
+      "tag": "div",
+      "text": "MAY CLAIM\nlocal http websocket adapter executed\nordered battle.live_event.v1 stream applied\nsnapshot-first websocket bootstrap supported\nMUST NOT CLAIM\nlive genetic events emitted\nexploit success\nblue detection\nblue kill\nblue block\njudge success without judge receipt\npacket level behavior\nmemory promotion\nproduction deployment\nproduction websocket tls/auth/fanout/reconnect behavior",
+      "qid": "battle:live:claim-boundary",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 41,
+      "tag": "div",
+      "text": "MAY CLAIM\nlocal http websocket adapter executed\nordered battle.live_event.v1 stream applied\nsnapshot-first websocket bootstrap supported",
+      "qid": "battle:live:claim-may",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 42,
+      "tag": "div",
+      "text": "MAY CLAIM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 43,
+      "tag": "ul",
+      "text": "local http websocket adapter executed\nordered battle.live_event.v1 stream applied\nsnapshot-first websocket bootstrap supported",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 44,
+      "tag": "li",
+      "text": "local http websocket adapter executed",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 45,
+      "tag": "li",
+      "text": "ordered battle.live_event.v1 stream applied",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 46,
+      "tag": "li",
+      "text": "snapshot-first websocket bootstrap supported",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 47,
+      "tag": "div",
+      "text": "MUST NOT CLAIM\nlive genetic events emitted\nexploit success\nblue detection\nblue kill\nblue block\njudge success without judge receipt\npacket level behavior\nmemory promotion\nproduction deployment\nproduction websocket tls/auth/fanout/reconnect behavior",
+      "qid": "battle:live:claim-must-not",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 48,
+      "tag": "div",
+      "text": "MUST NOT CLAIM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 49,
+      "tag": "ul",
+      "text": "live genetic events emitted\nexploit success\nblue detection\nblue kill\nblue block\njudge success without judge receipt\npacket level behavior\nmemory promotion\nproduction deployment\nproduction websocket tls/auth/fanout/reconnect behavior",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 50,
+      "tag": "li",
+      "text": "live genetic events emitted",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 51,
+      "tag": "li",
+      "text": "exploit success",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 52,
+      "tag": "li",
+      "text": "blue detection",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 53,
+      "tag": "li",
+      "text": "blue kill",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 54,
+      "tag": "li",
+      "text": "blue block",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 55,
+      "tag": "li",
+      "text": "judge success without judge receipt",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 56,
+      "tag": "li",
+      "text": "packet level behavior",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 57,
+      "tag": "li",
+      "text": "memory promotion",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 58,
+      "tag": "li",
+      "text": "production deployment",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 59,
+      "tag": "li",
+      "text": "production websocket tls/auth/fanout/reconnect behavior",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 60,
+      "tag": "div",
+      "text": "research_started\nresearch_receipt_materialized\ngenome_selected\nmethod_added\nmethod_rejected\ncode_author_started\nspecimen_materialized\ncompile_failed\nrepair_started\nrepair_materialized\ncompile_passed\ntarget_contact_unproven\njudge_pending\njudge_exploit_success\ngenome_promoted\nbranch_abandoned",
+      "qid": "battle:live:genetic-types",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 61,
+      "tag": "span",
+      "text": "research_started",
+      "qid": "battle:live:genetic:research_started",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 62,
+      "tag": "span",
+      "text": "research_receipt_materialized",
+      "qid": "battle:live:genetic:research_receipt_materialized",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 63,
+      "tag": "span",
+      "text": "genome_selected",
+      "qid": "battle:live:genetic:genome_selected",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 64,
+      "tag": "span",
+      "text": "method_added",
+      "qid": "battle:live:genetic:method_added",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 65,
+      "tag": "span",
+      "text": "method_rejected",
+      "qid": "battle:live:genetic:method_rejected",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 66,
+      "tag": "span",
+      "text": "code_author_started",
+      "qid": "battle:live:genetic:code_author_started",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 67,
+      "tag": "span",
+      "text": "specimen_materialized",
+      "qid": "battle:live:genetic:specimen_materialized",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 68,
+      "tag": "span",
+      "text": "compile_failed",
+      "qid": "battle:live:genetic:compile_failed",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 69,
+      "tag": "span",
+      "text": "repair_started",
+      "qid": "battle:live:genetic:repair_started",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 70,
+      "tag": "span",
+      "text": "repair_materialized",
+      "qid": "battle:live:genetic:repair_materialized",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 71,
+      "tag": "span",
+      "text": "compile_passed",
+      "qid": "battle:live:genetic:compile_passed",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 72,
+      "tag": "span",
+      "text": "target_contact_unproven",
+      "qid": "battle:live:genetic:target_contact_unproven",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 73,
+      "tag": "span",
+      "text": "judge_pending",
+      "qid": "battle:live:genetic:judge_pending",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 74,
+      "tag": "span",
+      "text": "judge_exploit_success",
+      "qid": "battle:live:genetic:judge_exploit_success",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 75,
+      "tag": "span",
+      "text": "genome_promoted",
+      "qid": "battle:live:genetic:genome_promoted",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 76,
+      "tag": "span",
+      "text": "branch_abandoned",
+      "qid": "battle:live:genetic:branch_abandoned",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 77,
+      "tag": "div",
+      "text": "COMPOSITE DEMONSTRATION\n\nStages are assembled from separate proof runs (4: compile, population, runtime_judge, synthesis). Causal continuity is not proven. Timeline source: synthetic presentation order.\n\nGENETIC PIXI · COMPOSITE\nNO CAUSAL CONTINUITY\nNO VICTORY WITHOUT JUDGE\nCOMPILE PASS ≠ RUNNABLE\nTARGET CONTACT ≠ EXPLOIT\nPRESENT 12\nNOT EMITTED 4\nMAY CLAIM\nresearch started\nresearch receipt materialized\ngenome selected\nmethod added\nmethod rejected\ncode author started\nMUST NOT CLAIM\nresearch compl",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 78,
+      "tag": "section",
+      "text": "COMPOSITE DEMONSTRATION\n\nStages are assembled from separate proof runs (4: compile, population, runtime_judge, synthesis). Causal continuity is not proven. Timeline source: synthetic presentation order.\n\nGENETIC PIXI · COMPOSITE\nNO CAUSAL CONTINUITY\nNO VICTORY WITHOUT JUDGE\nCOMPILE PASS ≠ RUNNABLE\nTARGET CONTACT ≠ EXPLOIT\nPRESENT 12\nNOT EMITTED 4\nMAY CLAIM\nresearch started\nresearch receipt materialized\ngenome selected\nmethod added\nmethod rejected\ncode author started\nMUST NOT CLAIM\nresearch compl",
+      "qid": "battle:genetic:banner",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 79,
+      "tag": "div",
+      "text": "COMPOSITE DEMONSTRATION\n\nStages are assembled from separate proof runs (4: compile, population, runtime_judge, synthesis). Causal continuity is not proven. Timeline source: synthetic presentation order.",
+      "qid": "battle:genetic:composite-banner",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 80,
+      "tag": "div",
+      "text": "COMPOSITE DEMONSTRATION",
+      "qid": "battle:genetic:composite-title",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 81,
+      "tag": "p",
+      "text": "Stages are assembled from separate proof runs (4: compile, population, runtime_judge, synthesis). Causal continuity is not proven. Timeline source: synthetic presentation order.",
+      "qid": "battle:genetic:composite-body",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 82,
+      "tag": "div",
+      "text": "GENETIC PIXI · COMPOSITE\nNO CAUSAL CONTINUITY\nNO VICTORY WITHOUT JUDGE\nCOMPILE PASS ≠ RUNNABLE\nTARGET CONTACT ≠ EXPLOIT\nPRESENT 12\nNOT EMITTED 4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 83,
+      "tag": "span",
+      "text": "GENETIC PIXI · COMPOSITE",
+      "qid": "battle:genetic:banner:fixture",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 84,
+      "tag": "span",
+      "text": "NO CAUSAL CONTINUITY",
+      "qid": "battle:genetic:banner:no-causal",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 85,
+      "tag": "span",
+      "text": "NO VICTORY WITHOUT JUDGE",
+      "qid": "battle:genetic:banner:no-victory",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 86,
+      "tag": "span",
+      "text": "COMPILE PASS ≠ RUNNABLE",
+      "qid": "battle:genetic:banner:compile-not-runnable",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 87,
+      "tag": "span",
+      "text": "TARGET CONTACT ≠ EXPLOIT",
+      "qid": "battle:genetic:banner:target-not-exploit",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 88,
+      "tag": "span",
+      "text": "PRESENT 12",
+      "qid": "battle:genetic:present-count",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 89,
+      "tag": "span",
+      "text": "NOT EMITTED 4",
+      "qid": "battle:genetic:not-emitted-count",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 90,
+      "tag": "div",
+      "text": "MAY CLAIM\nresearch started\nresearch receipt materialized\ngenome selected\nmethod added\nmethod rejected\ncode author started\nMUST NOT CLAIM\nresearch completed is exploit success\ngenome selected is exploit success\ncode generated is exploit success\ncompile passed is runnable\ncompile passed is exploit success\ntarget contact is exploit success\nrunnable is exploit success\nblue detection",
+      "qid": "battle:genetic:claim-boundary",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 91,
+      "tag": "div",
+      "text": "MAY CLAIM\nresearch started\nresearch receipt materialized\ngenome selected\nmethod added\nmethod rejected\ncode author started",
+      "qid": "battle:genetic:claim-may",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 92,
+      "tag": "div",
+      "text": "MAY CLAIM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 93,
+      "tag": "ul",
+      "text": "research started\nresearch receipt materialized\ngenome selected\nmethod added\nmethod rejected\ncode author started",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 94,
+      "tag": "li",
+      "text": "research started",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 95,
+      "tag": "li",
+      "text": "research receipt materialized",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 96,
+      "tag": "li",
+      "text": "genome selected",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 97,
+      "tag": "li",
+      "text": "method added",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 98,
+      "tag": "li",
+      "text": "method rejected",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 99,
+      "tag": "li",
+      "text": "code author started",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 100,
+      "tag": "div",
+      "text": "MUST NOT CLAIM\nresearch completed is exploit success\ngenome selected is exploit success\ncode generated is exploit success\ncompile passed is runnable\ncompile passed is exploit success\ntarget contact is exploit success\nrunnable is exploit success\nblue detection",
+      "qid": "battle:genetic:claim-must-not",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 101,
+      "tag": "div",
+      "text": "MUST NOT CLAIM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 102,
+      "tag": "ul",
+      "text": "research completed is exploit success\ngenome selected is exploit success\ncode generated is exploit success\ncompile passed is runnable\ncompile passed is exploit success\ntarget contact is exploit success\nrunnable is exploit success\nblue detection",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 103,
+      "tag": "li",
+      "text": "research completed is exploit success",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 104,
+      "tag": "li",
+      "text": "genome selected is exploit success",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 105,
+      "tag": "li",
+      "text": "code generated is exploit success",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 106,
+      "tag": "li",
+      "text": "compile passed is runnable",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 107,
+      "tag": "li",
+      "text": "compile passed is exploit success",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 108,
+      "tag": "li",
+      "text": "target contact is exploit success",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 109,
+      "tag": "li",
+      "text": "runnable is exploit success",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 110,
+      "tag": "li",
+      "text": "blue detection",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 111,
+      "tag": "div",
+      "text": "research_started\nresearch_receipt_materialized\ngenome_selected\nmethod_added\nmethod_rejected\ncode_author_started\nspecimen_materialized\ncompile_failed\ncompile_passed\ntarget_contact_unproven\njudge_pending\nbranch_abandoned",
+      "qid": "battle:genetic:present-types",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 112,
+      "tag": "span",
+      "text": "research_started",
+      "qid": "battle:genetic:present:research_started",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 113,
+      "tag": "span",
+      "text": "research_receipt_materialized",
+      "qid": "battle:genetic:present:research_receipt_materialized",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 114,
+      "tag": "span",
+      "text": "genome_selected",
+      "qid": "battle:genetic:present:genome_selected",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 115,
+      "tag": "span",
+      "text": "method_added",
+      "qid": "battle:genetic:present:method_added",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 116,
+      "tag": "span",
+      "text": "method_rejected",
+      "qid": "battle:genetic:present:method_rejected",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 117,
+      "tag": "span",
+      "text": "code_author_started",
+      "qid": "battle:genetic:present:code_author_started",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 118,
+      "tag": "span",
+      "text": "specimen_materialized",
+      "qid": "battle:genetic:present:specimen_materialized",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 119,
+      "tag": "span",
+      "text": "compile_failed",
+      "qid": "battle:genetic:present:compile_failed",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 120,
+      "tag": "span",
+      "text": "compile_passed",
+      "qid": "battle:genetic:present:compile_passed",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 121,
+      "tag": "span",
+      "text": "target_contact_unproven",
+      "qid": "battle:genetic:present:target_contact_unproven",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 122,
+      "tag": "span",
+      "text": "judge_pending",
+      "qid": "battle:genetic:present:judge_pending",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 123,
+      "tag": "span",
+      "text": "branch_abandoned",
+      "qid": "battle:genetic:present:branch_abandoned",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 124,
+      "tag": "div",
+      "text": "NOT_EMITTED:repair_started\nNOT_EMITTED:repair_materialized\nNOT_EMITTED:judge_exploit_success\nNOT_EMITTED:genome_promoted",
+      "qid": "battle:genetic:not-emitted-types",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 125,
+      "tag": "span",
+      "text": "NOT_EMITTED:repair_started",
+      "qid": "battle:genetic:not-emitted:repair_started",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 126,
+      "tag": "span",
+      "text": "NOT_EMITTED:repair_materialized",
+      "qid": "battle:genetic:not-emitted:repair_materialized",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 127,
+      "tag": "span",
+      "text": "NOT_EMITTED:judge_exploit_success",
+      "qid": "battle:genetic:not-emitted:judge_exploit_success",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 128,
+      "tag": "span",
+      "text": "NOT_EMITTED:genome_promoted",
+      "qid": "battle:genetic:not-emitted:genome_promoted",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 129,
+      "tag": "section",
+      "text": "EVIDENCE LADDER\n\nEducational progression only — each rung requires its own receipt. No rung invents Judge truth.\n\nRESEARCH\nPRESENT\nSources and questions exist. Research is not exploit success.\nGENERATED\nPRESENT\nGenerated is not compiled.\nCOMPILED\nPRESENT\nCompiled is not runnable.\nRAN\nUNKNOWN\nRunnable is not exploit success.\nTARGET CONTACT\nPRESENT\nTarget contact is not exploit success.\nJUDGE VERDICT\nPRESENT\nJudge determines the outcome.",
+      "qid": "battle:evidence-ladder",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 130,
+      "tag": "div",
+      "text": "EVIDENCE LADDER",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 131,
+      "tag": "p",
+      "text": "Educational progression only — each rung requires its own receipt. No rung invents Judge truth.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 132,
+      "tag": "ol",
+      "text": "RESEARCH\nPRESENT\nSources and questions exist. Research is not exploit success.\nGENERATED\nPRESENT\nGenerated is not compiled.\nCOMPILED\nPRESENT\nCompiled is not runnable.\nRAN\nUNKNOWN\nRunnable is not exploit success.\nTARGET CONTACT\nPRESENT\nTarget contact is not exploit success.\nJUDGE VERDICT\nPRESENT\nJudge determines the outcome.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 133,
+      "tag": "li",
+      "text": "RESEARCH\nPRESENT\nSources and questions exist. Research is not exploit success.",
+      "qid": "battle:evidence-ladder:research",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 134,
+      "tag": "div",
+      "text": "RESEARCH\nPRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 135,
+      "tag": "span",
+      "text": "RESEARCH",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 136,
+      "tag": "span",
+      "text": "PRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 137,
+      "tag": "div",
+      "text": "Sources and questions exist. Research is not exploit success.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 138,
+      "tag": "li",
+      "text": "GENERATED\nPRESENT\nGenerated is not compiled.",
+      "qid": "battle:evidence-ladder:generated",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 139,
+      "tag": "div",
+      "text": "GENERATED\nPRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 140,
+      "tag": "span",
+      "text": "GENERATED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 141,
+      "tag": "span",
+      "text": "PRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 142,
+      "tag": "div",
+      "text": "Generated is not compiled.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 143,
+      "tag": "li",
+      "text": "COMPILED\nPRESENT\nCompiled is not runnable.",
+      "qid": "battle:evidence-ladder:compiled",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 144,
+      "tag": "div",
+      "text": "COMPILED\nPRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 145,
+      "tag": "span",
+      "text": "COMPILED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 146,
+      "tag": "span",
+      "text": "PRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 147,
+      "tag": "div",
+      "text": "Compiled is not runnable.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 148,
+      "tag": "li",
+      "text": "RAN\nUNKNOWN\nRunnable is not exploit success.",
+      "qid": "battle:evidence-ladder:ran",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 149,
+      "tag": "div",
+      "text": "RAN\nUNKNOWN",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 150,
+      "tag": "span",
+      "text": "RAN",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 151,
+      "tag": "span",
+      "text": "UNKNOWN",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 152,
+      "tag": "div",
+      "text": "Runnable is not exploit success.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 153,
+      "tag": "li",
+      "text": "TARGET CONTACT\nPRESENT\nTarget contact is not exploit success.",
+      "qid": "battle:evidence-ladder:target_contact",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 154,
+      "tag": "div",
+      "text": "TARGET CONTACT\nPRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 155,
+      "tag": "span",
+      "text": "TARGET CONTACT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 156,
+      "tag": "span",
+      "text": "PRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 157,
+      "tag": "div",
+      "text": "Target contact is not exploit success.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 158,
+      "tag": "li",
+      "text": "JUDGE VERDICT\nPRESENT\nJudge determines the outcome.",
+      "qid": "battle:evidence-ladder:judge_verdict",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 159,
+      "tag": "div",
+      "text": "JUDGE VERDICT\nPRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 160,
+      "tag": "span",
+      "text": "JUDGE VERDICT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 161,
+      "tag": "span",
+      "text": "PRESENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 162,
+      "tag": "div",
+      "text": "Judge determines the outcome.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 163,
+      "tag": "section",
+      "text": "PARENT / CHILD COMPARISON\nPREVIEW · NOT ADAPTIVE CANARY\nPARENT\nArchive Escape\npayload-857-receipt · gen 1\nCHILD\nArchive Escape red-1\npayload-857-red-1 · gen 2\nINHERITED (FIXTURE-LISTED)\nparent_worker=red-0\nparent_lane=payload-857-receipt\nZIP_SLIP_CONFIRMED\nCHANGED / UNKNOWN\nactive hypothesis: Spawn child Red lane from receipt-backed parent handoff.\nViewer questions: Why did the child exist? · What did it inherit? · What changed? · What happened under Judge? · Why was a lineage retained?\nDoes not",
+      "qid": "battle:lineage-comparison",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 164,
+      "tag": "div",
+      "text": "PARENT / CHILD COMPARISON\nPREVIEW · NOT ADAPTIVE CANARY",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 165,
+      "tag": "span",
+      "text": "PARENT / CHILD COMPARISON",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 166,
+      "tag": "span",
+      "text": "PREVIEW · NOT ADAPTIVE CANARY",
+      "qid": "battle:lineage-comparison:composite",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 167,
+      "tag": "div",
+      "text": "PARENT\nArchive Escape\npayload-857-receipt · gen 1\nCHILD\nArchive Escape red-1\npayload-857-red-1 · gen 2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 168,
+      "tag": "div",
+      "text": "PARENT\nArchive Escape\npayload-857-receipt · gen 1",
+      "qid": "battle:lineage-comparison:parent",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 169,
+      "tag": "div",
+      "text": "PARENT",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 170,
+      "tag": "div",
+      "text": "Archive Escape",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 171,
+      "tag": "div",
+      "text": "payload-857-receipt · gen 1",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 172,
+      "tag": "div",
+      "text": "CHILD\nArchive Escape red-1\npayload-857-red-1 · gen 2",
+      "qid": "battle:lineage-comparison:child",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 173,
+      "tag": "div",
+      "text": "CHILD",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 174,
+      "tag": "div",
+      "text": "Archive Escape red-1",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 175,
+      "tag": "div",
+      "text": "payload-857-red-1 · gen 2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 176,
+      "tag": "div",
+      "text": "INHERITED (FIXTURE-LISTED)\nparent_worker=red-0\nparent_lane=payload-857-receipt\nZIP_SLIP_CONFIRMED\nCHANGED / UNKNOWN\nactive hypothesis: Spawn child Red lane from receipt-backed parent handoff.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 177,
+      "tag": "div",
+      "text": "INHERITED (FIXTURE-LISTED)\nparent_worker=red-0\nparent_lane=payload-857-receipt\nZIP_SLIP_CONFIRMED",
+      "qid": "battle:lineage-comparison:inherited",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 178,
+      "tag": "div",
+      "text": "INHERITED (FIXTURE-LISTED)",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 179,
+      "tag": "ul",
+      "text": "parent_worker=red-0\nparent_lane=payload-857-receipt\nZIP_SLIP_CONFIRMED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 180,
+      "tag": "li",
+      "text": "parent_worker=red-0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 181,
+      "tag": "li",
+      "text": "parent_lane=payload-857-receipt",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 182,
+      "tag": "li",
+      "text": "ZIP_SLIP_CONFIRMED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 183,
+      "tag": "div",
+      "text": "CHANGED / UNKNOWN\nactive hypothesis: Spawn child Red lane from receipt-backed parent handoff.",
+      "qid": "battle:lineage-comparison:new",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 184,
+      "tag": "div",
+      "text": "CHANGED / UNKNOWN",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 185,
+      "tag": "ul",
+      "text": "active hypothesis: Spawn child Red lane from receipt-backed parent handoff.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 186,
+      "tag": "li",
+      "text": "active hypothesis: Spawn child Red lane from receipt-backed parent handoff.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 187,
+      "tag": "div",
+      "text": "Viewer questions: Why did the child exist? · What did it inherit? · What changed? · What happened under Judge? · Why was a lineage retained?",
+      "qid": "battle:lineage-comparison:questions",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 188,
+      "tag": "div",
+      "text": "Does not prove: adaptive intelligence; child used inherited knowledge with acknowledgement; single-campaign causal continuity",
+      "qid": "battle:lineage-comparison:does-not-prove",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 189,
+      "tag": "div",
+      "text": "BATTLE-004 · POST /api/import-zip\n\nCWE-22 · Zip Slip path traversal · autonomous exploit agents evolve under pressure · fastest proven crash wins\n\nARENA\nZIP_SLIP_ARB\nOBJECTIVE\nPrevent archive path traversal\nTARGET\nPOST /api/import-zip\nDIFFICULTY\nJUDGE\nROUND TIME\n01:16 / 20:00\nRED TEAM\nEXPLOIT AGENTS\n6\nVS\nBLUE TEAM\nPATCH AGENTS\n14.4\nRECEIPT EVENTS\n07:00:00 PM\nFailed branch retained as negative evidence\n07:00:00 PM\nJudge success event is not emitted; Judge remains not run\n07:00:00 PM\nSpecimen cont",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 190,
+      "tag": "header",
+      "text": "BATTLE-004 · POST /api/import-zip\n\nCWE-22 · Zip Slip path traversal · autonomous exploit agents evolve under pressure · fastest proven crash wins\n\nARENA\nZIP_SLIP_ARB\nOBJECTIVE\nPrevent archive path traversal\nTARGET\nPOST /api/import-zip\nDIFFICULTY\nJUDGE\nROUND TIME\n01:16 / 20:00\nRED TEAM\nEXPLOIT AGENTS\n6\nVS\nBLUE TEAM\nPATCH AGENTS\n14.4\nRECEIPT EVENTS\n07:00:00 PM\nFailed branch retained as negative evidence\n07:00:00 PM\nJudge success event is not emitted; Judge remains not run\n07:00:00 PM\nSpecimen cont",
+      "qid": "battle:header:receipt",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 191,
+      "tag": "div",
+      "text": "BATTLE-004 · POST /api/import-zip\n\nCWE-22 · Zip Slip path traversal · autonomous exploit agents evolve under pressure · fastest proven crash wins\n\nARENA\nZIP_SLIP_ARB\nOBJECTIVE\nPrevent archive path traversal\nTARGET\nPOST /api/import-zip\nDIFFICULTY\nJUDGE\nROUND TIME\n01:16 / 20:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 192,
+      "tag": "div",
+      "text": "BATTLE-004 · POST /api/import-zip\n\nCWE-22 · Zip Slip path traversal · autonomous exploit agents evolve under pressure · fastest proven crash wins",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 203,
+      "tag": "div",
+      "text": "BATTLE-004 · POST /api/import-zip\n\nCWE-22 · Zip Slip path traversal · autonomous exploit agents evolve under pressure · fastest proven crash wins",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 204,
+      "tag": "h1",
+      "text": "BATTLE-004 · POST /api/import-zip",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 205,
+      "tag": "p",
+      "text": "CWE-22 · Zip Slip path traversal · autonomous exploit agents evolve under pressure · fastest proven crash wins",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 206,
+      "tag": "div",
+      "text": "ARENA\nZIP_SLIP_ARB\nOBJECTIVE\nPrevent archive path traversal\nTARGET\nPOST /api/import-zip\nDIFFICULTY\nJUDGE\nROUND TIME\n01:16 / 20:00",
+      "qid": "battle:header:facts",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 207,
+      "tag": "div",
+      "text": "ARENA\nZIP_SLIP_ARB",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 208,
+      "tag": "div",
+      "text": "ARENA",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 209,
+      "tag": "div",
+      "text": "ZIP_SLIP_ARB",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 210,
+      "tag": "div",
+      "text": "OBJECTIVE\nPrevent archive path traversal",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 211,
+      "tag": "div",
+      "text": "OBJECTIVE",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 212,
+      "tag": "div",
+      "text": "Prevent archive path traversal",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 213,
+      "tag": "div",
+      "text": "TARGET\nPOST /api/import-zip",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 214,
+      "tag": "div",
+      "text": "TARGET",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 215,
+      "tag": "div",
+      "text": "POST /api/import-zip",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 216,
+      "tag": "div",
+      "text": "DIFFICULTY\nJUDGE",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 217,
+      "tag": "div",
+      "text": "DIFFICULTY",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 218,
+      "tag": "div",
+      "text": "JUDGE",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 219,
+      "tag": "div",
+      "text": "ROUND TIME\n01:16 / 20:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 220,
+      "tag": "div",
+      "text": "ROUND TIME",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 221,
+      "tag": "div",
+      "text": "01:16 / 20:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 222,
+      "tag": "div",
+      "text": "RED TEAM\nEXPLOIT AGENTS\n6\nVS\nBLUE TEAM\nPATCH AGENTS\n14.4",
+      "qid": "battle:header:score",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 223,
+      "tag": "div",
+      "text": "RED TEAM\nEXPLOIT AGENTS\n6",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 224,
+      "tag": "div",
+      "text": "RED TEAM\nEXPLOIT AGENTS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 225,
+      "tag": "div",
+      "text": "RED TEAM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 226,
+      "tag": "div",
+      "text": "EXPLOIT AGENTS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 227,
+      "tag": "div",
+      "text": "6",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 240,
+      "tag": "div",
+      "text": "6",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 241,
+      "tag": "div",
+      "text": "VS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 242,
+      "tag": "div",
+      "text": "BLUE TEAM\nPATCH AGENTS\n14.4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 243,
+      "tag": "div",
+      "text": "BLUE TEAM\nPATCH AGENTS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 244,
+      "tag": "div",
+      "text": "BLUE TEAM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 245,
+      "tag": "div",
+      "text": "PATCH AGENTS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 246,
+      "tag": "div",
+      "text": "14.4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 247,
+      "tag": "div",
+      "text": "14.4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 250,
+      "tag": "div",
+      "text": "RECEIPT EVENTS\n07:00:00 PM\nFailed branch retained as negative evidence\n07:00:00 PM\nJudge success event is not emitted; Judge remains not run\n07:00:00 PM\nSpecimen contacted target surface without exploit proof",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 251,
+      "tag": "div",
+      "text": "RECEIPT EVENTS\n07:00:00 PM\nFailed branch retained as negative evidence\n07:00:00 PM\nJudge success event is not emitted; Judge remains not run\n07:00:00 PM\nSpecimen contacted target surface without exploit proof",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 252,
+      "tag": "div",
+      "text": "RECEIPT EVENTS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 254,
+      "tag": "button",
+      "text": "07:00:00 PM\nFailed branch retained as negative evidence",
+      "qid": "battle:events:item:battle-004-pr6-genetic-pixi:branch_abandoned:22",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 255,
+      "tag": "span",
+      "text": "07:00:00 PM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 268,
+      "tag": "span",
+      "text": "Failed branch retained as negative evidence",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 269,
+      "tag": "button",
+      "text": "07:00:00 PM\nJudge success event is not emitted; Judge remains not run",
+      "qid": "battle:events:item:battle-004-pr6-genetic-pixi:judge_pending:21",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 270,
+      "tag": "span",
+      "text": "07:00:00 PM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 283,
+      "tag": "span",
+      "text": "Judge success event is not emitted; Judge remains not run",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 284,
+      "tag": "button",
+      "text": "07:00:00 PM\nSpecimen contacted target surface without exploit proof",
+      "qid": "battle:events:item:battle-004-pr6-genetic-pixi:target_contact_unproven:20",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 285,
+      "tag": "span",
+      "text": "07:00:00 PM",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 298,
+      "tag": "span",
+      "text": "Specimen contacted target surface without exploit proof",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 299,
+      "tag": "button",
+      "text": "",
+      "qid": "battle:events:view-all",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 305,
+      "tag": "div",
+      "text": "HIDE\nRACE LEADERS\n1\nArchive EscapeBLUE_SUCCESS: handoff.\n2\nArchive Escape red-1BLUE_SUCCESS: blocked by Blue.\nTEAM STANDINGS\nRed Team\nExploit agents\n6\nBlue Team\nPatch agents\n14.4\nAGENT STATUS\nRUNNING\n0\nBLOCKED\n2\nKILLED\n0\nUSEFUL\n2\nPROMOTED\n0\nFASTEST CRASH\n0\nBLUE TEAM CONTROL STRIP\nActive Patches & Defensive Actions\nInterventions 4 · Blocks 2\n11:12 · +1\nEVOLUTION & PROGRESS GRAPH\n· Zoom 100%\n−\n+\nPLAYHEAD 01:39\nOVERVIEW\nMORE OUTCOMES →\n00:00\n04:00\n08:00\n12:00\n16:00\n20:00\nArchive Escape\npayload-857\n",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 306,
+      "tag": "div",
+      "text": "HIDE\nRACE LEADERS\n1\nArchive EscapeBLUE_SUCCESS: handoff.\n2\nArchive Escape red-1BLUE_SUCCESS: blocked by Blue.\nTEAM STANDINGS\nRed Team\nExploit agents\n6\nBlue Team\nPatch agents\n14.4\nAGENT STATUS\nRUNNING\n0\nBLOCKED\n2\nKILLED\n0\nUSEFUL\n2\nPROMOTED\n0\nFASTEST CRASH\n0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 307,
+      "tag": "button",
+      "text": "HIDE",
+      "qid": "battle:pane:left-toggle",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 308,
+      "tag": "aside",
+      "text": "RACE LEADERS\n1\nArchive EscapeBLUE_SUCCESS: handoff.\n2\nArchive Escape red-1BLUE_SUCCESS: blocked by Blue.\nTEAM STANDINGS\nRed Team\nExploit agents\n6\nBlue Team\nPatch agents\n14.4\nAGENT STATUS\nRUNNING\n0\nBLOCKED\n2\nKILLED\n0\nUSEFUL\n2\nPROMOTED\n0\nFASTEST CRASH\n0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 309,
+      "tag": "section",
+      "text": "RACE LEADERS\n1\nArchive EscapeBLUE_SUCCESS: handoff.\n2\nArchive Escape red-1BLUE_SUCCESS: blocked by Blue.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 310,
+      "tag": "div",
+      "text": "RACE LEADERS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 311,
+      "tag": "button",
+      "text": "1\nArchive EscapeBLUE_SUCCESS: handoff.",
+      "qid": "battle:leaderboard:item:payload-857-receipt",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 312,
+      "tag": "span",
+      "text": "1",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 313,
+      "tag": "span",
+      "text": "Archive EscapeBLUE_SUCCESS: handoff.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 314,
+      "tag": "span",
+      "text": "Archive Escape",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 315,
+      "tag": "span",
+      "text": "BLUE_SUCCESS: handoff.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 320,
+      "tag": "button",
+      "text": "2\nArchive Escape red-1BLUE_SUCCESS: blocked by Blue.",
+      "qid": "battle:leaderboard:item:payload-857-red-1",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 321,
+      "tag": "span",
+      "text": "2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 322,
+      "tag": "span",
+      "text": "Archive Escape red-1BLUE_SUCCESS: blocked by Blue.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 323,
+      "tag": "span",
+      "text": "Archive Escape red-1",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 324,
+      "tag": "span",
+      "text": "BLUE_SUCCESS: blocked by Blue.",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 329,
+      "tag": "section",
+      "text": "TEAM STANDINGS\nRed Team\nExploit agents\n6\nBlue Team\nPatch agents\n14.4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 330,
+      "tag": "div",
+      "text": "TEAM STANDINGS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 331,
+      "tag": "div",
+      "text": "Red Team\nExploit agents\n6\nBlue Team\nPatch agents\n14.4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 332,
+      "tag": "div",
+      "text": "Red Team\nExploit agents\n6",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 333,
+      "tag": "div",
+      "text": "Red Team\nExploit agents",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 347,
+      "tag": "div",
+      "text": "Red Team\nExploit agents",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 348,
+      "tag": "div",
+      "text": "Red Team",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 349,
+      "tag": "div",
+      "text": "Exploit agents",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 350,
+      "tag": "div",
+      "text": "6",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 351,
+      "tag": "div",
+      "text": "Blue Team\nPatch agents\n14.4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 352,
+      "tag": "div",
+      "text": "Blue Team\nPatch agents",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 356,
+      "tag": "div",
+      "text": "Blue Team\nPatch agents",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 357,
+      "tag": "div",
+      "text": "Blue Team",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 358,
+      "tag": "div",
+      "text": "Patch agents",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 359,
+      "tag": "div",
+      "text": "14.4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 360,
+      "tag": "section",
+      "text": "AGENT STATUS\nRUNNING\n0\nBLOCKED\n2\nKILLED\n0\nUSEFUL\n2\nPROMOTED\n0\nFASTEST CRASH\n0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 361,
+      "tag": "div",
+      "text": "AGENT STATUS",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 362,
+      "tag": "div",
+      "text": "RUNNING\n0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 363,
+      "tag": "span",
+      "text": "RUNNING",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 367,
+      "tag": "span",
+      "text": "0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 368,
+      "tag": "div",
+      "text": "BLOCKED\n2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 369,
+      "tag": "span",
+      "text": "BLOCKED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 375,
+      "tag": "span",
+      "text": "2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 376,
+      "tag": "div",
+      "text": "KILLED\n0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 377,
+      "tag": "span",
+      "text": "KILLED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 384,
+      "tag": "span",
+      "text": "0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 385,
+      "tag": "div",
+      "text": "USEFUL\n2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 386,
+      "tag": "span",
+      "text": "USEFUL",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 392,
+      "tag": "span",
+      "text": "2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 393,
+      "tag": "div",
+      "text": "PROMOTED\n0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 394,
+      "tag": "span",
+      "text": "PROMOTED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 399,
+      "tag": "span",
+      "text": "0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 400,
+      "tag": "div",
+      "text": "FASTEST CRASH\n0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 401,
+      "tag": "span",
+      "text": "FASTEST CRASH",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 408,
+      "tag": "span",
+      "text": "0",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 409,
+      "tag": "div",
+      "text": "BLUE TEAM CONTROL STRIP\nActive Patches & Defensive Actions\nInterventions 4 · Blocks 2\n11:12 · +1\nEVOLUTION & PROGRESS GRAPH\n· Zoom 100%\n−\n+\nPLAYHEAD 01:39\nOVERVIEW\nMORE OUTCOMES →\n00:00\n04:00\n08:00\n12:00\n16:00\n20:00\nArchive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF\nArchive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED\nMORE OUTCOMES →",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 410,
+      "tag": "div",
+      "text": "BLUE TEAM CONTROL STRIP\nActive Patches & Defensive Actions\nInterventions 4 · Blocks 2\n11:12 · +1\nEVOLUTION & PROGRESS GRAPH\n· Zoom 100%\n−\n+\nPLAYHEAD 01:39\nOVERVIEW\nMORE OUTCOMES →\n00:00\n04:00\n08:00\n12:00\n16:00\n20:00\nArchive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF\nArchive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED\nMORE OUTCOMES →",
+      "qid": "battle:race:source",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 411,
+      "tag": "section",
+      "text": "BLUE TEAM CONTROL STRIP\nActive Patches & Defensive Actions\nInterventions 4 · Blocks 2\n11:12 · +1",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 412,
+      "tag": "div",
+      "text": "BLUE TEAM CONTROL STRIP\nActive Patches & Defensive Actions\nInterventions 4 · Blocks 2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 416,
+      "tag": "div",
+      "text": "BLUE TEAM CONTROL STRIP\nActive Patches & Defensive Actions",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 417,
+      "tag": "div",
+      "text": "BLUE TEAM CONTROL STRIP",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 418,
+      "tag": "div",
+      "text": "Active Patches & Defensive Actions",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 419,
+      "tag": "div",
+      "text": "Interventions 4 · Blocks 2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 420,
+      "tag": "strong",
+      "text": "4",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 421,
+      "tag": "strong",
+      "text": "2",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 422,
+      "tag": "div",
+      "text": "11:12 · +1",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 424,
+      "tag": "div",
+      "text": "11:12 · +1",
+      "qid": "battle:blue-strip:patches",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 426,
+      "tag": "div",
+      "text": "11:12 · +1",
+      "qid": "battle:blue-strip:patch",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 429,
+      "tag": "span",
+      "text": "11:12 · +1",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 430,
+      "tag": "div",
+      "text": "EVOLUTION & PROGRESS GRAPH\n· Zoom 100%\n−\n+\nPLAYHEAD 01:39",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 431,
+      "tag": "span",
+      "text": "· Zoom 100%",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 432,
+      "tag": "span",
+      "text": "100%",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 433,
+      "tag": "div",
+      "text": "−\n+",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 434,
+      "tag": "button",
+      "text": "−",
+      "qid": "battle:timeline:zoom:out",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 435,
+      "tag": "button",
+      "text": "+",
+      "qid": "battle:timeline:zoom:in",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 436,
+      "tag": "span",
+      "text": "PLAYHEAD 01:39",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 437,
+      "tag": "div",
+      "text": "OVERVIEW\nMORE OUTCOMES →",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 438,
+      "tag": "div",
+      "text": "OVERVIEW",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 439,
+      "tag": "div",
+      "text": "",
+      "qid": null,
+      "testid": null,
+      "role": "presentation"
+    },
+    {
+      "index": 444,
+      "tag": "div",
+      "text": "MORE OUTCOMES →",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 445,
+      "tag": "div",
+      "text": "00:00\n04:00\n08:00\n12:00\n16:00\n20:00\nArchive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF\nArchive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED\nMORE OUTCOMES →",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 446,
+      "tag": "div",
+      "text": "00:00\n04:00\n08:00\n12:00\n16:00\n20:00\nArchive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF\nArchive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED",
+      "qid": "battle:timeline:scroll",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 447,
+      "tag": "div",
+      "text": "00:00\n04:00\n08:00\n12:00\n16:00\n20:00\nArchive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF\nArchive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 448,
+      "tag": "div",
+      "text": "00:00\n04:00\n08:00\n12:00\n16:00\n20:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 449,
+      "tag": "div",
+      "text": "00:00\n04:00\n08:00\n12:00\n16:00\n20:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 450,
+      "tag": "div",
+      "text": "00:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 451,
+      "tag": "div",
+      "text": "00:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 453,
+      "tag": "div",
+      "text": "04:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 454,
+      "tag": "div",
+      "text": "04:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 456,
+      "tag": "div",
+      "text": "08:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 457,
+      "tag": "div",
+      "text": "08:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 459,
+      "tag": "div",
+      "text": "12:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 460,
+      "tag": "div",
+      "text": "12:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 462,
+      "tag": "div",
+      "text": "16:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 463,
+      "tag": "div",
+      "text": "16:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 465,
+      "tag": "div",
+      "text": "20:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 466,
+      "tag": "div",
+      "text": "20:00",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 468,
+      "tag": "div",
+      "text": "Archive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF\nArchive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 471,
+      "tag": "div",
+      "text": "Archive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 472,
+      "tag": "button",
+      "text": "Archive Escape\npayload-857\nGEN 1\nBLOCKED HANDOFF",
+      "qid": "battle:lane:payload-857-receipt",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 486,
+      "tag": "span",
+      "text": "Archive Escape\npayload-857",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 487,
+      "tag": "span",
+      "text": "Archive Escape",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 488,
+      "tag": "span",
+      "text": "payload-857",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 489,
+      "tag": "span",
+      "text": "GEN 1",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 490,
+      "tag": "span",
+      "text": "BLOCKED HANDOFF",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 491,
+      "tag": "button",
+      "text": "",
+      "qid": "battle:lane:collapse:payload-857-receipt",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 494,
+      "tag": "div",
+      "text": "Archive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 495,
+      "tag": "button",
+      "text": "Archive Escape\nred-1 · payload-857-red-1\nGEN 2\nBLOCKED",
+      "qid": "battle:lane:payload-857-red-1",
+      "testid": null,
+      "role": null
+    }
+  ]
+}

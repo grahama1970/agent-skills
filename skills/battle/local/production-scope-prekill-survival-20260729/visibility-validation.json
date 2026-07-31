@@ -1,0 +1,28 @@
+{
+  "inspected_artifacts": [
+    "tau-live/red/handoff.json",
+    "tau-live/red/tau-subagent-receipt.json",
+    "tau-live/blue/handoff.json",
+    "tau-live/blue/tau-subagent-receipt.json",
+    "tau-live/red/handoff.json",
+    "tau-live/red/tau-subagent-receipt.json",
+    "tau-live/blue/handoff.json",
+    "tau-live/blue/tau-subagent-receipt.json",
+    "tau-live/blue/workers/blue-1/handoff.json",
+    "tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+    "tau-live/red/workers/red-1/handoff.json",
+    "tau-live/red/workers/red-1/tau-subagent-receipt.json",
+    "context/tau-public-context.json"
+  ],
+  "live": true,
+  "mocked": false,
+  "private_input_leaks": [],
+  "proves": [
+    "Red/Blue Tau handoff and receipt artifacts do not reference Arena private paths or answer-key strings."
+  ],
+  "schema": "battle.arena_tau_public_only_visibility_validation.v1",
+  "status": "PASS",
+  "tau_manifest_status": "PASS",
+  "team_count": 2,
+  "worker_count": 4
+}

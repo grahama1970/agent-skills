@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
 	absoluteLiveTransportUrl,
+	absoluteLiveWebSocketTransportUrl,
 	buildLiveSseTransportPackage,
+	buildLiveWebSocketTransportPackage,
 	resolveBattleLiveTransportBaseUrl,
 	resolveBattleLiveTransportBaseCandidates,
 	DEFAULT_BATTLE_LIVE_TRANSPORT_BASE,
@@ -26,6 +28,13 @@ describe("UX8 live SSE runtime", () => {
 		expect(
 			resolveBattleLiveTransportBaseCandidates("#battle/live?liveBase=http://127.0.0.1:59999"),
 		).toEqual(["http://127.0.0.1:59999"]);
+		expect(
+			absoluteLiveWebSocketTransportUrl({
+				baseUrl: "http://127.0.0.1:18765",
+				endpoint: "/battle/live/battle-004/ws",
+				webSocketPort: 18766,
+			}),
+		).toBe("ws://127.0.0.1:18766/battle/live/battle-004/ws");
 	});
 
 	it("bootstraps live package at seq 0 then applies ordered events", () => {
@@ -79,5 +88,26 @@ describe("UX8 live SSE runtime", () => {
 		const event3 = { ...event1, seq: 3, event_id: "e3" };
 		state = applyTransportEvent(state, event3);
 		expect(state.status).toBe("gap_recovery");
+	});
+
+	it("builds a websocket transport package without changing reducer semantics", () => {
+		const pack = buildLiveWebSocketTransportPackage({
+			snapshot: {
+				schema: "battle.snapshot.v1",
+				battle_id: "battle-004",
+				run_id: "run",
+				last_seq: 1,
+				generated_at: "2026-07-11T00:00:00Z",
+				mode: "receipt_replay",
+				events: [],
+				lanes: [],
+			},
+			baseUrl: "http://127.0.0.1:18765",
+			companionFixtureUrl: "/x.json",
+		});
+		expect(pack.manifest.mode).toBe("live_websocket_adapter");
+		expect(pack.manifest.stream_contract.transport).toBe("websocket");
+		expect(pack.manifest.live_source).toBe("local_http_websocket_adapter");
+		expect(bootstrapLiveTransportState(pack).status).toBe("ready");
 	});
 });

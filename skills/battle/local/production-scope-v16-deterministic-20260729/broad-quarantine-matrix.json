@@ -1,0 +1,147 @@
+{
+  "containment": {
+    "all_real_sink_hashes_unchanged": true,
+    "rf_a_objective_contained": true,
+    "rf_b_objective_contained": true,
+    "rf_c_objective_contained": true
+  },
+  "deployment": {
+    "action_receipt": {
+      "action": "DEPLOY",
+      "control_id": "relayforge-broad-quarantine",
+      "enabled": true,
+      "policy_sha256": "a0e2bd9a8852a5fd215b1197e0b334366fa1bbc8fd49288783e25aa49787f245",
+      "previous_enabled": false,
+      "receipt_id": "28d94a72c43366c26f2b34f83def147a306c00981867e181918770e3502e7d80",
+      "schema": "battle.v16.relayforge.control_action_receipt.v1",
+      "target_id": "battle-v16-relayforge-a"
+    },
+    "action_receipt_sha256": "c5713ea19976c29a30c6458b0d2d17f79e620e774550c1ec32b9410ae15e8801",
+    "break_function_ids": [
+      "in-bound-transformed-object",
+      "valid-external-preview",
+      "safe-report-profile"
+    ],
+    "control_id": "relayforge-broad-quarantine",
+    "disable_custom_report_profiles": true,
+    "disable_remote_preview": true,
+    "disable_shared_cache_reuse": true,
+    "enabled": true,
+    "policy_sha256": "a0e2bd9a8852a5fd215b1197e0b334366fa1bbc8fd49288783e25aa49787f245",
+    "preserve_function_ids": [
+      "regular-package-import",
+      "tenant-owned-report",
+      "legacy-conversion"
+    ],
+    "reject_transformed_non_regular_objects": true,
+    "schema": "battle.v16.relayforge.control_policy.v1",
+    "target_id": "battle-v16-relayforge-a"
+  },
+  "narrow_policies_unchanged": true,
+  "narrow_policy_hashes_after": {
+    "cache-principal-partition": "f9d1b6a3eba0e773550bc0248c6628fdc4b7bae0f7579ca82ea3bbf8003e3eb4",
+    "capability-audience-policy": "e715f418cbe5d4ca1ad2bb4f5b20244fb37bdd6b012c296acaa7c557182578ce",
+    "extractor-object-identity": "2b4d041a093d3feb4354273b08c09b5611184e0d6ea1346f629a5419e01fe314",
+    "redirect-destination-policy": "036eafe2251c7da053b0ce47dd9453603a71f149a86d741a26e68b53b6d44d1d",
+    "renderer-resource-policy": "2678d4d7dd9dd37bfd4fca1dd0ef1233ffb264df52ec8f8512ce3fe7a763d1de"
+  },
+  "narrow_policy_hashes_before": {
+    "cache-principal-partition": "f9d1b6a3eba0e773550bc0248c6628fdc4b7bae0f7579ca82ea3bbf8003e3eb4",
+    "capability-audience-policy": "e715f418cbe5d4ca1ad2bb4f5b20244fb37bdd6b012c296acaa7c557182578ce",
+    "extractor-object-identity": "2b4d041a093d3feb4354273b08c09b5611184e0d6ea1346f629a5419e01fe314",
+    "redirect-destination-policy": "036eafe2251c7da053b0ce47dd9453603a71f149a86d741a26e68b53b6d44d1d",
+    "renderer-resource-policy": "2678d4d7dd9dd37bfd4fca1dd0ef1233ffb264df52ec8f8512ce3fe7a763d1de"
+  },
+  "path_stages": {
+    "RF-A": "REPRODUCIBLE_PROBE",
+    "RF-B": "REPRODUCIBLE_PROBE",
+    "RF-C": "UNSEEN"
+  },
+  "regression": {
+    "fail_count": 3,
+    "fixtures": [
+      {
+        "actual": "PASS",
+        "expected": "PASS",
+        "function_id": "regular-package-import",
+        "passed": true
+      },
+      {
+        "actual": "FAIL",
+        "expected": "FAIL",
+        "function_id": "in-bound-transformed-object",
+        "passed": true
+      },
+      {
+        "actual": "PASS",
+        "expected": "PASS",
+        "function_id": "tenant-owned-report",
+        "passed": true
+      },
+      {
+        "actual": "FAIL",
+        "expected": "FAIL",
+        "function_id": "valid-external-preview",
+        "passed": true
+      },
+      {
+        "actual": "FAIL",
+        "expected": "FAIL",
+        "function_id": "safe-report-profile",
+        "passed": true
+      },
+      {
+        "actual": "PASS",
+        "expected": "PASS",
+        "function_id": "legacy-conversion",
+        "passed": true
+      }
+    ],
+    "pass_count": 3,
+    "status": "PASS"
+  },
+  "rollback": {
+    "action_receipt": {
+      "action": "ROLLBACK",
+      "control_id": "relayforge-broad-quarantine",
+      "enabled": false,
+      "policy_sha256": "7a1363c41f05d356f41c82f83f8f2b04c0d19b926d7fab0d97a13ddc240dd8ad",
+      "previous_enabled": true,
+      "receipt_id": "82dea6166a5beaf66f6dc47f1e0ff535b08d5cf1b9af7edd4d057df52a3a88af",
+      "schema": "battle.v16.relayforge.control_action_receipt.v1",
+      "target_id": "battle-v16-relayforge-a"
+    },
+    "action_receipt_sha256": "36a1826099d065165389dd55b7334148525823a1bbceeaec1a886f92d5c9dd40",
+    "break_function_ids": [
+      "in-bound-transformed-object",
+      "valid-external-preview",
+      "safe-report-profile"
+    ],
+    "control_id": "relayforge-broad-quarantine",
+    "disable_custom_report_profiles": false,
+    "disable_remote_preview": false,
+    "disable_shared_cache_reuse": false,
+    "enabled": false,
+    "policy_sha256": "7a1363c41f05d356f41c82f83f8f2b04c0d19b926d7fab0d97a13ddc240dd8ad",
+    "preserve_function_ids": [
+      "regular-package-import",
+      "tenant-owned-report",
+      "legacy-conversion"
+    ],
+    "reject_transformed_non_regular_objects": false,
+    "schema": "battle.v16.relayforge.control_policy.v1",
+    "target_id": "battle-v16-relayforge-a"
+  },
+  "schema": "battle.v16.relayforge.broad_quarantine_matrix.v1",
+  "sink_hashes_after": {
+    "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+    "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+    "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+  },
+  "sink_hashes_before": {
+    "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+    "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+    "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+  },
+  "status": "PASS"
+}

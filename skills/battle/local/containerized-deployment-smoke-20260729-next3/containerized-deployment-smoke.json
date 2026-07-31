@@ -1,0 +1,103 @@
+{
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "does_not_prove": [
+      "Production infrastructure is deployed.",
+      "Production WebSocket TLS, auth, fanout, compression, or reconnect behavior.",
+      "Cloud, Kubernetes, DNS, certificate, ingress, or secret-management behavior.",
+      "Unbounded swarm execution works.",
+      "Battle or RelayForge is production ready.",
+      "Six-trial qualification, factorial effects, or cross-target generalization."
+    ],
+    "proves": [
+      "A Git-archived local Battle package can build a Battle-owned container image.",
+      "The container entrypoint starts the Battle backend live HTTP/SSE/WebSocket adapter.",
+      "The container entrypoint serves the built spectator frontend through Vite preview.",
+      "The mapped container backend served matching snapshot-first WebSocket and SSE payloads.",
+      "The mapped container frontend/backend route passed PR8 and $test-interactions with zero failures and zero warnings."
+    ]
+  },
+  "command_output": {
+    "test_interactions_stderr_tail": "cute_interaction:406 -       [\u2713] assert_qs_action([data-qid='battle:control:event:blue-block']) \u2014 data-qs-action='BATTLE_RECEIPT_PROOF_SELECT'\n2026-07-29 17:26:41.872 | INFO     | __main__:_run_surface:437 - Surface: battle-stream-jsonl-open-fresh-unique (http://127.0.0.1:57189/#battle/live?transport=websocket&engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A36253&ti=battle-stream-jsonl-open-fresh)\n2026-07-29 17:26:44.699 | INFO     | __main__:_execute_interaction:403 -   [\u2713] PASS \u2014 Discovered live interaction: battle:stream:jsonl-open | clicked <BUTTON> ' Receipt stream'\n2026-07-29 17:26:44.699 | INFO     | __main__:_execute_interaction:406 -       [\u2713] assert_visible([data-qid='battle:stream:jsonl-open']) \u2014 visible\n2026-07-29 17:26:44.699 | INFO     | __main__:_execute_interaction:406 -       [\u2713] assert_title([data-qid='battle:stream:jsonl-open']) \u2014 title='Open receipt-backed event stream'\n2026-07-29 17:26:44.699 | INFO     | __main__:_execute_interaction:406 -       [\u2713] assert_qs_action([data-qid='battle:stream:jsonl-open']) \u2014 data-qs-action='BATTLE_JSONL_STREAM_OPEN'\n2026-07-29 17:26:44.812 | INFO     | __main__:run:525 - \n2026-07-29 17:26:44.813 | INFO     | __main__:run:526 - ============================================================\n2026-07-29 17:26:44.813 | INFO     | __main__:run:527 - RESULTS: 38 PASS / 0 FAIL / 0 WARN / 38 total\n2026-07-29 17:26:44.813 | INFO     | __main__:run:529 - ============================================================\n2026-07-29 17:26:44.814 | INFO     | __main__:run:540 - Results written to /home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/test-interactions/results.json\n2026-07-29 17:26:44.814 | INFO     | __main__:run:549 - Structured visual findings written to /home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/test-interactions/visual-findings.jsonl (0 finding(s))\n",
+    "test_interactions_stdout_tail": ""
+  },
+  "container": {
+    "build_log": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/docker-build.log",
+    "container_log": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/docker-container.log",
+    "dockerfile": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/package-root/skills/battle/docker/Dockerfile.deployment",
+    "entrypoint": "/app/skills/battle/docker/deployment-entrypoint.sh",
+    "image_id": "sha256:596dc25fe5cbab67c94cab6a70f8dad570755b8aabcddd1a4e3a5bc83dbceba2",
+    "image_tag": "battle-deployment-smoke:69d65110f503-1785360286",
+    "run_command": [
+      "docker",
+      "run",
+      "--name",
+      "battle-deployment-smoke-1785360287-1714126",
+      "-e",
+      "BATTLE_ID=battle-004",
+      "-e",
+      "BATTLE_ADAPTER_PORT=36253",
+      "-e",
+      "BATTLE_WEBSOCKET_PORT=54991",
+      "-e",
+      "BATTLE_FRONTEND_PORT=57189",
+      "-p",
+      "127.0.0.1:36253:36253",
+      "-p",
+      "127.0.0.1:54991:54991",
+      "-p",
+      "127.0.0.1:57189:57189",
+      "<image-tag>"
+    ]
+  },
+  "counts": {
+    "pr8_failed": 0,
+    "pr8_total": 33,
+    "test_interactions_failed": 0,
+    "test_interactions_passed": 38,
+    "test_interactions_total": 38,
+    "test_interactions_warned": 0,
+    "visual_findings": 0
+  },
+  "created_at": "2026-07-29T21:26:45Z",
+  "errors": [],
+  "launch": {
+    "adapter_base": "http://127.0.0.1:36253",
+    "health": {
+      "battle_id": "battle-004",
+      "event_count": 36,
+      "last_seq": 36,
+      "run_id": "arena-parent-spawn-20260707T220426Z",
+      "schema": "battle.live_transport_health.v1",
+      "status": "PASS",
+      "websocket_endpoint": "/battle/live/battle-004/ws",
+      "websocket_port": 54991
+    },
+    "spectator_base": "http://127.0.0.1:57189",
+    "websocket_url": "ws://127.0.0.1:54991/battle/live/battle-004/ws"
+  },
+  "live": "containerized_http_sse_websocket_adapter_plus_vite_preview",
+  "mocked": false,
+  "package": {
+    "archive": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/battle-package.tar",
+    "archive_sha256": "58eefad03caec4de956fdba7d46023f25bb9a5a0a09fb1da5a0f2aa8d8c7d7a0",
+    "included_paths": [
+      "skills/battle",
+      "skills/common"
+    ],
+    "root": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/package-root",
+    "source_commit": "69d65110f503170fc2a8e39b345a61398a110f41",
+    "source_ref": "HEAD"
+  },
+  "proofs": {
+    "backend_live_transport_receipt": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/backend/containerized-live-transport-proof.json",
+    "pr8_live_transport_summary": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/frontend-pr8/summary.json",
+    "screenshot": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/frontend-pr8/01-live-sse-adapter.png",
+    "screenshot_sha256": "6115b258cc83ce01cd9fffc4e0f67bea5d3acd0df41755ec0385dfeb440689a4",
+    "test_interactions_manifest": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/test-interactions-manifest.json",
+    "test_interactions_results": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/test-interactions/results.json",
+    "visual_findings": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/containerized-deployment-smoke-20260729-next3/test-interactions/visual-findings.jsonl"
+  },
+  "schema": "battle.containerized_deployment_smoke.v1",
+  "status": "PASS"
+}

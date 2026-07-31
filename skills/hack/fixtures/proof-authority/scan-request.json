@@ -1,0 +1,4 @@
+{
+  "request": "fixture bounded local probe observation",
+  "target_identity": "fixture-target@sha256:fixture"
+}

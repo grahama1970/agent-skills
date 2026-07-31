@@ -1,0 +1,64 @@
+{
+  "broad_quarantine": {
+    "assigned_paths": [
+      "RF-A",
+      "RF-B",
+      "RF-C"
+    ],
+    "control_id": "relayforge-broad-quarantine",
+    "implementation_status": "IMPLEMENTED",
+    "must_break_function_ids": [
+      "in-bound-transformed-object",
+      "valid-external-preview",
+      "safe-report-profile"
+    ]
+  },
+  "decoy_shutdown": {
+    "assigned_paths": [],
+    "control_id": "legacy-convert-disable",
+    "implementation_status": "IMPLEMENTED",
+    "must_break_function_ids": [
+      "legacy-conversion"
+    ]
+  },
+  "implementation_status": "DETERMINISTIC_SECURITY_COMPLETE",
+  "narrow_boundaries": [
+    {
+      "assigned_paths": [
+        "RF-A"
+      ],
+      "boundary_id": "extractor-object-identity",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "assigned_paths": [
+        "RF-B"
+      ],
+      "boundary_id": "cache-principal-partition",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "assigned_paths": [
+        "RF-C"
+      ],
+      "boundary_id": "redirect-destination-policy",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "assigned_paths": [
+        "RF-C"
+      ],
+      "boundary_id": "capability-audience-policy",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "assigned_paths": [
+        "RF-C"
+      ],
+      "boundary_id": "renderer-resource-policy",
+      "implementation_status": "IMPLEMENTED"
+    }
+  ],
+  "schema": "battle.v16.defense_graph.v1",
+  "target_id": "battle-v16-relayforge-a"
+}

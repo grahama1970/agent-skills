@@ -131,3 +131,37 @@ def test_ledger_snapshot_uses_existing_persona_memory_contract():
     text = (ROOT / "scripts/live_chain_receipt.py").read_text(encoding="utf-8")
     assert f'{source}"persona_memory"' in text
     assert "persona_continuity_ledgers" not in text
+
+
+def test_session_mood_ordering_uses_sequence_not_second_granularity_timestamps():
+    evidence = live_chain.session_mood_ordering(
+        {
+            "bound_seq": 0,
+            "first_turn_seq": 1,
+            "selected_before_first_turn": True,
+        },
+        "2026-07-29T13:09:50Z",
+        "2026-07-29T13:09:50Z",
+    )
+
+    assert evidence["selected_before_first_turn"] is True
+    assert evidence["selected_before_first_turn_by_sequence"] is True
+    assert evidence["selected_before_first_turn_by_timestamp"] is False
+    assert evidence["mood_bound_seq"] == 0
+    assert evidence["first_turn_seq"] == 1
+    assert "timestamp_boundary_note" in evidence
+
+
+def test_repo_portable_strips_absolute_persona_dream_paths():
+    got = live_chain.repo_portable(
+        {
+            "receipt": (
+                "/home/graham/workspace/experiments/agent-skills-main/"
+                "skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+            )
+        }
+    )
+
+    assert got == {
+        "receipt": "skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+    }

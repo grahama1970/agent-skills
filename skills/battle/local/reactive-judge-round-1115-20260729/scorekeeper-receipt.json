@@ -1,0 +1,17 @@
+{
+  "asc": 1,
+  "blue_score": 3.6,
+  "fdsr": 0.0,
+  "ignored_blue_advisory_fields": {
+    "advisory_blue_success": true,
+    "advisory_functionality_preserved": true
+  },
+  "judge1_verdict": "CONFIRMED",
+  "judge2_verdict": "BLUE_SUCCESS",
+  "red_score": 1.5,
+  "schema": "battle.scorekeeper_receipt.v1",
+  "score_authority": "judge_receipts_only",
+  "status": "PASS",
+  "tdsr": 1.0,
+  "winner": "Blue"
+}

@@ -1,0 +1,42 @@
+{
+  "defense_enabled": true,
+  "fixtures": [
+    {
+      "function_id": "regular-package-import",
+      "passed": true
+    },
+    {
+      "function_id": "in-bound-transformed-object",
+      "passed": true
+    },
+    {
+      "function_id": "tenant-owned-report",
+      "passed": true
+    },
+    {
+      "function_id": "valid-external-preview",
+      "passed": true
+    },
+    {
+      "function_id": "safe-report-profile",
+      "passed": true
+    },
+    {
+      "function_id": "legacy-conversion",
+      "passed": true
+    }
+  ],
+  "schema": "battle.v16.relayforge.rf_a_regression_matrix.v1",
+  "sink_hashes_after": {
+    "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+    "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+    "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+  },
+  "sink_hashes_before": {
+    "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+    "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+    "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+  },
+  "sink_hashes_unchanged": true,
+  "status": "PASS"
+}

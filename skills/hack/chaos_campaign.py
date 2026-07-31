@@ -18,10 +18,12 @@ from urllib.parse import urlparse
 import typer
 from rich.console import Console
 
+from hack.env import load_hack_dotenv as dotenv_helper
 from hack.self_improve_loop import ARTIFACT_ROOT
 from hack.session_audit import safe_slug
 
 console = Console()
+dotenv_helper()
 
 
 @dataclass(frozen=True)

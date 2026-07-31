@@ -94,16 +94,28 @@ PY
 fi
 
 extract_status=0
+attempt_dir="$artifact_dir/webgpt-recover-attempts/$(date -u +%Y%m%dT%H%M%SZ)-$$"
+mkdir -p "$attempt_dir"
+attempt_output="$attempt_dir/response.md"
+attempt_raw="$attempt_dir/response.raw.md"
+attempt_meta="$attempt_dir/response.meta.json"
+attempt_stderr="$attempt_dir/extract.stderr.log"
 "${SCRIPT_DIR}/webgpt-extract.sh" \
   --tab-id "$claim_tab_id" \
-  --output "$claim_output" \
-  --raw-output "$claim_raw" \
-  --meta-output "$claim_meta" \
+  --output "$attempt_output" \
+  --raw-output "$attempt_raw" \
+  --meta-output "$attempt_meta" \
   --sentinel "$claim_sentinel" \
   --wait \
   --timeout "$timeout_s" \
   --stable-polls "$stable_polls" \
-  >/dev/null || extract_status=$?
+  >"$attempt_dir/extract.stdout.log" 2>"$attempt_stderr" || extract_status=$?
+
+if [[ "$extract_status" -eq 0 ]]; then
+  cp "$attempt_output" "$claim_output"
+  cp "$attempt_raw" "$claim_raw"
+  cp "$attempt_meta" "$claim_meta"
+fi
 
 python3 "$TRANSPORT_PY" write-summary \
   --artifact-dir "$artifact_dir" \
@@ -111,20 +123,46 @@ python3 "$TRANSPORT_PY" write-summary \
   --raw "$claim_raw" \
   >/dev/null 2>&1 || true
 
-python3 - "$recovery_json" "$extract_status" "$claim_output" "$claim_raw" "$claim_meta" "$artifact_dir" <<'PY'
+python3 - "$recovery_json" "$extract_status" "$claim_output" "$claim_raw" "$claim_meta" "$artifact_dir" "$attempt_dir" "$attempt_output" "$attempt_raw" "$attempt_meta" "$attempt_stderr" <<'PY'
 import json
 import pathlib
 import sys
 
-recovery_path, status_s, output, raw, meta, artifact_dir = sys.argv[1:]
+(
+    recovery_path,
+    status_s,
+    output,
+    raw,
+    meta,
+    artifact_dir,
+    attempt_dir,
+    attempt_output,
+    attempt_raw,
+    attempt_meta,
+    attempt_stderr,
+) = sys.argv[1:]
 payload = json.loads(pathlib.Path(recovery_path).read_text(encoding="utf-8"))
 summary_path = pathlib.Path(artifact_dir) / "webgpt_transport_summary.json"
+stderr_path = pathlib.Path(attempt_stderr)
 payload["schema"] = "surf.webgpt_recover_finalize.v1"
 payload["finalize_attempted"] = True
 payload["finalize_exit_code"] = int(status_s)
 payload["finalize_output"] = output
 payload["finalize_raw_output"] = raw
 payload["finalize_meta_output"] = meta
+payload["finalize_attempt_artifacts"] = {
+    "attempt_dir": attempt_dir,
+    "output": attempt_output,
+    "raw_output": attempt_raw,
+    "meta_output": attempt_meta,
+    "stderr_log": attempt_stderr,
+}
+payload["finalize_preserved_existing_outputs"] = int(status_s) != 0
+payload["finalize_stderr_tail"] = (
+    stderr_path.read_text(encoding="utf-8", errors="replace")[-4000:]
+    if stderr_path.exists()
+    else ""
+)
 payload["transport_summary"] = str(summary_path) if summary_path.exists() else None
 print(json.dumps(payload, indent=2))
 PY

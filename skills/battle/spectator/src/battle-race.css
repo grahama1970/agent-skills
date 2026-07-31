@@ -29,6 +29,7 @@
 }
 
 .battle-timeline-scroll {
+  overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(85, 183, 255, 0.32) rgba(255, 255, 255, 0.04);
 }
@@ -364,8 +365,8 @@
 }
 
 .graphTitleBar .zoomBtn {
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   border: 1px solid rgba(90, 173, 255, 0.12);
   border-radius: 7px;
   background: rgba(4, 10, 18, 0.55);
@@ -374,6 +375,33 @@
   place-items: center;
   font-size: 14px;
   font-weight: 700;
+}
+
+.battle-proof-nav a,
+.battle-proof-nav summary {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.battle-receipt-footer [data-qid],
+.battle-receipt-header [data-qid^="battle:events:item"],
+.battle-receipt-header [data-qid="battle:events:view-all"],
+[data-qid^="battle:agent-pane:tab:"],
+[data-qid="battle:agent-pane:lifecycle-toggle"],
+[data-qid="battle:timeline:scrub"] {
+  min-height: 44px;
+}
+
+[data-qid="battle:events:view-all"],
+[data-qid="battle:agent-pane:lifecycle-toggle"],
+[data-qid="battle:control:playhead"],
+[data-qid^="battle:control:speed:"] {
+  min-width: 44px;
+}
+
+[data-qid="battle:control:speed"] {
+  min-height: 44px;
 }
 
 .graphTitleBar .zoomBtn:hover {
@@ -731,3 +759,88 @@
   background-attachment: local;
 }
 /* lanes stay content-height; scroll grid fills unused band */
+
+[data-qid="battle:lineage-comparison"] {
+  box-sizing: border-box;
+  color: #d7e5f5;
+  background: rgba(3, 8, 15, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+[data-qid="battle:lineage-comparison"] * {
+  box-sizing: border-box;
+}
+
+[data-qid="battle:lineage-comparison"] [data-qid="battle:adaptive-lineage:badge"],
+[data-qid="battle:lineage-comparison"] [data-qid="battle:adaptive-lineage:qualification"] {
+  display: inline-block;
+  margin: 0 6px 6px 0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  border: 1px solid rgba(94, 234, 212, 0.36);
+  background: rgba(20, 184, 166, 0.12);
+  color: #ccfbf1;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+[data-qid="battle:lineage-comparison"][data-mode="proof-unavailable"] [data-qid="battle:adaptive-lineage:badge"] {
+  border-color: rgba(251, 191, 36, 0.42);
+  background: rgba(251, 191, 36, 0.13);
+  color: #fde68a;
+}
+
+[data-qid^="battle:adaptive-lineage:source:"],
+[data-qid="battle:adaptive-lineage:unavailable-reason"],
+[data-qid="battle:adaptive-lineage:honesty"] {
+  color: #b8c7da;
+  font-size: 10px;
+}
+
+[data-qid="battle:lineage-comparison"] [data-qid^="battle:adaptive-lineage:team:"] {
+  margin-top: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.66);
+  padding: 8px;
+}
+
+[data-qid^="battle:adaptive-lineage:canonical-node:"] {
+  margin-top: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 5px;
+  background: rgba(2, 6, 23, 0.55);
+  padding: 6px;
+  color: #dbeafe;
+}
+
+[data-qid^="battle:adaptive-lineage:canonical-edge:"] {
+  color: #cbd5e1;
+}
+
+@media (max-width: 700px) {
+  [data-qid="battle:lineage-comparison"][data-mode="canonical-dual-team"] {
+    max-height: 220px;
+    overflow: auto;
+    padding: 8px;
+    font-size: 10px;
+  }
+
+  [data-qid="battle:lineage-comparison"][data-mode="canonical-dual-team"] [data-qid^="battle:adaptive-lineage:team:"] {
+    padding: 6px;
+  }
+
+  [data-qid="battle:lineage-comparison"][data-mode="canonical-dual-team"] [data-qid^="battle:adaptive-lineage:canonical-node:"] {
+    margin-top: 4px;
+    padding: 5px;
+  }
+
+  [data-qid="battle:lineage-comparison"][data-mode="canonical-dual-team"] [data-qid^="battle:adaptive-lineage:canonical-edge:"] {
+    display: none;
+  }
+}

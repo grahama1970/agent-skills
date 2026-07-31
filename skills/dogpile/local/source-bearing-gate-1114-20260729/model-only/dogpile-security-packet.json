@@ -1,0 +1,71 @@
+{
+  "adapter_outputs": {
+    "hack_scan_request": {
+      "artifact_path": "hack-scan-request.json",
+      "schema": "dogpile.hack_scan_request.v1"
+    }
+  },
+  "conflicts": [],
+  "effective_query": "fixture model only",
+  "ended_at": "2026-07-29T00:00:01Z",
+  "github_candidates": [],
+  "live": "deterministic_source_bearing_fixture",
+  "mocked": false,
+  "model_synthesis": {
+    "error": null,
+    "present": true,
+    "receipt_path": "report.md",
+    "receipt_sha256": "20cfdef6007e8e51d4ae437f75508b469648c80a5c9ef5318cc6f753cae64e79",
+    "source_bearing": false,
+    "text": "model only"
+  },
+  "negative_evidence": [],
+  "non_claims": [
+    "research_design_input_only",
+    "source_bearing_is_traceability_not_truth",
+    "no_scan_executed",
+    "no_docker_invoked",
+    "no_authorization_proof",
+    "no_exploit_or_patch_proof",
+    "no_repository_adoption_proof"
+  ],
+  "packet_sha256": "f2026839e19df4f443bf8c4c1b876f8776c20901dc9be323623f445b5cea11ab",
+  "packet_version": "1.0",
+  "provider_statuses": [
+    {
+      "artifact_path": "providers/stage1-codex_knowledge.json",
+      "artifact_sha256": "58f3d56c3ff31d3662a28cfa783ff8c3f7b370e0ede7ca9b95cc3fa33be4bf82",
+      "provider": "codex_knowledge",
+      "query": null,
+      "stage": "stage1",
+      "status": "ok"
+    },
+    {
+      "artifact_path": "providers/stage2-synthesis.json",
+      "artifact_sha256": "fbd796a29aae9281f2814c5714589fb80b073542a8034f834ae3f3a43e875f17",
+      "provider": "synthesis",
+      "query": null,
+      "stage": "stage2",
+      "status": "ok"
+    }
+  ],
+  "rejected_candidates": [],
+  "request_context": {},
+  "requested_query": "fixture model only",
+  "retrieval_evidence": [],
+  "run_id": "source-bearing-model-only-fixture",
+  "schema": "dogpile.security_research_packet.v1",
+  "source_bearing_evidence_count": 0,
+  "source_bearing_provider_count": 0,
+  "started_at": "2026-07-29T00:00:00Z",
+  "target_context": {
+    "canonical_id": "fixture-target",
+    "immutable_ref": "sha256:fixture",
+    "kind": "repository",
+    "target_url": "file:///fixtures/fixture-target"
+  },
+  "unresolved_questions": [],
+  "weak_coverage": [
+    "no source-bearing retrieval evidence"
+  ]
+}

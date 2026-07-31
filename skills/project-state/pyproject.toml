@@ -1,6 +1,6 @@
 [project]
 name = "project-state"
 version = "0.1.0"
-description = "Comprehensive Embry OS project state report"
+description = "Comprehensive project state report"
 requires-python = ">=3.12,<3.13"
 dependencies = ["loguru>=0.7,<0.7.3", "python-dotenv>=1.0", "pyyaml>=6.0", "typer>=0.9"]

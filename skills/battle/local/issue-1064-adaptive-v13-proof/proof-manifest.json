@@ -1,0 +1,115 @@
+{
+  "schema": "battle.adaptive_lineage_ui_proof_manifest.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "source_commit": "85af50be85ed6cd7960d3e5114fae3dfbf0ef18b",
+  "host": "http://127.0.0.1:3005",
+  "route": "http://127.0.0.1:3005/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
+  "retained_campaign": {
+    "campaign_receipt_sha256": "2527310d662b33c18695d724b0757ff604097fe70e2841b385e3f9c277bf19d7",
+    "events_jsonl_sha256": "9d7e013ebd2ac68d4fe12ca4183b77ff9664363c877aac747da89840995e2aa3"
+  },
+  "source_artifacts": [
+    {
+      "id": "local_fixture",
+      "path": "skills/battle/local/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",
+      "sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+      "bytes": 41270
+    },
+    {
+      "id": "public_fixture",
+      "path": "skills/battle/spectator/public/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",
+      "sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+      "bytes": 41270
+    },
+    {
+      "id": "plague_nurgling_png",
+      "path": "skills/battle/assets/sprites/pixijs/plague_nurgling.png",
+      "sha256": "19334a13b7aac8c24906fd6eccc156f5ed885dca5f5d13a3b09cbb9c5d2c802a",
+      "bytes": 585469
+    },
+    {
+      "id": "plague_nurgling_json",
+      "path": "skills/battle/assets/sprites/pixijs/plague_nurgling.json",
+      "sha256": "63be1df2c69d5c28226efab217577269f4f404992149c57055c11a9b97cdc2e5",
+      "bytes": 31314
+    },
+    {
+      "id": "sprite_manifest",
+      "path": "skills/battle/assets/sprites/pixijs/battle-sprite-assets.manifest.json",
+      "sha256": "ba487539dd51b708309e350c25404b848abbe8c7240d94ac38bd6ec5b85d07f8",
+      "bytes": 5252
+    }
+  ],
+  "proof_artifacts": [
+    {
+      "path": "proof-summary.json",
+      "sha256": "f430ba7c356386ea1ecb3ee97f519b4db01e28a4b9cd04fc93fe44f8c09dceae",
+      "bytes": 14109
+    },
+    {
+      "path": "browser-console.json",
+      "sha256": "80ea996373d1c7eb048886bdb8c7e682572e05696f77a3d6803f358a941429c4",
+      "bytes": 1202
+    },
+    {
+      "path": "network-authority-requests.json",
+      "sha256": "88c07d9a790c728dcb0cef652e5af5977318203c69db0e4ee081d058067b9264",
+      "bytes": 2172
+    },
+    {
+      "path": "screenshots/01-pre-spawn-children-hidden.png",
+      "sha256": "f01c4a8a2ebe6c8c3aac572eaaea763576b93543a783cb074a6de847c46e9f29",
+      "bytes": 344459
+    },
+    {
+      "path": "screenshots/02-spawn-authorized-pending.png",
+      "sha256": "51c6f25f0b1e1c027ed50ac8c5d9afada51ebd5334749ef3746f7a2b7e0d936e",
+      "bytes": 359572
+    },
+    {
+      "path": "screenshots/03-ladder-descent-hop.png",
+      "sha256": "317c0cf9e32e2b76dfbfbbbb54361b1d6fc4a1f6b08b9a4103bca561a0bc6bb9",
+      "bytes": 362987
+    },
+    {
+      "path": "screenshots/04-children-active-research.png",
+      "sha256": "b5372ed21275f160de7801f6bc9d9c9a5829e760851818ef5571bed66327cee1",
+      "bytes": 366705
+    },
+    {
+      "path": "screenshots/05-mutation-evidence.png",
+      "sha256": "22c322b74ef26176ce6d77c43a86db7b8bd3254ecb46e31a7be601884bf6b1bb",
+      "bytes": 368817
+    },
+    {
+      "path": "screenshots/06-judge-selection-memory-boundary.png",
+      "sha256": "f63382f1dcb1e44c8787c526ccc7f2672d8122af17b1a96fff02c21eaf630c0d",
+      "bytes": 368825
+    },
+    {
+      "path": "screenshots/07-four-lane-mobile.png",
+      "sha256": "036e442ebd017a32215d19c6f430d8b2a4109029905e34218e83a5da25db82d8",
+      "bytes": 85348
+    },
+    {
+      "path": "screenshots/08-four-lane-mobile-race.png",
+      "sha256": "d8b93e2bf7682e3cb3072eb05b9f44a66043f5380c75b139574d80971ff55a9b",
+      "bytes": 37273
+    },
+    {
+      "path": "screenshots/09-continuous-replay-single-mount.png",
+      "sha256": "b63152d55bb9f4466601264656aeec3ab13c353028d38d593c27976a394bab30",
+      "bytes": 369092
+    }
+  ],
+  "claims": {
+    "proves": [
+      "The retained V13 campaign is rendered through the public HTTP fixture with four visible Pixi runners, one-way outer-scroll camera control, and continuous Play/Pause/scrub/restart behavior on one stable Pixi mount."
+    ],
+    "does_not_prove": [
+      "Speaker output, final audio mix, exploit success, child improvement, durable memory reuse, or production readiness."
+    ]
+  }
+}

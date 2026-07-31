@@ -23,7 +23,7 @@ from common.file_bundler import bundle_for_review
 
 
 SKILL_DIR = Path(__file__).resolve().parent
-SKILLS_DIR = SKILL_DIR.parent
+SKILLS_DIR = SKILL_DIR.parents[2]
 SIBLING_CODE_RUNNER_RUN = SKILLS_DIR / "code-runner" / "run.sh"
 
 

@@ -1,0 +1,141 @@
+{
+  "battle_id": "battle-v16-relayforge-a",
+  "claims": {
+    "does_not_prove": [
+      "Battle Docker scorekeeper PASS unless Battle consumes this manifest and Judge receipts.",
+      "Unbounded Battle swarm execution.",
+      "Child-spawn lineage; this rung uses bounded independent workers.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Tau consumed bounded Battle Red and Blue handoffs.",
+      "Tau attempted Scillm chat-completions calls for each requested worker.",
+      "Tau wrote tau.subagent_receipt.v1 artifacts for each requested worker.",
+      "Each worker has its own materialization receipt."
+    ]
+  },
+  "duration_seconds": 49.644459,
+  "handoff_topology": "bounded_worker_matrix",
+  "live": true,
+  "materialized_counts": {
+    "blue": 1,
+    "red": 1
+  },
+  "mocked": false,
+  "model": "gpt-5.5",
+  "requested_workers": {
+    "blue": 1,
+    "red": 1
+  },
+  "run_id": "relayforge-v16-memory-chain",
+  "scenario_id": "relayforge-v16-memory-chain-blue-uptake",
+  "schema": "tau.battle_live_handoff_proof.v1",
+  "scillm_auth_preflight": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/scillm-auth-preflight.json",
+  "scillm_base_url": "http://localhost:4001",
+  "status": "PASS",
+  "surface": "scillm.chat_completions",
+  "teams": [
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/red/handoff.json",
+      "http_status": 200,
+      "lane_id": "payload-857-receipt",
+      "materialized": {
+        "artifact_bytes": 2278,
+        "artifact_sha256": "c2e318a33f3e608c940861cf86541f245f22d63970ad9c5be23fb1fb1c18a9cb",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/red/red_exploit_submission.py",
+        "rationale": "The public app.py joins archive member names directly to the destination path before writing. A zip member named ../arena_escape.txt therefore resolves outside the destination directory. This exploit directly imports import_zip, constructs a temporary zip with that traversal entry, invokes the function, and confirms the escaped file is created.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "6bc83f9647900b7dd326f401ace9b30767a9be86e08806b1b76ae0e18c2c17c2",
+        "status": "PASS",
+        "strategy_genome_sha256": "d9f5a95c9aea31165e364017a5744c79d7723439bb7033dd85571b4350110173"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 2278,
+        "artifact_sha256": "c2e318a33f3e608c940861cf86541f245f22d63970ad9c5be23fb1fb1c18a9cb",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/red/red_exploit_submission.py",
+        "rationale": "The public app.py joins archive member names directly to the destination path before writing. A zip member named ../arena_escape.txt therefore resolves outside the destination directory. This exploit directly imports import_zip, constructs a temporary zip with that traversal entry, invokes the function, and confirms the escaped file is created.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "6bc83f9647900b7dd326f401ace9b30767a9be86e08806b1b76ae0e18c2c17c2",
+        "status": "PASS",
+        "strategy_genome_sha256": "d9f5a95c9aea31165e364017a5744c79d7723439bb7033dd85571b4350110173"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-red-public-auditor",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/red/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/red/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "red",
+      "validation": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/red/validation.json",
+      "validation_ok": true,
+      "worker_id": "red-0",
+      "worker_index": 0
+    },
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/blue/handoff.json",
+      "http_status": 200,
+      "lane_id": null,
+      "materialized": {
+        "artifact_bytes": 3291,
+        "artifact_sha256": "c5407eaa35f5cac4399237748860bdd30c73a2d74e685f37d35519cbda55fc3b",
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/blue/app.py",
+        "rationale": "Applies the recalled durable-memory lesson: broad global quarantine can break required behavior, so this patch preserves import_zip functionality while enforcing a measured archive-extraction trust boundary. Cites memory_key=battle-v16-relayforge-a:memory-chain:blue:b781345bc7367f6a76cfafc4, memory_content_sha256=bca9772fed610e30a54a8e9cf297061e470369ae66dae31c5ce6e91d40d3fffd, memory_recall_receipt_sha256=2fc424818d951f0757012962696218f536d56d0f0f23310cac11b4f3f302753f, and source_observation_receipt_sha256=b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f. Memory is design input only and does not prove improvement.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "80c8818134b725fa36f17f49a8b63551b441828994b38a43cbcb8c561a033c25",
+        "status": "PASS",
+        "strategy_genome_sha256": "f6492be9586dc56d6297151878456ecf9eb27d5984cf1fa3c93ec39e048ef00b"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 3291,
+        "artifact_sha256": "c5407eaa35f5cac4399237748860bdd30c73a2d74e685f37d35519cbda55fc3b",
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/blue/app.py",
+        "rationale": "Applies the recalled durable-memory lesson: broad global quarantine can break required behavior, so this patch preserves import_zip functionality while enforcing a measured archive-extraction trust boundary. Cites memory_key=battle-v16-relayforge-a:memory-chain:blue:b781345bc7367f6a76cfafc4, memory_content_sha256=bca9772fed610e30a54a8e9cf297061e470369ae66dae31c5ce6e91d40d3fffd, memory_recall_receipt_sha256=2fc424818d951f0757012962696218f536d56d0f0f23310cac11b4f3f302753f, and source_observation_receipt_sha256=b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f. Memory is design input only and does not prove improvement.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "80c8818134b725fa36f17f49a8b63551b441828994b38a43cbcb8c561a033c25",
+        "status": "PASS",
+        "strategy_genome_sha256": "f6492be9586dc56d6297151878456ecf9eb27d5984cf1fa3c93ec39e048ef00b"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-blue-durable-memory-child",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/blue/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/blue/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "blue",
+      "validation": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/tau-live/blue/validation.json",
+      "validation_ok": true,
+      "worker_id": "blue-0",
+      "worker_index": 0
+    }
+  ]
+}

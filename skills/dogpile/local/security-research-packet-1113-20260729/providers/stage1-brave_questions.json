@@ -1,0 +1,103 @@
+{
+  "queries": [
+    "bounded software security scanning evidence contracts",
+    "bounded software security scanning evidence contracts sources evidence"
+  ],
+  "replacement_for": "perplexity",
+  "results": [
+    {
+      "ok": true,
+      "query": "bounded software security scanning evidence contracts",
+      "result": {
+        "count": 5,
+        "offset": 0,
+        "query": "bounded software security scanning evidence contracts",
+        "query_adjustment": {
+          "final_chars": 53,
+          "final_words": 6,
+          "normalized": false,
+          "original_chars": 53,
+          "original_query": "bounded software security scanning evidence contracts",
+          "original_words": 6,
+          "site_filters_requested": 0,
+          "site_filters_used": 0
+        },
+        "results": [
+          {
+            "description": "Note when analyzing big contracts you might have to increase Rusts stack size, see here. EthBMC 1.0.0 EthBMC: A Bounded Model Checker for Smart Contracts USAGE: ethbmc [FLAGS] [OPTIONS] &lt;INPUT&gt; FLAGS: -x, --acc The input is an Ethereum account address, must be used with parity backend, mainnet only --concrete-copy Use concrete calldatacopy -d, --debug-grap Dump debug graph after analysis --no-optimizations Disable all optimizations --dump-solver Dump all solver queries to ./queries -h, --help Prints help information --json Output json without logging --list The input is a list of Ethereum account address, writes the result to a csv file in the output folder --no-verify Skip verification phase.",
+            "title": "GitHub - RUB-SysSec/EthBMC: The code repository for the 2020 Usenix Security paper \"EthBMC: A Bounded Model Checker for Smart Contracts\"",
+            "url": "https://github.com/RUB-SysSec/EthBMC"
+          },
+          {
+            "description": "Based on these insights, we present the design and implementation of, a bounded model checker based on symbolic execution which provides a precise model of the Ethereum network. We demonstrate its capabilities in a series of experiments. First, we compare against the eight aforementioned tools, showing that even relatively simple toy examples can obstruct other analyzers. Further proving that precise modeling is indispensable, we leverage ETHBmc capabilities for automatic vulnerability scanning.",
+            "title": "ETHBMC: A Bounded Model Checker for Smart Contracts | USENIX",
+            "url": "https://www.usenix.org/conference/usenixsecurity20/presentation/frank"
+          },
+          {
+            "description": "Our method is based on game semantics, modelling computation as an interaction between a contract and its environment, reducing reasoning about unknown or malicious external contracts to trace enumeration. We implement this in a tool we refer to as YulToolkit, a bounded game-semantics checker for Yul, the intermediate language of Solidity.",
+            "title": "A Bounded Game Semantics Checker for Precise Smart Contract Analysis",
+            "url": "https://arxiv.org/html/2512.22417"
+          },
+          {
+            "description": "For example, we discovered that a precise memory model is missing and inter-contract analysis is only partially supported. Based on these insights, we present the design and implementation of ETHBMC, a bounded model checker based on symbolic execution which provides a precise model of the Ethereum network.",
+            "title": "ETHBMC | Proceedings of the 29th USENIX Conference on Security Symposium",
+            "url": "https://dl.acm.org/doi/10.5555/3489212.3489367"
+          },
+          {
+            "description": "This is <strong>an in-progress research project that aims to explore how archival science and cybersecurity can be applied to evaluate the trustworthiness and security of smart contracts</strong>.",
+            "title": "(PDF) Bounded and Shielded: Assessing Security Aspects and Trustworthiness of Smart Contracts",
+            "url": "https://www.academia.edu/53584465/Bounded_and_Shielded_Assessing_Security_Aspects_and_Trustworthiness_of_Smart_Contracts"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "query": "bounded software security scanning evidence contracts sources evidence",
+      "result": {
+        "count": 5,
+        "offset": 0,
+        "query": "bounded software security scanning evidence contracts sources",
+        "query_adjustment": {
+          "final_chars": 61,
+          "final_words": 7,
+          "normalized": true,
+          "original_chars": 70,
+          "original_query": "bounded software security scanning evidence contracts sources evidence",
+          "original_words": 8,
+          "site_filters_requested": 0,
+          "site_filters_used": 0
+        },
+        "results": [
+          {
+            "description": "The analysis will be made using the requirements of trustworthy records and the investigation of vulnerabilities related to the development and implementation of smart contracts. The expected contribution is to improve smart contracts’ trustworthiness as archival records and evidence.",
+            "title": "(PDF) Bounded and Shielded: Assessing Security Aspects and Trustworthiness of Smart Contracts",
+            "url": "https://www.academia.edu/53584465/Bounded_and_Shielded_Assessing_Security_Aspects_and_Trustworthiness_of_Smart_Contracts"
+          },
+          {
+            "description": "The code repository for the 2020 Usenix Security paper &quot;EthBMC: A Bounded Model Checker for Smart Contracts&quot; - RUB-SysSec/EthBMC",
+            "title": "GitHub - RUB-SysSec/EthBMC: The code repository for the 2020 Usenix Security paper \"EthBMC: A Bounded Model Checker for Smart Contracts\"",
+            "url": "https://github.com/RUB-SysSec/EthBMC"
+          },
+          {
+            "description": "Further proving that precise modeling is indispensable, we leverage ETHBMC capabilities for automatic vulnerability scanning. We perform a large-scale analysis of roughly 2.2 million accounts currently active on the blockchain and automatically generate 5,905 valid inputs which trigger a vulnerability. From these, 1,989 can destroy a contract at will (so called suicidal contracts) and the rest can be used by an adversary to arbitrarily extract money.",
+            "title": "ETHBMC | Proceedings of the 29th USENIX Conference on Security Symposium",
+            "url": "https://dl.acm.org/doi/10.5555/3489212.3489367"
+          },
+          {
+            "description": "Because they manage large amounts of digital assets111As of this writing, Ethereum smart contracts hold over USD 90 billion in cryptocurrency (defillama). and their code is public, smart contracts have been repeatedly targeted, resulting in multi-billion-dollar losses (crypto-crimes-2024; eth-vulnerabilities; eth-bugs), making them a critical area of security research. A large ecosystem of tools aims to detect vulnerabilities and verify safety of smart contracts. Surveys catalogue extensive literature, with a recent survey listing more than ninety tools (vidalVulnerabilityDetectionTechniques2024). Common techniques largely fall into the following categories: static analysis of source or bytecode (e.g. (ethainter)); symbolic execution (e.g. (manticore)) and bounded model checking (e.g.",
+            "title": "A Bounded Game Semantics Checker for Precise Smart Contract Analysis",
+            "url": "https://arxiv.org/html/2512.22417"
+          },
+          {
+            "description": "Based on these insights, we present ... of, a bounded model checker based on symbolic execution which provides a precise model of the Ethereum network. We demonstrate its capabilities in a series of experiments. First, we compare against the eight aforementioned tools, showing that even relatively simple toy examples can obstruct other analyzers. Further proving that precise modeling is indispensable, we leverage ETHBmc capabilities for automatic vulnerability scanning...",
+            "title": "ETHBMC: A Bounded Model Checker for Smart Contracts | USENIX",
+            "url": "https://www.usenix.org/conference/usenixsecurity20/presentation/frank"
+          }
+        ]
+      }
+    }
+  ],
+  "succeeded": 2,
+  "total": 2
+}

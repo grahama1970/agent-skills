@@ -1,0 +1,140 @@
+[
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:open-dialog",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "Open dialog"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:duplicate",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "Duplicate A"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:duplicate",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "Duplicate A"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:missing-qid",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "Missing QID"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:throws",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "Throw"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:fetch-fails",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "Fetch fails"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:inert",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "Inert"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:no-title",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "No title"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:no-action",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "No action"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "ce8e250a644e5f38",
+    "via_qid": "fixture:keyboard-miss",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "DIV",
+      "text": "Keyboard miss"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "e57cfff539cf3787",
+    "via_qid": "fixture:url-drift",
+    "clicked": {
+      "ok": true,
+      "found": true,
+      "tag": "BUTTON",
+      "text": "URL drift"
+    },
+    "depth": 1
+  },
+  {
+    "from": "5cc98dc0b811f7c9",
+    "to": "e57cfff539cf3787",
+    "via_qid": "fixture:open-dialog",
+    "depth": 1
+  }
+]

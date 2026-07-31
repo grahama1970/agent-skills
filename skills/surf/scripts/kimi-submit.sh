@@ -204,6 +204,79 @@ focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 provider_busy_cooldown_count=0
 attempt=0
+write_interrupted_meta() {
+  local signal_name="${1:-TERM}"
+  local finished
+  finished="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  cp "$raw_tmp" "$raw_output" 2>/dev/null || true
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$provider_busy_cooldown_s" "$provider_busy_cooldown_count" "$provider_busy_retry_attempts" "$attach_file_abs" "$signal_name" <<'PY'
+import json, pathlib, sys
+(
+    meta, inp, submitted, out, raw, err, sentinel, started, finished,
+    requested_tab_id, target_url, requested_model, requested_reasoning,
+    cooldown_s, cooldown_count, retry_attempts, attach_file, signal_name,
+) = sys.argv[1:]
+raw_text = pathlib.Path(raw).read_text(errors="replace") if pathlib.Path(raw).exists() else ""
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "interrupted",
+    "failure": "submit_interrupted_before_completion",
+    "blocker": "BROWSER_HANDLER_TIMEOUT",
+    "proof_status": "interrupted",
+    "exit_signal": signal_name,
+    "submitted_to_kimi": False,
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "raw_contains_sentinel": sentinel in raw_text,
+    "clean_contains_sentinel": False,
+    "raw_chars": len(raw_text),
+    "clean_chars": 0,
+    "requested_tab_id": requested_tab_id or None,
+    "controlled_tab_id": None,
+    "requested_url": target_url or None,
+    "requested_model": requested_model or None,
+    "requested_reasoning": requested_reasoning or None,
+    "attach_file": attach_file or None,
+    "attachment": None,
+    "attachment_delivery_proven": False,
+    "provider_busy_cooldown_seconds": int(cooldown_s),
+    "provider_busy_cooldown_count": int(cooldown_count),
+    "provider_busy_retry_attempts": int(retry_attempts),
+    "started_at": started,
+    "finished_at": finished,
+}, indent=2) + "\n")
+PY
+  exit 124
+}
+trap 'write_interrupted_meta TERM' TERM
+trap 'write_interrupted_meta INT' INT
+trap 'write_interrupted_meta HUP' HUP
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$attach_file_abs" <<'PY'
+import json, pathlib, sys
+meta, inp, submitted, out, raw, err, sentinel, started, requested_tab_id, target_url, requested_model, requested_reasoning, attach_file = sys.argv[1:]
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "running",
+    "proof_status": "pending",
+    "submitted_to_kimi": False,
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "controlled_tab_id": None,
+    "requested_url": target_url or None,
+    "requested_model": requested_model or None,
+    "requested_reasoning": requested_reasoning or None,
+    "attach_file": attach_file or None,
+    "attachment_delivery_proven": False,
+    "started_at": started,
+}, indent=2) + "\n")
+PY
 while true; do
   set +e
   if command -v timeout >/dev/null 2>&1; then
@@ -228,6 +301,7 @@ while true; do
   break
 done
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+trap - TERM INT HUP
 
 # Post-run focus snapshot for proof.
 focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"

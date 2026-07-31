@@ -19,12 +19,11 @@ metadata:
 
 provides:
   - cleanup
-composes: [ingest-code, task-monitor, project-watchdog]
+composes: [ingest-code, task-monitor, project-watchdog, agentic-evals]
 complies:
   - best-practices-skills
   - best-practices-python
   - best-practices-report
-  - best-practices-security
 ---
 
 # Cleanup Skill
@@ -50,26 +49,37 @@ This skill performs a deep assessment of the codebase to identify technical debt
   audit artifacts and no phase receipt
 - **Doc staleness**: Flags docs with TODO/FIXME or >365 days without changes
 - **Script scanability**: Flags tracked script-like files that are hard for a
-  human or agent to scan; readability debt, not unused-code evidence.
-- **Public-readiness/security cleanup**: Flags gitleaks, dir-scan, and GitHub settings blockers.
-- **Quality-gate cleanup**: Runs or reports scoped parse, lint, format, type, and test gates.
-- **Memory-index cleanup**: `--memory-index` runs `$ingest-code --treesitter` and writes a local searchability/offline-artifact receipt.
-- **Evidence-first Markdown report**: `--plan` writes a prose-first
-  `$best-practices-report` cleanup report with summary, scope, source inventory,
-  finding index, next actions, and non-claims.
-- **Worktree triage**: Classifies current dirty entries, and
-  `--registered-worktree-audit` enumerates every `git worktree list`
-  registration for rescue/prune planning
+  human or agent to scan because they lack useful file-purpose, usage,
+  side-effect, function, or class documentation. This is readability debt, not
+  unused-code evidence.
+- **Public-readiness/security cleanup**: `--public-readiness` preserves
+  gitleaks and GitHub settings blockers for maintainer triage without changing
+  repository visibility or allowlists automatically.
+- **Quality-gate cleanup**: `--quality-gate` runs selected project-native
+  parse, lint, type, and test gates when available and reports missing or
+  unestablished gates as scoped blockers.
+- **Memory-index cleanup**: `--memory-index` invokes `$ingest-code --treesitter`
+  and writes a local searchability/offline-artifact receipt for project agents.
+- **Evidence-first Markdown report**: `--plan` writes a prose-first cleanup
+  report that follows `$best-practices-report`: summary, scope,
+  source-of-truth inventory, finding index, outstanding/unknowns,
+  plan-ready next actions, and non-claims. It must not present cleanup counts as
+  dashboard health or readiness claims.
+- **Worktree triage**: Classifies current dirty git entries into
+  commit/archive/review buckets, and `--registered-worktree-audit` enumerates
+  every `git worktree list` registration for rescue/prune planning
 - **Dependency-safe quarantine**: Treats untracked source/config files as
   possible runtime dependencies of tracked code until import/readiness checks
   prove otherwise
 - **Nightly-readiness discipline**: Requires each project cleanup to preserve
   an easy sanity command, browser-oracle registry, best-practices receipts for
   changed relevant files, and a clean task commit/push boundary
-- **Clean worktree governance**: Allows a secondary clean worktree only for
-  commit isolation, with disclosure, live-repo proof, and later removal
-- **Reviewer-blocker receipts**: Treats unavailable `$ask`/WebGPT/Surf lanes as
-  external blockers with request, receipt, and lock-owner evidence
+- **Clean worktree governance**: Allows a secondary clean worktree for commit
+  isolation only when the live repo is dirty, but requires explicit disclosure,
+  live-repo proof after push, and later `git worktree remove`
+- **Reviewer-blocker receipts**: Treats unavailable `$ask`/WebGPT/Surf browser
+  lanes as external blockers with durable request, receipt, and lock-owner
+  evidence instead of killing or bypassing active reviewer processes
 - **Degraded marker honesty**: A `.ingest-code.json` that claims completion
   while scanning zero files, disabling the code index, or storing zero
   Tree-sitter symbols is degraded aggregate context, not complete indexing
@@ -78,18 +88,23 @@ This skill performs a deep assessment of the codebase to identify technical debt
   planning, auditing, or executing. Cleanup never ticks the watchdog, leases an
   issue, relabels an issue, closes an issue, or treats open GitHub issues as
   cleanup candidates.
+- **Agentic eval gate**: For skill cleanup, runs the target skill's
+  `fixtures/agentic_eval.json` through `$agentic-evals`. Cleanup records the
+  eval report, requires `readiness: READY`, and blocks the cleanup state when
+  the fixture is missing or non-READY.
 
 ## Evidence Model
 
 Indexing failures never stop non-mutating work. `--dry-run`, `--plan`, and
 `--worktree-audit` always run. `--plan`, `--execute`, and the default summary
-write a phase receipt with four independent states (`--dry-run` returns it
+write a phase receipt with five independent states (`--dry-run` returns it
 inline under `phase_receipt`):
 
 ```
 local_dependency_analysis: complete | incomplete | unavailable
 memory_indexing:           complete | blocked | unknown
 assessment:                complete
+agentic_evaluation:        complete | blocked | not_applicable
 mutation:                  allowed_limited | no_authorized_mutations
 ```
 
@@ -107,6 +122,7 @@ Each mutation class carries its own evidence requirement:
 | `quality_gate_validation` | explicit quality-gate request + scoped project-native parse/lint/type/test receipts | non-mutating assessment by default; blocks proof claims until selected gates run |
 | `memory_index_refresh` | explicit memory-index request + ingest-code receipt + `.ingest-code.json` + local artifact paths | non-cleanup mutation; indexes for project-agent recall/search |
 | `registered_worktree_rescue_prune` | explicit rescue/prune request + dirty secondary audit + active-process exclusion + pushed rescue branch receipt + clean status proof before remove | non-mutating audit by default; blocks prune/remove until rescue proof exists |
+| `agentic_evaluation` | target skill `fixtures/agentic_eval.json` run through `$agentic-evals` with `readiness: READY` | complete, blocked, or not_applicable |
 | `root_stray_mutation` | human owner decision | review-only |
 | `artifact_archive` | human owner decision | review-only |
 
@@ -127,7 +143,8 @@ is recorded in the phase receipt, and exits `0`. Automation should read
 `mutation_classes` in the receipt rather than inferring intent from the exit
 code alone.
 
-`$ingest-code scan` writes `.cleanup-evidence.json` in Phase 0 before Memory writes, so a Memory outage yields
+`$ingest-code scan` writes `.cleanup-evidence.json` in Phase 0, from local
+analysis, before any Memory write — so a Memory outage yields
 `local_dependency_analysis: complete` with `memory_indexing: blocked` rather than
 losing the analysis. See `references/cleanup-evidence-contract.md` for the
 `cleanup.evidence.v1` schema and per-candidate verdict semantics.
@@ -167,20 +184,14 @@ never per-file safety evidence. Every run states these limits explicitly:
    - Outdated documentation files
    - Script scanability gaps → non-mutating readability candidates for
      file-purpose, usage, side-effect, function, or class documentation
-   - Public-readiness blockers → non-mutating security/readiness candidates for
-     gitleaks history triage, noisy working-directory scans, and GitHub
-     visibility/security/reporting review
-   - Quality-gate blockers → non-mutating parse/lint/type/test candidates for
-     the selected cleanup slice
 2. **Planning** (`--plan`): Generate a **Cleanup Report** markdown file that
    complies with `$best-practices-report`: top summary, scope,
    source-of-truth inventory, finding index, detailed evidence sections,
    outstanding/broken/unknowns, plan-ready next actions, and non-claims. The
    report shows phase states, proof limits, marker warnings, and one verdict row
    per candidate, including script scanability repair rows.
-3. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown
-   ownership/risk buckets for dirty files so agents do not blindly stage
-   unrelated work.
+3. **Worktree triage** (`--worktree-audit`): Generate JSON + Markdown ownership/risk
+   buckets for dirty files so agents do not blindly stage unrelated work.
 4. **Registered worktree rescue audit** (`--registered-worktree-audit`):
    Enumerate all worktree registrations, mark `/tmp`, detached, prunable,
    active, dirty, and clean removal candidates, and emit rescue/prune commands.
@@ -189,22 +200,33 @@ never per-file safety evidence. Every run states these limits explicitly:
    isolation.
 6. **Readiness baseline**: Resolve the project's `$browser-oracle` registry and
    run the project's easy sanity command before moving source-like files.
-7. **Project-watchdog coordination** (`$project-watchdog`): Read watchdog
-   registry/state. Active registered repos block cleanup execution until
-   dispatch/routing state is coordinated. This is read-only; cleanup never
-   queries, leases, relabels, resolves, or ticks issues.
-8. **Code evidence / searchability** (`$ingest-code`): Run `--memory-index` to invoke `$ingest-code scan "$PWD" --treesitter`, refreshing `.ingest-code.json`, `.cleanup-evidence.json`, and code-symbol JSONL.
-   Indexing helps project-agent search but is not required for assessment or untracked junk removal. For tracked mutation, run
-   `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
+7. **Project-watchdog coordination** (`$project-watchdog`): Read the shared
+   watchdog registry and state. If the current repo is registered and both the
+   global and project state are `active`, cleanup execution is blocked until
+   watchdog dispatch/routing state is coordinated or paused by an authorized
+   operator. This check is read-only; cleanup must not query or resolve GitHub
+   issues, acquire leases, or run watchdog ticks.
+8. **Code evidence / searchability** (`$ingest-code`): Only required to unblock
+   tracked-file mutation, never to run assessment. Run `--memory-index` to
+   invoke `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`,
+   refreshing `.ingest-code.json`, `.cleanup-evidence.json`, and code-symbol
+   JSONL artifacts where supported.
    If this leaves a completed marker with zero scanned files or a disabled code
    index, treat the marker as degraded and rely on `.cleanup-evidence.json` for
    local dependency analysis only.
-9. **Execution** (`--execute`): Perform authorized mutations with confirmation:
+9. **Agentic eval gate** (`$agentic-evals`): When cleanup is invoked from a
+   skill directory, run `fixtures/agentic_eval.json` through `$agentic-evals`
+   before reporting completion. A missing fixture, invalid report, non-zero
+   runner exit, or readiness other than `READY` is a blocked cleanup state.
+   Writing modes store the eval report under
+   `artifacts/cleanup/agentic-evals/<skill>.json`; `--dry-run` returns the same
+   gate data inline without writing the receipt file.
+10. **Execution** (`--execute`): Perform authorized mutations with confirmation:
    - Remove only untracked junk paths that cleared per-path provenance
      (`--force` skips the prompt, not the provenance check)
    - Keep root strays, artifacts, and tracked candidates review-only
    - Log all actions to `local/CLEANUP_LOG.md` and the phase receipt
-10. **Script scanability repair**: When the requested cleanup slice is explicitly
+11. **Script scanability repair**: When the requested cleanup slice is explicitly
    readability repair, add only non-behavioral documentation such as module
    docstrings, usage notes, side-effect notes, and useful function/class
    docstrings. Do not change script control flow, flags, imports, IO behavior,
@@ -212,18 +234,18 @@ never per-file safety evidence. Every run states these limits explicitly:
    slice with parse/compile plus each touched script's `--help`, entrypoint
    smoke, or narrow sanity command, then commit separately from deletion or
    archive cleanup.
-11. **Public-readiness/security triage**: For an explicit public-readiness
+12. **Public-readiness/security triage**: For an explicit public-readiness
    slice, run `--public-readiness`, preserve artifacts, triage gitleaks history
-   findings, narrow noisy working-directory scans, and require maintainer review
-   for GitHub visibility/security/reporting settings. See
+   findings, narrow noisy working-directory scans, and require maintainer
+   review for GitHub visibility/security/reporting settings. See
    `references/public-readiness-security.md`.
-12. **Quality-gate validation**: For an explicit validation slice, run
+13. **Quality-gate validation**: For an explicit validation slice, run
    `--quality-gate` and preserve the receipt. Missing configured tools,
    unexecuted required gates, or failed gates remain blockers. See
    `references/quality-gates.md`.
-13. **Post-cleanup proof**: Rerun the same sanity command and relevant
-   `best-practices-*` checks for changed files, then commit/push only the
-   coherent cleanup slice.
+14. **Post-cleanup proof**: Rerun the same sanity command, the target skill's
+   `$agentic-evals` fixture, and relevant `best-practices-*` checks for changed
+   files, then commit/push only the coherent cleanup slice.
 
 ## How to Use
 
@@ -237,18 +259,39 @@ never per-file safety evidence. Every run states these limits explicitly:
    non-mutating public-readiness/security lane.
 6. Run `bash .pi/skills/cleanup/run.sh --quality-gate` for the selected
    non-mutating quality-gate lane.
-7. Run `bash .pi/skills/cleanup/run.sh --memory-index` for Memory searchability and local offline code-symbol artifacts.
-8. Use `--worktree-audit` for dirty trees and `--registered-worktree-audit` for
-   stray secondary worktrees; review the audit before `--execute`.
-9. Read `artifacts/cleanup/cleanup_receipt.json` (or `--receipt`) to see which
-   phase blocked and how to resume it.
+7. Run `bash .pi/skills/cleanup/run.sh --memory-index` for Memory
+   searchability and local offline code-symbol artifacts.
+8. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
+9. Use `--registered-worktree-audit` for stray secondary worktrees; review the
+   audit before rescue/prune.
+10. If a clean worktree is needed for commit isolation, record both paths in the
+   plan: the live repo of record and the temporary commit worktree.
+11. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
+12. Use `--force` only to skip the confirmation prompt for junk removal. It
+   cannot bypass per-path provenance or authorize any other mutation class.
+13. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
+   with `--receipt`) to see which phase blocked and how to resume it.
+14. For a skill target, read
+    `artifacts/cleanup/agentic-evals/<skill>.json` to inspect the `$agentic-evals`
+    report that made `agentic_evaluation` complete or blocked.
+
+## Environment
+
+The skill reads no environment variables. `CLEANUP_ARCHIVE_ROOT` and
+`--archive-root` were removed: archiving became review-only, which left the
+archive mover with no callers, and the knobs configured a code path that could
+not run. Archiving a root artifact is a human decision, made with `mv`.
 
 ## Own Output Paths
 
-Cleanup excludes its own outputs (`.cleanup-evidence.json`, `.ingest-code.json`,
-`artifacts/cleanup/`, `local/CLEANUP_LOG*`, `CLEANUP_PLAN.md`) from findings and
-lists them under `own_cleanup_outputs`. They are excluded, not hidden; add them
-to `.gitignore` separately because cleanup does not edit `.gitignore`.
+Cleanup excludes what it and its evidence producer write — `.cleanup-evidence.json`,
+`.ingest-code.json`, `artifacts/cleanup/`, `local/CLEANUP_LOG*`, `CLEANUP_PLAN.md`
+— from root strays and untracked findings, and lists them separately under
+`own_cleanup_outputs`. Without this a successful run leaves artifacts that the
+next run reports as work, so cleanup manufactures findings for itself.
+
+They are excluded, not hidden. Add them to the project's `.gitignore` as well;
+cleanup does not edit `.gitignore`.
 
 ## Safety Features
 
@@ -258,9 +301,10 @@ to `.gitignore` separately because cleanup does not edit `.gitignore`.
   usage, side-effect, function, or class documentation makes a script a
   readability repair candidate. It never proves the script is unused, stale,
   removable, or safe to archive.
-- **Script scanability repair is explicit and non-behavioral**: Repairs add
-  useful docstrings/comments and CLI descriptions without behavior changes, and
-  require parse/compile plus script help or a narrow sanity command.
+- **Script scanability repair is explicit and non-behavioral**: Cleanup may fix
+  scanability gaps only as an explicit readability slice. Repairs add useful
+  docstrings/comments and CLI descriptions without changing code behavior, and
+  must be proven with parse/compile plus script help or a narrow sanity command.
 - **Public-readiness is blocked until proven**: Cleanup may report public-review
   preparation, but must not claim a repository is safe to make public until
   gitleaks history findings, noisy dir scans, and GitHub settings review have
@@ -300,6 +344,12 @@ to `.gitignore` separately because cleanup does not edit `.gitignore`.
   the project-native command that answers "is this project basically working?"
   If none exists, add one before broad cleanup. Store receipts under an ignored
   artifact path and document the command in `README.md` and project knowledge.
+- **Every skill needs a working agentic eval**: A skill cleanup must not finish
+  from fixture presence alone. The target skill's `fixtures/agentic_eval.json`
+  must run through `$agentic-evals`, produce a parseable
+  `agentic_evals.report.v1` report, and reach `readiness: READY`. Missing or
+  non-READY evals are blocked cleanup states with resume commands in the
+  receipt.
 - **Every project needs a browser-oracle registry**: Resolve
   `.ask/browser-oracles.yaml` with `$browser-oracle`. If the registry is missing,
   add it. If the machine-local tab binding is stale, report the stale binding
@@ -346,6 +396,7 @@ to `.gitignore` separately because cleanup does not edit `.gitignore`.
 | `--force` | Skip the junk confirmation prompt only; cannot bypass provenance or authorize another class |
 | `--output <file>` | Specify output file for plan (default: CLEANUP_PLAN.md) |
 | `--receipt <file>` | Phase receipt path (default: artifacts/cleanup/cleanup_receipt.json) |
+| `--agentic-eval-timeout <seconds>` | Per-trial timeout passed to `$agentic-evals` for the target skill fixture (default: 120) |
 
 ## Worktree Triage Contract
 
@@ -446,7 +497,10 @@ Use the previous cleanup receipt as the baseline:
   update `complies`, and run the skill's `sanity.sh` or scoped tests.
 
 The final cleanup receipt must list `checked`, `skipped_unchanged`,
-`failed`, and `not_applicable` counts by best-practices skill.
+`failed`, and `not_applicable` counts by best-practices skill and for the
+`agentic_evaluation` gate. For skill targets, `checked: 1` and `readiness:
+READY` are required before cleanup can be reported as complete; `--dry-run`
+may return the report inline instead of writing the receipt file.
 
 ## Browser Reviewer And Oracle Blockers
 
@@ -455,33 +509,28 @@ shared external resources. If `/ask` no longer routes WebGPT, a browser-oracle
 binding is stale, or Surf reports an active browser lock, write a blocker receipt
 instead of improvising a substitute.
 
-Required blocker receipt fields:
+The blocker receipt must name the requested reviewer, binding, request bundle,
+command, stderr/status excerpt, lock owner details if present, whether a prompt
+was submitted, and the resume command. Valid outcomes are `review_complete`,
+`review_blocked_external`, and `review_not_applicable`. Do not use low-level
+browser typing, kill another lock owner, or claim review completion from a
+prepared prompt, stale tab text, or missing clean/raw/meta artifacts.
 
-- requested reviewer backend and project binding.
-- request bundle path.
-- command attempted.
-- stderr/status excerpt.
-- active lock path, owner pid, owner command, and created timestamp when Surf
-  reports a browser lock.
-- whether any prompt was actually submitted.
-- resume command to rerun after the lock clears.
+## Maintenance-State Findings
 
-Allowed outcomes:
+Cleanup often exercises Docker rebuilds, service restarts, migrations, and
+health checks. When a UI or caller reports degraded status during such a window,
+classify the event before calling it an outage:
 
-- `review_complete`: clean/raw/meta reviewer artifacts exist and match the
-  sentinel or reviewer schema.
-- `review_blocked_external`: no prompt submitted, or completion proof missing
-  because of a browser/provider/tool lock.
-- `review_not_applicable`: the project has no reviewable surface and the
-  cleanup plan explains why.
+- `expected_maintenance`: rebuild, restart, migration, or dependency startup is
+  in progress and operators know the service is temporarily unavailable.
+- `unexpected_degradation`: 5xx, timeout, failed health, or import/runtime error
+  outside a declared maintenance window.
+- `healthcheck_mismatch`: the service works through its API, but an orchestrator
+  such as Docker reports unhealthy.
 
-Forbidden outcomes:
-
-- Do not use low-level browser typing/clicking as a substitute for the
-  documented reviewer runtime.
-- Do not kill another active browser-handler process to free a lock.
-- Do not claim WebGPT review completion from a prepared prompt, stale tab text,
-  or missing clean/raw/meta artifacts.
+Project-state output should recommend a first-class maintenance/rebuild status
+when clients otherwise collapse expected maintenance into a generic 502 banner.
 
 ## Nightly Subagent Commit Boundary
 
@@ -491,8 +540,5 @@ cleanup slice: sanity runner, documentation, browser-oracle registry, and
 reviewed moves/restores. Do not stage unrelated dirty worktree entries just to
 make the branch look clean.
 
-## Artifact Extensions Detected
-
-Audio/video/model/archive/data/image artifacts include `.wav`, `.mp4`, `.pt`,
-`.ckpt`, `.safetensors`, `.gguf`, `.zip`, `.parquet`, `.npy`, `.tif`, and related
-binary formats.
+Artifact extension sets live in `cleanup.py` and include audio, video, model,
+archive, data, and large-image formats.

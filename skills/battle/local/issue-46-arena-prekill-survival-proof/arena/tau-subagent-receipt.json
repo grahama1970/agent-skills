@@ -1,0 +1,60 @@
+{
+  "context": {
+    "actor_type": "tau",
+    "artifacts_read": [
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-handoff.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-research-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/scenario.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/hidden-ground-truth.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/target/app.py",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/target/exploit_check.py"
+    ],
+    "assumptions": [
+      "Arena sees performance history but does not judge the current round.",
+      "Hidden ground truth is not visible to Red or Blue."
+    ],
+    "run_id": "arena-prekill-survival-20260728T170820Z-arena",
+    "subagent": "battle-arena",
+    "unknowns": []
+  },
+  "evidence": [
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-handoff.json",
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-research-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/scenario.json",
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/hidden-ground-truth.json",
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/target/app.py",
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/target/exploit_check.py"
+  ],
+  "goal": {
+    "goal_hash": "sha256:d3c593d9f7cb19c8902b1a34dae875f1023631f34e420bf75f4bb1c2becb8190",
+    "goal_id": "goal-battle-battle-004-arena",
+    "goal_version": 1,
+    "immutable_goal_preserved": true
+  },
+  "next": {
+    "executor": "local",
+    "reason": "Scenario and hidden oracle are ready for Red/Blue dispatch.",
+    "subagent": "battle-red-blue-dispatch"
+  },
+  "rationale": "Arena built the next hidden-bug Battle scenario for scorekeeper replay.",
+  "result": {
+    "artifacts": [
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-handoff.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-research-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/scenario.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/hidden-ground-truth.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/arena-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/target/app.py",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/arena/target/exploit_check.py"
+    ],
+    "commands_run": [],
+    "live": true,
+    "mocked": false,
+    "status": "PASS",
+    "summary": "Arena selected and built one researched hidden-bug scenario."
+  },
+  "schema": "tau.subagent_receipt.v1",
+  "stop_condition": "Red/Blue consume the public scenario while scorekeeper retains hidden truth."
+}

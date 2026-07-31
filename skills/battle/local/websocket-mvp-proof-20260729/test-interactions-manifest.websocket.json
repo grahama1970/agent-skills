@@ -1,0 +1,771 @@
+{
+  "version": 1,
+  "app": "Battle Spectator",
+  "base_url": "http://127.0.0.1:4173/#battle",
+  "discovery": {
+    "generated_at": "2026-07-29T14:19:26.738328+00:00",
+    "states": 1,
+    "qid_only_executable_selectors": true,
+    "focus": "patched live-route controls; one unique hash route per element to force remount"
+  },
+  "surfaces": [
+    {
+      "name": "battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-events-item-battle-004-pr6-genetic-pixi-branch_abandoned-22",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:branch_abandoned:22']",
+              "description": "Discovered live interaction: battle:events:item:battle-004-pr6-genetic-pixi:branch_abandoned:22",
+              "assert_visible": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:branch_abandoned:22']",
+              "assert_title": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:branch_abandoned:22']",
+              "assert_qs_action": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:branch_abandoned:22']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-events-item-battle-004-pr6-genetic-pixi-judge_pending-21",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:judge_pending:21']",
+              "description": "Discovered live interaction: battle:events:item:battle-004-pr6-genetic-pixi:judge_pending:21",
+              "assert_visible": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:judge_pending:21']",
+              "assert_title": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:judge_pending:21']",
+              "assert_qs_action": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:judge_pending:21']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-events-item-battle-004-pr6-genetic-pixi-target_contact_unproven-20",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:target_contact_unproven:20']",
+              "description": "Discovered live interaction: battle:events:item:battle-004-pr6-genetic-pixi:target_contact_unproven:20",
+              "assert_visible": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:target_contact_unproven:20']",
+              "assert_title": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:target_contact_unproven:20']",
+              "assert_qs_action": "[data-qid='battle:events:item:battle-004-pr6-genetic-pixi:target_contact_unproven:20']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-events-view-all-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-events-view-all-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-events-view-all",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:events:view-all']",
+              "description": "Discovered live interaction: battle:events:view-all",
+              "assert_visible": "[data-qid='battle:events:view-all']",
+              "assert_title": "[data-qid='battle:events:view-all']",
+              "assert_qs_action": "[data-qid='battle:events:view-all']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-pane-left-toggle-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-pane-left-toggle-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-pane-left-toggle",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:pane:left-toggle']",
+              "description": "Discovered live interaction: battle:pane:left-toggle",
+              "assert_visible": "[data-qid='battle:pane:left-toggle']",
+              "assert_title": "[data-qid='battle:pane:left-toggle']",
+              "assert_qs_action": "[data-qid='battle:pane:left-toggle']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-leaderboard-item-payload-857-receipt-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-leaderboard-item-payload-857-receipt-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-leaderboard-item-payload-857-receipt",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:leaderboard:item:payload-857-receipt']",
+              "description": "Discovered live interaction: battle:leaderboard:item:payload-857-receipt",
+              "assert_visible": "[data-qid='battle:leaderboard:item:payload-857-receipt']",
+              "assert_title": "[data-qid='battle:leaderboard:item:payload-857-receipt']",
+              "assert_qs_action": "[data-qid='battle:leaderboard:item:payload-857-receipt']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-leaderboard-item-payload-857-red-1-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-leaderboard-item-payload-857-red-1-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-leaderboard-item-payload-857-red-1",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:leaderboard:item:payload-857-red-1']",
+              "description": "Discovered live interaction: battle:leaderboard:item:payload-857-red-1",
+              "assert_visible": "[data-qid='battle:leaderboard:item:payload-857-red-1']",
+              "assert_title": "[data-qid='battle:leaderboard:item:payload-857-red-1']",
+              "assert_qs_action": "[data-qid='battle:leaderboard:item:payload-857-red-1']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-timeline-zoom-out-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-timeline-zoom-out-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-timeline-zoom-out",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:zoom:out']",
+              "description": "Discovered live interaction: battle:timeline:zoom:out",
+              "assert_visible": "[data-qid='battle:timeline:zoom:out']",
+              "assert_title": "[data-qid='battle:timeline:zoom:out']",
+              "assert_qs_action": "[data-qid='battle:timeline:zoom:out']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-timeline-zoom-in-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-timeline-zoom-in-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-timeline-zoom-in",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:zoom:in']",
+              "description": "Discovered live interaction: battle:timeline:zoom:in",
+              "assert_visible": "[data-qid='battle:timeline:zoom:in']",
+              "assert_title": "[data-qid='battle:timeline:zoom:in']",
+              "assert_qs_action": "[data-qid='battle:timeline:zoom:in']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-lane-payload-857-receipt-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-lane-payload-857-receipt-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-lane-payload-857-receipt",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-857-receipt']",
+              "description": "Discovered live interaction: battle:lane:payload-857-receipt",
+              "assert_visible": "[data-qid='battle:lane:payload-857-receipt']",
+              "assert_title": "[data-qid='battle:lane:payload-857-receipt']",
+              "assert_qs_action": "[data-qid='battle:lane:payload-857-receipt']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-lane-collapse-payload-857-receipt-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-lane-collapse-payload-857-receipt-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-lane-collapse-payload-857-receipt",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:collapse:payload-857-receipt']",
+              "description": "Discovered live interaction: battle:lane:collapse:payload-857-receipt",
+              "assert_visible": "[data-qid='battle:lane:collapse:payload-857-receipt']",
+              "assert_title": "[data-qid='battle:lane:collapse:payload-857-receipt']",
+              "assert_qs_action": "[data-qid='battle:lane:collapse:payload-857-receipt']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-lane-payload-857-red-1-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-lane-payload-857-red-1-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-lane-payload-857-red-1",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:payload-857-red-1']",
+              "description": "Discovered live interaction: battle:lane:payload-857-red-1",
+              "assert_visible": "[data-qid='battle:lane:payload-857-red-1']",
+              "assert_title": "[data-qid='battle:lane:payload-857-red-1']",
+              "assert_qs_action": "[data-qid='battle:lane:payload-857-red-1']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-timeline-scrub-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-timeline-scrub-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-timeline-scrub",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:scrub']",
+              "description": "Discovered live interaction: battle:timeline:scrub",
+              "assert_visible": "[data-qid='battle:timeline:scrub']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-pane-right-toggle-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-pane-right-toggle-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-pane-right-toggle",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:pane:right-toggle']",
+              "description": "Discovered live interaction: battle:pane:right-toggle",
+              "assert_visible": "[data-qid='battle:pane:right-toggle']",
+              "assert_title": "[data-qid='battle:pane:right-toggle']",
+              "assert_qs_action": "[data-qid='battle:pane:right-toggle']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-agent-pane-replay-red-0__blue-0-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-agent-pane-replay-red-0__blue-0-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-agent-pane-replay-red-0__blue-0",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:replay:red-0__blue-0']",
+              "description": "Discovered live interaction: battle:agent-pane:replay:red-0__blue-0",
+              "assert_visible": "[data-qid='battle:agent-pane:replay:red-0__blue-0']",
+              "assert_title": "[data-qid='battle:agent-pane:replay:red-0__blue-0']",
+              "assert_qs_action": "[data-qid='battle:agent-pane:replay:red-0__blue-0']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-agent-pane-lifecycle-toggle-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-agent-pane-lifecycle-toggle-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-agent-pane-lifecycle-toggle",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:lifecycle-toggle']",
+              "description": "Discovered live interaction: battle:agent-pane:lifecycle-toggle",
+              "assert_visible": "[data-qid='battle:agent-pane:lifecycle-toggle']",
+              "assert_title": "[data-qid='battle:agent-pane:lifecycle-toggle']",
+              "assert_qs_action": "[data-qid='battle:agent-pane:lifecycle-toggle']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-agent-pane-tab-summary-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-agent-pane-tab-summary-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-agent-pane-tab-summary",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:tab:summary']",
+              "description": "Discovered live interaction: battle:agent-pane:tab:summary",
+              "assert_visible": "[data-qid='battle:agent-pane:tab:summary']",
+              "assert_title": "[data-qid='battle:agent-pane:tab:summary']",
+              "assert_qs_action": "[data-qid='battle:agent-pane:tab:summary']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-agent-pane-tab-live-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-agent-pane-tab-live-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-agent-pane-tab-live",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:tab:live']",
+              "description": "Discovered live interaction: battle:agent-pane:tab:live",
+              "assert_visible": "[data-qid='battle:agent-pane:tab:live']",
+              "assert_title": "[data-qid='battle:agent-pane:tab:live']",
+              "assert_qs_action": "[data-qid='battle:agent-pane:tab:live']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-agent-pane-tab-logs-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-agent-pane-tab-logs-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-agent-pane-tab-logs",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:tab:logs']",
+              "description": "Discovered live interaction: battle:agent-pane:tab:logs",
+              "assert_visible": "[data-qid='battle:agent-pane:tab:logs']",
+              "assert_title": "[data-qid='battle:agent-pane:tab:logs']",
+              "assert_qs_action": "[data-qid='battle:agent-pane:tab:logs']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-agent-pane-tab-skills-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-agent-pane-tab-skills-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-agent-pane-tab-skills",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:tab:skills']",
+              "description": "Discovered live interaction: battle:agent-pane:tab:skills",
+              "assert_visible": "[data-qid='battle:agent-pane:tab:skills']",
+              "assert_title": "[data-qid='battle:agent-pane:tab:skills']",
+              "assert_qs_action": "[data-qid='battle:agent-pane:tab:skills']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-agent-pane-tab-receipts-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-agent-pane-tab-receipts-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-agent-pane-tab-receipts",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:agent-pane:tab:receipts']",
+              "description": "Discovered live interaction: battle:agent-pane:tab:receipts",
+              "assert_visible": "[data-qid='battle:agent-pane:tab:receipts']",
+              "assert_title": "[data-qid='battle:agent-pane:tab:receipts']",
+              "assert_qs_action": "[data-qid='battle:agent-pane:tab:receipts']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-playhead-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-playhead-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-playhead",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:playhead']",
+              "description": "Discovered live interaction: battle:control:playhead",
+              "assert_visible": "[data-qid='battle:control:playhead']",
+              "assert_title": "[data-qid='battle:control:playhead']",
+              "assert_qs_action": "[data-qid='battle:control:playhead']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-highlight-next-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-highlight-next-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-highlight-next",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:highlight-next']",
+              "description": "Discovered live interaction: battle:control:highlight-next",
+              "assert_visible": "[data-qid='battle:control:highlight-next']",
+              "assert_title": "[data-qid='battle:control:highlight-next']",
+              "assert_qs_action": "[data-qid='battle:control:highlight-next']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-highlight-reel-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-highlight-reel-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-highlight-reel",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:highlight-reel']",
+              "description": "Discovered live interaction: battle:control:highlight-reel",
+              "assert_visible": "[data-qid='battle:control:highlight-reel']",
+              "assert_title": "[data-qid='battle:control:highlight-reel']",
+              "assert_qs_action": "[data-qid='battle:control:highlight-reel']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-sound-arm-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-sound-arm-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-sound-arm",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:sound-arm']",
+              "description": "Discovered live interaction: battle:control:sound-arm",
+              "assert_visible": "[data-qid='battle:control:sound-arm']",
+              "assert_title": "[data-qid='battle:control:sound-arm']",
+              "assert_qs_action": "[data-qid='battle:control:sound-arm']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-speed-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-speed-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-speed",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:speed']",
+              "description": "Discovered live interaction: battle:control:speed",
+              "assert_visible": "[data-qid='battle:control:speed']",
+              "assert_title": "[data-qid='battle:control:speed']",
+              "assert_qs_action": "[data-qid='battle:control:speed']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-speed-1x-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-speed-1x-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-speed-1x",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:speed:1x']",
+              "description": "Discovered live interaction: battle:control:speed:1x",
+              "assert_visible": "[data-qid='battle:control:speed:1x']",
+              "assert_title": "[data-qid='battle:control:speed:1x']",
+              "assert_qs_action": "[data-qid='battle:control:speed:1x']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-speed-2x-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-speed-2x-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-speed-2x",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:speed:2x']",
+              "description": "Discovered live interaction: battle:control:speed:2x",
+              "assert_visible": "[data-qid='battle:control:speed:2x']",
+              "assert_title": "[data-qid='battle:control:speed:2x']",
+              "assert_qs_action": "[data-qid='battle:control:speed:2x']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-speed-4x-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-speed-4x-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-speed-4x",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:speed:4x']",
+              "description": "Discovered live interaction: battle:control:speed:4x",
+              "assert_visible": "[data-qid='battle:control:speed:4x']",
+              "assert_title": "[data-qid='battle:control:speed:4x']",
+              "assert_qs_action": "[data-qid='battle:control:speed:4x']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-speed-8x-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-speed-8x-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-speed-8x",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:speed:8x']",
+              "description": "Discovered live interaction: battle:control:speed:8x",
+              "assert_visible": "[data-qid='battle:control:speed:8x']",
+              "assert_title": "[data-qid='battle:control:speed:8x']",
+              "assert_qs_action": "[data-qid='battle:control:speed:8x']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-toolbar-filter-all-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-toolbar-filter-all-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-toolbar-filter-all",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:toolbar:filter:all']",
+              "description": "Discovered live interaction: battle:toolbar:filter:all",
+              "assert_visible": "[data-qid='battle:toolbar:filter:all']",
+              "assert_title": "[data-qid='battle:toolbar:filter:all']",
+              "assert_qs_action": "[data-qid='battle:toolbar:filter:all']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-toolbar-filter-red-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-toolbar-filter-red-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-toolbar-filter-red",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:toolbar:filter:red']",
+              "description": "Discovered live interaction: battle:toolbar:filter:red",
+              "assert_visible": "[data-qid='battle:toolbar:filter:red']",
+              "assert_title": "[data-qid='battle:toolbar:filter:red']",
+              "assert_qs_action": "[data-qid='battle:toolbar:filter:red']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-toolbar-filter-blue-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-toolbar-filter-blue-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-toolbar-filter-blue",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:toolbar:filter:blue']",
+              "description": "Discovered live interaction: battle:toolbar:filter:blue",
+              "assert_visible": "[data-qid='battle:toolbar:filter:blue']",
+              "assert_title": "[data-qid='battle:toolbar:filter:blue']",
+              "assert_qs_action": "[data-qid='battle:toolbar:filter:blue']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-toolbar-filter-useful-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-toolbar-filter-useful-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-toolbar-filter-useful",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:toolbar:filter:useful']",
+              "description": "Discovered live interaction: battle:toolbar:filter:useful",
+              "assert_visible": "[data-qid='battle:toolbar:filter:useful']",
+              "assert_title": "[data-qid='battle:toolbar:filter:useful']",
+              "assert_qs_action": "[data-qid='battle:toolbar:filter:useful']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-toolbar-filter-receipt-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-toolbar-filter-receipt-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-toolbar-filter-receipt",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:toolbar:filter:receipt']",
+              "description": "Discovered live interaction: battle:toolbar:filter:receipt",
+              "assert_visible": "[data-qid='battle:toolbar:filter:receipt']",
+              "assert_title": "[data-qid='battle:toolbar:filter:receipt']",
+              "assert_qs_action": "[data-qid='battle:toolbar:filter:receipt']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-event-blue-patch-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-event-blue-patch-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-event-blue-patch",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:event:blue-patch']",
+              "description": "Discovered live interaction: battle:control:event:blue-patch",
+              "assert_visible": "[data-qid='battle:control:event:blue-patch']",
+              "assert_title": "[data-qid='battle:control:event:blue-patch']",
+              "assert_qs_action": "[data-qid='battle:control:event:blue-patch']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-control-event-blue-block-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-control-event-blue-block-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-control-event-blue-block",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:event:blue-block']",
+              "description": "Discovered live interaction: battle:control:event:blue-block",
+              "assert_visible": "[data-qid='battle:control:event:blue-block']",
+              "assert_title": "[data-qid='battle:control:event:blue-block']",
+              "assert_qs_action": "[data-qid='battle:control:event:blue-block']"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "battle-stream-jsonl-open-fresh-unique",
+      "path": "/live?engine=pixi&battle=battle-004&transport=websocket&liveBase=http%3A%2F%2F127.0.0.1%3A18765&ti=battle-stream-jsonl-open-fresh",
+      "qid_compliance": false,
+      "elements": [
+        {
+          "name": "battle-stream-jsonl-open",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:stream:jsonl-open']",
+              "description": "Discovered live interaction: battle:stream:jsonl-open",
+              "assert_visible": "[data-qid='battle:stream:jsonl-open']",
+              "assert_title": "[data-qid='battle:stream:jsonl-open']",
+              "assert_qs_action": "[data-qid='battle:stream:jsonl-open']"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

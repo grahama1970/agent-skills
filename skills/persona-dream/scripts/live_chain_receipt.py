@@ -79,6 +79,18 @@ def rel(path: Path) -> str:
         return str(path)
 
 
+def repo_portable(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: repo_portable(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [repo_portable(item) for item in value]
+    if isinstance(value, str):
+        marker = "skills/persona-dream/"
+        if marker in value:
+            return value[value.index(marker):]
+    return value
+
+
 def artifact(path: Path) -> dict[str, Any]:
     return {
         "path": rel(path),
@@ -165,7 +177,34 @@ def memory_exact_create(collection: str, doc: dict) -> dict:
 def service_health() -> dict:
     memory = get_json(f"{GMO}/health")
     chatterbox = get_json(f"{session_mood_chatterbox_live.CHATTERBOX}/health")
-    return {"memory": memory, "chatterbox": chatterbox}
+    return repo_portable({"memory": memory, "chatterbox": chatterbox})
+
+
+def session_mood_ordering(binding: dict, mood_selected_at: str, first_turn_at: str) -> dict[str, Any]:
+    bound_seq = binding.get("bound_seq")
+    first_turn_seq = binding.get("first_turn_seq")
+    sequence_ordered = (
+        isinstance(bound_seq, int)
+        and isinstance(first_turn_seq, int)
+        and binding.get("selected_before_first_turn") is True
+        and bound_seq < first_turn_seq
+    )
+    timestamp_ordered = mood_selected_at < first_turn_at
+    evidence = {
+        "mood_bound_seq": bound_seq,
+        "first_turn_seq": first_turn_seq,
+        "mood_selected_at": mood_selected_at,
+        "first_turn_at": first_turn_at,
+        "selected_before_first_turn": sequence_ordered,
+        "selected_before_first_turn_by_sequence": sequence_ordered,
+        "selected_before_first_turn_by_timestamp": timestamp_ordered,
+    }
+    if sequence_ordered and not timestamp_ordered:
+        evidence["timestamp_boundary_note"] = (
+            "Binding order is enforced by sequence; second-granularity timestamps "
+            "may be equal when mood binding and first render happen in the same second."
+        )
+    return evidence
 
 
 def accepted_source_bundle(source_cycle: Path) -> dict:
@@ -559,6 +598,7 @@ def run_chain(args: argparse.Namespace) -> dict:
     status = "PASS_PERSONA_DREAM_LIVE_CHAIN" if all(
         row["status"] == "PASS_NEGATIVE_BLOCKED" for row in negatives
     ) else "BLOCKED_PERSONA_DREAM_LIVE_CHAIN"
+    mood_ordering = session_mood_ordering(live_receipt["binding"], mood_selected_at, first_turn_at)
     receipt = {
         "schema": "persona_dream.live_chain_receipt.v1",
         "created_at": utc_now(),
@@ -623,9 +663,7 @@ def run_chain(args: argparse.Namespace) -> dict:
                 "status": live_receipt["status"],
                 "mocked": False,
                 "live": True,
-                "mood_selected_at": mood_selected_at,
-                "first_turn_at": first_turn_at,
-                "selected_before_first_turn": mood_selected_at < first_turn_at,
+                **mood_ordering,
                 "receipt": artifact(live_receipt_path),
                 "session_mood_id": live_receipt["binding"]["session_mood"]["mood_id"],
                 "turns": [
