@@ -11,6 +11,7 @@ Orchestrates searches across:
 - GitHub (Repos & Issues)
 - ArXiv (Papers)
 - YouTube (Videos)
+- Context7 (Library docs, opt-in)
 - Readarr (Books/Usenet, opt-in)
 - Wayback Machine (Archives, opt-in)
 """
@@ -63,6 +64,9 @@ def search(
     with_feeds: bool = typer.Option(False, "--with-feeds", help="Include configured consume-feed RSS monitor dry-run"),
     feed_limit: int = typer.Option(3, "--feed-limit", min=1, max=25, help="Max feed items per source when --with-feeds is used"),
     feed_pack: str = typer.Option("security_code", "--feed-pack", help="Dogpile feed pack to use with --with-feeds; empty string uses consume-feed config"),
+    with_context7: bool = typer.Option(False, "--with-context7", help="Include Context7 current library/API documentation lookup"),
+    context7_library: Optional[str] = typer.Option(None, "--context7-library", help="Library name or Context7 library ID for --with-context7, e.g. react or /facebook/react"),
+    context7_tokens: int = typer.Option(3000, "--context7-tokens", min=500, max=10000, help="Max Context7 documentation tokens to request"),
     html_report: bool = typer.Option(False, "--html-report", help="Write a self-contained HTML/CSS report"),
     open_report: bool = typer.Option(False, "--open-report", help="Open the HTML report in your browser"),
     report_file: Optional[Path] = typer.Option(None, "--report-file", help="Write the HTML report to a specific path"),
@@ -119,6 +123,9 @@ def search(
             with_feeds=with_feeds,
             feed_limit=feed_limit,
             feed_pack=feed_pack,
+            with_context7=with_context7,
+            context7_library=context7_library,
+            context7_tokens=context7_tokens,
             html_report=html_report,
             open_report=open_report,
             report_file=report_file,

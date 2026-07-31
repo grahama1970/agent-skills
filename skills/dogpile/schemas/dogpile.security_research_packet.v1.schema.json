@@ -72,6 +72,7 @@
           "repository_ref": {"type": ["string", "null"]},
           "paper_id": {"type": ["string", "null"]},
           "video_id": {"type": ["string", "null"]},
+          "library_id": {"type": ["string", "null"]},
           "title": {"type": "string"},
           "retrieved_at": {"type": "string"},
           "excerpt": {"type": "string"},

@@ -40,7 +40,7 @@ def classify_source_bearing_record(record: dict[str, Any], *, base_dir: Path | N
             return {"source_bearing": False, "reason": "artifact hash mismatch"}
     has_identity = any(
         isinstance(record.get(key), str) and record.get(key, "").strip()
-        for key in ("url", "repository", "paper_id", "video_id")
+        for key in ("url", "repository", "paper_id", "video_id", "library_id")
     )
     if provider == "github" or source_type == "github_repository":
         has_receipt = bool(record.get("github_search_receipt") or record.get("evaluation_receipt") or record.get("source_bearing"))
@@ -48,12 +48,13 @@ def classify_source_bearing_record(record: dict[str, Any], *, base_dir: Path | N
             "source_bearing": bool(has_identity and has_receipt),
             "reason": "github evaluation receipt bound" if has_identity and has_receipt else "missing github-search evaluation receipt",
         }
-    if source_type in {"web_page", "paper", "video", "feed_snapshot"} or provider in {
+    if source_type in {"web_page", "paper", "video", "feed_snapshot", "library_docs"} or provider in {
         "brave",
         "brave_questions",
         "arxiv",
         "youtube",
         "feeds",
+        "context7",
     }:
         return {
             "source_bearing": bool(has_identity or source_type == "feed_snapshot"),

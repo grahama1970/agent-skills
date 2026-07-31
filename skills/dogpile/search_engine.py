@@ -64,6 +64,9 @@ def _run_search(
     with_feeds: bool = False,
     feed_limit: int = 3,
     feed_pack: str = "security_code",
+    with_context7: bool = False,
+    context7_library: Optional[str] = None,
+    context7_tokens: int = 3000,
     html_report: bool = False,
     open_report: bool = False,
     report_file: Optional[Path] = None,
@@ -128,7 +131,7 @@ def _run_search(
             console.print(f"  [cyan]{svc}:[/cyan] {q[:60]}...")
     else:
         # Use same query for all services
-        tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube", "readarr", "feeds"]}
+        tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube", "readarr", "feeds", "context7"]}
 
     # Override Brave query with preset-filtered query if active
     if preset_brave_query:
@@ -184,6 +187,9 @@ def _run_search(
             with_feeds=with_feeds,
             feed_limit=feed_limit,
             feed_pack=feed_pack,
+            with_context7=with_context7,
+            context7_library=context7_library,
+            context7_tokens=context7_tokens,
             publisher=publisher,
             on_result=schedule_stage2,
             monitor=monitor,
@@ -245,6 +251,7 @@ def _run_search(
     readarr_res = stage1_results["readarr"]
     wayback_res = stage1_results["wayback"]
     feeds_res = stage1_results["feeds"]
+    context7_res = stage1_results["context7"]
     codex_src_res = stage1_results["codex_knowledge"]
 
     github_stage2 = stage2_results.get("github", {})
@@ -299,6 +306,7 @@ def _run_search(
         brave_res=brave_res,
         brave_questions_res=brave_questions_res,
         feeds_res=feeds_res,
+        context7_res=context7_res,
         brave_deep=brave_deep,
         arxiv_res=arxiv_res,
         arxiv_details=arxiv_details,
@@ -376,7 +384,7 @@ def _run_search(
                 ("brave", brave_res), ("brave_questions", brave_questions_res), ("perplexity", perp_res),
                 ("github", github_res), ("arxiv", arxiv_res),
                 ("youtube", youtube_res), ("readarr", readarr_res),
-                ("wayback", wayback_res), ("feeds", feeds_res), ("codex", codex_src_res),
+                ("wayback", wayback_res), ("feeds", feeds_res), ("context7", context7_res), ("codex", codex_src_res),
             ]:
                 if res and not (isinstance(res, dict) and ("error" in res or "skipped" in res)):
                     sources_searched.append(name)

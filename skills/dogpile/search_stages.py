@@ -37,6 +37,7 @@ from dogpile.youtube_search import search_youtube
 from dogpile.wayback import search_wayback
 from dogpile.readarr import search_readarr
 from dogpile.feeds import search_feeds
+from dogpile.context7_docs import search_context7_docs
 
 PARTIAL_RESULTS_PATH = _SCRIPT_DIR / "dogpile_partial_results.json"
 
@@ -151,6 +152,12 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
         summary["output_chars"] = len(stdout)
         summary["source_bearing_evidence_count"] = 1 if stdout else 0
         summary["source_bearing"] = bool(stdout)
+    elif name == "context7" and isinstance(result, dict):
+        summary["selected_library_id"] = result.get("selected_library_id")
+        summary["context_chars"] = result.get("context_chars", 0)
+        summary["source_bearing_evidence_count"] = 1 if result.get("selected_library_id") and result.get("context") else 0
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
+        summary["requires_api_key"] = True
     elif name == "wayback" and isinstance(result, dict):
         summary["has_snapshot"] = bool(result.get("closest") or result.get("snapshots"))
     elif name == "codex_knowledge":
@@ -405,6 +412,13 @@ def _collect_evidence_digest(
         lines.append(str(feeds_res.get("stdout", ""))[-1200:])
         lines.append("")
 
+    context7_res = stage1_results.get("context7", {})
+    if isinstance(context7_res, dict) and context7_res.get("context"):
+        lines.append("Context7 library documentation:")
+        lines.append(f"Library: {context7_res.get('selected_library_id') or context7_res.get('library')}")
+        lines.append(str(context7_res.get("context", ""))[:1200])
+        lines.append("")
+
     for stage_name, stage_result in stage2_results.items():
         lines.append(f"{stage_name} deep results summary: {json.dumps(_summarize_result(stage_name, stage_result), ensure_ascii=False)}")
 
@@ -463,6 +477,9 @@ def run_stage1_searches(
     with_feeds: bool = False,
     feed_limit: int = 3,
     feed_pack: str = "security_code",
+    with_context7: bool = False,
+    context7_library: Optional[str] = None,
+    context7_tokens: int = 3000,
     publisher: Optional[PartialResultsPublisher] = None,
     on_result=None,
     monitor=None,
@@ -482,6 +499,9 @@ def run_stage1_searches(
         with_feeds: Include consume-feed RSS monitor dry-run.
         feed_limit: Max items per configured feed source.
         feed_pack: Dogpile feed pack name, or empty string for consume-feed config.
+        with_context7: Include current library/API docs from Context7.
+        context7_library: Required library name or Context7 library ID for Context7.
+        context7_tokens: Max Context7 doc tokens to request.
 
     Returns:
         Dict with results from each provider
@@ -512,6 +532,12 @@ def run_stage1_searches(
         providers["wayback"] = (search_wayback, [query])
     if with_feeds:
         providers["feeds"] = (search_feeds, [query, feed_limit, None, feed_pack])
+    if with_context7:
+        providers["context7"] = (
+            search_context7_docs,
+            [tailored.get("context7", query)],
+            {"library": context7_library, "tokens": context7_tokens},
+        )
 
     # Provider status for Rich live display
     status: Dict[str, str] = {name: "[dim]waiting[/dim]" for name in providers}
@@ -533,10 +559,12 @@ def run_stage1_searches(
         if monitor:
             for name in providers:
                 monitor.start_provider(name)
-        future_to_name = {
-            executor.submit(fn, *args): name
-            for name, (fn, args) in providers.items()
-        }
+        future_to_name = {}
+        for name, provider_spec in providers.items():
+            fn = provider_spec[0]
+            args = provider_spec[1]
+            kwargs = provider_spec[2] if len(provider_spec) > 2 else {}
+            future_to_name[executor.submit(fn, *args, **kwargs)] = name
         # Mark all as searching
         for name in providers:
             status[name] = "[yellow]searching...[/yellow]"
@@ -620,6 +648,13 @@ def run_stage1_searches(
         skipped["feeds"] = {
             "skipped": "Feed monitors are disabled by default.",
             "hint": "Pass --with-feeds to run configured consume-feed RSS monitors as a dry-run lane.",
+        }
+    if not with_context7:
+        skipped["context7"] = {
+            "skipped": "Context7 library documentation lookup is disabled by default.",
+            "hint": "Pass --with-context7 --context7-library <library-or-/owner/repo> for current code/API documentation questions.",
+            "requires_api_key": True,
+            "required_env": "CONTEXT7_API_KEY",
         }
 
     for name, result in skipped.items():

@@ -2,8 +2,8 @@
 name: dogpile
 description: >
   Deep research aggregator that searches Brave (Web), GitHub (Code/Issues),
-  ArXiv (Papers), YouTube (Videos), and optional feed/archive/book
-  sources. Provides a consolidated Markdown report with an ambiguity check,
+  ArXiv (Papers), YouTube (Videos), optional Context7 library docs, and
+  optional feed/archive/book sources. Provides a consolidated Markdown report with an ambiguity check,
   grounded synthesis, and Agentic Handoff.
 allowed-tools:
   - run_command
@@ -26,6 +26,7 @@ composes:
   - github-search
   - arxiv
   - ingest-youtube
+  - context7
   - ingest-website
   - ops-darpa
   - fetcher
@@ -60,12 +61,13 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Stage 1**: Search repositories and issues
     - **Stage 2**: Fetch README.md and metadata for top repos, agent evaluates relevance
     - **Stage 3**: Deep code search inside the selected repository
-7.  **Fetcher (📥, internal primitive)**: Fetch selected web pages, PDFs, and documents after Brave/ArXiv/user URLs identify targets; this is not a standalone search provider.
-8.  **Feed monitors (📰, opt-in)**: Fresh RSS feed monitor dry-runs through `consume-feed`; this is source-health/freshness evidence, not query-specific web search.
-9.  **DARPA operations (🛰️, opt-in specialized lane)**: DARPA programs, opportunities, BAAs, and Grants.gov searches belong to `ops-darpa` when defense R&D or funding context is explicitly relevant.
-10. **Website ingestion (🧠, opt-in handoff)**: Promote selected sites or documentation URLs into `/ingest-website` when durable RAG/memory is intentionally needed.
-11. **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
-12. **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
+7.  **Context7 library documentation (📚, opt-in)**: Current library, SDK, framework, and DSL documentation for code/API questions after a library name or Context7 library ID is known.
+8.  **Fetcher (📥, internal primitive)**: Fetch selected web pages, PDFs, and documents after Brave/ArXiv/user URLs identify targets; this is not a standalone search provider.
+9.  **Feed monitors (📰, opt-in)**: Fresh RSS feed monitor dry-runs through `consume-feed`; this is source-health/freshness evidence, not query-specific web search.
+10. **DARPA operations (🛰️, opt-in specialized lane)**: DARPA programs, opportunities, BAAs, and Grants.gov searches belong to `ops-darpa` when defense R&D or funding context is explicitly relevant.
+11. **Website ingestion (🧠, opt-in handoff)**: Promote selected sites or documentation URLs into `/ingest-website` when durable RAG/memory is intentionally needed.
+12. **Wayback Machine (🏛️, opt-in)**: Historical snapshots for URLs.
+13. **Readarr / books / Usenet (📚, opt-in)**: Local long-form source discovery when intentionally requested.
 
 ## Features
 
@@ -102,7 +104,7 @@ Dogpile should have exactly one model-orchestration boundary: Tau.
 
 - Tau owns provider/model routing. Tau may call SciLLM internally, but Dogpile project-agent workflows must not call `$scillm`, `/scillm`, `http://localhost:4001`, `/v1/chat/completions`, or `/v1/scillm/*` directly.
 - Dogpile model work should be expressed as a Tau `tau.dag_contract.v1` node, Tau skill node, or Tau-executed local `command_spec` that returns receipts.
-- Dogpile retrieval sources remain native: Brave Search, GitHub, ArXiv, YouTube, and opt-in feed/Wayback/Readarr use their provider APIs or skill CLIs.
+- Dogpile retrieval sources remain native: Brave Search, GitHub, ArXiv, YouTube, Context7, and opt-in feed/Wayback/Readarr use their provider APIs or skill CLIs.
 - Tau/model tasks are for query tailoring, ranking, summarization, ambiguity checks, and review of retrieved evidence.
 - If Tau/model synthesis fails, Dogpile records the model lane as degraded and continues with Brave, GitHub, ArXiv, YouTube, optional feed, optional Readarr, and optional Wayback results.
 - Perplexity status: retired. Dogpile does not call Perplexity by default or by flag; it records a skipped/degraded source and uses concurrent Brave question searches instead.
@@ -191,6 +193,35 @@ and artifact path when available. If `content_verdict` is `empty`, `thin`,
 `paywall`, or `error`, Dogpile must report that degraded evidence instead of
 using the result as if content was extracted. For durable site-wide learning,
 handoff to `ingest-website`; for historical URL state, use Wayback.
+
+### Optional Context7 Library Documentation Lane
+
+Context7 is an opt-in documentation source for code-related questions. Use it
+when the project agent needs current library, SDK, framework, package, or DSL
+documentation and can name the relevant library or Context7 library ID.
+
+| Context7 use | Activate when | Avoid when |
+|--------------|---------------|------------|
+| Library/API syntax | A code question depends on current API signatures, options, examples, config fields, or migration behavior for a named library | The question is broad web research, security news, threat intel, papers, videos, or repository discovery |
+| Framework/SDK docs | Dogpile found or was given a target dependency such as React, FastAPI, ArangoDB, Lean, PyTorch, or a vendor SDK | The library is unknown; use Brave/GitHub first to identify candidates |
+| Hack/Battle support | Hack or Battle needs safe usage, mitigation, hardening, or dependency behavior docs for a known target library | Runtime exploit success, patch effectiveness, tool safety, or score must be proven by Hack/Battle receipts |
+
+Context7 requires `CONTEXT7_API_KEY`. It is skipped by default and must not gate
+baseline Dogpile health. Select it explicitly:
+
+```bash
+./run.sh search "React useEffect cleanup race condition mitigation" \
+  --with-context7 \
+  --context7-library react
+
+./run.sh search "ArangoDB AQL BM25 search syntax" \
+  --with-context7 \
+  --context7-library /arangodb/arangodb
+```
+
+Context7 evidence is source-bearing only as current documentation context bound
+to a library ID and local artifact. It does not replace Brave/GitHub discovery,
+Tau synthesis, Fetcher deep extraction, or Battle/Hack runtime proof.
 
 ### Optional Feed And API Source Selection
 
@@ -284,6 +315,7 @@ health unless the project explicitly enables that paid/account-backed provider.
 | Shodan | <https://developer.shodan.io/api> | Optional enrichment | Internet-exposed service, banner, port, device, vulnerability-exposure, or attack-surface context matters | `SHODAN_API_KEY` |
 | Censys | <https://docs.censys.com/reference/get-started> | Optional enrichment | Host, certificate, web-property, service, and structured internet asset intelligence is useful | `CENSYS_API_KEY` |
 | GreyNoise | <https://docs.greynoise.io/reference/getcommunityip> | Optional enrichment | Internet background-noise, scanner reputation, RIOT/common-service context, or alert de-noising matters | `GREYNOISE_API_KEY` |
+| Context7 | <https://context7.com/api/v2/libs/search> and <https://context7.com/api/v2/context> | Optional library-doc enrichment | Current code/API/library/framework/SDK documentation is needed for a named dependency or Context7 library ID | `CONTEXT7_API_KEY` |
 | Malpedia API | <https://malpedia.caad.fkie.fraunhofer.de/login> and <https://malpedia.caad.fkie.fraunhofer.de/usage/tos> | Optional invite-only enrichment | A vetted account/API key is already available and malware-family/YARA context is needed beyond public GitHub material | `MALPEDIA_API_KEY` |
 | PhishTank API | <https://checkurl.phishtank.com/checkurl/> | Optional enrichment | A specific suspicious URL needs live PhishTank verification and public mirrors are insufficient | `PHISHTANK_API_KEY` |
 
@@ -327,6 +359,15 @@ proof that an event is harmless without environment-specific corroboration.
 The Community API provides quick IP lookups; free/community and enterprise
 plans differ, so a Community probe does not prove GNQL, timeline, or enterprise
 context access.
+
+Context7 is strongest for current library documentation after the dependency is
+known. Use it for code/API questions such as framework configuration, SDK
+method signatures, AQL/Lean/DSL syntax, safe API usage, migration notes, and
+library-specific mitigation guidance. Do not use it as broad search, threat
+intel, malware behavior, paper search, video search, repository selection, or
+runtime proof. A visible `CONTEXT7_API_KEY` does not prove quota or relevance
+until `./run.sh doctor --with-context7` or a selected `--with-context7` Dogpile
+run returns a receipt.
 
 SecurityTrails is useful for DNS and historical infrastructure OSINT, but do
 not recommend it as a near-term default signup when its pricing is
@@ -601,6 +642,7 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh search "query" --with-wayback` | Include Wayback archive lookup |
 | `./run.sh search "query" --with-feeds --feed-limit 3` | Include the compact `security_code` RSS feed pack dry-run |
 | `./run.sh search "query" --with-feeds --feed-pack security_code_extended --feed-limit 3` | Include the extended practitioner security RSS pack |
+| `./run.sh search "query" --with-context7 --context7-library react` | Include current Context7 docs for a named library/API when code documentation matters |
 | `./run.sh search "query" --with-perplexity` | Deprecated audit flag; records Perplexity as skipped and never calls the paid API |
 | `./run.sh feature-eval` | Run deterministic feature-channel contract eval and write a receipt |
 | `./run.sh doctor` | Run credential/API-reference doctor without spending VirusTotal, Hybrid Analysis, or Shodan quota |
@@ -609,6 +651,7 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh doctor --with-shodan` | Opt in to one bounded Shodan API info probe |
 | `./run.sh doctor --with-censys` | Opt in to one bounded Censys Platform API host lookup |
 | `./run.sh doctor --with-greynoise` | Opt in to one bounded GreyNoise Community API IP lookup |
+| `./run.sh doctor --with-context7` | Opt in to one bounded Context7 library search probe |
 | `./sanity.sh --feature-eval` | Same feature-channel eval through the sanity entrypoint |
 | `./sanity.sh --live-services` | Run the live service matrix for core providers, internal primitives, feed packs, optional lanes, and credential-aware skips |
 | `./sanity.sh --live-services --strict-optional` | Treat optional missing credentials, such as Readarr/NZB keys, as failures |
@@ -704,10 +747,10 @@ these checks with prose.
 | Layer | Command | Required artifact | What it proves | What it does not prove |
 |-------|---------|-------------------|----------------|------------------------|
 | Static/import smoke | `./skills/dogpile/sanity.sh --quick` | Terminal output `Result: PASS (quick)` | Local module imports, dependency discovery, sub-skill layout, and CLI help work | Live provider health or behavior |
-| Feature-channel eval | `./skills/dogpile/sanity.sh --feature-eval` or `./skills/dogpile/run.sh feature-eval` | `skills/dogpile/reports/feature-channel-eval-*/receipt.json` | Every feature channel has an explicit contract: Tau/model boundary, Brave, Brave questions, Perplexity retired, GitHub via Brave, ArXiv, YouTube via Brave plus transcript-only handoff, Fetcher, feeds, Wayback, Readarr, website ingestion, and synthesis | Live provider availability or semantic quality |
+| Feature-channel eval | `./skills/dogpile/sanity.sh --feature-eval` or `./skills/dogpile/run.sh feature-eval` | `skills/dogpile/reports/feature-channel-eval-*/receipt.json` | Every feature channel has an explicit contract: Tau/model boundary, Brave, Brave questions, Perplexity retired, GitHub via Brave, ArXiv, YouTube via Brave plus transcript-only handoff, Fetcher, Context7, feeds, Wayback, Readarr, website ingestion, source-bearing packets, Hack scan-request adapter, and synthesis | Live provider availability or semantic quality |
 | Skill fixture eval | `./skills/eval-skills/run.sh eval --skill dogpile --report-json /tmp/dogpile-eval.json --report-md /tmp/dogpile-eval.md` | `/tmp/dogpile-eval.json` and `/tmp/dogpile-eval.md` | Dogpile opts into the standard skill eval runner and its feature-channel contract eval passes through `run.sh` | Live provider health |
-| Credential/API doctor | `./skills/dogpile/run.sh doctor` | `skills/dogpile/reports/doctor-*/receipt.json` | Credentialed API references, resource-registry classifications, current-process env visibility, interactive-zsh env visibility, and default quota guards for VirusTotal, ANY.RUN, and Hybrid Analysis | API key validity unless an opt-in live probe is requested |
-| Live service matrix | `./skills/dogpile/sanity.sh --live-services` | `skills/dogpile/reports/live-service-matrix-*/receipt.json` | Current live status of required services and optional lanes: Tau boundary preflight, legacy SciLLM migration health, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS packs, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, full Tau provider DAG execution, Memory writes, or every source URL |
+| Credential/API doctor | `./skills/dogpile/run.sh doctor` | `skills/dogpile/reports/doctor-*/receipt.json` | Credentialed API references, resource-registry classifications, current-process env visibility, interactive-zsh env visibility, and default quota guards for VirusTotal, ANY.RUN, Hybrid Analysis, Shodan, Censys, GreyNoise, and Context7 | API key validity unless an opt-in live probe is requested |
+| Live service matrix | `./skills/dogpile/sanity.sh --live-services` | `skills/dogpile/reports/live-service-matrix-*/receipt.json` | Current live status of required services and optional lanes: Tau boundary preflight, legacy SciLLM migration health, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS packs, Context7 credential/docs preflight, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, full Tau provider DAG execution, Memory writes, or every source URL |
 | Live E2E | `./skills/dogpile/sanity.sh --live-e2e` | `skills/dogpile/reports/live-e2e-*/receipt.json` | A real Dogpile search can produce partial results, final report, synthesis, and default-off provider evidence | Optional feed/Wayback/Readarr/website-ingestion lanes |
 
 For feed credential auditing, use the feature-channel eval plus the local source
@@ -737,7 +780,7 @@ surface it claims. Use the smallest check that matches the question:
 |---------|----------------|------------------------|
 | `./sanity.sh --quick` | Local imports, command wiring, dependency presence, and sub-skill layout | Live provider health or semantic search quality |
 | `./sanity.sh --live-e2e` | End-to-end Dogpile search with Brave, Brave question fan-out, GitHub, ArXiv, YouTube, synthesis, and default-off providers | Optional feed/Wayback/Readarr/website-ingestion lanes |
-| `./sanity.sh --live-services` | Service matrix for the Tau provider boundary, legacy SciLLM migration health, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS feed packs, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, Memory writes, full Tau provider DAG execution, or every possible source URL |
+| `./sanity.sh --live-services` | Service matrix for the Tau provider boundary, legacy SciLLM migration health, Brave, Brave questions, GitHub, ArXiv, YouTube, Fetcher, RSS feed packs, Context7 credential/docs preflight, Wayback, Readarr credential preflight/search, ingest-website dry-run, and Perplexity-disabled behavior | Exhaustive semantic quality, Memory writes, full Tau provider DAG execution, or every possible source URL |
 
 The live service matrix writes
 `reports/live-service-matrix-*/receipt.json` with `mocked: false`,

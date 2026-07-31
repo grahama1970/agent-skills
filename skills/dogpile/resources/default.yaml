@@ -103,7 +103,7 @@ resources:
   # === DOCUMENTATION ===
   - name: Context7
     url: https://context7.com
-    api_url: https://api.context7.com/v1
+    api_url: https://context7.com/api/v2
     type: api
     method: GET
     tags: [docs, libraries, api, reference]

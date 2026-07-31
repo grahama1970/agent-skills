@@ -71,6 +71,15 @@ def fixture_inputs() -> dict[str, object]:
             }
         ],
         "feeds": {"returncode": 0, "stdout": "feed item: source-bearing security update"},
+        "context7": {
+            "library": "fastapi",
+            "selected_library_id": "/tiangolo/fastapi",
+            "selected_title": "FastAPI",
+            "query": "security scopes",
+            "context": "FastAPI dependency security scopes fixture documentation.",
+            "context_chars": 57,
+            "content_verdict": "ok",
+        },
         "readarr": {"skipped": "disabled by default"},
         "wayback": {"skipped": "disabled by default"},
         "perplexity": {"skipped": "retired"},
@@ -114,8 +123,9 @@ class SecurityResearchPacketTests(unittest.TestCase):
             packet = result["packet"]
 
         self.assertEqual(packet["schema"], SCHEMA)
-        self.assertGreaterEqual(packet["source_bearing_provider_count"], 5)
-        self.assertGreaterEqual(packet["source_bearing_evidence_count"], 5)
+        self.assertGreaterEqual(packet["source_bearing_provider_count"], 6)
+        self.assertGreaterEqual(packet["source_bearing_evidence_count"], 6)
+        self.assertIn("context7", {item["provider"] for item in packet["retrieval_evidence"]})
         self.assertFalse(packet["model_synthesis"]["source_bearing"])
         self.assertNotIn("Model-only overview", json.dumps(packet["retrieval_evidence"]))
         self.assertEqual(validate_security_research_packet(packet)["status"], "PASS")

@@ -78,6 +78,7 @@ EVIDENCE_KEYS = {
     "repository_ref",
     "paper_id",
     "video_id",
+    "library_id",
     "title",
     "retrieved_at",
     "excerpt",
@@ -304,6 +305,7 @@ def _collect_retrieval_evidence(
     evidence.extend(_arxiv_evidence(stage1_results.get("arxiv"), stage2_results.get("arxiv"), output_dir, retrieved_at))
     evidence.extend(_youtube_evidence(stage1_results.get("youtube"), stage2_results.get("youtube"), output_dir, retrieved_at))
     evidence.extend(_feed_evidence(stage1_results.get("feeds"), output_dir, retrieved_at))
+    evidence.extend(_context7_evidence(stage1_results.get("context7"), output_dir, retrieved_at))
     return evidence
 
 
@@ -436,6 +438,27 @@ def _feed_evidence(result: Any, output_dir: Path, retrieved_at: str) -> list[dic
     ]
 
 
+def _context7_evidence(result: Any, output_dir: Path, retrieved_at: str) -> list[dict[str, Any]]:
+    if not isinstance(result, dict) or not result.get("selected_library_id") or not result.get("context"):
+        return []
+    library_id = str(result["selected_library_id"])
+    return [
+        _write_evidence_item(
+            output_dir=output_dir,
+            provider="context7",
+            source_type="library_docs",
+            source=result,
+            retrieved_at=retrieved_at,
+            title=result.get("selected_title") or library_id,
+            url=f"https://context7.com{library_id}" if library_id.startswith("/") else "https://context7.com",
+            library_id=library_id,
+            excerpt=str(result.get("context", ""))[:500],
+            content_verdict=result.get("content_verdict") or "ok",
+            reason="Context7 documentation context is bound to a library ID and local artifact",
+        )
+    ]
+
+
 def _write_evidence_item(
     *,
     output_dir: Path,
@@ -449,10 +472,12 @@ def _write_evidence_item(
     repository_ref: str | None = None,
     paper_id: str | None = None,
     video_id: str | None = None,
+    library_id: str | None = None,
     excerpt: str = "",
+    content_verdict: str = "ok",
     reason: str,
 ) -> dict[str, Any]:
-    source_key = url or repository or paper_id or video_id or title or provider
+    source_key = url or repository or paper_id or video_id or library_id or title or provider
     evidence_id = f"{provider}-{sha256_text(str(source_key))[:12]}"
     artifact = output_dir / "evidence" / f"{evidence_id}.json"
     artifact_hash = write_json(artifact, source)
@@ -466,10 +491,11 @@ def _write_evidence_item(
         "repository_ref": repository_ref,
         "paper_id": paper_id,
         "video_id": video_id,
+        "library_id": library_id,
         "title": title or source_key,
         "retrieved_at": retrieved_at,
         "excerpt": str(excerpt or "")[:800],
-        "content_verdict": "ok",
+        "content_verdict": content_verdict,
         "retrieval_artifact": rel_path(artifact, output_dir),
         "content_sha256": artifact_hash,
         "classification_reason": reason,

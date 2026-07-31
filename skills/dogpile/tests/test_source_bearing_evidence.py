@@ -75,6 +75,21 @@ def test_web_source_with_bound_artifact_is_source_bearing(tmp_path: Path) -> Non
     assert result["source_bearing"] is True
 
 
+def test_context7_library_docs_with_bound_artifact_are_source_bearing(tmp_path: Path) -> None:
+    artifact, digest = _write_artifact(tmp_path, "context7.json", '{"library_id":"/facebook/react"}')
+    result = classify_source_bearing_record(
+        {
+            "provider": "context7",
+            "source_type": "library_docs",
+            "library_id": "/facebook/react",
+            "retrieval_artifact": artifact,
+            "content_sha256": digest,
+        },
+        base_dir=tmp_path,
+    )
+    assert result["source_bearing"] is True
+
+
 def test_github_requires_evaluation_receipt(tmp_path: Path) -> None:
     artifact, digest = _write_artifact(tmp_path, "repo.json", '{"repository":"example/tool"}')
     base = {
