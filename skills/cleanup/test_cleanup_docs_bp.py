@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import cleanup  # noqa: E402
 
+import cleanup_quality  # noqa: E402
 
 def test_conventional_root_docs_are_never_relocated():
     tracked = {"README.md", "LICENSE.md", "SECURITY.md", "CONTRIBUTING.md"}
@@ -273,3 +274,84 @@ def test_cleanup_report_surfaces_public_readiness_blockers():
     assert "Public-Readiness / Security Cleanup" in report
     assert "needs_explicit_triage_or_allowlist" in report
     assert "Fresh gitleaks history receipt exists." in report
+
+
+def test_quality_gate_flags_python_parse_and_configured_ruff(tmp_path, monkeypatch):
+    script = tmp_path / "scripts" / "bad.py"
+    script.parent.mkdir()
+    script.write_text("def broken(:\n    pass\n")
+    (tmp_path / "pyproject.toml").write_text("[tool.ruff]\nline-length = 100\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cleanup_quality,
+        "get_all_tracked_files",
+        lambda: {"scripts/bad.py", "pyproject.toml"},
+    )
+
+    quality = cleanup.scan_quality_gates(run_checks=False)
+    gates = {gate["id"]: gate for gate in quality["gates"]}
+
+    assert quality["status"] == "blocked"
+    assert gates["python_parse"]["status"] == "failed"
+    assert gates["ruff_check"]["status"] in {
+        "missing_required_tool",
+        "not_established",
+    }
+    assert quality["counts"]["blockers"] >= 2
+
+
+def test_quality_gate_runs_bash_syntax_when_selected(tmp_path, monkeypatch):
+    script = tmp_path / "run.sh"
+    script.write_text("#!/usr/bin/env bash\nif true; then\n  echo ok\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(cleanup_quality, "get_all_tracked_files", lambda: {"run.sh"})
+
+    quality = cleanup.scan_quality_gates(run_checks=True)
+    bash_gate = next(gate for gate in quality["gates"] if gate["id"] == "bash_syntax")
+
+    assert bash_gate["status"] == "failed"
+    assert quality["status"] == "blocked"
+
+
+def test_cleanup_report_surfaces_quality_gate_blockers():
+    findings = {
+        "root_strays": [],
+        "uncommitted_changes": [],
+        "untracked_files": [],
+        "dead_files": [],
+        "outdated_docs": [],
+        "doc_organization": [],
+        "script_scanability": [],
+        "cleanup_evidence_artifact": {"status": "complete"},
+        "ingest_code_evidence": {},
+        "mutation_readiness": {},
+        "candidate_dependency_evidence": [],
+        "project_watchdog": {},
+        "public_readiness": {"blockers": []},
+        "quality_gate": {
+            "status": "blocked",
+            "run_checks": False,
+            "counts": {"required": 1, "blockers": 1},
+            "gates": [
+                {
+                    "id": "ruff_check",
+                    "family": "python",
+                    "status": "not_established",
+                    "required": True,
+                    "command": ["ruff", "check", "--no-cache", "."],
+                }
+            ],
+            "blockers": [
+                {
+                    "id": "quality_gate_ruff_check_not_established",
+                    "valid_next_action": "Run the selected quality gate.",
+                }
+            ],
+        },
+    }
+
+    report = cleanup.generate_cleanup_plan(findings)
+
+    assert "F-006" in report
+    assert "Quality Gate Cleanup" in report
+    assert "quality_gate_ruff_check_not_established" in report

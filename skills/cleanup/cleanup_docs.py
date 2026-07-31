@@ -223,6 +223,8 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
     scanability = findings.get("script_scanability") or []
     public_readiness = findings.get("public_readiness") or {}
     public_blockers = public_readiness.get("blockers", [])
+    quality_gate = findings.get("quality_gate") or {}
+    quality_blockers = quality_gate.get("blockers", [])
     artifact = findings.get("cleanup_evidence_artifact") or {}
     evidence_status = artifact.get("status", "missing")
 
@@ -237,12 +239,14 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         risk_items.append("`[F-004]` Script scanability gaps make maintenance harder")
     if public_blockers:
         risk_items.append("`[F-005]` Public-readiness security blockers prevent a public release claim")
+    if quality_blockers:
+        risk_items.append("`[F-006]` Quality-gate blockers prevent a proven cleanup slice")
     if not risk_items:
         risk_items.append("No high-risk cleanup finding was produced by this assessment.")
 
     has_findings = any([
         root_strays_count, uncommitted_count, untracked_count, dead_count,
-        outdated_count, actionable, scanability, public_blockers,
+        outdated_count, actionable, scanability, public_blockers, quality_blockers,
     ])
     overall = "Needs Changes" if has_findings else "Partially Verified"
 
@@ -259,14 +263,16 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
             "script scanability repairs require explicit review or a separate "
             "repair slice. Public-readiness/security findings require "
             "deterministic gitleaks and maintainer-setting receipts before any "
-            "public release claim."
+            "public release claim. Quality-gate findings require scoped "
+            "parse/lint/typecheck/test receipts before claiming a cleanup slice "
+            "is proven."
         ),
         "",
         (
             "**Evidence Basis:** The report uses git status, tracked/untracked "
             "file inventory, lexical reference scans, cleanup evidence artifacts, "
             "ingest markers, project-watchdog state, documentation scans, and "
-            "public-readiness receipts where available."
+            "public-readiness receipts, and quality-gate receipts where available."
         ),
         "",
         "**Highest-Risk Issues:**",
@@ -282,6 +288,7 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         "2. `[A-002]` Refresh `.cleanup-evidence.json` before proposing tracked-file moves.",
         "3. `[A-003]` Handle script scanability as readability-only documentation repair.",
         "4. `[A-004]` Resolve public-readiness blockers before making the repository public.",
+        "5. `[A-005]` Run selected quality gates for the cleanup slice.",
         "",
         (
             "**Non-Claims:** This report does not prove unused code, runtime "
@@ -307,6 +314,7 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         "| S-006 | documentation and script scans | local static scan | fresh for this run | doc/readability findings | Findings require review before repair |",
         "| S-007 | best-practices gate mapping | local rule mapping | fresh for this run | changed-file proof planning | Mapping is not proof unless checks execute |",
         "| S-008 | gitleaks/GitHub readiness receipts | local security/readiness artifacts | status shown below | public-readiness blockers | Missing receipts block release claims |",
+        "| S-009 | project-native quality gates | local validation commands | status shown below | parse/lint/type/test blockers | Missing selected receipts block cleanup proof |",
         "",
         "## Finding Index",
         "",
@@ -317,6 +325,7 @@ def append_cleanup_report_preamble(plan: List[str], findings: Dict[str, Any]) ->
         f"| F-003 | {'Blocked' if dead_count and evidence_status != 'complete' else 'Partially Verified'} | `{dead_count}` lexical candidates; evidence `{evidence_status}` | Refresh per-candidate evidence and run readiness checks | Does not prove unused code |",
         f"| F-004 | {'Needs Changes' if scanability else 'Partially Verified'} | `{len(scanability)}` script scanability candidates | Apply readability-only repair slice | Does not prove behavior is wrong |",
         f"| F-005 | {'Blocked' if public_blockers else 'Partially Verified'} | `{len(public_blockers)}` public-readiness blockers | Triage gitleaks findings and maintainer settings receipts | Does not prove public release safety |",
+        f"| F-006 | {'Blocked' if quality_blockers else 'Partially Verified'} | `{len(quality_blockers)}` quality-gate blockers | Run `--quality-gate` or mark missing gates not applicable with rationale | Does not replace full CI |",
         "",
     ])
 

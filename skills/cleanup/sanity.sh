@@ -10,7 +10,8 @@ echo "=== Cleanup Skill Sanity ==="
 uv run --project "$SCRIPT_DIR" python -m py_compile \
   "$SCRIPT_DIR/cleanup.py" "$SCRIPT_DIR/cleanup_core.py" "$SCRIPT_DIR/cleanup_watchdog.py" \
   "$SCRIPT_DIR/cleanup_worktree.py" "$SCRIPT_DIR/cleanup_evidence.py" \
-  "$SCRIPT_DIR/cleanup_docs.py" "$SCRIPT_DIR/cleanup_public.py" "$SCRIPT_DIR/cleanup_bp.py" \
+  "$SCRIPT_DIR/cleanup_docs.py" "$SCRIPT_DIR/cleanup_public.py" \
+  "$SCRIPT_DIR/cleanup_quality.py" "$SCRIPT_DIR/cleanup_bp.py" \
   && echo "  [PASS] all cleanup modules compile" || { echo "  [FAIL] cleanup module syntax error"; exit 1; }
 # Every module stays under the 800-line rule from /best-practices-python.
 OVERSIZE=""

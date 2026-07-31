@@ -664,6 +664,9 @@ def build_phase_receipt(
             "public_readiness_blockers": len(
                 (findings.get("public_readiness") or {}).get("blockers", [])
             ),
+            "quality_gate_blockers": len(
+                (findings.get("quality_gate") or {}).get("blockers", [])
+            ),
         },
         "best_practices_gate": findings.get("best_practices_gate", {}),
         "actions_taken": actions_taken or [],
@@ -681,4 +684,3 @@ def write_phase_receipt(receipt: Dict[str, Any], receipt_path: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(receipt, indent=2, default=str))
     return path
-
