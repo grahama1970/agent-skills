@@ -1,0 +1,23 @@
+{
+  "schema": "battle.sprite_work_order.v1",
+  "character": {
+    "sprite_id": "plague_nurgling",
+    "display_name": "Plague Nurgling",
+    "team": "red",
+    "reference_image": "pi-mono/packages/ux-lab/assets/battle-sprites/plague_nurgling/plague_nurgling-contact-sheet.png",
+    "identity_traits": [
+      "olive-green pudgy round creature with warts and spots",
+      "two curved light-brown horns on the head",
+      "small yellow eyes and wide toothy grin",
+      "stubby arms and legs, side profile facing right",
+      "lime-green bubbles, slime, and plague energy effects"
+    ]
+  },
+  "task": "Regenerate runtime atlas from runtime-atlas-prompt.template.txt. Do NOT ship contact sheet to Pixi.",
+  "runtime_prompt_ref": "pi-mono/packages/ux-lab/assets/battle-sprites/plague_nurgling/plague_nurgling-runtime-prompt-canonical.json",
+  "outputs": {
+    "runtime_png": "skills/battle/assets/sprites/pixijs/plague_nurgling.png",
+    "runtime_json": "skills/battle/assets/sprites/pixijs/plague_nurgling.json"
+  },
+  "status": "needs_runtime_image_gen"
+}

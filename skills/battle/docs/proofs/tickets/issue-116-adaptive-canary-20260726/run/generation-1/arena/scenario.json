@@ -1,0 +1,25 @@
+{
+  "battle_id": "battle-004",
+  "cwe": "CWE-22",
+  "difficulty": "medium-plus",
+  "hidden_vulnerability_family": "Zip Slip path traversal",
+  "public_contract": {
+    "input": "zip archive upload",
+    "method": "POST",
+    "visible_behavior": "Extract uploaded archive into an import workspace."
+  },
+  "public_entrypoint": "/api/import-zip",
+  "red_blue_visible": {
+    "entrypoint": "/api/import-zip",
+    "files": [
+      "app.py"
+    ],
+    "hint": "Archive import endpoint accepts zip files."
+  },
+  "run_id": "issue-116-adaptive-canary-20260726-g1-arena",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "battle.arena_scenario.v1",
+  "selected_from_research": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-research-receipt.json",
+  "target_language": "python",
+  "title": "Archive import path traversal"
+}

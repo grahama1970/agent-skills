@@ -1,0 +1,48 @@
+{
+  "artifact_paths": {
+    "hidden_ground_truth": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/private/hidden-ground-truth.json",
+    "oracle": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/exploit_check.py",
+    "scenario": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/scenario.json",
+    "target_app": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/app.py",
+    "target_dir": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target"
+  },
+  "battle_id": "battle-004",
+  "commands_run": [
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        "1000:1000",
+        "-v",
+        "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target:/workspace:rw",
+        "-w",
+        "/workspace",
+        "python:3.12-slim",
+        "python",
+        "exploit_check.py",
+        "--expect-vulnerable"
+      ],
+      "exit_code": 0,
+      "stderr_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-hidden-oracle.stderr.txt",
+      "stdout_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-hidden-oracle.stdout.txt"
+    }
+  ],
+  "created_at": "2026-07-26T12:29:05Z",
+  "docker_image": "python:3.12-slim",
+  "live": "docker_oracle",
+  "mocked": false,
+  "out_dir": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena",
+  "persona": "canonical-battle-004-scenario-builder",
+  "run_id": "issue-116-adaptive-canary-20260726-g1-arena",
+  "schema": "battle.arena_receipt.v1",
+  "status": "PASS",
+  "team": "arena"
+}

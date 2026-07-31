@@ -1,0 +1,123 @@
+{
+  "schema": "battle.sprite_work_order.v1",
+  "instructions": "Fill every {{PLACEHOLDER}}. Execute steps in order. Do not skip validation. Do not ship contact sheets to Pixi.",
+  "character": {
+    "sprite_id": "{{SPRITE_ID}}",
+    "display_name": "{{DISPLAY_NAME}}",
+    "team": "{{red|blue}}",
+    "reference_image": "{{PATH_TO_CHARACTER_REFERENCE_OR_CONTACT_SHEET}}",
+    "identity_traits": [
+      "{{TRAIT_1}}",
+      "{{TRAIT_2}}",
+      "{{TRAIT_3}}"
+    ]
+  },
+  "atlas_contract": {
+    "frame_width": 64,
+    "frame_height": 64,
+    "columns": 8,
+    "rows": 14,
+    "atlas_width": 512,
+    "atlas_height": 896,
+    "anchor": { "x": 0.5, "y": 0.85 },
+    "texture_scale_mode": "nearest",
+    "pixijs_version": "v8"
+  },
+  "animation_rows": [
+    { "row": 0, "name": "idle", "frames": 4 },
+    { "row": 1, "name": "walk", "frames": 6 },
+    { "row": 2, "name": "run", "frames": 8 },
+    { "row": 3, "name": "research", "frames": 6 },
+    { "row": 4, "name": "payload", "frames": 6 },
+    { "row": 5, "name": "mutate", "frames": 6 },
+    { "row": 6, "name": "handoff", "frames": 6 },
+    { "row": 7, "name": "spawn", "frames": 8 },
+    { "row": 8, "name": "blocked", "frames": 6 },
+    { "row": 9, "name": "hit", "frames": 3 },
+    { "row": 10, "name": "killed", "frames": 8 },
+    { "row": 11, "name": "victory", "frames": 8 },
+    { "row": 12, "name": "promoted", "frames": 8 },
+    { "row": 13, "name": "fastest_crash", "frames": 8 }
+  ],
+  "prompts": {
+    "contact_sheet_template": "skills/battle/assets/sprites/pixijs/contact-sheet-prompt.template.txt",
+    "runtime_atlas_template": "skills/battle/assets/sprites/pixijs/runtime-atlas-prompt.template.txt",
+    "negative_prompt": "skills/battle/assets/sprites/pixijs/negative-prompt.txt"
+  },
+  "outputs": {
+    "contact_sheet_png": "assets/battle-sprites/{{SPRITE_ID}}/{{SPRITE_ID}}-contact-sheet.png",
+    "runtime_png": "skills/battle/assets/sprites/pixijs/{{SPRITE_ID}}.png",
+    "runtime_json": "skills/battle/assets/sprites/pixijs/{{SPRITE_ID}}.json"
+  },
+  "steps": [
+    {
+      "id": 1,
+      "name": "contact_sheet_optional",
+      "when": "No approved art yet",
+      "action": "Fill contact-sheet-prompt.template.txt and generate {{SPRITE_ID}}-contact-sheet.png",
+      "forbidden_outputs": ["skills/battle/assets/sprites/pixijs/{{SPRITE_ID}}.png"]
+    },
+    {
+      "id": 2,
+      "name": "runtime_atlas_generate",
+      "when": "Contact sheet approved OR reference locked",
+      "action": "Fill runtime-atlas-prompt.template.txt, upload reference, generate 512x896 transparent PNG",
+      "required_properties": ["RGBA", "512x896", "no labels", "no grid", "alpha corners transparent"]
+    },
+    {
+      "id": 3,
+      "name": "cleanup_if_needed",
+      "when": "Model output has checkerboard, grid lines, or wrong size",
+      "action": "Run spacing repair or script cleanup — NOT contact-sheet conversion unless explicitly fallback",
+      "commands": [
+        "python3 skills/battle/utils/clean_sprite_atlas.py convert-contact-sheet ONLY IF source is labeled contact sheet AND no runtime gen available",
+        "Prefer: regenerate from runtime-atlas-prompt.template.txt"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "write_pixi_json",
+      "action": "Generate manifest from row contract",
+      "commands": [
+        "skills/create-battle-sprite-sheet/run.sh manifest --sprite-id {{SPRITE_ID}} --image {{SPRITE_ID}}.png --out skills/battle/assets/sprites/pixijs/{{SPRITE_ID}}.json"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "validate",
+      "action": "Must PASS before handoff",
+      "commands": [
+        "skills/create-battle-sprite-sheet/run.sh validate-png --png skills/battle/assets/sprites/pixijs/{{SPRITE_ID}}.png",
+        "skills/create-battle-sprite-sheet/run.sh validate-json --json skills/battle/assets/sprites/pixijs/{{SPRITE_ID}}.json --png skills/battle/assets/sprites/pixijs/{{SPRITE_ID}}.png"
+      ],
+      "manual_checks": [
+        "Open PNG on black background — no gray grid scars through sprites",
+        "Open PNG on checkerboard — empty cells show checkerboard (real transparency), not gray/black fill",
+        "Frame names: {{SPRITE_ID}}_{animation}_{index}"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "sync",
+      "action": "Copy to public serve path if separate",
+      "paths": [
+        "skills/battle/spectator/public/battle-sprites/pixijs/",
+        "pi-mono/packages/ux-lab/public/battle-sprites/pixijs/"
+      ]
+    }
+  ],
+  "do_not": [
+    "Convert contact sheet directly to runtime and call it done",
+    "Treat IDE checkerboard preview as baked into PNG",
+    "Use battle-race-atlas.png for runner characters",
+    "Ship RGB contact sheets to Pixi Assets.load",
+    "Resize whole sheet to 512x896 without per-cell fit"
+  ],
+  "frame_name_pattern": "{{SPRITE_ID}}_{animation}_{frame_index}",
+  "example_frame_names": [
+    "{{SPRITE_ID}}_idle_0",
+    "{{SPRITE_ID}}_walk_3",
+    "{{SPRITE_ID}}_payload_0",
+    "{{SPRITE_ID}}_blocked_2"
+  ]
+}

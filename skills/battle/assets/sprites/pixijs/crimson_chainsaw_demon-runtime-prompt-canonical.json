@@ -1,0 +1,17 @@
+{
+  "atlas_target": {
+    "columns": 8,
+    "frame_height": 64,
+    "frame_width": 64,
+    "height": 896,
+    "rows": 14,
+    "width": 512
+  },
+  "display_name": "Crimson Chainsaw Demon",
+  "mode": "runtime_atlas",
+  "negative_prompt": "Negative prompt:\nlabels, row labels, title, metadata panel, JSON text, visible grid, checkerboard background, gray presentation background, inconsistent spacing, uneven cells, overlapping frames, cropped frames, character changing identity, different character per row, front view, three-quarter view, back view, realistic painting, soft blur, antialiasing, motion blur, oversized effects crossing cells, projectiles outside frame, weapons crossing neighboring frames, decorative border, poster layout",
+  "prompt": "Use the uploaded image as the ONLY reference.\n\nCreate a production-ready transparent PixiJS v8 sprite atlas for:\n\nCharacter name: Crimson Chainsaw Demon\nVariant id: crimson_chainsaw_demon\nCell size: 64x64\nAtlas grid: 8 columns x 14 rows\nAtlas size: 512x896\n\nPreserve these reference traits:\n- bulky red power armor with pale bone skull helmet and large curved horns\n- chainsaw blade and heavy minigun as dual weapons\n- side profile facing right with aggressive demon silhouette\n\nRuntime requirements:\n- transparent PNG\n- frames only\n- no labels\n- no text\n- no side panel\n- no checkerboard background\n- no visible grid\n- strict equal-size cells\n- every cell exactly 64x64\n- character always faces right\n- consistent scale\n- consistent baseline\n- no frame overlap\n- no effect crossing cell boundaries\n- empty unused cells fully transparent\n\nRows:\n0 idle 4 frames\n1 walk 6 frames\n2 run 8 frames\n3 research 6 frames\n4 payload 6 frames\n5 mutate 6 frames\n6 handoff 6 frames\n7 spawn 8 frames\n8 blocked 6 frames\n9 hit 3 frames\n10 killed 8 frames\n11 victory 8 frames\n12 promoted 8 frames\n13 fastest_crash 8 frames\n\nFor rows with fewer than 8 frames, leave remaining cells transparent.\n\nStyle:\nOriginal 16-bit side-view pixel art, early-console side-scroller, crisp hard pixel edges, nearest-neighbor scaling, limited palette, readable silhouette.\n\nDo not copy franchise logos, faction marks, copyrighted symbols, labels, or commercial sprites.\n",
+  "prompt_source": "battle/prompts/runtime-atlas-template.txt",
+  "schema": "battle.sprite_prompt_payload.v1",
+  "sprite_id": "crimson_chainsaw_demon"
+}

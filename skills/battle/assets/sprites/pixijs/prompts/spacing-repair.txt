@@ -1,0 +1,21 @@
+Reformat this sprite sheet into a clean runtime atlas.
+
+Keep the exact same character design and poses as much as possible, but fix the sheet layout.
+
+Requirements:
+- transparent background
+- 8 columns
+- 14 rows
+- equal cell size
+- no labels
+- no text
+- no visible grid
+- no checkerboard background
+- no decorative background
+- all frames centered in their cells
+- all baselines aligned
+- no overlap between frames
+- no effects crossing cell boundaries
+- empty unused cells fully transparent
+
+Do not redesign the character. Only regularize the sprite atlas spacing and alignment.

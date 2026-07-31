@@ -1,0 +1,11 @@
+{
+  "battle_id": "battle-004",
+  "failure_reason": "red artifact pipeline blocked",
+  "failure_type": "RuntimeError",
+  "live": true,
+  "mocked": false,
+  "note": "Specimen failed a co-evolution gate; recorded as FAIL (record-and-continue).",
+  "run_id": "issue-116-adaptive-canary-20260726",
+  "schema": "battle.adaptive_red_blue_lineage_canary.v1",
+  "status": "FAIL"
+}

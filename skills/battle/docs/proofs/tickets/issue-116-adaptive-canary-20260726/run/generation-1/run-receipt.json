@@ -1,0 +1,26 @@
+{
+  "agentic": true,
+  "artifacts": {
+    "tau_manifest": "tau-live/manifest.json",
+    "team_public_target": "arena/team-public/target/app.py",
+    "visibility_validation": "visibility-validation.json"
+  },
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Docker compile passed.",
+      "Judge evaluated the artifacts."
+    ],
+    "proves": [
+      "Arena and Tau materialized public-only Red and Blue artifacts without running Judge."
+    ]
+  },
+  "created_at": "2026-07-26T12:29:51Z",
+  "live": "brave_search_arena_tau_materialization_only",
+  "materialize_only": true,
+  "mocked": false,
+  "run_id": "issue-116-adaptive-canary-20260726-g1",
+  "schema": "battle.arena_tau_public_only_run_receipt.v1",
+  "status": "PASS",
+  "verdict": "MATERIALIZED_NOT_JUDGED"
+}

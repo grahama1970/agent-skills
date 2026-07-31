@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 2581,
+  "artifact_sha256": "b709e34d68305a73f041ea50fcd9187ba3213c34b9756fab3546bd6a6f471530",
+  "artifact_type": "blue_patch",
+  "parsed_keys": [
+    "app_py",
+    "artifact_type",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/app.py",
+  "rationale": "Hardens archive extraction by canonicalizing each member path against the destination and rejecting entries that could escape the workspace, including ../ traversal, absolute paths, Windows drive or UNC forms, backslash traversal, and symlink entries. It preserves the import_zip API and normal extraction behavior for safe files.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "fd9f66345905f9f3b38431f27dc6e17deaca2c54831c422fddee15ba8d70948b",
+  "status": "PASS",
+  "strategy_genome_sha256": "a8f81c8ac35f1bee5fa98af6195052ec7700728d747c1a7f9bd51863d674a381"
+}

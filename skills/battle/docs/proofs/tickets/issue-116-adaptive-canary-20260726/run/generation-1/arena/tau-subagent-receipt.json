@@ -1,0 +1,60 @@
+{
+  "context": {
+    "actor_type": "tau",
+    "artifacts_read": [
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-handoff.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-research-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/scenario.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/hidden-ground-truth.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/app.py",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/exploit_check.py"
+    ],
+    "assumptions": [
+      "Arena sees performance history but does not judge the current round.",
+      "Hidden ground truth is not visible to Red or Blue."
+    ],
+    "run_id": "issue-116-adaptive-canary-20260726-g1-arena",
+    "subagent": "battle-arena",
+    "unknowns": []
+  },
+  "evidence": [
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-handoff.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-research-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/scenario.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/hidden-ground-truth.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/app.py",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/exploit_check.py"
+  ],
+  "goal": {
+    "goal_hash": "sha256:988d969b0e8e56e6ced975e45c191739e8e046f5b1caa202baa033b5dd0655c6",
+    "goal_id": "goal-battle-battle-004-arena",
+    "goal_version": 1,
+    "immutable_goal_preserved": true
+  },
+  "next": {
+    "executor": "local",
+    "reason": "Scenario and hidden oracle are ready for Red/Blue dispatch.",
+    "subagent": "battle-red-blue-dispatch"
+  },
+  "rationale": "Arena built the next hidden-bug Battle scenario for scorekeeper replay.",
+  "result": {
+    "artifacts": [
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-handoff.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-research-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/scenario.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/hidden-ground-truth.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/arena-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/app.py",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/target/exploit_check.py"
+    ],
+    "commands_run": [],
+    "live": true,
+    "mocked": false,
+    "status": "PASS",
+    "summary": "Arena selected and built one researched hidden-bug scenario."
+  },
+  "schema": "tau.subagent_receipt.v1",
+  "stop_condition": "Red/Blue consume the public scenario while scorekeeper retains hidden truth."
+}

@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 3802,
+  "artifact_sha256": "fbc7e9226f35da76e301e26fca09683eff993f13a5ca454f999edd82fddb6423",
+  "artifact_type": "red_exploit",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/red/red_exploit_submission.py",
+  "rationale": "The public app.py joins each zip member name directly to the destination and writes it without canonical path validation. A zip entry named ../arena_escape.txt therefore escapes the intended extraction directory. The exploit locally imports import_zip, feeds it such an archive, and confirms the escaped file contents.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "d4989a4422fb9c647ee568dbf4afc2d4562f465cc15fa941df298ca870cc0db5",
+  "status": "PASS",
+  "strategy_genome_sha256": "e7a1927b856d1141862d109670495a2a231653e6087099ffa0a9cca9ab44e14a"
+}

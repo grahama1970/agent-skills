@@ -1,0 +1,61 @@
+{
+  "battle_id": "battle-004",
+  "instructions": "Return a JSON object with artifact_type=blue_patch, app_py, and strategy_genome. strategy_genome must be an object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation. The app_py value must be a complete replacement application file.",
+  "lane_id": "payload-857-blue-0",
+  "persona": "battle-blue-public-hardener",
+  "public_context": {
+    "artifacts": {
+      "team_public_brief": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/team-public/scenario-brief.json",
+      "team_public_target": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/arena/team-public/target/app.py"
+    },
+    "bundle_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/context/tau-public-context.json",
+    "schema": "tau.battle_context_bundle.v1",
+    "summary": {
+      "arena_private_artifact_count": 0,
+      "battle_id": "battle-004",
+      "mode": "bounded_worker_matrix",
+      "public_artifacts_inline": {
+        "app_py": "from pathlib import Path\nfrom zipfile import ZipFile\n\n\ndef import_zip(zip_path: str, destination: str) -> list[str]:\n    dest = Path(destination)\n    dest.mkdir(parents=True, exist_ok=True)\n    written: list[str] = []\n    with ZipFile(zip_path) as archive:\n        for name in archive.namelist():\n            target = dest / name\n            target.parent.mkdir(parents=True, exist_ok=True)\n            target.write_bytes(archive.read(name))\n            written.append(str(target))\n    return written\n",
+        "scenario_brief": {
+          "battle_id": "battle-004",
+          "public_contract": {
+            "input": "zip archive upload",
+            "method": "POST",
+            "visible_behavior": "Extract uploaded archive into an import workspace."
+          },
+          "public_entrypoint": "/api/import-zip",
+          "red_blue_visible": {
+            "entrypoint": "/api/import-zip",
+            "files": [
+              "app.py"
+            ],
+            "hint": "Archive import endpoint accepts zip files."
+          },
+          "scenario_id": "arena-zip-slip-import-001",
+          "title": "Archive import path traversal"
+        }
+      },
+      "public_entrypoint": "/api/import-zip",
+      "run_id": "issue-116-adaptive-canary-20260726-g1",
+      "scenario_id": "arena-zip-slip-import-001",
+      "team_public_artifact_count": 2,
+      "teams": {
+        "blue": {
+          "objective": "Submit a hardening or patch strategy from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+        }
+      },
+      "visibility_rule": "teams receive only the listed public artifacts",
+      "worker_counts": {
+        "blue": 1,
+        "red": 1
+      }
+    }
+  },
+  "run_id": "issue-116-adaptive-canary-20260726-g1",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_team_handoff.v1",
+  "team": "blue",
+  "visibility_model": "team_public_only",
+  "worker_id": "blue-0",
+  "worker_index": 0
+}

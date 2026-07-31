@@ -1,0 +1,33 @@
+{
+  "artifact_role": "red_exploit",
+  "battle_id": "battle-004",
+  "expected_observation": "When run with --expect-vulnerable against the vulnerable app.py, the script writes arena_escape.txt in the parent temp directory, prints RED_EXPLOIT_CONFIRMED, and exits 0.",
+  "generation": 1,
+  "knowledge_packet_id": null,
+  "mutation_origin": "Derived from the public app.py implementation where target = dest / name is written directly for each archive member.",
+  "parameters": {
+    "confirmation_token": "RED_EXPLOIT_CONFIRMED",
+    "destination_subdir": "intended_destination",
+    "escape_filename": "arena_escape.txt",
+    "stdlib_only": true,
+    "zip_entry": "../arena_escape.txt"
+  },
+  "parent_genome_sha256": null,
+  "provider_response_sha256": "d4989a4422fb9c647ee568dbf4afc2d4562f465cc15fa941df298ca870cc0db5",
+  "rejected_methods": [
+    "HTTP POST to /api/import-zip",
+    "use of requests/httpx/urllib/socket",
+    "assuming a running localhost service",
+    "checking only returned paths without filesystem verification"
+  ],
+  "research_receipt_sha256": null,
+  "run_id": "issue-116-reviewed-replay-20260726-g1",
+  "schema": "battle.adaptive_team_genome.v1",
+  "selected_methods": [
+    "local importlib load of ./app.py",
+    "temporary zip archive with ../arena_escape.txt member",
+    "direct call to import_zip without HTTP or network assumptions",
+    "marker-byte verification of file created outside extraction destination"
+  ],
+  "team": "red"
+}

@@ -1,0 +1,53 @@
+{
+  "context": {
+    "actor_type": "tau",
+    "artifacts_read": [
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/handoff.json"
+    ],
+    "assumptions": [
+      "Battle owns Docker execution and scorekeeping; Tau owns this handoff and artifact materialization receipt."
+    ],
+    "battle": {
+      "battle_id": "battle-004",
+      "lane_id": "payload-857-blue-0",
+      "persona": "battle-blue-public-hardener",
+      "scenario_id": "arena-zip-slip-import-001",
+      "team": "blue",
+      "worker_id": "blue-0"
+    },
+    "run_id": "issue-116-adaptive-canary-20260726-g1",
+    "subagent": "battle-blue-blue-0",
+    "unknowns": []
+  },
+  "evidence": [
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/handoff.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/scillm-call-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/materialized-artifact-receipt.json"
+  ],
+  "goal": {
+    "goal_id": "goal-battle-battle-004-tau-public-only",
+    "goal_version": 1,
+    "immutable_goal_preserved": true
+  },
+  "next": {
+    "executor": "local",
+    "reason": "Battle Judge may consume materialized paths only when materialization status is PASS.",
+    "subagent": "battle-scorekeeper"
+  },
+  "rationale": "Battle requested one bounded Tau/Scillm public-only handoff receipt before Judge replay.",
+  "result": {
+    "artifacts": [
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/scillm-call-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills/skills/battle/docs/proofs/tickets/issue-116-adaptive-canary-20260726/run/generation-1/tau-live/blue/materialized-artifact-receipt.json"
+    ],
+    "commands_run": [],
+    "live": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "status": "PASS",
+    "summary": "Battle blue produced a materialized executable artifact.",
+    "surface": "scillm.chat_completions"
+  },
+  "schema": "tau.subagent_receipt.v1",
+  "stop_condition": "Battle Judge consumes Red/Blue materialized artifacts or records INSUFFICIENT_EVIDENCE."
+}

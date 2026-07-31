@@ -1,0 +1,34 @@
+{
+  "artifact_role": "blue_patch",
+  "battle_id": "battle-004",
+  "expected_observation": "Safe archives extract under the destination and return written file paths; malicious archive members attempting traversal or absolute writes are rejected before writing outside the workspace.",
+  "generation": 1,
+  "knowledge_packet_id": null,
+  "mutation_origin": "public target showed direct dest / archive name writes, indicating zip-slip traversal risk",
+  "parameters": {
+    "chunk_size_bytes": 1048576,
+    "exception_type": "UnsafeArchivePath",
+    "preserve_public_function": "import_zip(zip_path: str, destination: str) -> list[str]"
+  },
+  "parent_genome_sha256": null,
+  "provider_response_sha256": "fd9f66345905f9f3b38431f27dc6e17deaca2c54831c422fddee15ba8d70948b",
+  "rejected_methods": [
+    "trusting ZipFile.extractall",
+    "string prefix checks without resolve",
+    "silently rewriting unsafe names",
+    "allowing symlink materialization"
+  ],
+  "research_receipt_sha256": null,
+  "run_id": "issue-116-reviewed-replay-20260726-g1",
+  "schema": "battle.adaptive_team_genome.v1",
+  "selected_methods": [
+    "canonical destination resolution",
+    "per-entry path containment check",
+    "absolute path rejection",
+    "Windows drive and UNC path rejection",
+    "backslash normalization",
+    "symlink entry rejection",
+    "streamed file writes"
+  ],
+  "team": "blue"
+}
