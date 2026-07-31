@@ -413,7 +413,11 @@ def list_closed_for_audit(
     pending: list[dict[str, Any]] = []
     for issue in json.loads(result.get("stdout") or "[]"):
         labels = {str(lbl.get("name")) for lbl in issue.get("labels", [])}
-        if config.CLOSURE_VERIFIED_LABEL in labels or labels & config.HUMAN_HOLD_LABELS:
+        if (
+            config.CLOSURE_VERIFIED_LABEL in labels
+            or config.CLOSURE_UNVERIFIED_LABEL in labels
+            or labels & config.HUMAN_HOLD_LABELS
+        ):
             continue
         if str(issue.get("stateReason") or "").upper() != "COMPLETED":
             continue

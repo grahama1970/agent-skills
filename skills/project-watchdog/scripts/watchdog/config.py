@@ -368,6 +368,12 @@ CLOSURE_AUDIT_RETRY_COOLDOWN_SECONDS = _env_seconds(
 #: Its presence keeps the audit from re-reading the same closure every minute.
 CLOSURE_VERIFIED_LABEL = "closure-verified"
 
+#: Applied when the audit panel returned NEEDS_ATTENTION: the closure could not
+#: be judged from the thread and stays closed-unverified. Durable for the same
+#: reason as closure-verified — without it the panel re-answers the identical
+#: question every tick (observed: one-minute window flash loop, 2026-07-31).
+CLOSURE_UNVERIFIED_LABEL = "closure-unverified"
+
 #: How far back the closure audit looks. A closure from months ago is history,
 #: not something to reopen.
 CLOSURE_AUDIT_WINDOW_SECONDS = _env_seconds("PROJECT_WATCHDOG_CLOSURE_AUDIT_WINDOW_SECONDS", 604_800)

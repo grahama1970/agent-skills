@@ -1308,6 +1308,27 @@ def handle_closure_audit(
                 ),
             )
         )
+        # Same durability rule as closure-verified: without a label the scan
+        # selects this closure again next tick and the panel re-answers the
+        # identical question every minute (observed as a window-flash loop).
+        mark = github.issue_edit(repo, issue_number, add=[config.CLOSURE_UNVERIFIED_LABEL])
+        result["commands"].append(mark)
+        if mark.get("exit_code") != 0:
+            result.update(
+                {
+                    "ok": False,
+                    "status": "NEEDS_ATTENTION",
+                    "summary": (
+                        f"closure of {repo}#{issue_number} was left unverified but "
+                        f"{config.CLOSURE_UNVERIFIED_LABEL!r} could not be applied: "
+                        f"{str(mark.get('stderr'))[:160]}. Without it the same closure is "
+                        f"re-audited every tick. Run: skills/ticket/run.sh ensure-labels "
+                        f"--repo {repo}"
+                    ),
+                }
+            )
+            log_event(run_id, "closure_unverified_label_failed", issue=issue_number)
+            return result
         result.update(
             {
                 "ok": True,
