@@ -90,3 +90,6 @@ skills/persona-dream/research/bakeoff/_agent_sample_outputs/
 # pilot receipts are proof artifacts, not scratch runs
 !skills/persona-dream/reports/pilot_c_vs_f/runs/
 !skills/persona-dream/reports/pilot_c_vs_f/runs/**
+
+# Root-level runtime goal receipts (skills/*/prompt-contracts/*/receipts stay tracked)
+/receipts/
