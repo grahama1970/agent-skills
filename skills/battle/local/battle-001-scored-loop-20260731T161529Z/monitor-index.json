@@ -1,0 +1,68 @@
+{
+  "artifacts": [
+    "battle-plan.json",
+    "blue/patch.diff",
+    "blue-receipt.json",
+    "judge/judge-exploit-safe.stderr.txt",
+    "judge/judge-exploit-safe.stdout.txt",
+    "judge/judge-receipt.json",
+    "judge/judge-regression.stderr.txt",
+    "judge/judge-regression.stdout.txt",
+    "monitor-index.json",
+    "red/red-exploit.stderr.txt",
+    "red/red-exploit.stdout.txt",
+    "red-receipt.json",
+    "run-receipt.json",
+    "scoreboard.json"
+  ],
+  "battle_id": "battle-001",
+  "campaign": "Battle",
+  "players": [
+    {
+      "persona": "Isstvan",
+      "receipt": "red-receipt.json",
+      "role": "exploit-finder",
+      "team": "red"
+    },
+    {
+      "persona": "Phalanx",
+      "receipt": "blue-receipt.json",
+      "role": "patcher",
+      "team": "blue"
+    },
+    {
+      "persona": "Battle Scorekeeper",
+      "receipt": "judge/judge-receipt.json",
+      "role": "verifier",
+      "team": "judge"
+    }
+  ],
+  "scenario": "seeded-path-traversal-001",
+  "schema": "battle.monitor_index.v1",
+  "scoreboard": "scoreboard.json",
+  "status": "PASS",
+  "timeline": [
+    {
+      "stage": "prepare",
+      "status": "PASS"
+    },
+    {
+      "stage": "red",
+      "status": "PASS"
+    },
+    {
+      "stage": "blue",
+      "status": "PASS"
+    },
+    {
+      "stage": "judge",
+      "status": "PASS"
+    },
+    {
+      "stage": "score",
+      "status": "PASS"
+    }
+  ],
+  "title": "Battle-001 seeded path traversal battle",
+  "verdict": "BLUE_SUCCESS"
+}

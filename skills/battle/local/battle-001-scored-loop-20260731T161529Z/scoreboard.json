@@ -1,0 +1,16 @@
+{
+  "asc": 1,
+  "battle_id": "battle-001",
+  "blue_score": 3.6,
+  "fdsr": 0.0,
+  "receipts": {
+    "blue": "blue-receipt.json",
+    "judge": "judge/judge-receipt.json",
+    "red": "red-receipt.json"
+  },
+  "red_score": 1.5,
+  "schema": "battle.scoreboard.v1",
+  "status": "PASS",
+  "tdsr": 1.0,
+  "verdict": "BLUE_SUCCESS"
+}

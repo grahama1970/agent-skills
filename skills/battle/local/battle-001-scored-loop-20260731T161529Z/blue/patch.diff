@@ -1,0 +1,29 @@
+--- a/app.py
++++ b/app.py
+@@ -1,7 +1,8 @@
+-"""Vulnerable document reader used by the Battle path traversal fixture.
++"""Patched document reader used by deterministic Battle Blue.
+ 
+-Inputs are document names relative to ``docs``. Output is file text. This
+-fixture intentionally allows traversal so Red can prove the seeded exploit.
++Inputs are document names relative to ``docs``. Output is file text when the
++resolved path stays inside the approved root. Traversal attempts raise
++``ValueError`` so the Judge can verify the exploit is blocked.
+ """
+ 
+ from pathlib import Path
+@@ -10,5 +11,12 @@
+ 
+ 
+ def read_doc(name: str) -> str:
+-    # Vulnerable fixture: allows path traversal outside docs/.
+-    return (ROOT / name).read_text(encoding="utf-8")
++    candidate = (ROOT / name).resolve()
++    root = ROOT.resolve()
++
++    try:
++        candidate.relative_to(root)
++    except ValueError as exc:
++        raise ValueError("document path escapes approved root") from exc
++
++    return candidate.read_text(encoding="utf-8")

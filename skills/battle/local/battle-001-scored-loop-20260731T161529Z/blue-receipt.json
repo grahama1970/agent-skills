@@ -1,0 +1,23 @@
+{
+  "battle_id": "battle-001",
+  "changed_files": [
+    "app.py"
+  ],
+  "commands_run": [
+    {
+      "command": [
+        "python",
+        "copy patched app.py into blue workspace"
+      ],
+      "exit_code": 0,
+      "stderr_path": null,
+      "stdout_path": "local/battle-001-scored-loop-20260731T161529Z/blue/patch.diff"
+    }
+  ],
+  "created_at": "2026-07-31T16:15:39Z",
+  "next_agent": "battle-scorekeeper",
+  "patch_artifact": "local/battle-001-scored-loop-20260731T161529Z/blue/patch.diff",
+  "round_number": 1,
+  "schema": "battle.blue_receipt.v1",
+  "status": "PASS"
+}

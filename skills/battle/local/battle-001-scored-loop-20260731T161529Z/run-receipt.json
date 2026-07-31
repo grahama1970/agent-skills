@@ -1,0 +1,38 @@
+{
+  "artifacts": [
+    "battle-plan.json",
+    "blue/patch.diff",
+    "blue-receipt.json",
+    "judge/judge-exploit-safe.stderr.txt",
+    "judge/judge-exploit-safe.stdout.txt",
+    "judge/judge-receipt.json",
+    "judge/judge-regression.stderr.txt",
+    "judge/judge-regression.stdout.txt",
+    "monitor-index.json",
+    "red/red-exploit.stderr.txt",
+    "red/red-exploit.stdout.txt",
+    "red-receipt.json",
+    "scoreboard.json"
+  ],
+  "battle_id": "battle-001",
+  "claim_scope": "fixture_contract_proof",
+  "execution": {
+    "agentic": false,
+    "live": "local_deterministic_fixture",
+    "mocked": false,
+    "models_used": []
+  },
+  "non_claims": [
+    "does_not_prove_real_red_agent_behavior",
+    "does_not_prove_real_blue_agent_behavior",
+    "does_not_prove_scillm_or_opencode_execution",
+    "does_not_prove_anvil_or_code_runner_patch_quality",
+    "does_not_prove_multi_round_learning",
+    "does_not_prove_docker_or_qemu_modes",
+    "does_not_prove_memory_learning",
+    "does_not_prove_lean_or_qra_assurance"
+  ],
+  "schema": "battle.run_receipt.v1",
+  "status": "PASS",
+  "verdict": "BLUE_SUCCESS"
+}

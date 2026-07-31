@@ -1,0 +1,39 @@
+{
+  "battle_id": "battle-001",
+  "commands_run": [
+    {
+      "command": [
+        "python3",
+        "exploit_check.py",
+        "--expect-safe"
+      ],
+      "exit_code": 0,
+      "stderr_path": "local/battle-001-scored-loop-20260731T161529Z/judge/judge-exploit-safe.stderr.txt",
+      "stdout_path": "local/battle-001-scored-loop-20260731T161529Z/judge/judge-exploit-safe.stdout.txt"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ],
+      "exit_code": 0,
+      "stderr_path": "local/battle-001-scored-loop-20260731T161529Z/judge/judge-regression.stderr.txt",
+      "stdout_path": "local/battle-001-scored-loop-20260731T161529Z/judge/judge-regression.stdout.txt"
+    }
+  ],
+  "created_at": "2026-07-31T16:15:39Z",
+  "exploit_blocked_after_patch": true,
+  "exploit_confirmed_before_patch": true,
+  "functionality_preserved": true,
+  "next_agent": "human",
+  "regression_tests_pass": true,
+  "round_number": 1,
+  "schema": "battle.judge_receipt.v1",
+  "status": "PASS",
+  "verdict": "BLUE_SUCCESS"
+}
