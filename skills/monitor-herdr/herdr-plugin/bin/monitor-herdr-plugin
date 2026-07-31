@@ -49,6 +49,24 @@ case "${1:-status}" in
       --cwd "${HERDR_WORKSPACE_CWD:-$PWD}" \
       --json
     ;;
+  open-file)
+    target="${MONITOR_HERDR_OPEN_FILE:-${HERDR_FILE_VIEWER_OPEN:-}}"
+    query="${MONITOR_HERDR_OPEN_QUERY:-}"
+    root="${MONITOR_HERDR_OPEN_ROOT:-${HERDR_WORKSPACE_CWD:-$PWD}}"
+    if [[ -n "$query" ]]; then
+      exec "$run_sh" open-file \
+        --query "$query" \
+        --root "$root" \
+        --json
+    fi
+    if [[ -z "$target" ]]; then
+      echo "MONITOR_HERDR_OPEN_FILE, HERDR_FILE_VIEWER_OPEN, or MONITOR_HERDR_OPEN_QUERY is required for open-file" >&2
+      exit 2
+    fi
+    exec "$run_sh" open-file "$target" \
+      --root "$root" \
+      --json
+    ;;
   *)
     echo "unknown monitor-herdr plugin command: $1" >&2
     exit 2
