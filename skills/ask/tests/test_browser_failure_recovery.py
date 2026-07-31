@@ -16,6 +16,7 @@ load_dotenv(find_dotenv(usecwd=True), override=False)
 
 
 WORKER_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_roundtable_worker.py"
+SURF_NORMALIZE = Path(__file__).resolve().parents[2] / "surf" / "scripts" / "surf_meta_normalize.py"
 SPEC = importlib.util.spec_from_file_location("tau_roundtable_worker", WORKER_PATH)
 assert SPEC and SPEC.loader
 tau_roundtable_worker = importlib.util.module_from_spec(SPEC)
@@ -945,6 +946,84 @@ def test_timeout_diagnostics_stuck_composer_reclassifies_submit_not_accepted(tmp
     assert packet["auto_retry_allowed"] is False
     assert packet["auto_retry_blocked_reason"] == "browser_submit_not_accepted_requires_composer_recovery_or_fresh_tab"
     assert packet["evidence"]["timeout_diagnostics"]["markers"]["prompt_still_in_composer"] is True
+
+
+def test_browser_worker_writes_terminal_surf_provider_result_for_killed_lane(tmp_path: Path) -> None:
+    surf_dir = tmp_path / "skills" / "surf"
+    surf_dir.mkdir(parents=True)
+    fake_surf = surf_dir / "run.sh"
+    fake_surf.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  meta.normalize)
+    shift
+    exec python3 {str(SURF_NORMALIZE)!r} "$@"
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_surf.chmod(0o755)
+    artifact_dir = tmp_path / "artifacts"
+    artifact_dir.mkdir()
+    request = artifact_dir / "request.md"
+    submitted = artifact_dir / "submitted.md"
+    bundle = artifact_dir / "bundle.md"
+    meta = artifact_dir / "response.meta.json"
+    request.write_text("Use ATTACHMENT_1.\n", encoding="utf-8")
+    submitted.write_text("Use ATTACHMENT_1.\n<<<KIMI_DONE:test>>>\n", encoding="utf-8")
+    bundle.write_text("# Bundle\n", encoding="utf-8")
+    meta.write_text(
+        json.dumps(
+            {
+                "status": "running",
+                "proof_status": "pending",
+                "submitted_to_kimi": False,
+                "requested_tab_id": "837364343",
+                "input": str(request),
+                "submitted_output": str(submitted),
+                "output": str(artifact_dir / "response.md"),
+                "raw_output": str(artifact_dir / "response.raw.md"),
+                "sentinel": "<<<KIMI_DONE:test>>>",
+                "attach_file": str(bundle),
+                "attachment_delivery_proven": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    args = _args(tmp_path, handler="webkimi")
+    commands: list[dict] = []
+
+    result_path, payload = tau_roundtable_worker._write_surf_provider_result(
+        args,
+        handler="webkimi",
+        meta_path=meta,
+        submit=tau_roundtable_worker.CmdResult(
+            command=["surf", "kimi.submit"],
+            returncode=-9,
+            stdout="",
+            stderr="[tau-worker] command timed out after 300s; killed process group rooted at pid 123",
+            duration=387.53,
+        ),
+        artifact_dir=artifact_dir,
+        commands=commands,
+    )
+
+    assert result_path == artifact_dir / "response.provider_result.json"
+    assert result_path and result_path.is_file()
+    assert payload["schema"] == "surf.provider_result.v1"
+    assert payload["provider"] == "kimi"
+    assert payload["status"] == "timeout"
+    assert payload["proof_status"] == "delivery_not_proven"
+    assert payload["success"] is False
+    assert payload["bounded_error"]["code"] == "browser_handler_timeout"
+    assert payload["attachments"]["delivery_proven"] is False
+    assert any(command["command"][1] == "meta.normalize" for command in commands)
 
 
 def test_webgpt_submit_command_expects_home_url_when_tab_id_is_bound(tmp_path: Path) -> None:

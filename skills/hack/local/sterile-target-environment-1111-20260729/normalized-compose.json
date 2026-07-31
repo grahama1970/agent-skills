@@ -1,0 +1,28 @@
+{
+  "name": "safe",
+  "networks": {
+    "default": {
+      "ipam": {},
+      "name": "safe_default"
+    }
+  },
+  "services": {
+    "envcheck": {
+      "command": [
+        "env"
+      ],
+      "entrypoint": null,
+      "environment": {
+        "OPENCLAW_CONFIG_DIR": "/tmp/hack-sterile-env-proof/target-state/config",
+        "OPENCLAW_GATEWAY_HOST": "127.0.0.1",
+        "OPENCLAW_GATEWAY_PORT": "80",
+        "OPENCLAW_HACK_HARDENING_VALIDATION": "1",
+        "OPENCLAW_WORKSPACE_DIR": "/tmp/hack-sterile-env-proof/target-state/workspace"
+      },
+      "image": "python:3.12-slim",
+      "networks": {
+        "default": null
+      }
+    }
+  }
+}

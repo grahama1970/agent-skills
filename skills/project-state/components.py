@@ -1,7 +1,7 @@
 """Phase 1b: Component project health checks.
 
-Parses registered component projects from embry.yaml and checks each for
-git status, dirty files, and test counts via pytest --collect-only.
+Parses registered component projects from embry.yaml when present and checks
+each for git status, dirty files, and test counts via pytest --collect-only.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ def collect_components() -> dict[str, Any]:
     """Check health of registered component projects."""
     config = _parse_components_config()
     if not config:
-        return {"registered": 0, "projects": {}, "note": "No components in embry.yaml"}
+        return {"registered": 0, "projects": {}, "note": "No component registry found"}
 
     projects: dict[str, dict[str, Any]] = {}
     for name, info in config.items():
@@ -87,8 +87,8 @@ def collect_components() -> dict[str, Any]:
             )
             if log_out.returncode == 0:
                 entry["last_commit"] = log_out.stdout.strip()
-        except Exception as e:
-            logger.debug("git log check failed: {}", e)
+        except Exception as exc:
+            logger.error("git log check failed for {}: {}", proj_path, exc)
 
         try:
             dirty_out = subprocess.run(
@@ -99,8 +99,8 @@ def collect_components() -> dict[str, Any]:
                 changed = len([ln for ln in dirty_out.stdout.splitlines() if ln.strip()])
                 entry["dirty"] = changed > 0
                 entry["changed_files"] = changed
-        except Exception as e:
-            logger.debug("git status check failed: {}", e)
+        except Exception as exc:
+            logger.error("git status check failed for {}: {}", proj_path, exc)
 
         # Test count via pytest --collect-only (fast, doesn't run tests)
         test_cmd = info.get("test_cmd", "")

@@ -14,7 +14,7 @@ type Props = {
 
 function isLiveAdapterConnected(sseClient: BattleLiveSseClientState | null | undefined): boolean {
 	if (!sseClient) return false;
-	if (sseClient.live !== "local_http_sse_adapter") return false;
+	if (sseClient.live !== "local_http_sse_adapter" && sseClient.live !== "local_http_websocket_adapter") return false;
 	return ["connecting", "open", "ended", "gap_recovery", "error"].includes(sseClient.status);
 }
 
@@ -27,20 +27,21 @@ export function BattleLiveTransportBanner({
 	onRecover,
 }: Props) {
 	if (mode === "contract" && contractModel && isLiveAdapterConnected(sseClient)) {
+		const isWebSocket = sseClient?.transportMode === "websocket";
 		return (
-			<section className="battle-live-transport-banner" data-qid="battle:live:banner" aria-label="Battle live SSE transport">
+			<section className="battle-live-transport-banner" data-qid="battle:live:banner" aria-label="Battle live transport">
 				<div className="flex flex-wrap items-center gap-2">
 					<span
 						className="rounded border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100"
 						data-qid="battle:live:banner:mode"
 					>
-						LIVE SSE ADAPTER
+						{isWebSocket ? "LIVE WEBSOCKET ADAPTER" : "LIVE SSE ADAPTER"}
 					</span>
 					<span
 						className="rounded border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100"
 						data-qid="battle:live:banner:live-source"
 					>
-						LIVE: LOCAL HTTP SSE
+						{isWebSocket ? "LIVE: LOCAL HTTP WEBSOCKET" : "LIVE: LOCAL HTTP SSE"}
 					</span>
 					<span
 						className="rounded border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100"
@@ -52,7 +53,7 @@ export function BattleLiveTransportBanner({
 						className="rounded border border-violet-400/30 bg-violet-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100"
 						data-qid="battle:live:banner:sse-connected"
 					>
-						{sseClient?.transportMode === "event_source" ? "EVENTSOURCE OPEN" : "SSE CONNECTED"}
+						{isWebSocket ? "WEBSOCKET OPEN" : sseClient?.transportMode === "event_source" ? "EVENTSOURCE OPEN" : "SSE CONNECTED"}
 					</span>
 					<span
 						className="rounded border border-sky-400/30 bg-sky-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-sky-100"
@@ -62,7 +63,9 @@ export function BattleLiveTransportBanner({
 							? "TRANSPORT: EVENTSOURCE"
 							: sseClient?.transportMode === "fetch_last_event_id"
 								? "TRANSPORT: FETCH RESUME"
-								: "TRANSPORT: UNKNOWN"}
+								: sseClient?.transportMode === "websocket"
+									? "TRANSPORT: WEBSOCKET"
+									: "TRANSPORT: UNKNOWN"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:status">
 						status {model?.status ?? sseClient?.status ?? "connecting"}
@@ -71,7 +74,7 @@ export function BattleLiveTransportBanner({
 						seq {model?.appliedSeq ?? sseClient?.lastSeq ?? 0}/{model?.lastSeq ?? "?"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:sse-client">
-						sse client {sseClient?.status ?? "idle"}
+						live client {sseClient?.status ?? "idle"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:genetic-count">
 						genetic types {contractModel.geneticEventCount}
@@ -105,29 +108,30 @@ export function BattleLiveTransportBanner({
 					<div data-qid="battle:live:battle-id">battle_id: {contractModel.battleId}</div>
 					<div data-qid="battle:live:run-id">run_id: {model?.runId ?? contractModel.runId}</div>
 					<div data-qid="battle:live:sse-endpoint">sse: {contractModel.sseEndpoint}</div>
+					<div data-qid="battle:live:websocket-endpoint">websocket: {contractModel.webSocketEndpoint ?? "n/a"}</div>
 					<div data-qid="battle:live:snapshot-endpoint">snapshot: {contractModel.snapshotEndpoint}</div>
 					<div data-qid="battle:live:base-url">base: {sseClient?.baseUrl ?? "n/a"}</div>
-					<div data-qid="battle:live:source">live_source: local_http_sse_adapter</div>
+					<div data-qid="battle:live:source">live_source: {sseClient?.live ?? "n/a"}</div>
 				</div>
 				<div className="mt-2 grid gap-2 md:grid-cols-2" data-qid="battle:live:claim-boundary">
 					<div className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-2" data-qid="battle:live:claim-may">
 						<div className="text-[10px] font-black uppercase tracking-[0.1em] text-emerald-300/80">May claim</div>
 						<ul className="mt-1 space-y-0.5 text-[11px] text-slate-200">
-							<li>local http sse adapter executed</li>
+							<li>{isWebSocket ? "local http websocket adapter executed" : "local http sse adapter executed"}</li>
 							<li>ordered battle.live_event.v1 stream applied</li>
-							<li>snapshot bootstrap + Last-Event-ID resume supported</li>
+							<li>{isWebSocket ? "snapshot-first websocket bootstrap supported" : "snapshot bootstrap + Last-Event-ID resume supported"}</li>
 						</ul>
 					</div>
 					<div className="rounded-lg border border-rose-400/20 bg-rose-400/5 p-2" data-qid="battle:live:claim-must-not">
 						<div className="text-[10px] font-black uppercase tracking-[0.1em] text-rose-300/80">Must not claim</div>
 						<ul className="mt-1 space-y-0.5 text-[11px] text-slate-200">
 							{contractModel.mustNotClaim
-								.filter((item) => !["sse_endpoint_implemented", "live_stream_executed"].includes(item))
+								.filter((item) => !["sse_endpoint_implemented", "websocket_endpoint_implemented", "live_stream_executed"].includes(item))
 								.map((item) => (
 									<li key={item}>{item.replace(/_/g, " ")}</li>
 								))}
 							<li>production deployment</li>
-							<li>websocket endpoint implemented</li>
+							<li>{isWebSocket ? "production websocket tls/auth/fanout/reconnect behavior" : "production websocket endpoint execution"}</li>
 						</ul>
 					</div>
 				</div>
@@ -155,7 +159,7 @@ export function BattleLiveTransportBanner({
 						className="rounded border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100"
 						data-qid="battle:live:banner:mode"
 					>
-						SSE CONTRACT
+						LIVE CONTRACT
 					</span>
 					<span
 						className="rounded border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100"
@@ -192,6 +196,7 @@ export function BattleLiveTransportBanner({
 					<div data-qid="battle:live:battle-id">battle_id: {contractModel.battleId}</div>
 					<div data-qid="battle:live:run-id">run_id: {contractModel.runId}</div>
 					<div data-qid="battle:live:sse-endpoint">sse: {contractModel.sseEndpoint}</div>
+					<div data-qid="battle:live:websocket-endpoint">websocket: {contractModel.webSocketEndpoint ?? "n/a"}</div>
 					<div data-qid="battle:live:snapshot-endpoint">snapshot: {contractModel.snapshotEndpoint}</div>
 					<div data-qid="battle:live:reconnect">reconnect: {contractModel.reconnectHeader}</div>
 					<div data-qid="battle:live:gap">gap: {contractModel.gapResponse}</div>

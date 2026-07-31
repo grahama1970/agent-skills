@@ -1,0 +1,8 @@
+{
+  "changed_files": [
+    "service.py"
+  ],
+  "diff": "--- a/service.py\n+++ b/service.py\n@@ -1,15 +1,18 @@\n-\"\"\"Intentionally vulnerable fixture service for Battle Judge replay.\"\"\"\n+\"\"\"Patched fixture service for Battle Judge replay.\"\"\"\n \n from __future__ import annotations\n \n-import subprocess\n+import re\n import sys\n \n \n+SAFE_HOST = re.compile(r\"^[A-Za-z0-9.-]{1,253}$\")\n+\n+\n def lookup(host: str) -> str:\n-    command = f\"echo lookup:{host}\"\n-    proc = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)\n-    return proc.stdout\n+    if not SAFE_HOST.fullmatch(host):\n+        raise ValueError(\"invalid host\")\n+    return f\"lookup:{host}\\n\"\n \n \n if __name__ == \"__main__\":\n",
+  "format": "unified_diff",
+  "schema": "battle.candidate_patch_artifact.v1"
+}

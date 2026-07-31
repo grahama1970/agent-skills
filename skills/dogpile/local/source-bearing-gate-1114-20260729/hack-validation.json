@@ -1,0 +1,28 @@
+{
+  "docker_invoked": false,
+  "errors": [],
+  "execution_started": false,
+  "expected_target": "fixture-target@sha256:fixture",
+  "network_invoked": false,
+  "non_claims": [
+    "no_authorization_proof",
+    "no_docker_invoked",
+    "no_exploit_or_patch_proof",
+    "no_scan_executed",
+    "research_design_input_only"
+  ],
+  "request_path": "/tmp/source-bearing-gate-1114-shared-20260729/valid/hack-scan-request.json",
+  "request_sha256": "bd090354e7a16f53590d0060ecf985a23e7afdc6d6bf0babecdff4356450b134",
+  "schema": "hack.scan_request_validation_receipt.v1",
+  "selected_evidence_count": 2,
+  "source_bearing_evidence_count": 2,
+  "source_packet_path": "/tmp/source-bearing-gate-1114-shared-20260729/valid/dogpile-security-packet.json",
+  "source_packet_schema": "dogpile.security_research_packet.v1",
+  "source_packet_sha256": "f0e3b2189fcbbb120ac0d2d2024495ba53e5e863bd9bf7c5d00aec5b2c64fb4a",
+  "status": "PASS",
+  "subprocess_invoked": false,
+  "target_identity": "fixture-target@sha256:fixture",
+  "valid": true,
+  "validation_time": "2026-07-29T18:36:43.213920+00:00",
+  "validator_version": "hack.scan-request-validator.v1"
+}

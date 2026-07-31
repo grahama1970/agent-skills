@@ -1,0 +1,7 @@
+{
+  "hack_scan_request": {
+    "artifact_path": "hack-scan-request.json",
+    "schema": "dogpile.hack_scan_request.v1",
+    "sha256": "4dd9fa502ab474502ae28ca1e68fb7279c0d225f9ad2f5e6503f8430f04ce513"
+  }
+}

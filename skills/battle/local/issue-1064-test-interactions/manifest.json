@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "app": "Battle issue 1064 receipt source interactions",
+  "base_url": "http://127.0.0.1:3005",
+  "surfaces": [
+    {
+      "name": "receipt-source-binding",
+      "path": "/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
+      "wait_ready": "[data-qid='battle:lineage-comparison']",
+      "wait_ready_timeout_ms": 20000,
+      "qid_compliance": true,
+      "elements": [
+        {
+          "name": "source-bound-panel",
+          "interactions": [
+            {
+              "action": "screenshot",
+              "description": "Initial receipt route with source-bound lineage panel",
+              "assert_selector": "[data-qid='battle:lineage-comparison']",
+              "assert_visible": "[data-qid='battle:lineage-comparison']",
+              "assert_attribute": {
+                "selector": "[data-qid='battle:lineage-comparison']",
+                "attribute": "data-mode",
+                "value": "canonical-dual-team"
+              },
+              "assert_text": "RECEIPT SOURCE",
+              "assert_text_scope": "[data-qid='battle:lineage-comparison']"
+            }
+          ]
+        },
+        {
+          "name": "receipt-race-source",
+          "interactions": [
+            {
+              "action": "wait",
+              "target": "[data-qid='battle:race:source']",
+              "description": "Race viewport exposes matching source identity",
+              "assert_visible": "[data-qid='battle:race:source']",
+              "assert_attribute": {
+                "selector": "[data-qid='battle:race:source']",
+                "attribute": "data-source-fixture-sha256",
+                "value": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba"
+              }
+            }
+          ]
+        },
+        {
+          "name": "timeline-controls",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:zoom:in']",
+              "description": "Zoom in through qid control",
+              "assert_title": "[data-qid='battle:timeline:zoom:in']",
+              "assert_qs_action": "[data-qid='battle:timeline:zoom:in']",
+              "assert_min_size": {
+                "selector": "[data-qid='battle:timeline:zoom:in']",
+                "min_width": 44,
+                "min_height": 44
+              },
+              "screenshot_after": true
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:timeline:zoom:out']",
+              "description": "Zoom out through qid control",
+              "assert_title": "[data-qid='battle:timeline:zoom:out']",
+              "assert_qs_action": "[data-qid='battle:timeline:zoom:out']",
+              "assert_min_size": {
+                "selector": "[data-qid='battle:timeline:zoom:out']",
+                "min_width": 44,
+                "min_height": 44
+              },
+              "screenshot_after": true
+            }
+          ]
+        },
+        {
+          "name": "lane-mirror",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:lane:red-g1']",
+              "description": "Select Red G1 via DOM lane mirror",
+              "assert_title": "[data-qid='battle:lane:red-g1']",
+              "assert_qs_action": "[data-qid='battle:lane:red-g1']",
+              "assert_min_size": {
+                "selector": "[data-qid='battle:lane:red-g1']",
+                "min_width": 44,
+                "min_height": 44
+              },
+              "screenshot_after": true
+            }
+          ]
+        },
+        {
+          "name": "proof-buttons",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:event:blue-patch']",
+              "description": "Open Blue patch proof text from receipt control",
+              "assert_title": "[data-qid='battle:control:event:blue-patch']",
+              "assert_qs_action": "[data-qid='battle:control:event:blue-patch']",
+              "assert_text": "Blue worker patch receipts are materialized",
+              "screenshot_after": true
+            },
+            {
+              "action": "click",
+              "target": "[data-qid='battle:control:event:blue-block']",
+              "description": "Open Blue block proof text from receipt control",
+              "assert_title": "[data-qid='battle:control:event:blue-block']",
+              "assert_qs_action": "[data-qid='battle:control:event:blue-block']",
+              "assert_text": "Blue block proof comes only from Judge",
+              "screenshot_after": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -255,6 +255,38 @@ def _memory_tags(
     ]
 
 
+def _items_with_all_tags(
+    items: Iterable[Any], required_tags: Iterable[str]
+) -> list[dict[str, Any]]:
+    required = set(required_tags)
+    matches: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        tags = item.get("tags")
+        if isinstance(tags, list) and required.issubset(set(tags)):
+            matches.append(item)
+    return matches
+
+
+def _matches_memory_document(
+    item: Any, document: Mapping[str, Any], required_tags: Iterable[str]
+) -> bool:
+    return (
+        isinstance(item, dict)
+        and item.get("_key") == document["_key"]
+        and item.get("source_memory_sha256") == document["source_memory_sha256"]
+        and item.get("solution") == document["solution"]
+        and item.get("battle_id") == document["battle_id"]
+        and item.get("experiment_id") == document["experiment_id"]
+        and item.get("trial_id") == document["trial_id"]
+        and item.get("block_id") == document["block_id"]
+        and item.get("condition_id") == document["condition_id"]
+        and item.get("team") == document["team"]
+        and item.get("tags") == list(required_tags)
+    )
+
+
 def load_source_bindings(
     *, source_root: Path, memory_source_root: Path, battle_id: str
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
@@ -1400,7 +1432,10 @@ def preflight_experiment(
                 raise ContractError(
                     "Memory preflight opposite-team recall response lacks items"
                 )
-            if opposite_team_items:
+            opposite_team_matches = _items_with_all_tags(
+                opposite_team_items, opposite_team_tags
+            )
+            if opposite_team_matches:
                 raise ContractError(
                     "Memory preflight opposite-team isolation returned records"
                 )
@@ -1429,7 +1464,10 @@ def preflight_experiment(
                 raise ContractError(
                     "Memory preflight other-trial recall response lacks items"
                 )
-            if other_trial_items:
+            other_trial_matches = _items_with_all_tags(
+                other_trial_items, other_trial_tags
+            )
+            if other_trial_matches:
                 raise ContractError(
                     "Memory preflight other-trial isolation returned records"
                 )
@@ -1475,8 +1513,8 @@ def preflight_experiment(
             "probe_write_response_sha256": canonical_sha256(write_body),
             "probe_recalled_sha256": canonical_sha256(recalled),
             "exact_write_recall_passed": True,
-            "opposite_team_item_count": len(opposite_team_items),
-            "other_trial_item_count": len(other_trial_items),
+            "opposite_team_item_count": len(opposite_team_matches),
+            "other_trial_item_count": len(other_trial_matches),
             "exact_isolation_passed": True,
         },
         "credentials_exposed": False,
@@ -1549,6 +1587,7 @@ def _write_and_recall_memory(
     exact: list[dict[str, Any]] = []
     recall_body: Any = None
     recall_request_count = 0
+    exact_lookup_request_count = 0
     recall_tags = list(document["tags"])
     for attempt in range(10):
         recall_request_count += 1
@@ -1570,22 +1609,40 @@ def _write_and_recall_memory(
         exact = [
             item
             for item in items
-            if isinstance(item, dict)
-            and item.get("_key") == document["_key"]
-            and item.get("source_memory_sha256") == document["source_memory_sha256"]
-            and item.get("solution") == document["solution"]
-            and item.get("battle_id") == document["battle_id"]
-            and item.get("experiment_id") == document["experiment_id"]
-            and item.get("trial_id") == document["trial_id"]
-            and item.get("block_id") == document["block_id"]
-            and item.get("condition_id") == document["condition_id"]
-            and item.get("team") == document["team"]
-            and item.get("tags") == recall_tags
+            if _matches_memory_document(item, document, recall_tags)
         ]
         if len(exact) == 1:
             break
         if attempt < 9:
             time.sleep(1)
+    exact_match_source = "recall"
+    exact_lookup_body: Any = None
+    if len(exact) != 1:
+        exact_lookup_request_count += 1
+        lookup_response = client.post(
+            "/list",
+            json={
+                "collection": collection,
+                "limit": 2,
+                "filters": {"_key": document["_key"]},
+            },
+        )
+        lookup_response.raise_for_status()
+        exact_lookup_body = lookup_response.json()
+        documents = (
+            exact_lookup_body.get("documents")
+            if isinstance(exact_lookup_body, dict)
+            else None
+        )
+        if not isinstance(documents, list):
+            raise TrialBlocked("memory_service", "exact lookup response lacks documents")
+        exact = [
+            item
+            for item in documents
+            if _matches_memory_document(item, document, recall_tags)
+        ]
+        if len(exact) == 1:
+            exact_match_source = "exact_key_lookup"
     if len(exact) != 1:
         raise TrialBlocked("memory_service", f"exact {team} recall did not converge")
 
@@ -1620,13 +1677,14 @@ def _write_and_recall_memory(
                 "memory_service",
                 f"{isolation_kind} recall response lacks items",
             )
-        if items:
+        matches = _items_with_all_tags(items, isolation_tags)
+        if matches:
             raise TrialBlocked(
                 "memory_isolation",
                 f"{isolation_kind} recall returned records",
                 retryable=False,
             )
-        negative_responses[isolation_kind] = body
+        negative_responses[isolation_kind] = {**body, "matching_items": matches}
 
     recall_receipt = {
         "schema": "battle.memory_ablation_recall_receipt.v1",
@@ -1652,6 +1710,12 @@ def _write_and_recall_memory(
             str(exact[0]["solution"]).encode("utf-8")
         ).hexdigest(),
         "service_response_sha256": canonical_sha256(recall_body),
+        "exact_match_source": exact_match_source,
+        "exact_lookup_response_sha256": (
+            canonical_sha256(exact_lookup_body)
+            if exact_lookup_body is not None
+            else None
+        ),
         "mocked": False,
         "live": True,
         "created_at": _now(),
@@ -1660,7 +1724,7 @@ def _write_and_recall_memory(
     recall_receipt["receipt_sha256"] = file_sha256(recall_path)
     return {
         "mode": "ON",
-        "service_request_count": 1 + recall_request_count,
+        "service_request_count": 1 + recall_request_count + exact_lookup_request_count,
         "write": write_receipt,
         "recall": recall_receipt,
         "document": document,
@@ -1873,6 +1937,7 @@ def _execute_live_trial(
     from .arena_battle_proof import _write_json as write_battle_json
 
     started = time.perf_counter()
+    trial_dir = trial_dir.resolve()
     source = _load_v13_source(battle_id=str(plan["battle_id"]), source_root=source_root)
 
     memory_dir = trial_dir / "memory"
@@ -2025,7 +2090,7 @@ def _execute_live_trial(
             genomes=genomes,
         )
     except Exception as exc:
-        raise TrialBlocked("artifact_pipeline", str(exc), retryable=False) from exc
+        raise TrialBlocked("artifact_pipeline", str(exc)) from exc
     try:
         judge = _judge_reviewed_generation(
             generation_dir=generation_dir,

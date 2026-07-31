@@ -1,0 +1,22 @@
+{
+  "fixture_fallback_used": false,
+  "label": "setup-owned-report",
+  "live": true,
+  "method": "GET",
+  "mocked": false,
+  "public_route": "/api/v1/reports/owned",
+  "request_sha256": "1c8557eaee92cf8f4645074354007232a26c4f91253d5a4813024bb83d602c7e",
+  "response_artifact_sha256": "57988f40b41c5161e67227fccd1ff622dd0892e5c4ce345d9d844eb0efa51a6f",
+  "response_body_sha256": "bb4faf9a3941f724d299546bc6525d338f4831ebc145d7c714b920cffc610710",
+  "response_status_code": 200,
+  "schema": "battle.v16.live_topology_action_execution.v1",
+  "selected_action_sha256": null,
+  "source_bindings": {},
+  "source_time": {
+    "duration_seconds": 0.004877,
+    "ended_at": "2026-07-29T16:05:33Z",
+    "started_at": "2026-07-29T16:05:33Z"
+  },
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a"
+}

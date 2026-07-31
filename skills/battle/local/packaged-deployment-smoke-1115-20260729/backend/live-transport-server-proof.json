@@ -1,0 +1,72 @@
+{
+  "base_url": "http://127.0.0.1:45609",
+  "battle_id": "battle-004",
+  "claim_boundary": {
+    "does_not_prove": [
+      "A production deployment is running.",
+      "A WebSocket endpoint exists.",
+      "Live Tau/provider/Docker/Judge runtime directories were read.",
+      "Any exploit succeeded.",
+      "Any Blue detection, kill, or block occurred.",
+      "Judge verified exploit success.",
+      "Memory promotion occurred."
+    ],
+    "proves": [
+      "The Battle live transport adapter served battle.snapshot.v1 over HTTP.",
+      "The Battle live transport adapter served ordered battle.live_event.v1 records as SSE.",
+      "The Battle live transport adapter honored Last-Event-ID resume.",
+      "The Battle live transport adapter failed closed on an impossible future Last-Event-ID."
+    ]
+  },
+  "event_count": 36,
+  "event_schema": "battle.live_event.v1",
+  "fixture_ref": "skills/battle/local/packaged-deployment-smoke-1115-20260729/package-root/skills/battle/spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json",
+  "future_last_event_id_status": 400,
+  "genetic_event_types_when_live": [
+    "research_started",
+    "research_receipt_materialized",
+    "genome_selected",
+    "method_added",
+    "method_rejected",
+    "code_author_started",
+    "specimen_materialized",
+    "compile_failed",
+    "repair_started",
+    "repair_materialized",
+    "compile_passed",
+    "target_contact_unproven",
+    "judge_pending",
+    "judge_exploit_success",
+    "genome_promoted",
+    "branch_abandoned"
+  ],
+  "last_seq": 36,
+  "live": "local_http_sse_adapter",
+  "mocked": false,
+  "raw_path_boundary": {
+    "forbidden_markers": [
+      "tau-dag-run/",
+      "command-loop/",
+      "command-artifacts/",
+      "provider-workspace",
+      "pr3c-provider-workspaces",
+      "outputs/provider-worker-result.json",
+      "inputs/tau-scillm-worker-work-order.json",
+      "/tmp/",
+      "/home/",
+      "/mnt/",
+      "/workspace",
+      "C:\\",
+      "D:\\"
+    ],
+    "raw_paths_leaked": false
+  },
+  "resume_from_last_event_id": 2,
+  "resumed_event_count": 34,
+  "run_id": "arena-parent-spawn-20260707T220426Z",
+  "schema": "battle.live_transport_server_proof.v1",
+  "snapshot_endpoint": "/battle/live/battle-004/snapshot",
+  "snapshot_schema": "battle.snapshot.v1",
+  "sse_endpoint": "/battle/live/battle-004/events",
+  "status": "PASS"
+}

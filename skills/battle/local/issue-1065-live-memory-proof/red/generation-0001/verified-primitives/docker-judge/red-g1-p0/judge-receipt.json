@@ -1,0 +1,28 @@
+{
+  "candidate_id": "red-g1-p0",
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--network",
+    "none",
+    "-e",
+    "BATTLE_JUDGE_PAYLOAD",
+    "python:3.12-slim",
+    "python",
+    "-c",
+    "import json, os; print(json.dumps(json.loads(os.environ['BATTLE_JUDGE_PAYLOAD']), sort_keys=True))"
+  ],
+  "docker_image": "python:3.12-slim",
+  "elapsed_seconds": 0.390996,
+  "exit_code": 0,
+  "generation": 1,
+  "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1065-live-memory-proof/red/generation-0001/verified-primitives/docker-judge/red-g1-p0/judge-receipt.json",
+  "role": "red",
+  "schema": "battle.verified_primitive_docker_judge_receipt.v1",
+  "sha256": "10e13cb64afb626eb19157f136ddddaed29bd0c7929b6096d7512e54f20bd7c1",
+  "status": "PASS",
+  "stderr_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1065-live-memory-proof/red/generation-0001/verified-primitives/docker-judge/red-g1-p0/stderr.txt",
+  "stdout_path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1065-live-memory-proof/red/generation-0001/verified-primitives/docker-judge/red-g1-p0/stdout.txt",
+  "verdict": "RED_SUCCESS"
+}

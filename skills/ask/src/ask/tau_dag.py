@@ -6,7 +6,9 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -231,6 +233,7 @@ class TauDagCompileInput:
     scillm_api_key: str = DEFAULT_SCILLM_API_KEY
     tau_project_root: Path = DEFAULT_TAU_PROJECT_ROOT
     browser_lock_timeout: int = 0
+    execution_timeout_seconds: int = 0
     attachments: tuple[str, ...] = ()
 
 
@@ -257,6 +260,7 @@ def infer_compile_input(
     scillm_api_key: str = DEFAULT_SCILLM_API_KEY,
     tau_project_root: Path = DEFAULT_TAU_PROJECT_ROOT,
     browser_lock_timeout: int = 0,
+    execution_timeout_seconds: int = 0,
     attachments: list[str] | None = None,
 ) -> TauDagCompileInput:
     """Merge explicit CLI fields with conservative request-text inference."""
@@ -319,6 +323,7 @@ def infer_compile_input(
         scillm_api_key=scillm_api_key or default_scillm_api_key(),
         tau_project_root=tau_project_root,
         browser_lock_timeout=max(0, int(browser_lock_timeout or 0)),
+        execution_timeout_seconds=max(0, int(execution_timeout_seconds or 0)),
         attachments=tuple(str(item) for item in (attachments or [])),
     )
 
@@ -1063,11 +1068,47 @@ def _synthesize_missing_browser_handler_receipts(
         response_path = artifact_dir / "response.md"
         raw_path = artifact_dir / "response.raw.md"
         meta_path = artifact_dir / "response.meta.json"
-        evidence_paths = [prompt_path, submitted_path, response_path, raw_path, meta_path]
+        submit_receipt_path = artifact_dir / "response.md.receipt.json"
+        inflight_path = artifact_dir / "webgpt_inflight.json"
+        heartbeat_path = artifact_dir / "webgpt_heartbeat.json"
+        evidence_paths = [
+            prompt_path,
+            submitted_path,
+            response_path,
+            raw_path,
+            meta_path,
+            submit_receipt_path,
+            inflight_path,
+            heartbeat_path,
+        ]
         if not any(path.exists() for path in evidence_paths):
             continue
         artifact_dir.mkdir(parents=True, exist_ok=True)
         submit_meta = _read_json(meta_path) if meta_path.is_file() else {}
+        submit_receipt = _read_json(submit_receipt_path) if submit_receipt_path.is_file() else {}
+        inflight = _read_json(inflight_path) if inflight_path.is_file() else {}
+        heartbeat = _read_json(heartbeat_path) if heartbeat_path.is_file() else {}
+        command_attachment_paths = _attachment_paths_from_command_spec(run_dir, node_id)
+        command_surf_run = _command_spec_flag_value(run_dir, node_id, "--surf-run")
+        if command_attachment_paths:
+            for payload in (submit_meta, submit_receipt, inflight):
+                if isinstance(payload, dict):
+                    payload.setdefault("attach_file", command_attachment_paths[0])
+                    payload.setdefault("attachment_paths", command_attachment_paths)
+        orphan_summary = _browser_orphan_artifact_summary(
+            submit_meta=submit_meta,
+            submit_receipt=submit_receipt,
+            inflight=inflight,
+            heartbeat=heartbeat,
+            handler=handler,
+            surf_run=Path(command_surf_run) if command_surf_run else Path("skills/surf/run.sh"),
+            prompt_path=prompt_path,
+            response_path=response_path,
+            raw_path=raw_path,
+            meta_path=meta_path,
+            attachment_paths=command_attachment_paths,
+        )
+        failure_code = orphan_summary["failure_code"]
         quarantined_response_path = response_path
         quarantine_receipt: dict[str, Any] | None = None
         response_chars = response_path.stat().st_size if response_path.is_file() else 0
@@ -1080,7 +1121,7 @@ def _synthesize_missing_browser_handler_receipts(
                 "status": "QUARANTINED",
                 "ok": False,
                 "provider_live": False,
-                "failure_code": "browser_handler_timeout",
+                "failure_code": failure_code,
                 "original_response_path": str(response_path),
                 "quarantine_path": str(quarantined_response_path),
                 "response_chars": response_chars,
@@ -1097,7 +1138,7 @@ def _synthesize_missing_browser_handler_receipts(
             "status": "NEEDS_ATTENTION",
             "mocked": False,
             "live": True,
-            "failure_code": "browser_handler_timeout",
+            "failure_code": failure_code,
             "handler": handler,
             "node_id": node_id,
             "reason": (
@@ -1107,21 +1148,41 @@ def _synthesize_missing_browser_handler_receipts(
             "evidence": {
                 "prompt_path": str(prompt_path) if prompt_path.exists() else None,
                 "submitted_prompt_path": str(submitted_path) if submitted_path.exists() else None,
+                "submit_receipt_path": str(submit_receipt_path) if submit_receipt_path.exists() else None,
+                "inflight_path": str(inflight_path) if inflight_path.exists() else None,
+                "heartbeat_path": str(heartbeat_path) if heartbeat_path.exists() else None,
                 "raw_response_path": str(raw_path) if raw_path.exists() else None,
                 "meta_path": str(meta_path) if meta_path.exists() else None,
                 "submit_meta_status": submit_meta.get("status") if isinstance(submit_meta, dict) else None,
+                "submit_receipt_status": submit_receipt.get("status") if isinstance(submit_receipt, dict) else None,
+                "inflight_status": inflight.get("status") if isinstance(inflight, dict) else None,
+                "inflight_submitted_to_chatgpt": inflight.get("submitted_to_chatgpt")
+                if isinstance(inflight, dict)
+                else None,
+                "heartbeat_phase": heartbeat.get("phase") if isinstance(heartbeat, dict) else None,
+                "heartbeat_page_state": heartbeat.get("page_state") if isinstance(heartbeat, dict) else None,
+                "sentinel": orphan_summary["sentinel"],
+                "requested_tab_id": orphan_summary["requested_tab_id"],
                 "response_chars": response_chars,
+                "provider_throttle": orphan_summary["provider_throttle"],
+                "requested_attachment_paths": command_attachment_paths,
             },
             "response_path": str(quarantined_response_path),
             "raw_response_path": str(raw_path),
             "meta_path": str(meta_path),
             "prompt_path": str(prompt_path),
+            "requested_attachment_paths": command_attachment_paths,
             "auto_retry_allowed": False,
-            "auto_retry_blocked_reason": "browser_handler_timeout_expired",
-            "next_command": [],
-            "fallback_instruction": (
-                "Treat only this browser lane as timed out. Let the join preserve usable peer seats, "
-                "then rerun this handler later or with a fresh provider tab."
+            "auto_retry_blocked_reason": orphan_summary["auto_retry_blocked_reason"],
+            "next_command": orphan_summary["next_command"],
+            "fallback_instruction": orphan_summary["fallback_instruction"],
+            "ticket_target": "$ask at agent-skills@main",
+            "ticket_instruction": (
+                "If this browser-recovery-packet still blocks the project after following next_command, "
+                "file a $ticket to $ask at agent-skills@main. Include the Ask run directory, dag.json, "
+                "node-receipt.json, browser-recovery-packet.json, response.meta.json when present, "
+                "response.md.receipt.json, webgpt_inflight.json, webgpt_heartbeat.json, raw response, "
+                "and exact command stderr."
             ),
         }
         _write_json(recovery_path, recovery_packet)
@@ -1144,9 +1205,12 @@ def _synthesize_missing_browser_handler_receipts(
             "recovery_packet_path": str(recovery_path),
             "response_chars": response_chars,
             "submit_meta": submit_meta if isinstance(submit_meta, dict) else {},
+            "submit_receipt": submit_receipt if isinstance(submit_receipt, dict) else {},
+            "webgpt_inflight": inflight if isinstance(inflight, dict) else {},
+            "webgpt_heartbeat": heartbeat if isinstance(heartbeat, dict) else {},
             "commands": [],
             "failure": "browser_handler_timeout: missing node-receipt.json after browser submit artifacts existed",
-            "failure_code": "browser_handler_timeout",
+            "failure_code": failure_code,
             "competition_lane_exit_ok": True,
             "recovery_packet": recovery_packet,
             "synthesized_missing_receipt": True,
@@ -1176,6 +1240,153 @@ def _synthesize_missing_browser_handler_receipts(
             }
         )
     return synthesized
+
+
+def _browser_orphan_artifact_summary(
+    *,
+    submit_meta: dict[str, Any],
+    submit_receipt: dict[str, Any],
+    inflight: dict[str, Any],
+    heartbeat: dict[str, Any],
+    handler: str,
+    surf_run: Path,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    attachment_paths: list[str],
+) -> dict[str, Any]:
+    haystack = "\n".join(
+        json.dumps(item, sort_keys=True, default=str)
+        for item in (submit_meta, submit_receipt, inflight, heartbeat)
+        if item
+    ).lower()
+    provider_throttle = any(
+        marker in haystack
+        for marker in (
+            "chatgpt_too_many_requests_detected",
+            "blocked_webgpt_provider_rate_limit",
+            "proof_status\": \"rate_limited",
+            "too many requests",
+            "temporarily limited access",
+            "provider_rate_limited",
+        )
+    )
+    prepared_prompt_only = any(
+        isinstance(source, dict)
+        and str(source.get("status") or "") == "prepared_prompt"
+        and source.get("submitted_to_chatgpt") is False
+        for source in (submit_meta, submit_receipt, inflight, heartbeat)
+    )
+    failure_code = (
+        "browser_provider_rate_limited"
+        if provider_throttle
+        else "browser_submit_not_accepted"
+        if prepared_prompt_only
+        else "browser_handler_timeout"
+    )
+    recovery_command = ""
+    for source in (submit_meta, inflight, submit_receipt, heartbeat):
+        if isinstance(source, dict):
+            recovery_command = str(source.get("recovery_command") or "").strip()
+            if recovery_command:
+                break
+    next_command = shlex.split(recovery_command) if recovery_command else []
+    sentinel = ""
+    requested_tab_id = ""
+    for source in (submit_meta, inflight, submit_receipt, heartbeat):
+        if not isinstance(source, dict):
+            continue
+        sentinel = sentinel or str(source.get("sentinel") or "").strip()
+        requested_tab_id = requested_tab_id or str(source.get("requested_tab_id") or "").strip()
+    if provider_throttle:
+        blocked_reason = "browser_provider_rate_limit_requires_backoff"
+        fallback_instruction = (
+            "Treat only this browser lane as provider-rate-limited. Do not launch parallel WebGPT "
+            "attempts. Wait for provider cooldown, then rerun this lane or continue with available peers."
+        )
+    elif prepared_prompt_only and attachment_paths:
+        blocked_reason = "browser_prepared_prompt_requires_attachment_preserving_resubmit"
+        submit_binary = surf_run if str(surf_run) else Path("skills/surf/run.sh")
+        transport = str(ROUNDTABLE_HANDLERS.get(handler, {}).get("transport") or f"{handler}.submit")
+        command = [
+            str(submit_binary),
+            transport,
+            "--input",
+            str(prompt_path),
+            "--output",
+            str(response_path.with_name("response.retry.md")),
+            "--raw-output",
+            str(raw_path.with_name("response.retry.raw.md")),
+            "--meta-output",
+            str(meta_path.with_name("response.retry.meta.json")),
+        ]
+        for attachment_path in attachment_paths:
+            command.extend(["--attach-file", attachment_path])
+        if requested_tab_id:
+            command.extend(["--tab-id", requested_tab_id])
+        next_command = command
+        fallback_instruction = (
+            "The WebGPT worker prepared the prompt but did not prove browser submission. "
+            "Run next_command only after tab preflight; it preserves the original local attachment path."
+        )
+    elif next_command:
+        blocked_reason = "browser_submitted_no_response_proof_requires_recover"
+        fallback_instruction = (
+            "Surf proved prompt submission but did not produce a terminal response/meta artifact. Run "
+            "next_command to recover the existing controlled tab before submitting a new WebGPT prompt."
+        )
+    else:
+        blocked_reason = "browser_handler_timeout_expired"
+        fallback_instruction = (
+            "Treat only this browser lane as timed out. Let the join preserve usable peer seats, "
+            "then rerun this handler later or with a fresh provider tab."
+        )
+    return {
+        "failure_code": failure_code,
+        "provider_throttle": provider_throttle,
+        "auto_retry_blocked_reason": blocked_reason,
+        "next_command": next_command,
+        "fallback_instruction": fallback_instruction,
+        "sentinel": sentinel or None,
+        "requested_tab_id": requested_tab_id or None,
+        "requested_attachment_paths": attachment_paths,
+    }
+
+
+def _attachment_paths_from_command_spec(run_dir: Path, node_id: str) -> list[str]:
+    paths: list[str] = []
+    for spec_path in _command_spec_paths(run_dir, node_id):
+        if not spec_path.is_file():
+            continue
+        payload = _read_json(spec_path)
+        command = payload.get("command") if isinstance(payload.get("command"), list) else []
+        for index, item in enumerate(command):
+            if str(item) != "--attach-file" or index + 1 >= len(command):
+                continue
+            value = str(command[index + 1] or "").strip()
+            if value and value not in paths:
+                paths.append(value)
+    return paths
+
+
+def _command_spec_flag_value(run_dir: Path, node_id: str, flag: str) -> str:
+    for spec_path in _command_spec_paths(run_dir, node_id):
+        if not spec_path.is_file():
+            continue
+        payload = _read_json(spec_path)
+        command = payload.get("command") if isinstance(payload.get("command"), list) else []
+        for index, item in enumerate(command):
+            if str(item) == flag and index + 1 < len(command):
+                return str(command[index + 1] or "").strip()
+    return ""
+
+
+def _command_spec_paths(run_dir: Path, node_id: str) -> tuple[Path, Path]:
+    return (
+        run_dir / "command-specs" / node_id / "tau-dispatch-command.json",
+        run_dir / "tau-receipts" / "compiled-command-specs" / node_id / "tau-dispatch-command.json",
+    )
 
 
 def _next_available_path(path: Path) -> Path:
@@ -1485,30 +1696,41 @@ def _is_browser_handler(handler: str) -> bool:
 
 def _run_gate_command(command: list[str], *, cwd: Path, timeout_seconds: float) -> dict[str, Any]:
     started = time.time()
+    proc: subprocess.Popen[str] | None = None
     try:
-        completed = subprocess.run(
+        proc = subprocess.Popen(
             command,
             cwd=str(cwd),
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=timeout_seconds,
-            check=False,
+            start_new_session=True,
         )
+        stdout, stderr = proc.communicate(timeout=timeout_seconds)
         return {
             "command": command,
-            "returncode": completed.returncode,
-            "stdout": completed.stdout[:20000],
-            "stderr": completed.stderr[:8000],
+            "returncode": proc.returncode,
+            "stdout": stdout[:20000],
+            "stderr": stderr[:8000],
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": False,
         }
     except subprocess.TimeoutExpired as exc:
+        if proc is not None:
+            _terminate_process_group(proc.pid)
+            try:
+                stdout, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                _kill_process_group(proc.pid)
+                stdout, stderr = proc.communicate()
+        else:
+            stdout = str(exc.stdout or "")
+            stderr = str(exc.stderr or "")
         return {
             "command": command,
             "returncode": 124,
-            "stdout": str(exc.stdout or "")[:20000],
-            "stderr": str(exc.stderr or "command timed out")[:8000],
+            "stdout": (stdout or "")[:20000],
+            "stderr": ((stderr or "") + "\n[ask-gate] command timed out; killed process group\n")[:8000],
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": True,
         }
@@ -1521,6 +1743,20 @@ def _run_gate_command(command: list[str], *, cwd: Path, timeout_seconds: float) 
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": False,
         }
+
+
+def _terminate_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+
+
+def _kill_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
 
 
 def _parse_tab_list_payload(text: str) -> list[dict[str, Any]] | None:
@@ -1967,6 +2203,14 @@ def _write_roundtable_command_spec(
     node_id = str(node["id"])
     handler = str(handler_policy.get("id") or node.get("agent") or node_id)
     is_subagent_handler = str(handler_policy.get("transport") or "") == "subagent-runner.codex_exec"
+    browser_handler = _is_browser_handler(handler)
+    lock_timeout_s = _browser_lock_timeout_seconds(input) if browser_handler else 0
+    worker_provider_timeout_s = (
+        "5400"
+        if handler == "codex"
+        else ("1500" if is_subagent_handler else ("900" if browser_handler else "300"))
+    )
+    command_timeout_budget_s = _browser_command_timeout_budget_seconds(input) if browser_handler else 0
     command = [
         sys.executable,
         str(worker_path),
@@ -1996,13 +2240,13 @@ def _write_roundtable_command_spec(
         # codex coder orders carry mandatory finish sequences (wheel build +
         # fixture suite + gate-document extractions + cargo test) that alone
         # take ~20 min; 3000s starved a real repair mid-flight (2026-07-22).
-        "5400"
-        if handler == "codex"
-        else ("1500" if is_subagent_handler else ("900" if _is_browser_handler(handler) else "300")),
+        worker_provider_timeout_s,
         "--stable-polls",
         "2",
         "--no-activate",
     ]
+    if command_timeout_budget_s:
+        command.extend(["--command-timeout-budget", str(command_timeout_budget_s)])
     prior_nodes = _roundtable_prior_nodes(input, node_id)
     if node_id == "join":
         prior_nodes = _handler_node_ids(input.handlers)
@@ -2010,7 +2254,6 @@ def _write_roundtable_command_spec(
         command.extend(["--prior-node", prior_node])
     if handler in ROUNDTABLE_HANDLERS and handler != "codex":
         command.extend(["--browser-oracle-project", _handler_project(input, handler)])
-        lock_timeout_s = _browser_lock_timeout_seconds(input)
         if lock_timeout_s:
             command.extend(["--browser-lock-timeout", str(lock_timeout_s)])
         # Local evidence a browser seat must actually see (agent-skills#1062).
@@ -2051,7 +2294,8 @@ def _write_roundtable_command_spec(
         "timeout_s": _roundtable_command_timeout(
             handler,
             is_subagent_handler=is_subagent_handler,
-            lock_timeout_s=_browser_lock_timeout_seconds(input) if _is_browser_handler(handler) else 0,
+            lock_timeout_s=lock_timeout_s,
+            execution_timeout_s=int(getattr(input, "execution_timeout_seconds", 0) or 0),
         ),
         "requires_network": node_id != "join",
         "mutates": handler == "codex",
@@ -2070,6 +2314,7 @@ def _roundtable_command_timeout(
     *,
     is_subagent_handler: bool,
     lock_timeout_s: int = 0,
+    execution_timeout_s: int = 0,
 ) -> int:
     if handler == "codex":
         return 6000
@@ -2082,12 +2327,16 @@ def _roundtable_command_timeout(
             + BROWSER_COMMAND_GRACE_SECONDS
         )
         if handler == "webgpt":
-            return max(3900, browser_envelope)
-        if handler == "webgemini":
-            return max(4200, browser_envelope)
-        if handler in {"webclaude", "webkimi", "webgrok"}:
-            return max(3000, browser_envelope)
-        return browser_envelope
+            base_timeout = max(3900, browser_envelope)
+        elif handler == "webgemini":
+            base_timeout = max(4200, browser_envelope)
+        elif handler in {"webclaude", "webkimi", "webgrok"}:
+            base_timeout = max(3000, browser_envelope)
+        else:
+            base_timeout = browser_envelope
+        if execution_timeout_s > 0:
+            return min(base_timeout, execution_timeout_s + BROWSER_COMMAND_GRACE_SECONDS)
+        return base_timeout
     if handler == "webgpt":
         return 3900
     if handler == "webgemini":
@@ -2095,6 +2344,13 @@ def _roundtable_command_timeout(
     if handler in {"webclaude", "webkimi", "webgrok"}:
         return 3000
     return 420
+
+
+def _browser_command_timeout_budget_seconds(input: TauDagCompileInput) -> int:
+    execution_timeout_s = int(getattr(input, "execution_timeout_seconds", 0) or 0)
+    if execution_timeout_s <= 0:
+        return 0
+    return max(30, execution_timeout_s)
 
 
 def _browser_handler_count(input: TauDagCompileInput) -> int:
@@ -2331,7 +2587,7 @@ def _roundtable_handler_prompt_contract(
     prior_nodes = prior_nodes or []
     requires_verdict = bool(prior_nodes) and _roundtable_requires_verdict(input.request)
     if input.workflow_mode == "compete":
-        return {
+        contract = {
             "schema": "ask.tau_dag_prompt_contract.v1",
             "system": "You are an isolated Tau-managed competitor. Do not rely on other candidates.",
             "user_template": (
@@ -2350,6 +2606,10 @@ def _roundtable_handler_prompt_contract(
             "verdict_schema": None,
             "isolation_required": True,
         }
+        if handler == "webclaude":
+            contract["model_preference"] = COMPETE_WEBCLAUDE_MODEL
+            contract["model_preference_scope"] = "ask_compete_default"
+        return contract
     return {
         "schema": "ask.tau_dag_prompt_contract.v1",
         "system": "You are a Tau-managed roundtable handler. Return receipt-backed findings only.",

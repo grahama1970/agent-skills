@@ -1,0 +1,21 @@
+{
+  "live": "deterministic_source_bearing_fixture",
+  "mocked": false,
+  "model_only_negative_receipt": "model-only/dogpile-security-packet.json",
+  "non_claims": [
+    "research_design_input_only",
+    "source_bearing_is_traceability_not_truth",
+    "no_scan_executed",
+    "no_docker_invoked",
+    "no_authorization_proof",
+    "no_exploit_or_patch_proof",
+    "no_repository_adoption_proof"
+  ],
+  "schema": "dogpile.source_bearing_gate_receipt.v1",
+  "skipped_provider_negative_receipt": "skipped-provider/dogpile-security-packet.json",
+  "source_bearing_evidence_count": 2,
+  "source_bearing_provider_count": 2,
+  "status": "PASS",
+  "valid_hack_scan_request": "valid/hack-scan-request.json",
+  "valid_packet": "valid/dogpile-security-packet.json"
+}

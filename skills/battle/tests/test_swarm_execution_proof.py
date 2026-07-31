@@ -1,0 +1,92 @@
+import json
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from battle_skill import swarm_execution_proof as swarm
+
+
+def test_unbounded_swarm_execution_receipt_records_dynamic_docker_workers(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_run(command, **kwargs):
+        worker_id = command[command.index("-e") + 1].split("=", 1)[1]
+        return SimpleNamespace(
+            returncode=0,
+            stdout=f"start {worker_id} of 6\nend {worker_id}\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr(swarm.subprocess, "run", fake_run)
+    monkeypatch.setattr(swarm, "_max_concurrent", lambda results: 3)
+
+    receipt = swarm.prove_unbounded_swarm_execution(
+        out_dir=tmp_path,
+        worker_count=6,
+        docker_image="python:3.12-slim",
+        min_concurrent_observed=3,
+    )
+
+    assert receipt["schema"] == "battle.unbounded_swarm_execution_proof.v1"
+    assert receipt["status"] == "PASS"
+    assert receipt["mocked"] is False
+    assert receipt["live"] == "local_docker_dynamic_swarm_execution"
+    assert receipt["worker_count"] == 6
+    assert receipt["completed_worker_count"] == 6
+    assert receipt["failed_worker_count"] == 0
+    assert receipt["max_concurrent_observed"] >= 3
+    assert len(receipt["worker_receipts"]) == 6
+    stored = json.loads((tmp_path / "unbounded-swarm-execution-proof.json").read_text(encoding="utf-8"))
+    assert stored["status"] == "PASS"
+    assert len(list((tmp_path / "workers").glob("*.json"))) == 6
+
+
+def test_unbounded_swarm_execution_fails_on_worker_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_run(command, **kwargs):
+        worker_id = command[command.index("-e") + 1].split("=", 1)[1]
+        return SimpleNamespace(
+            returncode=1,
+            stdout=f"start {worker_id} of 2\n",
+            stderr="boom",
+        )
+
+    monkeypatch.setattr(swarm.subprocess, "run", fake_run)
+
+    with pytest.raises(RuntimeError, match="worker red-000 failed"):
+        swarm.prove_unbounded_swarm_execution(
+            out_dir=tmp_path,
+            worker_count=2,
+            min_concurrent_observed=1,
+        )
+
+    stored = json.loads((tmp_path / "unbounded-swarm-execution-proof.json").read_text(encoding="utf-8"))
+    assert stored["status"] == "FAIL"
+    assert stored["failed_worker_count"] == 2
+
+
+def test_unbounded_swarm_execution_rejects_invalid_threshold(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="min_concurrent_observed must be <= worker_count"):
+        swarm.prove_unbounded_swarm_execution(
+            out_dir=tmp_path,
+            worker_count=2,
+            min_concurrent_observed=3,
+        )
+
+
+def test_max_concurrent_counts_overlapping_worker_intervals() -> None:
+    assert (
+        swarm._max_concurrent(
+            [
+                {"started_monotonic": 0.0, "ended_monotonic": 4.0},
+                {"started_monotonic": 1.0, "ended_monotonic": 3.0},
+                {"started_monotonic": 2.0, "ended_monotonic": 5.0},
+                {"started_monotonic": 6.0, "ended_monotonic": 7.0},
+            ]
+        )
+        == 3
+    )

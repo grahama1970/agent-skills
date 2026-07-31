@@ -14,6 +14,7 @@ dependencies = [
 "rich>=13.0.0",
 "textual",
 "typer>=0.9.0",
+"websockets>=15.0,<16.0",
 ]
 
 [build-system]
@@ -32,6 +33,7 @@ dev-dependencies = [
 # contain target-app `test_app.py` files (the exploit targets' own suites) that
 # import a local `app` module and must NOT be collected by the skill's pytest run.
 testpaths = ["tests"]
+pythonpath = ["src", "..", "../.."]
 norecursedirs = ["fixtures", "monitor", "arena", "sanity", "runtime-matrix", "spectator", ".venv", "*.egg", "build", "dist"]
 
 [tool.hatch.build.targets.wheel]

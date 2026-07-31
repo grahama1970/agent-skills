@@ -1,0 +1,38 @@
+{
+  "import_http_status": 201,
+  "import_response_sha256": "36eacd99609d53c1b6fef8395525b670d2b13dda75ec7639b8113afc9076f8e4",
+  "mode": "VULNERABLE",
+  "outcome": {
+    "capability_acquisition_measured": true,
+    "highest_stage": "PROTECTED_OBJECTIVE",
+    "implementation_status": "IMPLEMENTED",
+    "normal_import_capability_material_measured": true,
+    "path_id": "RF-C",
+    "preview_observation_measured": true,
+    "protected_objective_measured": true,
+    "public_observation_private_truth_absent": true,
+    "receipt_chain_sha256": "8bf65d949e019f5a7240d1cd707349e23eaaf32af2097c80c2fa1aae80d1aa17",
+    "renderer_boundary_violation_measured": true,
+    "returned_resource_sha256": "943c2f0df61e2e1766e5c5db8daa47f1beaa7ffe0fbe333638de09d0532ea081",
+    "rf_a_sink_unchanged": true,
+    "rf_b_sink_unchanged": true,
+    "sink_after_sha256": {
+      "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+      "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+      "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    },
+    "sink_before_sha256": {
+      "RF-A-SINK": "590c9927a6f700efc878bb63e15a7c95fd1be9adc1598fd94b535ef80dd523cb",
+      "RF-B-SINK": "6a2d58c01eeec6406a3a4427805ef69bd20bf7d42559c04b42cf079b4f803315",
+      "RF-C-SINK": "1395b90a4eeb943dc758f46b6bb3b063f9d9c31f265a780bdcb5aa6b2448bfdf"
+    },
+    "sink_isolation_proven": true,
+    "stage_index": 4
+  },
+  "preview_http_status": 200,
+  "preview_response_sha256": "86f877b45e4716374f87f7ea8342f2129a4461daa0260595865b727f9c2c8147",
+  "render_http_status": 200,
+  "render_response_sha256": "3e65359db9a1a1a930c19fa607c7eee2bd89c48c6400dc6e63278f36f038496a",
+  "schema": "battle.v16.relayforge.rf_c_reference.v1",
+  "state_tree_sha256": "b61daad8485ac3d5dac10d67bce1296690b0486a9b7ca4026e30550e83102c3f"
+}

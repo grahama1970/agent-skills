@@ -869,29 +869,171 @@ def _run_tau_harness(
     if result.returncode not in (0, 2) and not manifest_path.exists():
         return _write_json(
             manifest_path,
-            {
-                "schema": "tau.battle_live_handoff_proof.v1",
-                "battle_id": battle_id,
-                "run_id": run_id,
-                "scenario_id": scenario_id,
-                "status": "BLOCKED",
-                "reason": "tau_harness_command_failed_before_manifest",
-                "mocked": False,
-                "live": True,
-                "command": command,
-                "exit_code": result.returncode,
-                "stdout_path": str(out_dir / "tau-live-command.stdout.txt"),
-                "stderr_path": str(out_dir / "tau-live-command.stderr.txt"),
-                "teams": [],
-                "claims": {
-                    "proves": ["Battle attempted to invoke Tau's public-only Red/Blue handoff bridge."],
-                    "does_not_prove": ["Tau accepted the handoff.", "Red or Blue subagent receipts.", "Docker Judge replay."],
-                },
-            },
+            _partial_tau_manifest_from_worker_receipts(
+                tau_out=tau_out,
+                battle_id=battle_id,
+                run_id=run_id,
+                scenario_id=scenario_id,
+                command=command,
+                exit_code=result.returncode,
+                stdout_path=out_dir / "tau-live-command.stdout.txt",
+                stderr_path=out_dir / "tau-live-command.stderr.txt",
+                model=model,
+                scillm_base_url=scillm_base_url,
+                red_workers=red_workers,
+                blue_workers=blue_workers,
+            ),
         )
     if not manifest_path.exists():
         raise RuntimeError(f"Tau manifest missing after handoff command: {manifest_path}")
     return manifest_path
+
+
+def _partial_tau_manifest_from_worker_receipts(
+    *,
+    tau_out: Path,
+    battle_id: str,
+    run_id: str,
+    scenario_id: str,
+    command: list[str],
+    exit_code: int,
+    stdout_path: Path,
+    stderr_path: Path,
+    model: str,
+    scillm_base_url: str,
+    red_workers: int,
+    blue_workers: int,
+) -> dict[str, Any]:
+    teams = [
+        entry
+        for team_name in ("red", "blue")
+        for entry in _partial_tau_team_entries(tau_out=tau_out, team_name=team_name)
+    ]
+    red_materialized = len(
+        [
+            item
+            for item in teams
+            if item.get("team") == "red"
+            and isinstance(item.get("materialized_artifact"), dict)
+            and item["materialized_artifact"].get("status") == "PASS"
+            and item["materialized_artifact"].get("path")
+        ]
+    )
+    blue_materialized = len(
+        [
+            item
+            for item in teams
+            if item.get("team") == "blue"
+            and isinstance(item.get("materialized_artifact"), dict)
+            and item["materialized_artifact"].get("status") == "PASS"
+            and item["materialized_artifact"].get("path")
+        ]
+    )
+    return {
+        "schema": "tau.battle_live_handoff_proof.v1",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario_id,
+        "status": "BLOCKED",
+        "reason": "tau_harness_command_failed_before_manifest",
+        "mocked": False,
+        "live": True,
+        "surface": "scillm.chat_completions",
+        "model": model,
+        "scillm_base_url": scillm_base_url,
+        "command": command,
+        "exit_code": exit_code,
+        "stdout_path": str(stdout_path),
+        "stderr_path": str(stderr_path),
+        "requested_workers": {"red": red_workers, "blue": blue_workers},
+        "materialized_counts": {"red": red_materialized, "blue": blue_materialized},
+        "teams": teams,
+        "claims": {
+            "proves": [
+                "Battle attempted to invoke Tau's public-only Red/Blue handoff bridge.",
+                "Battle preserved any Tau worker receipts and materialization receipts written before the Tau aggregate manifest failed.",
+            ],
+            "does_not_prove": [
+                "Tau completed the full Red/Blue worker matrix.",
+                "Battle Judge replayed a Red/Blue pair unless both materialized counts are nonzero.",
+            ],
+        },
+    }
+
+
+def _partial_tau_team_entries(*, tau_out: Path, team_name: str) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for team_dir in _partial_tau_worker_dirs(tau_out=tau_out, team_name=team_name):
+        handoff_path = team_dir / "handoff.json"
+        materialized_path = team_dir / "materialized-artifact-receipt.json"
+        subagent_path = team_dir / "tau-subagent-receipt.json"
+        scillm_call_path = team_dir / "scillm-call-receipt.json"
+        handoff = _read_json_if_exists(handoff_path)
+        materialized = _read_json_if_exists(materialized_path)
+        subagent = _read_json_if_exists(subagent_path)
+        if not handoff and not materialized and not subagent:
+            continue
+        battle_context = (
+            subagent.get("context", {}).get("battle", {})
+            if isinstance(subagent.get("context"), dict)
+            and isinstance(subagent.get("context", {}).get("battle"), dict)
+            else {}
+        )
+        default_worker_id = (
+            team_dir.name if team_dir.name not in {"red", "blue"} else f"{team_name}-0"
+        )
+        worker_id = str(
+            battle_context.get("worker_id")
+            or handoff.get("worker_id")
+            or default_worker_id
+        )
+        lane_id = str(
+            battle_context.get("lane_id")
+            or handoff.get("lane_id")
+            or ("payload-857-receipt" if team_name == "red" and worker_id == "red-0" else f"payload-857-{worker_id}")
+        )
+        subagent_result = (
+            subagent.get("result") if isinstance(subagent.get("result"), dict) else {}
+        )
+        status = materialized.get("status") or subagent_result.get("status")
+        entry: dict[str, Any] = {
+            "team": team_name,
+            "worker_id": worker_id,
+            "lane_id": lane_id if team_name == "red" else None,
+            "status": status or "BLOCKED",
+        }
+        if handoff_path.exists():
+            entry["handoff"] = str(handoff_path)
+        if scillm_call_path.exists():
+            entry["scillm_call"] = str(scillm_call_path)
+        if subagent_path.exists():
+            entry["subagent_receipt"] = str(subagent_path)
+        if materialized_path.exists():
+            entry["materialized"] = materialized
+            entry["materialized_artifact"] = materialized
+        entries.append(entry)
+    return entries
+
+
+def _partial_tau_worker_dirs(*, tau_out: Path, team_name: str) -> list[Path]:
+    root = tau_out / team_name
+    dirs: list[Path] = []
+    if root.exists():
+        dirs.append(root)
+    workers_root = root / "workers"
+    if workers_root.exists():
+        dirs.extend(path for path in sorted(workers_root.iterdir()) if path.is_dir())
+    return dirs
+
+
+def _read_json_if_exists(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return value if isinstance(value, dict) else {}
 
 
 def _visibility_validation(*, out_dir: Path, tau_manifest: dict[str, Any]) -> dict[str, Any]:

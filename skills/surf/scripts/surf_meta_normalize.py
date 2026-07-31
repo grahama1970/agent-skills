@@ -21,6 +21,8 @@ PROVIDER_KEYS = {
 }
 
 RETRYABLE_FAILURES = {
+    "browser_handler_killed",
+    "browser_handler_timeout",
     "too_many_requests",
     "provider_capacity",
     "provider_rate_limited",
@@ -30,6 +32,122 @@ RETRYABLE_FAILURES = {
     "conversation_max_length",
     "response_not_finished",
 }
+
+NONTERMINAL_STATUSES = {
+    "delivery_pending",
+    "pending",
+    "prepared_prompt",
+    "running",
+}
+
+
+def read_text_arg(value: str | None, file_value: str | None) -> str:
+    if file_value:
+        try:
+            return Path(file_value).expanduser().read_text(errors="replace")
+        except OSError:
+            return ""
+    return value or ""
+
+
+def command_returncode_kind(returncode: int | None, stderr_text: str) -> str | None:
+    if returncode is None:
+        return None
+    lowered = stderr_text.lower()
+    if returncode == 124 or "timed out" in lowered or "killed process group" in lowered:
+        return "browser_handler_timeout"
+    if returncode in {-9, 137}:
+        return "browser_handler_killed"
+    if returncode in {-15, 143}:
+        return "browser_handler_interrupted"
+    if returncode != 0:
+        return "browser_handler_failed"
+    return None
+
+
+def unproven_proof_status(meta: dict[str, Any], failure_code: str) -> str:
+    if failure_code == "not_submitted":
+        return "not_submitted"
+    if bool(
+        first_present(
+            meta,
+            "submitted_to_chatgpt",
+            "submitted_to_claude",
+            "submitted_to_gemini",
+            "submitted_to_kimi",
+            "submitted_to_grok",
+            "submitted_to_provider",
+        )
+    ):
+        return "submitted_no_response_proof"
+    return "delivery_not_proven"
+
+
+def finalize_nonterminal_meta(
+    meta: dict[str, Any],
+    *,
+    returncode: int | None,
+    stderr_text: str,
+    stdout_text: str,
+    duration_seconds: float | None,
+) -> dict[str, Any]:
+    """Convert stale submit metadata into a terminal record using caller context.
+
+    A provider wrapper cannot handle SIGKILL. The parent process is therefore the
+    only reliable witness for killed or externally timed-out lanes.
+    """
+    status = str(meta.get("status") or "").lower()
+    proof_status = str(meta.get("proof_status") or "").lower()
+    should_finalize = (
+        returncode is not None
+        and returncode != 0
+        and (status in NONTERMINAL_STATUSES or proof_status in NONTERMINAL_STATUSES or not status)
+    )
+    if not should_finalize:
+        return meta
+
+    failure_code = command_returncode_kind(returncode, stderr_text) or "browser_handler_failed"
+    if status == "prepared_prompt" and not bool(first_present(meta, "submitted_to_chatgpt", "submitted_to_provider")):
+        failure_code = "not_submitted"
+
+    finished = dict(meta)
+    finished["source_meta_status"] = meta.get("status")
+    finished["source_meta_proof_status"] = meta.get("proof_status")
+    finished["source_meta_finalized"] = True
+    finished["status"] = {
+        "browser_handler_timeout": "timeout",
+        "browser_handler_killed": "killed",
+        "browser_handler_interrupted": "interrupted",
+        "not_submitted": "failed",
+    }.get(failure_code, "failed")
+    finished["failure"] = failure_code
+    finished["blocker"] = {
+        "browser_handler_timeout": "BROWSER_HANDLER_TIMEOUT",
+        "browser_handler_killed": "BROWSER_HANDLER_KILLED",
+        "browser_handler_interrupted": "BROWSER_HANDLER_INTERRUPTED",
+        "not_submitted": "BROWSER_SUBMIT_NOT_ACCEPTED",
+    }.get(failure_code, "BROWSER_HANDLER_FAILED")
+    finished["proof_status"] = unproven_proof_status(meta, failure_code)
+    finished["returncode"] = returncode
+    finished["exit_code"] = returncode
+    if duration_seconds is not None:
+        finished["command_duration_seconds"] = duration_seconds
+    if stderr_text:
+        finished["command_stderr_tail"] = stderr_text[-4000:]
+    if stdout_text:
+        finished["command_stdout_tail"] = stdout_text[-4000:]
+    for key in (
+        "submitted_to_chatgpt",
+        "submitted_to_claude",
+        "submitted_to_gemini",
+        "submitted_to_kimi",
+        "submitted_to_grok",
+    ):
+        if key in finished and finished[key] is None:
+            finished[key] = False
+    if finished.get("attach_file") and "attachment_delivery_proven" not in finished:
+        finished["attachment_delivery_proven"] = False
+    return finished
 
 NON_RETRYABLE_FAILURES = {
     "prompt_too_large",
@@ -124,9 +242,9 @@ def normalize_failure(meta: dict[str, Any], stderr_record: dict[str, Any]) -> di
             stderr_tail = None
     return {
         "code": failure,
-        "message": first_present(meta, "error", "message", "details"),
+        "message": first_present(meta, "error", "message", "details", "command_stderr_tail"),
         "exit_code": first_present(meta, "exit_code", "returncode"),
-        "stderr_tail": stderr_tail,
+        "stderr_tail": first_present(meta, "command_stderr_tail") or stderr_tail,
     }
 
 
@@ -223,6 +341,13 @@ def normalize(meta_path: Path, meta: dict[str, Any], provider: str) -> dict[str,
                 "sha256": sha256_file(meta_path),
             },
         },
+        "attachments": {
+            "requested": bool(first_present(meta, "attach_file", "attachment_path")),
+            "path": first_present(meta, "attach_file", "attachment_path"),
+            "metadata": meta.get("attachment"),
+            "delivery_proven": meta.get("attachment_delivery_proven"),
+            "missing": meta.get("attachment_missing"),
+        },
         "immutable_request_snapshot": {
             "required": True,
             "present": input_artifact["present"] and submitted_artifact["present"],
@@ -263,10 +388,23 @@ def main() -> int:
     parser.add_argument("--provider", choices=sorted(PROVIDER_KEYS) + ["unknown"])
     parser.add_argument("--json", action="store_true", help="emit JSON; currently the default output")
     parser.add_argument("--strict", action="store_true", help="exit nonzero if immutable/proof artifacts are incomplete")
+    parser.add_argument("--return-code", type=int, help="provider submit command return code from the parent")
+    parser.add_argument("--duration-seconds", type=float, help="provider submit command duration from the parent")
+    parser.add_argument("--command-stderr", help="provider submit command stderr text from the parent")
+    parser.add_argument("--command-stderr-file", help="file containing provider submit command stderr text")
+    parser.add_argument("--command-stdout", help="provider submit command stdout text from the parent")
+    parser.add_argument("--command-stdout-file", help="file containing provider submit command stdout text")
     args = parser.parse_args()
 
     meta_path = Path(args.meta).expanduser().resolve()
     meta = load_json(meta_path)
+    meta = finalize_nonterminal_meta(
+        meta,
+        returncode=args.return_code,
+        stderr_text=read_text_arg(args.command_stderr, args.command_stderr_file),
+        stdout_text=read_text_arg(args.command_stdout, args.command_stdout_file),
+        duration_seconds=args.duration_seconds,
+    )
     provider = infer_provider(meta, args.provider)
     payload = normalize(meta_path, meta, provider)
     errors = strict_errors(payload) if args.strict else []

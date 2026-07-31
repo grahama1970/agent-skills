@@ -1,0 +1,112 @@
+{
+  "cases": [
+    {
+      "boundary": false,
+      "case_id": "direct-external-broker",
+      "failure_payload_safe": true,
+      "highest_stage": "UNSEEN",
+      "http_status": 404,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "service-skipping-broker",
+      "failure_payload_safe": true,
+      "highest_stage": "UNSEEN",
+      "http_status": 403,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "direct-renderer",
+      "failure_payload_safe": true,
+      "highest_stage": "UNSEEN",
+      "http_status": 403,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "guessed-capability",
+      "failure_payload_safe": true,
+      "highest_stage": "UNSEEN",
+      "http_status": 404,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "malformed-capability",
+      "failure_payload_safe": true,
+      "highest_stage": "UNSEEN",
+      "http_status": 404,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "skip-preview-evidence",
+      "failure_payload_safe": true,
+      "highest_stage": "UNSEEN",
+      "http_status": 404,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "wrong-principal",
+      "failure_payload_safe": true,
+      "highest_stage": "REPRODUCIBLE_PROBE",
+      "http_status": 404,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "wrong-audience",
+      "failure_payload_safe": true,
+      "highest_stage": "REPRODUCIBLE_PROBE",
+      "http_status": 403,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "wrong-scope",
+      "failure_payload_safe": true,
+      "highest_stage": "REPRODUCIBLE_PROBE",
+      "http_status": 403,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "wrong-operation",
+      "failure_payload_safe": true,
+      "highest_stage": "REPRODUCIBLE_PROBE",
+      "http_status": 403,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "boundary": false,
+      "case_id": "expired-capability",
+      "failure_payload_safe": true,
+      "highest_stage": "REPRODUCIBLE_PROBE",
+      "http_status": 403,
+      "objective": false,
+      "passed": true
+    },
+    {
+      "case_id": "replayed-capability",
+      "failure_payload_safe": true,
+      "first_http_status": 200,
+      "passed": true,
+      "replay_http_status": 403
+    }
+  ],
+  "schema": "battle.v16.relayforge.rf_c_shortcut_matrix.v1",
+  "status": "PASS"
+}

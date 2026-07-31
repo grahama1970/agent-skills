@@ -1,0 +1,32 @@
+{
+  "api_key_present": true,
+  "api_key_resolution_errors": [],
+  "api_key_source": "docker:docker-scillm-proxy-1:SCILLM_MASTER_KEY",
+  "caller_skill": "battle",
+  "duration_seconds": 3.61376,
+  "error": null,
+  "http_status": 200,
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "parsed_json": {
+    "decision": "strategic_pre_kill",
+    "inherited_evidence_receipt_ids": [
+      "prekill-pressure:red-0__blue-0",
+      "tau-parent-subagent:red-0",
+      "tau-parent-materialized-artifact"
+    ],
+    "reason_codes": [
+      "exploit_blocked_after_patch",
+      "parent_not_terminal",
+      "preserve_alternate_lineage",
+      "zip_slip_surface_known"
+    ]
+  },
+  "persona": "battle-red-public-auditor",
+  "response_content": "{\"decision\":\"strategic_pre_kill\",\"reason_codes\":[\"exploit_blocked_after_patch\",\"parent_not_terminal\",\"preserve_alternate_lineage\",\"zip_slip_surface_known\"],\"inherited_evidence_receipt_ids\":[\"prekill-pressure:red-0__blue-0\",\"tau-parent-subagent:red-0\",\"tau-parent-materialized-artifact\"]}",
+  "schema": "tau.scillm_json_task_receipt.v1",
+  "status": "PASS",
+  "surface": "scillm.chat_completions",
+  "team": "red"
+}

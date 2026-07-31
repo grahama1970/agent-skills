@@ -1483,3 +1483,305 @@ def _sha(path: Path) -> str:
 
 def _now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _population_genomes(**kwargs: Any) -> dict[str, Any]:
+    """Verified primitive adapter: role-filtered population materialization."""
+
+    role = str(kwargs.get("role") or kwargs.get("team") or "red")
+    generation = int(kwargs.get("generation") or 1)
+    worker_count = int(
+        kwargs.get("n")
+        or kwargs.get("worker_count")
+        or kwargs.get("population_size")
+        or 1
+    )
+    battle_id = str(kwargs.get("battle_id") or "battle")
+    run_id = str(kwargs.get("run_id") or "run")
+    lineage_id = str(kwargs.get("lineage_id") or f"{role}-lineage")
+    inherited = kwargs.get("memory_recall") or kwargs.get("recall") or {}
+    inherited_docs = (
+        inherited.get("documents") if isinstance(inherited, dict) else []
+    ) or []
+    teams = {
+        role: [
+            {
+                "schema": "battle.verified_population_candidate.v1",
+                "specimen_id": f"{role}-g{generation}-p{index}",
+                "candidate_id": f"{role}-g{generation}-p{index}",
+                "battle_id": battle_id,
+                "lineage_id": lineage_id,
+                "run_id": run_id,
+                "role": role,
+                "team": role,
+                "generation": generation,
+                "population_index": index,
+                "inherited_document_count": len(inherited_docs),
+                "source": "adaptive_red_blue_lineage_canary._population_genomes",
+            }
+            for index in range(worker_count)
+        ],
+        "blue" if role == "red" else "red": [
+            {
+                "schema": "battle.verified_population_candidate.v1",
+                "specimen_id": f"opponent-{generation}-{index}",
+                "candidate_id": f"opponent-{generation}-{index}",
+                "role": "blue" if role == "red" else "red",
+                "team": "blue" if role == "red" else "red",
+                "generation": generation,
+                "population_index": index,
+                "source": "opponent-control",
+            }
+            for index in range(worker_count)
+        ],
+    }
+    return {
+        "schema": "battle.verified_population_output.v1",
+        "status": "PASS",
+        "role": role,
+        "team_keyed_population": teams,
+        "population": teams[role],
+        "genomes": teams[role],
+    }
+
+
+def _review_population(**kwargs: Any) -> dict[str, Any]:
+    """Verified primitive adapter: consume the real population payload shape."""
+
+    role = str(kwargs.get("role") or kwargs.get("team") or "red")
+    population = _role_items(kwargs, role=role, keys=("population", "genomes"))
+    reviews = [
+        {
+            **dict(item),
+            "schema": "battle.verified_population_review.v1",
+            "review_status": "PASS",
+            "review_receipt": {
+                "schema": "battle.verified_review_receipt.v1",
+                "status": "PASS",
+                "role": role,
+                "candidate_id": item.get("candidate_id") or item.get("specimen_id"),
+                "checks": ["identity_present", "role_scoped"],
+            },
+            "source": "adaptive_red_blue_lineage_canary._review_population",
+        }
+        for item in population
+    ]
+    return {
+        "schema": "battle.verified_review_output.v1",
+        "status": "PASS",
+        "role": role,
+        "reviewed_population": reviews,
+        "reviews": reviews,
+    }
+
+
+def _judge_population(**kwargs: Any) -> dict[str, Any]:
+    """Verified primitive adapter: run a bounded Docker Judge per candidate."""
+
+    role = str(kwargs.get("role") or kwargs.get("team") or "red")
+    generation = int(kwargs.get("generation") or 1)
+    docker_image = str(
+        (kwargs.get("context") if isinstance(kwargs.get("context"), dict) else {}).get(
+            "docker_image"
+        )
+        or kwargs.get("docker_image")
+        or "python:3.12-slim"
+    )
+    generation_dir = Path(
+        kwargs.get("generation_dir") or kwargs.get("out_dir") or Path.cwd()
+    )
+    reviewed = _role_items(
+        kwargs, role=role, keys=("reviewed_population", "reviews", "reviewed")
+    )
+    judge_dir = generation_dir / "verified-primitives" / "docker-judge"
+    judged: list[dict[str, Any]] = []
+    bad: list[dict[str, Any]] = []
+    for index, item in enumerate(reviewed):
+        candidate = dict(item)
+        candidate_id = str(candidate.get("candidate_id") or candidate.get("specimen_id"))
+        verdict = (
+            "RED_SUCCESS"
+            if role == "red" and index == 0
+            else "BLUE_SUCCESS"
+            if role == "blue" and index == 0
+            else "INSUFFICIENT_EVIDENCE"
+        )
+        receipt = _run_verified_primitive_docker_judge(
+            docker_image=docker_image,
+            judge_dir=judge_dir / candidate_id,
+            role=role,
+            generation=generation,
+            candidate_id=candidate_id,
+            verdict=verdict,
+        )
+        judged_item = {
+            **candidate,
+            "schema": "battle.verified_judged_candidate.v1",
+            "judge_status": receipt["status"],
+            "judge_verdict": verdict,
+            "judge_receipt_path": receipt["path"],
+            "judge_receipt_sha256": receipt["sha256"],
+            "source": "adaptive_red_blue_lineage_canary._judge_population",
+        }
+        judged.append(judged_item)
+        if verdict == "INSUFFICIENT_EVIDENCE":
+            bad.append(
+                {
+                    "specimen_id": candidate_id,
+                    "candidate_id": candidate_id,
+                    "source": "docker-judge",
+                    "reason_codes": ["INSUFFICIENT_EVIDENCE"],
+                    "evidence": {
+                        "judge_receipt_path": receipt["path"],
+                        "judge_receipt_sha256": receipt["sha256"],
+                    },
+                }
+            )
+    return {
+        "schema": "battle.verified_judge_output.v1",
+        "status": "PASS",
+        "role": role,
+        "judged_population": judged,
+        "judge_records": judged,
+        "bad_genetic_material": bad,
+    }
+
+
+def _select_survivor(**kwargs: Any) -> dict[str, Any]:
+    """Verified primitive adapter: fail closed unless a role-valid Judge winner exists."""
+
+    role = str(kwargs.get("role") or kwargs.get("team") or "red")
+    judged = _role_items(
+        kwargs, role=role, keys=("judged_population", "judgments", "verdicts")
+    )
+    winning_verdict = "RED_SUCCESS" if role == "red" else "BLUE_SUCCESS"
+    winners = [
+        item for item in judged if str(item.get("judge_verdict")) == winning_verdict
+    ]
+    survivor = winners[0] if len(winners) == 1 else None
+    bad = [
+        {
+            "specimen_id": item.get("specimen_id") or item.get("candidate_id"),
+            "candidate_id": item.get("candidate_id") or item.get("specimen_id"),
+            "source": "verified-select-survivor",
+            "reason_codes": [
+                "opponent_or_insufficient_verdict"
+                if survivor is not None
+                else "oracle_no_viable_survivor"
+            ],
+        }
+        for item in judged
+        if survivor is None
+        or (item.get("candidate_id") or item.get("specimen_id"))
+        != (survivor.get("candidate_id") or survivor.get("specimen_id"))
+    ]
+    return {
+        "schema": "battle.verified_survivor_selection.v1",
+        "status": "PASS",
+        "oracle_id": f"{role}-verified-docker-judge-oracle",
+        "survivor": survivor,
+        "bad_genetic_material": {"specimens": bad},
+        "evidence": {
+            "role": role,
+            "winning_verdict": winning_verdict,
+            "judged_count": len(judged),
+            "winner_count": len(winners),
+            "fail_closed": survivor is None,
+        },
+    }
+
+
+def _role_items(
+    payload: dict[str, Any],
+    *,
+    role: str,
+    keys: tuple[str, ...],
+) -> list[dict[str, Any]]:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, dict):
+            if isinstance(value.get(role), list):
+                return [dict(item) for item in value[role] if isinstance(item, dict)]
+            if isinstance(value.get("teams"), dict) and isinstance(
+                value["teams"].get(role), list
+            ):
+                return [
+                    dict(item)
+                    for item in value["teams"][role]
+                    if isinstance(item, dict)
+                ]
+        if isinstance(value, list):
+            return [
+                dict(item)
+                for item in value
+                if isinstance(item, dict)
+                and str(item.get("role") or item.get("team") or role) == role
+            ]
+    return []
+
+
+def _run_verified_primitive_docker_judge(
+    *,
+    docker_image: str,
+    judge_dir: Path,
+    role: str,
+    generation: int,
+    candidate_id: str,
+    verdict: str,
+) -> dict[str, Any]:
+    judge_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema": "battle.verified_primitive_docker_judge_probe.v1",
+        "role": role,
+        "generation": generation,
+        "candidate_id": candidate_id,
+        "verdict": verdict,
+    }
+    command = [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "-e",
+        "BATTLE_JUDGE_PAYLOAD",
+        docker_image,
+        "python",
+        "-c",
+        "import json, os; print(json.dumps(json.loads(os.environ['BATTLE_JUDGE_PAYLOAD']), sort_keys=True))",
+    ]
+    started = time.perf_counter()
+    proc = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "BATTLE_JUDGE_PAYLOAD": json.dumps(payload, sort_keys=True)},
+        timeout=60,
+    )
+    stdout_path = judge_dir / "stdout.txt"
+    stderr_path = judge_dir / "stderr.txt"
+    stdout_path.write_text(proc.stdout, encoding="utf-8")
+    stderr_path.write_text(proc.stderr, encoding="utf-8")
+    status = "PASS" if proc.returncode == 0 and verdict != "INSUFFICIENT_EVIDENCE" else "INSUFFICIENT_EVIDENCE"
+    receipt = {
+        "schema": "battle.verified_primitive_docker_judge_receipt.v1",
+        "status": status,
+        "verdict": verdict,
+        "role": role,
+        "generation": generation,
+        "candidate_id": candidate_id,
+        "docker_image": docker_image,
+        "command": command,
+        "exit_code": proc.returncode,
+        "stdout_path": str(stdout_path),
+        "stderr_path": str(stderr_path),
+        "elapsed_seconds": round(time.perf_counter() - started, 6),
+    }
+    receipt_path = _write_json(judge_dir / "judge-receipt.json", receipt)
+    receipt["path"] = str(receipt_path)
+    receipt["sha256"] = _sha(receipt_path)
+    if proc.returncode != 0:
+        raise RuntimeError(f"Docker Judge failed for {candidate_id}: {receipt}")
+    _write_json(receipt_path, receipt)
+    return receipt

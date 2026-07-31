@@ -1,0 +1,4 @@
+{
+  "runtime": "fixture-local-runtime",
+  "target_identity": "fixture-target@sha256:fixture"
+}

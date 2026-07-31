@@ -1,0 +1,31 @@
+{
+  "commands_run": [
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "-v",
+        "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof:/work",
+        "-w",
+        "/work",
+        "python:3.12-slim",
+        "python",
+        "-c",
+        "import pathlib, time\ntime.sleep(0.20)\npathlib.Path('blue-patch.txt').write_text('reject traversal entries', encoding='utf-8')\nprint('BLUE_PROACTIVE_DEFENSE_PASS')\n"
+      ],
+      "elapsed_seconds": 0.528562,
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "BLUE_PROACTIVE_DEFENSE_PASS\n"
+    }
+  ],
+  "first_action_input": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-1066-overlap-round-proof/blue-first-action-input.json",
+  "first_action_input_sha256": "d75a49c27136ce197c2d34b3af0a4d64eeed66d319c3e6d54c569eafcacebfb3",
+  "patch_artifact": "blue-patch.txt",
+  "schema": "battle.overlap_worker_receipt.v1",
+  "status": "PASS",
+  "team": "blue"
+}

@@ -61,6 +61,8 @@ _SPARTA_CONTROL_RETURN_FIELDS = [
     "title",
 ]
 
+_MEMORY_LIST_MAX_LIMIT = 500
+
 _NAME_LOOKUP_STOP_WORDS = {
     "a",
     "an",
@@ -186,6 +188,52 @@ def _normalize_sparta_control_doc(doc: dict) -> dict:
         "exists": True,
     }
     return {key: value for key, value in normalized.items() if value not in ("", None, [])}
+
+
+def _list_documents_paged(
+    *,
+    client,
+    collection: str,
+    limit: int,
+    return_fields: list[str],
+    q: str | None = None,
+    filters: dict | None = None,
+) -> list[dict]:
+    """Read Memory /list in bounded pages.
+
+    The daemon caps each /list request at 500 rows. A caller-provided larger
+    limit is a total cap, not a single request size.
+    """
+    total_limit = max(0, int(limit))
+    if total_limit == 0:
+        return []
+
+    docs: list[dict] = []
+    offset = 0
+    while len(docs) < total_limit:
+        batch_limit = min(_MEMORY_LIST_MAX_LIMIT, total_limit - len(docs))
+        payload = {
+            "collection": collection,
+            "limit": batch_limit,
+            "offset": offset,
+            "return_fields": return_fields,
+        }
+        if q:
+            payload["q"] = q
+        if filters:
+            payload["filters"] = filters
+
+        r = client.post("/list", json=payload)
+        r.raise_for_status()
+        batch = r.json().get("documents", [])
+        if not batch:
+            break
+        docs.extend(batch)
+        if len(batch) < batch_limit:
+            break
+        offset += len(batch)
+
+    return docs
 
 
 def _source_workbook_path() -> Path:
@@ -1793,10 +1841,11 @@ def _extract_nlp_entities(
 
     # 1. Load entity dictionary from ArangoDB collection
     try:
-        r = client.post("/list", json={
-            "collection": collection,
-            "limit": limit,
-            "return_fields": [
+        docs = _list_documents_paged(
+            client=client,
+            collection=collection,
+            limit=limit,
+            return_fields=[
                 "_id",
                 "_key",
                 name_field,
@@ -1812,8 +1861,7 @@ def _extract_nlp_entities(
                 "cluster",
                 "namespace",
             ],
-        })
-        docs = r.json().get("documents", [])
+        )
     except Exception as e:
         logger.warning(f"Failed to load entities from {collection}: {e}")
         docs = []
@@ -1908,6 +1956,60 @@ def _extract_nlp_entities(
                 entity["recall_context"] = items[0].get("solution", items[0].get("problem", ""))[:200]
         except Exception:
             pass
+
+    return entities
+
+
+def _extract_sparta_controls_via_daemon(text: str, client) -> list[dict]:
+    """Use Memory's canonical SPARTA extractor and hydrate control docs."""
+    try:
+        daemon = _call_extract_entities(text, include_taxonomy=False, view="verbose")
+    except Exception as exc:
+        logger.warning(f"daemon /extract-entities failed for sparta_controls: {exc}")
+        return []
+
+    resolved = daemon.get("resolved_entities", []) if isinstance(daemon, dict) else []
+    entities: list[dict] = []
+    seen_control_ids: set[str] = set()
+    for ent in resolved:
+        if not isinstance(ent, dict):
+            continue
+        cid = str(ent.get("canonical_id") or "").strip()
+        if not cid or cid in seen_control_ids:
+            continue
+        doc = _lookup_sparta_control_doc(client, control_id=cid)
+        entity = _normalize_sparta_control_doc(doc) if doc else {
+            "id": cid,
+            "canonical_id": cid,
+            "control_id": cid,
+            "name": ent.get("canonical_name") or cid,
+            "canonical_name": ent.get("canonical_name") or cid,
+            "label": cid,
+            "framework": ent.get("framework") or "",
+            "source_framework": ent.get("framework") or "",
+            "type": ent.get("entity_type") or "control",
+            "entity_type": ent.get("entity_type") or "control",
+            "exists": True,
+        }
+        entity["span"] = ent.get("span")
+        entity["mention"] = ent.get("mention")
+        entity["match_type"] = ent.get("resolution_method") or "daemon_extract_entities"
+        entities.append(entity)
+        seen_control_ids.add(cid)
+
+    for mention in _candidate_control_name_mentions(text):
+        doc = _lookup_sparta_control_doc_by_name(client, mention)
+        if not doc:
+            continue
+        entity = _normalize_sparta_control_doc(doc)
+        cid = str(entity.get("control_id") or "").strip()
+        if not cid or cid in seen_control_ids:
+            continue
+        entity["span"] = _span_for(text, mention)
+        entity["mention"] = mention
+        entity["match_type"] = "control_name"
+        entities.append(entity)
+        seen_control_ids.add(cid)
 
     return entities
 
@@ -2185,50 +2287,19 @@ def resolve(
         # SPARTA fast path: use daemon /extract-entities contract directly.
         # This yields grounded control spans and avoids local vocabulary drift.
         if collection == "sparta_controls":
-            daemon = _call_extract_entities(text, include_taxonomy=False)
-            resolved = daemon.get("resolved_entities", []) if isinstance(daemon, dict) else []
-            entities = []
-            for ent in resolved:
-                if not isinstance(ent, dict):
-                    continue
-                cid = str(ent.get("canonical_id") or "").strip()
-                if not cid:
-                    continue
-                doc = _lookup_sparta_control_doc(client, control_id=cid)
-                entity = _normalize_sparta_control_doc(doc) if doc else {
-                    "id": cid,
-                    "canonical_id": cid,
-                    "control_id": cid,
-                    "name": ent.get("canonical_name") or cid,
-                    "canonical_name": ent.get("canonical_name") or cid,
-                    "label": cid,
-                    "framework": ent.get("framework") or "",
-                    "source_framework": ent.get("framework") or "",
-                    "type": ent.get("entity_type") or "control",
-                    "entity_type": ent.get("entity_type") or "control",
-                    "exists": True,
-                }
-                entity["span"] = ent.get("span")
-                entity["mention"] = ent.get("mention")
-                entities.append(entity)
-            seen_control_ids = {
-                str(entity.get("control_id") or entity.get("canonical_id") or "").strip()
-                for entity in entities
-                if str(entity.get("control_id") or entity.get("canonical_id") or "").strip()
-            }
-            for mention in _candidate_control_name_mentions(text):
-                doc = _lookup_sparta_control_doc_by_name(client, mention)
-                if not doc:
-                    continue
-                entity = _normalize_sparta_control_doc(doc)
-                cid = str(entity.get("control_id") or "").strip()
-                if not cid or cid in seen_control_ids:
-                    continue
-                entity["span"] = _span_for(text, mention)
-                entity["mention"] = mention
-                entity["match_type"] = "control_name"
-                entities.append(entity)
-                seen_control_ids.add(cid)
+            entities = _extract_sparta_controls_via_daemon(text, client)
+            if not entities:
+                entities = _extract_nlp_entities(
+                    text=text,
+                    client=client,
+                    collection=collection,
+                    name_field=name_field,
+                    label_field=label_field,
+                    type_field=type_field,
+                    framework_field=framework_field,
+                    scope=scope,
+                    limit=limit,
+                )
         else:
             entities = _extract_nlp_entities(
                 text=text,
@@ -2320,17 +2391,32 @@ def _run_default_mode() -> None:
                 limit=limit,
             )
         else:
-            entities = _extract_nlp_entities(
-                text=text,
-                client=client,
-                collection=collection,
-                name_field=name_field,
-                label_field=label_field,
-                type_field=type_field,
-                framework_field=framework_field,
-                scope=scope,
-                limit=limit,
-            )
+            if collection == "sparta_controls":
+                entities = _extract_sparta_controls_via_daemon(text, client)
+                if not entities:
+                    entities = _extract_nlp_entities(
+                        text=text,
+                        client=client,
+                        collection=collection,
+                        name_field=name_field,
+                        label_field=label_field,
+                        type_field=type_field,
+                        framework_field=framework_field,
+                        scope=scope,
+                        limit=limit,
+                    )
+            else:
+                entities = _extract_nlp_entities(
+                    text=text,
+                    client=client,
+                    collection=collection,
+                    name_field=name_field,
+                    label_field=label_field,
+                    type_field=type_field,
+                    framework_field=framework_field,
+                    scope=scope,
+                    limit=limit,
+                )
 
         result = {
             "text": text,

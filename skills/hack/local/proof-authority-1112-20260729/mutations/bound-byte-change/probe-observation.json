@@ -1,0 +1,30 @@
+{
+  "authorization_manifest_sha256": "eb8f95905a7e2c310e23cd9db2d4b75fbc301aca3c0f231466a28abb89bf11db",
+  "created_at": "2026-07-29T00:00:00+00:00",
+  "evidence_artifacts": [
+    {
+      "path": "skills/hack/fixtures/proof-authority/observed-signal.json",
+      "redaction": "safe_summary_only",
+      "sha256": "2f1452b28c32c433a6ff58c7b225421c38ffaad245dc4d72ea0e6712a23ef409",
+      "summary": "fixture signal that requires independent replay before confirmation"
+    }
+  ],
+  "evidence_summary": "changed byte after validation",
+  "executor_identity": "hack-probe-fixture",
+  "exploit_confirmed": false,
+  "finding_class": "fixture command signal",
+  "non_claims": [
+    "observation_is_not_exploit_confirmation",
+    "probe_exit_code_is_not_exploit_confirmation",
+    "proof_file_name_is_not_exploit_confirmation"
+  ],
+  "observation_id": "obs-fixture-001",
+  "probe_exit_code": 0,
+  "probe_spec_sha256": "a7002bababc02567ce23e47126ee21430cc7aa8813fa73093e199caa64b6286a",
+  "scan_request_sha256": "3edb0f7f3d109197eb01e5fec890c8ea5addde96de54e14b80df55025f13f3c1",
+  "schema": "hack.probe_observation.v1",
+  "signal_type": "fixture_reflected_signal",
+  "target_identity": "fixture-target@sha256:fixture",
+  "target_runtime_sha256": "91667264d9989fc2cf939447bf82c1fd942c1da66416a261b66767e447e4278e",
+  "target_summary": "fixture local target identity"
+}

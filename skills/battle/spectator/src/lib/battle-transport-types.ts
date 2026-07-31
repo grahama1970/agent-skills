@@ -1,6 +1,6 @@
 import type { BattleTimelineControlV1, Lane } from "./battle-types";
 
-export type BattleTransportMode = "file_backed_replay_stream" | "live_sse_adapter";
+export type BattleTransportMode = "file_backed_replay_stream" | "live_sse_adapter" | "live_websocket_adapter";
 
 export type BattleStreamContractV1 = {
 	schema: "battle.stream_contract.v1";
@@ -8,7 +8,7 @@ export type BattleStreamContractV1 = {
 	event_schema: "battle.live_event.v1";
 	snapshot_schema: "battle.snapshot.v1";
 	lifecycle_schema: "battle.lifecycle_event.v1";
-	transport: "append_only_jsonl" | "sse";
+	transport: "append_only_jsonl" | "sse" | "websocket";
 	phase: string;
 	fail_closed_unknown_terminal_states: boolean;
 };

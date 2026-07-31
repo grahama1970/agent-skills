@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hack.probe_observation.v1.schema.json",
+  "title": "Hack Probe Observation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "observation_id",
+    "created_at",
+    "executor_identity",
+    "target_identity",
+    "target_runtime_sha256",
+    "authorization_manifest_sha256",
+    "scan_request_sha256",
+    "probe_spec_sha256",
+    "probe_exit_code",
+    "signal_type",
+    "finding_class",
+    "target_summary",
+    "evidence_summary",
+    "evidence_artifacts",
+    "exploit_confirmed",
+    "non_claims"
+  ],
+  "properties": {
+    "schema": {"const": "hack.probe_observation.v1"},
+    "observation_id": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "executor_identity": {"type": "string", "minLength": 1},
+    "target_identity": {"type": "string", "minLength": 1},
+    "target_runtime_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "authorization_manifest_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "scan_request_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "probe_spec_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "probe_exit_code": {"type": "integer"},
+    "signal_type": {"type": "string", "minLength": 1},
+    "finding_class": {"type": "string", "minLength": 1},
+    "target_summary": {"type": "string", "minLength": 1},
+    "evidence_summary": {"type": "string", "minLength": 1},
+    "evidence_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "redaction", "summary"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+          "redaction": {"type": "string", "minLength": 1},
+          "summary": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "exploit_confirmed": {"const": false},
+    "non_claims": {
+      "type": "array",
+      "items": {"type": "string"},
+      "contains": {"const": "observation_is_not_exploit_confirmation"}
+    }
+  }
+}

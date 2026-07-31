@@ -1,0 +1,12 @@
+{
+  "cache_result": "SEEDED_RECENT_REFERENCE",
+  "functional_result": "RECENT_REPORT_REFERENCE_OBSERVED",
+  "observation_id": "OBS-21",
+  "opaque_owner_identity_sha256": "b1c42fb9dacdb4698816ca5a693add38a8abe0221b578f18b69e5d742631e70b",
+  "opaque_report_reference": "a282f431f20f739d2fde91fcc211688be9d00f633017c965d6ab94f9a7690982",
+  "request_id": "recent-report-tenant-red",
+  "schema": "battle.v16.relayforge.public_observation.v1",
+  "source_observation_sha256": "661f40911a203b9efe80ee9061db4776b8288945c49fee1c80c63de9a57ac866",
+  "status_code": 200,
+  "target_id": "battle-v16-relayforge-a"
+}

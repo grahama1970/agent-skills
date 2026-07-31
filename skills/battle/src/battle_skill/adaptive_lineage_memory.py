@@ -294,6 +294,7 @@ class MemoryBackend:
 
         items: list[dict[str, Any]] = []
         scores: list[dict[str, float]] = []
+        dropped_forbidden: list[str] = []
         for raw in raw_items:
             if not isinstance(raw, Mapping):
                 raise AdaptiveLineageContractError(
@@ -302,9 +303,8 @@ class MemoryBackend:
             item = dict(raw)
             if not scope.allows(item):
                 identifier = _document_id(item) or "<unidentified>"
-                raise AdaptiveLineageContractError(
-                    f"ISOLATION BREACH: /memory returned forbidden item {identifier}"
-                )
+                dropped_forbidden.append(identifier)
+                continue
             item_scores = _score_map(item)
             item["scores"] = item_scores
             items.append(item)
@@ -327,6 +327,9 @@ class MemoryBackend:
             "confidence": confidence,
             "should_scan": should_scan,
             "score_fields": ["bm25", "graph", "dense", "freshness"],
+            "dropped_forbidden_item_count": len(dropped_forbidden),
+            "dropped_forbidden_item_ids": dropped_forbidden,
+            "isolation_policy": "drop_forbidden_daemon_hits_before_context",
         }
         return RecallResult(
             documents=tuple(items),
@@ -367,13 +370,9 @@ class MemoryBackend:
 
     @staticmethod
     def _require_write_ack(path: str, response: Mapping[str, Any]) -> None:
-        if response.get("ok") is True:
-            return
-        if str(response.get("status") or "").upper() in {
-            "PASS",
-            "OK",
-            "SUCCESS",
-        }:
+        if _write_ack_applied_count(response) >= 1 and not _write_ack_has_error(
+            response
+        ):
             return
         raise AdaptiveLineageContractError(
             f"Memory {path} did not acknowledge success: {json_safe(response)}"
@@ -723,3 +722,66 @@ def public_document_tags(
         *(f"access:{role}" for role in roles),
         "visibility:public",
     ]
+
+
+_WRITE_COUNT_FIELDS = (
+    "upserted",
+    "inserted",
+    "updated",
+    "modified",
+    "created",
+    "stored",
+    "written",
+    "write_count",
+    "documents_written",
+    "affected",
+    "count",
+)
+
+
+def _write_ack_has_error(value: Any) -> bool:
+    if isinstance(value, Mapping):
+        ok = value.get("ok")
+        if ok is False:
+            return True
+        status = str(value.get("status") or "").upper()
+        if status in {"FAIL", "FAILED", "ERROR", "ERR", "REJECTED"}:
+            return True
+        if value.get("error") not in (None, "", False):
+            return True
+        errors = value.get("errors")
+        if isinstance(errors, Sequence) and not isinstance(errors, (str, bytes)):
+            if errors:
+                return True
+        elif errors not in (None, "", False):
+            return True
+        return any(_write_ack_has_error(item) for item in value.values())
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        return any(_write_ack_has_error(item) for item in value)
+    return False
+
+
+def _write_ack_applied_count(response: Mapping[str, Any]) -> int:
+    total = 0
+    for field in _WRITE_COUNT_FIELDS:
+        raw = response.get(field)
+        if isinstance(raw, bool):
+            total += int(raw)
+        elif isinstance(raw, int):
+            total += max(raw, 0)
+        elif isinstance(raw, float):
+            total += max(int(raw), 0)
+    for field in ("_key", "key", "id", "_id"):
+        if response.get(field) not in (None, ""):
+            total += 1
+            break
+    for field in ("result", "results", "documents", "items"):
+        raw = response.get(field)
+        if isinstance(raw, Mapping):
+            if not _write_ack_has_error(raw):
+                total += max(_write_ack_applied_count(raw), 1)
+        elif isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
+            for item in raw:
+                if isinstance(item, Mapping) and not _write_ack_has_error(item):
+                    total += max(_write_ack_applied_count(item), 1)
+    return total

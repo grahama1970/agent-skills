@@ -1,0 +1,79 @@
+{
+  "context": {
+    "actor_type": "tau",
+    "artifacts_read": [
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/workers/red-1/handoff.json"
+    ],
+    "assumptions": [
+      "Battle owns Docker execution and scorekeeping; Tau owns this handoff and artifact materialization receipt."
+    ],
+    "battle": {
+      "battle_id": "battle-004",
+      "lane_id": "payload-857-red-1",
+      "persona": "battle-red-public-auditor-variant-1",
+      "scenario_id": "arena-zip-slip-import-001",
+      "team": "red",
+      "worker_id": "red-1"
+    },
+    "run_id": "arena-prekill-survival-20260728T170820Z",
+    "subagent": "battle-red-red-1",
+    "unknowns": []
+  },
+  "evidence": [
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/workers/red-1/handoff.json",
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/workers/red-1/scillm-call-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/workers/red-1/materialized-artifact-receipt.json"
+  ],
+  "goal": {
+    "goal_id": "goal-battle-battle-004-tau-public-only",
+    "goal_version": 1,
+    "immutable_goal_preserved": true
+  },
+  "inherited_evidence_refs": [
+    {
+      "kind": "parent_pressure",
+      "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/prekill-pressure-receipt.json",
+      "receipt_id": "prekill-pressure:red-0__blue-0",
+      "sha256": "91418ef4ca9ce748b7171ec733690c9a7671c92060127d0e06cdbb678b40e43b"
+    },
+    {
+      "kind": "parent_tau_subagent",
+      "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/tau-subagent-receipt.json",
+      "receipt_id": "tau-parent-subagent:red-0",
+      "sha256": "a8bfa73ae0ebaebc8e426c8878aa1e5dde02edc8e1ce027eda242ea226631eff"
+    },
+    {
+      "kind": "parent_materialized_artifact",
+      "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/materialized-artifact-receipt.json",
+      "receipt_id": "tau-parent-materialized-artifact",
+      "sha256": "57a50734ea875eee9924c4c70f4e135d57acbd9304d4586db71ed94789dfc999"
+    }
+  ],
+  "next": {
+    "executor": "local",
+    "reason": "Battle Judge may consume materialized paths only when materialization status is PASS.",
+    "subagent": "battle-scorekeeper"
+  },
+  "parent_lane_id": "payload-857-receipt",
+  "parent_worker_id": "red-0",
+  "pressure_receipt_id": "prekill-pressure:red-0__blue-0",
+  "rationale": "Battle requested one bounded Tau/Scillm public-only handoff receipt before Judge replay.",
+  "result": {
+    "artifacts": [
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/workers/red-1/scillm-call-receipt.json",
+      "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/red/workers/red-1/materialized-artifact-receipt.json"
+    ],
+    "commands_run": [],
+    "live": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "status": "PASS",
+    "summary": "Battle red produced a materialized executable artifact.",
+    "surface": "scillm.chat_completions"
+  },
+  "schema": "tau.subagent_receipt.v1",
+  "spawn_decision_receipt_id": "tau-parent-spawn-decision:red-0",
+  "spawn_type": "strategic_pre_kill",
+  "spawned_from_receipt": true,
+  "stop_condition": "Battle Judge consumes Red/Blue materialized artifacts or records INSUFFICIENT_EVIDENCE."
+}

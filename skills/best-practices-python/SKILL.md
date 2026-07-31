@@ -79,6 +79,17 @@ Use this skill whenever you:
 - `style-dataclass-records-over-stringly-dicts`
 - `correctness-centralized-error-codes`
 - `correctness-regex-only-known-grammar`
+- `correctness-mutable-default-factory`
+- `correctness-validate-boundaries`
+- `io-httpx-timeout-status`
+- `security-subprocess-no-shell-true`
+- `security-no-unsafe-deserialization`
+- `security-no-dynamic-exec`
+- `security-no-hardcoded-secrets`
+- `correctness-no-runtime-assert`
+- `packaging-no-sys-path-surgery`
+- `style-pathlib-paths`
+- `correctness-utc-aware-timestamps`
 - `conventions-loguru`
 - `conventions-typer-cli`
 - `conventions-httpx`
@@ -162,6 +173,38 @@ if info.retryable:
 
 Use `frozen=True` when the record is configuration, registry metadata, or a returned result that should not be mutated after construction. Use `slots=True` for small high-volume records unless the code needs dynamic attributes.
 
+### Rule: `correctness-mutable-default-factory`
+
+Never use mutable defaults in function signatures or dataclass fields. Use `None` plus initialization for functions, and `field(default_factory=...)` for dataclasses.
+
+**Wrong:**
+```python
+def collect(items: list[str] = []) -> list[str]:
+    items.append("new")
+    return items
+
+
+@dataclass
+class Batch:
+    records: list[str] = []
+```
+
+**Right:**
+```python
+from dataclasses import dataclass, field
+
+
+def collect(items: list[str] | None = None) -> list[str]:
+    safe_items = list(items or [])
+    safe_items.append("new")
+    return safe_items
+
+
+@dataclass
+class Batch:
+    records: list[str] = field(default_factory=list)
+```
+
 ## Regex Is Seldom the Right Choice
 
 **Use regex only when the input grammar is known in advance, bounded, and covered by fixtures.**
@@ -207,6 +250,219 @@ route = Route(match)
 ```
 
 When regex is truly justified, name the grammar in the function or constant, keep the pattern centralized, and add tests that prove both accepted and rejected inputs.
+
+## Validate External Data at Boundaries
+
+**External input is untrusted until parsed through a schema or typed boundary object.**
+
+### Rule: `correctness-validate-boundaries`
+
+When data enters from JSON, YAML, HTTP, files, CLI strings, environment variables, LLM output, browser state, subprocess output, or databases, validate it once at the boundary before business logic touches it.
+
+Use:
+- Pydantic for external payload validation, coercion, and explicit error reports
+- dataclasses for already-validated internal records
+- `TypedDict` only for narrow static typing of dictionary-shaped data that does not need runtime validation
+- parser libraries for known structured formats
+
+**Wrong:**
+```python
+payload = response.json()
+task_id = payload["task"]["id"]
+timeout = int(payload.get("timeout", 30))
+```
+
+**Right:**
+```python
+from pydantic import BaseModel, Field
+
+
+class TaskPayload(BaseModel):
+    task_id: str = Field(min_length=1)
+    timeout_s: float = Field(default=30.0, gt=0, le=600)
+
+
+payload = TaskPayload.model_validate(response.json())
+```
+
+Do not pass raw provider dictionaries across multiple modules. Convert them into a named model at the boundary, then pass the typed object.
+
+## Security and Runtime Gates
+
+### Rule: `security-no-unsafe-deserialization`
+
+Do not load untrusted or user-modifiable data with `pickle`, `marshal`, or unsafe YAML loaders. `pickle` can execute code during loading, and `yaml.load()` has historically allowed arbitrary object construction.
+
+**Wrong:**
+```python
+model = pickle.load(open(path, "rb"))
+config = yaml.load(text, Loader=yaml.Loader)
+```
+
+**Right:**
+```python
+config = yaml.safe_load(text)
+payload = ConfigPayload.model_validate(config)
+```
+
+Use JSON, TOML, safe YAML, SQLite, Parquet, or a signed/hashed internal artifact instead. If a trusted model artifact truly requires pickle/joblib, document the trust boundary, verify the artifact path or digest, and never accept that path from external input.
+
+### Rule: `security-no-dynamic-exec`
+
+Do not use `eval()`, `exec()`, dynamic imports from untrusted strings, or generated Python code as a parser, router, validator, or repair mechanism.
+
+**Wrong:**
+```python
+value = eval(user_expression)
+exec(generated_fix)
+```
+
+**Right:**
+```python
+value = ast.literal_eval(user_expression)
+```
+
+Prefer structured schemas, command registries, `Enum` dispatch, or purpose-built parsers. If executing generated code is the explicit product behavior, isolate it in a sandboxed runner with a receipt and no ambient credentials.
+
+### Rule: `security-no-hardcoded-secrets`
+
+Never hardcode API keys, tokens, passwords, proxy credentials, or plausible secret defaults in source. Do not log secrets, request headers, full environment dumps, or provider payloads that may contain secrets.
+
+**Wrong:**
+```python
+api_key = os.getenv("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
+logger.info("headers={}", headers)
+```
+
+**Right:**
+```python
+api_key = os.environ["SCILLM_PROXY_KEY"]
+logger.info("calling provider auth=present")
+```
+
+Example keys used only in tests or documentation must be obvious placeholders such as `example-key-not-secret`, and production code must fail closed when a required secret is absent.
+
+### Rule: `correctness-no-runtime-assert`
+
+Do not use `assert` for runtime validation, security checks, user input checks, artifact gates, or provider response validation. Python can remove assertions in optimized mode.
+
+**Wrong:**
+```python
+assert receipt["ok"] is True
+```
+
+**Right:**
+```python
+if receipt.get("ok") is not True:
+    raise ValueError("receipt did not pass validation")
+```
+
+`assert` is fine in tests. For smoke commands embedded in documentation, prefer explicit `raise SystemExit(...)` or a small checker script when the command is used as proof.
+
+### Rule: `packaging-no-sys-path-surgery`
+
+Do not scatter `sys.path.insert()` or `PYTHONPATH` hacks through project code. Package import paths through `pyproject.toml`, `uv run --project`, editable installs, or a single documented CLI bootstrap.
+
+**Wrong:**
+```python
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from common import memory_client
+```
+
+**Right:**
+```python
+from agent_skills.common import memory_client
+```
+
+A short source-tree bootstrap is acceptable only in a CLI entry file that documents why package execution is unavailable. Do not put path mutation inside libraries, reusable helpers, or modules imported by tests.
+
+## HTTP, Subprocess, Path, and Time Hygiene
+
+### Rule: `io-httpx-timeout-status`
+
+Every HTTP call MUST use `httpx`, an explicit timeout appropriate to the operation, and status handling. Do not rely on default timeout behavior for project code, because the correct budget differs between health checks, streaming calls, downloads, and model inference.
+
+**Wrong:**
+```python
+resp = httpx.post(url, json=payload)
+return resp.json()
+```
+
+**Right:**
+```python
+timeout = httpx.Timeout(connect=5.0, read=60.0, write=10.0, pool=5.0)
+with httpx.Client(timeout=timeout) as client:
+    resp = client.post(url, json=payload)
+    resp.raise_for_status()
+    return ResponsePayload.model_validate(resp.json())
+```
+
+Health checks should use short timeouts, usually 2-5 seconds. Long provider calls should still have a documented finite timeout and log timeout failures at `logger.error`.
+
+### Rule: `security-subprocess-no-shell-true`
+
+Do not use `shell=True` for subprocess calls. Use argument lists, finite timeouts, `check=True` when failure should stop the workflow, and explicit output capture when the caller needs receipts.
+
+**Wrong:**
+```python
+subprocess.run(f"git show {ref}", shell=True)
+```
+
+**Right:**
+```python
+result = subprocess.run(
+    ["git", "show", ref],
+    check=True,
+    capture_output=True,
+    text=True,
+    timeout=30,
+)
+```
+
+If shell behavior is genuinely required, the command must be static or every interpolated value must be quoted with `shlex.quote`, and the reason must be documented at the call site. In async code, this rule composes with `async-no-sync-subprocess`.
+
+### Rule: `style-pathlib-paths`
+
+Use `pathlib.Path` for filesystem paths. Do not build paths with string concatenation or scatter hardcoded `/tmp/...` paths through project logic.
+
+**Wrong:**
+```python
+out = "/tmp/my-skill/" + task_id + "/receipt.json"
+open(out, "w").write(data)
+```
+
+**Right:**
+```python
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+
+with TemporaryDirectory(prefix="my-skill-") as tmp:
+    out = Path(tmp) / task_id / "receipt.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(data, encoding="utf-8")
+```
+
+Hardcoded `/tmp` is allowed only for explicitly disposable evidence artifacts or documented runtime defaults. Even then, expose an override through CLI/env/config and convert to `Path` immediately.
+
+### Rule: `correctness-utc-aware-timestamps`
+
+Timestamps written to receipts, logs, caches, databases, filenames, or API payloads MUST be timezone-aware UTC. Do not use naive `datetime.now()` or `datetime.utcnow()`.
+
+**Wrong:**
+```python
+created_at = datetime.now().isoformat()
+```
+
+**Right:**
+```python
+from datetime import UTC, datetime
+
+
+created_at = datetime.now(UTC).isoformat()
+```
+
+Use wall-clock local time only for human-facing display, never as persisted operational evidence.
 
 ## Thin `__init__.py` in Packages (NON-NEGOTIABLE)
 

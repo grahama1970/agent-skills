@@ -12,9 +12,8 @@ triggers:
   - codex space monitor
   - lost agent monitor
 provides:
-  - stalled-agent-monitoring
   - progress-tracking
-  - agent-unblock-probe
+  - task-orchestration
 composes:
   - brave-search
   - ticket
@@ -140,6 +139,11 @@ scheduled job.
 When the human asks a project agent to "show", "open", or "jump to" a file in
 Files / the file viewer, the agent should use this skill's `open-file` command
 instead of pasting the path back into chat.
+
+This is a mobile usability requirement. On iPhone, iPad, and other small-screen
+sessions, chat-visible file paths and long snippets do not solve the inspection
+problem. The required outcome is a navigable Files pane opened to the requested
+file, line, or range.
 
 Exact path examples:
 

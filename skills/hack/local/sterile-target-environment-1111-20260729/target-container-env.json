@@ -1,0 +1,14 @@
+{
+  "GPG_KEY": "7169605F62C751356D054A26A821E680E5FA6305",
+  "HOME": "/root",
+  "HOSTNAME": "ac74e2fd3eba",
+  "LANG": "C.UTF-8",
+  "OPENCLAW_CONFIG_DIR": "/tmp/hack-sterile-env-proof/target-state/config",
+  "OPENCLAW_GATEWAY_HOST": "127.0.0.1",
+  "OPENCLAW_GATEWAY_PORT": "80",
+  "OPENCLAW_HACK_HARDENING_VALIDATION": "1",
+  "OPENCLAW_WORKSPACE_DIR": "/tmp/hack-sterile-env-proof/target-state/workspace",
+  "PATH": "/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+  "PYTHON_SHA256": "c08bc65a81971c1dd5783182826503369466c7e67374d1646519adf05207b684",
+  "PYTHON_VERSION": "3.12.13"
+}

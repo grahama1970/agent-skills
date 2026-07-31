@@ -104,7 +104,7 @@ describe("killShotVisualForEvent", () => {
 });
 
 describe("battlePixiReplayProbe", () => {
-	it("reports travel and killed impact on kill-shot fixture lane", async () => {
+	it("reports travel and blocked impact on parent-spawn fixture lane", async () => {
 		const { readFile } = await import("node:fs/promises");
 		const { resolve } = await import("node:path");
 		const { battleLanesForView } = await import("../lib/battle-data");
@@ -112,7 +112,7 @@ describe("battlePixiReplayProbe", () => {
 		const { buildRaceEngineRowLayout } = await import("../lib/build-race-engine-input");
 		const fixture = JSON.parse(
 			await readFile(
-				resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json"),
+				resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json"),
 				"utf8",
 			),
 		);
@@ -141,8 +141,8 @@ describe("battlePixiReplayProbe", () => {
 			contentWidth: 1200,
 		});
 		expect(impact.killShot?.phase).toBe("impact");
-		expect(impact.killShot?.impactKind).toBe("killed");
-		expect(impact.runnerAnimations["payload-857-red-1"]).toBe("killed");
+		expect(impact.killShot?.impactKind).toBe("blocked");
+		expect(impact.runnerAnimations["payload-857-red-1"]).toBe("blocked");
 	});
 });
 

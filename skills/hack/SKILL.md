@@ -26,6 +26,12 @@ composes:
   - task-monitor
   - code-runner
 
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-security
+runtime_self_improvement: basic
+
 taxonomy:
   - security
   - corruption
@@ -49,6 +55,35 @@ All security operations run in **isolated Docker containers** - no tools execute
 
 - **Docker Engine** must be installed and running
 - The security container image will be built automatically on first use
+
+## Compliance and Readiness State
+
+Current readiness is `USABLE_WITH_GAPS`: Hack has an executable `run.sh`, Docker
+isolation, authorization-bound target workflows, fixtures, schemas, tests, and a
+`sanity.sh` smoke check. It is not yet a fully self-maintaining substantial
+runtime skill.
+
+Agentic eval posture is provided by `fixtures/agentic_eval.json` and should be
+run through `/agentic-evals` when checking Hack readiness. Hack does not list
+`agentic-evals` in `composes:` because it does not delegate to that skill during
+normal security workflows; `composes:` is runtime delegation, while eval posture
+is a standards gate.
+
+Required next-step updates before declaring `runtime_self_improvement:
+substantial`:
+
+- Add `./run.sh verify` as a non-destructive verifier that emits a durable
+  receipt under the skill artifact root.
+- Strengthen `fixtures/agentic_eval.json` beyond the current positive
+  `sanity.sh` fixture with negative and adversarial safety-boundary cases.
+- Add a maintainer ticket/plan that references that verifier and its receipt.
+- Add an `agents/hack/AGENTS.md` maintainer contract for post-run inspection,
+  evidence triage, and safe repair routing.
+- Split oversized modules, starting with `session_audit.py` and
+  `evolutionary_campaign.py`, into focused modules under the 800-line Python
+  hygiene limit.
+- Remove bootstrap `sys.path` surgery after packaging/import boundaries are
+  normalized.
 
 ## Commands
 
@@ -302,6 +337,113 @@ Example:
 # Update exploit feeds (CVE monitoring)
 ./run.sh update-exploits --source github
 ```
+
+### Dogpile Scan Request Validation
+
+Dogpile can hand Hack a bounded scan-request packet for future execution
+planning:
+
+```bash
+./run.sh validate-scan-request fixtures/hack-scan-request/valid.json \
+  --expected-target fixture-target@sha256:fixture \
+  --receipt-out /tmp/hack-scan-request-validation.json
+```
+
+This command only validates the `dogpile.hack_scan_request.v1` data contract and
+writes `hack.scan_request_validation_receipt.v1`. It does not invoke Docker,
+subprocess scanners, network probes, target launch, exploit execution, patching,
+or Battle scoring. A valid request is research design input only; it is not
+target authorization and cannot be executed until the authorization-manifest,
+Compose-policy, sterile-environment, and independent-proof-authority gates exist.
+
+### Target Authorization Manifest
+
+Execution-capable Hack commands require a `security.target_authorization.v1`
+manifest before Docker, clone, scanner, network probe, proof-probe, or target
+runtime setup can start:
+
+```bash
+./run.sh authorization-preflight \
+  --authorization-manifest fixtures/authorization/valid-local.json \
+  --target fixture-target@sha256:fixture \
+  --action session-audit \
+  --receipt-out /tmp/hack-authorization-preflight.json
+```
+
+The manifest records project/operator scope, target identity, allowed URLs,
+CIDRs, ports, actions, probe classes, runtime modes, resource budgets, and
+denied behavior. It is not a legal opinion and does not prove Docker isolation,
+source truth, exploitability, patch effectiveness, or Battle readiness.
+
+### Compose Policy Gate
+
+Repository-provided Compose files are untrusted target input. Before
+`session-audit` can launch a target stack, Hack compiles the selected Compose
+file through a fail-closed policy gate:
+
+```bash
+./run.sh compose-policy fixtures/compose-policy/safe/docker-compose.yml \
+  --authorization-manifest fixtures/authorization/valid-local.json \
+  --out /tmp/hack-sanitized-compose.yml \
+  --receipt-out /tmp/hack-compose-policy-receipt.json
+```
+
+The policy path invokes `docker compose config --format json` with a sterile
+environment, rejects privileged containers, host namespaces, Docker/Podman
+socket mounts, broad host binds, writable source binds, unapproved capabilities,
+devices, unsafe service fields, public published ports, and paths that escape
+the target/session boundary. `session-audit` then runs `docker compose up` only
+against the Hack-generated sanitized Compose artifact and records
+`hack.compose_policy_receipt.v1` in the session reports.
+
+### Sterile Target Environment Gate
+
+Target-controlled Compose and container launches must not inherit the operator
+environment. Hack builds a separate target-runtime environment from an empty map
+and adds only generated non-secret variables needed by the authorized local
+scenario.
+
+```bash
+HACK_TEST_SECRET='must-not-cross-boundary' \
+OPENAI_API_KEY='must-not-cross-boundary' \
+./run.sh prove-sterile-target-environment \
+  --authorization-manifest fixtures/authorization/valid-local.json \
+  --compose fixtures/sterile-environment/safe/docker-compose.yml \
+  --out /tmp/hack-sterile-env-proof
+```
+
+The proof writes `hack.target_environment_receipt.v1`, normalized and sanitized
+Compose artifacts, target container environment readback, target-state config
+readback, and sentinel checks proving secret-looking parent process names and
+values did not cross the target boundary. Compose references to undeclared
+variables fail closed before target launch through the Compose policy gate.
+
+### Proof Authority Boundary
+
+Hack probe output is split into observation and validation authorities:
+
+```bash
+./run.sh prove-proof-authority \
+  --fixture fixtures/proof-authority \
+  --out /tmp/hack-proof-authority
+```
+
+`hack.probe_observation.v1` records what a bounded Hack probe observed. It
+binds target identity, authorization-manifest hash, runtime hash, scan/probe
+hashes, executor identity, exit code, signal type, and sanitized evidence
+artifacts. It always sets `exploit_confirmed=false`.
+
+`hack.proof_validation_receipt.v1` is the only Hack-side receipt that can set a
+session status to `CONFIRMED`, and only when an independent validator binds the
+exact observation artifact hash, target/auth/runtime/probe/scan hashes, replay
+spec hash, replay receipt hash, and validator identity. The validator identity
+must differ from the Hack executor. In Battle workflows this validator is the
+Battle Judge.
+
+Reports and memory payloads use the closed status vocabulary
+`NOT_ATTEMPTED`, `OBSERVED_UNCONFIRMED`, `CONFIRMED`, `REJECTED`, and
+`VALIDATION_ERROR`. A file named `proof.*`, a zero exit code, or a Hack-authored
+artifact is never sufficient to set `exploit_proven=true`.
 
 ## Architecture
 

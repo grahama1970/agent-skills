@@ -1,0 +1,6 @@
+{
+  "schema": "battle.judge_replay_receipt.fixture",
+  "status": "PASS",
+  "target_identity": "fixture-target@sha256:fixture",
+  "observed_signal": "fixture_reflected_signal"
+}

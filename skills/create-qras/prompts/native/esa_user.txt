@@ -14,7 +14,7 @@ Parent ID: {parent_id}
   "pairs": [
     {{
       "question": "What is ESA-SEC-01 according to ESA security guidelines?",
-      "reasoning": "The description explicitly defines the security requirements for space segment protection.",
+      "reasoning": "Space segment protection is treated separately because the asset cannot be physically reached after launch, so preventive design has to substitute for corrective maintenance.",
       "answer": "ESA-SEC-01 requires organizations to implement protective measures for space segment assets including spacecraft, payloads, and ground control interfaces.",
       "pair_type": "guideline_description",
       "control_id": "ESA-SEC-01",
@@ -29,7 +29,7 @@ Parent ID: {parent_id}
     }},
     {{
       "question": "What implementation guidance does ESA-SEC-01 provide?",
-      "reasoning": "The description explicitly states implementation steps for space segment protection.",
+      "reasoning": "The steps are sequenced because each later measure assumes the earlier one established a trusted baseline on the platform.",
       "answer": "ESA-SEC-01 requires organizations to establish security perimeters, implement access controls, and maintain audit trails for all space segment interactions.",
       "pair_type": "implementation_guidance",
       "control_id": "ESA-SEC-01",

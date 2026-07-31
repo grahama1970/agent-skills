@@ -1,0 +1,28 @@
+{
+  "docker_invoked": false,
+  "errors": [],
+  "execution_started": false,
+  "expected_target": "fixture-target@sha256:fixture",
+  "network_invoked": false,
+  "non_claims": [
+    "no_authorization_proof",
+    "no_docker_invoked",
+    "no_exploit_or_patch_proof",
+    "no_scan_executed",
+    "research_design_input_only"
+  ],
+  "request_path": "/tmp/dogpile-security-packet-run/hack-scan-request.json",
+  "request_sha256": "8f045f78c3fd766c79212b69e2d5fdcebb1ef951b0d89bf304cac046c96508ea",
+  "schema": "hack.scan_request_validation_receipt.v1",
+  "selected_evidence_count": 3,
+  "source_bearing_evidence_count": 3,
+  "source_packet_path": "/tmp/dogpile-security-packet.json",
+  "source_packet_schema": "dogpile.security_research_packet.v1",
+  "source_packet_sha256": "afcd4dae90200c5eab817c28e09b5be80933829cf55125f39d07be6658935ff1",
+  "status": "PASS",
+  "subprocess_invoked": false,
+  "target_identity": "fixture-target@sha256:fixture",
+  "valid": true,
+  "validation_time": "2026-07-29T18:16:19.530366+00:00",
+  "validator_version": "hack.scan-request-validator.v1"
+}

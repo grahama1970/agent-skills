@@ -1,0 +1,5 @@
+{
+  "description": "For example, we discovered that a precise memory model is missing and inter-contract analysis is only partially supported. Based on these insights, we present the design and implementation of ETHBMC, a bounded model checker based on symbolic execution which provides a precise model of the Ethereum network.",
+  "title": "ETHBMC | Proceedings of the 29th USENIX Conference on Security Symposium",
+  "url": "https://dl.acm.org/doi/10.5555/3489212.3489367"
+}

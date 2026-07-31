@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 3002,
+  "artifact_sha256": "45da224764ee4d1675376658a409985c699941208de687e01fbd997a39f07879",
+  "artifact_type": "blue_patch",
+  "parsed_keys": [
+    "app_py",
+    "artifact_type",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills-issue1049-20260728/skills/battle/local/issue-46-arena-prekill-survival-proof/tau-live/blue/workers/blue-1/app.py",
+  "rationale": "The original importer joined archive member names directly to the destination, allowing ../ or absolute-path Zip Slip writes outside the import workspace. This replacement validates every member path after normalization and resolution, rejects traversal/absolute/empty paths, rejects symlink entries, and writes only inside the resolved destination while preserving normal archive extraction behavior.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "9317409f9f8ea2704c74ce9dc7fb231565284bd759c1757532d94f09c1d9883b",
+  "status": "PASS",
+  "strategy_genome_sha256": "8b3738555de5c23aed95961b3e207d555de19a059f87e4d01582fbd52c837c9d"
+}

@@ -1,0 +1,32 @@
+{
+  "query": "OWASP file upload zip slip path traversal vulnerability",
+  "count": 5,
+  "offset": 0,
+  "results": [
+    {
+      "title": "Arbitrary File Write via Archive Extraction (Zip Slip)- OWASP Juiceshop #1 | by DebianHat | Medium",
+      "description": "Arbitrary <strong>File</strong> Write via Archive Extraction (<strong>Zip</strong> <strong>Slip</strong>)- <strong>OWASP</strong> Juiceshop #1 <strong>Zip</strong> <strong>Slip</strong> is an another <strong>path</strong> <strong>traversal</strong> <strong>vulnerability</strong> that occurs when extracting <strong>ZIP</strong> (or other archive) <strong>files</strong> without \u2026",
+      "url": "https://debianhat.medium.com/arbitrary-file-write-via-archive-extraction-zip-slip-owasp-juiceshop-1-a79164b291b2"
+    },
+    {
+      "title": "wstg/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files.md at master \u00b7 OWASP/wstg",
+      "description": "The Web Security Testing Guide is a comprehensive Open Source guide to testing the security of web applications and web services. - wstg/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_<strong>Upload</strong>_of_Malicious_<strong>Files</strong>.md at master \u00b7 <strong>OWASP</strong>/wstg",
+      "url": "https://github.com/OWASP/wstg/blob/master/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files.md"
+    },
+    {
+      "title": "WSTG - Latest | OWASP Foundation",
+      "description": "A malicious <strong>path</strong> will contain many levels of ../ (i.e. ../../../../../../../../tmp/<strong>traversed</strong>) to stand a better chance of reaching the root directory. Once the attack is successful, the tester can find /tmp/<strong>traversed</strong> to be created on the webserver through the <strong>ZIP</strong> <strong>slip</strong> attack. Logic that extracts compressed <strong>files</strong> either using custom code or a library. Archive Directory <strong>Traversal</strong> <strong>vulnerabilities</strong> ...",
+      "url": "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/09-Test_Upload_of_Malicious_Files"
+    },
+    {
+      "title": "Zip Path Traversal | Security | Android Developers",
+      "description": "<strong>OWASP</strong> category: MASVS-STORAGE: Storage \u00b7 The <strong>Zip</strong> <strong>Path</strong> <strong>Traversal</strong> <strong>vulnerability</strong>, also known as ZipSlip, is related to handling compressed archives. On this page, we demonstrate this <strong>vulnerability</strong> using the <strong>ZIP</strong> format as an example, but similar problems can arise in libraries handling other formats, ...",
+      "url": "https://developer.android.com/privacy-and-security/risks/zip-path-traversal"
+    },
+    {
+      "title": "Zip Slip Vulnerability | Snyk",
+      "description": "The most comprehensive, accurate, and timely database for open source <strong>vulnerabilities</strong>.",
+      "url": "https://security.snyk.io/research/zip-slip-vulnerability"
+    }
+  ]
+}

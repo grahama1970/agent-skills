@@ -1,0 +1,43 @@
+{
+  "capability_material": {
+    "capability_material_sha256": "e72db053b2a8ffeffa23513db11c7cc4fb22d1ff594dc314d9c1a6101893baa6",
+    "preview_locator": "https://public.example/preview/62f6a76873aa9099dcaec299da4f101f",
+    "preview_path": "/api/v1/jobs/v16-live-setup/preview",
+    "principal_identity_sha256": "06416dd8a81eb1fa9036c77da0364ebb19d5d44aadd561db676f063473aca03c",
+    "report_profile_alias": "f03f68a1b0ccc8f9778748f89769470a6a2b9d3936fd4f6be3753abe6004c509",
+    "report_profile_path": "/api/v1/jobs/v16-live-setup/report-profile"
+  },
+  "job_id": "v16-live-setup",
+  "observations": [
+    {
+      "functional_result": "VALID_PACKAGE",
+      "object_class_counts": {
+        "directory": 1,
+        "regular": 1,
+        "transformed": 0
+      },
+      "observation_id": "OBS-10",
+      "opaque_input_identity_sha256": "52a555faac423bb8e953ecd59765e00e76cb8a53b835c730a473803f9f7e7a2c",
+      "opaque_output_identity_sha256": "523a36fcd39a186dc5c4fa05e2bca5ac96f4b2325979213f969345fbe43c2f87",
+      "request_id": "v16-live-setup",
+      "schema": "battle.v16.relayforge.public_observation.v1",
+      "status_code": 202,
+      "target_id": "battle-v16-relayforge-a"
+    },
+    {
+      "functional_result": "COMPLETED",
+      "observation_id": "OBS-11",
+      "opaque_input_identity_sha256": "c17bcc22f730a589f4568b33f1b6418fcca472c759a1125776630c1f7d55bec7",
+      "opaque_output_identity_sha256": "1bfe25d44c0253ba4ed52c61f1252f19eb0b8a2273255d62ee4b1e6e49f7c0a0",
+      "request_id": "v16-live-setup",
+      "schema": "battle.v16.relayforge.public_observation.v1",
+      "status_code": 201,
+      "target_id": "battle-v16-relayforge-a",
+      "transformed_object_count": 0
+    }
+  ],
+  "schema": "battle.v16.relayforge.job_status.v1",
+  "status": "COMPLETED",
+  "target_id": "battle-v16-relayforge-a",
+  "tenant_id": "tenant-red"
+}

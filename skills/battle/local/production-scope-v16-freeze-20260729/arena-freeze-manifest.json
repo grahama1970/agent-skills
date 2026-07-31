@@ -1,0 +1,65 @@
+{
+  "action_budget_sha256": "7c90b0422679c6d73ed357898e35082cda0c031b13100e54bb56ce4d5b9f7eab",
+  "action_schema_sha256": "62c27198e6f8b21c1a888f48b1cfef71c3323e624a765adac1f38c36e299dc0a",
+  "architecture_sha256": "06554d76bad560aaf74378ffacdc9b4374bb0deb6b6da3c229abc94799431605",
+  "arena_freeze_command_receipt_schema_sha256": "ead5f07f2863a4c19387ce0ee246b4f8966abcc57350b9fe815fab56acbdf9cc",
+  "artifacts": {
+    "attack_graph": "attack-graph.json",
+    "defense_graph": "defense-graph.json",
+    "image_digests": "image-digest-manifest.json",
+    "private_truth": "private-truth-manifest.json",
+    "public_context": "public-context-manifest.json"
+  },
+  "attack_graph_sha256": "ba137528e586645f5bd6cf8f13d9c4748658dc2b362f54690096b73bc148c8f7",
+  "blockers": [
+    "durable-memory-packets-unimplemented",
+    "live-topology-not-qualified"
+  ],
+  "claims": {
+    "may_claim": [
+      "The RelayForge deterministic security contract including RF-D and broad controls is content-addressed"
+    ],
+    "must_not_claim": [
+      "RelayForge full deterministic qualification passed",
+      "Any V16 Memory packet or uptake chain is implemented",
+      "The live bounded campaign/topology is qualified",
+      "Memory changes Red or Blue outcomes"
+    ]
+  },
+  "defense_graph_sha256": "ee80330dd8950510c5c00f7499e70aa7e4218ae100f3dad8d7a9d176b133f375",
+  "deterministic_qualification_schema_sha256": "c0ff9250d230312f877937b7d1216432172f9fa98a0c639c9891df362f5b7573",
+  "image_digest_manifest_sha256": "1ce51d34d663f24c98c0222dac81dab5da714b5ff6cc8ba070881a29f884cfc4",
+  "instance_seed_schedule_sha256": "4bef0983b26f68d9fc20bc9aab94900a4f13f9920a0bdc9971090a2ab83ed85a",
+  "judge_outcome_schema_sha256": "ecb7d6a9c493433747ec7466a32bd840989e8106e7b85874c8339ea973a648c2",
+  "judge_predicate_corpus_sha256": "0cd46af767e8c971295f5d946eee182774f81a058dff59a06bd95185e2271acc",
+  "private_truth_schema_sha256": "e491bb311977e5ee4b7aefd295828050255d7d59ae7fc42b0098f7f163fd9013",
+  "private_truth_sha256": "cd7615e2a11e122d0269cf63633e4f8e8c9193b564f5c7de0fec567f45729fdc",
+  "public_context_schema_sha256": "131597900224c4fccd00b4e9ccabfee80486c9494145cc129038a42511f62fbd",
+  "public_context_sha256": "2181acd28b8ed8e2a0d8c9efe48e97fe55fc958ec6fa5e2832094ef64f6d8c20",
+  "qualification_eligible": false,
+  "reference_defense_contract_sha256": "3c3580ea07d18a62faf00b3878c7771de49701f83667e8442ee7d3220b3d49a2",
+  "reference_exploit_contract_sha256": "1c374336c1e742c325cc12701716420ed4d821f80161ff6833fe77d58025cd97",
+  "regression_corpus_sha256": "fedddb2df84205526a1fc016b926ea7dbf41b930b724d75a2131ae49ab59996a",
+  "repository_commit": "5ada65dc9f7d1e93a7c1e2428cb8a9a93fcc7c29",
+  "schema": "battle.v16.target_freeze.v1",
+  "semantic_version": "0.5.0-deterministic",
+  "source_files": {
+    "Dockerfile": "4e2358f88b465432172d65bc4fadae69fbc80c65cdcd3769c888cd9cbdb67629",
+    "compose.yaml": "4c6b73cf983f4c1dec8f91020004078cc479656051e5717a9425a7bbcec94707",
+    "contracts/private-truth.json": "bc50956c7d17d24c4aa2561d9aa56feb41f40f9e6ab4da9322a1d57001fe1b82",
+    "contracts/public-context.json": "b1f2c355f95a5286ffcc63a7004f904965cfa0f15326bef3e092b36f9850ad25",
+    "judge/judge.py": "fd18d71f97ae511fd215023ce5b63987319440eecb1c8970b336537550aba1a9",
+    "judge/predicates.json": "1ef395fd08ac015a18036537a3f60ea5a56ae91939b607c6977b00da6ddadea8",
+    "judge/regression-fixtures.json": "b0c18578bd80304a6d03d7e4314faa5e422dfc74d37f04c78384860630df3c56",
+    "rf_a_reference.py": "09fff2734d282c92ae28af49a8471f961db0fc4b983d1710f92422c000b10af8",
+    "rf_b_reference.py": "e5e98c63aac6949b47915dce441c2fda1518c141eadadcb8134ae0f26837baa3",
+    "rf_c_reference.py": "36ddb75efada4aa5744290eee1afd996883e71a689312837b981147405bb752c",
+    "rf_d_reference.py": "1cec725349b624ac1f6fc35d84ddb2760ca5ed472f9ea9f962f348c1ad5130e8",
+    "service.py": "c92eb62c9521a40480bede703b4d5d4dde6b6e6071944672cb759f7c0ca82c90"
+  },
+  "source_memory_contract_sha256": "551e3f9ab39459b5c12f8a46505416c9885fb50494c38c1d8dbe0939bccea369",
+  "status": "FROZEN_NOT_QUALIFIED",
+  "target_freeze_schema_sha256": "fed0f145d63e498f13d9b1005f376e047b4560db7334f9339225cfb59564634e",
+  "target_id": "battle-v16-relayforge-a",
+  "topology_sha256": "6b74869a6a74457c06fe61a096e85157895e1a350554ce36f8ace6a8f909e86d"
+}

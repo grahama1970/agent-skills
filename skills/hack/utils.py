@@ -20,6 +20,7 @@ from pathlib import Path
 from rich.console import Console
 from typing import Callable, Optional, Any
 
+from hack.env import load_hack_dotenv as dotenv_helper
 from hack.config import (
     MEMORY_SKILL,
     SKILL_RUN_TIMEOUT,
@@ -32,6 +33,7 @@ from hack.config import (
 from loguru import logger
 
 console = Console()
+dotenv_helper()
 
 # Add skills directory to path for common imports
 if str(SKILLS_DIR) not in sys.path:

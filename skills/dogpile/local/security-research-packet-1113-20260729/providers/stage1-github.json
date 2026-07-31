@@ -1,0 +1,64 @@
+{
+  "code_search": null,
+  "issues": [
+    {
+      "author": {
+        "id": "U_kgDOCRK7qw",
+        "is_bot": false,
+        "login": "grahama1970",
+        "type": "User",
+        "url": "https://github.com/grahama1970"
+      },
+      "createdAt": "2026-07-29T15:06:32Z",
+      "labels": [
+        {
+          "color": "0052cc",
+          "description": "Agent has leased this ticket",
+          "id": "LA_kwDOQ31KU88AAAACnH8w8w",
+          "name": "maintainer-active"
+        },
+        {
+          "color": "1d76db",
+          "description": "Maintainer route: backend Python or skill runtime",
+          "id": "LA_kwDOQ31KU88AAAACnUXPHQ",
+          "name": "route:backend_python_or_skill_runtime"
+        },
+        {
+          "color": "5319e7",
+          "description": "Requested repair agent: coder",
+          "id": "LA_kwDOQ31KU88AAAACnUXPIg",
+          "name": "agent:coder"
+        },
+        {
+          "color": "0052cc",
+          "description": "Ticket is routable to a cron-dispatched repair agent",
+          "id": "LA_kwDOQ31KU88AAAACtgLzxw",
+          "name": "agent-work"
+        },
+        {
+          "color": "BFD4F2",
+          "description": "Cross-repo dependency edge",
+          "id": "LA_kwDOQ31KU88AAAACtsky6Q",
+          "name": "blocks-downstream"
+        },
+        {
+          "color": "c2e0c6",
+          "description": "Concurrency lane: backend",
+          "id": "LA_kwDOQ31KU88AAAACttIWMg",
+          "name": "lane:be"
+        }
+      ],
+      "repository": {
+        "name": "agent-skills",
+        "nameWithOwner": "grahama1970/agent-skills"
+      },
+      "state": "open",
+      "title": "P1: Emit dogpile.security_research_packet.v1 with source-bearing provenance",
+      "url": "https://github.com/grahama1970/agent-skills/issues/1113"
+    }
+  ],
+  "query": "bounded software security scanning evidence contracts",
+  "repos": [],
+  "taxonomy": null,
+  "top_repo_analysis": null
+}

@@ -1,0 +1,92 @@
+{
+  "case_count": 10,
+  "cases": [
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/cap-device.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/cap-device/receipt.json",
+      "rejected_codes": [
+        "CAP_ADD_DENIED",
+        "DEVICES_DENIED"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/docker-socket.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/docker-socket/receipt.json",
+      "rejected_codes": [
+        "CONTAINER_SOCKET_MOUNT_DENIED"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/env-file.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/env-file/receipt.json",
+      "rejected_codes": [
+        "ENV_FILE_DENIED"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/extra-hosts.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/extra-hosts/receipt.json",
+      "rejected_codes": [
+        "EXTRA_HOSTS_DENIED"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/host-bind.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/host-bind/receipt.json",
+      "rejected_codes": [
+        "HOST_BIND_OUTSIDE_ROOT"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/host-network.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/host-network/receipt.json",
+      "rejected_codes": [
+        "HOST_NAMESPACE_DENIED"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/outside-build.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/outside-build/receipt.json",
+      "rejected_codes": [
+        "BUILD_CONTEXT_OUTSIDE_ROOT",
+        "IMAGE_OR_BUILD_REQUIRED"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/privileged.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/privileged/receipt.json",
+      "rejected_codes": [
+        "PRIVILEGED_DENIED"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/public-port.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/public-port/receipt.json",
+      "rejected_codes": [
+        "NON_LOOPBACK_PORT_DENIED"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "fixture": "skills/hack/fixtures/compose-policy/malicious/source-write.yml",
+      "receipt": "/tmp/hack-compose-policy-matrix/source-write/receipt.json",
+      "rejected_codes": [
+        "SOURCE_BIND_WRITABLE_DENIED"
+      ],
+      "status": "FAIL"
+    }
+  ],
+  "docker_up_call_count": 0,
+  "live": "docker_compose_config",
+  "mocked": false,
+  "schema": "hack.compose_policy_matrix.v1",
+  "status": "PASS"
+}

@@ -52,8 +52,9 @@ def compute_gaps(infra: dict, cascade: dict, daemons: dict,
 
     # ── Fix what's broken ──
 
-    # Cascade gaps
-    if cascade["tier_status"]["tier_1_5_gpt"] == "NOT_TRAINED":
+    # Embry cascade gaps apply only to Embry-style targets.
+    cascade_applicable = cascade.get("applicable", True)
+    if cascade_applicable and cascade["tier_status"]["tier_1_5_gpt"] == "NOT_TRAINED":
         gap = {
             "category": "cascade",
             "severity": "high",
@@ -68,7 +69,7 @@ def compute_gaps(infra: dict, cascade: dict, daemons: dict,
                     break
         gaps.append(gap)
 
-    if cascade["shadow"]["usable"] < cascade["shadow"]["total"] * 0.5:
+    if cascade_applicable and cascade["shadow"]["usable"] < cascade["shadow"]["total"] * 0.5:
         total, usable = cascade["shadow"]["total"], cascade["shadow"]["usable"]
         gaps.append({
             "category": "cascade",
@@ -77,7 +78,7 @@ def compute_gaps(infra: dict, cascade: dict, daemons: dict,
             "action": "Run prime_shadow.py --all --samples 200 to accumulate more usable entries",
         })
 
-    sparse_tasks = [t for t, c in cascade.get("training_data", {}).items() if c < 50]
+    sparse_tasks = [t for t, c in cascade.get("training_data", {}).items() if c < 50] if cascade_applicable else []
     if sparse_tasks:
         gaps.append({
             "category": "training",
@@ -87,7 +88,7 @@ def compute_gaps(infra: dict, cascade: dict, daemons: dict,
         })
 
     # Daemon gaps
-    if daemons["up"] < daemons["total"]:
+    if daemons.get("applicable", True) and daemons["up"] < daemons["total"]:
         down = [n for n, v in daemons["daemons"].items() if v["status"] != "ok"]
         gaps.append({
             "category": "infrastructure",
@@ -151,7 +152,7 @@ def compute_gaps(infra: dict, cascade: dict, daemons: dict,
         competitive_data = _extract_competitive_intel(research)
 
         # Classifier improvement opportunity
-        classifiers = cascade.get("classifiers_on_disk", [])
+        classifiers = cascade.get("classifiers_on_disk", []) if cascade_applicable else []
         if len(classifiers) >= 5:
             for s in arxiv_data:
                 if "classifier" in s["reason"].lower():

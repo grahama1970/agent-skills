@@ -20,6 +20,7 @@ from battle_skill.adaptive_lineage_verified_primitives import (
     PrimitiveBackedOracle,
     PrimitiveBundle,
     VerifiedPopulationHooks,
+    load_verified_primitive_bundle,
 )
 
 BATTLE_ID = "battle-004"
@@ -343,6 +344,58 @@ def test_c_red_recall_never_crosses_public_edge_into_blue_private_doc(
     )["scores"]["graph"] > 0.0
 
 
+def test_live_daemon_recall_quarantines_forbidden_hits_before_context(
+    tmp_path: Path,
+) -> None:
+    red_doc = {
+        "_key": "red-private",
+        "schema": "battle.lineage_memory_node.v2",
+        "collection": COLLECTION,
+        "battle_id": BATTLE_ID,
+        "lineage_id": LINEAGE_ID,
+        "scope": f"battle:{BATTLE_ID}:role:red",
+        "role": "red",
+        "node_kind": "survivor",
+        "text": "Red private survivor.",
+        "tags": [
+            "battle",
+            f"battle:{BATTLE_ID}",
+            f"lineage:{LINEAGE_ID}",
+            "role:red",
+            "access:red",
+            "visibility:public",
+        ],
+        "graph_edges_raw": [],
+    }
+    forbidden = {
+        **red_doc,
+        "_key": "blue-private",
+        "scope": f"battle:{BATTLE_ID}:role:blue",
+        "role": "blue",
+        "tags": [
+            "battle",
+            f"battle:{BATTLE_ID}",
+            f"lineage:{LINEAGE_ID}",
+            "role:blue",
+            "access:blue",
+            "visibility:public",
+        ],
+    }
+
+    class LeakyRecallClient(FakeMemoryHttpClient):
+        def _recall(self, payload: Mapping[str, Any]) -> dict[str, Any]:
+            body = super()._recall(payload)
+            body["items"].append(forbidden)
+            return body
+
+    memory = MemoryBackend(client=LeakyRecallClient([red_doc]), collection=COLLECTION)
+    recall = memory.recall(request=generation_request(tmp_path, role="red"))
+
+    assert [item["_key"] for item in recall.documents] == ["red-private"]
+    assert recall.receipt["dropped_forbidden_item_ids"] == ["blue-private"]
+    assert recall.receipt["dropped_forbidden_item_count"] == 1
+
+
 def test_primitive_backed_oracle_plugs_all_four_verified_helpers(
     tmp_path: Path,
 ) -> None:
@@ -470,3 +523,34 @@ def test_materialize_only_emits_n_and_skips_review_judge_oracle(
     assert receipt["judge_skipped"] is True
     assert receipt["oracle_skipped"] is True
     assert not any(call["path"] == "/store" for call in fake.calls)
+
+
+def test_memory_write_ack_requires_applied_write_without_errors() -> None:
+    accepted = [
+        {"ok": True, "_key": "doc-1"},
+        {"status": "PASS", "upserted": 1},
+        {"ok": True, "results": [{"_key": "doc-1"}]},
+    ]
+    rejected = [
+        {"ok": True},
+        {"status": "PASS", "upserted": 0},
+        {"ok": True, "_key": "doc-1", "errors": [{"message": "boom"}]},
+        {"ok": True, "results": [{"_key": "doc-1", "error": True}]},
+    ]
+    for response in accepted:
+        MemoryBackend._require_write_ack("/store", response)
+    for response in rejected:
+        try:
+            MemoryBackend._require_write_ack("/store", response)
+        except Exception as exc:
+            assert "did not acknowledge success" in str(exc)
+        else:
+            raise AssertionError(f"write ack should have failed: {response}")
+
+
+def test_repository_verified_primitive_bundle_exposes_real_adapters() -> None:
+    bundle = load_verified_primitive_bundle()
+    assert bundle.population_genomes.__name__ == "_population_genomes"
+    assert bundle.review_population.__name__ == "_review_population"
+    assert bundle.judge_population.__name__ == "_judge_population"
+    assert bundle.select_survivor.__name__ == "_select_survivor"

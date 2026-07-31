@@ -1,0 +1,154 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Blue kill, fastest crash, or promotion.",
+      "Judge replay of the child lane."
+    ],
+    "proves": [
+      "Tau spawned a receipt-backed Red child lane from an explicit parent subagent receipt."
+    ]
+  },
+  "duration_seconds": 19.304756,
+  "lineage_spawns": [
+    {
+      "battle_id": "battle-004",
+      "child_lane_id": "payload-857-red-1",
+      "child_payload_id": "payload-857-red-1",
+      "child_subagent_receipt": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "child_tau_subagent_id": "red-1",
+      "child_worker_id": "red-1",
+      "generation": 1,
+      "goal": "Materialize one receipt-backed Red child from the parent decision.",
+      "inherited_context": [
+        "receipt_id=prekill-pressure:red-0__blue-0;sha256=0b1bb9515e7672d138ae1c5a68b255bfeea2d5fa41377d28216160ddd280937f",
+        "receipt_id=tau-parent-subagent:red-0;sha256=24890db101b9605a4cd9724dd8b234d0cbb1ed001e675a76113d74f0c5b36b43",
+        "receipt_id=tau-parent-materialized-artifact;sha256=5baee2d875ebbee9bcc75905c2e43586b2caa2e6267236f3909d7a07ae6ffa13"
+      ],
+      "inherited_evidence_refs": [
+        {
+          "kind": "parent_pressure",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/prekill-pressure-receipt.json",
+          "receipt_id": "prekill-pressure:red-0__blue-0",
+          "sha256": "0b1bb9515e7672d138ae1c5a68b255bfeea2d5fa41377d28216160ddd280937f"
+        },
+        {
+          "kind": "parent_tau_subagent",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/tau-subagent-receipt.json",
+          "receipt_id": "tau-parent-subagent:red-0",
+          "sha256": "24890db101b9605a4cd9724dd8b234d0cbb1ed001e675a76113d74f0c5b36b43"
+        },
+        {
+          "kind": "parent_materialized_artifact",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/materialized-artifact-receipt.json",
+          "receipt_id": "tau-parent-materialized-artifact",
+          "sha256": "5baee2d875ebbee9bcc75905c2e43586b2caa2e6267236f3909d7a07ae6ffa13"
+        }
+      ],
+      "leased_task": "Continue the authorized Zip Slip proof using inherited receipt-backed parent evidence.",
+      "parent_lane_id": "payload-857-receipt",
+      "parent_subagent_receipt": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/tau-subagent-receipt.json",
+      "parent_tau_subagent_id": "red-0",
+      "parent_worker_id": "red-0",
+      "pressure_receipt_id": "prekill-pressure:red-0__blue-0",
+      "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
+      "run_id": "arena-prekill-survival-20260729T150835Z",
+      "schema": "battle.lineage_spawn_receipt.v1",
+      "spawn_decision_receipt_id": "tau-parent-spawn-decision:red-0",
+      "spawn_type": "strategic_pre_kill",
+      "status": "PASS"
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "run_id": "arena-prekill-survival-20260729T150835Z",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_spawn_child_proof.v1",
+  "scillm_auth_preflight": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/scillm-auth-preflight.json",
+  "spawn_receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
+  "status": "PASS",
+  "teams": [
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/workers/red-1/handoff.json",
+      "http_status": 200,
+      "inherited_context": [
+        "receipt_id=prekill-pressure:red-0__blue-0;sha256=0b1bb9515e7672d138ae1c5a68b255bfeea2d5fa41377d28216160ddd280937f",
+        "receipt_id=tau-parent-subagent:red-0;sha256=24890db101b9605a4cd9724dd8b234d0cbb1ed001e675a76113d74f0c5b36b43",
+        "receipt_id=tau-parent-materialized-artifact;sha256=5baee2d875ebbee9bcc75905c2e43586b2caa2e6267236f3909d7a07ae6ffa13"
+      ],
+      "inherited_evidence_refs": [
+        {
+          "kind": "parent_pressure",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/prekill-pressure-receipt.json",
+          "receipt_id": "prekill-pressure:red-0__blue-0",
+          "sha256": "0b1bb9515e7672d138ae1c5a68b255bfeea2d5fa41377d28216160ddd280937f"
+        },
+        {
+          "kind": "parent_tau_subagent",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/tau-subagent-receipt.json",
+          "receipt_id": "tau-parent-subagent:red-0",
+          "sha256": "24890db101b9605a4cd9724dd8b234d0cbb1ed001e675a76113d74f0c5b36b43"
+        },
+        {
+          "kind": "parent_materialized_artifact",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/materialized-artifact-receipt.json",
+          "receipt_id": "tau-parent-materialized-artifact",
+          "sha256": "5baee2d875ebbee9bcc75905c2e43586b2caa2e6267236f3909d7a07ae6ffa13"
+        }
+      ],
+      "lane_id": "payload-857-red-1",
+      "materialized": {
+        "artifact_bytes": 2632,
+        "artifact_sha256": "637f07cba71b58c4660e19b132c5fb8533b6db606872573ad71f45cfda751ec2",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/workers/red-1/red_exploit_submission.py",
+        "rationale": "The public app.py joins each ZIP member name directly to the destination and writes it without canonical path validation. A ZIP member named ../arena_escape.txt therefore resolves outside the intended extraction directory when import_zip is called directly.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "301eb9faa29c9d41722d8b099a1b0fafc5222c5c2c8469a8a34f912344a1af98",
+        "status": "PASS",
+        "strategy_genome_sha256": "ff7e6dd6d0ef4d88aec69f65e46e8414568c9b58994fce23fe301f4acf085872"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 2632,
+        "artifact_sha256": "637f07cba71b58c4660e19b132c5fb8533b6db606872573ad71f45cfda751ec2",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/workers/red-1/red_exploit_submission.py",
+        "rationale": "The public app.py joins each ZIP member name directly to the destination and writes it without canonical path validation. A ZIP member named ../arena_escape.txt therefore resolves outside the intended extraction directory when import_zip is called directly.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "301eb9faa29c9d41722d8b099a1b0fafc5222c5c2c8469a8a34f912344a1af98",
+        "status": "PASS",
+        "strategy_genome_sha256": "ff7e6dd6d0ef4d88aec69f65e46e8414568c9b58994fce23fe301f4acf085872"
+      },
+      "model": "gpt-5.5",
+      "parent_lane_id": "payload-857-receipt",
+      "parent_worker_id": "red-0",
+      "persona": "battle-red-public-auditor-variant-1",
+      "pressure_receipt_id": "prekill-pressure:red-0__blue-0",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/workers/red-1/scillm-call-receipt.json",
+      "spawn_decision_receipt_id": "tau-parent-spawn-decision:red-0",
+      "spawn_type": "strategic_pre_kill",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "red",
+      "validation": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/workers/red-1/validation.json",
+      "validation_ok": true,
+      "worker_id": "red-1",
+      "worker_index": 1
+    }
+  ]
+}

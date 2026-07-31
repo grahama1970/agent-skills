@@ -145,7 +145,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
       <div className="flex min-w-0 items-start justify-end gap-2">
         <div className={cn("battle-live-events", deathAnnouncement && "has-death-announcement")}>
           <div className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
-            <span className="h-2 w-2 rounded-full bg-battle-red shadow-redGlow" /> LIVE EVENTS
+            <span className="h-2 w-2 rounded-full bg-battle-red shadow-redGlow" /> RECEIPT EVENTS
           </div>
           <BattleHungerGamesDeathAnnouncement card={deathAnnouncement} onDismiss={onDismissDeathAnnouncement ?? (() => undefined)} />
           {events.slice(-3).reverse().map((event, index) => (
@@ -204,9 +204,10 @@ function EventIcon({ event }: { event: BattleEvent }) {
 }
 
 function ReceiptLiveEventText({ event }: { event: BattleEvent }) {
-  const prefix = event.ui.notification_prefix;
-  const highlight = event.ui.notification_highlight;
-  const tone = event.ui.notification_highlight_tone ?? (event.team === "blue" ? "blue" : event.team === "red" ? "red" : "green");
+  const ui = event.ui ?? {};
+  const prefix = ui.notification_prefix;
+  const highlight = ui.notification_highlight;
+  const tone = ui.notification_highlight_tone ?? (event.team === "blue" ? "blue" : event.team === "red" ? "red" : "green");
   if (prefix && highlight) {
     return (
       <span className="min-w-0 truncate">
@@ -215,7 +216,7 @@ function ReceiptLiveEventText({ event }: { event: BattleEvent }) {
       </span>
     );
   }
-  return <span className="min-w-0 truncate">{event.ui.notification ?? event.summary}</span>;
+  return <span className="min-w-0 truncate">{ui.notification ?? event.summary}</span>;
 }
 
 

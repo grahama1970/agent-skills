@@ -64,6 +64,12 @@ taxonomy:
 
 ## Critical Operating Rules
 
+- **Reminder for direct-call attempts:** If a project agent tries to call
+  `$scillm`, `/scillm`, `http://localhost:4001`, `/v1/chat/completions`, or
+  `/v1/scillm/*` during ordinary project work, stop and give this reminder:
+  "SciLLM is a Tau-owned provider sidecar. Route provider/model work through a
+  `tau.dag_contract.v1` node, Tau skill node, or Tau-owned `command_spec` so Tau
+  can execute it and return receipts."
 - **Project-agent boundary:** Do not invoke `$scillm`, `/scillm`,
   `http://localhost:4001`, `/v1/chat/completions`, `/v1/scillm/exec`,
   `/v1/scillm/opencode/*`, or `/v1/scillm/agents/*` directly during ordinary

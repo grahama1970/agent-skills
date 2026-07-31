@@ -1,0 +1,70 @@
+{
+  "created_at": "2026-07-29T18:16:05Z",
+  "execution_mode": "no_docker_validation_only",
+  "expires_at": "2026-07-30T18:16:05Z",
+  "non_claims": [
+    "research_design_input_only",
+    "no_scan_executed",
+    "no_docker_invoked",
+    "no_authorization_proof",
+    "no_exploit_or_patch_proof"
+  ],
+  "request_id": "dogpile-security-20260729T181545Z-516ec9058a-hack-scan-request",
+  "requested_scan": {
+    "lanes": [
+      "sast",
+      "sca"
+    ],
+    "profile": "hobbyist"
+  },
+  "schema": "dogpile.hack_scan_request.v1",
+  "selected_source_evidence": [
+    {
+      "content_sha256": "e3a3380d78b25250c46a9af5f7036182c1cb376b700bdd31c327ff78a48bb50d",
+      "evidence_id": "brave-b042b0f095b1",
+      "provider": "brave",
+      "repository": null,
+      "repository_ref": null,
+      "retrieval_artifact": "evidence/brave-b042b0f095b1.json",
+      "retrieved_at": "2026-07-29T18:16:05Z",
+      "source_bearing": true,
+      "source_type": "web_page",
+      "url": "https://github.com/RUB-SysSec/EthBMC"
+    },
+    {
+      "content_sha256": "2565299520e67674d12d6107d6c27a5259965a943d046b7ddc23416aedd61f1a",
+      "evidence_id": "brave-66d7ba6a5801",
+      "provider": "brave",
+      "repository": null,
+      "repository_ref": null,
+      "retrieval_artifact": "evidence/brave-66d7ba6a5801.json",
+      "retrieved_at": "2026-07-29T18:16:05Z",
+      "source_bearing": true,
+      "source_type": "web_page",
+      "url": "https://www.usenix.org/conference/usenixsecurity20/presentation/frank"
+    },
+    {
+      "content_sha256": "7eceb44851b7ebc8f3913c2f8ccef9281c575e20d6ea5754ef6027b694d7f3ec",
+      "evidence_id": "brave-737d9cf30d6b",
+      "provider": "brave",
+      "repository": null,
+      "repository_ref": null,
+      "retrieval_artifact": "evidence/brave-737d9cf30d6b.json",
+      "retrieved_at": "2026-07-29T18:16:05Z",
+      "source_bearing": true,
+      "source_type": "web_page",
+      "url": "https://arxiv.org/html/2512.22417"
+    }
+  ],
+  "source_packet": {
+    "artifact_path": "/tmp/dogpile-security-packet.json",
+    "schema": "dogpile.security_research_packet.v1",
+    "sha256": "afcd4dae90200c5eab817c28e09b5be80933829cf55125f39d07be6658935ff1"
+  },
+  "target": {
+    "canonical_id": "fixture-target",
+    "immutable_ref": "sha256:fixture",
+    "kind": "repository",
+    "target_url": "file:///fixtures/fixture-target"
+  }
+}

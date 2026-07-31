@@ -397,6 +397,48 @@ def format_youtube_section(youtube_res: List[Dict], youtube_transcripts: List[Di
     return lines
 
 
+def format_context7_section(context7_res: Dict[str, Any]) -> List[str]:
+    """Format optional Context7 library documentation results."""
+    lines = ["## Library Documentation (Context7)"]
+
+    if not isinstance(context7_res, dict):
+        lines.append(f"> Error: unexpected result type {type(context7_res).__name__}")
+        lines.append("")
+        return lines
+
+    if "skipped" in context7_res or "skipped_missing_credentials" in context7_res:
+        reason = context7_res.get("skipped") or context7_res.get("skipped_missing_credentials")
+        lines.append(f"> Skipped: {reason}")
+        if context7_res.get("hint"):
+            lines.append(f"> Hint: {context7_res['hint']}")
+        lines.append("")
+        return lines
+
+    if "error" in context7_res:
+        lines.append(f"> Error: {context7_res['error']}")
+        if context7_res.get("hint"):
+            lines.append(f"> Hint: {context7_res['hint']}")
+        lines.append("")
+        return lines
+
+    selected = context7_res.get("selected_library_id") or context7_res.get("library") or "unknown"
+    title = context7_res.get("selected_title") or selected
+    lines.append(f"**Selected library:** `{selected}` ({title})")
+    lines.append(f"**Query:** {context7_res.get('query', '')}")
+    context = str(context7_res.get("context") or "")
+    if context:
+        if len(context) > 2500:
+            context = context[:2500] + "\n\n[... truncated for brevity ...]"
+        lines.append("")
+        lines.append("```")
+        lines.append(context)
+        lines.append("```")
+    else:
+        lines.append("> No documentation context returned.")
+    lines.append("")
+    return lines
+
+
 def generate_report(
     query: str,
     wayback_res: Dict[str, Any],
@@ -411,6 +453,7 @@ def generate_report(
     brave_res: Dict[str, Any],
     brave_questions_res: Dict[str, Any],
     feeds_res: Dict[str, Any],
+    context7_res: Dict[str, Any],
     brave_deep: List[Dict],
     arxiv_res: Dict[str, Any],
     arxiv_details: List[Dict],
@@ -431,6 +474,7 @@ def generate_report(
     md_lines.extend(_safe_section("AI Research (Perplexity)", format_perplexity_section, perp_res))
     md_lines.extend(_safe_section("Books & Usenet (Readarr)", format_readarr_section, readarr_res))
     md_lines.extend(_safe_section("Feed Monitors", format_feeds_section, feeds_res))
+    md_lines.extend(_safe_section("Library Documentation (Context7)", format_context7_section, context7_res))
     md_lines.extend(_safe_section(
         "GitHub",
         format_github_section,

@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""Tests for Battle target authorization preflight."""
+
+from __future__ import annotations
+
+import json
+import shutil
+import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
+from typer.testing import CliRunner
+
+import battle_skill.orchestrator
+from battle_skill.cli import app
+from common.security_authorization import validate_target_authorization
+
+FIXTURE = Path(__file__).resolve().parents[2] / "hack" / "fixtures" / "authorization" / "valid-local.json"
+
+
+class BattleTargetAuthorizationTests(unittest.TestCase):
+    def test_shared_validator_is_used_for_battle_manifest(self) -> None:
+        receipt = validate_target_authorization(
+            FIXTURE,
+            expected_target="fixture-target@sha256:fixture",
+            requested_action="battle",
+            requested_runtime_mode="battle",
+        )
+
+        self.assertEqual(receipt["status"], "PASS", receipt["errors"])
+        self.assertFalse(receipt["execution_started"])
+        self.assertFalse(receipt["docker_invoked"])
+        self.assertFalse(receipt["qemu_invoked"])
+
+    def test_missing_manifest_stops_before_orchestrator_construction(self) -> None:
+        with patch("battle_skill.orchestrator.BattleOrchestrator", side_effect=AssertionError("orchestrator reached")):
+            result = CliRunner().invoke(
+                app,
+                [
+                    "battle",
+                    ".",
+                    "--rounds",
+                    "1",
+                    "--authorization-target",
+                    "fixture-target@sha256:fixture",
+                ],
+            )
+
+        self.assertEqual(result.exit_code, 2, result.output)
+        self.assertIn("authorization manifest is required", result.output)
+
+    def test_wrong_target_manifest_stops_before_orchestrator_construction(self) -> None:
+        with TemporaryDirectory() as temp:
+            manifest = Path(temp) / "authorization.json"
+            shutil.copy(FIXTURE, manifest)
+            payload = json.loads(manifest.read_text())
+            payload["target"]["immutable_ref"] = "sha256:wrong"
+            manifest.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+            with patch("battle_skill.orchestrator.BattleOrchestrator", side_effect=AssertionError("orchestrator reached")):
+                result = CliRunner().invoke(
+                    app,
+                    [
+                        "battle",
+                        ".",
+                        "--rounds",
+                        "1",
+                        "--authorization-manifest",
+                        str(manifest),
+                        "--authorization-target",
+                        "fixture-target@sha256:fixture",
+                    ],
+                )
+
+        self.assertEqual(result.exit_code, 2, result.output)
+        self.assertIn("target identity does not match requested target", result.output)
+
+
+if __name__ == "__main__":
+    unittest.main()

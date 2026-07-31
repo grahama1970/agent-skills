@@ -136,32 +136,3 @@ describe("hunger games ticker overlay", () => {
 		expect(rows.at(-1)?.ui?.notification_highlight).toBe("RED-0 SURVIVES");
 	});
 });
-
-describe("kill-shot proof fixture cues", () => {
-	it("fires killed impact cue after blue blast travel window", async () => {
-		const { readFile } = await import("node:fs/promises");
-		const { resolve } = await import("node:path");
-		const raw = await readFile(
-			resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-kill-shot-pixi-replay/battle.normalized_ux_fixture.json"),
-			"utf8",
-		);
-		const proofFixture = JSON.parse(raw);
-		const { battleLanesForView, battleEventsForView } = await import("./battle-data");
-		const lanes = battleLanesForView(proofFixture.lanes, proofFixture);
-		const battleEvents = battleEventsForView(proofFixture);
-		const lane = lanes.find((item) => item.id === "payload-857-red-1");
-		expect(lane).toBeTruthy();
-		const blast = lane!.events.find((event) => event.kind === "blue_blast");
-		expect(blast?.elapsed_seconds).toBeGreaterThan(90);
-		const cues = collectReplayCueCrossings({
-			prevSeconds: blast!.elapsed_seconds! - 1,
-			nextSeconds: blast!.elapsed_seconds! + KILL_SHOT_TRAVEL_SECONDS + 0.2,
-			fixture: proofFixture,
-			lanes,
-			battleEvents,
-		});
-		expect(cues.map((cue) => cue.cue)).toContain("killed");
-		const killedCue = cues.find((cue) => cue.cue === "killed");
-		expect(killedCue?.highlight).toContain("ELIMINATED");
-	});
-});

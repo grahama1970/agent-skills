@@ -1,5 +1,20 @@
 {
-  "fixture_sha256": "ffaebd09fe412051ff5aa77b61e3aaf5bd27804b87af0913becf58c728d083bf",
+  "canonical_dual_team": {
+    "blue_edge_count": 1,
+    "blue_node_count": 2,
+    "cross_team_edge_count": 0,
+    "problems": [],
+    "red_edge_count": 1,
+    "red_node_count": 2,
+    "resolved_reference_count": 20,
+    "schema": "battle.canonical_dual_team_fixture_validation.v1",
+    "score_status": "PASS",
+    "status": "PASS"
+  },
+  "event_count": 24,
+  "fixture_sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+  "lane_count": 4,
+  "lineage_edge_count": 2,
   "local_public_byte_identical": true,
   "schema": "battle.normalized_adaptive_lineage_validation.v1",
   "status": "PASS"

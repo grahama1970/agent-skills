@@ -3,6 +3,7 @@ import {
 	battleLiveTransportBattleId,
 	battleLiveTransportFixtureKey,
 	battleLiveTransportMode,
+	battleLiveRuntimeTransport,
 	isBattleLiveView,
 } from "../lib/battle-transport-registry";
 import { loadBattleTransportPackage } from "../lib/battle-transport-loader";
@@ -10,16 +11,20 @@ import { loadBattleLiveTransportContract } from "../lib/battle-live-transport-co
 import {
 	createIdleLiveSseClientState,
 	planLiveSseClient,
+	planLiveWebSocketClient,
 	applySseLiveEvent,
 	shouldOpenEventSource,
+	shouldOpenWebSocket,
 	type BattleLiveSseClientState,
 } from "../lib/battle-live-sse-client";
 import {
 	buildLiveSseTransportPackage,
+	buildLiveWebSocketTransportPackage,
 	contractAllowsLiveAdapterExecution,
 	discoverBattleLiveTransportAdapter,
 	fetchBattleLiveSnapshot,
 	openBattleLiveSseStream,
+	openBattleLiveWebSocketStream,
 	resolveBattleLiveTransportBaseUrl,
 } from "../lib/battle-live-sse-runtime";
 import { battleLiveTransportContractCompanionUrl } from "../lib/battle-live-transport-contract-registry";
@@ -51,10 +56,11 @@ export function useBattleLiveTransport() {
 
 	const isLiveRoute = isBattleLiveView();
 	const mode = battleLiveTransportMode();
+	const runtimeTransport = battleLiveRuntimeTransport();
 	const fixtureKey = battleLiveTransportFixtureKey();
 	const battleId = battleLiveTransportBattleId();
 	const liveBaseUrl = resolveBattleLiveTransportBaseUrl();
-	const routeKey = `${routeEpoch}:${mode}:${fixtureKey ?? ""}:${battleId ?? ""}:${liveBaseUrl}`;
+	const routeKey = `${routeEpoch}:${mode}:${runtimeTransport}:${fixtureKey ?? ""}:${battleId ?? ""}:${liveBaseUrl}`;
 
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<BattleTransportLoadError | BattleLiveTransportContractLoadError | null>(null);
@@ -183,6 +189,109 @@ export function useBattleLiveTransport() {
 		[stopStream],
 	);
 
+	const startLiveWebSocket = useCallback(
+		async (args: {
+			contract: BattleLiveTransportContractV1;
+			companion: BattleNormalizedUxFixture;
+			baseUrl: string;
+			webSocketPort: number;
+		}) => {
+			stopStream();
+			const endpoint = args.contract.websocket?.endpoint ?? null;
+			if (!endpoint) {
+				setError({
+					code: "CONTRACT_VALIDATION_FAILED",
+					title: "CONTRACT VALIDATION FAILED",
+					detail: "Contract does not advertise a WebSocket endpoint.",
+				});
+				setSseClient(planLiveWebSocketClient(args.contract, { adapterAvailable: false, baseUrl: args.baseUrl }));
+				return;
+			}
+			setError(null);
+			setCompanion(args.companion);
+			setSseClient({
+				status: "connecting",
+				lastSeq: 0,
+				lastEventId: null,
+				error: null,
+				endpoint,
+				baseUrl: args.baseUrl,
+				live: "local_http_websocket_adapter",
+				transportMode: "websocket",
+			});
+			let expectedLastSeq = 0;
+			const handle = openBattleLiveWebSocketStream({
+				baseUrl: args.baseUrl,
+				webSocketEndpoint: endpoint,
+				webSocketPort: args.webSocketPort,
+				onOpen: () => {
+					setSseClient((current) => ({
+						...current,
+						status: "open",
+						transportMode: "websocket",
+						error: null,
+					}));
+				},
+				onSnapshot: (snapshot) => {
+					expectedLastSeq = snapshot.last_seq;
+					const pack = buildLiveWebSocketTransportPackage({
+						snapshot,
+						baseUrl: args.baseUrl,
+						companionFixtureUrl: battleLiveTransportContractCompanionUrl(args.contract.battle_id as "battle-004"),
+					});
+					setState(bootstrapLiveTransportState(pack));
+				},
+				onEvent: (event) => {
+					setState((current) => {
+						const next = applySseLiveEvent(current, event);
+						const lastSeq = next.pack?.manifest.last_seq ?? expectedLastSeq;
+						if (event.seq >= lastSeq && lastSeq > 0) {
+							queueMicrotask(() => streamCloseRef.current?.());
+						}
+						return next;
+					});
+					setSseClient((current) => ({
+						...current,
+						status: "open",
+						lastSeq: event.seq,
+						lastEventId: String(event.seq),
+						transportMode: "websocket",
+						error: null,
+					}));
+				},
+				onError: (message) => {
+					setSseClient((current) => ({
+						...current,
+						status: "error",
+						error: message,
+					}));
+					setState((current) =>
+						current.status === "gap_recovery"
+							? current
+							: {
+									...current,
+									status: "error",
+									error: message,
+									followLive: false,
+								},
+					);
+				},
+			});
+			streamCloseRef.current = handle.close;
+			void handle.done.then(() => {
+				setSseClient((current) =>
+					current.status === "error" || current.status === "gap_recovery"
+						? current
+						: {
+								...current,
+								status: "ended",
+							},
+				);
+			});
+		},
+		[stopStream],
+	);
+
 	useEffect(() => {
 		if (!isLiveRoute) {
 			stopStream();
@@ -235,7 +344,34 @@ export function useBattleLiveTransport() {
 
 				if (cancelled) return;
 
-				if (probe.ok && shouldOpenEventSource(result.contract, { adapterAvailable: true })) {
+				if (
+					runtimeTransport === "websocket" &&
+					probe.ok &&
+					shouldOpenWebSocket(result.contract, {
+						adapterAvailable: true,
+						websocketAvailable:
+							probe.webSocketEndpoint === result.contract.websocket?.endpoint && probe.webSocketPort != null,
+					})
+				) {
+					const webSocketPort = probe.webSocketPort;
+					if (webSocketPort == null) return;
+					setLoading(false);
+					setSseClient(
+						planLiveWebSocketClient(result.contract, {
+							adapterAvailable: true,
+							baseUrl: probe.baseUrl,
+						}),
+					);
+					await startLiveWebSocket({
+						contract: result.contract,
+						companion: result.companion,
+						baseUrl: probe.baseUrl,
+						webSocketPort,
+					});
+					return;
+				}
+
+				if (runtimeTransport === "sse" && probe.ok && shouldOpenEventSource(result.contract, { adapterAvailable: true })) {
 					setLoading(false);
 					setSseClient(
 						planLiveSseClient(result.contract, {
@@ -254,10 +390,15 @@ export function useBattleLiveTransport() {
 				setLoading(false);
 				setState(createIdleTransportState());
 				setSseClient(
-					planLiveSseClient(result.contract, {
-						adapterAvailable: false,
-						baseUrl: liveBaseUrl,
-					}),
+					runtimeTransport === "websocket"
+						? planLiveWebSocketClient(result.contract, {
+								adapterAvailable: false,
+								baseUrl: liveBaseUrl,
+							})
+						: planLiveSseClient(result.contract, {
+								adapterAvailable: false,
+								baseUrl: liveBaseUrl,
+							}),
 				);
 				return;
 			}
@@ -302,7 +443,7 @@ export function useBattleLiveTransport() {
 			cancelled = true;
 			stopStream();
 		};
-	}, [battleId, fixtureKey, isLiveRoute, liveBaseUrl, mode, routeKey, startLiveSse, stopStream]);
+	}, [battleId, fixtureKey, isLiveRoute, liveBaseUrl, mode, routeKey, runtimeTransport, startLiveSse, startLiveWebSocket, stopStream]);
 
 	// Reflect reducer gap state onto SSE client chrome.
 	useEffect(() => {
@@ -342,19 +483,32 @@ export function useBattleLiveTransport() {
 		}
 		if (mode === "contract" && contract && companion && sseClient.baseUrl) {
 			setLoading(true);
-			await startLiveSse({
-				contract,
-				companion,
-				baseUrl: sseClient.baseUrl,
-				lastEventId: 0,
-			});
+			if (sseClient.transportMode === "websocket") {
+				const probe = await discoverBattleLiveTransportAdapter({ battleId: contract.battle_id });
+				if (probe.ok && probe.webSocketPort != null) {
+					await startLiveWebSocket({
+						contract,
+						companion,
+						baseUrl: probe.baseUrl,
+						webSocketPort: probe.webSocketPort,
+					});
+				}
+			} else {
+				await startLiveSse({
+					contract,
+					companion,
+					baseUrl: sseClient.baseUrl,
+					lastEventId: 0,
+				});
+			}
 			setLoading(false);
 		}
-	}, [companion, contract, fixtureKey, isLiveRoute, mode, sseClient.baseUrl, startLiveSse]);
+	}, [companion, contract, fixtureKey, isLiveRoute, mode, sseClient.baseUrl, sseClient.transportMode, startLiveSse, startLiveWebSocket]);
 
 	return {
 		isLiveRoute,
 		mode,
+		runtimeTransport,
 		fixtureKey,
 		battleId,
 		liveBaseUrl,

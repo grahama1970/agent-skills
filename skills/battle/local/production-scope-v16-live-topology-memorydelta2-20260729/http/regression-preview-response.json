@@ -1,0 +1,18 @@
+{
+  "job_id": "v16-reg-rfc",
+  "observation": {
+    "functional_result": "EXTERNAL_PREVIEW_COMPLETED",
+    "observation_id": "OBS-30",
+    "opaque_final_destination_sha256": "c7e1022dd937b9662b128229d505b82de47020bcfaa2f3e51e03cc9d74b1bb69",
+    "opaque_initial_destination_sha256": "2a87e078abc335eae7f2214dae6ee4d50a9bc9354add7404d129b715d1a1464b",
+    "redirect_hop_count": 1,
+    "request_id": "rf-c-preview-v16-reg-rfc",
+    "schema": "battle.v16.relayforge.public_observation.v1",
+    "status_code": 200,
+    "target_id": "battle-v16-relayforge-a"
+  },
+  "preview_sha256": "24e84641b839a1682e8646ded1c4d96b5fb053a8d62f4369444e8e24bfcae101",
+  "redirect_hop_count": 1,
+  "schema": "battle.v16.relayforge.preview_result.v1",
+  "target_id": "battle-v16-relayforge-a"
+}

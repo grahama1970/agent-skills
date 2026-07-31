@@ -1,0 +1,23 @@
+{
+  "commands": [
+    "uv run --project skills/hack python -m pytest skills/hack/tests/test_compose_policy.py -q",
+    "./skills/hack/run.sh compose-policy skills/hack/fixtures/compose-policy/safe/docker-compose.yml --authorization-manifest skills/hack/fixtures/authorization/valid-local.json --out /tmp/hack-sanitized-compose.yml --receipt-out /tmp/hack-compose-policy-receipt.json",
+    "./skills/hack/run.sh compose-policy-matrix skills/hack/fixtures/compose-policy/malicious --authorization-manifest skills/hack/fixtures/authorization/valid-local.json --out /tmp/hack-compose-policy-matrix",
+    "docker compose --env-file <empty> -f /tmp/hack-sanitized-compose.yml config --format json"
+  ],
+  "live": [
+    "docker_compose_config",
+    "docker_compose_config_readback"
+  ],
+  "matrix_case_count": 10,
+  "matrix_docker_up_call_count": 0,
+  "matrix_summary": "skills/hack/local/compose-policy-1110-20260729/matrix-summary.json",
+  "mocked": false,
+  "passed_case_count": 0,
+  "rejected_case_count": 10,
+  "safe_receipt": "skills/hack/local/compose-policy-1110-20260729/compose-policy-receipt.json",
+  "sanitized_compose": "skills/hack/local/compose-policy-1110-20260729/sanitized-compose.yml",
+  "sanitized_compose_sha256": "98fa747a128d4e5124992a6854c8370143be05710cfd548f3099a4f4058f48e8",
+  "schema": "hack.compose_policy_1110_proof_bundle.v1",
+  "status": "PASS"
+}

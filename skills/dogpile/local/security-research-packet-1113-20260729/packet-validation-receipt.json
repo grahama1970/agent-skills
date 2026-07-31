@@ -1,0 +1,13 @@
+{
+  "errors": [],
+  "live": "dogpile_provider_search",
+  "mocked": false,
+  "packet_schema": "dogpile.security_research_packet.v1",
+  "packet_sha256": "114012846b8cda8a74a3285b73673773e02e3642f9c3813c0cc2d5b2afd02eda",
+  "run_id": "dogpile-security-20260729T181545Z-516ec9058a",
+  "schema": "dogpile.security_research_packet_validation.v1",
+  "source_bearing_evidence_count": 14,
+  "source_bearing_provider_count": 3,
+  "status": "PASS",
+  "valid": true
+}

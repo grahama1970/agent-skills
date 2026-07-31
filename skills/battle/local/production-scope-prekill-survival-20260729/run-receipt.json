@@ -1,0 +1,206 @@
+{
+  "agentic": true,
+  "artifacts": {
+    "arena_private_ledger": "arena/private/hidden-vulnerability-ledger.json",
+    "arena_private_oracle_receipt": "arena/arena-receipt.json",
+    "arena_run_receipt": "arena/run-receipt.json",
+    "blue_handoff": "tau-live/blue/handoff.json",
+    "blue_tau_subagent_receipt": "tau-live/blue/tau-subagent-receipt.json",
+    "exploit_lifecycle_receipts": "exploit-lifecycle-receipts.json",
+    "judge_receipt": "judge/judge-receipt.json",
+    "lineage_receipts": "lineage-receipts.json",
+    "red_handoff": "tau-live/red/handoff.json",
+    "red_tau_subagent_receipt": "tau-live/red/tau-subagent-receipt.json",
+    "scoreboard": "scoreboard.json",
+    "tau_manifest": "tau-live/manifest.json",
+    "tau_public_context": "context/tau-public-context.json",
+    "team_public_brief": "arena/team-public/scenario-brief.json",
+    "team_public_target": "arena/team-public/target/app.py",
+    "visibility_validation": "visibility-validation.json"
+  },
+  "battle_clock": {
+    "allotted_seconds": 180.0,
+    "elapsed_seconds": 75.326493,
+    "mode": "receipt_elapsed",
+    "remaining_seconds": 104.673507,
+    "source_receipt_id": "tau-live/manifest"
+  },
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Unbounded Battle swarm execution.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Arena created private answer-key artifacts and public team artifacts.",
+      "Battle invoked Tau's Red/Blue live handoff bridge, not direct Scillm.",
+      "Tau wrote tau.agent_handoff.v1 and tau.subagent_receipt.v1 artifacts for requested workers.",
+      "The Tau handoff context references only arena/team-public artifacts.",
+      "Battle Judge replayed materialized Tau Red/Blue artifact pairs in Docker.",
+      "A live parent Red pressure receipt caused a parent-authored pre-terminal Tau child spawn, and the child produced a real post-terminal Judge receipt."
+    ]
+  },
+  "created_at": "2026-07-29T15:10:21Z",
+  "execution_scope": "public_only_tau_worker_matrix_rung",
+  "lineage_request": {
+    "condition": "parent pressure receipt and parent-authored spawn decision must precede child materialization; child activity must follow the earliest parent terminal receipt",
+    "mode": "prekill_survival_parent_decision",
+    "receipt": "lineage-receipts.json",
+    "requested": true,
+    "status": "PASS"
+  },
+  "live": "brave_search_docker_arena_oracle_tau_harness",
+  "mocked": false,
+  "prekill_survival_contract": {
+    "battle_spawn_policy_decision": {
+      "receipt_id": "lifecycle:spawn_decision:lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "status": "allowed"
+    },
+    "child_lifecycle_started": {
+      "child_exploit_id": "payload-857-red-1",
+      "inherited_evidence_refs": [
+        {
+          "kind": "parent_pressure",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/prekill-pressure-receipt.json",
+          "receipt_id": "prekill-pressure:red-0__blue-0",
+          "sha256": "0b1bb9515e7672d138ae1c5a68b255bfeea2d5fa41377d28216160ddd280937f"
+        },
+        {
+          "kind": "parent_tau_subagent",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/tau-subagent-receipt.json",
+          "receipt_id": "tau-parent-subagent:red-0",
+          "sha256": "24890db101b9605a4cd9724dd8b234d0cbb1ed001e675a76113d74f0c5b36b43"
+        },
+        {
+          "kind": "parent_materialized_artifact",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/materialized-artifact-receipt.json",
+          "receipt_id": "tau-parent-materialized-artifact",
+          "sha256": "5baee2d875ebbee9bcc75905c2e43586b2caa2e6267236f3909d7a07ae6ffa13"
+        }
+      ],
+      "receipt_id": "lifecycle:child_lifecycle_started:lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "source_time": 102.450288
+    },
+    "child_materialized": {
+      "child_exploit_id": "payload-857-red-1",
+      "receipt_id": "lifecycle:child_materialized:lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "source_time": 102.450288
+    },
+    "earliest_confirmed_terminal": {
+      "event_type": "judge_blue_success",
+      "parent_exploit_id": "payload-857-receipt",
+      "receipt_id": "lifecycle:judge_blue_success:red-0__blue-0",
+      "source_time": 103.149514
+    },
+    "errors": [],
+    "lineage_registered": {
+      "child_exploit_id": "payload-857-red-1",
+      "generation": 1,
+      "lineage_id": "battle-004:arena-zip-slip-import-001:lineage",
+      "parent_exploit_id": "payload-857-receipt",
+      "receipt_id": "lifecycle:lineage_registered:lineage-spawn-payload-857-receipt-to-payload-857-red-1"
+    },
+    "parent_pressure_observed": {
+      "parent_exploit_id": "payload-857-receipt",
+      "receipt_id": "lifecycle:pressure_assessed:red-0__blue-0",
+      "source_pressure_receipt_id": "prekill-pressure:red-0__blue-0",
+      "source_time": 78.46451
+    },
+    "post_terminal_child_lifecycle_receipt": {
+      "child_exploit_id": "payload-857-red-1",
+      "event_type": "child_lifecycle_receipt_after_parent_terminal",
+      "receipt_id": "lifecycle:child_lifecycle_receipt_after_parent_terminal:lineage-spawn-payload-857-receipt-to-payload-857-red-1",
+      "source_time": 104.276403
+    },
+    "red_spawn_intent": {
+      "author_worker_id": "red-0",
+      "decision": "strategic_pre_kill",
+      "inherited_evidence_refs": [
+        {
+          "kind": "parent_pressure",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/prekill-pressure-receipt.json",
+          "receipt_id": "prekill-pressure:red-0__blue-0",
+          "sha256": "0b1bb9515e7672d138ae1c5a68b255bfeea2d5fa41377d28216160ddd280937f"
+        },
+        {
+          "kind": "parent_tau_subagent",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/tau-subagent-receipt.json",
+          "receipt_id": "tau-parent-subagent:red-0",
+          "sha256": "24890db101b9605a4cd9724dd8b234d0cbb1ed001e675a76113d74f0c5b36b43"
+        },
+        {
+          "kind": "parent_materialized_artifact",
+          "path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-prekill-survival-20260729/tau-live/red/materialized-artifact-receipt.json",
+          "receipt_id": "tau-parent-materialized-artifact",
+          "sha256": "5baee2d875ebbee9bcc75905c2e43586b2caa2e6267236f3909d7a07ae6ffa13"
+        }
+      ],
+      "receipt_id": "lifecycle:spawn_decision:lineage-spawn-payload-857-receipt-to-payload-857-red-1"
+    },
+    "status": "PASS"
+  },
+  "round_config": {
+    "battle_id": "battle-004",
+    "canonical_allotted_seconds": 1200.0,
+    "override_reason": "dev_smoke_test",
+    "resolved_allotted_seconds": 180.0,
+    "time_limit_source": "cli_override"
+  },
+  "run_id": "arena-prekill-survival-20260729T150835Z",
+  "schema": "battle.arena_tau_public_only_run_receipt.v1",
+  "status": "PASS",
+  "timing_receipts": {
+    "claims": {
+      "does_not_prove": [
+        "Precise model-token timing.",
+        "Precise in-container exploit phase timing.",
+        "Validated elapsed-time x-axis placement for the UX timeline."
+      ],
+      "proves": [
+        "Battle control plane measured coarse elapsed ordering for major Arena/Tau/Judge receipt stages."
+      ]
+    },
+    "events": [
+      {
+        "elapsed_seconds": 1.656631,
+        "receipt_id": "arena-receipt",
+        "stage": "arena_context_ready"
+      },
+      {
+        "elapsed_seconds": 77.467352,
+        "receipt_id": "tau-live/manifest",
+        "stage": "initial_tau_manifest_ready"
+      },
+      {
+        "elapsed_seconds": 77.471635,
+        "receipt_id": "visibility-validation",
+        "stage": "visibility_validation_ready"
+      },
+      {
+        "elapsed_seconds": 106.377531,
+        "receipt_id": "judge-receipt",
+        "stage": "parent_judge_ready"
+      },
+      {
+        "elapsed_seconds": 106.377536,
+        "receipt_id": "lineage-receipts",
+        "stage": "lineage_receipts_ready"
+      }
+    ],
+    "schema": "battle.control_plane_timing_receipts.v1",
+    "source": "battle_control_plane_perf_counter"
+  },
+  "upstream_arena_status": "PASS",
+  "verdict": "BLUE_SUCCESS",
+  "worker_counts": {
+    "blue_materialized": 2,
+    "blue_requested": 2,
+    "blue_success_pairs": 4,
+    "judged_pairs": 4,
+    "red_child_spawn_requested": true,
+    "red_initial_requested": 1,
+    "red_materialized": 2,
+    "red_prekill_survival_requested": true,
+    "red_requested": 2
+  }
+}

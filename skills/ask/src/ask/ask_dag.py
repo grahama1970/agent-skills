@@ -205,6 +205,7 @@ def draft_ask_dag_from_question(
         {
             "id": "memory_first",
             "type": "memory.recall",
+            "allow_failure": True,
             "input": {"query": text, "scope": scope, "k": 5},
         }
     ]
@@ -333,6 +334,7 @@ def build_persona_review_implement_dag(
         {
             "id": "memory_first",
             "type": "memory.recall",
+            "allow_failure": True,
             "input": {"query": text, "scope": scope, "k": 8},
         },
         {

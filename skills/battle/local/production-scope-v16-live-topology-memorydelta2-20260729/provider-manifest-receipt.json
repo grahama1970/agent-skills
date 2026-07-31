@@ -1,0 +1,50 @@
+{
+  "context_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/providers/context/tau-public-context.json",
+  "context_sha256": "63faa50d39b5002974bfc0a6a7d293c9dfd68042098a432568cd0ed610c382b6",
+  "created_at": "2026-07-29T16:06:43Z",
+  "fixture_fallback_used": false,
+  "live": true,
+  "memory_chain_qualification_sha256": "72d1f41dd20ba4ad7777dce434615fa88277c5818f5bdbe78684dab3e95be5f2",
+  "mocked": false,
+  "post_memory_strategy_sha256": "e0dac6dc4c3159be8c7cdcefc2b534dfe421065dea0f8489bb42f44de64e4095",
+  "private_identifier_match_count": 0,
+  "schema": "battle.v16.live_topology_provider_manifest.v1",
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "tau_manifest_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/providers/tau-live/manifest.json",
+  "tau_manifest_sha256": "2d2d910f2d9df0649646053b2445daa46283ab83b6ab4aefe1933e5ab6a2ef6b",
+  "team_context_sha256": {
+    "blue": "cbcfb0abf67802b56b375d532c73b2ee7945f367123bd71d20d8d242fa665d97",
+    "red": "1c5c32dd12e37eb6869db593d77e3d31538430c31c433d5f42684515d9749a54"
+  },
+  "teams": {
+    "blue": {
+      "http_status": 200,
+      "live": true,
+      "materialized_artifact_sha256": "8bacdba0a219561131f598100e2c1ea6cf1f6a91f968eaa4006009d798aa4251",
+      "mocked": false,
+      "parsed_json_sha256": "dc272d7df23969228cdbe894b7fcf9365bbbe2e72a95b312bb40c383f5b56e32",
+      "provider_call_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/providers/tau-live/blue/scillm-call-receipt.json",
+      "provider_call_sha256": "ec053f41c8a4dc94ac955c7d74d19919421e76fd10eadc2ce203cf5bac188692",
+      "provider_request_sha256": null,
+      "strategy_genome_sha256": "a752908b66d56b8373122d5238a3f65c13736ca7c30de41280cc9d706fc58231",
+      "tau_handoff_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/providers/tau-live/blue/handoff.json",
+      "tau_handoff_sha256": "c2586296913063c35751cba568286cc6a22b5262236b5be4a04970a27f8c6d3b",
+      "team": "blue"
+    },
+    "red": {
+      "http_status": 200,
+      "live": true,
+      "materialized_artifact_sha256": "4ef2c9048fd13566762e17cb258aa16b9321c70d889c46a4d70558759d17ceb3",
+      "mocked": false,
+      "parsed_json_sha256": "088448897f02d3bc29fb78f1a611a5737a25d8e915c92402eac85dada711057b",
+      "provider_call_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/providers/tau-live/red/scillm-call-receipt.json",
+      "provider_call_sha256": "ab8d1c4e3c7a8c144ba4e8f60feeb1b436551d7cc09ddcf9350525c795c5ac3d",
+      "provider_request_sha256": null,
+      "strategy_genome_sha256": "08d4839dad53e96c1d996727f359b5aae43de525e14fbee273e6ec4c5c0e4d6e",
+      "tau_handoff_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-live-topology-memorydelta2-20260729/providers/tau-live/red/handoff.json",
+      "tau_handoff_sha256": "9fb316cb1d7d5ff89e2a074714d542e169cc4492d32d54ebb2f295535d26c0af",
+      "team": "red"
+    }
+  }
+}

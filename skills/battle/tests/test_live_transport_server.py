@@ -12,6 +12,7 @@ import pytest
 from battle_skill.live_transport_server import (
     build_live_transport_source,
     prove_live_transport_server,
+    prove_production_websocket_transport,
 )
 
 
@@ -39,7 +40,7 @@ def test_prove_live_transport_server_exercises_snapshot_sse_and_resume(tmp_path)
 
     assert receipt["status"] == "PASS"
     assert receipt["mocked"] is False
-    assert receipt["live"] == "local_http_sse_adapter"
+    assert receipt["live"] == "local_http_sse_websocket_adapter"
     assert receipt["snapshot_schema"] == "battle.snapshot.v1"
     assert receipt["event_schema"] == "battle.live_event.v1"
     assert receipt["event_count"] == receipt["last_seq"]
@@ -52,3 +53,32 @@ def test_prove_live_transport_server_exercises_snapshot_sse_and_resume(tmp_path)
     assert (tmp_path / "snapshot-response.json").exists()
     assert (tmp_path / "events.sse").read_text(encoding="utf-8").startswith("id: 1\n")
     assert "event: battle.live_event\n" in (tmp_path / "events.sse").read_text(encoding="utf-8")
+
+
+def test_prove_production_websocket_transport_exercises_auth_reconnect_and_fanout(tmp_path):
+    receipt = prove_production_websocket_transport(
+        fixture_path=FIXTURE,
+        battle_id="battle-004",
+        out_dir=tmp_path,
+        auth_token="test-production-ws-token",
+    )
+
+    assert receipt["schema"] == "battle.production_websocket_transport_proof.v1"
+    assert receipt["status"] == "PASS"
+    assert receipt["mocked"] is False
+    assert receipt["live"] == "local_authenticated_websocket_fanout_reconnect_adapter"
+    assert receipt["auth"]["unauthenticated_rejection_code"] == 1008
+    assert receipt["auth"]["bad_token_rejection_code"] == 1008
+    assert receipt["auth"]["token_sha256"] != "test-production-ws-token"
+    assert receipt["reconnect"]["resume_from_last_event_id"] == 2
+    assert receipt["reconnect"]["resumed_event_count"] == receipt["event_count"] - 2
+    assert receipt["reconnect"]["bad_resume_rejection_code"] == 1008
+    assert receipt["fanout"]["client_count"] == 2
+    assert receipt["fanout"]["identical_streams"] is True
+    assert receipt["websocket_snapshot_first"] is True
+    assert receipt["websocket_matches_source_events"] is True
+    assert receipt["query_token_matches_bearer"] is True
+    assert "production ready" not in " ".join(receipt["claim_boundary"]["proves"]).lower()
+    assert (tmp_path / "production-websocket-transport-proof.json").exists()
+    assert (tmp_path / "authorized-events.jsonl").exists()
+    assert (tmp_path / "resumed-events.jsonl").exists()

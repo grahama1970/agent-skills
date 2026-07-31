@@ -1,0 +1,42 @@
+{
+  "schema": "battle.production_scope_evidence.v1",
+  "status": "PARTIAL_PASS",
+  "branch": "main",
+  "mocked": false,
+  "live": [
+    "local_http_sse_adapter_plus_vite_preview",
+    "brave_search_docker_arena_oracle_tau_harness"
+  ],
+  "frontend_receipt": "skills/battle/local/full-working-battle-evidence-20260729.json",
+  "mvp_backend_receipt": "skills/battle/local/full-battle-mvp-tau-docker-judge-20260729/run-receipt.json",
+  "prekill_survival_receipt": "skills/battle/local/production-scope-prekill-survival-20260729/run-receipt.json",
+  "prekill_survival": {
+    "status": "PASS",
+    "verdict": "BLUE_SUCCESS",
+    "lineage_request_status": "PASS",
+    "lineage_receipts": "skills/battle/local/production-scope-prekill-survival-20260729/lineage-receipts.json",
+    "judge_receipt": "skills/battle/local/production-scope-prekill-survival-20260729/judge/judge-receipt.json",
+    "scoreboard": "skills/battle/local/production-scope-prekill-survival-20260729/scoreboard.json",
+    "judged_pair_count": 4,
+    "red_materialized_count": 2,
+    "blue_materialized_count": 2,
+    "blue_success_pairs": 4,
+    "red_child_spawn_requested": true,
+    "child_lineage_spawns": 1,
+    "post_terminal_child_lifecycle_receipt": true
+  },
+  "proved_now": [
+    "Battle invoked Tau Red/Blue handoff bridge rather than direct Battle-to-Scillm routing.",
+    "Tau materialized two Red artifacts and two Blue artifacts.",
+    "Battle Judge replayed four Red/Blue pairs in Docker.",
+    "A parent Red pressure receipt caused a parent-authored pre-terminal child spawn.",
+    "The child produced a real post-terminal Judge receipt."
+  ],
+  "remaining_not_proven": [
+    "production deployment",
+    "websocket transport",
+    "unbounded swarm execution",
+    "Blue kill or promotion",
+    "memory promotion"
+  ]
+}

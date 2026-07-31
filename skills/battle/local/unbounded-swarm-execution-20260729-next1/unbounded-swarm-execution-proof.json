@@ -1,0 +1,46 @@
+{
+  "claim_boundary": {
+    "does_not_prove": [
+      "Mathematically unbounded or infinite swarm execution.",
+      "Live Tau provider generation for every worker.",
+      "Exploit success, Blue kill, patch success, or Judge success.",
+      "Production infrastructure, cluster scheduling, Kubernetes, or autoscaling behavior.",
+      "Production-scale throughput under real target load.",
+      "Battle or RelayForge is production ready."
+    ],
+    "proves": [
+      "Battle can schedule a configurable worker-count swarm beyond the prior fixed 2-worker proof.",
+      "Each swarm worker executed inside Docker with network disabled.",
+      "The swarm receipt records per-worker command, timing, stdout, stderr, exit code, and concurrency envelope."
+    ]
+  },
+  "completed_worker_count": 12,
+  "created_at": "2026-07-29T21:46:06Z",
+  "docker_image": "python:3.12-slim",
+  "elapsed_seconds": 0.811166,
+  "errors": [],
+  "failed_worker_count": 0,
+  "live": "local_docker_dynamic_swarm_execution",
+  "max_concurrent_observed": 12,
+  "max_workers": 12,
+  "min_concurrent_required": 4,
+  "mocked": false,
+  "network_mode": "none",
+  "schema": "battle.unbounded_swarm_execution_proof.v1",
+  "status": "PASS",
+  "worker_count": 12,
+  "worker_receipts": [
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/red-000.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/blue-001.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/red-002.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/blue-003.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/red-004.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/blue-005.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/red-006.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/blue-007.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/red-008.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/blue-009.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/red-010.json",
+    "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/unbounded-swarm-execution-20260729-next1/workers/blue-011.json"
+  ]
+}

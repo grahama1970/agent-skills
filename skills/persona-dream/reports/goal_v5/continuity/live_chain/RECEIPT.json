@@ -20,10 +20,10 @@
   "created_at": "2026-07-29T13:10:08Z",
   "dream_cycle_id": "live_chain_20260729t130950z",
   "final_receipt_readback": {
+    "body_sha256_before_readback_field": "sha256:de49ad1cdf98649ee7104f6aac2920127e3a2aef951faf4364db1eeb8d386c16",
     "dream_cycle_id": "live_chain_20260729t130950z",
     "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
     "readback_ok": true,
-    "body_sha256_before_readback_field": "sha256:a859ac471aa6dbda21436baeaa7274df1ba0989bd9bfb8463bbf9ae0c069376e",
     "stage_count": 6,
     "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
   },
@@ -145,7 +145,7 @@
           "duration_s_flat_spread": 1.36,
           "f0_range_hz_flat_spread": 60.85,
           "f0_sd_hz_flat_spread": 21.21,
-          "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+          "receipt": "skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
         },
         "schema": "chatterbox.stage_preset_affect_status.v1",
         "status": "not_validated_as_affect_channel",
@@ -384,8 +384,10 @@
     },
     {
       "first_turn_at": "2026-07-29T13:09:50Z",
+      "first_turn_seq": 1,
       "live": true,
       "mocked": false,
+      "mood_bound_seq": 0,
       "mood_selected_at": "2026-07-29T13:09:50Z",
       "name": "session_mood_live_chatterbox",
       "receipt": {
@@ -394,9 +396,12 @@
         "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
         "sha256": "sha256:7947ecdce50c0ddab47301bfda37225683dfcf2196a1dfed0e75d6321e9e43fb"
       },
-      "selected_before_first_turn": false,
+      "selected_before_first_turn": true,
+      "selected_before_first_turn_by_sequence": true,
+      "selected_before_first_turn_by_timestamp": false,
       "session_mood_id": "session_mood:f65062c26b4b30d507f793f9",
       "status": "PASS_SESSION_MOOD_CHATTERBOX_LIVE",
+      "timestamp_boundary_note": "Binding order is enforced by sequence; second-granularity timestamps may be equal when mood binding and first render happen in the same second.",
       "turns": [
         {
           "asr_gate": {

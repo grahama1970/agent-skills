@@ -91,7 +91,7 @@ CHANNEL_FOR_VALIDATOR = {
 }
 
 
-def run_eval(out_dir: Path) -> dict[str, Any]:
+def run_eval(out_dir: Path, *, allow_live: bool = False) -> dict[str, Any]:
     cases: list[dict[str, Any]] = []
     work = out_dir / "_artifacts"
     work.mkdir(parents=True, exist_ok=True)
@@ -188,6 +188,7 @@ def run_eval(out_dir: Path) -> dict[str, Any]:
         "schema": "battle.backend_eval.v1",
         "mocked": False,
         "live": False,
+        "allow_live_flag_requested": allow_live,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "scope": "deterministic backend contracts + committed fixture integrity; no live Tau/Docker/browser",
         "summary": {
@@ -206,17 +207,35 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run the deterministic BATTLE backend eval")
     parser.add_argument("--out-dir", type=Path,
                         default=SKILL_DIR / "reports" / f"backend-eval-{_utc_stamp()}")
+    parser.add_argument(
+        "--receipt-out",
+        type=Path,
+        default=None,
+        help="Write a copy of the backend eval receipt to this exact JSON path.",
+    )
+    parser.add_argument(
+        "--allow-live",
+        action="store_true",
+        help=(
+            "Compatibility flag for ticket commands. This eval remains "
+            "deterministic and does not invoke live Tau/Docker/browser."
+        ),
+    )
     args = parser.parse_args()
 
     out_dir = args.out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
-    receipt = run_eval(out_dir)
+    receipt = run_eval(out_dir, allow_live=args.allow_live)
     receipt_path = out_dir / "receipt.json"
     receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
+    if args.receipt_out is not None:
+        args.receipt_out.parent.mkdir(parents=True, exist_ok=True)
+        args.receipt_out.write_text(json.dumps(receipt, indent=2) + "\n")
 
     print(json.dumps({
         "status": receipt["status"],
         "receipt_path": str(receipt_path),
+        "receipt_out": str(args.receipt_out) if args.receipt_out is not None else None,
         "summary": receipt["summary"],
     }, indent=2))
     return 0 if receipt["status"] == "passed" else 1

@@ -23,6 +23,7 @@ from rich.table import Table
 from dogpile.config import console
 from dogpile.utils import log_status
 from dogpile.error_hints import get_error_hint
+from dogpile.security_research_packet import make_run_id, utc_now
 from dogpile.codex import search_codex, search_codex_knowledge
 from dogpile.brave import (
     build_brave_question_queries,
@@ -36,6 +37,7 @@ from dogpile.youtube_search import search_youtube
 from dogpile.wayback import search_wayback
 from dogpile.readarr import search_readarr
 from dogpile.feeds import search_feeds
+from dogpile.context7_docs import search_context7_docs
 
 PARTIAL_RESULTS_PATH = _SCRIPT_DIR / "dogpile_partial_results.json"
 
@@ -114,44 +116,78 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
     if name == "brave" and isinstance(result, dict):
         web_results = result.get("web", {}).get("results", []) or result.get("results", [])
         summary["result_count"] = len(web_results)
+        summary["source_bearing_evidence_count"] = sum(1 for item in web_results if item.get("url") or item.get("link"))
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
         if result.get("query"):
             summary["query"] = result["query"]
     elif name == "brave_questions" and isinstance(result, dict):
         summary["queries"] = len(result.get("queries", []) or [])
         summary["succeeded"] = result.get("succeeded", 0)
         summary["total"] = result.get("total", 0)
+        count = 0
+        for run in result.get("results", []) or []:
+            run_result = run.get("result", {})
+            if isinstance(run_result, dict):
+                items = run_result.get("web", {}).get("results", []) or run_result.get("results", [])
+                count += sum(1 for item in items if item.get("url") or item.get("link"))
+        summary["source_bearing_evidence_count"] = count
+        summary["source_bearing"] = count > 0
     elif name == "github" and isinstance(result, dict):
         summary["repos"] = len(result.get("repos", []) or [])
         summary["issues"] = len(result.get("issues", []) or [])
+        summary["source_bearing_evidence_count"] = 0
+        summary["source_bearing"] = False
     elif name == "arxiv" and isinstance(result, dict):
         summary["papers"] = len(result.get("items", []) or [])
+        summary["source_bearing_evidence_count"] = sum(1 for item in result.get("items", []) or [] if item.get("id") or item.get("abs_url") or item.get("url"))
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
     elif name in {"youtube", "readarr"} and isinstance(result, list):
         summary["result_count"] = len(result)
+        summary["source_bearing_evidence_count"] = sum(1 for item in result if isinstance(item, dict) and (item.get("id") or item.get("url")))
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
     elif name == "feeds" and isinstance(result, dict):
         summary["returncode"] = result.get("returncode")
         summary["limit"] = result.get("limit")
         stdout = str(result.get("stdout", ""))
         summary["output_chars"] = len(stdout)
+        summary["source_bearing_evidence_count"] = 1 if stdout else 0
+        summary["source_bearing"] = bool(stdout)
+    elif name == "context7" and isinstance(result, dict):
+        summary["selected_library_id"] = result.get("selected_library_id")
+        summary["context_chars"] = result.get("context_chars", 0)
+        summary["source_bearing_evidence_count"] = 1 if result.get("selected_library_id") and result.get("context") else 0
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
+        summary["requires_api_key"] = True
     elif name == "wayback" and isinstance(result, dict):
         summary["has_snapshot"] = bool(result.get("closest") or result.get("snapshots"))
     elif name == "codex_knowledge":
         text = result if isinstance(result, str) else json.dumps(result, ensure_ascii=False)
         summary["excerpt"] = text[:180]
+        summary["source_bearing_evidence_count"] = 0
+        summary["source_bearing"] = False
+        summary["model_synthesis_present"] = True
     elif name == "stage2_github" and isinstance(result, dict):
         summary["repos_examined"] = len(result.get("github_details", []) or [])
         summary["target_repo"] = result.get("target_repo")
         github_deep = result.get("github_deep", {}) or {}
         summary["code_matches"] = len(github_deep.get("code_matches", []) or [])
+        has_receipt = bool(result.get("evaluation_receipt") or result.get("github_search_receipt"))
+        summary["source_bearing_evidence_count"] = 1 if has_receipt and result.get("target_repo") else 0
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
     elif name == "stage2_arxiv" and isinstance(result, dict):
         summary["paper_details"] = len(result.get("arxiv_details", []) or [])
         summary["deep_extractions"] = len(result.get("arxiv_deep", []) or [])
     elif name == "stage2_youtube" and isinstance(result, list):
         summary["transcripts"] = len(result)
+        summary["source_bearing_evidence_count"] = sum(1 for item in result if isinstance(item, dict) and (item.get("id") or item.get("url") or item.get("full_text")))
+        summary["source_bearing"] = summary["source_bearing_evidence_count"] > 0
     elif name == "stage2_brave" and isinstance(result, list):
         summary["deep_extractions"] = len(result)
     elif name == "report" and isinstance(result, str):
         summary["chars"] = len(result)
         summary["lines"] = len(result.splitlines())
+        summary["source_bearing_evidence_count"] = 0
+        summary["source_bearing"] = False
     else:
         summary["type"] = type(result).__name__
     return summary
@@ -160,14 +196,26 @@ def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
 class PartialResultsPublisher:
     """Persist partial Dogpile results and emit machine-readable progress events."""
 
-    def __init__(self, requested_query: str, request_context: Optional[Dict[str, Any]] = None):
-        self.path = PARTIAL_RESULTS_PATH
+    def __init__(
+        self,
+        requested_query: str,
+        request_context: Optional[Dict[str, Any]] = None,
+        output_dir: Optional[Path] = None,
+        run_id: Optional[str] = None,
+    ):
+        run_id = run_id or make_run_id(requested_query)
+        self.output_dir = (output_dir or (_SCRIPT_DIR / "local" / "search-runs" / run_id)).resolve()
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.path = self.output_dir / "dogpile_partial_results.json"
         request_context = request_context or {}
         self.state: Dict[str, Any] = {
+            "run_id": run_id,
             "requested_query": requested_query,
             "effective_query": requested_query,
             "status": "starting",
+            "started_at": utc_now(),
             "updated_at": time.time(),
+            "output_dir": str(self.output_dir),
             "partial_results_path": str(self.path),
             "request_context": request_context,
             "tailored_queries": {},
@@ -191,6 +239,13 @@ class PartialResultsPublisher:
         tmp_path = self.path.with_suffix(".tmp")
         tmp_path.write_text(json.dumps(self.state, indent=2, ensure_ascii=False))
         tmp_path.replace(self.path)
+        if self.path != PARTIAL_RESULTS_PATH:
+            latest = {
+                "latest_run_id": self.state.get("run_id"),
+                "partial_results_path": str(self.path),
+                "updated_at": self.state["updated_at"],
+            }
+            PARTIAL_RESULTS_PATH.write_text(json.dumps(latest, indent=2, sort_keys=True) + "\n")
 
     def emit(self, event: Dict[str, Any]) -> None:
         payload = {**event, "partial_results_path": str(self.path), "ts": time.time()}
@@ -239,6 +294,7 @@ class PartialResultsPublisher:
 
     def complete(self, success: bool, error: Optional[str] = None) -> None:
         self.state["status"] = "completed" if success else "failed"
+        self.state["ended_at"] = utc_now()
         if error:
             self.state["error"] = error
         self.emit(
@@ -356,6 +412,13 @@ def _collect_evidence_digest(
         lines.append(str(feeds_res.get("stdout", ""))[-1200:])
         lines.append("")
 
+    context7_res = stage1_results.get("context7", {})
+    if isinstance(context7_res, dict) and context7_res.get("context"):
+        lines.append("Context7 library documentation:")
+        lines.append(f"Library: {context7_res.get('selected_library_id') or context7_res.get('library')}")
+        lines.append(str(context7_res.get("context", ""))[:1200])
+        lines.append("")
+
     for stage_name, stage_result in stage2_results.items():
         lines.append(f"{stage_name} deep results summary: {json.dumps(_summarize_result(stage_name, stage_result), ensure_ascii=False)}")
 
@@ -414,6 +477,9 @@ def run_stage1_searches(
     with_feeds: bool = False,
     feed_limit: int = 3,
     feed_pack: str = "security_code",
+    with_context7: bool = False,
+    context7_library: Optional[str] = None,
+    context7_tokens: int = 3000,
     publisher: Optional[PartialResultsPublisher] = None,
     on_result=None,
     monitor=None,
@@ -433,6 +499,9 @@ def run_stage1_searches(
         with_feeds: Include consume-feed RSS monitor dry-run.
         feed_limit: Max items per configured feed source.
         feed_pack: Dogpile feed pack name, or empty string for consume-feed config.
+        with_context7: Include current library/API docs from Context7.
+        context7_library: Required library name or Context7 library ID for Context7.
+        context7_tokens: Max Context7 doc tokens to request.
 
     Returns:
         Dict with results from each provider
@@ -463,6 +532,12 @@ def run_stage1_searches(
         providers["wayback"] = (search_wayback, [query])
     if with_feeds:
         providers["feeds"] = (search_feeds, [query, feed_limit, None, feed_pack])
+    if with_context7:
+        providers["context7"] = (
+            search_context7_docs,
+            [tailored.get("context7", query)],
+            {"library": context7_library, "tokens": context7_tokens},
+        )
 
     # Provider status for Rich live display
     status: Dict[str, str] = {name: "[dim]waiting[/dim]" for name in providers}
@@ -484,10 +559,12 @@ def run_stage1_searches(
         if monitor:
             for name in providers:
                 monitor.start_provider(name)
-        future_to_name = {
-            executor.submit(fn, *args): name
-            for name, (fn, args) in providers.items()
-        }
+        future_to_name = {}
+        for name, provider_spec in providers.items():
+            fn = provider_spec[0]
+            args = provider_spec[1]
+            kwargs = provider_spec[2] if len(provider_spec) > 2 else {}
+            future_to_name[executor.submit(fn, *args, **kwargs)] = name
         # Mark all as searching
         for name in providers:
             status[name] = "[yellow]searching...[/yellow]"
@@ -571,6 +648,13 @@ def run_stage1_searches(
         skipped["feeds"] = {
             "skipped": "Feed monitors are disabled by default.",
             "hint": "Pass --with-feeds to run configured consume-feed RSS monitors as a dry-run lane.",
+        }
+    if not with_context7:
+        skipped["context7"] = {
+            "skipped": "Context7 library documentation lookup is disabled by default.",
+            "hint": "Pass --with-context7 --context7-library <library-or-/owner/repo> for current code/API documentation questions.",
+            "requires_api_key": True,
+            "required_env": "CONTEXT7_API_KEY",
         }
 
     for name, result in skipped.items():

@@ -1,0 +1,9 @@
+{
+  "commit": "d85b13e7998b1cd7d9a9945b0d63aa1fd3c016b0",
+  "created_at": "2026-07-29T22:12:28Z",
+  "live": "git_archive_to_local_release_directory",
+  "mocked": false,
+  "release_dir": "/mnt/storage12tb/deployments/agent-skills/releases/d85b13e7998b",
+  "schema": "battle.local_release_cut.v1",
+  "status": "PASS"
+}

@@ -1,0 +1,100 @@
+from __future__ import annotations
+
+import json
+import os
+import socket
+import subprocess
+import textwrap
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+CLI = REPO_ROOT / "skills/surf/vendor/surf-cli/native/cli.cjs"
+
+
+def test_click_positional_css_selector_reaches_native_request(tmp_path: Path) -> None:
+    socket_path = tmp_path / "surf.sock"
+    server = tmp_path / "server.py"
+    request_path = tmp_path / "request.json"
+    server.write_text(
+        textwrap.dedent(
+            """
+            import json
+            import socket
+            import sys
+            from pathlib import Path
+
+            socket_path = sys.argv[1]
+            request_path = Path(sys.argv[2])
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.bind(socket_path)
+            sock.listen(1)
+            conn, _ = sock.accept()
+            with conn:
+                data = b""
+                while b"\\n" not in data:
+                    chunk = conn.recv(65536)
+                    if not chunk:
+                        break
+                    data += chunk
+                request = json.loads(data.split(b"\\n", 1)[0].decode("utf-8"))
+                request_path.write_text(json.dumps(request, sort_keys=True))
+                response = {
+                    "id": request["id"],
+                    "result": {"content": [{"type": "text", "text": "OK"}]},
+                }
+                conn.sendall((json.dumps(response) + "\\n").encode("utf-8"))
+            sock.close()
+            """
+        ),
+        encoding="utf-8",
+    )
+    server_proc = subprocess.Popen(
+        ["python3", str(server), str(socket_path), str(request_path)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        for _ in range(100):
+            if socket_path.exists():
+                break
+            server_proc.poll()
+            if server_proc.returncode is not None:
+                raise AssertionError(server_proc.stderr.read())
+            import time
+
+            time.sleep(0.01)
+
+        env = os.environ.copy()
+        env.update({"SURF_SOCKET": str(socket_path), "SURF_NO_LOCK": "1"})
+        result = subprocess.run(
+            [
+                "node",
+                str(CLI),
+                "click",
+                'textarea[data-testid="composer"]',
+                "--tab-id",
+                "837365001",
+            ],
+            cwd=REPO_ROOT / "skills/surf/vendor/surf-cli",
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=10,
+        )
+        assert result.returncode == 0, result.stderr
+        request = json.loads(request_path.read_text(encoding="utf-8"))
+    finally:
+        server_proc.terminate()
+        try:
+            server_proc.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            server_proc.kill()
+            server_proc.wait(timeout=2)
+
+    assert request["params"]["tool"] == "click"
+    assert request["params"]["args"]["selector"] == 'textarea[data-testid="composer"]'
+    assert "ref" not in request["params"]["args"]
+    assert request["tabId"] == 837365001

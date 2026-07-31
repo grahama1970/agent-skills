@@ -31,7 +31,7 @@ The addendum groups the requested issue links:
 
 ```text
 cd skills/battle
-git diff --check -- GOAL_ADAPTIVE_LINEAGE.md README.md docs/PROJECT_KNOWLEDGE.md local/HANDOFF.md
+git diff --check -- GOAL_ADAPTIVE_LINEAGE.md README.md docs/PROJECT_KNOWLEDGE.md local/HANDOFF.md docs/proofs/tickets/issue-1049-current-state-addendum-20260728.md
 ```
 
 Result: exit 0.

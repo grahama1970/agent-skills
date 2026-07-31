@@ -1,0 +1,108 @@
+{
+  "artifacts": {
+    "team_public_brief": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/arena/team-public/scenario-brief.json",
+    "team_public_target": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/arena/team-public/target/app.py"
+  },
+  "bundle_path": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/battle/local/production-scope-v16-memory-chain-postfilter-20260729/provider/context/tau-public-context.json",
+  "schema": "tau.battle_context_bundle.v1",
+  "summary": {
+    "arena_private_artifact_count": 0,
+    "battle_id": "battle-v16-relayforge-a",
+    "mode": "v16_memory_chain_qualification",
+    "public_artifacts_inline": {
+      "app_py": "\"\"\"Public bounded package-import contract for strategy qualification.\"\"\"\nfrom pathlib import Path\nfrom zipfile import ZipFile\n\ndef import_zip(zip_path: str, destination: str) -> list[str]:\n    root = Path(destination)\n    root.mkdir(parents=True, exist_ok=True)\n    written: list[str] = []\n    with ZipFile(zip_path) as archive:\n        for member in archive.infolist():\n            if member.is_dir():\n                continue\n            target = root / member.filename\n            target.parent.mkdir(parents=True, exist_ok=True)\n            target.write_bytes(archive.read(member))\n            written.append(str(target))\n    return written\n\nBASELINE_STRATEGY = {'selected_methods': ['global-service-quarantine'], 'parameters': {'control_scope': 'global', 'preserve_functionality': False}}\n",
+      "scenario_brief": {
+        "outcome_authority": "Battle and Judge retain outcome authority.",
+        "private_truth_included": false,
+        "public_entrypoint": "strategy-only",
+        "schema": "battle.v16.memory_chain_public_brief.v1",
+        "source_observation_receipt_sha256": "b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f",
+        "target_id": "battle-v16-relayforge-a",
+        "task": "Produce one Blue strategy mutation from the supplied recalled evidence."
+      }
+    },
+    "public_entrypoint": "strategy-only",
+    "run_id": "relayforge-v16-memory-chain",
+    "scenario_id": "relayforge-v16-memory-chain-blue-uptake",
+    "team_public_artifact_count": 2,
+    "teams": {
+      "blue": {
+        "objective": "Produce a changed Blue strategy artifact from the exact recalled record. In rationale and strategy_genome.mutation_origin cite memory_key=battle-v16-relayforge-a:memory-chain:blue:b781345bc7367f6a76cfafc4, memory_content_sha256=bca9772fed610e30a54a8e9cf297061e470369ae66dae31c5ce6e91d40d3fffd, memory_recall_receipt_sha256=2fc424818d951f0757012962696218f536d56d0f0f23310cac11b4f3f302753f, and source_observation_receipt_sha256=b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f. Return memory_origin_reason that names each changed strategy field. strategy_genome must contain selected_methods, rejected_methods, parameters, mutation_origin, expected_observation, and memory_origin_reason. Adopt exact selected method evidence-targeted-boundary-control and reject exact method global-service-quarantine. Memory is design input only and does not prove improvement."
+      },
+      "red": {
+        "objective": "Return a bounded public-only audit artifact without using durable Memory. Do not claim any security outcome."
+      }
+    },
+    "visibility_rule": "teams receive only the listed public artifacts",
+    "worker_counts": {
+      "blue": 1,
+      "red": 1
+    }
+  },
+  "team_contexts": {
+    "blue": {
+      "authority": {
+        "memory_is_design_input_only": true,
+        "outcome_improvement_proven": false
+      },
+      "durable_memory_recall": {
+        "memory_content_sha256": "bca9772fed610e30a54a8e9cf297061e470369ae66dae31c5ce6e91d40d3fffd",
+        "memory_key": "battle-v16-relayforge-a:memory-chain:blue:b781345bc7367f6a76cfafc4",
+        "memory_recall_receipt_sha256": "2fc424818d951f0757012962696218f536d56d0f0f23310cac11b4f3f302753f",
+        "source_observation_receipt_sha256": "b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f",
+        "strategy": {
+          "expected_observation": "contain the evidenced trust boundary while preserving the public functionality contract",
+          "mutation_origin": "durable_memory",
+          "parameters": {
+            "control_scope": "measured_trust_boundary"
+          },
+          "rejected_methods": [
+            "global-service-quarantine"
+          ],
+          "selected_methods": [
+            "evidence-targeted-boundary-control"
+          ]
+        },
+        "summary": "Judge-measured broad quarantine contained the tested security paths but broke three required functions; prefer evidence-targeted boundary controls over global service shutdown."
+      },
+      "pre_memory_strategy": {
+        "expected_observation": "all advanced workflows are unavailable",
+        "live": false,
+        "memory_citations": {},
+        "memory_origin_reason": null,
+        "mocked": false,
+        "mutation_origin": "pre-memory baseline",
+        "outcome_improvement_proven": false,
+        "parameters": {
+          "control_scope": "global",
+          "preserve_functionality": false
+        },
+        "phase": "PRE_MEMORY",
+        "rejected_methods": [
+          "evidence-targeted-boundary-control"
+        ],
+        "schema": "battle.v16.memory_chain_strategy.v1",
+        "selected_methods": [
+          "global-service-quarantine"
+        ],
+        "source_lesson_sha256": "0f317274033c0b6b8a7be89c5e87dc5bb0e96ab60cf298ada860b7b0a574c1a3",
+        "source_observation_receipt_sha256": "b781345bc7367f6a76cfafc47624d2750731d091cccf830496e8b2b58a26974f",
+        "status": "PASS",
+        "strategy_id": "relayforge-v16-blue-pre-memory",
+        "target_id": "battle-v16-relayforge-a",
+        "team": "blue"
+      },
+      "team": "blue"
+    },
+    "red": {
+      "authority": {
+        "memory_available": false,
+        "memory_is_design_input_only": true,
+        "outcome_improvement_proven": false
+      },
+      "durable_memory_recall": null,
+      "pre_memory_strategy": null,
+      "team": "red"
+    }
+  }
+}

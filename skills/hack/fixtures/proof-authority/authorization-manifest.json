@@ -1,0 +1,4 @@
+{
+  "authorization": "fixture authority for proof-authority validation",
+  "target_identity": "fixture-target@sha256:fixture"
+}

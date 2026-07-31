@@ -401,6 +401,13 @@ def _documents_from_response(body: Any, label: str) -> list[dict[str, Any]]:
     return [item for item in items if isinstance(item, dict)]
 
 
+def _documents_from_list_response(body: Any, label: str) -> list[dict[str, Any]]:
+    documents = body.get("documents") if isinstance(body, dict) else None
+    if not isinstance(documents, list):
+        raise MemoryChainContractError(f"{label} response lacks documents")
+    return [item for item in documents if isinstance(item, dict)]
+
+
 def write_and_recall_memory(
     *,
     source: Mapping[str, Any],
@@ -511,39 +518,47 @@ def write_and_recall_memory(
                 )
 
             negative_requests = {
-                "cross_team": _recall_request(
-                    document,
-                    _replace_tag(list(document["tags"]), "team:", "team:red"),
-                ),
-                "wrong_key": _recall_request(
-                    document,
-                    _replace_tag(
-                        list(document["tags"]),
-                        "memory-key:",
-                        f"memory-key:{document['_key']}:wrong",
-                    ),
-                ),
-                "wrong_source_hash": _recall_request(
-                    document,
-                    _replace_tag(
-                        list(document["tags"]),
-                        "source-observation-sha:",
-                        "source-observation-sha:" + ("0" * 64),
-                    ),
-                ),
+                "cross_team": {
+                    "collection": MEMORY_COLLECTION,
+                    "limit": 10,
+                    "filters": {
+                        "_key": document["_key"],
+                        "team": "red",
+                        "battle_id": TARGET_ID,
+                    },
+                },
+                "wrong_key": {
+                    "collection": MEMORY_COLLECTION,
+                    "limit": 10,
+                    "filters": {
+                        "_key": f"{document['_key']}:wrong",
+                        "team": TEAM,
+                        "battle_id": TARGET_ID,
+                    },
+                },
+                "wrong_source_hash": {
+                    "collection": MEMORY_COLLECTION,
+                    "limit": 10,
+                    "filters": {
+                        "_key": document["_key"],
+                        "team": TEAM,
+                        "battle_id": TARGET_ID,
+                        "source_memory_sha256": "0" * 64,
+                    },
+                },
             }
             negative_counts: dict[str, int] = {}
             negative_hashes: dict[str, str] = {}
             for name, request in negative_requests.items():
-                response = client.post("/recall", json=request)
+                response = client.post("/list", json=request)
                 response.raise_for_status()
                 body = response.json()
-                items = _documents_from_response(body, name)
+                items = _documents_from_list_response(body, name)
                 negative_counts[name] = len(items)
                 negative_hashes[name] = canonical_sha256(body)
                 if items:
                     raise MemoryChainContractError(
-                        f"Memory isolation failure: {name} recall returned records"
+                        f"Memory isolation failure: {name} exact lookup returned records"
                     )
     except httpx.HTTPError as exc:
         raise MemoryChainContractError(f"production Memory request failed: {exc}") from exc

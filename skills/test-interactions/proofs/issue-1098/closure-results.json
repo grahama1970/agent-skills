@@ -1,0 +1,24 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1098,
+  "unit": {
+    "command": "python3 skills/test-interactions/tests/test_discovery.py",
+    "exit_code": 0,
+    "passed": 6
+  },
+  "e2e": {
+    "command": "skills/test-interactions/run.sh discover --url http://127.0.0.1:8775/discovery_defects.html --output-dir /tmp/test-interactions-1098-main-20260729/discovery --manifest-output /tmp/test-interactions-1098-main-20260729/manifest.generated.json --max-depth 1 --max-states 4 --max-actions 12",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/test-interactions/proofs/issue-1098/discovery-findings.jsonl",
+    "readback": {
+      "missing_qid_count": 0,
+      "manifest_uncovered_missing_qid_count": 0,
+      "manifest_has_fixture_missing_qid": true,
+      "manifest_has_css_missing_selector": false,
+      "cdp_read_artifact": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/test-interactions/proofs/issue-1098/cdp-read.json",
+      "cdp_screenshot_artifact": "/home/graham/workspace/experiments/agent-skills-main-clean/skills/test-interactions/proofs/issue-1098/cdp-fixture.png"
+    }
+  }
+}

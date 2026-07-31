@@ -1,0 +1,159 @@
+{
+  "url": "http://127.0.0.1:8775/discovery_defects.html",
+  "title": "test-interactions discovery defects fixture",
+  "text": "Discovery defects fixture\nOpen dialog Duplicate A Duplicate B Missing QID Throw Fetch fails Inert No title No action\nKeyboard miss\nURL drift",
+  "elements": [
+    {
+      "index": 0,
+      "tag": "main",
+      "text": "Discovery defects fixture\nOpen dialog Duplicate A Duplicate B Missing QID Throw Fetch fails Inert No title No action\nKeyboard miss\nURL drift",
+      "qid": "fixture:discovery:surface",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 1,
+      "tag": "h1",
+      "text": "Discovery defects fixture",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 2,
+      "tag": "button",
+      "text": "Open dialog",
+      "qid": "fixture:open-dialog",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 3,
+      "tag": "button",
+      "text": "Duplicate A",
+      "qid": "fixture:duplicate",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 4,
+      "tag": "button",
+      "text": "Duplicate B",
+      "qid": "fixture:duplicate",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 5,
+      "tag": "button",
+      "text": "Missing QID",
+      "qid": "fixture:missing-qid",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 6,
+      "tag": "button",
+      "text": "Throw",
+      "qid": "fixture:throws",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 7,
+      "tag": "button",
+      "text": "Fetch fails",
+      "qid": "fixture:fetch-fails",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 8,
+      "tag": "button",
+      "text": "Inert",
+      "qid": "fixture:inert",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 9,
+      "tag": "button",
+      "text": "No title",
+      "qid": "fixture:no-title",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 10,
+      "tag": "button",
+      "text": "No action",
+      "qid": "fixture:no-action",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 11,
+      "tag": "div",
+      "text": "Keyboard miss",
+      "qid": "fixture:keyboard-miss",
+      "testid": null,
+      "role": "button"
+    },
+    {
+      "index": 12,
+      "tag": "button",
+      "text": "URL drift",
+      "qid": "fixture:url-drift",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 13,
+      "tag": "div",
+      "text": "Dialog\n          Dialog control\n          Close\n          dialog ready",
+      "qid": "fixture:dialog-backdrop",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 14,
+      "tag": "section",
+      "text": "Dialog\n          Dialog control\n          Close\n          dialog ready",
+      "qid": "fixture:dialog",
+      "testid": null,
+      "role": "dialog"
+    },
+    {
+      "index": 15,
+      "tag": "h2",
+      "text": "Dialog",
+      "qid": null,
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 16,
+      "tag": "button",
+      "text": "Dialog control",
+      "qid": "fixture:dialog-control",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 17,
+      "tag": "button",
+      "text": "Close",
+      "qid": "fixture:close-dialog",
+      "testid": null,
+      "role": null
+    },
+    {
+      "index": 18,
+      "tag": "p",
+      "text": "dialog ready",
+      "qid": "fixture:dialog-state",
+      "testid": null,
+      "role": null
+    }
+  ]
+}

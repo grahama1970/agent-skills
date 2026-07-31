@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from dotenv import find_dotenv, load_dotenv
 from loguru import logger
 import typer
 
@@ -25,6 +26,8 @@ from goal_discovery import discover_immutable_goal, path_is_relative_to, project
 from herdr_terminal_control import herdr_bin_path, pane_run_submit, wait_for_agent_idle
 from prompt_builder import build_prompt
 from transcript_classifier import completion_claim_present, exhausted_blocker_claim, goal_allows_stop, latest_transcript_region, transcript_goal_claim, valid_attempt_value
+
+load_dotenv(find_dotenv(usecwd=True), override=False)
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 STATE_ROOT = Path.home() / ".local" / "state" / "monitor-herdr"
@@ -987,7 +990,35 @@ def resolve_workspace(client: HerdrClient, space: str) -> dict[str, Any] | list[
             return workspace
         if str(workspace.get("number")) == space:
             return workspace
-    raise RuntimeError(f"Herdr workspace not found for --space {space!r}")
+    raise RuntimeError(
+        f"Herdr workspace not found for --space {space!r}. "
+        f"{describe_available_spaces(workspaces)}"
+    )
+
+
+def describe_available_spaces(workspaces: list[dict[str, Any]]) -> str:
+    """Render the spaces a caller could have asked for.
+
+    An unknown --space is a caller error, and a caller error should teach the
+    caller. Listing the live workspaces turns a dead end into a next step.
+    """
+    if not workspaces:
+        return "No Herdr workspaces are open; start one before running a tick."
+    known = []
+    for workspace in workspaces:
+        label = workspace.get("label")
+        number = workspace.get("number")
+        parts = [str(workspace.get("workspace_id"))]
+        if label:
+            parts.append(f"label={label}")
+        if number is not None:
+            parts.append(f"number={number}")
+        known.append(" ".join(parts))
+    return (
+        "Available spaces (match by workspace_id, label, or number): "
+        + "; ".join(known)
+        + ". Use --space '*' to scan every workspace."
+    )
 
 
 def update_stopped_observation(observations: dict[str, Any], candidate: dict[str, Any], *, now_epoch: int) -> None:

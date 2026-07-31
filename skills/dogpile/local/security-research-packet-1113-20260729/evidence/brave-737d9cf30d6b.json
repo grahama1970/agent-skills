@@ -1,0 +1,5 @@
+{
+  "description": "Our method is based on game semantics, modelling computation as an interaction between a contract and its environment, reducing reasoning about unknown or malicious external contracts to trace enumeration. We implement this in a tool we refer to as YulToolkit, a bounded game-semantics checker for Yul, the intermediate language of Solidity.",
+  "title": "A Bounded Game Semantics Checker for Precise Smart Contract Analysis",
+  "url": "https://arxiv.org/html/2512.22417"
+}

@@ -1,0 +1,174 @@
+{
+  "schema": "battle.backend_eval.v1",
+  "mocked": false,
+  "live": false,
+  "allow_live_flag_requested": true,
+  "generated_at": "2026-07-28T15:44:42Z",
+  "scope": "deterministic backend contracts + committed fixture integrity; no live Tau/Docker/browser",
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13,
+    "channels": [
+      "adaptive_lineage_fixtures",
+      "deterministic_contracts",
+      "genetic_lifecycle_fixtures",
+      "live_transport",
+      "race_replay_fixtures"
+    ],
+    "failed_cases": []
+  },
+  "cases": [
+    {
+      "name": "semantic_outcome_matrix_roundtrips",
+      "channel": "deterministic_contracts",
+      "status": "passed",
+      "proves": "The exploit outcome-scoring matrix exports and re-validates deterministically (mocked=false).",
+      "does_not_prove": "That any live exploit actually achieved these outcomes against a target.",
+      "details": {
+        "outcome_cases": 8,
+        "tail": "  \"mocked\": false,\n  \"proof_mode\": \"receipt_backed_fixture\"\n}"
+      }
+    },
+    {
+      "name": "exploit_lifecycle_dag_roundtrips",
+      "channel": "deterministic_contracts",
+      "status": "passed",
+      "proves": "The exploit lifecycle DAG (states + legal transitions) exports and re-validates deterministically.",
+      "does_not_prove": "That a live specimen traversed these states, or that any transition was receipt-backed in a live run.",
+      "details": {
+        "tail": "  \"live\": false,\n  \"proof_mode\": \"receipt_backed_fixture\"\n}"
+      }
+    },
+    {
+      "name": "fixture_valid::battle-004-adaptive-lineage-v13",
+      "channel": "adaptive_lineage_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-004-adaptive-lineage-v13` fixture satisfies its declared contract (battle.normalized_adaptive_lineage_fixture.v1) via `validate-adaptive-lineage-fixture`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_adaptive_lineage_fixture.v1",
+        "validator": "validate-adaptive-lineage-fixture",
+        "tail": null
+      }
+    },
+    {
+      "name": "fixture_valid::battle-004-adaptive-memory-v14",
+      "channel": "adaptive_lineage_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-004-adaptive-memory-v14` fixture satisfies its declared contract (battle.normalized_adaptive_lineage_fixture.v1) via `validate-adaptive-lineage-fixture`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_adaptive_lineage_fixture.v1",
+        "validator": "validate-adaptive-lineage-fixture",
+        "tail": null
+      }
+    },
+    {
+      "name": "fixture_valid::battle-004-parent-spawn-lifecycle-pixi-replay",
+      "channel": "race_replay_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-004-parent-spawn-lifecycle-pixi-replay` fixture satisfies its declared contract (battle.normalized_ux_fixture.v1) via `validate-ux-contract`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_ux_fixture.v1",
+        "validator": "validate-ux-contract",
+        "tail": null
+      }
+    },
+    {
+      "name": "fixture_valid::battle-004-parent-spawn-pixi-replay",
+      "channel": "race_replay_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-004-parent-spawn-pixi-replay` fixture satisfies its declared contract (battle.normalized_ux_fixture.v1) via `validate-ux-contract`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_ux_fixture.v1",
+        "validator": "validate-ux-contract",
+        "tail": null
+      }
+    },
+    {
+      "name": "fixture_valid::battle-004-pr6-genetic-pixi",
+      "channel": "genetic_lifecycle_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-004-pr6-genetic-pixi` fixture satisfies its declared contract (battle.normalized_ux_fixture.v1) via `validate-genetic-pixi-fixture`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_ux_fixture.v1",
+        "validator": "validate-genetic-pixi-fixture",
+        "tail": null
+      }
+    },
+    {
+      "name": "fixture_valid::battle-004-sparse-pixi-replay",
+      "channel": "race_replay_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-004-sparse-pixi-replay` fixture satisfies its declared contract (battle.normalized_ux_fixture.v1) via `validate-ux-contract`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_ux_fixture.v1",
+        "validator": "validate-ux-contract",
+        "tail": null
+      }
+    },
+    {
+      "name": "fixture_valid::battle-005-ssrf-metadata-pixi-replay",
+      "channel": "race_replay_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-005-ssrf-metadata-pixi-replay` fixture satisfies its declared contract (battle.normalized_ux_fixture.v1) via `validate-ux-contract`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_ux_fixture.v1",
+        "validator": "validate-ux-contract",
+        "tail": null
+      }
+    },
+    {
+      "name": "fixture_valid::battle-006-pickle-deserialization-pixi-replay",
+      "channel": "race_replay_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-006-pickle-deserialization-pixi-replay` fixture satisfies its declared contract (battle.normalized_ux_fixture.v1) via `validate-ux-contract`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_ux_fixture.v1",
+        "validator": "validate-ux-contract",
+        "tail": null
+      }
+    },
+    {
+      "name": "fixture_valid::battle-007-file-upload-pixi-replay",
+      "channel": "race_replay_fixtures",
+      "status": "passed",
+      "proves": "The committed `battle-007-file-upload-pixi-replay` fixture satisfies its declared contract (battle.normalized_ux_fixture.v1) via `validate-ux-contract`.",
+      "does_not_prove": "That the spectator actually renders it, or that its receipts reflect a live exploit outcome.",
+      "details": {
+        "schema": "battle.normalized_ux_fixture.v1",
+        "validator": "validate-ux-contract",
+        "tail": null
+      }
+    },
+    {
+      "name": "adaptive_lineage_live_fixture_is_live",
+      "channel": "adaptive_lineage_fixtures",
+      "status": "passed",
+      "proves": "The committed adaptive-lineage fixture validates and is honestly tagged data_source=live (G0->{G1-A,G1-B}->G2, 4 nodes / 3 edges).",
+      "does_not_prove": "That the live badge renders, or that the lineage improved exploit performance (improvement_claimed stays false).",
+      "details": {
+        "data_source": "live",
+        "node_count": 4
+      }
+    },
+    {
+      "name": "live_transport_contract_valid",
+      "channel": "live_transport",
+      "status": "passed",
+      "proves": "The published SSE/snapshot transport contract validates and forbids raw-path leakage.",
+      "does_not_prove": "That an SSE server is running or that live genetic events were emitted (live=contract_only).",
+      "details": {
+        "tail": null
+      }
+    }
+  ],
+  "status": "passed"
+}

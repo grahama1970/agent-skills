@@ -1,0 +1,6 @@
+{
+  "byte_identical": true,
+  "first_sha256": "30f0a449bcb3c2a76a151648fcb74cb5c4f94592caf151ea9e6f8fdf977eed95",
+  "schema": "battle.v16.relayforge.rf_c_reset_replay.v1",
+  "second_sha256": "30f0a449bcb3c2a76a151648fcb74cb5c4f94592caf151ea9e6f8fdf977eed95"
+}

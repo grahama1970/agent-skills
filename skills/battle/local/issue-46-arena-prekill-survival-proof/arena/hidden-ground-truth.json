@@ -1,0 +1,18 @@
+{
+  "battle_id": "battle-004",
+  "hidden_vulnerabilities": [
+    {
+      "cwe": "CWE-22",
+      "entry_point": "/api/import-zip",
+      "id": "hidden-zip-slip-001",
+      "name": "Zip Slip archive extraction path traversal",
+      "oracle": "A zip entry named ../arena_escape.txt writes outside the import directory before patching."
+    }
+  ],
+  "not_visible_to": [
+    "red",
+    "blue"
+  ],
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "battle.hidden_ground_truth.v1"
+}

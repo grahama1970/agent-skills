@@ -1,0 +1,34 @@
+{
+  "authorization_manifest_sha256": "eb8f95905a7e2c310e23cd9db2d4b75fbc301aca3c0f231466a28abb89bf11db",
+  "confirms_exploit": true,
+  "created_at": "2026-07-29T00:01:00+00:00",
+  "errors": [],
+  "live": "local_deterministic_receipt_validation",
+  "mocked": false,
+  "non_claims": [
+    "validation_receipt_is_not_patch_proof",
+    "validation_receipt_is_not_general_target_safety",
+    "local_fixture_does_not_prove_arbitrary_target"
+  ],
+  "observation_artifact_sha256": "ba3f4b5fbe7fdff2a15ffca53f1163c55e6983dbb6c2bc7ae9fd4a947d2e14da",
+  "observation_id": "obs-fixture-001",
+  "probe_spec_sha256": "a7002bababc02567ce23e47126ee21430cc7aa8813fa73093e199caa64b6286a",
+  "replay_command": [
+    "fixture-replay",
+    "--case",
+    "wrong-scan-request-hash"
+  ],
+  "replay_receipt_artifact": "skills/hack/fixtures/proof-authority/replay-receipt.json",
+  "replay_receipt_sha256": "df5bf784b029c5889b622a9c361c05964a42b943582855fd5f45dcf039159fe6",
+  "replay_spec_artifact": "skills/hack/fixtures/proof-authority/replay-spec.json",
+  "replay_spec_sha256": "342085f8841a1a48882f13a02af5ce895164684948d5ef20f629b9fda95becc8",
+  "scan_request_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "schema": "hack.proof_validation_receipt.v1",
+  "status": "CONFIRMED",
+  "target_identity": "fixture-target@sha256:fixture",
+  "target_runtime_sha256": "91667264d9989fc2cf939447bf82c1fd942c1da66416a261b66767e447e4278e",
+  "validation_id": "validation-wrong-scan-request-hash",
+  "validator_authority": "independent-battle-judge",
+  "validator_identity": "battle-judge-fixture",
+  "validator_independent": true
+}
