@@ -12,7 +12,7 @@ triggers:
   - backup memory database
   - arango ops
   - check database health
-  - find missing embeddings
+  - flag embedding arrays stored in Arango (contract violation)
   - detect duplicates
   - database maintenance
   - cleanup orphans
@@ -47,8 +47,8 @@ CONTAINER=arangodb ./run.sh dump
 # Run all health checks
 ./run.sh check
 
-# Find documents missing embeddings
-./run.sh embeddings --fix
+# Find docs violating the no-embeddings-in-Arango contract
+./run.sh embeddings
 
 # Detect duplicate lessons
 ./run.sh duplicates --report
@@ -70,7 +70,7 @@ CONTAINER=arangodb ./run.sh dump
 
 | Check | Description |
 |-------|-------------|
-| `embeddings` | Find lessons/episodes without embedding vectors |
+| `embeddings` | Find docs that VIOLATE the vector contract by holding embedding arrays in Arango (Qdrant is the only vector store) |
 | `duplicates` | Detect lessons with similar titles/content |
 | `orphans` | Find edges pointing to deleted documents |
 | `integrity` | Verify all foreign keys resolve |
@@ -88,7 +88,7 @@ All commands support `--json` for machine-readable output:
 {
   "status": "healthy|warning|critical",
   "checks": {
-    "embeddings": {"missing": 0, "total": 1234},
+    "embeddings": {"violations": 0, "total": 1234},
     "duplicates": {"found": 5, "clusters": 2},
     "orphans": {"edges": 0},
     "integrity": {"errors": 0}
@@ -131,7 +131,7 @@ Notes:
 - **Explicit Mode**: Set `CONTAINER` env var to use Docker. Default is local binary.
 - **Integrity Check**: Verifies `manifest.json` existence after dump.
 - **Safe Retention**: Keeps last N backups automatically (default 7).
-- **Embedding Gaps**: Detects and optionally fixes missing embeddings.
+- **Embedding Contract**: Flags docs holding embedding arrays in Arango. Arango must NEVER store embeddings — over a certain dataset size the community edition shuts down (paid tier required); Qdrant owns all vectors, Arango holds pointer metadata only. `--fix` is refused; migration belongs to the memory repo's migrate_arango_embeddings_to_qdrant.py.
 - **Orphan Cleanup**: Removes edges pointing to deleted documents.
 - **Duplicate Detection**: Finds lessons with identical titles.
 
@@ -145,7 +145,6 @@ Notes:
 | `ARANGO_PASS` | - | Password |
 | `CONTAINER` | - | **Required for Docker dump**. Container name. |
 | `RETENTION_N` | `7` | Number of backups to keep |
-| `EMBEDDING_SERVICE_URL` | - | Required for `embeddings --fix` |
 | `DRY_RUN` | `0` | Set to `1` for preview mode |
 
 ## Batch Operations & Performance

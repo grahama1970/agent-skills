@@ -323,33 +323,43 @@ coll.add_index({
 
 **Real incident (2026-04-14):** Lineage backfill failed on 269 docs without embeddings. Error message was misleading ("vector field not present") even when providing the embedding in the UPDATE — the index validates against the OLD document state.
 
-### 22. CRITICAL: All Searchable Docs Must Have Embeddings — `arango-require-embeddings`
+### 22. CRITICAL: Arango NEVER Stores Embeddings — `arango-no-embedding-arrays`
 
-Every document in a searchable collection (sparta_qra, lessons, sparta_url_knowledge) MUST have an `embedding` field with a 384-dimension vector. Docs without embeddings:
-1. Break the dense lane of hybrid search (cosine similarity returns 0)
-2. Trigger sparse vector index bugs on UPDATE operations
-3. Create data quality gaps that degrade recall
+**Operator ruling (2026-07-31), supersedes the old `arango-require-embeddings` rule.**
+ArangoDB must never hold embedding/vector arrays. Qdrant is the only vector
+store. Rationale: embedding arrays inflate the dataset past the ArangoDB
+community-edition size cap, at which point the server shuts down and demands a
+paid license. Arango documents carry pointer metadata only: `qdrant_collection`,
+`qdrant_point_id`, `embedding_model`, `embedding_version`, `text_hash`,
+`semantic_sync_state`. The dense lane of hybrid search queries Qdrant via the
+memory daemon, never `COSINE_SIMILARITY` over Arango-resident arrays.
 
 ```python
-# BAD — writing doc without embedding
-db.aql.execute("INSERT {question: @q, answer: @a} INTO sparta_qra", ...)
+# BAD — writing a vector into Arango (community-edition size bomb)
+db.aql.execute("INSERT {question: @q, answer: @a, embedding: @emb} INTO sparta_qra", ...)
 
-# GOOD — always include embedding
-embedding = embedding_service.embed(question)  # 384-dim vector
-db.aql.execute("INSERT {question: @q, answer: @a, embedding: @emb} INTO sparta_qra",
-    bind_vars={"q": question, "a": answer, "emb": embedding})
+# GOOD — canonical doc through the memory daemon; semantic sync owns Qdrant
+client.post("/upsert", json={
+    "collection": "sparta_qra",
+    "documents": [{"_key": "...", "question": q, "answer": a}],
+})
 ```
 
-**Monitoring:**
+**Monitoring (count should be 0 — a hit is a violation, not a gap):**
 ```aql
--- Count docs missing embeddings (should be 0)
 FOR d IN sparta_qra
-  FILTER !HAS(d, "embedding") OR d.embedding == null
+  FILTER HAS(d, "embedding") AND d.embedding != null
   COLLECT WITH COUNT INTO cnt
   RETURN cnt
 ```
 
-**Backfill script:** Use `/ops-arango embeddings --fix` to populate missing embeddings.
+**Detection:** `/ops-arango embeddings` reports violations. `--fix` is refused
+by design; migration is owned by the memory repo
+(`scripts/migrate_arango_embeddings_to_qdrant.py`).
+
+Rules 21 (sparse vector index UPDATE bug) and the vector-index server flags in
+rule 24 are legacy context for pre-migration collections; do not add new vector
+indexes to Arango.
 
 **Real incident (2026-04-16):** 2,937 QRAs missing embeddings discovered during batch update. These were created by a script that skipped the embedding step.
 

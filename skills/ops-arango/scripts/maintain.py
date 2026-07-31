@@ -47,58 +47,79 @@ def check_embeddings(
     embedding_service: Optional[str] = None,
     scope: Optional[str] = None,
 ) -> dict:
-    """Find documents missing embedding vectors.
+    """Find documents that VIOLATE the vector contract by holding embedding arrays.
+
+    Operator ruling (2026-07-31): ArangoDB must NEVER store embeddings — Qdrant
+    is the only vector store. Arango documents carry pointer metadata only
+    (qdrant_collection, qdrant_point_id, embedding_model, text_hash,
+    semantic_sync_state). A doc WITH an `embedding` array is the defect.
 
     Args:
         db: ArangoDB database connection
-        fix: If True, backfill missing embeddings
-        embedding_service: URL of embedding service (required for fix)
+        fix: Refused. Migration to Qdrant is owned by the memory repo
+             (scripts/migrate_arango_embeddings_to_qdrant.py), not this check.
+        embedding_service: Unused; kept for CLI signature compatibility.
         scope: Filter collections by prefix (e.g., "sparta" for sparta_*)
     """
-    results = {"missing": [], "missing_count": 0, "total": 0, "fixed": 0}
-
-    # Collections that should have embeddings and their text fields
-    # Format: {collection: (text_fields, preview_field)}
-    embedding_collections = {
-        "lessons": (["problem", "solution"], "problem"),
-        "episodes": (["content"], "content"),
-        "sparta_qra": (["question", "answer", "reasoning"], "question"),
-        "sparta_controls": (["name", "description"], "name"),
-        "sparta_url_knowledge": (["text", "topic"], "topic"),
+    results = {
+        "contract": "arango-never-stores-embeddings",
+        "violations": [],
+        "violation_count": 0,
+        "total": 0,
+        "fixed": 0,
+        "remediation": (
+            "run the memory repo's scripts/migrate_arango_embeddings_to_qdrant.py "
+            "to move vectors to Qdrant and strip the Arango field"
+        ),
     }
+    if fix:
+        # Stripping 100K+ embedding fields is a migration, not a health-check
+        # side effect; the memory repo owns it. Fail loudly instead of mutating.
+        print(
+            "ERROR: 'embeddings --fix' is refused: Arango never stores embeddings; "
+            "use the memory repo's migrate_arango_embeddings_to_qdrant.py",
+            file=sys.stderr,
+        )
+        results["fix_refused"] = True
+        return results
 
-    # Filter by scope if specified
+    embedding_collections = {
+        "lessons": "problem",
+        "episodes": "content",
+        "sparta_qra": "question",
+        "sparta_controls": "name",
+        "sparta_url_knowledge": "topic",
+    }
     if scope:
         embedding_collections = {
             k: v for k, v in embedding_collections.items()
             if k.startswith(scope)
         }
 
-    for coll_name, (text_fields, preview_field) in embedding_collections.items():
+    for coll_name, preview_field in embedding_collections.items():
         if not db.has_collection(coll_name):
             continue
 
         coll = db.collection(coll_name)
 
-        # Count server-side; never pull full documents for a report. The old
-        # RETURN doc full scan shipped whole collections (233K+ QRAs) over the
-        # wire and blew the 60s client timeout every nightly check.
+        # Count server-side; never pull full documents for a report (a full
+        # RETURN doc scan blew the 60s client timeout on 233K+ collections).
         count_query = """
         FOR doc IN @@collection
-            FILTER doc.embedding == null OR !HAS(doc, "embedding")
-            COLLECT WITH COUNT INTO missing_count
-            RETURN missing_count
+            FILTER HAS(doc, "embedding") AND doc.embedding != null
+            COLLECT WITH COUNT INTO violation_count
+            RETURN violation_count
         """
-        missing_count = next(
+        violation_count = next(
             db.aql.execute(count_query, bind_vars={"@collection": coll_name})
         )
-        results["missing_count"] += missing_count
+        results["violation_count"] += violation_count
 
         results["total"] += coll.count()
-        if missing_count:
+        if violation_count:
             sample_query = """
             FOR doc IN @@collection
-                FILTER doc.embedding == null OR !HAS(doc, "embedding")
+                FILTER HAS(doc, "embedding") AND doc.embedding != null
                 LIMIT @sample
                 RETURN {_key: doc._key, preview: doc.@preview_field}
             """
@@ -107,60 +128,11 @@ def check_embeddings(
                 "sample": 25,
                 "preview_field": preview_field or "_key",
             }):
-                results["missing"].append({
+                results["violations"].append({
                     "collection": coll_name,
                     "_key": doc["_key"],
                     "preview": str(doc.get("preview") or "")[:50],
                 })
-
-        if fix and missing_count and embedding_service:
-            import httpx
-            http = httpx.Client(timeout=30)
-            # Fix mode fetches only the text fields it needs, in bounded pages,
-            # so no single request can outlive the client timeout.
-            fix_query = """
-            FOR doc IN @@collection
-                FILTER doc.embedding == null OR !HAS(doc, "embedding")
-                FILTER doc._key > @last_key
-                SORT doc._key
-                LIMIT @page
-                RETURN KEEP(doc, APPEND(["_key"], @fields))
-            """
-            missing = []
-            last_key = ""
-            while True:
-                page = list(db.aql.execute(fix_query, bind_vars={
-                    "@collection": coll_name,
-                    "last_key": last_key,
-                    "page": 500,
-                    "fields": text_fields,
-                }))
-                if not page:
-                    break
-                missing.extend(page)
-                last_key = page[-1]["_key"]
-            for doc in missing:
-                try:
-                    # Concatenate all text fields, handling None values
-                    parts = []
-                    for field in text_fields:
-                        val = doc.get(field)
-                        if val:
-                            parts.append(str(val))
-                    text = " ".join(parts)
-                    if not text.strip():
-                        continue
-
-                    # Call embedding service (single text, not batch)
-                    resp = http.post(f"{embedding_service}/embed", json={"text": text})
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        embedding = data.get("embedding") or data.get("embeddings", [[]])[0]
-                        if embedding and len(embedding) == 384:
-                            coll.update({"_key": doc["_key"], "embedding": embedding})
-                            results["fixed"] += 1
-                except Exception as e:
-                    print(f"[warn] Failed to fix {coll_name}/{doc['_key']}: {e}", file=sys.stderr)
 
     return results
 
@@ -764,12 +736,17 @@ def check():
 
     emb = check_embeddings(db)
     report.checks["embeddings"] = {
-        "missing": emb["missing_count"],
+        "contract": "arango-never-stores-embeddings",
+        "violations": emb["violation_count"],
         "total": emb["total"]
     }
-    if emb["missing_count"]:
+    if emb["violation_count"]:
         report.status = "warning"
-        report.recommendations.append(f"Run 'embeddings --fix' to fix {emb['missing_count']} missing embeddings")
+        report.recommendations.append(
+            f"{emb['violation_count']} docs hold embedding arrays in Arango "
+            "(contract: Qdrant is the only vector store); "
+            "run memory repo's migrate_arango_embeddings_to_qdrant.py"
+        )
 
     dups = check_duplicates(db)
     report.checks["duplicates"] = {
@@ -809,7 +786,7 @@ def check():
         print(f"\nStatus: {report.status.upper()}")
         print(f"Documents: {stats['total_documents']}")
         print(f"Size: {round(stats['total_size_bytes'] / 1024 / 1024, 2)} MB")
-        print(f"Missing embeddings: {emb['missing_count']}")
+        print(f"Embedding-array contract violations: {emb['violation_count']}")
         print(f"Duplicate clusters: {len(dups['clusters'])}")
         print(f"Orphaned edges: {len(orphs['orphaned_edges'])}")
         print(f"Integrity errors: {len(integ['errors'])}")
@@ -821,34 +798,29 @@ def check():
 
 @app.command()
 def embeddings(
-    fix: bool = typer.Option(False, help="Fix missing embeddings"),
+    fix: bool = typer.Option(False, help="Refused: Qdrant is the only vector store; migration is owned by the memory repo"),
     scope: Optional[str] = typer.Option(None, help="Filter collections by prefix (e.g., 'sparta')"),
 ):
-    """Check/fix missing embeddings."""
+    """Report docs violating the contract by holding embedding arrays in Arango."""
     db = get_db()
-    embedding_service = os.environ.get("EMBEDDING_SERVICE_URL")
-
-    if fix and not embedding_service:
-        print("ERROR: EMBEDDING_SERVICE_URL required for --fix", file=sys.stderr)
-        sys.exit(1)
 
     scope_msg = f" (scope: {scope})" if scope else ""
-    print(f"[ops-arango] Checking embeddings{scope_msg}...")
-    result = check_embeddings(db, fix=fix, embedding_service=embedding_service, scope=scope)
+    print(f"[ops-arango] Checking embedding-array contract{scope_msg}...")
+    result = check_embeddings(db, fix=fix, scope=scope)
 
     if _json_output:
         print(json.dumps(result, indent=2))
     else:
         print(f"Total documents: {result['total']}")
-        print(f"Missing embeddings: {result['missing_count']}")
-        if fix:
-            print(f"Fixed: {result['fixed']}")
-        if result["missing"] and not fix:
-            print("\nMissing in:")
-            for doc in result["missing"][:10]:
-                print(f"  {doc['collection']}/{doc['_key']}: {doc.get('title', 'untitled')[:50]}")
-            if len(result["missing"]) > 10:
-                print(f"  ... and {len(result['missing']) - 10} more")
+        print(f"Embedding-array contract violations: {result['violation_count']}")
+        if result.get("fix_refused"):
+            print("Fix refused: migration to Qdrant is owned by the memory repo")
+        if result.get("violations"):
+            print("\nViolations (sample):")
+            for doc in result["violations"][:10]:
+                print(f"  {doc['collection']}/{doc['_key']}: {doc.get('preview', '')[:50]}")
+            if result["violation_count"] > 10:
+                print(f"  ... {result['violation_count']} total")
 
 
 @app.command()
@@ -957,9 +929,9 @@ def full(
     orphs = check_orphans(db, fix=(fix and not dry_run))
     report.checks["orphans"] = {"edges": len(orphs["orphaned_edges"]), "fixed": orphs["fixed"]}
 
-    print("[2/4] Missing embeddings...")
-    emb = check_embeddings(db, fix=(fix and not dry_run and bool(embedding_service)), embedding_service=embedding_service)
-    report.checks["embeddings"] = {"missing": len(emb["missing"]), "fixed": emb["fixed"]}
+    print("[2/4] Embedding-array contract...")
+    emb = check_embeddings(db)
+    report.checks["embeddings"] = {"violations": emb["violation_count"], "fixed": 0}
 
     print("[3/4] Duplicates...")
     dups = check_duplicates(db)
@@ -971,7 +943,7 @@ def full(
 
     if integ["errors"]:
         report.status = "critical"
-    elif orphs["orphaned_edges"] or emb["missing"] or dups["found"]:
+    elif orphs["orphaned_edges"] or emb["violation_count"] or dups["found"]:
         report.status = "warning"
 
     if _json_output:
