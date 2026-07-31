@@ -199,6 +199,21 @@ After a successful scan, `/ingest-code` writes a `.ingest-code.json` marker file
 
 The marker is also stored in `/memory` with tags `["ingest-code", "indexed-codebase", <stem>, <path>]` for discovery via recall.
 
+## Local Agent Artifacts
+
+`/ingest-code` also leaves local artifacts for project agents that cannot or
+should not query `/memory` during a task:
+
+| Artifact | Purpose |
+|----------|---------|
+| `.ingest-code.json` | Marker with scan status, scope, scan roots, code-index counts, and local artifact paths |
+| `.cleanup-evidence.json` | Per-candidate dependency evidence consumed by `$cleanup` for tracked-file mutation decisions |
+| `artifacts/ingest-code/code-symbols.jsonl` | JSONL code-symbol records with paths, line ranges, signatures, docstrings, lexical terms, and snippets for offline lookup |
+
+These artifacts are fallback evidence, not a replacement for `/memory recall`.
+Prefer `/memory recall` when available; use the JSONL and evidence files for
+offline inspection, review bundles, or deterministic receipts.
+
 ## Related Skills
 
 | Skill | Relationship |

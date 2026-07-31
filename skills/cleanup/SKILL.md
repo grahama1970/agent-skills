@@ -53,6 +53,7 @@ This skill performs a deep assessment of the codebase to identify technical debt
   human or agent to scan; readability debt, not unused-code evidence.
 - **Public-readiness/security cleanup**: Flags gitleaks, dir-scan, and GitHub settings blockers.
 - **Quality-gate cleanup**: Runs or reports scoped parse, lint, format, type, and test gates.
+- **Memory-index cleanup**: `--memory-index` runs `$ingest-code --treesitter` and writes a local searchability/offline-artifact receipt.
 - **Evidence-first Markdown report**: `--plan` writes a prose-first
   `$best-practices-report` cleanup report with summary, scope, source inventory,
   finding index, next actions, and non-claims.
@@ -104,6 +105,7 @@ Each mutation class carries its own evidence requirement:
 | `script_scanability_repair` | explicit readability cleanup request + parse/compile + script `--help` or narrow sanity proof | non-mutating assessment by default; repair as separate slice |
 | `public_readiness_security_triage` | explicit public-readiness request + gitleaks history receipt + per-finding triage/allowlist + narrowed working-dir scan + maintainer GitHub settings inventory | non-mutating assessment by default; blocks public-release claims until receipts exist |
 | `quality_gate_validation` | explicit quality-gate request + scoped project-native parse/lint/type/test receipts | non-mutating assessment by default; blocks proof claims until selected gates run |
+| `memory_index_refresh` | explicit memory-index request + ingest-code receipt + `.ingest-code.json` + local artifact paths | non-cleanup mutation; indexes for project-agent recall/search |
 | `registered_worktree_rescue_prune` | explicit rescue/prune request + dirty secondary audit + active-process exclusion + pushed rescue branch receipt + clean status proof before remove | non-mutating audit by default; blocks prune/remove until rescue proof exists |
 | `root_stray_mutation` | human owner decision | review-only |
 | `artifact_archive` | human owner decision | review-only |
@@ -191,8 +193,8 @@ never per-file safety evidence. Every run states these limits explicitly:
    registry/state. Active registered repos block cleanup execution until
    dispatch/routing state is coordinated. This is read-only; cleanup never
    queries, leases, relabels, resolves, or ticks issues.
-8. **Code evidence** (`$ingest-code`): Only required to unblock tracked-file
-   mutation, never to run assessment. Run
+8. **Code evidence / searchability** (`$ingest-code`): Run `--memory-index` to invoke `$ingest-code scan "$PWD" --treesitter`, refreshing `.ingest-code.json`, `.cleanup-evidence.json`, and code-symbol JSONL.
+   Indexing helps project-agent search but is not required for assessment or untracked junk removal. For tracked mutation, run
    `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`.
    If this leaves a completed marker with zero scanned files or a disabled code
    index, treat the marker as degraded and rely on `.cleanup-evidence.json` for
@@ -235,15 +237,11 @@ never per-file safety evidence. Every run states these limits explicitly:
    non-mutating public-readiness/security lane.
 6. Run `bash .pi/skills/cleanup/run.sh --quality-gate` for the selected
    non-mutating quality-gate lane.
-7. Use `--worktree-audit` for dirty trees and `--registered-worktree-audit` for
+7. Run `bash .pi/skills/cleanup/run.sh --memory-index` for Memory searchability and local offline code-symbol artifacts.
+8. Use `--worktree-audit` for dirty trees and `--registered-worktree-audit` for
    stray secondary worktrees; review the audit before `--execute`.
-8. Read `artifacts/cleanup/cleanup_receipt.json` (or `--receipt`) to see which
+9. Read `artifacts/cleanup/cleanup_receipt.json` (or `--receipt`) to see which
    phase blocked and how to resume it.
-
-## Environment
-
-The skill reads no environment variables. Archiving is review-only; root
-artifact moves are human decisions made with `mv`.
 
 ## Own Output Paths
 
@@ -343,6 +341,7 @@ to `.gitignore` separately because cleanup does not edit `.gitignore`.
 | `--script-scanability` | Run only the non-mutating script readability scan |
 | `--public-readiness` | Run only the non-mutating public-readiness/security lane |
 | `--quality-gate` | Run only the non-mutating project-native quality-gate lane |
+| `--memory-index` | Run `$ingest-code --treesitter` and write `artifacts/cleanup/memory-index-receipt.json` |
 | `--execute` | Remove untracked junk paths that cleared per-path provenance |
 | `--force` | Skip the junk confirmation prompt only; cannot bypass provenance or authorize another class |
 | `--output <file>` | Specify output file for plan (default: CLEANUP_PLAN.md) |

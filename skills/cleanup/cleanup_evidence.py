@@ -70,6 +70,7 @@ def scan_ingest_code_evidence(marker_path: str = ".ingest-code.json") -> Dict[st
         "edges_stored": marker.get("edges_stored"),
         "scan_roots": marker.get("scan_roots", []),
         "completed_scan_roots": marker.get("completed_scan_roots", []),
+        "local_artifacts": marker.get("local_artifacts", {}),
         "code_index": {
             "enabled": code_index.get("enabled", False),
             "treesitter": code_index.get("treesitter", False),

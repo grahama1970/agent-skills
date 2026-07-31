@@ -192,6 +192,8 @@ def _write_ingest_marker(
     started_at: str | None = None,
     scan_roots: list[str | Path] | None = None,
     completed_scan_roots: list[str | Path] | None = None,
+    local_code_symbols_artifact: str | Path | None = None,
+    local_code_symbols_written: int = 0,
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
     now = datetime.now().isoformat()
@@ -223,10 +225,36 @@ def _write_ingest_marker(
         "completed_scan_roots": [
             str(Path(root).resolve()) for root in (completed_scan_roots or [])
         ],
+        "local_artifacts": {
+            "code_symbols_jsonl": (
+                str(Path(local_code_symbols_artifact).resolve())
+                if local_code_symbols_artifact else None
+            ),
+            "code_symbols_written": local_code_symbols_written,
+            "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
+        },
     }
     marker_path = path / ".ingest-code.json"
     marker_path.write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n")
     return marker_path
+
+
+def _prepare_local_code_symbols_artifact(codebase_root: Path) -> Path:
+    """Create an empty local JSONL code-symbol artifact for offline agents."""
+    artifact = codebase_root / "artifacts" / "ingest-code" / "code-symbols.jsonl"
+    artifact.parent.mkdir(parents=True, exist_ok=True)
+    artifact.write_text("")
+    return artifact
+
+
+def _append_local_code_symbols(artifact: Path, records: list[CodeSymbolRecord]) -> int:
+    """Append code symbols as JSONL so agents can inspect them without Memory."""
+    if not records:
+        return 0
+    with artifact.open("a", encoding="utf-8") as handle:
+        for record in records:
+            handle.write(json.dumps(record.to_document(), sort_keys=True) + "\n")
+    return len(records)
 
 
 def build_marker_status(path: Path) -> dict[str, Any]:
@@ -911,8 +939,9 @@ def _store_treesitter_symbols_for_directory(
     codebase_root: Path,
     scope: str,
     verification_samples: Optional[list[dict[str, str]]] = None,
+    local_artifact_path: Optional[Path] = None,
 ) -> int:
-    """Scan one configured directory and upsert structured code symbols to memory."""
+    """Scan one directory, write local symbols, and upsert symbols to memory."""
     directory = directory.resolve()
     codebase_root = codebase_root.resolve()
     treesitter_script = find_treesitter_skill()
@@ -983,6 +1012,9 @@ def _store_treesitter_symbols_for_directory(
             if record is None:
                 continue
             records.append(record)
+
+    if local_artifact_path is not None:
+        _append_local_code_symbols(local_artifact_path, records)
 
     result = CodeMemoryClient().upsert_code_symbols(records)
     for error in result.errors[:5]:
@@ -1470,11 +1502,14 @@ def scan(
 
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
+    local_code_symbols_written = 0
+    local_code_symbols_artifact = None
     if treesitter and code_index and not cwe_only:
         print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
         if dry_run:
             print("  [DRY RUN] treesitter code_symbols upsert skipped", flush=True)
         else:
+            local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
             verification_samples: list[dict[str, str]] = []
             for scan_root in _extract_configured_scan_roots(path):
                 root_stored = _store_treesitter_symbols_for_directory(
@@ -1482,9 +1517,14 @@ def scan(
                     path,
                     scope,
                     verification_samples=verification_samples,
+                    local_artifact_path=local_code_symbols_artifact,
                 )
                 code_symbols_stored += root_stored
                 print(f"Code index: {root_stored} symbols stored from {scan_root}", flush=True)
+            if local_code_symbols_artifact.exists():
+                local_code_symbols_written = sum(
+                    1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
+                )
 
     # Output summary
     result = {
@@ -1498,12 +1538,14 @@ def scan(
         "edges_found": edges_total,
         "edges_stored": edges_stored,
         "code_symbols_stored": code_symbols_stored,
+        "local_code_symbols_written": local_code_symbols_written,
+        "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
         "dry_run": dry_run,
     }
     print(f"\n{json.dumps(result, indent=2)}")
 
     # --- Write marker file + store ingestion record in /memory ---
-    if not dry_run and (knowledge_stored > 0 or code_symbols_stored > 0):
+    if not dry_run and (knowledge_stored > 0 or code_symbols_stored > 0 or local_code_symbols_written > 0):
         try:
             scan_roots = _extract_configured_scan_roots(path) if treesitter and code_index else []
             marker_path = _write_ingest_marker(
@@ -1517,6 +1559,8 @@ def scan(
                 scope=scope,
                 scan_roots=scan_roots,
                 completed_scan_roots=scan_roots if code_symbols_stored > 0 else [],
+                local_code_symbols_artifact=local_code_symbols_artifact,
+                local_code_symbols_written=local_code_symbols_written,
             )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:
@@ -1626,19 +1670,27 @@ def rescan(
         # Treesitter symbol extraction (per codebase, not per file)
         code_symbol_scan_roots: list[Path] = []
         completed_code_symbol_scan_roots: list[Path] = []
+        local_code_symbols_artifact = None
+        local_code_symbols_written = 0
         codebase_ts_symbols = 0
         if treesitter and code_index:
             code_symbol_scan_roots = _extract_configured_scan_roots(path)
+            local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
             for scan_root in code_symbol_scan_roots:
                 root_stored = _store_treesitter_symbols_for_directory(
                     scan_root,
                     path,
                     scope,
                     verification_samples=verifiable_samples,
+                    local_artifact_path=local_code_symbols_artifact,
                 )
                 codebase_ts_symbols += root_stored
                 completed_code_symbol_scan_roots.append(scan_root)
                 print(f"Treesitter: {root_stored} symbols stored from {scan_root}", flush=True)
+            if local_code_symbols_artifact.exists():
+                local_code_symbols_written = sum(
+                    1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
+                )
             total_ts_symbols += codebase_ts_symbols
 
         marker_path = _write_ingest_marker(
@@ -1653,6 +1705,8 @@ def rescan(
             started_at=started_at,
             scan_roots=code_symbol_scan_roots,
             completed_scan_roots=completed_code_symbol_scan_roots,
+            local_code_symbols_artifact=local_code_symbols_artifact,
+            local_code_symbols_written=local_code_symbols_written,
         )
         print(f"Marker written: {marker_path}", flush=True)
         pending_markers.append({"path": str(marker_path), "codebase": str(path)})

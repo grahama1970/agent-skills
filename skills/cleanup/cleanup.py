@@ -2,9 +2,8 @@
 """
 Cleanup Skill - Deep codebase assessment and technical debt cleanup.
 
-Orchestration entry point. The assessment, evidence, and reporting logic lives in
-focused modules so every file stays under the 800-line rule from
-/best-practices-python:
+Orchestration entry point. Logic lives in focused modules so every file stays
+under the 800-line rule from /best-practices-python:
 
     cleanup_core       shared constants, logging, git and file helpers
     cleanup_watchdog   project-watchdog registry context (read-only)
@@ -15,14 +14,7 @@ focused modules so every file stays under the 800-line rule from
     cleanup_quality    project-native parse, lint, typecheck, and test gates
     cleanup_bp         best-practices gate and rule execution
 
-The workflow:
-1. Assessment (--dry-run): Scan and generate findings
-2. Planning (--plan): Generate a Cleanup Plan markdown
-3. Execution (--execute): Remove untracked junk cleared by per-path provenance
-4. Finalization: Record cleanup in local/CLEANUP_LOG.md and the phase receipt
-
-Evidence model: assessment, planning, and worktree audit never depend on an
-index and always run. Each mutation class carries its own evidence requirement.
+Evidence model: assessment, planning, and worktree audit run without an index.
 """
 
 from __future__ import annotations
@@ -78,6 +70,8 @@ from cleanup_public import *  # noqa: F401,F403
 from cleanup_public import scan_public_readiness, append_public_readiness_markdown
 from cleanup_quality import *  # noqa: F401,F403
 from cleanup_quality import scan_quality_gates, append_quality_gate_markdown
+from cleanup_memory_index import *  # noqa: F401,F403
+from cleanup_memory_index import run_memory_indexing
 from cleanup_bp import *  # noqa: F401,F403
 from cleanup_bp import (
     best_practices_skill_for, evaluate_best_practices_gate,
@@ -531,6 +525,7 @@ def main(
     script_scanability: bool = typer.Option(False, "--script-scanability", help="Run only the non-mutating script scanability pass"),
     public_readiness: bool = typer.Option(False, "--public-readiness", help="Run only the non-mutating public-readiness/security cleanup lane"),
     quality_gate: bool = typer.Option(False, "--quality-gate", help="Run only the non-mutating project-native quality gate lane"),
+    memory_index: bool = typer.Option(False, "--memory-index", help="Run ingest-code --treesitter and write a local indexing receipt"),
     force: bool = typer.Option(False, "--force", help="Skip confirmation prompts for junk removal only; cannot authorize any other mutation class"),
     output: str = typer.Option("CLEANUP_PLAN.md", "--output", help="Output file for plan"),
     receipt: str = typer.Option(DEFAULT_RECEIPT_PATH, "--receipt", help="Path for the resumable phase receipt"),
@@ -572,6 +567,11 @@ def main(
 
     if quality_gate:
         print(json.dumps(scan_quality_gates(run_checks=True), indent=2, default=str))
+        return
+
+    if memory_index:
+        receipt_data = run_memory_indexing(dry_run=dry_run, output=output)
+        print(json.dumps(receipt_data, indent=2, default=str))
         return
 
     log_info("Starting assessment...")
