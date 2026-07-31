@@ -71,10 +71,10 @@ table below is checked against it by
 | Continuity ledger | Atomic writes, epoch compare-and-set, cycle idempotency, identity-core hash guard, read-time validation | Runtime authority across real sessions |
 | Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Binding inside the production conversation service |
 | Chatterbox voice | Live `/synthesize-batch` render of the mood envelope, strict ASR WER 0.0, durable WAV snapshots | Perceived emotion, naturalness, human acceptance |
-| Speaker recognition | Long 4.68-6.0s session-mood renders pass resemblyzer identity/adversarial scoring with separation 0.208427 | Human listener recognition, perceived emotion, naturalness, cross-mood identity |
+| Speaker recognition | Condition-scoped resemblyzer receipts only — joined live-chain three-turn renders (4.64-5.32s) separation 0.159977 (`reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json`); long 4.68-6.0s renders separation 0.208427 (`reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json`); neither value is a universal threshold | Human listener recognition, perceived emotion, naturalness, cross-mood identity (#1130) |
 | Joined live chain | One fresh cycle id, `live_chain_20260729t130950z`, joins accepted dream evidence -> Watch binding -> journal -> ledger delta -> pre-turn session mood -> three live Chatterbox turns -> Embry recognition, with 13/13 negative controls blocked | Production conversation-service authority; perceived emotion |
 | Session arc bias | `session_arc_bias.v1` publishes bounded deltas from the latest ledger arc, `intensity_delta=0.18`, `valence_delta=-0.18`, with no tone category; `sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json` binds the SPARTA consumer contract | SPARTA production consumption; per-turn tone classification; perceived emotion |
-| Reliability pilot | Five fresh live-chain cycles passed in `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`: 5 attempted, 5 completed, 5 passed, duplicate accepted effects 0, Wilson 95% lower bound 0.565509 | Production reliability; larger campaign; restart/recovery study |
+| Reliability pilot | Five fresh live-chain cycles passed in `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`: 5 attempted, 5 completed, 5 passed, duplicate accepted effects 0, Wilson 95% lower bound 0.565509 — a downstream P2 engineering pilot, not production or full Phase 01-16 pipeline reliability | Production reliability (no-restart soak, #1128); restart/recovery study (#1129) |
 | Blinded listener study | Four preregistered Chatterbox stimuli are restored, hash-matched, live-ASR verified at WER 0.0, and paired with a rater response schema that rejects empty/malformed rows | Valid human responses remain 0/20; no perceptual emotion or naturalness result |
 | Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
 | PCTOM-R | Strong deterministic receipt machinery, live Tau slices | Confidence-bounded planning advantage |
@@ -89,6 +89,15 @@ the blinded listener study of dream-derived emotion, Embry identity, and
 naturalness. Persona Dream does not own SPARTA service edits. Do not expand
 PCTOM-R, generate a new Kling clip, or run another broad assessment before that
 gate unless the operator explicitly reprioritizes.
+
+Scoped successor issues own the open claims: #1126 and #1127 repair the blinded
+listener study before any human response is collected (gating #1058); #1128 is
+the larger no-restart reliability soak; #1129 is the restart/recovery fault
+campaign; #1130 is cross-mood machine identity; #1131 owns the PCTOM-R
+corpus/estimator repair (measurement validity is blocked, so no PCTOM count is
+a finding); #1059 stays deferred with no provider spend. The scoped claim
+registry in `CURRENT_STATUS.json` (`current_claims`) is the authority for what
+each present-tense claim proves and does not prove.
 
 ## PCTOM-R, and why its numbers are not a result
 

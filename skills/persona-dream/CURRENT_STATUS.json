@@ -14,7 +14,7 @@
     "evidence_boundary": "One accepted canonical dream persistence path is meaningful history, not repeated pipeline reliability.",
     "unverified": [
       "fresh Phase 01-16 rerun",
-      "five-cycle reliability study",
+      "fresh full Phase 01-16 five-cycle media-pipeline reliability study (scope: full_phase01_16_media_pipeline_reliability; the completed 5/5 result is the downstream P2 continuity pilot, scope: p2_continuity_feasibility_pilot)",
       "previous-video attachment A/B proof"
     ]
   },
@@ -189,6 +189,107 @@
       "scaled held-out replication",
       "connection to Embry continuity ledger and relationship state"
     ]
+  },
+  "current_claims": {
+    "_comment": "Scoped claim registry required by grahama1970/agent-skills#1132. One object per present-tense claim; check_current_state_consistency.py fails closed on missing ids, PASS without receipt, PASS while a successor issue is open, and the named scope conflations.",
+    "p2_continuity_feasibility_pilot": {
+      "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
+      "scope": "downstream P2 continuity chain only; N=5 engineering feasibility pilot under one local configuration",
+      "receipt": "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
+      "receipt_sha256": "sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f",
+      "sample_count": 5,
+      "proves": "five consecutive live continuity cycles completed and passed with zero duplicate accepted effects; Wilson 95% lower bound 0.565509 as a preregistered acceptance index",
+      "does_not_prove": "production reliability, no-restart soak behavior, cumulative-state corruption resistance, or anything about the full Phase 01-16 media pipeline",
+      "next_scope_issue": "grahama1970/agent-skills#1128",
+      "surface_token": "#1128"
+    },
+    "p2_continuity_reliability_soak": {
+      "status": "PLANNED_NOT_RUN",
+      "scope": "35+ consecutive no-restart live P2 continuity cycles against long-lived Memory and Chatterbox instances",
+      "sample_count": 0,
+      "proves": "nothing yet",
+      "does_not_prove": "anything; the campaign has not started",
+      "successor_issue": "grahama1970/agent-skills#1128",
+      "successor_resolved": false
+    },
+    "p2_restart_recovery": {
+      "status": "PLANNED_NOT_RUN",
+      "scope": "deterministic restart/partial-receipt/stale-session fault campaign, separate from the reliability soak denominator",
+      "sample_count": 0,
+      "proves": "nothing yet",
+      "does_not_prove": "anything; the campaign has not started",
+      "successor_issue": "grahama1970/agent-skills#1129",
+      "successor_resolved": false
+    },
+    "full_phase01_16_media_pipeline_reliability": {
+      "status": "HISTORICAL_N1_UNPROVEN",
+      "scope": "fresh complete Phase 01-16 dream/media generation reliability; distinct from the downstream P2 continuity chain",
+      "sample_count": 1,
+      "proves": "one accepted canonical dream persistence path exists as meaningful history",
+      "does_not_prove": "repeatable full-pipeline reliability; downstream continuity receipts are not evidence for this scope",
+      "historical": true
+    },
+    "machine_speaker_identity_by_receipt_and_condition": {
+      "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION",
+      "scope": "resemblyzer machine scoring, per exact receipt and render condition only: joined live-chain three-turn renders (4.64-5.32s) separation 0.159977 in reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json; long 4.68-6.0s renders separation 0.208427 in reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json; neither value is a universal threshold",
+      "receipt": "reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:b034c4c5520676cfe263af3c618638a9d17317eb51be7bfa1c0973cb2992689e",
+      "sample_count": 3,
+      "proves": "condition-scoped machine speaker separation for one dream-derived session mood",
+      "does_not_prove": "human listener recognition, perceived emotion, cross-mood identity, or a universal separation threshold",
+      "next_scope_issue": "grahama1970/agent-skills#1130"
+    },
+    "human_perceived_emotion_and_identity": {
+      "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
+      "scope": "blinded human listener study of dream-derived emotion, Embry identity, and naturalness",
+      "receipt": "reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
+      "receipt_sha256": "sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89",
+      "valid_human_responses": "0/20",
+      "sample_count": 0,
+      "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
+      "does_not_prove": "any perceptual emotion, naturalness, or human identity result; WER 0.0 and embedding separations are machine evidence and cannot substitute",
+      "successor_issue": "grahama1970/agent-skills#1126",
+      "successor_resolved": false,
+      "surface_token": "#1126"
+    },
+    "pctom_apparatus_integrity": {
+      "status": "PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE",
+      "scope": "deterministic receipt machinery, coverage, and fail-closed controls of the PCTOM-R apparatus only",
+      "receipt": "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
+      "receipt_sha256": "sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f",
+      "sample_count": 43,
+      "proves": "the experiment apparatus runs deterministically within its text-first scope; historical GOAL.md snapshot counts are subordinate to this registry",
+      "does_not_prove": "measurement validity or held-out benefit; #1056 proved the benefit estimator degenerate"
+    },
+    "pctom_measurement_validity": {
+      "status": "BLOCKED_DEGENERATE_CORPUS_AND_ESTIMATOR",
+      "scope": "whether the PCTOM-R corpus and M/R/D/CD estimator can measure anything: #1056 proved 24/24 TRUE labels and constant per-condition distributions",
+      "sample_count": 24,
+      "proves": "the measurement-validity-v2 gate fails closed on the current corpus",
+      "does_not_prove": "that any recorded PCTOM-R coverage or success count is a finding",
+      "successor_issue": "grahama1970/agent-skills#1131",
+      "successor_resolved": false,
+      "surface_token": "#1131"
+    },
+    "pctom_heldout_benefit": {
+      "status": "UNPROVEN",
+      "scope": "confidence-bounded counterfactual-dreaming planning advantage on a held-out slice",
+      "sample_count": 0,
+      "proves": "nothing yet",
+      "does_not_prove": "any benefit claim; blocked behind measurement validity",
+      "successor_issue": "grahama1970/agent-skills#1131",
+      "successor_resolved": false
+    },
+    "previous_video_attachment_causality": {
+      "status": "UNPROVEN_DEFERRED",
+      "scope": "whether attaching the previous accepted dream video changes outcomes; requires a #1059 paired A/B receipt and explicit paid-call authorization",
+      "sample_count": 0,
+      "paired_receipt": false,
+      "proves": "nothing yet",
+      "does_not_prove": "any previous-video benefit; stays off the active critical path with no provider spend",
+      "successor_issue": "grahama1970/agent-skills#1059",
+      "successor_resolved": false
+    }
   },
   "sanity": {
     "status": "PASS",

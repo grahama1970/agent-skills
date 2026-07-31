@@ -174,6 +174,40 @@ STAGES = (
 )
 
 
+#: The scoped claim registry required by #1132. Every present-tense claim in
+#: the surfaces must resolve to exactly one of these ids; the checker blocks
+#: when a claim id is missing, under-specified, or asserts more than its scope.
+CLAIM_IDS = (
+    "p2_continuity_feasibility_pilot",
+    "p2_continuity_reliability_soak",
+    "p2_restart_recovery",
+    "full_phase01_16_media_pipeline_reliability",
+    "machine_speaker_identity_by_receipt_and_condition",
+    "human_perceived_emotion_and_identity",
+    "pctom_apparatus_integrity",
+    "pctom_measurement_validity",
+    "pctom_heldout_benefit",
+    "previous_video_attachment_causality",
+)
+
+REQUIRED_CLAIM_FIELDS = ("status", "scope", "proves", "does_not_prove")
+
+#: A speaker-recognition number may only appear next to its exact receipt and
+#: render condition. Bare "separation 0.208427" reads as a universal score.
+RECOGNITION_NUMBERS = ("0.208427", "0.159977")
+CONDITION_TOKENS = (
+    "live_chain", "live chain", "live-chain",
+    "long_identity", "long identity", "long-identity",
+    "4.68", "4.64",
+)
+
+#: A paragraph mentioning the N=5 pilot together with production/full-pipeline
+#: reliability must carry one of these, or it is conflating scopes.
+NEGATION_TOKENS = ("not", "unproven", "remains", "distinct", "rather than", "beyond", "instead")
+PILOT_TOKENS = ("five-cycle", "five cycle", "n=5", "5/5")
+OVERREACH_TOKENS = ("production reliability", "full pipeline", "phase 01-16 reliability", "full phase 01-16")
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -408,6 +442,215 @@ def check_retracted_evidence(status_doc: dict[str, Any], mismatches: list[dict[s
         )
 
 
+def _walk_unverified(obj: Any, path: str, out: list[tuple[str, str]]) -> None:
+    if isinstance(obj, dict):
+        for key, val in obj.items():
+            sub = f"{path}.{key}" if path else key
+            if key == "unverified" and isinstance(val, list):
+                for idx, item in enumerate(val):
+                    out.append((f"{sub}[{idx}]", str(item)))
+            else:
+                _walk_unverified(val, sub, out)
+    elif isinstance(obj, list):
+        for idx, val in enumerate(obj):
+            _walk_unverified(val, f"{path}[{idx}]", out)
+
+
+def check_claim_registry(status_doc: dict[str, Any], mismatches: list[dict[str, Any]]) -> None:
+    """#1132: every present-tense claim carries an exact scope and receipt.
+
+    The registry lives at ``current_claims``. Scope conflations the ticket
+    names — pilot-as-production, full-pipeline-from-continuity, human-from-WER,
+    PCTOM apparatus-as-benefit, unpaired previous-video benefit — each block
+    with a named rule.
+    """
+    registry = status_doc.get("current_claims")
+    if not isinstance(registry, dict):
+        mismatches.append(
+            _mismatch("claim_registry_missing", "CURRENT_STATUS.json", "current_claims",
+                      "the scoped claim registry required by #1132 is absent")
+        )
+        return
+
+    for claim_id in CLAIM_IDS:
+        claim = registry.get(claim_id)
+        if not isinstance(claim, dict):
+            mismatches.append(
+                _mismatch("claim_missing", "CURRENT_STATUS.json", f"current_claims.{claim_id}",
+                          "required scoped claim object is absent")
+            )
+            continue
+        for field in REQUIRED_CLAIM_FIELDS:
+            if not claim.get(field):
+                mismatches.append(
+                    _mismatch("claim_field_missing", "CURRENT_STATUS.json",
+                              f"current_claims.{claim_id}.{field}",
+                              "scoped claim object lacks a required field")
+                )
+
+        status = str(claim.get("status", ""))
+        is_pass = status.startswith("PASS")
+        receipt_rel = claim.get("receipt")
+        pinned_sha = claim.get("receipt_sha256")
+
+        if receipt_rel:
+            receipt_path = ROOT / str(receipt_rel)
+            if not receipt_path.is_file():
+                mismatches.append(
+                    _mismatch("claim_receipt_missing", "CURRENT_STATUS.json",
+                              f"current_claims.{claim_id}.receipt",
+                              f"named receipt {receipt_rel} does not exist")
+                )
+            elif pinned_sha and pinned_sha != sha256_file(receipt_path):
+                mismatches.append(
+                    _mismatch("claim_receipt_hash_mismatch", "CURRENT_STATUS.json",
+                              f"current_claims.{claim_id}.receipt_sha256",
+                              f"pinned {pinned_sha} but receipt hashes to {sha256_file(receipt_path)}")
+                )
+        elif is_pass:
+            mismatches.append(
+                _mismatch("claim_pass_without_receipt", "CURRENT_STATUS.json",
+                          f"current_claims.{claim_id}",
+                          f"status {status!r} asserts PASS with no receipt")
+            )
+
+        if claim.get("successor_issue") and not claim.get("successor_resolved") and is_pass:
+            mismatches.append(
+                _mismatch("claim_pass_while_successor_open", "CURRENT_STATUS.json",
+                          f"current_claims.{claim_id}.status",
+                          f"status {status!r} asserts PASS while successor "
+                          f"{claim.get('successor_issue')} is open")
+            )
+
+    pilot = registry.get("p2_continuity_feasibility_pilot") or {}
+    pilot_text = (str(pilot.get("status", "")) + " " + str(pilot.get("scope", ""))).lower()
+    if any(tok in pilot_text for tok in OVERREACH_TOKENS):
+        mismatches.append(
+            _mismatch("pilot_described_as_production_or_full_pipeline", "CURRENT_STATUS.json",
+                      "current_claims.p2_continuity_feasibility_pilot",
+                      "the N=5 engineering pilot claims production or full-pipeline scope")
+        )
+
+    full = registry.get("full_phase01_16_media_pipeline_reliability") or {}
+    if str(full.get("status", "")).startswith("PASS"):
+        receipt_rel = str(full.get("receipt", ""))
+        if not receipt_rel or "goal_v5/continuity" in receipt_rel:
+            mismatches.append(
+                _mismatch("full_pipeline_reliability_inferred_from_continuity",
+                          "CURRENT_STATUS.json",
+                          "current_claims.full_phase01_16_media_pipeline_reliability",
+                          "full Phase 01-16 reliability asserted from downstream continuity "
+                          "receipts or from no receipt at all")
+            )
+
+    human = registry.get("human_perceived_emotion_and_identity") or {}
+    if str(human.get("status", "")).startswith("PASS"):
+        responses = str(human.get("valid_human_responses", "0/0"))
+        try:
+            have, need = (int(part) for part in responses.split("/", 1))
+        except ValueError:
+            have, need = 0, 1
+        receipt_rel = str(human.get("receipt", ""))
+        if have < need or "voice_recognition" in receipt_rel or "wer" in receipt_rel.lower():
+            mismatches.append(
+                _mismatch("human_perception_inferred_from_machine_scores",
+                          "CURRENT_STATUS.json",
+                          "current_claims.human_perceived_emotion_and_identity",
+                          f"human perception asserted with responses {responses} and receipt "
+                          f"{receipt_rel!r}; WER/embedding receipts are machine evidence")
+            )
+
+    video = registry.get("previous_video_attachment_causality") or {}
+    if str(video.get("status", "")).startswith("PASS") and not video.get("paired_receipt"):
+        mismatches.append(
+            _mismatch("previous_video_benefit_without_paired_receipt", "CURRENT_STATUS.json",
+                      "current_claims.previous_video_attachment_causality",
+                      "previous-video benefit asserted without a valid #1059 paired receipt")
+        )
+
+    rows: list[tuple[str, str]] = []
+    _walk_unverified(status_doc, "", rows)
+    for json_path, text in rows:
+        low = text.lower()
+        if ("five-cycle" in low or "five cycle" in low) and "reliab" in low:
+            if not any(tok in low for tok in ("phase 01-16", "full ", "media pipeline", "media-pipeline")):
+                mismatches.append(
+                    _mismatch("completed_pilot_listed_unverified_without_scope",
+                              "CURRENT_STATUS.json", json_path,
+                              "a five-cycle reliability item is listed unverified without a "
+                              "distinct scope id, contradicting the completed P2 pilot",
+                              text)
+                )
+
+    for claim_id in CLAIM_IDS:
+        claim = registry.get(claim_id) or {}
+        token = claim.get("surface_token")
+        if not token:
+            continue
+        for label, path in (("README.md", README), ("PROJECT_KNOWLEDGE.md", PROJECT_KNOWLEDGE)):
+            summary = current_summary(path)
+            if summary and str(token).lower() not in summary:
+                mismatches.append(
+                    _mismatch("surface_missing_active_successor", label,
+                              f"current_claims.{claim_id}.surface_token",
+                              f"current summary never names active successor {token}")
+                )
+
+
+def full_paragraphs(path: Path) -> list[tuple[int, str]]:
+    """Whole-file paragraphs; the number/scope rules apply beyond the summary."""
+    if not path.is_file():
+        return []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    paragraphs: list[tuple[int, str]] = []
+    buf: list[str] = []
+    start = 1
+    for idx, line in enumerate(lines, start=1):
+        if line.strip():
+            if not buf:
+                start = idx
+            buf.append(line.strip())
+        elif buf:
+            paragraphs.append((start, " ".join(buf).lower()))
+            buf = []
+    if buf:
+        paragraphs.append((start, " ".join(buf).lower()))
+    return paragraphs
+
+
+def check_scope_conflation_prose(mismatches: list[dict[str, Any]]) -> None:
+    """#1132 text rules over README and PROJECT_KNOWLEDGE.
+
+    A recognition number must sit next to its receipt and render condition; a
+    pilot mention must not share a paragraph with production/full-pipeline
+    reliability unless the paragraph itself draws the distinction. Historical
+    paragraphs are exempt, as everywhere else in this checker.
+    """
+    for label, path in (("README.md", README), ("PROJECT_KNOWLEDGE.md", PROJECT_KNOWLEDGE)):
+        for line_no, para in full_paragraphs(path):
+            if any(mark in para for mark in HISTORICAL_MARKERS):
+                continue
+            for number in RECOGNITION_NUMBERS:
+                if number in para:
+                    if "receipt" not in para or not any(tok in para for tok in CONDITION_TOKENS):
+                        mismatches.append(
+                            _mismatch("unqualified_recognition_number", label,
+                                      f"line {line_no}",
+                                      f"separation {number} appears without its exact receipt "
+                                      f"and render condition; a single observed separation is "
+                                      f"not a universal identity result",
+                                      number)
+                        )
+            if any(tok in para for tok in PILOT_TOKENS) and any(tok in para for tok in OVERREACH_TOKENS):
+                if not any(tok in para for tok in NEGATION_TOKENS):
+                    mismatches.append(
+                        _mismatch("pilot_conflated_with_production_or_full_pipeline", label,
+                                  f"line {line_no}",
+                                  "the N=5 pilot and production/full-pipeline reliability share "
+                                  "a paragraph with no distinguishing language")
+                    )
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     mismatches: list[dict[str, Any]] = []
     status_path = args.current_status
@@ -423,6 +666,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         check_blockers_and_next_steps(status_doc, resolved, mismatches)
         check_prose_surfaces(status_doc, resolved, mismatches)
         check_retracted_evidence(status_doc, mismatches)
+        check_claim_registry(status_doc, mismatches)
+        check_scope_conflation_prose(mismatches)
 
     return {
         "schema": "persona_dream.current_state_consistency.v1",

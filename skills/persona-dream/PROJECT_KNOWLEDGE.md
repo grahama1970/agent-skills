@@ -3,6 +3,13 @@
 **Last updated:** 2026-07-29 UTC (joined live-chain + session arc-bias + SPARTA handoff contract + N=5 reliability pilot PASS; listener rater page ready and analysis false-green gated; SPARTA/human responses next) by Codex
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
+**Active successor issues (own the open claims; see `CURRENT_STATUS.json` `current_claims`):**
+#1126/#1127 blinded listener study repair (gates #1058 human collection),
+#1128 no-restart reliability soak (the completed 5/5 result is the downstream
+P2 engineering pilot, not production or full Phase 01-16 reliability),
+#1129 restart/recovery fault campaign, #1130 cross-mood machine identity,
+#1131 PCTOM-R corpus/estimator repair (measurement validity blocked),
+#1059 previous-video causality deferred with no provider spend.
 
 ## 2026-07-29 — Listener-study rater page ready; still no perceptual conclusion
 

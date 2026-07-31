@@ -180,6 +180,16 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+> HISTORICAL SNAPSHOT — superseded and subordinate. The counts and PASS
+> statuses below were recorded before closed issue #1056 proved the PCTOM-R
+> benefit estimator degenerate (24/24 TRUE labels, constant per-condition
+> distributions). They document apparatus integrity within its text-first
+> scope only; measurement validity and held-out benefit remain open under
+> #1131. The authoritative present-tense claims live in
+> `CURRENT_STATUS.json` (`current_claims`); nothing in this snapshot may be
+> read as a current measurement-validity or benefit result. The immutable
+> goal text in this file is unchanged by this marker.
+
 - PCTOM-R strict objective bundle with v25-26 evidence:
   refreshed manifest
   `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/pctom_goal_coverage_strict_with_v25_26_manifest.v1.json`;
