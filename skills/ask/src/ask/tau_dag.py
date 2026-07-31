@@ -23,6 +23,9 @@ load_dotenv_once()
 
 ASK_SKILL_ROOT = Path(__file__).resolve().parents[2]
 TAU_DAG_SCHEMA = "tau.dag_contract.v1"
+# Tau's "standard" execution profile rejects contracts requesting more; a
+# larger panel still runs, with lanes beyond the cap queued by Tau's scheduler.
+TAU_STANDARD_PROFILE_MAX_CONCURRENCY = 4
 ASK_TAU_DAG_BUNDLE_SCHEMA = "ask.tau_dag_bundle.v1"
 ASK_TAU_DAG_INTERVIEW_SCHEMA = "ask.tau_dag_interview.v1"
 DEFAULT_SCILLM_BASE_URL = "http://127.0.0.1:4001"
@@ -783,8 +786,25 @@ def run_tau_dag_bundle(
     if dag_path.is_file():
         receipt_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(dag_path, receipt_dir / "dag-contract.json")
+    receipt_path = receipt_dir / "dag-receipt.json"
+    # A pre-dispatch rejection (e.g. DAG_CONTRACT_INVALID) exits non-zero with a
+    # tau.dag_error.v1 payload on stdout and never writes dag-receipt.json.
+    # Persist that payload as the receipt and skip polling: run-status would
+    # report UNKNOWN for the whole poll timeout with no output.
+    pre_dispatch_error = None
+    if dag_run["returncode"] != 0 and not receipt_path.exists():
+        payload = _json_or_none(dag_run["stdout"])
+        if isinstance(payload, dict) and str(payload.get("status") or "").upper() == "BLOCKED":
+            pre_dispatch_error = payload
+            receipt_dir.mkdir(parents=True, exist_ok=True)
+            _write_json(receipt_path, payload)
+            sys.stderr.write(
+                "tau dag-run blocked before dispatch: "
+                f"verdict={payload.get('verdict')} failure_code={payload.get('failure_code')} "
+                f"message={payload.get('message')}\n"
+            )
     polls: list[dict[str, Any]] = []
-    if poll:
+    if poll and pre_dispatch_error is None:
         polls = poll_tau_status(
             receipt_dir,
             tau_project_root=tau_project_root,
@@ -794,7 +814,6 @@ def run_tau_dag_bundle(
     viewer: dict[str, Any] | None = None
     if viewer_link:
         viewer = tau_viewer_link(receipt_dir, tau_project_root=tau_project_root)
-    receipt_path = receipt_dir / "dag-receipt.json"
     receipt = _read_json(receipt_path) if receipt_path.exists() else None
     status = str(receipt.get("status") if isinstance(receipt, dict) else "UNKNOWN")
     degraded_join = _ensure_degraded_roundtable_join(bundle)
@@ -824,7 +843,7 @@ def run_tau_dag_bundle(
         status = "NEEDS_ATTENTION" if join_status in {"BLOCKED", "FAIL", "FAILED", "ERROR"} else join_status
     elif join_status == "PASS" and dag_run["returncode"] == 0:
         status = "PASS"
-    if dag_run["returncode"] != 0 and status not in {"DEGRADED", "NEEDS_ATTENTION"}:
+    if dag_run["returncode"] != 0 and status not in {"DEGRADED", "NEEDS_ATTENTION", "BLOCKED"}:
         status = "ERROR"
     provider_live = bool(
         isinstance(receipt, dict) and receipt.get("provider_live") is True
@@ -1838,7 +1857,11 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "resume": True,
             "default_timeout_seconds": 300,
             "max_total_attempts": len(handler_nodes) + 1,
-            "max_concurrency": len(handler_nodes) if input.topology == "concurrent" else 1,
+            "max_concurrency": (
+                min(len(handler_nodes), TAU_STANDARD_PROFILE_MAX_CONCURRENCY)
+                if input.topology == "concurrent"
+                else 1
+            ),
         },
         "context": {
             "compiled_by": "$ask",
