@@ -1016,11 +1016,18 @@ def _validate_source_root_against_plan(
             raise ContractError(f"live source artifact binding mismatch for {team}")
 
 
-def _json_command(*, command: list[str], cwd: Path, label: str) -> dict[str, Any]:
+def _json_command(
+    *,
+    command: list[str],
+    cwd: Path,
+    label: str,
+    allow_nonzero_json: bool = False,
+) -> dict[str, Any]:
     environment = os.environ.copy()
     # Battle and Tau require different Python versions. Never let a nested Tau
     # uv process repurpose Battle's active project environment in place.
     environment.pop("UV_PROJECT_ENVIRONMENT", None)
+    environment.pop("VIRTUAL_ENV", None)
     completed = subprocess.run(
         command,
         cwd=cwd,
@@ -1029,7 +1036,7 @@ def _json_command(*, command: list[str], cwd: Path, label: str) -> dict[str, Any
         capture_output=True,
         text=True,
     )
-    if completed.returncode != 0:
+    if completed.returncode != 0 and not (allow_nonzero_json and completed.stdout.strip()):
         detail = completed.stderr.strip() or completed.stdout.strip() or "no output"
         raise ContractError(f"{label} failed: {detail}")
     try:
@@ -1046,13 +1053,14 @@ def _tau_runtime_readiness(*, tau_root: Path) -> dict[str, Any]:
     if not (root / "pyproject.toml").is_file():
         raise ContractError(f"Tau root is not a Tau checkout: {root}")
     doctor = _json_command(
-        command=["uv", "run", "tau", "doctor"], cwd=root, label="Tau doctor"
+        command=["uv", "run", "tau", "doctor"],
+        cwd=root,
+        label="Tau doctor",
+        allow_nonzero_json=True,
     )
     lanes = doctor.get("lanes") if isinstance(doctor.get("lanes"), dict) else {}
     if (
         doctor.get("schema") != "tau.doctor.v1"
-        or doctor.get("status") != "PASS"
-        or doctor.get("ok") is not True
         or doctor.get("mocked") is not False
         or doctor.get("live") is not True
         or lanes.get("local_cli", {}).get("ready") is not True

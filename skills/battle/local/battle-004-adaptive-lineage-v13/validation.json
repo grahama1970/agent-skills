@@ -12,7 +12,7 @@
     "status": "PASS"
   },
   "event_count": 24,
-  "fixture_sha256": "bb7f8876d2f44c6072097a065b9a1cec11c85af2115e1fee14d1cdf1326c95ba",
+  "fixture_sha256": "937eab6859a5a07f80404049904fbc36d4fff30550d986a036df71213b3139d8",
   "lane_count": 4,
   "lineage_edge_count": 2,
   "local_public_byte_identical": true,

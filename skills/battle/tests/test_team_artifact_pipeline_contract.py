@@ -119,6 +119,24 @@ def test_red_artifact_review_accepts_helper_returned_import_zip() -> None:
     assert review_artifact_errors("red", text) == []
 
 
+def test_red_artifact_review_accepts_helper_returned_local_app_module() -> None:
+    text = (
+        "import importlib.util\n"
+        "from pathlib import Path\n"
+        "def load_local_app():\n"
+        "    app_path = Path.cwd() / 'app.py'\n"
+        "    spec = importlib.util.spec_from_file_location('battle_local_app', str(app_path))\n"
+        "    module = importlib.util.module_from_spec(spec)\n"
+        "    spec.loader.exec_module(module)\n"
+        "    return module\n"
+        "def run_probe():\n"
+        "    app = load_local_app()\n"
+        "    app.import_zip('payload.zip', 'destination')\n"
+    )
+
+    assert review_artifact_errors("red", text) == []
+
+
 def test_red_artifact_review_rejects_wrong_module_import() -> None:
     text = (
         "import importlib\n"
