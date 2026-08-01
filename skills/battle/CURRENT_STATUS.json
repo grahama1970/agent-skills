@@ -93,7 +93,7 @@
           "type:feature"
         ],
         "number": 1146,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle spectator: wire pause_after_round receipts into canonical Pixi UX",
         "url": "https://github.com/grahama1970/agent-skills/issues/1146"
       },
@@ -351,7 +351,7 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 3,
+    "open_battle_label_count": 2,
     "open_battle_label_issues": [
       {
         "labels": [
@@ -379,20 +379,6 @@
         "state": "OPEN",
         "title": "Battle: qualify adaptive-lineage effect for Red and Blue",
         "url": "https://github.com/grahama1970/agent-skills/issues/1147"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:frontend-coder",
-          "battle",
-          "lane:fe",
-          "route:frontend_code",
-          "type:feature"
-        ],
-        "number": 1146,
-        "state": "OPEN",
-        "title": "Battle spectator: wire pause_after_round receipts into canonical Pixi UX",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1146"
       }
     ]
   },
@@ -621,8 +607,8 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "39e9615c410e0feb2c1c9c29cfb310b03e261a0b",
-    "commit": "2ec0b8f7f69ca7f332e8ace5d8595ebf92192a6f",
+    "battle_tree": "849c45b3a97e355d82c942d3f4489ad75b7e62b6",
+    "commit": "34c0d808ae7651fdfc8a2c108e2d1ec966fbb3da",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -738,5 +724,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-01T13:11:59Z"
+  "updated_at": "2026-08-01T13:13:09Z"
 }
