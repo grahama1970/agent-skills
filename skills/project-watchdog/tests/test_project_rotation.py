@@ -93,6 +93,37 @@ def test_target_is_read_from_the_line_ticket_writes():
     assert issue_targets(_issue(2, "skills/ticket/")) == {"skills/ticket"}
 
 
+def test_markdown_target_paths_override_orientation_skill_mentions():
+    body = """## Type
+
+feature
+
+## Target paths
+
+- skills/battle/sanity.sh, skills/battle qualification scripts
+
+## Orientation for a stateless agent
+
+Use `skills/memory/run.sh recall`, `skills/project-state/run.sh --json`,
+`skills/dogpile/run.sh`, `skills/brave-search/run.sh`, `skills/test/run.sh`,
+and `skills/treesitter/run.sh`.
+"""
+    assert issue_targets({"body": body}) == {"skills/battle/sanity.sh"}
+
+
+def test_markdown_target_paths_accept_coarse_exact_skill_path():
+    body = """## Target paths
+
+- skills/battle, project-watchdog/Tau repair lane
+
+## Required skills
+
+- `battle`
+- `ticket`
+"""
+    assert issue_targets({"body": body}) == {"skills/battle"}
+
+
 def test_a_legacy_ticket_falls_back_to_the_skills_it_mentions():
     """7 of the 8 leases open on agent-skills predate the target: line."""
     body = "Fix `skills/ask` compete when `skills/surf` returns a stale tab."
