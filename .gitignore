@@ -74,6 +74,7 @@ skills/battle/battles/
 skills/battle/patch-runs/
 skills/battle/reports/battle_*.md
 skills/battle/reports/battle_*_viz/
+skills/battle/spectator/public/battle-fixtures/battle-004-same-run-qualification/
 skills/battle/uv.lock
 
 # Persona-dream research bakeoff outputs

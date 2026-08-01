@@ -45,4 +45,9 @@ if [[ "${1:-}" == "tiered-gate" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/tiered_qualification.py" "$@"
 fi
 
+if [[ "${1:-}" == "same-run-qualification" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/same_run_qualification.py" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"
