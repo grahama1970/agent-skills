@@ -593,11 +593,46 @@ _TARGET_LINE = re.compile(r"^target:\s*(\S+)\s*$", re.MULTILINE)
 #: agent-skills, where the `target:` line resolves 1.
 _SKILL_PATH = re.compile(r"\bskills/[a-z0-9][a-z0-9._-]*")
 
+_TARGET_PATHS_HEADING = re.compile(r"^##\s+Target paths\s*$", re.IGNORECASE | re.MULTILINE)
+
 #: A ticket whose target cannot be read at all. Just another target value: it
 #: collides with other unreadable tickets and with nothing else. Treating it as
 #: colliding with everything sounds safer and is not -- one legacy ticket with
 #: no target then holds the whole fleet, which is the stall being fixed.
 UNKNOWN_TARGET = "?"
+
+
+def _clean_target_path_fragment(raw: str) -> str | None:
+    """Return a concrete target path from one declared Markdown fragment."""
+    fragment = raw.strip().strip("`").strip().rstrip(".,;")
+    if not fragment:
+        return None
+    token = fragment.split()[0].strip("`").rstrip(".,;")
+    if not token or token.startswith(("/", "..")) or "/" not in token:
+        return None
+    if token != fragment and "." not in Path(token).name:
+        return None
+    return token.rstrip("/")
+
+
+def _markdown_target_paths(body: str) -> set[str]:
+    """Parse the ``## Target paths`` block written by modern ticket bodies."""
+    match = _TARGET_PATHS_HEADING.search(body)
+    if not match:
+        return set()
+    targets: set[str] = set()
+    for line in body[match.end():].splitlines():
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            break
+        if not stripped.startswith(("-", "*")):
+            continue
+        item = stripped[1:].strip()
+        for part in item.split(","):
+            target = _clean_target_path_fragment(part)
+            if target:
+                targets.add(target)
+    return targets
 
 
 def issue_targets(issue: dict[str, Any]) -> set[str]:
@@ -612,6 +647,9 @@ def issue_targets(issue: dict[str, Any]) -> set[str]:
     match = _TARGET_LINE.search(body)
     if match and (declared := match.group(1).strip().rstrip("/")):
         return {declared}
+    declared_paths = _markdown_target_paths(body)
+    if declared_paths:
+        return declared_paths
     mentioned = {path.rstrip("/") for path in _SKILL_PATH.findall(body)}
     return mentioned or {UNKNOWN_TARGET}
 
