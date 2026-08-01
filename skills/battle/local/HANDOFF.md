@@ -1,4 +1,164 @@
-# Battle Handoff - main branch only
+# Handoff Report: Battle
+
+**Timestamp**: 2026-08-01T07:49:43-04:00  
+**Active Agent**: Codex  
+**Source Directory**: `/home/graham/workspace/experiments/agent-skills/skills/battle`
+
+This is the current operational handoff for the next Battle agent. The older
+2026-07-29 handoff remains below under **Historical Handoff** because it
+contains useful receipt paths, but the 2026-08-01 section is the current queue
+and proof boundary.
+
+## 1. Project Overview
+
+- **Ecosystem**: Python skill package with a TypeScript/Vite/PixiJS spectator.
+- **Core purpose**: Battle is a Red/Blue security competition orchestrator. It
+  schedules agent teams, materializes artifacts, runs executable work inside
+  Docker, records Judge/scorekeeper receipts, and renders receipt-backed battle
+  state in the spectator.
+- **Primary invariant**: Battle is the control plane. Target code, exploit code,
+  patch code, probes, and replay checks execute only in Docker. Provider/model
+  calls for Battle proof work route through Tau/loop; project agents should not
+  call SciLLM directly and then treat that as Battle proof.
+
+## 2. Current State (Doc-Code Alignment)
+
+- **Implemented local slices**:
+  - Deterministic backend contract/eval path is alive:
+    `python3 scripts/backend_eval.py --out-dir /tmp/battle-handoff-backend-eval-20260801`
+    returned `passed=13 failed=0 total=13` with receipt
+    `/tmp/battle-handoff-backend-eval-20260801/receipt.json`.
+  - Spectator TypeScript/Pixi test slice is alive:
+    `npm run typecheck` passed in `skills/battle/spectator`.
+  - Spectator Vitest slice is alive:
+    `npm test -- --run` passed `44` test files and `191` tests in
+    `skills/battle/spectator`.
+  - The repository has substantial local receipts for backend Arena, local
+    transport, WebSocket, containerized preview, swarm, Memory/lineage, and
+    production-readiness contract rungs. See the historical section below for
+    specific 2026-07-29 receipt paths.
+
+- **Current queue**:
+  - Before the new queue was created, direct GitHub readback showed no open
+    `battle`-labelled issues and prior Battle issues `#1048`, `#1063`,
+    `#1064`, `#1065`, `#1066`, and epic `#46` were closed.
+  - The current open Battle queue is `#1141` through `#1150`:
+    - `#1141` prove project-agent lane can dispatch a clean Battle repair.
+    - `#1142` generate receipt-derived `CURRENT_STATUS.json`.
+    - `#1143` prove one same-run Arena-to-Pixi qualification.
+    - `#1144` resolve sanity root-layout failure on `patch_writer.py`.
+    - `#1145` add backend `pause_after_round` human-interjection contract.
+    - `#1146` wire `pause_after_round` receipts into canonical Pixi UX.
+    - `#1147` qualify adaptive-lineage effect for Red and Blue.
+    - `#1148` decide supported terminal semantics for local MVP.
+    - `#1149` emit bounded staging infrastructure readiness receipt.
+    - `#1150` add tiered sanity and live qualification gates.
+
+- **Drift/misalignment to avoid**:
+  - Do not restart from stale references that say `#1048` or `#1064` are open;
+    they are closed. Work the new open queue.
+  - Do not claim Battle is complete because backend and spectator tests pass.
+    The main local MVP gap is one source-bound same-run Arena-to-Pixi
+    qualification where the browser-visible state is derived from the exact
+    fresh Arena/Tau/Docker/Judge run.
+  - Do not claim production readiness from local Docker/container/WebSocket
+    receipts. The production-readiness contract remains fail-closed until a
+    bounded staging/production infrastructure receipt exists.
+  - Do not treat WebGPT/WebClaude/WebGemini/WebGrok text as closure proof.
+    Reviewer output is advisory and must be reconciled against receipts,
+    commands, and GitHub state.
+
+## 3. What is Working Well
+
+- `backend_eval.py` currently passes its deterministic contract suite
+  (`13/13`). This proves committed deterministic fixtures/contracts only; it
+  does not prove live Tau, Docker Judge, browser, production infra, or adaptive
+  efficacy.
+- The canonical spectator has a current clean local TypeScript/Vitest signal:
+  typecheck passed and `44` files / `191` tests passed.
+- The codebase has strong evidence boundaries: Judge/scorekeeper authority,
+  fail-closed production-readiness contract, local transport/WebSocket receipt
+  shape, and explicit mocked/live/agentic claim fields in many receipts.
+- The next work is now leaseable via focused GitHub issues rather than an
+  ambiguous "finish Battle" objective.
+
+## 4. What is Currently Broken
+
+- **Failed test/gate**: `bash sanity.sh` fails immediately at root layout:
+  `Root-level Python files are not allowed; implementation belongs in
+  src/battle_skill.` The offending path is
+  `skills/battle/patch_writer.py`. This is tracked by `#1144`.
+- **Missing local MVP proof**: no fresh one-command qualification currently
+  proves Arena -> Tau Red/Blue -> Docker Judge -> source-bound transport ->
+  Pixi browser render as the same causal run. This is tracked by `#1143`.
+- **Status authority missing**: there is not yet a generated
+  `CURRENT_STATUS.json` derived from receipts that docs can link to. This is
+  tracked by `#1142`.
+- **Project-agent dispatch uncertain**: the intended Battle project-agent lane
+  needs a clean dispatch proof before new issues can be assumed routable. This
+  is tracked by `#1141`.
+- **WebGPT ask lane failure**: the requested `$ask webgpt` ticket-planning call
+  failed twice with `BROWSER_SUBMIT_NOT_ACCEPTED`; the rerun DAG receipt is at
+  `/mnt/storage12tb/skills/ask/outputs/battle-ticket-webgpt-rerun-20260801/ask-tau-create-a-focused-github-ticket-s-e177c2c493d0/tau-receipts/dag-receipt.json`.
+  The Ask bug is `#1151`.
+- **Worktree caveat**: the current repository worktree is dirty with many
+  pre-existing tracked Battle artifact/test changes and unrelated repo changes.
+  Do not reset, clean, or broad-stash this tree. Stage only task-relevant paths.
+
+## 5. Next Steps
+
+1. Work `#1141` first: prove the project-agent lane can dispatch a clean Battle
+   repair from a clean main source boundary. Without this, more tickets may be
+   well-written but not actually routable.
+2. Work `#1144` as the smallest code repair: move/remove/justify
+   `skills/battle/patch_writer.py` so `bash sanity.sh` passes the root-layout
+   gate, then continue through the next sanity failures if any.
+3. Work `#1142`: generate a receipt-derived `CURRENT_STATUS.json` and make docs
+   point at it. The generator must fail on stale closed-ticket blockers or
+   unsupported claims.
+4. Work `#1143`: build the one-command same-run Arena-to-Pixi qualification.
+   This is the local MVP closure bar, not production closure.
+5. After `#1143`, proceed to operator control (`#1145`, `#1146`), adaptive
+   effect qualification (`#1147`), terminal semantics (`#1148`), staging
+   readiness (`#1149`), and recurring/tiered gates (`#1150`).
+
+## 6. Project Context for Success
+
+- **Key files**:
+  - `skills/battle/SKILL.md`: operational invariants and proof boundaries.
+  - `skills/battle/run.sh`: CLI entrypoint.
+  - `skills/battle/sanity.sh`: current narrow gate, presently failing on
+    root-level `patch_writer.py`.
+  - `skills/battle/scripts/backend_eval.py`: deterministic backend eval runner.
+  - `skills/battle/src/battle_skill/`: Python implementation package.
+  - `skills/battle/spectator/`: canonical Vite/Pixi spectator.
+  - `skills/battle/docs/PROJECT_KNOWLEDGE.md`: long-form project state, but
+    should be reconciled against current receipts/GitHub readback.
+  - `artifacts/tickets/battle_remaining_gaps_ticket_receipt_20260801.md`:
+    ticket creation receipt for `#1141`-`#1150`.
+  - `artifacts/ask/battle_remaining_gaps_ticket_bundle_20260801.md`:
+    bundle used for the failed WebGPT ticket-planning ask.
+
+- **Recent Battle commits on local log**:
+  - `de60c26c2 battle: land exception_handling-incidental relaxation + method_replace template`
+  - `b0f03c3d3 battle: relax exception_handling to incidental + method_replace diff template`
+  - `7b7605f98 battle: land adaptive-lineage creator->reviewer retry onto canonical main`
+  - `69adcc4db battle: creator->reviewer retry for adaptive-lineage operator consistency`
+  - `f86be314a battle: intelligently merge stale-lane test edits onto canonical main`
+
+- **Claim language for next agent**:
+  - Say `mocked: no, live: local deterministic fixture` for `backend_eval`
+    proof only.
+  - Say `mocked: no, live: local TypeScript/Vitest source checks` for spectator
+    tests only.
+  - Do not say same-run E2E, production-ready, all Battle gaps closed, or full
+    adaptive efficacy until the corresponding receipts exist.
+
+Immutable Goal: NOT_MET
+
+---
+
+# Historical Handoff: Battle - main branch only
 
 Timestamp: 2026-07-29T22:16Z
 
