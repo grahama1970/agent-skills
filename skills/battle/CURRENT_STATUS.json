@@ -1,5 +1,28 @@
 {
   "blocked": [],
+  "decisions": [
+    {
+      "id": "terminal_semantics_local_mvp",
+      "issue_refs": [
+        1148
+      ],
+      "path": "skills/battle/docs/TERMINAL_SEMANTICS_LOCAL_MVP.md",
+      "receipt_requirement": "Operator-visible terminal success must be Judge/scorekeeper receipt-backed.",
+      "status": "DECIDED",
+      "supported_states": [
+        "BLUE_SUCCESS",
+        "RED_SUCCESS",
+        "INSUFFICIENT_EVIDENCE",
+        "BLOCKED",
+        "UNAVAILABLE"
+      ],
+      "unsupported_states": [
+        "kill",
+        "promotion",
+        "fastest_crash"
+      ]
+    }
+  ],
   "generated_by": {
     "command": "./skills/battle/run.sh current-status generate",
     "script": "skills/battle/scripts/current_status.py"
@@ -127,7 +150,7 @@
           "type:feature"
         ],
         "number": 1142,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: generate receipt-derived CURRENT_STATUS.json",
         "url": "https://github.com/grahama1970/agent-skills/issues/1142"
       },
@@ -328,7 +351,7 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 6,
+    "open_battle_label_count": 5,
     "open_battle_label_issues": [
       {
         "labels": [
@@ -396,20 +419,6 @@
         "state": "OPEN",
         "title": "Battle: add backend pause_after_round human-interjection contract",
         "url": "https://github.com/grahama1970/agent-skills/issues/1145"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:reporter",
-          "battle",
-          "lane:docs",
-          "route:documentation_or_report",
-          "type:feature"
-        ],
-        "number": 1142,
-        "state": "OPEN",
-        "title": "Battle: generate receipt-derived CURRENT_STATUS.json",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1142"
       }
     ]
   },
@@ -435,14 +444,6 @@
       ],
       "reason": "Same-run qualification does not prove adaptive improvement for Red and Blue.",
       "status": "OPEN"
-    },
-    {
-      "id": "terminal_semantics_decision",
-      "issue_refs": [
-        1148
-      ],
-      "reason": "Supported terminal semantics remain a product/documentation decision.",
-      "status": "OPEN"
     }
   ],
   "production_gaps": [
@@ -462,11 +463,11 @@
       "status": "OPEN"
     },
     {
-      "id": "terminal_semantics_policy",
+      "id": "terminal_semantics_implementation",
       "issue_refs": [
         1148
       ],
-      "status": "OPEN"
+      "status": "DECIDED_DOC_ONLY"
     }
   ],
   "proven": [
@@ -589,18 +590,22 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "c99d543936c5341e8576558daf10128e0d953405",
-    "commit": "d727819832f49fac557a165bcefa08bd769fac39",
+    "battle_tree": "9d6770b27700b7fe7cfb276db27e51a3741d0e62",
+    "commit": "20040dfe02395c01aa649dc2ac0a04f8ce55fb3a",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
     "battle_skill_contract": {
-      "exists": false,
+      "exists": true,
       "path": "skills/battle/SKILL.md"
     },
     "planning_bundle": {
       "exists": true,
       "path": "/home/graham/workspace/experiments/agent-skills/artifacts/ask/battle_remaining_gaps_ticket_bundle_20260801.md"
+    },
+    "terminal_semantics_decision": {
+      "exists": true,
+      "path": "skills/battle/docs/TERMINAL_SEMANTICS_LOCAL_MVP.md"
     }
   },
   "source_receipts": {
@@ -668,6 +673,14 @@
       "status": "UNSUPPORTED"
     },
     {
+      "claim": "kill_promotion_fastest_crash_supported",
+      "issue_refs": [
+        1148
+      ],
+      "reason": "Local MVP decision supports only Judge-backed success/blocked states.",
+      "status": "UNSUPPORTED"
+    },
+    {
       "claim": "fast_sanity_is_live_product_proof",
       "issue_refs": [
         1150
@@ -676,5 +689,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-01T12:53:39Z"
+  "updated_at": "2026-08-01T12:56:28Z"
 }

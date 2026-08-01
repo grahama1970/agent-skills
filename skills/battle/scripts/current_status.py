@@ -37,6 +37,7 @@ DEFAULT_RECEIPTS = {
 
 SOURCE_CONTEXT = {
     "battle_skill_contract": "skills/battle/SKILL.md",
+    "terminal_semantics_decision": "skills/battle/docs/TERMINAL_SEMANTICS_LOCAL_MVP.md",
     "planning_bundle": (
         "/home/graham/workspace/experiments/agent-skills/artifacts/ask/"
         "battle_remaining_gaps_ticket_bundle_20260801.md"
@@ -111,6 +112,12 @@ def _receipt(path: Path) -> dict[str, Any]:
     return item
 
 
+def _source_context_item(path: str) -> dict[str, Any]:
+    candidate = Path(path)
+    resolved = candidate if candidate.is_absolute() else REPO_ROOT / candidate
+    return {"path": path, "exists": resolved.is_file()}
+
+
 def _issue_ref(issue: dict[str, Any]) -> dict[str, Any]:
     return {
         "number": issue["number"],
@@ -164,8 +171,7 @@ def generate(out: Path) -> int:
             "battle_tree": _git(["rev-parse", "HEAD:skills/battle"]),
         },
         "source_context": {
-            key: {"path": value, "exists": Path(value).is_file()}
-            for key, value in SOURCE_CONTEXT.items()
+            key: _source_context_item(value) for key, value in SOURCE_CONTEXT.items()
         },
         "issue_state_at_generation": {
             "open_battle_label_count": len(open_issues),
@@ -266,12 +272,23 @@ def generate(out: Path) -> int:
                 "status": "OPEN",
                 "reason": "Same-run qualification does not prove adaptive improvement for Red and Blue.",
             },
+        ],
+        "decisions": [
             {
-                "id": "terminal_semantics_decision",
+                "id": "terminal_semantics_local_mvp",
                 "issue_refs": [1148],
-                "status": "OPEN",
-                "reason": "Supported terminal semantics remain a product/documentation decision.",
-            },
+                "status": "DECIDED",
+                "path": "skills/battle/docs/TERMINAL_SEMANTICS_LOCAL_MVP.md",
+                "supported_states": [
+                    "BLUE_SUCCESS",
+                    "RED_SUCCESS",
+                    "INSUFFICIENT_EVIDENCE",
+                    "BLOCKED",
+                    "UNAVAILABLE",
+                ],
+                "unsupported_states": ["kill", "promotion", "fastest_crash"],
+                "receipt_requirement": "Operator-visible terminal success must be Judge/scorekeeper receipt-backed.",
+            }
         ],
         "blocked": [],
         "unsupported": [
@@ -288,6 +305,12 @@ def generate(out: Path) -> int:
                 "reason": "Current live receipt proves same-run Arena/Tau/Judge/Pixi qualification, not adaptive effect.",
             },
             {
+                "claim": "kill_promotion_fastest_crash_supported",
+                "status": "UNSUPPORTED",
+                "issue_refs": [1148],
+                "reason": "Local MVP decision supports only Judge-backed success/blocked states.",
+            },
+            {
                 "claim": "fast_sanity_is_live_product_proof",
                 "status": "UNSUPPORTED",
                 "issue_refs": [1150],
@@ -297,7 +320,7 @@ def generate(out: Path) -> int:
         "production_gaps": [
             {"id": "staging_infrastructure_readiness", "issue_refs": [1149], "status": "OPEN"},
             {"id": "operator_human_interjection", "issue_refs": [1145, 1146], "status": "OPEN"},
-            {"id": "terminal_semantics_policy", "issue_refs": [1148], "status": "OPEN"},
+            {"id": "terminal_semantics_implementation", "issue_refs": [1148], "status": "DECIDED_DOC_ONLY"},
         ],
         "non_claims": [
             "This status does not claim production deployment readiness.",

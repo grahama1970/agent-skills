@@ -18,6 +18,10 @@ The generated artifact separates:
 - unsupported claims;
 - production gaps.
 
+Decision records linked from the generated status:
+
+- [`../TERMINAL_SEMANTICS_LOCAL_MVP.md`](../TERMINAL_SEMANTICS_LOCAL_MVP.md)
+
 Do not copy older handoff issue lists into new reports. Treat older goal files,
 project-knowledge notes, and reviewer bundles as historical unless the claim is
 restated in `CURRENT_STATUS.json` with a source receipt.
