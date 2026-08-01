@@ -212,7 +212,11 @@ def run(
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
         browser_lock_timeout=browser_lock_timeout,
-        execution_timeout_seconds=int(poll_timeout_seconds) if execute else 0,
+        # Lane execution budgets come from the per-handler envelopes in
+        # _roundtable_command_timeout; deriving them from --poll-timeout-seconds
+        # (default 120) starved every browser lane to a 300s wall (observed:
+        # webgpt/webgrok killed mid-generation at 120s effective submit).
+        execution_timeout_seconds=0,
         attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)
@@ -466,7 +470,11 @@ def compete(
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
         browser_lock_timeout=browser_lock_timeout,
-        execution_timeout_seconds=int(poll_timeout_seconds) if execute else 0,
+        # Lane execution budgets come from the per-handler envelopes in
+        # _roundtable_command_timeout; deriving them from --poll-timeout-seconds
+        # (default 120) starved every browser lane to a 300s wall (observed:
+        # webgpt/webgrok killed mid-generation at 120s effective submit).
+        execution_timeout_seconds=0,
         attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)

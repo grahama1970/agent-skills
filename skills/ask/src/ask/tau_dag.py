@@ -736,6 +736,17 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         ],
         },
     }
+    # Run the installed Tau's own contract + plan-semantics validators on the
+    # emitted DAG before any browser or provider work. Every layer skew this
+    # catches (illegal join shape agent-skills#1123, over-cap concurrency
+    # agent-skills#1134) previously surfaced only live, mid-run.
+    tau_validation = _tau_contract_validation(dag_path, input=input)
+    final_bundle["tau_contract_validation"] = tau_validation
+    if tau_validation.get("status") == "BLOCKED":
+        final_bundle["status"] = "BLOCKED"
+        final_bundle["blocked_reason"] = "tau_contract_validation_failed"
+        _write_json(run_dir / "compile-status.json", final_bundle)
+        return final_bundle
     _write_json(run_dir / "compile-status.json", final_bundle)
     # tau#113: READY must never be a false green. Assert the runtime artifacts
     # exist non-empty on disk before the bundle is handed to the caller.
@@ -745,6 +756,50 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         run_dir / "compile-status.json",
     )
     return final_bundle
+
+
+def _tau_contract_validation(dag_path: Path, *, input: TauDagCompileInput) -> dict[str, Any]:
+    """Validate the emitted contract with the installed Tau's validators."""
+
+    tau_root = Path(str(getattr(input, "tau_project_root", "") or DEFAULT_TAU_PROJECT_ROOT))
+    tau_python = tau_root / ".venv" / "bin" / "python3"
+    if not tau_python.is_file():
+        return {
+            "schema": "ask.tau_contract_validation.v1",
+            "status": "SKIPPED",
+            "reason": f"tau interpreter not found at {tau_python}",
+        }
+    probe = (
+        "import sys, json\n"
+        "from pathlib import Path\n"
+        "from tau_coding.project_dag import (\n"
+        "    load_dag_contract_payload, validate_dag_contract,\n"
+        "    validate_project_dag_plan_semantics,\n"
+        ")\n"
+        "p = Path(sys.argv[1])\n"
+        "try:\n"
+        "    validate_project_dag_plan_semantics(validate_dag_contract(load_dag_contract_payload(p)))\n"
+        "except Exception as exc:\n"
+        "    print(json.dumps({'ok': False, 'error': str(exc)[:2000]}))\n"
+        "    raise SystemExit(0)\n"
+        "print(json.dumps({'ok': True}))\n"
+    )
+    result = _run_command([str(tau_python), "-c", probe, str(dag_path)], cwd=tau_root)
+    payload = _json_or_none(result["stdout"])
+    if result["returncode"] != 0 or not isinstance(payload, dict):
+        return {
+            "schema": "ask.tau_contract_validation.v1",
+            "status": "SKIPPED",
+            "reason": f"validator did not run cleanly (rc {result['returncode']}): {str(result['stderr'])[:400]}",
+        }
+    if payload.get("ok") is True:
+        return {"schema": "ask.tau_contract_validation.v1", "status": "PASS"}
+    return {
+        "schema": "ask.tau_contract_validation.v1",
+        "status": "BLOCKED",
+        "error": payload.get("error"),
+        "message": "Installed Tau rejected the compiled DAG contract before dispatch.",
+    }
 
 
 def _assert_runtime_artifacts(*paths: Path) -> None:

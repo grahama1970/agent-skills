@@ -3295,7 +3295,15 @@ def _browser_provider_extract_command(
         return []
     if failure_code not in {MISSING_SENTINEL, BROWSER_HANDLER_TIMEOUT}:
         return []
-    sentinel = str(submit_meta.get("sentinel") or "").strip()
+    # A submit killed at the worker timeout never writes its final meta; the
+    # heartbeat is the durable record of the round's sentinel and acceptance.
+    heartbeat_path = meta_path.parent / "webgpt_heartbeat.json"
+    heartbeat: dict[str, Any] = {}
+    if heartbeat_path.is_file():
+        loaded = _read_json(heartbeat_path)
+        if isinstance(loaded, dict):
+            heartbeat = loaded
+    sentinel = str(submit_meta.get("sentinel") or heartbeat.get("sentinel") or "").strip()
     if not sentinel:
         return []
     submitted_field = f"submitted_to_{HANDLER_BACKENDS.get(handler, handler).replace('web', '')}"
@@ -3304,13 +3312,11 @@ def _browser_provider_extract_command(
         submitted = submitted or submit_meta.get("submitted_to_chatgpt") is True
     if handler == "webgrok":
         submitted = submitted or submit_meta.get("submitted_to_grok") is True
-    if not submitted:
+    if not submitted and heartbeat.get("submitted_at"):
         # A submit killed at the worker timeout leaves meta status "failed"
         # even when the prompt went in; the heartbeat's submitted_at is the
         # durable acceptance proof in that case.
-        heartbeat = _read_json(meta_path.parent / "webgpt_heartbeat.json")
-        if isinstance(heartbeat, dict) and heartbeat.get("submitted_at"):
-            submitted = True
+        submitted = True
     if not submitted and str(submit_meta.get("status") or "") != "missing_sentinel":
         return []
     tab_id = str(
@@ -4821,28 +4827,64 @@ def _write_browser_queue_state(
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _terminate_process_group(pid: int) -> None:
+def _descendant_pids(root_pid: int) -> list[int]:
+    """All descendants of root_pid, crossing setsid boundaries.
+
+    Surf submit scripts run their provider CLI under `setsid`, which moves it
+    out of the shell's process group; a plain killpg leaves that CLI alive and
+    holding the lane's tab lock (observed: orphaned `cli.cjs chatgpt`/`grok`
+    submits surviving the worker watchdog for 10+ minutes).
+    """
+    children: dict[int, list[int]] = {}
     try:
-        os.killpg(pid, signal.SIGTERM)
+        out = subprocess.run(
+            ["ps", "-eo", "pid=,ppid="], capture_output=True, text=True, timeout=10
+        ).stdout
+    except Exception:
+        return []
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        try:
+            pid, ppid = int(parts[0]), int(parts[1])
+        except ValueError:
+            continue
+        children.setdefault(ppid, []).append(pid)
+    found: list[int] = []
+    stack = [root_pid]
+    while stack:
+        current = stack.pop()
+        for child in children.get(current, []):
+            found.append(child)
+            stack.append(child)
+    return found
+
+
+def _signal_process_tree(pid: int, sig: int) -> None:
+    descendants = _descendant_pids(pid)
+    try:
+        os.killpg(pid, sig)
     except ProcessLookupError:
-        return
+        pass
     except PermissionError:
         try:
-            os.kill(pid, signal.SIGTERM)
+            os.kill(pid, sig)
         except ProcessLookupError:
-            return
+            pass
+    for child in descendants:
+        try:
+            os.kill(child, sig)
+        except (ProcessLookupError, PermissionError):
+            continue
+
+
+def _terminate_process_group(pid: int) -> None:
+    _signal_process_tree(pid, signal.SIGTERM)
 
 
 def _kill_process_group(pid: int) -> None:
-    try:
-        os.killpg(pid, signal.SIGKILL)
-    except ProcessLookupError:
-        return
-    except PermissionError:
-        try:
-            os.kill(pid, signal.SIGKILL)
-        except ProcessLookupError:
-            return
+    _signal_process_tree(pid, signal.SIGKILL)
 
 
 def _is_subagent_handler_args(args: argparse.Namespace) -> bool:
