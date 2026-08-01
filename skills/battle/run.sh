@@ -60,4 +60,9 @@ if [[ "${1:-}" == "human-interjection-proof" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/human_interjection_proof.py" "$@"
 fi
 
+if [[ "${1:-}" == "human-interjection-spectator-proof" ]]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/human-interjection-spectator-proof.sh" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"

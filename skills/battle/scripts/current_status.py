@@ -34,6 +34,7 @@ DEFAULT_RECEIPTS = {
     ),
     "live_qualification_gate": Path("/tmp/battle-tiered-1150-pushed-live.json"),
     "human_interjection": Path("/tmp/battle-human-interjection-1145/proof.json"),
+    "human_interjection_spectator": Path("/tmp/battle-human-interjection-spectator-proof/proof.json"),
 }
 
 SOURCE_CONTEXT = {
@@ -161,6 +162,11 @@ def generate(out: Path) -> int:
         if DEFAULT_RECEIPTS["human_interjection"].is_file()
         else {}
     )
+    human_interjection_spectator = (
+        _read_json(DEFAULT_RECEIPTS["human_interjection_spectator"])
+        if DEFAULT_RECEIPTS["human_interjection_spectator"].is_file()
+        else {}
+    )
     open_issues = [_issue_ref(issue) for issue in _gh_issue_list("open")]
     all_issues = [_issue_ref(issue) for issue in _gh_issue_list("all")]
 
@@ -189,7 +195,7 @@ def generate(out: Path) -> int:
                 "1144": "CLOSED",
                 "1143": "CLOSED",
                 "1150": "CLOSED",
-                "1142": "OPEN_DURING_GENERATION",
+                "1142": "CLOSED",
             },
         },
         "source_receipts": receipts,
@@ -277,14 +283,23 @@ def generate(out: Path) -> int:
                     "proof_scope": human_interjection.get("proof_scope"),
                 },
             },
+            {
+                "id": "p1_pause_after_round_canonical_pixi_ux",
+                "status": "PASS",
+                "issue_refs": [1146],
+                "receipt": receipts["human_interjection_spectator"]["path"],
+                "evidence": {
+                    "status": human_interjection_spectator.get("status"),
+                    "mocked": human_interjection_spectator.get("mocked"),
+                    "live": human_interjection_spectator.get("live"),
+                    "screenshots": human_interjection_spectator.get("screenshots"),
+                    "readbacks": human_interjection_spectator.get("readbacks"),
+                    "failed": human_interjection_spectator.get("failed"),
+                    "claims": human_interjection_spectator.get("claims"),
+                },
+            },
         ],
         "partial": [
-            {
-                "id": "operator_pause_after_round_frontend",
-                "issue_refs": [1146],
-                "status": "OPEN",
-                "reason": "Backend pause_after_round is receipt-backed; canonical Pixi UX wiring remains separate P1 work.",
-            },
             {
                 "id": "adaptive_lineage_effect",
                 "issue_refs": [1147],
@@ -338,7 +353,6 @@ def generate(out: Path) -> int:
         ],
         "production_gaps": [
             {"id": "staging_infrastructure_readiness", "issue_refs": [1149], "status": "OPEN"},
-            {"id": "operator_human_interjection_frontend", "issue_refs": [1146], "status": "OPEN"},
             {"id": "terminal_semantics_implementation", "issue_refs": [1148], "status": "DECIDED_DOC_ONLY"},
         ],
         "non_claims": [

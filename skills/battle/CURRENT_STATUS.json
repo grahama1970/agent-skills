@@ -107,7 +107,7 @@
           "type:feature"
         ],
         "number": 1145,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: add backend pause_after_round human-interjection contract",
         "url": "https://github.com/grahama1970/agent-skills/issues/1145"
       },
@@ -346,12 +346,12 @@
     ],
     "focused_p0_issues": {
       "1141": "CLOSED",
-      "1142": "OPEN_DURING_GENERATION",
+      "1142": "CLOSED",
       "1143": "CLOSED",
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 4,
+    "open_battle_label_count": 3,
     "open_battle_label_issues": [
       {
         "labels": [
@@ -393,20 +393,6 @@
         "state": "OPEN",
         "title": "Battle spectator: wire pause_after_round receipts into canonical Pixi UX",
         "url": "https://github.com/grahama1970/agent-skills/issues/1146"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:coder",
-          "battle",
-          "lane:be",
-          "route:backend_python_or_skill_runtime",
-          "type:feature"
-        ],
-        "number": 1145,
-        "state": "OPEN",
-        "title": "Battle: add backend pause_after_round human-interjection contract",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1145"
       }
     ]
   },
@@ -416,14 +402,6 @@
     "This status does not claim every remaining battle-labelled issue is closed."
   ],
   "partial": [
-    {
-      "id": "operator_pause_after_round_frontend",
-      "issue_refs": [
-        1146
-      ],
-      "reason": "Backend pause_after_round is receipt-backed; canonical Pixi UX wiring remains separate P1 work.",
-      "status": "OPEN"
-    },
     {
       "id": "adaptive_lineage_effect",
       "issue_refs": [
@@ -438,13 +416,6 @@
       "id": "staging_infrastructure_readiness",
       "issue_refs": [
         1149
-      ],
-      "status": "OPEN"
-    },
-    {
-      "id": "operator_human_interjection_frontend",
-      "issue_refs": [
-        1146
       ],
       "status": "OPEN"
     },
@@ -606,12 +577,52 @@
       ],
       "receipt": "/tmp/battle-human-interjection-1145/proof.json",
       "status": "PASS"
+    },
+    {
+      "evidence": {
+        "claims": {
+          "does_not_prove": [
+            "Tau execution pausing beyond the backend after-round application receipt.",
+            "Production auth, websocket fanout, or staging infrastructure readiness."
+          ],
+          "proves": [
+            "The canonical Pixi receipt route renders pause_after_round pending, accepted, applied, rejected, and unavailable states from generated backend receipt fields.",
+            "The canonical Pixi receipt route fails closed to missing_backend when pause_after_round backend fields are absent."
+          ]
+        },
+        "failed": [],
+        "live": true,
+        "mocked": false,
+        "readbacks": [
+          "readbacks/battle-004-pause-after-round-pending.json",
+          "readbacks/battle-004-pause-after-round-accepted.json",
+          "readbacks/battle-004-pause-after-round-applied.json",
+          "readbacks/battle-004-pause-after-round-rejected.json",
+          "readbacks/battle-004-pause-after-round-unavailable.json",
+          "readbacks/battle-004-pause-after-round-missing-backend.json"
+        ],
+        "screenshots": [
+          "screenshots/01-pending.png",
+          "screenshots/02-accepted.png",
+          "screenshots/03-applied.png",
+          "screenshots/04-rejected.png",
+          "screenshots/05-unavailable.png",
+          "screenshots/06-missing-backend.png"
+        ],
+        "status": "PASS"
+      },
+      "id": "p1_pause_after_round_canonical_pixi_ux",
+      "issue_refs": [
+        1146
+      ],
+      "receipt": "/tmp/battle-human-interjection-spectator-proof/proof.json",
+      "status": "PASS"
     }
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "2519adf175949e93f621cb97ef7474353cff6f02",
-    "commit": "0c887b2e7f9e07c605657e94431ee6cf40db3cc4",
+    "battle_tree": "2afebaabedc066b948d8764c8cfaf85d033afbd0",
+    "commit": "514548cb7cef738b1d96e14e648c113c09e9448e",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -654,6 +665,15 @@
       "path": "/tmp/battle-human-interjection-1145/proof.json",
       "schema": "battle.human_interjection_proof.v1",
       "sha256": "5f9ab127f18ea42c98ed16d99b27b0308238d507806edf2576a7134a0c4f10c2",
+      "status": "PASS"
+    },
+    "human_interjection_spectator": {
+      "exists": true,
+      "live": true,
+      "mocked": false,
+      "path": "/tmp/battle-human-interjection-spectator-proof/proof.json",
+      "schema": "battle.human_interjection_spectator_proof.v1",
+      "sha256": "5631edb3795d838ebf65f8da107a22720a285a1730477dd1bf34b529ccbdeb9e",
       "status": "PASS"
     },
     "live_qualification_gate": {
@@ -718,5 +738,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-01T12:59:34Z"
+  "updated_at": "2026-08-01T13:09:30Z"
 }

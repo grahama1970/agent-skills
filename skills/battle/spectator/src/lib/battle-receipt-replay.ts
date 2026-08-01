@@ -17,6 +17,12 @@ export const BATTLE_RECEIPT_REPLAY_FIXTURE_URLS = {
 	"battle-004-adaptive-lineage-v13": "/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json",
 	"battle-004-adaptive-memory-v14": "/battle-fixtures/battle-004-adaptive-memory-v14/battle.normalized_ux_fixture.json",
 	"battle-004-same-run-qualification": "/battle-fixtures/battle-004-same-run-qualification/battle.normalized_ux_fixture.json",
+	"battle-004-pause-after-round-pending": "/battle-fixtures/battle-004-pause-after-round-pending/battle.normalized_ux_fixture.json",
+	"battle-004-pause-after-round-accepted": "/battle-fixtures/battle-004-pause-after-round-accepted/battle.normalized_ux_fixture.json",
+	"battle-004-pause-after-round-applied": "/battle-fixtures/battle-004-pause-after-round-applied/battle.normalized_ux_fixture.json",
+	"battle-004-pause-after-round-rejected": "/battle-fixtures/battle-004-pause-after-round-rejected/battle.normalized_ux_fixture.json",
+	"battle-004-pause-after-round-unavailable": "/battle-fixtures/battle-004-pause-after-round-unavailable/battle.normalized_ux_fixture.json",
+	"battle-004-pause-after-round-missing-backend": "/battle-fixtures/battle-004-pause-after-round-missing-backend/battle.normalized_ux_fixture.json",
 } as const;
 
 export type BattleReceiptReplayFixtureKey = keyof typeof BATTLE_RECEIPT_REPLAY_FIXTURE_URLS;

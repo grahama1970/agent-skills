@@ -999,6 +999,35 @@ export type BattleSpriteThemeV1 = {
 	variants: Record<string, BattleSpriteThemeVariantV1>;
 };
 
+export type BattleHumanInterjectionState = "pending" | "accepted" | "applied" | "rejected" | "unavailable";
+
+export type BattleHumanInterjectionPanelItem = {
+	state: BattleHumanInterjectionState;
+	status: string;
+	label: string;
+	request_id?: string | null;
+	reason_code?: string | null;
+	receipt_path?: string | null;
+	receipt_schema?: string | null;
+	backend_receipt: boolean;
+	live: boolean;
+	mocked: boolean;
+};
+
+export type BattleHumanInterjectionPanelSource = {
+	schema: "battle.human_interjection_panel.v1";
+	source: "backend_receipts" | string;
+	run_id: string;
+	mocked: boolean;
+	live: boolean;
+	source_proof_receipt?: string | null;
+	states: BattleHumanInterjectionPanelItem[];
+	claims?: {
+		proves?: string[];
+		does_not_prove?: string[];
+	};
+};
+
 /** Versioned alias — schema battle.normalized_ux_fixture.v1 — see BATTLE_RACE_ENGINE_PIXI_SPIKE.md */
 export type BattleNormalizedUxFixture = {
 	schema: "battle.normalized_ux_fixture.v1";
@@ -1142,6 +1171,7 @@ export type BattleNormalizedUxFixture = {
 	};
 	leaderboard: LeaderboardEntry[];
 	receipts: BattleReceiptRef[];
+	human_interjection_panel?: BattleHumanInterjectionPanelSource;
 	bluePatchActions?: BluePatchAction[];
 	battle_timeline_control?: BattleTimelineControlV1;
 	validation?: {
