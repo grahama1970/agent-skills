@@ -65,7 +65,7 @@
           "type:question"
         ],
         "number": 1148,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: decide supported terminal semantics for local MVP",
         "url": "https://github.com/grahama1970/agent-skills/issues/1148"
       },
@@ -351,7 +351,7 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 5,
+    "open_battle_label_count": 4,
     "open_battle_label_issues": [
       {
         "labels": [
@@ -365,18 +365,6 @@
         "state": "OPEN",
         "title": "Battle: emit bounded staging infrastructure readiness receipt",
         "url": "https://github.com/grahama1970/agent-skills/issues/1149"
-      },
-      {
-        "labels": [
-          "agent:reporter",
-          "battle",
-          "route:documentation_or_report",
-          "type:question"
-        ],
-        "number": 1148,
-        "state": "OPEN",
-        "title": "Battle: decide supported terminal semantics for local MVP",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1148"
       },
       {
         "labels": [
@@ -429,12 +417,11 @@
   ],
   "partial": [
     {
-      "id": "operator_pause_after_round",
+      "id": "operator_pause_after_round_frontend",
       "issue_refs": [
-        1145,
         1146
       ],
-      "reason": "Backend pause_after_round and canonical Pixi UX wiring remain separate P1 issues.",
+      "reason": "Backend pause_after_round is receipt-backed; canonical Pixi UX wiring remains separate P1 work.",
       "status": "OPEN"
     },
     {
@@ -455,9 +442,8 @@
       "status": "OPEN"
     },
     {
-      "id": "operator_human_interjection",
+      "id": "operator_human_interjection_frontend",
       "issue_refs": [
-        1145,
         1146
       ],
       "status": "OPEN"
@@ -586,12 +572,46 @@
       ],
       "receipt": "/tmp/battle-tiered-1150-pushed-live.json",
       "status": "PASS"
+    },
+    {
+      "evidence": {
+        "case_statuses": {
+          "accepted": "ACCEPTED",
+          "application": "APPLIED",
+          "duplicate": "DUPLICATE_ACCEPTED",
+          "invalid_auth": "REJECTED",
+          "invalid_timing": "REJECTED",
+          "wrong_run": "REJECTED"
+        },
+        "live": true,
+        "mocked": false,
+        "proof_scope": {
+          "does_not_prove": [
+            "Frontend controls.",
+            "Tau or orchestrator pause execution beyond the recorded after-round contract.",
+            "Arbitrary redirect or persona-change commands."
+          ],
+          "proves": [
+            "pause_after_round accepts an authenticated current-run request at a round boundary.",
+            "duplicate request ids are idempotent.",
+            "invalid auth, invalid timing, and wrong-run requests fail closed with receipts.",
+            "Judge/round receipts are not mutated by interjection handling."
+          ]
+        },
+        "status": "PASS"
+      },
+      "id": "p1_pause_after_round_backend_contract",
+      "issue_refs": [
+        1145
+      ],
+      "receipt": "/tmp/battle-human-interjection-1145/proof.json",
+      "status": "PASS"
     }
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "9d6770b27700b7fe7cfb276db27e51a3741d0e62",
-    "commit": "20040dfe02395c01aa649dc2ac0a04f8ce55fb3a",
+    "battle_tree": "2519adf175949e93f621cb97ef7474353cff6f02",
+    "commit": "0c887b2e7f9e07c605657e94431ee6cf40db3cc4",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -625,6 +645,15 @@
       "path": "/tmp/battle-tiered-1150-pushed-fast.json",
       "schema": "battle.tiered_fast_sanity_gate.v1",
       "sha256": "4f192433d7375761dc03017774a0ab07c5dc7daedff6d47baa78ce0f429849a4",
+      "status": "PASS"
+    },
+    "human_interjection": {
+      "exists": true,
+      "live": true,
+      "mocked": false,
+      "path": "/tmp/battle-human-interjection-1145/proof.json",
+      "schema": "battle.human_interjection_proof.v1",
+      "sha256": "5f9ab127f18ea42c98ed16d99b27b0308238d507806edf2576a7134a0c4f10c2",
       "status": "PASS"
     },
     "live_qualification_gate": {
@@ -689,5 +718,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-01T12:56:28Z"
+  "updated_at": "2026-08-01T12:59:34Z"
 }

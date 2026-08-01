@@ -33,6 +33,7 @@ DEFAULT_RECEIPTS = {
         "qualification-receipt.json"
     ),
     "live_qualification_gate": Path("/tmp/battle-tiered-1150-pushed-live.json"),
+    "human_interjection": Path("/tmp/battle-human-interjection-1145/proof.json"),
 }
 
 SOURCE_CONTEXT = {
@@ -155,6 +156,11 @@ def generate(out: Path) -> int:
         if DEFAULT_RECEIPTS["project_agent_dispatch"].is_file()
         else {}
     )
+    human_interjection = (
+        _read_json(DEFAULT_RECEIPTS["human_interjection"])
+        if DEFAULT_RECEIPTS["human_interjection"].is_file()
+        else {}
+    )
     open_issues = [_issue_ref(issue) for issue in _gh_issue_list("open")]
     all_issues = [_issue_ref(issue) for issue in _gh_issue_list("all")]
 
@@ -258,13 +264,26 @@ def generate(out: Path) -> int:
                     "errors": live_gate.get("errors"),
                 },
             },
+            {
+                "id": "p1_pause_after_round_backend_contract",
+                "status": "PASS",
+                "issue_refs": [1145],
+                "receipt": receipts["human_interjection"]["path"],
+                "evidence": {
+                    "status": human_interjection.get("status"),
+                    "mocked": human_interjection.get("mocked"),
+                    "live": human_interjection.get("live"),
+                    "case_statuses": human_interjection.get("case_statuses"),
+                    "proof_scope": human_interjection.get("proof_scope"),
+                },
+            },
         ],
         "partial": [
             {
-                "id": "operator_pause_after_round",
-                "issue_refs": [1145, 1146],
+                "id": "operator_pause_after_round_frontend",
+                "issue_refs": [1146],
                 "status": "OPEN",
-                "reason": "Backend pause_after_round and canonical Pixi UX wiring remain separate P1 issues.",
+                "reason": "Backend pause_after_round is receipt-backed; canonical Pixi UX wiring remains separate P1 work.",
             },
             {
                 "id": "adaptive_lineage_effect",
@@ -319,7 +338,7 @@ def generate(out: Path) -> int:
         ],
         "production_gaps": [
             {"id": "staging_infrastructure_readiness", "issue_refs": [1149], "status": "OPEN"},
-            {"id": "operator_human_interjection", "issue_refs": [1145, 1146], "status": "OPEN"},
+            {"id": "operator_human_interjection_frontend", "issue_refs": [1146], "status": "OPEN"},
             {"id": "terminal_semantics_implementation", "issue_refs": [1148], "status": "DECIDED_DOC_ONLY"},
         ],
         "non_claims": [
