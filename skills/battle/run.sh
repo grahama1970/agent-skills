@@ -50,4 +50,9 @@ if [[ "${1:-}" == "same-run-qualification" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/same_run_qualification.py" "$@"
 fi
 
+if [[ "${1:-}" == "current-status" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/current_status.py" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"

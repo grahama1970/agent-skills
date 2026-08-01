@@ -3,6 +3,15 @@
 **Last updated:** 2026-07-12 16:34 by agent
 **Status:** Active development
 
+## Current Status Addendum (2026-08-01)
+
+Authoritative current status is now generated from named receipts and GitHub
+issue state in
+[`../CURRENT_STATUS.json`](../CURRENT_STATUS.json), with operator notes in
+[`status/README.md`](status/README.md). Historical issue lists below may be
+stale; do not treat a ticket as an open blocker unless it appears as open in
+`CURRENT_STATUS.json`.
+
 ## Current State Addendum (2026-07-28)
 
 Authoritative status: see
