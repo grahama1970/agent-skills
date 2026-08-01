@@ -49,6 +49,9 @@
           "agent-work",
           "battle",
           "lane:ops",
+          "maintainer-active",
+          "maintainer-blocked",
+          "needs-human",
           "route:ops_or_scheduler",
           "type:feature"
         ],
@@ -75,6 +78,9 @@
           "agent:coder",
           "battle",
           "lane:be",
+          "maintainer-active",
+          "maintainer-blocked",
+          "needs-human",
           "route:backend_python_or_skill_runtime",
           "type:feature"
         ],
@@ -358,6 +364,9 @@
           "agent-work",
           "battle",
           "lane:ops",
+          "maintainer-active",
+          "maintainer-blocked",
+          "needs-human",
           "route:ops_or_scheduler",
           "type:feature"
         ],
@@ -372,6 +381,9 @@
           "agent:coder",
           "battle",
           "lane:be",
+          "maintainer-active",
+          "maintainer-blocked",
+          "needs-human",
           "route:backend_python_or_skill_runtime",
           "type:feature"
         ],
@@ -607,8 +619,8 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "849c45b3a97e355d82c942d3f4489ad75b7e62b6",
-    "commit": "34c0d808ae7651fdfc8a2c108e2d1ec966fbb3da",
+    "battle_tree": "3960b0e3159d6569686a103862272bf49048e037",
+    "commit": "6266ba4e6a2442d7755c9f64b8e5491215d456d1",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -724,5 +736,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-01T13:13:09Z"
+  "updated_at": "2026-08-01T14:34:02Z"
 }
