@@ -40,4 +40,9 @@ if [[ "${1:-}" == "backend-eval" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/backend_eval.py" "$@"
 fi
 
+if [[ "${1:-}" == "tiered-gate" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/tiered_qualification.py" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"
