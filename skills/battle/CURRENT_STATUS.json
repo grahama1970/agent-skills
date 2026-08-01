@@ -621,8 +621,8 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "2afebaabedc066b948d8764c8cfaf85d033afbd0",
-    "commit": "514548cb7cef738b1d96e14e648c113c09e9448e",
+    "battle_tree": "39e9615c410e0feb2c1c9c29cfb310b03e261a0b",
+    "commit": "2ec0b8f7f69ca7f332e8ace5d8595ebf92192a6f",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -673,7 +673,7 @@
       "mocked": false,
       "path": "/tmp/battle-human-interjection-spectator-proof/proof.json",
       "schema": "battle.human_interjection_spectator_proof.v1",
-      "sha256": "5631edb3795d838ebf65f8da107a22720a285a1730477dd1bf34b529ccbdeb9e",
+      "sha256": "7f6f37cd87d422f7ef03b21e65f321ce566bb0218d58afd6c53258f15339facc",
       "status": "PASS"
     },
     "live_qualification_gate": {
@@ -738,5 +738,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-01T13:09:30Z"
+  "updated_at": "2026-08-01T13:11:59Z"
 }

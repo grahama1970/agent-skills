@@ -37,6 +37,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
+rm -rf "$BACKEND_DIR" "$FIXTURE_DIR"
 mkdir -p "$OUT_DIR" "$BACKEND_DIR" "$FIXTURE_DIR"
 
 if [[ -n "${BATTLE_HOST:-}" ]]; then
