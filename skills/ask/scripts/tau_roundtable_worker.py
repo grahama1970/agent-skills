@@ -53,7 +53,9 @@ SURF_PROVIDER_RESULT_PROVIDERS = {
 }
 HANDLER_EXTRACT_COMMANDS = {
     "webgpt": "webgpt.extract",
-    "webgemini": "gemini.extract",
+    # webgemini intentionally absent: the surf CLI implements no gemini.extract
+    # (verified 2026-08-01: "Unknown tool"), so naming it produced unrunnable
+    # recovery packets. Gemini recovery is a targeted model-response DOM read.
     "webgrok": "grok.extract",
 }
 HANDLER_EXTRACT_WAIT_SUPPORTED = {"webgpt", "webgrok"}
