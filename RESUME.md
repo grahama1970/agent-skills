@@ -12,7 +12,7 @@ I build agentic AI systems for defense, aerospace, and compliance where outputs 
 Much of my current client work is export-controlled, so client and program details are withheld. Publicly releasable independent engineering is at github.com/grahama1970:
 
 - tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action.
-- pdf_oxide (major contributor; fork of yfedoseev/pdf_oxide) — Rust PDF toolkit: built the Python pipeline/plugin system, PDF-cloning fixture generation, and Arango/embeddings/Lean 4 enrichment layers on my fork (430 commits). Upstream's published benchmark: 0.8ms mean/doc on a 3,830-file public corpus.
+- pdf_oxide — my heavily diverged fork of yfedoseev/pdf_oxide (independent since Mar 2026): 430 commits and ~137K lines added, including Rust-core changes, a full Python pipeline/plugin system, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling.
 - agent-skills — 330+ reusable agent skills and 70+ bounded worker roles, portable across Claude Code, Codex, and Gemini. Public repo, private runtime — effectively my living resume.
 - Private, regulated side: an ArangoDB agent-memory platform — approximately 219K evidence-grounded question–reasoning–answer records across 7K+ security-control records (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND, SPARTA), hybrid BM25 + vector + graph recall over 2.2M source chunks; a corpus of ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval.
 
@@ -30,7 +30,7 @@ Buffalo, NY based (hybrid/onsite there, or remote). Open to contract engagements
 Feb 2025 - Present
 Independent AI engineering practice. Clients are primarily export-controlled (ITAR) defense/aerospace — names withheld; publicly releasable engineering is at github.com/grahama1970.
 - Built tau, a receipt-gated multi-agent orchestration harness: goals compile to typed DAG contracts; every agent handoff must produce a schema-valid receipt, hashed evidence artifact, or validator result — no receipt, no action.
-- Major contributor to pdf_oxide (fork of yfedoseev/pdf_oxide, MIT/Apache-2.0): built the Python pipeline/plugin system, PDF-cloning fixture generation, and knowledge-graph/embeddings enrichment layers — 430 commits on my fork atop the upstream Rust core.
+- Develop a heavily diverged fork of pdf_oxide (origin: yfedoseev/pdf_oxide, MIT/Apache-2.0; independent since Mar 2026): 430 commits, ~137K lines added — Rust-core changes, full Python pipeline/plugin system, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling.
 - Authored agent-skills: 330+ reusable agent capabilities (compliance evidence mapping, document AI, LLM evaluation, retrieval) and 70+ bounded worker roles — public repo, private runtime.
 - Built an ArangoDB agent-memory platform (private, regulated): ~219K evidence-grounded QRA records across 7K+ security-control records; hybrid BM25 + vector + multi-hop graph recall over 2.2M source chunks; ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval.
 - Core contributor to pi-mono (open-source agent framework/TUI): extension system, agent runtime, and TUI harness work, Feb–Jul 2026.
@@ -57,7 +57,7 @@ Mar 2005 - 2016
 Client work is mostly export-controlled, so here is the public, verifiable side — including the fun stuff:
 - agent-skills — my living resume: 330+ reusable agent skills, 70+ worker roles. Public repo, private runtime. https://github.com/grahama1970/agent-skills
 - tau — receipt-gated multi-agent harness. "Agents hallucinate. Tau contains them." https://github.com/grahama1970/tau
-- pdf_oxide — my fork of yfedoseev's Rust PDF toolkit: Python pipeline/plugins, fixture generation, KG/embeddings enrichment (430 commits). https://github.com/grahama1970/pdf_oxide
+- pdf_oxide — heavily diverged fork of yfedoseev's Rust PDF toolkit (430 commits, ~137K lines added: Rust-core changes, Python pipeline, PDF cloning, NIST validation). https://github.com/grahama1970/pdf_oxide
 - scillm, extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public.
 
 ## TOP SKILLS
