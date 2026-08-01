@@ -8,7 +8,7 @@ OUT_DIR="$TMP_ROOT/battle-001"
 
 export BATTLE_STORAGE_ROOT="$STORAGE_ROOT"
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$STORAGE_ROOT/.venv}"
-export PYTHONPATH="$SCRIPT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="$SCRIPT_DIR/src:$SCRIPT_DIR/..${PYTHONPATH:+:$PYTHONPATH}"
 
 mkdir -p "$STORAGE_ROOT" "$TMP_ROOT"
 rm -rf "$OUT_DIR"
@@ -43,11 +43,14 @@ uv run --project "$SCRIPT_DIR" python - <<'PY'
 import battle_skill
 from battle_skill.cli import app
 from battle_skill.config import SKILL_DIR, ARTIFACTS_DIR
+from battle_skill.patch_writer import write_patch
 
 assert app is not None
+assert callable(write_patch)
 assert SKILL_DIR.name == "battle", SKILL_DIR
 assert str(ARTIFACTS_DIR).startswith("/mnt/storage12tb/skills/battle"), ARTIFACTS_DIR
 print("BATTLE_IMPORT_PASS")
+print("BATTLE_PATCH_WRITER_IMPORT_PASS")
 PY
 
 echo "4. Checking CLI help and fail-closed missing fixture"
