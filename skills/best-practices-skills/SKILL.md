@@ -296,6 +296,61 @@ metadata for skill-maintainer and `/skills-ci`.
    - Do not summarize skipped routes as success. Skipped required release checks are
      release blockers; skipped non-required checks are coverage gaps.
 
+## Typed Seam Contracts (Multi-Layer Skills, NON-NEGOTIABLE)
+
+Any skill whose workflow crosses a boundary — into another skill, a runtime
+(Tau), a transport (Surf), a copied worker script, or a subprocess — MUST
+validate every artifact that crosses that boundary with a typed model at the
+**producer** side, and the validation MUST be unignorable.
+
+Derived from the 2026-07-31/08-01 /ask incident cluster: seven distinct
+outages (agent-skills #1123, #1124, #1134–#1139) were all the same failure
+class — layer N emitted something layer N+1 rejects or misreads, nothing
+checked the seam, and the drift surfaced hours later as an unrelated symptom
+(silent hour-long polls, wrong browser tab closed, unrecoverable seats).
+
+Rules:
+
+1. **One typed model per crossing artifact.** Pydantic models for package
+   code; stdlib `@dataclass` with an explicit `validate()` for scripts that
+   must stay copy-safe/self-contained. Ad hoc dict poking is not validation.
+2. **Producer-side, not consumer-side.** The producer runs the check before
+   emitting, so the violation is attributed to the code that drifted, with
+   its context intact. Where feasible, run the **consumer's actual
+   validator** (e.g. /ask runs installed Tau's `validate_dag_contract` on
+   every emitted DAG before any browser opens).
+3. **Unignorable: pass, self-heal, or raise.** Exactly three outcomes.
+   A violation first gets a deterministic, narrow repair attempt derived
+   from a known failure class; a successful repair is re-validated and
+   recorded (`SELF_HEALED` + the exact repairs). Anything else raises /
+   exits non-zero so the orchestrator fails the step closed. No advisory
+   warnings — a drifting agent will ignore them.
+4. **Stamp the pass.** A validated artifact carries a
+   `seam_validation: {kind, status: PASS}` receipt so downstream readers can
+   distinguish "validated" from "never checked".
+5. **Cross-field truth checks belong in the model.** `READY` requires the
+   artifacts that READY implies; `ok: true` requires `status: PASS`; ids
+   must be shaped like the ids the consumer resolves. Field presence alone
+   does not catch lying summaries.
+6. **Emitted commands must be runnable.** Any artifact containing a command
+   for a human or agent to run (recovery packets, `next_command`,
+   `rebind_command`) is validated for runnability at emission: argv[0]
+   exists and is executable, tool names exist in the installed target skill.
+   A rejected command is preserved with its reason, never silently emptied.
+7. **Copied code is a seam.** If a skill copies a worker/script into a run
+   directory, the executor hash-compares the copy against the source before
+   dispatch and refreshes stale copies, recording the swap.
+8. **Test fixtures speak the real contract.** When a seam contract lands,
+   fixtures that fabricated cross-boundary payloads must be upgraded to the
+   production shape — the contract refusing old fixtures is the contract
+   working, not a regression.
+
+Reference implementation: `skills/ask/src/ask/seam_models.py` (pydantic,
+`enforce()`/`SeamViolation`) plus `HandoffContract`/`RecoveryPacketContract`
+dataclasses in `skills/ask/scripts/tau_roundtable_worker.py`, wired at the
+compile-return, lifecycle-write, execution-write, handoff-emission, and
+recovery-packet seams.
+
 ## Project State / Readiness Report Standard
 
 Skills that orchestrate other skills, external services, Docker stacks, or long-running
@@ -541,6 +596,12 @@ recommendation, represented in `references/rules.yml`.
   entrypoints, persist machine-readable proof artifacts, and fail closed when a
   required downstream receipt is missing. A generated request file is not a live
   proof.
+- Multi-layer skills validate every boundary-crossing artifact with a typed
+  model at the producer (see "Typed Seam Contracts"): pydantic in package
+  code, `@dataclass` + `validate()` in copy-safe scripts; violations
+  self-heal-with-record or raise — never warn-and-continue; validated
+  artifacts carry a `seam_validation` receipt; emitted commands are checked
+  runnable before emission.
 - Skills that require evals provide `fixtures/agentic_eval.json` or delegate to
   an evaluation skill such as `agentic-evals`; skills that do not require evals
   document a concrete `eval_not_required` rationale.
