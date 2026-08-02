@@ -340,6 +340,16 @@ def run(
         or (isinstance(provider_gate, dict) and provider_gate.get("live") is True)
         or (isinstance(browser_availability, dict) and browser_availability.get("live") is True)
     )
+    if (
+        isinstance(execution, dict)
+        and execution.get("schema") == "ask.tau_dag_execution.v1"
+        and "seam_validation" not in execution
+    ):
+        # Blocked-execution builders bypass run_tau_dag_bundle; enforce the
+        # same typed seam contract on their output before it leaves the CLI.
+        from .seam_models import enforce as _enforce_seam
+
+        execution = _enforce_seam("ask.tau_dag_execution.v1", execution)
     output = {
         "schema": "ask.tau_dag_cli_result.v1",
         "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),
@@ -567,6 +577,16 @@ def compete(
 
     if execute:
         _cleanup_browser_lifecycle(lifecycle)
+    if (
+        isinstance(execution, dict)
+        and execution.get("schema") == "ask.tau_dag_execution.v1"
+        and "seam_validation" not in execution
+    ):
+        # Blocked-execution builders bypass run_tau_dag_bundle; enforce the
+        # same typed seam contract on their output before it leaves the CLI.
+        from .seam_models import enforce as _enforce_seam
+
+        execution = _enforce_seam("ask.tau_dag_execution.v1", execution)
     output = {
         "schema": "ask.tau_dag_cli_result.v1",
         "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),
