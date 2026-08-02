@@ -4,7 +4,8 @@
 
 > **Quick Links:** [Browse Skills](skills/) | [View Agents](agents/) |
 > [Explore Personas](personas/) |
-> [Check Maintenance Leads](reports/agent-maintainer/latest.md)
+> [Check Maintenance Leads](reports/agent-maintainer/latest.md) |
+> [About the author / hiring](RESUME.md)
 
 **Agent Skills** is my shared toolbox and playground for agent work: reusable
 capabilities, bounded workers, persona contracts, and lifecycle hooks. I've
@@ -34,6 +35,7 @@ Pick the path that matches what you want to explore:
 | Explore identities | [`personas/`](personas/) for registry records, memory probes, and voice-readiness evidence |
 | Borrow safety rails | [`hooks/`](hooks/) for quality gates, memory-first rules, and completion discipline |
 | Find maintenance leads | [`reports/agent-maintainer/latest.md`](reports/agent-maintainer/latest.md) for triage notes and possible follow-up work |
+| Know who built this | [`RESUME.md`](RESUME.md) — the author's resume; this repo is the working evidence behind it |
 
 ```bash
 # Find skill contracts
