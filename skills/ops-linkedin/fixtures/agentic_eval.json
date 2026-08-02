@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "skill": "ops-linkedin",
+  "trials": 3,
+  "proof_scope": "local request validation, draft preparation, fail-closed claim gating, and bounded human attestation through the real CLI; no LinkedIn network or browser access",
+  "claims": {
+    "proves": "the skill prepares typed local handoffs, refuses unsupported evidence-sensitive requests, and never upgrades a human attestation into platform verification",
+    "does_not_prove": "that LinkedIn accepted, displayed, sent, or delivered any action, or that an official LinkedIn API integration is authorized"
+  },
+  "cases": [
+    {
+      "name": "sanity-gates",
+      "type": "positive",
+      "command": ["bash", "../sanity.sh"],
+      "expected": {"exit_code": 0, "stdout_contains": ["Result: PASS"]}
+    },
+    {
+      "name": "policy-declares-draft-only-posture",
+      "type": "positive",
+      "command": ["bash", "-c", "OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh policy"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "draft-and-human-handoff",
+          "Automated access to LinkedIn pages or DOM content"
+        ]
+      }
+    },
+    {
+      "name": "prepared-post-is-not-executed",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "d=$(mktemp -d); OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh prepare ../assets/examples/publish-post.json -o $d/p.json >/dev/null; grep -E '\"status\": \"PREPARED\"|\"execution_claim\": \"NOT_EXECUTED\"|\"platform_verified\": false' $d/p.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PREPARED", "NOT_EXECUTED", "platform_verified"]
+      }
+    },
+    {
+      "name": "unsupported-profile-claim-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "d=$(mktemp -d); OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh prepare ../assets/examples/profile-update-blocked.json -o $d/p.json >/dev/null; rc=$?; grep BLOCKED_UNVERIFIED_CLAIMS $d/p.json; echo EXIT=$rc"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["BLOCKED_UNVERIFIED_CLAIMS", "EXIT=3"]
+      }
+    },
+    {
+      "name": "attestation-without-explicit-confirmation-is-refused",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "d=$(mktemp -d); OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh prepare ../assets/examples/publish-post.json -o $d/p.json >/dev/null; OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh attest $d/p.json --actor eval 2>&1; echo EXIT=$?"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["explicit --confirm-human-completed is required", "EXIT=3"]
+      }
+    },
+    {
+      "name": "human-attestation-never-claims-platform-proof",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "d=$(mktemp -d); OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh prepare ../assets/examples/publish-post.json -o $d/p.json >/dev/null; OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh attest $d/p.json --actor eval --confirm-human-completed -o $d/c.json >/dev/null; grep -E '\"execution_claim\": \"USER_ATTESTED_MANUAL_ACTION\"|\"platform_verified\": false' $d/c.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["USER_ATTESTED_MANUAL_ACTION", "platform_verified"]
+      }
+    }
+  ]
+}

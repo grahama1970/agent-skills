@@ -122,3 +122,12 @@ capabilities:
   progress-tracking:
     providers:
       - task-monitor
+  linkedin-content-drafting:
+    providers:
+      - ops-linkedin
+  linkedin-manual-handoff:
+    providers:
+      - ops-linkedin
+  linkedin-profile-governance:
+    providers:
+      - ops-linkedin
