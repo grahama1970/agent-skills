@@ -1,0 +1,17 @@
+{
+  "schema_version": "ops-linkedin.request.v1",
+  "lane": "profile",
+  "action": "profile-update",
+  "content": {
+    "title": "About opening",
+    "text": "Principal AI architect delivering production systems at exceptional scale."
+  },
+  "claims": [
+    {
+      "claim_id": "scale-claim",
+      "text": "Delivered production systems at exceptional scale.",
+      "status": "needs-source",
+      "source_refs": []
+    }
+  ]
+}
