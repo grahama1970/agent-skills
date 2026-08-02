@@ -2850,6 +2850,16 @@ def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
             provider="chutes",
             auth="scillm_proxy_bearer",
         )
+    if lower.startswith("opencode-go/"):
+        # OpenCode Go chat models route through the same SciLLM proxy by
+        # model name; Tau's adapter owns the transport (operator 2026-08-02:
+        # /tau auto-handles opencode, /ask supports it as a named seat).
+        return ScillmModelRoute(
+            requested_model=requested,
+            model=requested,
+            provider="opencode-go",
+            auth="scillm_proxy_bearer",
+        )
     if lower.startswith(("gpt-5.6", "gpt-5-6")):
         requested_effort = "xhigh" if "xhigh" in lower else None
         return ScillmModelRoute(
@@ -3191,6 +3201,8 @@ def _infer_provider_hint_from_model(model: str) -> str:
     lower = model.strip().lower()
     if lower.startswith(("deepseek-ai/", "qwen/", "moonshotai/", "zai-org/")):
         return "chutes"
+    if lower.startswith("opencode-go/"):
+        return "opencode-go"
     return ""
 
 
