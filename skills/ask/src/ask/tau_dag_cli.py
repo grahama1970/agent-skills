@@ -1089,6 +1089,27 @@ def _provision_browser_lifecycle(
         created_tabs.append({"handler": handler, "project": project, "tab_id": tab_id, "url": BROWSER_FRESH_URLS[handler], "window_id": window_id})
         _replace_handler_project(handler_projects, handler, project)
 
+    # Provisioning-to-gate identity guard (#1139): the handler gate resolves
+    # these ids minutes later through tab.list; twice a run's freshly created
+    # tabs were already gone by then, blocking pre-provider with no clue when
+    # they vanished. Re-verify each id NOW through the same entrypoint; a
+    # missing tab gets ONE recreate, then the run blocks with the mismatch
+    # named at the moment it exists.
+    identity_guard = _verify_created_tabs(
+        surf_run,
+        created_tabs,
+        commands=commands,
+        lock_timeout_seconds=lock_timeout_seconds,
+        window_id=window_id,
+    )
+    if identity_guard.get("blocked"):
+        lifecycle = _lifecycle_blocked(
+            mode, run_dir, "tab_vanished_after_creation", commands, created_tabs, window_id=window_id
+        )
+        lifecycle["identity_guard"] = identity_guard
+        _write_lifecycle(run_dir, lifecycle)
+        return lifecycle
+
     for tab in created_tabs:
         bound = _lifecycle_command(
             [
@@ -1178,6 +1199,77 @@ def _read_json_file(path: Path) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+
+
+def _verify_created_tabs(
+    surf_run: Path,
+    created_tabs: list[dict[str, Any]],
+    *,
+    commands: list[dict[str, Any]],
+    lock_timeout_seconds: int,
+    window_id: str | None,
+) -> dict[str, Any]:
+    """Verify every created tab id via tab.list; recreate a missing tab once."""
+
+    def live_ids() -> set[str] | None:
+        listing = _lifecycle_command(
+            [str(surf_run), "tab.list", "--json"],
+            cwd=surf_run.parent,
+            timeout_seconds=60,
+        )
+        commands.append(listing)
+        if listing["returncode"] != 0:
+            return None
+        payload = _json_or_text(listing["stdout"])
+        if not isinstance(payload, list):
+            return None
+        return {str(t.get("id")) for t in payload if isinstance(t, dict)}
+
+    ids = live_ids()
+    if ids is None:
+        # Cannot verify: do not block on the guard's own failure; the gate
+        # will re-check later exactly as before.
+        return {"status": "UNVERIFIED", "blocked": False}
+    guard: dict[str, Any] = {"status": "PASS", "blocked": False, "checks": []}
+    for tab in created_tabs:
+        tab_id = str(tab.get("tab_id"))
+        if tab_id in ids:
+            guard["checks"].append({"tab_id": tab_id, "handler": tab.get("handler"), "present": True})
+            continue
+        recreate_cmd = [str(surf_run), "tab.new", str(tab.get("url")), "--json", "--background"]
+        if window_id:
+            recreate_cmd.extend(["--window-id", str(window_id)])
+        recreate_cmd.extend(["--lock-timeout", str(lock_timeout_seconds)])
+        recreated = _lifecycle_command(recreate_cmd, cwd=surf_run.parent, timeout_seconds=120)
+        commands.append(recreated)
+        new_id = _extract_tab_id(_json_or_text(recreated["stdout"])) if recreated["returncode"] == 0 else ""
+        ids_after = live_ids() or set()
+        if new_id and new_id in ids_after:
+            guard["checks"].append(
+                {
+                    "tab_id": tab_id,
+                    "handler": tab.get("handler"),
+                    "present": False,
+                    "action": "recreated",
+                    "new_tab_id": new_id,
+                }
+            )
+            tab["tab_id"] = new_id
+            tab["recreated_from"] = tab_id
+            guard["status"] = "SELF_HEALED"
+            continue
+        guard["checks"].append(
+            {
+                "tab_id": tab_id,
+                "handler": tab.get("handler"),
+                "present": False,
+                "action": "recreate_failed",
+                "recreate_returncode": recreated["returncode"],
+            }
+        )
+        guard["status"] = "BLOCKED"
+        guard["blocked"] = True
+    return guard
 
 
 def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:

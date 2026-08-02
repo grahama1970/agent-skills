@@ -917,6 +917,23 @@ def run_tau_dag_bundle(
         "--scheduler",
         "bounded-ready-queue",
     ]
+    # Stale-worker self-heal: run dirs carry a copy of the worker made at
+    # compile time; executing a reused or old run dir ran pre-fix code twice
+    # this week. If the copy's hash differs from the repo worker, refresh it
+    # and say so.
+    worker_refreshed: dict[str, Any] | None = None
+    run_worker = run_dir / "workers" / "ask_tau_roundtable_worker.py"
+    repo_worker = ASK_SKILL_ROOT / "scripts" / "tau_roundtable_worker.py"
+    if run_worker.is_file() and repo_worker.is_file():
+        run_sha, repo_sha = _sha256(run_worker), _sha256(repo_worker)
+        if run_sha != repo_sha:
+            shutil.copyfile(repo_worker, run_worker)
+            run_worker.chmod(0o755)
+            worker_refreshed = {
+                "stale_sha256": f"sha256:{run_sha}",
+                "refreshed_sha256": f"sha256:{repo_sha}",
+                "note": "run-dir worker copy was stale; refreshed from the repo before dispatch",
+            }
     dag_run = _run_command(command, cwd=tau_project_root)
     execution_self_heal: dict[str, Any] | None = None
     if dag_run["returncode"] != 0:
@@ -1022,6 +1039,7 @@ def run_tau_dag_bundle(
         "provider_transport": provider_transport,
         "command": command,
         "execution_self_heal": execution_self_heal,
+        "worker_refreshed": worker_refreshed,
         "dag_run_returncode": dag_run["returncode"],
         "dag_run_stdout": dag_run["stdout"],
         "dag_run_stderr": dag_run["stderr"],
