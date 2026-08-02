@@ -49,6 +49,8 @@ taxonomy:
 
 # LinkedIn Operations
 
+> Staging note: this copy lives under `incoming/ops-linkedin`. Treat it as reviewable candidate code, not an activated repository capability, until a promotion PR moves it under `skills/` and registers its `provides` entries.
+
 Prepare LinkedIn work locally, validate factual claims, and hand the final action to a
 human. The skill deliberately stops before LinkedIn access or submission.
 
@@ -99,7 +101,7 @@ social-action automation are intentionally not copied. See `references/linkedin-
 4. **Prepare the packet.**
 
    ```bash
-   bash ./skills/ops-linkedin/run.sh prepare request.json --output handoff.json
+   bash ./incoming/ops-linkedin/run.sh prepare request.json --output handoff.json
    ```
 
 5. **Inspect readiness.**
@@ -112,7 +114,7 @@ social-action automation are intentionally not copied. See `references/linkedin-
    personally completed the action, the agent may run:
 
    ```bash
-   bash ./skills/ops-linkedin/run.sh attest handoff.json \
+   bash ./incoming/ops-linkedin/run.sh attest handoff.json \
      --actor "<human name>" \
      --confirm-human-completed \
      --output completion.json
@@ -128,21 +130,21 @@ several recipients or posts into one ambiguous receipt.
 
 ```bash
 # Dated policy snapshot and current implementation state
-bash ./skills/ops-linkedin/run.sh policy
-bash ./skills/ops-linkedin/run.sh status
+bash ./incoming/ops-linkedin/run.sh policy
+bash ./incoming/ops-linkedin/run.sh status
 
 # Prepare and validate a local packet
-bash ./skills/ops-linkedin/run.sh prepare request.json -o handoff.json
-bash ./skills/ops-linkedin/run.sh validate handoff.json
+bash ./incoming/ops-linkedin/run.sh prepare request.json -o handoff.json
+bash ./incoming/ops-linkedin/run.sh validate handoff.json
 
 # Record explicit human completion; this is not platform verification
-bash ./skills/ops-linkedin/run.sh attest handoff.json \
+bash ./incoming/ops-linkedin/run.sh attest handoff.json \
   --actor "Graham" \
   --confirm-human-completed \
   -o completion.json
 
 # Deterministic local checks
-bash ./skills/ops-linkedin/sanity.sh
+bash ./incoming/ops-linkedin/sanity.sh
 ```
 
 `prepare` exits `3` when it writes a blocked packet. `--allow-blocked` may be used only by
