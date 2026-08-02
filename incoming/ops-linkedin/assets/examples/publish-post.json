@@ -1,0 +1,22 @@
+{
+  "schema_version": "ops-linkedin.request.v1",
+  "lane": "publish",
+  "action": "post",
+  "content": {
+    "title": "Draft launch update",
+    "text": "I published a new evidence-bounded engineering workflow. The linked repository contains the implementation and verification notes."
+  },
+  "claims": [
+    {
+      "claim_id": "repo-public",
+      "text": "The implementation and verification notes are available in the linked repository.",
+      "status": "verified",
+      "source_refs": [
+        "https://github.com/example/project"
+      ]
+    }
+  ],
+  "notes": [
+    "Replace the example repository before use."
+  ]
+}
