@@ -53,9 +53,9 @@ SURF_PROVIDER_RESULT_PROVIDERS = {
 }
 HANDLER_EXTRACT_COMMANDS = {
     "webgpt": "webgpt.extract",
-    # webgemini intentionally absent: the surf CLI implements no gemini.extract
-    # (verified 2026-08-01: "Unknown tool"), so naming it produced unrunnable
-    # recovery packets. Gemini recovery is a targeted model-response DOM read.
+    # gemini.extract routes to scripts/gemini-extract.sh (run.sh route added
+    # 2026-08-02 after the packet runnability gate exposed the missing route).
+    "webgemini": "gemini.extract",
     "webgrok": "grok.extract",
 }
 HANDLER_EXTRACT_WAIT_SUPPORTED = {"webgpt", "webgrok"}
@@ -1866,8 +1866,10 @@ def _browser_failure_recovery_packet(
             if item != "--tab-id" or index + 1 < len(next_command)
         ]
         next_command = [item for item in next_command if item != "--tab-id"]
+    next_command, next_command_rejected = _validate_next_command_runnable(next_command)
     return {
         "schema": RECOVERY_PACKET_SCHEMA,
+        **({"next_command_rejected": next_command_rejected} if next_command_rejected else {}),
         "status": "NEEDS_ATTENTION",
         "mocked": False,
         "live": bool(commands),
@@ -2944,6 +2946,54 @@ def surf_lock_owner() -> dict[str, Any] | None:
         payload["owner_alive"] = Path(f"/proc/{pid}").exists() if pid else None
         return payload
     return None
+
+
+_SURF_CLI_SOURCE_CACHE: dict[str, str] = {}
+
+
+def _validate_next_command_runnable(
+    next_command: list[str],
+) -> tuple[list[str], dict[str, Any] | None]:
+    """Refuse to emit a next_command the operator cannot actually run.
+
+    Two checks, both derived from live failures: argv[0] must be an existing
+    executable (a packet once pointed at a path that was never created), and a
+    surf tool name must exist in the installed CLI (a packet once named
+    gemini.extract, which the CLI does not implement — the operator burned a
+    lane discovering that). A rejected command is preserved with its reason so
+    the producer bug is visible instead of laundered into an empty list.
+    """
+    if not next_command:
+        return next_command, None
+    argv0 = Path(str(next_command[0]))
+    if not argv0.is_file() or not os.access(argv0, os.X_OK):
+        return [], {
+            "command": next_command,
+            "reason": f"argv[0] is not an executable file: {argv0}",
+        }
+    if argv0.name == "run.sh" and "surf" in str(argv0) and len(next_command) > 1:
+        tool = str(next_command[1])
+        if "." in tool and (argv0.parent / "vendor" / "surf-cli").is_dir():
+            surf_root = argv0.parent
+            source = _SURF_CLI_SOURCE_CACHE.get(str(surf_root))
+            if source is None:
+                source = ""
+                candidates = [
+                    surf_root / "run.sh",
+                    surf_root / "vendor" / "surf-cli" / "native" / "cli.cjs",
+                    surf_root / "vendor" / "surf-cli" / "native" / "host-helpers.cjs",
+                ]
+                candidates.extend(sorted((surf_root / "scripts").glob("*.sh")) if (surf_root / "scripts").is_dir() else [])
+                for candidate in candidates:
+                    if candidate.is_file():
+                        source += candidate.read_text(encoding="utf-8", errors="replace")
+                _SURF_CLI_SOURCE_CACHE[str(surf_root)] = source
+            if source and tool not in source:
+                return [], {
+                    "command": next_command,
+                    "reason": f"surf tool {tool!r} not found in the installed surf skill",
+                }
+    return next_command, None
 
 
 def _recovery_next_command(
@@ -4443,6 +4493,52 @@ def _handoff(
             else item
             for item in evidence
         ]
+    # Self-check the handoff against the consumer's actual rules before
+    # emitting it: Tau rejects path-bearing receipt evidence whose file is
+    # absent or empty (evidence_receipt_path_missing). Repair what is
+    # repairable (write a minimal receipt stub carrying the failure context so
+    # the path is real and truthful) and record every action taken, so a
+    # drifting producer is corrected at the seam instead of blocking the DAG.
+    self_check: list[dict[str, Any]] = []
+    path_required_kinds = {"handler_response_receipt", "roundtable_join_receipt"}
+    for item in evidence:
+        if not isinstance(item, dict):
+            continue
+        kind = str(item.get("kind") or "")
+        needs_path = kind in path_required_kinds or (kind.endswith("_receipt") and "path" in item)
+        if not needs_path:
+            continue
+        raw_path = item.get("path")
+        path = Path(str(raw_path)) if raw_path else None
+        if path is not None and path.is_file() and path.stat().st_size > 0:
+            continue
+        if path is not None:
+            try:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    json.dumps(
+                        {
+                            "schema": "ask.repaired_evidence_receipt_stub.v1",
+                            "kind": kind,
+                            "node_id": args.node_id,
+                            "status": status,
+                            "note": (
+                                "Producer emitted this receipt path without writing the file; "
+                                "the handoff self-check materialized this stub so the seam "
+                                "contract holds. Treat as degraded evidence."
+                            ),
+                        },
+                        indent=2,
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                self_check.append({"kind": kind, "action": "materialized_missing_receipt_stub", "path": str(path)})
+                continue
+            except OSError as exc:
+                self_check.append({"kind": kind, "action": "repair_failed", "error": str(exc)[:200]})
+        else:
+            self_check.append({"kind": kind, "action": "missing_path_unrepairable"})
     return {
         "schema": "tau.agent_handoff.v1",
         "github": start.get("github", {"repo": "unknown", "target": "unknown"}),
@@ -4456,6 +4552,7 @@ def _handoff(
             "status": status,
             "summary": summary,
             "evidence": evidence,
+            **({"handoff_self_check": self_check} if self_check else {}),
         },
         "rationale": "The node emitted receipt-backed Tau roundtable evidence.",
         "next_agent": {

@@ -558,6 +558,10 @@ if [[ "$1" == "claude.submit" ]]; then
     exec python3 "$SKILL_DIR/scripts/claude-submit.py" "${@:2}"
 fi
 
+if [[ "$1" == "gemini.extract" ]]; then
+    exec "$SKILL_DIR/scripts/gemini-extract.sh" "${@:2}"
+fi
+
 if [[ "$1" == "webgpt.extract" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-extract.sh" "${@:2}"
 fi

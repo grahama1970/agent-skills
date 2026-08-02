@@ -741,6 +741,19 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
     # catches (illegal join shape agent-skills#1123, over-cap concurrency
     # agent-skills#1134) previously surfaced only live, mid-run.
     tau_validation = _tau_contract_validation(dag_path, input=input)
+    if tau_validation.get("status") == "BLOCKED":
+        # Self-heal known violation classes before giving up: repair the
+        # artifact, re-validate with the same installed-Tau validators, and
+        # record exactly what changed. A block without a repair attempt just
+        # moves the failure onto the caller.
+        tau_validation = _self_heal_tau_contract(
+            dag_path,
+            input=input,
+            validation=tau_validation,
+        )
+        if tau_validation.get("status") == "SELF_HEALED":
+            final_bundle["dag"] = _read_json(dag_path)
+            final_bundle["dag_sha256"] = f"sha256:{_sha256(dag_path)}"
     final_bundle["tau_contract_validation"] = tau_validation
     if tau_validation.get("status") == "BLOCKED":
         final_bundle["status"] = "BLOCKED"
@@ -756,6 +769,68 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         run_dir / "compile-status.json",
     )
     return final_bundle
+
+
+def _bundle_heal_input(bundle: dict[str, Any]) -> Any:
+    """Minimal input shim for validator/self-heal calls from the execute path."""
+    from types import SimpleNamespace
+
+    return SimpleNamespace(tau_project_root=DEFAULT_TAU_PROJECT_ROOT)
+
+
+def _self_heal_tau_contract(
+    dag_path: Path,
+    *,
+    input: TauDagCompileInput,
+    validation: dict[str, Any],
+) -> dict[str, Any]:
+    """Repair known contract-violation classes, then re-validate.
+
+    Each repair is deterministic, narrow, and derived from a failure class the
+    installed Tau has actually rejected live (agent-skills#1123, #1134). The
+    repaired artifact must pass the same validators; a repair that does not
+    re-validate is discarded and the original BLOCKED result is returned with
+    the attempted repairs recorded.
+    """
+    error = str(validation.get("error") or "")
+    dag = _read_json(dag_path)
+    if not isinstance(dag, dict):
+        return validation
+    repairs: list[str] = []
+    if "max_concurrency" in error:
+        limits = dag.get("limits") or {}
+        raw = int(limits.get("max_concurrency") or 0)
+        if raw > TAU_STANDARD_PROFILE_MAX_CONCURRENCY:
+            limits["max_concurrency"] = TAU_STANDARD_PROFILE_MAX_CONCURRENCY
+            dag["limits"] = limits
+            repairs.append(
+                f"clamped limits.max_concurrency {raw} -> {TAU_STANDARD_PROFILE_MAX_CONCURRENCY}"
+            )
+    if "join" in error:
+        for node in dag.get("nodes") or []:
+            if isinstance(node, dict) and node.get("join") is not None:
+                context = node.setdefault("context", {})
+                if isinstance(context, dict) and "join_semantics" not in context:
+                    context["join_semantics"] = node["join"]
+                del node["join"]
+                repairs.append(
+                    f"moved illegal join declaration on node {node.get('id')!r} into context.join_semantics"
+                )
+    if not repairs:
+        return validation
+    _write_json(dag_path, dag)
+    revalidated = _tau_contract_validation(dag_path, input=input)
+    if revalidated.get("status") == "PASS":
+        return {
+            "schema": "ask.tau_contract_validation.v1",
+            "status": "SELF_HEALED",
+            "repairs": repairs,
+            "original_error": error[:600],
+        }
+    validation = dict(validation)
+    validation["attempted_repairs"] = repairs
+    validation["revalidation_error"] = revalidated.get("error")
+    return validation
 
 
 def _tau_contract_validation(dag_path: Path, *, input: TauDagCompileInput) -> dict[str, Any]:
@@ -843,6 +918,26 @@ def run_tau_dag_bundle(
         "bounded-ready-queue",
     ]
     dag_run = _run_command(command, cwd=tau_project_root)
+    execution_self_heal: dict[str, Any] | None = None
+    if dag_run["returncode"] != 0:
+        # A contract rejection at dag-run time (e.g. an execution-profile cap
+        # the plan-semantics validators do not enforce) gets ONE deterministic
+        # repair attempt and re-run. The repaired contract, the repairs, and
+        # both attempts stay in the receipt; a failed repair does not loop.
+        payload = _json_or_none(dag_run["stdout"])
+        if (
+            isinstance(payload, dict)
+            and str(payload.get("verdict") or "") == "DAG_CONTRACT_INVALID"
+        ):
+            message = str(payload.get("message") or "")
+            healed = _self_heal_tau_contract(
+                dag_path,
+                input=_bundle_heal_input(bundle),
+                validation={"status": "BLOCKED", "error": message},
+            )
+            if healed.get("status") == "SELF_HEALED":
+                execution_self_heal = healed
+                dag_run = _run_command(command, cwd=tau_project_root)
     if dag_path.is_file():
         receipt_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(dag_path, receipt_dir / "dag-contract.json")
@@ -926,6 +1021,7 @@ def run_tau_dag_bundle(
         "execution_owner": "$tau",
         "provider_transport": provider_transport,
         "command": command,
+        "execution_self_heal": execution_self_heal,
         "dag_run_returncode": dag_run["returncode"],
         "dag_run_stdout": dag_run["stdout"],
         "dag_run_stderr": dag_run["stderr"],

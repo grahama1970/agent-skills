@@ -25,6 +25,18 @@ SPEC.loader.exec_module(tau_roundtable_worker)
 
 
 def _args(tmp_path: Path, *, handler: str = "webkimi") -> argparse.Namespace:
+    # The recovery runnability gate refuses next_commands whose argv[0] does
+    # not exist as an executable, so the fixture materializes the fake
+    # entrypoints the packets reference.
+    for stub in (
+        tmp_path / "skills" / "surf" / "run.sh",
+        tmp_path / "skills" / "browser-oracle" / "run.sh",
+        tmp_path / "skills" / "ask" / "run.sh",
+    ):
+        stub.parent.mkdir(parents=True, exist_ok=True)
+        if not stub.exists():
+            stub.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            stub.chmod(0o755)
     return argparse.Namespace(
         node_id=f"handler-{handler}",
         handler=handler,
