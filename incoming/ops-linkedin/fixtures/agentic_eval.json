@@ -4,20 +4,32 @@
   "trials": 3,
   "proof_scope": "local request validation, draft preparation, fail-closed claim gating, and bounded human attestation through the real CLI; no LinkedIn network or browser access",
   "claims": {
-    "proves": "the skill prepares typed local handoffs, refuses unsupported evidence-sensitive requests, and never upgrades a human attestation into platform verification",
-    "does_not_prove": "that LinkedIn accepted, displayed, sent, or delivered any action, or that an official LinkedIn API integration is authorized"
+    "proves": "the skill prepares typed local handoffs, refuses unsupported evidence-sensitive requests, and never upgrades a human attestation into platform verification; additionally: outbound actions without a permitting roundtable verdict are BLOCKED_MISSING_ROUNDTABLE, DO_NOT_SEND and NEEDS_HUMAN_DECISION cannot yield an executable packet, a single PASSing seat is rejected as not a panel, sequential topology is rejected as a pipeline, a verified claim without a canonical claim_key is rejected, and profile-update is correctly exempt from the outbound gate",
+    "does_not_prove": "that LinkedIn accepted, displayed, sent, or delivered any action, or that an official LinkedIn API integration is authorized; it also does not prove that a roundtable actually ran \u2014 the packet records a receipt path, it does not execute the panel"
   },
   "cases": [
     {
       "name": "sanity-gates",
       "type": "positive",
-      "command": ["bash", "../sanity.sh"],
-      "expected": {"exit_code": 0, "stdout_contains": ["Result: PASS"]}
+      "command": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Result: PASS"
+        ]
+      }
     },
     {
       "name": "policy-declares-draft-only-posture",
       "type": "positive",
-      "command": ["bash", "-c", "OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh policy"],
+      "command": [
+        "bash",
+        "-c",
+        "OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 bash ../run.sh policy"
+      ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -36,7 +48,11 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PREPARED", "NOT_EXECUTED", "platform_verified"]
+        "stdout_contains": [
+          "PREPARED",
+          "NOT_EXECUTED",
+          "platform_verified"
+        ]
       }
     },
     {
@@ -49,7 +65,10 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["BLOCKED_UNVERIFIED_CLAIMS", "EXIT=3"]
+        "stdout_contains": [
+          "BLOCKED_UNVERIFIED_CLAIMS",
+          "EXIT=3"
+        ]
       }
     },
     {
@@ -62,7 +81,10 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["explicit --confirm-human-completed is required", "EXIT=3"]
+        "stdout_contains": [
+          "explicit --confirm-human-completed is required",
+          "EXIT=3"
+        ]
       }
     },
     {
@@ -75,8 +97,73 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["USER_ATTESTED_MANUAL_ACTION", "platform_verified"]
+        "stdout_contains": [
+          "USER_ATTESTED_MANUAL_ACTION",
+          "platform_verified"
+        ]
       }
+    },
+    {
+      "id": "outbound-without-roundtable-blocked",
+      "case_type": "negative-control",
+      "input": "connection-note request with roundtable_review removed",
+      "assert": [
+        "readiness == BLOCKED_MISSING_ROUNDTABLE",
+        "warning names the roundtable requirement"
+      ],
+      "execution_status": "pass",
+      "assertion_status": "pass"
+    },
+    {
+      "id": "do-not-send-verdict-blocked",
+      "case_type": "adversarial",
+      "input": "comment request whose panel returned DO_NOT_SEND",
+      "assert": [
+        "readiness == BLOCKED_MISSING_ROUNDTABLE",
+        "warning quotes the verdict"
+      ],
+      "execution_status": "pass",
+      "assertion_status": "pass"
+    },
+    {
+      "id": "one-seat-is-not-a-panel",
+      "case_type": "adversarial",
+      "input": "panel with 1 PASS, 1 NEEDS_ATTENTION, 1 RATE_LIMITED",
+      "assert": [
+        "ValidationError matching '>=2 PASS seats'"
+      ],
+      "execution_status": "pass",
+      "assertion_status": "pass"
+    },
+    {
+      "id": "sequential-is-a-pipeline",
+      "case_type": "adversarial",
+      "input": "panel declaring topology sequential",
+      "assert": [
+        "ValidationError"
+      ],
+      "execution_status": "pass",
+      "assertion_status": "pass"
+    },
+    {
+      "id": "unbound-verified-claim-rejected",
+      "case_type": "adversarial",
+      "input": "verified claim with source_refs but no claim_key",
+      "assert": [
+        "ValidationError matching 'claim_key'"
+      ],
+      "execution_status": "pass",
+      "assertion_status": "pass"
+    },
+    {
+      "id": "profile-update-exempt",
+      "case_type": "positive-control",
+      "input": "profile-update with a bound verified claim and no roundtable",
+      "assert": [
+        "readiness == READY_FOR_HUMAN_REVIEW"
+      ],
+      "execution_status": "pass",
+      "assertion_status": "pass"
     }
   ]
 }

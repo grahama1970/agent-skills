@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from ops_linkedin.models import (
+    OUTBOUND_ACTIONS,
     Action,
     ClaimStatus,
     ExecutionClaim,
@@ -62,6 +63,15 @@ def determine_readiness(request: HandoffRequest) -> Readiness:
     if request.action in claim_required_actions and not verified:
         return Readiness.BLOCKED_UNVERIFIED_CLAIMS
 
+    # Operator decision 2026-08-02: every outbound action is gated by an /ask
+    # roundtable following best-practices-roundtable. Checked here rather than in
+    # the model alone so a request without a panel is BLOCKED and inspectable
+    # instead of raising a validation error the caller might mistake for a bug.
+    if request.action in OUTBOUND_ACTIONS:
+        review = request.roundtable_review
+        if review is None or not review.permits_execution:
+            return Readiness.BLOCKED_MISSING_ROUNDTABLE
+
     return Readiness.READY_FOR_HUMAN_REVIEW
 
 
@@ -69,6 +79,21 @@ def warnings_for(request: HandoffRequest, readiness: Readiness) -> list[str]:
     """Return explicit limitations without inferring claims from free-form text."""
 
     warnings: list[str] = []
+    if readiness is Readiness.BLOCKED_MISSING_ROUNDTABLE:
+        review = request.roundtable_review
+        if review is None:
+            warnings.append(
+                "This outbound action has no roundtable_review. Every outbound LinkedIn "
+                "action requires an /ask roundtable per best-practices-roundtable: concurrent "
+                "topology, an immutable goal, at least two PASSing seats, and an attributed "
+                "synthesis. Run the panel and attach its receipt."
+            )
+        else:
+            warnings.append(
+                f"The roundtable returned verdict '{review.verdict.value}', which does not "
+                "permit execution. Revise the draft and convene a new panel, or record the "
+                "human decision explicitly."
+            )
     if readiness is Readiness.BLOCKED_UNVERIFIED_CLAIMS:
         warnings.append(
             "The request is blocked because evidence-sensitive content has no complete "

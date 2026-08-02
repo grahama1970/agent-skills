@@ -26,6 +26,7 @@ metadata:
   short-description: Draft-only LinkedIn operations with manual handoff receipts
   version: "0.1.0"
   policy-snapshot: "2026-08-02"
+  outbound-gate: "roundtable-required-2026-08-02"
 provides:
   - linkedin-content-drafting
   - linkedin-manual-handoff
@@ -39,6 +40,7 @@ complies:
   - best-practices-skills
   - best-practices-python
   - best-practices-security
+  - best-practices-roundtable
 taxonomy:
   - compliance
   - privacy
@@ -148,10 +150,39 @@ bash ./skills/ops-linkedin/sanity.sh
 `prepare` exits `3` when it writes a blocked packet. `--allow-blocked` may be used only by
 a review pipeline that needs the blocked artifact; it does not make the packet executable.
 
+## Outbound actions require an /ask roundtable
+
+Operator decision 2026-08-02. `post`, `image-post`, `comment`, `connection-note`, and
+`message` place content in front of another person or an audience, so each request must
+carry a `roundtable_review` whose verdict permits execution. Without one the packet is
+`BLOCKED_MISSING_ROUNDTABLE`.
+
+`profile-update` is deliberately **excluded**: it edits the user's own surface rather than
+contacting anyone, and it is revised often.
+
+Required in `roundtable_review`: `ran: true`, `topology: concurrent` (a sequential chain
+is a pipeline, not a roundtable), an `immutable_goal`, `run_dir` so receipts can be
+inspected, **at least two `PASS` seats** (one voice is not a panel), an attributed
+`synthesis`, `rounds_run` within the 3-round cap, and
+`follows_best_practices_roundtable: true`. Verdicts `DO_NOT_SEND` and
+`NEEDS_HUMAN_DECISION` block the packet.
+
+Why the expensive review is the cheap option: outbound volume is deliberately low and
+each message is dossier-backed and aimed at a named person, so response likelihood is
+high. One badly-worded message costs a contact and their organization permanently. Low
+volume plus high hit-rate inverts the usual QA calculus.
+
+`assets/examples/roundtable-review.json` is a reusable receipt shape.
+
 ## Claim discipline
 
 - Do not infer evidence from confident wording.
 - Do not label a claim `verified` without a source reference.
+- A `verified` claim MUST carry `claim_key`, the key of the approved claim in the
+  canonical `career_profile` ledger in `/memory`. This is the same vocabulary as
+  `grahamaco.inmail_draft.v1` `claims_referenced[].claim_key`, so LinkedIn copy and
+  outreach copy cannot drift into two independent claim sets. An unbound verified claim
+  is a second source of truth and is rejected.
 - `profile-update` and `lead-research-plan` require at least one verified claim.
 - Any `needs-source` claim blocks the packet.
 - Quantitative, credential, employer, clearance, customer, funding, scale, performance,
@@ -168,6 +199,7 @@ supply the explicit claim ledger so the review boundary remains inspectable.
 | `status: PREPARED` | Local draft and manual steps exist; nothing was done on LinkedIn |
 | `readiness: READY_FOR_HUMAN_REVIEW` | Evidence gate passed for human review |
 | `readiness: BLOCKED_UNVERIFIED_CLAIMS` | Do not execute the draft |
+| `readiness: BLOCKED_MISSING_ROUNDTABLE` | Outbound action with no permitting panel verdict |
 | `execution_claim: NOT_EXECUTED` | No action was claimed |
 | `execution_claim: USER_ATTESTED_MANUAL_ACTION` | A named human said they performed it |
 | `platform_verified: false` | The skill has no independent LinkedIn proof |

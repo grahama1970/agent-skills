@@ -70,12 +70,32 @@ class ClaimStatus(StrEnum):
     EXCLUDED = "excluded"
 
 
+class RoundtableSeatStatus(StrEnum):
+    """Receipt-derived state of one roundtable seat."""
+
+    PASS = "PASS"
+    FAIL = "FAIL"
+    NEEDS_ATTENTION = "NEEDS_ATTENTION"
+    RATE_LIMITED = "RATE_LIMITED"
+    NOT_RUN = "NOT_RUN"
+
+
+class RoundtableVerdict(StrEnum):
+    """Panel outcome. Only the first two permit a human-executable packet."""
+
+    SEND_AS_IS = "SEND_AS_IS"
+    SEND_WITH_REVISIONS = "SEND_WITH_REVISIONS"
+    DO_NOT_SEND = "DO_NOT_SEND"
+    NEEDS_HUMAN_DECISION = "NEEDS_HUMAN_DECISION"
+
+
 class Readiness(StrEnum):
     """Whether a packet may be handed to a human for manual execution."""
 
     READY_FOR_HUMAN_REVIEW = "READY_FOR_HUMAN_REVIEW"
     BLOCKED_UNVERIFIED_CLAIMS = "BLOCKED_UNVERIFIED_CLAIMS"
     BLOCKED_INVALID_REQUEST = "BLOCKED_INVALID_REQUEST"
+    BLOCKED_MISSING_ROUNDTABLE = "BLOCKED_MISSING_ROUNDTABLE"
 
 
 class PacketStatus(StrEnum):
@@ -142,6 +162,16 @@ class Claim(BaseModel):
     status: ClaimStatus
     source_refs: list[str] = Field(default_factory=list)
     notes: str | None = Field(default=None, max_length=2_000)
+    claim_key: str | None = Field(
+        default=None,
+        min_length=3,
+        max_length=200,
+        description=(
+            "Key of the approved claim in the canonical career_profile ledger in /memory. "
+            "Shared vocabulary with grahamaco.inmail_draft.v1 claims_referenced[].claim_key so "
+            "LinkedIn copy and outreach copy cannot drift into two independent claim sets."
+        ),
+    )
 
     @field_validator("source_refs")
     @classmethod
@@ -159,7 +189,98 @@ class Claim(BaseModel):
 
         if self.status is ClaimStatus.VERIFIED and not self.source_refs:
             raise ValueError("verified claims require at least one source_refs entry")
+        if self.status is ClaimStatus.VERIFIED and not self.claim_key:
+            raise ValueError(
+                "verified claims require claim_key bound to the canonical career_profile "
+                "ledger; an unbound verified claim is a second source of truth"
+            )
         return self
+
+
+class RoundtableSeat(BaseModel):
+    """One panel seat and its receipt-derived status."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    handler: str = Field(min_length=2, max_length=80)
+    status: RoundtableSeatStatus
+    response_bytes: int | None = Field(default=None, ge=0)
+    failure_code: str | None = Field(default=None, max_length=120)
+
+
+class RoundtableSynthesis(BaseModel):
+    """Attributed synthesis required by best-practices-roundtable."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    seat_status: str = Field(min_length=5, max_length=2_000)
+    common_ground: str = Field(min_length=5, max_length=4_000)
+    attributed_dissent: str = Field(max_length=4_000)
+    externally_checked_claims: str | None = Field(default=None, max_length=4_000)
+    claims_still_unverified: str | None = Field(default=None, max_length=4_000)
+    surviving_dissent_reported_to_human: bool = False
+
+
+class RoundtableReview(BaseModel):
+    """Mandatory panel review for outbound LinkedIn actions.
+
+    Operator decision 2026-08-02: outbound volume is deliberately low and each
+    message is dossier-backed at a named person, so response likelihood is high.
+    One badly-worded message costs a contact and their organization permanently,
+    which makes the expensive review the cheap option.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    ran: Literal[True]
+    run_dir: str = Field(min_length=10, max_length=500)
+    topology: Literal["concurrent"]
+    immutable_goal: str = Field(min_length=20, max_length=2_000)
+    shared_packet_identical_for_every_seat: Literal[True] = True
+    seats: list[RoundtableSeat] = Field(min_length=3)
+    synthesis: RoundtableSynthesis
+    rounds_run: int = Field(default=1, ge=1, le=3)
+    between_round_research: str | None = Field(default=None, max_length=4_000)
+    verdict: RoundtableVerdict
+    revisions_applied: list[str] = Field(default_factory=list)
+    follows_best_practices_roundtable: Literal[True]
+    closure_note: str | None = Field(default=None, max_length=2_000)
+
+    @model_validator(mode="after")
+    def panel_must_be_a_panel(self) -> RoundtableReview:
+        """At least two seats must have returned usable responses."""
+
+        passing = [seat for seat in self.seats if seat.status is RoundtableSeatStatus.PASS]
+        if len(passing) < 2:
+            raise ValueError(
+                f"roundtable needs >=2 PASS seats, got {len(passing)}; one voice is not a panel"
+            )
+        return self
+
+    @property
+    def permits_execution(self) -> bool:
+        """True only for verdicts that allow a human to act on the draft."""
+
+        return self.verdict in {
+            RoundtableVerdict.SEND_AS_IS,
+            RoundtableVerdict.SEND_WITH_REVISIONS,
+        }
+
+
+OUTBOUND_ACTIONS: frozenset[Action] = frozenset(
+    {
+        Action.POST,
+        Action.IMAGE_POST,
+        Action.COMMENT,
+        Action.CONNECTION_NOTE,
+        Action.MESSAGE,
+    }
+)
+"""Actions that place content in front of another person or an audience.
+
+profile-update is deliberately excluded: it edits the user's own surface rather
+than contacting anyone, and it is revised frequently.
+"""
 
 
 class HandoffRequest(BaseModel):
@@ -175,6 +296,7 @@ class HandoffRequest(BaseModel):
     claims: list[Claim] = Field(default_factory=list)
     research_inputs: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
+    roundtable_review: RoundtableReview | None = None
 
     @model_validator(mode="after")
     def action_matches_lane_and_shape(self) -> HandoffRequest:

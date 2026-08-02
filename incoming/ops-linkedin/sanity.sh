@@ -103,6 +103,48 @@ if [[ "$blocked_rc" -ne 3 ]]; then
 fi
 grep -q '"readiness": "BLOCKED_UNVERIFIED_CLAIMS"' "$tmp_dir/blocked-packet.json"
 
+echo "Check: outbound action without a roundtable fails closed"
+set +e
+bash "$SCRIPT_DIR/run.sh" prepare \
+  "$SCRIPT_DIR/assets/examples/connection-note.json" \
+  --output "$tmp_dir/rt-ok.json" >/dev/null 2>&1
+rt_ok=$?
+set -e
+test "$rt_ok" -eq 0
+grep -q '"readiness": "READY_FOR_HUMAN_REVIEW"' "$tmp_dir/rt-ok.json"
+
+python3 - "$SCRIPT_DIR" "$tmp_dir" <<'PYGATE'
+import json, subprocess, sys
+skill_dir, tmp_dir = sys.argv[1], sys.argv[2]
+req = json.load(open(f"{skill_dir}/assets/examples/connection-note.json"))
+del req["roundtable_review"]
+path = f"{tmp_dir}/no-roundtable.json"
+json.dump(req, open(path, "w"))
+out = f"{tmp_dir}/no-roundtable-packet.json"
+proc = subprocess.run(
+    ["bash", f"{skill_dir}/run.sh", "prepare", path, "--output", out, "--allow-blocked"],
+    capture_output=True, text=True)
+packet = json.load(open(out))
+assert packet["readiness"] == "BLOCKED_MISSING_ROUNDTABLE", packet["readiness"]
+assert any("roundtable" in w.lower() for w in packet["warnings"]), packet["warnings"]
+print("outbound-roundtable-gate=PASS")
+PYGATE
+
+echo "Check: verified claims are bound to the canonical claim ledger"
+python3 - "$SCRIPT_DIR" <<'PYCLAIM'
+import json, sys, pathlib
+skill_dir = sys.argv[1]
+bad = []
+for f in pathlib.Path(f"{skill_dir}/assets/examples").glob("*.json"):
+    doc = json.loads(f.read_text())
+    for claim in doc.get("claims", []):
+        if claim.get("status") == "verified" and not claim.get("claim_key"):
+            bad.append(f"{f.name}:{claim.get('claim_id')}")
+if bad:
+    raise SystemExit("unbound verified claims: " + ", ".join(bad))
+print("claim-key-binding=PASS")
+PYCLAIM
+
 echo "Check: attestation requires explicit human confirmation"
 set +e
 bash "$SCRIPT_DIR/run.sh" attest "$tmp_dir/post-packet.json" --actor sanity >/dev/null 2>&1

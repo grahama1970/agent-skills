@@ -120,3 +120,35 @@ receipt, or independent verification.
 - `2`: JSON, schema, or boundary validation error.
 - `3`: blocked readiness or refused lifecycle transition.
 - `127`: `uv` unavailable and system-Python override not selected.
+
+
+## Outbound roundtable contract (added 2026-08-02)
+
+`HandoffRequest.roundtable_review` is required for every action in `OUTBOUND_ACTIONS`
+(`post`, `image-post`, `comment`, `connection-note`, `message`).
+
+| Field | Rule |
+|---|---|
+| `ran` | must be `true` |
+| `run_dir` | Ask tau-dag run directory; receipts must be inspectable |
+| `topology` | must be `concurrent`; sequential is a pipeline, not a roundtable |
+| `immutable_goal` | >= 20 chars; `$ask` fails preflight without one |
+| `shared_packet_identical_for_every_seat` | must be `true`; no seat gets hidden context |
+| `seats` | >= 3 requested, **>= 2 with status `PASS`** |
+| `synthesis` | `seat_status`, `common_ground`, `attributed_dissent` required |
+| `rounds_run` | 1..3 (best-practices-roundtable cap) |
+| `verdict` | only `SEND_AS_IS` or `SEND_WITH_REVISIONS` permit execution |
+| `follows_best_practices_roundtable` | must be `true` |
+
+A missing or non-permitting review yields `readiness: BLOCKED_MISSING_ROUNDTABLE`. The
+readiness gate is evaluated in the service rather than raised in the model so the caller
+receives an inspectable blocked packet with a warning, not an opaque validation error.
+Structural violations (sequential topology, one PASS seat) are model-level and raise.
+
+## Claim vocabulary binding (added 2026-08-02)
+
+`Claim.claim_key` references the approved claim in the canonical `career_profile`
+collection in `/memory`, shared with `grahamaco.inmail_draft.v1`
+`claims_referenced[].claim_key`. A `verified` claim without `claim_key` is rejected:
+two independent ledgers over the same facts is how the 70-vs-90 worker-role drift
+happened, and on this surface the drift would be a false claim to an employer.

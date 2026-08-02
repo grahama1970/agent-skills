@@ -99,3 +99,25 @@ OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 \
 
 `fixtures/agentic_eval.json` covers positive, negative, and adversarial lifecycle cases.
 It does not and must not claim live LinkedIn proof.
+
+
+## Outbound roundtable gate + claim binding (2026-08-02)
+
+Two integration gaps were closed while the skill was still staged under `incoming/`.
+
+1. **No roundtable gate.** `grep -rn roundtable` returned nothing. The `interact` lane
+   prepared connection notes and one-to-one messages gated on evidence only, which would
+   have allowed outbound contact without the panel the operator mandated for every
+   outbound message. Added `RoundtableReview` with `OUTBOUND_ACTIONS` and the
+   `BLOCKED_MISSING_ROUNDTABLE` readiness state.
+2. **Two claim vocabularies.** Nothing bound the claim ledger to `career_profile` claim
+   keys, while `grahamaco.inmail_draft.v1` already used `claims_referenced[].claim_key`.
+   `Claim.claim_key` is now required for `verified` claims.
+
+Verification: 23 tests pass (15 original + 8 new gate tests), `sanity.sh` PASS. The 6
+pre-existing tests that failed on first run did so because their fixtures predated the
+contract; they were upgraded to the production shape, which is the contract working
+rather than a regression.
+
+Still not established: any live LinkedIn action, and the exec-bit loss from ZIP staging
+(now fixed with mode 100755).
