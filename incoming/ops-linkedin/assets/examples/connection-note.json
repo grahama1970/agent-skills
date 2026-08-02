@@ -1,0 +1,23 @@
+{
+  "schema_version": "ops-linkedin.request.v1",
+  "lane": "interact",
+  "action": "connection-note",
+  "target": {
+    "name": "Example Recipient",
+    "company": "Example Company",
+    "url": "https://www.linkedin.com/in/example-recipient/"
+  },
+  "content": {
+    "text": "I appreciated your public talk on resilient AI systems. I work on evidence-bounded agent workflows and would be glad to connect."
+  },
+  "claims": [
+    {
+      "claim_id": "talk-context",
+      "text": "The recipient gave a public talk on resilient AI systems.",
+      "status": "verified",
+      "source_refs": [
+        "https://example.org/talk"
+      ]
+    }
+  ]
+}
