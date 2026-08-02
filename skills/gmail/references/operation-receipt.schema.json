@@ -1,0 +1,130 @@
+{
+  "$defs": {
+    "OAuthProfile": {
+      "description": "Named least-privilege OAuth profiles stored independently.",
+      "enum": [
+        "readonly",
+        "compose",
+        "manage"
+      ],
+      "title": "OAuthProfile",
+      "type": "string"
+    },
+    "Operation": {
+      "description": "Closed set of supported Gmail write operations.",
+      "enum": [
+        "batch_modify",
+        "trash",
+        "untrash",
+        "create_label",
+        "create_draft",
+        "send_message",
+        "send_draft"
+      ],
+      "title": "Operation",
+      "type": "string"
+    },
+    "ReceiptStatus": {
+      "description": "Outcome categories that keep ambiguous network writes distinct.",
+      "enum": [
+        "success",
+        "failure",
+        "indeterminate"
+      ],
+      "title": "ReceiptStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Write receipt that intentionally excludes bodies, attachments, and tokens.",
+  "properties": {
+    "account": {
+      "format": "email",
+      "title": "Account",
+      "type": "string"
+    },
+    "completed_at": {
+      "format": "date-time",
+      "title": "Completed At",
+      "type": "string"
+    },
+    "error_code": {
+      "anyOf": [
+        {
+          "maxLength": 120,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Code"
+    },
+    "error_message": {
+      "anyOf": [
+        {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Message"
+    },
+    "operation": {
+      "$ref": "#/$defs/Operation"
+    },
+    "payload_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Payload Sha256",
+      "type": "string"
+    },
+    "plan_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "profile": {
+      "$ref": "#/$defs/OAuthProfile"
+    },
+    "receipt_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "result": {
+      "additionalProperties": true,
+      "title": "Result",
+      "type": "object"
+    },
+    "schema": {
+      "const": "gmail.operation_receipt.v1",
+      "default": "gmail.operation_receipt.v1",
+      "title": "Schema",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ReceiptStatus"
+    }
+  },
+  "required": [
+    "plan_id",
+    "operation",
+    "profile",
+    "account",
+    "status",
+    "started_at",
+    "completed_at",
+    "payload_sha256"
+  ],
+  "title": "OperationReceipt",
+  "type": "object"
+}

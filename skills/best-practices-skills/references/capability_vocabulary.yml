@@ -122,3 +122,18 @@ capabilities:
   progress-tracking:
     providers:
       - task-monitor
+  email-search:
+    providers:
+      - gmail
+  email-read:
+    providers:
+      - gmail
+  email-drafting:
+    providers:
+      - gmail
+  email-send:
+    providers:
+      - gmail
+  mailbox-management:
+    providers:
+      - gmail

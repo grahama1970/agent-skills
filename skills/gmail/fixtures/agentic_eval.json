@@ -1,0 +1,59 @@
+{
+  "version": 2,
+  "skill": "gmail",
+  "trials": 3,
+  "proof_scope": "local routing and safety-contract smoke; no live Gmail mutation",
+  "claims": {
+    "proves": "API-first reads and plan-gated writes; no permanent-delete or direct-send route",
+    "does_not_prove": "live OAuth, Gmail behavior, delivery, spam placement, or Google approval"
+  },
+  "cases": [
+    {
+      "name": "top-level-help",
+      "type": "positive",
+      "command": [
+        "bash",
+        "run.sh",
+        "--help"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "two-phase writes",
+          "plan"
+        ]
+      }
+    },
+    {
+      "name": "commit-requires-approval",
+      "type": "negative",
+      "command": [
+        "bash",
+        "run.sh",
+        "plan",
+        "commit",
+        "missing-plan.json"
+      ],
+      "expected": {
+        "exit_code": 2
+      }
+    },
+    {
+      "name": "no-permanent-delete-command",
+      "type": "positive",
+      "command": [
+        "bash",
+        "run.sh",
+        "message",
+        "--help"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_excludes": [
+          "permanent-delete",
+          "batchDelete"
+        ]
+      }
+    }
+  ]
+}
