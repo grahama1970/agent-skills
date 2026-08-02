@@ -404,7 +404,7 @@ def test_worker_webclaude_submit_command_includes_prior_response_attachment(tmp_
     original_run_cmd = tau_roundtable_worker._run_cmd
     tau_roundtable_worker._run_cmd = fake_run_cmd
     try:
-        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+        result = tau_roundtable_worker._run_handler(args, {"goal": {"goal_hash": "sha256:test"}}, artifact_dir)
     finally:
         tau_roundtable_worker._run_cmd = original_run_cmd
 
@@ -504,7 +504,7 @@ def test_worker_webclaude_refreshes_binding_after_new_url_materializes(tmp_path:
     original_run_cmd = tau_roundtable_worker._run_cmd
     tau_roundtable_worker._run_cmd = fake_run_cmd
     try:
-        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+        result = tau_roundtable_worker._run_handler(args, {"goal": {"goal_hash": "sha256:test"}}, artifact_dir)
     finally:
         tau_roundtable_worker._run_cmd = original_run_cmd
 
@@ -657,7 +657,7 @@ def test_worker_fails_closed_when_browser_response_denies_attached_evidence(tmp_
     original_run_cmd = tau_roundtable_worker._run_cmd
     tau_roundtable_worker._run_cmd = fake_run_cmd
     try:
-        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+        result = tau_roundtable_worker._run_handler(args, {"goal": {"goal_hash": "sha256:test"}}, artifact_dir)
     finally:
         tau_roundtable_worker._run_cmd = original_run_cmd
 
@@ -752,7 +752,7 @@ def test_worker_webgpt_receipt_includes_transport_summary(tmp_path: Path) -> Non
     original_run_cmd = tau_roundtable_worker._run_cmd
     tau_roundtable_worker._run_cmd = fake_run_cmd
     try:
-        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+        result = tau_roundtable_worker._run_handler(args, {"goal": {"goal_hash": "sha256:test"}}, artifact_dir)
     finally:
         tau_roundtable_worker._run_cmd = original_run_cmd
 
@@ -778,6 +778,7 @@ def test_worker_webgpt_receipt_includes_transport_summary(tmp_path: Path) -> Non
             "path": str(artifact_dir / "webgpt_transport_summary.json"),
             "final_transport_state": "completed",
             "next_command": summary_payload["next_command"],
+            "goal_hash": "sha256:test",
         }
     ]
 
@@ -859,7 +860,7 @@ def test_worker_preserves_degraded_webgpt_sentinel_response_after_focus_drift(tm
     original_run_cmd = tau_roundtable_worker._run_cmd
     tau_roundtable_worker._run_cmd = fake_run_cmd
     try:
-        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+        result = tau_roundtable_worker._run_handler(args, {"goal": {"goal_hash": "sha256:test"}}, artifact_dir)
     finally:
         tau_roundtable_worker._run_cmd = original_run_cmd
 
@@ -949,7 +950,7 @@ def test_worker_quarantines_unverified_webgpt_response_md(tmp_path: Path) -> Non
     original_run_cmd = tau_roundtable_worker._run_cmd
     tau_roundtable_worker._run_cmd = fake_run_cmd
     try:
-        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+        result = tau_roundtable_worker._run_handler(args, {"goal": {"goal_hash": "sha256:test"}}, artifact_dir)
     finally:
         tau_roundtable_worker._run_cmd = original_run_cmd
 

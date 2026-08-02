@@ -20,6 +20,7 @@ from typing import Any
 import httpx
 
 from .env import load_dotenv_once
+from .seam_models import enforce as _enforce_seam
 
 load_dotenv_once()
 
@@ -768,7 +769,9 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         dag_path,
         run_dir / "compile-status.json",
     )
-    return final_bundle
+    # Typed seam contract: a malformed bundle raises SeamViolation here, at
+    # the producer, instead of being consumed downstream.
+    return _enforce_seam(ASK_TAU_DAG_BUNDLE_SCHEMA, final_bundle)
 
 
 def _bundle_heal_input(bundle: dict[str, Any]) -> Any:
@@ -1063,6 +1066,7 @@ def run_tau_dag_bundle(
             ],
         },
     }
+    result = _enforce_seam("ask.tau_dag_execution.v1", result)
     _write_json(run_dir / "execution-status.json", result)
     return result
 

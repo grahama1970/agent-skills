@@ -1867,6 +1867,11 @@ def _browser_failure_recovery_packet(
         ]
         next_command = [item for item in next_command if item != "--tab-id"]
     next_command, next_command_rejected = _validate_next_command_runnable(next_command)
+    RecoveryPacketContract(
+        schema=str(RECOVERY_PACKET_SCHEMA),
+        failure_code=str(failure_code),
+        next_command=list(next_command),
+    ).validate()
     return {
         "schema": RECOVERY_PACKET_SCHEMA,
         **({"next_command_rejected": next_command_rejected} if next_command_rejected else {}),
@@ -2946,6 +2951,67 @@ def surf_lock_owner() -> dict[str, Any] | None:
         payload["owner_alive"] = Path(f"/proc/{pid}").exists() if pid else None
         return payload
     return None
+
+
+@dataclass(frozen=True)
+class HandoffContract:
+    """Deterministic seam contract for tau.agent_handoff.v1 emissions.
+
+    validate() raises SeamContractError on violation: the worker exits
+    non-zero and Tau fails the node closed, so a drifting producer cannot
+    hand malformed evidence downstream and have it ignored.
+    """
+
+    schema: str
+    goal: dict
+    result: dict
+
+    REQUIRED_RESULT_KEYS = ("status", "summary", "evidence")
+
+    def validate(self) -> None:
+        problems: list[str] = []
+        if self.schema != "tau.agent_handoff.v1":
+            problems.append(f"schema must be tau.agent_handoff.v1, got {self.schema!r}")
+        if not isinstance(self.goal, dict) or not self.goal.get("goal_hash"):
+            problems.append("goal.goal_hash is required")
+        if not isinstance(self.result, dict):
+            problems.append("result must be an object")
+        else:
+            for key in self.REQUIRED_RESULT_KEYS:
+                if key not in self.result:
+                    problems.append(f"result.{key} is required")
+            for index, item in enumerate(self.result.get("evidence") or []):
+                if isinstance(item, dict) and not item.get("goal_hash"):
+                    problems.append(f"evidence[{index}] missing goal_hash")
+        if problems:
+            raise SeamContractError("tau.agent_handoff.v1", problems)
+
+
+@dataclass(frozen=True)
+class RecoveryPacketContract:
+    """Seam contract for browser recovery packets: no unrunnable guidance."""
+
+    schema: str
+    failure_code: str
+    next_command: list
+
+    def validate(self) -> None:
+        problems: list[str] = []
+        if not self.schema:
+            problems.append("schema is required")
+        if not self.failure_code:
+            problems.append("failure_code is required")
+        if not isinstance(self.next_command, list):
+            problems.append("next_command must be a list")
+        if problems:
+            raise SeamContractError("ask.browser_recovery_packet", problems)
+
+
+class SeamContractError(RuntimeError):
+    def __init__(self, kind: str, problems: list[str]) -> None:
+        self.kind = kind
+        self.problems = problems
+        super().__init__(f"seam {kind!r} violated: {problems}")
 
 
 _SURF_CLI_SOURCE_CACHE: dict[str, str] = {}
@@ -4539,7 +4605,7 @@ def _handoff(
                 self_check.append({"kind": kind, "action": "repair_failed", "error": str(exc)[:200]})
         else:
             self_check.append({"kind": kind, "action": "missing_path_unrepairable"})
-    return {
+    handoff_payload = {
         "schema": "tau.agent_handoff.v1",
         "github": start.get("github", {"repo": "unknown", "target": "unknown"}),
         "goal": start.get("goal", {}),
@@ -4563,6 +4629,12 @@ def _handoff(
         "required_evidence": list(args.evidence),
         "stop_condition": "Stop after emitting a single tau.agent_handoff.v1 response.",
     }
+    HandoffContract(
+        schema=str(handoff_payload.get("schema")),
+        goal=handoff_payload.get("goal") or {},
+        result=handoff_payload.get("result") or {},
+    ).validate()
+    return handoff_payload
 
 
 class CmdResult:

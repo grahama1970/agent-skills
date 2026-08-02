@@ -1348,6 +1348,11 @@ def _replace_handler_project(items: list[str], handler: str, project: str) -> No
 
 
 def _write_lifecycle(run_dir: Path, lifecycle: dict[str, Any]) -> None:
+    from .seam_models import enforce as _enforce_seam
+
+    # Typed seam contract: a malformed lifecycle receipt raises at the
+    # producer instead of feeding the handler gate garbage.
+    lifecycle = _enforce_seam("ask.browser_tab_lifecycle.v1", lifecycle)
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "browser-tab-lifecycle.json").write_text(json.dumps(lifecycle, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
