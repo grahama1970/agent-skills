@@ -1109,6 +1109,7 @@ def _provision_browser_lifecycle(
         lifecycle["identity_guard"] = identity_guard
         _write_lifecycle(run_dir, lifecycle)
         return lifecycle
+    verified_identity_guard = identity_guard
 
     for tab in created_tabs:
         bound = _lifecycle_command(
@@ -1141,6 +1142,7 @@ def _provision_browser_lifecycle(
         "mode": mode,
         "run_dir": str(run_dir),
         "window_id": window_id,
+        "identity_guard": verified_identity_guard,
         "created_tabs": created_tabs,
         "handler_projects": handler_projects,
         "lock_timeout_seconds": lock_timeout_seconds,
