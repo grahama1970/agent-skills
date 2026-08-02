@@ -2187,7 +2187,13 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                         handler=handler,
                         prior_nodes=prior_nodes,
                     ),
-                    "browser_oracle_project": _handler_project(input, handler),
+                    # Only browser seats carry a browser-oracle project; Tau
+                    # preflights any node that declares one, so stamping it on
+                    # a scillm-routed model seat forced a binding_missing block
+                    # (observed live: deepseek-ai seat, watchdog xhigh seat).
+                    "browser_oracle_project": _handler_project(input, handler)
+                    if _is_browser_handler(handler)
+                    else None,
                     "request": input.request,
                     "immutable_goal": input.immutable_goal,
                     "topology": input.topology,
@@ -3059,10 +3065,16 @@ def _normalize_model(value: str) -> str:
 
 
 def _normalize_handler(value: str) -> str:
-    raw = value.strip().lower().removeprefix("$")
+    stripped = value.strip().removeprefix("$")
+    raw = stripped.lower()
     compact = re.sub(r"[^a-z0-9]+", "", raw)
     if compact in _HANDLER_ALIASES:
         return _HANDLER_ALIASES[compact]
+    if "/" in stripped:
+        # Provider-namespaced model ids (deepseek-ai/DeepSeek-V3.2-TEE) are
+        # case-sensitive at the provider; lowercasing broke chutes routing
+        # (observed live: SCILLM_MODEL_NOT_FOUND for a valid model).
+        return re.sub(r"\s+", "-", stripped)
     return re.sub(r"\s+", "-", raw)
 
 

@@ -647,10 +647,10 @@ def test_natural_chutes_exact_model_prompt_compiles_to_single_scillm_handler(tmp
 
     assert bundle["status"] == "READY"
     assert request.request == "what is 2+2?"
-    assert request.handlers == ("deepseek-ai/deepseek-v3.2-tee",)
+    assert request.handlers == ("deepseek-ai/DeepSeek-V3.2-TEE",)
     assert request.handler_provider_hints == ("chutes",)
     dag = bundle["dag"]
-    assert dag["context"]["handlers"] == ["deepseek-ai/deepseek-v3.2-tee"]
+    assert dag["context"]["handlers"] == ["deepseek-ai/DeepSeek-V3.2-TEE"]
     node = dag["nodes"][0]
     assert node["context"]["provider_hint"] == "chutes"
     policy = node["context"]["handler_policy"]
@@ -658,14 +658,14 @@ def test_natural_chutes_exact_model_prompt_compiles_to_single_scillm_handler(tmp
     assert policy["transport"] == "scillm.chat"
     assert policy["provider_hint"] == "chutes"
     assert policy["model_policy"]["provider"] == "chutes"
-    assert policy["model_policy"]["model"] == "deepseek-ai/deepseek-v3.2-tee"
+    assert policy["model_policy"]["model"] == "deepseek-ai/DeepSeek-V3.2-TEE"
     command_spec = json.loads(
         Path(bundle["command_spec_root"], "handler-deepseek-ai-deepseek-v3-2-tee", "tau-dispatch-command.json").read_text(
             encoding="utf-8"
         )
     )
     command = command_spec["command"]
-    assert command[command.index("--handler") + 1] == "deepseek-ai/deepseek-v3.2-tee"
+    assert command[command.index("--handler") + 1] == "deepseek-ai/DeepSeek-V3.2-TEE"
     assert command[command.index("--provider-hint") + 1] == "chutes"
 
 
@@ -682,7 +682,7 @@ def test_chutes_prefixed_handler_is_canonicalized_before_scillm_dispatch(tmp_pat
     bundle = compile_tau_dag_bundle(request)
 
     assert bundle["status"] == "READY"
-    assert request.handlers == ("deepseek-ai/deepseek-v3.2-tee",)
+    assert request.handlers == ("deepseek-ai/DeepSeek-V3.2-TEE",)
     assert request.handler_provider_hints == ("chutes",)
     command_spec = json.loads(
         Path(bundle["command_spec_root"], "handler-deepseek-ai-deepseek-v3-2-tee", "tau-dispatch-command.json").read_text(
@@ -690,7 +690,7 @@ def test_chutes_prefixed_handler_is_canonicalized_before_scillm_dispatch(tmp_pat
         )
     )
     command = command_spec["command"]
-    assert command[command.index("--handler") + 1] == "deepseek-ai/deepseek-v3.2-tee"
+    assert command[command.index("--handler") + 1] == "deepseek-ai/DeepSeek-V3.2-TEE"
     assert command[command.index("--provider-hint") + 1] == "chutes"
 
 
@@ -855,7 +855,7 @@ def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_
         "webgpt",
         "webclaude",
         "webkimi",
-        "deepseek-ai/deepseek-v3.2-tee",
+        "deepseek-ai/DeepSeek-V3.2-TEE",
     )
     assert request.handler_provider_hints == ("", "", "", "chutes")
     dag = bundle["dag"]
@@ -863,7 +863,7 @@ def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_
         "webgpt",
         "webclaude",
         "webkimi",
-        "deepseek-ai/deepseek-v3.2-tee",
+        "deepseek-ai/DeepSeek-V3.2-TEE",
     ]
     assert dag["edges"] == [
         {"from": "handler-webgpt", "to": "join"},
