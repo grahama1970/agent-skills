@@ -6,6 +6,7 @@ into a compact PatchResult for blue-team workflows.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -13,7 +14,7 @@ import subprocess
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import httpx  # Required dependency for consistency with battle stack.
 from loguru import logger
@@ -26,13 +27,25 @@ SKILL_DIR = Path(__file__).resolve().parent
 SKILLS_DIR = SKILL_DIR.parents[2]
 SIBLING_CODE_RUNNER_RUN = SKILLS_DIR / "code-runner" / "run.sh"
 
+FunctionalEvidenceLiteral = Literal["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"]
+_BUILD_SMOKE_MARKERS = (
+    "test -d .",
+    "py_compile",
+    "compileall",
+)
+
 
 class PatchResult(BaseModel):
     success: bool = False
     rounds: int = 0
     patch_diff: str = ""
     score: float = 0.0
-    functionality_preserved: bool = False
+    functionality_preserved: bool | None = None
+    functional_evidence_status: FunctionalEvidenceLiteral = "INSUFFICIENT_EVIDENCE"
+    functional_test_command: str | None = None
+    functional_exit_code: int | None = None
+    functional_receipt_ref: str | None = None
+    functional_artifact_sha256: str | None = None
 
 
 def _safe_rel(path: str, cwd: Path) -> str:
@@ -43,6 +56,74 @@ def _safe_rel(path: str, cwd: Path) -> str:
         return str(p.relative_to(cwd))
     except ValueError:
         return str(p)
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _is_behavioral_test_command(command: str) -> bool:
+    normalized = " ".join(command.lower().split())
+    return bool(normalized) and not any(
+        marker in normalized for marker in _BUILD_SMOKE_MARKERS
+    )
+
+
+def _assertion_value(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if not isinstance(value, dict):
+        return None
+    for key in ("passed", "success", "ok"):
+        if isinstance(value.get(key), bool):
+            return bool(value[key])
+    status = value.get("status")
+    if isinstance(status, str):
+        normalized = status.strip().upper()
+        if normalized in {"PASS", "PASSED", "SUCCESS", "OK"}:
+            return True
+        if normalized in {"FAIL", "FAILED", "ERROR"}:
+            return False
+    return None
+
+
+def _classify_functional_assertions(
+    assertions: Any,
+    test_command: str,
+) -> tuple[FunctionalEvidenceLiteral, bool | None]:
+    """Classify only explicit behavioral assertions.
+
+    A build/smoke command is always INSUFFICIENT_EVIDENCE, even if the command
+    succeeded. For behavioral commands, any explicit failure yields FAIL; every
+    assertion must be explicitly understood and pass before yielding PASS.
+    """
+
+    if not _is_behavioral_test_command(test_command):
+        return "INSUFFICIENT_EVIDENCE", None
+    if not isinstance(assertions, list) or not assertions:
+        return "INSUFFICIENT_EVIDENCE", None
+    values = [_assertion_value(item) for item in assertions]
+    if any(value is False for value in values):
+        return "FAIL", False
+    if all(value is True for value in values):
+        return "PASS", True
+    return "INSUFFICIENT_EVIDENCE", None
+
+
+def _functional_exit_code(result: dict[str, Any]) -> int | None:
+    for key in (
+        "functional_test_exit_code",
+        "test_exit_code",
+        "assertion_exit_code",
+    ):
+        value = result.get(key)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+    return None
 
 
 def _ensure_git_repo(cwd: Path) -> None:
@@ -225,13 +306,18 @@ def write_patch(
             "code-runner not found. Checked sibling {}, cwd .pi, and cwd skills.",
             SIBLING_CODE_RUNNER_RUN,
         )
-        return PatchResult(success=False)
+        return PatchResult(
+            success=False,
+            functional_test_command=test_command,
+        )
 
     code_runner_dir = run_sh.parent
 
     patch_runs_dir = SKILL_DIR / "patch-runs"
     patch_runs_dir.mkdir(parents=True, exist_ok=True)
     td_path = Path(tempfile.mkdtemp(prefix="patch_writer_", dir=str(patch_runs_dir)))
+    result_receipt_ref: str | None = None
+    result_artifact_sha256: str | None = None
     try:
         spec_path = td_path / "spec.json"
         spec["output_dir"] = str(td_path)
@@ -249,7 +335,10 @@ def write_patch(
             )
         except Exception as e:
             logger.exception("Failed invoking code-runner: {}", e)
-            return PatchResult(success=False)
+            return PatchResult(
+                success=False,
+                functional_test_command=test_command,
+            )
 
         if proc.returncode != 0:
             logger.error(
@@ -259,7 +348,10 @@ def write_patch(
                 proc.stderr[-2000:],
                 td_path,
             )
-            return PatchResult(success=False)
+            return PatchResult(
+                success=False,
+                functional_test_command=test_command,
+            )
 
         result_path = td_path / f"{spec['task_id']}.result.json"
         if not result_path.exists():
@@ -268,13 +360,21 @@ def write_patch(
                 result_path = alt
             else:
                 logger.error("No result.json found after code-runner run")
-                return PatchResult(success=False)
+                return PatchResult(
+                    success=False,
+                    functional_test_command=test_command,
+                )
 
         try:
+            result_artifact_sha256 = _sha256(result_path)
+            result_receipt_ref = f"sha256:{result_artifact_sha256}"
             result = json.loads(result_path.read_text(encoding="utf-8"))
         except Exception as e:
             logger.exception("Failed reading result.json: {}", e)
-            return PatchResult(success=False)
+            return PatchResult(
+                success=False,
+                functional_test_command=test_command,
+            )
     finally:
         if os.getenv("BATTLE_KEEP_PATCH_RUNS") != "0":
             pass
@@ -299,16 +399,10 @@ def write_patch(
             patch_diff = patch_artifact.read_text(encoding="utf-8")
     score = float(result.get("score", result.get("best_score", 0.0)) or 0.0)
 
-    # Receipt-truth: functionality-preservation is only PROVEN by explicit passing
-    # functional assertions. Deriving it from DoD `success` alone inflates the score,
-    # because the DoD can be a trivial gate (e.g. `test -d .` for a target with no test
-    # harness, or a compile-only `py_compile`) that never exercises real behavior.
-    # Absent real assertions the claim stays fail-closed (unproven -> False).
-    final_assertions = result.get("assertions", [])
-    if isinstance(final_assertions, list) and final_assertions:
-        functionality_preserved = all(bool(x) for x in final_assertions)
-    else:
-        functionality_preserved = False
+    functional_status, functionality_preserved = _classify_functional_assertions(
+        result.get("assertions", []),
+        test_command,
+    )
 
     return PatchResult(
         success=success,
@@ -316,4 +410,9 @@ def write_patch(
         patch_diff=patch_diff,
         score=score,
         functionality_preserved=functionality_preserved,
+        functional_evidence_status=functional_status,
+        functional_test_command=test_command,
+        functional_exit_code=_functional_exit_code(result),
+        functional_receipt_ref=result_receipt_ref,
+        functional_artifact_sha256=result_artifact_sha256,
     )
