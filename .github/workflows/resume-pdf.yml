@@ -1,0 +1,89 @@
+name: Resume PDF
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/resume/graham-anderson-resume.md"
+      - "docs/resume/resume.css"
+      - "scripts/build_markdown_pdf.py"
+      - ".github/workflows/resume-pdf.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docs/resume/graham-anderson-resume.md"
+      - "docs/resume/resume.css"
+      - "scripts/build_markdown_pdf.py"
+      - ".github/workflows/resume-pdf.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-resume-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Check resume source
+        id: resume_source
+        run: |
+          if [[ -f docs/resume/graham-anderson-resume.md ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "docs/resume/graham-anderson-resume.md is not present; skipping PDF build"
+          fi
+
+      - name: Build resume PDF
+        if: steps.resume_source.outputs.present == 'true'
+        run: |
+          css_args=()
+          if [[ -f docs/resume/resume.css ]]; then
+            css_args=(--css docs/resume/resume.css)
+          fi
+          uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
+            docs/resume/graham-anderson-resume.md \
+            docs/resume/graham-anderson-resume.pdf \
+            --title "Graham Anderson Resume" \
+            --author "Graham Anderson" \
+            "${css_args[@]}"
+
+      - name: Verify generated PDF
+        if: steps.resume_source.outputs.present == 'true'
+        run: |
+          test -s docs/resume/graham-anderson-resume.pdf
+          python - <<'PY'
+          from pathlib import Path
+          pdf = Path("docs/resume/graham-anderson-resume.pdf")
+          data = pdf.read_bytes()
+          if not data.startswith(b"%PDF"):
+              raise SystemExit("generated resume is not a PDF")
+          if len(data) < 1000:
+              raise SystemExit("generated resume PDF is unexpectedly small")
+          PY
+
+      - name: Commit generated PDF on main
+        if: steps.resume_source.outputs.present == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git add docs/resume/graham-anderson-resume.pdf
+          if git diff --cached --quiet; then
+            echo "Resume PDF already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Build resume PDF [skip ci]"
+          git push origin HEAD:main
+
+      - uses: actions/upload-artifact@v4
+        if: steps.resume_source.outputs.present == 'true'
+        with:
+          name: graham-anderson-resume-pdf
+          path: docs/resume/graham-anderson-resume.pdf
