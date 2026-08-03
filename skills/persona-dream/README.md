@@ -172,51 +172,6 @@ the JSON, not here.*
 
 <!-- END GENERATED CURRENT RESEARCH STATE -->
 
-## PCTOM-R, and why its numbers are not a result
-
-PCTOM-R asks whether counterfactual dreaming improves *prospective* Theory of
-Mind — predicting what another agent will do — beyond what direct memory gives.
-
-The machinery is strong and the receipt counts are large. Neither fact is a
-finding. Receipt volume measures the reliability of the experiment apparatus
-within its text-first scope; it does not measure benefit. Until a preregistered
-proper-scoring or planning-regret metric separates CD from the strongest M/R/D
-baseline on a held-out slice, PCTOM-R has no result to report.
-
-## Ownership boundaries
-
-Persona Dream owns the dream packet, continuity ledger, session-mood binding,
-and the receipts that join them. It does **not** own: Graph Memory (persistence
-and recall), Watch (observation and adjudication), Tau (model routing and
-creator/reviewer loops), Kling and other providers (media generation),
-Chatterbox (speech synthesis), or the voice-evaluation lane (speaker backends).
-Each has its own proof boundary; Persona Dream may cite their receipts but may
-not restate their guarantees. See [Technical Architecture](#technical-architecture).
-
-## What this project does not claim
-
-None of the following is proven, and no commit, single historical run, ASR word
-error rate, speaker-embedding score, or volume of receipts establishes any of
-them:
-
-- end-to-end pipeline reliability across repeated cycles;
-- deployed production behavior beyond the local live SPARTA API receipt;
-- perceived emotion, naturalness, or human acceptance of synthesized speech;
-- that a human listener recognizes Embry;
-- a confidence-bounded PCTOM-R planning advantage;
-- that attaching a previous video causally improves continuity.
-
-Claims here are retired only by a named receipt read back from disk.
-
----
-
-## Research detail
-
-The settled research goal and gate sequence live in [`GOAL.md`](GOAL.md).
-Detailed hypotheses, protocols, and workstream descriptions live in
-[`docs/research.md`](docs/research.md). For current checked state, use
-[`CURRENT_STATUS.json`](CURRENT_STATUS.json).
-
 ## Current Proof Boundary
 
 Persona Dream is an advanced research prototype and a substantial hardening
@@ -256,6 +211,51 @@ Provider selection is near the end of the media-production spine. It is not the
 end of the founding research experiment.
 
 ---
+
+## PCTOM-R, and why its numbers are not a result
+
+PCTOM-R asks whether counterfactual dreaming improves *prospective* Theory of
+Mind — predicting what another agent will do — beyond what direct memory gives.
+
+The machinery is strong and the receipt counts are large. Neither fact is a
+finding. Receipt volume measures the reliability of the experiment apparatus
+within its text-first scope; it does not measure benefit. Until a preregistered
+proper-scoring or planning-regret metric separates CD from the strongest M/R/D
+baseline on a held-out slice, PCTOM-R has no result to report.
+
+## What this project does not claim
+
+None of the following is proven, and no commit, single historical run, ASR word
+error rate, speaker-embedding score, or volume of receipts establishes any of
+them:
+
+- end-to-end pipeline reliability across repeated cycles;
+- deployed production behavior beyond the local live SPARTA API receipt;
+- perceived emotion, naturalness, or human acceptance of synthesized speech;
+- that a human listener recognizes Embry;
+- a confidence-bounded PCTOM-R planning advantage;
+- that attaching a previous video causally improves continuity.
+
+Claims here are retired only by a named receipt read back from disk.
+
+---
+
+## Ownership boundaries
+
+Persona Dream owns the dream packet, continuity ledger, session-mood binding,
+and the receipts that join them. It does **not** own: Graph Memory (persistence
+and recall), Watch (observation and adjudication), Tau (model routing and
+creator/reviewer loops), Kling and other providers (media generation),
+Chatterbox (speech synthesis), or the voice-evaluation lane (speaker backends).
+Each has its own proof boundary; Persona Dream may cite their receipts but may
+not restate their guarantees. See [Technical Architecture](#technical-architecture).
+
+## Research detail
+
+The settled research goal and gate sequence live in [`GOAL.md`](GOAL.md).
+Detailed hypotheses, protocols, and workstream descriptions live in
+[`docs/research.md`](docs/research.md). For current checked state, use
+[`CURRENT_STATUS.json`](CURRENT_STATUS.json).
 
 ## Pipeline detail
 
