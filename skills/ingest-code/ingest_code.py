@@ -24,7 +24,7 @@ import subprocess
 import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
@@ -34,7 +34,7 @@ from dotenv import load_dotenv
 
 from code_memory_client import CodeMemoryClient
 from code_graph_artifact import write_code_graph_bundle
-from code_symbol_record import CodeSymbolRecord
+from code_symbol_record import IDENTITY_ALGORITHM_VERSION, CodeSymbolRecord
 from ingest_code_cwe import scan_file_cwe
 
 load_dotenv(override=False)
@@ -88,6 +88,15 @@ class TreeSitterScanResult:
 
     records: list[CodeSymbolRecord]
     outcome: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class RepositoryIdentity:
+    """Repository identity selected for symbol and file IDs."""
+
+    repository_id: str
+    authoritative: bool
+    source: str
 
 
 def load_taxonomy_module():
@@ -692,8 +701,51 @@ def _git_value(cwd: Path, args: list[str], default: str) -> str:
     return default
 
 
+def _normalize_repository_id(value: str) -> str:
+    """Normalize configured or Git-derived repository identity."""
+    raw = value.strip()
+    if not raw:
+        return ""
+    raw = raw.replace("\\", "/")
+    raw = re.sub(r"^[a-z]+://", "", raw)
+    raw = re.sub(r"^git@", "", raw)
+    raw = raw.replace(":", "/", 1) if "/" in raw and ":" in raw.split("/", 1)[0] else raw
+    raw = re.sub(r"^([^@/]+@)", "", raw)
+    raw = raw.rstrip("/")
+    if raw.endswith(".git"):
+        raw = raw[:-4]
+    raw = raw.lower()
+    raw = re.sub(r"/+", "/", raw)
+    return raw
+
+
+def resolve_repository_identity(codebase_root: Path) -> RepositoryIdentity:
+    """Resolve repository identity without trusting the checkout directory name."""
+    explicit = (
+        os.environ.get("INGEST_CODE_REPOSITORY_ID")
+        or os.environ.get("CODE_SYMBOLS_REPOSITORY_ID")
+        or ""
+    )
+    normalized_explicit = _normalize_repository_id(explicit)
+    if normalized_explicit:
+        return RepositoryIdentity(normalized_explicit, True, "explicit")
+
+    remote = _git_value(codebase_root, ["config", "--get", "remote.origin.url"], "")
+    normalized_remote = _normalize_repository_id(remote)
+    if normalized_remote:
+        return RepositoryIdentity(normalized_remote, True, "git_remote_origin")
+
+    fallback_basis = str(codebase_root.resolve())
+    fallback = f"local:{codebase_root.resolve().name}:{hashlib.sha256(fallback_basis.encode('utf-8')).hexdigest()[:16]}"
+    return RepositoryIdentity(fallback, False, "local_checkout_fallback")
+
+
 def _current_branch(codebase_root: Path) -> str:
-    return _git_value(codebase_root, ["rev-parse", "--abbrev-ref", "HEAD"], "unknown")
+    branch = _git_value(codebase_root, ["rev-parse", "--abbrev-ref", "HEAD"], "unknown")
+    if branch == "HEAD":
+        commit = _current_commit(codebase_root)
+        return f"detached:{commit[:12]}" if commit != "unknown" else "detached:unknown"
+    return branch
 
 
 def _current_commit(codebase_root: Path) -> str:
@@ -725,9 +777,12 @@ def _language_for_path(filepath: Path) -> str:
 
 def _relative_path(filepath: Path, codebase_root: Path) -> str:
     try:
-        return filepath.resolve().relative_to(codebase_root.resolve()).as_posix()
-    except ValueError:
-        return filepath.as_posix()
+        rel_path = filepath.resolve().relative_to(codebase_root.resolve()).as_posix()
+    except ValueError as exc:
+        raise ValueError(f"symbol path is outside codebase root: {filepath}") from exc
+    if rel_path.startswith("../") or rel_path == ".." or Path(rel_path).is_absolute():
+        raise ValueError(f"symbol path is outside codebase root: {filepath}")
+    return rel_path
 
 
 def _content_hash(text: str) -> str:
@@ -756,14 +811,18 @@ def _name_from_call(node: ast.AST) -> str:
 
 
 def _find_python_parent_symbol(tree: ast.AST, start_line: int, node: ast.AST) -> Optional[str]:
+    parents: list[tuple[int, int, str]] = []
     for candidate in ast.walk(tree):
-        if not isinstance(candidate, ast.ClassDef):
+        if not isinstance(candidate, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         candidate_start = getattr(candidate, "lineno", 0)
         candidate_end = getattr(candidate, "end_lineno", 0)
         if candidate_start <= start_line <= candidate_end and candidate is not node:
-            return candidate.name
-    return None
+            parents.append((candidate_start, candidate_end, candidate.name))
+    if not parents:
+        return None
+    parents.sort(key=lambda item: (item[0], -(item[1] - item[0])))
+    return ".".join(name for _, _, name in parents)
 
 
 def _extract_python_symbol_details(
@@ -834,6 +893,7 @@ def _build_code_symbol_record(
     branch: str,
     commit: str,
     imports: list[dict],
+    repository_identity: RepositoryIdentity | None = None,
 ) -> Optional[CodeSymbolRecord]:
     raw_kind = symbol.get("kind", "")
     kind = _normalize_symbol_kind(raw_kind)
@@ -867,17 +927,18 @@ def _build_code_symbol_record(
         qualified_name = name
 
     rel_path = _relative_path(filepath, codebase_root)
+    identity = repository_identity or RepositoryIdentity(repo, True, "legacy_repo")
     tags = _build_symbol_tags(kind, name, filepath.stem)
     tags.extend([
         "code_symbol",
-        f"repo:{repo}",
+        f"repo:{identity.repository_id}",
         f"lang:{_language_for_path(filepath)}",
         f"path:{rel_path}",
     ])
 
     return CodeSymbolRecord(
         scope=scope,
-        repo=repo,
+        repo=identity.repository_id,
         root=str(codebase_root.resolve()),
         branch=branch,
         commit=commit,
@@ -897,8 +958,40 @@ def _build_code_symbol_record(
         called_symbols=called_symbols,
         string_literals=string_literals,
         content_hash=_content_hash(code or signature or docstring or name),
+        repository_id=identity.repository_id,
+        repository_id_authoritative=identity.authoritative,
+        identity_algorithm_version=IDENTITY_ALGORITHM_VERSION,
         tags=tags,
     )
+
+
+def _with_duplicate_identity_discriminators(records: list[CodeSymbolRecord]) -> list[CodeSymbolRecord]:
+    """Add deterministic discriminators when producer shaping fields collide."""
+    groups: dict[tuple[str, str, str, str, str, str], list[CodeSymbolRecord]] = {}
+    for record in records:
+        key = (
+            record.effective_repository_id,
+            record.branch,
+            record.normalized_path,
+            record.language,
+            record.symbol_kind,
+            record.qualified_name,
+        )
+        groups.setdefault(key, []).append(record)
+
+    result: list[CodeSymbolRecord] = []
+    for group in groups.values():
+        if len(group) == 1:
+            result.extend(group)
+            continue
+        ordered = sorted(group, key=lambda item: (item.start_line, item.end_line, item.signature, item.symbol_name))
+        for index, record in enumerate(ordered, start=1):
+            if record.identity_discriminator:
+                result.append(record)
+            else:
+                discriminator = f"decl:{index}:{record.start_line}:{record.end_line}"
+                result.append(replace(record, identity_discriminator=discriminator))
+    return sorted(result, key=lambda item: (item.normalized_path, item.qualified_name, item.start_line))
 
 
 def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
@@ -1127,7 +1220,8 @@ def _scan_treesitter_symbol_records_with_outcome(
         )
         return TreeSitterScanResult(records=[], outcome=outcome)
 
-    repo = codebase_root.resolve().name
+    repository_identity = resolve_repository_identity(codebase_root)
+    repo = repository_identity.repository_id
     branch = _current_branch(codebase_root)
     commit = _current_commit(codebase_root)
     records: list[CodeSymbolRecord] = []
@@ -1157,6 +1251,7 @@ def _scan_treesitter_symbol_records_with_outcome(
                 branch=branch,
                 commit=commit,
                 imports=symbol_context["imports"],
+                repository_identity=repository_identity,
             )
             if record is None:
                 continue
@@ -1180,7 +1275,7 @@ def _scan_treesitter_symbol_records_with_outcome(
         reported_paths=reported_paths,
         stderr=result.stderr.strip(),
     )
-    return TreeSitterScanResult(records=records, outcome=outcome)
+    return TreeSitterScanResult(records=_with_duplicate_identity_discriminators(records), outcome=outcome)
 
 
 def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
@@ -1564,7 +1659,8 @@ def scan(
             )
         local_code_symbols_written = _append_local_code_symbols(local_code_symbols_artifact, code_symbol_records)
         precomputed_edges = extract_edges(files, path)
-        repo_name = path.resolve().name
+        repository_identity = resolve_repository_identity(path)
+        repo_name = repository_identity.repository_id
         code_graph_artifact = write_code_graph_bundle(
             codebase_root=path,
             repo=repo_name,
@@ -1575,6 +1671,9 @@ def scan(
             symbols=code_symbol_records,
             edges=precomputed_edges,
             extractor_outcomes=code_symbol_extractor_outcomes,
+            repository_id_authoritative=repository_identity.authoritative,
+            repository_id_source=repository_identity.source,
+            identity_algorithm_version=IDENTITY_ALGORITHM_VERSION,
         )
         print(f"Code graph artifacts: {code_graph_artifact['path']}", flush=True)
 

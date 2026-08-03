@@ -124,11 +124,20 @@ Each record includes:
 
 | Field | Purpose |
 |-------|---------|
-| `repo`, `branch`, `commit`, `path` | Scope and staleness control |
+| `repo`, `repository_id`, `branch`, `commit`, `path` | Canonical repository identity, scope, and staleness control |
 | `language`, `symbol_kind`, `symbol_name`, `qualified_name` | Symbol filtering and exact lookup |
 | `start_line`, `end_line`, `code`, `content_hash` | Cited source retrieval and deterministic updates |
 | `imports`, `parameters`, `local_variables`, `called_symbols`, `string_literals` | Lexical terms for memory's sparse/hybrid retrieval |
 | `problem`, `solution`, `text`, `tags` | Compatibility with existing memory recall surfaces |
+
+`repository_id` is the producer-level identity used for file and symbol IDs. It
+is resolved from an explicit `INGEST_CODE_REPOSITORY_ID` /
+`CODE_SYMBOLS_REPOSITORY_ID` value first, then from normalized
+`remote.origin.url`. Checkout directory basename is not authoritative. If no
+explicit or Git remote identity is available, the scan uses a non-authoritative
+local fallback and marks the code-graph bundle as not reconciliation-eligible.
+Symbol documents publish `identity_algorithm_version` and retain `legacy_key`
+for migration diagnostics.
 
 Identifier-heavy fields are emitted as `lexical_terms` such as `symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`, and split identifier tokens. These are inputs to `/memory`'s code retrieval backend; `/ingest-code` does not create Qdrant collections or payload indexes directly.
 

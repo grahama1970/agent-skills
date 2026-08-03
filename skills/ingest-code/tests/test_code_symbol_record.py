@@ -104,7 +104,12 @@ def test_documents_publish_current_and_version_identity() -> None:
     assert document["_key"] == record.symbol_id
     assert document["symbol_id"] == record.symbol_id
     assert document["symbol_version_id"] == record.symbol_version_id
+    assert document["repository_id"] == record.effective_repository_id
+    assert document["repository_id_authoritative"] is True
+    assert document["identity_algorithm_version"] == record.identity_algorithm_version
     assert document["content_hash"] == record.effective_content_hash
     assert document["path"] == record.normalized_path
     assert legacy["symbol_id"] == record.symbol_id
     assert legacy["symbol_version_id"] == record.symbol_version_id
+    assert legacy["repository_id"] == record.effective_repository_id
+    assert legacy["identity_algorithm_version"] == record.identity_algorithm_version
