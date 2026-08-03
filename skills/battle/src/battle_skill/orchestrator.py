@@ -19,13 +19,32 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.live import Live
 
-from .config import BATTLES_DIR, TASK_MONITOR_SKILL, NULL_ROUND_THRESHOLD, STABLE_ROUND_THRESHOLD, DEFAULT_MODEL, BATTLE_SWARM_WORKERS
-from .state import BattleState, TwinMode, Finding, Patch, RoundResult
+from .config import (
+    BATTLES_DIR,
+    TASK_MONITOR_SKILL,
+    NULL_ROUND_THRESHOLD,
+    STABLE_ROUND_THRESHOLD,
+    DEFAULT_MODEL,
+    SUCCESSFUL_PATCH_SCORE,
+    TIME_DECAY_FACTOR,
+    SEVERITY_MULTIPLIERS,
+)
+from .state import BattleState, TwinMode, Finding, FunctionalEvidenceStatus, Patch, RoundResult
 from .digital_twin import DigitalTwin
 from .red_team import RedAgent
 from .blue_team import BlueAgent
-from .scoring import Scorer, score_round
+from .scoring import Scorer
 from .human_interjection import apply_pending_pause_after_round
+from .orchestrator_judge import (
+    BlueCandidateRef,
+    FailClosedJudgeBoundary,
+    JudgeBoundary,
+    JudgeFindingOutcome,
+    JudgePatchOutcome,
+    RoundJudgeContext,
+    source_identity,
+    wrap_blue_candidates,
+)
 
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv(usecwd=True), override=False)
@@ -72,7 +91,8 @@ class BattleOrchestrator:
     def __init__(self, target_path: str, max_rounds: int = 1000, concurrent: bool = True,
                  twin_mode: TwinMode | None = None, qemu_machine: str | None = None,
                  docker_image: str | None = None, chaos: bool = False,
-                 profile: str = "hobbyist", model: str = "gpt-5.2-codex"):
+                 profile: str = "hobbyist", model: str = "gpt-5.2-codex",
+                 judge_boundary: JudgeBoundary | None = None):
         self.battle_id = f"battle_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self.target_path = str(Path(target_path).resolve())
         self.max_rounds = max_rounds
@@ -104,6 +124,23 @@ class BattleOrchestrator:
         self.stop_event = threading.Event()
         self.worker_timeout = int(os.environ.get("BATTLE_WORKER_TIMEOUT_SECONDS", "300"))
         self.control_dir = BATTLES_DIR / f"{self.battle_id}_control"
+        self.judge_boundary = judge_boundary or FailClosedJudgeBoundary()
+
+    def _round_judge_context(self, round_num: int) -> RoundJudgeContext:
+        source_commit, source_tree = source_identity()
+        receipt_root = getattr(
+            self,
+            "control_dir",
+            BATTLES_DIR / f"{self.battle_id}_control",
+        )
+        return RoundJudgeContext(
+            battle_id=self.battle_id,
+            run_id=self.battle_id,
+            round_number=round_num,
+            receipt_dir=receipt_root / "judge" / f"round-{round_num:04d}",
+            source_commit=source_commit,
+            source_tree=source_tree,
+        )
 
     def setup_digital_twin(self) -> bool:
         if not self.digital_twin.setup():
@@ -170,64 +207,127 @@ class BattleOrchestrator:
                 self.state.blue_active = False
                 self.state.blue_action = "idle"
 
-    def judge_red_findings(self, findings: list[Finding], round_num: int) -> list[Finding]:
-        """Return findings confirmed by an independent Judge boundary.
-
-        The legacy agent path has no Docker replay receipt yet, so it fails
-        closed unless a finding already carries an explicit exploit proof and is
-        not tagged as rejected. The deterministic #1115 proof runner exercises
-        the full local Docker Judge path.
-        """
-        confirmed: list[Finding] = []
-        for finding in findings:
-            if finding.exploit_proof and "judge:rejected" not in finding.tags:
-                finding.tags = sorted(set(finding.tags + ["judge:confirmed"]))
-                confirmed.append(finding)
-        return confirmed
+    def judge_red_findings(self, findings: list[Finding], round_num: int) -> list[JudgeFindingOutcome]:
+        """Return immutable Red finding outcomes from the Battle Judge boundary."""
+        boundary = getattr(self, "judge_boundary", FailClosedJudgeBoundary())
+        return boundary.judge_findings(self._round_judge_context(round_num), findings)
 
     def judge_patch_verdicts(
         self,
+        candidates: list[BlueCandidateRef],
         patches: list[Patch],
         confirmed_findings: list[Finding],
         round_num: int,
-    ) -> dict[str, str]:
-        """Return Judge #2 verdicts for candidate patches.
-
-        Without a Battle-owned replay receipt, Blue advisory fields are not
-        sufficient for score. This default path therefore records
-        INSUFFICIENT_EVIDENCE; deterministic Docker proof is provided by
-        prove-reactive-judge-round.
-        """
-        return {patch.id: "INSUFFICIENT_EVIDENCE" for patch in patches}
+    ) -> list[JudgePatchOutcome]:
+        """Return immutable Blue patch outcomes from the Battle Judge boundary."""
+        boundary = getattr(self, "judge_boundary", FailClosedJudgeBoundary())
+        return boundary.judge_patches(
+            self._round_judge_context(round_num),
+            candidates,
+            patches,
+            confirmed_findings,
+        )
 
     def score_judged_round(
         self,
-        confirmed_findings: list[Finding],
+        findings: list[Finding],
+        finding_outcomes: list[JudgeFindingOutcome],
         patches: list[Patch],
-        patch_verdicts: dict[str, str],
+        patch_outcomes: list[JudgePatchOutcome],
         round_num: int,
     ) -> tuple[float, float]:
-        """Score only Judge-confirmed findings and Judge-successful patches."""
+        """Score only immutable Judge-confirmed findings and successful patches."""
+        confirmed_ids = {
+            outcome.finding_id
+            for outcome in finding_outcomes
+            if outcome.verdict == "CONFIRMED"
+        }
+        confirmed_findings = [
+            finding for finding in findings if finding.id in confirmed_ids
+        ]
         red_score = sum(Scorer.score_finding(f, round_num) for f in confirmed_findings)
         blue_score = 0.0
         if confirmed_findings:
+            finding_by_id = {finding.id: finding for finding in confirmed_findings}
             for patch in patches:
-                if patch_verdicts.get(patch.id) != "BLUE_SUCCESS":
+                accepted = [
+                    outcome
+                    for outcome in patch_outcomes
+                    if outcome.patch_id == patch.id
+                    and outcome.verdict == "BLUE_SUCCESS"
+                    and outcome.functional_evidence_status is FunctionalEvidenceStatus.PASS
+                ]
+                if not accepted:
                     continue
-                matching_finding = next(
-                    (f for f in confirmed_findings if f.id == patch.finding_id),
-                    confirmed_findings[0],
-                )
-                base_verified = patch.verified
-                base_functionality = patch.functionality_preserved
-                patch.verified = True
-                patch.functionality_preserved = True
-                try:
-                    blue_score += Scorer.score_patch(patch, matching_finding, round_num)
-                finally:
-                    patch.verified = base_verified
-                    patch.functionality_preserved = base_functionality
+                matching_finding = finding_by_id.get(patch.finding_id)
+                if not matching_finding:
+                    continue
+                blue_score += self._score_judge_accepted_patch(patch, matching_finding, round_num)
+        self._write_scorekeeper_receipt(
+            round_num=round_num,
+            findings=findings,
+            patches=patches,
+            finding_outcomes=finding_outcomes,
+            patch_outcomes=patch_outcomes,
+            red_score=red_score,
+            blue_score=blue_score,
+        )
         return red_score, blue_score
+
+    def _score_judge_accepted_patch(self, patch: Patch, finding: Finding, round_num: int) -> float:
+        base = SUCCESSFUL_PATCH_SCORE
+        mult = SEVERITY_MULTIPLIERS.get(finding.severity, 1.0)
+        base *= 1.2
+        decay = 1.0 / (1.0 + TIME_DECAY_FACTOR * round_num)
+        return base * mult * decay
+
+    def _write_scorekeeper_receipt(
+        self,
+        *,
+        round_num: int,
+        findings: list[Finding],
+        patches: list[Patch],
+        finding_outcomes: list[JudgeFindingOutcome],
+        patch_outcomes: list[JudgePatchOutcome],
+        red_score: float,
+        blue_score: float,
+    ) -> Path:
+        receipt_path = self.control_dir / "judge" / f"round-{round_num:04d}" / "scorekeeper-receipt.json"
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt = {
+            "schema": "battle.orchestrator_scorekeeper_receipt.v1",
+            "status": "PASS",
+            "mocked": False,
+            "live": True,
+            "battle_id": self.battle_id,
+            "run_id": self.battle_id,
+            "round_number": round_num,
+            "score_authority": "judge_receipts_only",
+            "red_score": red_score,
+            "blue_score": blue_score,
+            "finding_ids": [finding.id for finding in findings],
+            "patch_ids": [patch.id for patch in patches],
+            "accepted_red_finding_ids": [
+                outcome.finding_id
+                for outcome in finding_outcomes
+                if outcome.verdict == "CONFIRMED"
+            ],
+            "accepted_blue_candidate_ids": [
+                outcome.candidate_id
+                for outcome in patch_outcomes
+                if outcome.verdict == "BLUE_SUCCESS"
+                and outcome.functional_evidence_status is FunctionalEvidenceStatus.PASS
+            ],
+            "finding_outcome_receipts": [
+                outcome.receipt.path for outcome in finding_outcomes
+            ],
+            "patch_outcome_receipts": [
+                outcome.receipt.path for outcome in patch_outcomes
+            ],
+            "created_at": datetime.now().isoformat(),
+        }
+        receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return receipt_path
 
     def run_round_concurrent(self, round_num: int) -> RoundResult:
         start_time = time.time()
@@ -268,7 +368,15 @@ class BattleOrchestrator:
                 console.print(f"[red]Blue team error: {e}[/red]")
                 patches = []
 
-            confirmed_findings = self.judge_red_findings(findings, round_num)
+            finding_outcomes = self.judge_red_findings(findings, round_num)
+            confirmed_ids = {
+                outcome.finding_id
+                for outcome in finding_outcomes
+                if outcome.verdict == "CONFIRMED"
+            }
+            confirmed_findings = [
+                finding for finding in findings if finding.id in confirmed_ids
+            ]
             reactive_patches: list[Patch] = []
             if confirmed_findings:
                 try:
@@ -277,10 +385,18 @@ class BattleOrchestrator:
                     console.print(f"[red]Reactive Blue team error: {e}[/red]")
                     reactive_patches = []
 
-            patches = reactive_patches
-            patch_verdicts = self.judge_patch_verdicts(patches, confirmed_findings, round_num)
+            proactive_candidates = wrap_blue_candidates(patches, phase="proactive")
+            reactive_candidates = wrap_blue_candidates(reactive_patches, phase="reactive")
+            patches = patches + reactive_patches
+            candidates = proactive_candidates + reactive_candidates
+            patch_outcomes = self.judge_patch_verdicts(
+                candidates,
+                patches,
+                confirmed_findings,
+                round_num,
+            )
 
-            if patches and any(verdict == "BLUE_SUCCESS" for verdict in patch_verdicts.values()):
+            if patches and any(outcome.verdict == "BLUE_SUCCESS" for outcome in patch_outcomes):
                 try:
                     self.digital_twin.sync_blue_to_arena()
                 except Exception as e:
@@ -289,9 +405,10 @@ class BattleOrchestrator:
             executor.shutdown(wait=False, cancel_futures=True)
 
         red_score, blue_score = self.score_judged_round(
-            confirmed_findings,
+            findings,
+            finding_outcomes,
             patches,
-            patch_verdicts,
+            patch_outcomes,
             round_num,
         )
         with self.state._lock:
@@ -309,14 +426,36 @@ class BattleOrchestrator:
         start_time = time.time()
         findings = self.red_agent.attack(round_num)
         self.state.all_findings.extend(findings)
-        patches = self.blue_agent.defend(findings, round_num)
+        finding_outcomes = self.judge_red_findings(findings, round_num)
+        confirmed_ids = {
+            outcome.finding_id
+            for outcome in finding_outcomes
+            if outcome.verdict == "CONFIRMED"
+        }
+        confirmed_findings = [
+            finding for finding in findings if finding.id in confirmed_ids
+        ]
+        patches = self.blue_agent.defend(confirmed_findings, round_num)
         self.state.all_patches.extend(patches)
-        red_score, blue_score = score_round(findings, patches, round_num)
+        candidates = wrap_blue_candidates(patches, phase="reactive")
+        patch_outcomes = self.judge_patch_verdicts(
+            candidates,
+            patches,
+            confirmed_findings,
+            round_num,
+        )
+        red_score, blue_score = self.score_judged_round(
+            findings,
+            finding_outcomes,
+            patches,
+            patch_outcomes,
+            round_num,
+        )
         self.state.red_total_score += red_score
         self.state.blue_total_score += blue_score
         self.state.current_round = round_num
-        self._update_termination_tracking(findings, red_score, blue_score)
-        result = RoundResult(round_number=round_num, red_findings=findings, blue_patches=patches,
+        self._update_termination_tracking(confirmed_findings, red_score, blue_score)
+        result = RoundResult(round_number=round_num, red_findings=confirmed_findings, blue_patches=patches,
                              red_score=red_score, blue_score=blue_score, duration_seconds=time.time() - start_time)
         self.state.rounds.append(result)
         return result

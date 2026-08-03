@@ -1,0 +1,173 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import battle_skill.orchestrator as orchestrator_module
+import battle_skill.state as state_module
+from battle_skill.orchestrator import BattleOrchestrator
+from battle_skill.orchestrator_judge import (
+    BlueCandidateRef,
+    FailClosedJudgeBoundary,
+    JudgeFindingOutcome,
+    JudgePatchOutcome,
+    ReceiptRef,
+    RoundJudgeContext,
+    wrap_blue_candidates,
+)
+from battle_skill.state import AttackType, DefenseType, Finding, FunctionalEvidenceStatus, Patch
+
+
+def _finding() -> Finding:
+    return Finding(
+        id="finding-1",
+        type=AttackType.INJECTION,
+        severity="high",
+        description="fixture finding",
+        exploit_proof="free-form exploit text",
+    )
+
+
+def _patch(patch_id: str = "patch-1") -> Patch:
+    return Patch(
+        id=patch_id,
+        finding_id="finding-1",
+        type=DefenseType.PATCH,
+        diff="fixture-blue-success",
+        verified=True,
+        functional_evidence_status=FunctionalEvidenceStatus.PASS,
+    )
+
+
+def test_default_judge_boundary_fails_closed_without_self_scoring(tmp_path: Path) -> None:
+    orchestrator = BattleOrchestrator(str(tmp_path / "target"), max_rounds=1)
+    orchestrator.control_dir = tmp_path / "control"
+    finding = _finding()
+    patch = _patch()
+    candidates = wrap_blue_candidates([patch], phase="reactive")
+
+    finding_outcomes = orchestrator.judge_red_findings([finding], 1)
+    patch_outcomes = orchestrator.judge_patch_verdicts(candidates, [patch], [], 1)
+    red_score, blue_score = orchestrator.score_judged_round(
+        [finding],
+        finding_outcomes,
+        [patch],
+        patch_outcomes,
+        1,
+    )
+
+    assert red_score == 0.0
+    assert blue_score == 0.0
+    assert finding.tags == []
+    assert patch.verified is True
+    assert patch.functional_evidence_status is FunctionalEvidenceStatus.PASS
+    assert finding_outcomes[0].verdict == "INSUFFICIENT_EVIDENCE"
+    assert patch_outcomes[0].verdict == "INSUFFICIENT_EVIDENCE"
+    scorekeeper = json.loads(
+        (tmp_path / "control" / "judge" / "round-0001" / "scorekeeper-receipt.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert scorekeeper["score_authority"] == "judge_receipts_only"
+    assert scorekeeper["accepted_red_finding_ids"] == []
+    assert scorekeeper["accepted_blue_candidate_ids"] == []
+
+
+class _RecordingBoundary(FailClosedJudgeBoundary):
+    def __init__(self, tmp_path: Path) -> None:
+        super().__init__()
+        self.tmp_path = tmp_path
+        self.patch_calls: list[dict[str, object]] = []
+
+    def _ref(self, name: str) -> ReceiptRef:
+        path = self.tmp_path / name
+        path.write_text("{}", encoding="utf-8")
+        return ReceiptRef(name=name, path=str(path), sha256="sha256")
+
+    def judge_findings(
+        self,
+        context: RoundJudgeContext,
+        findings: list[Finding],
+    ) -> list[JudgeFindingOutcome]:
+        return [
+            JudgeFindingOutcome(
+                finding_id=finding.id,
+                source_sha256="finding-sha",
+                verdict="CONFIRMED",
+                receipt=self._ref(f"{finding.id}.json"),
+            )
+            for finding in findings
+        ]
+
+    def judge_patches(
+        self,
+        context: RoundJudgeContext,
+        candidates: list[BlueCandidateRef],
+        patches: list[Patch],
+        confirmed_findings: list[Finding],
+    ) -> list[JudgePatchOutcome]:
+        self.patch_calls.append(
+            {
+                "candidate_ids": [candidate.candidate_id for candidate in candidates],
+                "phases": [candidate.phase for candidate in candidates],
+                "patch_ids": [patch.id for patch in patches],
+                "confirmed_findings": [finding.id for finding in confirmed_findings],
+            }
+        )
+        return [
+            JudgePatchOutcome(
+                candidate_id=candidate.candidate_id,
+                patch_id=candidate.patch_id,
+                finding_id=candidate.finding_id,
+                source_sha256=candidate.source_sha256,
+                verdict="BLUE_SUCCESS",
+                functional_evidence_status=FunctionalEvidenceStatus.PASS,
+                receipt=self._ref(f"{candidate.candidate_id}.json"),
+            )
+            for candidate in candidates
+        ]
+
+
+class _RoundHarness(BattleOrchestrator):
+    def __init__(self, tmp_path: Path, *, concurrent: bool, boundary: _RecordingBoundary) -> None:
+        super().__init__(str(tmp_path / "target"), max_rounds=1, concurrent=concurrent, judge_boundary=boundary)
+        self.control_dir = tmp_path / "control"
+        self.red_agent = self
+        self.blue_agent = self
+
+    def attack(self, round_num: int) -> list[Finding]:
+        return [_finding()]
+
+    def validate_finding_cascade(self, finding: Finding) -> Finding:
+        return finding
+
+    def defend(self, findings: list[Finding], round_num: int) -> list[Patch]:
+        phase = "reactive" if findings else "proactive"
+        return [_patch(f"patch-{phase}")]
+
+
+def test_concurrent_round_retains_proactive_and_reactive_candidates(tmp_path: Path) -> None:
+    boundary = _RecordingBoundary(tmp_path)
+    orchestrator = _RoundHarness(tmp_path, concurrent=True, boundary=boundary)
+    orchestrator.digital_twin.sync_blue_to_arena = lambda: None
+
+    result = orchestrator.run_round_concurrent(1)
+
+    assert result.red_score > 0
+    assert result.blue_score > 0
+    assert [patch.id for patch in result.blue_patches] == ["patch-proactive", "patch-reactive"]
+    assert boundary.patch_calls[0]["phases"] == ["proactive", "reactive"]
+    assert all(":" in candidate_id for candidate_id in boundary.patch_calls[0]["candidate_ids"])
+
+
+def test_sequential_round_uses_same_boundary_and_confirmed_findings(tmp_path: Path) -> None:
+    boundary = _RecordingBoundary(tmp_path)
+    orchestrator = _RoundHarness(tmp_path, concurrent=False, boundary=boundary)
+
+    result = orchestrator.run_round_sequential(1)
+
+    assert result.red_score > 0
+    assert result.blue_score > 0
+    assert [patch.id for patch in result.blue_patches] == ["patch-reactive"]
+    assert boundary.patch_calls[0]["phases"] == ["reactive"]
+    assert boundary.patch_calls[0]["confirmed_findings"] == ["finding-1"]

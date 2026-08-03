@@ -14,7 +14,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from battle_skill.orchestrator import BattleOrchestrator
-from battle_skill.state import AttackType, BattleState, Finding
+from battle_skill.orchestrator_judge import (
+    BlueCandidateRef,
+    FailClosedJudgeBoundary,
+    JudgeFindingOutcome,
+    JudgePatchOutcome,
+    ReceiptRef,
+    RoundJudgeContext,
+)
+from battle_skill.state import AttackType, BattleState, Finding, FunctionalEvidenceStatus, Patch
 
 
 class _RedAgent:
@@ -56,6 +64,58 @@ class _Twin:
         raise AssertionError("no patches means sync must not run")
 
 
+class _SyncTwin:
+    def sync_blue_to_arena(self) -> None:
+        return None
+
+
+def _ref(tmp_path: Path, name: str) -> ReceiptRef:
+    path = tmp_path / name
+    path.write_text("{}", encoding="utf-8")
+    return ReceiptRef(name=name, path=str(path), sha256="sha256")
+
+
+class _ConfirmingBoundary(FailClosedJudgeBoundary):
+    def __init__(self, tmp_path: Path) -> None:
+        super().__init__()
+        self.tmp_path = tmp_path
+
+    def judge_findings(
+        self,
+        context: RoundJudgeContext,
+        findings: list[Finding],
+    ) -> list[JudgeFindingOutcome]:
+        return [
+            JudgeFindingOutcome(
+                finding_id=finding.id,
+                source_sha256="finding-sha",
+                verdict="CONFIRMED",
+                receipt=_ref(self.tmp_path, f"{finding.id}.json"),
+            )
+            for finding in findings
+        ]
+
+    def judge_patches(
+        self,
+        context: RoundJudgeContext,
+        candidates: list[BlueCandidateRef],
+        patches: list[Patch],
+        confirmed_findings: list[Finding],
+    ) -> list[JudgePatchOutcome]:
+        return [
+            JudgePatchOutcome(
+                candidate_id=candidate.candidate_id,
+                patch_id=candidate.patch_id,
+                finding_id=candidate.finding_id,
+                source_sha256=candidate.source_sha256,
+                verdict="BLUE_SUCCESS",
+                functional_evidence_status=FunctionalEvidenceStatus.PASS,
+                receipt=_ref(self.tmp_path, f"{candidate.candidate_id}.json"),
+            )
+            for candidate in candidates
+        ]
+
+
 def _event(events: list[tuple[str, float]], name: str) -> float:
     return next(value for key, value in events if key == name)
 
@@ -71,6 +131,8 @@ def test_run_round_concurrent_starts_red_and_proactive_blue_before_await(
     orchestrator.red_agent = _RedAgent(events)
     orchestrator.blue_agent = _BlueAgent(events, blue_inputs)
     orchestrator.digital_twin = _Twin()
+    orchestrator.control_dir = tmp_path / "control"
+    orchestrator.judge_boundary = FailClosedJudgeBoundary()
     orchestrator.state = BattleState(
         battle_id="test-overlap",
         target_path=str(tmp_path),
@@ -97,10 +159,6 @@ def test_run_round_concurrent_dispatches_reactive_blue_only_after_confirmation(
             finding.exploit_proof = "judge-confirmed-fixture"
             return [finding]
 
-    class _JudgedOrchestrator(BattleOrchestrator):
-        def judge_patch_verdicts(self, patches, confirmed_findings, round_num):
-            return {patch.id: "BLUE_SUCCESS" for patch in patches}
-
     class _ReactiveBlueAgent(_BlueAgent):
         def defend(self, findings: list[Finding], round_num: int):
             super().defend(findings, round_num)
@@ -119,14 +177,16 @@ def test_run_round_concurrent_dispatches_reactive_blue_only_after_confirmation(
                 ]
             return []
 
-    orchestrator = _JudgedOrchestrator.__new__(_JudgedOrchestrator)
+    orchestrator = BattleOrchestrator.__new__(BattleOrchestrator)
     events: list[tuple[str, float]] = []
     blue_inputs: list[list[Finding]] = []
     orchestrator.battle_id = "test-reactive"
     orchestrator.worker_timeout = 2
     orchestrator.red_agent = _ConfirmedRedAgent(events)
     orchestrator.blue_agent = _ReactiveBlueAgent(events, blue_inputs)
-    orchestrator.digital_twin = _Twin()
+    orchestrator.digital_twin = _SyncTwin()
+    orchestrator.control_dir = tmp_path / "control"
+    orchestrator.judge_boundary = _ConfirmingBoundary(tmp_path)
     orchestrator.state = BattleState(
         battle_id="test-reactive",
         target_path=str(tmp_path),
@@ -139,6 +199,6 @@ def test_run_round_concurrent_dispatches_reactive_blue_only_after_confirmation(
     result = orchestrator.run_round_concurrent(1)
 
     assert [len(call) for call in blue_inputs] == [0, 1]
-    assert result.red_findings[0].tags == ["judge:confirmed"]
+    assert result.red_findings[0].tags == []
     assert result.blue_patches[0].verified is False
     assert result.blue_score > 0
