@@ -24,12 +24,19 @@ from websockets.sync.server import Server as WebSocketServer
 from websockets.sync.server import ServerConnection, serve as websocket_serve
 
 from .battle_event_adapter import _live_event_envelopes, _snapshot_envelope
+from .human_interjection import (
+    APPLICATION_SCHEMA,
+    INTERJECTION_SCHEMA,
+    SUPPORTED_ACTION,
+    submit_pause_after_round,
+)
 from .live_transport_contract import GENETIC_EVENT_TYPES
 
 
 SNAPSHOT_ENDPOINT_TEMPLATE = "/battle/live/{battle_id}/snapshot"
 EVENTS_ENDPOINT_TEMPLATE = "/battle/live/{battle_id}/events"
 WEBSOCKET_ENDPOINT_TEMPLATE = "/battle/live/{battle_id}/ws"
+PAUSE_CONTROL_ENDPOINT_TEMPLATE = "/battle/live/{battle_id}/controls/pause-after-round"
 FORBIDDEN_TRANSPORT_MARKERS = (
     "tau-dag-run/",
     "command-loop/",
@@ -67,6 +74,21 @@ class LiveTransportSource:
     def websocket_endpoint(self) -> str:
         return WEBSOCKET_ENDPOINT_TEMPLATE.format(battle_id=self.battle_id)
 
+    @property
+    def pause_control_endpoint(self) -> str:
+        return PAUSE_CONTROL_ENDPOINT_TEMPLATE.format(battle_id=self.battle_id)
+
+
+@dataclass(frozen=True)
+class LiveControlConfig:
+    """Optional live control authority for local Pixi proof/runtime adapters."""
+
+    control_dir: Path
+    expected_auth_token: str
+    authority_receipt: Path
+    active_run_id: str
+    enabled: bool = True
+
 
 def build_live_transport_source(*, fixture_path: Path, battle_id: str) -> LiveTransportSource:
     """Build in-memory snapshot/events from a normalized Battle UX fixture."""
@@ -94,12 +116,182 @@ def build_live_transport_source(*, fixture_path: Path, battle_id: str) -> LiveTr
     return source
 
 
+def _snapshot_with_control_panel(
+    *,
+    source: LiveTransportSource,
+    config: LiveControlConfig | None,
+) -> dict[str, Any]:
+    snapshot = dict(source.snapshot)
+    panel = _human_interjection_panel(source=source, config=config)
+    if panel is not None:
+        snapshot["human_interjection_panel"] = panel
+    return snapshot
+
+
+def _control_health(
+    *,
+    source: LiveTransportSource,
+    config: LiveControlConfig | None,
+) -> dict[str, Any]:
+    available = config is not None and config.enabled
+    return {
+        "schema": "battle.live_control_health.v1",
+        "available": available,
+        "action": SUPPORTED_ACTION,
+        "endpoint": source.pause_control_endpoint if available else None,
+        "run_id": config.active_run_id if available else source.run_id,
+        "auth": "bearer" if available else None,
+        "boundary": "round_running" if available else None,
+        "panel": _human_interjection_panel(source=source, config=config),
+    }
+
+
+def _human_interjection_panel(
+    *,
+    source: LiveTransportSource,
+    config: LiveControlConfig | None,
+) -> dict[str, Any] | None:
+    if config is None:
+        return None
+    request_dir = config.control_dir / "requests"
+    application_dir = config.control_dir / "applications"
+    request_rows = _control_receipts(request_dir, suffix=".json")
+    application_rows = _control_receipts(application_dir, suffix=".application.json")
+    items: list[dict[str, Any]] = []
+    applied_by_request_id = {
+        str(row.get("request_id") or ""): row
+        for row in application_rows
+        if row.get("schema") == APPLICATION_SCHEMA and row.get("status") == "APPLIED"
+    }
+
+    for row in sorted(request_rows, key=lambda item: str(item.get("created_at") or "")):
+        if row.get("schema") != INTERJECTION_SCHEMA:
+            continue
+        request_id = str(row.get("request_id") or "")
+        status = str(row.get("status") or "")
+        reason = str(row.get("reason") or "")
+        state = "accepted" if row.get("accepted") is True else "rejected"
+        receipt_path = row.get("__path")
+        receipt_schema = row.get("schema")
+        if request_id in applied_by_request_id:
+            state = "applied"
+            status = "APPLIED"
+            reason = "pause_after_round_applied"
+            receipt_path = applied_by_request_id[request_id].get("__path")
+            receipt_schema = applied_by_request_id[request_id].get("schema")
+        items.append(
+            {
+                "state": state,
+                "status": status,
+                "label": _human_interjection_label(state=state, status=status, reason=reason),
+                "request_id": request_id,
+                "reason_code": reason,
+                "receipt_path": receipt_path,
+                "receipt_schema": receipt_schema,
+                "backend_receipt": True,
+                "live": row.get("live") is True,
+                "mocked": row.get("mocked") is True,
+            }
+        )
+
+    for row in sorted(application_rows, key=lambda item: str(item.get("created_at") or "")):
+        if row.get("schema") != APPLICATION_SCHEMA or row.get("status") != "APPLIED":
+            continue
+        request_id = str(row.get("request_id") or "")
+        if any(item.get("state") == "applied" and item.get("request_id") == request_id for item in items):
+            continue
+        items.append(
+            {
+                "state": "applied",
+                "status": "APPLIED",
+                "label": "pause_after_round applied at the after-round boundary.",
+                "request_id": request_id,
+                "reason_code": "pause_after_round_applied",
+                "receipt_path": row.get("__path"),
+                "receipt_schema": row.get("schema"),
+                "backend_receipt": True,
+                "live": row.get("live") is True,
+                "mocked": row.get("mocked") is True,
+            }
+        )
+
+    return {
+        "schema": "battle.human_interjection_panel.v1",
+        "source": "backend_receipts",
+        "run_id": config.active_run_id,
+        "mocked": False,
+        "live": True,
+        "source_proof_receipt": _latest_control_receipt_ref(request_rows, application_rows),
+        "states": items,
+        "control": {
+            "schema": "battle.human_interjection_control.v1",
+            "enabled": config.enabled,
+            "action": SUPPORTED_ACTION,
+            "endpoint": source.pause_control_endpoint,
+            "auth": "bearer",
+            "boundary": "round_running",
+            "run_id": config.active_run_id,
+        },
+        "claims": {
+            "proves": [
+                "pause_after_round state is projected from backend request/application receipts.",
+                "The control endpoint is enabled only by an explicit local live control configuration.",
+            ],
+            "does_not_prove": [
+                "Production identity, CSRF, OAuth, TLS, ingress, or tenant authorization.",
+            ],
+        },
+    }
+
+
+def _control_receipts(path: Path, *, suffix: str) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    for item in sorted(path.glob(f"*{suffix}")):
+        try:
+            value = json.loads(item.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if isinstance(value, dict):
+            rows.append({**value, "__path": item.as_posix()})
+    return rows
+
+
+def _latest_control_receipt_ref(*groups: list[dict[str, Any]]) -> str | None:
+    candidates = [item for group in groups for item in group if item.get("__path")]
+    if not candidates:
+        return None
+    latest = max(candidates, key=lambda item: str(item.get("created_at") or ""))
+    return str(latest.get("__path"))
+
+
+def _human_interjection_label(*, state: str, status: str, reason: str) -> str:
+    if state == "applied":
+        return "pause_after_round applied at the after-round boundary."
+    if state == "accepted":
+        return "pause_after_round accepted; Battle will pause after the current round."
+    if status.startswith("DUPLICATE_"):
+        return f"duplicate request id handled fail-closed: {reason}."
+    return f"pause_after_round rejected: {reason or 'request did not satisfy the backend gate'}."
+
+
+def _bearer_token(value: str | None) -> str:
+    if not value:
+        return ""
+    prefix = "Bearer "
+    if value.startswith(prefix):
+        return value[len(prefix) :]
+    return ""
+
+
 def create_live_transport_server(
     *,
     source: LiveTransportSource,
     host: str = "127.0.0.1",
     port: int = 0,
     websocket_port: int | None = None,
+    control_config: LiveControlConfig | None = None,
 ) -> ThreadingHTTPServer:
     """Create a ThreadingHTTPServer for the Battle live transport source."""
 
@@ -119,11 +311,12 @@ def create_live_transport_server(
                         "last_seq": source.snapshot.get("last_seq"),
                         "websocket_endpoint": source.websocket_endpoint if websocket_port is not None else None,
                         "websocket_port": websocket_port,
+                        "control": _control_health(source=source, config=control_config),
                     }
                 )
                 return
             if path == source.snapshot_endpoint:
-                self._write_json(source.snapshot)
+                self._write_json(_snapshot_with_control_panel(source=source, config=control_config))
                 return
             if path == source.events_endpoint:
                 self._write_sse()
@@ -138,6 +331,134 @@ def create_live_transport_server(
                 status=404,
             )
 
+        def do_OPTIONS(self) -> None:  # noqa: N802 - stdlib handler API
+            self.send_response(204)
+            self._write_cors_headers()
+            self.send_header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Accept,Authorization,Content-Type")
+            self.end_headers()
+
+        def do_POST(self) -> None:  # noqa: N802 - stdlib handler API
+            path = urlsplit(self.path).path
+            if path != source.pause_control_endpoint:
+                self._write_json(
+                    {
+                        "schema": "battle.live_transport_error.v1",
+                        "status": "NOT_FOUND",
+                        "battle_id": source.battle_id,
+                        "path": path,
+                    },
+                    status=404,
+                )
+                return
+            if control_config is None or not control_config.enabled:
+                self._write_json(
+                    {
+                        "schema": "battle.live_control_submission.v1",
+                        "status": "REJECTED",
+                        "reason": "control_unavailable",
+                        "battle_id": source.battle_id,
+                        "run_id": source.run_id,
+                        "panel": _human_interjection_panel(source=source, config=control_config),
+                    },
+                    status=503,
+                )
+                return
+
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                length = 0
+            if length <= 0 or length > 16_384:
+                self._write_json(
+                    {
+                        "schema": "battle.live_control_submission.v1",
+                        "status": "REJECTED",
+                        "reason": "malformed_payload",
+                        "battle_id": source.battle_id,
+                        "run_id": source.run_id,
+                        "panel": _human_interjection_panel(source=source, config=control_config),
+                    },
+                    status=400,
+                )
+                return
+
+            try:
+                payload = json.loads(self.rfile.read(length).decode("utf-8"))
+            except Exception:
+                self._write_json(
+                    {
+                        "schema": "battle.live_control_submission.v1",
+                        "status": "REJECTED",
+                        "reason": "malformed_payload",
+                        "battle_id": source.battle_id,
+                        "run_id": source.run_id,
+                        "panel": _human_interjection_panel(source=source, config=control_config),
+                    },
+                    status=400,
+                )
+                return
+            if not isinstance(payload, dict):
+                self._write_json(
+                    {
+                        "schema": "battle.live_control_submission.v1",
+                        "status": "REJECTED",
+                        "reason": "malformed_payload",
+                        "battle_id": source.battle_id,
+                        "run_id": source.run_id,
+                        "panel": _human_interjection_panel(source=source, config=control_config),
+                    },
+                    status=400,
+                )
+                return
+
+            auth_token = _bearer_token(self.headers.get("Authorization"))
+            action = str(payload.get("action") or "")
+            request_run_id = str(payload.get("run_id") or "")
+            request_id = str(payload.get("request_id") or "")
+            boundary = str(payload.get("boundary") or "")
+            if action != SUPPORTED_ACTION:
+                self._write_json(
+                    {
+                        "schema": "battle.live_control_submission.v1",
+                        "status": "REJECTED",
+                        "reason": "unsupported_action",
+                        "battle_id": source.battle_id,
+                        "run_id": source.run_id,
+                        "request_id": request_id,
+                        "panel": _human_interjection_panel(source=source, config=control_config),
+                    },
+                    status=400,
+                )
+                return
+
+            receipt = submit_pause_after_round(
+                out_dir=control_config.control_dir / "requests",
+                active_run_id=control_config.active_run_id,
+                request_run_id=request_run_id,
+                request_id=request_id,
+                auth_token=auth_token,
+                expected_auth_token=control_config.expected_auth_token,
+                boundary=boundary,
+                judge_receipt=control_config.authority_receipt,
+            )
+            status_code = 202 if receipt.get("accepted") is True else 403
+            if str(receipt.get("status", "")).startswith("DUPLICATE_"):
+                status_code = 200 if receipt.get("accepted") is True else 409
+            self._write_json(
+                {
+                    "schema": "battle.live_control_submission.v1",
+                    "status": receipt.get("status"),
+                    "action": SUPPORTED_ACTION,
+                    "battle_id": source.battle_id,
+                    "run_id": control_config.active_run_id,
+                    "request_id": request_id,
+                    "backend_receipt": receipt,
+                    "panel": _human_interjection_panel(source=source, config=control_config),
+                },
+                status=status_code,
+            )
+
         def log_message(self, format: str, *args: Any) -> None:  # noqa: A002 - stdlib handler API
             return
 
@@ -145,11 +466,15 @@ def create_live_transport_server(
             body = json.dumps(payload, sort_keys=True).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self._write_cors_headers()
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+        def _write_cors_headers(self) -> None:
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Vary", "Origin")
 
         def _write_sse(self) -> None:
             try:
@@ -168,7 +493,7 @@ def create_live_transport_server(
 
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self._write_cors_headers()
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Accel-Buffering", "no")
             self.end_headers()

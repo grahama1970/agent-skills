@@ -1,8 +1,12 @@
+import { PauseCircle } from "lucide-react";
 import type { BattleNormalizedUxFixture } from "./lib/battle-types";
 import { humanInterjectionPanelViewModel } from "./lib/battle-human-interjection";
+import type { BattleLivePauseControlState } from "./lib/battle-live-control";
 
 type Props = {
 	fixture: BattleNormalizedUxFixture | null;
+	liveControl?: BattleLivePauseControlState | null;
+	onPauseAfterRound?: () => void | Promise<boolean>;
 };
 
 const STATE_LABELS: Record<string, string> = {
@@ -21,10 +25,10 @@ function stateTone(state: string): string {
 	return "border-amber-400/40 bg-amber-500/10 text-amber-100";
 }
 
-export function BattleHumanInterjectionPanel({ fixture }: Props) {
+export function BattleHumanInterjectionPanel({ fixture, liveControl, onPauseAfterRound }: Props) {
 	const model = humanInterjectionPanelViewModel(fixture);
 	const stateValue = model.stateSet.join(" ");
-	const visibleStates = model.states.length
+	const backendStates = model.states.length
 		? model.states
 		: [
 				{
@@ -40,6 +44,30 @@ export function BattleHumanInterjectionPanel({ fixture }: Props) {
 					mocked: model.mocked === true,
 				},
 			];
+	const hasPending = backendStates.some((item) => item.state === "pending" || item.request_id === liveControl?.requestId);
+	const visibleStates =
+		liveControl?.status === "pending" && liveControl.requestId && !hasPending
+			? [
+					{
+						state: "pending" as const,
+						status: "PENDING",
+						label: "pause_after_round request is being submitted to the backend.",
+						request_id: liveControl.requestId,
+						reason_code: "client_pending_submit",
+						receipt_path: null,
+						receipt_schema: null,
+						backend_receipt: false,
+						live: true,
+						mocked: false,
+					},
+					...backendStates,
+				]
+			: backendStates;
+	const canSubmit =
+		Boolean(liveControl?.available && onPauseAfterRound) &&
+		liveControl?.status !== "pending" &&
+		liveControl?.status !== "accepted" &&
+		liveControl?.status !== "applied";
 
 	return (
 		<section
@@ -51,6 +79,9 @@ export function BattleHumanInterjectionPanel({ fixture }: Props) {
 			data-mocked={String(model.mocked)}
 			data-run-id={model.runId ?? ""}
 			data-source-proof-receipt={model.sourceProofReceipt ?? ""}
+			data-control-available={String(liveControl?.available ?? false)}
+			data-control-status={liveControl?.status ?? "unavailable"}
+			data-control-request-id={liveControl?.requestId ?? ""}
 			aria-label="Battle pause after round receipt state"
 		>
 			<div className="flex flex-wrap items-center gap-2">
@@ -64,6 +95,24 @@ export function BattleHumanInterjectionPanel({ fixture }: Props) {
 				<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:human-interjection:run">
 					run {model.runId ?? "n/a"}
 				</span>
+				{liveControl?.available ? (
+					<button
+						type="button"
+						className="ml-auto inline-flex min-h-11 items-center gap-2 rounded border border-emerald-300/60 bg-emerald-500/18 px-3 text-[11px] font-black uppercase text-emerald-50 shadow-sm hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:border-slate-600 disabled:bg-slate-800 disabled:text-slate-400"
+						data-qid="battle:human-interjection:pause-button"
+						data-status={liveControl.status}
+						data-request-id={liveControl.requestId ?? ""}
+						disabled={!canSubmit}
+						title="Submit pause_after_round to the live Battle backend"
+						aria-label="Submit pause after round"
+						onClick={() => {
+							void onPauseAfterRound?.();
+						}}
+					>
+						<PauseCircle className="h-4 w-4" aria-hidden="true" />
+						Pause
+					</button>
+				) : null}
 			</div>
 			<div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-5" data-qid="battle:human-interjection:states">
 				{visibleStates.map((item) => (

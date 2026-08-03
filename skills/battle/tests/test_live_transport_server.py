@@ -5,12 +5,18 @@ Purpose: Auto-generated module docstring. Review for accuracy.
 Inputs/Outputs/Failures: See functions below.
 """
 
+import json
+import threading
 from pathlib import Path
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 import pytest
 
 from battle_skill.live_transport_server import (
+    LiveControlConfig,
     build_live_transport_source,
+    create_live_transport_server,
     prove_live_transport_server,
     prove_production_websocket_transport,
 )
@@ -83,3 +89,104 @@ def test_prove_production_websocket_transport_exercises_auth_reconnect_and_fanou
     assert (tmp_path / "production-websocket-transport-proof.json").exists()
     assert (tmp_path / "authorized-events.jsonl").exists()
     assert (tmp_path / "resumed-events.jsonl").exists()
+
+
+def test_live_transport_control_post_records_pause_request_and_panel(tmp_path):
+    source = build_live_transport_source(fixture_path=FIXTURE, battle_id="battle-004")
+    authority_receipt = tmp_path / "authority-receipt.json"
+    authority_receipt.write_text(
+        json.dumps(
+            {
+                "schema": "battle.control_authority_receipt.v1",
+                "status": "PASS",
+                "mocked": False,
+                "live": True,
+                "run_id": source.run_id,
+            }
+        ),
+        encoding="utf-8",
+    )
+    config = LiveControlConfig(
+        control_dir=tmp_path / "control",
+        expected_auth_token="test-control-token",
+        authority_receipt=authority_receipt,
+        active_run_id=source.run_id,
+    )
+    server = create_live_transport_server(source=source, host="127.0.0.1", port=0, control_config=config)
+    port = int(server.server_address[1])
+    thread = threading.Thread(target=server.serve_forever, name="battle-control-post-test", daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{port}"
+    try:
+        request = Request(
+            f"{base_url}{source.pause_control_endpoint}",
+            method="POST",
+            data=json.dumps(
+                {
+                    "action": "pause_after_round",
+                    "run_id": source.run_id,
+                    "request_id": "pause-test",
+                    "boundary": "round_running",
+                }
+            ).encode("utf-8"),
+            headers={
+                "Authorization": "Bearer test-control-token",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        with urlopen(request, timeout=10) as response:
+            body = json.loads(response.read().decode("utf-8"))
+        snapshot = json.loads(urlopen(f"{base_url}{source.snapshot_endpoint}", timeout=10).read().decode("utf-8"))
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    assert body["status"] == "ACCEPTED"
+    assert body["panel"]["states"][0]["state"] == "accepted"
+    assert body["panel"]["control"]["endpoint"] == source.pause_control_endpoint
+    assert snapshot["human_interjection_panel"]["states"][0]["request_id"] == "pause-test"
+    assert (tmp_path / "control" / "requests" / "pause-test.json").exists()
+
+
+def test_live_transport_control_rejects_bad_auth(tmp_path):
+    source = build_live_transport_source(fixture_path=FIXTURE, battle_id="battle-004")
+    authority_receipt = tmp_path / "authority-receipt.json"
+    authority_receipt.write_text("{}", encoding="utf-8")
+    config = LiveControlConfig(
+        control_dir=tmp_path / "control",
+        expected_auth_token="test-control-token",
+        authority_receipt=authority_receipt,
+        active_run_id=source.run_id,
+    )
+    server = create_live_transport_server(source=source, host="127.0.0.1", port=0, control_config=config)
+    port = int(server.server_address[1])
+    thread = threading.Thread(target=server.serve_forever, name="battle-control-auth-test", daemon=True)
+    thread.start()
+    try:
+        request = Request(
+            f"http://127.0.0.1:{port}{source.pause_control_endpoint}",
+            method="POST",
+            data=json.dumps(
+                {
+                    "action": "pause_after_round",
+                    "run_id": source.run_id,
+                    "request_id": "pause-test",
+                    "boundary": "round_running",
+                }
+            ).encode("utf-8"),
+            headers={
+                "Authorization": "Bearer wrong-token",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        with pytest.raises(HTTPError) as excinfo:
+            urlopen(request, timeout=10)
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    assert excinfo.value.code == 403

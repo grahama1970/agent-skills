@@ -1022,6 +1022,15 @@ export type BattleHumanInterjectionPanelSource = {
 	live: boolean;
 	source_proof_receipt?: string | null;
 	states: BattleHumanInterjectionPanelItem[];
+	control?: {
+		schema: "battle.human_interjection_control.v1";
+		enabled: boolean;
+		action: "pause_after_round" | string;
+		endpoint: string;
+		auth: "bearer" | string;
+		boundary: "round_running" | string;
+		run_id: string;
+	};
 	claims?: {
 		proves?: string[];
 		does_not_prove?: string[];

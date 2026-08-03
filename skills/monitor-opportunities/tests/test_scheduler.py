@@ -1,0 +1,12 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+
+def test_scheduler_command_is_full_run_transaction() -> None:
+    source = (Path(__file__).parents[1] / "src" / "monitor_opportunities" / "cli.py").read_text(
+        encoding="utf-8"
+    )
+    assert "monitor-opportunities-nightly" in source
+    assert '" run"' in source
+    assert "scheduler" in source
