@@ -123,7 +123,6 @@ Revision ids, request hashes, receipt paths, and the per-phase narrative are in
 [`docs/verification.md`](docs/verification.md). Current machine state is in
 [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
 
----
 
 ## PCTOM-R, and why its numbers are not a result
 
@@ -150,7 +149,6 @@ them:
 - that attaching a previous video causally improves continuity.
 - Claims here are retired only by a named receipt read back from disk.
 
----
 
 ## Ownership boundaries
 
