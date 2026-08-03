@@ -96,7 +96,13 @@ class Patch:
     functional_artifact_sha256: str | None = None
 
     def __post_init__(self) -> None:
-        """Normalize legacy Boolean data without coercing missing evidence."""
+        """Normalize legacy Boolean data without inventing behavioral failure.
+
+        Historical Battle payloads used ``False`` for both a real regression and
+        missing evidence. That ambiguity must migrate to INSUFFICIENT_EVIDENCE.
+        Legacy ``True`` can safely retain PASS; new failures must set the explicit
+        FAIL status.
+        """
         self.functional_evidence_status = FunctionalEvidenceStatus(
             self.functional_evidence_status
         )
@@ -106,8 +112,6 @@ class Patch:
             self.functionality_preserved = False
         elif self.functionality_preserved is True:
             self.functional_evidence_status = FunctionalEvidenceStatus.PASS
-        elif self.functionality_preserved is False:
-            self.functional_evidence_status = FunctionalEvidenceStatus.FAIL
         else:
             self.functionality_preserved = None
 
