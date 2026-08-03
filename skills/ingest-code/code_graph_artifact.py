@@ -12,6 +12,30 @@ from typing import Any
 from code_symbol_record import CodeSymbolRecord
 
 SCHEMA_VERSION = "ingest-code.code_graph_bundle.v1"
+DEFAULT_MAX_SOURCE_BYTES = 1024 * 1024
+INCOMPLETE_FILE_STATUSES = {"failed", "unreadable", "binary", "too_large", "unsupported"}
+INCOMPLETE_EXTRACTOR_OUTCOMES = {
+    "failed",
+    "unavailable",
+    "timed_out",
+    "invalid_output",
+    "partial",
+}
+SUPPORTED_SOURCE_LANGUAGES = {
+    "python",
+    "typescript",
+    "javascript",
+    "rust",
+    "go",
+    "java",
+    "c",
+    "cpp",
+    "ruby",
+    "php",
+    "swift",
+    "kotlin",
+    "scala",
+}
 ARTIFACT_FILENAMES = (
     "manifest.json",
     "files.jsonl",
@@ -92,11 +116,34 @@ def _language_for_path(path: Path) -> str:
     return mapping.get(path.suffix, path.suffix.lstrip(".") or "unknown")
 
 
-def _source_hash(path: Path) -> str:
+def _read_file_bytes(path: Path, max_source_bytes: int) -> tuple[bytes | None, str]:
     try:
-        return hashlib.sha256(path.read_bytes()).hexdigest()
+        size = path.stat().st_size
+    except OSError as exc:
+        return None, f"stat_failed:{exc}"
+    if size > max_source_bytes:
+        return None, "too_large"
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        return None, f"read_failed:{exc}"
+    if b"\0" in data[:8192]:
+        return None, "binary"
+    return data, ""
+
+
+def _source_hash(path: Path, max_source_bytes: int) -> tuple[str, str]:
+    data, reason = _read_file_bytes(path, max_source_bytes)
+    if data is None:
+        return "", reason
+    return hashlib.sha256(data).hexdigest(), ""
+
+
+def _file_size(path: Path) -> int:
+    try:
+        return path.stat().st_size
     except OSError:
-        return ""
+        return 0
 
 
 def _python_parse_error(path: Path) -> str:
@@ -157,6 +204,29 @@ def ignored_source_files(root: Path, suffixes: set[str]) -> list[Path]:
     return sorted(paths, key=lambda item: item.as_posix())
 
 
+def _root_relative_or_dot(path: Path, root: Path) -> str:
+    if path.resolve() == root.resolve():
+        return "."
+    return normalized_rel_path(path, root)
+
+
+def _extractor_reported_paths(extractor_outcomes: list[dict[str, Any]]) -> set[str]:
+    reported: set[str] = set()
+    for outcome in extractor_outcomes:
+        for rel_path in outcome.get("reported_paths", []):
+            if isinstance(rel_path, str) and rel_path:
+                reported.add(rel_path.replace("\\", "/").strip())
+    return reported
+
+
+def _outcome_for_path(rel_path: str, extractor_outcomes: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for outcome in extractor_outcomes:
+        root = str(outcome.get("root") or ".").replace("\\", "/").strip() or "."
+        if root == "." or rel_path == root or rel_path.startswith(f"{root}/"):
+            return outcome
+    return None
+
+
 def _file_records(
     *,
     root: Path,
@@ -164,23 +234,56 @@ def _file_records(
     branch: str,
     files: list[Path],
     ignored_files: list[Path],
+    extractor_outcomes: list[dict[str, Any]],
+    max_source_bytes: int,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:
     records: list[dict[str, Any]] = []
     diagnostics: list[dict[str, Any]] = []
     ids_by_path: dict[str, str] = {}
+    reported_paths = _extractor_reported_paths(extractor_outcomes)
 
     for path in sorted(files, key=lambda item: normalized_rel_path(item, root)):
         rel_path = normalized_rel_path(path, root)
         language = _language_for_path(path)
         status = "parsed"
         reason = ""
-        if language in {"markdown", "unknown"}:
-            status = "skipped"
+        message = ""
+        source_hash, hash_error = _source_hash(path, max_source_bytes)
+        path_outcome = _outcome_for_path(rel_path, extractor_outcomes)
+
+        if hash_error == "too_large":
+            status = "too_large"
+            reason = "too_large"
+            message = f"file exceeds max_source_bytes={max_source_bytes}"
+        elif hash_error == "binary":
+            status = "binary"
+            reason = "binary"
+            message = "file appears to be binary"
+        elif hash_error:
+            status = "unreadable"
+            reason = "unreadable"
+            message = hash_error
+        elif language not in SUPPORTED_SOURCE_LANGUAGES:
+            status = "unsupported"
             reason = "unsupported_language"
-        parse_error = _python_parse_error(path)
-        if parse_error:
-            status = "failed"
-            reason = "parse_error"
+            message = reason
+        else:
+            outcome_status = str((path_outcome or {}).get("status") or "")
+            if outcome_status in INCOMPLETE_EXTRACTOR_OUTCOMES:
+                status = "failed"
+                reason = f"extractor_{outcome_status}"
+                message = str((path_outcome or {}).get("reason") or reason)
+            elif language == "python":
+                parse_error = _python_parse_error(path)
+                if parse_error:
+                    status = "failed"
+                    reason = "parse_error"
+                    message = parse_error
+            elif extractor_outcomes and rel_path not in reported_paths:
+                status = "failed"
+                reason = "parser_no_report"
+                message = "configured extractor did not report this non-Python source file"
+
         current_file_id = file_id(repo, branch, rel_path)
         ids_by_path[rel_path] = current_file_id
         record = {
@@ -189,8 +292,8 @@ def _file_records(
             "language": language,
             "status": status,
             "reason": reason,
-            "size_bytes": path.stat().st_size if path.exists() else 0,
-            "source_hash": _source_hash(path),
+            "size_bytes": _file_size(path),
+            "source_hash": source_hash,
         }
         records.append(record)
         if reason:
@@ -198,9 +301,9 @@ def _file_records(
                 "diagnostic_id": _sha256_id("cd", [current_file_id, reason]),
                 "file_id": current_file_id,
                 "path": rel_path,
-                "severity": "error" if status == "failed" else "info",
+                "severity": "error" if status in INCOMPLETE_FILE_STATUSES else "info",
                 "reason": reason,
-                "message": parse_error or reason,
+                "message": message or reason,
             })
 
     known_paths = {record["path"] for record in records}
@@ -216,8 +319,8 @@ def _file_records(
             "language": _language_for_path(path),
             "status": "ignored",
             "reason": "gitignore",
-            "size_bytes": path.stat().st_size if path.exists() else 0,
-            "source_hash": _source_hash(path),
+            "size_bytes": _file_size(path),
+            "source_hash": _source_hash(path, max_source_bytes)[0],
         })
         diagnostics.append({
             "diagnostic_id": _sha256_id("cd", [current_file_id, "gitignore"]),
@@ -240,10 +343,13 @@ def _symbol_records(
     branch: str,
     symbols: list[CodeSymbolRecord],
     ids_by_path: dict[str, str],
+    parsed_paths: set[str],
 ) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for symbol in symbols:
         rel_path = symbol.normalized_path
+        if rel_path not in parsed_paths:
+            continue
         current_file_id = ids_by_path.get(rel_path) or file_id(repo, branch, rel_path)
         document = symbol.to_document()
         records.append({
@@ -307,6 +413,8 @@ def write_code_graph_bundle(
     symbols: list[CodeSymbolRecord],
     edges: list[dict[str, Any]],
     artifact_root: Path | None = None,
+    extractor_outcomes: list[dict[str, Any]] | None = None,
+    max_source_bytes: int = DEFAULT_MAX_SOURCE_BYTES,
 ) -> dict[str, Any]:
     """Write the deterministic ingest-code code graph bundle and return metadata."""
     root = codebase_root.resolve()
@@ -315,14 +423,35 @@ def write_code_graph_bundle(
 
     suffixes = {path.suffix for path in files if path.suffix}
     ignored = ignored_source_files(root, suffixes)
+    outcomes = extractor_outcomes or [{
+        "root": _root_relative_or_dot(scan_root, root),
+        "status": "succeeded",
+        "reason": "",
+        "extractor": "unspecified",
+        "command": [],
+        "declared_languages": sorted({_language_for_path(path) for path in files}),
+        "discovered_file_count": len(files),
+        "reported_file_count": len(files),
+        "reported_paths": sorted(normalized_rel_path(path, root) for path in files),
+    } for scan_root in scan_roots]
     file_records, diagnostics, ids_by_path = _file_records(
         root=root,
         repo=repo,
         branch=branch,
         files=files,
         ignored_files=ignored,
+        extractor_outcomes=outcomes,
+        max_source_bytes=max_source_bytes,
     )
-    symbol_records = _symbol_records(root=root, repo=repo, branch=branch, symbols=symbols, ids_by_path=ids_by_path)
+    parsed_paths = {record["path"] for record in file_records if record["status"] == "parsed"}
+    symbol_records = _symbol_records(
+        root=root,
+        repo=repo,
+        branch=branch,
+        symbols=symbols,
+        ids_by_path=ids_by_path,
+        parsed_paths=parsed_paths,
+    )
     edge_records = _edge_records(root=root, repo=repo, branch=branch, edges=edges, ids_by_path=ids_by_path)
 
     counts = {
@@ -331,15 +460,28 @@ def write_code_graph_bundle(
         "files_failed": sum(1 for item in file_records if item["status"] == "failed"),
         "files_ignored": sum(1 for item in file_records if item["status"] == "ignored"),
         "files_skipped": sum(1 for item in file_records if item["status"] == "skipped"),
+        "files_unsupported": sum(1 for item in file_records if item["status"] == "unsupported"),
+        "files_binary": sum(1 for item in file_records if item["status"] == "binary"),
+        "files_too_large": sum(1 for item in file_records if item["status"] == "too_large"),
+        "files_unreadable": sum(1 for item in file_records if item["status"] == "unreadable"),
         "symbols": len(symbol_records),
         "edges": len(edge_records),
         "diagnostics": len(diagnostics),
     }
+    incomplete_roots = [
+        outcome for outcome in outcomes if str(outcome.get("status")) in INCOMPLETE_EXTRACTOR_OUTCOMES
+    ]
+    incomplete_files = [
+        item for item in file_records if str(item.get("status")) in INCOMPLETE_FILE_STATUSES
+    ]
+    complete = not incomplete_roots and not incomplete_files
     coverage = {
         "schema_version": SCHEMA_VERSION,
-        "complete": counts["files_failed"] == 0,
-        "fail_closed": counts["files_failed"] > 0,
+        "complete": complete,
+        "fail_closed": not complete,
+        "reconciliation_eligible": complete,
         "counts": counts,
+        "extractor_outcomes": outcomes,
     }
     manifest = {
         "schema_version": SCHEMA_VERSION,
@@ -351,7 +493,9 @@ def write_code_graph_bundle(
         "scan_roots": [normalized_rel_path(path, root) if path.resolve() != root else "." for path in scan_roots],
         "artifacts": list(ARTIFACT_FILENAMES) + ["checksums.json"],
         "coverage_complete": coverage["complete"],
+        "reconciliation_eligible": coverage["reconciliation_eligible"],
         "counts": counts,
+        "extractor_outcomes": outcomes,
     }
 
     payloads: dict[str, bytes] = {
@@ -379,4 +523,5 @@ def write_code_graph_bundle(
         "checksums": str(output_dir / "checksums.json"),
         "counts": counts,
         "complete": coverage["complete"],
+        "reconciliation_eligible": coverage["reconciliation_eligible"],
     }

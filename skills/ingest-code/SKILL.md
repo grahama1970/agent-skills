@@ -214,13 +214,27 @@ should not query `/memory` during a task:
 | `artifacts/ingest-code/code-graph/files.jsonl` | Root-relative file records with stable file IDs, language, parse/skip/ignored/failed status, source hash, and reason |
 | `artifacts/ingest-code/code-graph/symbols.jsonl` | Symbol records with `symbol_id`, `symbol_version_id`, `legacy_key`, source range, content hash, and Memory-compatible document shape |
 | `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic resolved import edges between scanned files |
-| `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct parse, ignored-file, and skip diagnostics with exact root-relative paths |
-| `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with parsed, failed, ignored, skipped, symbol, edge, and diagnostic counts; parse failures set `fail_closed=true` |
+| `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct extraction, parse, read/hash, ignored-file, binary, too-large, unsupported, and skip diagnostics with exact root-relative paths |
+| `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with extractor outcomes, parsed, failed, ignored, unsupported, binary, too-large, unreadable, symbol, edge, and diagnostic counts; incomplete extraction sets `fail_closed=true` |
 | `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
 
 These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for
 offline inspection, review bundles, or deterministic receipts.
+
+`coverage.complete=true` is authoritative only when every configured scan root
+has a successful extraction outcome and every relevant discovered source file is
+accounted for. Missing, timed-out, non-zero, malformed, partial, or unexpectedly
+empty Tree-sitter extraction writes `coverage.complete=false`,
+`fail_closed=true`, and `reconciliation_eligible=false`. Read/hash failures,
+binary files, too-large files, unsupported files, Python parse failures, and
+non-Python files not reported by the configured extractor also fail closed.
+Ignored files are recorded as `ignored` diagnostics but do not by themselves
+make coverage incomplete.
+
+Do not use local artifacts for GMO reconciliation, "no callers", dead-code, or
+other absence-based claims unless the bundle checksum is valid and
+`coverage.reconciliation_eligible=true`.
 
 ## Related Skills
 
