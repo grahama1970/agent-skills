@@ -440,12 +440,23 @@ def test_readme_research_state_block_matches_current_status():
     )
 
 
-def test_readme_generated_block_tracks_a_claim_status_change(tmp_path):
-    """Changing a claim's status must change the generated block."""
+def test_readme_generated_block_tracks_machine_state_changes(tmp_path):
+    """The digest must move when the state it reports moves.
+
+    Retargeted 2026-08-03: the block was reduced to a <=12-line digest because 85
+    lines of machine state contradicted the README's own "not a status log"
+    sentence. Per-claim status is deliberately no longer rendered -- it lives in
+    CURRENT_STATUS.json -- so this now exercises the fields the digest does
+    carry: the active blocker and the set of open claim owners.
+    """
     generator = _load("generate_readme_research_state")
     status = json.loads((ROOT / "CURRENT_STATUS.json").read_text(encoding="utf-8"))
     before = generator.render(status)
 
-    status["current_claims"]["pctom_heldout_benefit"]["status"] = "PASS_SOMETHING_NEW"
-
+    status["active_blockers"] = ["a completely different blocker"]
     assert generator.render(status) != before
+
+    status = json.loads((ROOT / "CURRENT_STATUS.json").read_text(encoding="utf-8"))
+    status["current_claims"]["pctom_heldout_benefit"]["successor_issue"] = "owner/repo#4242"
+    assert generator.render(status) != before
+    assert "#4242" in generator.render(status)

@@ -45,8 +45,13 @@ HISTORICAL_MARKERS = ("historical", "superseded", "retracted", "stale", "folded 
 
 #: How far into a document counts as "current summary". Raised from 60 after
 #: #1069: the stale P2.4 section header sat at line 57 and its body beyond it,
-#: so a 60-line window saw the header but not the instruction under it.
-SUMMARY_LINE_LIMIT = 120
+#: so a 60-line window saw the header but not the instruction under it. Raised
+#: again from 120 on 2026-08-03: a review panel moved navigation, evidence
+#: guidance, and Quick Start above the status block, which is correct for a
+#: cold reader and pushed the generated CURRENT RESEARCH STATE block to ~line
+#: 200. The window must reach the generated block, or the checker silently
+#: stops seeing the very surface it is meant to police.
+SUMMARY_LINE_LIMIT = 240
 
 
 class Stage:

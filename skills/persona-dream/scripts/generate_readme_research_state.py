@@ -89,40 +89,25 @@ def render(status: dict[str, Any]) -> str:
         for issue, label in referenced.items() if issue not in owned
     ]
 
+    # A <=12-line digest, not a status dump. webclaude, 2026-08-03: 85 generated
+    # lines of machine state contradicted the README's own sentence that it is
+    # "deliberately not a status log", and duplicated CURRENT_STATUS.json which
+    # the navigation table points at two lines earlier. Full dispositions stay
+    # in the JSON; the README carries only what orients a cold reader.
+    blockers = status.get("active_blockers") or []
+    next_step = (status.get("next_step") or {}).get("default") or ""
     lines = [
         BEGIN,
         "",
-        "*Generated from `CURRENT_STATUS.json` by",
-        "`scripts/generate_readme_research_state.py`. Do not hand-edit: run",
-        "`./run.sh generate-readme-research-state`. `--check` runs in the test suite.*",
+        f"*Generated from `CURRENT_STATUS.json` by `scripts/generate_readme_research_state.py`;",
+        "run `./run.sh generate-readme-research-state`. Full claim dispositions live in",
+        "the JSON, not here.*",
         "",
-        "### Active successor issues",
-        "",
+        f"- **Phase:** `{_cell(status.get('current_phase'), 60)}`",
+        f"- **Open claims:** {', '.join(f'{i} ({l})' for i, l in list(owned.items())[:6]) or 'none'}",
+        f"- **Current blocker:** {_cell(blockers[0], 220) if blockers else 'none recorded'}",
+        f"- **Next step:** {_cell(next_step, 220) or 'not recorded'}",
     ]
-    lines += successor_bullets or ["- none open"]
-    lines += [
-        "",
-        "### Claim dispositions",
-        "",
-        "| Claim | Status | Proven | Not proven / active disposition |",
-        "|---|---|---|---|",
-    ]
-    for key in ordered:
-        claim = claims.get(key) or {}
-        issue = _issue_link(claim.get("successor_issue") or claim.get("next_scope_issue") or "")
-        not_proven = _cell(claim.get("does_not_prove"))
-        if issue and not claim.get("successor_resolved"):
-            if not_proven and not_proven[-1] not in ".;…":
-                not_proven += "."
-            not_proven = f"{not_proven} Owned by {issue}.".strip()
-        lines.append(
-            f"| {CLAIM_LABELS.get(key, key)} | `{_cell(claim.get('status'), 60)}` | "
-            f"{_cell(claim.get('proves'))} | {not_proven} |"
-        )
-
-    blockers = status.get("active_blockers") or []
-    lines += ["", "### Current blockers", ""]
-    lines += [f"- {_cell(b, 400)}" for b in blockers] or ["- none recorded"]
     lines += ["", END]
     return "\n".join(lines)
 

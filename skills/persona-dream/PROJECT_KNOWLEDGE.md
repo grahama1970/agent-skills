@@ -146,9 +146,11 @@ Proof on the rebased tree:
 - `rg -n "stimuli/(control|dream|adversarial|baseline)\.wav|>control<|>dream<|>adversarial<|>baseline<|\"condition\"" skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html`
   -> no matches
 
-Boundary: this answers the UX question for evaluation collection. It does not
-create human ratings, signed interpretation, perceived-emotion evidence,
-SPARTA production consumption, or immutable-goal completion.
+Boundary (as recorded on 2026-07-29; SUPERSEDED in part): this answers the UX
+question for evaluation collection. It does not create human ratings, signed
+interpretation, perceived-emotion evidence, or immutable-goal completion. The
+SPARTA-consumption clause is historical: a SPARTA-owned local live API receipt
+has since been accepted.
 
 deployed SPARTA production evidence beyond the separate local live API receipt,
 or immutable-goal completion.
