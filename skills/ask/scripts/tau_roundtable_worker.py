@@ -427,6 +427,10 @@ def _configure_browser_runtime_environment(args: argparse.Namespace) -> None:
 
 
 def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
+    # Recovery gets its own slice of the lane budget: the submit may consume
+    # most of the wall clock, and a recovery ladder that cannot finish is worse
+    # than one that reports its remaining budget honestly.
+    lane_deadline = time.time() + max(300, int(getattr(args, "timeout", 900) or 900))
     request_payload = _read_json(Path(args.request_file))
     request_text = str(request_payload.get("request") or "")
     handler = args.handler
@@ -730,7 +734,39 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        if recovery_packet.get("failure_code") in BROWSER_TRANSPORT_BLOCKERS:
+        # Assume the first attempt fails: something upstream has probably
+        # changed. Work the lane's own recovery ladder here, in-run, instead
+        # of emitting advice nobody executes (observed 2026-08-03: nine failed
+        # lanes, five with a concrete next_command, zero recovery artifacts).
+        lane_recovery = _attempt_lane_recovery(
+            args,
+            recovery_packet=recovery_packet,
+            browser_oracle=resolve_payload,
+            submit_meta=submit_meta,
+            response_path=response_path,
+            raw_path=raw_path,
+            meta_path=meta_path,
+            artifact_dir=artifact_dir,
+            deadline=lane_deadline,
+        )
+        (artifact_dir / "lane-recovery.json").write_text(
+            json.dumps(lane_recovery, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        recovery_packet["lane_recovery"] = lane_recovery
+        recovery_packet_path.write_text(
+            json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        if lane_recovery.get("recovered"):
+            recovered_path = Path(str(lane_recovery.get("response_path") or ""))
+            if recovered_path.is_file():
+                response_text = recovered_path.read_text(encoding="utf-8", errors="replace")
+                response_path.write_text(response_text, encoding="utf-8")
+                ok = True
+                status = "PASS"
+                provider_live = True
+                failure = ""
+        if not ok and recovery_packet.get("failure_code") in BROWSER_TRANSPORT_BLOCKERS:
             status = "BLOCKED"
         response_quarantine = _quarantine_failed_browser_response(
             response_path=response_path,
@@ -3394,6 +3430,177 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
     # The primary receipt keeps browser-oracle resolution separately; tests and
     # recovery packets still need a deterministic fallback when only args exist.
     return ""
+
+
+#: Failure classes where retrying inside the lane cannot help: the provider
+#: itself refused, so another attempt is spray-and-pray against a wall.
+LANE_RECOVERY_HOPELESS = frozenset(
+    {
+        BROWSER_PROVIDER_RATE_LIMITED,
+        "grok_provider_rate_limited",
+        "browser_provider_capacity_busy",
+    }
+)
+
+
+def _lane_recovery_actions(
+    args: argparse.Namespace,
+    *,
+    failure_code: str,
+    browser_oracle: dict[str, Any],
+    submit_meta: dict[str, Any],
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    packet_next_command: list[str],
+) -> list[dict[str, Any]]:
+    """Ordered, escalating recovery actions for one failed browser lane.
+
+    Every entry is a DIFFERENT evidence-derived action, never the same command
+    twice: repeating an identical attempt is spray-and-pray. The order encodes
+    what actually recovered lanes in production:
+
+    1. provider extract - the response is usually already rendered in the tab
+       and only the capture missed its window.
+    2. foreground the tab, then extract again - Chrome virtualizes background
+       tabs, and CDP evaluation against them times out; foregrounding made an
+       identical extract succeed in seconds (observed 2026-08-01, webgpt and
+       webgemini seats).
+    3. the recovery packet's own next_command - resubmit or rebind, already
+       computed per failure class.
+    """
+    actions: list[dict[str, Any]] = []
+    extract = _browser_provider_extract_command(
+        args,
+        failure_code=failure_code,
+        browser_oracle=browser_oracle,
+        submit_meta=submit_meta,
+        response_path=response_path,
+        raw_path=raw_path,
+        meta_path=meta_path,
+    )
+    tab_id = str(
+        submit_meta.get("controlled_tab_id")
+        or submit_meta.get("requested_tab_id")
+        or browser_oracle.get("controlled_tab_id")
+        or browser_oracle.get("tab_id")
+        or ""
+    ).strip()
+    if extract:
+        actions.append({"action": "provider_extract", "command": extract})
+        if tab_id:
+            actions.append(
+                {
+                    "action": "foreground_tab_then_extract",
+                    "command": extract,
+                    "pre_command": [str(args.surf_run), "tab.switch", tab_id],
+                }
+            )
+    if packet_next_command:
+        actions.append({"action": "packet_next_command", "command": list(packet_next_command)})
+    return actions
+
+
+def _lane_recovery_succeeded(meta_path: Path, output_path: Path, sentinel: str) -> bool:
+    """A recovery counts only when it produced sentinel-bearing provider text."""
+    meta = _read_json(meta_path) if meta_path.is_file() else None
+    if isinstance(meta, dict) and meta.get("raw_contains_sentinel") is True:
+        return True
+    if sentinel and output_path.is_file():
+        try:
+            return sentinel in output_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return False
+    return False
+
+
+def _attempt_lane_recovery(
+    args: argparse.Namespace,
+    *,
+    recovery_packet: dict[str, Any],
+    browser_oracle: dict[str, Any],
+    submit_meta: dict[str, Any],
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    artifact_dir: Path,
+    deadline: float,
+) -> dict[str, Any]:
+    """Work a failed browser lane until it yields proof or the ladder runs out.
+
+    Assume the first attempt failed for a reason that has probably changed
+    under us (provider DOM, tab virtualization, stale binding). Each rung is a
+    distinct diagnosis-driven action whose result is verified by the same
+    sentinel contract the original attempt had to satisfy.
+    """
+    failure_code = str(recovery_packet.get("failure_code") or "")
+    receipt: dict[str, Any] = {
+        "schema": "ask.lane_recovery.v1",
+        "handler": str(args.handler),
+        "node_id": str(args.node_id),
+        "initial_failure_code": failure_code,
+        "attempts": [],
+        "recovered": False,
+    }
+    if failure_code in LANE_RECOVERY_HOPELESS:
+        receipt["skipped_reason"] = (
+            f"{failure_code} is provider-side; retrying cannot change it"
+        )
+        return receipt
+    heartbeat_path = meta_path.parent / "webgpt_heartbeat.json"
+    heartbeat = _read_json(heartbeat_path) if heartbeat_path.is_file() else None
+    sentinel = str(
+        submit_meta.get("sentinel")
+        or (heartbeat.get("sentinel") if isinstance(heartbeat, dict) else "")
+        or ""
+    ).strip()
+    actions = _lane_recovery_actions(
+        args,
+        failure_code=failure_code,
+        browser_oracle=browser_oracle,
+        submit_meta=submit_meta,
+        response_path=response_path,
+        raw_path=raw_path,
+        meta_path=meta_path,
+        packet_next_command=list(recovery_packet.get("next_command") or []),
+    )
+    if not actions:
+        receipt["skipped_reason"] = "no evidence-derived recovery action available"
+        return receipt
+    out_path = response_path.with_name("response.recovered.md")
+    out_raw = raw_path.with_name("response.recovered.raw.md")
+    out_meta = meta_path.with_name("response.recovered.meta.json")
+    for index, action in enumerate(actions, start=1):
+        remaining = int(deadline - time.time())
+        if remaining < 30:
+            receipt["attempts"].append(
+                {"attempt": index, "action": action["action"], "skipped": "recovery_budget_exhausted"}
+            )
+            break
+        command = list(action["command"])
+        for flag, value in (("--output", out_path), ("--raw-output", out_raw), ("--meta-output", out_meta)):
+            if flag in command:
+                command[command.index(flag) + 1] = str(value)
+        entry: dict[str, Any] = {"attempt": index, "action": action["action"], "command": command}
+        pre = action.get("pre_command")
+        if pre:
+            pre_result = _run_cmd(list(pre), cwd=artifact_dir, timeout=min(120, remaining))
+            entry["pre_command"] = list(pre)
+            entry["pre_returncode"] = pre_result.returncode
+            time.sleep(3)
+        result = _run_cmd(command, cwd=artifact_dir, timeout=max(30, min(remaining - 10, 900)))
+        entry["returncode"] = result.returncode
+        entry["stderr_excerpt"] = (result.stderr or "")[-400:]
+        if _lane_recovery_succeeded(out_meta, out_raw, sentinel):
+            entry["recovered"] = True
+            receipt["attempts"].append(entry)
+            receipt["recovered"] = True
+            receipt["recovered_by"] = action["action"]
+            receipt["response_path"] = str(out_path if out_path.is_file() else out_raw)
+            return receipt
+        entry["recovered"] = False
+        receipt["attempts"].append(entry)
+    return receipt
 
 
 def _browser_provider_extract_command(
