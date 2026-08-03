@@ -768,13 +768,17 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 failure = ""
         if not ok and recovery_packet.get("failure_code") in BROWSER_TRANSPORT_BLOCKERS:
             status = "BLOCKED"
-        response_quarantine = _quarantine_failed_browser_response(
-            response_path=response_path,
-            recovery_packet=recovery_packet,
-            response_text=response_text,
-        )
-        if response_quarantine.get("quarantine_path"):
-            response_path = Path(str(response_quarantine["quarantine_path"]))
+        if not ok:
+            # Quarantine only unrecovered output. A lane that healed itself has
+            # sentinel-verified provider text at response_path; moving it aside
+            # would hand the join an empty seat that actually succeeded.
+            response_quarantine = _quarantine_failed_browser_response(
+                response_path=response_path,
+                recovery_packet=recovery_packet,
+                response_text=response_text,
+            )
+            if response_quarantine.get("quarantine_path"):
+                response_path = Path(str(response_quarantine["quarantine_path"]))
     crosstalk = crosstalk_tab_mismatch(str(resolve_payload.get("tab_id") or ""), submit_meta)
     if crosstalk:
         # Never let a cross-tab capture be read as this seat's answer.

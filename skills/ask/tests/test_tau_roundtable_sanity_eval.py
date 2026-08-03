@@ -7,6 +7,7 @@ import json
 import multiprocessing
 import os
 import sys
+import time
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -1245,3 +1246,98 @@ def test_worker_prior_receipts_marks_missing_upstream_not_ready(tmp_path: Path) 
             "path": str(tmp_path / "handler-webgpt" / "node-receipt.json"),
         }
     ]
+
+
+def test_worker_lane_recovers_in_run_and_keeps_response(tmp_path: Path, monkeypatch) -> None:
+    """A lane whose submit misses its capture window heals itself in-run.
+
+    Pins the composed path: the submit produces no verifiable response, the
+    recovery ladder extracts the answer that was already rendered in the tab,
+    and the recovered text stays at response.md instead of being quarantined
+    as a failure the lane no longer has.
+    """
+    request_file = tmp_path / "request.json"
+    request_file.write_text(json.dumps({"request": "Ask webgpt."}), encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    artifact_dir.mkdir(parents=True)
+    surf = tmp_path / "surf-run.sh"
+    surf.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    surf.chmod(0o755)
+    args = SimpleNamespace(
+        node_id="handler-webgpt", handler="webgpt", topology="concurrent",
+        workflow_mode="roundtable", request_file=str(request_file),
+        browser_oracle_project="tau", next_agent="join", artifact_dir=str(artifact_dir),
+        surf_run=str(surf), browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
+        scillm_base_url="http://127.0.0.1:4001", scillm_api_key="", prior_node=[],
+        timeout=300, stable_polls=2, no_activate=True, evidence=[], codex_workspace="",
+        browser_model_preference="",
+    )
+    sentinel = "<<<WEBGPT_DONE:20260803T120000Z:abc123>>>"
+
+    def fake_run_cmd(command, *, cwd, timeout):
+        if "resolve" in command:
+            return tau_roundtable_worker.CmdResult(
+                command, 0,
+                json.dumps({"tab_id": "837366839", "conversation_url": "https://chatgpt.com/"}),
+                "", 0.01,
+            )
+        if "webgpt.submit" in command:
+            # Capture window missed: no sentinel captured anywhere.
+            for flag, text in (("--output", ""), ("--raw-output", "")):
+                Path(command[command.index(flag) + 1]).write_text(text, encoding="utf-8")
+            Path(command[command.index("--meta-output") + 1]).write_text(
+                json.dumps({"status": "failed", "failure": "missing_sentinel",
+                            "sentinel": sentinel, "requested_tab_id": "837366839",
+                            "submitted_to_chatgpt": True}),
+                encoding="utf-8",
+            )
+            return tau_roundtable_worker.CmdResult(command, 1, "", "timed out", 0.01)
+        if "webgpt.extract" in command:
+            # The answer was rendered in the tab all along.
+            body = f"Recovered provider answer.\n{sentinel}\n"
+            for flag in ("--output", "--raw-output"):
+                Path(command[command.index(flag) + 1]).write_text(body, encoding="utf-8")
+            Path(command[command.index("--meta-output") + 1]).write_text(
+                json.dumps({"status": "completed", "raw_contains_sentinel": True,
+                            "raw_chars": len(body)}),
+                encoding="utf-8",
+            )
+            return tau_roundtable_worker.CmdResult(command, 0, "ok", "", 0.01)
+        return tau_roundtable_worker.CmdResult(command, 0, "", "", 0.01)
+
+    monkeypatch.setattr(tau_roundtable_worker, "_run_cmd", fake_run_cmd)
+    monkeypatch.setattr(tau_roundtable_worker, "_run_browser_transport_cmd",
+                        lambda command, **kw: fake_run_cmd(command, cwd=kw.get("cwd"), timeout=kw.get("timeout", 60)))
+
+    result = tau_roundtable_worker._run_handler(
+        args, {"goal": {"goal_hash": "sha256:test"}}, artifact_dir
+    )
+
+    recovery = json.loads((artifact_dir / "lane-recovery.json").read_text(encoding="utf-8"))
+    assert recovery["recovered"] is True
+    assert recovery["recovered_by"] == "provider_extract"
+    assert result["handoff"]["result"]["status"] == "PASS"
+    assert (artifact_dir / "response.md").is_file()
+    assert sentinel in (artifact_dir / "response.md").read_text(encoding="utf-8")
+    assert not (artifact_dir / "response.unverified.md").exists()
+
+
+def test_worker_lane_recovery_never_retries_provider_refusal(tmp_path: Path) -> None:
+    """A rate-limited provider gets zero recovery attempts, with the reason."""
+    artifact_dir = tmp_path / "art"
+    artifact_dir.mkdir()
+    args = SimpleNamespace(handler="webgrok", node_id="handler-webgrok",
+                           surf_run=str(tmp_path / "surf.sh"), timeout=120,
+                           stable_polls=2, no_activate=True, evidence=[])
+    receipt = tau_roundtable_worker._attempt_lane_recovery(
+        args,
+        recovery_packet={"failure_code": "grok_provider_rate_limited", "next_command": []},
+        browser_oracle={}, submit_meta={"sentinel": "<<<X>>>"},
+        response_path=artifact_dir / "response.md",
+        raw_path=artifact_dir / "response.raw.md",
+        meta_path=artifact_dir / "response.meta.json",
+        artifact_dir=artifact_dir, deadline=time.time() + 300,
+    )
+    assert receipt["recovered"] is False
+    assert receipt["attempts"] == []
+    assert "provider-side" in receipt["skipped_reason"]
