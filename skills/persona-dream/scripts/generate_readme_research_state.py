@@ -105,8 +105,8 @@ def render(status: dict[str, Any]) -> str:
         "",
         f"- **Phase:** `{_cell(status.get('current_phase'), 60)}`",
         f"- **Open claims:** {', '.join(f'{i} ({l})' for i, l in list(owned.items())[:6]) or 'none'}",
-        f"- **Current blocker:** {_cell(blockers[0], 220) if blockers else 'none recorded'}",
-        f"- **Next step:** {_cell(next_step, 220) or 'not recorded'}",
+        f"- **Current blocker:** {_cell(blockers[0], 150) if blockers else 'none recorded'}",
+        f"- **Next step:** {_cell(next_step, 150) or 'not recorded'}",
     ]
     lines += ["", END]
     return "\n".join(lines)

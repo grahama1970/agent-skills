@@ -72,10 +72,8 @@ registry, not this file, is the authority.
    measurable value over direct memory and structured reflection. **A loss, a
    tie, or a null result is a completed result.** The goal is to learn whether
    the mechanism earns its complexity, not to prove that it succeeds.
-2. **Experimental subject** — Embry is the primary persistent-persona test case.
-   "Build Embry" is deliberately *not* the top-level objective; that framing
-   assumed the mechanism works and rewarded churn in pursuit of a predetermined
-   success.
+2. **Experimental subject** — Embry is the test case, not the objective.
+   "Build Embry" would assume the mechanism works.
 3. **Safety contract** — preserve identity, factual competence, answer content,
    and evidence classes. These are validity constraints, never conclusions. See
    the Persistent-Persona Safety Hypothesis in [`GOAL.md`](GOAL.md).
@@ -83,16 +81,15 @@ registry, not this file, is the authority.
    Graph Memory Operator, Tau, SPARTA, and Chatterbox. Recorded per experiment
    in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
 5. **Product decision** — adopt, constrain, simplify, or retire each mechanism
-   on the evidence. A component that fails a controlled ablation is removed or
-   constrained; deletion is a goal-serving action.
+   on the evidence. Deletion is a goal-serving action here.
 
 **PCTOM-R** (Prospective Counterfactual Theory of Mind) is the research
 workstream under item 1: does imagining what did *not* happen improve
-predictions about what another agent *will* do? Its apparatus was repaired
-Issue #1131 tracks the measurement-validity repair that allows
-the treatment to lose; that repair is not evidence of benefit. The held-out
-result is tracked by #1008; use [`CURRENT_STATUS.json`](CURRENT_STATUS.json) and
-the revision-scoped receipts under `reports/` to determine its current state.
+predictions about what another agent *will* do? Issue #1131 tracks the
+measurement-validity repair that lets the treatment lose; that repair is not
+evidence of benefit. The held-out result is tracked by #1008. Current state is
+in [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
+
 **Kling, Watch, Memory, Chatterbox, and Tau** are supporting lanes. Their
 transfer decisions live in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
 
@@ -116,48 +113,28 @@ weakest joined leg, and joining every leg in one run is what P2 is for.
 
 ## Current state
 
-Phase **P2_LIVE_CONTINUITY_CHAIN**. Machine-readable state, including the
-authoritative blocker list and next step, lives in `CURRENT_STATUS.json`; the
-table below is checked against it by
-`./run.sh check-current-state-consistency --strict`.
+Phase **P2_LIVE_CONTINUITY_CHAIN**. The digest below is generated from
+`CURRENT_STATUS.json`, which holds the authoritative blockers, next step, and
+every figure. `./run.sh check-current-state-consistency --strict` fails if this
+file drifts from it.
 
 | Lane | Implemented and receipted | Not proven |
 |---|---|---|
-| Continuity ledger | Atomic writes, epoch compare-and-set, cycle idempotency, identity-core hash guard, read-time validation | Runtime authority across real sessions |
-| Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Deployed production behavior beyond local live receipts |
-| Chatterbox voice | Live `/synthesize-batch` render of the mood envelope, strict ASR WER 0.0, durable WAV snapshots | Perceived emotion, naturalness, human acceptance |
-| Speaker recognition | Condition-scoped resemblyzer receipts only — joined live-chain three-turn renders (4.64-5.32s) separation 0.159977 (`reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json`); long 4.68-6.0s renders separation 0.208427 (`reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json`); neither value is a universal threshold | Human listener recognition, perceived emotion, naturalness, cross-mood identity (#1130) |
-| Joined live chain | One fresh cycle id, `live_chain_20260729t130950z`, joins accepted dream evidence -> Watch binding -> journal -> ledger delta -> pre-turn session mood -> three live Chatterbox turns -> Embry recognition, with 13/13 negative controls blocked | Perceived emotion; deployed production behavior beyond local live receipts |
-| Session arc bias | `session_arc_bias.v1` publishes bounded deltas from the latest ledger arc, `intensity_delta=0.18`, `valence_delta=-0.18`, with no tone category; `sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json` binds the SPARTA consumer contract; `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716` locally consumed that artifact before turn 1 and preserved answer text/tone category across three turns | Human-perceived emotion; deployed production behavior beyond the local live API receipt |
-| Reliability pilot | Five fresh live-chain cycles passed in `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`: 5 attempted, 5 completed, 5 passed, duplicate accepted effects 0, Wilson 95% lower bound 0.565509 — a downstream P2 engineering pilot, not production or full Phase 01-16 pipeline reliability | Production reliability (no-restart soak, #1128); restart/recovery study (#1129) |
-| Blinded listener study | V2 preregistration, counterbalanced rater surface, response validation, ASR verification, and neutral-repeat technical screen | Existing four stimuli rejected as `BLOCKED_STIMULUS_TECHNICAL_CONFOUND`; #1179 must re-render and pass the frozen screen before #1058 human collection. No perceptual emotion, identity, or naturalness result |
-| Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
-| PCTOM-R | Measurement-validity-v2 passes on a non-degenerate corpus; mixed truth labels, episode-conditioned distributions, sealed commitments, and valid CD losses | No live held-out benefit result; #1008 must determine whether CD beats, ties, or loses to the strongest baseline |
+| Continuity ledger | Atomic writes, epoch compare-and-set, cycle idempotency, identity-core guard | Runtime authority across real sessions |
+| Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Behavior beyond local live receipts |
+| Chatterbox voice | Live render of the mood envelope at ASR WER 0.0, with durable snapshots | Perceived emotion, naturalness, human acceptance |
+| Speaker recognition | Machine separation under two named render conditions; neither value is a universal threshold | Human recognition; cross-mood identity (#1130) |
+| Joined live chain | One fresh cycle joins dream evidence through to recognition, 13/13 negative controls blocked | Perceived emotion; behavior beyond local receipts |
+| Session arc bias | Bounded deltas published under a hash-bound consumer contract, consumed live by SPARTA before turn 1 | Human-perceived emotion; deployed production behavior |
+| Reliability pilot | Five live cycles passed, zero duplicate accepted effects — a feasibility pilot | Production reliability (#1128); restart/recovery (#1129) |
+| Blinded listener study | V2 preregistration, counterbalanced raters, and a neutral-repeat technical screen | Stimuli rejected as technically confounded; #1179 must re-render before #1058 |
+| PCTOM-R | Measurement validity passes on a non-degenerate corpus; the treatment can lose | No held-out benefit result (#1008) |
+| Historical media loop | One accepted dream persistence path and provider return | Repeatability; previous-video causality |
 
-The active voice gate is **#1179**: re-render all four listener-study
-conditions under one identical normalization policy and rerun the frozen
-technical-confound screen. Human collection must not begin unless that screen
-passes. Cross-mood machine identity remains under #1130; perceived emotion,
-identity, and naturalness remain under #1058.
+Figures, receipt paths, and revision ids are in
+[`CURRENT_STATUS.json`](CURRENT_STATUS.json) and
+[`docs/verification.md`](docs/verification.md).
 
-```text
-#1179 re-render all four conditions identically
--> rerun unchanged technical-confound screen
--> #1130 cross-mood machine identity
--> #1058 blinded human listener study
-```
-
-**#1131 is closed:** the PCTOM-R corpus and estimator now pass
-measurement-validity-v2 and can produce treatment losses. This validates the
-apparatus only. **#1008 owns the live held-out condition-benefit result**, which
-does not yet exist; no evidence currently shows that counterfactual dreaming
-helps.
-
-SPARTA has a local live API receipt at
-`grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716` showing the
-current `session_arc_bias.v1` artifact was applied before turn 1, reused across
-three turns, preserved answer text and tone category, and fell back to neutral
-when no artifact was supplied.
 
 <!-- BEGIN GENERATED CURRENT RESEARCH STATE -->
 
@@ -167,48 +144,35 @@ the JSON, not here.*
 
 - **Phase:** `P2_LIVE_CONTINUITY_CHAIN`
 - **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery), #1059 (Previous-video causality)
-- **Current blocker:** Blinded Chatterbox listener-study stimuli are present, ASR-verified, and available through a static blinded rater page; the analysis guard still blocks without enough valid human rows plus signed human interpretation, s…
-- **Next step:** Collect the blinded Chatterbox listener-study responses and signed interpretation; do not substitute LLM/self-ratings. Defer PCTOM-R unless the operator reprioritizes the research workstream.
+- **Current blocker:** Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions…
+- **Next step:** Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.
 
 <!-- END GENERATED CURRENT RESEARCH STATE -->
 
 ## Current Proof Boundary
 
-Persona Dream is an advanced research prototype and a substantial hardening
-workload for Tau, the agentic harness that runs and verifies the pipeline. It is
-not yet a completed personality-evolution product.
+This is a research prototype. Nothing below is a product claim, and the
+vocabulary is deliberately narrow: **implemented** means code exists,
+**fixture-proven** means deterministic checks pass with no live behavior implied,
+**live slice proven** means a real external operation ran and was inspected, and
+**blocked** means a named prerequisite is missing.
 
-### Status Vocabulary
-
-The README uses these proof terms consistently:
-
-| Status | Meaning |
-|---|---|
-| **Implemented** | Code, scripts, artifacts, or a UX surface exist |
-| **Accepted evidence** | The selected run contains a receipt-backed artifact accepted by its current gate |
-| **Fixture-proven** | Deterministic fixture-backed checks pass; no live external behavior is implied |
-| **Live slice proven** | A real external operation or generated artifact was executed and inspected |
-| **Qualified revision** | The immutable revision, required evidence, Memory projection, active pointer, and terminal repair event agree |
-| **Blocked** | A named prerequisite is missing or intentionally disallowed |
-| **Designed** | The architecture and evidence contract exist, but the implementation proof does not |
-| **Not implemented** | No working rung currently exists |
-
-| Boundary | State | What that proves |
+| Boundary | State | Where the evidence lives |
 |---|---|---|
-| Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
-| Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
-| Phases 01-10 - Qualified successor revision | **Qualified revision at acceptance rung** | `rev_successor_943b01ecd9a3` is `PASS_ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, 10 phase + 16 required-artifact Memory records and the 42-step bundle exactly reread, and the rebuilt artifact index makes the eight Phase C storyboard frames (8/8 actual-pixel identity PASS, 7/7 continuity) the active Phase 07 evidence while the montage-derived frames stay stale |
-| Phase 11 - Submit and Return | **Live successor return received and accepted (agent level)** | The successor made exactly one hash-bound authorized submit (request `sha256:97688ec5…`, fal request id `019f77f0…`) and received a valid 10.041667s H.264 720p return (`sha256:59b9ff31…`). Step 36 continuity PASS v2 (ArcFace + Tau-routed pose/occlusion adjudication); steps 37-38 PASS v2 (exact line muxed and force-aligned 4.74-7.86s; visible-speaker inapplicable-by-composition per the lane C design). The earlier `rev_upstream_bf3b05d47fb8` return remains superseded historical evidence. Human subjective acceptance of the video remains open |
-| Phase 12 - Watch Observation | **Live slice proven for perception-on-historical-return** | The `watch` post-return gauntlet (`scripts/watch_post_return_gauntlet.py`) runs the `watch` skill over the frozen historical Kling return, extracts scene-driven frames + Whisper transcript, and independently localizes the identity-drift and visible-speaker windows. Validated against ground truth: `watch_gauntlet/991c311f365f/watch_gauntlet_validation_receipt.v1.json` (`PASS_WATCH_GAUNTLET_VALIDATED`, 5/5 expectations). The gauntlet has since also run on the accepted successor return (`watch_gauntlet/59b9ff3155d6/`); its observation packet remains `DEGRADED` (per-frame VLM entities pending), with the authoritative visual verdicts carried by the step-36 v2 receipt |
-| Phases 13-15 - Interpretation through persistence | **Live slice proven on accepted return** | On the ACCEPTED successor return, phase 13/14 text reasoning routes through the Tau node (tau `09e64a44`; no direct scillm), 4 interpretations + 4 ToM candidates pass the deterministic gates, and phase 15 wrote the FIRST canonical dream memory (19 records, exact reread-by-key) permitted only by a binding agent-level acceptance receipt; superseded/historical returns stay fail-closed |
-| Phase 16 - Recall and later persona behavior | **Machine-decidable slice LIVE-PROVEN (`PASS`)** | `scripts/phase16_behavior_evaluation.py` → `phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json` (`overall_status: PASS`): (a) semantic recall returns the dream from 3 differently-worded queries (ranks 1/3/7, dense 0.59/0.43/0.74) while a `orbital telemetry` negative control does NOT; (b) multi-hop traversal resolves all 14 canonical edges live to 3 source memories + 7 Watch observations + 4 ToM nodes; (c) the persona uses the dream and marks it as a dream, with context assembled ONLY from live recall; (d) it denies literal occurrence and the `synthetic_origin=true`/`literal_historical_event=false` flags reread exactly; (e) identity is stable (loop write-set is dream+edges+ToM only, source anchors literal/unchanged, Tau values Q&A stable). All LLM probes route through the Tau node (no direct scillm). **Out of scope this slice: Chatterbox voice expression (item 10) and human subjective acceptance of the video** |
+| Grounded dream packets | Implemented | `reports/` run receipts |
+| Image and storyboard production | Live slice proven | `reports/` panel and review receipts |
+| Phases 01-10, qualified revision | Qualified revision | [`docs/verification.md`](docs/verification.md) |
+| Phase 11, submit and return | Live return accepted at agent level; human acceptance open | [`docs/verification.md`](docs/verification.md) |
+| Phase 12, Watch observation | Live slice proven on historical return; packet degraded on successor | [`docs/verification.md`](docs/verification.md) |
+| Phases 13-15, interpretation to persistence | Live slice proven on the accepted return | [`docs/verification.md`](docs/verification.md) |
+| Phase 16, recall and later behavior | Machine-decidable slice live-proven | [`docs/verification.md`](docs/verification.md) |
+| Chatterbox voice expression | Blocked: stimuli rejected as technically confounded | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1179 |
+| PCTOM-R held-out benefit | Not run | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1008 |
 
-The screenshots below come from an archived Embry/Kai run. That run has not been
-regenerated with every newer provider artifact. A blocked screenshot describes
-the selected run root, not the full set of current development capabilities.
-
-Provider selection is near the end of the media-production spine. It is not the
-end of the founding research experiment.
+Revision ids, request hashes, receipt paths, and the per-phase narrative are in
+[`docs/verification.md`](docs/verification.md). Current machine state is in
+[`CURRENT_STATUS.json`](CURRENT_STATUS.json). Provider selection is near the end
+of the media-production spine; it is not the end of the research experiment.
 
 ---
 

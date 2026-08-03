@@ -417,18 +417,19 @@
     ]
   },
   "active_blockers": [
-    "Blinded Chatterbox listener-study stimuli are present, ASR-verified, and available through a static blinded rater page; the analysis guard still blocks without enough valid human rows plus signed human interpretation, so no perceptual emotion, naturalness, or human listener acceptance claim is available.",
+    "Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions under one normalization and pass the frozen screen before any human collection under #1058.",
     "SPARTA has local live API proof of consuming the Persona Dream session_arc_bias artifact, but deployed production operation beyond that local receipt remains unproven.",
     "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
     "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
   ],
   "next_step": {
-    "default": "Collect the blinded Chatterbox listener-study responses and signed interpretation; do not substitute LLM/self-ratings. Defer PCTOM-R unless the operator reprioritizes the research workstream.",
+    "default": "Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.",
     "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
     "ordered_steps": [
-      "Use skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html to collect the 20 blinded Chatterbox listener-study responses for dream-derived emotion, Embry identity, and naturalness, then add signed human interpretation; do not substitute LLM/self-ratings.",
-      "Rerun ./skills/persona-dream/run.sh analyze-blinded-listener-study --json and require the analysis receipt to clear human_responses_complete and signed_human_interpretation_missing.",
+      "#1179: re-render all four conditions identically, then rerun the frozen technical-confound screen without changing thresholds.",
+      "#1130: cross-mood machine identity, then #1058 human collection once the screen passes.",
+      "#1129 restart/recovery, then #1128 no-restart reliability soak.",
       "Defer PCTOM-R condition-benefit expansion until continuity runtime reliability has deterministic evidence or the operator explicitly reprioritizes the research workstream."
     ]
   },
