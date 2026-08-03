@@ -1,0 +1,110 @@
+"""Regression tests for stable ingest-code symbol identity."""
+
+from __future__ import annotations
+
+import importlib.util
+import sys
+from pathlib import Path
+
+MODULE_DIR = Path(__file__).resolve().parents[1]
+spec = importlib.util.spec_from_file_location(
+    "code_symbol_record",
+    MODULE_DIR / "code_symbol_record.py",
+)
+assert spec and spec.loader
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+
+from code_symbol_record import CodeSymbolRecord
+
+
+def _record(**overrides) -> CodeSymbolRecord:
+    values = {
+        "scope": "test",
+        "repo": "grahama1970/example",
+        "root": "/repo",
+        "branch": "main",
+        "commit": "abc123",
+        "path": "src/example.py",
+        "language": "python",
+        "symbol_kind": "function",
+        "symbol_name": "build_index",
+        "qualified_name": "build_index",
+        "start_line": 10,
+        "end_line": 12,
+        "code": "def build_index():\n    return 1\n",
+        "content_hash": "content-before",
+    }
+    values.update(overrides)
+    return CodeSymbolRecord(**values)
+
+
+def test_logical_identity_survives_commit_line_and_body_changes() -> None:
+    before = _record()
+    after = _record(
+        commit="def456",
+        start_line=30,
+        end_line=34,
+        code="def build_index():\n    return 2\n",
+        content_hash="content-after",
+    )
+
+    assert before.symbol_id == after.symbol_id
+    assert before.key == after.key
+    assert before.symbol_version_id != after.symbol_version_id
+    assert before.legacy_key != after.legacy_key
+
+
+def test_path_separator_normalization_is_identity_stable() -> None:
+    posix = _record(path="src/nested/example.py")
+    windows = _record(path=r".\src\nested\example.py")
+
+    assert posix.normalized_path == "src/nested/example.py"
+    assert windows.normalized_path == posix.normalized_path
+    assert windows.symbol_id == posix.symbol_id
+
+
+def test_identity_changes_for_entity_shaping_fields() -> None:
+    base = _record()
+
+    variants = [
+        _record(repo="grahama1970/other"),
+        _record(branch="feature"),
+        _record(path="src/other.py"),
+        _record(language="typescript"),
+        _record(symbol_kind="method"),
+        _record(qualified_name="IndexBuilder.build_index"),
+        _record(identity_discriminator="overload:string"),
+    ]
+
+    assert all(candidate.symbol_id != base.symbol_id for candidate in variants)
+
+
+def test_same_named_symbols_in_different_files_do_not_collide() -> None:
+    first = _record(path="src/first.py")
+    second = _record(path="src/second.py")
+
+    assert first.symbol_name == second.symbol_name
+    assert first.symbol_id != second.symbol_id
+
+
+def test_explicit_discriminator_separates_overloads() -> None:
+    first = _record(identity_discriminator="(str)")
+    second = _record(identity_discriminator="(int)")
+
+    assert first.symbol_id != second.symbol_id
+
+
+def test_documents_publish_current_and_version_identity() -> None:
+    record = _record(content_hash="")
+    document = record.to_document()
+    legacy = record.to_legacy_lesson_document()["metadata"]
+
+    assert document["_key"] == record.symbol_id
+    assert document["symbol_id"] == record.symbol_id
+    assert document["symbol_version_id"] == record.symbol_version_id
+    assert document["content_hash"] == record.effective_content_hash
+    assert document["path"] == record.normalized_path
+    assert legacy["symbol_id"] == record.symbol_id
+    assert legacy["symbol_version_id"] == record.symbol_version_id

@@ -9,6 +9,7 @@ TMP="${TMPDIR:-/tmp}/external-project-adoption-smoke-$$"
 REPO="$TMP/repo"
 FAIL_HOME="$TMP/orchestrate-fail-home"
 PASS_HOME="$TMP/orchestrate-pass-home"
+export PLAN_ARTIFACT_ROOT="${PLAN_ARTIFACT_ROOT:-$TMP/plan-artifacts}"
 
 cleanup() {
   status=$?
@@ -33,11 +34,18 @@ MD
 touch skills/__init__.py skills/hack/__init__.py skills/hack/tests/__init__.py
 
 cat > skills/hack/tests/test_evolutionary_campaign.py <<'PY'
+import unittest
+
 from skills.hack.evolutionary_campaign import answer
 
 
-def test_answer_is_42():
-    assert answer() == 42
+class EvolutionaryCampaignTests(unittest.TestCase):
+    def test_answer_is_42(self):
+        self.assertEqual(answer(), 42)
+
+
+if __name__ == "__main__":
+    unittest.main()
 PY
 
 git add README.md skills/__init__.py skills/hack/__init__.py skills/hack/tests/__init__.py skills/hack/tests/test_evolutionary_campaign.py
@@ -87,12 +95,12 @@ tasks:
     commit_on_success: true
     rollback_on_failure: true
     definition_of_done:
-      command: "python -m pytest skills/hack/tests/test_evolutionary_campaign.py -q"
+      command: "python -m unittest discover -s skills/hack/tests -q"
       assertion: "exit_code == 0"
     tests:
-      - "python -m pytest skills/hack/tests/test_evolutionary_campaign.py -q"
+      - "python -m unittest discover -s skills/hack/tests -q"
     blind_tests:
-      - command: "python -m pytest skills/hack/tests/test_evolutionary_campaign.py -q"
+      - command: "python -m unittest discover -s skills/hack/tests -q"
 YAML
 
 "$PLAN" --validate "$TMP/hack-plan.yaml" > "$TMP/plan.log" 2>&1

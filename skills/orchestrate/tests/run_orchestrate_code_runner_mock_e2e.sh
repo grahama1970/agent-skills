@@ -30,11 +30,18 @@ def answer():
 PY
 
 cat > tests/test_target.py <<'PY'
+import unittest
+
 from src.target import answer
 
 
-def test_answer_returns_42():
-    assert answer() == 42
+class TargetTests(unittest.TestCase):
+    def test_answer_returns_42(self):
+        self.assertEqual(answer(), 42)
+
+
+if __name__ == "__main__":
+    unittest.main()
 PY
 
 git add src/__init__.py src/target.py tests/__init__.py tests/test_target.py
@@ -78,10 +85,10 @@ tasks:
     max_rounds: 1
     timeout_seconds: 120
     definition_of_done:
-      command: "python -m pytest tests/test_target.py -q"
+      command: "python -m unittest discover -s tests -q"
       assertion: "exit_code == 0"
     blind_tests:
-      - command: "python -m pytest tests/test_target.py -q"
+      - command: "python -m unittest discover -s tests -q"
 YAML
 
 MOCK_RESPONSE=$'### FILE: src/target.py\n```python\ndef answer():\n    return 42\n```'
@@ -126,7 +133,7 @@ for forbidden in [
 
 assert spec["allowlist"] == ["src/target.py"], spec
 assert spec["definition_of_done"] == {
-    "command": "python -m pytest tests/test_target.py -q",
+    "command": "python -m unittest discover -s tests -q",
     "assertion": "exit_code == 0",
 }, spec
 assert spec["read_context"] == ["src/target.py", "tests/test_target.py"], spec
