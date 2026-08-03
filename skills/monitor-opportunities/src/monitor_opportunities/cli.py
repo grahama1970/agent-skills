@@ -1,4 +1,4 @@
-"""CLI entrypoint for the zero-network Stage 0 kernel."""
+"""CLI entrypoint for the read-only Stage 0 opportunity monitor."""
 
 from __future__ import annotations
 
@@ -12,7 +12,12 @@ from loguru import logger
 
 from . import __version__
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
+from .decisions import append_decision, replay as replay_decisions
+from .discovery import sweep as sweep_sources
+from .pipeline import run_stage0, status_for_run
+from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
+from .tailoring import tailor as tailor_resume
 from .verification import run_verification
 
 app = typer.Typer(
@@ -21,18 +26,22 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-IMPLEMENTED = ["status", "report", "verify"]
-NOT_IMPLEMENTED = [
-    "run",
-    "resume",
+IMPLEMENTED = [
+    "status",
+    "report",
+    "verify",
     "sweep",
     "rank",
     "tailor",
-    "serve",
     "decision",
     "replay",
-    "apply",
+    "run",
+    "resume",
     "schedule",
+]
+NOT_IMPLEMENTED = [
+    "serve",
+    "apply",
 ]
 
 
@@ -54,18 +63,18 @@ def status_payload() -> dict[str, object]:
         "immutable_goal": IMMUTABLE_GOAL,
         "stage": STAGE,
         "operational_readiness": "NOT_ESTABLISHED",
-        "network_access": False,
+        "network_access": True,
         "external_effects": False,
         "implemented_commands": IMPLEMENTED,
         "not_implemented_commands": NOT_IMPLEMENTED,
         "capabilities": {
             "local_report": "IMPLEMENTED",
             "verification_receipt": "IMPLEMENTED",
-            "live_discovery": "NOT_IMPLEMENTED",
-            "eligibility_and_ranking": "NOT_IMPLEMENTED",
-            "claim_bound_tailoring": "NOT_IMPLEMENTED",
-            "decision_ledger": "NOT_IMPLEMENTED",
-            "scheduler_registration": "NOT_IMPLEMENTED",
+            "live_discovery": "IMPLEMENTED_READ_ONLY",
+            "eligibility_and_ranking": "IMPLEMENTED_LOCAL",
+            "claim_bound_tailoring": "IMPLEMENTED_LOCAL",
+            "decision_ledger": "IMPLEMENTED_LOCAL",
+            "scheduler_registration": "IMPLEMENTED_LOCAL_READBACK",
             "gmail_mailbox_draft": "BLOCKED_STAGE_0",
             "gmail_send": "PERMANENTLY_FORBIDDEN",
             "linkedin_handoff": "BLOCKED_STAGE_0",
@@ -75,8 +84,8 @@ def status_payload() -> dict[str, object]:
             "ats_submit": "BLOCKED_STAGE_0",
         },
         "non_claims": [
-            "The nightly opportunity pipeline is not implemented or reliable.",
-            "Fixture rendering does not prove live sources, ranking, tailoring, scheduling, or effects.",
+            "Stage 0 does not prove long-run nightly reliability.",
+            "No Gmail, LinkedIn, ATS, Memory, or scheduler effect is hidden behind report rendering.",
         ],
     }
 
@@ -134,6 +143,166 @@ def verify(
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
     if receipt["overall"] != "PASS":
         raise typer.Exit(code=1)
+
+
+@app.command()
+def sweep(
+    lane: str = typer.Option("A,B,C", "--lane", help="Comma-separated lanes to attempt."),
+    out: Path = typer.Option(..., "--out", file_okay=False),
+    fixture_dir: Path | None = typer.Option(None, "--fixture-dir", file_okay=False),
+) -> None:
+    """Run read-only source discovery and write local receipts."""
+    _configure_logging()
+    lanes = {item.strip().upper() for item in lane.split(",") if item.strip()}
+    skill_dir = Path(__file__).resolve().parents[2]
+    receipt = sweep_sources(skill_dir=skill_dir, lanes=lanes, out_dir=out, fixture_dir=fixture_dir)
+    typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
+
+
+@app.command()
+def rank(
+    input_dir: Path = typer.Option(..., "--input", exists=True, file_okay=False, readable=True),
+    limit: int = typer.Option(8, "--limit", min=0, max=8),
+    out: Path = typer.Option(..., "--out", file_okay=False),
+) -> None:
+    """Hard-gate eligibility before deterministic ranking."""
+    _configure_logging()
+    receipt = rank_candidates(input_dir, limit, out)
+    typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
+
+
+@app.command()
+def tailor(
+    posting: str = typer.Option(..., "--posting"),
+    claims: Path = typer.Option(..., "--claims", exists=True, dir_okay=False, readable=True),
+    out: Path = typer.Option(..., "--out", file_okay=False),
+) -> None:
+    """Compile a local claim-bound resume variant."""
+    _configure_logging()
+    try:
+        receipt = tailor_resume(posting, claims, out)
+    except ValueError as exc:
+        _fail(ContractError("TAILORING_FAILED", str(exc)))
+    typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
+
+
+@app.command()
+def decision(
+    run: Path = typer.Option(..., "--run", file_okay=False),
+    item: str = typer.Option(..., "--item"),
+    action: str = typer.Option(..., "--action"),
+    actor: str = typer.Option("candidate", "--actor"),
+    idempotency_key: str = typer.Option(..., "--idempotency-key"),
+    reason: str | None = typer.Option(None, "--reason"),
+) -> None:
+    """Append one local decision event; external effects are impossible."""
+    _configure_logging()
+    try:
+        event = append_decision(
+            run_dir=run,
+            item_id=item,
+            action=action,
+            actor=actor,
+            idempotency_key=idempotency_key,
+            reason=reason,
+        )
+    except ValueError as exc:
+        _fail(ContractError("DECISION_REJECTED", str(exc)))
+    typer.echo(json.dumps({"status": "PASS", **event}, indent=2, sort_keys=True))
+
+
+@app.command()
+def replay(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+) -> None:
+    """Replay the local decision ledger into the current projection."""
+    _configure_logging()
+    projection = replay_decisions(run)
+    typer.echo(json.dumps({"status": "PASS", **projection}, indent=2, sort_keys=True))
+
+
+@app.command("run")
+def run_command(
+    out: Path | None = typer.Option(None, "--out", file_okay=False),
+    fixture_dir: Path | None = typer.Option(None, "--fixture-dir", file_okay=False),
+) -> None:
+    """Run one resumable Stage 0 transaction with no external effects."""
+    _configure_logging()
+    skill_dir = Path(__file__).resolve().parents[2]
+    if out is None:
+        out = skill_dir / "local" / "nightly" / "latest"
+    receipt = run_stage0(skill_dir, out, fixture_dir)
+    typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
+
+
+@app.command()
+def resume(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+) -> None:
+    """Read back a prior Stage 0 run status."""
+    _configure_logging()
+    typer.echo(json.dumps(status_for_run(run), indent=2, sort_keys=True))
+
+
+@app.command()
+def schedule(
+    cron: str = typer.Option("0 2 * * *", "--cron"),
+) -> None:
+    """Register the single full-run transaction with the scheduler and read it back."""
+    _configure_logging()
+    import subprocess
+
+    repo_root = Path(__file__).resolve().parents[4]
+    scheduler = repo_root / "skills" / "scheduler" / "run.sh"
+    command = str(repo_root / "skills" / "monitor-opportunities" / "run.sh") + " run"
+    register = subprocess.run(
+        [
+            str(scheduler),
+            "register",
+            "--name",
+            "monitor-opportunities-nightly",
+            "--cron",
+            cron,
+            "--command",
+            command,
+            "--workdir",
+            str(repo_root),
+            "--description",
+            "Nightly Stage 0 opportunity report",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    listing = subprocess.run(
+        [str(scheduler), "list", "--json"],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    jobs = json.loads(listing.stdout)
+    job = jobs.get("monitor-opportunities-nightly")
+    if not job or job.get("cron") != cron or job.get("command") != command:
+        _fail(ContractError("SCHEDULER_READBACK_FAILED", "Registered job did not read back"))
+    typer.echo(
+        json.dumps(
+            {
+                "status": "PASS",
+                "schema": "monitor_opportunities.scheduler_receipt.v1",
+                "external_effects": False,
+                "name": "monitor-opportunities-nightly",
+                "cron": cron,
+                "command": command,
+                "workdir": str(repo_root),
+                "register_stdout": register.stdout,
+                "readback": job,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 def _not_implemented(command: str) -> None:

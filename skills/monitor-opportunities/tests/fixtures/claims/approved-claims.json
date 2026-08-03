@@ -1,0 +1,40 @@
+{
+  "active": true,
+  "candidate_profile_id": "graham-anderson-stage0-fixture",
+  "claims": [
+    {
+      "approved": true,
+      "claim_key": "claim:arcos:acert-architect",
+      "evidence_refs": ["fixture://arcos"],
+      "wordings": [
+        {
+          "text": "Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence.",
+          "wording_id": "wording:arcos:lead"
+        }
+      ]
+    },
+    {
+      "approved": true,
+      "claim_key": "claim:pdf-oxide:document-extraction",
+      "evidence_refs": ["fixture://pdf-oxide"],
+      "wordings": [
+        {
+          "text": "Built document extraction systems that preserve source evidence and support deterministic review workflows.",
+          "wording_id": "wording:pdf:extract"
+        }
+      ]
+    },
+    {
+      "approved": true,
+      "claim_key": "claim:memory:retrieval-platform",
+      "evidence_refs": ["fixture://memory"],
+      "wordings": [
+        {
+          "text": "Designed retrieval and receipt systems that separate source truth, inference, and human review decisions.",
+          "wording_id": "wording:memory:receipt"
+        }
+      ]
+    }
+  ],
+  "schema": "monitor_opportunities.claim_snapshot.v1"
+}

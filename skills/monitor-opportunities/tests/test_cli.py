@@ -17,7 +17,8 @@ def test_status_json_is_truthful() -> None:
     payload = json.loads(result.stdout)
     assert payload["stage"] == "STAGE_0_RESEARCH_ONLY"
     assert payload["operational_readiness"] == "NOT_ESTABLISHED"
-    assert payload["network_access"] is False
+    assert payload["network_access"] is True
+    assert payload["external_effects"] is False
     assert payload["capabilities"]["gmail_send"] == "PERMANENTLY_FORBIDDEN"
 
 
