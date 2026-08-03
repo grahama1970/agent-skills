@@ -85,6 +85,11 @@ if [[ "${1:-}" == "prove-live-human-interjection-control" ]]; then
   exec bash "$SCRIPT_DIR/scripts/live-human-interjection-control-proof.sh" "$@"
 fi
 
+if [[ "${1:-}" == "qualify-local-campaign" ]]; then
+  shift
+  exec bash "$SCRIPT_DIR/scripts/local-campaign-qualification-proof.sh" "$@"
+fi
+
 if [[ "${1:-}" == "human-interjection-proof" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/human_interjection_proof.py" "$@"
