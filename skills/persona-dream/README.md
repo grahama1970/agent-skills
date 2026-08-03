@@ -69,18 +69,6 @@ lanes with their own receipts and boundaries.
 
 This project does not have to become a production product to be complete.
 
-**Active successor issues**, each owning one open claim in
-`CURRENT_STATUS.json` (`current_claims`): **#1179** re-render the listener
-stimuli under one identical loudness normalization — #1126 and #1127 are closed,
-and the technical screen #1127 produced *blocked* the existing four stimuli as
-loudness-confounded, so no human collection may begin (gating #1058);
-**#1130** cross-mood machine identity; **#1128** no-restart reliability soak and
-**#1129** restart/recovery, neither started; **#1008** the live held-out PCTOM-R
-comparison on the apparatus repaired by #1131; **#1133** consume Chatterbox
-perceptual validation without self-certifying it; **#1059** previous-video
-causality, deferred with no provider spend. Findings and their adopt / constrain
-/ reject decisions are recorded in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
-
 ## Architecture: the bounded loop
 
 ```
@@ -113,33 +101,74 @@ table below is checked against it by
 | Joined live chain | One fresh cycle id, `live_chain_20260729t130950z`, joins accepted dream evidence -> Watch binding -> journal -> ledger delta -> pre-turn session mood -> three live Chatterbox turns -> Embry recognition, with 13/13 negative controls blocked | Perceived emotion; deployed production behavior beyond local live receipts |
 | Session arc bias | `session_arc_bias.v1` publishes bounded deltas from the latest ledger arc, `intensity_delta=0.18`, `valence_delta=-0.18`, with no tone category; `sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json` binds the SPARTA consumer contract; `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716` locally consumed that artifact before turn 1 and preserved answer text/tone category across three turns | Human-perceived emotion; deployed production behavior beyond the local live API receipt |
 | Reliability pilot | Five fresh live-chain cycles passed in `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`: 5 attempted, 5 completed, 5 passed, duplicate accepted effects 0, Wilson 95% lower bound 0.565509 — a downstream P2 engineering pilot, not production or full Phase 01-16 pipeline reliability | Production reliability (no-restart soak, #1128); restart/recovery study (#1129) |
-| Blinded listener study | Four preregistered Chatterbox stimuli are restored, hash-matched, live-ASR verified at WER 0.0, and paired with a rater response schema that rejects empty/malformed rows | Valid human responses remain 0/20; no perceptual emotion or naturalness result |
+| Blinded listener study | V2 preregistration, counterbalanced rater surface, response validation, ASR verification, and neutral-repeat technical screen | Existing four stimuli rejected as `BLOCKED_STIMULUS_TECHNICAL_CONFOUND`; #1179 must re-render and pass the frozen screen before #1058 human collection. No perceptual emotion, identity, or naturalness result |
 | Historical media loop | One accepted canonical dream persistence path and provider return | Repeatability; previous-video attachment causality |
-| PCTOM-R | Strong deterministic receipt machinery, live Tau slices | Confidence-bounded planning advantage |
+| PCTOM-R | Measurement-validity-v2 passes on a non-degenerate corpus; mixed truth labels, episode-conditioned distributions, sealed commitments, and valid CD losses | No live held-out benefit result; #1008 must determine whether CD beats, ties, or loses to the strongest baseline |
 
-**The active gate** is no longer producing the first joined live-chain receipt,
-the five-cycle engineering pilot, or the SPARTA arc-bias consumer handoff. Those
-now exist. SPARTA has a local live API receipt at
+The active voice gate is **#1179**: re-render all four listener-study
+conditions under one identical normalization policy and rerun the frozen
+technical-confound screen. Human collection must not begin unless that screen
+passes. Cross-mood machine identity remains under #1130; perceived emotion,
+identity, and naturalness remain under #1058.
+
+```text
+#1179 re-render all four conditions identically
+-> rerun unchanged technical-confound screen
+-> #1130 cross-mood machine identity
+-> #1058 blinded human listener study
+```
+
+**#1131 is closed:** the PCTOM-R corpus and estimator now pass
+measurement-validity-v2 and can produce treatment losses. This validates the
+apparatus only. **#1008 owns the live held-out condition-benefit result**, which
+does not yet exist; no evidence currently shows that counterfactual dreaming
+helps.
+
+SPARTA has a local live API receipt at
 `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716` showing the
-current Persona Dream `session_arc_bias.v1` artifact was applied before turn 1,
-reused across three turns, preserved answer text and tone category, and fell
-back to neutral when no artifact was supplied. The next gate is perceptual
-Chatterbox evidence: collect the human responses for the blinded listener study
-of dream-derived emotion, Embry identity, and naturalness, then add the signed
-human interpretation. Do not substitute LLM/self-ratings, expand PCTOM-R,
-generate a new Kling clip, or run another broad assessment before that gate
-unless the operator explicitly reprioritizes.
+current `session_arc_bias.v1` artifact was applied before turn 1, reused across
+three turns, preserved answer text and tone category, and fell back to neutral
+when no artifact was supplied.
 
-Scoped successor issues own the open claims: #1126 and #1127 are CLOSED -- the
-technical screen they produced BLOCKED the existing four stimuli, which are
-confounded by loudness, so #1179 must re-render them under one identical
-normalization before any human response is collected (gating #1058); #1128 is
-the larger no-restart reliability soak; #1129 is the restart/recovery fault
-campaign; #1130 is cross-mood machine identity; #1131 owns the PCTOM-R
-corpus/estimator repair (measurement validity is blocked, so no PCTOM count is
-a finding); #1059 stays deferred with no provider spend. The scoped claim
-registry in `CURRENT_STATUS.json` (`current_claims`) is the authority for what
-each present-tense claim proves and does not prove.
+<!-- BEGIN GENERATED CURRENT RESEARCH STATE -->
+
+*Generated from `CURRENT_STATUS.json` by
+`scripts/generate_readme_research_state.py`. Do not hand-edit: run
+`./run.sh generate-readme-research-state`. `--check` runs in the test suite.*
+
+### Active successor issues
+
+- **#1008** — PCTOM-R held-out benefit
+- **#1179** — Blinded listener study
+- **#1128** — Continuity reliability soak
+- **#1129** — Restart / recovery
+- **#1059** — Previous-video causality
+- **#1130** — next scope for Machine speaker identity
+
+### Claim dispositions
+
+| Claim | Status | Proven | Not proven / active disposition |
+|---|---|---|---|
+| PCTOM-R measurement validity | `PASS_MEASUREMENT_VALIDITY_V2` | the corpus and estimator are non-degenerate and the all-TRUE constant control still blocks; 11/11 adversarial controls behave | that counterfactual dreaming helps; CD winning here is a property of the toy cue structure. Owned by #1008. |
+| PCTOM-R held-out benefit | `UNPROVEN` | nothing yet | any benefit claim; blocked behind measurement validity. Owned by #1008. |
+| PCTOM-R apparatus integrity | `PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE` | the experiment apparatus runs deterministically within its text-first scope; historical GOAL.md snapshot counts are subordinate to this registry | measurement validity or held-out benefit; #1056 proved the benefit estimator degenerate |
+| Blinded listener study | `BLOCKED_STIMULUS_TECHNICAL_CONFOUND` | only that the analysis guard fails closed without human rows and signed interpretation | any perceptual emotion, naturalness, or human identity result; WER 0.0 and embedding separations are machine evidence and cannot substitute; the current four stimuli are technically confounded by loudness and cannot support a perceptual cl… Owned by #1179. |
+| Machine speaker identity | `PASS_SESSION_MOOD_VOICE_RECOGNITION` | condition-scoped machine speaker separation for one dream-derived session mood | human listener recognition, perceived emotion, cross-mood identity, or a universal separation threshold. Owned by #1130. |
+| Continuity feasibility pilot | `PASS_LIVE_CHAIN_RELIABILITY_PILOT` | five consecutive live continuity cycles completed and passed with zero duplicate accepted effects; Wilson 95% lower bound 0.565509 as a preregistered acceptance index | production reliability, no-restart soak behavior, cumulative-state corruption resistance, or anything about the full Phase 01-16 media pipeline. Owned by #1128. |
+| Continuity reliability soak | `PLANNED_NOT_RUN` | nothing yet | anything; the campaign has not started. Owned by #1128. |
+| Restart / recovery | `PLANNED_NOT_RUN` | nothing yet | anything; the campaign has not started. Owned by #1129. |
+| Full Phase 01-16 media pipeline | `HISTORICAL_N1_UNPROVEN` | one accepted canonical dream persistence path exists as meaningful history | repeatable full-pipeline reliability; downstream continuity receipts are not evidence for this scope |
+| Previous-video causality | `UNPROVEN_DEFERRED` | nothing yet | any previous-video benefit; stays off the active critical path with no provider spend. Owned by #1059. |
+
+### Current blockers
+
+- Blinded Chatterbox listener-study stimuli are present, ASR-verified, and available through a static blinded rater page; the analysis guard still blocks without enough valid human rows plus signed human interpretation, so no perceptual emotion, naturalness, or human listener acceptance claim is available.
+- SPARTA has local live API proof of consuming the Persona Dream session_arc_bias artifact, but deployed production operation beyond that local receipt remains unproven.
+- The five-cycle reliability result is an N=5 engineering pilot, not production reliability.
+- PCTOM-R does not yet prove confidence-bounded planning advantage.
+- Previous-video attachment A/B proof remains unrun and is not on the current critical path.
+
+<!-- END GENERATED CURRENT RESEARCH STATE -->
 
 ## PCTOM-R, and why its numbers are not a result
 

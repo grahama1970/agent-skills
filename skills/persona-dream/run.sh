@@ -740,6 +740,9 @@ case "$COMMAND" in
   live-chain-reliability)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_reliability.py" "$@"
     ;;
+  generate-readme-research-state)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/generate_readme_research_state.py" "$@"
+    ;;
   technical-screen-blinded-listener-study)
     # Requires numpy/scipy/librosa/soundfile; use the Chatterbox venv interpreter,
     # matching the speaker-recognition lane's recorded runtime.

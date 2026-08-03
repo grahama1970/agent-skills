@@ -1,0 +1,133 @@
+# monitor-opportunities project knowledge
+
+Updated: 2026-08-03
+Authoritative branch target: `grahama1970/agent-skills@main`
+Immutable goal: see `../SKILL.md`.
+
+## Current state
+
+Contract-freeze state: **CONTRACT_ONLY / STAGE_0_RESEARCH_ONLY / NOT_ESTABLISHED**.
+
+This contract slice defines the product and evidence boundary but does not itself add a
+runtime. The first executable state is tracked by issue #1166 and PR #1180: a zero-network
+Stage 0 kernel implementing `status`, `report`, and `verify`. When `run.sh` is present,
+`./run.sh status --json` is the authority for implemented capabilities and operational
+readiness; this document must not override that machine-readable result.
+
+Even after the Stage 0 kernel lands, live discovery, ranking, resume compilation,
+decisions, scheduling, Gmail/LinkedIn handoffs, and ATS effects remain unimplemented until
+their focused tickets close with retained proof. A rendered fixture is useful working
+value, but it is not a reliable nightly opportunity pipeline.
+
+The report is the product. The first working-value milestone is not auto-apply; it is a
+zero-network Stage 0 kernel that can validate and render the expected morning report,
+write a verification receipt, and prove Gmail, LinkedIn, and ATS effects are unreachable.
+
+`local/HANDOFF.md` is a timestamped historical snapshot. Its statement that the skill was
+untracked was superseded by commit `76697ea5ec0561aba83cfe0adbe0e3c475b2a6de`, which
+added the initial contract to `main`. Its substantive implementation warning remains
+correct for every capability not explicitly reported as implemented by `status`.
+
+## Product decisions
+
+1. One report manifest and one human entry point expose all action-worthy work. Hidden
+   drafts, variants, plans, blockers, or decisions are defects.
+2. Co-equal lanes mean honest coverage, not equal output.
+3. Buffalo/WNY is an eligibility gate. Relocation-required roles are rejected before
+   ranking.
+4. Search/aggregator results can locate primary evidence but cannot independently admit
+   an opportunity.
+5. Public ATS posting interfaces prove discovery content, not submit authority.
+6. “Algorithm-aware” tailoring is represented as an evidence-backed
+   `screening_interface_profile`, never proprietary-weight speculation.
+7. Candidate facts come from one approved claim snapshot. Tailoring cannot mint facts.
+8. Gmail send and all LinkedIn automation are permanently outside this skill. The human
+   transmits every message.
+9. ATS inspect, prefill, and submit are separate site/provider capabilities. Submit also
+   requires per-application exact-payload human authorization.
+10. Unknown or sensitive application fields, and every free-text field, are
+    `human_required`.
+11. Empty nights are valid. Volume is audit data, not a success objective.
+12. Feed failure, no matches, and not searched are distinct evidence states.
+
+## Focused implementation sequence
+
+| Order | Issue / PR | Slice | Value unlocked |
+|---:|---:|---|---|
+| 1 | #1165 / #1176 | Freeze report, safety, tailoring, and source contracts | implementation target and expected fixture |
+| 2 | #1166 / #1180 | Zero-network status/report/verify kernel | first runnable, safe user value |
+| 3 | #1167 | Research-first read-only discovery | real source and feed-health evidence |
+| 4 | #1168 | Hard eligibility then deterministic ranking | defensible shortlist or valid empty night |
+| 5 | #1169 | Claim-bound resume compiler | safe per-opportunity resume artifacts |
+| 6 | #1170 | Append-only local decision loop | actual interactive morning product |
+| 7 | #1171 | Resumable nightly run and scheduler readback | daily Stage 0 operation |
+| 8 | #1172 | Draft-only Gmail and local LinkedIn handoffs | human-transmitted outreach workflow |
+| 9 | #1173 | Site-specific ATS inspect/prefill/submit gates | bounded auto-apply after human authorization |
+
+Do not collapse these into one implementation PR. The first seven slices establish useful
+Stage 0 operation without external effects. Issues #1172 and #1173 are promotion work and
+must not block the report-first value path.
+
+Recommended merge order is #1176 first, then rebase/read back #1180 against the merged
+contract and run the committed fixture through `report` and `verify`. Both PRs were tested
+for compatibility before publication; merge-time readback remains required.
+
+## Readiness gates
+
+### Stage 0 report kernel
+
+Required before any live discovery:
+
+- expected report fixture validates and renders;
+- status distinguishes implemented, unimplemented, and unauthorized capabilities;
+- negative gates reject hidden items, sendable outreach, Stage 0 ATS authorization,
+  auto-filled free text, relocation shortlist entries, and shortlist size over eight;
+- `verify` writes and reads back a machine-readable receipt;
+- no network client or connected-system adapter exists in the kernel.
+
+### Live read-only nightly product
+
+Required before scheduler registration:
+
+- at least one live official Lane A source receipt;
+- honest Lane B health result;
+- primary-source Lane C result or valid no-match;
+- eligibility/ranking receipts;
+- claim-bound variant generation and prohibited-delta probes;
+- one report entry point with hidden-artifact count zero;
+- decision replay and crash recovery;
+- one full Stage 0 run with `external_effects: false`.
+
+### External effects
+
+Required separately per capability:
+
+- human promotion receipt with exact scope, evidence, version, expiry/revocation;
+- exact item/payload authorization where required;
+- idempotency/reservation and readback;
+- `INDETERMINATE` reconciliation before retry;
+- report and ledger reflect the observed effect;
+- negative proof that neighboring forbidden capabilities remain unreachable.
+
+## Known external dependencies and blockers
+
+- `/memory` or an approved export must expose exactly one current claim snapshot. Direct
+  database access is forbidden.
+- Gmail OAuth requires human browser authorization. Gmail integration must be merged and
+  independently proven before mailbox drafts are promoted.
+- `ops-linkedin` must remain a local human-handoff integration; LinkedIn platform access
+  is never a dependency.
+- Human attestations for clearance, citizenship/work authorization, salary, phone, and
+  self-identification remain missing/unknown until explicitly provided. The system may not
+  infer them.
+- Source/provider behavior and terms are time-sensitive. Each live adapter qualification
+  records current evidence and limitations.
+
+## Non-claims
+
+- The nightly pipeline is not currently reliable or operational.
+- The expected fixture and Stage 0 kernel do not prove live discovery, ranking quality,
+  resume correctness, scheduler reliability, Gmail draft creation, or ATS submission.
+- A working ATS discovery interface does not prove an application-submit interface.
+- A model or roundtable verdict is advisory and cannot authorize facts or effects.
+- This project does not optimize application volume or promise job/client outcomes.

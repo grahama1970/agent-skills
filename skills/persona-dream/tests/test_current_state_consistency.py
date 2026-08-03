@@ -416,3 +416,36 @@ def test_surface_dropping_active_successor_blocks(tmp_path, monkeypatch):
 
     assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
     assert "surface_missing_active_successor" in _rules(got)
+
+
+# ---- README generated-block drift (#1179 era) --------------------------------
+
+
+def test_readme_research_state_block_matches_current_status():
+    """The generated README block must not drift from the machine projection.
+
+    Three separate times an authority changed, a hand-written current-state
+    paragraph stayed stale, and this checker passed until a new phrase rule was
+    added. Phrase rules only ever catch wording someone already used. Generating
+    the operational block removes the drift surface; this test enforces it.
+    """
+    generator = _load("generate_readme_research_state")
+    status = json.loads((ROOT / "CURRENT_STATUS.json").read_text(encoding="utf-8"))
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert generator.BEGIN in readme and generator.END in readme
+    assert generator.splice(readme, generator.render(status)) == readme, (
+        "README generated block drifts from CURRENT_STATUS.json — "
+        "run ./run.sh generate-readme-research-state"
+    )
+
+
+def test_readme_generated_block_tracks_a_claim_status_change(tmp_path):
+    """Changing a claim's status must change the generated block."""
+    generator = _load("generate_readme_research_state")
+    status = json.loads((ROOT / "CURRENT_STATUS.json").read_text(encoding="utf-8"))
+    before = generator.render(status)
+
+    status["current_claims"]["pctom_heldout_benefit"]["status"] = "PASS_SOMETHING_NEW"
+
+    assert generator.render(status) != before
