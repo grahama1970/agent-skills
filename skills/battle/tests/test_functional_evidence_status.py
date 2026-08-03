@@ -52,26 +52,35 @@ def test_patch_defaults_to_insufficient_without_coercing_false() -> None:
     assert patch.functionality_preserved is None
 
 
-def test_legacy_explicit_boolean_is_migrated_without_losing_meaning() -> None:
-    failed = Patch(
-        id="patch-fail",
-        finding_id="finding-fail",
+def test_legacy_false_migrates_to_insufficient_but_true_retains_pass() -> None:
+    legacy_false = Patch(
+        id="patch-legacy-false",
+        finding_id="finding-legacy-false",
         type=DefenseType.PATCH,
         diff="",
         functionality_preserved=False,
     )
-    passed = Patch(
-        id="patch-pass",
-        finding_id="finding-pass",
+    legacy_true = Patch(
+        id="patch-legacy-true",
+        finding_id="finding-legacy-true",
         type=DefenseType.PATCH,
         diff="",
         functionality_preserved=True,
     )
+    explicit_fail = Patch(
+        id="patch-explicit-fail",
+        finding_id="finding-explicit-fail",
+        type=DefenseType.PATCH,
+        diff="",
+        functional_evidence_status=FunctionalEvidenceStatus.FAIL,
+    )
 
-    assert failed.functional_evidence_status is FunctionalEvidenceStatus.FAIL
-    assert failed.functionality_preserved is False
-    assert passed.functional_evidence_status is FunctionalEvidenceStatus.PASS
-    assert passed.functionality_preserved is True
+    assert legacy_false.functional_evidence_status is FunctionalEvidenceStatus.INSUFFICIENT_EVIDENCE
+    assert legacy_false.functionality_preserved is None
+    assert legacy_true.functional_evidence_status is FunctionalEvidenceStatus.PASS
+    assert legacy_true.functionality_preserved is True
+    assert explicit_fail.functional_evidence_status is FunctionalEvidenceStatus.FAIL
+    assert explicit_fail.functionality_preserved is False
 
 
 def test_state_round_trip_preserves_functional_evidence_metadata() -> None:
