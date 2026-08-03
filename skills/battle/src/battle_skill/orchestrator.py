@@ -25,6 +25,7 @@ from .digital_twin import DigitalTwin
 from .red_team import RedAgent
 from .blue_team import BlueAgent
 from .scoring import Scorer, score_round
+from .human_interjection import apply_pending_pause_after_round
 
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv(usecwd=True), override=False)
@@ -102,6 +103,7 @@ class BattleOrchestrator:
         self.patch_queue: queue.Queue[Patch] = queue.Queue()
         self.stop_event = threading.Event()
         self.worker_timeout = int(os.environ.get("BATTLE_WORKER_TIMEOUT_SECONDS", "300"))
+        self.control_dir = BATTLES_DIR / f"{self.battle_id}_control"
 
     def setup_digital_twin(self) -> bool:
         if not self.digital_twin.setup():
@@ -327,6 +329,70 @@ class BattleOrchestrator:
             self.stable_rounds = 0
         self.last_scores = (red_score, blue_score)
 
+    def _write_round_boundary_receipt(self, result: RoundResult) -> Path:
+        """Persist completed round state before applying an interjection."""
+        state_path = self.state.save()
+        round_dir = self.control_dir / "round-boundaries"
+        round_dir.mkdir(parents=True, exist_ok=True)
+        receipt_path = round_dir / f"round-{result.round_number:04d}.json"
+        receipt = {
+            "schema": "battle.round_boundary.v1",
+            "status": "PASS",
+            "mocked": False,
+            "live": True,
+            "battle_id": self.battle_id,
+            "run_id": self.battle_id,
+            "round_number": result.round_number,
+            "red_score": result.red_score,
+            "blue_score": result.blue_score,
+            "red_finding_count": len(result.red_findings),
+            "blue_patch_count": len(result.blue_patches),
+            "state_checkpoint": str(state_path),
+            "state_status": self.state.status,
+            "created_at": datetime.now().isoformat(),
+        }
+        receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n")
+        return receipt_path
+
+    def _apply_pause_after_round(self, result: RoundResult) -> bool:
+        """Apply one accepted request or stop fail-closed on control errors."""
+        round_receipt = self._write_round_boundary_receipt(result)
+        try:
+            scan = apply_pending_pause_after_round(
+                control_dir=self.control_dir,
+                active_run_id=self.battle_id,
+                round_receipt=round_receipt,
+            )
+        except Exception as e:
+            error_dir = self.control_dir / "errors"
+            error_dir.mkdir(parents=True, exist_ok=True)
+            error_path = error_dir / f"round-{result.round_number:04d}.json"
+            error_path.write_text(json.dumps({
+                "schema": "battle.human_interjection_control_error.v1",
+                "status": "BLOCKED",
+                "mocked": False,
+                "live": True,
+                "battle_id": self.battle_id,
+                "run_id": self.battle_id,
+                "round_number": result.round_number,
+                "round_receipt": str(round_receipt),
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "created_at": datetime.now().isoformat(),
+            }, indent=2, sort_keys=True) + "\n")
+            self.state.status = "paused"
+            self.state.save()
+            return True
+
+        application = scan.get("application")
+        if scan.get("status") != "APPLIED" or not isinstance(application, dict):
+            return False
+        if application.get("pause_next_round") is not True:
+            return False
+        self.state.status = "paused"
+        self.state.save()
+        return True
+
     def generate_live_display(self) -> Table:
         title = f"Battle: {self.battle_id} [bold yellow]Profile: {self.state.threat_profile}[/bold yellow]"
         if self.chaos:
@@ -368,6 +434,10 @@ class BattleOrchestrator:
                     console.print(f"[dim]Round {round_num}: Red +{result.red_score:.1f} ({len(result.red_findings)} finds) | "
                                   f"Blue +{result.blue_score:.1f} ({len(result.blue_patches)} patches)[/dim]")
                     self.monitor.update(self.state.current_round, self.state.red_total_score, self.state.blue_total_score)
+                    if self._apply_pause_after_round(result):
+                        live.stop()
+                        console.print("\n[yellow]Battle paused at the after-round control boundary[/yellow]")
+                        return self.state
                     if self.state.current_round % checkpoint_interval == 0:
                         self.save_full_checkpoint(self.state.current_round)
         except KeyboardInterrupt:
