@@ -3170,39 +3170,21 @@ def resume(
     battle_id: str = typer.Argument(..., help="Battle ID to resume"),
 ):
     """Resume a paused battle."""
-    from .orchestrator import BattleOrchestrator
     from .report import generate_report
+    from .resume_runtime import resume_battle_once
 
-    state = BattleState.load(battle_id)
-    if not state:
-        console.print(f"[red]Battle not found: {battle_id}[/red]")
+    receipt = resume_battle_once(battle_id)
+    if receipt.get("status") == "BLOCKED":
+        console.print(f"[red]Resume blocked: {receipt.get('reason')}[/red]")
         raise typer.Exit(1)
-
-    if state.status == "completed":
-        console.print("[yellow]Battle already completed[/yellow]")
+    if receipt.get("status") == "DUPLICATE_IGNORED":
+        console.print("[yellow]Resume request already applied[/yellow]")
         return
 
-    console.print(f"[green]Resuming battle from round {state.current_round}[/green]")
-
-    # Recreate orchestrator with existing state
-    orchestrator = BattleOrchestrator(
-        state.target_path,
-        state.max_rounds,
-        concurrent=state.concurrent,
-        twin_mode=state.twin_mode,
-        qemu_machine=state.qemu_machine,
-        docker_image=state.docker_image,
-        chaos=state.chaos,
-        profile=state.threat_profile,
-        model=state.model,
-    )
-    orchestrator.state = state
-    orchestrator.battle_id = state.battle_id
-
-    # Continue battle
-    final_state = orchestrator.run()
-
     # Generate report
+    final_state = BattleState.load(battle_id)
+    if final_state is None:
+        raise typer.Exit(1)
     report = generate_report(final_state)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = REPORTS_DIR / f"{final_state.battle_id}.md"

@@ -1,0 +1,68 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import battle_skill.resume_runtime as resume_runtime
+import battle_skill.state as state_module
+from battle_skill.resume_runtime import resume_battle_once
+from battle_skill.state import BattleState
+
+
+def test_resume_requires_paused_state(tmp_path: Path, monkeypatch) -> None:
+    battles_dir = tmp_path / "battles"
+    monkeypatch.setattr(state_module, "BATTLES_DIR", battles_dir)
+    monkeypatch.setattr(resume_runtime, "BATTLES_DIR", battles_dir)
+    state = BattleState(
+        battle_id="battle-running",
+        target_path=str(tmp_path),
+        max_rounds=2,
+        current_round=1,
+        status="running",
+    )
+    state.save()
+
+    receipt = resume_battle_once("battle-running", request_id="resume-running")
+
+    assert receipt["status"] == "BLOCKED"
+    assert receipt["reason"] == "state_not_paused"
+
+
+def test_duplicate_resume_request_does_not_run_factory_twice(tmp_path: Path, monkeypatch) -> None:
+    battles_dir = tmp_path / "battles"
+    monkeypatch.setattr(state_module, "BATTLES_DIR", battles_dir)
+    monkeypatch.setattr(resume_runtime, "BATTLES_DIR", battles_dir)
+    state = BattleState(
+        battle_id="battle-paused",
+        target_path=str(tmp_path),
+        max_rounds=1,
+        current_round=1,
+        status="paused",
+    )
+    state.save()
+    calls = 0
+
+    class _NoopOrchestrator:
+        def __init__(self, loaded: BattleState) -> None:
+            self.state = loaded
+            self.battle_id = loaded.battle_id
+
+        def run(self) -> BattleState:
+            nonlocal calls
+            calls += 1
+            self.state.status = "completed"
+            self.state.save()
+            return self.state
+
+    def factory(loaded: BattleState):
+        return _NoopOrchestrator(loaded)
+
+    first = resume_battle_once("battle-paused", request_id="resume-once", orchestrator_factory=factory)
+    second = resume_battle_once("battle-paused", request_id="resume-once", orchestrator_factory=factory)
+
+    assert first["status"] == "APPLIED"
+    assert second["status"] == "DUPLICATE_IGNORED"
+    assert second["started_round"] is None
+    assert calls == 1
+    duplicate_dir = battles_dir / "battle-paused_control" / "resume" / "duplicates"
+    assert list(duplicate_dir.glob("resume-once-*.json"))
