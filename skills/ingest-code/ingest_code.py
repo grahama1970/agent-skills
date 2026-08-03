@@ -33,7 +33,11 @@ import httpx
 from dotenv import load_dotenv
 
 from code_memory_client import CodeMemoryClient
-from code_graph_artifact import write_code_graph_bundle
+from code_graph_artifact import (
+    calculate_configuration_digest,
+    validate_code_graph_bundle,
+    write_code_graph_bundle,
+)
 from code_symbol_record import IDENTITY_ALGORITHM_VERSION, CodeSymbolRecord
 from ingest_code_cwe import scan_file_cwe
 
@@ -80,6 +84,7 @@ SKIP_DIRS = {
 }
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
+MARKER_SCHEMA_VERSION = "ingest-code.marker.v2"
 
 
 @dataclass(frozen=True)
@@ -215,6 +220,9 @@ def _write_ingest_marker(
     local_code_symbols_artifact: str | Path | None = None,
     local_code_symbols_written: int = 0,
     code_graph_artifact: dict[str, Any] | None = None,
+    coverage_scope: str = "full",
+    reconciliation_eligible: bool | None = None,
+    failed_scan_roots: list[str | Path] | None = None,
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
     now = datetime.now().isoformat()
@@ -229,7 +237,28 @@ def _write_ingest_marker(
     }
     structured_count = int(write_status.get("structured_upsert_stored", 0) or 0)
     structured_healthy = structured_count > 0 and write_status.get("write_status") == "complete"
+    artifact_reconciliation_eligible = bool((code_graph_artifact or {}).get("reconciliation_eligible"))
+    marker_reconciliation_eligible = (
+        artifact_reconciliation_eligible
+        if reconciliation_eligible is None
+        else bool(reconciliation_eligible)
+    )
+    artifact_binding = (
+        {
+            "manifest": code_graph_artifact.get("manifest"),
+            "manifest_hash": code_graph_artifact.get("manifest_hash"),
+            "checksums": code_graph_artifact.get("checksums"),
+            "checksums_hash": code_graph_artifact.get("checksums_hash"),
+            "bundle_digest": code_graph_artifact.get("bundle_digest"),
+            "commit": code_graph_artifact.get("commit"),
+            "configuration_digest": code_graph_artifact.get("configuration_digest"),
+            "coverage_complete": code_graph_artifact.get("coverage_complete"),
+            "reconciliation_eligible": code_graph_artifact.get("reconciliation_eligible"),
+        }
+        if code_graph_artifact else None
+    )
     marker = {
+        "schema_version": MARKER_SCHEMA_VERSION,
         "ingested_at": now,
         "started_at": started_at or now,
         "completed_at": now if run_status == "complete" else None,
@@ -259,9 +288,18 @@ def _write_ingest_marker(
         "scope": scope,
         "run_status": run_status,
         "completed": run_status == "complete",
+        "coverage_scope": coverage_scope,
+        "reconciliation_eligible": marker_reconciliation_eligible,
+        "source_freshness_status": "fresh_at_write" if artifact_binding else "not_authoritative_without_full_bundle",
         "scan_roots": [str(Path(root).resolve()) for root in (scan_roots or [])],
         "completed_scan_roots": [
             str(Path(root).resolve()) for root in (completed_scan_roots or [])
+        ],
+        "successful_scan_roots": [
+            str(Path(root).resolve()) for root in (completed_scan_roots or [])
+        ],
+        "failed_scan_roots": [
+            str(Path(root).resolve()) for root in (failed_scan_roots or [])
         ],
         "local_artifacts": {
             "code_symbols_jsonl": (
@@ -271,20 +309,7 @@ def _write_ingest_marker(
             "code_symbols_written": local_code_symbols_written,
             "code_graph": code_graph_artifact,
             "code_symbols_write_status": write_status,
-            "code_graph_binding": (
-                {
-                    "manifest": code_graph_artifact.get("manifest"),
-                    "manifest_hash": code_graph_artifact.get("manifest_hash"),
-                    "checksums": code_graph_artifact.get("checksums"),
-                    "checksums_hash": code_graph_artifact.get("checksums_hash"),
-                    "bundle_digest": code_graph_artifact.get("bundle_digest"),
-                    "commit": code_graph_artifact.get("commit"),
-                    "configuration_digest": code_graph_artifact.get("configuration_digest"),
-                    "coverage_complete": code_graph_artifact.get("coverage_complete"),
-                    "reconciliation_eligible": code_graph_artifact.get("reconciliation_eligible"),
-                }
-                if code_graph_artifact else None
-            ),
+            "code_graph_binding": artifact_binding,
             "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
         },
     }
@@ -311,6 +336,223 @@ def _append_local_code_symbols(artifact: Path, records: list[CodeSymbolRecord]) 
     return len(records)
 
 
+def _sha256_file(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def _read_json_file(path: Path) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{path.name} is not a JSON object")
+    return data
+
+
+def _read_jsonl_file(path: Path) -> list[dict[str, Any]]:
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def _code_graph_scan_config(
+    codebase_root: Path,
+    *,
+    patterns: list[str],
+    treesitter: bool,
+    code_index: bool,
+    dry_run: bool,
+    cwe_only: bool,
+) -> dict[str, Any]:
+    return {
+        "glob_patterns": patterns,
+        "exclude_dirs": sorted(SKIP_DIRS),
+        "ignore_rules": "git_exclude_standard",
+        "monitor_config": _load_monitor_config(codebase_root) or {},
+        "treesitter": treesitter,
+        "code_index": code_index,
+        "dry_run": dry_run,
+        "cwe_only": cwe_only,
+    }
+
+
+def _current_configuration_digest_for_manifest(path: Path, manifest: dict[str, Any]) -> str:
+    config = manifest.get("configuration") if isinstance(manifest.get("configuration"), dict) else {}
+    patterns = [str(pattern) for pattern in config.get("glob_patterns", DEFAULT_GLOB_PATTERNS)]
+    feature_flags = config.get("feature_flags") if isinstance(config.get("feature_flags"), dict) else {}
+    files = collect_files(path, patterns)
+    scan_roots = _extract_configured_scan_roots(path)
+    extractor_outcomes = [{
+        "declared_languages": list(config.get("language_support", _configured_language_support())),
+    }]
+    scan_config = _code_graph_scan_config(
+        path,
+        patterns=patterns,
+        treesitter=bool(feature_flags.get("treesitter", True)),
+        code_index=bool(feature_flags.get("code_index", True)),
+        dry_run=bool(feature_flags.get("dry_run", False)),
+        cwe_only=bool(feature_flags.get("cwe_only", False)),
+    )
+    return calculate_configuration_digest(
+        root=path,
+        scan_roots=scan_roots,
+        files=files,
+        extractor_outcomes=extractor_outcomes,
+        scan_config=scan_config,
+    )
+
+
+def _source_hashes_match_bundle(path: Path, bundle_dir: Path) -> tuple[bool, list[str]]:
+    mismatches: list[str] = []
+    for record in _read_jsonl_file(bundle_dir / "files.jsonl"):
+        rel_path = str(record.get("path") or "")
+        if not rel_path or rel_path == "." or str(record.get("status")) == "ignored":
+            continue
+        expected_hash = str(record.get("source_hash") or "")
+        if not expected_hash:
+            mismatches.append(rel_path)
+            continue
+        source_path = path / rel_path
+        if not source_path.is_file():
+            mismatches.append(rel_path)
+            continue
+        if _sha256_file(source_path) != expected_hash:
+            mismatches.append(rel_path)
+    return not mismatches, mismatches
+
+
+def _local_code_symbols_freshness(marker: dict[str, Any]) -> dict[str, Any]:
+    local = marker.get("local_artifacts") if isinstance(marker.get("local_artifacts"), dict) else {}
+    artifact_path = local.get("code_symbols_jsonl")
+    if not artifact_path:
+        return {"status": "not_present", "authoritative_for_modification": False}
+    path = Path(str(artifact_path))
+    if not path.exists():
+        return {"status": "missing", "authoritative_for_modification": False, "path": str(path)}
+    return {
+        "status": "compatibility_only",
+        "authoritative_for_modification": False,
+        "path": str(path),
+        "line_count": sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip()),
+    }
+
+
+def _code_graph_freshness(path: Path, marker: dict[str, Any]) -> dict[str, Any]:
+    local = marker.get("local_artifacts") if isinstance(marker.get("local_artifacts"), dict) else {}
+    binding = local.get("code_graph_binding") if isinstance(local.get("code_graph_binding"), dict) else None
+    if not binding:
+        return {
+            "status": "not_present",
+            "checksum_valid": False,
+            "source_hashes_match": False,
+            "configuration_digest_match": False,
+            "commit_match": False,
+            "coverage_complete": False,
+            "reconciliation_eligible": False,
+            "blocks_negative_claims": True,
+            "reasons": ["no_full_code_graph_bundle_binding"],
+        }
+
+    reasons: list[str] = []
+    manifest_path = Path(str(binding.get("manifest") or ""))
+    checksums_path = Path(str(binding.get("checksums") or ""))
+    if not manifest_path.is_absolute():
+        manifest_path = path / manifest_path
+    if not checksums_path.is_absolute():
+        checksums_path = path / checksums_path
+    bundle_dir = manifest_path.parent
+    try:
+        validation = validate_code_graph_bundle(bundle_dir)
+        manifest = _read_json_file(manifest_path)
+        coverage = _read_json_file(bundle_dir / "coverage.json")
+    except Exception as exc:
+        return {
+            "status": "invalid",
+            "checksum_valid": False,
+            "source_hashes_match": False,
+            "configuration_digest_match": False,
+            "commit_match": False,
+            "coverage_complete": False,
+            "reconciliation_eligible": False,
+            "blocks_negative_claims": True,
+            "reasons": [f"bundle_validation_failed:{exc}"],
+        }
+
+    checksum_valid = True
+    if validation.get("manifest_hash") != binding.get("manifest_hash"):
+        reasons.append("marker_manifest_hash_mismatch")
+    if validation.get("checksums_hash") != binding.get("checksums_hash"):
+        reasons.append("marker_checksums_hash_mismatch")
+    if validation.get("bundle_digest") != binding.get("bundle_digest"):
+        reasons.append("marker_bundle_digest_mismatch")
+
+    current_commit = _current_commit(path)
+    commit_match = current_commit == str(binding.get("commit") or manifest.get("commit"))
+    if not commit_match:
+        reasons.append("commit_mismatch")
+
+    current_branch = _current_branch(path)
+    ref_match = current_branch == str(manifest.get("ref") or manifest.get("branch"))
+    if not ref_match:
+        reasons.append("ref_mismatch")
+
+    try:
+        current_configuration_digest = _current_configuration_digest_for_manifest(path, manifest)
+        configuration_digest_match = current_configuration_digest == str(binding.get("configuration_digest") or "")
+    except Exception as exc:
+        current_configuration_digest = ""
+        configuration_digest_match = False
+        reasons.append(f"configuration_digest_unavailable:{exc}")
+    if not configuration_digest_match:
+        reasons.append("configuration_digest_mismatch")
+
+    source_hashes_match, source_mismatches = _source_hashes_match_bundle(path, bundle_dir)
+    if not source_hashes_match:
+        reasons.append("source_hash_mismatch")
+
+    coverage_complete = bool(coverage.get("complete"))
+    coverage_reconciliation_eligible = bool(coverage.get("reconciliation_eligible"))
+    if not coverage_complete:
+        reasons.append("coverage_incomplete")
+    if not coverage_reconciliation_eligible:
+        reasons.append("coverage_not_reconciliation_eligible")
+
+    hashes_match = not any(reason.startswith("marker_") for reason in reasons)
+    eligible = (
+        checksum_valid
+        and hashes_match
+        and commit_match
+        and ref_match
+        and configuration_digest_match
+        and source_hashes_match
+        and coverage_complete
+        and coverage_reconciliation_eligible
+    )
+    return {
+        "status": "fresh" if eligible else "stale",
+        "checksum_valid": checksum_valid,
+        "manifest_hash_match": validation.get("manifest_hash") == binding.get("manifest_hash"),
+        "checksums_hash_match": validation.get("checksums_hash") == binding.get("checksums_hash"),
+        "bundle_digest_match": validation.get("bundle_digest") == binding.get("bundle_digest"),
+        "source_hashes_match": source_hashes_match,
+        "source_mismatches": source_mismatches,
+        "configuration_digest_match": configuration_digest_match,
+        "current_configuration_digest": current_configuration_digest,
+        "expected_configuration_digest": binding.get("configuration_digest"),
+        "commit_match": commit_match,
+        "current_commit": current_commit,
+        "expected_commit": binding.get("commit") or manifest.get("commit"),
+        "ref_match": ref_match,
+        "current_ref": current_branch,
+        "expected_ref": manifest.get("ref") or manifest.get("branch"),
+        "coverage_complete": coverage_complete,
+        "reconciliation_eligible": eligible,
+        "blocks_negative_claims": not eligible,
+        "bundle_digest": validation.get("bundle_digest"),
+        "reasons": sorted(set(reasons)),
+    }
+
+
 def build_marker_status(path: Path) -> dict[str, Any]:
     """Return normalized status for a repository's local ingest marker."""
     marker_path = path / ".ingest-code.json"
@@ -331,7 +573,29 @@ def build_marker_status(path: Path) -> dict[str, Any]:
             "error": str(exc),
             "code_index": {"enabled": False},
         }
-    status = "fresh" if marker.get("run_status") == "complete" and marker.get("completed") is True else "running"
+    marker.setdefault("schema_version", "ingest-code.marker.legacy")
+    marker.setdefault("coverage_scope", "full")
+    marker.setdefault("reconciliation_eligible", False)
+    marker.setdefault("successful_scan_roots", marker.get("completed_scan_roots", []))
+    marker.setdefault("failed_scan_roots", [])
+    local = marker.setdefault("local_artifacts", {})
+    local["code_symbols_jsonl_freshness"] = _local_code_symbols_freshness(marker)
+    code_graph_status = _code_graph_freshness(path.resolve(), marker)
+    local["code_graph_freshness"] = code_graph_status
+
+    complete_marker = marker.get("run_status") == "complete" and marker.get("completed") is True
+    if not complete_marker:
+        status = "running"
+    elif marker.get("coverage_scope") == "incremental":
+        status = "incremental"
+    elif code_graph_status["status"] in {"invalid", "stale"}:
+        status = "stale"
+    else:
+        status = "fresh"
+    marker["source_freshness_status"] = code_graph_status["status"]
+    marker["reconciliation_eligible"] = bool(marker.get("reconciliation_eligible")) and bool(
+        code_graph_status.get("reconciliation_eligible")
+    )
     marker["status"] = status
     return marker
 
@@ -1709,16 +1973,26 @@ def scan(
             repository_id_source=repository_identity.source,
             identity_algorithm_version=IDENTITY_ALGORITHM_VERSION,
             scan_config={
-                "glob_patterns": patterns,
-                "exclude_dirs": sorted(SKIP_DIRS),
-                "ignore_rules": "git_exclude_standard",
-                "treesitter": treesitter,
-                "code_index": code_index,
-                "dry_run": dry_run,
-                "cwe_only": cwe_only,
+                **_code_graph_scan_config(
+                    path,
+                    patterns=patterns,
+                    treesitter=treesitter,
+                    code_index=code_index,
+                    dry_run=dry_run,
+                    cwe_only=cwe_only,
+                )
             },
         )
         print(f"Code graph artifacts: {code_graph_artifact['path']}", flush=True)
+
+    successful_code_symbol_scan_roots = [
+        root for root, outcome in zip(code_symbol_scan_roots, code_symbol_extractor_outcomes)
+        if outcome.get("status") == "succeeded"
+    ]
+    failed_code_symbol_scan_roots = [
+        root for root, outcome in zip(code_symbol_scan_roots, code_symbol_extractor_outcomes)
+        if outcome.get("status") != "succeeded"
+    ]
 
     # --- Phase 1: Functional knowledge extraction ---
     knowledge_stored = 0
@@ -1916,10 +2190,15 @@ def scan(
                 scope=scope,
                 code_symbols_write_status=code_symbols_write_status,
                 scan_roots=scan_roots,
-                completed_scan_roots=scan_roots if code_symbols_write_status and code_symbols_write_status.get("write_status") == "complete" else [],
+                completed_scan_roots=successful_code_symbol_scan_roots,
                 local_code_symbols_artifact=local_code_symbols_artifact,
                 local_code_symbols_written=local_code_symbols_written,
                 code_graph_artifact=code_graph_artifact,
+                coverage_scope="full",
+                reconciliation_eligible=bool(
+                    code_graph_artifact and code_graph_artifact.get("reconciliation_eligible")
+                ),
+                failed_scan_roots=failed_code_symbol_scan_roots,
             )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:
@@ -2029,28 +2308,82 @@ def rescan(
         # Treesitter symbol extraction (per codebase, not per file)
         code_symbol_scan_roots: list[Path] = []
         completed_code_symbol_scan_roots: list[Path] = []
+        failed_code_symbol_scan_roots: list[Path] = []
         local_code_symbols_artifact = None
         local_code_symbols_written = 0
         codebase_ts_symbols = 0
+        code_symbols_write_status: dict[str, Any] | None = None
         if treesitter and code_index:
             code_symbol_scan_roots = _extract_configured_scan_roots(path)
             local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
+            aggregate_attempted = 0
+            aggregate_structured = 0
+            aggregate_legacy = 0
+            aggregate_verified = 0
+            aggregate_failed = 0
+            aggregate_record_results: list[dict[str, Any]] = []
             for scan_root in code_symbol_scan_roots:
-                root_stored = _store_treesitter_symbols_for_directory(
+                root_files = [
+                    filepath for filepath in files
+                    if filepath.resolve() == scan_root.resolve()
+                    or scan_root.resolve() in filepath.resolve().parents
+                ]
+                root_result = _scan_treesitter_symbol_records_with_outcome(
                     scan_root,
                     path,
                     scope,
-                    verification_samples=verifiable_samples,
-                    local_artifact_path=local_code_symbols_artifact,
+                    discovered_files=root_files,
                 )
+                _append_local_code_symbols(local_code_symbols_artifact, root_result.records)
+                memory_result = CodeMemoryClient().upsert_code_symbols(root_result.records)
+                for error in memory_result.errors[:5]:
+                    print(f"  [WARN] {error}", file=sys.stderr, flush=True)
+                for record in memory_result.structured_records:
+                    verifiable_samples.append({
+                        "name": record.symbol_name,
+                        "problem": record.problem,
+                    })
+
+                aggregate_attempted += memory_result.attempted
+                aggregate_structured += memory_result.structured_upsert_stored
+                aggregate_legacy += memory_result.legacy_fallback_stored
+                aggregate_verified += memory_result.structured_verified
+                aggregate_failed += memory_result.failed
+                aggregate_record_results.extend(memory_result.record_results)
+
+                root_stored = memory_result.structured_upsert_stored
                 codebase_ts_symbols += root_stored
-                completed_code_symbol_scan_roots.append(scan_root)
-                print(f"Treesitter: {root_stored} symbols stored from {scan_root}", flush=True)
+                if root_result.outcome.get("status") == "succeeded":
+                    completed_code_symbol_scan_roots.append(scan_root)
+                else:
+                    failed_code_symbol_scan_roots.append(scan_root)
+                print(
+                    "Treesitter: "
+                    f"{root_stored} symbols stored from {scan_root} "
+                    f"({root_result.outcome.get('status')}, {memory_result.write_status})",
+                    flush=True,
+                )
             if local_code_symbols_artifact.exists():
                 local_code_symbols_written = sum(
                     1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
                 )
             total_ts_symbols += codebase_ts_symbols
+            if aggregate_attempted or code_symbol_scan_roots:
+                if aggregate_failed == 0 and len(completed_code_symbol_scan_roots) == len(code_symbol_scan_roots):
+                    aggregate_status = "complete"
+                elif aggregate_structured or aggregate_legacy:
+                    aggregate_status = "degraded"
+                else:
+                    aggregate_status = "failed"
+                code_symbols_write_status = {
+                    "attempted": aggregate_attempted,
+                    "structured_upsert_stored": aggregate_structured,
+                    "legacy_fallback_stored": aggregate_legacy,
+                    "structured_verified": aggregate_verified,
+                    "failed": aggregate_failed,
+                    "write_status": aggregate_status,
+                    "record_results": aggregate_record_results,
+                }
 
         marker_path = _write_ingest_marker(
             path,
@@ -2061,11 +2394,15 @@ def rescan(
             code_symbols_stored=codebase_ts_symbols,
             treesitter=bool(completed_code_symbol_scan_roots),
             scope=scope,
+            code_symbols_write_status=code_symbols_write_status,
             started_at=started_at,
             scan_roots=code_symbol_scan_roots,
             completed_scan_roots=completed_code_symbol_scan_roots,
+            failed_scan_roots=failed_code_symbol_scan_roots,
             local_code_symbols_artifact=local_code_symbols_artifact,
             local_code_symbols_written=local_code_symbols_written,
+            coverage_scope="incremental",
+            reconciliation_eligible=False,
         )
         print(f"Marker written: {marker_path}", flush=True)
         pending_markers.append({"path": str(marker_path), "codebase": str(path)})
