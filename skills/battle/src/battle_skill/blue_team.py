@@ -13,7 +13,13 @@ from loguru import logger
 from rich.console import Console
 
 from .config import ANVIL_SKILL
-from .state import BattleState, Finding, Patch, DefenseType
+from .state import (
+    BattleState,
+    DefenseType,
+    Finding,
+    FunctionalEvidenceStatus,
+    Patch,
+)
 from .memory import BattleMemory
 from . import patch_writer
 
@@ -162,6 +168,15 @@ class BlueAgent:
                     diff=patch_result.patch_diff,
                     verified=patch_result.success,
                     functionality_preserved=patch_result.functionality_preserved,
+                    functional_evidence_status=FunctionalEvidenceStatus(
+                        patch_result.functional_evidence_status
+                    ),
+                    functional_test_command=patch_result.functional_test_command,
+                    functional_exit_code=patch_result.functional_exit_code,
+                    functional_receipt_ref=patch_result.functional_receipt_ref,
+                    functional_artifact_sha256=(
+                        patch_result.functional_artifact_sha256
+                    ),
                 )
                 patches.append(patch)
 
@@ -179,7 +194,11 @@ class BlueAgent:
                         type=DefenseType.PATCH,
                         diff="",
                         verified=False,
-                        functionality_preserved=False,
+                        functionality_preserved=None,
+                        functional_evidence_status=(
+                            FunctionalEvidenceStatus.INSUFFICIENT_EVIDENCE
+                        ),
+                        functional_test_command=test_command,
                     )
                 )
 
@@ -209,7 +228,11 @@ class BlueAgent:
         console.print("[blue]Blue Team: STORE phase - saving learnings[/blue]")
 
         for patch in patches:
-            if patch.verified:
+            if (
+                patch.verified
+                and patch.functional_evidence_status
+                is FunctionalEvidenceStatus.PASS
+            ):
                 tags = ["defense", "success", f"round_{self.current_round}"]
                 self.memory.learn(
                     problem=f"Vulnerability patched: {patch.finding_id}",
@@ -280,7 +303,10 @@ class BlueAgent:
                         type=DefenseType.PATCH,
                         diff=result.stdout[:2000] if result.returncode == 0 else "",
                         verified=False,
-                        functionality_preserved=False,
+                        functionality_preserved=None,
+                        functional_evidence_status=(
+                            FunctionalEvidenceStatus.INSUFFICIENT_EVIDENCE
+                        ),
                     )
                 except (subprocess.TimeoutExpired, OSError):
                     pass
