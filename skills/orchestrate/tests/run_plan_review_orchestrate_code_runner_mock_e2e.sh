@@ -8,6 +8,7 @@ ORCH="$ROOT/skills/orchestrate/run.sh"
 TMP="${TMPDIR:-/tmp}/plan-review-orchestrate-code-runner-mock-e2e-$$"
 REPO="$TMP/repo"
 ORCH_HOME="$TMP/orchestrate-home"
+export PLAN_ARTIFACT_ROOT="${PLAN_ARTIFACT_ROOT:-$TMP/plan-artifacts}"
 
 cleanup() {
   status=$?
