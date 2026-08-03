@@ -216,20 +216,28 @@ should not query `/memory` during a task:
 
 | Artifact | Purpose |
 |----------|---------|
-| `.ingest-code.json` | Marker with scan status, scope, scan roots, code-index counts, and local artifact paths |
+| `.ingest-code.json` | Marker with scan status, scope, scan roots, code-index counts, local artifact paths, and accepted bundle hashes |
 | `.cleanup-evidence.json` | Per-candidate dependency evidence consumed by `$cleanup` for tracked-file mutation decisions |
 | `artifacts/ingest-code/code-symbols.jsonl` | JSONL code-symbol records with paths, line ranges, signatures, docstrings, lexical terms, and snippets for offline lookup |
-| `artifacts/ingest-code/code-graph/manifest.json` | Bundle metadata, repository identity, scan roots, dirty tracked-worktree state, counts, and artifact list |
+| `artifacts/ingest-code/code-graph/manifest.json` | Bundle schema, artifact schema versions, repository identity, ref/commit, extractor/parser versions, configuration digest, worktree state, authoritative scan roots, counts, coverage status, reconciliation eligibility, and exact artifact list |
 | `artifacts/ingest-code/code-graph/files.jsonl` | Root-relative file records with stable file IDs, language, parse/skip/ignored/failed status, source hash, and reason |
 | `artifacts/ingest-code/code-graph/symbols.jsonl` | Symbol records with `symbol_id`, `symbol_version_id`, `legacy_key`, source range, content hash, and Memory-compatible document shape |
 | `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic resolved import edges between scanned files |
 | `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct extraction, parse, read/hash, ignored-file, binary, too-large, unsupported, and skip diagnostics with exact root-relative paths |
 | `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with extractor outcomes, parsed, failed, ignored, unsupported, binary, too-large, unreadable, symbol, edge, and diagnostic counts; incomplete extraction sets `fail_closed=true` |
-| `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
+| `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle plus the v1 `bundle_digest` over sorted artifact names, schema versions, and non-checksum artifact hashes |
 
 These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for
 offline inspection, review bundles, or deterministic receipts.
+
+The code-graph bundle is written to a sibling temporary directory, validated,
+and then published as the current artifact directory. The published directory
+must contain exactly the seven allowed files listed above, with no stale files
+from older schemas or interrupted runs. Host-specific absolute paths are not
+portable digest inputs; the manifest represents the repository root as `.`.
+Embedded `memory_document` fields in `symbols.jsonl` are compatibility
+projections only. The top-level symbol fields are canonical.
 
 `coverage.complete=true` is authoritative only when every configured scan root
 has a successful extraction outcome and every relevant discovered source file is
@@ -242,8 +250,9 @@ Ignored files are recorded as `ignored` diagnostics but do not by themselves
 make coverage incomplete.
 
 Do not use local artifacts for GMO reconciliation, "no callers", dead-code, or
-other absence-based claims unless the bundle checksum is valid and
-`coverage.reconciliation_eligible=true`.
+other absence-based claims unless the bundle checksum, `bundle_digest`,
+manifest `configuration_digest`, source/ref freshness, and
+`coverage.reconciliation_eligible=true` have all been checked.
 
 ## Related Skills
 

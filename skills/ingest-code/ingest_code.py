@@ -252,6 +252,20 @@ def _write_ingest_marker(
             ),
             "code_symbols_written": local_code_symbols_written,
             "code_graph": code_graph_artifact,
+            "code_graph_binding": (
+                {
+                    "manifest": code_graph_artifact.get("manifest"),
+                    "manifest_hash": code_graph_artifact.get("manifest_hash"),
+                    "checksums": code_graph_artifact.get("checksums"),
+                    "checksums_hash": code_graph_artifact.get("checksums_hash"),
+                    "bundle_digest": code_graph_artifact.get("bundle_digest"),
+                    "commit": code_graph_artifact.get("commit"),
+                    "configuration_digest": code_graph_artifact.get("configuration_digest"),
+                    "coverage_complete": code_graph_artifact.get("coverage_complete"),
+                    "reconciliation_eligible": code_graph_artifact.get("reconciliation_eligible"),
+                }
+                if code_graph_artifact else None
+            ),
             "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
         },
     }
@@ -1674,6 +1688,15 @@ def scan(
             repository_id_authoritative=repository_identity.authoritative,
             repository_id_source=repository_identity.source,
             identity_algorithm_version=IDENTITY_ALGORITHM_VERSION,
+            scan_config={
+                "glob_patterns": patterns,
+                "exclude_dirs": sorted(SKIP_DIRS),
+                "ignore_rules": "git_exclude_standard",
+                "treesitter": treesitter,
+                "code_index": code_index,
+                "dry_run": dry_run,
+                "cwe_only": cwe_only,
+            },
         )
         print(f"Code graph artifacts: {code_graph_artifact['path']}", flush=True)
 
