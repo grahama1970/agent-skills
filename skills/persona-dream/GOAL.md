@@ -9,33 +9,108 @@ This file is the local immutable-goal evidence for `persona-dream`.
 Monitor phrase:
 
 ```text
-IMMUTABLE_GOAL_EVIDENCE: persona-dream Embry persistent-persona continuity lane is active.
+IMMUTABLE_GOAL_EVIDENCE: persona-dream falsifiable research and transfer goal is active.
 ```
 
 The goal is not a GitHub-status goal, a video-provider goal, a dashboard goal,
-or a benchmark-only goal. The goal is to build and verify Embry as a persistent
-persona whose explicitly synthetic dreams produce bounded, provenance-linked
-changes in self-narrative, arc state, session mood, and voice while preserving
-identity, factual competence, answer content, and synthetic-versus-literal
-boundaries.
+or a benchmark-only goal. It is also not a goal to prove that dreaming works.
 
 ## Controlling Goal
 
-Meet the research goals of Persona Dream by proving that a persistent persona
-can dream, watch, reflect, update a continuity ledger, carry a session-bound
-mood into conversation and voice, and remain recognizably itself while the
-pipeline remains receipt-backed, provenance-bound, and fail-closed under faults.
+Registered with `$goal-drift` on 2026-08-03, source `human_prompt`:
 
-The controlling product/research hierarchy is:
+```text
+Determine through preregistered, falsifiable, fail-closed experiments whether
+provenance-bound synthetic dreaming adds measurable value over direct memory and
+structured reflection for prospective social reasoning, bounded persona
+adaptation, and emotionally appropriate voice, while preserving identity,
+factual competence, answer content, and synthetic-versus-literal boundaries;
+transfer validated mechanisms and failure modes into Graph Memory Operator, Tau,
+SPARTA, and Chatterbox, and retire or simplify components that fail controlled
+ablation.
+```
 
-1. Product/identity goal: build Embry as a persistent persona whose dream-
-   derived reflection changes her arc and session disposition without rewriting
-   identity or factual content.
-2. Research question: determine whether the dream mechanism adds useful
-   prospective social reasoning and continuity beyond direct memory retrieval.
-3. Supporting technology lanes: PCTOM-R, Kling visual externalization, Watch
-   observation, Memory persistence, Chatterbox voice expression, and Tau
-   orchestration.
+Read it back with `skills/goal-drift/run.sh goal --project persona-dream`; that
+registry, not this file, is the authority.
+
+The prior goal ("build and verify Embry as a persistent persona whose synthetic
+dreams produce...") assumed the desired mechanism works and implicitly rewarded
+the project for continuing until every positive claim was demonstrated. That
+wording produced churn: more machinery, more receipts, more status work in
+pursuit of a predetermined successful system. It is superseded, and its content
+survives below as the Persistent-Persona Safety Hypothesis.
+
+The controlling hierarchy is:
+
+1. **Research goal** — determine whether synthetic dreaming adds value over
+   simpler baselines.
+2. **Experimental subject** — use Embry as the primary persistent-persona test
+   case. "Build Embry" is not the top-level objective.
+3. **Safety contract** — preserve identity, factual competence, answer content,
+   and evidence classes.
+4. **Transfer contract** — move validated mechanisms and failure lessons into
+   their owning projects.
+5. **Product decision** — adopt, constrain, simplify, or retire each mechanism
+   based on evidence.
+
+## Persistent-Persona Safety Hypothesis
+
+Demoted from Immutable Goal on 2026-08-03. This is a hypothesis and a safety
+constraint, not the research conclusion:
+
+```text
+Synthetic dreams may produce bounded, provenance-linked changes in Embry's
+self-narrative, arc state, session mood, and voice ONLY when identity, factual
+competence, answer content, and synthetic-versus-literal boundaries remain
+preserved.
+```
+
+## Experimental Invariants
+
+Non-negotiable in every run. These are validity and safety constraints; none of
+them is a research result:
+
+```text
+provenance-bound inputs
+bounded state changes
+identity preservation
+factual-competence preservation
+answer-content preservation
+synthetic-versus-literal separation
+sealed commitments
+deterministic scoring
+fail-closed evidence
+no hidden duplicate effects
+```
+
+## Completion Rule
+
+The goal is met when the project has produced an honest DISPOSITION for its
+major hypotheses -- not only when they are positive. A loss, a tie, or a null
+result is a completed result. Persona Dream itself does not have to become a
+production product.
+
+The goal explicitly does NOT require:
+
+```text
+proving that dreaming beats reflection
+proving that multimodal media beats text
+proving that dream-derived emotion is preferred
+completing every historical Phase 01-16 media path
+generating more Kling videos
+obtaining a positive PCTOM-R result
+making Persona Dream generally production-ready
+preserving every experimental subsystem indefinitely
+```
+
+A component that fails a controlled ablation is removed, constrained, or
+retained only as a creative interface. Deletion is a goal-serving action.
+
+## Supporting technology lanes
+
+PCTOM-R, Kling visual externalization, Watch observation, Memory persistence,
+Chatterbox voice expression, and Tau orchestration are supporting lanes with
+their own receipts and boundaries.
 
 PCTOM-R remains a critical research workstream, but it is no longer the whole
 project identity. Its question is prospective and fault-aware:
@@ -46,7 +121,9 @@ about other minds while the full pipeline remains reliable under memory, model,
 tool, schema, persistence, retry, and fault-injection pressure?
 ```
 
-The active immutable objective is:
+SUPERSEDED 2026-08-03. The text below was the active immutable objective until
+the goal was re-registered as a falsifiable research-and-transfer question. It
+survives above as the Persistent-Persona Safety Hypothesis. Historical only:
 
 ```text
 Build and verify Embry as a persistent persona whose synthetic dreams produce
@@ -55,7 +132,8 @@ and voice while preserving identity, factual competence, answer content, and
 synthetic-versus-literal boundaries.
 ```
 
-This supersedes the PCTOM-R-only framing as the top-level project identity.
+That statement superseded the PCTOM-R-only framing as the top-level project
+identity, and is itself now superseded.
 PCTOM-R evidence remains load-bearing for the research workstream; media-spine
 and Kling-video goals remain historical or supporting unless the human
 explicitly reactivates paid provider execution.

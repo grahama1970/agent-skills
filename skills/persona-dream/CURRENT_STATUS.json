@@ -4,8 +4,11 @@
   "updated_at": "2026-07-29T18:20:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
-    "sha256": "sha256:a67eeca95951f1a0e2d514ea57093b2ece9510c853780afc1a6d24dcbf8d9b8a",
-    "summary": "Build and verify Embry as a persistent persona whose synthetic dreams produce bounded, provenance-linked changes in self-narrative, arc state, session mood, and voice while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries."
+    "sha256": "sha256:7ce90ef7b9acc3ea2a3fba1e3f48b8ec864f10e9d375d5540eb6d01370ea8b48",
+    "summary": "Determine through preregistered, falsifiable, fail-closed experiments whether provenance-bound synthetic dreaming adds measurable value over direct memory and structured reflection, while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries; transfer validated mechanisms and failure modes into Graph Memory Operator, Tau, SPARTA, and Chatterbox, and retire or simplify components that fail controlled ablation.",
+    "registered_with": "skills/goal-drift/run.sh goal --project persona-dream",
+    "registered_source": "human_prompt",
+    "superseded_goal_note": "The prior 'build and verify Embry' objective is demoted to the Persistent-Persona Safety Hypothesis in GOAL.md; it is a safety constraint, not the research conclusion."
   },
   "current_phase": "P2_LIVE_CONTINUITY_CHAIN",
   "latest_alignment_repair_receipt": "skills/persona-dream/reports/goal_v5/alignment_repair/RECEIPT.json",
@@ -530,5 +533,6 @@
       "successor_issue": "grahama1970/agent-skills#1059",
       "successor_resolved": false
     }
-  }
+  },
+  "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md"
 }
