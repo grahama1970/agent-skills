@@ -207,6 +207,7 @@ def _write_ingest_marker(
     code_symbols_stored: int,
     treesitter: bool,
     scope: str,
+    code_symbols_write_status: dict[str, Any] | None = None,
     run_status: str = "complete",
     started_at: str | None = None,
     scan_roots: list[str | Path] | None = None,
@@ -217,6 +218,17 @@ def _write_ingest_marker(
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
     now = datetime.now().isoformat()
+    write_status = code_symbols_write_status or {
+        "attempted": code_symbols_stored,
+        "structured_upsert_stored": code_symbols_stored,
+        "legacy_fallback_stored": 0,
+        "structured_verified": code_symbols_stored,
+        "failed": 0,
+        "write_status": "complete" if code_symbols_stored > 0 else "complete",
+        "record_results": [],
+    }
+    structured_count = int(write_status.get("structured_upsert_stored", 0) or 0)
+    structured_healthy = structured_count > 0 and write_status.get("write_status") == "complete"
     marker = {
         "ingested_at": now,
         "started_at": started_at or now,
@@ -228,15 +240,21 @@ def _write_ingest_marker(
         "cwe_stored": cwe_stored,
         "edges_stored": edges_stored,
         "code_index": {
-            "enabled": code_symbols_stored > 0,
+            "enabled": structured_healthy,
             "backend": "memory",
-            "collection": "code_symbols",
-            "treesitter": bool(treesitter),
-            "symbols_stored": code_symbols_stored,
-            "lexical_terms": code_symbols_stored > 0,
-            "line_ranges": code_symbols_stored > 0,
-            "content_hashes": code_symbols_stored > 0,
-            "hybrid_retrieval_capable": code_symbols_stored > 0,
+            "collection": "code_symbols" if structured_healthy else None,
+            "treesitter": bool(treesitter and structured_healthy),
+            "symbols_stored": structured_count,
+            "structured_upsert_stored": structured_count,
+            "legacy_fallback_stored": int(write_status.get("legacy_fallback_stored", 0) or 0),
+            "structured_verified": int(write_status.get("structured_verified", 0) or 0),
+            "failed": int(write_status.get("failed", 0) or 0),
+            "attempted": int(write_status.get("attempted", code_symbols_stored) or 0),
+            "write_status": str(write_status.get("write_status", "complete")),
+            "lexical_terms": structured_healthy,
+            "line_ranges": structured_healthy,
+            "content_hashes": structured_healthy,
+            "hybrid_retrieval_capable": structured_healthy,
         },
         "scope": scope,
         "run_status": run_status,
@@ -252,6 +270,7 @@ def _write_ingest_marker(
             ),
             "code_symbols_written": local_code_symbols_written,
             "code_graph": code_graph_artifact,
+            "code_symbols_write_status": write_status,
             "code_graph_binding": (
                 {
                     "manifest": code_graph_artifact.get("manifest"),
@@ -1115,14 +1134,15 @@ def _store_treesitter_symbols_for_directory(
     for error in result.errors[:5]:
         print(f"  [WARN] {error}", file=sys.stderr, flush=True)
 
+    structured_records = tuple(getattr(result, "structured_records", records[: getattr(result, "stored", 0)]))
     if verification_samples is not None:
-        for record in records[:result.stored]:
+        for record in structured_records:
             verification_samples.append({
                 "name": record.symbol_name,
                 "problem": record.problem,
             })
 
-    return result.stored
+    return int(getattr(result, "structured_upsert_stored", getattr(result, "stored", 0)))
 
 
 def _scan_treesitter_symbol_records_for_directory(
@@ -1827,6 +1847,7 @@ def scan(
 
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
+    code_symbols_write_status: dict[str, Any] | None = None
     if treesitter and code_index and not cwe_only:
         print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
         if dry_run:
@@ -1834,15 +1855,31 @@ def scan(
         else:
             verification_samples: list[dict[str, str]] = []
             memory_result = CodeMemoryClient().upsert_code_symbols(code_symbol_records)
-            code_symbols_stored = memory_result.stored
+            code_symbols_stored = memory_result.structured_upsert_stored
+            code_symbols_write_status = {
+                "attempted": memory_result.attempted,
+                "structured_upsert_stored": memory_result.structured_upsert_stored,
+                "legacy_fallback_stored": memory_result.legacy_fallback_stored,
+                "structured_verified": memory_result.structured_verified,
+                "failed": memory_result.failed,
+                "write_status": memory_result.write_status,
+                "record_results": list(memory_result.record_results),
+            }
             for error in memory_result.errors[:5]:
                 print(f"  [WARN] {error}", file=sys.stderr, flush=True)
-            for record in code_symbol_records[:memory_result.stored]:
+            for record in memory_result.structured_records:
                 verification_samples.append({
                     "name": record.symbol_name,
                     "problem": record.problem,
                 })
-            print(f"Code index: {code_symbols_stored} symbols stored", flush=True)
+            print(
+                "Code index: "
+                f"{memory_result.structured_upsert_stored} structured, "
+                f"{memory_result.legacy_fallback_stored} legacy fallback, "
+                f"{memory_result.failed} failed "
+                f"({memory_result.write_status})",
+                flush=True,
+            )
 
     # Output summary
     result = {
@@ -1856,6 +1893,7 @@ def scan(
         "edges_found": edges_total,
         "edges_stored": edges_stored,
         "code_symbols_stored": code_symbols_stored,
+        "code_symbols_write_status": code_symbols_write_status,
         "local_code_symbols_written": local_code_symbols_written,
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
         "code_graph_artifact": code_graph_artifact,
@@ -1876,8 +1914,9 @@ def scan(
                 code_symbols_stored=code_symbols_stored,
                 treesitter=bool(treesitter and code_index and code_symbols_stored > 0),
                 scope=scope,
+                code_symbols_write_status=code_symbols_write_status,
                 scan_roots=scan_roots,
-                completed_scan_roots=scan_roots if code_symbols_stored > 0 else [],
+                completed_scan_roots=scan_roots if code_symbols_write_status and code_symbols_write_status.get("write_status") == "complete" else [],
                 local_code_symbols_artifact=local_code_symbols_artifact,
                 local_code_symbols_written=local_code_symbols_written,
                 code_graph_artifact=code_graph_artifact,
