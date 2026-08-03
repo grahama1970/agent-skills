@@ -1,0 +1,80 @@
+[20260624T205317Z] iteration start
+[20260624T205425Z] baseline 26/28 failed=['qra_coverage_per_control', 'sparta_explorer_page_purpose']
+[20260624T205425Z] cycle 1 OPERATOR_REQUIRED failed=['qra_coverage_per_control', 'sparta_explorer_page_purpose']
+[20260624T205425Z] iteration span 0s (0.0m)
+[20260624T205535Z] iteration done pass=False stop=operator_required_only
+{
+  "schema": "dewey_overnight_run.v5",
+  "run_id": "start-operator-smoke-20260624T2048Z",
+  "completed_at": "20260624T205804Z",
+  "first_task": "full_database_backup",
+  "iterate_until_monitor_pass": true,
+  "monitor_pass": false,
+  "terminal_status": "OPERATOR_REQUIRED",
+  "terminal_reason": "only_operator_or_product_owned_dimensions_remain",
+  "session_dir": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z",
+  "steps": [
+    {
+      "step": "backup_first",
+      "status": "ok",
+      "session_id": "start-operator-smoke-20260624T2048Z",
+      "session_dir": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z",
+      "backup_dir": "/mnt/storage12tb/backups/arangodb/20260624-164759",
+      "sparta_controls_at_backup": 12491,
+      "backup_receipt": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/backup_receipt.json"
+    },
+    {
+      "step": "monitor_sparta_iteration",
+      "status": "operator_required",
+      "stop_reason": "operator_required_only",
+      "terminal_status": "OPERATOR_REQUIRED",
+      "terminal_reason": "only_operator_or_product_owned_dimensions_remain",
+      "exit_code": 0,
+      "cycles": [
+        {
+          "cycle": 1,
+          "health_before": {
+            "passed": 26,
+            "total": 28,
+            "waived_dimensions": [
+              "monitor_sparta_mutation_default"
+            ],
+            "failed_count": 2,
+            "failed_dimensions": [
+              "qra_coverage_per_control",
+              "sparta_explorer_page_purpose"
+            ],
+            "monitor_pass": false
+          },
+          "stop_reason": "operator_required_only",
+          "terminal": {
+            "terminal_status": "OPERATOR_REQUIRED",
+            "terminal_reason": "only_operator_or_product_owned_dimensions_remain",
+            "exit_code": 0
+          }
+        }
+      ],
+      "final_health": {
+        "passed": 26,
+        "total": 28,
+        "waived_dimensions": [
+          "monitor_sparta_mutation_default"
+        ],
+        "failed_count": 2,
+        "failed_dimensions": [
+          "qra_coverage_per_control",
+          "sparta_explorer_page_purpose"
+        ],
+        "monitor_pass": false
+      },
+      "monitor_pass": false,
+      "stall_dimensions": {}
+    },
+    {
+      "step": "morning_report",
+      "status": "ok",
+      "report_html": "/mnt/storage12tb/skills/review-db/outputs/dewey-morning-reports/latest/report.html",
+      "report_json": "/mnt/storage12tb/skills/review-db/outputs/dewey-morning-reports/latest/report.json"
+    }
+  ]
+}

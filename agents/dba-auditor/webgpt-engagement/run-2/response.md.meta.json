@@ -1,0 +1,16 @@
+{
+  "status": "completed",
+  "output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-2/response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-2/response.md.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-extract-stderr.dlElTE.log",
+  "sentinel": null,
+  "requested_tab_id": "837355531",
+  "controlled_tab_id": "837355531",
+  "response_source": "assistant-dom",
+  "raw_contains_sentinel": false,
+  "clean_contains_sentinel": false,
+  "raw_chars": 185,
+  "clean_chars": 185,
+  "started_at": "2026-06-24T16:16:34Z",
+  "finished_at": "2026-06-24T16:16:34Z"
+}

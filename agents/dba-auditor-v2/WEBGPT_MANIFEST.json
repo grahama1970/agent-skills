@@ -1,0 +1,72 @@
+{
+  "bundle_name": "dewey-dba-auditor-final-code-bundle.zip",
+  "created_for": "Dewey dba-auditor one-issue monitor-sparta repair worker",
+  "critical_invariants": [
+    "one cron activation claims at most one repair issue",
+    "Dewey lane runner must not invoke monitor_sparta.py repair-cycle",
+    "Dewey artifacts must not contain inline embedding/vector arrays",
+    "qra_coverage_per_control requires prompt-reviewer receipt and create-qras manifest"
+  ],
+  "files": [
+    {
+      "bytes": 861,
+      "path": "PATCH_SUMMARY.md",
+      "sha256": "f3f9370dfa276cb717360dfba5614df63e52ee908b30a7a0a87527bb024f02b4"
+    },
+    {
+      "bytes": 4448,
+      "path": "README_FOR_CODEX.md",
+      "sha256": "0882042ac9313d226a473a2f2d7b8798684154a4f7a3dbd1f98b52b03a3f12e0"
+    },
+    {
+      "bytes": 13266,
+      "path": "agent-skills/agents/dba-auditor/scripts/dewey_issue_worker.py",
+      "sha256": "c4ff70415b408b95a4d526718c72e9a2c1e8d0627b71edbb9f9e42e9cd1d6354"
+    },
+    {
+      "bytes": 24914,
+      "path": "agent-skills/agents/dba-auditor/scripts/dewey_lane_runner.py",
+      "sha256": "9128389cc5b83c33cf9797be83b376397f524c1893eaa019c298d6a6b23d2a1b"
+    },
+    {
+      "bytes": 4112,
+      "path": "agent-skills/agents/dba-auditor/scripts/dewey_nightly_cron.sh",
+      "sha256": "36c495f82fdbea8f95ba103ea477e82e210fc0a46fbf87a7606015f8e2e34a86"
+    },
+    {
+      "bytes": 5665,
+      "path": "agent-skills/agents/dba-auditor/scripts/dewey_overnight_run.py",
+      "sha256": "536f3642bd271a7488d2a3a1163953a08394e8be802c85da35b21694ab050532"
+    },
+    {
+      "bytes": 22992,
+      "path": "agent-skills/agents/dba-auditor/scripts/dewey_repair_queue.py",
+      "sha256": "057d2af08d8aea2afdcbd643533379ebcce11307bd70e0c1a09827e71fec01b0"
+    },
+    {
+      "bytes": 1668,
+      "path": "agent-skills/agents/dba-auditor/tests/test_dewey_issue_worker.py",
+      "sha256": "0aebbc769b1e8f86387469ca25e7454d561c426baa46867a864ac1edc137c755"
+    },
+    {
+      "bytes": 1316,
+      "path": "agent-skills/agents/dba-auditor/tests/test_dewey_lane_runner.py",
+      "sha256": "969e32877d5a57160857b4349f4f8dd9ea47acef566509a7666f32b7c2c26829"
+    },
+    {
+      "bytes": 2825,
+      "path": "agent-skills/agents/dba-auditor/tests/test_dewey_repair_queue.py",
+      "sha256": "7153e3d44880d0822b7876f6c37b58e9803c2fd06c60e74f3e0fa01017a77859"
+    },
+    {
+      "bytes": 9031,
+      "path": "memory/scripts/validation/monitor_sparta_repair_queue.py",
+      "sha256": "02bb3433f3351ca7a7f26332cc931a20eeee4821ddf07c95d40f37edb0608a6b"
+    }
+  ],
+  "schema": "dewey.final_code_bundle.manifest.v1",
+  "tested": {
+    "command": "cd agent-skills/agents/dba-auditor && python3 -m pytest tests -q",
+    "result": "5 passed in 0.20s"
+  }
+}

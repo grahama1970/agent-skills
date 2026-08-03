@@ -1,0 +1,52 @@
+diff --git a/memory/scripts/validation/monitor_sparta.py b/memory/scripts/validation/monitor_sparta.py
+index 0000000..0000000 100644
+--- a/memory/scripts/validation/monitor_sparta.py
++++ b/memory/scripts/validation/monitor_sparta.py
+@@
++# R3 diagnostics helper: dependency-free and located next to this file.
++from monitor_sparta_r3_diagnostics import (
++    build_embed_step_diagnostics,
++    build_health_fix_diagnostics,
++    enrich_repair_cycle_receipt,
++    failed_dimensions as r3_failed_dimensions,
++    qra_operator_lane_step,
++    should_skip_qra_repair_lane,
++    summarize_worker_wait,
++    write_operator_manifest_entry,
++)
+@@
+-    steps.append(embed_step)
++    steps.append(build_embed_step_diagnostics(embed_step, baseline_health, health_after_embed_or_fix))
+@@
+-    steps.append(health_fix_step)
++    health_fix_step.update(build_health_fix_diagnostics(
++        baseline_health,
++        health_after_fix,
++        attempted_dimensions=r3_failed_dimensions(baseline_health),
++    ))
++    steps.append(health_fix_step)
+@@
+-    qra_step = _start_create_qras_backfill(...)
+-    steps.append(qra_step)
++    baseline_failed = set(r3_failed_dimensions(baseline_health))
++    if should_skip_qra_repair_lane(baseline_failed):
++        operator_queue_path = str(Path(state_dir) / "operator_queue" / "qra_coverage_per_control.jsonl")
++        write_operator_manifest_entry(
++            operator_queue_path,
++            session_id=session_id,
++            baseline_health=baseline_health,
++        )
++        steps.append(qra_operator_lane_step(
++            baseline_health,
++            operator_queue_path=operator_queue_path,
++        ))
++    else:
++        # Keep existing non-QRA worker lanes here if any. Under R3 Option B,
++        # qra_coverage_per_control must not launch create_qras_backfill by default.
++        pass
+@@
+-    worker_wait = _wait_for_monitor_workers(...)
++    worker_wait = summarize_worker_wait(_wait_for_monitor_workers(...), started_workers=started_workers)
+@@
+-    return receipt
++    return enrich_repair_cycle_receipt(receipt)

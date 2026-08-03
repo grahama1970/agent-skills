@@ -1,0 +1,12 @@
+Isolated sanity run performed inside the WebGPT sandbox.
+
+Commands:
+  python -m py_compile memory/scripts/validation/monitor_sparta_r3_diagnostics.py
+  python -m pytest -q agent-skills/agents/dba-auditor/tests/test_dewey_r3_monitor_sparta_diagnostics.py
+
+Result:
+  5 passed in 0.29s
+
+Evidence honesty:
+  This is isolated non-mutating helper/fixture evidence only.
+  No live SPARTA mutation, ArangoDB, Qdrant, scillm, Chutes, or cron proof was run in this environment.

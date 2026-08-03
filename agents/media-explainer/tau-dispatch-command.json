@@ -1,0 +1,8 @@
+{
+  "command": [
+    "python3",
+    "/home/graham/workspace/experiments/agent-skills/agents/media-explainer/scripts/media_explainer_tau_adapter.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "timeout_s": 120
+}

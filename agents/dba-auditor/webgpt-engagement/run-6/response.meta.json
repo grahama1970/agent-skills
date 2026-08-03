@@ -1,0 +1,82 @@
+{
+  "status": "failed",
+  "failure": "tab_identity_preflight_failed",
+  "input": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/create-architecture-request.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/response.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.HCWams.log",
+  "sentinel": "<<<WEBGPT_DONE:20260624T191658Z:55cf3014>>>",
+  "requested_tab_id": "837356326",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "tab_identity_preflight": {
+    "ok": false,
+    "error": "expected_url_ambiguous_duplicate_tabs",
+    "tab_id": "837356326",
+    "tab": {
+      "id": "837356326",
+      "title": "Sparta Explorer - Pong response",
+      "url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87"
+    },
+    "chatgpt_tabs_count": 13,
+    "expected_url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+    "expected_title": null,
+    "url_resolution": {
+      "ok": false,
+      "error": "ambiguous_url",
+      "requested_url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+      "normalized_url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+      "tab_id": null,
+      "candidates": [
+        {
+          "id": "837356326",
+          "url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+          "title": "Sparta Explorer - Pong response"
+        },
+        {
+          "id": "837355531",
+          "url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+          "title": "Sparta Explorer - Pong response"
+        }
+      ]
+    },
+    "url_match": {
+      "tab_url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+      "tab_normalized_url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+      "expected_normalized_url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+      "tab_conversation_id": null,
+      "expected_conversation_id": null
+    },
+    "source": "tab-id",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837356326"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "expected_url_matches_tab",
+        "ok": true,
+        "detail": "expected_url matched tab 837356326"
+      },
+      {
+        "name": "expected_url_unique",
+        "ok": false,
+        "detail": "expected_url matches 2 open ChatGPT tabs"
+      }
+    ]
+  },
+  "started_at": "2026-06-24T19:16:58Z",
+  "finished_at": "2026-06-24T19:16:58Z",
+  "proof_status": "not_submitted",
+  "agent_diagnosis": "The requested tab did not match the required ChatGPT identity before submission.",
+  "agent_action": "Run tab.list and webgpt.preflight with --url, --expect-url, or --expect-title; do not submit until the target tab identity matches.",
+  "submitted_to_chatgpt": false
+}

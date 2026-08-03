@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "prepared_prompt",
+  "submitted_to_chatgpt": false,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/create-architecture-request.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/response.raw.md",
+  "meta_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-6/response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260624T191658Z:55cf3014>>>",
+  "requested_tab_id": "837356326",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-06-24T19:16:58Z"
+}

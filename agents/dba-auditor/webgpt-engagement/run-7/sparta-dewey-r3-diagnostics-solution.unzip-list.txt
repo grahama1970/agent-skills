@@ -1,0 +1,29 @@
+Archive:  /home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-7/sparta-dewey-r3-diagnostics-solution.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/
+        0  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/memory/
+        0  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/memory/scripts/
+        0  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/memory/scripts/validation/
+    23351  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/memory/scripts/validation/monitor_sparta_r3_diagnostics.py
+        0  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/agent-skills/
+        0  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/agent-skills/agents/
+        0  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/agent-skills/agents/dba-auditor/
+        0  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/agent-skills/agents/dba-auditor/tests/
+     4022  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/agent-skills/agents/dba-auditor/tests/test_dewey_r3_monitor_sparta_diagnostics.py
+        0  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/fixtures/
+        0  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/fixtures/dewey_r3/
+     2493  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/fixtures/dewey_r3/repair_cycle_noop_input.json
+      943  2026-06-24 15:22   sparta-dewey-r3-diagnostics-solution/fixtures/dewey_r3/expected_noop_diagnostics.json
+        0  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/patches/
+     2068  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/patches/monitor_sparta_repair_cycle_r3.diff
+      626  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/patches/dewey_overnight_run_unfixable_contract_r3.diff
+        0  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/commands/
+     1862  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/commands/README.md
+    11552  2026-06-24 15:23   sparta-dewey-r3-diagnostics-solution/ARCHITECTURE.md
+     5756  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/PATCH_PLAN.md
+     3198  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/prompt_improvements.md
+      468  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/SANITY_RESULTS.txt
+     3279  2026-06-24 15:24   sparta-dewey-r3-diagnostics-solution/MANIFEST.json
+---------                     -------
+    59618                     24 files

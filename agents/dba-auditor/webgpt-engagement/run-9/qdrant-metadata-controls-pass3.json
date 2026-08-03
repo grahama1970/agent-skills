@@ -1,0 +1,95 @@
+{
+  "batches": 1,
+  "collection": "sparta_controls",
+  "completed_at": "2026-06-24T20:10:34.125277+00:00",
+  "duration_seconds": 0.628,
+  "last_key": "ctrl__d3f:WindowsShortcutFile",
+  "missing_points": 170,
+  "missing_samples": [
+    {
+      "_key": "MID_001",
+      "point_id": "f6bb0af1-62b5-5e58-b225-f8980e25dd28"
+    },
+    {
+      "_key": "MID_002",
+      "point_id": "b6784507-3954-59a8-bf79-1f60eb9fa8b8"
+    },
+    {
+      "_key": "MID_003",
+      "point_id": "ae029350-c1ad-522b-82e5-95e639894e08"
+    },
+    {
+      "_key": "MID_004",
+      "point_id": "e6bc9346-0959-5826-85b9-7695845ca9f3"
+    },
+    {
+      "_key": "MID_005",
+      "point_id": "f35ac19b-ba84-5e31-ad55-3a041cc9c7b6"
+    },
+    {
+      "_key": "MID_006",
+      "point_id": "f53e94b1-e0e7-5c86-9fd6-c4ac53367fb4"
+    },
+    {
+      "_key": "MID_007",
+      "point_id": "fbcf04b2-4d29-534a-a03c-4c9aab2dc921"
+    },
+    {
+      "_key": "MID_008",
+      "point_id": "20959b34-6e99-5e01-9cc5-bf8b173f7a20"
+    },
+    {
+      "_key": "MID_009",
+      "point_id": "e82a0754-d4dd-50f9-9ccf-b19cf660e3ee"
+    },
+    {
+      "_key": "MID_010",
+      "point_id": "5adcedc6-2e41-57ea-b489-7effaabb8073"
+    },
+    {
+      "_key": "MID_011",
+      "point_id": "4cd8b4ff-1466-587e-8c49-96c48acb96e0"
+    },
+    {
+      "_key": "MID_012",
+      "point_id": "ddddc61a-a1cc-5fd9-b693-0cf54b7f0ef3"
+    },
+    {
+      "_key": "MID_013",
+      "point_id": "77ca9936-2d46-5ca9-8d4e-976bc9448ace"
+    },
+    {
+      "_key": "MID_014",
+      "point_id": "203d3233-1561-5a17-aa37-0d16467ae096"
+    },
+    {
+      "_key": "MID_015",
+      "point_id": "3135aab7-fa54-599b-b71d-d9981560f04d"
+    },
+    {
+      "_key": "MID_016",
+      "point_id": "50531307-a321-553c-8123-123e947e775c"
+    },
+    {
+      "_key": "MID_017",
+      "point_id": "b8d319d9-0685-5c96-8740-f3e09da2891d"
+    },
+    {
+      "_key": "MID_018",
+      "point_id": "af81b200-dcdf-5a05-a655-35e3c846162f"
+    },
+    {
+      "_key": "MID_019",
+      "point_id": "fabdf84c-8960-5f50-82d6-0a5e049067a8"
+    },
+    {
+      "_key": "MID_020",
+      "point_id": "c46c20e4-0d7a-55a9-a5dc-306c01af348a"
+    }
+  ],
+  "mode": "backfill_qdrant_metadata",
+  "policy": "Qdrant is the embedding store; Arango stores only point metadata",
+  "processed": 411,
+  "schema_version": "sparta-monitor-repair:v1",
+  "updated": 241
+}

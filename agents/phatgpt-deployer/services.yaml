@@ -1,0 +1,11 @@
+services:
+  github:
+    required: true
+    permissions:
+      contents: read
+      pull_requests: read
+      issues: write
+      checks: read
+  shell:
+    required: true
+    mode: read_mostly

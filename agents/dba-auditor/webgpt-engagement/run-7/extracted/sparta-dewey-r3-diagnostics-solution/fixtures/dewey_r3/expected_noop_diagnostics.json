@@ -1,0 +1,31 @@
+{
+  "expected_step_fields": {
+    "sparta_qdrant_embed_batch": {
+      "eligible_count": 170,
+      "changed_count": 0,
+      "skip_reason": "all_processed_documents_already_present_in_qdrant",
+      "health_embed_mismatch": true
+    },
+    "monitor_health_fix": {
+      "status": "attempted_no_progress",
+      "changed_count": 0,
+      "required_per_dimension_results": [
+        "embedding_gaps",
+        "description_completeness",
+        "qra_coverage_per_control",
+        "inline_embedding_policy",
+        "sparta_explorer_page_purpose"
+      ]
+    },
+    "create_qras_backfill": {
+      "contract_violation": true,
+      "skip_reason": "qra_coverage_per_control_should_use_operator_lane_not_default_worker"
+    }
+  },
+  "expected_worker_wait": {
+    "timed_out": true,
+    "still_running": true,
+    "status": "timed_out"
+  },
+  "expected_contract": "Option B: QRA coverage is operator/review-gated and remains unfixable by Dewey"
+}

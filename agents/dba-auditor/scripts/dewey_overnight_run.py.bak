@@ -1,0 +1,583 @@
+#!/usr/bin/env python3
+"""Dewey overnight run — backup FIRST, iterate /monitor-sparta until 29/29, then report.
+
+Nightly cron entry: memory/.agents/services.yaml -> dewey-overnight-monitor-sparta
+Install: memory/scripts/install_scheduled_jobs.sh
+
+Non-negotiable:
+  1. db_repair_session begin (full backup)
+  2. Loop monitor-sparta repair-cycle until ALL health dimensions pass
+  3. Session verify + auto-revert on regression after every cycle
+  4. Morning report (even if incomplete — exit 1 when monitor not pass)
+"""
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+AGENT_SKILLS = Path(os.environ.get("AGENT_SKILLS_ROOT", "/home/graham/workspace/experiments/agent-skills"))
+MEMORY_ROOT = Path(os.environ.get("MEMORY_ROOT", "/home/graham/workspace/experiments/memory"))
+MONITOR_SCRIPT = MEMORY_ROOT / "scripts/validation/monitor_sparta.py"
+SCRIPTS = AGENT_SKILLS / "agents/dba-auditor/scripts"
+SESSION_BASE = Path(
+    os.environ.get("DEWEY_SESSION_BASE", "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions")
+)
+RUN_RECEIPT_BASE = Path(
+    os.environ.get("DEWEY_RUN_RECEIPT_DIR", "/mnt/storage12tb/skills/review-db/outputs/dewey-overnight-runs")
+)
+STALL_THRESHOLD = int(os.environ.get("DEWEY_STALL_LIMIT", "8"))
+
+SCHEMA = "dewey_overnight_run.v5"
+
+
+def _load_db_session():
+    spec = importlib.util.spec_from_file_location("db_repair_session", SCRIPTS / "db_repair_session.py")
+    mod = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _now() -> str:
+    return time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+
+
+def _run(cmd: list[str] | str, *, cwd: Path | None = None, shell: bool = False, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+    merged = os.environ.copy()
+    if env:
+        merged.update(env)
+    return subprocess.run(
+        cmd,
+        cwd=str(cwd) if cwd else None,
+        env=merged,
+        text=True,
+        capture_output=True,
+        check=False,
+        shell=shell,
+    )
+
+
+def _write_json(path: Path, payload: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+DEWEY_WAIVED_DIMENSIONS = frozenset({"monitor_sparta_mutation_default"})
+
+
+def _health_summary(health: dict[str, Any]) -> dict[str, Any]:
+    checks = health.get("checks") or []
+    waived = DEWEY_WAIVED_DIMENSIONS if os.environ.get("SPARTA_MONITOR_MUTATION_ENABLED") == "1" else frozenset()
+    scored = [c for c in checks if c.get("dimension") not in waived]
+    failed = [c for c in scored if not c.get("ok")]
+    passed = len(scored) - len(failed)
+    return {
+        "passed": passed,
+        "total": len(scored),
+        "waived_dimensions": sorted(waived),
+        "failed_count": len(failed),
+        "failed_dimensions": [str(c.get("dimension")) for c in failed],
+        "monitor_pass": passed == len(scored) and len(scored) > 0,
+    }
+
+
+def _session_log(session_dir: Path, message: str) -> None:
+    """Append one human-readable line; flush immediately for overnight tailing."""
+    session_dir.mkdir(parents=True, exist_ok=True)
+    line = f"[{_now()}] {message}\n"
+    with (session_dir / "dewey.log").open("a", encoding="utf-8") as fh:
+        fh.write(line)
+        fh.flush()
+    print(line, end="", flush=True)
+
+
+def _health_diff(prev: dict[str, Any], curr: dict[str, Any]) -> dict[str, Any]:
+    """Compare two health summaries and return structured diff."""
+    prev_failed = set(prev.get("failed_dimensions", []))
+    curr_failed = set(curr.get("failed_dimensions", []))
+    return {
+        "improved": sorted(prev_failed - curr_failed),
+        "regressed": sorted(curr_failed - prev_failed),
+        "persistent": sorted(prev_failed & curr_failed),
+        "prev_score": f"{prev.get('passed', 0)}/{prev.get('total', 0)}",
+        "curr_score": f"{curr.get('passed', 0)}/{curr.get('total', 0)}",
+        "score_delta": curr.get("passed", 0) - prev.get("passed", 0),
+    }
+
+
+def _format_diff_line(diff: dict[str, Any]) -> str:
+    """Format health diff as single human-readable line."""
+    parts = []
+    if diff["improved"]:
+        parts.append(f"IMPROVED={diff['improved']}")
+    if diff["regressed"]:
+        parts.append(f"REGRESSED={diff['regressed']}")
+    if diff["persistent"]:
+        parts.append(f"STUCK={diff['persistent']}")
+    delta = diff["score_delta"]
+    parts.append(f"score {diff['curr_score']} ({delta:+d})")
+    return "  ".join(parts)
+
+
+def _format_repair_steps(cycle_payload: dict[str, Any]) -> str:
+    """Unpack repair-cycle step results into human-readable lines."""
+    steps = cycle_payload.get("steps") or []
+    lines = []
+    for step in steps:
+        step_id = step.get("id", "?")
+        exit_code = step.get("exit_code", "?")
+        ok = step.get("ok")
+        if ok is None and "summary" in step:
+            ok = step.get("summary", {}).get("monitor_pass")
+        if ok is None:
+            ok = exit_code == 0
+        line = f"  step {step_id}: exit={exit_code} ok={ok}"
+        if "duration_s" in step:
+            line += f" {step['duration_s']:.0f}s"
+        lines.append(line)
+
+    worker_wait = cycle_payload.get("worker_wait") or {}
+    if worker_wait:
+        ww_ok = "ok" if worker_wait.get("ok") else f"timed_out={worker_wait.get('timed_out')}"
+        lines.append(f"  worker_wait: {ww_ok} waited={worker_wait.get('waited_s', '?')}s")
+
+    final = cycle_payload.get("final") or {}
+    if final:
+        lines.append(f"  final_health: {final.get('passed')}/{final.get('total')} failed={final.get('failed_dimensions')}")
+
+    stop = cycle_payload.get("stop_reason")
+    if stop:
+        lines.append(f"  stop_reason: {stop}")
+
+    return "\n".join(lines)
+
+
+def _format_stall_warnings(persistent_failures: dict[str, int]) -> str | None:
+    """Generate stall warning if any dimension has been stuck past threshold."""
+    stuck = [dim for dim, count in persistent_failures.items() if count >= STALL_THRESHOLD]
+    if not stuck:
+        return None
+    details = [f"{dim}={persistent_failures[dim]} cycles" for dim in stuck]
+    return f"STALL WARNING: {', '.join(details)} no improvement in {STALL_THRESHOLD}+ cycles"
+
+
+def _compact_cycle_record(cycle_rec: dict[str, Any]) -> dict[str, Any]:
+    """Drop multi-MB health blobs; keep scores, steps, and repair receipts."""
+    compact: dict[str, Any] = {
+        "cycle": cycle_rec.get("cycle"),
+        "stop_reason": cycle_rec.get("stop_reason"),
+        "health_before": cycle_rec.get("health_before"),
+        "health_after": cycle_rec.get("health_after"),
+        "verify": cycle_rec.get("verify"),
+        "cycle_duration_s": cycle_rec.get("cycle_duration_s"),
+    }
+    rc = cycle_rec.get("repair_cycle") or {}
+    payload = rc.get("payload") or {}
+    steps = []
+    for step in payload.get("steps") or []:
+        steps.append(
+            {
+                "id": step.get("id"),
+                "ok": step.get("ok"),
+                "started": step.get("started"),
+                "reason": step.get("reason"),
+                "exit_code": step.get("exit_code"),
+                "duration_s": step.get("duration_s"),
+            }
+        )
+    compact["repair_cycle"] = {
+        "exit_code": rc.get("exit_code"),
+        "baseline": payload.get("baseline"),
+        "final": payload.get("final"),
+        "steps": steps,
+        "worker_wait": payload.get("worker_wait"),
+        "stop_reason": payload.get("stop_reason"),
+        "stderr_tail": rc.get("stderr_tail"),
+    }
+    return compact
+
+
+def _persist_cycle_artifacts(session_dir: Path, cycle_rec: dict[str, Any]) -> None:
+  compact = _compact_cycle_record(cycle_rec)
+  with (session_dir / "cycles_compact.jsonl").open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(compact, sort_keys=True) + "\n")
+    fh.flush()
+  with (session_dir / "cycles.jsonl").open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(cycle_rec, sort_keys=True) + "\n")
+    fh.flush()
+  state = {
+    "updated_at": _now(),
+    "last_cycle": compact.get("cycle"),
+    "health_after": compact.get("health_after"),
+    "stop_reason": compact.get("stop_reason"),
+  }
+  _write_json(session_dir / "iteration_state.json", state)
+
+
+def _mutation_env() -> dict[str, str]:
+    return {
+        "SPARTA_MONITOR_MUTATION_ENABLED": "1",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONUNBUFFERED": "1",
+    }
+
+
+def step_backup(session_id: str | None) -> dict[str, Any]:
+    cmd = [sys.executable, str(SCRIPTS / "db_repair_session.py"), "begin"]
+    if session_id:
+        cmd.extend(["--session-id", session_id])
+    proc = _run(cmd, cwd=MEMORY_ROOT)
+    if proc.returncode != 0:
+        raise RuntimeError(f"backup-first failed: {proc.stderr[-2000:]}")
+    begin_out = json.loads(proc.stdout.strip().splitlines()[-1])
+    session_dir = Path(begin_out["session_dir"])
+    receipt_path = session_dir / "backup_receipt.json"
+    if not receipt_path.is_file():
+        raise RuntimeError(f"backup receipt missing: {receipt_path}")
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    backup_dir = Path(receipt.get("backup_dir") or "")
+    if not (backup_dir / "dump.json").is_file():
+        raise RuntimeError(f"backup incomplete: {backup_dir}")
+    return {
+        "step": "backup_first",
+        "status": "ok",
+        "session_id": begin_out.get("session_id"),
+        "session_dir": str(session_dir),
+        "backup_dir": str(backup_dir),
+        "sparta_controls_at_backup": receipt.get("sparta_controls_at_backup"),
+        "backup_receipt": str(receipt_path),
+    }
+
+
+def step_iterate_monitor_sparta(
+    session_dir: Path,
+    *,
+    max_cycles: int,
+    embed_batch_limit: int,
+    wait_timeout_s: int,
+) -> dict[str, Any]:
+    """Iterate monitor-sparta repair-cycle until all pass.
+    
+    Enhanced per-cycle logging: health diffs, step-level diagnostics,
+    persistent failure tracking, stall detection, timing.
+    """
+    db = _load_db_session()
+    cycles: list[dict[str, Any]] = []
+    stop_reason: str | None = None
+    persistent_failures: dict[str, int] = {}
+
+    _session_log(session_dir, "iteration start")
+    health = db.run_monitor_health(session_dir, "baseline")
+    summary = _health_summary(health)
+    _session_log(session_dir, f"baseline {summary['passed']}/{summary['total']} failed={summary['failed_dimensions']}")
+    prev_summary = summary
+
+    overall_start = time.time()
+
+    for i in range(1, max_cycles + 1):
+        cycle_rec: dict[str, Any] = {"cycle": i, "health_before": summary}
+
+        if summary["monitor_pass"]:
+            cycle_rec["stop_reason"] = "monitor_sparta_all_pass"
+            cycles.append(cycle_rec)
+            _persist_cycle_artifacts(session_dir, cycle_rec)
+            _session_log(session_dir, f"cycle {i} MONITOR PASS {summary['passed']}/{summary['total']}")
+            stop_reason = "monitor_sparta_all_pass"
+            break
+
+        cycle_start = time.time()
+        artifact_dir = session_dir / "repair_artifacts" / f"cycle_{i}"
+        proc = _run(
+            [
+                "uv",
+                "run",
+                "python",
+                str(MONITOR_SCRIPT),
+                "repair-cycle",
+                "--artifact-dir",
+                str(artifact_dir),
+                "--embed-batch-limit",
+                str(embed_batch_limit),
+                "--wait-timeout-s",
+                str(wait_timeout_s),
+                "--json",
+            ],
+            cwd=MEMORY_ROOT,
+            env=_mutation_env(),
+        )
+        cycle_duration_s = time.time() - cycle_start
+
+        cycle_payload: dict[str, Any] = {}
+        if (proc.stdout or "").strip():
+            try:
+                cycle_payload = json.loads(proc.stdout)
+            except json.JSONDecodeError:
+                cycle_payload = {"parse_error": True, "stdout_tail": (proc.stdout or "")[-2000:]}
+        cycle_rec["cycle_duration_s"] = cycle_duration_s
+        cycle_rec["repair_cycle"] = {
+            "exit_code": proc.returncode,
+            "payload": cycle_payload,
+            "stderr_tail": (proc.stderr or "")[-1500:],
+        }
+
+        _session_log(session_dir, f"cycle {i} ({cycle_duration_s:.0f}s) repair-cycle exit={proc.returncode}")
+        step_lines = _format_repair_steps(cycle_payload)
+        for line in step_lines.split("\n"):
+            if line.strip():
+                _session_log(session_dir, line)
+
+        vproc = _run(
+            [sys.executable, str(SCRIPTS / "db_repair_session.py"), "verify", str(session_dir)],
+            cwd=MEMORY_ROOT,
+        )
+        verify = json.loads(vproc.stdout) if vproc.stdout.strip() else {"parse_error": True}
+        cycle_rec["verify"] = {
+            "exit_code": vproc.returncode,
+            "regression": verify.get("regression"),
+            "reasons": verify.get("reasons"),
+        }
+        if vproc.returncode == 2 or verify.get("regression"):
+            cycle_rec["stop_reason"] = "session_reverted_regression"
+            cycles.append(cycle_rec)
+            _session_log(session_dir, f"cycle {i} REGRESSION reverted reasons={verify.get('reasons')}")
+            _persist_cycle_artifacts(session_dir, cycle_rec)
+            stop_reason = "session_reverted_regression"
+            break
+
+        health = db.run_monitor_health(session_dir, f"cycle_{i}")
+        summary = _health_summary(health)
+        cycle_rec["health_after"] = summary
+
+        diff = _health_diff(prev_summary, summary)
+        diff_line = _format_diff_line(diff)
+        _session_log(session_dir, f"cycle {i} {diff_line}")
+
+        prev_summary = summary
+
+        for dim in summary.get("failed_dimensions", []):
+            persistent_failures[dim] = persistent_failures.get(dim, 0) + 1
+        for dim in diff.get("improved", []):
+            persistent_failures.pop(dim, None)
+
+        stall_warning = _format_stall_warnings(persistent_failures)
+        if stall_warning:
+            _session_log(session_dir, f"cycle {i} {stall_warning}")
+
+        cycles.append(cycle_rec)
+        _persist_cycle_artifacts(session_dir, cycle_rec)
+
+        if summary["monitor_pass"]:
+            stop_reason = "monitor_sparta_all_pass"
+            break
+
+    total_duration_s = time.time() - overall_start
+    _session_log(session_dir, f"iteration span {total_duration_s:.0f}s ({total_duration_s/60:.1f}m)")
+
+    final_health = db.run_monitor_health(session_dir, "final")
+    final_summary = _health_summary(final_health)
+    result = {
+        "step": "monitor_sparta_iteration",
+        "status": "ok" if final_summary.get("monitor_pass") else "incomplete",
+        "stop_reason": stop_reason,
+        "cycles": cycles,
+        "final_health": final_summary,
+        "monitor_pass": final_summary.get("monitor_pass"),
+        "stall_dimensions": {
+            dim: count for dim, count in sorted(persistent_failures.items())
+            if count >= STALL_THRESHOLD
+        },
+    }
+    _write_json(session_dir / "coverage_iteration.json", result)
+    _session_log(session_dir, f"iteration done pass={final_summary.get('monitor_pass')} stop={stop_reason}")
+    if result["stall_dimensions"]:
+        _session_log(session_dir, f"stall dimensions at end: {result['stall_dimensions']}")
+    return result
+
+
+def step_focus() -> dict[str, Any]:
+    proc = _run([sys.executable, str(SCRIPTS / "dewey_nightly_focus.py"), "active"], cwd=MEMORY_ROOT)
+    data = json.loads(proc.stdout) if proc.stdout.strip() else {}
+    active = data.get("active")
+    return {
+        "step": "nightly_focus",
+        "status": "ok" if active else "none",
+        "focus_objective": (active or {}).get("focus_objective"),
+        "lanes": (active or {}).get("monitor_sparta_lanes"),
+    }
+
+
+def step_scans(manifest_limit: int) -> dict[str, Any]:
+    outputs: dict[str, str] = {}
+    for name, script, extra in [
+        ("qra", "audit_qra_landscape.py", ["--manifest-limit", str(manifest_limit)]),
+        ("framework", "sparta_framework_ingestion_scan.py", []),
+        ("opportunities", "sparta_dataset_opportunities.py", ["--manifest-limit", str(manifest_limit)]),
+    ]:
+        out = Path(f"/tmp/dewey_{name}_{_now()}.json")
+        proc = _run([sys.executable, str(SCRIPTS / script), "--out", str(out), *extra], cwd=MEMORY_ROOT)
+        if proc.returncode != 0:
+            raise RuntimeError(f"scan {name} failed: {proc.stderr[-1500:]}")
+        outputs[name] = str(out)
+    return {"step": "scans", "status": "ok", "outputs": outputs}
+
+
+def step_morning_report() -> dict[str, Any]:
+    proc = _run([sys.executable, str(SCRIPTS / "render_overnight_morning_report.py")], cwd=MEMORY_ROOT)
+    if proc.returncode != 0:
+        raise RuntimeError(f"morning report failed: {proc.stderr[-1500:]}")
+    latest = Path("/mnt/storage12tb/skills/review-db/outputs/dewey-morning-reports/latest")
+    return {
+        "step": "morning_report",
+        "status": "ok",
+        "report_html": str(latest / "report.html"),
+        "report_json": str(latest / "report.json"),
+    }
+
+
+def cmd_start(args: argparse.Namespace) -> int:
+    run_id = args.session_id or f"dewey-overnight-{_now()}"
+    receipt_dir = RUN_RECEIPT_BASE / run_id
+    receipt_dir.mkdir(parents=True, exist_ok=True)
+    steps: list[dict[str, Any]] = []
+
+    if not args.skip_backup:
+        steps.append(step_backup(run_id))
+        session_dir = Path(steps[-1]["session_dir"])
+    else:
+        session_dir = SESSION_BASE / run_id
+        if not (session_dir / "backup_receipt.json").is_file():
+            print(json.dumps({"error": "skip-backup requires backup_receipt.json", "session_dir": str(session_dir)}), file=sys.stderr)
+            return 1
+
+    iteration_result: dict[str, Any] | None = None
+    if args.iterate:
+        iteration_result = step_iterate_monitor_sparta(
+            session_dir,
+            max_cycles=args.max_cycles,
+            embed_batch_limit=args.embed_batch_limit,
+            wait_timeout_s=args.wait_timeout_s,
+        )
+        steps.append(iteration_result)
+
+    if not args.skip_scans:
+        steps.append(step_focus())
+        steps.append(step_scans(args.manifest_limit))
+
+    steps.append(step_morning_report())
+
+    monitor_pass = bool(iteration_result and iteration_result.get("monitor_pass"))
+    receipt = {
+        "schema": SCHEMA,
+        "run_id": run_id,
+        "completed_at": _now(),
+        "first_task": "full_database_backup",
+        "iterate_until_monitor_pass": args.iterate,
+        "monitor_pass": monitor_pass,
+        "session_dir": str(session_dir),
+        "steps": steps,
+    }
+    _write_json(receipt_dir / "run_receipt.json", receipt)
+    print(json.dumps(receipt, indent=2))
+    return 0 if monitor_pass or not args.iterate else 1
+
+
+def cmd_once(args: argparse.Namespace) -> int:
+    """Run one repair cycle (operator smoke/debug). Skip backup, scans, morning report."""
+    run_id = args.session_id or f"dewey-once-{_now()}"
+    session_dir = SESSION_BASE / run_id
+    session_dir.mkdir(parents=True, exist_ok=True)
+
+    _session_log(session_dir, "once: single repair cycle (no backup, no scans)")
+    health = _load_db_session().run_monitor_health(session_dir, "baseline")
+    summary = _health_summary(health)
+    _session_log(session_dir, f"baseline {summary['passed']}/{summary['total']} failed={summary['failed_dimensions']}")
+
+    if summary["monitor_pass"]:
+        _session_log(session_dir, "already 29/29 pass, nothing to repair")
+        return 0
+
+    cycle_start = time.time()
+    artifact_dir = session_dir / "repair_artifacts" / "cycle_1"
+    proc = _run(
+        [
+            "uv", "run", "python",
+            str(MONITOR_SCRIPT), "repair-cycle",
+            "--artifact-dir", str(artifact_dir),
+            "--embed-batch-limit", str(args.embed_batch_limit),
+            "--wait-timeout-s", str(args.wait_timeout_s),
+            "--json",
+        ],
+        cwd=MEMORY_ROOT,
+        env=_mutation_env(),
+    )
+    cycle_duration_s = time.time() - cycle_start
+
+    cycle_payload: dict[str, Any] = {}
+    if (proc.stdout or "").strip():
+        try:
+            cycle_payload = json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            cycle_payload = {"parse_error": True, "stdout_tail": (proc.stdout or "")[-2000:]}
+
+    _session_log(session_dir, f"once: repair-cycle exit={proc.returncode} ({cycle_duration_s:.0f}s)")
+
+    for line in _format_repair_steps(cycle_payload).split("\n"):
+        if line.strip():
+            _session_log(session_dir, line)
+
+    post_health = _load_db_session().run_monitor_health(session_dir, "post")
+    post_summary = _health_summary(post_health)
+    diff = _health_diff(summary, post_summary)
+    _session_log(session_dir, f"once: {_format_diff_line(diff)}")
+
+    result = {
+        "schema": SCHEMA,
+        "run_id": run_id,
+        "command": "once",
+        "repair_exit_code": proc.returncode,
+        "cycle_duration_s": cycle_duration_s,
+        "baseline": summary,
+        "final": post_summary,
+        "monitor_pass": post_summary.get("monitor_pass"),
+    }
+    _write_json(session_dir / "once_receipt.json", result)
+    print(json.dumps(result, indent=2))
+    return 0 if summary.get("monitor_pass") else 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="subcommand", required=True)
+
+    start = sub.add_parser("start", help="backup first, iterate monitor-sparta until pass")
+    start.add_argument("--session-id")
+    start.add_argument("--manifest-limit", type=int, default=50)
+    start.add_argument("--skip-backup", action="store_true")
+    start.add_argument("--skip-scans", action="store_true")
+    start.add_argument("--iterate", action=argparse.BooleanOptionalAction, default=True)
+    start.add_argument("--max-cycles", type=int, default=int(os.environ.get("DEWEY_MAX_ITERATIONS", "512")))
+    start.add_argument("--embed-batch-limit", type=int, default=int(os.environ.get("DEWEY_EMBED_BATCH_LIMIT", "200")))
+    start.add_argument("--wait-timeout-s", type=int, default=int(os.environ.get("DEWEY_WAIT_TIMEOUT_S", "7200")))
+
+    once = sub.add_parser("once", help="run one repair cycle for operator smoke/debug (skip backup, skip scans)")
+    once.add_argument("--session-id")
+    once.add_argument("--embed-batch-limit", type=int, default=int(os.environ.get("DEWEY_EMBED_BATCH_LIMIT", "200")))
+    once.add_argument("--wait-timeout-s", type=int, default=int(os.environ.get("DEWEY_WAIT_TIMEOUT_S", "7200")))
+
+    args = parser.parse_args()
+    if args.subcommand == "start":
+        return cmd_start(args)
+    if args.subcommand == "once":
+        return cmd_once(args)
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

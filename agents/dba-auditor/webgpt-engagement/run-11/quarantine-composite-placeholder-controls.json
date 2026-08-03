@@ -1,0 +1,114 @@
+{
+  "candidate_count": 12,
+  "completed_at": "2026-06-24T20:15:53.127957+00:00",
+  "control_ids": [
+    "CWE-1176|CWE-1060|CWE-1077",
+    "CWE-492|T1514|T1631|T1540",
+    "CWE-624|CWE-185|CWE-625",
+    "CWE-798|CWE-1391|CWE-1392",
+    "T0883|T1581|T1101|T0860|T1650",
+    "T1047|T1084|T1218.005",
+    "T1109|T1101|T1162|T1108",
+    "T1145|T1187|T1101",
+    "T1195|EX-0005|T0862|EX-0005.01",
+    "T1429|T1123|T1513",
+    "T1554|T1474|T1550|T1050|T0862",
+    "T1648|EX-0012.03|T1584.004"
+  ],
+  "control_updated": 12,
+  "duration_seconds": 0.622,
+  "mode": "quarantine_composite_placeholder_controls",
+  "policy": "Pipe-composite placeholder controls are non-source controls and must not be active coverage items",
+  "relationship_updated": 12,
+  "rollback": {
+    "controls": [
+      {
+        "_key": "ctrl__CWE-1176_CWE-1060_CWE-1077",
+        "control_id": "CWE-1176|CWE-1060|CWE-1077"
+      },
+      {
+        "_key": "ctrl__CWE-492_T1514_T1631_T1540",
+        "control_id": "CWE-492|T1514|T1631|T1540"
+      },
+      {
+        "_key": "ctrl__CWE-624_CWE-185_CWE-625",
+        "control_id": "CWE-624|CWE-185|CWE-625"
+      },
+      {
+        "_key": "ctrl__CWE-798_CWE-1391_CWE-1392",
+        "control_id": "CWE-798|CWE-1391|CWE-1392"
+      },
+      {
+        "_key": "ctrl__T0883_T1581_T1101_T0860_T1650",
+        "control_id": "T0883|T1581|T1101|T0860|T1650"
+      },
+      {
+        "_key": "ctrl__T1047_T1084_T1218.005",
+        "control_id": "T1047|T1084|T1218.005"
+      },
+      {
+        "_key": "ctrl__T1109_T1101_T1162_T1108",
+        "control_id": "T1109|T1101|T1162|T1108"
+      },
+      {
+        "_key": "ctrl__T1145_T1187_T1101",
+        "control_id": "T1145|T1187|T1101"
+      },
+      {
+        "_key": "ctrl__T1195_EX-0005_T0862_EX-0005.01",
+        "control_id": "T1195|EX-0005|T0862|EX-0005.01"
+      },
+      {
+        "_key": "ctrl__T1429_T1123_T1513",
+        "control_id": "T1429|T1123|T1513"
+      },
+      {
+        "_key": "ctrl__T1554_T1474_T1550_T1050_T0862",
+        "control_id": "T1554|T1474|T1550|T1050|T0862"
+      },
+      {
+        "_key": "ctrl__T1648_EX-0012.03_T1584.004",
+        "control_id": "T1648|EX-0012.03|T1584.004"
+      }
+    ],
+    "relationships": [
+      {
+        "_key": "rel__self__CWE-1176_CWE-1060_CWE-1077"
+      },
+      {
+        "_key": "rel__self__CWE-492_T1514_T1631_T1540"
+      },
+      {
+        "_key": "rel__self__CWE-624_CWE-185_CWE-625"
+      },
+      {
+        "_key": "rel__self__CWE-798_CWE-1391_CWE-1392"
+      },
+      {
+        "_key": "rel__self__T0883_T1581_T1101_T0860_T1650"
+      },
+      {
+        "_key": "rel__self__T1047_T1084_T1218.005"
+      },
+      {
+        "_key": "rel__self__T1109_T1101_T1162_T1108"
+      },
+      {
+        "_key": "rel__self__T1145_T1187_T1101"
+      },
+      {
+        "_key": "rel__self__T1195_EX-0005_T0862_EX-0005.01"
+      },
+      {
+        "_key": "rel__self__T1429_T1123_T1513"
+      },
+      {
+        "_key": "rel__self__T1554_T1474_T1550_T1050_T0862"
+      },
+      {
+        "_key": "rel__self__T1648_EX-0012.03_T1584.004"
+      }
+    ]
+  },
+  "schema_version": "sparta-monitor-repair:v1"
+}

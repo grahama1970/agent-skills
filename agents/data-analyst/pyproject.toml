@@ -1,0 +1,17 @@
+[project]
+name = "oc-subagent-data-analyst"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "pandas",
+  "numpy",
+]
+
+[project.optional-dependencies]
+charts = [
+  "matplotlib",
+]
+test = [
+  "pytest",
+  "hypothesis",
+]

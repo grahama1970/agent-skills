@@ -163,6 +163,16 @@
       "preregistration_v2": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json",
       "preregistration_v2_sha256": "sha256:3348a10b5242c63cf4ae30f92451fb21821d1004953882d6d0f87ff108758ef0",
       "boundary": "v2 design repair only (#1126): per-rater counterbalanced order, intention-to-treat primary, independent attention check; provides no human perceptual evidence"
+    },
+    "latest_technical_screen_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+    "latest_technical_screen_receipt_sha256": "sha256:209e5ec65d2620080e646e6d24d248105639b547c398a34de35be99670e31ac1",
+    "latest_technical_screen": {
+      "status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND",
+      "issue": "grahama1970/agent-skills#1127",
+      "neutral_render_count": 8,
+      "finding": "dream +4.22 LKFS and adversarial +3.75 LKFS vs neutral median against a same-parameter neutral spread of sd 0.79 (tolerance 2.38); adversarial also +1.96s duration and an elevated silence floor. Loudness is a known correlate of perceived arousal, so raters could separate the dream stimulus without any emotion being conveyed.",
+      "cleared": "the upstream resemble-ai/chatterbox#536 ~4.9 kHz vocoder line is NOT differentially present: every condition sits within +/-1.9 dB of neutral against a 3.0 dB tolerance",
+      "boundary": "technical comparability screening only; proves nothing about perceived emotion, naturalness, or identity"
     }
   },
   "latest_voice_proof": {
@@ -469,17 +479,18 @@
       "next_scope_issue": "grahama1970/agent-skills#1130"
     },
     "human_perceived_emotion_and_identity": {
-      "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
+      "status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND",
       "scope": "blinded human listener study of dream-derived emotion, Embry identity, and naturalness; v2 design (per-rater counterbalancing, intention-to-treat primary, independent attention check) preregistered under #1126",
       "receipt": "reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
       "receipt_sha256": "sha256:241b32edbf0ca854907338454497ca76f7e6caaa7483927ee36a9844a89025a5",
       "valid_human_responses": "0/20",
       "sample_count": 0,
       "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
-      "does_not_prove": "any perceptual emotion, naturalness, or human identity result; WER 0.0 and embedding separations are machine evidence and cannot substitute",
+      "does_not_prove": "any perceptual emotion, naturalness, or human identity result; WER 0.0 and embedding separations are machine evidence and cannot substitute; the current four stimuli are technically confounded by loudness and cannot support a perceptual claim until re-rendered under one identical normalization",
       "successor_issue": "grahama1970/agent-skills#1127",
       "successor_resolved": false,
-      "surface_token": "#1127"
+      "surface_token": "#1127",
+      "blocking_receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json"
     },
     "pctom_apparatus_integrity": {
       "status": "PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE",

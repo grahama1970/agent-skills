@@ -1,0 +1,530 @@
+{
+  "baseline": {
+    "failed_count": 5,
+    "failed_dimensions": [
+      "embedding_gaps",
+      "description_completeness",
+      "qra_coverage_per_control",
+      "inline_embedding_policy",
+      "sparta_explorer_page_purpose"
+    ],
+    "monitor_pass": false,
+    "passed": 23,
+    "total": 28,
+    "waived_dimensions": []
+  },
+  "final": {
+    "failed_count": 5,
+    "failed_dimensions": [
+      "embedding_gaps",
+      "description_completeness",
+      "qra_coverage_per_control",
+      "inline_embedding_policy",
+      "sparta_explorer_page_purpose"
+    ],
+    "monitor_pass": false,
+    "passed": 23,
+    "total": 28,
+    "waived_dimensions": []
+  },
+  "final_duration_s": 69.98589825630188,
+  "monitor_pass": false,
+  "r3_diagnostics": {
+    "baseline_failed_dimensions": [
+      "embedding_gaps",
+      "description_completeness",
+      "qra_coverage_per_control",
+      "inline_embedding_policy",
+      "sparta_explorer_page_purpose"
+    ],
+    "contract": "Option B: QRA coverage is operator/review-gated and remains unfixable by Dewey",
+    "final_failed_dimensions": [
+      "embedding_gaps",
+      "description_completeness",
+      "qra_coverage_per_control",
+      "inline_embedding_policy",
+      "sparta_explorer_page_purpose"
+    ],
+    "improved_dimensions": [],
+    "regressed_dimensions": [],
+    "remaining_unfixable_dimensions": [
+      "qra_coverage_per_control",
+      "sparta_explorer_page_purpose"
+    ],
+    "repairable_by_repair_cycle": [
+      "description_completeness",
+      "embedding_gaps",
+      "inline_embedding_policy"
+    ],
+    "stuck_dimensions": [
+      "embedding_gaps",
+      "description_completeness",
+      "qra_coverage_per_control",
+      "inline_embedding_policy",
+      "sparta_explorer_page_purpose"
+    ],
+    "unfixable_by_dewey": [
+      "qra_coverage_per_control",
+      "sparta_explorer_page_purpose"
+    ]
+  },
+  "schema": "monitor_sparta_repair_cycle.v1",
+  "steps": [
+    {
+      "changed_count": 0,
+      "debug_hint": "embedding_gaps still fails even though the embed batch dropped every processed doc; compare health-check eligible IDs with migrate_arango_embeddings_to_qdrant candidate query.",
+      "dropped_count": 200,
+      "duration_s": 18.65670895576477,
+      "eligible_count": 170,
+      "embed_batch_counters": {
+        "dropped": 200,
+        "failed": 0,
+        "pending": 0,
+        "processed": 200,
+        "synced": 200
+      },
+      "embed_metrics": {
+        "collection": "sparta_controls",
+        "dropped": 200,
+        "failed": 0,
+        "pending": 0,
+        "processed": 200,
+        "synced": 200
+      },
+      "exit_code": 0,
+      "health_after_status": "failed",
+      "health_dimension": "embedding_gaps",
+      "health_embed_mismatch": true,
+      "health_embedding_gaps": {
+        "sparta_controls": {
+          "missing": 170,
+          "pct_missing": 1.36,
+          "total": 12491
+        }
+      },
+      "id": "sparta_qdrant_embed_batch",
+      "inline_embedding_arrays": 55071,
+      "ok": true,
+      "processed_count": 200,
+      "skip_reason": "selected_docs_already_synced_in_qdrant",
+      "stderr_tail": "2026-06-24 15:33:02.899 | INFO     | __main__:main:653 - progress collection=sparta_controls processed=64 synced=64 pending=0 failed=0 dropped=64\n2026-06-24 15:33:09.067 | INFO     | __main__:main:653 - progress collection=sparta_controls processed=128 synced=128 pending=0 failed=0 dropped=128\n2026-06-24 15:33:14.226 | INFO     | __main__:main:653 - progress collection=sparta_controls processed=192 synced=192 pending=0 failed=0 dropped=192\n2026-06-24 15:33:14.836 | INFO     | __main__:main:653 - progress collection=sparta_controls processed=200 synced=200 pending=0 failed=0 dropped=200\n",
+      "stdout_tail": "{\n  \"collection\": \"sparta_controls\",\n  \"processed\": 200,\n  \"synced\": 200,\n  \"pending\": 0,\n  \"dropped\": 200,\n  \"resume_offset\": 200,\n  \"last_key\": \"CVE-2024-3296\",\n  \"dry_run\": false,\n  \"resync_stale\": false,\n  \"resync_model\": false\n}\n",
+      "synced_count": 200
+    },
+    {
+      "changed_count": 0,
+      "duration_s": 150.44393157958984,
+      "eligible_count": null,
+      "exit_code": 0,
+      "fix_exit_code": 1,
+      "id": "monitor_health_fix",
+      "per_dimension": [
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "arangodb_backup_freshness",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "consumer_path_canaries",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": 0,
+          "after_ok": true,
+          "before_count": 0,
+          "before_ok": true,
+          "changed_count": 0,
+          "dimension": "control_description_coverage",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "corpus_completeness",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": 0,
+          "after_ok": true,
+          "before_count": 0,
+          "before_ok": true,
+          "changed_count": 0,
+          "dimension": "create_qras_remaining_calls",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "crosswalk_chain_schema",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "crosswalk_edges",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": 0,
+          "after_ok": true,
+          "before_count": 0,
+          "before_ok": true,
+          "changed_count": 0,
+          "dimension": "description_audit",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": 12,
+          "after_ok": false,
+          "before_count": 12,
+          "before_ok": false,
+          "changed_count": 0,
+          "dimension": "description_completeness",
+          "reason": "no_observed_improvement_after_fix",
+          "result": "failed"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "description_preservation",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": 170,
+          "after_ok": false,
+          "before_count": 170,
+          "before_ok": false,
+          "changed_count": 0,
+          "dimension": "embedding_gaps",
+          "reason": "no_observed_improvement_after_fix",
+          "result": "failed"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "formalizability_coverage",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "framework_name_normalization",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": 54871,
+          "after_ok": false,
+          "before_count": 55071,
+          "before_ok": false,
+          "changed_count": 200,
+          "dimension": "inline_embedding_policy",
+          "reason": "gap_count_improved_but_dimension_still_failing",
+          "result": "attempted"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "monitor_sparta_mutation_default",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": 0,
+          "after_ok": false,
+          "before_count": 0,
+          "before_ok": false,
+          "changed_count": 0,
+          "dimension": "qra_coverage_per_control",
+          "reason": "no_observed_improvement_after_fix",
+          "result": "failed"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "qra_evidence_coverage",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "qra_question_surface_quality",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "qra_reasoning_coverage",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "qra_stub_grounding",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "relationship_coverage",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "requirement_quality",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "source_control_field_parity",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "source_control_parity",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": false,
+          "before_count": null,
+          "before_ok": false,
+          "changed_count": null,
+          "dimension": "sparta_explorer_page_purpose",
+          "reason": "no_observed_improvement_after_fix",
+          "result": "failed"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "sparta_relationship_integrity",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "taxonomy_backfill",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "upstream_version",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        },
+        {
+          "after_count": null,
+          "after_ok": true,
+          "before_count": null,
+          "before_ok": true,
+          "changed_count": null,
+          "dimension": "url_content_identity",
+          "reason": "dimension_already_passing_before_fix",
+          "result": "skipped"
+        }
+      ],
+      "per_dimension_results": [
+        {
+          "affected_count_after": null,
+          "affected_count_before": null,
+          "after_status": "failed",
+          "before_status": "failed",
+          "changed_count": null,
+          "dimension": "embedding_gaps",
+          "eligible_count": null,
+          "result": "stuck",
+          "skip_reason": "dimension_still_failing_count_unreported"
+        },
+        {
+          "affected_count_after": null,
+          "affected_count_before": null,
+          "after_status": "failed",
+          "before_status": "failed",
+          "changed_count": null,
+          "dimension": "description_completeness",
+          "eligible_count": null,
+          "result": "stuck",
+          "skip_reason": "dimension_still_failing_count_unreported"
+        },
+        {
+          "affected_count_after": null,
+          "affected_count_before": null,
+          "after_status": "failed",
+          "before_status": "failed",
+          "changed_count": null,
+          "dimension": "qra_coverage_per_control",
+          "eligible_count": null,
+          "result": "stuck",
+          "skip_reason": "operator_review_required"
+        },
+        {
+          "affected_count_after": null,
+          "affected_count_before": null,
+          "after_status": "failed",
+          "before_status": "failed",
+          "changed_count": null,
+          "dimension": "inline_embedding_policy",
+          "eligible_count": null,
+          "result": "stuck",
+          "skip_reason": "dimension_still_failing_count_unreported"
+        },
+        {
+          "affected_count_after": null,
+          "affected_count_before": null,
+          "after_status": "failed",
+          "before_status": "failed",
+          "changed_count": null,
+          "dimension": "sparta_explorer_page_purpose",
+          "eligible_count": null,
+          "result": "stuck",
+          "skip_reason": "not_repairable_by_monitor_sparta"
+        }
+      ],
+      "skip_reason": "all_attempted_dimensions_still_failing",
+      "skipped_dimensions": [
+        "embedding_gaps",
+        "description_completeness",
+        "qra_coverage_per_control",
+        "inline_embedding_policy",
+        "sparta_explorer_page_purpose"
+      ],
+      "status": "attempted_no_progress",
+      "stderr_tail": "",
+      "stdout_tail": "...\n    [FAIL] 54871 SPARTA documents still contain inline embedding arrays\n  25. QRA Stub Grounding...\n    [PASS] No QRAs are grounded in stub-described controls\n  26. URL Content Identity...\n    [PASS] URL clean-text identity metadata has no known mismatches\n  27. Sparta Explorer Page Purpose...\n    [FAIL] 21 Sparta Explorer page-purpose guardrail failures\n  28. Consumer Path Canaries...\n    [PASS] Consumer-path canaries pass (4 pass, 1 known_gap_classified, 0 fail) with Sparta Chat visual proof\n  29. ArangoDB Backup Freshness...\n    [PASS] ArangoDB backup fresh (2.9h old)\n\n  --- Auto-backfill ---\n  Source workbook: no newer upstream version detected\n  Source controls: no gaps to fix\n  Source control fields: no gaps to fix\n  Taxonomy: no gaps to fix\n  Control descriptions: no gaps to fix\n  Removing 54871 Qdrant-synced inline vector arrays from sparta_controls, sparta_url_knowledge...\n    Inline vector cleanup artifact: /home/graham/workspace/experiments/sparta/artifacts/monitor-sparta/20260624T153422_inline_vector_cleanup.json\n  Backfilling embeddings for 1 collections...\n    Embedding backfill: 0 fixed across 1 collections\n  Evidence case: no gaps to fix\n  Legacy QRA course-correction: no failed grounding rows to classify\n  QRA question surfaces: no malformed generated rows to course-correct\n  Reasoning: no gaps to fix\n\n============================================================\n  RESULT: 23/29 dimensions PASS\n============================================================\n\n",
+      "stuck_dimensions": [
+        "embedding_gaps",
+        "description_completeness",
+        "qra_coverage_per_control",
+        "inline_embedding_policy",
+        "sparta_explorer_page_purpose"
+      ],
+      "summary": {
+        "failed_count": 5,
+        "failed_dimensions": [
+          "embedding_gaps",
+          "description_completeness",
+          "qra_coverage_per_control",
+          "inline_embedding_policy",
+          "sparta_explorer_page_purpose"
+        ],
+        "monitor_pass": false,
+        "passed": 23,
+        "total": 28,
+        "waived_dimensions": []
+      }
+    },
+    {
+      "changed_count": 0,
+      "contract": "Option B: qra_coverage_per_control is operator/review-gated, not Dewey-repairable",
+      "debug_hint": "Do not launch create_qras_backfill from Dewey repair-cycle by default. Queue/review QRA generation through the operator lane, then rerun health --json.",
+      "dimension": "qra_coverage_per_control",
+      "duration_s": 0.0003437995910644531,
+      "eligible_count": 4944,
+      "id": "qra_coverage_operator_lane",
+      "ok": true,
+      "operator_queue_path": "/home/graham/workspace/experiments/memory/artifacts/monitor_sparta_gap_plan/operator_queue/qra_coverage_per_control.jsonl",
+      "skip_reason": "operator_review_required",
+      "status": "skipped"
+    }
+  ],
+  "stop_reason": "failures_remain",
+  "worker_wait": {
+    "completed": false,
+    "log_paths": [],
+    "ok": true,
+    "pid_files": [],
+    "pids": [],
+    "status": "no_workers",
+    "still_running": false,
+    "timed_out": false,
+    "waited_s": 0,
+    "worker_count": 0
+  }
+}

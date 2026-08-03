@@ -1,0 +1,6 @@
+[project]
+name = "agent-approach-owner"
+version = "0.1.0"
+description = "Approach-owner worker contract for bounded experiment bakeoff lanes."
+requires-python = ">=3.11"
+dependencies = []

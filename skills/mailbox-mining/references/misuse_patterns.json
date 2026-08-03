@@ -1,0 +1,53 @@
+{
+  "schema": "mailbox_mining.misuse_patterns.v1",
+  "patterns": [
+    {
+      "name": "direct_google_api",
+      "pattern": "gmail\\.googleapis\\.com|googleapiclient\\.discovery",
+      "severity": "error",
+      "fix": "Do not call Google directly; use /gmail (skills/gmail), which owns the REST API and OAuth."
+    },
+    {
+      "name": "oauth_in_code",
+      "pattern": "InstalledAppFlow|from_client_secrets_file|oauth2client",
+      "severity": "error",
+      "fix": "/gmail owns OAuth profiles and token storage. Never script a grant here."
+    },
+    {
+      "name": "hardcoded_credential",
+      "pattern": "(?:client_secret|refresh_token)\\s*[:=]\\s*['\\\"]",
+      "severity": "error",
+      "fix": "No Gmail credential belongs in code."
+    },
+    {
+      "name": "send_attempt",
+      "pattern": "users\\(\\)\\.messages\\(\\)\\.send|\\.send_message\\(",
+      "severity": "error",
+      "fix": "Sending goes through /gmail plan outbound + human approval code. Never send from this skill."
+    },
+    {
+      "name": "filter_mutation",
+      "pattern": "users\\(\\)\\.settings\\(\\)|\\.filters\\(\\)\\.create",
+      "severity": "error",
+      "fix": "/gmail deliberately exposes no filter/forwarding mutation. Do not add one."
+    },
+    {
+      "name": "direct_arango",
+      "pattern": "from arango import|ArangoClient",
+      "severity": "error",
+      "fix": "Write through /memory, never ArangoDB directly."
+    },
+    {
+      "name": "unredacted_body_store",
+      "pattern": "(?:body|payload)\\s*[:=].*(?:upsert|/store)",
+      "severity": "warning",
+      "fix": "Mail bodies must not reach memory; extract relationship metadata only."
+    },
+    {
+      "name": "mcp_gmail_connector",
+      "pattern": "mcp__claude_ai_Gmail__",
+      "severity": "warning",
+      "fix": "The MCP connector was the old transport. /gmail is API-first and is now the documented layer."
+    }
+  ]
+}

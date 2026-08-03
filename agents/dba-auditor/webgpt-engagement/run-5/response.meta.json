@@ -1,0 +1,42 @@
+{
+  "status": "failed",
+  "failure": "tab_identity_preflight_failed",
+  "input": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/create-architecture-request.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/response.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.kVAzC5.log",
+  "sentinel": "<<<WEBGPT_DONE:20260624T191626Z:62525e79>>>",
+  "requested_tab_id": "837356322",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "tab_identity_preflight": {
+    "ok": false,
+    "error": "tab_not_open_chatgpt",
+    "tab_id": "837356322",
+    "tab": null,
+    "chatgpt_tabs_count": 12,
+    "expected_url": null,
+    "expected_title": null,
+    "source": "tab-id",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837356322"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": false,
+        "detail": "no open chatgpt tab 837356322"
+      }
+    ]
+  },
+  "started_at": "2026-06-24T19:16:29Z",
+  "finished_at": "2026-06-24T19:16:29Z",
+  "proof_status": "not_submitted",
+  "agent_diagnosis": "The requested tab did not match the required ChatGPT identity before submission.",
+  "agent_action": "Run tab.list and webgpt.preflight with --url, --expect-url, or --expect-title; do not submit until the target tab identity matches.",
+  "submitted_to_chatgpt": false
+}

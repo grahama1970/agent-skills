@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Live smoke harness for Dewey monitor-sparta repair-cycle.
+# Runs one real repair-cycle with minimal batch, then verifies JSON output.
+# This is a REAL mutation test — requires SPARTA_MONITOR_MUTATION_ENABLED=1.
+set -euo pipefail
+
+MEMORY_ROOT="${MEMORY_ROOT:-/home/graham/workspace/experiments/memory}"
+AGENT_SKILLS_ROOT="${AGENT_SKILLS_ROOT:-/home/graham/workspace/experiments/agent-skills}"
+DEWEY_SCRIPT="${AGENT_SKILLS_ROOT}/agents/dba-auditor/scripts/dewey_overnight_run.py"
+MONITOR_SCRIPT="${MEMORY_ROOT}/scripts/validation/monitor_sparta.py"
+UV_BIN="${UV_BIN:-uv}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+RUN_STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OUT_DIR="${MEMORY_ROOT}/artifacts/dewey_monitor_sparta/live_smoke_${RUN_STAMP}"
+mkdir -p "${OUT_DIR}"
+
+if [ "${SPARTA_MONITOR_MUTATION_ENABLED:-0}" != "1" ]; then
+  echo "ERROR: SPARTA_MONITOR_MUTATION_ENABLED=1 required for repair-cycle (real mutation)"
+  echo "Set it and re-run: SPARTA_MONITOR_MUTATION_ENABLED=1 $0"
+  exit 1
+fi
+
+run_py() {
+  if command -v "${UV_BIN}" >/dev/null 2>&1; then
+    "${UV_BIN}" run python "$@"
+  else
+    "${PYTHON_BIN}" "$@"
+  fi
+}
+
+echo "=== Smoke: health --json (before) ==="
+run_py "${MONITOR_SCRIPT}" health --json > "${OUT_DIR}/health_before.json" 2>&1
+echo "Wrote ${OUT_DIR}/health_before.json"
+
+echo "=== Smoke: repair-cycle (one pass, short timeouts) ==="
+cd "${MEMORY_ROOT}"
+SPARTA_MONITOR_MUTATION_ENABLED=1 \
+  run_py "${MONITOR_SCRIPT}" repair-cycle \
+    --artifact-dir "${OUT_DIR}/repair_cycle_artifacts" \
+    --embed-batch-limit 10 \
+    --wait-timeout-s 120 \
+    --json > "${OUT_DIR}/repair_cycle_output.json" 2>&1
+RC=$?
+echo "repair-cycle exit code: ${RC}"
+
+echo "=== Smoke: health --json (after) ==="
+run_py "${MONITOR_SCRIPT}" health --json > "${OUT_DIR}/health_after.json" 2>&1
+echo "Wrote ${OUT_DIR}/health_after.json"
+
+echo "=== Smoke: validate repair-cycle JSON ==="
+"${PYTHON_BIN}" - "${OUT_DIR}" "${RC}" <<'PY'
+from __future__ import annotations
+import json
+import sys
+from pathlib import Path
+
+out = Path(sys.argv[1])
+repair_exit = int(sys.argv[2])
+
+output_path = out / "repair_cycle_output.json"
+raw = json.loads(output_path.read_text())
+
+required_top = ["schema", "steps", "baseline", "final", "stop_reason"]
+missing = [k for k in required_top if k not in raw]
+if missing:
+    raise SystemExit(f"FAIL: missing top-level keys: {missing}")
+
+steps = raw.get("steps") or []
+step_ids = {s.get("id") for s in steps}
+print(f"Steps found: {sorted(step_ids)}")
+
+baseline = raw.get("baseline", {})
+final = raw.get("final", {})
+print(f"Baseline health: {baseline.get('passed')}/{baseline.get('total')}")
+print(f"Final health: {final.get('passed')}/{final.get('total')}")
+print(f"Stop reason: {raw.get('stop_reason')}")
+print(f"Schema: {raw.get('schema')}")
+
+timed_steps = [s for s in steps if s.get("duration_s") is not None]
+if not timed_steps:
+    print("WARN: no steps have duration_s timing")
+else:
+    for s in timed_steps:
+        print(f"  {s['id']}: {s['duration_s']:.1f}s")
+
+print(json.dumps({
+    "ok": True,
+    "out_dir": str(out),
+    "baseline": baseline,
+    "final": final,
+    "stop_reason": raw.get("stop_reason"),
+    "repair_exit_code": repair_exit,
+}, sort_keys=True))
+PY
+
+echo "=== Smoke complete ==="
+echo "Output: ${OUT_DIR}"

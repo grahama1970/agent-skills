@@ -1,0 +1,99 @@
+{
+  "backend_capability_digests": {
+    "chatterbox_base_affect": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+    "chatterbox_turbo": "4b332b29ed1608307e96205143c68c123de182bca8ec86a6b5b2da10ef7b1aaa",
+    "qwen3_tts": "56e68f4e55501f6a976eff0a5e09a63576ea152ebbdde773fa7a16977fa0fa8a"
+  },
+  "boundary": "Measures same-parameter renderer spread only. Not evidence of emotion, identity, or naturalness.",
+  "created_at": "2026-08-03T13:40:03Z",
+  "deterministic_seed": {
+    "chatterbox_base_affect": false,
+    "chatterbox_turbo": false,
+    "qwen3_tts": false
+  },
+  "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+  "live": true,
+  "mocked": false,
+  "render_count": 8,
+  "renders": [
+    {
+      "asr_transcript": null,
+      "engine": "chatterbox_base",
+      "index": 1,
+      "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_01.wav",
+      "wav_sha256": "sha256:e0e0d4e43f9557610ccd4e6159859618bf41e500306f165a8a48945def71b82a"
+    },
+    {
+      "asr_transcript": null,
+      "engine": "chatterbox_base",
+      "index": 2,
+      "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_02.wav",
+      "wav_sha256": "sha256:937e8dedb44ddaba7403ddbfa42738f022b2396517568447642c4a5b93263c7f"
+    },
+    {
+      "asr_transcript": null,
+      "engine": "chatterbox_base",
+      "index": 3,
+      "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_03.wav",
+      "wav_sha256": "sha256:b7b6a7b202ccc25da6c26b1d385520509b6b8e8b4a4aa5cfac3aed5d5411b98c"
+    },
+    {
+      "asr_transcript": null,
+      "engine": "chatterbox_base",
+      "index": 4,
+      "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_04.wav",
+      "wav_sha256": "sha256:c09ba0ad952d5ed620a230af74b4d0790dc6fdcc9767bf931076a4de0eed185b"
+    },
+    {
+      "asr_transcript": null,
+      "engine": "chatterbox_base",
+      "index": 5,
+      "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_05.wav",
+      "wav_sha256": "sha256:b7523fae61d4f044767164fb40c60ef2f67388fa7544b106f08ad8ef174d3442"
+    },
+    {
+      "asr_transcript": null,
+      "engine": "chatterbox_base",
+      "index": 6,
+      "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_06.wav",
+      "wav_sha256": "sha256:922541caf17b1a7ffd00c574cdb689c1c7493a1bcdd9bd7a25f6b58ef202f157"
+    },
+    {
+      "asr_transcript": null,
+      "engine": "chatterbox_base",
+      "index": 7,
+      "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_07.wav",
+      "wav_sha256": "sha256:aa98833a50c2ed3b0a9e7f210047eab617a35d2d7fd77f09057296b93c46354d"
+    },
+    {
+      "asr_transcript": null,
+      "engine": "chatterbox_base",
+      "index": 8,
+      "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_08.wav",
+      "wav_sha256": "sha256:c3cd4880e8a8ed48d4de8e647c6cc5ac97558fe8599816aa504ef623b1cee99c"
+    }
+  ],
+  "request": {
+    "answer_text": "I need you to wait before you commit to that plan, because the constraint changed this morning.",
+    "asr_cache": false,
+    "asr_max_candidates": 1,
+    "asr_max_wer": 0.0,
+    "asr_verify": true,
+    "label": "technical_screen_neutral_calibration",
+    "ref_audio": "/data/embry_ref.wav",
+    "use_blessed_qra_cache": false,
+    "voice_delivery": {
+      "intensity": 0.0,
+      "tone": "neutral",
+      "valence": 0.0
+    }
+  },
+  "request_sha256": "sha256:2bd84dcae88284d1858c2e13c0442cf536d307a75ccb9fd737b6beb80efe485d",
+  "schema": "persona_dream.technical_screen_neutral_calibration.v1",
+  "server_boot": {
+    "device": "cuda",
+    "engine": "chatterbox_turbo",
+    "model_load_seconds": 9.959,
+    "started_at_utc": "2026-07-31T13:06:41Z"
+  }
+}

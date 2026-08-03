@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dewey R3 Monitor-Sparta Repair-Cycle Diagnostics</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 32px; color: #172026; background: #f7f8f9; }
+    main { max-width: 1180px; margin: 0 auto; }
+    h1, h2 { color: #101820; }
+    section { background: #fff; border: 1px solid #d8dee4; border-radius: 8px; padding: 20px; margin: 18px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border-bottom: 1px solid #e5e7eb; padding: 10px; text-align: left; vertical-align: top; }
+    th { background: #eef2f5; }
+    code { background: #eef2f5; padding: 2px 5px; border-radius: 4px; }
+    .missing { color: #8a3a00; font-weight: 700; }
+    .partial { color: #6f5700; font-weight: 700; }
+    .live { color: #116329; font-weight: 700; }
+    .attempt { color: #6256a9; font-weight: 700; }
+    .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .node { border: 1px solid #cfd7df; border-radius: 6px; padding: 12px; background: #f9fbfc; min-height: 84px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Dewey R3 Monitor-Sparta Repair-Cycle Diagnostics</h1>
+  <p><strong>Slice:</strong> dewey-r3-diagnostics. <strong>Last updated:</strong> 2026-06-24.</p>
+  <p>This page is the brownfield rendered goal/progress surface for the WebGPT create-architecture round. It is context, not proof.</p>
+
+  <section>
+    <h2>Master Flow</h2>
+    <div class="flow">
+      <div class="node"><strong>Cron</strong><br>Launches Dewey nightly with flock and calibrated budgets.</div>
+      <div class="node"><strong>Dewey</strong><br>Reads health, runs only <code>monitor_sparta.py repair-cycle</code>, writes logs and morning report.</div>
+      <div class="node"><strong>Repair Cycle</strong><br>Runs embed, health fix, and QRA backfill lanes with structured receipts.</div>
+      <div class="node"><strong>Workers</strong><br>May run create-qras jobs; completion and health impact must be observable.</div>
+      <div class="node"><strong>Health</strong><br>Final 29/29 PASS is authoritative only from live <code>health --json</code>.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>R3 Gaps</h2>
+    <table>
+      <thead><tr><th>Gap</th><th>Status</th><th>Required behavior</th><th>Current evidence</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Embed lane silent no-op</td>
+          <td class="live">PORTED</td>
+          <td>Step exposes <code>eligible_count</code>, <code>changed_count</code>, <code>skip_reason</code>, and health/embed mismatch detail.</td>
+          <td>Live R3 receipt reports <code>eligible_count=170</code>, <code>changed_count=0</code>, <code>health_embed_mismatch=true</code>.</td>
+        </tr>
+        <tr>
+          <td>Health --fix per-dimension result</td>
+          <td class="live">PORTED</td>
+          <td>Each dimension reports skipped/attempted/succeeded/failed with before/after affected counts.</td>
+          <td>Live R3 receipt reports <code>status=attempted_no_progress</code>, <code>changed_count=0</code>, and per-dimension results.</td>
+        </tr>
+        <tr>
+          <td>QRA worker wait</td>
+          <td class="live">RESOLVED FOR R3</td>
+          <td>Default repair-cycle no longer launches unbounded create-qras workers for QRA coverage.</td>
+          <td>Live R3 receipt has <code>worker_wait.status=no_workers</code> and no <code>create_qras_backfill</code> step.</td>
+        </tr>
+        <tr>
+          <td>QRA lane contract</td>
+          <td class="live">RESOLVED</td>
+          <td>Choose Option A, B, or C and align repair-cycle behavior with Dewey <code>UNFIXABLE_DIMENSIONS</code>.</td>
+          <td>WebGPT chose Option B. Live R3 receipt emits <code>qra_coverage_operator_lane</code> and keeps QRA coverage operator-owned.</td>
+        </tr>
+        <tr>
+          <td>Local project-agent patch</td>
+          <td class="live">SUPERSEDED</td>
+          <td>WebGPT run-7 zip is now the controlling R3 artifact.</td>
+          <td>Downloaded zip SHA256 <code>3d89ec00a9fb361abe459aaea9e8387ae934870cd2bf6d53a6cc3d1474fb8b31</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Sanity Matrix</h2>
+    <table>
+      <thead><tr><th>Check</th><th>Status</th><th>Command / artifact</th><th>Honesty</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Syntax</td>
+          <td class="live">UNIT</td>
+          <td><code>python -m py_compile scripts/validation/monitor_sparta.py</code></td>
+          <td>Non-mutating syntax check only.</td>
+        </tr>
+        <tr>
+          <td>Dewey unit tests</td>
+          <td class="live">UNIT</td>
+          <td><code>uv run pytest agent-skills/agents/dba-auditor/tests/test_dewey_monitor_sparta_nightly.py</code> -> 19 passed</td>
+          <td>Mocked fake monitor; wiring only.</td>
+        </tr>
+        <tr>
+          <td>Live repair-cycle</td>
+          <td class="live">LIVE</td>
+          <td><code>SPARTA_MONITOR_MUTATION_ENABLED=1 uv run python scripts/validation/monitor_sparta.py repair-cycle --json --wait --wait-timeout-s 300 --embed-batch-limit 200</code></td>
+          <td>Run completed with exit 1 because health still fails; receipt shape assertions passed. Artifact: <code>webgpt-engagement/run-7/dewey-r3-repair-cycle.json</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Roadmap</h2>
+    <ol>
+      <li>R3 creation bundle was submitted through Sparta Explorer WebGPT and completed in tab <code>837356331</code>.</li>
+      <li>Downloaded <code>sparta-dewey-r3-diagnostics-solution.zip</code> and verified manifest/unzip/checksum.</li>
+      <li>Ported helper, tests, fixtures, and live repair-cycle integration.</li>
+      <li>Ran compile, isolated tests, existing Dewey tests, live health, and live repair-cycle receipt assertions.</li>
+      <li>Next round should debug deterministic lanes that still report no progress: embedding, description completeness, and inline embedding policy.</li>
+    </ol>
+  </section>
+</main>
+</body>
+</html>

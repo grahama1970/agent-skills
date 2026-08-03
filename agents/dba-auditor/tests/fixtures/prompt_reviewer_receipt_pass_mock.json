@@ -1,0 +1,27 @@
+{
+  "approved_for_qra_generation": true,
+  "blocking_findings": [],
+  "created_at": "2026-06-25T16:59:28Z",
+  "findings": [
+    {
+      "message": "Fixture receipt for isolated validation only; not live closure proof.",
+      "severity": "info"
+    }
+  ],
+  "honesty": {
+    "database_mutation_allowed": false,
+    "does_not_prove": [
+      "live prompt-reviewer execution",
+      "QRA generation success",
+      "monitor-sparta green"
+    ],
+    "live": false,
+    "mocked": true
+  },
+  "prompt_contract_ok": true,
+  "request_sha256": "7d0c4e54b02b27243a1bcd92b7c8233a2b2c50ab65b1c0bb7711e0074d679d82",
+  "response_contract_ok": true,
+  "reviewer_agent": "prompt-reviewer",
+  "schema_version": "dewey.prompt-review.receipt.v1",
+  "verdict": "PASS"
+}

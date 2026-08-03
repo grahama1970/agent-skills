@@ -1,0 +1,72 @@
+schema: oc_subagent.protocol.v1
+id: evidence_completion_gate
+version: v1
+
+description: >
+  Shared fail-closed completion gate for subagents that perform research,
+  evidence collection, review, extraction, validation, implementation, release,
+  or any task with required outputs. A subagent must not report PASS,
+  COMPLETED, DONE, READY, VALID, or HANDOFF_READY from task-envelope validation,
+  prompt compliance, schema acceptance, or absence of errors alone.
+
+completion_gate:
+  completion_requires:
+    - requested_work_executed_or_explicitly_refused
+    - required_outputs_exist
+    - required_artifacts_are_readable
+    - artifact_schema_or_shape_checked_when_declared
+    - receipt_lists_artifacts_and_commands
+    - result_status_matches_evidence
+  validation_only_is_not_completion: true
+  task_contract_validated_is_not_completion: true
+  missing_artifact_must_fail_closed: true
+  missing_required_output_status:
+    - BLOCKED
+    - REFUSED
+    - INSUFFICIENT_EVIDENCE
+  terminal_success_status:
+    allowed_only_after_completion_gate: true
+    blocked_words_without_evidence:
+      - PASS
+      - COMPLETED
+      - DONE
+      - READY
+      - VALID
+      - HANDOFF_READY
+
+subagent_responsibilities:
+  - Check every declared required output before reporting success.
+  - For each required artifact, record path, existence, schema or shape check,
+    and evidence summary in the final receipt.
+  - If the task asks for evidence collection, source inspection, capability
+    inventory, screenshots, proofs, review findings, extraction output, or
+    deployment proof, produce that artifact or return a fail-closed status.
+  - Keep the work item in its current lane when evidence is missing; do not
+    promote to coder, reviewer, releaser, memory, or downstream consumers.
+  - Treat model prose, task-block validation, green logs, and empty error lists
+    as claims until backed by durable artifacts.
+
+receipt_minimum_fields:
+  - status
+  - reason
+  - requested_work_summary
+  - required_outputs_checked
+  - artifacts
+  - commands_run
+  - missing
+  - next_required_action
+
+forbidden_completion_patterns:
+  - status_completed_from_task_contract_validated
+  - status_pass_from_schema_validation_only
+  - downstream_handoff_without_required_artifact
+  - memory_promotion_without_receipt_artifact
+  - reviewer_pass_without_artifact_or_command_evidence
+  - releaser_deploy_without_exact_sha_and_proof_artifacts
+
+project_agent_or_runtime_responsibilities:
+  - Reject success receipts that omit required output checks.
+  - Refuse downstream routing when required artifacts are missing.
+  - Prefer terminal labels or lane removal after evidence collection so the
+    same item is not repeatedly reprocessed.
+  - Record any repeated false-completion pattern as a subagent contract defect.

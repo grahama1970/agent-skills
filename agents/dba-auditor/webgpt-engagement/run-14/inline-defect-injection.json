@@ -1,0 +1,22 @@
+{
+  "collection": "sparta_controls",
+  "control_id": "AC-11.1",
+  "key": "AC-11_1",
+  "rollback": {
+    "dewey_test_inline_embedding_injected_at": null,
+    "embedding": null
+  },
+  "schema": "dewey_inline_embedding_defect.v1",
+  "updated": {
+    "_key": "AC-11_1",
+    "control_id": "AC-11.1",
+    "dewey_test_inline_embedding_injected_at": 1782334913,
+    "embedding": [
+      0.125,
+      0.25,
+      0.5
+    ],
+    "qdrant_point_id": "0048b66c-328b-56b3-96cb-7da8491badfa",
+    "semantic_sync_state": "synced"
+  }
+}

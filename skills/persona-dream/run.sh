@@ -12,6 +12,10 @@ Commands:
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
   check-pctom-measurement-validity-v2  Gate: PCTOM-R measurement must be falsifiable before live spend
+  run-pctom-v2-validity-lane  Rebuild the frozen PCTOM-R v2 corpus + estimator and re-prove the validity-v2 gate
+  build-pctom-v2-corpus  Build the condition-blind PCTOM-R v2 corpus from hidden simulator state
+  run-pctom-v2-condition-comparison  Episode-conditioned M/R/D/CD sealed condition preflight
+  check-pctom-v2-negative-controls  Adversarial controls: each must BLOCK with a typed reason
   check-skill-contract  Static check: SKILL.md remains a stable executable contract
   check-current-state-consistency  Static check: current-state surfaces must not contradict named receipts
   check-tau-routing-boundary  Static check: only /tau may reach /scillm (fails on un-sanctioned direct scillm calls)
@@ -736,6 +740,12 @@ case "$COMMAND" in
   live-chain-reliability)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_reliability.py" "$@"
     ;;
+  technical-screen-blinded-listener-study)
+    # Requires numpy/scipy/librosa/soundfile; use the Chatterbox venv interpreter,
+    # matching the speaker-recognition lane's recorded runtime.
+    exec "${CHATTERBOX_VENV_PYTHON:-/home/graham/workspace/experiments/chatterbox/.venv/bin/python}" \
+      "${SCRIPT_DIR}/scripts/technical_screen_blinded_listener_study.py" "$@"
+    ;;
   preregister-blinded-listener-study-v2)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/preregister_blinded_listener_study_v2.py" "$@"
     ;;
@@ -763,6 +773,24 @@ case "$COMMAND" in
     # Gate before #1008 live held-out Tau spend: the estimator must be able to
     # produce a CD loss, and predictions must depend on episode evidence.
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_measurement_validity_v2.py" "$@"
+    ;;
+  run-pctom-v2-validity-lane)
+    # #1131: rebuild the frozen v2 corpus, run the episode-conditioned M/R/D/CD
+    # preflight, run the #1056 validity-v2 gate over it on both splits, run the
+    # adversarial negative controls, and write the four required receipts.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_pctom_v2_validity_lane.py" "$@"
+    ;;
+  build-pctom-v2-corpus)
+    # #1131: condition-blind corpus generator; labels come from a hidden-state oracle.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_pctom_v2_corpus.py" "$@"
+    ;;
+  run-pctom-v2-condition-comparison)
+    # #1131: episode-conditioned M/R/D/CD estimator and sealed condition preflight.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_pctom_v2_condition_comparison.py" "$@"
+    ;;
+  check-pctom-v2-negative-controls)
+    # #1131: ten adversarial controls that must each BLOCK with a typed reason.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_v2_negative_controls.py" "$@"
     ;;
   check-skill-contract)
     # Fail closed when SKILL.md stops being a stable executable contract:

@@ -1,0 +1,154 @@
+{
+  "baseline": {
+    "failed_count": 3,
+    "failed_dimensions": [
+      "qra_coverage_per_control",
+      "monitor_sparta_mutation_default",
+      "sparta_explorer_page_purpose"
+    ],
+    "monitor_pass": false,
+    "passed": 26,
+    "total": 29
+  },
+  "final": {
+    "failed_count": 3,
+    "failed_dimensions": [
+      "qra_coverage_per_control",
+      "monitor_sparta_mutation_default",
+      "sparta_explorer_page_purpose"
+    ],
+    "monitor_pass": false,
+    "passed": 26,
+    "total": 29
+  },
+  "final_duration_s": 71.11542201042175,
+  "monitor_pass": false,
+  "r3_diagnostics": {
+    "baseline_failed_dimensions": [
+      "qra_coverage_per_control",
+      "monitor_sparta_mutation_default",
+      "sparta_explorer_page_purpose"
+    ],
+    "contract": "Option B: QRA coverage is operator/review-gated and remains unfixable by Dewey",
+    "final_failed_dimensions": [
+      "qra_coverage_per_control",
+      "monitor_sparta_mutation_default",
+      "sparta_explorer_page_purpose"
+    ],
+    "improved_dimensions": [],
+    "regressed_dimensions": [],
+    "remaining_unfixable_dimensions": [
+      "qra_coverage_per_control",
+      "sparta_explorer_page_purpose"
+    ],
+    "repairable_by_repair_cycle": [
+      "description_completeness",
+      "embedding_gaps",
+      "inline_embedding_policy"
+    ],
+    "stuck_dimensions": [
+      "qra_coverage_per_control",
+      "monitor_sparta_mutation_default",
+      "sparta_explorer_page_purpose"
+    ],
+    "unfixable_by_dewey": [
+      "qra_coverage_per_control",
+      "sparta_explorer_page_purpose"
+    ]
+  },
+  "schema": "monitor_sparta_repair_cycle.v1",
+  "started_workers": [],
+  "steps": [
+    {
+      "changed_count": 0,
+      "duration_s": 81.36766123771667,
+      "eligible_count": null,
+      "exit_code": 1,
+      "id": "monitor_health_fix",
+      "per_dimension_results": [
+        {
+          "affected_count_after": null,
+          "affected_count_before": null,
+          "after_status": "failed",
+          "before_status": "failed",
+          "changed_count": null,
+          "dimension": "qra_coverage_per_control",
+          "eligible_count": null,
+          "result": "stuck",
+          "skip_reason": "operator_review_required"
+        },
+        {
+          "affected_count_after": null,
+          "affected_count_before": null,
+          "after_status": "failed",
+          "before_status": "failed",
+          "changed_count": null,
+          "dimension": "monitor_sparta_mutation_default",
+          "eligible_count": null,
+          "result": "stuck",
+          "skip_reason": "dimension_still_failing_count_unreported"
+        },
+        {
+          "affected_count_after": null,
+          "affected_count_before": null,
+          "after_status": "failed",
+          "before_status": "failed",
+          "changed_count": null,
+          "dimension": "sparta_explorer_page_purpose",
+          "eligible_count": null,
+          "result": "stuck",
+          "skip_reason": "not_repairable_by_monitor_sparta"
+        }
+      ],
+      "skip_reason": "all_attempted_dimensions_still_failing",
+      "skipped_dimensions": [
+        "qra_coverage_per_control",
+        "monitor_sparta_mutation_default",
+        "sparta_explorer_page_purpose"
+      ],
+      "status": "attempted_no_progress",
+      "stuck_dimensions": [
+        "qra_coverage_per_control",
+        "monitor_sparta_mutation_default",
+        "sparta_explorer_page_purpose"
+      ],
+      "summary": {
+        "failed_count": 3,
+        "failed_dimensions": [
+          "qra_coverage_per_control",
+          "monitor_sparta_mutation_default",
+          "sparta_explorer_page_purpose"
+        ],
+        "monitor_pass": false,
+        "passed": 26,
+        "total": 29
+      }
+    },
+    {
+      "changed_count": 0,
+      "contract": "Option B: qra_coverage_per_control is operator/review-gated, not Dewey-repairable",
+      "debug_hint": "Do not launch create_qras_backfill from Dewey repair-cycle by default. Queue/review QRA generation through the operator lane, then rerun health --json.",
+      "dimension": "qra_coverage_per_control",
+      "duration_s": 0.0004413127899169922,
+      "eligible_count": null,
+      "id": "qra_coverage_operator_lane",
+      "ok": true,
+      "operator_queue_path": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-13/live-repair-cycle-artifacts/qra_operator_lane.jsonl",
+      "skip_reason": "operator_review_required",
+      "status": "skipped"
+    }
+  ],
+  "stop_reason": "failures_remain",
+  "worker_wait": {
+    "completed": false,
+    "log_paths": [],
+    "ok": true,
+    "pid_files": [],
+    "pids": [],
+    "status": "no_workers",
+    "still_running": false,
+    "timed_out": false,
+    "waited_s": 0,
+    "worker_count": 0
+  }
+}

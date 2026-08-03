@@ -1,0 +1,11 @@
+{
+  "collection": "persona_memory",
+  "documents_path": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/memory-upsert-candidates.jsonl",
+  "status": "candidate_requires_human_approval",
+  "notes": [
+    "These documents are reviewable candidate persona_memory rows for persona_id=dba_auditor.",
+    "They should be upserted only after approval because they encode process memory, not source-canon story memory.",
+    "Use the memory daemon /upsert endpoint with collection=persona_memory and the parsed JSONL documents."
+  ],
+  "example_command": "python - <<'PY'\nimport json, httpx\npath='/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/memory-upsert-candidates.jsonl'\ndocs=[json.loads(line) for line in open(path, encoding='utf-8') if line.strip()]\nr=httpx.post('http://127.0.0.1:8601/upsert', json={'collection':'persona_memory','documents':docs}, timeout=60)\nprint(r.status_code)\nprint(r.text[:2000])\nPY"
+}

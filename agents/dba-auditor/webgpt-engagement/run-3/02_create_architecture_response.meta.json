@@ -1,0 +1,81 @@
+{
+  "status": "failed",
+  "failure": "submit_failed",
+  "chatgpt_ready_error": "composer_not_empty",
+  "exit_code": 1,
+  "input": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-3/create-architecture-request.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-3/02_create_architecture_submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-3/02_create_architecture_response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-3/02_create_architecture_response.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.4ZwkEg.log",
+  "sentinel": "<<<WEBGPT_DONE:20260624T191127Z:e89cf5d6>>>",
+  "requested_tab_id": "837355531",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "tab_identity_preflight": {
+    "ok": true,
+    "error": null,
+    "tab_id": "837355531",
+    "tab": {
+      "id": "837355531",
+      "title": "Sparta Explorer - Pong response",
+      "url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87"
+    },
+    "chatgpt_tabs_count": 12,
+    "expected_url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+    "expected_title": null,
+    "source": "tab-id",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837355531"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "expected_url_matches_tab",
+        "ok": true,
+        "detail": "expected_url matched tab 837355531"
+      },
+      {
+        "name": "expected_url_unique",
+        "ok": true,
+        "detail": "unique"
+      },
+      {
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true,
+        "detail": "verified"
+      }
+    ]
+  },
+  "roundtrip_preflight_required": false,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight": null,
+  "controlled_tab_id": null,
+  "conversation_url": null,
+  "response_source": null,
+  "response_timed_out": null,
+  "timeout_error": null,
+  "raw_contains_sentinel": false,
+  "clean_contains_sentinel": false,
+  "raw_chars": 0,
+  "clean_chars": 0,
+  "raw_response_advisory": false,
+  "extract_fallback_used": false,
+  "extract_fallback_reason": "submit_failed",
+  "extract_fallback_raw": null,
+  "extract_fallback_meta": null,
+  "started_at": "2026-06-24T19:11:28Z",
+  "finished_at": "2026-06-24T19:11:29Z",
+  "proof_status": "not_submitted",
+  "agent_diagnosis": "ChatGPT rejected pre-submit readiness: composer_not_empty",
+  "agent_action": "Clear the ChatGPT composer/stopped generation state, or use a fresh foreground reviewer/project conversation tab before retrying.",
+  "submitted_to_chatgpt": false
+}

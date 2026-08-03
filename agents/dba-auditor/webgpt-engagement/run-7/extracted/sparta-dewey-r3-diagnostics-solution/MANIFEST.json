@@ -1,0 +1,83 @@
+{
+  "contents": [
+    {
+      "path": "ARCHITECTURE.md",
+      "sha256": "a60062f0e392ee7ecf69d93292760f16329f25694a4feab211fbb00fef6e23d5",
+      "size_bytes": 11552
+    },
+    {
+      "path": "PATCH_PLAN.md",
+      "sha256": "441b7f476f638ed1e42763ad662f0e0b2a316461a883391a05a96ab4d2248fcd",
+      "size_bytes": 5756
+    },
+    {
+      "path": "SANITY_RESULTS.txt",
+      "sha256": "b2114ce3d57bd4be8db208c377617b924b621fb5fed3565af2e9104cb7421bb0",
+      "size_bytes": 468
+    },
+    {
+      "path": "agent-skills/agents/dba-auditor/tests/test_dewey_r3_monitor_sparta_diagnostics.py",
+      "sha256": "497c262bfca1baa1c69d2c9b5606d0c6bdb181c30988eb8d2c8511d7ecc37ea7",
+      "size_bytes": 4022
+    },
+    {
+      "path": "commands/README.md",
+      "sha256": "653f2e678da060f17031fa39943b70f20f9a573ce0bc833adf7ef56acf178109",
+      "size_bytes": 1862
+    },
+    {
+      "path": "fixtures/dewey_r3/expected_noop_diagnostics.json",
+      "sha256": "fe80cf1b03907eff3b6a29f8c611cd994256f282a170cc94c29702b6e73b9c23",
+      "size_bytes": 943
+    },
+    {
+      "path": "fixtures/dewey_r3/repair_cycle_noop_input.json",
+      "sha256": "e90039905437bbdb1b00480445e21eeb396d88e0e908be98ec4e27b1eafa3dc3",
+      "size_bytes": 2493
+    },
+    {
+      "path": "memory/scripts/validation/monitor_sparta_r3_diagnostics.py",
+      "sha256": "ab6e57316811bb284eb260ed43f6272094f07903693a7f53f37ed3947ee5e2bd",
+      "size_bytes": 23351
+    },
+    {
+      "path": "patches/dewey_overnight_run_unfixable_contract_r3.diff",
+      "sha256": "fe3c9418dc35099721b79d84b0938a7fdf85ee888bba06e4b648b40ab2e1b812",
+      "size_bytes": 626
+    },
+    {
+      "path": "patches/monitor_sparta_repair_cycle_r3.diff",
+      "sha256": "b1f404676c18e32b1d6478e5c46820dc04c0f50029b3225ee6f4da0ee683bfef",
+      "size_bytes": 2068
+    },
+    {
+      "path": "prompt_improvements.md",
+      "sha256": "52743fb2b1d9bd8cb34cd9c055d8483359a0f1bdc0b8bbcca6802f5121bec2ae",
+      "size_bytes": 3198
+    }
+  ],
+  "contract": {
+    "dewey_role": "orchestrator only; all actual repairs remain inside monitor_sparta.py repair-cycle",
+    "no_live_mutation_claimed": true,
+    "qra_lane_resolution": "Option B: qra_coverage_per_control is operator/review-gated and remains unfixable by Dewey default repair-cycle",
+    "round": "Dewey R3 diagnostics",
+    "type": "$create-architecture"
+  },
+  "created_at_utc": "2026-06-24T19:17:40Z",
+  "isolated_sanity": {
+    "commands": [
+      "python -m py_compile memory/scripts/validation/monitor_sparta_r3_diagnostics.py",
+      "python -m pytest -q agent-skills/agents/dba-auditor/tests/test_dewey_r3_monitor_sparta_diagnostics.py"
+    ],
+    "mutating_live_repair_cycle_run": false,
+    "result": "5 passed in 0.29s"
+  },
+  "name": "sparta-dewey-r3-diagnostics-solution",
+  "porting_notes": [
+    "Do not overwrite memory/scripts/validation/monitor_sparta.py wholesale; the source bundle did not include the 10780-line file.",
+    "Copy monitor_sparta_r3_diagnostics.py next to monitor_sparta.py and apply PATCH_PLAN.md mechanically.",
+    "Do not re-enable Dewey cron until live repair-cycle receipt shape and morning report proof pass."
+  ],
+  "source_bundle": "sparta-dewey-r3-create-architecture-bundle.zip",
+  "zip_name": "sparta-dewey-r3-diagnostics-solution.zip"
+}

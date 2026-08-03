@@ -1,0 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pi-skill-goal-drift"
+version = "0.1.0"
+description = "Read-only goal-drift auditor"
+requires-python = ">=3.10"
+dependencies = ["typer>=0.12"]

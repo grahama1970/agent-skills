@@ -1,0 +1,6 @@
+[project]
+name = "agent-approach-researcher"
+version = "0.1.0"
+description = "Approach researcher worker contract for bounded experiment bakeoffs."
+requires-python = ">=3.11"
+dependencies = []

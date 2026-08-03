@@ -1,0 +1,28 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5",
+  "requested_tab_id": "837356322",
+  "requested_url": null,
+  "controlled_tab_id": null,
+  "submit_receipt_status": "prepared_prompt",
+  "submitted_to_chatgpt": false,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/response.raw.md",
+  "response_meta_path": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/response.meta.json",
+  "response_receipt_path": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/response.receipt.json",
+  "submitted_path": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/submitted.md",
+  "sentinel": "<<<WEBGPT_DONE:20260624T191626Z:62525e79>>>",
+  "raw_sentinel_present": false,
+  "focus_changed": null,
+  "transport_degraded": false,
+  "raw_response_advisory": false,
+  "final_transport_state": "prepared_prompt_only",
+  "proof_status": "not_submitted",
+  "agent_diagnosis": "The requested tab did not match the required ChatGPT identity before submission.",
+  "agent_action": "Run tab.list and webgpt.preflight with --url, --expect-url, or --expect-title; do not submit until the target tab identity matches.",
+  "next_command": "surf webgpt.preflight --tab-id 837356322 && surf webgpt.submit --input /home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/submitted.md --output /home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-5/02_response.md",
+  "do_not_do": [
+    "do_not_treat_prepared_prompt_as_completion_proof"
+  ],
+  "needs_attention": null
+}

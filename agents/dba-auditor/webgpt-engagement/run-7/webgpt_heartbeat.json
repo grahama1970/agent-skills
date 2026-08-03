@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-06-24T19:19:36Z",
+  "submitted_at": "2026-06-24T19:17:45Z",
+  "last_browser_observation_at": "2026-06-24T19:19:36Z",
+  "phase": "submitted",
+  "page_state": "generating",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-7/response.receipt.json",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-7/response.raw.md",
+  "timeout_remaining_seconds": 900,
+  "sentinel": "<<<WEBGPT_DONE:20260624T191740Z:ca874aeb>>>",
+  "prepared_prompt_is_transport_proof": false
+}

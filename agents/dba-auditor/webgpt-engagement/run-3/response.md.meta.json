@@ -1,0 +1,51 @@
+{
+  "status": "failed",
+  "failure": "tab_identity_preflight_failed",
+  "input": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-3/creation-bundle.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-3/response.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-3/response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/agents/dba-auditor/webgpt-engagement/run-3/response.md.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.uJuHZp.log",
+  "sentinel": "<<<WEBGPT_DONE:20260624T182319Z:e5e03bd5>>>",
+  "requested_tab_id": "837355531",
+  "requested_url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87",
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "tab_identity_preflight": {
+    "ok": false,
+    "error": "unverified_tab_id_with_multiple_chatgpt_tabs",
+    "tab_id": "837355531",
+    "tab": {
+      "id": "837355531",
+      "title": "Sparta Explorer - Pong response",
+      "url": "https://chatgpt.com/g/g-p-6a22b674b76881918809ceac4396a409-sparta-explorer/c/6a3af580-53c8-83ea-a301-ecfc6fc49f87"
+    },
+    "chatgpt_tabs_count": 11,
+    "expected_url": null,
+    "expected_title": null,
+    "source": "tab-id",
+    "checks": [
+      {
+        "name": "tab_id_valid",
+        "ok": true,
+        "detail": "837355531"
+      },
+      {
+        "name": "tab_open_chatgpt",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "tab_identity_verified_or_allowed",
+        "ok": false,
+        "detail": "multiple ChatGPT tabs require --expect-url, --expect-title, --url, --create-tab, or --allow-unverified-tab-id"
+      }
+    ]
+  },
+  "started_at": "2026-06-24T18:23:19Z",
+  "finished_at": "2026-06-24T18:23:19Z",
+  "proof_status": "not_submitted",
+  "agent_diagnosis": "The requested tab did not match the required ChatGPT identity before submission.",
+  "agent_action": "Run tab.list and webgpt.preflight with --url, --expect-url, or --expect-title; do not submit until the target tab identity matches.",
+  "submitted_to_chatgpt": false
+}

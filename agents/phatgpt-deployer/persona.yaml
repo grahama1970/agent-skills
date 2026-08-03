@@ -1,0 +1,6 @@
+id: phatgpt-deployer
+name: PhatGPT Deployer
+role: gate-only release/deployment agent
+temperature: 0.1
+mutates_code: false
+merge_authority: dry_run_only

@@ -1,0 +1,82 @@
+{
+  "baseline": {
+    "passed": 23,
+    "total": 28,
+    "failed_dimensions": [
+      "embedding_gaps",
+      "description_completeness",
+      "qra_coverage_per_control",
+      "inline_embedding_policy",
+      "sparta_explorer_page_purpose"
+    ],
+    "dimensions": {
+      "embedding_gaps": {"ok": false, "missing_count": 170},
+      "description_completeness": {"ok": false, "missing_count": 12},
+      "qra_coverage_per_control": {"ok": false, "missing_count": 5080},
+      "inline_embedding_policy": {"ok": false, "missing_count": 3},
+      "sparta_explorer_page_purpose": {"ok": false, "missing_count": 1}
+    }
+  },
+  "steps": [
+    {
+      "id": "sparta_qdrant_embed_batch",
+      "ok": true,
+      "duration_s": 6.86,
+      "stdout_tail": "processed=200 synced=200 dropped=200 resume_offset=200"
+    },
+    {
+      "id": "monitor_health_fix",
+      "ok": true,
+      "duration_s": 164.95,
+      "summary": {
+        "passed": 23,
+        "total": 28,
+        "failed_dimensions": [
+          "embedding_gaps",
+          "description_completeness",
+          "qra_coverage_per_control",
+          "inline_embedding_policy",
+          "sparta_explorer_page_purpose"
+        ],
+        "dimensions": {
+          "embedding_gaps": {"ok": false, "missing_count": 170},
+          "description_completeness": {"ok": false, "missing_count": 12},
+          "qra_coverage_per_control": {"ok": false, "missing_count": 5080},
+          "inline_embedding_policy": {"ok": false, "missing_count": 3},
+          "sparta_explorer_page_purpose": {"ok": false, "missing_count": 1}
+        }
+      }
+    },
+    {
+      "id": "create_qras_backfill",
+      "ok": true,
+      "duration_s": 16.22,
+      "started": true,
+      "pid": 2923121
+    }
+  ],
+  "worker_wait": {
+    "timed_out": true,
+    "waited_s": 300,
+    "create_qras_running": true
+  },
+  "final": {
+    "passed": 23,
+    "total": 28,
+    "failed_dimensions": [
+      "embedding_gaps",
+      "description_completeness",
+      "qra_coverage_per_control",
+      "inline_embedding_policy",
+      "sparta_explorer_page_purpose"
+    ],
+    "dimensions": {
+      "embedding_gaps": {"ok": false, "missing_count": 170},
+      "description_completeness": {"ok": false, "missing_count": 12},
+      "qra_coverage_per_control": {"ok": false, "missing_count": 5080},
+      "inline_embedding_policy": {"ok": false, "missing_count": 3},
+      "sparta_explorer_page_purpose": {"ok": false, "missing_count": 1}
+    }
+  },
+  "stop_reason": "failures_remain"
+}

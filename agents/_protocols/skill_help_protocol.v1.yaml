@@ -1,0 +1,121 @@
+schema: oc_subagent.protocol.v1
+id: skill_help_protocol
+version: v1
+
+description: >
+  Shared protocol for bounded subagent help using skills syntax. A caller emits
+  `$ask <agent> to <bounded-task> with <skill@version> on <artifact-or-target>`.
+  The runtime loads the helper persona and referenced SKILL.md, executes the
+  helper, validates outputs, writes receipts, records the child run, and resumes
+  the caller with a typed help_result and resume_packet.
+
+help_request_form: "$ask <agent> to <bounded-task> with <skill@version> on <artifact-or-target>"
+
+runtime_responsibilities:
+  - validate_helper_agent_exists
+  - validate_skill_exists_and_record_version_or_digest
+  - validate_target_artifact_exists
+  - validate_reads_slots_and_writes_slots_when_parallel
+  - create_child_run_node
+  - persist_logical_pause_state
+  - run_helper_with_referenced_skill_md
+  - wait_for_terminal_event
+  - validate_required_outputs
+  - write_helper_receipt
+  - write_run_graph_event
+  - update_active_artifact_slots
+  - create_resume_packet_for_caller
+  - enforce_required_read_artifact_before_continuation
+  - record_consumed_artifact_receipts
+
+caller_responsibilities:
+  - emit_structured_gap_or_change_request_before_help
+  - use_skill_syntax_not_raw_prompt_blob
+  - name_helper_agent_task_skill_and_target
+  - declare_reads_slots_and_writes_slots_for_parallel_help
+  - pause_blocking_work_until_help_result
+  - read_required_artifacts_after_resume
+  - record_consumed_artifacts_in_final_receipt
+  - do_not_use_superseded_artifacts
+
+helper_responsibilities:
+  - answer_only_the_bounded_request
+  - produce_required_artifacts
+  - produce_proof_receipt
+  - do_not_free_chat_with_caller
+  - do_not_execute_recursive_help_by_default
+  - if_additional_help_is_needed_emit_needs_help_request_instead_of_calling_directly
+
+handoff_contract:
+  help_result_type: help_result
+  resume_packet_type: resume_packet
+  summary_is_non_authoritative: true
+  artifact_paths_are_authoritative: true
+  required_read_artifact_before_use: true
+  consumed_artifact_receipt_required: true
+  superseded_artifacts_must_not_be_used: true
+
+pause_contract:
+  pause_is_logical_run_state: true
+  process_memory_not_required_for_correctness: true
+  persist:
+    - run_graph.json
+    - session_snapshot.json
+    - artifact_manifest.json
+    - active_artifact_slots.json
+    - pending_help_request.json
+
+recursive_help_policy:
+  allow_recursive_help: false
+  helper_may_emit_needs_help_request: true
+  scillm_may_schedule_needed_help_as_sibling_call: true
+
+failure_policy:
+  max_attempts_per_help_request: 2
+  max_help_calls_total_default: 3
+  retry_same_helper_once: true
+  escalate_after_repeated_failure: true
+  fail_closed_on_missing_receipt: true
+  fail_closed_on_missing_terminal_event: true
+
+parallel_help_policy:
+  default_mode: sequential
+  allow_parallel_sibling_help_when:
+    - inputs_are_independent
+    - outputs_do_not_write_same_artifact_slot
+    - join_policy_is_declared
+  join_policy_default: all_succeeded
+  preflight_collision_rules:
+    - block_parallel_if_writes_slots_overlap
+    - add_dependency_if_helper_reads_slot_written_by_pending_helper
+    - run_sequentially_if_helper_does_not_declare_writes_slots
+
+injection_policy:
+  auto_inject_default:
+    - low_risk_design_guidance
+    - layout_recommendations
+    - graph_rendering_constraints
+    - implementation_notes
+  shadow_gate_default:
+    - evidence_sufficiency_states
+    - qra_readiness_changes
+    - source_provenance_conclusions
+    - contradiction_resolution
+    - compliance_claim_support
+  hard_gate_default:
+    - expert_blessed_status
+    - destructive_repo_edits
+    - production_deployment
+    - final_evidence_approval
+
+restore_policy:
+  restore_verb: restore_artifact_slot
+  restore_as_slot_promotion_not_file_deletion: true
+  immutable_versions: true
+  restore_requires:
+    - slot
+    - from_path
+    - to_path
+    - reason
+    - approving_actor
+    - restore_receipt

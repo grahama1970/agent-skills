@@ -1,0 +1,12 @@
+{
+  "collection": "sparta_controls",
+  "processed": 170,
+  "synced": 170,
+  "pending": 0,
+  "dropped": 0,
+  "resume_offset": 170,
+  "last_key": "TID_412",
+  "dry_run": false,
+  "resync_stale": false,
+  "resync_model": false
+}

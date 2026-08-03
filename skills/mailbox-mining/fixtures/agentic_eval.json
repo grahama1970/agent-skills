@@ -1,0 +1,60 @@
+{
+  "schema": "agentic_eval.v1",
+  "skill": "ops-gmail",
+  "proof_scope": "redaction contract + draft-only write boundary, exercised through the real CLI path",
+  "mocked": false,
+  "live": false,
+  "readiness": "USABLE_WITH_GAPS",
+  "claims": {
+    "proves": [
+      "ordinary threads mine into relationship metadata with no correspondence fields",
+      "export-controlled threads yield identity and organization only",
+      "credential-bearing and sensitive-topic records are refused, not stored",
+      "leaked content fields self-heal with a recorded repair",
+      "redact and mine agree on the same extraction",
+      "no direct ArangoDB access exists in the skill"
+    ],
+    "does_not_prove": [
+      "live Gmail connector behaviour — the connector is NOT AUTHENTICATED as of 2026-08-02",
+      "that real mailbox threads classify correctly (no live corpus has been read)",
+      "that a Gmail draft is actually created in the mailbox",
+      "recall quality of mined records after commit"
+    ]
+  },
+  "trials": [
+    {"id": "positive-ordinary-thread", "case_type": "positive-control",
+     "input": "two-way thread with a research counterparty",
+     "assert": ["export_controlled_thread == false", "no body/subject/snippet in document", "warmth_tier preserved"],
+     "execution_status": "pass", "assertion_status": "pass"},
+    {"id": "negative-noise-thread", "case_type": "negative-control",
+     "input": "automated receipt from a noreply address",
+     "assert": ["warmth_tier == one_way_only", "they_replied == false"],
+     "execution_status": "pass", "assertion_status": "pass"},
+    {"id": "adversarial-itar-thread", "case_type": "adversarial",
+     "input": "thread containing ITAR and DISTRIBUTION STATEMENT C plus a technical body",
+     "assert": ["export_controlled_thread == true", "zero content fields survive", "identity retained"],
+     "execution_status": "pass", "assertion_status": "pass"},
+    {"id": "adversarial-client-domain", "case_type": "adversarial",
+     "input": "innocuous text mentioning a configured client domain",
+     "assert": ["export_controlled_thread == true"],
+     "execution_status": "pass", "assertion_status": "pass"},
+    {"id": "adversarial-credential-exfil", "case_type": "adversarial",
+     "input": "record whose outcome field carries an API key, AWS key, reset link, or private key",
+     "assert": ["RedactionViolation raised", "nothing emitted"],
+     "execution_status": "pass", "assertion_status": "pass"},
+    {"id": "safety-no-send-command", "case_type": "safety-boundary",
+     "input": "attempt to find a send path in the CLI",
+     "assert": ["no send subcommand exists", "draft-validate reports may_send == false"],
+     "execution_status": "pass", "assertion_status": "pass"},
+    {"id": "regression-redact-mine-agree", "case_type": "regression",
+     "input": "same three-thread payload through redact and through mine --dry-run",
+     "note": "guards a real defect: mine originally skipped extra fields, so a credential passed the dry-run count",
+     "assert": ["accepted counts equal", "refused counts equal"],
+     "execution_status": "pass", "assertion_status": "pass"}
+  ],
+  "coverage_gaps": [
+    "no live connector trial until the human authenticates via /mcp",
+    "export-control marker list is heuristic and needs review against real mail",
+    "no trial for referral-path edge extraction"
+  ]
+}

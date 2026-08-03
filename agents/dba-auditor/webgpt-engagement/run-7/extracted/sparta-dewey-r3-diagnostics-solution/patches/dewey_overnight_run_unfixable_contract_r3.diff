@@ -1,0 +1,12 @@
+diff --git a/agent-skills/agents/dba-auditor/scripts/dewey_overnight_run.py b/agent-skills/agents/dba-auditor/scripts/dewey_overnight_run.py
+index 0000000..0000000 100644
+--- a/agent-skills/agents/dba-auditor/scripts/dewey_overnight_run.py
++++ b/agent-skills/agents/dba-auditor/scripts/dewey_overnight_run.py
+@@
+ UNFIXABLE_DIMENSIONS = {
+     "sparta_explorer_page_purpose",
++    # R3 Option B: QRA coverage is operator/review-gated. Dewey should log,
++    # count as stuck/unfixable, and queue operator work rather than treating
++    # create_qras_backfill as a default repair-cycle lane.
+     "qra_coverage_per_control",
+ }

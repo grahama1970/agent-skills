@@ -1,0 +1,151 @@
+{
+  "blocks": "grahama1970/agent-skills#1058 human collection until PASS",
+  "claims": {
+    "does_not_prove": [
+      "that any requested emotion was realized in the audio",
+      "perceived emotion, naturalness, or human identity recognition",
+      "anything about conditions or renderers outside this preregistered set"
+    ],
+    "proves": []
+  },
+  "comparison_row_count": 52,
+  "conditions_screened": [
+    "adversarial",
+    "baseline",
+    "control",
+    "dream"
+  ],
+  "created_at": "2026-08-03T13:43:58Z",
+  "failed_gates": [
+    "nuisance_metric_exceeds_neutral_spread:adversarial:duration_s",
+    "nuisance_metric_exceeds_neutral_spread:adversarial:k_weighted_loudness_lkfs",
+    "nuisance_metric_exceeds_neutral_spread:adversarial:rms_dbfs",
+    "nuisance_metric_exceeds_neutral_spread:adversarial:silence_floor_dbfs",
+    "nuisance_metric_exceeds_neutral_spread:dream:k_weighted_loudness_lkfs",
+    "nuisance_metric_exceeds_neutral_spread:dream:rms_dbfs"
+  ],
+  "intended_mediator_rows_outside_neutral_spread": [
+    {
+      "class": "intended_mediator",
+      "condition": "adversarial",
+      "delta": 41.217,
+      "metric": "f0_median_hz",
+      "neutral_median": 194.6599,
+      "neutral_sd": 4.44409,
+      "tolerance": 15.0,
+      "value": 235.8769,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "intended_mediator",
+      "condition": "baseline",
+      "delta": 30.5652,
+      "metric": "f0_median_hz",
+      "neutral_median": 194.6599,
+      "neutral_sd": 4.44409,
+      "tolerance": 15.0,
+      "value": 225.2251,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "intended_mediator",
+      "condition": "control",
+      "delta": -15.8986,
+      "metric": "f0_median_hz",
+      "neutral_median": 194.6599,
+      "neutral_sd": 4.44409,
+      "tolerance": 15.0,
+      "value": 178.7613,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "intended_mediator",
+      "condition": "dream",
+      "delta": 34.5021,
+      "metric": "f0_median_hz",
+      "neutral_median": 194.6599,
+      "neutral_sd": 4.44409,
+      "tolerance": 15.0,
+      "value": 229.162,
+      "within_neutral_spread": false
+    }
+  ],
+  "issue": "grahama1970/agent-skills#1127",
+  "live": true,
+  "manifest": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_MANIFEST.json",
+  "manifest_sha256": "sha256:a174c8742407932357384856fc82462832ae9f71f5bb0787f2df0bfd14e18ccb",
+  "mocked": false,
+  "neutral_render_count": 8,
+  "nuisance_rows_outside_neutral_spread": [
+    {
+      "class": "nuisance",
+      "condition": "adversarial",
+      "delta": 1.96,
+      "metric": "duration_s",
+      "neutral_median": 5.6,
+      "neutral_sd": 0.377624,
+      "tolerance": 1.132872,
+      "value": 7.56,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "nuisance",
+      "condition": "adversarial",
+      "delta": 3.749037,
+      "metric": "k_weighted_loudness_lkfs",
+      "neutral_median": -26.890797,
+      "neutral_sd": 0.79255,
+      "tolerance": 2.37765,
+      "value": -23.14176,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "nuisance",
+      "condition": "adversarial",
+      "delta": 3.451825,
+      "metric": "rms_dbfs",
+      "neutral_median": -27.032367,
+      "neutral_sd": 0.646799,
+      "tolerance": 1.940397,
+      "value": -23.580542,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "nuisance",
+      "condition": "adversarial",
+      "delta": -9.476755,
+      "metric": "silence_floor_dbfs",
+      "neutral_median": -59.053274,
+      "neutral_sd": 2.67679,
+      "tolerance": 8.030371,
+      "value": -68.530029,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "nuisance",
+      "condition": "dream",
+      "delta": 4.219153,
+      "metric": "k_weighted_loudness_lkfs",
+      "neutral_median": -26.890797,
+      "neutral_sd": 0.79255,
+      "tolerance": 2.37765,
+      "value": -22.671644,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "nuisance",
+      "condition": "dream",
+      "delta": 3.874607,
+      "metric": "rms_dbfs",
+      "neutral_median": -27.032367,
+      "neutral_sd": 0.646799,
+      "tolerance": 1.940397,
+      "value": -23.15776,
+      "within_neutral_spread": false
+    }
+  ],
+  "schema": "persona_dream.technical_screen_receipt.v1",
+  "status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND",
+  "study_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study",
+  "tolerance_rule_sha256": "sha256:b5005fd8b67a2117428d2a4a893dd3ef847505d641cd31e01f8eec09f382a4c8"
+}

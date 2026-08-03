@@ -1,0 +1,25 @@
+{
+  "collections": [
+    "sparta_controls",
+    "sparta_url_knowledge"
+  ],
+  "completed_at": "2026-06-24T19:58:06.566412+00:00",
+  "duration_seconds": 10.331,
+  "mode": "strip_arango_inline_vectors",
+  "policy": "SPARTA embeddings are stored in Qdrant; Arango inline vector fields are forbidden",
+  "results": [
+    {
+      "batches": 3,
+      "collection": "sparta_controls",
+      "dropped": 11473,
+      "last_key": "esa__T2055_001"
+    },
+    {
+      "batches": 9,
+      "collection": "sparta_url_knowledge",
+      "dropped": 43398,
+      "last_key": "uk__9__9"
+    }
+  ],
+  "schema_version": "sparta-monitor-repair:v1"
+}

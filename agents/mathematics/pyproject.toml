@@ -1,0 +1,19 @@
+[project]
+name = "oc-subagent-mathematics"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "sympy",
+  "numpy",
+  "scipy",
+  "mpmath",
+]
+
+[project.optional-dependencies]
+tables = [
+  "pandas",
+]
+test = [
+  "pytest",
+  "hypothesis",
+]

@@ -1,0 +1,573 @@
+[20260624T210321Z] iteration start
+[20260624T210430Z] baseline 25/28 failed=['qra_coverage_per_control', 'inline_embedding_policy', 'sparta_explorer_page_purpose']
+[20260624T210828Z] cycle 1 (238s) repair-cycle exit=1
+[20260624T210828Z]   step sparta_qdrant_embed_batch: exit=? ok=True 6s
+[20260624T210828Z]   step monitor_health_fix: exit=1 ok=False 83s
+[20260624T210828Z]   step qra_coverage_operator_lane: exit=? ok=True 0s
+[20260624T210828Z]   worker_wait: ok waited=0s
+[20260624T210828Z]   final_health: 26/29 failed=['qra_coverage_per_control', 'monitor_sparta_mutation_default', 'sparta_explorer_page_purpose']
+[20260624T210828Z]   stop_reason: failures_remain
+[20260624T211051Z] cycle 1 IMPROVED=['inline_embedding_policy']  STUCK=['qra_coverage_per_control', 'sparta_explorer_page_purpose']  score 26/28 (+1)
+[20260624T211051Z] cycle 1 OPERATOR_REQUIRED failed=['qra_coverage_per_control', 'sparta_explorer_page_purpose']
+[20260624T211051Z] iteration span 381s (6.4m)
+[20260624T211222Z] iteration done pass=False stop=operator_required_only
+{
+  "schema": "dewey_overnight_run.v5",
+  "run_id": "start-operator-smoke-20260624T2048Z",
+  "completed_at": "20260624T211413Z",
+  "first_task": "full_database_backup",
+  "iterate_until_monitor_pass": true,
+  "monitor_pass": false,
+  "terminal_status": "OPERATOR_REQUIRED",
+  "terminal_reason": "only_operator_or_product_owned_dimensions_remain",
+  "session_dir": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z",
+  "steps": [
+    {
+      "step": "monitor_sparta_iteration",
+      "status": "operator_required",
+      "stop_reason": "operator_required_only",
+      "terminal_status": "OPERATOR_REQUIRED",
+      "terminal_reason": "only_operator_or_product_owned_dimensions_remain",
+      "exit_code": 0,
+      "cycles": [
+        {
+          "cycle": 1,
+          "health_before": {
+            "passed": 25,
+            "total": 28,
+            "waived_dimensions": [
+              "monitor_sparta_mutation_default"
+            ],
+            "failed_count": 3,
+            "failed_dimensions": [
+              "qra_coverage_per_control",
+              "inline_embedding_policy",
+              "sparta_explorer_page_purpose"
+            ],
+            "monitor_pass": false
+          },
+          "cycle_duration_s": 237.8329997062683,
+          "repair_cycle": {
+            "exit_code": 1,
+            "payload": {
+              "baseline": {
+                "failed_count": 4,
+                "failed_dimensions": [
+                  "qra_coverage_per_control",
+                  "monitor_sparta_mutation_default",
+                  "inline_embedding_policy",
+                  "sparta_explorer_page_purpose"
+                ],
+                "monitor_pass": false,
+                "passed": 25,
+                "total": 29
+              },
+              "final": {
+                "failed_count": 3,
+                "failed_dimensions": [
+                  "qra_coverage_per_control",
+                  "monitor_sparta_mutation_default",
+                  "sparta_explorer_page_purpose"
+                ],
+                "monitor_pass": false,
+                "passed": 26,
+                "total": 29
+              },
+              "final_duration_s": 73.66176772117615,
+              "monitor_pass": false,
+              "r3_diagnostics": {
+                "baseline_failed_dimensions": [
+                  "qra_coverage_per_control",
+                  "monitor_sparta_mutation_default",
+                  "inline_embedding_policy",
+                  "sparta_explorer_page_purpose"
+                ],
+                "contract": "Option B: QRA coverage is operator/review-gated and remains unfixable by Dewey",
+                "final_failed_dimensions": [
+                  "qra_coverage_per_control",
+                  "monitor_sparta_mutation_default",
+                  "sparta_explorer_page_purpose"
+                ],
+                "improved_dimensions": [
+                  "inline_embedding_policy"
+                ],
+                "regressed_dimensions": [],
+                "remaining_unfixable_dimensions": [
+                  "qra_coverage_per_control",
+                  "sparta_explorer_page_purpose"
+                ],
+                "repairable_by_repair_cycle": [
+                  "description_completeness",
+                  "embedding_gaps",
+                  "inline_embedding_policy"
+                ],
+                "stuck_dimensions": [
+                  "qra_coverage_per_control",
+                  "monitor_sparta_mutation_default",
+                  "sparta_explorer_page_purpose"
+                ],
+                "unfixable_by_dewey": [
+                  "qra_coverage_per_control",
+                  "sparta_explorer_page_purpose"
+                ]
+              },
+              "schema": "monitor_sparta_repair_cycle.v1",
+              "started_workers": [],
+              "steps": [
+                {
+                  "artifact_dir": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane",
+                  "changed_count": 1,
+                  "duration_s": 6.453908443450928,
+                  "eligible_count": 0,
+                  "embed_metrics": {},
+                  "health_after_status": "passed",
+                  "health_dimension": "embedding_gaps",
+                  "health_embed_mismatch": false,
+                  "id": "sparta_qdrant_embed_batch",
+                  "ok": true,
+                  "r3_diagnostics": {
+                    "dropped_count": null,
+                    "eligible_count": null,
+                    "synced_count": null
+                  },
+                  "skip_reason": null,
+                  "status": "succeeded",
+                  "substeps": [
+                    {
+                      "command": [
+                        "/home/graham/workspace/experiments/memory/.venv/bin/python3",
+                        "/home/graham/workspace/experiments/memory/scripts/validation/sparta_repair_manifests.py",
+                        "strip-synced-vectors",
+                        "--collection",
+                        "sparta_controls",
+                        "--collection",
+                        "sparta_url_knowledge",
+                        "--collection",
+                        "sparta_qra",
+                        "--batch-size",
+                        "5000",
+                        "--limit",
+                        "0",
+                        "--output",
+                        "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/strip_inline_vectors.json"
+                      ],
+                      "duration_s": 1.3048686981201172,
+                      "exit_code": 0,
+                      "id": "strip_arango_inline_vectors",
+                      "ok": true,
+                      "output_path": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/strip_inline_vectors.json",
+                      "payload": {
+                        "collections": [
+                          "sparta_controls",
+                          "sparta_url_knowledge",
+                          "sparta_qra"
+                        ],
+                        "completed_at": "2026-06-24T21:05:46.093952+00:00",
+                        "duration_seconds": 0.814,
+                        "mode": "strip_arango_inline_vectors",
+                        "policy": "SPARTA embeddings are stored in Qdrant; Arango inline vector fields are forbidden",
+                        "results": [
+                          {
+                            "batches": 1,
+                            "collection": "sparta_controls",
+                            "dropped": 1,
+                            "last_key": "AC-11_1"
+                          },
+                          {
+                            "batches": 0,
+                            "collection": "sparta_url_knowledge",
+                            "dropped": 0,
+                            "last_key": null
+                          },
+                          {
+                            "batches": 0,
+                            "collection": "sparta_qra",
+                            "dropped": 0,
+                            "last_key": null
+                          }
+                        ],
+                        "schema_version": "sparta-monitor-repair:v1"
+                      },
+                      "stderr_tail": "",
+                      "stdout_tail": "{\n  \"duration_seconds\": 0.814,\n  \"output\": \"/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/strip_inline_vectors.json\",\n  \"results\": [\n    {\n      \"batches\": 1,\n      \"collection\": \"sparta_controls\",\n      \"dropped\": 1,\n      \"last_key\": \"AC-11_1\"\n    },\n    {\n      \"batches\": 0,\n      \"collection\": \"sparta_url_knowledge\",\n      \"dropped\": 0,\n      \"last_key\": null\n    },\n    {\n      \"batches\": 0,\n      \"collection\": \"sparta_qra\",\n      \"dropped\": 0,\n      \"last_key\": null\n    }\n  ],\n  \"summary\": {\n    \"collections\": [\n      \"sparta_controls\",\n      \"sparta_url_knowledge\",\n      \"sparta_qra\"\n    ],\n    \"completed_at\": \"2026-06-24T21:05:46.093952+00:00\",\n    \"duration_seconds\": 0.814,\n    \"mode\": \"strip_arango_inline_vectors\",\n    \"policy\": \"SPARTA embeddings are stored in Qdrant; Arango inline vector fields are forbidden\",\n    \"schema_version\": \"sparta-monitor-repair:v1\"\n  }\n}\n"
+                    },
+                    {
+                      "collection": "sparta_controls",
+                      "command": [
+                        "/home/graham/workspace/experiments/memory/.venv/bin/python3",
+                        "/home/graham/workspace/experiments/memory/scripts/validation/sparta_repair_manifests.py",
+                        "backfill-qdrant-metadata",
+                        "--collection",
+                        "sparta_controls",
+                        "--batch-size",
+                        "1",
+                        "--limit",
+                        "1",
+                        "--output",
+                        "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_controls_qdrant_metadata.json"
+                      ],
+                      "duration_s": 0.4990050792694092,
+                      "exit_code": 0,
+                      "id": "sparta_controls_qdrant_metadata_backfill",
+                      "ok": true,
+                      "output_path": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_controls_qdrant_metadata.json",
+                      "payload": {
+                        "batches": 0,
+                        "collection": "sparta_controls",
+                        "completed_at": "2026-06-24T21:05:46.585096+00:00",
+                        "duration_seconds": 0.029,
+                        "last_key": null,
+                        "missing_points": 0,
+                        "missing_samples": [],
+                        "mode": "backfill_qdrant_metadata",
+                        "policy": "Qdrant is the embedding store; Arango stores only point metadata",
+                        "processed": 0,
+                        "schema_version": "sparta-monitor-repair:v1",
+                        "updated": 0
+                      },
+                      "stderr_tail": "",
+                      "stdout_tail": "{\n  \"duration_seconds\": 0.029,\n  \"output\": \"/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_controls_qdrant_metadata.json\",\n  \"results\": null,\n  \"summary\": {\n    \"batches\": 0,\n    \"collection\": \"sparta_controls\",\n    \"completed_at\": \"2026-06-24T21:05:46.585096+00:00\",\n    \"duration_seconds\": 0.029,\n    \"last_key\": null,\n    \"missing_points\": 0,\n    \"missing_samples\": [],\n    \"mode\": \"backfill_qdrant_metadata\",\n    \"policy\": \"Qdrant is the embedding store; Arango stores only point metadata\",\n    \"processed\": 0,\n    \"schema_version\": \"sparta-monitor-repair:v1\",\n    \"updated\": 0\n  }\n}\n"
+                    },
+                    {
+                      "collection": "sparta_url_knowledge",
+                      "command": [
+                        "/home/graham/workspace/experiments/memory/.venv/bin/python3",
+                        "/home/graham/workspace/experiments/memory/scripts/validation/sparta_repair_manifests.py",
+                        "backfill-qdrant-metadata",
+                        "--collection",
+                        "sparta_url_knowledge",
+                        "--batch-size",
+                        "1",
+                        "--limit",
+                        "1",
+                        "--output",
+                        "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_url_knowledge_qdrant_metadata.json"
+                      ],
+                      "duration_s": 0.5729608535766602,
+                      "exit_code": 0,
+                      "id": "sparta_url_knowledge_qdrant_metadata_backfill",
+                      "ok": true,
+                      "output_path": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_url_knowledge_qdrant_metadata.json",
+                      "payload": {
+                        "batches": 0,
+                        "collection": "sparta_url_knowledge",
+                        "completed_at": "2026-06-24T21:05:47.167703+00:00",
+                        "duration_seconds": 0.109,
+                        "last_key": null,
+                        "missing_points": 0,
+                        "missing_samples": [],
+                        "mode": "backfill_qdrant_metadata",
+                        "policy": "Qdrant is the embedding store; Arango stores only point metadata",
+                        "processed": 0,
+                        "schema_version": "sparta-monitor-repair:v1",
+                        "updated": 0
+                      },
+                      "stderr_tail": "",
+                      "stdout_tail": "{\n  \"duration_seconds\": 0.109,\n  \"output\": \"/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_url_knowledge_qdrant_metadata.json\",\n  \"results\": null,\n  \"summary\": {\n    \"batches\": 0,\n    \"collection\": \"sparta_url_knowledge\",\n    \"completed_at\": \"2026-06-24T21:05:47.167703+00:00\",\n    \"duration_seconds\": 0.109,\n    \"last_key\": null,\n    \"missing_points\": 0,\n    \"missing_samples\": [],\n    \"mode\": \"backfill_qdrant_metadata\",\n    \"policy\": \"Qdrant is the embedding store; Arango stores only point metadata\",\n    \"processed\": 0,\n    \"schema_version\": \"sparta-monitor-repair:v1\",\n    \"updated\": 0\n  }\n}\n"
+                    },
+                    {
+                      "collection": "sparta_qra",
+                      "command": [
+                        "/home/graham/workspace/experiments/memory/.venv/bin/python3",
+                        "/home/graham/workspace/experiments/memory/scripts/validation/sparta_repair_manifests.py",
+                        "backfill-qdrant-metadata",
+                        "--collection",
+                        "sparta_qra",
+                        "--batch-size",
+                        "1",
+                        "--limit",
+                        "1",
+                        "--output",
+                        "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_qra_qdrant_metadata.json"
+                      ],
+                      "duration_s": 1.2878351211547852,
+                      "exit_code": 0,
+                      "id": "sparta_qra_qdrant_metadata_backfill",
+                      "ok": true,
+                      "output_path": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_qra_qdrant_metadata.json",
+                      "payload": {
+                        "batches": 0,
+                        "collection": "sparta_qra",
+                        "completed_at": "2026-06-24T21:05:48.448358+00:00",
+                        "duration_seconds": 0.821,
+                        "last_key": null,
+                        "missing_points": 0,
+                        "missing_samples": [],
+                        "mode": "backfill_qdrant_metadata",
+                        "policy": "Qdrant is the embedding store; Arango stores only point metadata",
+                        "processed": 0,
+                        "schema_version": "sparta-monitor-repair:v1",
+                        "updated": 0
+                      },
+                      "stderr_tail": "",
+                      "stdout_tail": "{\n  \"duration_seconds\": 0.821,\n  \"output\": \"/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qdrant_embedding_lane/sparta_qra_qdrant_metadata.json\",\n  \"results\": null,\n  \"summary\": {\n    \"batches\": 0,\n    \"collection\": \"sparta_qra\",\n    \"completed_at\": \"2026-06-24T21:05:48.448358+00:00\",\n    \"duration_seconds\": 0.821,\n    \"last_key\": null,\n    \"missing_points\": 0,\n    \"missing_samples\": [],\n    \"mode\": \"backfill_qdrant_metadata\",\n    \"policy\": \"Qdrant is the embedding store; Arango stores only point metadata\",\n    \"processed\": 0,\n    \"schema_version\": \"sparta-monitor-repair:v1\",\n    \"updated\": 0\n  }\n}\n"
+                    },
+                    {
+                      "collection": "sparta_controls",
+                      "command": [
+                        "uv",
+                        "run",
+                        "python",
+                        "/home/graham/workspace/experiments/memory/scripts/migrate_arango_embeddings_to_qdrant.py",
+                        "--collection",
+                        "sparta_controls",
+                        "--needs-embed-only",
+                        "--limit",
+                        "1",
+                        "--batch-size",
+                        "1",
+                        "--embed-batch-size",
+                        "16"
+                      ],
+                      "duration_s": 0.6634659767150879,
+                      "exit_code": 0,
+                      "id": "sparta_controls_missing_qdrant_embed",
+                      "ok": true,
+                      "output_path": null,
+                      "payload": {
+                        "collection": "sparta_controls",
+                        "dropped": 0,
+                        "dry_run": false,
+                        "last_key": null,
+                        "pending": 0,
+                        "processed": 0,
+                        "resume_offset": 0,
+                        "resync_model": false,
+                        "resync_stale": false,
+                        "synced": 0
+                      },
+                      "stderr_tail": "",
+                      "stdout_tail": "{\n  \"collection\": \"sparta_controls\",\n  \"processed\": 0,\n  \"synced\": 0,\n  \"pending\": 0,\n  \"dropped\": 0,\n  \"resume_offset\": 0,\n  \"last_key\": null,\n  \"dry_run\": false,\n  \"resync_stale\": false,\n  \"resync_model\": false\n}\n"
+                    },
+                    {
+                      "collection": "sparta_url_knowledge",
+                      "command": [
+                        "uv",
+                        "run",
+                        "python",
+                        "/home/graham/workspace/experiments/memory/scripts/migrate_arango_embeddings_to_qdrant.py",
+                        "--collection",
+                        "sparta_url_knowledge",
+                        "--needs-embed-only",
+                        "--limit",
+                        "1",
+                        "--batch-size",
+                        "1",
+                        "--embed-batch-size",
+                        "16"
+                      ],
+                      "duration_s": 0.7420239448547363,
+                      "exit_code": 0,
+                      "id": "sparta_url_knowledge_missing_qdrant_embed",
+                      "ok": true,
+                      "output_path": null,
+                      "payload": {
+                        "collection": "sparta_url_knowledge",
+                        "dropped": 0,
+                        "dry_run": false,
+                        "last_key": null,
+                        "pending": 0,
+                        "processed": 0,
+                        "resume_offset": 0,
+                        "resync_model": false,
+                        "resync_stale": false,
+                        "synced": 0
+                      },
+                      "stderr_tail": "",
+                      "stdout_tail": "{\n  \"collection\": \"sparta_url_knowledge\",\n  \"processed\": 0,\n  \"synced\": 0,\n  \"pending\": 0,\n  \"dropped\": 0,\n  \"resume_offset\": 0,\n  \"last_key\": null,\n  \"dry_run\": false,\n  \"resync_stale\": false,\n  \"resync_model\": false\n}\n"
+                    },
+                    {
+                      "collection": "sparta_qra",
+                      "command": [
+                        "uv",
+                        "run",
+                        "python",
+                        "/home/graham/workspace/experiments/memory/scripts/migrate_arango_embeddings_to_qdrant.py",
+                        "--collection",
+                        "sparta_qra",
+                        "--needs-embed-only",
+                        "--limit",
+                        "1",
+                        "--batch-size",
+                        "1",
+                        "--embed-batch-size",
+                        "16"
+                      ],
+                      "duration_s": 1.3832409381866455,
+                      "exit_code": 0,
+                      "id": "sparta_qra_missing_qdrant_embed",
+                      "ok": true,
+                      "output_path": null,
+                      "payload": {
+                        "collection": "sparta_qra",
+                        "dropped": 0,
+                        "dry_run": false,
+                        "last_key": null,
+                        "pending": 0,
+                        "processed": 0,
+                        "resume_offset": 0,
+                        "resync_model": false,
+                        "resync_stale": false,
+                        "synced": 0
+                      },
+                      "stderr_tail": "",
+                      "stdout_tail": "{\n  \"collection\": \"sparta_qra\",\n  \"processed\": 0,\n  \"synced\": 0,\n  \"pending\": 0,\n  \"dropped\": 0,\n  \"resume_offset\": 0,\n  \"last_key\": null,\n  \"dry_run\": false,\n  \"resync_stale\": false,\n  \"resync_model\": false\n}\n"
+                    }
+                  ]
+                },
+                {
+                  "changed_count": 0,
+                  "duration_s": 83.08711695671082,
+                  "eligible_count": null,
+                  "exit_code": 1,
+                  "id": "monitor_health_fix",
+                  "per_dimension_results": [
+                    {
+                      "affected_count_after": null,
+                      "affected_count_before": null,
+                      "after_status": "failed",
+                      "before_status": "failed",
+                      "changed_count": null,
+                      "dimension": "qra_coverage_per_control",
+                      "eligible_count": null,
+                      "result": "stuck",
+                      "skip_reason": "operator_review_required"
+                    },
+                    {
+                      "affected_count_after": null,
+                      "affected_count_before": null,
+                      "after_status": "failed",
+                      "before_status": "failed",
+                      "changed_count": null,
+                      "dimension": "monitor_sparta_mutation_default",
+                      "eligible_count": null,
+                      "result": "stuck",
+                      "skip_reason": "dimension_still_failing_count_unreported"
+                    },
+                    {
+                      "affected_count_after": 0,
+                      "affected_count_before": null,
+                      "after_status": "passed",
+                      "before_status": "failed",
+                      "changed_count": null,
+                      "dimension": "inline_embedding_policy",
+                      "eligible_count": null,
+                      "result": "succeeded",
+                      "skip_reason": null
+                    },
+                    {
+                      "affected_count_after": null,
+                      "affected_count_before": null,
+                      "after_status": "failed",
+                      "before_status": "failed",
+                      "changed_count": null,
+                      "dimension": "sparta_explorer_page_purpose",
+                      "eligible_count": null,
+                      "result": "stuck",
+                      "skip_reason": "not_repairable_by_monitor_sparta"
+                    }
+                  ],
+                  "skip_reason": null,
+                  "skipped_dimensions": [
+                    "qra_coverage_per_control",
+                    "monitor_sparta_mutation_default",
+                    "sparta_explorer_page_purpose"
+                  ],
+                  "status": "partial",
+                  "stuck_dimensions": [
+                    "qra_coverage_per_control",
+                    "monitor_sparta_mutation_default",
+                    "sparta_explorer_page_purpose"
+                  ],
+                  "summary": {
+                    "failed_count": 3,
+                    "failed_dimensions": [
+                      "qra_coverage_per_control",
+                      "monitor_sparta_mutation_default",
+                      "sparta_explorer_page_purpose"
+                    ],
+                    "monitor_pass": false,
+                    "passed": 26,
+                    "total": 29
+                  }
+                },
+                {
+                  "changed_count": 0,
+                  "contract": "Option B: qra_coverage_per_control is operator/review-gated, not Dewey-repairable",
+                  "debug_hint": "Do not launch create_qras_backfill from Dewey repair-cycle by default. Queue/review QRA generation through the operator lane, then rerun health --json.",
+                  "dimension": "qra_coverage_per_control",
+                  "duration_s": 0.0003819465637207031,
+                  "eligible_count": null,
+                  "id": "qra_coverage_operator_lane",
+                  "ok": true,
+                  "operator_queue_path": "/mnt/storage12tb/skills/review-db/outputs/dewey-sessions/start-operator-smoke-20260624T2048Z/repair_artifacts/cycle_1/qra_operator_lane.jsonl",
+                  "skip_reason": "operator_review_required",
+                  "status": "skipped"
+                }
+              ],
+              "stop_reason": "failures_remain",
+              "worker_wait": {
+                "completed": false,
+                "log_paths": [],
+                "ok": true,
+                "pid_files": [],
+                "pids": [],
+                "status": "no_workers",
+                "still_running": false,
+                "timed_out": false,
+                "waited_s": 0,
+                "worker_count": 0
+              }
+            },
+            "stderr_tail": ""
+          },
+          "verify": {
+            "exit_code": 0,
+            "regression": false,
+            "reasons": []
+          },
+          "health_after": {
+            "passed": 26,
+            "total": 28,
+            "waived_dimensions": [
+              "monitor_sparta_mutation_default"
+            ],
+            "failed_count": 2,
+            "failed_dimensions": [
+              "qra_coverage_per_control",
+              "sparta_explorer_page_purpose"
+            ],
+            "monitor_pass": false
+          },
+          "stop_reason": "operator_required_only",
+          "terminal": {
+            "terminal_status": "OPERATOR_REQUIRED",
+            "terminal_reason": "only_operator_or_product_owned_dimensions_remain",
+            "exit_code": 0
+          }
+        }
+      ],
+      "final_health": {
+        "passed": 26,
+        "total": 28,
+        "waived_dimensions": [
+          "monitor_sparta_mutation_default"
+        ],
+        "failed_count": 2,
+        "failed_dimensions": [
+          "qra_coverage_per_control",
+          "sparta_explorer_page_purpose"
+        ],
+        "monitor_pass": false
+      },
+      "monitor_pass": false,
+      "stall_dimensions": {}
+    },
+    {
+      "step": "morning_report",
+      "status": "ok",
+      "report_html": "/mnt/storage12tb/skills/review-db/outputs/dewey-morning-reports/latest/report.html",
+      "report_json": "/mnt/storage12tb/skills/review-db/outputs/dewey-morning-reports/latest/report.json"
+    }
+  ]
+}

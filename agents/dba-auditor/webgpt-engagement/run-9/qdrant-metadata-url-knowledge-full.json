@@ -1,0 +1,14 @@
+{
+  "batches": 43,
+  "collection": "sparta_url_knowledge",
+  "completed_at": "2026-06-24T20:06:54.859508+00:00",
+  "duration_seconds": 62.566,
+  "last_key": "uk__99__9",
+  "missing_points": 0,
+  "missing_samples": [],
+  "mode": "backfill_qdrant_metadata",
+  "policy": "Qdrant is the embedding store; Arango stores only point metadata",
+  "processed": 42709,
+  "schema_version": "sparta-monitor-repair:v1",
+  "updated": 42709
+}

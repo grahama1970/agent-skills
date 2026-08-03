@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Nightly Dewey: backup-first, iterate /monitor-sparta until 29/29 PASS.
+# Budget: DEWEY_NIGHTLY_CHUTES_BUDGET Chutes calls via /scillm (default 5000).
+set -euo pipefail
+
+AGENT_SKILLS_ROOT="${AGENT_SKILLS_ROOT:-/home/graham/workspace/experiments/agent-skills}"
+MEMORY_ROOT="${MEMORY_ROOT:-/home/graham/workspace/experiments/memory}"
+DEWEY_SCRIPT="${AGENT_SKILLS_ROOT}/agents/dba-auditor/scripts/dewey_overnight_run.py"
+LOCK_FILE="${MEMORY_ROOT}/artifacts/dewey_nightly/dewey-overnight-monitor-sparta.lock"
+RUN_STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+RUN_ID="${DEWEY_RUN_ID:-dewey-monitor-sparta-${RUN_STAMP}}"
+LOG_DIR="${MEMORY_ROOT}/artifacts/dewey_nightly/${RUN_ID}"
+mkdir -p "${LOG_DIR}" "$(dirname "${LOCK_FILE}")"
+
+export MEMORY_ROOT
+export AGENT_SKILLS_ROOT
+export ARANGO_DB="${ARANGO_DB:-memory}"
+export SPARTA_MONITOR_MUTATION_ENABLED="${SPARTA_MONITOR_MUTATION_ENABLED:-1}"
+export DEWEY_NIGHTLY_CHUTES_BUDGET="${DEWEY_NIGHTLY_CHUTES_BUDGET:-5000}"
+export DEWEY_QRA_BATCH_LIMIT="${DEWEY_QRA_BATCH_LIMIT:-50}"
+export DEWEY_MAX_ITERATIONS="${DEWEY_MAX_ITERATIONS:-512}"
+export DEWEY_WALL_CLOCK_S="${DEWEY_WALL_CLOCK_S:-43200}"
+export DEWEY_WAIT_TIMEOUT_S="${DEWEY_WAIT_TIMEOUT_S:-7200}"
+export DEWEY_WORKER_POLL_S="${DEWEY_WORKER_POLL_S:-30}"
+export DEWEY_STALL_LIMIT="${DEWEY_STALL_LIMIT:-8}"
+
+cd "${MEMORY_ROOT}"
+
+exec 9>"${LOCK_FILE}"
+if ! flock -n 9; then
+  echo "dewey_nightly_cron: another dewey-overnight-monitor-sparta run is active" | tee -a "${LOG_DIR}/cron.log"
+  exit 75
+fi
+
+{
+  echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "run_id=${RUN_ID}"
+  echo "repo=${MEMORY_ROOT}"
+  echo "max_cycles=${DEWEY_MAX_ITERATIONS} wall_clock_s=${DEWEY_WALL_CLOCK_S} wait_timeout_s=${DEWEY_WAIT_TIMEOUT_S} qra_batch_limit=${DEWEY_QRA_BATCH_LIMIT}"
+} >> "${LOG_DIR}/cron.log"
+
+exec python3 "${DEWEY_SCRIPT}" start "$@"
