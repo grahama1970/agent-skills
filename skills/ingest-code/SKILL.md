@@ -50,8 +50,8 @@ cd .pi/skills/ingest-code
 # CWE scan only (legacy mode)
 ./run.sh scan /path/to/codebase --cwe-only
 
-# Preview without storing to /memory
-./run.sh scan /path/to/codebase --dry-run
+# Full offline artifact export without storing to /memory
+./run.sh scan /path/to/codebase --treesitter --dry-run
 
 # Include Tree-sitter structured code symbols for memory's hybrid code index
 ./run.sh scan /path/to/codebase --treesitter
@@ -73,7 +73,7 @@ Options:
   --validate         Run LLM validation on CWE matches
   --treesitter       Run Tree-sitter scan for structured code symbols
   --code-index       Upsert Tree-sitter symbols to memory `code_symbols` (default)
-  --no-code-index    Disable structured code-symbol upserts
+  --no-code-index    Disable structured code-symbol upserts to /memory only
   --dry-run          Preview without writing to /memory
   --scope            Memory scope (default: "code")
   --batch-size       Files per CWE scan batch (default: 50)
@@ -90,7 +90,7 @@ Options:
   --validate         Run LLM validation
   --treesitter       Run Tree-sitter scan for structured code symbols
   --code-index       Upsert Tree-sitter symbols to memory `code_symbols` (default)
-  --no-code-index    Disable structured code-symbol upserts
+  --no-code-index    Disable structured code-symbol upserts to /memory only
   --scope            Memory scope
 ```
 
@@ -244,6 +244,14 @@ These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for
 offline inspection, review bundles, or deterministic receipts.
 
+`scan --treesitter --dry-run` is the full offline artifact-export path for
+reviewers and GMO handoff. `--no-code-index` disables only structured
+`/memory /upsert`; Tree-sitter local artifacts and the code-graph bundle remain
+enabled when `--treesitter` is used. `rescan` is incremental scheduler evidence:
+unless it publishes a complete fresh full bundle, its marker uses
+`coverage_scope=incremental`, `reconciliation_eligible=false`, and cannot make a
+prior full bundle fresh by timestamp alone.
+
 The code-graph bundle is written to a sibling temporary directory, validated,
 and then published as the current artifact directory. The published directory
 must contain exactly the seven allowed files listed above, with no stale files
@@ -266,6 +274,12 @@ Do not use local artifacts for GMO reconciliation, "no callers", dead-code, or
 other absence-based claims unless the bundle checksum, `bundle_digest`,
 manifest `configuration_digest`, source/ref freshness, and
 `coverage.reconciliation_eligible=true` have all been checked.
+
+`.ingest-code.json` records `coverage_scope`, `reconciliation_eligible`,
+commit/ref, the accepted bundle hashes, source freshness status, successful scan
+roots, and failed scan roots. Agents must treat `code-symbols.jsonl` as a
+compatibility artifact unless the marker's `code_graph_freshness.status` is
+`fresh` and `blocks_negative_claims=false`.
 
 ## Related Skills
 

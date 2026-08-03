@@ -283,8 +283,29 @@ def _configuration_payload(
             "dry_run": bool(config.get("dry_run", False)),
             "cwe_only": bool(config.get("cwe_only", False)),
         },
+        "monitor_config": config.get("monitor_config") or {},
     }
     return payload
+
+
+def calculate_configuration_digest(
+    *,
+    root: Path,
+    scan_roots: list[Path],
+    files: list[Path],
+    extractor_outcomes: list[dict[str, Any]],
+    max_source_bytes: int = DEFAULT_MAX_SOURCE_BYTES,
+    scan_config: dict[str, Any] | None = None,
+) -> str:
+    """Return the v1 digest for normalized code-graph extraction configuration."""
+    return _sha256_json(_configuration_payload(
+        root=root,
+        scan_roots=scan_roots,
+        files=files,
+        extractor_outcomes=extractor_outcomes,
+        max_source_bytes=max_source_bytes,
+        scan_config=scan_config,
+    ))
 
 
 def _extractor_versions(extractor_outcomes: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -803,7 +824,14 @@ def write_code_graph_bundle(
         max_source_bytes=max_source_bytes,
         scan_config=scan_config,
     )
-    configuration_digest = _sha256_json(configuration)
+    configuration_digest = calculate_configuration_digest(
+        root=root,
+        scan_roots=scan_roots,
+        files=files,
+        extractor_outcomes=outcomes,
+        max_source_bytes=max_source_bytes,
+        scan_config=scan_config,
+    )
     artifact_schema_versions = dict(ARTIFACT_SCHEMA_VERSIONS)
     extractor_versions = _extractor_versions(outcomes)
     coverage = {
