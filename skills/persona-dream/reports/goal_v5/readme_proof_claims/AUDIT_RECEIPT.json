@@ -1,0 +1,103 @@
+{
+  "claims": [
+    {
+      "boundary": "Grounded dream packets",
+      "ok": true,
+      "readme_evidence_cell": "`reports/` run receipts",
+      "readme_state": "Implemented",
+      "receipt": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_01_idea/dream_packet_validation.json",
+      "receipt_sha256": "sha256:65f13535f5859a01fb56a52c7390ddb8dce43e80f45ccae84e86a1b9e9a72438",
+      "receipt_status": "PASS_DREAM_PACKET"
+    },
+    {
+      "boundary": "Image and storyboard production",
+      "ok": true,
+      "readme_evidence_cell": "`reports/` panel and review receipts",
+      "readme_state": "Live slice proven",
+      "receipt": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/identity_successor_gate_summary.v1.json",
+      "receipt_sha256": "sha256:fabfc92ba482ebb508512bc2f87d944acb6aec1149a63e2983bb72af9b5c2e92",
+      "receipt_status": "PASS_IDENTITY_SOURCE_SUCCESSOR"
+    },
+    {
+      "boundary": "Phases 01-10, qualified revision",
+      "ok": true,
+      "readme_evidence_cell": "[`docs/verification.md`](docs/verification.md)",
+      "readme_state": "Qualified revision",
+      "receipt": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v6.json",
+      "receipt_sha256": "sha256:0efc5671da43f5d03c2d987b629946c2727ae50fe0fa5f414323b0f9f5d7695e",
+      "receipt_status": "PASS_ACCEPTANCE_RUNG"
+    },
+    {
+      "boundary": "Phase 11, submit and return",
+      "ok": true,
+      "readme_evidence_cell": "[`docs/verification.md`](docs/verification.md)",
+      "readme_state": "Live return accepted at agent level; human acceptance open",
+      "receipt": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/phase11_download_ffprobe_receipt.v1.json",
+      "receipt_sha256": "sha256:447a00d054c3cacb68d07811ae2c4c4a77120d74e51b29acd652920ea8a95120",
+      "receipt_status": "PASS_PHASE11_PROVIDER_RETURN_DOWNLOADED"
+    },
+    {
+      "boundary": "Phase 12, Watch observation",
+      "ok": true,
+      "readme_evidence_cell": "[`docs/verification.md`](docs/verification.md)",
+      "readme_state": "Live slice proven on historical return; packet degraded on successor",
+      "receipt": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/991c311f365f/watch_gauntlet_validation_receipt.v1.json",
+      "receipt_sha256": "sha256:fa5732426d4e8bb9a28c5092b929a6b99115e42580e1ce17bfcaa33acfb00ff2",
+      "receipt_status": "PASS_WATCH_GAUNTLET_VALIDATED"
+    },
+    {
+      "boundary": "Phases 13-15, interpretation to persistence",
+      "ok": true,
+      "readme_evidence_cell": "[`docs/verification.md`](docs/verification.md)",
+      "readme_state": "Live slice proven on the accepted return",
+      "receipt": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json",
+      "receipt_sha256": "sha256:e14120a5f46c9d3c7c47dee66c2d3ffc63cbe69f6decc27a216b8981b2d5c232",
+      "receipt_status": "PASS_V2_LINEAGE"
+    },
+    {
+      "boundary": "Phase 16, recall and later behavior",
+      "ok": true,
+      "readme_evidence_cell": "[`docs/verification.md`](docs/verification.md)",
+      "readme_state": "Machine-decidable slice live-proven",
+      "receipt": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json",
+      "receipt_sha256": "sha256:297854aea32cbca42caf0a6dac2b52aa26e6547c0086490e45d9ec246f4bd529",
+      "receipt_status": "PASS"
+    },
+    {
+      "boundary": "Chatterbox voice expression",
+      "ok": true,
+      "readme_evidence_cell": "[`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1179",
+      "readme_state": "Blocked: stimuli rejected as technically confounded",
+      "receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+      "receipt_sha256": "sha256:209e5ec65d2620080e646e6d24d248105639b547c398a34de35be99670e31ac1",
+      "receipt_status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND"
+    },
+    {
+      "boundary": "PCTOM-R held-out benefit",
+      "evidence": "declared unproven; no receipt claimed",
+      "ok": true,
+      "readme_evidence_cell": "[`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1008",
+      "readme_state": "Not run"
+    }
+  ],
+  "claims_summary": {
+    "does_not_prove": [
+      "that the receipts themselves are correct",
+      "anything about prose outside the Current Proof Boundary table",
+      "perceived emotion, identity, or any held-out benefit result"
+    ],
+    "proves": [
+      "every proof-boundary row in the README names a receipt that exists, parses, and carries a status supporting the claimed state",
+      "boundaries with no receipt are declared unproven and use no positive-result language"
+    ]
+  },
+  "created_at": "2026-08-03T16:42:05Z",
+  "failed_gates": [],
+  "live": false,
+  "mocked": false,
+  "readme": "skills/persona-dream/README.md",
+  "readme_sha256": "sha256:1566f537338747c2a6655aed299e37689555af58e121cbc9e6fe6fb0dcd3e371",
+  "rows_checked": 9,
+  "schema": "persona_dream.readme_proof_claim_audit.v1",
+  "status": "PASS_README_PROOF_CLAIMS_BOUND"
+}

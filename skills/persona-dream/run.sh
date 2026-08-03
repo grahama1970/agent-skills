@@ -740,6 +740,9 @@ case "$COMMAND" in
   live-chain-reliability)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/live_chain_reliability.py" "$@"
     ;;
+  audit-readme-proof-claims)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/audit_readme_proof_claims.py" "$@"
+    ;;
   generate-readme-research-state)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/generate_readme_research_state.py" "$@"
     ;;

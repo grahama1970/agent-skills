@@ -460,3 +460,47 @@ def test_readme_generated_block_tracks_machine_state_changes(tmp_path):
     status["current_claims"]["pctom_heldout_benefit"]["successor_issue"] = "owner/repo#4242"
     assert generator.render(status) != before
     assert "#4242" in generator.render(status)
+
+
+# ---- README proof-claim binding ---------------------------------------------
+
+
+def test_every_readme_proof_claim_binds_to_a_real_receipt():
+    """No proof row may rest on navigation rather than evidence.
+
+    "Issue references alone are navigation, not proof." Each row in the Current
+    Proof Boundary table must name a receipt that exists, parses, and carries a
+    status supporting the claimed state; rows with no receipt must be declared
+    unproven and use no positive-result language.
+    """
+    audit = _load("audit_readme_proof_claims")
+    args = type("Args", (), {"readme": ROOT / "README.md", "out": None})()
+    got = audit.run(args)
+    assert got["status"] == "PASS_README_PROOF_CLAIMS_BOUND", got["failed_gates"]
+    assert got["rows_checked"] >= 5
+
+
+def test_proof_claim_audit_blocks_a_receipt_that_contradicts_the_claim(monkeypatch):
+    audit = _load("audit_readme_proof_claims")
+    monkeypatch.setitem(
+        audit.CLAIMS, "Chatterbox voice expression",
+        ("reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+         "PASS_"),
+    )
+    args = type("Args", (), {"readme": ROOT / "README.md", "out": None})()
+    got = audit.run(args)
+    assert got["status"] == "BLOCKED_README_PROOF_CLAIM_UNBOUND"
+    assert any("receipt_status_does_not_support_claim" in g for g in got["failed_gates"])
+
+
+def test_proof_claim_audit_blocks_positive_language_on_an_unproven_row(tmp_path, monkeypatch):
+    audit = _load("audit_readme_proof_claims")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8").replace(
+        "| PCTOM-R held-out benefit | Not run |",
+        "| PCTOM-R held-out benefit | Live slice proven |")
+    path = tmp_path / "README.md"
+    path.write_text(readme, encoding="utf-8")
+    args = type("Args", (), {"readme": path, "out": None})()
+    got = audit.run(args)
+    assert got["status"] == "BLOCKED_README_PROOF_CLAIM_UNBOUND"
+    assert any("unproven_claim_uses_positive_language" in g for g in got["failed_gates"])
