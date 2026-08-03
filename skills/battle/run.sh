@@ -80,6 +80,11 @@ if [[ "${1:-}" == "prove-pause-restart-resume" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_pause_restart_resume.py" "$@"
 fi
 
+if [[ "${1:-}" == "prove-live-human-interjection-control" ]]; then
+  shift
+  exec bash "$SCRIPT_DIR/scripts/live-human-interjection-control-proof.sh" "$@"
+fi
+
 if [[ "${1:-}" == "human-interjection-proof" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/human_interjection_proof.py" "$@"

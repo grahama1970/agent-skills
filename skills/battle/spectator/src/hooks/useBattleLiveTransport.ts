@@ -27,6 +27,13 @@ import {
 	openBattleLiveWebSocketStream,
 	resolveBattleLiveTransportBaseUrl,
 } from "../lib/battle-live-sse-runtime";
+import {
+	deriveBattleLivePauseControl,
+	liveControlAuthToken,
+	stablePauseRequestId,
+	submitBattleLivePauseAfterRound,
+	type BattleLivePauseControlState,
+} from "../lib/battle-live-control";
 import { battleLiveTransportContractCompanionUrl } from "../lib/battle-live-transport-contract-registry";
 import {
 	bootstrapLiveTransportState,
@@ -69,6 +76,9 @@ export function useBattleLiveTransport() {
 	const [contract, setContract] = useState<BattleLiveTransportContractV1 | null>(null);
 	const [contractModel, setContractModel] = useState<BattleLiveTransportContractViewModel | null>(null);
 	const [sseClient, setSseClient] = useState<BattleLiveSseClientState>(createIdleLiveSseClientState);
+	const [pauseRequestId, setPauseRequestId] = useState<string | null>(null);
+	const [pausePending, setPausePending] = useState(false);
+	const [pauseError, setPauseError] = useState<string | null>(null);
 	const streamCloseRef = useRef<(() => void) | null>(null);
 
 	const stopStream = useCallback(() => {
@@ -111,7 +121,7 @@ export function useBattleLiveTransport() {
 				),
 			});
 			setError(null);
-			setCompanion(args.companion);
+			setCompanion(mergeCompanionWithSnapshotPanel(args.companion, snapshotResult.snapshot));
 			setState(bootstrapLiveTransportState(pack));
 			const transportMode = (args.lastEventId ?? 0) > 0 ? "fetch_last_event_id" : "event_source";
 			setSseClient({
@@ -239,6 +249,7 @@ export function useBattleLiveTransport() {
 						baseUrl: args.baseUrl,
 						companionFixtureUrl: battleLiveTransportContractCompanionUrl(args.contract.battle_id as "battle-004"),
 					});
+					setCompanion(mergeCompanionWithSnapshotPanel(args.companion, snapshot));
 					setState(bootstrapLiveTransportState(pack));
 				},
 				onEvent: (event) => {
@@ -302,6 +313,8 @@ export function useBattleLiveTransport() {
 			setContract(null);
 			setContractModel(null);
 			setSseClient(createIdleLiveSseClientState());
+			setPausePending(false);
+			setPauseError(null);
 			return;
 		}
 
@@ -505,6 +518,95 @@ export function useBattleLiveTransport() {
 		}
 	}, [companion, contract, fixtureKey, isLiveRoute, mode, sseClient.baseUrl, sseClient.transportMode, startLiveSse, startLiveWebSocket]);
 
+	const pauseControl: BattleLivePauseControlState = useMemo(
+		() =>
+			deriveBattleLivePauseControl({
+				panel: companion?.human_interjection_panel,
+				baseUrl: sseClient.baseUrl,
+				requestId: pauseRequestId,
+				localPending: pausePending,
+				error: pauseError,
+			}),
+		[companion?.human_interjection_panel, pauseError, pausePending, pauseRequestId, sseClient.baseUrl],
+	);
+
+	const submitPauseAfterRound = useCallback(async () => {
+		if (!pauseControl.available || !pauseControl.baseUrl || !pauseControl.endpoint || !pauseControl.runId || !contract) {
+			setPauseError("pause_after_round control is unavailable on this route.");
+			return false;
+		}
+		const token = liveControlAuthToken();
+		if (!token) {
+			setPauseError("pause_after_round control token is missing.");
+			return false;
+		}
+		const requestId = pauseRequestId ?? stablePauseRequestId(pauseControl.runId);
+		setPauseRequestId(requestId);
+		setPausePending(true);
+		setPauseError(null);
+		await new Promise((resolve) => window.setTimeout(resolve, 150));
+		const result = await submitBattleLivePauseAfterRound({
+			baseUrl: pauseControl.baseUrl,
+			endpoint: pauseControl.endpoint,
+			runId: pauseControl.runId,
+			requestId,
+			authToken: token,
+		});
+		if (result.panel) {
+			setCompanion((current) => (current ? { ...current, human_interjection_panel: result.panel ?? undefined } : current));
+		}
+		if (!result.ok) {
+			setPausePending(false);
+			setPauseError(result.reason);
+			return false;
+		}
+		const snapshot = await fetchBattleLiveSnapshot({
+			baseUrl: pauseControl.baseUrl,
+			snapshotEndpoint: contract.initial_snapshot.endpoint,
+		});
+		if (snapshot.ok) {
+			setCompanion((current) => (current ? mergeCompanionWithSnapshotPanel(current, snapshot.snapshot) : current));
+			setState((current) =>
+				current.pack
+					? {
+							...current,
+							pack: {
+								...current.pack,
+								snapshot: snapshot.snapshot,
+							},
+						}
+					: current,
+			);
+		}
+		setPausePending(false);
+		return true;
+	}, [contract, pauseControl.available, pauseControl.baseUrl, pauseControl.endpoint, pauseControl.runId, pauseRequestId]);
+
+	useEffect(() => {
+		if (!contract || !pauseControl.baseUrl || (pauseControl.status !== "pending" && pauseControl.status !== "accepted")) return;
+		let cancelled = false;
+		let attempts = 0;
+		const timer = window.setInterval(() => {
+			attempts += 1;
+			void fetchBattleLiveSnapshot({
+				baseUrl: pauseControl.baseUrl!,
+				snapshotEndpoint: contract.initial_snapshot.endpoint,
+			}).then((snapshot) => {
+				if (cancelled || !snapshot.ok) return;
+				setCompanion((current) => (current ? mergeCompanionWithSnapshotPanel(current, snapshot.snapshot) : current));
+				const state = snapshot.snapshot.human_interjection_panel?.states?.some((item) => item.state === "applied" || item.state === "rejected");
+				if (state || attempts >= 80) {
+					window.clearInterval(timer);
+					setPausePending(false);
+				}
+			});
+		}, 250);
+		return () => {
+			cancelled = true;
+			window.clearInterval(timer);
+		};
+	}, [contract, pauseControl.baseUrl, pauseControl.status]);
+
 	return {
 		isLiveRoute,
 		mode,
@@ -520,8 +622,21 @@ export function useBattleLiveTransport() {
 		contract,
 		contractModel,
 		sseClient,
+		pauseControl,
+		submitPauseAfterRound,
 		returnToLive,
 		scrubToSeconds,
 		recoverFromGap,
+	};
+}
+
+function mergeCompanionWithSnapshotPanel(
+	companion: BattleNormalizedUxFixture,
+	snapshot: { human_interjection_panel?: BattleNormalizedUxFixture["human_interjection_panel"] },
+): BattleNormalizedUxFixture {
+	if (!snapshot.human_interjection_panel) return companion;
+	return {
+		...companion,
+		human_interjection_panel: snapshot.human_interjection_panel,
 	};
 }

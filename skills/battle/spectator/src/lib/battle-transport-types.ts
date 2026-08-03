@@ -1,4 +1,4 @@
-import type { BattleTimelineControlV1, Lane } from "./battle-types";
+import type { BattleHumanInterjectionPanelSource, BattleTimelineControlV1, Lane } from "./battle-types";
 
 export type BattleTransportMode = "file_backed_replay_stream" | "live_sse_adapter" | "live_websocket_adapter";
 
@@ -79,6 +79,7 @@ export type BattleSnapshotV1Full = {
 	scoreboard?: Record<string, unknown>;
 	claims?: Record<string, unknown>;
 	validation?: Record<string, unknown>;
+	human_interjection_panel?: BattleHumanInterjectionPanelSource;
 	replay_compression_policy?: Record<string, unknown>;
 	source_time_window?: Record<string, unknown>;
 	normalized_fixture_path?: string;

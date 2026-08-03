@@ -334,7 +334,11 @@ function BattleSpectatorArenaContent({ routeEpoch }: { routeEpoch: number }) {
       ) : null}
       {receiptChrome ? (
         <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0">
-          <BattleHumanInterjectionPanel fixture={typedReceiptFixture} />
+          <BattleHumanInterjectionPanel
+            fixture={typedReceiptFixture}
+            liveControl={liveReplay ? liveTransport.pauseControl : null}
+            onPauseAfterRound={liveReplay ? liveTransport.submitPauseAfterRound : undefined}
+          />
         </div>
       ) : null}
       {geneticModel ? (
