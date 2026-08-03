@@ -65,6 +65,11 @@ if [[ "${1:-}" == "prove-functional-evidence-status" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_functional_evidence_status.py" "$@"
 fi
 
+if [[ "${1:-}" == "prove-runtime-pause-after-round" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_runtime_pause_after_round.py" "$@"
+fi
+
 if [[ "${1:-}" == "human-interjection-proof" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/human_interjection_proof.py" "$@"
