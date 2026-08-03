@@ -24,6 +24,7 @@ import subprocess
 import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
@@ -79,6 +80,14 @@ SKIP_DIRS = {
 }
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
+
+
+@dataclass(frozen=True)
+class TreeSitterScanResult:
+    """Structured Tree-sitter extraction result used for fail-closed coverage."""
+
+    records: list[CodeSymbolRecord]
+    outcome: dict[str, Any]
 
 
 def load_taxonomy_module():
@@ -917,24 +926,69 @@ def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
     return [codebase_path.resolve()]
 
 
-def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]]:
+def _parse_treesitter_scan_output(stdout: str) -> tuple[list[dict[str, Any]], str]:
     """Parse treesitter scan output, skipping human summary lines."""
     payload = stdout.strip()
     if not payload:
-        return []
+        return [], "empty_output"
 
     json_start = payload.find("[")
     if json_start < 0:
-        return []
+        return [], "missing_json_array"
 
     try:
         data = json.loads(payload[json_start:])
-    except json.JSONDecodeError:
-        return []
+    except json.JSONDecodeError as exc:
+        return [], f"malformed_json:{exc}"
 
     if isinstance(data, list):
-        return data
-    return []
+        return data, ""
+    return [], "json_root_not_array"
+
+
+def _rel_path_for_outcome(path: Path, root: Path) -> str:
+    path = path.resolve()
+    root = root.resolve()
+    if path == root:
+        return "."
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _configured_language_support() -> list[str]:
+    return sorted({
+        _language_for_path(Path(f"file{pattern.removeprefix('*')}"))
+        for pattern in DEFAULT_GLOB_PATTERNS
+    })
+
+
+def _treesitter_outcome(
+    *,
+    directory: Path,
+    codebase_root: Path,
+    status: str,
+    reason: str,
+    command: list[str],
+    discovered_files: list[Path],
+    reported_paths: list[str] | None = None,
+    stderr: str = "",
+) -> dict[str, Any]:
+    reported = sorted(set(reported_paths or []))
+    return {
+        "root": _rel_path_for_outcome(directory, codebase_root),
+        "status": status,
+        "reason": reason,
+        "extractor": "treesitter",
+        "extractor_version": "treesitter_skill_run_sh",
+        "command": command,
+        "declared_languages": _configured_language_support(),
+        "discovered_file_count": len(discovered_files),
+        "reported_file_count": len(reported),
+        "reported_paths": reported,
+        "stderr": stderr[:2000],
+    }
 
 
 def _store_treesitter_symbols_for_directory(
@@ -970,12 +1024,36 @@ def _scan_treesitter_symbol_records_for_directory(
     scope: str,
 ) -> list[CodeSymbolRecord]:
     """Scan one directory and return CodeSymbolRecord instances without writing Memory."""
+    return _scan_treesitter_symbol_records_with_outcome(
+        directory,
+        codebase_root,
+        scope,
+        discovered_files=None,
+    ).records
+
+
+def _scan_treesitter_symbol_records_with_outcome(
+    directory: Path,
+    codebase_root: Path,
+    scope: str,
+    discovered_files: list[Path] | None,
+) -> TreeSitterScanResult:
+    """Scan one directory and return symbols plus a fail-closed extraction outcome."""
     directory = directory.resolve()
     codebase_root = codebase_root.resolve()
+    discovered = sorted(discovered_files or [], key=lambda item: item.resolve().as_posix())
     treesitter_script = find_treesitter_skill()
     if not treesitter_script:
         print(f"Treesitter skill not found for {directory}", file=sys.stderr, flush=True)
-        return []
+        outcome = _treesitter_outcome(
+            directory=directory,
+            codebase_root=codebase_root,
+            status="unavailable",
+            reason="treesitter_skill_not_found",
+            command=[],
+            discovered_files=discovered,
+        )
+        return TreeSitterScanResult(records=[], outcome=outcome)
 
     cmd = [
         "bash",
@@ -1000,22 +1078,61 @@ def _scan_treesitter_symbol_records_for_directory(
         )
     except subprocess.TimeoutExpired:
         print(f"Treesitter scan timed out for {directory}", file=sys.stderr, flush=True)
-        return []
+        outcome = _treesitter_outcome(
+            directory=directory,
+            codebase_root=codebase_root,
+            status="timed_out",
+            reason="treesitter_scan_timeout",
+            command=cmd,
+            discovered_files=discovered,
+        )
+        return TreeSitterScanResult(records=[], outcome=outcome)
 
     if result.returncode != 0:
         stderr = result.stderr.strip()
         if stderr:
             print(f"Treesitter scan failed for {directory}: {stderr}", file=sys.stderr, flush=True)
-        return []
+        outcome = _treesitter_outcome(
+            directory=directory,
+            codebase_root=codebase_root,
+            status="failed",
+            reason=f"treesitter_exit_{result.returncode}",
+            command=cmd,
+            discovered_files=discovered,
+            stderr=stderr,
+        )
+        return TreeSitterScanResult(records=[], outcome=outcome)
 
-    scan_results = _parse_treesitter_scan_output(result.stdout)
-    if not scan_results:
-        return []
+    scan_results, parse_error = _parse_treesitter_scan_output(result.stdout)
+    if parse_error and parse_error != "empty_output":
+        outcome = _treesitter_outcome(
+            directory=directory,
+            codebase_root=codebase_root,
+            status="invalid_output",
+            reason=parse_error,
+            command=cmd,
+            discovered_files=discovered,
+            stderr=result.stderr.strip(),
+        )
+        return TreeSitterScanResult(records=[], outcome=outcome)
+    if not scan_results and discovered:
+        outcome = _treesitter_outcome(
+            directory=directory,
+            codebase_root=codebase_root,
+            status="partial",
+            reason="unexpected_empty_output",
+            command=cmd,
+            discovered_files=discovered,
+            stderr=result.stderr.strip(),
+        )
+        return TreeSitterScanResult(records=[], outcome=outcome)
 
     repo = codebase_root.resolve().name
     branch = _current_branch(codebase_root)
     commit = _current_commit(codebase_root)
     records: list[CodeSymbolRecord] = []
+    reported_paths: list[str] = []
+    discovered_set = {_relative_path(path, codebase_root) for path in discovered}
     for file_entry in scan_results:
         file_path_raw = file_entry.get("path")
         if not file_path_raw:
@@ -1024,6 +1141,10 @@ def _scan_treesitter_symbol_records_for_directory(
         filepath = Path(file_path_raw)
         if not filepath.is_absolute():
             filepath = codebase_root / filepath
+        rel_path = _relative_path(filepath, codebase_root)
+        if discovered_set and rel_path not in discovered_set:
+            continue
+        reported_paths.append(rel_path)
         symbol_context = _extract_symbol_context(filepath)
 
         for symbol in file_entry.get("symbols", []):
@@ -1041,7 +1162,25 @@ def _scan_treesitter_symbol_records_for_directory(
                 continue
             records.append(record)
 
-    return records
+    status = "succeeded"
+    reason = ""
+    reported_set = set(reported_paths)
+    if discovered_set and not reported_set.issuperset(discovered_set):
+        status = "partial"
+        missing_count = len(discovered_set - reported_set)
+        reason = f"reported_files_missing:{missing_count}"
+
+    outcome = _treesitter_outcome(
+        directory=directory,
+        codebase_root=codebase_root,
+        status=status,
+        reason=reason,
+        command=cmd,
+        discovered_files=discovered,
+        reported_paths=reported_paths,
+        stderr=result.stderr.strip(),
+    )
+    return TreeSitterScanResult(records=records, outcome=outcome)
 
 
 def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
@@ -1393,6 +1532,7 @@ def scan(
     # inspectable extraction evidence even when later upserts fail.
     code_symbol_scan_roots: list[Path] = []
     code_symbol_records: list[CodeSymbolRecord] = []
+    code_symbol_extractor_outcomes: list[dict[str, Any]] = []
     precomputed_edges: list[dict[str, Any]] | None = None
     code_graph_artifact: dict[str, Any] | None = None
     local_code_symbols_artifact: Path | None = None
@@ -1402,9 +1542,26 @@ def scan(
         code_symbol_scan_roots = _extract_configured_scan_roots(path)
         local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
         for scan_root in code_symbol_scan_roots:
-            root_records = _scan_treesitter_symbol_records_for_directory(scan_root, path, scope)
+            root_files = [
+                filepath for filepath in files
+                if filepath.resolve() == scan_root.resolve()
+                or scan_root.resolve() in filepath.resolve().parents
+            ]
+            root_result = _scan_treesitter_symbol_records_with_outcome(
+                scan_root,
+                path,
+                scope,
+                discovered_files=root_files,
+            )
+            root_records = root_result.records
             code_symbol_records.extend(root_records)
-            print(f"Code graph: {len(root_records)} symbols extracted from {scan_root}", flush=True)
+            code_symbol_extractor_outcomes.append(root_result.outcome)
+            print(
+                "Code graph: "
+                f"{len(root_records)} symbols extracted from {scan_root} "
+                f"({root_result.outcome['status']})",
+                flush=True,
+            )
         local_code_symbols_written = _append_local_code_symbols(local_code_symbols_artifact, code_symbol_records)
         precomputed_edges = extract_edges(files, path)
         repo_name = path.resolve().name
@@ -1417,6 +1574,7 @@ def scan(
             files=files,
             symbols=code_symbol_records,
             edges=precomputed_edges,
+            extractor_outcomes=code_symbol_extractor_outcomes,
         )
         print(f"Code graph artifacts: {code_graph_artifact['path']}", flush=True)
 

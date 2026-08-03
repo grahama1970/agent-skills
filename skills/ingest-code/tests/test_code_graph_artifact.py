@@ -157,25 +157,40 @@ def test_scan_dry_run_emits_code_graph_without_memory_upsert(monkeypatch, tmp_pa
     monkeypatch.setattr(ingest_code, "_extract_configured_scan_roots", lambda path: [repo])
     monkeypatch.setattr(
         ingest_code,
-        "_scan_treesitter_symbol_records_for_directory",
-        lambda directory, codebase_root, scope: [
-            CodeSymbolRecord(
-                scope=scope,
-                repo=repo.name,
-                root=str(repo),
-                branch="main",
-                commit="abc123",
-                path="app.py",
-                language="python",
-                symbol_kind="function",
-                symbol_name="app",
-                qualified_name="app",
-                start_line=1,
-                end_line=2,
-                code=source.read_text(),
-                content_hash="hash-app",
-            )
-        ],
+        "_scan_treesitter_symbol_records_with_outcome",
+        lambda directory, codebase_root, scope, discovered_files: ingest_code.TreeSitterScanResult(
+            records=[
+                CodeSymbolRecord(
+                    scope=scope,
+                    repo=repo.name,
+                    root=str(repo),
+                    branch="main",
+                    commit="abc123",
+                    path="app.py",
+                    language="python",
+                    symbol_kind="function",
+                    symbol_name="app",
+                    qualified_name="app",
+                    start_line=1,
+                    end_line=2,
+                    code=source.read_text(),
+                    content_hash="hash-app",
+                )
+            ],
+            outcome={
+                "root": ".",
+                "status": "succeeded",
+                "reason": "",
+                "extractor": "treesitter",
+                "extractor_version": "test",
+                "command": ["test-treesitter"],
+                "declared_languages": ["python"],
+                "discovered_file_count": 1,
+                "reported_file_count": 1,
+                "reported_paths": ["app.py"],
+                "stderr": "",
+            },
+        ),
     )
 
     class ForbiddenMemoryClient:
