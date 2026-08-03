@@ -1,0 +1,435 @@
+"""Typed Stage 0 report contracts and fail-closed semantic validation."""
+
+from __future__ import annotations
+
+from enum import StrEnum
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+IMMUTABLE_GOAL = (
+    "Daily top opportunities that are highly targeted, delivered in an interactive "
+    "report/interview, with auto-apply using a custom targeted resume given the algorithm "
+    "likely employed by the employer or client."
+)
+CONTRACT_VERSION = "0.2.0"
+STAGE = "STAGE_0_RESEARCH_ONLY"
+SENSITIVE_FIELD_TYPES = {
+    "free_text",
+    "self_identification",
+    "salary",
+    "clearance",
+    "work_authorization",
+    "legal",
+}
+
+
+class ResultStatus(StrEnum):
+    MATCHES = "MATCHES"
+    NO_MATCHES = "NO_MATCHES"
+    FEED_DOWN = "FEED_DOWN"
+    AUTH_REQUIRED = "AUTH_REQUIRED"
+    AUTH_FAILED = "AUTH_FAILED"
+    RATE_LIMITED = "RATE_LIMITED"
+    POLICY_BLOCKED = "POLICY_BLOCKED"
+    STALE_DATA = "STALE_DATA"
+    INVALID_REQUEST = "INVALID_REQUEST"
+    INVALID_RESPONSE = "INVALID_RESPONSE"
+    NOT_SEARCHED = "NOT_SEARCHED"
+
+
+DEGRADED_RESULT_STATUSES = {
+    ResultStatus.FEED_DOWN,
+    ResultStatus.AUTH_REQUIRED,
+    ResultStatus.AUTH_FAILED,
+    ResultStatus.RATE_LIMITED,
+    ResultStatus.POLICY_BLOCKED,
+    ResultStatus.STALE_DATA,
+    ResultStatus.INVALID_REQUEST,
+    ResultStatus.INVALID_RESPONSE,
+}
+
+
+class ContractError(ValueError):
+    """Stable machine-readable contract error."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+    def as_dict(self) -> dict[str, str]:
+        return {"code": self.code, "message": self.message}
+
+
+class StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+
+class ImmutableGoal(StrictModel):
+    text: str = Field(min_length=40)
+    goal_hash: str | None = None
+
+
+class CapabilityAuthority(StrictModel):
+    local_report: str
+    local_resume_variant: str
+    gmail_mailbox_draft_create: str
+    linkedin_human_handoff_ready: str
+    ats_form_inspect: str
+    ats_form_prefill: str
+    ats_form_submit: str
+
+
+class LaneCoverage(StrictModel):
+    lane: str
+    searched: bool
+    result_status: ResultStatus
+    candidates_observed: int = Field(ge=0)
+    candidates_admitted: int = Field(ge=0)
+    source_receipt_ids: list[str]
+    limitations: list[str]
+
+
+class SourceReceipt(StrictModel):
+    receipt_id: str
+    lane: str
+    provider: str
+    target: str
+    source_class: str
+    result_status: ResultStatus
+    observed_at: str
+    request_summary: str
+    response_status: int | None
+    content_type: str | None
+    response_bytes: int = Field(ge=0)
+    content_sha256: str | None
+    evidence_refs: list[str]
+    limitations: list[str]
+
+
+class EligibilityRejection(StrictModel):
+    rejection_id: str
+    lane: str
+    title: str
+    organization: str
+    reason_code: str
+    source_receipt_id: str
+    action_worthy: bool
+    visible_in_report: bool
+
+
+class Location(StrictModel):
+    display: str
+    workplace_type: str
+    relocation_required: bool
+
+
+class ScreeningInterfaceProfile(StrictModel):
+    observed: list[str]
+    inferred: list[str]
+    confidence: float = Field(ge=0, le=1)
+    evidence_refs: list[str]
+    unknowns: list[str] = Field(min_length=1)
+
+
+class Opportunity(StrictModel):
+    opportunity_id: str
+    lane: str
+    opportunity_type: str
+    title: str
+    organization: str
+    location: Location
+    source_receipt_ids: list[str] = Field(min_length=1)
+    eligibility_state: str
+    fit_score: float = Field(ge=0, le=1)
+    claim_keys: list[str] = Field(min_length=1)
+    why_candidate: list[str] = Field(min_length=1)
+    screening_interface_profile: ScreeningInterfaceProfile
+    status: str
+    action_worthy: bool
+    visible_in_report: bool
+
+
+class PresentationDiff(StrictModel):
+    allowed_changes: list[str]
+    prohibited_changes: list[str]
+
+
+class ResumeVariant(StrictModel):
+    variant_id: str
+    opportunity_id: str
+    claim_snapshot_sha256: str
+    claim_keys: list[str] = Field(min_length=1)
+    artifact_refs: list[str] = Field(min_length=1)
+    presentation_diff: PresentationDiff
+    status: str
+    action_worthy: bool
+    visible_in_report: bool
+
+
+class OutreachPacket(StrictModel):
+    packet_id: str
+    opportunity_id: str
+    channel: str
+    subject: str | None
+    body: str
+    claim_keys: list[str] = Field(min_length=1)
+    roundtable_status: str
+    effect_status: str
+    sendable: bool
+    candidate_transmits: bool
+    action_worthy: bool
+    visible_in_report: bool
+
+
+class ApplicationField(StrictModel):
+    name: str
+    field_type: str
+    required: bool
+    disposition: str
+    automated_answer: str | None
+
+
+class Application(StrictModel):
+    application_id: str
+    opportunity_id: str
+    ats_provider: str | None
+    state: str
+    authorized: bool
+    form_schema_digest: str | None
+    fields: list[ApplicationField]
+    action_worthy: bool
+    visible_in_report: bool
+
+
+class TalkingPoint(StrictModel):
+    text: str
+    claim_keys: list[str] = Field(min_length=1)
+    source_refs: list[str] = Field(min_length=1)
+
+
+class InterviewPrep(StrictModel):
+    opportunity_id: str
+    talking_points: list[TalkingPoint] = Field(min_length=1)
+
+
+class DecisionAction(StrictModel):
+    action: str
+    target_type: str
+    enabled: bool
+    effects_external: bool
+
+
+class ArtifactAccounting(StrictModel):
+    action_worthy_total: int = Field(ge=0)
+    visible_total: int = Field(ge=0)
+    hidden_total: int = Field(ge=0)
+    hidden_ids: list[str]
+
+
+class ReportManifest(StrictModel):
+    schema_name: str = Field(alias="schema")
+    run_id: str
+    generated_at: str
+    contract_version: str
+    immutable_goal: ImmutableGoal
+    stage: str
+    operational_readiness: str
+    capability_authority: CapabilityAuthority
+    lane_coverage: list[LaneCoverage]
+    source_receipts: list[SourceReceipt]
+    eligibility_rejections: list[EligibilityRejection]
+    opportunities: list[Opportunity]
+    resume_variants: list[ResumeVariant]
+    outreach_packets: list[OutreachPacket]
+    applications: list[Application]
+    interview_prep: list[InterviewPrep]
+    decision_actions: list[DecisionAction]
+    artifact_accounting: ArtifactAccounting
+    non_claims: list[str] = Field(min_length=1)
+
+
+def _require(raw: dict[str, Any], key: str) -> Any:
+    if key not in raw:
+        raise ContractError("SCHEMA_INVALID", f"Missing required top-level field: {key}")
+    return raw[key]
+
+
+def _validate_raw_semantics(raw: dict[str, Any]) -> None:
+    if not isinstance(raw, dict):
+        raise ContractError("SCHEMA_INVALID", "Report manifest must be a JSON object")
+
+    if _require(raw, "stage") != STAGE:
+        raise ContractError("STAGE_NOT_RESEARCH_ONLY", f"Stage must be {STAGE}")
+
+    opportunities = _require(raw, "opportunities")
+    if not isinstance(opportunities, list):
+        raise ContractError("SCHEMA_INVALID", "opportunities must be an array")
+    if len(opportunities) > 8:
+        raise ContractError("SHORTLIST_LIMIT_EXCEEDED", "Stage 0 shortlist cannot exceed eight")
+
+    valid_statuses = {status.value for status in ResultStatus}
+    for lane in _require(raw, "lane_coverage"):
+        status = lane.get("result_status")
+        if status not in valid_statuses:
+            raise ContractError("UNKNOWN_SOURCE_STATUS", f"Unknown lane result status: {status}")
+        if lane.get("searched") is False and status != ResultStatus.NOT_SEARCHED.value:
+            raise ContractError(
+                "NOT_SEARCHED_MISMATCH", "A lane not searched must be NOT_SEARCHED"
+            )
+        if status == ResultStatus.NOT_SEARCHED.value and lane.get("searched") is not False:
+            raise ContractError(
+                "NOT_SEARCHED_MISMATCH", "NOT_SEARCHED requires searched=false"
+            )
+
+    for receipt in _require(raw, "source_receipts"):
+        status = receipt.get("result_status")
+        if status not in valid_statuses:
+            raise ContractError("UNKNOWN_SOURCE_STATUS", f"Unknown receipt status: {status}")
+
+    for opportunity in opportunities:
+        if opportunity.get("location", {}).get("relocation_required") is True:
+            raise ContractError(
+                "RELOCATION_SHORTLISTED", "Relocation-required opportunities cannot be shortlisted"
+            )
+
+    for packet in _require(raw, "outreach_packets"):
+        if packet.get("sendable") is not False:
+            raise ContractError("OUTREACH_SENDABLE_STAGE0", "Stage 0 outreach cannot be sendable")
+        if packet.get("candidate_transmits") is not True:
+            raise ContractError(
+                "HUMAN_TRANSMISSION_REQUIRED", "The candidate must transmit every message"
+            )
+
+    for application in _require(raw, "applications"):
+        if application.get("authorized") is not False or application.get("state") != "BLOCKED_STAGE_0":
+            raise ContractError(
+                "ATS_AUTHORIZED_STAGE0", "ATS applications must remain blocked and unauthorized"
+            )
+        for field in application.get("fields", []):
+            field_type = field.get("field_type")
+            if field_type in SENSITIVE_FIELD_TYPES:
+                if field.get("disposition") != "human_required" or field.get(
+                    "automated_answer"
+                ) is not None:
+                    raise ContractError(
+                        "HUMAN_REQUIRED_FIELD_AUTOFILLED",
+                        f"Sensitive/free-text field was automated: {field.get('name')}",
+                    )
+            if field.get("disposition") == "human_required" and field.get(
+                "automated_answer"
+            ) is not None:
+                raise ContractError(
+                    "HUMAN_REQUIRED_FIELD_AUTOFILLED",
+                    f"human_required field has an automated answer: {field.get('name')}",
+                )
+
+
+def _artifact_rows(manifest: ReportManifest) -> list[tuple[str, bool, bool]]:
+    rows: list[tuple[str, bool, bool]] = []
+    for item in manifest.opportunities:
+        rows.append(item.opportunity_id, item.action_worthy, item.visible_in_report))
+    for item in manifest.resume_variants:
+        rows.append((item.variant_id, item.action_worthy, item.visible_in_report))
+    for item in manifest.outreach_packets:
+        rows.append((item.packet_id, item.action_worthy, item.visible_in_report))
+    for item in manifest.applications:
+        rows.append((item.application_id, item.action_worthy, item.visible_in_report))
+    return rows
+
+
+def _validate_model_semantics(manifest: ReportManifest) -> None:
+    if manifest.schema_name != "monitor_opportunities.report.v1":
+        raise ContractError(
+            "SCHEMA_VERSION_UNSUPPORTED", f"Unsupported schema: {manifest.schema_name}"
+        )
+    if manifest.contract_version != CONTRACT_VERSION:
+        raise ContractError(
+            "CONTRACT_VERSION_UNSUPPORTED",
+            f"Contract must be {CONTRACT_VERSION}, got {manifest.contract_version}",
+        )
+    if manifest.immutable_goal.text != IMMUTABLE_GOAL:
+        raise ContractError("IMMUTABLE_GOAL_MISMATCH", "Report is not bound to the immutable goal")
+
+    lanes = [lane.lane for lane in manifest.lane_coverage]
+    if sorted(lanes) != ["A", "B", "C"]:
+        raise ContractError("LANE_COVERAGE_INCOMPLETE", "Exactly one record for lanes A, B, and C is required")
+
+    receipts_by_lane: dict[str, list[SourceReceipt]] = {"A": [], "B": [], "C": []}
+    for receipt in manifest.source_receipts:
+        receipts_by_lane.setdefault(receipt.lane, []).append(receipt)
+
+    for lane in manifest.lane_coverage:
+        receipt_statuses = {
+            receipt.result_status
+            for receipt in receipts_by_lane.get(lane.lane, [])
+            if receipt.receipt_id in lane.source_receipt_ids
+        }
+        if lane.result_status == ResultStatus.NO_MATCHES and receipt_statuses & DEGRADED_RESULT_STATUSES:
+            raise ContractError(
+                "FEED_FAILURE_MISLABELED",
+                f"Lane {lane.lane} reports NO_MATCHES despite degraded source evidence",
+            )
+        if lane.searched and not lane.source_receipt_ids:
+            raise ContractError(
+                "SOURCE_RECEIPT_MISSING", f"Searched lane {lane.lane} has no source receipt"
+            )
+
+    rows = _artifact_rows(manifest)
+    action_worthy = [row for row in rows if row[1]]
+    hidden = [artifact_id for artifact_id, _, visible in action_worthy if not visible]
+    visible = [row for row in action_worthy if row[2]]
+    accounting = manifest.artifact_accounting
+    if hidden:
+        raise ContractError("HIDDEN_ACTION_ARTIFACT", f"Hidden action-worthy artifacts: {hidden}")
+    if accounting.hidden_total != 0 or accounting.hidden_ids:
+        raise ContractError("HIDDEN_ACTION_ARTIFACT", "Manifest declares hidden artifacts")
+    if accounting.action_worthy_total != len(action_worthy):
+        raise ContractError(
+            "ARTIFACT_ACCOUNTING_MISMATCH",
+            "action_worthy_total does not match calculated artifacts",
+        )
+    if accounting.visible_total != len(visible):
+        raise ContractError(
+            "ARTIFACT_ACCOUNTING_MISMATCH", "visible_total does not match calculated artifacts"
+        )
+
+    blocked_values = {"BLOCKED_STAGE_0", "NOT_IMPLEMENTED"}
+    authority = manifest.capability_authority
+    external = {
+        "gmail_mailbox_draft_create": authority.gmail_mailbox_draft_create,
+        "linkedin_human_handoff_ready": authority.linkedin_human_handoff_ready,
+        "ats_form_inspect": authority.ats_form_inspect,
+        "ats_form_prefill": authority.ats_form_prefill,
+        "ats_form_submit": authority.ats_form_submit,
+    }
+    invalid = {name: value for name, value in external.items() if value not in blocked_values}
+    if invalid:
+        raise ContractError(
+            "EXTERNAL_CAPABILITY_ENABLED_STAGE0", f"Stage 0 external capabilities enabled: {invalid}"
+        )
+
+    for variant in manifest.resume_variants:
+        if variant.presentation_diff.prohibited_changes:
+            raise ContractError(
+                "PROHIBITED_RESUME_DELTA", f"Variant {variant.variant_id} changes facts"
+            )
+
+    for action in manifest.decision_actions:
+        if action.effects_external:
+            raise ContractError(
+                "EXTERNAL_DECISION_STAGE0", f"Decision {action.action} cannot cause an effect"
+            )
+
+
+def validate_manifest(raw: dict[str, Any]) -> ReportManifest:
+    """Parse and semantically validate a Stage 0 report manifest."""
+
+    _validate_raw_semantics(raw)
+    try:
+        manifest = ReportManifest.model_validate(raw)
+    except ValidationError as exc:
+        raise ContractError("SCHEMA_INVALID", str(exc)) from exc
+    _validate_model_semantics(manifest)
+    return manifest

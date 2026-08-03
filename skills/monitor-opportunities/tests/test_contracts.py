@@ -1,0 +1,54 @@
+from __future__ import annotations
+
+import copy
+
+import pytest
+
+from monitor_opportunities.contracts import ContractError, validate_manifest
+from monitor_opportunities.verification import built_in_fixture
+
+
+def test_valid_fixture_is_accepted() -> None:
+    manifest = validate_manifest(built_in_fixture())
+    assert manifest.stage == "STAGE_0_RESEARCH_ONLY"
+    assert manifest.artifact_accounting.hidden_total == 0
+
+
+@pytest.mark.parametrize(
+    ("mutate", "code"),
+    [
+        (lambda data: data["outreach_packets"][0].update(sendable=True), "OUTREACH_SENDABLE_STAGE0"),
+        (lambda data: data["applications"][0].update(authorized=True), "ATS_AUTHORIZED_STAGE0"),
+        (
+            lambda data: data["opportunities"][0]["location"].update(relocation_required=True),
+            "RELOCATION_SHORTLISTED",
+        ),
+        (
+            lambda data: data["lane_coverage"][1].update(result_status="NO_MATCHES"),
+            "FEED_FAILURE_MISLABELED",
+        ),
+    ],
+)
+def test_fail_closed_mutations(mutate, code: str) -> None:  # type: ignore[no-untyped-def]
+    data = copy.deepcopy(built_in_fixture())
+    mutate(data)
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+    assert exc.value.code == code
+
+
+def test_hidden_artifact_is_rejected() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["outreach_packets"][0]["visible_in_report"] = False
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+    assert exc.value.code == "HIDDEN_ACTION_ARTIFACT"
+
+
+def test_human_required_free_text_cannot_be_filled() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    field = data["applications"][0]["fields"][0]
+    field["automated_answer"] = "Invented answer"
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+    assert exc.value.code == "HUMAN_REQUIRED_FIELD_AUTOFILLED"
