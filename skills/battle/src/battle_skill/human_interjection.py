@@ -85,7 +85,7 @@ def submit_pause_after_round(
     if not existing:
         _write_json(receipt_path, receipt)
     else:
-        duplicate_path = out_dir / f"{safe_request_id}.duplicate.{int(time.time())}.json"
+        duplicate_path = out_dir / f"{safe_request_id}.duplicate.{time.time_ns()}.json"
         receipt["original_receipt"] = str(receipt_path)
         _write_json(duplicate_path, receipt)
     return receipt
@@ -218,7 +218,9 @@ def apply_pending_pause_after_round(
         "scanned": scanned,
         "created_at": _utc(),
     }
-    scan_path = scan_dir / f"round-{round_number:04d}.json"
+    scan_path = scan_dir / (
+        f"round-{round_number:04d}-scan-{time.time_ns()}.json"
+    )
     _write_json(scan_path, receipt)
     receipt["scan_receipt"] = str(scan_path)
     return receipt
