@@ -27,7 +27,16 @@ class MemoryWriteResult:
 
 @dataclass(frozen=True)
 class CodeSymbolWriteResult(MemoryWriteResult):
+    structured_upsert_stored: int
+    legacy_fallback_stored: int
+    structured_verified: int
+    failed: int
+    write_status: str
     stored_records: tuple[CodeSymbolRecord, ...]
+    structured_records: tuple[CodeSymbolRecord, ...]
+    legacy_records: tuple[CodeSymbolRecord, ...]
+    failed_records: tuple[CodeSymbolRecord, ...]
+    record_results: tuple[dict, ...]
 
 
 class CodeMemoryClient:
@@ -49,16 +58,52 @@ class CodeMemoryClient:
     ) -> CodeSymbolWriteResult:
         """Upsert structured code symbols, splitting failed batches first."""
         if not records:
-            return CodeSymbolWriteResult(stored=0, attempted=0, errors=[], stored_records=())
+            return CodeSymbolWriteResult(
+                stored=0,
+                attempted=0,
+                errors=[],
+                structured_upsert_stored=0,
+                legacy_fallback_stored=0,
+                structured_verified=0,
+                failed=0,
+                write_status="complete",
+                stored_records=(),
+                structured_records=(),
+                legacy_records=(),
+                failed_records=(),
+                record_results=(),
+            )
 
         effective_batch_size = self._resolve_batch_size(batch_size)
-        stored_records: list[CodeSymbolRecord] = []
+        structured_records: list[CodeSymbolRecord] = []
+        legacy_records: list[CodeSymbolRecord] = []
+        failed_records: list[CodeSymbolRecord] = []
+        record_results: list[dict] = []
         errors: list[str] = []
+
+        def append_result(record: CodeSymbolRecord, *, route: str, status: str, error: str = "") -> None:
+            record_results.append({
+                "symbol_id": record.symbol_id,
+                "symbol_version_id": record.symbol_version_id,
+                "qualified_name": record.qualified_name,
+                "route": route,
+                "status": status,
+                "error": error,
+            })
 
         def store_batch(batch: list[CodeSymbolRecord], client: httpx.Client) -> None:
             upsert_error = self._upsert_batch(batch, collection=collection, client=client)
             if upsert_error is None:
-                stored_records.extend(batch)
+                for record in batch:
+                    verification_error = self._verify_structured_code_symbol(record, collection, client)
+                    if verification_error is None:
+                        structured_records.append(record)
+                        append_result(record, route="structured_upsert", status="stored")
+                    else:
+                        failed_records.append(record)
+                        error = f"exact readback failed for {record.qualified_name}: {verification_error}"
+                        errors.append(error)
+                        append_result(record, route="structured_upsert", status="failed", error=error)
                 return
 
             if len(batch) > 1:
@@ -69,23 +114,44 @@ class CodeMemoryClient:
 
             record = batch[0]
             if self.store_legacy_code_symbol(record, client=client):
-                stored_records.append(record)
+                legacy_records.append(record)
+                append_result(record, route="legacy_fallback", status="stored", error=upsert_error)
                 return
 
-            errors.append(
+            failed_records.append(record)
+            error = (
                 f"upsert and legacy fallback failed for {record.qualified_name}: "
                 f"upsert={upsert_error}; legacy=fallback failed"
             )
+            errors.append(error)
+            append_result(record, route="failed", status="failed", error=error)
 
         with self._client() as client:
             for i in range(0, len(records), effective_batch_size):
                 store_batch(records[i : i + effective_batch_size], client)
 
+        stored_records = [*structured_records, *legacy_records]
+        failed = len(failed_records)
+        if failed:
+            write_status = "failed"
+        elif legacy_records:
+            write_status = "degraded"
+        else:
+            write_status = "complete"
         return CodeSymbolWriteResult(
             stored=len(stored_records),
             attempted=len(records),
             errors=errors,
             stored_records=tuple(stored_records),
+            structured_upsert_stored=len(structured_records),
+            legacy_fallback_stored=len(legacy_records),
+            structured_verified=len(structured_records),
+            failed=failed,
+            write_status=write_status,
+            structured_records=tuple(structured_records),
+            legacy_records=tuple(legacy_records),
+            failed_records=tuple(failed_records),
+            record_results=tuple(record_results),
         )
 
     def _resolve_batch_size(self, requested: int | None) -> int:
@@ -127,6 +193,56 @@ class CodeMemoryClient:
         if detail:
             return f"HTTP {response.status_code}: {detail}"
         return f"HTTP {response.status_code}"
+
+    def _verify_structured_code_symbol(
+        self,
+        record: CodeSymbolRecord,
+        collection: str,
+        client: httpx.Client,
+    ) -> str | None:
+        """Verify one structured write using a bounded exact-key readback route."""
+        try:
+            response = client.post(
+                "/get",
+                json={"collection": collection, "key": record.symbol_id},
+            )
+        except Exception as exc:
+            return f"readback_unavailable:{exc}"
+
+        if response.status_code == 404:
+            return "readback_missing"
+        if not (200 <= response.status_code < 300):
+            detail = getattr(response, "text", "") or ""
+            return f"readback_http_{response.status_code}:{detail}" if detail else f"readback_http_{response.status_code}"
+
+        try:
+            payload = response.json()
+        except Exception as exc:
+            return f"readback_invalid_json:{exc}"
+
+        document = payload.get("document") if isinstance(payload, dict) else None
+        if document is None and isinstance(payload, dict):
+            document = payload.get("item") or payload.get("record") or payload.get("data")
+        if not isinstance(document, dict):
+            return "readback_missing_document"
+
+        expected = record.to_document()
+        checks = {
+            "_key": expected["_key"],
+            "symbol_id": expected["symbol_id"],
+            "symbol_version_id": expected["symbol_version_id"],
+            "repo": expected["repo"],
+            "repository_id": expected["repository_id"],
+            "branch": expected["branch"],
+            "path": expected["path"],
+            "content_hash": expected["content_hash"],
+            "start_line": expected["start_line"],
+            "end_line": expected["end_line"],
+        }
+        for field, expected_value in checks.items():
+            if document.get(field) != expected_value:
+                return f"readback_mismatch:{field}"
+        return None
 
     def store_legacy_code_symbol(
         self,

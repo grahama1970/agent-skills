@@ -141,6 +141,14 @@ for migration diagnostics.
 
 Identifier-heavy fields are emitted as `lexical_terms` such as `symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`, and split identifier tokens. These are inputs to `/memory`'s code retrieval backend; `/ingest-code` does not create Qdrant collections or payload indexes directly.
 
+Structured code-index success requires a `/memory /upsert` write to
+`collection="code_symbols"` and bounded exact-key readback of a matching
+`symbol_id`, `symbol_version_id`, repository, branch, path, source range, and
+content hash. If structured upsert falls back to `/store` or `/learn`, the
+fallback remains compatibility storage only: `.ingest-code.json` records
+`write_status="degraded"`, keeps fallback counts separate, and does not set
+`code_index.enabled` or `hybrid_retrieval_capable`.
+
 ## Directory Filtering
 
 **Git repositories:** When scanning a git repo, `/ingest-code` uses `git ls-files` which automatically respects `.gitignore`. Files ignored by git are excluded from ingestion.
@@ -196,6 +204,11 @@ After a successful scan, `/ingest-code` writes a `.ingest-code.json` marker file
     "collection": "code_symbols",
     "treesitter": true,
     "symbols_stored": 4182,
+    "structured_upsert_stored": 4182,
+    "legacy_fallback_stored": 0,
+    "structured_verified": 4182,
+    "failed": 0,
+    "write_status": "complete",
     "lexical_terms": true,
     "line_ranges": true,
     "content_hashes": true,
