@@ -12,6 +12,18 @@ outputs/
 logs/
 data/
 work/
+local/
+CLEANUP_LOG*
+
+spectator/public/**/*.bak
+spectator/public/battle-race-atlas.png
+spectator/public/battle-race-atlas.png.json
+spectator/public/**/captures/
+spectator/public/**/*screenshot*
+spectator/public/**/*.tmp
+spectator/**/captures/
+spectator/**/*screenshot*
+spectator/UX-DESIGN-REVIEW-*-input.jpg
 
 monitor/**/node_modules/
 monitor/**/dist/

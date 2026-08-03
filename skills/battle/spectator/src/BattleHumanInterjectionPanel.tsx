@@ -1,0 +1,87 @@
+import type { BattleNormalizedUxFixture } from "./lib/battle-types";
+import { humanInterjectionPanelViewModel } from "./lib/battle-human-interjection";
+
+type Props = {
+	fixture: BattleNormalizedUxFixture | null;
+};
+
+const STATE_LABELS: Record<string, string> = {
+	pending: "Pending",
+	accepted: "Accepted",
+	applied: "Applied",
+	rejected: "Rejected",
+	unavailable: "Unavailable",
+	missing_backend: "Missing Backend",
+};
+
+function stateTone(state: string): string {
+	if (state === "applied") return "border-emerald-400/40 bg-emerald-500/10 text-emerald-100";
+	if (state === "accepted" || state === "pending") return "border-cyan-400/40 bg-cyan-500/10 text-cyan-100";
+	if (state === "rejected") return "border-rose-400/40 bg-rose-500/10 text-rose-100";
+	return "border-amber-400/40 bg-amber-500/10 text-amber-100";
+}
+
+export function BattleHumanInterjectionPanel({ fixture }: Props) {
+	const model = humanInterjectionPanelViewModel(fixture);
+	const stateValue = model.stateSet.join(" ");
+	const visibleStates = model.states.length
+		? model.states
+		: [
+				{
+					state: model.stateSet[0],
+					status: model.status.toUpperCase(),
+					label: model.reason ?? "pause_after_round backend receipts are unavailable.",
+					request_id: null,
+					reason_code: model.status,
+					receipt_path: model.sourceProofReceipt,
+					receipt_schema: null,
+					backend_receipt: false,
+					live: model.live === true,
+					mocked: model.mocked === true,
+				},
+			];
+
+	return (
+		<section
+			className="rounded-lg border border-cyan-300/15 bg-slate-950/88 px-3 py-2 shadow-lg"
+			data-qid="battle:human-interjection:panel"
+			data-state={stateValue}
+			data-source-bound={String(model.sourceBound)}
+			data-live={String(model.live)}
+			data-mocked={String(model.mocked)}
+			data-run-id={model.runId ?? ""}
+			data-source-proof-receipt={model.sourceProofReceipt ?? ""}
+			aria-label="Battle pause after round receipt state"
+		>
+			<div className="flex flex-wrap items-center gap-2">
+				<span className="battle-label">Pause After Round</span>
+				<span
+					className={`rounded border px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${model.sourceBound ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-100" : "border-amber-400/40 bg-amber-500/10 text-amber-100"}`}
+					data-qid="battle:human-interjection:source"
+				>
+					{model.sourceBound ? "Backend receipts" : "Fail closed"}
+				</span>
+				<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:human-interjection:run">
+					run {model.runId ?? "n/a"}
+				</span>
+			</div>
+			<div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-5" data-qid="battle:human-interjection:states">
+				{visibleStates.map((item) => (
+					<div
+						key={`${item.state}:${item.request_id ?? item.status}`}
+						className={`min-h-16 rounded border p-2 ${stateTone(item.state)}`}
+						data-qid={`battle:human-interjection:state:${item.state}`}
+						data-status={item.status}
+						data-request-id={item.request_id ?? ""}
+						data-reason-code={item.reason_code ?? ""}
+						data-backend-receipt={String(item.backend_receipt)}
+						data-receipt-path={item.receipt_path ?? ""}
+					>
+						<div className="text-[10px] font-black uppercase tracking-[0.1em]">{STATE_LABELS[item.state] ?? item.state}</div>
+						<div className="mt-1 text-[11px] leading-snug text-slate-100">{item.label}</div>
+					</div>
+				))}
+			</div>
+		</section>
+	);
+}

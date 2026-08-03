@@ -147,6 +147,14 @@ def _local_app_import_zip_bindings(tree: ast.AST) -> tuple[set[str], set[str]]:
         if name not in spec_module_names
         or _executes_local_module(tree, name, spec_names)
     }
+    module_factory_names = _local_app_module_factory_names(tree, loaded_module_names)
+    for name, value in assignments.items():
+        if (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Name)
+            and value.func.id in module_factory_names
+        ):
+            loaded_module_names.add(name)
     return direct_names, loaded_module_names
 
 
@@ -156,10 +164,27 @@ def _name_assignments(tree: ast.AST) -> dict[str, ast.AST]:
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name):
-                    assignments[target.id] = node.value
+                    assignments.setdefault(target.id, node.value)
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            assignments[node.target.id] = node.value
+            assignments.setdefault(node.target.id, node.value)
     return assignments
+
+
+def _local_app_module_factory_names(
+    tree: ast.AST, module_names: set[str]
+) -> set[str]:
+    factory_names: set[str] = set()
+    for function in (
+        node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+    ):
+        for node in ast.walk(function):
+            if (
+                isinstance(node, ast.Return)
+                and isinstance(node.value, ast.Name)
+                and node.value.id in module_names
+            ):
+                factory_names.add(function.name)
+    return factory_names
 
 
 def _local_import_zip_factory_names(tree: ast.AST, module_names: set[str]) -> set[str]:

@@ -15,13 +15,21 @@ the human/operator guide.
 
 ## Current Battle State
 
-Authoritative current-state notes for the adaptive-lineage goal live in
-[`GOAL_ADAPTIVE_LINEAGE.md`](GOAL_ADAPTIVE_LINEAGE.md#current-state-addendum-2026-07-28).
-The original 2026-07-18 four-specimen adaptive-lineage goal remains accepted as
-`MET`. The later dual-team co-evolution amendment is separate and remains
-`NOT_MET` until #1048 and #1064 close with deterministic backend and frontend
-proof. Related active work is tracked in #1063, #1065, #1066, and the broader
-async scheduler epic #46.
+The authoritative current-state artifact is generated from receipts and GitHub
+issue state:
+
+- [`CURRENT_STATUS.json`](CURRENT_STATUS.json)
+- [`docs/status/README.md`](docs/status/README.md)
+
+Regenerate it with:
+
+```bash
+./run.sh current-status generate
+./run.sh current-status check
+```
+
+Older goal files and handoffs are historical unless their claims appear in
+`CURRENT_STATUS.json`.
 
 ## How Battle Works
 
@@ -72,6 +80,23 @@ Judge replay is required before any exploit-success claim.
 | Run a source-code Red vs Blue round | `./run.sh battle /path/to/codebase --rounds 10` |
 | Inspect recent battle state | `./run.sh status` |
 | Generate a battle report | `./run.sh report <battle-id>` |
+
+## Qualification Gates
+
+Battle uses separate gates so fast sanity is not confused with live Arena/Pixi
+readiness:
+
+| Tier | Command | Proves | Does not prove |
+|---|---|---|---|
+| Fast offline sanity | `./run.sh tiered-gate fast-sanity --out /tmp/battle-tiered/fast.json` | Root layout, package imports, deterministic fixture receipt, committed contract health | Live Tau, Docker Judge, browser, or provider readiness |
+| Deterministic backend/spectator contracts | `./run.sh tiered-gate deterministic --out-dir /tmp/battle-tiered/backend --receipt-out /tmp/battle-tiered/backend/receipt.json` | Deterministic backend contracts and committed spectator fixture integrity | Live Arena, live Pixi, live provider, or browser execution |
+| Live same-run Arena-to-Pixi qualification | `./run.sh tiered-gate live --arena-receipt <arena-run-receipt.json> --pixi-receipt <pixi-proof.json> --out /tmp/battle-tiered/live.json` | Supplied Arena and Pixi receipts are non-mocked, live, same-run, current-source, and not fixture-backed | Creating a new live run; provider reliability beyond those receipts |
+| Same-run receipt validation | `./run.sh tiered-gate same-run-live --same-run-receipt <qualification-receipt.json> --out /tmp/battle-tiered/live.json` | A single same-run Arena/Tau/Judge/Pixi receipt is live, current-source, browser/CDP-backed, and not fixture-backed | Creating a new live run; provider reliability beyond that receipt |
+
+The live tier fails closed when source commit/tree metadata is missing or stale,
+when run ids differ, or when the browser/Pixi state is fixture-backed. Use the
+Arena/Pixi proof command that owns the live run to generate those receipts; the
+tiered gate only validates them.
 
 ## Operating Contract
 

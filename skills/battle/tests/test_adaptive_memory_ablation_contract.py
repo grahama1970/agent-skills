@@ -139,17 +139,68 @@ def test_nested_runtime_command_cannot_repurpose_battle_uv_environment(
     tmp_path, monkeypatch
 ) -> None:
     monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", "/tmp/battle-active-environment")
+    monkeypatch.setenv("VIRTUAL_ENV", "/tmp/battle-active-venv")
     payload = ablation._json_command(
         command=[
             sys.executable,
             "-c",
-            "import json,os; print(json.dumps({'uv_env': os.getenv('UV_PROJECT_ENVIRONMENT')}))",
+            "import json,os; print(json.dumps({'uv_env': os.getenv('UV_PROJECT_ENVIRONMENT'), 'virtual_env': os.getenv('VIRTUAL_ENV')}))",
         ],
         cwd=tmp_path,
         label="environment isolation probe",
     )
-    assert payload == {"uv_env": None}
+    assert payload == {"uv_env": None, "virtual_env": None}
     assert os.environ["UV_PROJECT_ENVIRONMENT"] == "/tmp/battle-active-environment"
+    assert os.environ["VIRTUAL_ENV"] == "/tmp/battle-active-venv"
+
+
+def test_json_command_can_accept_structured_nonzero_json(tmp_path) -> None:
+    payload = ablation._json_command(
+        command=[
+            sys.executable,
+            "-c",
+            "import json,sys; print(json.dumps({'schema': 'receipt.v1', 'status': 'BLOCKED'})); sys.exit(1)",
+        ],
+        cwd=tmp_path,
+        label="structured blocked receipt",
+        allow_nonzero_json=True,
+    )
+
+    assert payload == {"schema": "receipt.v1", "status": "BLOCKED"}
+
+
+def test_tau_runtime_readiness_accepts_local_lanes_when_provider_lane_blocked(
+    tmp_path, monkeypatch
+) -> None:
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'tau'\n", encoding="utf-8")
+
+    def fake_json_command(**kwargs):
+        assert kwargs["label"] == "Tau doctor"
+        return {
+            "schema": "tau.doctor.v1",
+            "status": "BLOCKED",
+            "ok": False,
+            "mocked": False,
+            "live": True,
+            "lanes": {
+                "local_cli": {"ready": True},
+                "local_sanity": {"ready": True},
+                "provider_live": {"ready": False},
+            },
+        }
+
+    class FakeCompleted:
+        returncode = 0
+        stdout = "a" * 40 + "\n"
+
+    monkeypatch.setattr(ablation, "_json_command", fake_json_command)
+    monkeypatch.setattr(ablation.subprocess, "run", lambda *args, **kwargs: FakeCompleted())
+
+    readiness = ablation._tau_runtime_readiness(tau_root=tmp_path)
+
+    assert readiness["status"] == "PASS"
+    assert readiness["local_cli_ready"] is True
+    assert readiness["local_sanity_ready"] is True
 
 
 def test_preflight_rejects_any_preexisting_trial_output(tmp_path) -> None:

@@ -39,6 +39,7 @@ import { BattleRoundStoryIntro } from "./BattleRoundStoryIntro";
 import { scoreCaptionForCue, scoreTriggerForEffectCue, scoreTriggerForReceiptBeat } from "./lib/battle-score-bindings";
 import { spriteIdForLane } from "./engine/battle-lane-variant-map";
 import { BattleLiveTransportBanner } from "./BattleLiveTransportBanner";
+import { BattleHumanInterjectionPanel } from "./BattleHumanInterjectionPanel";
 import { useBattleLiveTransport } from "./hooks/useBattleLiveTransport";
 import { BattleReceiptFooter } from "./BattleReceiptFooter";
 import { cn } from "./lib/utils";
@@ -329,6 +330,11 @@ function BattleSpectatorArenaContent({ routeEpoch }: { routeEpoch: number }) {
             onReturnToLive={liveTransport.returnToLive}
             onRecover={liveTransport.recoverFromGap}
           />
+        </div>
+      ) : null}
+      {receiptChrome ? (
+        <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0">
+          <BattleHumanInterjectionPanel fixture={typedReceiptFixture} />
         </div>
       ) : null}
       {geneticModel ? (

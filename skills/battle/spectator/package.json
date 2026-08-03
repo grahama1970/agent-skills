@@ -42,6 +42,7 @@
     "prove:adaptive-lineage-v13": "node scripts/prove-battle-adaptive-lineage-v13.mjs",
     "prove:adaptive-lineage-panel-source": "node scripts/prove-battle-adaptive-lineage-panel-source.mjs",
     "prove:adaptive-memory-v14": "node scripts/prove-battle-adaptive-memory-v14.mjs",
+    "prove:human-interjection-panel": "node scripts/prove-battle-human-interjection-panel.mjs",
     "prove:layout-geometry": "node scripts/prove-battle-layout-geometry.mjs"
   },
   "dependencies": {

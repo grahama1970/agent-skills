@@ -1,0 +1,106 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from battle_skill.human_interjection import apply_after_round, submit_pause_after_round
+
+
+def test_pause_after_round_accepts_and_applies_without_mutating_judge_receipt(
+    tmp_path: Path,
+) -> None:
+    judge = tmp_path / "judge.json"
+    judge.write_text(json.dumps({"schema": "judge", "status": "PASS"}), encoding="utf-8")
+
+    receipt = submit_pause_after_round(
+        out_dir=tmp_path / "interjections",
+        active_run_id="run-1",
+        request_run_id="run-1",
+        request_id="req-1",
+        auth_token="secret",
+        expected_auth_token="secret",
+        boundary="round_running",
+        judge_receipt=judge,
+    )
+    application = apply_after_round(
+        out_dir=tmp_path / "applications",
+        interjection_receipt=tmp_path / "interjections" / "req-1.json",
+        round_receipt=judge,
+    )
+
+    assert receipt["schema"] == "battle.human_interjection.v1"
+    assert receipt["status"] == "ACCEPTED"
+    assert receipt["mocked"] is False
+    assert receipt["live"] is True
+    assert receipt["applies_at"] == "after_current_round"
+    assert receipt["immutability"]["judge_receipt_unchanged"] is True
+    assert application["status"] == "APPLIED"
+    assert application["round_receipt_unchanged"] is True
+
+
+def test_pause_after_round_duplicate_is_idempotent(tmp_path: Path) -> None:
+    judge = tmp_path / "judge.json"
+    judge.write_text(json.dumps({"schema": "judge", "status": "PASS"}), encoding="utf-8")
+    kwargs = {
+        "out_dir": tmp_path / "interjections",
+        "active_run_id": "run-1",
+        "request_run_id": "run-1",
+        "request_id": "req-1",
+        "auth_token": "secret",
+        "expected_auth_token": "secret",
+        "boundary": "round_running",
+        "judge_receipt": judge,
+    }
+
+    first = submit_pause_after_round(**kwargs)
+    second = submit_pause_after_round(**kwargs)
+
+    assert first["status"] == "ACCEPTED"
+    assert second["status"] == "DUPLICATE_ACCEPTED"
+    assert second["accepted"] is True
+    assert second["reason"] == "duplicate_request_id"
+
+
+def test_pause_after_round_rejects_invalid_inputs(tmp_path: Path) -> None:
+    judge = tmp_path / "judge.json"
+    judge.write_text(json.dumps({"schema": "judge", "status": "PASS"}), encoding="utf-8")
+
+    invalid_auth = submit_pause_after_round(
+        out_dir=tmp_path / "interjections",
+        active_run_id="run-1",
+        request_run_id="run-1",
+        request_id="bad-auth",
+        auth_token="wrong",
+        expected_auth_token="secret",
+        boundary="round_running",
+        judge_receipt=judge,
+    )
+    invalid_timing = submit_pause_after_round(
+        out_dir=tmp_path / "interjections",
+        active_run_id="run-1",
+        request_run_id="run-1",
+        request_id="bad-time",
+        auth_token="secret",
+        expected_auth_token="secret",
+        boundary="judge_finalized",
+        judge_receipt=judge,
+    )
+    wrong_run = submit_pause_after_round(
+        out_dir=tmp_path / "interjections",
+        active_run_id="run-1",
+        request_run_id="run-2",
+        request_id="wrong-run",
+        auth_token="secret",
+        expected_auth_token="secret",
+        boundary="round_running",
+        judge_receipt=judge,
+    )
+
+    assert invalid_auth["status"] == "REJECTED"
+    assert invalid_auth["reason"] == "invalid_auth"
+    assert invalid_timing["reason"] == "invalid_timing"
+    assert wrong_run["reason"] == "wrong_run"
+    assert all(
+        receipt["immutability"]["judge_receipt_unchanged"]
+        for receipt in (invalid_auth, invalid_timing, wrong_run)
+    )

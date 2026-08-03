@@ -40,4 +40,29 @@ if [[ "${1:-}" == "backend-eval" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/backend_eval.py" "$@"
 fi
 
+if [[ "${1:-}" == "tiered-gate" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/tiered_qualification.py" "$@"
+fi
+
+if [[ "${1:-}" == "same-run-qualification" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/same_run_qualification.py" "$@"
+fi
+
+if [[ "${1:-}" == "current-status" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/current_status.py" "$@"
+fi
+
+if [[ "${1:-}" == "human-interjection-proof" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/human_interjection_proof.py" "$@"
+fi
+
+if [[ "${1:-}" == "human-interjection-spectator-proof" ]]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/human-interjection-spectator-proof.sh" "$@"
+fi
+
 exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"

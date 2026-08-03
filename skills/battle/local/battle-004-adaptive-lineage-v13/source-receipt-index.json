@@ -1,176 +1,176 @@
 {
   "battle_id": "battle-004",
-  "campaign_root_id": "battle-004-adaptive-red-blue-lineage-v13",
+  "campaign_root_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3",
   "memory_evaluation": {
     "decisions": [
       "NO_PROMOTION",
       "NO_PROMOTION"
     ],
-    "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-memory-evaluation",
-    "sha256": "bfe63d19882ef6f9d8ecd9c715f671e522013104ec57564557f355f12d223aa6"
+    "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-memory-evaluation",
+    "sha256": "7a95e086f16bacdf597967f95f903655965c4e66167c994c22d86f7e9bf42cdc"
   },
   "public_receipts": [
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-observation",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "78fc93f98d81f8fb72147448074cd7a7eece9d50f2cd5c2347dc5466af385bb6",
+      "sha256": "a467eadf5d144e1b4489f562e2d9e819a4588e61de50b144d4a7d79dcb92c689",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-observation",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "df3570931f988c80a72647e769924eb8eab09396131ded0b3acb71868af67e63",
+      "sha256": "859228168a067c55480351830ddacb9419a4fe0fb1319af4506e7693a4014d57",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g2-observation",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "317de695abcaf72c38eb2eccc7e68970d3dec35e7412b81f677b638389d7ddb0",
+      "sha256": "7c9c7ff06455d378471c89ccfa0143b09210c3110037b721601b9afae3d12a4d",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g2-observation",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "ba18de7ad1a0d5ee05a738cb7e6860a6a346549258f3265638416abf0856e7ff",
+      "sha256": "680284fed1304e59069caada1d79f3a28346f2cba7c341ef967c466b1b602caa",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-fitness",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "6a74bed467712120fd6cc5b69663dc3cbd48a1610e64f0a22aeeac99b6800510",
+      "sha256": "b290698e3f13c22f3fc6a70c089d10e61dceb557357f090046b5a7a8e3052ba6",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-fitness",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "65112d90ac84e9e79c7f41ce14e269054f9a3391d0632af9784959fdc35e33c8",
+      "sha256": "a2bef1bbd22189dc6912c1626e65b6cf34a7d81eae4f0716e1a95c74bd7731ec",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g2-fitness",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "e053a82d7fea58f3a860cdb43d1c7045d92bcd24d19ab444f434a074656541e3",
+      "sha256": "29c10cdcd07392f3c7855e3317cf4146d27c89e09f6e595a2238779e6923381f",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g2-fitness",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "dfc675b69626e13e4bb995a044c665e4c4dd8c9d228a02c8ad9869205d8d975f",
+      "sha256": "5dbbb54781d8fbfa57b518766ee752052f39543369f4ebc6d6a222a6c4a396fc",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-parent-spawn-request",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "d88df30ac4704e367b32bd62bc2dcb8d85c0c9dc76c290914840c6a2f3072670",
+      "sha256": "79f164ca418dd3a029f35426b490bb5809fe6ad9e93934a972fdce4359b7853e",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-parent-spawn-request",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "80224c8fe47650b78fded13cc3631b6ad60649c96f06e6222fc3d68525d4fe8c",
+      "sha256": "d15e15a96987f60fc691e16b0a6940480a603d92251b1ee922a807bc8b626878",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-g2-delta",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "059643ca7d7f2f556b537a17e77b8347134463a32531a115acad4fdc46af5229",
+      "sha256": "df6adfb7010c5a54f554a9995323c926e18e745cdaae5d13fcf3e42bac7a87e9",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-g2-delta",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "d37259a338f0ba09fd8a4ed4e193662a4ce68772af5bf9867d1223682a8b89e7",
+      "sha256": "1d070ee6f5a55c0be08f45b116795e33f8c70ef3fef082db9b7183b22c1fbbc8",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-selection",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
       "schema": "battle.adaptive_selection_receipt.v1",
-      "sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+      "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-memory-evaluation",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-memory-evaluation",
       "schema": "battle.memory_promotion_evaluation.v1",
-      "sha256": "bfe63d19882ef6f9d8ecd9c715f671e522013104ec57564557f355f12d223aa6",
+      "sha256": "7a95e086f16bacdf597967f95f903655965c4e66167c994c22d86f7e9bf42cdc",
       "status": "PASS"
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "e69ec6a291e5f2b79f0524777328ce39b1f6e763ed3e773c3755f882d7262ec2",
+      "sha256": "3864ca621eaa8201b9a8eb79aff2ac061017b5bd642f2e4002785b8eaf3f503e",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-spawn-policy-decision",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "abad5cd4c7ebdd7f52a0d304c5fcc57be5dc8e7f6019dc7ad1350b786aeeffc7",
+      "sha256": "dca2a1cd2ce5d1196c363eb719429a95ddb3456917d60231d41e046d5537f240",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-spawn-policy-decision",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "ac2f5b31c87136dce78ac8b988c0c1fdf53d8ca550e9c6a59a868708291d0152",
+      "sha256": "3928c023a57a2ea7c8354c5cef8fef9812e0a9f758af04064e76eaf95fcaec85",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-knowledge-packet",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "b95bdda4037f9e7a394555fbfad8b8e6a9730a39dbad0cabbc0059fea727b424",
+      "sha256": "cf43a54560994aa1bac1b9b234ab82c10cdf65e5b299c8c6515a8aaa0fedb396",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-knowledge-packet",
+      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "bf37e0aec0188ffb6afbe130f3e6689f406823be01df0dd71dc83cf1b8bcafc0",
+      "sha256": "a7dd38462a1a96d422cb950406e07e80f951e15d085c12c8d3401189de5e35ad",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "d70081a73a999ca643e07627d4c76bfdc8b4778b804c5dc4df23e487beb1fd32",
+      "sha256": "9ed0c1bf5a94923496f4a419a5af846e95919a54c87d189fed69982dc8e7cdc0",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "f73c3fd90a282de13784239ed0d610704547b425c14b5d36b3c2b360624330b9",
+      "sha256": "616a15e80e285f8b1b3926e322ebcb752673d772e179e67cf8ddfe1f2dfd718d",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "67cdf392fb24f37d33c8409a4dfe3b9dcdbef36f1575c8fd0930818d1675182b",
+      "sha256": "5fa342648faf9819a1b16540c99e92830fff3f7f0307e928c1b6b923a0222c86",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "30ed377848531571b655557df7c918f2254dcbe5019985bebf315534837a7f3d",
+      "sha256": "5d819dcfc2a2bd26f36720166cb852f388f70ddefc589b926bdc0d0458a7fd99",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "f29b43efeb87f3b22735488ec0588f47438c2a4ffa8875d638e63eacfb20fb73",
+      "sha256": "84f4983c9c1ab95f9bcae8c59095f5b8d6b32b747f1065bef3d696b9d1eccbe4",
       "status": "PASS",
       "verdict": null
     }
   ],
-  "run_id": "battle-004-adaptive-red-blue-lineage-v13",
+  "run_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3",
   "schema": "battle.adaptive_lineage_source_receipt_index.v1",
   "selection": {
     "improvement_claimed": false,
-    "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-selection",
-    "sha256": "920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+    "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
+    "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
     "teams": {
       "blue": {
         "component_comparison": [
@@ -190,8 +190,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "65112d90ac84e9e79c7f41ce14e269054f9a3391d0632af9784959fdc35e33c8",
-        "generation_2_fitness_receipt_sha256": "dfc675b69626e13e4bb995a044c665e4c4dd8c9d228a02c8ad9869205d8d975f",
+        "generation_1_fitness_receipt_sha256": "a2bef1bbd22189dc6912c1626e65b6cf34a7d81eae4f0716e1a95c74bd7731ec",
+        "generation_2_fitness_receipt_sha256": "5dbbb54781d8fbfa57b518766ee752052f39543369f4ebc6d6a222a6c4a396fc",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null
@@ -214,8 +214,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "6a74bed467712120fd6cc5b69663dc3cbd48a1610e64f0a22aeeac99b6800510",
-        "generation_2_fitness_receipt_sha256": "e053a82d7fea58f3a860cdb43d1c7045d92bcd24d19ab444f434a074656541e3",
+        "generation_1_fitness_receipt_sha256": "b290698e3f13c22f3fc6a70c089d10e61dceb557357f090046b5a7a8e3052ba6",
+        "generation_2_fitness_receipt_sha256": "29c10cdcd07392f3c7855e3317cf4146d27c89e09f6e595a2238779e6923381f",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null

@@ -1,0 +1,740 @@
+{
+  "blocked": [],
+  "decisions": [
+    {
+      "id": "terminal_semantics_local_mvp",
+      "issue_refs": [
+        1148
+      ],
+      "path": "skills/battle/docs/TERMINAL_SEMANTICS_LOCAL_MVP.md",
+      "receipt_requirement": "Operator-visible terminal success must be Judge/scorekeeper receipt-backed.",
+      "status": "DECIDED",
+      "supported_states": [
+        "BLUE_SUCCESS",
+        "RED_SUCCESS",
+        "INSUFFICIENT_EVIDENCE",
+        "BLOCKED",
+        "UNAVAILABLE"
+      ],
+      "unsupported_states": [
+        "kill",
+        "promotion",
+        "fastest_crash"
+      ]
+    }
+  ],
+  "generated_by": {
+    "command": "./skills/battle/run.sh current-status generate",
+    "script": "skills/battle/scripts/current_status.py"
+  },
+  "issue_state_at_generation": {
+    "all_battle_label_issue_count": 23,
+    "all_battle_label_issues": [
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1150,
+        "state": "CLOSED",
+        "title": "Battle: add tiered sanity and live qualification gates",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1150"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "battle",
+          "lane:ops",
+          "maintainer-active",
+          "maintainer-blocked",
+          "needs-human",
+          "route:ops_or_scheduler",
+          "type:feature"
+        ],
+        "number": 1149,
+        "state": "OPEN",
+        "title": "Battle: emit bounded staging infrastructure readiness receipt",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1149"
+      },
+      {
+        "labels": [
+          "agent:reporter",
+          "battle",
+          "route:documentation_or_report",
+          "type:question"
+        ],
+        "number": 1148,
+        "state": "CLOSED",
+        "title": "Battle: decide supported terminal semantics for local MVP",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1148"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "maintainer-active",
+          "maintainer-blocked",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1147,
+        "state": "OPEN",
+        "title": "Battle: qualify adaptive-lineage effect for Red and Blue",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1147"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "lane:fe",
+          "route:frontend_code",
+          "type:feature"
+        ],
+        "number": 1146,
+        "state": "CLOSED",
+        "title": "Battle spectator: wire pause_after_round receipts into canonical Pixi UX",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1146"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1145,
+        "state": "CLOSED",
+        "title": "Battle: add backend pause_after_round human-interjection contract",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1145"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1144,
+        "state": "CLOSED",
+        "title": "Battle: resolve sanity root-layout failure on patch_writer.py",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1144"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1143,
+        "state": "CLOSED",
+        "title": "Battle: prove one same-run Arena-to-Pixi qualification",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1143"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:reporter",
+          "battle",
+          "lane:docs",
+          "route:documentation_or_report",
+          "type:feature"
+        ],
+        "number": 1142,
+        "state": "CLOSED",
+        "title": "Battle: generate receipt-derived CURRENT_STATUS.json",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1142"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "battle",
+          "lane:ops",
+          "route:ops_or_scheduler",
+          "type:feature"
+        ],
+        "number": 1141,
+        "state": "CLOSED",
+        "title": "Battle: prove project-agent lane can dispatch a clean Battle repair",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1141"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1066,
+        "state": "CLOSED",
+        "title": "Make one Battle round overlap a Red worker and a proactive Blue worker",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1066"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1065,
+        "state": "CLOSED",
+        "title": "Prove the universal lineage engine end to end against real Memory and verified primitives",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1065"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:frontend_code",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1064,
+        "state": "CLOSED",
+        "title": "Spectator: derive adaptive mechanics panel from the loaded receipt fixture",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1064"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1063,
+        "state": "CLOSED",
+        "title": "Regenerate BATTLE-004 kill-shot replay from an explicit Judge kill receipt",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1063"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1054,
+        "state": "CLOSED",
+        "title": "Make QEMU GDB port allocation deterministic and collision-free",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1054"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1053,
+        "state": "CLOSED",
+        "title": "Neuter the unused swarm_patch self-certification path",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1053"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1052,
+        "state": "CLOSED",
+        "title": "Represent Blue functionality as PASS, FAIL, or INSUFFICIENT_EVIDENCE",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1052"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:frontend_code",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1051,
+        "state": "CLOSED",
+        "title": "loadBattleRunnerSprites drops later-requested atlases \u2014 stale module-level loadPromise never resets on success",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1051"
+      },
+      {
+        "labels": [
+          "agent:reporter",
+          "battle",
+          "route:documentation_or_report",
+          "type:question"
+        ],
+        "number": 1050,
+        "state": "CLOSED",
+        "title": "Project-state for /battle: backend green, stall is a UX-acceptance + doc-drift loop \u2014 confirm closure path and ticket priority",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1050"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:documentation_or_report",
+          "type:feature"
+        ],
+        "number": 1049,
+        "state": "CLOSED",
+        "title": "Append a verified Battle goal addendum without rewriting the completed immutable goal",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1049"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1048,
+        "state": "CLOSED",
+        "title": "Publish one canonical dual-team co-evolution fixture with isolated trees and a Judge-backed scoreboard",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1048"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1047,
+        "state": "CLOSED",
+        "title": "Repair or retire the invalid battle-004-adaptive-live genetic replay fixture",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1047"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1035,
+        "state": "CLOSED",
+        "title": "Add a deterministic Battle backend-eval command over committed proof contracts",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1035"
+      }
+    ],
+    "focused_p0_issues": {
+      "1141": "CLOSED",
+      "1142": "CLOSED",
+      "1143": "CLOSED",
+      "1144": "CLOSED",
+      "1150": "CLOSED"
+    },
+    "open_battle_label_count": 2,
+    "open_battle_label_issues": [
+      {
+        "labels": [
+          "agent-work",
+          "battle",
+          "lane:ops",
+          "maintainer-active",
+          "maintainer-blocked",
+          "needs-human",
+          "route:ops_or_scheduler",
+          "type:feature"
+        ],
+        "number": 1149,
+        "state": "OPEN",
+        "title": "Battle: emit bounded staging infrastructure readiness receipt",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1149"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "maintainer-active",
+          "maintainer-blocked",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1147,
+        "state": "OPEN",
+        "title": "Battle: qualify adaptive-lineage effect for Red and Blue",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1147"
+      }
+    ]
+  },
+  "non_claims": [
+    "This status does not claim production deployment readiness.",
+    "This status does not claim adaptive improvement beyond the same-run receipt.",
+    "This status does not claim every remaining battle-labelled issue is closed."
+  ],
+  "partial": [
+    {
+      "id": "adaptive_lineage_effect",
+      "issue_refs": [
+        1147
+      ],
+      "reason": "Same-run qualification does not prove adaptive improvement for Red and Blue.",
+      "status": "OPEN"
+    }
+  ],
+  "production_gaps": [
+    {
+      "id": "staging_infrastructure_readiness",
+      "issue_refs": [
+        1149
+      ],
+      "status": "OPEN"
+    },
+    {
+      "id": "terminal_semantics_implementation",
+      "issue_refs": [
+        1148
+      ],
+      "status": "DECIDED_DOC_ONLY"
+    }
+  ],
+  "proven": [
+    {
+      "does_not_prove": [
+        "Ask/WebGPT transport completed a repair.",
+        "Every future Battle ticket will dispatch successfully."
+      ],
+      "evidence": {
+        "handled_count": 1,
+        "receipt_status": "NEEDS_ATTENTION",
+        "selected_issue": 1150,
+        "selected_target": "skills/battle/sanity.sh",
+        "worktree_ready": true
+      },
+      "id": "p0_project_agent_dispatch_selection",
+      "issue_refs": [
+        1141
+      ],
+      "receipt": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260801T120749Z/receipt.json",
+      "status": "PROVEN_SELECTION_PARTIAL_REPAIR_NEEDS_ATTENTION"
+    },
+    {
+      "evidence": {
+        "proof_scope": "offline sanity plus local deterministic fixture checks; no live provider/Docker/browser qualification",
+        "source": {
+          "battle_tree": "c99d543936c5341e8576558daf10128e0d953405",
+          "commit": "d727819832f49fac557a165bcefa08bd769fac39"
+        },
+        "status": "PASS"
+      },
+      "id": "p0_root_layout_and_fast_sanity",
+      "issue_refs": [
+        1144,
+        1150
+      ],
+      "receipt": "/tmp/battle-tiered-1150-pushed-fast.json",
+      "status": "PASS"
+    },
+    {
+      "evidence": {
+        "backend_eval_receipt": "/tmp/battle-tiered-1150-pushed-backend/receipt.json",
+        "proof_scope": "deterministic backend contracts and committed spectator fixture integrity; no live Tau/Docker/browser",
+        "source": {
+          "battle_tree": "c99d543936c5341e8576558daf10128e0d953405",
+          "commit": "d727819832f49fac557a165bcefa08bd769fac39"
+        },
+        "status": "PASS"
+      },
+      "id": "p0_deterministic_backend_gate",
+      "issue_refs": [
+        1150
+      ],
+      "receipt": "/tmp/battle-tiered-1150-pushed-backend/tiered-deterministic-gate.json",
+      "status": "PASS"
+    },
+    {
+      "evidence": {
+        "browser_status": "PASS",
+        "judge_verdict": "BLUE_SUCCESS",
+        "live": true,
+        "mocked": false,
+        "proof_scope": {
+          "does_not_prove": [
+            "Production deployment.",
+            "Adaptive improvement unless the Arena run requested it."
+          ],
+          "proves": [
+            "A fresh Arena/Tau/Judge run produced a normalized Pixi fixture.",
+            "The spectator route loaded the published same-run fixture key.",
+            "The receipt binds run id, source commit, Battle tree, Judge verdict, and browser screenshot metadata."
+          ]
+        },
+        "run_id": "arena-parent-spawn-20260801T124451Z",
+        "source_commit": "d727819832f49fac557a165bcefa08bd769fac39",
+        "source_tree": "c99d543936c5341e8576558daf10128e0d953405",
+        "status": "PASS",
+        "tau_source": {
+          "available": true,
+          "branch": "main",
+          "commit": "f88726432531d4f95a9e561c9f36a216b82661bb",
+          "dirty": false,
+          "path": "/home/graham/workspace/experiments/tau"
+        }
+      },
+      "id": "p0_same_run_arena_to_pixi",
+      "issue_refs": [
+        1143,
+        1150
+      ],
+      "receipt": "/tmp/battle-same-run-qualification-1143-pushed-20260801T124449Z/qualification-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "evidence": {
+        "current_source": {
+          "battle_tree": "c99d543936c5341e8576558daf10128e0d953405",
+          "commit": "d727819832f49fac557a165bcefa08bd769fac39"
+        },
+        "errors": [],
+        "inputs": {
+          "cdp_read_json": "/tmp/battle-same-run-qualification-1143-pushed-20260801T124449Z/cdp/agent-skills-1143-integrate/battle-same-run-qualification/20260801T124708Z.read.json",
+          "cdp_screenshot": "/tmp/battle-same-run-qualification-1143-pushed-20260801T124449Z/cdp/agent-skills-1143-integrate/battle-same-run-qualification/20260801T124708Z.png",
+          "fixture_key": "battle-004-same-run-qualification",
+          "fixture_sha256": "046ebb032868287c32fa65e6952cf9e0cbedbb4461615586ef723c417507312d",
+          "run_id": "arena-parent-spawn-20260801T124451Z",
+          "same_run_receipt": "/tmp/battle-same-run-qualification-1143-pushed-20260801T124449Z/qualification-receipt.json",
+          "source_commit": "d727819832f49fac557a165bcefa08bd769fac39",
+          "source_tree": "c99d543936c5341e8576558daf10128e0d953405"
+        },
+        "status": "PASS"
+      },
+      "id": "p0_live_qualification_gate",
+      "issue_refs": [
+        1150
+      ],
+      "receipt": "/tmp/battle-tiered-1150-pushed-live.json",
+      "status": "PASS"
+    },
+    {
+      "evidence": {
+        "case_statuses": {
+          "accepted": "ACCEPTED",
+          "application": "APPLIED",
+          "duplicate": "DUPLICATE_ACCEPTED",
+          "invalid_auth": "REJECTED",
+          "invalid_timing": "REJECTED",
+          "wrong_run": "REJECTED"
+        },
+        "live": true,
+        "mocked": false,
+        "proof_scope": {
+          "does_not_prove": [
+            "Frontend controls.",
+            "Tau or orchestrator pause execution beyond the recorded after-round contract.",
+            "Arbitrary redirect or persona-change commands."
+          ],
+          "proves": [
+            "pause_after_round accepts an authenticated current-run request at a round boundary.",
+            "duplicate request ids are idempotent.",
+            "invalid auth, invalid timing, and wrong-run requests fail closed with receipts.",
+            "Judge/round receipts are not mutated by interjection handling."
+          ]
+        },
+        "status": "PASS"
+      },
+      "id": "p1_pause_after_round_backend_contract",
+      "issue_refs": [
+        1145
+      ],
+      "receipt": "/tmp/battle-human-interjection-1145/proof.json",
+      "status": "PASS"
+    },
+    {
+      "evidence": {
+        "claims": {
+          "does_not_prove": [
+            "Tau execution pausing beyond the backend after-round application receipt.",
+            "Production auth, websocket fanout, or staging infrastructure readiness."
+          ],
+          "proves": [
+            "The canonical Pixi receipt route renders pause_after_round pending, accepted, applied, rejected, and unavailable states from generated backend receipt fields.",
+            "The canonical Pixi receipt route fails closed to missing_backend when pause_after_round backend fields are absent."
+          ]
+        },
+        "failed": [],
+        "live": true,
+        "mocked": false,
+        "readbacks": [
+          "readbacks/battle-004-pause-after-round-pending.json",
+          "readbacks/battle-004-pause-after-round-accepted.json",
+          "readbacks/battle-004-pause-after-round-applied.json",
+          "readbacks/battle-004-pause-after-round-rejected.json",
+          "readbacks/battle-004-pause-after-round-unavailable.json",
+          "readbacks/battle-004-pause-after-round-missing-backend.json"
+        ],
+        "screenshots": [
+          "screenshots/01-pending.png",
+          "screenshots/02-accepted.png",
+          "screenshots/03-applied.png",
+          "screenshots/04-rejected.png",
+          "screenshots/05-unavailable.png",
+          "screenshots/06-missing-backend.png"
+        ],
+        "status": "PASS"
+      },
+      "id": "p1_pause_after_round_canonical_pixi_ux",
+      "issue_refs": [
+        1146
+      ],
+      "receipt": "/tmp/battle-human-interjection-spectator-proof/proof.json",
+      "status": "PASS"
+    }
+  ],
+  "schema": "battle.current_status.v1",
+  "source": {
+    "battle_tree": "3960b0e3159d6569686a103862272bf49048e037",
+    "commit": "6266ba4e6a2442d7755c9f64b8e5491215d456d1",
+    "repository": "grahama1970/agent-skills"
+  },
+  "source_context": {
+    "battle_skill_contract": {
+      "exists": true,
+      "path": "skills/battle/SKILL.md"
+    },
+    "planning_bundle": {
+      "exists": true,
+      "path": "/home/graham/workspace/experiments/agent-skills/artifacts/ask/battle_remaining_gaps_ticket_bundle_20260801.md"
+    },
+    "terminal_semantics_decision": {
+      "exists": true,
+      "path": "skills/battle/docs/TERMINAL_SEMANTICS_LOCAL_MVP.md"
+    }
+  },
+  "source_receipts": {
+    "deterministic_backend": {
+      "exists": true,
+      "live": false,
+      "mocked": false,
+      "path": "/tmp/battle-tiered-1150-pushed-backend/tiered-deterministic-gate.json",
+      "schema": "battle.tiered_deterministic_gate.v1",
+      "sha256": "cd08ba89b4f43b9fe4236a024ad71530b2c7b885c997febc1a53e8f248ae145c",
+      "status": "PASS"
+    },
+    "fast_sanity": {
+      "exists": true,
+      "live": false,
+      "mocked": false,
+      "path": "/tmp/battle-tiered-1150-pushed-fast.json",
+      "schema": "battle.tiered_fast_sanity_gate.v1",
+      "sha256": "4f192433d7375761dc03017774a0ab07c5dc7daedff6d47baa78ce0f429849a4",
+      "status": "PASS"
+    },
+    "human_interjection": {
+      "exists": true,
+      "live": true,
+      "mocked": false,
+      "path": "/tmp/battle-human-interjection-1145/proof.json",
+      "schema": "battle.human_interjection_proof.v1",
+      "sha256": "5f9ab127f18ea42c98ed16d99b27b0308238d507806edf2576a7134a0c4f10c2",
+      "status": "PASS"
+    },
+    "human_interjection_spectator": {
+      "exists": true,
+      "live": true,
+      "mocked": false,
+      "path": "/tmp/battle-human-interjection-spectator-proof/proof.json",
+      "schema": "battle.human_interjection_spectator_proof.v1",
+      "sha256": "7f6f37cd87d422f7ef03b21e65f321ce566bb0218d58afd6c53258f15339facc",
+      "status": "PASS"
+    },
+    "live_qualification_gate": {
+      "exists": true,
+      "live": true,
+      "mocked": false,
+      "path": "/tmp/battle-tiered-1150-pushed-live.json",
+      "schema": "battle.tiered_live_qualification_gate.v1",
+      "sha256": "b5e2598cfbbeaff8379cf8457160a84b6923d3b4675f83281c5220bae7d22d41",
+      "status": "PASS"
+    },
+    "project_agent_dispatch": {
+      "exists": true,
+      "live": true,
+      "mocked": false,
+      "path": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260801T120749Z/receipt.json",
+      "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+      "sha256": "479429520aee2d288dbea58d00b7ca265de8a233bd00a352cafd63490d956293",
+      "status": "NEEDS_ATTENTION"
+    },
+    "same_run_qualification": {
+      "exists": true,
+      "live": true,
+      "mocked": false,
+      "path": "/tmp/battle-same-run-qualification-1143-pushed-20260801T124449Z/qualification-receipt.json",
+      "schema": "battle.same_run_arena_pixi_qualification.v1",
+      "sha256": "0b8d5474b6b9357bd51cd9b211e78d7d90dff0082a183c9872087e4c5dca04c4",
+      "status": "PASS"
+    }
+  },
+  "unsupported": [
+    {
+      "claim": "production_deployment_ready",
+      "issue_refs": [
+        1149
+      ],
+      "reason": "No DNS/TLS/ingress/secrets/auth/capacity/rollback/teardown readiness receipt yet.",
+      "status": "UNSUPPORTED"
+    },
+    {
+      "claim": "full_adaptive_improvement_proven",
+      "issue_refs": [
+        1147
+      ],
+      "reason": "Current live receipt proves same-run Arena/Tau/Judge/Pixi qualification, not adaptive effect.",
+      "status": "UNSUPPORTED"
+    },
+    {
+      "claim": "kill_promotion_fastest_crash_supported",
+      "issue_refs": [
+        1148
+      ],
+      "reason": "Local MVP decision supports only Judge-backed success/blocked states.",
+      "status": "UNSUPPORTED"
+    },
+    {
+      "claim": "fast_sanity_is_live_product_proof",
+      "issue_refs": [
+        1150
+      ],
+      "reason": "Fast sanity is explicitly offline/deterministic; live proof is a separate gate.",
+      "status": "UNSUPPORTED"
+    }
+  ],
+  "updated_at": "2026-08-01T14:34:02Z"
+}
