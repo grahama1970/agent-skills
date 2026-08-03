@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
+FunctionalEvidenceLiteral = Literal["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"]
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -48,6 +50,12 @@ class BlueReceipt:
     status: Literal["PASS", "FAIL", "BLOCKED"] = "BLOCKED"
     patch_artifact: str | None = None
     changed_files: list[str] = field(default_factory=list)
+    functional_evidence_status: FunctionalEvidenceLiteral = "INSUFFICIENT_EVIDENCE"
+    functionality_preserved: bool | None = None
+    functional_test_command: str | None = None
+    functional_exit_code: int | None = None
+    functional_receipt_ref: str | None = None
+    functional_artifact_sha256: str | None = None
     commands_run: list[CommandResult] = field(default_factory=list)
     next_agent: str = "battle-scorekeeper"
     created_at: str = field(default_factory=utc_now)
@@ -69,7 +77,12 @@ class JudgeReceipt:
     exploit_confirmed_before_patch: bool = False
     exploit_blocked_after_patch: bool = False
     regression_tests_pass: bool = False
-    functionality_preserved: bool = False
+    functional_evidence_status: FunctionalEvidenceLiteral = "INSUFFICIENT_EVIDENCE"
+    functionality_preserved: bool | None = None
+    functional_test_command: str | None = None
+    functional_exit_code: int | None = None
+    functional_receipt_ref: str | None = None
+    functional_artifact_sha256: str | None = None
     commands_run: list[CommandResult] = field(default_factory=list)
     next_agent: str = "human"
     created_at: str = field(default_factory=utc_now)
