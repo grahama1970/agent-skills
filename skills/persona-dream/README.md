@@ -2,8 +2,11 @@
 
 ![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)
 
-> **Can an AI persona dream about what has happened to it, watch the dream it
-> made, learn from it, and still remain recognizably itself?**
+> **Does letting an AI persona dream about what has happened to it actually help
+> — more than plainly remembering or reflecting — and is it still recognizably
+> itself afterwards?**
+>
+> "No" is a real answer, and finding it is success.
 
 Persona Dream gives a persistent multimodal voice persona — a long-lived agent
 with durable memory, a stable character, and access to text, images, audio, and
@@ -34,14 +37,49 @@ the current evidence boundary. It is deliberately **not** a status log.
 
 ## The controlling hierarchy
 
-1. **Build Embry as a persistent persona** whose synthetic dreams produce
-   bounded, provenance-linked changes in self-narrative, arc state, session
-   mood, and voice while she remains recognizably herself.
-2. **PCTOM-R** is the research workstream asking whether counterfactual dreaming
-   improves prospective social prediction and planning beyond direct memory,
-   under fail-closed controls.
-3. **Kling, Watch, Memory, Chatterbox, and Tau** are supporting lanes with their
-   own receipts and boundaries.
+The immutable goal is registered with `$goal-drift` (source `human_prompt`) and
+read back with `skills/goal-drift/run.sh goal --project persona-dream`. That
+registry, not this file, is the authority.
+
+1. **Research goal** — determine, through preregistered, falsifiable,
+   fail-closed experiments, whether provenance-bound synthetic dreaming adds
+   measurable value over direct memory and structured reflection. **A loss, a
+   tie, or a null result is a completed result.** The goal is to learn whether
+   the mechanism earns its complexity, not to prove that it succeeds.
+2. **Experimental subject** — Embry is the primary persistent-persona test case.
+   "Build Embry" is deliberately *not* the top-level objective; that framing
+   assumed the mechanism works and rewarded churn in pursuit of a predetermined
+   success.
+3. **Safety contract** — preserve identity, factual competence, answer content,
+   and evidence classes. These are validity constraints, never conclusions. See
+   the Persistent-Persona Safety Hypothesis in [`GOAL.md`](GOAL.md).
+4. **Transfer contract** — move validated mechanisms and failure lessons into
+   Graph Memory Operator, Tau, SPARTA, and Chatterbox. Recorded per experiment
+   in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
+5. **Product decision** — adopt, constrain, simplify, or retire each mechanism
+   on the evidence. A component that fails a controlled ablation is removed or
+   constrained; deletion is a goal-serving action.
+
+**PCTOM-R** (Prospective Counterfactual Theory of Mind) is the research
+workstream under item 1: does imagining what did *not* happen improve
+predictions about what another agent *will* do? Its apparatus was repaired
+under #1131 so the treatment can lose; the live held-out result is #1008 and
+does not exist yet. **Kling, Watch, Memory, Chatterbox, and Tau** are supporting
+lanes with their own receipts and boundaries.
+
+This project does not have to become a production product to be complete.
+
+**Active successor issues**, each owning one open claim in
+`CURRENT_STATUS.json` (`current_claims`): **#1179** re-render the listener
+stimuli under one identical loudness normalization — #1126 and #1127 are closed,
+and the technical screen #1127 produced *blocked* the existing four stimuli as
+loudness-confounded, so no human collection may begin (gating #1058);
+**#1130** cross-mood machine identity; **#1128** no-restart reliability soak and
+**#1129** restart/recovery, neither started; **#1008** the live held-out PCTOM-R
+comparison on the apparatus repaired by #1131; **#1133** consume Chatterbox
+perceptual validation without self-certifying it; **#1059** previous-video
+causality, deferred with no provider spend. Findings and their adopt / constrain
+/ reject decisions are recorded in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
 
 ## Architecture: the bounded loop
 
@@ -92,8 +130,10 @@ human interpretation. Do not substitute LLM/self-ratings, expand PCTOM-R,
 generate a new Kling clip, or run another broad assessment before that gate
 unless the operator explicitly reprioritizes.
 
-Scoped successor issues own the open claims: #1126 and #1127 repair the blinded
-listener study before any human response is collected (gating #1058); #1128 is
+Scoped successor issues own the open claims: #1126 and #1127 are CLOSED -- the
+technical screen they produced BLOCKED the existing four stimuli, which are
+confounded by loudness, so #1179 must re-render them under one identical
+normalization before any human response is collected (gating #1058); #1128 is
 the larger no-restart reliability soak; #1129 is the restart/recovery fault
 campaign; #1130 is cross-mood machine identity; #1131 owns the PCTOM-R
 corpus/estimator repair (measurement validity is blocked, so no PCTOM count is

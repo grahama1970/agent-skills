@@ -490,10 +490,11 @@
       "sample_count": 0,
       "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
       "does_not_prove": "any perceptual emotion, naturalness, or human identity result; WER 0.0 and embedding separations are machine evidence and cannot substitute; the current four stimuli are technically confounded by loudness and cannot support a perceptual claim until re-rendered under one identical normalization",
-      "successor_issue": "grahama1970/agent-skills#1127",
+      "successor_issue": "grahama1970/agent-skills#1179",
       "successor_resolved": false,
-      "surface_token": "#1127",
-      "blocking_receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json"
+      "surface_token": "#1179",
+      "blocking_receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+      "resolved_prerequisite": "grahama1970/agent-skills#1127 CLOSED: technical screen built and it BLOCKED the existing stimuli"
     },
     "pctom_apparatus_integrity": {
       "status": "PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE",
@@ -505,23 +506,26 @@
       "does_not_prove": "measurement validity or held-out benefit; #1056 proved the benefit estimator degenerate"
     },
     "pctom_measurement_validity": {
-      "status": "BLOCKED_DEGENERATE_CORPUS_AND_ESTIMATOR",
-      "scope": "whether the PCTOM-R corpus and M/R/D/CD estimator can measure anything: #1056 proved 24/24 TRUE labels and constant per-condition distributions",
-      "sample_count": 24,
-      "proves": "the measurement-validity-v2 gate fails closed on the current corpus",
-      "does_not_prove": "that any recorded PCTOM-R coverage or success count is a finding",
-      "successor_issue": "grahama1970/agent-skills#1131",
-      "successor_resolved": false,
-      "surface_token": "#1131"
+      "status": "PASS_MEASUREMENT_VALIDITY_V2",
+      "scope": "the PCTOM-R apparatus can now measure something: held-out split has 96 labels {TRUE 40, FALSE 24, UNKNOWN 32}, distinct distributions M4/R8/D16/CD30, and CD loses on 4 episodes so the treatment can be falsified",
+      "sample_count": 96,
+      "proves": "the corpus and estimator are non-degenerate and the all-TRUE constant control still blocks; 11/11 adversarial controls behave",
+      "does_not_prove": "that counterfactual dreaming helps; CD winning here is a property of the toy cue structure",
+      "surface_token": "#1008",
+      "receipt": "research/prospective-tom/receipts/measurement-validity-v2-pass/MEASUREMENT_VALIDITY_RECEIPT.json",
+      "receipt_sha256": "sha256:a00c5396003cfa7c860a79393878ad47f6c19f4f101675a631b0438d220015b9",
+      "resolved_by": "grahama1970/agent-skills#1131",
+      "next_scope_issue": "grahama1970/agent-skills#1008"
     },
     "pctom_heldout_benefit": {
       "status": "UNPROVEN",
-      "scope": "confidence-bounded counterfactual-dreaming planning advantage on a held-out slice",
+      "scope": "live held-out condition comparison on the repaired apparatus",
       "sample_count": 0,
       "proves": "nothing yet",
       "does_not_prove": "any benefit claim; blocked behind measurement validity",
-      "successor_issue": "grahama1970/agent-skills#1131",
-      "successor_resolved": false
+      "successor_issue": "grahama1970/agent-skills#1008",
+      "successor_resolved": false,
+      "surface_token": "#1008"
     },
     "previous_video_attachment_causality": {
       "status": "UNPROVEN_DEFERRED",

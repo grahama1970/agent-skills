@@ -4,11 +4,14 @@
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
 **Active successor issues (own the open claims; see `CURRENT_STATUS.json` `current_claims`):**
-#1126/#1127 blinded listener study repair (gates #1058 human collection),
+#1126/#1127 blinded listener study repair CLOSED — the #1127 screen BLOCKED the
+existing stimuli as loudness-confounded, so #1179 must re-render them under one
+identical normalization before any human collection (gates #1058),
 #1128 no-restart reliability soak (the completed 5/5 result is the downstream
 P2 engineering pilot, not production or full Phase 01-16 reliability),
 #1129 restart/recovery fault campaign, #1130 cross-mood machine identity,
-#1131 PCTOM-R corpus/estimator repair (measurement validity blocked),
+#1131 PCTOM-R corpus/estimator repair CLOSED (apparatus now valid; the live
+held-out benefit result is #1008 and does not exist yet),
 #1059 previous-video causality deferred with no provider spend.
 
 ## 2026-07-29 — SPARTA local live arc-bias consumption PASS; human perception still missing
@@ -750,7 +753,13 @@ Next deterministic build: add speaker-similarity plus adversarial Embry
 recognition checks for the live Chatterbox outputs, then assemble the larger
 `reports/goal_v5/continuity/live_chain/RECEIPT.json`.
 
-## 2026-07-27 — CONTROLLING HIERARCHY aligned across GOAL/README/SKILL
+## 2026-07-27 — SUPERSEDED — CONTROLLING HIERARCHY aligned across GOAL/README/SKILL
+
+> SUPERSEDED 2026-08-03. The "Build Embry as a persistent persona" hierarchy
+> below was demoted when the immutable goal was re-registered as a falsifiable
+> research-and-transfer question. Its content survives as the
+> Persistent-Persona Safety Hypothesis in `GOAL.md` — a constraint, not the
+> research conclusion. Retained for chronology only.
 
 The 2026-07-27 reassessment was accepted as the operating direction. The
 PCTOM-R-only immutable-goal framing is now superseded as the top-level project

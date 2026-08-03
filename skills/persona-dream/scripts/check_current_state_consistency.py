@@ -457,6 +457,66 @@ def check_retracted_evidence(status_doc: dict[str, Any], mismatches: list[dict[s
         )
 
 
+#: Phrases that assert the SUPERSEDED "build Embry" objective as the current
+#: top-level goal. Observed 2026-08-03: the immutable goal was re-registered as
+#: a falsifiable research question, GOAL.md was rewritten, and this checker
+#: still returned PASS while README's controlling hierarchy led with
+#: "1. Build Embry as a persistent persona" -- the exact contradiction between
+#: a higher authority and a lower surface that this file exists to catch. The
+#: checker verified receipts against status and never compared the goal to the
+#: surfaces that cite it.
+SUPERSEDED_GOAL_MARKERS = (
+    "1. **build embry as a persistent persona**",
+    "1. build embry as a persistent persona",
+    "the goal is to build and verify embry",
+)
+
+#: The re-registered goal's own vocabulary. A current summary that names none of
+#: it is describing a project whose goal has moved on without it.
+CURRENT_GOAL_TOKENS = ("falsifiab", "transfer", "ablation", "disposition", "goal-drift")
+
+
+def check_goal_alignment(mismatches: list[dict[str, Any]]) -> None:
+    """Level 4 vs the immutable goal: surfaces may not restate a demoted goal.
+
+    Historical paragraphs stay exempt, as everywhere else here -- chronology
+    remains readable, it just cannot be read as the current objective.
+    """
+    for label, path in (("README.md", README), ("PROJECT_KNOWLEDGE.md", PROJECT_KNOWLEDGE)):
+        if not path.is_file():
+            continue
+        for line_no, para in summary_paragraphs(path):
+            if any(mark in para for mark in HISTORICAL_MARKERS):
+                continue
+            for marker in SUPERSEDED_GOAL_MARKERS:
+                if marker in para:
+                    mismatches.append(
+                        _mismatch(
+                            "surface_states_superseded_goal",
+                            label,
+                            f"line {line_no}",
+                            "this current summary presents the demoted "
+                            "'build Embry' objective as the top-level goal; the "
+                            "registered immutable goal is the falsifiable "
+                            "research-and-transfer question in GOAL.md",
+                            marker,
+                        )
+                    )
+
+    summary = current_summary(README)
+    if summary and not any(token in summary for token in CURRENT_GOAL_TOKENS):
+        mismatches.append(
+            _mismatch(
+                "surface_omits_current_goal_frame",
+                "README.md",
+                "current summary",
+                "the README current summary names none of the registered goal's "
+                f"load-bearing terms {CURRENT_GOAL_TOKENS!r}, so a reader cannot "
+                "tell which objective is active",
+            )
+        )
+
+
 def _walk_unverified(obj: Any, path: str, out: list[tuple[str, str]]) -> None:
     if isinstance(obj, dict):
         for key, val in obj.items():
@@ -683,6 +743,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         check_retracted_evidence(status_doc, mismatches)
         check_claim_registry(status_doc, mismatches)
         check_scope_conflation_prose(mismatches)
+        check_goal_alignment(mismatches)
 
     return {
         "schema": "persona_dream.current_state_consistency.v1",

@@ -9,7 +9,7 @@
       "current-state surfaces do not contradict named receipts"
     ]
   },
-  "created_at": "2026-07-31T18:35:19Z",
+  "created_at": "2026-08-03T14:25:15Z",
   "current_status_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/CURRENT_STATUS.json",
   "hierarchy": [
     "named receipt status and hash",
@@ -63,7 +63,7 @@
       "accepted": true,
       "exists": true,
       "receipt": "reports/goal_v5/continuity/live_chain/RECEIPT.json",
-      "sha256": "sha256:436075e6635ff9a6e643a46c624ace9a9eb0cd201130baea242742efdaf7919f",
+      "sha256": "sha256:e414712551e43d727996b065ca250b2221bbbf60824d6fbbeae3a177e144e2fd",
       "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
     },
     "P2_session_arc_bias": {
@@ -72,6 +72,13 @@
       "receipt": "reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
       "sha256": "sha256:3949f62a8306e5a6040b66fd6982d396748e239745e665bc66a357ab3337d3d3",
       "status": "PASS_SESSION_ARC_BIAS_RECEIPT"
+    },
+    "P2_sparta_arc_bias_consumption": {
+      "accepted": true,
+      "exists": true,
+      "receipt": "reports/goal_v5/continuity/sparta_arc_bias_consumption/RECEIPT.json",
+      "sha256": "sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813",
+      "status": "PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED"
     },
     "P2_sparta_arc_bias_handoff": {
       "accepted": true,

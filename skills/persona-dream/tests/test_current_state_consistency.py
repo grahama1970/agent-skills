@@ -224,7 +224,7 @@ def test_superseded_marker_exempts_the_historical_p24_section(tmp_path, monkeypa
     marked.write_text(
         "# Project Knowledge: persona-dream\n\n"
         "## CURRENT NEXT STEP\n\n"
-        "1. #1037 recognition gate; successors #1128, #1126, #1127, #1131.\n\n"
+        "1. #1037 recognition gate; successors #1128, #1179, #1008, #1130.\n\n"
         "## SUPERSEDED - P2.4 voice-recognition preflight blocks on missing backend\n\n"
         "> SUPERSEDED 2026-07-28. Retained as the record of the failed attempts.\n",
         encoding="utf-8",
@@ -272,18 +272,69 @@ def test_completed_pilot_listed_unverified_without_scope_blocks(tmp_path):
     assert "completed_pilot_listed_unverified_without_scope" in _rules(got)
 
 
-def test_pctom_validity_pass_while_1131_open_blocks(tmp_path):
+def test_claim_pass_while_successor_open_blocks(tmp_path):
+    """A claim cannot report PASS while the issue that would establish it is open.
+
+    Retargeted 2026-08-03: this previously used pctom_measurement_validity
+    against open #1131. #1131 closed -- the apparatus is repaired and the claim
+    legitimately passes -- so the rule is now exercised against
+    pctom_heldout_benefit, whose successor #1008 has not run. The rule under
+    test is unchanged; only the claim that still has an open successor moved.
+    """
     doc = _status_doc()
-    doc["current_claims"]["pctom_measurement_validity"]["status"] = "PASS_MEASUREMENT_VALID"
-    doc["current_claims"]["pctom_measurement_validity"]["receipt"] = (
-        "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json"
-    )
-    doc["current_claims"]["pctom_measurement_validity"].pop("receipt_sha256", None)
+    claim = doc["current_claims"]["pctom_heldout_benefit"]
+    claim["status"] = "PASS_HELDOUT_BENEFIT"
+    claim["receipt"] = "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json"
+    claim.pop("receipt_sha256", None)
 
     got = _run(tmp_path, doc)
 
     assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
     assert "claim_pass_while_successor_open" in _rules(got)
+
+
+def test_surface_stating_the_superseded_build_embry_goal_blocks(tmp_path, monkeypatch):
+    """#1132/#1179 era: a surface may not present the demoted goal as current.
+
+    The immutable goal was re-registered on 2026-08-03 as a falsifiable
+    research-and-transfer question. This checker returned PASS while README's
+    controlling hierarchy still led with "1. Build Embry as a persistent
+    persona" -- a lower surface contradicting the highest authority, which is
+    exactly what this file exists to prevent.
+    """
+    stale = tmp_path / "README.md"
+    stale.write_text(
+        "# Persona Dream\n\n"
+        "## The controlling hierarchy\n\n"
+        "1. **Build Embry as a persistent persona** whose synthetic dreams "
+        "produce bounded, provenance-linked changes.\n\n"
+        "Successors: #1179, #1008, #1128, #1130.\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(checker, "README", stale)
+
+    args = type("Args", (), {"current_status": ROOT / "CURRENT_STATUS.json", "out": None})()
+    got = checker.run(args)
+
+    assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
+    assert "surface_states_superseded_goal" in _rules(got)
+
+
+def test_surface_omitting_the_current_goal_frame_blocks(tmp_path, monkeypatch):
+    """A README that names none of the registered goal's terms cannot orient a reader."""
+    bland = tmp_path / "README.md"
+    bland.write_text(
+        "# Persona Dream\n\nPhase P2 live continuity chain.\n\n"
+        "Successors: #1179, #1008, #1128, #1130.\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(checker, "README", bland)
+
+    args = type("Args", (), {"current_status": ROOT / "CURRENT_STATUS.json", "out": None})()
+    got = checker.run(args)
+
+    assert got["status"] == "BLOCKED_CURRENT_STATE_CONTRADICTS_RECEIPTS"
+    assert "surface_omits_current_goal_frame" in _rules(got)
 
 
 def test_full_pipeline_reliability_from_continuity_receipt_blocks(tmp_path):
