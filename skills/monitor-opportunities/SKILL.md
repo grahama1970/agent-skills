@@ -131,12 +131,49 @@ Every variant is validated before use: schema-valid, every assertion resolves to
 key, and a diff against canonical shows only presentation deltas. A variant that adds a
 factual assertion is a defect, not a variant.
 
+## Canonical resume and PDF handoff
+
+The public canonical resume artifact in this repository is:
+
+```text
+docs/resume/graham-anderson-resume.md
+docs/resume/graham-anderson-resume.pdf
+```
+
+`docs/resume/graham-anderson-resume.md` is the human-edited baseline presentation.
+The PDF is a generated artifact produced by `.github/workflows/resume-pdf.yml` on
+pushes to `main`, or manually with:
+
+```bash
+uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
+  docs/resume/graham-anderson-resume.md \
+  docs/resume/graham-anderson-resume.pdf \
+  --title "Graham Anderson Resume" \
+  --author "Graham Anderson"
+```
+
+`monitor-opportunities` must treat that Markdown file as the baseline resume
+presentation, not as the fact ledger. The canonical fact source remains the
+`career_profile` claim ledger. A tailored resume variant is valid only when it:
+
+- starts from approved `career_profile` claims;
+- selects, orders and labels those claims for one posting and inferred ATS stack;
+- writes a per-posting Markdown variant and generated PDF;
+- emits a diff against `docs/resume/graham-anderson-resume.md`;
+- proves every factual assertion in the variant resolves to a `claim_key`;
+- appears in the interactive report before it is used anywhere.
+
+The GitHub Actions PDF workflow renders only the public canonical resume. The
+`./run.sh tailor --posting <key>` implementation is responsible for rendering
+per-opportunity PDFs by calling `scripts/build_markdown_pdf.py` directly after
+claim-binding validation passes.
+
 ## Commands
 
 ```bash
 ./run.sh sweep --lane A,B,C          # discovery only; writes job_postings
 ./run.sh rank --limit 8              # score + dossiers; no outbound
-./run.sh tailor --posting <key>      # resume variant + claim-binding validation
+./run.sh tailor --posting <key>      # claim-bound Markdown/PDF variant + diff
 ./run.sh report                      # build the interactive morning report
 ./run.sh apply --posting <key>       # ATS form only; never email or LinkedIn
 ./run.sh status                      # readiness, stage, feed health
