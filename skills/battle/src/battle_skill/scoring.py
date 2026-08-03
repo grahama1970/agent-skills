@@ -4,7 +4,12 @@ AIxCC-style scoring and metrics calculation.
 """
 from __future__ import annotations
 
-from .state import Finding, Patch, BattleState
+from .state import (
+    BattleState,
+    Finding,
+    FunctionalEvidenceStatus,
+    Patch,
+)
 from .config import (
     VULN_DISCOVERY_SCORE,
     EXPLOIT_PROOF_SCORE,
@@ -64,8 +69,9 @@ class Scorer:
         # Severity multiplier (fixing critical vulns worth more)
         mult = SEVERITY_MULTIPLIERS.get(finding.severity, 1.0)
 
-        # Functionality preserved bonus
-        if patch.functionality_preserved:
+        # Only explicit behavioral PASS earns the functionality bonus. Missing
+        # evidence is not silently treated as either preserved or broken.
+        if patch.functional_evidence_status is FunctionalEvidenceStatus.PASS:
             base *= 1.2
 
         # Time decay (faster patches worth more)
@@ -76,29 +82,46 @@ class Scorer:
     @classmethod
     def calculate_metrics(cls, state: BattleState) -> dict[str, float | int]:
         """
-        Calculate TDSR, FDSR, ASC metrics.
+        Calculate TDSR, FDSR, ASC, and unresolved functional evidence count.
 
-        Args:
-            state: Current battle state
-
-        Returns:
-            Dict with 'tdsr', 'fdsr', 'asc' metrics
+        TDSR includes only verified patches with explicit functional PASS. FDSR
+        includes only verified patches with explicit functional FAIL. A verified
+        patch with INSUFFICIENT_EVIDENCE contributes to neither rate.
         """
         total_findings = len(state.all_findings)
         verified_patches = [p for p in state.all_patches if p.verified]
-        functional_patches = [p for p in verified_patches if p.functionality_preserved]
+        functional_patches = [
+            p
+            for p in verified_patches
+            if p.functional_evidence_status is FunctionalEvidenceStatus.PASS
+        ]
+        broken_patches = [
+            p
+            for p in verified_patches
+            if p.functional_evidence_status is FunctionalEvidenceStatus.FAIL
+        ]
+        insufficient_patches = [
+            p
+            for p in verified_patches
+            if p.functional_evidence_status
+            is FunctionalEvidenceStatus.INSUFFICIENT_EVIDENCE
+        ]
 
         # TDSR: True Defense Success Rate
         tdsr = len(functional_patches) / total_findings if total_findings > 0 else 0.0
 
-        # FDSR: Fake Defense Success Rate (patched but broke functionality)
-        broken_patches = [p for p in verified_patches if not p.functionality_preserved]
+        # FDSR: Fake Defense Success Rate (behavioral test ran and failed)
         fdsr = len(broken_patches) / total_findings if total_findings > 0 else 0.0
 
         # ASC: Attack Success Count
         asc = total_findings
 
-        return {"tdsr": tdsr, "fdsr": fdsr, "asc": asc}
+        return {
+            "tdsr": tdsr,
+            "fdsr": fdsr,
+            "asc": asc,
+            "functional_evidence_insufficient": len(insufficient_patches),
+        }
 
 
 def score_round(

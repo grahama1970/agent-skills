@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 
 import jsonschema
+import pytest
 
 from battle_skill.exploit_combiner import run_exploit_combiner_proof
 from battle_skill.live_tau_child_dag_canary import run_live_tau_child_dag_canary
@@ -51,6 +52,9 @@ def test_pr3b_proof_card_fixture_normalizes_backend_artifacts_without_tau_paths(
         spawn_architect_proof=spawn,
         timeout_seconds=900,
     )
+    canary_receipt = json.loads((live_tau / "live-tau-child-dag-canary-receipt.json").read_text(encoding="utf-8"))
+    if canary_receipt.get("reason") == "tau_preflight_failed":
+        pytest.skip("local Tau preflight unavailable; PR3b normalization requires Tau DAG artifacts")
 
     out = tmp_path / "battle.normalized_proof_card_fixture.json"
     fixture = normalize_pr3b_proof_card_fixture(live_tau_canary=live_tau, out=out)

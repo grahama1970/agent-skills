@@ -1,0 +1,180 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+import battle_skill.orchestrator as orchestrator_module
+import battle_skill.state as state_module
+from battle_skill.human_interjection import (
+    apply_pending_pause_after_round,
+    submit_pause_after_round,
+)
+from battle_skill.orchestrator import BattleOrchestrator
+from battle_skill.state import RoundResult
+
+
+def _write_json(path: Path, payload: dict) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _judge_receipt(root: Path) -> Path:
+    return _write_json(
+        root / "judge.json",
+        {
+            "schema": "battle.judge_receipt.v1",
+            "status": "PASS",
+            "verdict": "BLUE_SUCCESS",
+        },
+    )
+
+
+def _round_receipt(root: Path, round_number: int = 1) -> Path:
+    return _write_json(
+        root / f"round-{round_number}.json",
+        {
+            "schema": "battle.round_boundary.v1",
+            "status": "PASS",
+            "round_number": round_number,
+        },
+    )
+
+
+def test_control_scan_applies_one_request_exactly_once(tmp_path: Path) -> None:
+    control_dir = tmp_path / "control"
+    judge_receipt = _judge_receipt(tmp_path)
+    round_receipt = _round_receipt(tmp_path)
+    judge_sha = _sha256(judge_receipt)
+    round_sha = _sha256(round_receipt)
+
+    submitted = submit_pause_after_round(
+        out_dir=control_dir / "requests",
+        active_run_id="run-1",
+        request_run_id="run-1",
+        request_id="pause-1",
+        auth_token="secret",
+        expected_auth_token="secret",
+        boundary="round_running",
+        judge_receipt=judge_receipt,
+    )
+    first = apply_pending_pause_after_round(
+        control_dir=control_dir,
+        active_run_id="run-1",
+        round_receipt=round_receipt,
+    )
+    second = apply_pending_pause_after_round(
+        control_dir=control_dir,
+        active_run_id="run-1",
+        round_receipt=round_receipt,
+    )
+
+    assert submitted["status"] == "ACCEPTED"
+    assert first["status"] == "APPLIED"
+    assert first["application"]["status"] == "APPLIED"
+    assert first["application"]["pause_next_round"] is True
+    assert second["status"] == "NO_ELIGIBLE_REQUEST"
+    assert second["scanned"][0]["reason"] == "already_applied"
+    assert len(list((control_dir / "applications").glob("*.application.json"))) == 1
+    assert _sha256(judge_receipt) == judge_sha
+    assert _sha256(round_receipt) == round_sha
+
+
+def test_rejected_and_wrong_run_requests_cannot_pause(tmp_path: Path) -> None:
+    control_dir = tmp_path / "control"
+    judge_receipt = _judge_receipt(tmp_path)
+    round_receipt = _round_receipt(tmp_path)
+
+    submit_pause_after_round(
+        out_dir=control_dir / "requests",
+        active_run_id="run-1",
+        request_run_id="run-1",
+        request_id="bad-auth",
+        auth_token="wrong",
+        expected_auth_token="secret",
+        boundary="round_running",
+        judge_receipt=judge_receipt,
+    )
+    submit_pause_after_round(
+        out_dir=control_dir / "requests",
+        active_run_id="run-1",
+        request_run_id="run-2",
+        request_id="wrong-run",
+        auth_token="secret",
+        expected_auth_token="secret",
+        boundary="round_running",
+        judge_receipt=judge_receipt,
+    )
+
+    scan = apply_pending_pause_after_round(
+        control_dir=control_dir,
+        active_run_id="run-1",
+        round_receipt=round_receipt,
+    )
+
+    assert scan["status"] == "NO_ELIGIBLE_REQUEST"
+    assert {entry["reason"] for entry in scan["scanned"]} == {
+        "request_not_accepted"
+    }
+    assert not list((control_dir / "applications").glob("*.json"))
+
+
+def test_orchestrator_sets_durable_paused_state_after_round(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    battles_dir = tmp_path / "battles"
+    monkeypatch.setattr(state_module, "BATTLES_DIR", battles_dir)
+    monkeypatch.setattr(orchestrator_module, "BATTLES_DIR", battles_dir)
+
+    orchestrator = BattleOrchestrator(str(tmp_path / "target"), max_rounds=2)
+    orchestrator.control_dir = tmp_path / "control"
+    orchestrator.state.status = "running"
+    orchestrator.state.current_round = 1
+    judge_receipt = _judge_receipt(tmp_path)
+
+    submit_pause_after_round(
+        out_dir=orchestrator.control_dir / "requests",
+        active_run_id=orchestrator.battle_id,
+        request_run_id=orchestrator.battle_id,
+        request_id="pause-after-one",
+        auth_token="secret",
+        expected_auth_token="secret",
+        boundary="round_running",
+        judge_receipt=judge_receipt,
+    )
+
+    result = RoundResult(round_number=1, red_score=1.0, blue_score=2.0)
+    assert orchestrator._apply_pause_after_round(result) is True
+    assert orchestrator.state.status == "paused"
+    assert orchestrator.state.current_round == 1
+
+    saved = json.loads(
+        (battles_dir / f"{orchestrator.battle_id}.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert saved["status"] == "paused"
+    assert saved["current_round"] == 1
+    assert len(
+        list(
+            (orchestrator.control_dir / "applications").glob(
+                "*.application.json"
+            )
+        )
+    ) == 1
+
+    # A restart-style rescan sees the existing application and cannot apply it again.
+    assert orchestrator._apply_pause_after_round(result) is False
+    assert len(
+        list(
+            (orchestrator.control_dir / "applications").glob(
+                "*.application.json"
+            )
+        )
+    ) == 1

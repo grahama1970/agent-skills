@@ -118,6 +118,7 @@ Options:
 ### Phase 4: Structured Code Index (Tree-sitter → /memory)
 
 When `--treesitter --code-index` is enabled, `/ingest-code` emits `CodeSymbolRecord` documents to `/memory /upsert` with `collection="code_symbols"`.
+Before any code-symbol upsert, the same extraction pass writes a deterministic local code-graph bundle under `artifacts/ingest-code/code-graph/`.
 
 Each record includes:
 
@@ -209,6 +210,13 @@ should not query `/memory` during a task:
 | `.ingest-code.json` | Marker with scan status, scope, scan roots, code-index counts, and local artifact paths |
 | `.cleanup-evidence.json` | Per-candidate dependency evidence consumed by `$cleanup` for tracked-file mutation decisions |
 | `artifacts/ingest-code/code-symbols.jsonl` | JSONL code-symbol records with paths, line ranges, signatures, docstrings, lexical terms, and snippets for offline lookup |
+| `artifacts/ingest-code/code-graph/manifest.json` | Bundle metadata, repository identity, scan roots, dirty tracked-worktree state, counts, and artifact list |
+| `artifacts/ingest-code/code-graph/files.jsonl` | Root-relative file records with stable file IDs, language, parse/skip/ignored/failed status, source hash, and reason |
+| `artifacts/ingest-code/code-graph/symbols.jsonl` | Symbol records with `symbol_id`, `symbol_version_id`, `legacy_key`, source range, content hash, and Memory-compatible document shape |
+| `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic resolved import edges between scanned files |
+| `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct parse, ignored-file, and skip diagnostics with exact root-relative paths |
+| `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with parsed, failed, ignored, skipped, symbol, edge, and diagnostic counts; parse failures set `fail_closed=true` |
+| `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
 
 These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for

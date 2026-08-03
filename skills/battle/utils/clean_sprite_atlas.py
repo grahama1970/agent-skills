@@ -20,6 +20,8 @@ import typer
 from PIL import Image
 
 
+Image.init()
+
 app = typer.Typer(no_args_is_help=True)
 
 ROWS: tuple[tuple[str, int], ...] = (
@@ -128,6 +130,53 @@ def _remove_checkerboard_from_cell(cell: Image.Image, *, lower: int, upper: int,
     background = _edge_connected_mask(mask)
     rgba[:, :, 3] = np.where(background > 0, 0, rgba[:, :, 3])
     return Image.fromarray(rgba, "RGBA")
+
+
+def _detect_row_bands(mask: np.ndarray) -> list[tuple[int, int]]:
+    """Detect ordered content bands from a foreground mask."""
+
+    rows = np.asarray(mask).astype(bool).any(axis=1)
+    bands: list[tuple[int, int]] = []
+    start: int | None = None
+    for index, present in enumerate(rows):
+        if present and start is None:
+            start = index
+        elif not present and start is not None:
+            if index - start > 1:
+                bands.append((start, index))
+            start = None
+    if start is not None and len(rows) - start > 1:
+        bands.append((start, len(rows)))
+    return bands
+
+
+def _isolate_main_subject(cell: Image.Image) -> Image.Image:
+    """Drop tiny edge-connected slivers while preserving large edge VFX."""
+
+    rgba = np.array(cell.convert("RGBA"))
+    alpha = rgba[:, :, 3]
+    count, labels, stats, _centroids = cv2.connectedComponentsWithStats((alpha > 0).astype(np.uint8), 8)
+    height, width = alpha.shape
+    remove = np.zeros_like(alpha, dtype=bool)
+    for label in range(1, count):
+        x, y, w, h, area = stats[label]
+        touches_edge = x == 0 or y == 0 or x + w >= width or y + h >= height
+        thin_edge_sliver = touches_edge and (w <= max(4, int(width * 0.08)) or h <= max(4, int(height * 0.08)))
+        tiny_edge_noise = touches_edge and area <= int(width * height * 0.04)
+        if thin_edge_sliver or tiny_edge_noise:
+            remove |= labels == label
+    rgba[:, :, 3] = np.where(remove, 0, rgba[:, :, 3])
+    return Image.fromarray(rgba, "RGBA")
+
+
+def _detect_background_kind(image: Image.Image) -> str:
+    rgba = np.array(image.convert("RGBA"))
+    if not (rgba[:, :, 3] > 0).any():
+        return "transparent"
+    rgb = rgba[:, :, :3]
+    if float(rgb.mean()) <= 85:
+        return "dark"
+    return "checker"
 
 
 def _is_dark_background(pixel: tuple[int, int, int, int]) -> bool:
@@ -298,6 +347,82 @@ def _trim_presentation_gutter(cell: Image.Image, *, top: int = 3, right: int = 3
 def _cell_has_sprite(cell: Image.Image) -> bool:
     alpha = cell.convert("RGBA").getchannel("A")
     return alpha.getbbox() is not None
+
+
+def _foreground_mask(image: Image.Image, *, background: str, lower: int, upper: int, neutral_spread: int) -> np.ndarray:
+    rgba = np.array(image.convert("RGBA"))
+    if background == "transparent":
+        return rgba[:, :, 3] > 0
+    rgb = rgba[:, :, :3]
+    if background == "dark":
+        brightness = rgb.max(axis=2)
+        spread = rgb.max(axis=2).astype(np.int16) - rgb.min(axis=2).astype(np.int16)
+        return ~((brightness <= 76) & (spread <= 30))
+    near_light = (rgb >= lower).all(axis=2) & (rgb <= upper).all(axis=2)
+    spread = rgb.max(axis=2).astype(np.int16) - rgb.min(axis=2).astype(np.int16)
+    neutral = spread <= neutral_spread
+    return ~(near_light & neutral)
+
+
+@app.command("convert-autogrid")
+def convert_autogrid(
+    source: Annotated[Path, typer.Option(help="Input generated sprite sheet with detectable row bands.")],
+    sprite_id: Annotated[str, typer.Option(help="Stable Pixi variant id.")],
+    out_png: Annotated[Path, typer.Option(help="Output transparent runtime atlas.")],
+    out_json: Annotated[Path, typer.Option(help="PixiJS spritesheet JSON.")],
+    frame_width: Annotated[int, typer.Option()] = 64,
+    frame_height: Annotated[int, typer.Option()] = 64,
+    columns: Annotated[int, typer.Option()] = 8,
+    background: Annotated[str, typer.Option(help="auto, checker, dark, or transparent.")] = "auto",
+    background_lower: Annotated[int, typer.Option()] = 200,
+    background_upper: Annotated[int, typer.Option()] = 255,
+    neutral_spread: Annotated[int, typer.Option()] = 42,
+    row_pad: Annotated[int, typer.Option()] = 6,
+    gutter: Annotated[int, typer.Option()] = 2,
+    hold_last_frame: Annotated[bool, typer.Option()] = True,
+) -> None:
+    """Convert a loosely aligned generated sheet into the canonical 8x14 atlas."""
+
+    image = Image.open(source).convert("RGBA")
+    bg = _detect_background_kind(image) if background == "auto" else background
+    mask = _foreground_mask(image, background=bg, lower=background_lower, upper=background_upper, neutral_spread=neutral_spread)
+    bands = _detect_row_bands(mask)
+    if len(bands) < len(ROWS):
+        step = image.height / len(ROWS)
+        bands = [(round(row * step), round((row + 1) * step)) for row in range(len(ROWS))]
+    target = Image.new("RGBA", (columns * frame_width, len(ROWS) * frame_height), (0, 0, 0, 0))
+    for row_index, (_animation_name, frame_count) in enumerate(ROWS):
+        start, end = bands[row_index]
+        start = max(0, start - row_pad)
+        end = min(image.height, end + row_pad)
+        previous: Image.Image | None = None
+        for column in range(frame_count):
+            left = round(column * image.width / columns)
+            right = round((column + 1) * image.width / columns)
+            cell = image.crop((left, start, right, end))
+            if bg == "dark":
+                cell = _remove_dark_edge_background(cell)
+            elif bg == "checker":
+                cell = _remove_checkerboard_from_cell(
+                    cell,
+                    lower=background_lower,
+                    upper=background_upper,
+                    neutral_spread=neutral_spread,
+                )
+            cell = _isolate_main_subject(cell)
+            if not _cell_has_sprite(cell) and hold_last_frame and previous is not None:
+                frame = previous.copy()
+            else:
+                frame = _fit_frame(cell, frame_width=frame_width, frame_height=frame_height, gutter=gutter)
+                if _cell_has_sprite(frame):
+                    previous = frame.copy()
+            target.alpha_composite(frame, (column * frame_width, row_index * frame_height))
+
+    out_png.parent.mkdir(parents=True, exist_ok=True)
+    target.save(out_png)
+    _write_json(out_json, sprite_id=sprite_id, image_name=out_png.name, frame_width=frame_width, frame_height=frame_height, columns=columns)
+    typer.echo(str(out_png))
+    typer.echo(str(out_json))
 
 
 @app.command("convert-contact-sheet")

@@ -28,8 +28,94 @@
     "script": "skills/battle/scripts/current_status.py"
   },
   "issue_state_at_generation": {
-    "all_battle_label_issue_count": 23,
+    "all_battle_label_issue_count": 29,
     "all_battle_label_issues": [
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "maintainer-active",
+          "route:backend_python_or_skill_runtime",
+          "type:maintenance"
+        ],
+        "number": 1178,
+        "state": "OPEN",
+        "title": "Battle: establish a clean current-source release-candidate baseline",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1178"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1177,
+        "state": "OPEN",
+        "title": "Battle: resume a paused campaign exactly once from durable state",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1177"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1164,
+        "state": "OPEN",
+        "title": "Battle: prove one restartable three-round local campaign from Arena through Pixi",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1164"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "lane:fe",
+          "route:frontend_code",
+          "type:feature"
+        ],
+        "number": 1163,
+        "state": "OPEN",
+        "title": "Battle spectator: submit and follow pause_after_round over authenticated live transport",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1163"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1162,
+        "state": "OPEN",
+        "title": "Battle: apply accepted pause_after_round receipts in the real round loop",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1162"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1161,
+        "state": "OPEN",
+        "title": "Battle: route the ordinary orchestrator through Battle-owned Docker Judge receipts",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1161"
+      },
       {
         "labels": [
           "agent-work",
@@ -78,14 +164,11 @@
           "agent:coder",
           "battle",
           "lane:be",
-          "maintainer-active",
-          "maintainer-blocked",
-          "needs-human",
           "route:backend_python_or_skill_runtime",
           "type:feature"
         ],
         "number": 1147,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: qualify adaptive-lineage effect for Red and Blue",
         "url": "https://github.com/grahama1970/agent-skills/issues/1147"
       },
@@ -259,14 +342,15 @@
       {
         "labels": [
           "agent-work",
-          "agent:agent-skill-maintainer",
+          "agent:coder",
           "battle",
+          "lane:be",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1052,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Represent Blue functionality as PASS, FAIL, or INSUFFICIENT_EVIDENCE",
         "url": "https://github.com/grahama1970/agent-skills/issues/1052"
       },
@@ -357,8 +441,94 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 2,
+    "open_battle_label_count": 8,
     "open_battle_label_issues": [
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "maintainer-active",
+          "route:backend_python_or_skill_runtime",
+          "type:maintenance"
+        ],
+        "number": 1178,
+        "state": "OPEN",
+        "title": "Battle: establish a clean current-source release-candidate baseline",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1178"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1177,
+        "state": "OPEN",
+        "title": "Battle: resume a paused campaign exactly once from durable state",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1177"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1164,
+        "state": "OPEN",
+        "title": "Battle: prove one restartable three-round local campaign from Arena through Pixi",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1164"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "lane:fe",
+          "route:frontend_code",
+          "type:feature"
+        ],
+        "number": 1163,
+        "state": "OPEN",
+        "title": "Battle spectator: submit and follow pause_after_round over authenticated live transport",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1163"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1162,
+        "state": "OPEN",
+        "title": "Battle: apply accepted pause_after_round receipts in the real round loop",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1162"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:coder",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1161,
+        "state": "OPEN",
+        "title": "Battle: route the ordinary orchestrator through Battle-owned Docker Judge receipts",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1161"
+      },
       {
         "labels": [
           "agent-work",
@@ -381,16 +551,14 @@
           "agent:coder",
           "battle",
           "lane:be",
-          "maintainer-active",
-          "maintainer-blocked",
-          "needs-human",
           "route:backend_python_or_skill_runtime",
-          "type:feature"
+          "skill-bug",
+          "type:bug"
         ],
-        "number": 1147,
+        "number": 1052,
         "state": "OPEN",
-        "title": "Battle: qualify adaptive-lineage effect for Red and Blue",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1147"
+        "title": "Represent Blue functionality as PASS, FAIL, or INSUFFICIENT_EVIDENCE",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1052"
       }
     ]
   },
@@ -619,8 +787,8 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "3960b0e3159d6569686a103862272bf49048e037",
-    "commit": "6266ba4e6a2442d7755c9f64b8e5491215d456d1",
+    "battle_tree": "77f6ab886b6cf0eba6c414f9391d6af48950d818",
+    "commit": "931129e8d7268193c8f36e45ee33cf205fb28b12",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -736,5 +904,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-01T14:34:02Z"
+  "updated_at": "2026-08-03T14:44:16Z"
 }

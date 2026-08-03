@@ -138,7 +138,7 @@ describe("BattleLineageComparisonPanel (adaptive)", () => {
 		);
 
 		expect(v13Markup).toContain('data-mode="canonical-dual-team"');
-		expect(v13Markup).toContain('data-run-id="battle-004-adaptive-red-blue-lineage-v13"');
+		expect(v13Markup).toContain(`data-run-id="${v13Race.run_id}"`);
 		expect(v13Markup).toContain('data-source-fixture-sha256="v13hash"');
 		expect(v13Markup).toContain('data-qid="battle:adaptive-lineage:canonical-node:red-g1"');
 		expect(v13Markup).toContain('data-qid="battle:adaptive-lineage:canonical-node:blue-g2"');

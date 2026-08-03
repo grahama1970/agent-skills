@@ -17,6 +17,7 @@ from battle_skill.live_transport_server import (
 
 
 FIXTURE = Path("spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json")
+FIXTURE_AUTH_VALUE = "test-production-ws-auth-value"
 
 
 def test_live_transport_source_builds_snapshot_and_ordered_events():
@@ -60,7 +61,7 @@ def test_prove_production_websocket_transport_exercises_auth_reconnect_and_fanou
         fixture_path=FIXTURE,
         battle_id="battle-004",
         out_dir=tmp_path,
-        auth_token="test-production-ws-token",
+        auth_token=FIXTURE_AUTH_VALUE,
     )
 
     assert receipt["schema"] == "battle.production_websocket_transport_proof.v1"
@@ -69,7 +70,7 @@ def test_prove_production_websocket_transport_exercises_auth_reconnect_and_fanou
     assert receipt["live"] == "local_authenticated_websocket_fanout_reconnect_adapter"
     assert receipt["auth"]["unauthenticated_rejection_code"] == 1008
     assert receipt["auth"]["bad_token_rejection_code"] == 1008
-    assert receipt["auth"]["token_sha256"] != "test-production-ws-token"
+    assert receipt["auth"]["token_sha256"] != FIXTURE_AUTH_VALUE
     assert receipt["reconnect"]["resume_from_last_event_id"] == 2
     assert receipt["reconnect"]["resumed_event_count"] == receipt["event_count"] - 2
     assert receipt["reconnect"]["bad_resume_rejection_code"] == 1008

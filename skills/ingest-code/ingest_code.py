@@ -32,6 +32,7 @@ import httpx
 from dotenv import load_dotenv
 
 from code_memory_client import CodeMemoryClient
+from code_graph_artifact import write_code_graph_bundle
 from code_symbol_record import CodeSymbolRecord
 from ingest_code_cwe import scan_file_cwe
 
@@ -194,6 +195,7 @@ def _write_ingest_marker(
     completed_scan_roots: list[str | Path] | None = None,
     local_code_symbols_artifact: str | Path | None = None,
     local_code_symbols_written: int = 0,
+    code_graph_artifact: dict[str, Any] | None = None,
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
     now = datetime.now().isoformat()
@@ -231,6 +233,7 @@ def _write_ingest_marker(
                 if local_code_symbols_artifact else None
             ),
             "code_symbols_written": local_code_symbols_written,
+            "code_graph": code_graph_artifact,
             "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
         },
     }
@@ -942,12 +945,37 @@ def _store_treesitter_symbols_for_directory(
     local_artifact_path: Optional[Path] = None,
 ) -> int:
     """Scan one directory, write local symbols, and upsert symbols to memory."""
+    records = _scan_treesitter_symbol_records_for_directory(directory, codebase_root, scope)
+
+    if local_artifact_path is not None:
+        _append_local_code_symbols(local_artifact_path, records)
+
+    result = CodeMemoryClient().upsert_code_symbols(records)
+    for error in result.errors[:5]:
+        print(f"  [WARN] {error}", file=sys.stderr, flush=True)
+
+    if verification_samples is not None:
+        for record in records[:result.stored]:
+            verification_samples.append({
+                "name": record.symbol_name,
+                "problem": record.problem,
+            })
+
+    return result.stored
+
+
+def _scan_treesitter_symbol_records_for_directory(
+    directory: Path,
+    codebase_root: Path,
+    scope: str,
+) -> list[CodeSymbolRecord]:
+    """Scan one directory and return CodeSymbolRecord instances without writing Memory."""
     directory = directory.resolve()
     codebase_root = codebase_root.resolve()
     treesitter_script = find_treesitter_skill()
     if not treesitter_script:
         print(f"Treesitter skill not found for {directory}", file=sys.stderr, flush=True)
-        return 0
+        return []
 
     cmd = [
         "bash",
@@ -972,17 +1000,17 @@ def _store_treesitter_symbols_for_directory(
         )
     except subprocess.TimeoutExpired:
         print(f"Treesitter scan timed out for {directory}", file=sys.stderr, flush=True)
-        return 0
+        return []
 
     if result.returncode != 0:
         stderr = result.stderr.strip()
         if stderr:
             print(f"Treesitter scan failed for {directory}: {stderr}", file=sys.stderr, flush=True)
-        return 0
+        return []
 
     scan_results = _parse_treesitter_scan_output(result.stdout)
     if not scan_results:
-        return 0
+        return []
 
     repo = codebase_root.resolve().name
     branch = _current_branch(codebase_root)
@@ -1013,21 +1041,7 @@ def _store_treesitter_symbols_for_directory(
                 continue
             records.append(record)
 
-    if local_artifact_path is not None:
-        _append_local_code_symbols(local_artifact_path, records)
-
-    result = CodeMemoryClient().upsert_code_symbols(records)
-    for error in result.errors[:5]:
-        print(f"  [WARN] {error}", file=sys.stderr, flush=True)
-
-    if verification_samples is not None:
-        for record in records[:result.stored]:
-            verification_samples.append({
-                "name": record.symbol_name,
-                "problem": record.problem,
-            })
-
-    return result.stored
+    return records
 
 
 def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
@@ -1375,6 +1389,37 @@ def scan(
     files = collect_files(path, patterns)
     print(f"Found {len(files)} files to scan in {path}", flush=True)
 
+    # Build deterministic structured artifacts before Memory writes. This leaves
+    # inspectable extraction evidence even when later upserts fail.
+    code_symbol_scan_roots: list[Path] = []
+    code_symbol_records: list[CodeSymbolRecord] = []
+    precomputed_edges: list[dict[str, Any]] | None = None
+    code_graph_artifact: dict[str, Any] | None = None
+    local_code_symbols_artifact: Path | None = None
+    local_code_symbols_written = 0
+    if treesitter and not cwe_only:
+        print("\n--- Preparing deterministic code graph artifacts ---", flush=True)
+        code_symbol_scan_roots = _extract_configured_scan_roots(path)
+        local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
+        for scan_root in code_symbol_scan_roots:
+            root_records = _scan_treesitter_symbol_records_for_directory(scan_root, path, scope)
+            code_symbol_records.extend(root_records)
+            print(f"Code graph: {len(root_records)} symbols extracted from {scan_root}", flush=True)
+        local_code_symbols_written = _append_local_code_symbols(local_code_symbols_artifact, code_symbol_records)
+        precomputed_edges = extract_edges(files, path)
+        repo_name = path.resolve().name
+        code_graph_artifact = write_code_graph_bundle(
+            codebase_root=path,
+            repo=repo_name,
+            branch=_current_branch(path),
+            commit=_current_commit(path),
+            scan_roots=code_symbol_scan_roots,
+            files=files,
+            symbols=code_symbol_records,
+            edges=precomputed_edges,
+        )
+        print(f"Code graph artifacts: {code_graph_artifact['path']}", flush=True)
+
     # --- Phase 1: Functional knowledge extraction ---
     knowledge_stored = 0
     knowledge_total = 0
@@ -1490,7 +1535,7 @@ def scan(
 
     if not cwe_only:
         print("\n--- Phase 3: Extracting code relationships ---", flush=True)
-        edges = extract_edges(files, path)
+        edges = precomputed_edges if precomputed_edges is not None else extract_edges(files, path)
         edges_total = len(edges)
         print(f"  Found {edges_total} internal dependency edges", flush=True)
         if edges_total > 0:
@@ -1502,29 +1547,22 @@ def scan(
 
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
-    local_code_symbols_written = 0
-    local_code_symbols_artifact = None
     if treesitter and code_index and not cwe_only:
         print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
         if dry_run:
             print("  [DRY RUN] treesitter code_symbols upsert skipped", flush=True)
         else:
-            local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
             verification_samples: list[dict[str, str]] = []
-            for scan_root in _extract_configured_scan_roots(path):
-                root_stored = _store_treesitter_symbols_for_directory(
-                    scan_root,
-                    path,
-                    scope,
-                    verification_samples=verification_samples,
-                    local_artifact_path=local_code_symbols_artifact,
-                )
-                code_symbols_stored += root_stored
-                print(f"Code index: {root_stored} symbols stored from {scan_root}", flush=True)
-            if local_code_symbols_artifact.exists():
-                local_code_symbols_written = sum(
-                    1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
-                )
+            memory_result = CodeMemoryClient().upsert_code_symbols(code_symbol_records)
+            code_symbols_stored = memory_result.stored
+            for error in memory_result.errors[:5]:
+                print(f"  [WARN] {error}", file=sys.stderr, flush=True)
+            for record in code_symbol_records[:memory_result.stored]:
+                verification_samples.append({
+                    "name": record.symbol_name,
+                    "problem": record.problem,
+                })
+            print(f"Code index: {code_symbols_stored} symbols stored", flush=True)
 
     # Output summary
     result = {
@@ -1540,6 +1578,7 @@ def scan(
         "code_symbols_stored": code_symbols_stored,
         "local_code_symbols_written": local_code_symbols_written,
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
+        "code_graph_artifact": code_graph_artifact,
         "dry_run": dry_run,
     }
     print(f"\n{json.dumps(result, indent=2)}")
@@ -1547,7 +1586,7 @@ def scan(
     # --- Write marker file + store ingestion record in /memory ---
     if not dry_run and (knowledge_stored > 0 or code_symbols_stored > 0 or local_code_symbols_written > 0):
         try:
-            scan_roots = _extract_configured_scan_roots(path) if treesitter and code_index else []
+            scan_roots = code_symbol_scan_roots if treesitter else []
             marker_path = _write_ingest_marker(
                 path,
                 files_scanned=len(files),
@@ -1561,6 +1600,7 @@ def scan(
                 completed_scan_roots=scan_roots if code_symbols_stored > 0 else [],
                 local_code_symbols_artifact=local_code_symbols_artifact,
                 local_code_symbols_written=local_code_symbols_written,
+                code_graph_artifact=code_graph_artifact,
             )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:

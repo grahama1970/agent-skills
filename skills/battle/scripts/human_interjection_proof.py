@@ -29,7 +29,8 @@ def run(out_dir: Path) -> int:
     out_dir = out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     active_run_id = "battle-human-interjection-proof-run"
-    secret = "battle-local-proof-secret"
+    fixture_auth_value = "battle-local-proof-auth-value"
+    invalid_auth_value = "wrong-auth-value"
     judge_receipt = out_dir / "judge-receipt.json"
     _write(
         judge_receipt,
@@ -51,8 +52,8 @@ def run(out_dir: Path) -> int:
         active_run_id=active_run_id,
         request_run_id=active_run_id,
         request_id="pause-accepted",
-        auth_token=secret,
-        expected_auth_token=secret,
+        auth_token=fixture_auth_value,
+        expected_auth_token=fixture_auth_value,
         boundary="round_running",
         judge_receipt=judge_receipt,
     )
@@ -61,8 +62,8 @@ def run(out_dir: Path) -> int:
         active_run_id=active_run_id,
         request_run_id=active_run_id,
         request_id="pause-accepted",
-        auth_token=secret,
-        expected_auth_token=secret,
+        auth_token=fixture_auth_value,
+        expected_auth_token=fixture_auth_value,
         boundary="round_running",
         judge_receipt=judge_receipt,
     )
@@ -71,8 +72,8 @@ def run(out_dir: Path) -> int:
         active_run_id=active_run_id,
         request_run_id=active_run_id,
         request_id="pause-invalid-auth",
-        auth_token="wrong-secret",
-        expected_auth_token=secret,
+        auth_token=invalid_auth_value,
+        expected_auth_token=fixture_auth_value,
         boundary="round_running",
         judge_receipt=judge_receipt,
     )
@@ -81,8 +82,8 @@ def run(out_dir: Path) -> int:
         active_run_id=active_run_id,
         request_run_id=active_run_id,
         request_id="pause-invalid-timing",
-        auth_token=secret,
-        expected_auth_token=secret,
+        auth_token=fixture_auth_value,
+        expected_auth_token=fixture_auth_value,
         boundary="judge_finalized",
         judge_receipt=judge_receipt,
     )
@@ -91,8 +92,8 @@ def run(out_dir: Path) -> int:
         active_run_id=active_run_id,
         request_run_id="other-run",
         request_id="pause-wrong-run",
-        auth_token=secret,
-        expected_auth_token=secret,
+        auth_token=fixture_auth_value,
+        expected_auth_token=fixture_auth_value,
         boundary="round_running",
         judge_receipt=judge_receipt,
     )
