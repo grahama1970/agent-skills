@@ -1,0 +1,545 @@
+{
+  "anti_circularity": {
+    "generator": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/research/prospective-tom/scripts/build_pctom_v2_corpus.py",
+    "hits": [],
+    "sha256": "sha256:7c90a7a805b60afb0ef699f4182910be131d8243b2421c0decd66463974c0a6c"
+  },
+  "benefit_vs_prevalence_baseline": {
+    "development": {
+      "CD": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": -0.124835153,
+          "lo": -0.284531012
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.437530208,
+        "mean_paired_diff_vs_prevalence_baseline": -0.201358681
+      },
+      "D": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": -0.087338008,
+          "lo": -0.248481367
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.474627026,
+        "mean_paired_diff_vs_prevalence_baseline": -0.164261863
+      },
+      "M": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": 5.1409e-05,
+          "lo": -0.102509099
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.586046743,
+        "mean_paired_diff_vs_prevalence_baseline": -0.052842146
+      },
+      "P0_prevalence_baseline": {
+        "distribution_order1": [
+          {
+            "probability": 0.333333333,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "UNKNOWN"
+          }
+        ],
+        "distribution_order2": [
+          {
+            "probability": 0.5,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.166666667,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "UNKNOWN"
+          }
+        ],
+        "mean_brier": 0.638888889,
+        "note": "intercept/prevalence-only null; not emitted as a scored case condition"
+      },
+      "R": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": 0.093541534,
+          "lo": -0.099810142
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.634667431,
+        "mean_paired_diff_vs_prevalence_baseline": -0.004221458
+      }
+    },
+    "heldout": {
+      "CD": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": -0.084097804,
+          "lo": -0.26143667
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.466857251,
+        "mean_paired_diff_vs_prevalence_baseline": -0.172031637
+      },
+      "D": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": -0.060560697,
+          "lo": -0.231795007
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.494982812,
+        "mean_paired_diff_vs_prevalence_baseline": -0.143906076
+      },
+      "M": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": -0.006072348,
+          "lo": -0.110099726
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.580454545,
+        "mean_paired_diff_vs_prevalence_baseline": -0.058434344
+      },
+      "P0_prevalence_baseline": {
+        "distribution_order1": [
+          {
+            "probability": 0.333333333,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "UNKNOWN"
+          }
+        ],
+        "distribution_order2": [
+          {
+            "probability": 0.5,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.166666667,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "UNKNOWN"
+          }
+        ],
+        "mean_brier": 0.638888889,
+        "note": "intercept/prevalence-only null; not emitted as a scored case condition"
+      },
+      "R": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": 0.085167708,
+          "lo": -0.10183641
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.631226794,
+        "mean_paired_diff_vs_prevalence_baseline": -0.007662095
+      }
+    }
+  },
+  "calibration_heldout_disjointness": {
+    "episode_id_overlap": 0,
+    "problems": []
+  },
+  "claims": {
+    "does_not_prove": [
+      "that counterfactual dreaming improves prospective Theory of Mind",
+      "anything about live Tau behaviour (#1008 owns the live held-out run)",
+      "that the corpus is representative of real social interaction"
+    ],
+    "proves": [
+      "the frozen PCTOM-R v2 corpus and episode-conditioned estimator pass the #1056 validity-v2 gate on both splits",
+      "every condition, including CD, loses on at least one episode",
+      "ten adversarial negative controls each block with a typed reason"
+    ]
+  },
+  "confirmatory_split": "heldout",
+  "corpus_manifest_sha256": "sha256:afe50509846e3dd6524dfa69a15ce60c37ee7784dc72ad5a69cf9253dae907ca",
+  "distinct_distributions_by_condition": {
+    "development": {
+      "CD": 28,
+      "D": 16,
+      "M": 4,
+      "R": 8
+    },
+    "heldout": {
+      "CD": 30,
+      "D": 16,
+      "M": 4,
+      "R": 8
+    }
+  },
+  "distinct_per_episode_scores_by_condition": {
+    "development": {
+      "CD": 17,
+      "D": 11,
+      "M": 6,
+      "R": 9
+    },
+    "heldout": {
+      "CD": 18,
+      "D": 11,
+      "M": 6,
+      "R": 9
+    }
+  },
+  "evidence_ref_counts_by_condition": {
+    "development": {
+      "CD": 538,
+      "D": 384,
+      "M": 136,
+      "R": 262
+    },
+    "heldout": {
+      "CD": 534,
+      "D": 386,
+      "M": 140,
+      "R": 268
+    }
+  },
+  "evidence_ref_hashes_by_split": {
+    "development": {
+      "CD": 269,
+      "D": 192,
+      "M": 68,
+      "R": 131
+    },
+    "heldout": {
+      "CD": 267,
+      "D": 193,
+      "M": 70,
+      "R": 134
+    }
+  },
+  "gate_status_by_split": {
+    "development": "PASS_MEASUREMENT_VALIDITY_V2",
+    "heldout": "PASS_MEASUREMENT_VALIDITY_V2"
+  },
+  "human_hidden_state_scoring": false,
+  "issue": "grahama1970/agent-skills#1131",
+  "label_counts_by_family": {
+    "development": {
+      "coordination_conflict": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "information_asymmetry_false_belief": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "preference_desire_uncertainty": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "trust_commitment_relationship": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      }
+    },
+    "heldout": {
+      "coordination_conflict": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "information_asymmetry_false_belief": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "preference_desire_uncertainty": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "trust_commitment_relationship": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      }
+    }
+  },
+  "label_counts_by_order": {
+    "development": {
+      "all": {
+        "FALSE": 24,
+        "TRUE": 40,
+        "UNKNOWN": 32
+      },
+      "order1": {
+        "FALSE": 16,
+        "TRUE": 16,
+        "UNKNOWN": 16
+      },
+      "order2": {
+        "FALSE": 8,
+        "TRUE": 24,
+        "UNKNOWN": 16
+      }
+    },
+    "heldout": {
+      "all": {
+        "FALSE": 24,
+        "TRUE": 40,
+        "UNKNOWN": 32
+      },
+      "order1": {
+        "FALSE": 16,
+        "TRUE": 16,
+        "UNKNOWN": 16
+      },
+      "order2": {
+        "FALSE": 8,
+        "TRUE": 24,
+        "UNKNOWN": 16
+      }
+    }
+  },
+  "label_counts_by_truth_value": {
+    "development": {
+      "FALSE": 24,
+      "TRUE": 40,
+      "UNKNOWN": 32
+    },
+    "heldout": {
+      "FALSE": 24,
+      "TRUE": 40,
+      "UNKNOWN": 32
+    }
+  },
+  "live": false,
+  "live_tau_calls": 0,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_controls": null,
+  "preregistration_sha256": "sha256:33523ce2d583599307bf9f884d96d0678d2841f5f333d1dc039a6c7391240a71",
+  "problem_count": 0,
+  "problems": [],
+  "proper_scores_by_condition": {
+    "development": {
+      "CD": 0.437530208,
+      "D": 0.474627026,
+      "M": 0.586046743,
+      "R": 0.634667431
+    },
+    "heldout": {
+      "CD": 0.466857251,
+      "D": 0.494982812,
+      "M": 0.580454545,
+      "R": 0.631226794
+    }
+  },
+  "provider_calls": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_v2_measurement_validity.v1",
+  "score_variance_within_label_class": {
+    "development": {
+      "CD": {
+        "order1=FALSE": {
+          "distinct_values": 5,
+          "n": 16,
+          "variance": 0.063644831288
+        },
+        "order1=TRUE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.018134775956
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 9,
+          "n": 16,
+          "variance": 0.081801240812
+        }
+      },
+      "D": {
+        "order1=FALSE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.060781380786
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.04006116048
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 6,
+          "n": 16,
+          "variance": 0.107288530164
+        }
+      },
+      "M": {
+        "order1=FALSE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.011565021101
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.04006116048
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.013006557782
+        }
+      },
+      "R": {
+        "order1=FALSE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.060781380786
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.04006116048
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 4,
+          "n": 16,
+          "variance": 0.043075552973
+        }
+      }
+    },
+    "heldout": {
+      "CD": {
+        "order1=FALSE": {
+          "distinct_values": 5,
+          "n": 16,
+          "variance": 0.097266421398
+        },
+        "order1=TRUE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.016216013793
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 10,
+          "n": 16,
+          "variance": 0.109945317282
+        }
+      },
+      "D": {
+        "order1=FALSE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.060781380786
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.028761858806
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 6,
+          "n": 16,
+          "variance": 0.134824876009
+        }
+      },
+      "M": {
+        "order1=FALSE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.011565021101
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.028761858806
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.013656885671
+        }
+      },
+      "R": {
+        "order1=FALSE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.060781380786
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.028761858806
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 4,
+          "n": 16,
+          "variance": 0.034616999981
+        }
+      }
+    }
+  },
+  "sealed_commitment_counts": {
+    "development": 192,
+    "heldout": 192
+  },
+  "sealed_commitments_recomputed_ok": {
+    "development": 192,
+    "heldout": 192
+  },
+  "status": "PASS_PCTOM_MEASUREMENT_VALIDITY_V2",
+  "win_tie_loss_by_condition": {
+    "development": {
+      "CD": {
+        "loss": 2,
+        "tie": 28,
+        "win": 18
+      },
+      "D": {
+        "loss": 15,
+        "tie": 15,
+        "win": 18
+      },
+      "M": {
+        "loss": 22,
+        "tie": 22,
+        "win": 4
+      },
+      "R": {
+        "loss": 28,
+        "tie": 15,
+        "win": 5
+      }
+    },
+    "heldout": {
+      "CD": {
+        "loss": 4,
+        "tie": 26,
+        "win": 18
+      },
+      "D": {
+        "loss": 14,
+        "tie": 17,
+        "win": 17
+      },
+      "M": {
+        "loss": 19,
+        "tie": 22,
+        "win": 7
+      },
+      "R": {
+        "loss": 25,
+        "tie": 17,
+        "win": 6
+      }
+    }
+  }
+}

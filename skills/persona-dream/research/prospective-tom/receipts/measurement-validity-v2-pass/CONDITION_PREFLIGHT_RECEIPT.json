@@ -1,0 +1,543 @@
+{
+  "benefit_vs_prevalence_baseline": {
+    "CD": {
+      "bootstrap_ci_by_base_episode": {
+        "hi": -0.084097804,
+        "lo": -0.26143667
+      },
+      "lower_is_better": true,
+      "mean_brier": 0.466857251,
+      "mean_paired_diff_vs_prevalence_baseline": -0.172031637
+    },
+    "D": {
+      "bootstrap_ci_by_base_episode": {
+        "hi": -0.060560697,
+        "lo": -0.231795007
+      },
+      "lower_is_better": true,
+      "mean_brier": 0.494982812,
+      "mean_paired_diff_vs_prevalence_baseline": -0.143906076
+    },
+    "M": {
+      "bootstrap_ci_by_base_episode": {
+        "hi": -0.006072348,
+        "lo": -0.110099726
+      },
+      "lower_is_better": true,
+      "mean_brier": 0.580454545,
+      "mean_paired_diff_vs_prevalence_baseline": -0.058434344
+    },
+    "P0_prevalence_baseline": {
+      "distribution_order1": [
+        {
+          "probability": 0.333333333,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.333333333,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.333333333,
+          "value": "UNKNOWN"
+        }
+      ],
+      "distribution_order2": [
+        {
+          "probability": 0.5,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.166666667,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.333333333,
+          "value": "UNKNOWN"
+        }
+      ],
+      "mean_brier": 0.638888889,
+      "note": "intercept/prevalence-only null; not emitted as a scored case condition"
+    },
+    "R": {
+      "bootstrap_ci_by_base_episode": {
+        "hi": 0.085167708,
+        "lo": -0.10183641
+      },
+      "lower_is_better": true,
+      "mean_brier": 0.631226794,
+      "mean_paired_diff_vs_prevalence_baseline": -0.007662095
+    }
+  },
+  "commitment_integrity_problems": [],
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "corpus_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/research/prospective-tom/local/pctom-v2/heldout/artifacts/pctom_v2_corpus.json",
+  "corpus_sha256": "sha256:093b1671eb552f335525dd54cf36f728ecc208718cf63dec52581e9d26774817",
+  "counts": {
+    "cases": 192,
+    "distinct_distributions_by_condition": {
+      "CD": 30,
+      "D": 16,
+      "M": 4,
+      "R": 8
+    },
+    "distinct_per_episode_scores_by_condition": {
+      "CD": 18,
+      "D": 11,
+      "M": 6,
+      "R": 9
+    },
+    "episodes": 48,
+    "evidence_ref_count_by_condition": {
+      "CD": 534,
+      "D": 386,
+      "M": 140,
+      "R": 268
+    },
+    "label_counts": {
+      "all": {
+        "FALSE": 24,
+        "TRUE": 40,
+        "UNKNOWN": 32
+      },
+      "order1": {
+        "FALSE": 16,
+        "TRUE": 16,
+        "UNKNOWN": 16
+      },
+      "order2": {
+        "FALSE": 8,
+        "TRUE": 24,
+        "UNKNOWN": 16
+      }
+    },
+    "label_counts_by_family": {
+      "coordination_conflict": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "information_asymmetry_false_belief": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "preference_desire_uncertainty": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      },
+      "trust_commitment_relationship": {
+        "FALSE": 6,
+        "TRUE": 10,
+        "UNKNOWN": 8
+      }
+    },
+    "win_tie_loss_by_condition": {
+      "CD": {
+        "loss": 4,
+        "tie": 26,
+        "win": 18
+      },
+      "D": {
+        "loss": 14,
+        "tie": 17,
+        "win": 17
+      },
+      "M": {
+        "loss": 19,
+        "tie": 22,
+        "win": 7
+      },
+      "R": {
+        "loss": 25,
+        "tie": 17,
+        "win": 6
+      }
+    }
+  },
+  "episodes_sha256": "sha256:616f27e80dca448c039b2b7d060439223b7e2a5ec8814a2d0194ed7a068d2e35",
+  "errors": [],
+  "evidence_scope_problems": [],
+  "exploratory_split_receipt": {
+    "benefit_vs_prevalence_baseline": {
+      "CD": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": -0.124835153,
+          "lo": -0.284531012
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.437530208,
+        "mean_paired_diff_vs_prevalence_baseline": -0.201358681
+      },
+      "D": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": -0.087338008,
+          "lo": -0.248481367
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.474627026,
+        "mean_paired_diff_vs_prevalence_baseline": -0.164261863
+      },
+      "M": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": 5.1409e-05,
+          "lo": -0.102509099
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.586046743,
+        "mean_paired_diff_vs_prevalence_baseline": -0.052842146
+      },
+      "P0_prevalence_baseline": {
+        "distribution_order1": [
+          {
+            "probability": 0.333333333,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "UNKNOWN"
+          }
+        ],
+        "distribution_order2": [
+          {
+            "probability": 0.5,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.166666667,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.333333333,
+            "value": "UNKNOWN"
+          }
+        ],
+        "mean_brier": 0.638888889,
+        "note": "intercept/prevalence-only null; not emitted as a scored case condition"
+      },
+      "R": {
+        "bootstrap_ci_by_base_episode": {
+          "hi": 0.093541534,
+          "lo": -0.099810142
+        },
+        "lower_is_better": true,
+        "mean_brier": 0.634667431,
+        "mean_paired_diff_vs_prevalence_baseline": -0.004221458
+      }
+    },
+    "conditions": [
+      "M",
+      "R",
+      "D",
+      "CD"
+    ],
+    "corpus_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/research/prospective-tom/local/pctom-v2/development/artifacts/pctom_v2_corpus.json",
+    "corpus_sha256": "sha256:4823e443e0c6bdf4a92336303416f9d01446c223a8801d417bc956a3ca25cb59",
+    "counts": {
+      "cases": 192,
+      "distinct_distributions_by_condition": {
+        "CD": 28,
+        "D": 16,
+        "M": 4,
+        "R": 8
+      },
+      "distinct_per_episode_scores_by_condition": {
+        "CD": 17,
+        "D": 11,
+        "M": 6,
+        "R": 9
+      },
+      "episodes": 48,
+      "evidence_ref_count_by_condition": {
+        "CD": 538,
+        "D": 384,
+        "M": 136,
+        "R": 262
+      },
+      "label_counts": {
+        "all": {
+          "FALSE": 24,
+          "TRUE": 40,
+          "UNKNOWN": 32
+        },
+        "order1": {
+          "FALSE": 16,
+          "TRUE": 16,
+          "UNKNOWN": 16
+        },
+        "order2": {
+          "FALSE": 8,
+          "TRUE": 24,
+          "UNKNOWN": 16
+        }
+      },
+      "label_counts_by_family": {
+        "coordination_conflict": {
+          "FALSE": 6,
+          "TRUE": 10,
+          "UNKNOWN": 8
+        },
+        "information_asymmetry_false_belief": {
+          "FALSE": 6,
+          "TRUE": 10,
+          "UNKNOWN": 8
+        },
+        "preference_desire_uncertainty": {
+          "FALSE": 6,
+          "TRUE": 10,
+          "UNKNOWN": 8
+        },
+        "trust_commitment_relationship": {
+          "FALSE": 6,
+          "TRUE": 10,
+          "UNKNOWN": 8
+        }
+      },
+      "win_tie_loss_by_condition": {
+        "CD": {
+          "loss": 2,
+          "tie": 28,
+          "win": 18
+        },
+        "D": {
+          "loss": 15,
+          "tie": 15,
+          "win": 18
+        },
+        "M": {
+          "loss": 22,
+          "tie": 22,
+          "win": 4
+        },
+        "R": {
+          "loss": 28,
+          "tie": 15,
+          "win": 5
+        }
+      }
+    },
+    "episodes_sha256": "sha256:bb14008dba01b17cb20d64ee578e06763ffadafc186e5aa8f518e0a70baf2edf",
+    "errors": [],
+    "human_hidden_state_scoring": false,
+    "live": false,
+    "live_tau_calls": 0,
+    "llm_judge_used": false,
+    "memory_write_attempts": 0,
+    "mocked": false,
+    "output_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/research/prospective-tom/local/pctom-v2/development",
+    "primary_proper_score": "multiclass_brier",
+    "provider_calls": 0,
+    "schema": "persona_dream.research.prospective_tom.pctom_v2_condition_preflight.v1",
+    "score_variance_within_label_class": {
+      "CD": {
+        "order1=FALSE": {
+          "distinct_values": 5,
+          "n": 16,
+          "variance": 0.063644831288
+        },
+        "order1=TRUE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.018134775956
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 9,
+          "n": 16,
+          "variance": 0.081801240812
+        }
+      },
+      "D": {
+        "order1=FALSE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.060781380786
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.04006116048
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 6,
+          "n": 16,
+          "variance": 0.107288530164
+        }
+      },
+      "M": {
+        "order1=FALSE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.011565021101
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.04006116048
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.013006557782
+        }
+      },
+      "R": {
+        "order1=FALSE": {
+          "distinct_values": 3,
+          "n": 16,
+          "variance": 0.060781380786
+        },
+        "order1=TRUE": {
+          "distinct_values": 2,
+          "n": 16,
+          "variance": 0.04006116048
+        },
+        "order1=UNKNOWN": {
+          "distinct_values": 4,
+          "n": 16,
+          "variance": 0.043075552973
+        }
+      }
+    },
+    "sealed": true,
+    "sealed_commitment_count": 192,
+    "sealed_commitments_recomputed_ok": 192,
+    "split": "development",
+    "status": "PASS_PCTOM_V2_CONDITION_PREFLIGHT",
+    "visible_cue_subset_by_condition": {
+      "CD": [
+        "cue_recency",
+        "cue_ack",
+        "cue_hedge",
+        "cue_contrast"
+      ],
+      "D": [
+        "cue_recency",
+        "cue_ack",
+        "cue_hedge"
+      ],
+      "M": [
+        "cue_recency"
+      ],
+      "R": [
+        "cue_recency",
+        "cue_ack"
+      ]
+    }
+  },
+  "human_hidden_state_scoring": false,
+  "live": false,
+  "live_tau_calls": 0,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "output_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/research/prospective-tom/local/pctom-v2/heldout",
+  "preregistration_sha256": "sha256:33523ce2d583599307bf9f884d96d0678d2841f5f333d1dc039a6c7391240a71",
+  "primary_proper_score": "multiclass_brier",
+  "provider_calls": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_v2_condition_preflight.v1",
+  "score_variance_within_label_class": {
+    "CD": {
+      "order1=FALSE": {
+        "distinct_values": 5,
+        "n": 16,
+        "variance": 0.097266421398
+      },
+      "order1=TRUE": {
+        "distinct_values": 3,
+        "n": 16,
+        "variance": 0.016216013793
+      },
+      "order1=UNKNOWN": {
+        "distinct_values": 10,
+        "n": 16,
+        "variance": 0.109945317282
+      }
+    },
+    "D": {
+      "order1=FALSE": {
+        "distinct_values": 3,
+        "n": 16,
+        "variance": 0.060781380786
+      },
+      "order1=TRUE": {
+        "distinct_values": 2,
+        "n": 16,
+        "variance": 0.028761858806
+      },
+      "order1=UNKNOWN": {
+        "distinct_values": 6,
+        "n": 16,
+        "variance": 0.134824876009
+      }
+    },
+    "M": {
+      "order1=FALSE": {
+        "distinct_values": 2,
+        "n": 16,
+        "variance": 0.011565021101
+      },
+      "order1=TRUE": {
+        "distinct_values": 2,
+        "n": 16,
+        "variance": 0.028761858806
+      },
+      "order1=UNKNOWN": {
+        "distinct_values": 2,
+        "n": 16,
+        "variance": 0.013656885671
+      }
+    },
+    "R": {
+      "order1=FALSE": {
+        "distinct_values": 3,
+        "n": 16,
+        "variance": 0.060781380786
+      },
+      "order1=TRUE": {
+        "distinct_values": 2,
+        "n": 16,
+        "variance": 0.028761858806
+      },
+      "order1=UNKNOWN": {
+        "distinct_values": 4,
+        "n": 16,
+        "variance": 0.034616999981
+      }
+    }
+  },
+  "sealed": true,
+  "sealed_commitment_count": 192,
+  "sealed_commitments_recomputed_ok": 192,
+  "split": "heldout",
+  "status": "PASS_PCTOM_V2_CONDITION_PREFLIGHT",
+  "visible_cue_subset_by_condition": {
+    "CD": [
+      "cue_recency",
+      "cue_ack",
+      "cue_hedge",
+      "cue_contrast"
+    ],
+    "D": [
+      "cue_recency",
+      "cue_ack",
+      "cue_hedge"
+    ],
+    "M": [
+      "cue_recency"
+    ],
+    "R": [
+      "cue_recency",
+      "cue_ack"
+    ]
+  }
+}

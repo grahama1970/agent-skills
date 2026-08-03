@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""audit_pctom_evidence_scope_ledger - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 import argparse

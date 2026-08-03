@@ -1,0 +1,46 @@
+{
+  "schema": "persona_dream.research.prospective_tom.pctom_v2_preregistration.v1",
+  "issue": "grahama1970/agent-skills#1131",
+  "follows": "#1056 (fail-closed measurement-validity-v2 gate)",
+  "blocks": "#1008",
+  "primary_proper_score": "multiclass_brier",
+  "score_direction": "lower_is_better",
+  "aggregation": "per-episode mean Brier over the two factual (first- and second-order) belief distributions",
+  "null_baseline": {
+    "id": "P0_prevalence_baseline",
+    "definition": "intercept/prevalence-only predictor: the marginal label frequency per perspective order, computed from labels alone and using no episode feature",
+    "emitted_as_scored_case_condition": false,
+    "reason_not_emitted": "a constant predictor is exactly what the validity-v2 gate must reject; shipping it as a case condition would correctly block the gate, so it is reported as a reference score in the preflight receipt instead"
+  },
+  "strongest_baseline_rule": "among M, R and D, the condition with the lowest mean per-episode Brier on the split under analysis; CD is compared against that condition, not against the mean of the baselines",
+  "benefit_definition": "paired per-base-episode difference in mean Brier between a condition and P0_prevalence_baseline; uncertainty by percentile bootstrap resampled over BASE EPISODES (not over condition rows, which are not independent)",
+  "conditions": {
+    "M": "direct_memory_readout, visible cue subset {cue_recency}",
+    "R": "textual_reflection, visible cue subset {cue_recency, cue_ack}",
+    "D": "single_trajectory_dream, visible cue subset {cue_recency, cue_ack, cue_hedge}",
+    "CD": "counterfactual_dream, visible cue subset {cue_recency, cue_ack, cue_hedge, cue_contrast}"
+  },
+  "design": {
+    "hidden_state": "three binary latent factors per episode (state_changed, counterpart_informed, state_ambiguous) crossed with four binary observation-channel bits",
+    "labels": "derived from the latent triple by oracle_order1 / oracle_order2; never authored per episode",
+    "unknown_permitted": true,
+    "episodes_per_split": 48,
+    "splits": {
+      "development": "exploratory: used to design the cue channel and weight table",
+      "heldout": "confirmatory: disjoint episode ids, disjoint simulator seed range, disjoint template id pool, and a rotated observation-channel schedule"
+    },
+    "paired": "every base episode is evaluated under all of M, R, D and CD, so contrasts are paired by episode and all four conditions see an identical label distribution",
+    "determinism": "no random number generator is consulted in corpus generation or inference; the bootstrap uses a fixed-seed LCG. No jitter is added anywhere to manufacture variance."
+  },
+  "declared_before_confirmatory_preflight": true,
+  "honest_scope_note": "The development split was used to design the estimator and is exploratory. Only the heldout split is confirmatory under this preregistration. A CD loss, a tie, or a null result is an acceptable and expected outcome; nothing in the corpus or estimator is tuned toward a CD win.",
+  "outcomes_that_would_not_falsify_the_design": [
+    "CD does not beat the strongest baseline",
+    "the benefit confidence interval spans zero",
+    "M or R wins on some episodes"
+  ],
+  "llm_judge_used": false,
+  "human_hidden_state_scoring": false,
+  "live_tau_calls": 0,
+  "provider_calls": 0
+}
