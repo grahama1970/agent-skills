@@ -8,8 +8,15 @@ import { isBattlePopulationView } from "../lib/battle-population-registry";
 import { isBattleLiveView } from "../lib/battle-transport-registry";
 import { isBattleCampaignView } from "../lib/battle-campaign-registry";
 import { isBattleMusicView } from "../lib/battle-music-registry";
+import { useRegisterAction } from "../hooks/useRegisterAction";
 
 export function BattleProofNav() {
+	useRegisterAction("battle:nav:proofs-menu", {
+		action: "BATTLE_NAV_PROOFS_MENU_TOGGLE",
+		label: "Toggle Battle Proofs Menu",
+		description: "Expand or collapse the Battle proofs and stages navigation menu.",
+		tags: ["battle", "navigation"],
+	});
 	const hash = typeof window !== "undefined" ? window.location.hash : "";
 	const onProof = isBattleProofCardView(hash);
 	const onSynthesis = isBattleSynthesisView(hash);
@@ -33,8 +40,20 @@ export function BattleProofNav() {
 			<a href="#battle" aria-current={onDesign ? "page" : undefined} data-qid="battle:nav:design" data-qs-action="BATTLE_NAV_DESIGN" title="Dense design-parity mockup (not receipt truth)">
 				Design
 			</a>
-			<details className="battle-proof-nav-more" data-qid="battle:nav:proofs-menu">
-				<summary className={onProofFamily ? "is-active" : undefined}>Proofs &amp; stages</summary>
+			<details
+				className="battle-proof-nav-more"
+				data-qid="battle:nav:proofs-menu"
+				data-qs-action="BATTLE_NAV_PROOFS_MENU_TOGGLE"
+				title="Show Battle proofs and stages navigation"
+			>
+				<summary
+					className={onProofFamily ? "is-active" : undefined}
+					data-qid="battle:nav:proofs-menu:summary"
+					data-qs-action="BATTLE_NAV_PROOFS_MENU_TOGGLE"
+					title="Show Battle proofs and stages navigation"
+				>
+					Proofs &amp; stages
+				</summary>
 				<div className="battle-proof-nav-more-links">
 					<a
 						href="#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13"

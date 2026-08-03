@@ -29,7 +29,7 @@ export function PixiHitTargetMirrors({ lanes, rowLayout, input, contentWidth, al
 	const layoutByLane = new Map(rowLayout.map((row) => [row.laneId, row]));
 
 	return (
-		<div className="battlePixiHitMirrorLayer" aria-hidden={false}>
+		<div className="battlePixiHitMirrorLayer" aria-hidden={false} data-qid="battle:pixi:hit-mirror-layer">
 			{lanes.map((lane) => {
 				const row = layoutByLane.get(lane.id);
 				if (!row) return null;
@@ -40,7 +40,7 @@ export function PixiHitTargetMirrors({ lanes, rowLayout, input, contentWidth, al
 						key={`lane-${lane.id}`}
 						type="button"
 						className="battlePixiHitMirror"
-						data-qid={`battle:lane:${lane.id}`}
+						data-qid={`battle:pixi:lane:${lane.id}`}
 						data-qs-action="BATTLE_LANE_SELECT"
 						title={`Select lane ${lane.name}`}
 						aria-label={`Select lane ${lane.name}`}

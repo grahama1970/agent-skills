@@ -1,7 +1,8 @@
 import { PauseCircle } from "lucide-react";
-import type { BattleNormalizedUxFixture } from "./lib/battle-types";
-import { humanInterjectionPanelViewModel } from "./lib/battle-human-interjection";
+import type { BattleHumanInterjectionPanelItem, BattleNormalizedUxFixture } from "./lib/battle-types";
+import { humanInterjectionOperatorStates, humanInterjectionPanelViewModel } from "./lib/battle-human-interjection";
 import type { BattleLivePauseControlState } from "./lib/battle-live-control";
+import { useRegisterAction } from "./hooks/useRegisterAction";
 
 type Props = {
 	fixture: BattleNormalizedUxFixture | null;
@@ -26,13 +27,20 @@ function stateTone(state: string): string {
 }
 
 export function BattleHumanInterjectionPanel({ fixture, liveControl, onPauseAfterRound }: Props) {
+	useRegisterAction("battle:human-interjection:pause-button", {
+		action: "BATTLE_PAUSE_AFTER_ROUND_SUBMIT",
+		label: "Pause Battle After Round",
+		description: "Submit a receipt-backed pause_after_round request to the live Battle backend.",
+		tags: ["battle", "live", "human-interjection"],
+	});
 	const model = humanInterjectionPanelViewModel(fixture);
 	const stateValue = model.stateSet.join(" ");
-	const backendStates = model.states.length
+	const fallbackState = model.stateSet[0] === "missing_backend" ? "unavailable" : model.stateSet[0];
+	const backendStates: BattleHumanInterjectionPanelItem[] = model.states.length
 		? model.states
 		: [
 				{
-					state: model.stateSet[0],
+					state: fallbackState,
 					status: model.status.toUpperCase(),
 					label: model.reason ?? "pause_after_round backend receipts are unavailable.",
 					request_id: null,
@@ -45,7 +53,7 @@ export function BattleHumanInterjectionPanel({ fixture, liveControl, onPauseAfte
 				},
 			];
 	const hasPending = backendStates.some((item) => item.state === "pending" || item.request_id === liveControl?.requestId);
-	const visibleStates =
+	const stateItems =
 		liveControl?.status === "pending" && liveControl.requestId && !hasPending
 			? [
 					{
@@ -63,6 +71,7 @@ export function BattleHumanInterjectionPanel({ fixture, liveControl, onPauseAfte
 					...backendStates,
 				]
 			: backendStates;
+	const visibleStates = humanInterjectionOperatorStates(stateItems, liveControl?.requestId ?? null);
 	const canSubmit =
 		Boolean(liveControl?.available && onPauseAfterRound) &&
 		liveControl?.status !== "pending" &&
@@ -100,6 +109,7 @@ export function BattleHumanInterjectionPanel({ fixture, liveControl, onPauseAfte
 						type="button"
 						className="ml-auto inline-flex min-h-11 items-center gap-2 rounded border border-emerald-300/60 bg-emerald-500/18 px-3 text-[11px] font-black uppercase text-emerald-50 shadow-sm hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:border-slate-600 disabled:bg-slate-800 disabled:text-slate-400"
 						data-qid="battle:human-interjection:pause-button"
+						data-qs-action="BATTLE_PAUSE_AFTER_ROUND_SUBMIT"
 						data-status={liveControl.status}
 						data-request-id={liveControl.requestId ?? ""}
 						disabled={!canSubmit}

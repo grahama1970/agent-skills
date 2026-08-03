@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BattleNormalizedUxFixture } from "./battle-types";
-import { humanInterjectionPanelViewModel } from "./battle-human-interjection";
+import { humanInterjectionOperatorStates, humanInterjectionPanelViewModel } from "./battle-human-interjection";
 
 const baseFixture = {
 	schema: "battle.normalized_ux_fixture.v1",
@@ -60,5 +60,70 @@ describe("humanInterjectionPanelViewModel", () => {
 		expect(model.status).toBe("unavailable");
 		expect(model.sourceBound).toBe(false);
 		expect(model.stateSet).toEqual(["unavailable"]);
+	});
+
+	it("dedupes backend pause states and removes diagnostic rejections from the operator view", () => {
+		const states = humanInterjectionOperatorStates([
+			{
+				state: "applied",
+				status: "APPLIED",
+				label: "pause_after_round applied at the after-round boundary.",
+				request_id: "pause-1",
+				backend_receipt: true,
+				live: true,
+				mocked: false,
+			},
+			{
+				state: "rejected",
+				status: "REJECTED",
+				label: "pause_after_round rejected: invalid_auth.",
+				request_id: "bad-auth-proof",
+				reason_code: "invalid_auth",
+				backend_receipt: true,
+				live: true,
+				mocked: false,
+			},
+			{
+				state: "applied",
+				status: "APPLIED",
+				label: "pause_after_round applied at the after-round boundary.",
+				request_id: "pause-1",
+				backend_receipt: true,
+				live: true,
+				mocked: false,
+			},
+			{
+				state: "rejected",
+				status: "REJECTED",
+				label: "pause_after_round rejected: wrong_run.",
+				request_id: "wrong-run-proof",
+				reason_code: "wrong_run",
+				backend_receipt: true,
+				live: true,
+				mocked: false,
+			},
+		]);
+
+		expect(states).toHaveLength(1);
+		expect(states[0]?.state).toBe("applied");
+		expect(states[0]?.request_id).toBe("pause-1");
+	});
+
+	it("keeps a single non-diagnostic rejection visible when no primary pause state exists", () => {
+		const states = humanInterjectionOperatorStates([
+			{
+				state: "rejected",
+				status: "REJECTED",
+				label: "pause_after_round rejected by backend policy.",
+				request_id: "operator-request",
+				reason_code: "policy",
+				backend_receipt: true,
+				live: true,
+				mocked: false,
+			},
+		]);
+
+		expect(states).toHaveLength(1);
+		expect(states[0]?.state).toBe("rejected");
 	});
 });

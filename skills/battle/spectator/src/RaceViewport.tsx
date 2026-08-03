@@ -64,6 +64,7 @@ type Props = {
 
 export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher, onSelect, query, filter = "all", speed = "1x", playing = false, battleEvents = [], soundEnabled = false, onReplayCue, onReceiptBeat, onPlayheadSeconds, onUserScrubSeconds, highlightReel = false, onHighlightReelChange, highlightJumpToken = 0, onPlayingChange }: Props) {
   useRegisterAction("battle:timeline:scroll", { action: "BATTLE_TIMELINE_SCROLL", label: "Scroll Battle Timeline", description: "Scroll the receipt-backed Battle timeline horizontally.", tags: ["battle", "timeline"] });
+  useRegisterAction("battle:timeline:scrub", { action: "BATTLE_TIMELINE_SCRUB", label: "Scrub Battle Timeline", description: "Move the Battle playhead along the receipt-backed timeline.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline", description: "Adjust the Battle timeline zoom.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom:out", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline Out", description: "Zoom the Battle timeline out.", tags: ["battle", "timeline"] });
   useRegisterAction("battle:timeline:zoom:in", { action: "BATTLE_TIMELINE_ZOOM", label: "Zoom Battle Timeline In", description: "Zoom the Battle timeline in.", tags: ["battle", "timeline"] });
@@ -469,10 +470,12 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
       {(designView || receiptReplay) ? (
         <div className="playheadOverlay" aria-hidden="true">
           <div />
-          <div
-            className="playheadTrack"
-            data-qid="battle:timeline:scrub"
-            onClick={onOverlayScrubPointer}
+            <div
+              className="playheadTrack"
+              data-qid="battle:timeline:scrub"
+              data-qs-action="BATTLE_TIMELINE_SCRUB"
+              title="Scrub the Battle timeline playhead"
+              onClick={onOverlayScrubPointer}
             onKeyDown={(event) => {
               if (event.key === "ArrowLeft") setPlayheadSeconds((value) => Math.max(0, value - 1));
               if (event.key === "ArrowRight") setPlayheadSeconds((value) => Math.min(allotted, value + 1));
@@ -505,9 +508,10 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
           {receiptReplay && pixiEngine && !director.cameraFollow ? (
             <button
               type="button"
-              className="ml-2 rounded-md border border-battle-cyan/30 bg-battle-cyan/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-battle-cyan"
+              className="ml-2 min-h-11 rounded-md border border-battle-cyan/30 bg-battle-cyan/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-battle-cyan"
               data-qid="battle:timeline:resume-follow"
               data-qs-action="BATTLE_CAMERA_RESUME_FOLLOW"
+              title="Resume Battle camera follow mode"
               onClick={() => director.resumeCameraFollow()}
             >
               Resume follow
