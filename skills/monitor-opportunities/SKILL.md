@@ -1,14 +1,12 @@
 ---
 name: monitor-opportunities
 description: >
-  Nightly opportunity monitor. Sweeps ATS-native job APIs and federal feeds, ranks a small
-  set of high-fit opportunities across employment, federal subcontract and commercial
-  contract lanes, generates a per-opportunity resume variant tuned to the screening stack
-  that employer actually uses, and emits ONE interactive morning report covering LinkedIn
-  InMail drafts, Gmail drafts, auto-apply status and resume updates. Use when the user asks
-  for today's opportunities, the morning opportunity report, to tailor a resume for a
-  posting, to check what needs sending, or to run or schedule the nightly opportunity
-  sweep.
+  Nightly opportunity monitor that researches a bounded set of target employers and
+  clients, ranks only eligible opportunities, compiles claim-bound resume variants,
+  and emits one interactive morning report covering human-transmitted outreach and
+  separately gated ATS application state. Use when the user asks for today's
+  opportunities, the morning opportunity report, a targeted resume, what needs human
+  action, or to run or schedule the nightly opportunity sweep.
 allowed-tools:
   - Bash
   - Read
@@ -27,9 +25,9 @@ triggers:
   - find me work
   - client prospects
 metadata:
-  short-description: Nightly opportunity sweep with algorithm-aware resume tailoring and one interactive report
+  short-description: Nightly opportunity report with claim-bound tailoring and gated effects
   author: Graham
-  version: "0.1.0"
+  version: "0.2.0"
 runtime_self_improvement: substantial
 
 provides:
@@ -43,6 +41,7 @@ composes:
   - mailbox-mining
   - ops-linkedin
   - gmail
+  - ask
   - scheduler
   - task-monitor
 complies:
@@ -50,6 +49,7 @@ complies:
   - best-practices-python
   - best-practices-arangodb
   - best-practices-roundtable
+  - best-practices-security
 taxonomy:
   - operations
   - retrieval
@@ -66,83 +66,148 @@ taxonomy:
 > report/interview, with auto-apply using a custom targeted resume given the algorithm
 > likely employed by the employer or client.**
 
-Each morning the candidate opens **one** artifact, sees a small ranked set of real
-opportunities across every lane, and can act on all of them from that one place. Every
-message to a human is transmitted **by the human**.
+Operationally, “algorithm likely employed” means an evidence-backed
+`screening_interface_profile`: observed ATS/provider host, observed form fields and file
+constraints, job-description conventions, bounded presentation inferences, confidence,
+evidence references, limitations, and explicit unknowns. It does **not** mean knowledge
+of proprietary ranking weights, knockout logic, recruiter workflow, or a hidden scoring
+algorithm.
+
+Each morning the candidate opens **one entry point** backed by one source-of-truth report
+manifest. It exposes a small ranked set of real opportunities, every associated artifact,
+every blocker, and every available decision. Every message to another human is
+transmitted **by the candidate**.
 
 ## The interactive report is the product
 
-Not a byproduct. One artifact per night, covering all four action types together:
+Not a byproduct. One report manifest and one human entry point per completed run cover:
 
 | Section | Contents | Candidate action |
 |---|---|---|
-| Opportunities | ranked, ≤8, each with dossier, fit score and **why this candidate** | keep / reject / defer |
-| Tailored resume | the variant generated for that posting + a diff against canonical | accept / amend a claim |
-| InMail drafts | full verbatim text, claim keys, roundtable verdict, send steps | **candidate sends** |
-| Gmail drafts | full verbatim text, draft location in the mailbox, send steps | **candidate sends** |
-| Auto-apply | ATS form status per application, or why it is staged | authorize / withhold |
-| Interview prep | JD-derived talking points bound to ledger claims | read |
+| Opportunities | ranked, ≤8, dossier, eligibility, fit, source evidence, why this candidate | keep / reject / defer |
+| Tailored resume | claim-bound variant, artifacts, and presentation-only diff | accept / propose claim amendment |
+| InMail | verbatim local handoff text, claim keys, roundtable state, human steps | candidate transmits |
+| Gmail | verbatim text and, only after separate promotion, mailbox draft location | candidate transmits |
+| ATS application | inspect/prefill/submit state, exact payload binding, blockers | authorize / withhold |
+| Interview prep | source- and claim-bound talking points | read |
+| Coverage and health | lanes searched, source receipts, feed failures, unknowns | inspect |
 
-Every candidate decision writes back to the ledger. Amending a claim regenerates the
-affected resume variant. **Staging without presenting is a silent queue and is a defect.**
+Every action-worthy staged artifact must have `visible_in_report: true`. The manifest
+records action-worthy, visible, and hidden counts; `hidden_total` must be zero. Staging
+without presenting is a silent queue and is a defect.
 
-## Lanes (co-equal)
+“Co-equal lanes” means each enabled lane is honestly inspected and visibly reported. It
+does not require equal output or filler opportunities.
 
-- **A — employment**: WNY hybrid/onsite preferred, credible remote acceptable.
-  **Buffalo is a hard constraint — relocation roles are rejected, never shortlisted.**
-- **B — federal/defense**: SAM.gov Sources Sought / RFI, SBIR awardees needing
-  subcontractors.
-- **C — commercial contract** for grahamaco: document extraction, agent pipelines,
-  agentic integration, applied R&D. Usually has no "apply" button — find the NEED, propose.
+## Lanes
 
-## Discovery: research-first, never board enumeration
+- **A — employment** (`employment_posting`): WNY hybrid/onsite preferred, credible
+  remote acceptable. **Buffalo is a hard constraint. Relocation-required roles are
+  rejected before ranking.**
+- **B — federal/defense** (`federal_notice`): SAM.gov Sources Sought/RFI and bounded,
+  source-backed subcontract signals.
+- **C — commercial contract** (`commercial_signal`) for grahamaco: document extraction,
+  agent pipelines, agentic integration, and applied R&D. Usually there is no apply
+  button; find and source the need before proposing work.
 
-Enumerate-and-filter is a spray architecture and is **forbidden as a primary strategy**.
-Identify which employers are worth targeting, then read only their boards.
+Federal notices and commercial signals are not forced into an employment-posting schema.
 
-Verified working (2026-08-02):
+## Discovery: research first, never board enumeration
 
-```
+Enumerate-and-filter is a spray architecture and is forbidden as the primary strategy.
+Maintain a reviewed target-account registry, identify which employers or clients are
+worth inspecting, and read their primary sources.
+
+Initial official employment discovery interfaces:
+
+```text
 greenhouse  boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true
 lever       api.lever.co/v0/postings/{slug}?mode=json
 ashby       api.ashbyhq.com/posting-api/job-board/{slug}
 ```
 
-These return the full JD **and the employer's own apply URL**, so discovery never requires
-scraping an aggregator. Aggregator/open-web search produces noise; ATS APIs produce facts.
+These can establish published job content and the employer-hosted apply URL. They do
+**not** establish candidate-side submission authority. Open-web or aggregator results
+may locate a primary source, but cannot by themselves admit a shortlisted opportunity.
 
-**LinkedIn is never automated** (UA §8.2). Human-saved HTML only, then leave the platform.
+LinkedIn is never automated. Only human-saved or human-supplied content may be used, then
+the workflow leaves the platform.
 
-## Algorithm-aware resume tailoring
+## Source and feed truth
 
-Infer the screening stack from evidence available **before** applying — the ATS host on
-the apply URL, form field shapes, JD phrasing conventions — and record the inference with
-its basis. Then tailor **presentation only**:
+Each source attempt writes a receipt. Closed run-result vocabulary:
 
-**May change per opportunity**: section order, section headers, keyword surface and
-density, title mirroring, bullet ordering, file format (single-column `.docx` for Workday),
-which approved claims are surfaced or omitted.
+```text
+MATCHES
+NO_MATCHES
+FEED_DOWN
+AUTH_REQUIRED
+AUTH_FAILED
+RATE_LIMITED
+POLICY_BLOCKED
+STALE_DATA
+INVALID_REQUEST
+INVALID_RESPONSE
+NOT_SEARCHED
+```
 
-**May never change**: facts, dates, employers, titles, metrics, or any assertion not bound
-to a `claim_key` in the canonical `career_profile` ledger. Tailoring **reorders and
-selects approved claims; it never mints one.**
+A feed failure must never render as no opportunities. Source health is run-specific
+evidence, not permanent prose. `NOT_SEARCHED` is distinct from `NO_MATCHES`.
 
-Every variant is validated before use: schema-valid, every assertion resolves to a claim
-key, and a diff against canonical shows only presentation deltas. A variant that adds a
-factual assertion is a defect, not a variant.
+## Eligibility before ranking
 
-## Canonical resume and PDF handoff
+Every candidate first receives a deterministic eligibility result. Ranking cannot
+rescue a rejected or human-review item. Required geographic order, all else equal:
 
-The public canonical resume artifact in this repository is:
+```text
+WNY hybrid > WNY onsite > credible remote
+```
+
+Relocation-required, source-invalid, stale, duplicate/already-applied, or explicitly
+ineligible opportunities are rejected before scoring. Ambiguous location, clearance,
+citizenship/work-authorization, salary, and other human-attested facts remain `UNKNOWN`
+or `human_required`; a model cannot infer an attestation.
+
+An empty shortlist is a valid successful result. Never relax threshold, geography, or
+eligibility policy to manufacture volume.
+
+## Claim-bound resume tailoring
+
+Tailoring compiles a presentation from exactly one approved career-profile/claim
+snapshot. It selects, orders, labels, and renders approved claims; it never mints a
+factual assertion.
+
+May change per opportunity:
+
+- section order and headers;
+- approved claim selection and bullet ordering;
+- approved aliases and keyword surface;
+- a clearly labeled target-role summary;
+- ATS-safe layout and file format.
+
+May never change:
+
+- employers or historical employment titles;
+- dates, clients, technologies, credentials, metrics, or outcomes;
+- clearance, citizenship, work authorization, salary, or self-identification facts;
+- any assertion not bound to an approved `claim_key` and wording variant.
+
+Target-role language may appear in a clearly labeled target/summary field. It may not
+replace an historical employment title. Every variant carries a claim snapshot digest,
+claim keys, a semantic presentation diff, and explicit prohibited-delta validation.
+Claim amendment creates a human-review proposal; it does not mutate the canonical ledger.
+
+## Canonical resume and render handoff
+
+The public canonical resume presentation in this repository is:
 
 ```text
 RESUME.md
 docs/resume/graham-anderson-resume.pdf
 ```
 
-`RESUME.md` is the human-edited baseline presentation. The PDF is a generated
-artifact produced by `.github/workflows/resume-pdf.yml` on pushes to `main`, or
-manually with:
+`RESUME.md` is the human-edited baseline presentation. The PDF is generated by
+`.github/workflows/resume-pdf.yml` on pushes to `main`, or manually with:
 
 ```bash
 uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
@@ -152,89 +217,134 @@ uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
   --author "Graham Anderson"
 ```
 
-`monitor-opportunities` must treat that Markdown file as the baseline resume
-presentation, not as the fact ledger. The canonical fact source remains the
-`career_profile` claim ledger. A tailored resume variant is valid only when it:
+That Markdown file is a presentation baseline, not the fact ledger. The canonical fact
+authority remains the approved `career_profile` claim snapshot. A per-opportunity variant
+must start from approved claims, bind every factual assertion to `claim_key` values,
+produce the requested ATS-safe formats, emit a semantic diff against the canonical
+presentation, and appear in the morning report before use. The public workflow renders
+only the public canonical resume; the tailoring runtime owns per-opportunity rendering
+after claim validation passes.
 
-- starts from approved `career_profile` claims;
-- selects, orders and labels those claims for one posting and inferred ATS stack;
-- writes a per-posting Markdown variant and generated PDF;
-- emits a diff against `RESUME.md`;
-- proves every factual assertion in the variant resolves to a `claim_key`;
-- appears in the interactive report before it is used anywhere.
+## Intended command surface
 
-The GitHub Actions PDF workflow renders only the public canonical resume. The
-`./run.sh tailor --posting <key>` implementation is responsible for rendering
-per-opportunity PDFs by calling `scripts/build_markdown_pdf.py` directly after
-claim-binding validation passes.
-
-## Commands
+The command list is the target contract. Current implementation status is authoritative
+only in `./run.sh status --json` and `docs/PROJECT_KNOWLEDGE.md`.
 
 ```bash
-./run.sh sweep --lane A,B,C          # discovery only; writes job_postings
-./run.sh rank --limit 8              # score + dossiers; no outbound
-./run.sh tailor --posting <key>      # claim-bound Markdown/PDF variant + diff
-./run.sh report                      # build the interactive morning report
-./run.sh apply --posting <key>       # ATS form only; never email or LinkedIn
-./run.sh status                      # readiness, stage, feed health
-./run.sh schedule                    # register the nightly cron via /scheduler
-./sanity.sh                          # behavioral gates
+./run.sh run --out <run-root>                 # one resumable nightly transaction
+./run.sh sweep --lane A,B,C --out <dir>       # read-only discovery receipts
+./run.sh rank --input <run> --limit 8          # eligibility first, then score
+./run.sh tailor --posting <key> --out <dir>    # claim-bound resume artifacts
+./run.sh report --input <manifest> --out <dir> # validate and render one report
+./run.sh serve --report <run-dir>              # loopback decision entry point
+./run.sh decision ...                          # append-only human decision event
+./run.sh replay --run <run-id>                 # rebuild projection from events
+./run.sh apply --posting <key>                 # separately gated ATS effect only
+./run.sh status --json                         # readiness, stage, feeds, blockers
+./run.sh verify --out <dir>                    # machine-readable verification receipt
+./run.sh schedule --cron "0 2 * * *"           # register the full run, then read back
+./sanity.sh                                    # deterministic behavioral gates
 ```
 
-Register the nightly run:
+Unsupported commands must fail non-zero with an explicit `NOT_IMPLEMENTED`; a
+success-looking placeholder is forbidden.
 
-```bash
-/scheduler add monitor-opportunities --cron "0 2 * * *" --budget 10
+## Capability authority and human authorization
+
+Current stage: **`STAGE_0_RESEARCH_ONLY`**.
+
+| Capability | Stage 0 authority |
+|---|---|
+| Read approved public sources | allowed when implemented |
+| Write local source/dossier artifacts | allowed |
+| Rank eligible opportunities | allowed |
+| Compile local claim-bound resume variants | allowed |
+| Render local outreach text in the report | allowed, not sendable |
+| Create Gmail mailbox draft | blocked pending separate capability promotion |
+| Send Gmail | permanently forbidden to this skill |
+| Prepare LinkedIn human handoff as ready | blocked pending separate promotion |
+| Access or automate LinkedIn | permanently forbidden |
+| Inspect ATS form | blocked pending site/provider promotion |
+| Prefill ATS form | blocked pending separate promotion |
+| Submit ATS form | blocked pending site/provider promotion and exact human authorization |
+
+Capability promotion is explicit, capability-specific, scoped, receipt-bearing,
+revocable, and never granted by elapsed time, exit zero, agent agreement, or prior
+success. It does not authorize future unknown application payloads.
+
+Every ATS submission additionally requires a per-application human authorization bound
+to the exact posting, form schema, resume, attachments, answer set, policy, and payload
+digest. Any change invalidates authorization.
+
+External ATS effects use:
+
+```text
+PREPARED -> HUMAN_AUTHORIZED -> COMMITTING -> COMMITTED | BLOCKED | INDETERMINATE
 ```
 
-## Stage gate — nothing is sendable until proven
-
-Current stage: **`STAGE_0_RESEARCH_ONLY`**. In stage 0 the skill may sweep, rank, write
-dossiers, tailor resumes and build the report; it may **not** create a Gmail draft in the
-mailbox, mark an outbound LinkedIn packet ready, or submit any application. The report
-labels these **"WOULD PRESENT (STAGE_0 — not sendable)"**.
-
-Stage advances only on an explicit human promotion decision — never automatically, never
-by elapsed time, and never because a run exited zero.
+`INDETERMINATE` blocks automatic retry until reconciliation proves whether the effect
+occurred.
 
 ## Who transmits
 
-**The human. Always.** Gmail is `--mode draft` only; `--mode send` is forbidden and
-`plan commit` creates a draft, it does not transmit. LinkedIn has no automation at all.
-Autonomous submission applies **only** to employer-hosted ATS application forms, and never
-to email, InMail, connection notes, comments or posts.
+**The human. Always.** Gmail is draft-only after a separate promotion; Gmail send,
+schedule-send, and forwarding are forbidden. LinkedIn output is a local human handoff
+packet; this skill never logs in, drives the platform, posts, comments, connects, or
+messages.
 
-Every outbound message additionally requires a completed `/ask` roundtable per
-`best-practices-roundtable`: concurrent topology, immutable goal, ≥2 PASS seats, attributed
-synthesis, 3-round cap, verdict `SEND_AS_IS` or `SEND_WITH_REVISIONS`.
+Every proposed outbound message requires a completed `/ask` roundtable under
+`best-practices-roundtable`: concurrent topology, one immutable goal, at least two PASS
+seats, attributed synthesis and dissent, no more than three rounds, and verdict
+`SEND_AS_IS` or `SEND_WITH_REVISIONS`.
 
 ## Never auto-answer
 
-EEO / veteran / disability self-ID, clearance, work authorization, salary, legal,
-background or criminal disclosures, ambiguous drop-downs, and **any free-text field** —
-plus anything lacking an exact hit in the attested answer bank. Unknown form fields
-default to `human_required`.
+EEO, veteran, disability, gender/race/ethnicity self-identification, clearance,
+citizenship/work authorization, salary, legal, background/criminal disclosures,
+ambiguous choice fields, and **every free-text field** are `human_required`. Anything
+without an exact approved answer-bank hit is also `human_required`.
 
-## Quality over volume
+## Quality and audit counts
 
-Caps: 8 shortlisted, 3 applications per run, 5 per week. `applications_sent`,
-`resumes_submitted` and `boards_enumerated` are **forbidden metrics**. Success is *the
-number of high-fit opportunities with defensible dossiers*.
+Caps: eight shortlisted opportunities, three applications per run, five per week.
+Application, resume, board, and candidate counts may exist as audit/reconciliation data,
+but are forbidden as optimization or success metrics. Success is a defensible small set
+with source, eligibility, claim, and decision evidence.
 
-**An empty night is a valid outcome.** If nothing clears the bar, say so and exit 0. Never
-lower the threshold, widen the geography, or add filler to make a night look productive.
+## Scheduler registration
 
-## Feed health must be loud
+Register one full-run transaction only after deterministic and live Stage 0 gates pass.
+Budget is enforced and receipted by `monitor-opportunities`; the scheduler does not claim
+a budget capability it lacks.
 
-A dead feed must never render as "no opportunities". `status` reports per-feed health, and
-the report states which lanes were actually searched. As of 2026-08-02 the **SAM.gov
-Opportunities API returns HTTP 404 with zero bytes from its own `istio-envoy` gateway** on
-every documented path and both auth styles, so **lane B has no working feed** and must be
-reported `FEED_DOWN`, not empty.
+```bash
+skills/scheduler/run.sh register \
+  --name monitor-opportunities-nightly \
+  --cron "0 2 * * *" \
+  --command "/absolute/path/to/skills/monitor-opportunities/run.sh run" \
+  --workdir "/absolute/path/to/agent-skills" \
+  --description "Nightly Stage 0 opportunity report"
+
+skills/scheduler/run.sh list
+```
+
+Registration success is not proof until name, command, working directory, cron, and
+enabled state are read back exactly.
+
+## Runtime self-improvement boundary
+
+The substantial runtime may record feed failures, parser regressions, false positives,
+ranking errors, and proposed improvements. It may not silently change the immutable goal,
+Buffalo geography, capability authority, target registry, source allowlist, claim facts,
+human attestations, ranking thresholds, caps, or external-effect policy. Such changes
+become maintainer tickets or human-reviewed versioned configuration.
 
 ## References
 
-- `references/tailoring-contract.md` — what a variant may and may not change
-- `references/report-format.md` — the interactive report contract
-- `docs/PROJECT_KNOWLEDGE.md` — current state, gaps, defect history
-- `fixtures/agentic_eval.json` — positive, negative, adversarial cases
+- `references/report-format.md` — source-of-truth morning report and visibility invariant
+- `references/tailoring-contract.md` — claim authority and permitted presentation deltas
+- `references/safety-stage-contract.md` — capability promotion, human authorization, effects
+- `references/source-integrity-contract.md` — research-first sources and feed truth
+- `schemas/report.schema.json` — Stage 0 report schema
+- `fixtures/reports/stage0_mixed_lanes.json` — expected mixed-lane Stage 0 product fixture
+- `docs/PROJECT_KNOWLEDGE.md` — current implementation state, decisions, and next slices
