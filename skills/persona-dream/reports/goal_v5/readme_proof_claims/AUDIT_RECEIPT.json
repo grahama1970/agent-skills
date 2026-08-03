@@ -91,12 +91,12 @@
       "boundaries with no receipt are declared unproven and use no positive-result language"
     ]
   },
-  "created_at": "2026-08-03T16:42:05Z",
+  "created_at": "2026-08-03T16:55:52Z",
   "failed_gates": [],
   "live": false,
   "mocked": false,
   "readme": "skills/persona-dream/README.md",
-  "readme_sha256": "sha256:1566f537338747c2a6655aed299e37689555af58e121cbc9e6fe6fb0dcd3e371",
+  "readme_sha256": "sha256:8d591b3a089daa83ce6121f611ed05b1135a9285c0e4265558c60363ae9be8cd",
   "rows_checked": 9,
   "schema": "persona_dream.readme_proof_claim_audit.v1",
   "status": "PASS_README_PROOF_CLAIMS_BOUND"

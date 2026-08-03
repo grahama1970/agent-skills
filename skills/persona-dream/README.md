@@ -61,56 +61,6 @@ live-provider, Watch, graph-persistence, or behavior-evaluation stages.
 
 ---
 
-## The controlling hierarchy
-
-The immutable goal is registered with `$goal-drift` (source `human_prompt`) and
-read back with `skills/goal-drift/run.sh goal --project persona-dream`. That
-registry, not this file, is the authority.
-
-1. **Research goal** — determine, through preregistered, falsifiable,
-   fail-closed experiments, whether provenance-bound synthetic dreaming adds
-   measurable value over direct memory and structured reflection. **A loss, a
-   tie, or a null result is a completed result.** The goal is to learn whether
-   the mechanism earns its complexity, not to prove that it succeeds.
-2. **Experimental subject** — Embry is the test case, not the objective.
-   "Build Embry" would assume the mechanism works.
-3. **Safety contract** — preserve identity, factual competence, answer content,
-   and evidence classes. These are validity constraints, never conclusions. See
-   the Persistent-Persona Safety Hypothesis in [`GOAL.md`](GOAL.md).
-4. **Transfer contract** — move validated mechanisms and failure lessons into
-   Graph Memory Operator, Tau, SPARTA, and Chatterbox. Recorded per experiment
-   in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
-5. **Product decision** — adopt, constrain, simplify, or retire each mechanism
-   on the evidence. Deletion is a goal-serving action here.
-
-**PCTOM-R** (Prospective Counterfactual Theory of Mind) is the research
-workstream under item 1: does imagining what did *not* happen improve
-predictions about what another agent *will* do? Issue #1131 tracks the
-measurement-validity repair that lets the treatment lose; that repair is not
-evidence of benefit. The held-out result is tracked by #1008. Current state is
-in [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
-
-**Kling, Watch, Memory, Chatterbox, and Tau** are supporting lanes. Their
-transfer decisions live in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
-
-This project does not have to become a production product to be complete.
-
-## Architecture: the bounded loop
-
-```
-accepted dream
-  -> Watch observations          (what the persona saw, adjudicated)
-  -> first-person journal        (grounded, explicitly synthetic)
-  -> bounded arc delta           (what may change, and by how much)
-  -> continuity ledger           (the authority object; atomic, epoch-checked)
-  -> session mood before turn 1  (deterministic, bound before the user speaks)
-  -> Chatterbox voice delivery   (the mood made audible)
-  -> recognition check           (is it still recognizably Embry?)
-```
-
-Each arrow is a gate with its own receipt. The loop is only as strong as the
-weakest joined leg, and joining every leg in one run is what P2 is for.
-
 ## Current state
 
 Phase **P2_LIVE_CONTINUITY_CHAIN**. The digest below is generated from
@@ -171,8 +121,7 @@ vocabulary is deliberately narrow: **implemented** means code exists,
 
 Revision ids, request hashes, receipt paths, and the per-phase narrative are in
 [`docs/verification.md`](docs/verification.md). Current machine state is in
-[`CURRENT_STATUS.json`](CURRENT_STATUS.json). Provider selection is near the end
-of the media-production spine; it is not the end of the research experiment.
+[`CURRENT_STATUS.json`](CURRENT_STATUS.json).
 
 ---
 
@@ -199,8 +148,7 @@ them:
 - that a human listener recognizes Embry;
 - a confidence-bounded PCTOM-R planning advantage;
 - that attaching a previous video causally improves continuity.
-
-Claims here are retired only by a named receipt read back from disk.
+- Claims here are retired only by a named receipt read back from disk.
 
 ---
 
@@ -213,6 +161,57 @@ creator/reviewer loops), Kling and other providers (media generation),
 Chatterbox (speech synthesis), or the voice-evaluation lane (speaker backends).
 Each has its own proof boundary; Persona Dream may cite their receipts but may
 not restate their guarantees. See [Technical Architecture](#technical-architecture).
+
+---
+
+## Architecture: the bounded loop
+
+```
+accepted dream
+  -> Watch observations          (what the persona saw, adjudicated)
+  -> first-person journal        (grounded, explicitly synthetic)
+  -> bounded arc delta           (what may change, and by how much)
+  -> continuity ledger           (the authority object; atomic, epoch-checked)
+  -> session mood before turn 1  (deterministic, bound before the user speaks)
+  -> Chatterbox voice delivery   (the mood made audible)
+  -> recognition check           (is it still recognizably Embry?)
+```
+
+Each arrow is a gate with its own receipt. The loop is only as strong as the
+weakest joined leg, and joining every leg in one run is what P2 is for.
+
+## The controlling hierarchy
+
+The immutable goal is registered with `$goal-drift` (source `human_prompt`) and
+read back with `skills/goal-drift/run.sh goal --project persona-dream`. That
+registry, not this file, is the authority.
+
+1. **Research goal** — determine, through preregistered, falsifiable,
+   fail-closed experiments, whether provenance-bound synthetic dreaming adds
+   measurable value over direct memory and structured reflection. **A loss, a
+   tie, or a null result is a completed result.** The goal is to learn whether
+   the mechanism earns its complexity, not to prove that it succeeds.
+2. **Experimental subject** — Embry is the test case, not the objective.
+   "Build Embry" would assume the mechanism works.
+3. **Safety contract** — preserve identity, factual competence, answer content,
+   and evidence classes. These are validity constraints, never conclusions. See
+   the Persistent-Persona Safety Hypothesis in [`GOAL.md`](GOAL.md).
+4. **Transfer contract** — move validated mechanisms and failure lessons into
+   Graph Memory Operator, Tau, SPARTA, and Chatterbox. Recorded per experiment
+   in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
+5. **Product decision** — adopt, constrain, simplify, or retire each mechanism
+   on the evidence. Deletion is a goal-serving action here.
+
+**PCTOM-R** (Prospective Counterfactual Theory of Mind) is the research
+workstream under item 1: does imagining what did *not* happen improve
+predictions about what another agent *will* do? Issue #1131 tracks the
+measurement-validity repair that lets the treatment lose; that repair is not
+evidence of benefit. The held-out result is tracked by #1008. Current state is
+in [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
+
+**Kling, Watch, Memory, Chatterbox, and Tau** are supporting lanes. Their
+transfer decisions live in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md). This
+project does not have to become a production product to be complete.
 
 ## Research detail
 
