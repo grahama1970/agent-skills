@@ -10,6 +10,9 @@ from pathlib import Path
 from battle_skill import production_infrastructure_probe as probe
 
 
+FIXTURE_WEBSOCKET_AUTH_VALUE = "example-websocket-auth-value"
+
+
 def test_production_infrastructure_receipt_records_success_shape(tmp_path: Path, monkeypatch) -> None:
     _patch_probe_success(monkeypatch)
 
@@ -21,7 +24,7 @@ def test_production_infrastructure_receipt_records_success_shape(tmp_path: Path,
         commit="abc123",
         release_id="release-abc123",
         secret_source="production-secret-manager",
-        websocket_bearer_token="example-token-not-secret",
+        websocket_bearer_token=FIXTURE_WEBSOCKET_AUTH_VALUE,
     )
 
     assert receipt["schema"] == "battle.production_infrastructure_deployment_proof.v1"
@@ -30,7 +33,7 @@ def test_production_infrastructure_receipt_records_success_shape(tmp_path: Path,
     assert receipt["live"] == "production_infrastructure_deployment"
     assert receipt["target"]["environment"] == "production"
     assert receipt["evidence"]["secret_configuration"]["source"] == "production-secret-manager"
-    assert "example-token-not-secret" not in str(receipt)
+    assert FIXTURE_WEBSOCKET_AUTH_VALUE not in str(receipt)
     assert (tmp_path / "production-infrastructure-deployment-proof.json").exists()
 
 
