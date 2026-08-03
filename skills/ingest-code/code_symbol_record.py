@@ -33,9 +33,30 @@ def _unique(values: list[str]) -> list[str]:
     return result
 
 
+def _normalize_repo_path(value: str) -> str:
+    """Normalize a repository-relative path without resolving filesystem state."""
+    normalized = re.sub(r"/+", "/", value.replace("\\", "/").strip())
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized
+
+
+def _sha256_id(prefix: str, values: list[str]) -> str:
+    basis = "\x1f".join(values)
+    digest = hashlib.sha256(basis.encode("utf-8")).hexdigest()[:40]
+    return f"{prefix}_{digest}"
+
+
 @dataclass(frozen=True)
 class CodeSymbolRecord:
-    """Memory-owned code index record emitted by ingest-code."""
+    """Memory-owned code index record emitted by ingest-code.
+
+    ``symbol_id`` identifies the logical symbol currently represented by this
+    document. ``symbol_version_id`` identifies one indexed source version of
+    that symbol. Keeping those identities separate lets ordinary Memory upserts
+    replace the current projection without treating line or body changes as a
+    new entity.
+    """
 
     scope: str
     repo: str
@@ -58,10 +79,55 @@ class CodeSymbolRecord:
     called_symbols: list[str] = field(default_factory=list)
     string_literals: list[str] = field(default_factory=list)
     content_hash: str = ""
+    identity_discriminator: str = ""
     tags: list[str] = field(default_factory=list)
 
     @property
-    def key(self) -> str:
+    def normalized_path(self) -> str:
+        """Return the path form used for logical identity and retrieval."""
+        return _normalize_repo_path(self.path)
+
+    @property
+    def effective_content_hash(self) -> str:
+        """Return the supplied source hash or a deterministic local fallback."""
+        if self.content_hash:
+            return self.content_hash
+        source = self.code or self.signature or self.docstring or self.symbol_name
+        return hashlib.sha256(source.encode("utf-8")).hexdigest()
+
+    @property
+    def symbol_id(self) -> str:
+        """Return the stable logical identity for the current symbol."""
+        return _sha256_id(
+            "cs",
+            [
+                self.repo.strip(),
+                self.branch.strip(),
+                self.normalized_path,
+                self.language.strip().lower(),
+                self.symbol_kind.strip().lower(),
+                self.qualified_name.strip(),
+                self.identity_discriminator.strip(),
+            ],
+        )
+
+    @property
+    def symbol_version_id(self) -> str:
+        """Return the identity of this indexed source version."""
+        return _sha256_id(
+            "csv",
+            [
+                self.symbol_id,
+                self.commit.strip(),
+                str(self.start_line),
+                str(self.end_line),
+                self.effective_content_hash,
+            ],
+        )
+
+    @property
+    def legacy_key(self) -> str:
+        """Return the pre-v2 line/content-shaped key for migration diagnostics."""
         basis = "|".join([
             self.repo,
             self.branch,
@@ -75,13 +141,18 @@ class CodeSymbolRecord:
         return f"cs_{hashlib.sha256(basis.encode('utf-8')).hexdigest()[:40]}"
 
     @property
+    def key(self) -> str:
+        """Compatibility alias for the stable current-projection key."""
+        return self.symbol_id
+
+    @property
     def problem(self) -> str:
-        file_name = Path(self.path).name
+        file_name = Path(self.normalized_path).name
         return f"What is {self.symbol_name} in {file_name}?"
 
     @property
     def solution(self) -> str:
-        parts = [f"File: {self.path}:{self.start_line}-{self.end_line}"]
+        parts = [f"File: {self.normalized_path}:{self.start_line}-{self.end_line}"]
         parts.append(f"Kind: {self.symbol_kind}")
         parts.append(f"Qualified name: {self.qualified_name}")
         if self.signature:
@@ -104,7 +175,7 @@ class CodeSymbolRecord:
             "type:code_symbol",
             f"repo:{self.repo}",
             f"branch:{self.branch}",
-            f"path:{self.path}",
+            f"path:{self.normalized_path}",
             f"lang:{self.language}",
             f"kind:{self.symbol_kind}",
             f"symbol:{self.symbol_name}",
@@ -124,20 +195,20 @@ class CodeSymbolRecord:
         add("call", self.called_symbols)
         add("import", self.imports)
         add("literal", self.string_literals)
-        add("path_token", split_identifier(self.path))
+        add("path_token", split_identifier(self.normalized_path))
         return sorted(set(terms))
 
     def to_document(self) -> dict:
         """Return a /memory /upsert document for the code_symbols collection."""
         return {
-            "_key": self.key,
+            "_key": self.symbol_id,
             "type": "code_symbol",
             "scope": self.scope,
             "repo": self.repo,
             "root": self.root,
             "branch": self.branch,
             "commit": self.commit,
-            "path": self.path,
+            "path": self.normalized_path,
             "language": self.language,
             "symbol_kind": self.symbol_kind,
             "symbol_name": self.symbol_name,
@@ -152,7 +223,11 @@ class CodeSymbolRecord:
             "local_variables": _unique(self.local_variables),
             "called_symbols": _unique(self.called_symbols),
             "string_literals": _unique(self.string_literals),
-            "content_hash": self.content_hash,
+            "content_hash": self.effective_content_hash,
+            "symbol_id": self.symbol_id,
+            "symbol_version_id": self.symbol_version_id,
+            "identity_discriminator": self.identity_discriminator,
+            "legacy_key": self.legacy_key,
             "lexical_terms": self.lexical_terms,
             "tags": _unique(self.tags + self.lexical_terms[:50]),
             "problem": self.problem,
@@ -174,14 +249,18 @@ class CodeSymbolRecord:
                 "repo": self.repo,
                 "branch": self.branch,
                 "commit": self.commit,
-                "path": self.path,
+                "path": self.normalized_path,
                 "language": self.language,
                 "symbol_kind": self.symbol_kind,
                 "symbol_name": self.symbol_name,
                 "qualified_name": self.qualified_name,
                 "start_line": self.start_line,
                 "end_line": self.end_line,
-                "content_hash": self.content_hash,
+                "content_hash": self.effective_content_hash,
+                "symbol_id": self.symbol_id,
+                "symbol_version_id": self.symbol_version_id,
+                "identity_discriminator": self.identity_discriminator,
+                "legacy_key": self.legacy_key,
                 "lexical_terms": self.lexical_terms,
             },
         }

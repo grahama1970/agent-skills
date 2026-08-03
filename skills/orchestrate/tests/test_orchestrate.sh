@@ -14,6 +14,7 @@ set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 FIXTURES_DIR="$SCRIPT_DIR/fixtures"
+export AGENT_SKILLS_ARTIFACT_ROOT="${AGENT_SKILLS_ARTIFACT_ROOT:-${TMPDIR:-/tmp}/agent-skills-orchestrate-test-artifacts-$$}"
 
 # Colors
 GREEN='\033[0;32m'

@@ -201,6 +201,11 @@ jobs:
             # Skip system/hidden dirs
             [[ "$skill" == .* ]] && continue
             [[ "$skill" == __pycache__ ]] && continue
+            case "$skill" in
+              _shared|common|consume_common|create-claude|sanity|subagent-service|webgpt-engagement)
+                continue
+                ;;
+            esac
 
             TOTAL=$((TOTAL + 1))
 

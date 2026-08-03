@@ -4,14 +4,14 @@ on:
   push:
     branches: [main]
     paths:
-      - "docs/resume/graham-anderson-resume.md"
+      - "RESUME.md"
       - "docs/resume/resume.css"
       - "scripts/build_markdown_pdf.py"
       - ".github/workflows/resume-pdf.yml"
   pull_request:
     branches: [main]
     paths:
-      - "docs/resume/graham-anderson-resume.md"
+      - "RESUME.md"
       - "docs/resume/resume.css"
       - "scripts/build_markdown_pdf.py"
       - ".github/workflows/resume-pdf.yml"
@@ -34,11 +34,11 @@ jobs:
       - name: Check resume source
         id: resume_source
         run: |
-          if [[ -f docs/resume/graham-anderson-resume.md ]]; then
+          if [[ -f RESUME.md ]]; then
             echo "present=true" >> "$GITHUB_OUTPUT"
           else
             echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "docs/resume/graham-anderson-resume.md is not present; skipping PDF build"
+            echo "RESUME.md is not present; skipping PDF build"
           fi
 
       - name: Build resume PDF
@@ -49,7 +49,7 @@ jobs:
             css_args=(--css docs/resume/resume.css)
           fi
           uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
-            docs/resume/graham-anderson-resume.md \
+            RESUME.md \
             docs/resume/graham-anderson-resume.pdf \
             --title "Graham Anderson Resume" \
             --author "Graham Anderson" \

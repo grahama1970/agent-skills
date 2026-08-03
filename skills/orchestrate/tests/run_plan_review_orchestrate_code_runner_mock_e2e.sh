@@ -8,6 +8,7 @@ ORCH="$ROOT/skills/orchestrate/run.sh"
 TMP="${TMPDIR:-/tmp}/plan-review-orchestrate-code-runner-mock-e2e-$$"
 REPO="$TMP/repo"
 ORCH_HOME="$TMP/orchestrate-home"
+export PLAN_ARTIFACT_ROOT="${PLAN_ARTIFACT_ROOT:-$TMP/plan-artifacts}"
 
 cleanup() {
   status=$?
@@ -32,11 +33,18 @@ def answer():
 PY
 
 cat > tests/test_target.py <<'PY'
+import unittest
+
 from src.target import answer
 
 
-def test_answer_returns_42():
-    assert answer() == 42
+class TargetTests(unittest.TestCase):
+    def test_answer_returns_42(self):
+        self.assertEqual(answer(), 42)
+
+
+if __name__ == "__main__":
+    unittest.main()
 PY
 
 git add src/__init__.py src/target.py tests/__init__.py tests/test_target.py
@@ -83,12 +91,12 @@ tasks:
     apply_to_source: true
     commit_on_success: true
     definition_of_done:
-      command: "python -m pytest tests/test_target.py -q"
+      command: "python -m unittest discover -s tests -q"
       assertion: "exit_code == 0"
     tests:
-      - "python -m pytest tests/test_target.py -q"
+      - "python -m unittest discover -s tests -q"
     blind_tests:
-      - command: "python -m pytest tests/test_target.py -q"
+      - command: "python -m unittest discover -s tests -q"
 YAML
 
 "$PLAN" --validate "$TMP/good-plan.yaml" > "$TMP/plan-good.log" 2>&1
@@ -163,7 +171,7 @@ assert spec["apply_to_source"] is True, spec
 assert spec["commit_on_success"] is True, spec
 assert spec["rollback_on_failure"] is True, spec
 assert spec["definition_of_done"] == {
-    "command": "python -m pytest tests/test_target.py -q",
+    "command": "python -m unittest discover -s tests -q",
     "assertion": "exit_code == 0",
 }, spec
 assert "Prior Related Context" in spec["prompt"], spec["prompt"]
@@ -219,11 +227,18 @@ def answer():
     return 0
 PY
 cat > tests/test_target.py <<'PY'
+import unittest
+
 from src.target import answer
 
 
-def test_answer_returns_42():
-    assert answer() == 42
+class TargetTests(unittest.TestCase):
+    def test_answer_returns_42(self):
+        self.assertEqual(answer(), 42)
+
+
+if __name__ == "__main__":
+    unittest.main()
 PY
 git add src/__init__.py src/target.py tests/__init__.py tests/test_target.py
 git commit -q -m "initial"
@@ -265,10 +280,10 @@ tasks:
     commit_on_success: true
     rollback_on_failure: true
     definition_of_done:
-      command: "python -m pytest tests/test_target.py -q"
+      command: "python -m unittest discover -s tests -q"
       assertion: "exit_code == 0"
     tests:
-      - "python -m pytest tests/test_target.py -q"
+      - "python -m unittest discover -s tests -q"
     blind_tests:
       - command: "python -c 'import sys; sys.exit(1)'"
 YAML

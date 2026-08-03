@@ -64,6 +64,7 @@ skills/ask/src/ask/ask_task_state.json
 .venv/
 state/
 *.pdf
+!docs/resume/graham-anderson-resume.pdf
 *.so
 *.so.*
 fetch_cache/
