@@ -1,0 +1,39 @@
+name: monitor-opportunities Stage 0 kernel
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "skills/monitor-opportunities/**"
+      - ".github/workflows/monitor-opportunities.yml"
+  push:
+    branches: [main]
+    paths:
+      - "skills/monitor-opportunities/**"
+      - ".github/workflows/monitor-opportunities.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stage0-kernel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run deterministic Stage 0 gates
+        run: skills/monitor-opportunities/sanity.sh
+
+      - name: Upload verification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitor-opportunities-stage0-verification
+          path: /tmp/monitor-opportunities-sanity
+          if-no-files-found: error
