@@ -139,6 +139,10 @@ def test_code_graph_bundle_is_deterministic_and_self_describing(tmp_path: Path) 
     assert symbols[0]["symbol_id"] == _symbol(repo).symbol_id
     assert symbols[0]["symbol_version_id"] == _symbol(repo).symbol_version_id
     assert symbols[0]["legacy_key"] == _symbol(repo).legacy_key
+    assert symbols[0]["repository_id"] == _symbol(repo).effective_repository_id
+    assert symbols[0]["repository_id_authoritative"] is True
+    assert symbols[0]["identity_algorithm_version"] == "ingest-code.symbol-identity.v2"
+    assert "identity_discriminator" in symbols[0]
 
     edges = _jsonl(bundle / "edges.jsonl")
     assert edges[0]["edge_type"] == "IMPORTS"

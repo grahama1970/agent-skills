@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from code_symbol_record import CodeSymbolRecord
+from code_symbol_record import IDENTITY_ALGORITHM_VERSION, CodeSymbolRecord
 
 SCHEMA_VERSION = "ingest-code.code_graph_bundle.v1"
 DEFAULT_MAX_SOURCE_BYTES = 1024 * 1024
@@ -357,6 +357,10 @@ def _symbol_records(
             "symbol_id": symbol.symbol_id,
             "symbol_version_id": symbol.symbol_version_id,
             "legacy_key": symbol.legacy_key,
+            "repository_id": symbol.effective_repository_id,
+            "repository_id_authoritative": symbol.repository_id_authoritative,
+            "identity_algorithm_version": symbol.identity_algorithm_version,
+            "identity_discriminator": symbol.identity_discriminator,
             "path": rel_path,
             "language": symbol.language,
             "symbol_kind": symbol.symbol_kind,
@@ -415,6 +419,9 @@ def write_code_graph_bundle(
     artifact_root: Path | None = None,
     extractor_outcomes: list[dict[str, Any]] | None = None,
     max_source_bytes: int = DEFAULT_MAX_SOURCE_BYTES,
+    repository_id_authoritative: bool = True,
+    repository_id_source: str = "legacy_repo",
+    identity_algorithm_version: str = IDENTITY_ALGORITHM_VERSION,
 ) -> dict[str, Any]:
     """Write the deterministic ingest-code code graph bundle and return metadata."""
     root = codebase_root.resolve()
@@ -475,17 +482,23 @@ def write_code_graph_bundle(
         item for item in file_records if str(item.get("status")) in INCOMPLETE_FILE_STATUSES
     ]
     complete = not incomplete_roots and not incomplete_files
+    reconciliation_eligible = complete and repository_id_authoritative
     coverage = {
         "schema_version": SCHEMA_VERSION,
         "complete": complete,
         "fail_closed": not complete,
-        "reconciliation_eligible": complete,
+        "reconciliation_eligible": reconciliation_eligible,
+        "repository_id_authoritative": repository_id_authoritative,
         "counts": counts,
         "extractor_outcomes": outcomes,
     }
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "repo": repo,
+        "repository_id": repo,
+        "repository_id_authoritative": repository_id_authoritative,
+        "repository_id_source": repository_id_source,
+        "identity_algorithm_version": identity_algorithm_version,
         "root": str(root),
         "branch": branch,
         "commit": commit,
