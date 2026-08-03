@@ -120,7 +120,8 @@ def run_verification(out_dir: Path, fixture_path: Path | None = None) -> dict[st
     mutations.append(("ats_authorized", ats_authorized, "ATS_AUTHORIZED_STAGE0"))
 
     def free_text(value: dict[str, Any]) -> None:
-        field = value["applications"][0]["fields"][0]
+        fields = value["applications"][0]["fields"]
+        field = next(item for item in fields if item["field_type"] == "free_text")
         field["disposition"] = "exact_approved_answer"
         field["automated_answer"] = "Generated response"
 

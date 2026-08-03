@@ -47,7 +47,8 @@ def test_hidden_artifact_is_rejected() -> None:
 
 def test_human_required_free_text_cannot_be_filled() -> None:
     data = copy.deepcopy(built_in_fixture())
-    field = data["applications"][0]["fields"][0]
+    fields = data["applications"][0]["fields"]
+    field = next(item for item in fields if item["field_type"] == "free_text")
     field["automated_answer"] = "Invented answer"
     with pytest.raises(ContractError) as exc:
         validate_manifest(data)
