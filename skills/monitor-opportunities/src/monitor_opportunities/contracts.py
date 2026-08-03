@@ -329,7 +329,7 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
 def _artifact_rows(manifest: ReportManifest) -> list[tuple[str, bool, bool]]:
     rows: list[tuple[str, bool, bool]] = []
     for item in manifest.opportunities:
-        rows.append(item.opportunity_id, item.action_worthy, item.visible_in_report))
+        rows.append((item.opportunity_id, item.action_worthy, item.visible_in_report))
     for item in manifest.resume_variants:
         rows.append((item.variant_id, item.action_worthy, item.visible_in_report))
     for item in manifest.outreach_packets:
