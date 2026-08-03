@@ -11,12 +11,18 @@ GEO_PRIORITY = {"WNY_HYBRID": 300, "WNY_ONSITE": 200, "REMOTE": 100, "NOT_APPLIC
 
 
 def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
+    if candidate.get("source_valid") is False:
+        return "REJECT_SOURCE_INVALID", ["source_valid=false"]
     if candidate.get("relocation_required") is True:
         return "REJECT_RELOCATION_REQUIRED", ["relocation_required=true"]
     if candidate.get("already_applied") is True:
         return "REJECT_DUPLICATE_OR_ALREADY_APPLIED", ["already_applied=true"]
     if candidate.get("stale") is True:
         return "REJECT_STALE", ["stale=true"]
+    if candidate.get("work_authorization_mismatch") is True:
+        return "REJECT_WORK_AUTHORIZATION_MISMATCH", ["work_authorization_mismatch=true"]
+    if candidate.get("clearance_required") == "UNKNOWN":
+        return "HUMAN_REVIEW_ELIGIBILITY_UNKNOWN", ["clearance requirement is unknown"]
     if candidate.get("clearance_required") is True:
         return "REJECT_CLEARANCE_REQUIRED_UNATTESTED", ["clearance requirement is unattested"]
     lane = candidate.get("lane")
@@ -34,6 +40,17 @@ def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
     return "REJECT_LOCATION", [f"unsupported workplace_type={workplace!r}"]
 
 
+def _load_candidates(input_path: Path) -> list[dict[str, Any]]:
+    if input_path.is_file():
+        payload = read_json(input_path)
+        if isinstance(payload, list):
+            return payload
+        if isinstance(payload, dict) and isinstance(payload.get("candidates"), list):
+            return payload["candidates"]
+        raise ValueError(f"ranking input file must be a candidate list or object with candidates: {input_path}")
+    return read_jsonl(input_path / "candidates.jsonl")
+
+
 def _score(candidate: dict[str, Any]) -> dict[str, Any]:
     geo = GEO_PRIORITY.get(candidate.get("workplace_type"), 0)
     role = round(float(candidate.get("fit_score", 0.0)) * 100, 3)
@@ -44,7 +61,7 @@ def _score(candidate: dict[str, Any]) -> dict[str, Any]:
 
 def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    candidates = read_jsonl(discovery_run / "candidates.jsonl")
+    candidates = _load_candidates(discovery_run)
     eligibility_receipts = []
     ranking_receipts = []
     admitted = []

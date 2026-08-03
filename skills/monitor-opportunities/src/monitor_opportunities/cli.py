@@ -17,6 +17,7 @@ from .discovery import sweep as sweep_sources
 from .pipeline import run_stage0, status_for_run
 from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
+from .service import serve as serve_report
 from .tailoring import tailor as tailor_resume
 from .verification import run_verification
 
@@ -38,9 +39,9 @@ IMPLEMENTED = [
     "run",
     "resume",
     "schedule",
+    "serve",
 ]
 NOT_IMPLEMENTED = [
-    "serve",
     "apply",
 ]
 
@@ -74,6 +75,7 @@ def status_payload() -> dict[str, object]:
             "eligibility_and_ranking": "IMPLEMENTED_LOCAL",
             "claim_bound_tailoring": "IMPLEMENTED_LOCAL",
             "decision_ledger": "IMPLEMENTED_LOCAL",
+            "loopback_decision_service": "IMPLEMENTED_LOCAL",
             "scheduler_registration": "IMPLEMENTED_LOCAL_READBACK",
             "gmail_mailbox_draft": "BLOCKED_STAGE_0",
             "gmail_send": "PERMANENTLY_FORBIDDEN",
@@ -161,7 +163,7 @@ def sweep(
 
 @app.command()
 def rank(
-    input_dir: Path = typer.Option(..., "--input", exists=True, file_okay=False, readable=True),
+    input_dir: Path = typer.Option(..., "--input", exists=True, readable=True),
     limit: int = typer.Option(8, "--limit", min=0, max=8),
     out: Path = typer.Option(..., "--out", file_okay=False),
 ) -> None:
@@ -219,6 +221,20 @@ def replay(
     _configure_logging()
     projection = replay_decisions(run)
     typer.echo(json.dumps({"status": "PASS", **projection}, indent=2, sort_keys=True))
+
+
+@app.command()
+def serve(
+    report: Path = typer.Option(..., "--report", exists=True, file_okay=False, readable=True),
+    host: str = typer.Option("127.0.0.1", "--host"),
+    port: int = typer.Option(8765, "--port", min=1, max=65535),
+) -> None:
+    """Serve one local report and decision loop on loopback."""
+    _configure_logging()
+    try:
+        serve_report(report, host, port)
+    except ValueError as exc:
+        _fail(ContractError("SERVE_REJECTED", str(exc)))
 
 
 @app.command("run")

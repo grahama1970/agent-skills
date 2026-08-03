@@ -11,8 +11,14 @@ from .util import read_json, sha256_bytes, sha256_json, stable_id, utc_now, writ
 
 
 def _claim_map(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    if snapshot.get("schema") != "monitor_opportunities.claim_snapshot.v1" or snapshot.get("active") is not True:
+        raise ValueError("active claim snapshot required")
     claims = snapshot.get("claims", [])
-    return {claim["claim_key"]: claim for claim in claims if claim.get("approved") is True}
+    return {
+        claim["claim_key"]: claim
+        for claim in claims
+        if claim.get("approved") is True and claim.get("stale") is not True and claim.get("expired") is not True
+    }
 
 
 def _posting(posting_key: str) -> dict[str, Any]:
@@ -59,6 +65,14 @@ def _validate_no_prohibited_delta(lines: list[str], approved_texts: set[str]) ->
     return prohibited
 
 
+def _line_kind(line: str, approved_texts: set[str]) -> str:
+    if line in approved_texts:
+        return "approved_claim"
+    if line.startswith("Target role:"):
+        return "target_language"
+    return "presentation"
+
+
 def tailor(posting_key: str, claims_path: Path, out_dir: Path) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     snapshot = read_json(claims_path)
@@ -77,6 +91,7 @@ def tailor(posting_key: str, claims_path: Path, out_dir: Path) -> dict[str, Any]
         "Selected claims:",
     ]
     claim_refs = []
+    rendered_statements = []
     approved_texts = set()
     for claim in selected:
         wording = claim["wordings"][0]
@@ -87,6 +102,15 @@ def tailor(posting_key: str, claims_path: Path, out_dir: Path) -> dict[str, Any]
     prohibited = _validate_no_prohibited_delta(lines, approved_texts)
     if prohibited:
         raise ValueError(f"prohibited factual delta: {prohibited}")
+    for line in lines:
+        kind = _line_kind(line, approved_texts)
+        refs = []
+        if kind == "approved_claim":
+            for claim in selected:
+                for wording in claim["wordings"]:
+                    if wording["text"] == line:
+                        refs.append({"claim_key": claim["claim_key"], "wording_id": wording["wording_id"]})
+        rendered_statements.append({"text": line, "kind": kind, "claim_refs": refs})
 
     resume_txt = "\n".join(lines) + "\n"
     text_path = out_dir / "resume.txt"
@@ -100,6 +124,7 @@ def tailor(posting_key: str, claims_path: Path, out_dir: Path) -> dict[str, Any]
         "opportunity_id": posting["opportunity_id"],
         "claim_snapshot_sha256": sha256_json(snapshot),
         "claim_refs": claim_refs,
+        "rendered_statements": rendered_statements,
         "artifact_refs": [str(text_path), str(docx_path)],
         "status": "WOULD_PRESENT_STAGE0",
     }

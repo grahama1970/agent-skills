@@ -20,3 +20,30 @@ def test_empty_candidate_run_exits_zero(tmp_path: Path) -> None:
     receipt = json.loads((out / "ranking-receipt.json").read_text(encoding="utf-8"))
     assert receipt["shortlisted"] == 0
     assert json.loads((out / "shortlist.json").read_text(encoding="utf-8")) == []
+
+
+def test_mixed_fixture_gates_before_ranking_and_caps_shortlist(tmp_path: Path) -> None:
+    fixture = Path("skills/monitor-opportunities/tests/fixtures/ranking/mixed_candidates.json")
+    out = tmp_path / "ranking"
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    receipts = [
+        json.loads(line)
+        for line in (out / "eligibility-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    states = {row["candidate_id"]: row["state"] for row in receipts}
+    assert states["rank:wny-hybrid"] == "ELIGIBLE_WNY_HYBRID"
+    assert states["rank:wny-onsite"] == "ELIGIBLE_WNY_ONSITE"
+    assert states["rank:remote"] == "ELIGIBLE_REMOTE"
+    assert states["rank:relocation"] == "REJECT_RELOCATION_REQUIRED"
+    assert states["rank:ambiguous-location"] == "HUMAN_REVIEW_LOCATION_AMBIGUOUS"
+    assert states["rank:unknown-clearance"] == "HUMAN_REVIEW_ELIGIBILITY_UNKNOWN"
+    assert states["rank:stale"] == "REJECT_STALE"
+    assert states["rank:already-applied"] == "REJECT_DUPLICATE_OR_ALREADY_APPLIED"
+    shortlist = json.loads((out / "shortlist.json").read_text(encoding="utf-8"))
+    shortlisted_ids = [row["candidate_id"] for row in shortlist]
+    assert len(shortlisted_ids) == 8
+    assert shortlisted_ids[:3] == ["rank:wny-hybrid", "rank:wny-onsite", "rank:remote"]
+    assert "rank:remote-seven" not in shortlisted_ids
+    assert not {"rank:relocation", "rank:ambiguous-location", "rank:unknown-clearance"} & set(shortlisted_ids)

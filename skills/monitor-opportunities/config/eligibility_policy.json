@@ -1,0 +1,5 @@
+{
+  "schema": "monitor_opportunities.eligibility_policy.v1",
+  "policy_version": "eligibility.v1",
+  "receipt_rule": "Every inspected candidate receives exactly one terminal eligibility receipt before ranking."
+}
