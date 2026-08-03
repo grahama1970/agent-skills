@@ -202,9 +202,12 @@ def _classify_path(path: str, status: str) -> dict[str, str]:
     elif path.startswith("skills/battle/tests/"):
         category = "intentional_source_test"
         reason = "test fixture/source adjustment for scanner-safe synthetic auth values"
-    elif path.startswith("skills/battle/scripts/") or path == "skills/battle/run.sh":
+    elif path.startswith("skills/battle/scripts/") or path.startswith("skills/battle/src/battle_skill/") or path.startswith("skills/battle/utils/") or path == "skills/battle/run.sh":
         category = "intentional_source"
         reason = "Battle runtime or bounded release-candidate proof command"
+    elif path.startswith("skills/battle/spectator/src/") and path.endswith((".test.ts", ".test.tsx")):
+        category = "intentional_source_test"
+        reason = "spectator test expectation aligned to current committed fixture semantics"
     elif path.startswith("skills/battle/docs/") or path in {"skills/battle/README.md", "skills/battle/PROJECT_KNOWLEDGE.md"}:
         category = "intentional_documentation"
         reason = "documentation drift disposition or status pointer"
