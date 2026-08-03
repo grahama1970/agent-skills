@@ -55,6 +55,11 @@ if [[ "${1:-}" == "current-status" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/current_status.py" "$@"
 fi
 
+if [[ "${1:-}" == "release-candidate-baseline" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/release_candidate_baseline.py" "$@"
+fi
+
 if [[ "${1:-}" == "human-interjection-proof" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/human_interjection_proof.py" "$@"

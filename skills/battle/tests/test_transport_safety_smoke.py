@@ -30,28 +30,39 @@ def test_transport_safety_receipt_gate_requires_closed_bad_resume_statuses() -> 
         "tests_passed": 14,
         "tests_total": 14,
     }
+    source_snapshot = {"schema": "battle.snapshot.v1", "last_seq": 4}
+    events = [{"seq": 1}, {"seq": 2}, {"seq": 3}, {"seq": 4}]
+    health = {"status": "PASS", "websocket_endpoint": "/battle/live/battle-004/ws", "websocket_port": 8765}
     errors = _receipt_errors(
-        health={"status": "PASS"},
+        health=health,
         event_count=4,
+        source_snapshot=source_snapshot,
+        sse_events=events,
         resume_events=[{"seq": 3}, {"seq": 4}],
         bad_resume_statuses={
             "future_last_event_id": 400,
             "non_integer_last_event_id": 400,
             "negative_last_event_id": 400,
         },
+        websocket_snapshot=source_snapshot,
+        websocket_events=events,
         frontend=frontend,
     )
     assert errors == []
 
     errors = _receipt_errors(
-        health={"status": "PASS"},
+        health=health,
         event_count=4,
+        source_snapshot=source_snapshot,
+        sse_events=events,
         resume_events=[{"seq": 2}, {"seq": 3}, {"seq": 4}],
         bad_resume_statuses={
             "future_last_event_id": 400,
             "non_integer_last_event_id": 200,
             "negative_last_event_id": 400,
         },
+        websocket_snapshot=source_snapshot,
+        websocket_events=events,
         frontend=frontend,
     )
     assert errors == [

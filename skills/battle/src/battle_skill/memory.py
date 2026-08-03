@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import signal
 import subprocess
 import time
@@ -32,6 +33,15 @@ console = Console()
 # single fixed path shared by every dogpile run, so concurrent Red/Blue
 # searches would clobber each other's copy. Never read that file from here.
 DOGPILE_EVENT_PREFIX = "[dogpile-event] "
+
+
+def _console_print(message: str) -> None:
+    """Progress logging must not make research fail."""
+
+    try:
+        console.print(message)
+    except ModuleNotFoundError:
+        print(re.sub(r"\[[^\]]+\]", "", message))
 
 
 class BattleMemory:
@@ -86,7 +96,7 @@ class BattleMemory:
             Dict with 'found', 'items', 'confidence' keys
         """
         if not self.memory_script.exists():
-            console.print("[yellow]Memory skill not available[/yellow]")
+            _console_print("[yellow]Memory skill not available[/yellow]")
             return {"found": False, "items": [], "confidence": 0.0}
 
         try:
@@ -135,7 +145,7 @@ class BattleMemory:
             True if learning was stored successfully
         """
         if not self.memory_script.exists():
-            console.print("[yellow]Memory skill not available[/yellow]")
+            _console_print("[yellow]Memory skill not available[/yellow]")
             return False
 
         cmd = [
@@ -156,7 +166,7 @@ class BattleMemory:
             )
             return result.returncode == 0
         except Exception as e:
-            console.print(f"[red]Failed to store learning: {e}[/red]")
+            _console_print(f"[red]Failed to store learning: {e}[/red]")
             return False
 
     def start_new_round(self, round_num: int) -> None:
@@ -168,7 +178,7 @@ class BattleMemory:
         """
         self.current_round = round_num
         self.research_calls_this_round = 0
-        console.print(f"[cyan]Round {round_num}: Research budget reset ({self.max_research_calls} calls)[/cyan]")
+        _console_print(f"[cyan]Round {round_num}: Research budget reset ({self.max_research_calls} calls)[/cyan]")
 
     def get_research_budget_remaining(self) -> int:
         """Get remaining research calls for this round."""
@@ -182,12 +192,12 @@ class BattleMemory:
     def _spend_budget(self, query: str, force: bool) -> tuple[bool, int]:
         """Charge one research call. Returns (allowed, budget_remaining)."""
         if not force and self.research_calls_this_round >= self.max_research_calls:
-            console.print(f"[yellow]Research budget exceeded ({self.max_research_calls} calls/round)[/yellow]")
-            console.print(f"[dim]Query '{query}' not executed. Use force=True to override.[/dim]")
+            _console_print(f"[yellow]Research budget exceeded ({self.max_research_calls} calls/round)[/yellow]")
+            _console_print(f"[dim]Query '{query}' not executed. Use force=True to override.[/dim]")
             return False, 0
         self.research_calls_this_round += 1
         remaining = self.get_research_budget_remaining()
-        console.print(
+        _console_print(
             f"[dim]Research call {self.research_calls_this_round}/{self.max_research_calls} "
             f"({remaining} remaining)[/dim]"
         )
@@ -283,7 +293,7 @@ class BattleMemory:
 
         dogpile_script = DOGPILE_SKILL / "run.sh"
         if not dogpile_script.exists():
-            console.print("[yellow]Dogpile skill not available[/yellow]")
+            _console_print("[yellow]Dogpile skill not available[/yellow]")
             return {"success": False, "error": "dogpile not available", "budget_remaining": remaining}
 
         cmd = self._build_command(query, dogpile_script)
@@ -385,7 +395,7 @@ class BattleMemory:
                 else f"deadline {deadline_s}s hit before any source-bearing provider landed"
             )
 
-        console.print(
+        _console_print(
             f"[dim]Research {'partial' if timed_out else 'complete'} in {elapsed}s — "
             f"{len(productive)} productive provider(s), "
             f"{len(source_bearing)} source-bearing provider(s): {', '.join(source_bearing) or 'none'}[/dim]"
@@ -450,7 +460,7 @@ class BattleMemory:
         """
         taxonomy_script = TAXONOMY_SKILL / "run.sh"
         if not taxonomy_script.exists():
-            console.print("[yellow]Taxonomy skill not available[/yellow]")
+            _console_print("[yellow]Taxonomy skill not available[/yellow]")
             return {"success": False, "tags": []}
 
         try:

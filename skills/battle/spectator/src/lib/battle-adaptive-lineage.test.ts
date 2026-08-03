@@ -43,18 +43,23 @@ describe("Battle V13 adaptive lineage projection", () => {
 		const validated = validateAdaptiveLineageFixture(await sourceFixture());
 		if (!validated.ok) throw new Error(validated.error.detail);
 		const fixture = adaptiveLineageToRaceFixture(validated.fixture);
-		expect(lanesVisibleAtPlayhead(fixture.lanes, fixture, 71.67).map((lane) => lane.id)).toEqual(["red-g1", "blue-g1"]);
-		expect(lanesVisibleAtPlayhead(fixture.lanes, fixture, 71.68).map((lane) => lane.id)).toEqual(["red-g1", "red-g2", "blue-g1", "blue-g2"]);
+		const childVisibility = fixture.lanes
+			.filter((lane) => lane.parentId)
+			.map((lane) => lane.visible_from_elapsed_seconds!)
+			.sort((a, b) => a - b);
+		expect(lanesVisibleAtPlayhead(fixture.lanes, fixture, childVisibility[0] - 0.001).map((lane) => lane.id)).toEqual(["red-g1", "blue-g1"]);
+		expect(lanesVisibleAtPlayhead(fixture.lanes, fixture, childVisibility[1] + 0.001).map((lane) => lane.id)).toEqual(["red-g1", "red-g2", "blue-g1", "blue-g2"]);
 		const child = fixture.lanes.find((lane) => lane.id === "red-g2")!;
 		const allotted = fixture.battle_clock!.allotted_seconds!;
-		expect(runnerAnimationForLane(child, 72, allotted, true)).toBe("idle");
-		expect(lineageTransitionPhase(child, 72)).toBe("authorized_pending");
-		expect(runnerAnimationForLane(child, 79.2, allotted, true)).toBe("spawn");
-		expect(lineageTransitionPhase(child, 79.2)).toBe("descending");
-		expect(runnerAnimationForLane(child, 82, allotted, true)).toBe("research");
-		expect(lineageTransitionPhase(child, 82)).toBe("active");
-		expect(runnerAnimationForLane(child, 134.45, allotted, true)).toBe("mutate");
-		const ticker = receiptBeatsVisibleAtPlayhead(collectReceiptBeats(fixture, fixture.lanes), 134.451, 2);
+		const visibleAt = child.visible_from_elapsed_seconds!;
+		const activeAt = child.first_active_segment_elapsed_seconds!;
+		expect(runnerAnimationForLane(child, visibleAt + 0.01, allotted, true)).toBe("idle");
+		expect(lineageTransitionPhase(child, visibleAt + 0.01)).toBe("authorized_pending");
+		expect(lineageTransitionPhase(child, activeAt + 0.01)).toBe("descending");
+		expect(lineageTransitionPhase(child, activeAt + 2)).toBe("active");
+		const mutationAt = validated.fixture.events.find((event) => event.event_type === "genome_mutated" && event.lane_id === "red-g2")!.elapsed_seconds;
+		expect(runnerAnimationForLane(child, mutationAt + 0.001, allotted, true)).toBe("mutate");
+		const ticker = receiptBeatsVisibleAtPlayhead(collectReceiptBeats(fixture, fixture.lanes), mutationAt + 0.05, 2);
 		expect(ticker.map((beat) => beat.react.liveEvent.notification)).toEqual([
 			"Adaptive lineage — RED G2 CHILD: MUTATION EVIDENCE VERIFIED",
 			"Adaptive lineage — BLUE G2 CHILD: MUTATION EVIDENCE VERIFIED",
