@@ -136,17 +136,17 @@ factual assertion is a defect, not a variant.
 The public canonical resume artifact in this repository is:
 
 ```text
-docs/resume/graham-anderson-resume.md
+RESUME.md
 docs/resume/graham-anderson-resume.pdf
 ```
 
-`docs/resume/graham-anderson-resume.md` is the human-edited baseline presentation.
-The PDF is a generated artifact produced by `.github/workflows/resume-pdf.yml` on
-pushes to `main`, or manually with:
+`RESUME.md` is the human-edited baseline presentation. The PDF is a generated
+artifact produced by `.github/workflows/resume-pdf.yml` on pushes to `main`, or
+manually with:
 
 ```bash
 uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
-  docs/resume/graham-anderson-resume.md \
+  RESUME.md \
   docs/resume/graham-anderson-resume.pdf \
   --title "Graham Anderson Resume" \
   --author "Graham Anderson"
@@ -159,7 +159,7 @@ presentation, not as the fact ledger. The canonical fact source remains the
 - starts from approved `career_profile` claims;
 - selects, orders and labels those claims for one posting and inferred ATS stack;
 - writes a per-posting Markdown variant and generated PDF;
-- emits a diff against `docs/resume/graham-anderson-resume.md`;
+- emits a diff against `RESUME.md`;
 - proves every factual assertion in the variant resolves to a `claim_key`;
 - appears in the interactive report before it is used anywhere.
 
