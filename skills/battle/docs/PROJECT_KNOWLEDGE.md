@@ -1,7 +1,29 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-07-12 16:34 by agent
+**Last updated:** 2026-08-03 by agent
 **Status:** Active development
+
+## Current Status Addendum (2026-08-03)
+
+The human's assessment is that Battle has been spiraling for approximately one
+month. This is supported by repeated frontend regressions, false-green backend
+checks, non-replayable dual-team evidence, and work drifting into UX before the
+backend's adaptive Red/Blue lineage was independently reproducible. The human
+also identifies repeated agent lies and hallucinations, despite use of an
+OpenAI state-of-the-art model, as part of that month-long spiral.
+
+Recovery is locked to one ticket at a time. The only active Battle repair is
+[#1199](https://github.com/grahama1970/agent-skills/issues/1199): preserve all
+four selected Red/Blue artifacts immutably, independently recompute 4/4 hashes,
+and Docker-replay both exact Judge pairs from one fresh non-mocked run. Existing
+`2/2` focused tests and `13/13` backend-eval results are supporting checks only;
+they missed that both canonical Blue artifacts no longer match their receipt
+hashes.
+
+Arena UX work is frozen. After #1199 has deterministic backend proof, generate
+a non-vague, readable HTML/CSS report from that proven run showing the adaptive
+lineage and judged outcome. The human reviews that report before any Arena UX
+work resumes.
 
 ## Current Status Addendum (2026-08-01)
 
