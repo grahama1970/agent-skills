@@ -7,7 +7,7 @@ U.S. citizen. Extensive experience delivering under export-controlled (ITAR) con
 Principal AI Engineer | Machine Learning Engineer | AI Architect | Agentic AI · LLM/RAG · Knowledge Graphs | Defense & Aerospace | Founder, grahamaco | Buffalo, NY · Remote
 
 ## ABOUT
-I build agentic AI systems for defense, aerospace, and compliance where outputs must be traceable to evidence — LLM multi-agent orchestration, RAG/GraphRAG, and knowledge-graph reasoning. Recent public work includes a receipt-gated multi-agent harness, a Rust PDF extraction platform, and a large library of bounded agent capabilities.
+I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS, I was Principal Data Scientist and ACERT Technical Lead for CS Group's contribution: the responsible technical/project lead for knowledge-graph and LLM reasoning delivery for automated certification of mission-critical software, working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators.
 
 Much of my current client work is export-controlled, so client and program details are withheld. Publicly releasable independent engineering is at github.com/grahama1970:
 
@@ -16,7 +16,7 @@ Much of my current client work is export-controlled, so client and program detai
 - agent-skills — 330+ reusable agent skills and 70+ bounded worker roles, portable across Claude Code, Codex, and Gemini. Public repo, private runtime — effectively my living resume.
 - Private, regulated side: an ArangoDB agent-memory platform — approximately 219K evidence-grounded question–reasoning–answer records across 7K+ security-control records (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND, SPARTA), hybrid BM25 + vector + graph recall over 2.2M source chunks; a corpus of ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval.
 
-Before this: Principal Data Scientist and ACERT Technical Lead at CS Group, on the DARPA ARCOS prime-contractor team — knowledge graph + LLM reasoning for automated compliance verification of mission-critical software. Presented Agentic Cybersecurity research to Air Force Research Laboratory and received an AFRL "Hacker" challenge coin following the presentation.
+Recent public work includes a receipt-gated multi-agent harness, a Rust PDF extraction platform, and a large library of bounded agent capabilities. Presented Agentic Cybersecurity research to Air Force Research Laboratory and received an AFRL "Hacker" challenge coin following the presentation.
 
 15+ years of hand-coding underneath it all — today I work primarily through agentic coding, driving many harnesses and models, including my own (tau). I build the tools that make agentic development trustworthy, and I use them daily.
 
@@ -42,9 +42,9 @@ Jan 2024 - Feb 2025
 - Consulted in aerospace/defense settings under export-controlled / ITAR constraints.
 - Presented Agentic Cybersecurity work to Air Force Research Laboratory; received an AFRL "Hacker" challenge coin.
 
-### Principal Data Scientist & ACERT Technical Lead | CS Group (DARPA ARCOS prime-contractor team)
+### Principal Data Scientist & ACERT Technical Lead | CS Group (DARPA ARCOS)
 Sep 2020 - Dec 2023
-- Joined full-time specifically for the 4-year DARPA ARCOS program (Automated Rapid Certification of Software).
+- Responsible technical/project lead for CS Group's contribution to the 4-year DARPA ARCOS program (Automated Rapid Certification of Software), working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators.
 - Led design and delivery of ACERT (Automated Certification of Requirements Tool): architected the ArangoDB knowledge-graph schema and LLM-assisted reasoning pipeline for multi-hop compliance verification of mission-critical software against complex certification standards.
 - Worked with government and aerospace program stakeholders; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code.
 
