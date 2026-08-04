@@ -85,7 +85,7 @@ that dreaming helps.
 | Criterion | Status | Owner |
 |---|---|---|
 | `cognitive_value_disposition` | apparatus valid, no result | #1008 |
-| `voice_value_disposition` | stimuli rejected, re-render required | #1127 follow-up, then #1130 → #1058 |
+| `voice_value_disposition` | stimuli rejected (#1127); requested tone measured NOT audible (#1209) | #1179 re-render, then #1130 → #1058 |
 | `persistent_persona_value_disposition` | N=5 feasibility only | #1128 |
 | `operational_value_disposition` | not started | #1129 → #1128 |
 | `transfer_record` | this ledger | ongoing |
@@ -124,3 +124,42 @@ and would require provider spend.
   state that previous-video attachment benefit is unproven; that statement is
   now permanent rather than pending.
 - **Serves criterion:** `ablation_retirement`.
+
+---
+
+## #1209 — Requested delivery tone does not change the audio
+
+```text
+Finding:
+Zero acoustic metrics exceeded the renderer's own noise floor for any requested
+tone. emotion_knobs returned null on every render.
+
+What was falsified:
+That routing a dream-derived mood to an accepted delivery tone produces
+audibly different speech. Tone survives normalization (#1202) and is recorded
+(#1208); neither means it reaches the waveform.
+
+Transferable lesson:
+Calibrate the threshold from same-parameter repeats, and report a three-way
+disposition. At n=6 neutral repeats two tones looked audible; at n=10 one was
+marginal; a fresh n=10 showed none. An effect that disappears as the noise
+estimate improves was never an effect, and a two-way pass/fail would have
+published the n=6 run as a success.
+
+Decision:
+CONSTRAIN. Keep the tone mapping — it is honest provenance for what was
+requested — but remove every claim that the mood is made audible. Do not
+pursue acoustic affect through Chatterbox presets; its own health already
+reported preset shifts below stochastic spread and this confirms it.
+```
+
+- **Evidence:** `/tmp/pd-tone-effect/TONE_EFFECT_RECEIPT.json`,
+  `BLOCKED_TONE_BELOW_STOCHASTIC_SPREAD`, 10 neutral repeats, three tones,
+  thresholds derived as `K_SD × published sd`.
+- **Destination repository:** `grahama1970/chatterbox` — a renderer whose
+  presets do not move the waveform should say so in its own capability report
+  rather than accepting the parameter silently.
+- **Downstream:** no adoption. The affect route is closed until a backend
+  exposes structured affect axes that measurably move the audio.
+- **Serves criterion:** `voice_value_disposition`, `ablation_retirement`.
+

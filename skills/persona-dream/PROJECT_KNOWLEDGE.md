@@ -4681,3 +4681,21 @@ now surface requested-vs-normalized in receipts.
   branch when the named branch does not carry that residue. Gate 0 and live
   Gate 0 bridge receipts now emit `receipt_sha256`; the live bridge also
   records file hashes for its live-memory and Gate 0 child receipts.
+
+- 2026-08-04 Requested delivery tone does NOT reach the waveform, measured (#1209).
+  Receipt `/tmp/pd-tone-effect/TONE_EFFECT_RECEIPT.json`,
+  `BLOCKED_TONE_BELOW_STOCHASTIC_SPREAD`: zero acoustic metrics
+  (f0 median/range, rms, K-weighted loudness, duration, voiced ratio, pause
+  ratio) exceeded the renderer's own same-parameter noise floor for
+  `firm_boundary`, `grief_safe` or `memory_uncertain`. `emotion_knobs` returned
+  null on every render. This confirms from the persona-dream side what root
+  PROJECT_KNOWLEDGE.md:129 recorded on 2026-07-01 — Chatterbox prosody needs a
+  style-capable adapter; the preset parameter is accepted but inert.
+  Two things that are true and must not be confused with it: tone survives
+  normalization (#1202) and is recorded on every spoken journal (#1208).
+  Method note worth reusing: derive the threshold from N same-parameter neutral
+  repeats and report a three-way disposition. At n=6 repeats two tones looked
+  audible; at n=10 one was marginal; a fresh n=10 showed none. A two-way
+  pass/fail would have published the n=6 run as a success.
+  Consequence: no surface may claim the mood is made audible. README and
+  TRANSFER_LEDGER corrected the same day.

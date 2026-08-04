@@ -72,7 +72,7 @@ file drifts from it.
 |---|---|---|
 | Continuity ledger | Atomic writes, epoch compare-and-set, cycle idempotency, identity-core guard | Runtime authority across real sessions |
 | Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Behavior beyond local live receipts |
-| Chatterbox voice | Live render of the mood envelope at ASR WER 0.0, with durable snapshots | Perceived emotion, naturalness, human acceptance |
+| Chatterbox voice | Live render at ASR WER 0.0 with durable snapshots; Embry reads her own journal aloud (#1208) | That the requested tone is audible at all — measured below the renderer's own noise floor (#1209). Perceived emotion, naturalness, human acceptance |
 | Speaker recognition | Machine separation under two named render conditions; neither value is a universal threshold | Human recognition; cross-mood identity (#1130) |
 | Joined live chain | One fresh cycle joins dream evidence through to recognition, 13/13 negative controls blocked | Perceived emotion; behavior beyond local receipts |
 | Session arc bias | Bounded deltas published under a hash-bound consumer contract, consumed live by SPARTA before turn 1 | Human-perceived emotion; deployed production behavior |
@@ -171,7 +171,8 @@ accepted dream
   -> bounded arc delta           (what may change, and by how much)
   -> continuity ledger           (the authority object; atomic, epoch-checked)
   -> session mood before turn 1  (deterministic, bound before the user speaks)
-  -> Chatterbox voice delivery   (the mood made audible)
+  -> Chatterbox voice delivery   (the mood requested of the renderer;
+                                  measured NOT audible, #1209)
   -> recognition check           (is it still recognizably Embry?)
 ```
 
