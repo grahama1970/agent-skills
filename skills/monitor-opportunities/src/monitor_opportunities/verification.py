@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from .contracts import ContractError, IMMUTABLE_GOAL, validate_manifest
+from .contracts import ContractError, validate_manifest
 from .report import render_report
 
 

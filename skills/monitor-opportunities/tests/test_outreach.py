@@ -1,0 +1,193 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from monitor_opportunities.contracts import IMMUTABLE_GOAL
+from monitor_opportunities.gmail_handoff import (
+    GmailHandoffError,
+    create_gmail_mailbox_draft,
+    gmail_send_authority_state,
+)
+from monitor_opportunities.linkedin_handoff import write_linkedin_handoff_packet
+from monitor_opportunities.outreach import OutreachError, build_outreach_packet
+
+
+def _claims() -> dict[str, Any]:
+    return json.loads(
+        (Path(__file__).parent / "fixtures" / "claims" / "approved-claims.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+
+def _opportunity() -> dict[str, Any]:
+    return {
+        "opportunity_id": "opp:outreach",
+        "title": "Principal Evidence Systems Architect",
+        "organization": "Fixture Aerospace",
+        "claim_keys": ["claim:arcos:acert-architect"],
+    }
+
+
+def _roundtable(packet_digest: str, verdict: str = "SEND_AS_IS") -> dict[str, Any]:
+    return {
+        "schema": "monitor_opportunities.outreach_roundtable_receipt.v1",
+        "immutable_goal": IMMUTABLE_GOAL,
+        "topology": "concurrent",
+        "rounds": 1,
+        "attributed_synthesis": True,
+        "packet_digest": packet_digest,
+        "verdict": verdict,
+        "seats": [
+            {"handler": "webgpt", "status": "PASS"},
+            {"handler": "webclaude", "status": "PASS"},
+        ],
+        "dissent": [],
+    }
+
+
+def _reviewed_packet(channel: str = "GMAIL") -> dict[str, Any]:
+    draft = build_outreach_packet(
+        opportunity=_opportunity(),
+        channel=channel,
+        claim_snapshot=_claims(),
+    )
+    return build_outreach_packet(
+        opportunity=_opportunity(),
+        channel=channel,
+        claim_snapshot=_claims(),
+        roundtable_receipt=_roundtable(draft["payload_digest"]),
+    )
+
+
+def _promotion() -> dict[str, Any]:
+    return {
+        "schema": "monitor_opportunities.capability_promotion.v1",
+        "capability": "gmail_mailbox_draft_create",
+        "actor": "human",
+        "decision": "PROMOTE",
+        "contract_version": "0.2.0",
+        "scope": {"accounts": ["test@example.com"]},
+        "does_not_authorize": ["gmail_send", "gmail_schedule_send", "gmail_forward", "linkedin"],
+    }
+
+
+class DraftAdapter:
+    def __init__(self, *, indeterminate: bool = False, reconcile: bool = True) -> None:
+        self.indeterminate = indeterminate
+        self.reconcile = reconcile
+        self.create_calls = 0
+        self.read_calls = 0
+        self._drafts: dict[str, dict[str, Any]] = {}
+
+    def create_draft(self, *, subject: str, body: str, idempotency_marker: str) -> dict[str, Any]:
+        self.create_calls += 1
+        draft = {
+            "draft_id": f"draft-{self.create_calls}",
+            "subject": subject,
+            "body": body,
+            "sent": False,
+            "idempotency_marker": idempotency_marker,
+        }
+        self._drafts[idempotency_marker] = draft
+        if self.indeterminate:
+            return {"status": "INDETERMINATE", "idempotency_marker": idempotency_marker}
+        return {"status": "DRAFT_CREATED", "draft_id": draft["draft_id"]}
+
+    def read_draft(self, draft_id: str) -> dict[str, Any]:
+        self.read_calls += 1
+        return next(row for row in self._drafts.values() if row["draft_id"] == draft_id)
+
+    def find_draft_by_idempotency_marker(self, idempotency_marker: str) -> dict[str, Any] | None:
+        if not self.reconcile:
+            return None
+        draft = self._drafts.get(idempotency_marker)
+        if draft is None:
+            return None
+        return {"status": "DRAFT_CREATED", "draft_id": draft["draft_id"]}
+
+
+def test_stage0_blocks_mailbox_draft_creation_without_promotion(tmp_path: Path) -> None:
+    with pytest.raises(GmailHandoffError, match="GMAIL_DRAFT_PROMOTION_MISSING"):
+        create_gmail_mailbox_draft(
+            packet=_reviewed_packet("GMAIL"),
+            promotion_receipt=None,
+            adapter=DraftAdapter(),
+            ledger_path=tmp_path / "effects.jsonl",
+            idempotency_key="same",
+        )
+
+
+def test_gmail_capability_promotion_does_not_authorize_send() -> None:
+    authority = gmail_send_authority_state()
+    assert authority["gmail_sent"] is False
+    assert set(authority["forbidden_effects"]) == {
+        "gmail_send",
+        "gmail_schedule_send",
+        "gmail_forward",
+    }
+
+
+def test_linkedin_packet_creation_performs_no_platform_call(tmp_path: Path) -> None:
+    packet = _reviewed_packet("LINKEDIN")
+    receipt = write_linkedin_handoff_packet(packet=packet, out_dir=tmp_path)
+    assert receipt["linkedin_automated"] is False
+    assert receipt["platform_calls_attempted"] == 0
+    assert receipt["external_effects"] is False
+    assert Path(receipt["handoff_ref"]).exists()
+
+
+def test_missing_or_failed_roundtable_blocks_readiness() -> None:
+    missing = build_outreach_packet(opportunity=_opportunity(), channel="GMAIL", claim_snapshot=_claims())
+    assert missing["roundtable_status"] == "NOT_RUN"
+    assert missing["readiness_state"] == "BLOCKED_ROUNDTABLE"
+    failed = build_outreach_packet(
+        opportunity=_opportunity(),
+        channel="GMAIL",
+        claim_snapshot=_claims(),
+        roundtable_receipt=_roundtable(missing["payload_digest"], verdict="DO_NOT_SEND"),
+    )
+    assert failed["roundtable_status"] == "BLOCKED"
+    assert failed["readiness_state"] == "BLOCKED_ROUNDTABLE"
+
+
+def test_unsupported_claim_blocks_message() -> None:
+    opportunity = {**_opportunity(), "claim_keys": ["claim:not-approved"]}
+    with pytest.raises(OutreachError, match="UNSUPPORTED_CLAIM"):
+        build_outreach_packet(opportunity=opportunity, channel="GMAIL", claim_snapshot=_claims())
+
+
+def test_duplicate_gmail_idempotency_key_creates_one_draft_effect(tmp_path: Path) -> None:
+    adapter = DraftAdapter()
+    kwargs = {
+        "packet": _reviewed_packet("GMAIL"),
+        "promotion_receipt": _promotion(),
+        "adapter": adapter,
+        "ledger_path": tmp_path / "effects.jsonl",
+        "idempotency_key": "same-key",
+    }
+    first = create_gmail_mailbox_draft(**kwargs)
+    second = create_gmail_mailbox_draft(**kwargs)
+    assert first == second
+    assert adapter.create_calls == 1
+    assert first["state"] == "DRAFT_CREATED_NOT_SENT"
+    assert first["gmail_sent"] is False
+
+
+def test_uncertain_gmail_response_reconciles_before_retry(tmp_path: Path) -> None:
+    adapter = DraftAdapter(indeterminate=True, reconcile=True)
+    receipt = create_gmail_mailbox_draft(
+        packet=_reviewed_packet("GMAIL"),
+        promotion_receipt=_promotion(),
+        adapter=adapter,
+        ledger_path=tmp_path / "effects.jsonl",
+        idempotency_key="uncertain",
+    )
+    assert adapter.create_calls == 1
+    assert adapter.read_calls == 1
+    assert receipt["state"] == "DRAFT_CREATED_NOT_SENT"
+    assert receipt["gmail_sent"] is False

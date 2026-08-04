@@ -189,10 +189,17 @@ def _opportunity_cards(manifest: Any, token: str) -> str:
         outreach_html = "".join(
             '<section class="packet"><h4>Human-Transmitted Outreach</h4>'
             f"<p>{html.escape(packet.channel)} {_badge(packet.effect_status)} "
-            f"sendable={str(packet.sendable).lower()}</p>"
+            f"{_badge(packet.readiness_state)} sendable={str(packet.sendable).lower()}</p>"
+            f"<p><strong>Recipient:</strong> {html.escape(packet.recipient)} "
+            f"({html.escape(packet.contact_provenance)})</p>"
             f"<p><strong>Subject:</strong> {html.escape(packet.subject or '(none)')}</p>"
             f"<pre>{html.escape(packet.body)}</pre>"
+            f"<p>Roundtable verdict: {html.escape(packet.roundtable_verdict or 'not permitting')}</p>"
+            f"<p>Payload digest: <code>{html.escape(packet.payload_digest)}</code></p>"
+            f"<p>Roundtable receipt: <code>{html.escape(packet.roundtable_receipt_digest or 'none')}</code></p>"
             f"{_list(packet.claim_keys, 'No claim keys retained.')}"
+            "<h5>Human send steps</h5>"
+            f"{_list(packet.human_send_steps, 'No human send steps retained.')}"
             "</section>"
             for packet in outreach.get(item.opportunity_id, [])
         ) or '<p class="blocker">No outreach packet is present.</p>'

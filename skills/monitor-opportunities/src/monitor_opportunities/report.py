@@ -91,9 +91,18 @@ def render_html(manifest: ReportManifest) -> str:
 
     outreach = "".join(
         f"<article><h3>{html.escape(item.channel)} — {html.escape(item.packet_id)}</h3>"
-        f"<p>{_badge(item.effect_status)} candidate_transmits={str(item.candidate_transmits).lower()}</p>"
+        f"<p>{_badge(item.effect_status)} {_badge(item.readiness_state)} "
+        f"candidate_transmits={str(item.candidate_transmits).lower()}</p>"
+        f"<p><strong>Recipient:</strong> {html.escape(item.recipient)} "
+        f"({html.escape(item.contact_provenance)})</p>"
         f"<p><strong>Subject:</strong> {html.escape(item.subject or '(none)')}</p>"
-        f"<pre>{html.escape(item.body)}</pre><h4>Claims</h4>{_list(item.claim_keys)}</article>"
+        f"<pre>{html.escape(item.body)}</pre>"
+        f"<p><strong>Characters:</strong> {item.character_count}</p>"
+        f"<p><strong>Roundtable verdict:</strong> {html.escape(item.roundtable_verdict or 'not permitting')}</p>"
+        f"<p><strong>Payload digest:</strong> <code>{html.escape(item.payload_digest)}</code></p>"
+        f"<p><strong>Roundtable receipt digest:</strong> <code>{html.escape(item.roundtable_receipt_digest or 'none')}</code></p>"
+        f"<h4>Claims</h4>{_list(item.claim_keys)}"
+        f"<h4>Human send steps</h4>{_list(item.human_send_steps)}</article>"
         for item in manifest.outreach_packets
     ) or "<p>None</p>"
 

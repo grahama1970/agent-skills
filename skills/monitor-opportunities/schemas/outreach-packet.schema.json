@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahama.co/schemas/monitor-opportunities/outreach-packet-v1.json",
+  "title": "monitor-opportunities local outreach packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "packet_id",
+    "opportunity_id",
+    "channel",
+    "recipient",
+    "contact_provenance",
+    "subject",
+    "body",
+    "character_count",
+    "claim_keys",
+    "roundtable_status",
+    "roundtable_verdict",
+    "roundtable_receipt_digest",
+    "payload_digest",
+    "readiness_state",
+    "effect_status",
+    "sendable",
+    "candidate_transmits",
+    "human_send_steps",
+    "action_worthy",
+    "visible_in_report"
+  ],
+  "properties": {
+    "packet_id": { "type": "string", "minLength": 1 },
+    "opportunity_id": { "type": "string", "minLength": 1 },
+    "channel": { "enum": ["GMAIL", "LINKEDIN"] },
+    "recipient": { "type": "string", "minLength": 1 },
+    "contact_provenance": { "type": "string", "minLength": 1 },
+    "subject": { "type": ["string", "null"] },
+    "body": { "type": "string", "minLength": 1 },
+    "character_count": { "type": "integer", "minimum": 1 },
+    "claim_keys": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^claim:" }
+    },
+    "roundtable_status": { "enum": ["NOT_RUN", "PASS", "BLOCKED"] },
+    "roundtable_verdict": { "type": ["string", "null"], "enum": ["SEND_AS_IS", "SEND_WITH_REVISIONS", null] },
+    "roundtable_receipt_digest": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "payload_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "readiness_state": { "enum": ["BLOCKED_ROUNDTABLE", "REVIEW_PERMITTED"] },
+    "effect_status": { "const": "WOULD_PRESENT_STAGE0" },
+    "sendable": { "const": false },
+    "candidate_transmits": { "const": true },
+    "human_send_steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "action_worthy": { "const": true },
+    "visible_in_report": { "const": true }
+  }
+}

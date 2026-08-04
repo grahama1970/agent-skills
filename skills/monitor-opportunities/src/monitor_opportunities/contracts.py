@@ -173,13 +173,21 @@ class OutreachPacket(StrictModel):
     packet_id: str
     opportunity_id: str
     channel: str
+    recipient: str
+    contact_provenance: str
     subject: str | None
     body: str
+    character_count: int = Field(ge=1)
     claim_keys: list[str] = Field(min_length=1)
     roundtable_status: str
+    roundtable_verdict: str | None
+    roundtable_receipt_digest: str | None
+    payload_digest: str
+    readiness_state: str
     effect_status: str
     sendable: bool
     candidate_transmits: bool
+    human_send_steps: list[str] = Field(min_length=1)
     action_worthy: bool
     visible_in_report: bool
 
@@ -328,6 +336,14 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError(
                 "HUMAN_TRANSMISSION_REQUIRED", "The candidate must transmit every message"
             )
+        if packet.get("effect_status") != "WOULD_PRESENT_STAGE0":
+            raise ContractError("OUTREACH_EFFECT_STAGE0", "Stage 0 outreach must remain local handoff only")
+        if packet.get("channel") == "LINKEDIN" and packet.get("subject") is not None:
+            raise ContractError("LINKEDIN_SUBJECT_INVALID", "LinkedIn handoff packets do not use a subject")
+        if packet.get("contact_provenance") in {"", None}:
+            raise ContractError("CONTACT_PROVENANCE_MISSING", "Outreach packets must record contact provenance")
+        if packet.get("roundtable_status") != "PASS" and packet.get("readiness_state") == "REVIEW_PERMITTED":
+            raise ContractError("OUTREACH_READY_WITHOUT_ROUNDTABLE", "Outreach readiness requires PASS roundtable")
 
     for application in _require(raw, "applications"):
         if application.get("authorized") is not False or application.get("state") != "BLOCKED_STAGE_0":

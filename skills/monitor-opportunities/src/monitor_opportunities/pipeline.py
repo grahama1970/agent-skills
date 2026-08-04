@@ -9,6 +9,7 @@ from typing import Any
 from .application_packets import build_application_packets
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE
 from .discovery import sweep
+from .outreach import build_outreach_packets
 from .ranking import rank
 from .report import load_manifest, render_report
 from .tailoring import tailor, tailor_candidate
@@ -174,29 +175,21 @@ def _resume_variant(tailoring_dir: Path, fallback_opportunity_id: str | None) ->
     ]
 
 
-def _report_from_run(run_id: str, run_dir: Path, discovery_dir: Path, ranking_dir: Path, tailoring_dir: Path) -> dict[str, Any]:
+def _report_from_run(
+    run_id: str,
+    run_dir: Path,
+    discovery_dir: Path,
+    ranking_dir: Path,
+    tailoring_dir: Path,
+    skill_dir: Path,
+) -> dict[str, Any]:
     shortlist = read_json(ranking_dir / "shortlist.json")
     rejections = read_json(ranking_dir / "rejections.json")
     opportunities = [_opportunity(candidate) for candidate in shortlist]
     first_opportunity_id = opportunities[0]["opportunity_id"] if opportunities else None
     resume_variants = _resume_variant(tailoring_dir, first_opportunity_id)
-    outreach_packets = [
-        {
-            "packet_id": stable_id("outreach", opportunity["opportunity_id"]),
-            "opportunity_id": opportunity["opportunity_id"],
-            "channel": "GMAIL",
-            "subject": f"Human-transmitted follow-up for {opportunity['organization']}",
-            "body": "Stage 0 local handoff text only. The human decides whether to transmit.",
-            "claim_keys": opportunity["claim_keys"],
-            "roundtable_status": "NOT_RUN",
-            "effect_status": "WOULD_PRESENT_STAGE0",
-            "sendable": False,
-            "candidate_transmits": True,
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
-        for opportunity in opportunities
-    ]
+    claim_snapshot = read_json(skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json")
+    outreach_packets = build_outreach_packets(opportunities=opportunities, claim_snapshot=claim_snapshot)
     applications = [
         {
             "application_id": stable_id("application", opportunity["opportunity_id"]),
@@ -293,6 +286,18 @@ def _report_from_run(run_id: str, run_dir: Path, discovery_dir: Path, ranking_di
                 "enabled": False,
                 "effects_external": False,
             },
+            {
+                "action": "MARK_HUMAN_SENT_GMAIL",
+                "target_type": "outreach_packet",
+                "enabled": False,
+                "effects_external": False,
+            },
+            {
+                "action": "MARK_HUMAN_SENT_LINKEDIN",
+                "target_type": "outreach_packet",
+                "enabled": False,
+                "effects_external": False,
+            },
         ],
         "artifact_accounting": {
             "action_worthy_total": action_worthy_total,
@@ -302,7 +307,8 @@ def _report_from_run(run_id: str, run_dir: Path, discovery_dir: Path, ranking_di
         },
         "non_claims": [
             "Stage 0 run proves local read-only artifacts for this invocation only.",
-            "No Gmail, LinkedIn, ATS, Memory, or external application effect was executed.",
+            "No Gmail send, Gmail draft creation, LinkedIn platform access, ATS, Memory, or external application effect was executed.",
+            "Outreach packets are local human-transmit text until a permitting Ask roundtable and capability-specific promotion exist.",
             "Employer/client ranking weights and workflows remain unknown.",
         ],
     }
@@ -345,7 +351,7 @@ def run_stage0(
         phases.append({"phase": "TAILORING_COMPLETE", "artifact": str(tailoring_dir / "tailoring-receipt.json")})
 
     manifest_path = out_dir / "report-manifest.json"
-    report_manifest = _report_from_run(run_id, out_dir, discovery_dir, ranking_dir, tailoring_dir)
+    report_manifest = _report_from_run(run_id, out_dir, discovery_dir, ranking_dir, tailoring_dir, skill_dir)
     write_json(manifest_path, report_manifest)
     manifest = load_manifest(manifest_path)
     render_artifacts = render_report(manifest, report_dir)

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahama.co/schemas/monitor-opportunities/outreach-effect-receipt-v1.json",
+  "title": "monitor-opportunities outreach effect receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "effect_id",
+    "packet_id",
+    "channel",
+    "state",
+    "draft_id",
+    "idempotency_key",
+    "idempotency_marker",
+    "subject_digest",
+    "body_digest",
+    "gmail_sent",
+    "linkedin_automated",
+    "external_effects",
+    "created_at",
+    "receipt_digest"
+  ],
+  "properties": {
+    "schema": { "const": "monitor_opportunities.outreach_effect_receipt.v1" },
+    "effect_id": { "type": "string", "minLength": 1 },
+    "packet_id": { "type": "string", "minLength": 1 },
+    "channel": { "enum": ["GMAIL", "LINKEDIN"] },
+    "state": { "enum": ["DRAFT_CREATED_NOT_SENT", "INDETERMINATE", "LOCAL_HANDOFF_READY"] },
+    "draft_id": { "type": ["string", "null"] },
+    "idempotency_key": { "type": "string", "minLength": 1 },
+    "idempotency_marker": { "type": "string", "minLength": 1 },
+    "subject_digest": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "body_digest": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "gmail_sent": { "const": false },
+    "linkedin_automated": { "const": false },
+    "external_effects": { "type": "boolean" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "receipt_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}
