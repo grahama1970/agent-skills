@@ -10,3 +10,5 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert "monitor-opportunities-nightly" in source
     assert '" run"' in source
     assert "scheduler" in source
+    assert "_canonical_repo_root" in source
+    assert '".worktrees"' in source

@@ -53,6 +53,15 @@ def _configure_logging() -> None:
     logger.add(sys.stderr, level="INFO", colorize=False)
 
 
+def _canonical_repo_root() -> Path:
+    repo_root = Path(__file__).resolve().parents[4]
+    parts = repo_root.parts
+    if ".worktrees" in parts:
+        marker = parts.index(".worktrees")
+        return Path(*parts[:marker])
+    return repo_root
+
+
 def _fail(exc: ContractError) -> NoReturn:
     typer.echo(json.dumps({"status": "ERROR", **exc.as_dict()}, sort_keys=True), err=True)
     raise typer.Exit(code=2)
@@ -97,9 +106,20 @@ def status_payload() -> dict[str, object]:
 @app.command()
 def status(
     json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+    run: Path | None = typer.Option(None, "--run", exists=True, file_okay=False, readable=True),
 ) -> None:
     """Report exact Stage 0 implementation and authority state."""
     _configure_logging()
+    if run is not None:
+        payload = status_for_run(run)
+        if json_output:
+            typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+            return
+        typer.echo(f"run: {payload['run_id']}")
+        typer.echo(f"state: {payload['state']}")
+        typer.echo(f"stale: {str(payload['current_stale']).lower()}")
+        typer.echo(f"external effects: {str(payload['external_effects']).lower()}")
+        return
     payload = status_payload()
     if json_output:
         typer.echo(json.dumps(payload, indent=2, sort_keys=True))
@@ -312,7 +332,7 @@ def schedule(
     _configure_logging()
     import subprocess
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = _canonical_repo_root()
     scheduler = repo_root / "skills" / "scheduler" / "run.sh"
     command = str(repo_root / "skills" / "monitor-opportunities" / "run.sh") + " run"
     register = subprocess.run(

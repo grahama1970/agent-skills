@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -310,11 +311,53 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
     if not receipt_path.exists():
         return {"schema": "monitor_opportunities.run_status.v1", "run_dir": str(run_dir), "state": "NOT_FOUND"}
     receipt = read_json(receipt_path)
+    manifest_path = run_dir / "report-manifest.json"
+    manifest = read_json(manifest_path) if manifest_path.exists() else None
+    projection_path = run_dir / "decision-projection.json"
+    projection = read_json(projection_path) if projection_path.exists() else {"items": {}}
+    completed_at = receipt.get("completed_at")
+    current_stale = _is_stale(completed_at)
+    accounting = manifest.get("artifact_accounting", {}) if manifest else {}
+    action_worthy_total = int(accounting.get("action_worthy_total", 0))
+    decided_total = len(projection.get("items", {}))
     return {
         "schema": "monitor_opportunities.run_status.v1",
         "run_dir": str(run_dir),
         "run_id": receipt["run_id"],
         "state": receipt["terminal_state"],
+        "last_attempt": completed_at,
+        "last_complete_report": receipt.get("report_html"),
+        "current_stale": current_stale,
+        "stale_policy": "stale when no completed report exists or completed_at is older than 24 hours",
+        "lane_health": [
+            {
+                "lane": lane["lane"],
+                "status": lane["result_status"],
+                "observed": lane["candidates_observed"],
+                "admitted": lane["candidates_admitted"],
+            }
+            for lane in (manifest or {}).get("lane_coverage", [])
+        ],
+        "dependency_readiness": {
+            "discovery": "READY" if (run_dir / "discovery" / "run-manifest.json").exists() else "MISSING",
+            "ranking": "READY" if (run_dir / "ranking" / "ranking-receipt.json").exists() else "MISSING",
+            "tailoring": "READY" if (run_dir / "tailoring" / "tailoring-receipt.json").exists() else "MISSING",
+            "report": "READY" if receipt.get("report_html") and Path(receipt["report_html"]).exists() else "MISSING",
+        },
+        "budget": receipt.get("budget", {}),
+        "artifact_accounting": accounting,
+        "unresolved_decisions": max(action_worthy_total - decided_total, 0),
+        "indeterminate_effect_state": False,
         "report_html": receipt["report_html"],
         "external_effects": receipt["external_effects"],
     }
+
+
+def _is_stale(completed_at: str | None) -> bool:
+    if not completed_at:
+        return True
+    try:
+        completed = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    return (datetime.now(timezone.utc) - completed).total_seconds() > 24 * 60 * 60
