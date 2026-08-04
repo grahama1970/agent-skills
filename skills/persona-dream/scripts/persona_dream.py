@@ -11,30 +11,69 @@ import time
 import urllib.error
 import urllib.request
 import base64
+import importlib.util
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
+
+
+def _load_sibling(name: str):
+    """Load a sibling script as a module, so a step can be reused in-process."""
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(f"{name}.py"))
+    if not spec or not spec.loader:
+        raise RuntimeError(f"cannot load sibling script: {name}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 import typer
 
 app = typer.Typer(help="Create receipt-backed persona dream packets.")
 
+# A dream needs tension, and tension in a life is psychological, not procedural.
+# The previous table was a security-compliance vocabulary (qra, nist, mitre,
+# spoof, malformed, supplier, citation) inherited from SPARTA work. Against
+# autobiographical memory it both under-fired and mis-fired: a live run on
+# 2026-08-04 recalled six real Embry memories and produced zero contradictions,
+# collapsing the reflection to a template stub, while "Loyalty" matched the
+# metadata word "source" and the richest memory in the set -- offering Kai a
+# partial confession about crossing a boundary while refusing to identify
+# James -- matched nothing at all (#1200).
+#
+# These axes are the ones a persona's memories actually pull against. Terms are
+# matched on word boundaries so "source" cannot score "resource" and a bare
+# metadata token cannot manufacture a tension.
 BRIDGES = {
-    "Fragility": ["fragile", "weak", "drift", "gap", "uncertain", "broken"],
-    "Resilience": ["resilient", "recover", "anchor", "proof", "stable", "ready"],
-    "Corruption": ["corrupt", "contradict", "false", "malformed", "spoof"],
-    "Loyalty": ["trust", "faithful", "supplier", "source", "citation"],
-    "Stealth": ["hidden", "shadow", "unseen", "ambiguous", "opaque"],
-    "Precision": ["precise", "exact", "formal", "control", "qra", "nist", "mitre", "sparta"],
+    "Concealment": ["hid", "hidden", "concealed", "withheld", "refuses to identify",
+                    "private", "secret", "unsaid", "silence", "omits", "guarded"],
+    "Disclosure": ["confession", "confesses", "admits", "tells", "reveals",
+                   "discloses", "honest", "names", "acknowledges"],
+    "Competence": ["competent", "capable", "expert", "handled", "responds competently",
+                   "precise", "mastery", "skilled"],
+    "Inadequacy": ["gap", "unsure", "uncertain", "questions about", "struggled",
+                   "could not", "had to stop", "failed", "unprepared", "doubt"],
+    "Belonging": ["family", "potluck", "shared", "together", "chapel", "helps",
+                  "friend", "welcomed", "community"],
+    "Isolation": ["alone", "apart", "distance", "withdrew", "left out",
+                  "on her own", "separate", "unseen"],
+    # "record" removed: memory metadata reads "The source records ...", which
+    # manufactured a Duty match out of a storage verb rather than an obligation.
+    "Duty": ["procedure", "protocol", "obligation", "must comply",
+             "responsibility", "review trail", "audit"],
+    "Desire": ["wanted", "wished", "longing", "hoped", "yearning",
+               "drawn to", "ache"],
 }
 
 OPPOSITIONS = {
-    "Fragility": "Resilience",
-    "Resilience": "Fragility",
-    "Corruption": "Loyalty",
-    "Loyalty": "Corruption",
-    "Stealth": "Precision",
-    "Precision": "Stealth",
+    "Concealment": "Disclosure",
+    "Disclosure": "Concealment",
+    "Competence": "Inadequacy",
+    "Inadequacy": "Competence",
+    "Belonging": "Isolation",
+    "Isolation": "Belonging",
+    "Duty": "Desire",
+    "Desire": "Duty",
 }
 
 PERSONA_MEDIA_ROOT = Path("/mnt/storage12tb/media/personas")
@@ -493,11 +532,20 @@ def _fetch_residue(persona: Persona, limit: int, about: str | None = None, secon
 
 
 def _bridges_for(text: str) -> list[str]:
+    """Axes present in one memory, matched on word boundaries.
+
+    Bare substring matching let "source" score Loyalty and would let "resource"
+    score "source" (#1200). Multi-word terms are matched as phrases; single
+    words must stand alone.
+    """
     lowered = text.lower()
     found = []
     for bridge, terms in BRIDGES.items():
-        if any(term in lowered for term in terms):
-            found.append(bridge)
+        for term in terms:
+            pattern = re.escape(term) if " " in term else rf"\b{re.escape(term)}\w*\b"
+            if re.search(pattern, lowered):
+                found.append(bridge)
+                break
     return found
 
 
@@ -1401,6 +1449,21 @@ def generate(
     }
     _write_json(out / "manifest.json", manifest)
 
+    # #1201: publish the entry in the two forms it actually needs -- an
+    # annotated journal a human reads, and the annotation-stripped text the
+    # renderer speaks. Chatterbox synthesizes inline tags as literal words, so
+    # these cannot be the same bytes. Non-fatal: a render failure must not lose
+    # the dream artifacts that already succeeded.
+    journal_render: dict[str, Any] | None = None
+    try:
+        _render_journal = _load_sibling("render_journal_entry")
+        journal_render = _render_journal.run(
+            SimpleNamespace(run_dir=out, persona=persona.display_name, journal_text="", out=None)
+        )
+    except Exception as exc:  # noqa: BLE001 - never lose a completed dream to a renderer bug
+        journal_render = {"status": "BLOCKED_JOURNAL_RENDER_ERROR",
+                          "error": f"{type(exc).__name__}: {exc}"}
+
     response = {
         "schema": "persona_dream.response.v1",
         "status": "ok",
@@ -1411,6 +1474,10 @@ def generate(
         "memory_write_status": receipt["status"],
         "dream_packet": str(out / "dream_packet.json"),
         "manifest": str(out / "manifest.json"),
+        "journal_status": (journal_render or {}).get("status"),
+        "journal_error": (journal_render or {}).get("error"),
+        "journal_markdown": (journal_render or {}).get("journal_markdown"),
+        "journal_spoken": (journal_render or {}).get("journal_spoken"),
     }
     if mode == "video_plan":
         response.update({

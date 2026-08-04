@@ -1,0 +1,85 @@
+"""#1202: a dream's mood must survive the trip to the renderer.
+
+Debugger proof at chatterbox presets.py:138 showed every dream-derived mood
+collapsing to neutral_warm because the two projects use different vocabularies.
+These pin the mapping and, more importantly, pin the drift check: if Chatterbox
+changes its tone set, that must fail here rather than silently flatten Embry.
+"""
+import importlib.util
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+mapper = _load("map_delivery_tone")
+
+
+def _pair(a, b, n=1):
+    return [{"bridge_a": a, "bridge_b": b} for _ in range(n)]
+
+
+def test_every_axis_maps_into_the_accepted_vocabulary():
+    for axis, tone in mapper.AXIS_TO_DELIVERY.items():
+        assert tone in mapper.ALLOWED_TONES, f"{axis} -> {tone} is not accepted by Chatterbox"
+
+
+def test_different_tensions_request_different_tones():
+    """The whole point: concealment must not sound like belonging."""
+    tones = {
+        mapper.map_mood("m", _pair("Concealment", "Disclosure", 2))["voice_delivery"]["tone"],
+        mapper.map_mood("m", _pair("Belonging", "Isolation", 2))["voice_delivery"]["tone"],
+        mapper.map_mood("m", _pair("Inadequacy", "Competence", 2))["voice_delivery"]["tone"],
+        mapper.map_mood("m", _pair("Duty", "Desire", 1))["voice_delivery"]["tone"],
+    }
+    assert len(tones) == 4, f"tensions collapsed onto {tones}"
+
+
+def test_no_tension_falls_back_honestly():
+    got = mapper.map_mood("m", [])
+    assert got["voice_delivery"]["tone"] == mapper.NEUTRAL_FALLBACK
+    assert got["dominant_tension_axis"] is None
+    assert "no tension" in got["mapped_because"]
+
+
+def test_persona_mood_is_preserved_alongside_delivery_tone():
+    """Embry keeps what she felt; the renderer gets what it accepts."""
+    got = mapper.map_mood("guarded_quietly_wanting", _pair("Concealment", "Disclosure"))
+    assert got["persona_mood_label"] == "guarded_quietly_wanting"
+    assert got["voice_delivery"]["tone"] == "firm_boundary"
+    assert got["voice_delivery"]["tone"] != got["persona_mood_label"]
+
+
+def test_result_never_claims_the_tone_was_achieved():
+    got = mapper.map_mood("m", _pair("Duty", "Desire"))
+    assert "REQUESTED" in got["boundary"]
+    assert "stochastic spread" in got["boundary"]
+
+
+def test_mirror_is_in_sync_with_chatterbox():
+    """Fails when Chatterbox's tone set moves. That is the point."""
+    presets = Path("/home/graham/workspace/experiments/chatterbox/src/chatterbox/agent/presets.py")
+    drift = mapper.check_vocabulary_drift(presets)
+    if not drift.get("checked"):
+        import pytest
+        pytest.skip(f"chatterbox presets unavailable: {drift.get('reason')}")
+    assert drift["in_sync"], (
+        f"tone vocabulary drifted — missing from mirror: {drift['missing_from_mirror']}, "
+        f"not in upstream: {drift['not_in_upstream']}"
+    )
+    assert drift["unmapped_axes"] == []
+
+
+def test_drift_check_detects_an_out_of_date_mirror(tmp_path):
+    fake = tmp_path / "presets.py"
+    fake.write_text('ALLOWED_TONES = {\n    "neutral_warm",\n    "brand_new_tone",\n}\n')
+    drift = mapper.check_vocabulary_drift(fake)
+    assert drift["checked"] and not drift["in_sync"]
+    assert "brand_new_tone" in drift["missing_from_mirror"]

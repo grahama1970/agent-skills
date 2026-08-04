@@ -743,6 +743,12 @@ case "$COMMAND" in
   audit-readme-proof-claims)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/audit_readme_proof_claims.py" "$@"
     ;;
+  map-delivery-tone)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/map_delivery_tone.py" "$@"
+    ;;
+  render-journal-entry)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/render_journal_entry.py" "$@"
+    ;;
   generate-readme-research-state)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/generate_readme_research_state.py" "$@"
     ;;
@@ -866,6 +872,11 @@ case "$COMMAND" in
     ;;
   lore-canary)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_lore_extraction_canary.py" "$@"
+    ;;
+  render-journal-ux)
+    # Static journal + chat page for one or more run dirs. Self-contained HTML,
+    # opens from file://; no backend, no network references.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/ux/render_journal_ux.py" "$@"
     ;;
   test-suite)
     # Deterministic contract suite. Runs offline (no paid/live provider calls);
