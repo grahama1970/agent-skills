@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahama.co/schemas/monitor-opportunities/application-authorization-v1.json",
+  "title": "monitor-opportunities application authorization",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "authorization_id", "actor", "plan_id", "plan_digest", "state", "authorization_digest", "external_effects"],
+  "properties": {
+    "schema": { "const": "monitor_opportunities.application_authorization.v1" },
+    "authorization_id": { "type": "string", "minLength": 1 },
+    "actor": { "const": "human" },
+    "plan_id": { "type": "string", "minLength": 1 },
+    "plan_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "state": { "const": "HUMAN_AUTHORIZED" },
+    "authorization_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "external_effects": { "const": false }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahama.co/schemas/monitor-opportunities/application-plan-v1.json",
+  "title": "monitor-opportunities application plan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "plan_id", "plan_digest", "posting_id", "provider", "site", "form_schema_digest", "fields", "unresolved_required_fields", "state", "external_effects"],
+  "properties": {
+    "schema": { "const": "monitor_opportunities.application_plan.v1" },
+    "plan_id": { "type": "string", "minLength": 1 },
+    "plan_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "posting_id": { "type": "string", "minLength": 1 },
+    "provider": { "type": "string", "minLength": 1 },
+    "site": { "type": "string", "minLength": 1 },
+    "form_schema_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "fields": { "type": "array" },
+    "unresolved_required_fields": { "type": "array", "items": { "type": "string" } },
+    "state": { "const": "PREPARED" },
+    "external_effects": { "const": false }
+  }
+}

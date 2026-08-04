@@ -1,0 +1,266 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from monitor_opportunities.application_plan import (
+    ApplicationGateError,
+    authorize_application_plan,
+    build_application_plan,
+    commit_application,
+    inspect_ats_form,
+    reconcile_application,
+)
+from monitor_opportunities.util import sha256_json
+
+
+def _policy(form: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": "monitor_opportunities.capability_promotion.v1",
+        "capability": f"ats_form_inspect:{form['provider']}:{form['site']}",
+        "actor": "human",
+        "decision": "PROMOTE",
+        "contract_version": "0.2.0",
+        "scope": {"providers": [form["provider"]], "sites": [form["site"]]},
+    }
+
+
+def _greenhouse_form() -> dict[str, Any]:
+    return {
+        "provider": "greenhouse",
+        "site": "fixture-aerospace.example",
+        "posting_id": "gh-123",
+        "url": "https://fixture-aerospace.example/jobs/123",
+        "accepted_attachments": ["resume"],
+        "policy_observations": ["fixture policy permits inspect only"],
+        "fields": [
+            {"name": "Full name", "field_type": "text", "required": True},
+            {"name": "Email", "field_type": "email", "required": True},
+            {"name": "Resume", "field_type": "file", "required": True},
+            {"name": "Why this role?", "field_type": "free_text", "required": True},
+            {"name": "Race/Ethnicity", "field_type": "self_identification", "required": False},
+            {"name": "Clearance", "field_type": "clearance", "required": True},
+            {"name": "Salary expectation", "field_type": "salary", "required": True},
+            {"name": "Work authorization", "field_type": "work_authorization", "required": True},
+            {"name": "Background disclosure", "field_type": "legal", "required": False},
+            {"name": "Preferred office", "field_type": "choice", "required": True, "ambiguous": True, "options": ["Buffalo", "Remote"]},
+        ],
+    }
+
+
+def _lever_form() -> dict[str, Any]:
+    return {
+        "provider": "lever",
+        "site": "fixture-manufacturing.example",
+        "posting_id": "lever-456",
+        "url": "https://fixture-manufacturing.example/apply/456",
+        "accepted_attachments": ["resume", "cover_letter"],
+        "policy_observations": ["fixture policy permits inspect only"],
+        "fields": [
+            {"name": "Full name", "field_type": "text", "required": True},
+            {"name": "Email", "field_type": "email", "required": True},
+            {"name": "Resume", "field_type": "file", "required": True},
+        ],
+    }
+
+
+def _answer_bank(extra: dict[str, str] | None = None) -> dict[str, Any]:
+    answers = {
+        "Full name": "Graham Anderson",
+        "Email": "graham@example.com",
+        "Resume": "resume.pdf",
+    }
+    if extra:
+        answers.update(extra)
+    return {"schema": "monitor_opportunities.answer_bank.v1", "answers": answers}
+
+
+def _plan(form: dict[str, Any] | None = None, answer_bank: dict[str, Any] | None = None) -> dict[str, Any]:
+    form = form or _lever_form()
+    inspection = inspect_ats_form(form, _policy(form))
+    return build_application_plan(
+        inspection=inspection,
+        answer_bank=answer_bank or _answer_bank(),
+        resume_digest="a" * 64,
+        attachment_digests=["b" * 64],
+        candidate_profile_digest="c" * 64,
+    )
+
+
+def _authorization(plan: dict[str, Any]) -> dict[str, Any]:
+    return authorize_application_plan(
+        plan=plan,
+        actor="human",
+        idempotency_key="auth-1",
+        approved_plan_digest=plan["plan_digest"],
+    )
+
+
+class SubmitAdapter:
+    def __init__(self, state: str = "COMMITTED") -> None:
+        self.state = state
+        self.submit_calls = 0
+        self.reconcile_calls = 0
+
+    def submit(self, plan: dict[str, Any], idempotency_key: str) -> dict[str, Any]:
+        self.submit_calls += 1
+        return {
+            "state": self.state,
+            "provider_confirmation": f"confirmation-{plan['posting_id']}-{idempotency_key}",
+        }
+
+    def reconcile(self, reservation_id: str) -> dict[str, Any]:
+        self.reconcile_calls += 1
+        return {"state": "COMMITTED", "provider_confirmation": f"reconciled-{reservation_id}"}
+
+
+def test_two_distinct_form_shapes_inspect_without_mutation() -> None:
+    for form in [_greenhouse_form(), _lever_form()]:
+        inspection = inspect_ats_form(form, _policy(form))
+        assert inspection["mutation_performed"] is False
+        assert inspection["external_effects"] is False
+        assert inspection["provider"] == form["provider"]
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "Why this role?",
+        "Race/Ethnicity",
+        "Clearance",
+        "Salary expectation",
+        "Work authorization",
+        "Background disclosure",
+        "Preferred office",
+    ],
+)
+def test_sensitive_free_text_and_ambiguous_fields_are_human_required(field_name: str) -> None:
+    plan = _plan(_greenhouse_form(), _answer_bank({"Clearance": "yes", "Salary expectation": "1"}))
+    field = next(row for row in plan["fields"] if row["name"] == field_name)
+    assert field["disposition"] == "human_required"
+    assert field["automated_answer"] is None
+
+
+def test_missing_exact_answer_blocks_required_field() -> None:
+    plan = _plan(_lever_form(), {"schema": "monitor_opportunities.answer_bank.v1", "answers": {"Full name": "Graham Anderson"}})
+    assert "Email" in plan["unresolved_required_fields"]
+    assert "Resume" in plan["unresolved_required_fields"]
+    with pytest.raises(ApplicationGateError, match="UNRESOLVED_REQUIRED"):
+        authorize_application_plan(
+            plan=plan,
+            actor="human",
+            idempotency_key="auth-missing",
+            approved_plan_digest=plan["plan_digest"],
+        )
+
+
+def test_changed_form_after_authorization_blocks_commit(tmp_path: Path) -> None:
+    plan = _plan()
+    auth = _authorization(plan)
+    with pytest.raises(ApplicationGateError, match="FORM_CHANGED"):
+        commit_application(
+            plan=plan,
+            authorization=auth,
+            adapter=SubmitAdapter(),
+            ledger_path=tmp_path / "ledger.jsonl",
+            idempotency_key="submit-1",
+            current_form_schema_digest=sha256_json({"changed": True}),
+        )
+
+
+def test_changed_resume_after_authorization_blocks_commit(tmp_path: Path) -> None:
+    plan = _plan()
+    auth = _authorization(plan)
+    with pytest.raises(ApplicationGateError, match="RESUME_CHANGED"):
+        commit_application(
+            plan=plan,
+            authorization=auth,
+            adapter=SubmitAdapter(),
+            ledger_path=tmp_path / "ledger.jsonl",
+            idempotency_key="submit-1",
+            current_resume_digest="d" * 64,
+        )
+
+
+def test_duplicate_or_already_applied_posting_blocks_commit(tmp_path: Path) -> None:
+    plan = _plan()
+    auth = _authorization(plan)
+    ledger = tmp_path / "ledger.jsonl"
+    first = commit_application(
+        plan=plan,
+        authorization=auth,
+        adapter=SubmitAdapter(),
+        ledger_path=ledger,
+        idempotency_key="submit-1",
+    )
+    assert first["state"] == "COMMITTED"
+    with pytest.raises(ApplicationGateError, match="DUPLICATE_OR_ALREADY_APPLIED"):
+        commit_application(
+            plan=plan,
+            authorization=auth,
+            adapter=SubmitAdapter(),
+            ledger_path=ledger,
+            idempotency_key="submit-2",
+        )
+
+
+def test_cap_exceeded_blocks_commit(tmp_path: Path) -> None:
+    plan = _plan()
+    auth = _authorization(plan)
+    ledger = tmp_path / "ledger.jsonl"
+    commit_application(
+        plan=plan,
+        authorization=auth,
+        adapter=SubmitAdapter(),
+        ledger_path=ledger,
+        idempotency_key="submit-1",
+    )
+    second = _plan({**_lever_form(), "posting_id": "lever-789"})
+    with pytest.raises(ApplicationGateError, match="APPLICATION_CAP_EXCEEDED"):
+        commit_application(
+            plan=second,
+            authorization=_authorization(second),
+            adapter=SubmitAdapter(),
+            ledger_path=ledger,
+            idempotency_key="submit-2",
+            caps={"max_daily": 1},
+        )
+
+
+def test_timeout_after_submit_is_indeterminate(tmp_path: Path) -> None:
+    plan = _plan()
+    adapter = SubmitAdapter(state="INDETERMINATE")
+    receipt = commit_application(
+        plan=plan,
+        authorization=_authorization(plan),
+        adapter=adapter,
+        ledger_path=tmp_path / "ledger.jsonl",
+        idempotency_key="submit-1",
+    )
+    assert receipt["state"] == "INDETERMINATE"
+    assert receipt["external_effects"] is True
+    assert adapter.submit_calls == 1
+
+
+def test_restart_reconciliation_without_duplicate_submit(tmp_path: Path) -> None:
+    plan = _plan()
+    adapter = SubmitAdapter(state="INDETERMINATE")
+    ledger = tmp_path / "ledger.jsonl"
+    receipt = commit_application(
+        plan=plan,
+        authorization=_authorization(plan),
+        adapter=adapter,
+        ledger_path=ledger,
+        idempotency_key="submit-1",
+    )
+    reconciled = reconcile_application(
+        reservation_id=receipt["reservation_id"],
+        adapter=adapter,
+        ledger_path=ledger,
+    )
+    assert reconciled["state"] == "COMMITTED"
+    assert reconciled["submitted_application"] is True
+    assert adapter.submit_calls == 1
+    assert adapter.reconcile_calls == 1

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahama.co/schemas/monitor-opportunities/application-effect-receipt-v1.json",
+  "title": "monitor-opportunities application effect receipt",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "reservation_id", "plan_id", "plan_digest", "stable_application_key", "idempotency_key", "state", "external_effects"],
+  "properties": {
+    "schema": { "const": "monitor_opportunities.application_effect_receipt.v1" },
+    "reservation_id": { "type": "string", "minLength": 1 },
+    "plan_id": { "type": "string", "minLength": 1 },
+    "plan_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "stable_application_key": { "type": "string", "minLength": 1 },
+    "idempotency_key": { "type": "string", "minLength": 1 },
+    "state": { "enum": ["RESERVED", "COMMITTED", "BLOCKED", "INDETERMINATE"] },
+    "external_effects": { "type": "boolean" }
+  }
+}
