@@ -1,5 +1,7 @@
 # ops-linkedin
 
+> **Repository status:** staged under `incoming/ops-linkedin`. It is not an active repository capability until a separate promotion PR moves it to `skills/ops-linkedin` and registers its capability vocabulary entries.
+
 `ops-linkedin` prepares LinkedIn work without automating LinkedIn. It converts a typed JSON
 request into an evidence-aware handoff packet containing reviewed copy, explicit claim
 sources, manual steps, negative automation guardrails, and bounded proof semantics.
@@ -29,7 +31,7 @@ Every lane ends before LinkedIn access.
 ## Quick start
 
 ```bash
-cd skills/ops-linkedin
+cd incoming/ops-linkedin
 uv sync --extra dev
 
 bash ./run.sh policy

@@ -2,6 +2,8 @@
 
 Last reviewed: 2026-08-02
 
+Repository placement: **STAGED_IN_INCOMING** at `incoming/ops-linkedin`. The skill is reviewable but is not registered as an active capability until promotion.
+
 ## Immutable goal
 
 Provide useful LinkedIn profile/content/outreach preparation while preventing the agent
@@ -86,15 +88,15 @@ current skill accepts manifests but does not define that wider canonical schema.
 ## Verification
 
 ```bash
-bash ./skills/ops-linkedin/sanity.sh
+bash ./incoming/ops-linkedin/sanity.sh
 
 OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 \
-  bash ./skills/ops-linkedin/run.sh prepare \
-  ./skills/ops-linkedin/assets/examples/publish-post.json \
+  bash ./incoming/ops-linkedin/run.sh prepare \
+  ./incoming/ops-linkedin/assets/examples/publish-post.json \
   -o /tmp/ops-linkedin-packet.json
 
 OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 \
-  bash ./skills/ops-linkedin/run.sh validate /tmp/ops-linkedin-packet.json
+  bash ./incoming/ops-linkedin/run.sh validate /tmp/ops-linkedin-packet.json
 ```
 
 `fixtures/agentic_eval.json` covers positive, negative, and adversarial lifecycle cases.
