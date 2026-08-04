@@ -69,8 +69,80 @@
       "readme_evidence_cell": "[`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1179",
       "readme_state": "Blocked: stimuli rejected as technically confounded",
       "receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-      "receipt_sha256": "sha256:51554144d2dd680a30a4c0ce44aa2f5e0b6673a23cd21d3be5f471eae99bc167",
+      "receipt_sha256": "sha256:209e5ec65d2620080e646e6d24d248105639b547c398a34de35be99670e31ac1",
       "receipt_status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND"
+    },
+    {
+      "boundary": "Readable journal artifact",
+      "ok": true,
+      "readme_evidence_cell": "`reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json`",
+      "readme_state": "Implemented and hash-bound",
+      "receipt": "reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json",
+      "receipt_sha256": "sha256:789a6a717257427ad09b5352f68e13c083bec08bb92eb81a2a520c0eaf250dcf",
+      "receipt_status": "PASS_JOURNAL_RENDERED"
+    },
+    {
+      "boundary": "Spoken journal",
+      "ok": true,
+      "readme_evidence_cell": "`reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json`",
+      "readme_state": "Live slice proven",
+      "receipt": "reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json",
+      "receipt_sha256": "sha256:3321fa0867f9d048d1a4d33bfc7dcdb1530e519758f331788a061a8493ecde04",
+      "receipt_status": "PASS_JOURNAL_SPOKEN"
+    },
+    {
+      "boundary": "Requested tone to measurable acoustic effect",
+      "ok": true,
+      "readme_evidence_cell": "`reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json`, #1209",
+      "readme_state": "**Disproven**: below the renderer's own stochastic spread",
+      "receipt": "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json",
+      "receipt_sha256": "sha256:93c85255440e53d22dccb2798aa62e2861e0aca77e4dadecdda956b0e012fa99",
+      "receipt_status": "BLOCKED_TONE_BELOW_STOCHASTIC_SPREAD"
+    },
+    {
+      "boundary": "Journal page",
+      "ok": true,
+      "readme_evidence_cell": "`reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json`",
+      "readme_state": "Live slice proven: rendered in Chrome at 1440x900, footnotes resolve, audio loads",
+      "receipt": "reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json",
+      "receipt_sha256": "sha256:38113d74578245963b0e36b9f9604898545d02b346535f2949f5a1ab2f97e0a0",
+      "receipt_status": "PASS_JOURNAL_UX_RENDERED_IN_BROWSER"
+    },
+    {
+      "boundary": "Interactive dream discussion",
+      "ok": true,
+      "readme_evidence_cell": "`reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json`",
+      "readme_state": "Append-only writer live-proven; return into memory blocked upstream",
+      "receipt": "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json",
+      "receipt_sha256": "sha256:e9093ad7b32c8f76d5760a5efc8bd9021e2f059eb027761a66d7cd89301dcbcd",
+      "receipt_status": "PASS_CONVERSATION_APPENDED"
+    },
+    {
+      "boundary": "Day events to a later dream",
+      "ok": true,
+      "readme_evidence_cell": "`reports/goal_v5/day_events/DAY_BLEND_RECEIPT.json`",
+      "readme_state": "Live slice proven: two consecutive days produce different journals",
+      "receipt": "reports/goal_v5/day_events/DAY_BLEND_RECEIPT.json",
+      "receipt_sha256": "sha256:c73c3474715fd80a24ff74f7ef9d52029f4c9d705cb253e478f9d0d712b800d4",
+      "receipt_status": "PASS_CONSECUTIVE_DAYS_DIFFER"
+    },
+    {
+      "boundary": "Return arc, discussion into a later dream",
+      "ok": true,
+      "readme_evidence_cell": "`reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json`",
+      "readme_state": "Live slice proven: carried, retrieved, and recalled as attributed speech",
+      "receipt": "reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json",
+      "receipt_sha256": "sha256:91fcee1fae43ca8102f13489ed389f5d8fe7923fa7fc30661a756ce1d75a3742",
+      "receipt_status": "PASS_RETURN_ARC_CLOSED"
+    },
+    {
+      "boundary": "Dreams accumulate as memory",
+      "ok": true,
+      "readme_evidence_cell": "`reports/goal_v5/accumulation/ACCUMULATION_RECEIPT.json`",
+      "readme_state": "Live slice proven: interpretation and media stored, drawn by a later dream, marked dreamt",
+      "receipt": "reports/goal_v5/accumulation/ACCUMULATION_RECEIPT.json",
+      "receipt_sha256": "sha256:777a268cb83c03dd85b30b492c48d139623e66b2573937e5a817d82cc35018da",
+      "receipt_status": "PASS_DREAMS_ACCUMULATE_AS_MEMORY"
     },
     {
       "boundary": "PCTOM-R held-out benefit",
@@ -91,13 +163,13 @@
       "boundaries with no receipt are declared unproven and use no positive-result language"
     ]
   },
-  "created_at": "2026-08-04T13:05:50Z",
+  "created_at": "2026-08-04T18:00:44Z",
   "failed_gates": [],
   "live": false,
   "mocked": false,
-  "readme": "skills/persona-dream/README.md",
-  "readme_sha256": "sha256:641e1dae2beaf7f2a33211b5f8a2516f0d8088b3c12de45e1a0120f200363aca",
-  "rows_checked": 9,
+  "readme": "skills/persona-dream/docs/EVIDENCE.md",
+  "readme_sha256": "sha256:a306917b32a7cb8e48eb4cf29eab01130fb018a38c7201523ebca6d07b69ec69",
+  "rows_checked": 17,
   "schema": "persona_dream.readme_proof_claim_audit.v1",
   "status": "PASS_README_PROOF_CLAIMS_BOUND"
 }
