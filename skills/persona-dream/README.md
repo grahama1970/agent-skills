@@ -324,6 +324,22 @@ needs a backend that exposes affect axes which measurably move the audio; until
 one does, the mapping is kept because it is honest provenance for what was
 *requested*, and every surface says the emotion is not audible.
 
+**Where this is going, and what is not built yet.** Today the register comes from
+a single dream's dominant tension — one night, one axis. That is the shallow
+version. Dreams are memories, they carry links to the memories they interpreted,
+and conversations attach to the journals they were about, so dreams stand in
+relation to each other: a tension can recur, intensify, or be resolved and come
+back. The intended behaviour is that those relationships colour the register — a
+tension surfacing for the fifth time, or one that a human pressed hard on last
+week, should not sound like one appearing for the first time.
+
+None of that modulation exists yet. What exists is the substrate it needs: the
+links are in the graph, dreamt records are distinguishable from lived ones, and
+conversation turns are bound to the entry that provoked them. Recurrence and
+intensity across related dreams are not computed, and nothing reads them. It is
+named here as design intent so a reader can tell the difference between what the
+architecture supports and what it currently does.
+
 Three properties are worth a researcher's attention:
 
 - **Consecutive days differ.** Five cycles once produced byte-identical
@@ -420,6 +436,16 @@ evaluating whether discussion changes later dreams should be able to have the
 discussion where they are reading, not in a terminal. Making the page write
 turns directly, and showing carried turns arriving back in the next dream, is
 what turns the surface into an instrument.
+
+The interaction model is not being invented here. It is adapted from the SPARTA
+Explorer chat surface, which already solves the harder half of this problem: a
+human and an agent discussing a conclusion while every claim stays traceable to
+the evidence that supports it. Product overview:
+[`grahama1970/sparta-public`](https://github.com/grahama1970/sparta-public).
+The requirement it carries over is the one that matters here — a discussion
+surface must never let commentary quietly become evidence, which is the same
+boundary this project enforces when a turn re-enters memory as attributed
+speech.
 
 **4. Longitudinal adaptation (#1196).** Does the persona measurably change over
 many dreams, and is she still recognizably herself? Two failure modes matter
