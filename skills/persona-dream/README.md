@@ -356,6 +356,70 @@ kept from becoming an agent's autobiography — that is
 [`docs/CLAIM_PROVENANCE.md`](docs/CLAIM_PROVENANCE.md). It transfers
 independently of whether dreaming works.
 
+## What happens next, and what would falsify it
+
+The obvious question is whether any of this helps. It is unanswered, and the
+honest position is that it *cannot* be answered from what exists today —
+accumulation only began working on 2026-08-04, so there is no history to study
+yet. Nothing here has run long enough to have changed anyone.
+
+That makes the first step unglamorous and unavoidable.
+
+**1. Accumulate, daily, before measuring anything.** A longitudinal claim needs
+a longitudinal record. Running `ingest-day` → `generate --write-memory` →
+`store-dream-artifacts` daily is what produces the material any later comparison
+would examine. Until that record exists, every experiment below is
+underpowered by construction.
+
+**2. The matched comparison (#1195).** Hold the source memories, the task, the
+scoring rule and the model budget fixed, and vary only how the evidence is
+processed: direct memory readout, structured reflection, a text-only dream, and
+a dream whose rendered media were independently observed. The comparison is
+preregistered, and every condition can win, tie, or lose.
+
+> **One thing is genuinely unsettled and we would welcome argument about it:**
+> what should she be measurably *better at*? Whatever is chosen decides what a
+> result means, and it is possible to design a task that guarantees the media
+> condition wins or that it cannot. We have deliberately not picked one quietly.
+
+**3. Longitudinal adaptation (#1196).** Does the persona measurably change over
+many dreams, and is she still recognizably herself? Two failure modes matter
+equally: no change at all, which would mean dreaming adds nothing; and drift,
+which would mean it adds the wrong thing. The bounded arc delta and recognition
+check exist to catch the second.
+
+### What each outcome would mean
+
+| Outcome | Consequence |
+|---|---|
+| Dreaming beats memory and reflection | scope the claim to the tested case; replicate before generalizing |
+| No detectable difference | a completed result — record it and stop claiming the mechanism helps |
+| Difference only with rendered media | keep the media lane; it is expensive and would need to earn that |
+| Persona drifts | the safety constraint failed; that is a finding about bounding, not about dreaming |
+| Underpowered to tell | say so, and fix the design rather than reporting the null as evidence |
+
+A null result retires the mechanism rather than embarrassing it. That is what
+the transfer ledger's adopt / constrain / reject / retire column is for, and it
+already contains one retirement and one negative that stuck.
+
+### Known limits we are not hiding
+
+- **N=1 and synthetic.** One persona. No population, so nothing here speaks to
+  individual differences.
+- **The tension axes are not instruments.** They are invented vocabulary matched
+  lexically, not validated psychometrics, and should be treated as latent
+  variables awaiting validation.
+- **No human subjects.** No trust, delegation, or perception measurement. The
+  one perceptual study was blocked as technically confounded and stayed blocked.
+- **One component is already known not to work.** Requested voice delivery tone
+  does not reach the waveform. It was measured, not assumed, and the surfaces
+  were corrected rather than the experiment re-run for a better draw.
+
+If you want the methodology rather than the hypothesis — how claims are bound to
+receipts and how a claim that outruns its evidence is refused — that is
+[`docs/CLAIM_PROVENANCE.md`](docs/CLAIM_PROVENANCE.md), and it holds whatever
+these experiments return.
+
 ## Embry and Kai: Example workflow, not a benefit result
 
 The current fixture begins with a deceptively ordinary choice: Embry and Kai
