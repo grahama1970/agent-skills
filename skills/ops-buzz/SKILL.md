@@ -127,6 +127,7 @@ Environment variables:
 |---|---|
 | `BUZZ_RELAY_URL` | Buzz relay URL. Defaults are owned by `buzz-cli`; set explicitly for production use. |
 | `BUZZ_PRIVATE_KEY` | Nostr private key used by `buzz-cli` for NIP-98 signing. |
+| `BUZZ_IDENTITY_KEY` | Backward-compatible local identity key; `run.sh` exports it as `BUZZ_PRIVATE_KEY` when the latter is unset. |
 | `BUZZ_BIN` | Optional path/name for `buzz`; defaults to `buzz`. |
 
 Optional local config:

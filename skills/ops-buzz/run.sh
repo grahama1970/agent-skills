@@ -12,6 +12,10 @@ if [[ -f "$REPO_ROOT/.env" ]]; then
   set +a
 fi
 
+if [[ -z "${BUZZ_PRIVATE_KEY:-}" && -n "${BUZZ_IDENTITY_KEY:-}" ]]; then
+  export BUZZ_PRIVATE_KEY="$BUZZ_IDENTITY_KEY"
+fi
+
 cd "$SCRIPT_DIR"
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/ops-buzz/.venv}"
 export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
