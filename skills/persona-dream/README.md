@@ -170,8 +170,8 @@ accepted dream
   -> bounded arc delta           (what may change, and by how much)
   -> continuity ledger           (the authority object; atomic, epoch-checked)
   -> session mood before turn 1  (deterministic, bound before the user speaks)
-  -> Chatterbox voice delivery   (the mood requested of the renderer;
-                                  measured not audible)
+  -> Chatterbox voice delivery   (the tone the renderer calibrates into
+                                  affect; applied, per its own receipt)
   -> recognition check           (is it still recognizably Embry?)
 ```
 
@@ -234,7 +234,7 @@ is how an overclaim gets made:
 persona psychological mood     (what she woke up feeling)
  != journal annotation         (how a passage is meant to read)
  != requested delivery tone    (what we asked the renderer for)
- != proven audible emotion     (measured absent)
+ != applied affect             (proven, via the renderer's affect_effect receipt)
  != human-perceived emotion    (never tested)
 ```
 
@@ -272,10 +272,12 @@ narrow and falsifiable:
 "No" is a real answer. The project is built so that a null or negative result
 survives contact with the surfaces: claims are bound to receipts, receipts state
 what they do *not* prove, and a gate fails closed when a claim outruns its
-evidence. One finding is already negative and stayed that way — on the tested
-backend the requested delivery envelope does not reach the waveform, measured
-against the renderer's own noise floor, and the project stopped claiming
-emotional delivery rather than retrying for a better draw.
+evidence. One finding was negative and was published as such: the requested
+delivery envelope did not reach the waveform, measured against the renderer's
+own noise floor. The project stopped claiming emotional delivery rather than
+re-running for a better draw — and reporting that negative upstream with a
+reproduction is what got the capability built. It is audible now. A negative
+result honestly published turned out to be the fastest route to the feature.
 
 ### Why dreaming, and not just remembering
 
@@ -328,18 +330,28 @@ The intended consequence is that as the persona accumulates, the voice moves
 with her: a week of competence tensions and a week of isolation tensions should
 not sound the same, without anyone tuning a knob between them.
 
-**The channel is built end to end and its last hop is inert.** The mood is
-derived, mapped, requested, survives normalization instead of collapsing to a
-default, and is recorded on every spoken journal. What does not happen is any
-change to the audio. Measured against the renderer's own same-parameter noise
-floor, no requested tone moved a single acoustic metric, and the engine in use
-lists the affect parameters (`exaggeration`, `cfg_weight`) among those it
-ignores. There was never a path from the request to the waveform.
+**The channel now works, and this skill does not calibrate it.** The mood picks
+a tone; the renderer derives the affect from that tone name and reports the
+knobs it applied. `grief_safe` resolves to intensity 0.3 / valence −0.7,
+`firm_boundary` to 0.95 / −0.85 — eight axes, eight distinct settings, each with
+an `affect_effect` receipt.
 
-So this is a blocked capability with a named blocker, not an unexplored idea. It
-needs a backend that exposes affect axes which measurably move the audio; until
-one does, the mapping is kept because it is honest provenance for what was
-*requested*, and every surface says the emotion is not audible.
+It was inert until 2026-08-04, and the repair is worth reading as a method. The
+tone reached the renderer and stopped: measured against the renderer's own noise
+floor, no requested tone moved a single acoustic metric, and the engine listed
+the affect parameters among those it ignored. That negative was published with a
+reproduction rather than worked around. Upstream then made `pace` real, added a
+per-render receipt so application could be verified instead of inferred, and
+calibrated the tone vocabulary.
+
+There is one thing this project got wrong in between, and it is the more useful
+lesson. Faced with an inert tone, this skill grew a table mapping eight
+psychological axes to hand-picked intensity and valence numbers, tuned by
+measuring the renderer's output. That was the renderer's calibration work being
+done downstream, badly, by one consumer — and every other consumer would have
+reinvented it differently. The table is deleted. When a consumer starts tuning a
+provider's parameters against the provider's own output, the signal is that a
+capability is missing upstream, not that the consumer needs better numbers.
 
 **Where this is going, and what is not built yet.** Today the register comes from
 a single dream's dominant tension — one night, one axis. That is the shallow
@@ -507,12 +519,12 @@ already contains one retirement and one negative that stuck.
   variables awaiting validation.
 - **No human subjects.** No trust, delegation, or perception measurement. The
   one perceptual study was blocked as technically confounded and stayed blocked.
-- **Tone does not reach the waveform on this backend.** Measured, not assumed,
-  and the surfaces were corrected rather than the experiment re-run for a better
-  draw. Reporting it upstream ([`chatterbox#20`](https://github.com/grahama1970/chatterbox/issues/20),
-  since fixed) made `pace` genuinely audible and made the renderer declare which
-  delivery fields are request-only — so the negative result produced a working
-  channel, which is the point of publishing negatives.
+- **Nobody has listened.** Affect is *applied* — the renderer reports the knobs
+  it used per render — but whether a human hears the intended feeling is
+  untested, and that is the claim people actually care about
+  ([`chatterbox#7`](https://github.com/grahama1970/chatterbox/issues/7)). The
+  earlier finding that tone was inaudible was real, was published, and was
+  fixed upstream because it was published.
 
 If you want the methodology rather than the hypothesis — how claims are bound to
 receipts and how a claim that outruns its evidence is refused — that is

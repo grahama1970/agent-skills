@@ -568,14 +568,15 @@
       "does_not_prove": "any acoustic or perceptual consequence; see journal_tone_effect, which measured none"
     },
     "journal_tone_effect": {
-      "status": "DISPROVEN_TONE_NOT_AUDIBLE",
+      "status": "SUPERSEDED_TONE_NOW_CALIBRATED_UPSTREAM",
       "scope": "three requested TONES on one text against 10 same-parameter neutral repeats, engine chatterbox_turbo",
       "receipt": "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json",
       "receipt_sha256": "sha256:93c85255440e53d22dccb2798aa62e2861e0aca77e4dadecdda956b0e012fa99",
       "sample_count": 10,
-      "proves": "no requested tone moved any measured acoustic metric beyond the renderer own same-parameter stochastic spread; emotion_knobs returned null on every render, and the engine health lists exaggeration and cfg_weight among ignored_turbo_params",
-      "does_not_prove": "that a listener fails to perceive emotion, and nothing about other delivery fields. Reported upstream as grahama1970/chatterbox#20, since fixed: pace is now a real pitch-preserving time stretch verified here at under 0.01s error against its own per-render receipt, and the renderer now declares per field which parts of the delivery envelope are audible. Tone remains request-only on this engine.",
-      "resolved_by_issue": "grahama1970/agent-skills#1209"
+      "proves": "as measured on 2026-08-04, no requested tone moved any acoustic metric beyond the renderer own same-parameter stochastic spread, and the engine listed the affect parameters among those it ignored",
+      "does_not_prove": "anything about the current renderer. Publishing this negative with a reproduction led to grahama1970/chatterbox#20, #21 and #22: pace was made a real time stretch, a per-render affect_effect receipt was added, and the tone vocabulary was calibrated. Tone now derives distinct affect per tone name, verified live. Human perception remains untested (chatterbox#7).",
+      "resolved_by_issue": "grahama1970/agent-skills#1209",
+      "superseded_by": "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json is historical; see chatterbox#20/#21/#22"
     },
     "journal_conversation_persistence": {
       "status": "PASS_CONVERSATION_PERSISTED",
