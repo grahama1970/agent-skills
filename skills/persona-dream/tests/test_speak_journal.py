@@ -1,0 +1,63 @@
+"""#1208: the journal audio must be bound to the journal text.
+
+The live proof is a real render; these pin the contract around it so a later
+change cannot quietly produce audio that belongs to a different entry, lose the
+transcript again, or claim a tone was achieved.
+"""
+import importlib.util
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+speak = _load("speak_journal")
+
+
+def test_missing_spoken_text_blocks_without_calling_the_renderer(tmp_path):
+    args = type("A", (), {"run_dir": tmp_path, "out": tmp_path / "r.json"})()
+    got = speak.run(args)
+    assert got["status"] == "BLOCKED_NO_SPOKEN_TEXT"
+    assert got["live"] is False
+    assert any("journal_spoken_missing" in g for g in got["failed_gates"])
+
+
+def test_container_path_maps_onto_the_host_bind_mount(tmp_path, monkeypatch):
+    host_root = tmp_path / "logs"
+    (host_root / "somelabel").mkdir(parents=True)
+    wav = host_root / "somelabel" / "finished_response.wav"
+    wav.write_bytes(b"RIFF....WAVE")
+    monkeypatch.setattr(speak, "CHATTERBOX_OUT_HOST_ROOT", host_root)
+    assert speak.resolve_host_audio("/out/somelabel/finished_response.wav") == wav
+
+
+def test_unresolvable_container_path_returns_none(tmp_path, monkeypatch):
+    monkeypatch.setattr(speak, "CHATTERBOX_OUT_HOST_ROOT", tmp_path)
+    assert speak.resolve_host_audio("/out/nope/finished_response.wav") is None
+    assert speak.resolve_host_audio("") is None
+
+
+def test_live_receipt_binds_audio_to_text_and_disclaims_achieved_tone():
+    """Read back the real receipt produced by the live run."""
+    path = Path("/tmp/pd-t4/JOURNAL_AUDIO_RECEIPT.json")
+    if not path.is_file():
+        import pytest
+        pytest.skip("no live receipt present; run ./run.sh speak-journal --run-dir /tmp/pd-t4")
+    r = json.loads(path.read_text(encoding="utf-8"))
+    assert r["status"] == "PASS_JOURNAL_SPOKEN"
+    assert r["live"] is True and r["mocked"] is False
+    assert r["spoken_text_sha256"].startswith("sha256:")
+    assert r["audio_sha256"].startswith("sha256:")
+    assert r["audio_bytes"] > 0
+    assert r["tone_survived"] is True
+    assert r["asr_transcript"]
+    does_not = " ".join(r["claims"]["does_not_prove"]).lower()
+    assert "audible" in does_not and "1209" in does_not
