@@ -749,6 +749,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         check_blockers_and_next_steps(status_doc, resolved, mismatches)
         check_prose_surfaces(status_doc, resolved, mismatches)
         check_retracted_evidence(status_doc, mismatches)
+        check_pctom_claims_cite_pctom_apparatus(status_doc, mismatches)
         check_claim_registry(status_doc, mismatches)
         check_scope_conflation_prose(mismatches)
         check_goal_alignment(mismatches)
@@ -782,6 +783,31 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             ],
         },
     }
+
+
+#: A PCTOM claim may not be earned by a continuity receipt. They are different
+#: apparatus: a P2 continuity run passing proves the continuity chain held, not
+#: that the Theory-of-Mind scorer is deterministic. Binding one to the other was
+#: how apparatus integrity came to cite reports/goal_v5/continuity/... (#1194).
+def check_pctom_claims_cite_pctom_apparatus(
+    status_doc: dict[str, Any], mismatches: list[dict[str, Any]] | None = None
+) -> list[str]:
+    problems: list[str] = []
+    for name, claim in (status_doc.get("current_claims") or {}).items():
+        if not isinstance(claim, dict) or not name.startswith("pctom_"):
+            continue
+        receipt = str(claim.get("receipt") or "")
+        if receipt.startswith("reports/goal_v5/continuity/"):
+            detail = ("a continuity receipt cannot earn a PCTOM apparatus claim; "
+                      "they are different apparatus")
+            problems.append(f"pctom_claim_bound_to_continuity_receipt:{name} :: {receipt}")
+            if mismatches is not None:
+                mismatches.append(
+                    _mismatch("pctom_claim_bound_to_continuity_receipt",
+                              "CURRENT_STATUS.json",
+                              f"current_claims.{name}.receipt",
+                              detail, receipt))
+    return problems
 
 
 def main() -> int:

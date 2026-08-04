@@ -57,6 +57,15 @@
   `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` with 5
   attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted
   effects, and Wilson 95% lower bound 0.565509.
+> **STOP — do not collect human ratings.** The four stimuli below were later
+> found technically confounded by
+> `reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json`,
+> which BLOCKS them. #1179 owns the re-render under one identical
+> loudness-normalization policy. Collecting responses against the current
+> stimuli produces data that cannot be interpreted, and the readiness bullets
+> below describe the state BEFORE that screen. They are retained as history, not
+> as an instruction.
+
 - **Blinded listener-study readiness:** Four preregistered Chatterbox stimuli
   are restored under `reports/goal_v5/continuity/blinded_listener_study/stimuli/`
   and validated by

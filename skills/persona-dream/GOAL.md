@@ -210,10 +210,17 @@ evidence is a named local artifact, receipt status, command result, count,
 hash, or fail-closed blocker tied to the continuity-and-research gate model.
 
 When an agent is asked to align this goal with the README, the default action is
-to keep the Embry continuity objective active, treat PCTOM-R as a research
-workstream under it, and amend this file only when the README, receipts, or
-human instruction expose a concrete mismatch in the active gate model, evidence
-boundary, or next artifact order.
+to keep the **falsifiable research goal** active as the controlling objective,
+treat Embry continuity as a safety constraint under it rather than the goal
+itself, treat PCTOM-R as a research workstream under it, and amend this file
+only when the README, receipts, or human instruction expose a concrete mismatch
+in the active gate model, evidence boundary, or next artifact order.
+
+> **Superseded 2026-08-03.** Earlier revisions of this file made the Embry
+> continuity objective the thing to keep active. That instruction predates the
+> falsifiable-goal reset and must not be restored: an agent following it reads a
+> safety property as the research conclusion, and can report success for a run
+> that proves only that nothing broke.
 
 ## Alignment With README
 

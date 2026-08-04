@@ -116,7 +116,11 @@
       "rater_page_receipt_sha256": "sha256:f190e9d641e7f3926d211212374ed509b4c7fa2194916e259dfb2e3073436e1c",
       "rater_page_status": "PASS_BLINDED_LISTENER_RATER_PAGE_READY",
       "human_responses": "0/20 valid",
-      "remaining_failed_gate": "human_responses_complete"
+      "remaining_failed_gate": "human_responses_complete",
+      "superseded_by": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+      "superseded_on": "2026-08-03",
+      "supersession_note": "READY_FOR_HUMAN_RATERS described readiness before the technical screen, which blocked these stimuli as confounded. Human collection must not proceed until #1179 re-renders under one loudness-normalization policy. Retained as history.",
+      "human_collection_permitted": false
     },
     "latest_blinded_listener_study_analysis_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
     "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:241b32edbf0ca854907338454497ca76f7e6caaa7483927ee36a9844a89025a5",
@@ -500,11 +504,12 @@
     "pctom_apparatus_integrity": {
       "status": "PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE",
       "scope": "deterministic receipt machinery, coverage, and fail-closed controls of the PCTOM-R apparatus only",
-      "receipt": "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
-      "receipt_sha256": "sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f",
+      "receipt": "research/prospective-tom/receipts/pctom-deterministic-scoring-covered.v1.json",
+      "receipt_sha256": "sha256:67f2346dd14f89614336444b29329f292fb09a51114b1e3c67753560bcf7a158",
       "sample_count": 43,
       "proves": "the experiment apparatus runs deterministically within its text-first scope; historical GOAL.md snapshot counts are subordinate to this registry",
-      "does_not_prove": "measurement validity or held-out benefit; #1056 proved the benefit estimator degenerate"
+      "does_not_prove": "measurement validity or held-out benefit; #1056 proved the benefit estimator degenerate",
+      "rebound_note": "was bound to reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json, a downstream P2 continuity receipt. A continuity run passing says nothing about whether the PCTOM apparatus scores deterministically; it is the wrong apparatus."
     },
     "pctom_measurement_validity": {
       "status": "PASS_MEASUREMENT_VALIDITY_V2",
@@ -523,7 +528,7 @@
       "scope": "live held-out condition comparison on the repaired apparatus",
       "sample_count": 0,
       "proves": "nothing yet",
-      "does_not_prove": "any benefit claim; blocked behind measurement validity",
+      "does_not_prove": "nothing is proven yet. Measurement validity is no longer the blocker -- #1131 passes and pctom_measurement_validity is PASS_MEASUREMENT_VALIDITY_V2. What remains is running the held-out benefit comparison itself.",
       "successor_issue": "grahama1970/agent-skills#1008",
       "successor_resolved": false,
       "surface_token": "#1008"

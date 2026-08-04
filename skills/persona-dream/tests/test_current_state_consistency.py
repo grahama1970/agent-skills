@@ -504,3 +504,22 @@ def test_proof_claim_audit_blocks_positive_language_on_an_unproven_row(tmp_path,
     got = audit.run(args)
     assert got["status"] == "BLOCKED_README_PROOF_CLAIM_UNBOUND"
     assert any("unproven_claim_uses_positive_language" in g for g in got["failed_gates"])
+
+
+def test_a_pctom_claim_cannot_be_earned_by_a_continuity_receipt():
+    """Different apparatus (#1194).
+
+    pctom_apparatus_integrity cited reports/goal_v5/continuity/reliability/
+    AGGREGATE_RECEIPT.json. A P2 continuity run passing proves the continuity
+    chain held; it says nothing about whether the Theory-of-Mind scorer is
+    deterministic. The live registry must stay clean, and the rule must fire
+    when the binding is reintroduced.
+    """
+    status = json.loads(checker.CURRENT_STATUS.read_text(encoding="utf-8"))
+    assert checker.check_pctom_claims_cite_pctom_apparatus(status) == []
+
+    regressed = json.loads(json.dumps(status))
+    regressed["current_claims"]["pctom_apparatus_integrity"]["receipt"] = (
+        "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json")
+    problems = checker.check_pctom_claims_cite_pctom_apparatus(regressed)
+    assert problems and "pctom_apparatus_integrity" in problems[0]

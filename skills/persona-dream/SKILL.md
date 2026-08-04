@@ -58,10 +58,18 @@ development and is not complete; see `CURRENT_STATUS.json` for what is proven.
 Current operating hierarchy:
 
 ```text
-persistent persona continuity goal
+falsifiable research goal: does synthetic dreaming add measurable value
+over direct memory and structured reflection?
+-> persistent persona continuity: a SAFETY CONSTRAINT under that goal,
+   not the objective. It bounds what a dream may change; it is not
+   evidence that dreaming helps.
 -> PCTOM-R prospective Theory-of-Mind research workstream
 -> supporting media, Watch, Memory, Chatterbox, and Tau lanes
 ```
+
+A null or negative outcome is a valid result. Continuity holding while dreaming
+adds nothing is a coherent finding, and an agent that reads continuity as the
+objective will mistake a safety property for a research conclusion.
 
 For Embry, the top-level success criterion is not a benchmark score or a single
 Kling return. The goal is that explicitly synthetic dreams produce bounded,
