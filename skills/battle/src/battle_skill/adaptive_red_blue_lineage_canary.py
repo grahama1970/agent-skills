@@ -1595,6 +1595,8 @@ def _campaign_status(**items: Any) -> tuple[str, str]:
         for name in ("red_spawn", "blue_spawn", "red_ack", "blue_ack", "selection")
     ):
         return "BLOCKED", "spawn_inheritance_or_selection_blocked"
+    if any(items[name].get("status") != "PASS" for name in ("g1_judge", "g2_judge")):
+        return "BLOCKED", "judge_status_not_pass"
     if any(
         int(items[name].get("judged_pair_count") or 0) < 1
         for name in ("g1_judge", "g2_judge")
@@ -1647,6 +1649,8 @@ def _campaign_status(**items: Any) -> tuple[str, str]:
         for item in replays
     ):
         return "BLOCKED", "judge_replay_mismatch"
+    if any(item.get("receipt_valid") is not True for item in replays):
+        return "BLOCKED", "judge_replay_receipt_invalid"
     return "PASS", "two_generation_red_blue_lineage_evaluated"
 
 
@@ -1691,13 +1695,32 @@ def _build_artifact_integrity_receipt(
     replay_records = []
     for generation in (1, 2):
         replay = judges[generation].get("exact_replay")
+        replay_path = Path(str(replay.get("path") if isinstance(replay, dict) else ""))
+        replay_resolved = replay_path.resolve() if replay_path.exists() else replay_path
+        replay_expected = replay.get("sha256") if isinstance(replay, dict) else None
+        replay_actual = (
+            _sha(replay_path)
+            if replay_path.is_file() and not replay_path.is_symlink()
+            else None
+        )
+        replay_inside_run = replay_path.exists() and replay_resolved.is_relative_to(root)
+        receipt_valid = (
+            replay_actual == replay_expected
+            and replay_inside_run
+            and replay_path.is_file()
+            and not replay_path.is_symlink()
+        )
         replay_records.append(
             {
                 "generation": generation,
                 "status": replay.get("status") if isinstance(replay, dict) else None,
                 "matched": replay.get("matched") if isinstance(replay, dict) else False,
-                "path": replay.get("path") if isinstance(replay, dict) else None,
-                "sha256": replay.get("sha256") if isinstance(replay, dict) else None,
+                "path": str(replay_path) if str(replay_path) else None,
+                "expected_sha256": replay_expected,
+                "actual_sha256": replay_actual,
+                "receipt_valid": receipt_valid,
+                "regular_file": replay_path.is_file() and not replay_path.is_symlink(),
+                "inside_run_root": replay_inside_run,
             }
         )
     slot_keys = {item["slot_key"] for item in slots}
@@ -1713,7 +1736,10 @@ def _build_artifact_integrity_receipt(
         and all(item["matched"] for item in slots)
     )
     replays_pass = {item["generation"] for item in replay_records} == {1, 2} and all(
-        item["status"] == "PASS" and item["matched"] for item in replay_records
+        item["status"] == "PASS"
+        and item["matched"]
+        and item["receipt_valid"]
+        for item in replay_records
     )
     return {
         "schema": "battle.adaptive_artifact_integrity.v1",
@@ -1722,7 +1748,9 @@ def _build_artifact_integrity_receipt(
         "matched_slot_count": sum(1 for item in slots if item["matched"]),
         "required_replay_count": 2,
         "matched_replay_count": sum(
-            1 for item in replay_records if item["status"] == "PASS" and item["matched"]
+            1
+            for item in replay_records
+            if item["status"] == "PASS" and item["matched"] and item["receipt_valid"]
         ),
         "slots": slots,
         "judge_replays": replay_records,

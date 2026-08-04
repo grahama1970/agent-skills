@@ -51,8 +51,8 @@ def test_campaign_status_requires_both_lineages_and_both_judge_pairs() -> None:
     values = {
         "generation_1": {"status": "PASS"},
         "visibility": {"status": "PASS"},
-        "g1_judge": {"judged_pair_count": 1},
-        "g2_judge": {"judged_pair_count": 1},
+        "g1_judge": {"status": "PASS", "judged_pair_count": 1},
+        "g2_judge": {"status": "PASS", "judged_pair_count": 1},
         "red_spawn": {"status": "PASS"},
         "blue_spawn": {"status": "PASS"},
         "red_ack": {"status": "PASS"},
@@ -133,10 +133,24 @@ def test_campaign_status_fails_closed_without_exact_integrity_sets() -> None:
     )
 
     values = _passing_campaign_values()
+    values["g1_judge"]["status"] = "INSUFFICIENT_EVIDENCE"  # type: ignore[index]
+    assert _campaign_status(**values) == (
+        "BLOCKED",
+        "judge_status_not_pass",
+    )
+
+    values = _passing_campaign_values()
     values["artifact_integrity"]["judge_replays"][0]["matched"] = False
     assert _campaign_status(**values) == (
         "BLOCKED",
         "judge_replay_mismatch",
+    )
+
+    values = _passing_campaign_values()
+    values["artifact_integrity"]["judge_replays"][0]["receipt_valid"] = False
+    assert _campaign_status(**values) == (
+        "BLOCKED",
+        "judge_replay_receipt_invalid",
     )
 
 
@@ -203,6 +217,20 @@ def test_integrity_receipt_requires_four_unique_slots_and_two_replays(
     assert receipt["status"] == "PASS"
     assert receipt["matched_slot_count"] == receipt["required_slot_count"] == 4
     assert receipt["matched_replay_count"] == receipt["required_replay_count"] == 2
+    assert all(item["receipt_valid"] for item in receipt["judge_replays"])
+
+    judges[1]["exact_replay"]["sha256"] = "0" * 64
+    bad_replay = _build_artifact_integrity_receipt(
+        out_dir=tmp_path,
+        pipelines=pipelines,  # type: ignore[arg-type]
+        judges=judges,
+    )
+    assert bad_replay["status"] == "FAIL"
+    assert bad_replay["matched_replay_count"] == 1
+    assert bad_replay["judge_replays"][0]["receipt_valid"] is False
+    judges[1]["exact_replay"]["sha256"] = hashlib.sha256(
+        (tmp_path / "replay-1.json").read_bytes()
+    ).hexdigest()
 
     Path(receipt["slots"][0]["path"]).write_text("DRIFT\n", encoding="utf-8")
     failed = _build_artifact_integrity_receipt(
@@ -305,8 +333,8 @@ def _passing_campaign_values() -> dict[str, object]:
     return {
         "generation_1": {"status": "PASS"},
         "visibility": {"status": "PASS"},
-        "g1_judge": {"judged_pair_count": 1},
-        "g2_judge": {"judged_pair_count": 1},
+        "g1_judge": {"status": "PASS", "judged_pair_count": 1},
+        "g2_judge": {"status": "PASS", "judged_pair_count": 1},
         "red_spawn": {"status": "PASS"},
         "blue_spawn": {"status": "PASS"},
         "red_ack": {"status": "PASS"},
