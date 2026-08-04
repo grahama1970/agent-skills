@@ -6,18 +6,21 @@ Immutable goal: see `../SKILL.md`.
 
 ## Current state
 
-Contract-freeze state: **CONTRACT_ONLY / STAGE_0_RESEARCH_ONLY / NOT_ESTABLISHED**.
+Contract-freeze state: **LOCAL_STAGE_0_KERNEL / STAGE_0_RESEARCH_ONLY / NOT_ESTABLISHED**.
 
-This contract slice defines the product and evidence boundary but does not itself add a
-runtime. The first executable state is tracked by issue #1166 and PR #1180: a zero-network
-Stage 0 kernel implementing `status`, `report`, and `verify`. When `run.sh` is present,
-`./run.sh status --json` is the authority for implemented capabilities and operational
-readiness; this document must not override that machine-readable result.
+This skill has a local Stage 0 kernel. `./run.sh status --json` is the authority for
+implemented capabilities and operational readiness; this document must not override that
+machine-readable result.
 
-Even after the Stage 0 kernel lands, live discovery, ranking, resume compilation,
-decisions, scheduling, Gmail/LinkedIn handoffs, and ATS effects remain unimplemented until
-their focused tickets close with retained proof. A rendered fixture is useful working
-value, but it is not a reliable nightly opportunity pipeline.
+Live discovery, ranking, resume compilation, decisions, scheduling, Gmail/LinkedIn
+handoffs, and ATS effects are only established to the extent reported by `status` and
+retained command receipts. A rendered fixture is useful working value, but it is not a
+reliable nightly opportunity pipeline.
+
+The local kernel now includes a `buzz-review` adapter that turns a completed report run
+into an `ops_buzz.agent_request.v1` handoff and runs it through `ops-buzz ask-agent
+--dry-run`. This proves the typed handoff seam only. It does not post to Buzz, observe a
+Buzz agent response, create Gmail/InMail drafts, or mutate the monitor decision ledger.
 
 The report is the product. The first working-value milestone is not auto-apply; it is a
 zero-network Stage 0 kernel that can validate and render the expected morning report,

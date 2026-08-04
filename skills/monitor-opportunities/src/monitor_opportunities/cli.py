@@ -11,6 +11,7 @@ import typer
 from loguru import logger
 
 from . import __version__
+from .buzz_review import BuzzAgentReviewConfig, create_buzz_agent_review
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .decisions import append_decision, replay as replay_decisions
 from .discovery import sweep as sweep_sources
@@ -40,6 +41,7 @@ IMPLEMENTED = [
     "resume",
     "schedule",
     "serve",
+    "buzz-review",
 ]
 NOT_IMPLEMENTED = [
     "apply",
@@ -263,6 +265,43 @@ def resume(
     """Read back a prior Stage 0 run status."""
     _configure_logging()
     typer.echo(json.dumps(status_for_run(run), indent=2, sort_keys=True))
+
+
+@app.command("buzz-review")
+def buzz_review(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+    channel: str = typer.Option(..., "--channel", help="Buzz channel UUID or configured channel id."),
+    target_agent: str = typer.Option(..., "--target-agent", help="Buzz agent name to address."),
+    report_url: str = typer.Option(..., "--report-url", help="Human-accessible report URL."),
+    out: Path | None = typer.Option(None, "--out", file_okay=False),
+    mention_pubkey: str | None = typer.Option(None, "--mention-pubkey"),
+    ops_buzz_run: Path | None = typer.Option(None, "--ops-buzz-run", dir_okay=False),
+    timeout_seconds: int = typer.Option(0, "--timeout-seconds", min=0, max=600),
+    poll_interval_seconds: int = typer.Option(5, "--poll-interval-seconds", min=1, max=60),
+    readback_limit: int = typer.Option(20, "--readback-limit", min=1, max=100),
+) -> None:
+    """Create a no-network Buzz agent-review request for one completed report run."""
+    _configure_logging()
+    if out is None:
+        out = run / "buzz-review"
+    try:
+        receipt = create_buzz_agent_review(
+            BuzzAgentReviewConfig(
+                run_dir=run,
+                out_dir=out,
+                channel=channel,
+                target_agent=target_agent,
+                report_url=report_url,
+                mention_pubkey=mention_pubkey,
+                ops_buzz_run=ops_buzz_run,
+                timeout_seconds=timeout_seconds,
+                poll_interval_seconds=poll_interval_seconds,
+                readback_limit=readback_limit,
+            )
+        )
+    except ContractError as exc:
+        _fail(exc)
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
 
 
 @app.command()
