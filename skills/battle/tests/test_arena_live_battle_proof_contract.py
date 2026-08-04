@@ -111,20 +111,39 @@ def test_judge_pair_records_source_to_docker_workspace_byte_bindings(
     blue_artifact = tmp_path / "patched_app.py"
     red_artifact.write_text("print('RED_EXPLOIT_CONFIRMED')\n", encoding="utf-8")
     blue_artifact.write_text("def import_zip(): return 'blocked'\n", encoding="utf-8")
+    red_sha = proof._sha256(red_artifact)
+    blue_sha = proof._sha256(blue_artifact)
 
     def fake_run_command(command, *, out_dir: Path, name: str):  # type: ignore[no-untyped-def]
         stdout = out_dir / f"{name}.stdout"
         stderr = out_dir / f"{name}.stderr"
-        stdout.write_text(
-            "RED_EXPLOIT_CONFIRMED\n"
-            if name == "judge-red-exploit-original"
-            else "",
-            encoding="utf-8",
-        )
+        if name == "judge-original-input-hashes":
+            stdout.write_text(
+                json.dumps({"red_exploit_submission.py": red_sha}, sort_keys=True),
+                encoding="utf-8",
+            )
+        elif name == "judge-patched-input-hashes":
+            stdout.write_text(
+                json.dumps(
+                    {
+                        "app.py": blue_sha,
+                        "red_exploit_submission.py": red_sha,
+                    },
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
+        else:
+            stdout.write_text(
+                "RED_EXPLOIT_CONFIRMED\n"
+                if name == "judge-red-exploit-original"
+                else "",
+                encoding="utf-8",
+            )
         stderr.write_text("", encoding="utf-8")
         return {
             "command": command,
-            "exit_code": 0 if name == "judge-red-exploit-original" else 1,
+            "exit_code": 1 if name == "judge-red-exploit-patched" else 0,
             "stdout_path": str(stdout),
             "stderr_path": str(stderr),
         }
@@ -151,6 +170,19 @@ def test_judge_pair_records_source_to_docker_workspace_byte_bindings(
     assert attempt["status"] == "PASS"
     assert attempt["verdict"] == "BLUE_SUCCESS"
     assert attempt["judge_input_byte_binding_pass"] is True
+    assert attempt["container_input_hash_pass"] is True
+    assert [item["status"] for item in attempt["container_input_hashes"]] == [
+        "PASS",
+        "PASS",
+    ]
+    assert attempt["container_input_hashes"][0]["observed_sha256"] == {
+        "red_exploit_submission.py": red_sha,
+    }
+    assert attempt["container_input_hashes"][1]["observed_sha256"] == {
+        "app.py": blue_sha,
+        "red_exploit_submission.py": red_sha,
+    }
+    assert len(attempt["commands_run"]) == 4
     bindings = {item["role"]: item for item in attempt["judge_input_byte_bindings"]}
     assert set(bindings) == {
         "red_original_exploit",
@@ -527,16 +559,47 @@ def test_prekill_pressure_callback_runs_before_terminal_confirmation(
     blue_path = tmp_path / "blue.py"
     red_path.write_text("print('RED_EXPLOIT_CONFIRMED')\n", encoding="utf-8")
     blue_path.write_text("def import_zip(*args):\n    return None\n", encoding="utf-8")
+    red_sha = proof._sha256(red_path)
+    blue_sha = proof._sha256(blue_path)
 
+    original_hash_stdout = tmp_path / "original-hash.stdout"
+    original_hash_stderr = tmp_path / "original-hash.stderr"
+    patched_hash_stdout = tmp_path / "patched-hash.stdout"
+    patched_hash_stderr = tmp_path / "patched-hash.stderr"
     before_stdout = tmp_path / "before.stdout"
     before_stderr = tmp_path / "before.stderr"
     after_stdout = tmp_path / "after.stdout"
     after_stderr = tmp_path / "after.stderr"
+    original_hash_stdout.write_text(
+        json.dumps({"red_exploit_submission.py": red_sha}, sort_keys=True),
+        encoding="utf-8",
+    )
+    original_hash_stderr.write_text("", encoding="utf-8")
+    patched_hash_stdout.write_text(
+        json.dumps(
+            {"app.py": blue_sha, "red_exploit_submission.py": red_sha},
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    patched_hash_stderr.write_text("", encoding="utf-8")
     before_stdout.write_text("RED_EXPLOIT_CONFIRMED\n", encoding="utf-8")
     before_stderr.write_text("", encoding="utf-8")
     after_stdout.write_text("", encoding="utf-8")
     after_stderr.write_text("blocked\n", encoding="utf-8")
     commands = [
+        {
+            "exit_code": 0,
+            "stdout_path": str(original_hash_stdout),
+            "stderr_path": str(original_hash_stderr),
+            "command": ["original-hash"],
+        },
+        {
+            "exit_code": 0,
+            "stdout_path": str(patched_hash_stdout),
+            "stderr_path": str(patched_hash_stderr),
+            "command": ["patched-hash"],
+        },
         {
             "exit_code": 0,
             "stdout_path": str(before_stdout),

@@ -204,6 +204,18 @@ def _write_attempt(*, root: Path, generation: int, attempt_dir: Path) -> None:
                 _binding("red_patched_exploit", red_source, patched_red, red_sha),
                 _binding("blue_patched_app", blue_source, patched_blue, blue_sha),
             ],
+            "container_input_hash_pass": True,
+            "container_input_hashes": [
+                _container_hash_receipt(
+                    {"red_exploit_submission.py": red_sha}
+                ),
+                _container_hash_receipt(
+                    {
+                        "app.py": blue_sha,
+                        "red_exploit_submission.py": red_sha,
+                    }
+                ),
+            ],
         },
     )
 
@@ -230,6 +242,17 @@ def _binding(role: str, source: Path, execution: Path, source_sha: str) -> dict[
         else "/workspace/red_exploit_submission.py",
         "matched": True,
         "regular_file": True,
+    }
+
+
+def _container_hash_receipt(values: dict[str, str]) -> dict[str, object]:
+    return {
+        "schema": "battle.judge_container_input_hashes.v1",
+        "status": "PASS",
+        "expected_sha256": dict(values),
+        "observed_sha256": dict(values),
+        "matched": True,
+        "command_receipt": {"exit_code": 0},
     }
 
 

@@ -1237,6 +1237,25 @@ def _judge_pair(
     original_red_exec.write_bytes(red_bytes)
     patched_red_exec.write_bytes(red_bytes)
     patched_blue_exec.write_bytes(blue_bytes)
+    original_container_hash = _container_input_hash_receipt(
+        docker_image=docker_image,
+        work_dir=original_work,
+        out_dir=replay_dir,
+        name="judge-original-input-hashes",
+        expected={
+            "red_exploit_submission.py": red_sha256,
+        },
+    )
+    patched_container_hash = _container_input_hash_receipt(
+        docker_image=docker_image,
+        work_dir=patched_work,
+        out_dir=replay_dir,
+        name="judge-patched-input-hashes",
+        expected={
+            "red_exploit_submission.py": red_sha256,
+            "app.py": blue_sha256,
+        },
+    )
 
     before = _run_command(
         _python_docker_command(
@@ -1341,14 +1360,21 @@ def _judge_pair(
     judge_input_byte_binding_pass = all(
         item["matched"] for item in judge_input_byte_bindings
     )
+    container_input_hash_pass = (
+        original_container_hash["status"] == "PASS"
+        and patched_container_hash["status"] == "PASS"
+    )
     verdict = (
         "BLUE_SUCCESS"
         if exploit_confirmed
         and exploit_blocked
         and functionality_preserved
         and judge_input_byte_binding_pass
+        and container_input_hash_pass
         else "RED_SUCCESS"
-        if exploit_confirmed and judge_input_byte_binding_pass
+        if exploit_confirmed
+        and judge_input_byte_binding_pass
+        and container_input_hash_pass
         else "INSUFFICIENT_EVIDENCE"
     )
     ended_elapsed_seconds = (
@@ -1375,13 +1401,23 @@ def _judge_pair(
         "blue_artifact_sha256": blue_sha256,
         "judge_input_byte_binding_pass": judge_input_byte_binding_pass,
         "judge_input_byte_bindings": judge_input_byte_bindings,
+        "container_input_hash_pass": container_input_hash_pass,
+        "container_input_hashes": [
+            original_container_hash,
+            patched_container_hash,
+        ],
         "exploit_confirmed_before_patch": exploit_confirmed,
         "exploit_blocked_after_patch": exploit_blocked,
         "exploit_still_succeeds_after_patch": (
             exploit_still_succeeds
         ),
         "functionality_preserved": functionality_preserved,
-        "commands_run": [before, after],
+        "commands_run": [
+            original_container_hash["command_receipt"],
+            patched_container_hash["command_receipt"],
+            before,
+            after,
+        ],
         **(
             {
                 "started_elapsed_seconds": started_elapsed_seconds,
@@ -1401,6 +1437,50 @@ def _judge_pair(
     }
     _write_json(replay_dir / "attempt-receipt.json", attempt)
     return attempt
+
+def _container_input_hash_receipt(
+    *,
+    docker_image: str,
+    work_dir: Path,
+    out_dir: Path,
+    name: str,
+    expected: dict[str, str],
+) -> dict[str, Any]:
+    paths_json = json.dumps(sorted(expected))
+    code = (
+        "import hashlib,json,pathlib;"
+        f"paths={paths_json};"
+        "print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+    )
+    command_receipt = _run_command(
+        _python_docker_command(
+            docker_image=docker_image,
+            work_dir=work_dir,
+            args=["python", "-c", code],
+        ),
+        out_dir=out_dir,
+        name=name,
+    )
+    stdout_path = Path(str(command_receipt.get("stdout_path") or ""))
+    try:
+        observed = json.loads(stdout_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        observed = {}
+    matched = (
+        command_receipt.get("exit_code") == 0
+        and isinstance(observed, dict)
+        and observed == expected
+    )
+    return {
+        "schema": "battle.judge_container_input_hashes.v1",
+        "status": "PASS" if matched else "FAIL",
+        "docker_image": docker_image,
+        "work_dir": str(work_dir),
+        "expected_sha256": expected,
+        "observed_sha256": observed,
+        "matched": matched,
+        "command_receipt": command_receipt,
+    }
 
 def _judge_input_byte_binding(
     *,

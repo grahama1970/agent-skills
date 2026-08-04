@@ -145,6 +145,7 @@ def _verify_attempt(
 
     require(attempt.get("status") == "PASS", "attempt_status_not_pass")
     require(attempt.get("judge_input_byte_binding_pass") is True, "byte_binding_not_pass")
+    require(attempt.get("container_input_hash_pass") is True, "container_input_hash_not_pass")
     bindings = (
         attempt.get("judge_input_byte_bindings")
         if isinstance(attempt.get("judge_input_byte_bindings"), list)
@@ -169,6 +170,22 @@ def _verify_attempt(
         require(binding.get("matched") is True, f"binding_declared_unmatched:{role}")
         docker_path = binding.get("docker_workspace_path")
         require(isinstance(docker_path, str) and docker_path.startswith("/workspace/"), f"docker_path_invalid:{role}")
+    container_hashes = (
+        attempt.get("container_input_hashes")
+        if isinstance(attempt.get("container_input_hashes"), list)
+        else []
+    )
+    require(len(container_hashes) == 2, "container_hash_receipt_count_invalid")
+    for item in container_hashes:
+        require(item.get("status") == "PASS", "container_hash_status_not_pass")
+        require(item.get("matched") is True, "container_hash_declared_unmatched")
+        expected = item.get("expected_sha256")
+        observed = item.get("observed_sha256")
+        require(isinstance(expected, dict), "container_hash_expected_invalid")
+        require(isinstance(observed, dict), "container_hash_observed_invalid")
+        require(expected == observed, "container_hash_expected_observed_mismatch")
+        command = item.get("command_receipt") if isinstance(item.get("command_receipt"), dict) else {}
+        require(command.get("exit_code") == 0, "container_hash_command_failed")
 
 
 def _result(*, run_dir: Path, errors: list[str], checked_files: list[str]) -> dict[str, Any]:
