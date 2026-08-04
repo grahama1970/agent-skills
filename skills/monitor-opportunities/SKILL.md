@@ -130,8 +130,11 @@ These can establish published job content and the employer-hosted apply URL. The
 **not** establish candidate-side submission authority. Open-web or aggregator results
 may locate a primary source, but cannot by themselves admit a shortlisted opportunity.
 
-LinkedIn is never automated. Only human-saved or human-supplied content may be used, then
-the workflow leaves the platform.
+LinkedIn is one source, not the product. `ops-linkedin` may contribute explicitly
+authorized, read-only evidence from a human-supplied LinkedIn Jobs/opportunity tab. Saved,
+exported, pasted, screenshot, and `ops-linkedin` capture artifacts are ingested as local
+evidence, then the workflow leaves the platform. The monitor still ranks across all
+enabled lanes and must not become LinkedIn-only.
 
 ## Source and feed truth
 

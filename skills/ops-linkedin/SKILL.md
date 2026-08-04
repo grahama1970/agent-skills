@@ -1,9 +1,10 @@
 ---
 name: ops-linkedin
 description: >
-  Prepare evidence-bounded LinkedIn profile updates, posts, image-post captions,
-  comments, connection notes, messages, manual search plans, lead-research plans,
-  and content reviews as local drafts with typed human-execution handoff packets.
+  Prepare evidence-bounded LinkedIn opportunity discovery, profile updates,
+  posts, image-post captions, comments, connection notes, messages, manual search
+  plans, lead-research plans, and content reviews as local drafts or evidence
+  packets with typed human-execution handoff packets.
   Use when a user says "update my LinkedIn", "draft a LinkedIn post", "write a
   connection note", "plan LinkedIn outreach", "review my LinkedIn content", or
   otherwise asks for LinkedIn operations. This skill does not automate LinkedIn.
@@ -28,6 +29,7 @@ metadata:
   policy-snapshot: "2026-08-02"
   outbound-gate: "roundtable-required-2026-08-02"
 provides:
+  - linkedin-opportunity-discovery
   - linkedin-content-drafting
   - linkedin-manual-handoff
   - linkedin-profile-governance
@@ -51,20 +53,26 @@ taxonomy:
 
 # LinkedIn Operations
 
-Prepare LinkedIn work locally, validate factual claims, and hand the final action to a
-human. The skill deliberately stops before LinkedIn access or submission.
+Prepare LinkedIn work locally, validate factual claims, capture explicitly authorized
+read-only opportunity evidence, and hand every outbound action to a human. The skill
+deliberately stops before LinkedIn submission or social/action automation.
 
 ## Immutable boundary
 
 The skill MUST NOT:
 
-- open, drive, inspect, or modify LinkedIn through a browser, extension, DOM bridge,
-  WebSocket bridge, browser-control skill, or headless browser;
+- open, drive, inspect, or modify LinkedIn without an explicit human-supplied tab id and
+  purpose-bound authorization;
 - inspect cookies, passwords, session tokens, local storage, or login state;
-- scrape profiles, posts, contacts, search results, comments, or company pages;
+- scrape profiles, posts, contacts, search results, comments, or company pages in bulk;
 - automatically post, like, comment, connect, follow, message, apply, or upload;
 - perform bulk engagement, outreach sequences, rate-limit evasion, or anti-bot evasion;
 - report `PREPARED` work as executed, delivered, published, or platform-verified.
+
+The skill MAY capture one already-open LinkedIn opportunity/job tab as read-only evidence
+when the human supplies the exact tab id and explicit authorization. This capture writes a
+local artifact for `monitor-opportunities`; it does not click, scroll, apply, message,
+connect, inspect credentials, or claim platform verification.
 
 An official LinkedIn API adapter is outside this MVP. Add one only after documented
 LinkedIn authorization, a separate security/policy review, and new live receipts.
@@ -75,6 +83,7 @@ Read `references/linkedin-policy.md` before proposing any expansion of this boun
 
 | Lane | Supported preparation | Human-only finish |
 |---|---|---|
+| `opportunity` | Read-only capture of one human-authorized opportunity tab into a local evidence artifact | Decide whether to keep/reject/defer in the morning report |
 | `profile` | Evidence-bounded headline, About, Experience, Skills, Featured, or profile-field draft | Open the profile, edit, review visibility, save |
 | `explore` | Manual search query and review plan | Run the search and inspect results |
 | `publish` | Text post or image-post caption and attachment checklist | Create, preview, and publish the post |
@@ -89,13 +98,13 @@ social-action automation are intentionally not copied. See `references/linkedin-
 
 1. **Classify the lane and action.** Use only the action vocabulary in
    `references/contracts.md`.
-2. **Gather evidence outside LinkedIn.**
+2. **Gather evidence with the narrowest authorized source.**
    - Use `/memory` for the user's canonical resume, profile state, prior approved copy,
      and earlier handoff receipts.
    - Use `/brave-search` or `/dogpile` for current public facts. Do not ask those skills
      to scrape LinkedIn or bypass access controls.
-   - Treat user-provided LinkedIn exports, pasted text, screenshots, and metrics as input
-     artifacts; label their capture date.
+   - Treat user-provided LinkedIn exports, pasted text, screenshots, metrics, and
+     explicitly authorized single-tab captures as input artifacts; label their capture date.
 3. **Build a request manifest.** Every factual claim that is labeled `verified` needs at
    least one source reference. Use `assets/examples/` as shape examples.
 4. **Prepare the packet.**
@@ -109,7 +118,8 @@ social-action automation are intentionally not copied. See `references/linkedin-
    - `BLOCKED_UNVERIFIED_CLAIMS` means stop. Add evidence, soften the copy, or mark the
      unsupported claim `excluded`; do not bypass the gate.
 6. **Give the human the draft and manual steps.** Do not call `/surf`, browser control,
-   or any hidden LinkedIn transport.
+   or any hidden LinkedIn transport for outbound actions. For opportunity discovery only,
+   `capture-opportunity-tab` may use Surf read-only against the exact human-supplied tab.
 7. **Record completion only after an explicit user statement.** When the user says they
    personally completed the action, the agent may run:
 
@@ -136,6 +146,13 @@ bash ./skills/ops-linkedin/run.sh status
 # Prepare and validate a local packet
 bash ./skills/ops-linkedin/run.sh prepare request.json -o handoff.json
 bash ./skills/ops-linkedin/run.sh validate handoff.json
+
+# Capture one already-open LinkedIn opportunity tab as local evidence.
+bash ./skills/ops-linkedin/run.sh capture-opportunity-tab \
+  --tab-id 837367508 \
+  --human-authorized \
+  --require-top-candidate \
+  --output /tmp/linkedin-opportunity-evidence.json
 
 # Record explicit human completion; this is not platform verification
 bash ./skills/ops-linkedin/run.sh attest handoff.json \
@@ -203,6 +220,10 @@ supply the explicit claim ledger so the review boundary remains inspectable.
 | `execution_claim: NOT_EXECUTED` | No action was claimed |
 | `execution_claim: USER_ATTESTED_MANUAL_ACTION` | A named human said they performed it |
 | `platform_verified: false` | The skill has no independent LinkedIn proof |
+
+`capture-opportunity-tab` emits `ops-linkedin.opportunity_capture.v1`, a local evidence
+artifact for downstream ranking. It is not a handoff packet, execution receipt, delivery
+receipt, or authorization to apply/contact.
 
 Never rewrite these semantics in prose as stronger proof.
 

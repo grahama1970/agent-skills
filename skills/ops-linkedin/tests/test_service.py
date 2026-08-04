@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-from ops_linkedin.cli import app
+from ops_linkedin.cli import _infer_linkedin_opportunity, app
 from ops_linkedin.models import (
     Claim,
     ClaimStatus,
@@ -246,11 +246,59 @@ def test_policy_has_no_automation_escape_hatch() -> None:
 
     policy = policy_report()
     prohibited = " ".join(policy.prohibited).lower()
+    allowed = " ".join(policy.allowed).lower()
 
-    assert "automated access" in prohibited
+    assert "read-only local evidence" in allowed
+    assert "unauthorised automated access" in prohibited
     assert "scraping" in prohibited
     assert "cookies" in prohibited
     assert "automated posting" in prohibited
+
+
+def test_authorized_linkedin_opportunity_capture_maps_top_candidate_signal() -> None:
+    """A human-authorized tab capture becomes monitor-compatible local evidence."""
+
+    artifact = _infer_linkedin_opportunity(
+        {
+            "title": "Applied AI Architect | LinkedIn",
+            "url": "https://www.linkedin.com/jobs/view/123",
+            "observed_at": "2026-08-04T19:20:00Z",
+            "body_text": "\n".join(
+                [
+                    "Applied AI Architect",
+                    "Buffalo Systems Lab",
+                    "Buffalo, NY hybrid",
+                    "You'd be a top candidate based on your profile and experience.",
+                ]
+            ),
+        }
+    )
+
+    assert artifact["schema_version"] == "ops-linkedin.opportunity_capture.v1"
+    assert artifact["source"] == "human_authorized_linkedin_tab"
+    assert artifact["capture_method"] == "surf_read_only_existing_tab"
+    assert artifact["top_candidate"] is True
+    assert "top candidate" in artifact["top_candidate_text"].lower()
+    assert artifact["guardrails"]["read_only"] is True
+    assert artifact["guardrails"]["clicked"] is False
+    assert artifact["guardrails"]["applied"] is False
+
+
+def test_authorized_linkedin_opportunity_capture_fails_closed_without_signal() -> None:
+    """A generic feed/job capture must not become top-candidate evidence."""
+
+    artifact = _infer_linkedin_opportunity(
+        {
+            "title": "Feed | LinkedIn",
+            "url": "https://www.linkedin.com/feed/",
+            "observed_at": "2026-08-04T19:21:00Z",
+            "body_text": "Feed post\nAssociate Product Marketing Manager\nScopely\nCulver City, CA",
+        }
+    )
+
+    assert artifact["top_candidate"] is False
+    assert "no linkedin top-candidate" in artifact["top_candidate_text"].lower()
+    assert artifact["guardrails"]["bulk_collection"] is False
 
 
 def test_policy_cli_outputs_machine_readable_json() -> None:

@@ -101,10 +101,31 @@ def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path)
     assert linkedin_receipts
     assert linkedin_receipts[0]["automation_policy"] == "linkedin_no_automation"
     assert any(
-        "top-candidate" in " ".join(row["why_candidate"]).lower()
+        "linkedin profile/recommendation-based relevance evidence" in " ".join(row["why_candidate"]).lower()
         for row in manifest["opportunities"]
     )
     assert all(action["effects_external"] is False for action in manifest["decision_actions"])
+
+
+def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevant(tmp_path: Path) -> None:
+    fixture = Path(__file__).parent / "fixtures" / "discovery" / "ops-linkedin-jobs-capture.json"
+    out = tmp_path / "nightly-ops-linkedin"
+    result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((out / "run-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["external_effects"] is False
+    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
+    linkedin_receipts = [
+        row for row in manifest["source_receipts"] if row["source_class"] == "ops_linkedin_authorized_read_only"
+    ]
+    assert linkedin_receipts
+    assert linkedin_receipts[0]["automation_policy"] == "linkedin_authorized_read_only_no_actions"
+    assert any(row["title"] == "GenAI Python Systems Engineer - Senior Manager" for row in manifest["opportunities"])
+    assert not any(row["title"] == "Founders Associate" for row in manifest["opportunities"])
+    assert any(
+        row["title"] == "Founders Associate" and row["reason_code"] == "HUMAN_REVIEW_LOCATION_AMBIGUOUS"
+        for row in manifest["eligibility_rejections"]
+    )
 
 
 def test_run_renders_reviewed_gmail_draft_receipt(tmp_path: Path) -> None:

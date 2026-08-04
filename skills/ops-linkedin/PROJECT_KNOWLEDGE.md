@@ -4,9 +4,11 @@ Last reviewed: 2026-08-02
 
 ## Immutable goal
 
-Provide useful LinkedIn profile/content/outreach preparation while preventing the agent
-from accessing or acting on LinkedIn through unauthorized automation. Every operation must
-end in a local draft and a human-execution handoff with honest proof limits.
+Provide useful LinkedIn opportunity discovery plus profile/content/outreach preparation
+while preventing the agent from acting on LinkedIn through unauthorized automation.
+Opportunity discovery may capture one human-authorized, already-open Jobs/opportunity tab
+as read-only local evidence. Every outbound/action operation must end in a local draft and
+a human-execution handoff with honest proof limits.
 
 ## Current readiness
 
@@ -15,11 +17,12 @@ Overall: **READY_FOR_DRAFT_ONLY_USE**
 | Feature | State | Evidence |
 |---|---|---|
 | Typed request validation | READY | Pydantic v2 models and tests |
+| Authorized opportunity capture | READY | `capture-opportunity-tab` emits `ops-linkedin.opportunity_capture.v1` |
 | Evidence-aware packet generation | READY | `prepare` emits `ops-linkedin.handoff.v1` |
 | Block unsupported profile/lead claims | READY | deterministic readiness gate and exit code `3` |
 | Packet schema validation | READY | `validate` command |
 | Human completion attestation | READY | explicit confirmation flag; `platform_verified=false` |
-| Browser/session automation | PROHIBITED | immutable boundary and static sanity gate |
+| Browser/session action automation | PROHIBITED | immutable boundary and static sanity gate |
 | Live LinkedIn execution | NOT_ESTABLISHED | deliberately outside scope |
 | Official LinkedIn API adapter | NOT_IMPLEMENTED | authorization and separate review required |
 
@@ -28,6 +31,7 @@ Overall: **READY_FOR_DRAFT_ONLY_USE**
 - Agent-facing `SKILL.md` with progressive disclosure and routing.
 - Human-facing `README.md`.
 - Typer CLI with `policy`, `status`, `prepare`, `validate`, and `attest`.
+- Read-only `capture-opportunity-tab` command for one human-authorized LinkedIn tab.
 - Pydantic request, claim, handoff, status, and policy contracts.
 - Pure service functions with no network/browser dependencies.
 - Unit tests, non-mocked sanity checks, and an agentic-evals fixture.
@@ -37,7 +41,7 @@ Overall: **READY_FOR_DRAFT_ONLY_USE**
 
 - Chrome extensions or browser plug-ins.
 - WebSocket/DOM bridges.
-- Selenium, Playwright, browser-use, Surf, or equivalent LinkedIn control.
+- Hidden or broad Selenium, Playwright, browser-use, Surf, or equivalent LinkedIn control.
 - Login/session/cookie inspection.
 - Scraping or systematic profile/post viewing.
 - Automated posting, comments, likes, connections, follows, messages, applications, or
@@ -46,7 +50,9 @@ Overall: **READY_FOR_DRAFT_ONLY_USE**
   anti-detection logic.
 - Bulk prospect collection or outreach sequencing.
 
-These are exclusions, not missing MVP features.
+These are exclusions, not missing MVP features. Authorized read-only opportunity capture is
+the narrow exception because finding relevant LinkedIn opportunities is part of the
+product goal; it is not permission to apply, connect, message, post, or collect profiles.
 
 ## Aspirational work with hard prerequisites
 

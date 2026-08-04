@@ -233,13 +233,18 @@ def policy_report() -> PolicyReport:
             "Draft profile copy, posts, comments, connection notes, and messages locally.",
             "Analyze user-provided or exported content and metrics.",
             "Create manual search and lead-research plans using public-web sources.",
+            (
+                "Capture one already-open LinkedIn opportunity tab as read-only local evidence "
+                "when Graham supplies the tab id and explicit authorization."
+            ),
             "Create local handoff packets and record explicit human completion attestations.",
         ],
         prohibited=[
-            "Automated access to LinkedIn pages or DOM content.",
-            "Scraping profiles, posts, contacts, or search results.",
+            "Hidden, bulk, or unauthorised automated access to LinkedIn pages or DOM content.",
+            "Scraping profiles, posts, contacts, or search results at scale.",
             "Reading or copying browser cookies, passwords, or session tokens.",
             "Automated posting, liking, commenting, connecting, following, or messaging.",
+            "Automated applying or uploading through LinkedIn.",
             "Bulk or inauthentic engagement and attempts to evade platform controls.",
         ],
         official_sources=[
@@ -275,9 +280,14 @@ def status_report(*, now: datetime | None = None) -> StatusReport:
                 evidence="attest command preserves platform_verified=false",
             ),
             FeatureStatus(
-                feature="LinkedIn browser automation",
+                feature="authorized read-only opportunity tab capture",
+                state=FeatureState.READY,
+                evidence="capture-opportunity-tab requires --tab-id and --human-authorized and writes local evidence only",
+            ),
+            FeatureStatus(
+                feature="LinkedIn outbound/browser actions",
                 state=FeatureState.PROHIBITED,
-                evidence="negative guardrails and no network/browser dependencies",
+                evidence="negative guardrails prohibit apply/connect/message/post and cookie/session access",
             ),
             FeatureStatus(
                 feature="official LinkedIn API adapter",
@@ -292,10 +302,12 @@ def status_report(*, now: datetime | None = None) -> StatusReport:
         ],
         claims_proves=[
             "The CLI can validate manifests and create local handoff packets.",
+            "The CLI can turn one human-authorized LinkedIn opportunity tab into local evidence.",
             "Prepared packets state that no LinkedIn action was executed.",
             "A human attestation remains distinct from platform verification.",
         ],
         claims_does_not_prove=[
+            "That a captured LinkedIn page is relevant unless downstream monitor ranking admits it.",
             "That LinkedIn accepted, displayed, or delivered any action.",
             "That platform terms will remain unchanged after the policy snapshot date.",
             "That an official API integration is authorized or available.",

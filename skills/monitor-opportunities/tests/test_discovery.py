@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 from monitor_opportunities.cli import app
 from monitor_opportunities.discovery import (
     LINKEDIN_AUTOMATION_POLICY,
+    LINKEDIN_AUTHORIZED_READ_ONLY_POLICY,
     _ashby_candidates,
     _candidate_id,
     _employment_candidates,
@@ -137,6 +138,20 @@ def test_human_supplied_linkedin_evidence_is_local_only_candidate() -> None:
     assert rows[0]["automation_policy"] == "linkedin_no_automation"
     assert rows[0]["top_candidate_evidence"] is True
     assert rows[0]["apply_url"] is None
+
+
+def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() -> None:
+    fixture = Path(__file__).parent / "fixtures" / "discovery" / "ops-linkedin-jobs-capture.json"
+    receipt, rows = _linkedin_evidence_candidates(fixture)
+    assert receipt["source_class"] == "ops_linkedin_authorized_read_only"
+    assert receipt["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
+    assert receipt["result_status"] == "MATCHES"
+    assert len(rows) == 2
+    assert rows[0]["source_provider"] == "ops_linkedin_authorized_read_only"
+    assert rows[0]["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
+    assert rows[0]["top_candidate_evidence"] is True
+    assert rows[0]["apply_url"] is None
+    assert rows[1]["location_display"] == "New York, NY (On-site)"
 
 
 def test_candidate_identity_ignores_mutable_content_receipts() -> None:

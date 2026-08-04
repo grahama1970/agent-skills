@@ -164,14 +164,19 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
         observed = [f"Primary-source need signal observed: {evidence_url or source_id}"]
         inferred = ["Use a capability profile; do not send outreach automatically."]
         claim_keys = ["claim:pdf-oxide:document-extraction"]
-    elif candidate.get("source_provider") == "human_supplied_linkedin":
+    elif candidate.get("source_provider") in {"human_supplied_linkedin", "ops_linkedin_authorized_read_only"}:
         opportunity_type = "employment_posting"
+        source_label = (
+            "ops-linkedin authorized read-only LinkedIn evidence"
+            if candidate.get("source_provider") == "ops_linkedin_authorized_read_only"
+            else "Human-supplied LinkedIn evidence"
+        )
         observed = [
-            f"Human-supplied LinkedIn evidence observed: {evidence_url or source_id}",
+            f"{source_label} observed: {evidence_url or source_id}",
             f"Automation policy: {candidate.get('automation_policy', 'linkedin_no_automation')}",
         ]
         if candidate.get("top_candidate_evidence"):
-            observed.append("Graham-supplied evidence marks this as a LinkedIn top-candidate signal.")
+            observed.append("LinkedIn evidence marks this as a profile/recommendation-based relevance signal.")
         inferred = [
             "Use this as a relevance signal only; leave LinkedIn and inspect primary employer/client sources separately.",
             "Do not connect, message, click apply, scrape, or otherwise automate LinkedIn.",
@@ -186,7 +191,7 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
         claim_keys = ["claim:arcos:acert-architect"]
     why_candidate = ["Ranked after deterministic eligibility gating and source receipt readback."]
     if candidate.get("top_candidate_evidence"):
-        why_candidate.append("Ranking includes Graham-supplied LinkedIn top-candidate evidence.")
+        why_candidate.append("Ranking includes LinkedIn profile/recommendation-based relevance evidence.")
     return {
         "opportunity_id": candidate["candidate_id"],
         "lane": candidate["lane"],

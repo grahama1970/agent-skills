@@ -1,0 +1,49 @@
+{
+  "schema_version": "ops-linkedin.opportunity_capture.v1",
+  "source": "human_authorized_linkedin_tab",
+  "observed_at": "2026-08-04T19:09:30Z",
+  "capture_method": "surf_read_only_existing_tab",
+  "automation_policy": "linkedin_authorized_read_only_no_actions",
+  "linkedin_url": "https://www.linkedin.com/jobs/",
+  "primary_evidence_url": "https://www.linkedin.com/jobs/",
+  "page_title": "Jobs",
+  "top_candidate": true,
+  "top_candidate_text": "LinkedIn displayed profile-based opportunity recommendation sections.",
+  "opportunities": [
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-04T19:09:30Z",
+      "title": "GenAI Python Systems Engineer - Senior Manager",
+      "organization": "PwC",
+      "location": "Buffalo, NY (Hybrid)",
+      "linkedin_url": "https://www.linkedin.com/jobs/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/",
+      "top_candidate": true,
+      "top_candidate_text": "LinkedIn Top job picks for you, based on profile, preferences, applies, searches, and saves.",
+      "evidence_text": "LinkedIn Top job picks for you, based on profile, preferences, applies, searches, and saves.\n\nGenAI Python Systems Engineer - Senior Manager\nPwC\nBuffalo, NY (Hybrid)"
+    },
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-04T19:09:30Z",
+      "title": "Founders Associate",
+      "organization": "talentpluto",
+      "location": "New York, NY (On-site)",
+      "linkedin_url": "https://www.linkedin.com/jobs/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/",
+      "top_candidate": true,
+      "top_candidate_text": "LinkedIn jobs where Graham is more likely to hear back, based on profile, job criteria, and recruiter feedback.",
+      "evidence_text": "LinkedIn jobs where Graham is more likely to hear back, based on profile, job criteria, and recruiter feedback.\n\nFounders Associate\ntalentpluto\nNew York, NY (On-site)"
+    }
+  ],
+  "guardrails": {
+    "human_authorized_existing_tab": true,
+    "read_only": true,
+    "clicked": false,
+    "submitted": false,
+    "messaged": false,
+    "connected": false,
+    "applied": false,
+    "cookie_or_session_access": false,
+    "bulk_collection": false
+  }
+}

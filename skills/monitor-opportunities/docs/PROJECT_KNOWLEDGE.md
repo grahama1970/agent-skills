@@ -44,8 +44,10 @@ correct for every capability not explicitly reported as implemented by `status`.
 6. “Algorithm-aware” tailoring is represented as an evidence-backed
    `screening_interface_profile`, never proprietary-weight speculation.
 7. Candidate facts come from one approved claim snapshot. Tailoring cannot mint facts.
-8. Gmail send and all LinkedIn automation are permanently outside this skill. The human
-   transmits every message.
+8. Gmail send and all LinkedIn outbound/action automation are permanently outside this
+   skill. `ops-linkedin` may provide authorized read-only opportunity evidence from a
+   human-supplied tab, but the human transmits every message and performs every LinkedIn
+   action.
 9. ATS inspect, prefill, and submit are separate site/provider capabilities. Submit also
    requires per-application exact-payload human authorization.
 10. Unknown or sensitive application fields, and every free-text field, are
@@ -118,8 +120,11 @@ Required separately per capability:
   database access is forbidden.
 - Gmail OAuth requires human browser authorization. Gmail integration must be merged and
   independently proven before mailbox drafts are promoted.
-- `ops-linkedin` must remain a local human-handoff integration; LinkedIn platform access
-  is never a dependency.
+- LinkedIn is only one source in the monitor. `ops-linkedin` may capture one
+  human-authorized opportunity tab as read-only local evidence, but the monitor remains
+  responsible for cross-source discovery, eligibility, ranking, and report visibility.
+  Hiddenjobs.dev, Indeed/source locators, employer ATS sources, DARPA, SAM.gov, and
+  commercial primary sources are still co-equal lanes.
 - Human attestations for clearance, citizenship/work authorization, salary, phone, and
   self-identification remain missing/unknown until explicitly provided. The system may not
   infer them.

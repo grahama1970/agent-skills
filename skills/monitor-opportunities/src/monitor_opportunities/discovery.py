@@ -16,6 +16,7 @@ HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=10.0, write=3.0, pool=3.0)
 MAX_RESPONSE_BYTES = 1_500_000
 SOURCE_LOCATOR_TERMS = ("greenhouse", "lever", "ashby", "workday", "workable")
 LINKEDIN_AUTOMATION_POLICY = "linkedin_no_automation"
+LINKEDIN_AUTHORIZED_READ_ONLY_POLICY = "linkedin_authorized_read_only_no_actions"
 
 
 def _base_receipt(lane: str, provider: str, target: str, source_class: str) -> dict[str, Any]:
@@ -128,7 +129,6 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
         [
             "Human-supplied LinkedIn evidence is a relevance signal only.",
             "LinkedIn is not logged into, scraped, clicked, connected, messaged, or otherwise automated.",
-            f"Automation policy: {LINKEDIN_AUTOMATION_POLICY}.",
         ]
     )
     try:
@@ -138,6 +138,20 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
         receipt["parser_result"] = "ERROR"
         receipt["limitations"].append(f"Local LinkedIn artifact could not be parsed: {type(exc).__name__}")
         return _finalize_receipt(receipt), []
+    source_values = {str(row.get("source") or "") for row in records}
+    authorized_capture = "human_authorized_linkedin_tab" in source_values
+    if authorized_capture:
+        receipt["target"] = "ops-linkedin authorized read-only opportunity capture"
+        receipt["source_class"] = "ops_linkedin_authorized_read_only"
+        receipt["automation_policy"] = LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
+        receipt["request_summary"] = (
+            f"Read ops-linkedin authorized read-only evidence artifact {path.name}; "
+            "the capture used a human-supplied tab id and performed no LinkedIn actions"
+        )
+        receipt["limitations"].append(
+            "ops-linkedin read one human-authorized LinkedIn opportunity tab; no apply/connect/message/post action was taken."
+        )
+    receipt["limitations"].append(f"Automation policy: {receipt['automation_policy']}.")
 
     receipt["result_status"] = "MATCHES" if records else "NO_MATCHES"
     receipt["parser_result"] = "PARSED"
@@ -171,10 +185,16 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
         payload = {
             "lane": "A",
             "source_receipt_id": receipt["receipt_id"],
-            "source_provider": "human_supplied_linkedin",
+            "source_provider": "ops_linkedin_authorized_read_only"
+            if str(record.get("source") or "") == "human_authorized_linkedin_tab"
+            else "human_supplied_linkedin",
             "source_identity": str(record.get("linkedin_url") or primary_url or path.name),
-            "source_class": "human_supplied_linkedin",
-            "automation_policy": LINKEDIN_AUTOMATION_POLICY,
+            "source_class": "ops_linkedin_authorized_read_only"
+            if str(record.get("source") or "") == "human_authorized_linkedin_tab"
+            else "human_supplied_linkedin",
+            "automation_policy": LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
+            if str(record.get("source") or "") == "human_authorized_linkedin_tab"
+            else LINKEDIN_AUTOMATION_POLICY,
             "top_candidate_evidence": top_candidate,
             "organization": organization,
             "title": title,
