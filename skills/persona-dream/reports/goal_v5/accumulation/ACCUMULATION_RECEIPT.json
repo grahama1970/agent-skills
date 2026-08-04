@@ -1,0 +1,49 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "that accumulation improves anything; that is the unrun comparison",
+      "that the persona changes in any measured way over many days"
+    ],
+    "proves": [
+      "a dream's interpretation is stored as memory and drawn by a later dream",
+      "dream media are stored as memories by modality, bound to the bytes they describe",
+      "dreamt records are distinguishable from lived ones without reading metadata"
+    ]
+  },
+  "created_at": "2026-08-04T18:20:00Z",
+  "defect_found": {
+    "cause": "the reflection write targeted the `lessons` collection, which rejects a dream interpretation with HTTP 422 'no extractable taxonomy'. It failed soft, so every run reported success while the write errored every time. No dream could build on another because no dream was ever kept.",
+    "fix": "write to persona_memory and gate on an AQL read-back",
+    "symptom": "five consecutive dreams produced byte-identical journals",
+    "verified": {
+      "collection": "persona_memory",
+      "http_status": 200,
+      "read_back": true
+    }
+  },
+  "failed_gates": [],
+  "live": true,
+  "lived_vs_dreamt": {
+    "all_dreamt_self_declare": true,
+    "day": "2026-08-04",
+    "dreamt": 4,
+    "lived": 11,
+    "rule": "everything dreamt is marked synthetic in metadata AND self-declaring in its text -- 'In a dream I interpreted my recent experience: ...' and 'From a dream: ...' -- so a retrieval path that drops the metadata still cannot promote an interpretation into something that happened"
+  },
+  "mocked": false,
+  "modalities_registered": [
+    "image (contact sheet)",
+    "audio (journal reading)",
+    "video (provider return)"
+  ],
+  "schema": "persona_dream.accumulation_receipt.v1",
+  "status": "PASS_DREAMS_ACCUMULATE_AS_MEMORY",
+  "traversal": {
+    "audio_walks": true,
+    "edge_source": "the run's own memory_write_receipt, and only when that write landed. Recomputing the key from dream_reflection.md produced a dangling edge that silently traversed to nothing, because persona_dream hashes the in-memory string and the file differs by formatting.",
+    "image_walks": true,
+    "memories_reached": 6,
+    "path": "artifact -> the dream that produced it -> the memories that dream interpreted"
+  },
+  "what_this_shows": "A dream's interpretation and its media become memories, so a later dream builds on what an earlier one concluded. This is the mechanism by which a persona deepens rather than resetting."
+}

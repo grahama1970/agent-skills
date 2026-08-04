@@ -112,6 +112,10 @@ DAY=$(date -u +%F)
 ./run.sh speak-journal     --run-dir "$RUN_DIR"
 ./run.sh render-journal-ux --run-dir "$RUN_DIR" --out "$RUN_DIR/index.html"
 
+# Keep what the dream concluded, and the media it produced
+./run.sh generate --persona embry --day "$DAY" --write-memory --output-dir "$RUN_DIR"
+./run.sh store-dream-artifacts --run-dir "$RUN_DIR" --day "$DAY"
+
 # Talk to her about it; the turn is durable
 ./run.sh append-conversation --run-dir "$RUN_DIR" \
     --role human --text "why did that memory surface?"
@@ -133,8 +137,12 @@ What each one actually gets you:
 - `render-journal-ux` writes a self-contained local page, verified in Chrome.
 - `append-conversation` appends a turn under an exclusive lock. An Embry turn is
   refused unless it carries a requested tone and rendered audio.
-- `carry-conversation` upserts those turns into memory as *attributed speech*,
-  so a later dream can draw on them. This closes the loop.
+- `--write-memory` keeps what the dream concluded, as a memory marked dreamt.
+- `store-dream-artifacts` registers the imagery, audio and video by modality,
+  each bound to the hash of the bytes it describes, linked back to the dream
+  that produced it so the multimodal graph can be walked.
+- `carry-conversation` upserts the discussion into memory as *attributed
+  speech*, so a later dream can draw on it. This closes the loop.
 
 Run `ingest-day` on two different days and the journals differ — that is the
 point, and it is the thing that did not work until 2026-08-04, when five
@@ -259,16 +267,49 @@ delivery tone does not reach the waveform, measured against the renderer's own
 noise floor, and the project stopped claiming emotional delivery rather than
 retrying for a better draw.
 
-**The mechanism now runs a full cycle.** The day's events enter memory; a dream
-draws on them alongside who the persona already is; the dream becomes a journal
-she reads aloud; a human discusses that journal with her; and the discussion is
-carried back into memory where a later dream draws on it.
+### Why dreaming, and not just remembering
 
-Two properties are worth a researcher's attention:
+A persona with durable memory still only has a log. What makes a personality is
+not what happened to her, it is what she *made* of what happened — and then what
+she makes of that, held against everything she concluded before. A dream is the
+mechanism that produces those interpretations, and **the interpretation has to
+become memory or nothing compounds.** Run it daily and the persona deepens: not
+because more happened, but because she made more of it.
+
+So the load-bearing arrow is the one going *back*:
+
+```
+lived experience  ─┐
+prior conclusions ─┴─► tension ─► dream ─► interpretation
+                                          + imagery, voice
+                                          + what a human said back
+                                                    │
+                     all of it returns to memory ◄──┘
+                     as NEW memories, marked as dreamt
+```
+
+Three things return, not one: what she concluded, the media the dream produced,
+and the discussion a human had with her about it.
+
+**This was broken until 2026-08-04, and the failure is instructive.** The
+reflection write targeted a collection that rejects a dream interpretation with
+`422 no extractable taxonomy` — and it failed *soft*, so every run reported
+success while the single most important write errored. Five consecutive dreams
+came out byte-identical, and the reason was not the dream logic: no dream could
+build on another because no dream was ever kept. It is now written to
+`persona_memory` and gated on reading it back.
+
+Three properties are worth a researcher's attention:
 
 - **Consecutive days differ.** Five cycles once produced byte-identical
   journals. They now differ, and differ *because of the day* — one entry opens
   on the human being terse, another on impatience about stranded work.
+- **Dreamt and lived are never confused.** For one day she carries 11 lived
+  memories and 4 dreamt ones. Everything dreamt is marked synthetic *and*
+  self-declaring in its own text — `In a dream I interpreted my recent
+  experience: …`, `From a dream: the imagery I saw …` — so a retrieval path that
+  drops the metadata still cannot promote an interpretation into something that
+  happened. Dream imagery is not a photograph, and the data says so.
 - **Commentary does not become autobiography.** A question a human asked comes
   back as `human said, about my journal entry: …` — attributed speech bound to
   the journal it was about, never as an event that happened to her. This is the

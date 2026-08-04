@@ -608,6 +608,14 @@
       "receipt_sha256": "sha256:91fcee1fae43ca8102f13489ed389f5d8fe7923fa7fc30661a756ce1d75a3742",
       "proves": "a discussion about a dream is carried into memory, retrieved by a later dream, and recalled as attributed speech rather than as an event that occurred",
       "does_not_prove": "that the later dream is better for it; that is the research question the controlled ablations exist to answer, and it remains unrun"
+    },
+    "dream_accumulation": {
+      "status": "PASS_DREAMS_ACCUMULATE_AS_MEMORY",
+      "scope": "one persona, one day, mechanism only",
+      "receipt": "reports/goal_v5/accumulation/ACCUMULATION_RECEIPT.json",
+      "receipt_sha256": "sha256:777a268cb83c03dd85b30b492c48d139623e66b2573937e5a817d82cc35018da",
+      "proves": "a dream's interpretation and its media are written to memory, retrieved by a later dream, and remain distinguishable from lived memory without reading metadata",
+      "does_not_prove": "that accumulation improves anything, or that the persona measurably changes over many days; both remain unrun"
     }
   },
   "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md"
