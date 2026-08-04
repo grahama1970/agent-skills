@@ -3,9 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import httpx
 from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
+from monitor_opportunities.discovery import _ashby_candidates, _employment_candidates, _sam_receipt
 
 runner = CliRunner()
 
@@ -32,3 +34,61 @@ def test_unattempted_lane_is_not_searched(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     lane_summaries = json.loads((out / "lane-summaries.json").read_text(encoding="utf-8"))
     assert {row["lane"]: row["result_status"] for row in lane_summaries}["B"] == "NOT_SEARCHED"
+
+
+def test_employment_dispatch_rejects_unknown_provider() -> None:
+    target = {"provider": "unknown-board", "name": "Example", "slug": "example"}
+    receipt, rows = _employment_candidates(httpx.Client(), target)
+    assert rows == []
+    assert receipt["result_status"] == "INVALID_REQUEST"
+    assert receipt["parser_result"] == "UNSUPPORTED_PROVIDER"
+
+
+def test_ashby_candidate_maps_primary_fields() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/posting-api/job-board/example")
+        return httpx.Response(
+            200,
+            json={
+                "jobs": [
+                    {
+                        "title": "Applied AI Engineer",
+                        "location": {"name": "Remote"},
+                        "jobUrl": "https://jobs.example/ai",
+                        "applyUrl": "https://jobs.example/ai/apply",
+                        "descriptionPlain": "Build applied AI systems.",
+                    }
+                ]
+            },
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt, rows = _ashby_candidates(client, {"name": "Example", "slug": "example"})
+    assert receipt["provider"] == "ashby"
+    assert receipt["result_status"] == "MATCHES"
+    assert rows[0]["source_provider"] == "ashby"
+    assert rows[0]["title"] == "Applied AI Engineer"
+    assert rows[0]["workplace_type"] == "REMOTE"
+
+
+def test_sam_zero_records_is_no_matches(monkeypatch) -> None:
+    monkeypatch.setenv("SAM_GOV_API_KEY", "example-key-not-secret")
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args) -> None:
+            return None
+
+        def get(self, url: str, params: dict[str, str]) -> httpx.Response:
+            assert params == {"api_key": "example-key-not-secret"}
+            return httpx.Response(200, json={"totalRecords": 0, "opportunitiesData": []})
+
+    monkeypatch.setattr("monitor_opportunities.discovery.httpx.Client", FakeClient)
+    receipt = _sam_receipt()
+    assert receipt["result_status"] == "NO_MATCHES"
+    assert receipt["parser_result"] == "PARSED"

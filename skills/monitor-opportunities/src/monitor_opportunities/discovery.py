@@ -122,6 +122,154 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
     return receipt, candidates
 
 
+def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    slug = target["slug"]
+    receipt = _base_receipt("A", "lever", target["name"], "employer_ats")
+    url = f"https://api.lever.co/v0/postings/{slug}?mode=json"
+    receipt["request_summary"] = f"GET {url} with no credentials; response capped"
+    try:
+        response = client.get(url)
+        receipt["response_status"] = response.status_code
+        receipt["content_type"] = response.headers.get("content-type")
+        body = response.content[:MAX_RESPONSE_BYTES]
+        receipt["response_bytes"] = len(response.content)
+        receipt["content_sha256"] = sha256_bytes(body)
+        if response.status_code == 404:
+            receipt["result_status"] = "INVALID_REQUEST"
+            receipt["parser_result"] = "NO_PARSE"
+            receipt["limitations"].append("Lever board slug did not route.")
+            return _finalize_receipt(receipt), []
+        response.raise_for_status()
+        if len(response.content) > MAX_RESPONSE_BYTES:
+            receipt["result_status"] = "INVALID_RESPONSE"
+            receipt["parser_result"] = "SIZE_LIMIT"
+            receipt["limitations"].append("Response exceeded bounded parser limit.")
+            return _finalize_receipt(receipt), []
+        data = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+
+    postings = data if isinstance(data, list) else []
+    receipt["result_status"] = "MATCHES" if postings else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt = _finalize_receipt(receipt)
+    candidates: list[dict[str, Any]] = []
+    for job in postings[: target.get("limit", 20)]:
+        categories = job.get("categories") or {}
+        location = categories.get("location") or "Unknown"
+        hosted_url = job.get("hostedUrl") or job.get("applyUrl")
+        payload = {
+            "lane": "A",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": "lever",
+            "source_identity": slug,
+            "organization": target["name"],
+            "title": job.get("text") or "Untitled",
+            "location_display": location,
+            "workplace_type": _workplace_type(location),
+            "relocation_required": _relocation_required(location, str(job)),
+            "clearance_required": False,
+            "posting_url": hosted_url,
+            "apply_url": job.get("applyUrl") or hosted_url,
+            "published_at": str(job.get("createdAt")) if job.get("createdAt") is not None else None,
+            "updated_at": str(job.get("updatedAt")) if job.get("updatedAt") is not None else None,
+            "content_hash": sha256_bytes(str(job).encode("utf-8")),
+            "posting_text": _lever_posting_text(job)[:4000],
+            "fit_score": target.get("default_fit_score", 0.5),
+        }
+        payload["candidate_id"] = stable_id("candidate:a", payload)
+        candidates.append(payload)
+    return receipt, candidates
+
+
+def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    slug = target["slug"]
+    receipt = _base_receipt("A", "ashby", target["name"], "employer_ats")
+    url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
+    receipt["request_summary"] = f"GET {url} with no credentials; response capped"
+    try:
+        response = client.get(url)
+        receipt["response_status"] = response.status_code
+        receipt["content_type"] = response.headers.get("content-type")
+        body = response.content[:MAX_RESPONSE_BYTES]
+        receipt["response_bytes"] = len(response.content)
+        receipt["content_sha256"] = sha256_bytes(body)
+        if response.status_code == 404:
+            receipt["result_status"] = "INVALID_REQUEST"
+            receipt["parser_result"] = "NO_PARSE"
+            receipt["limitations"].append("Ashby board slug did not route.")
+            return _finalize_receipt(receipt), []
+        response.raise_for_status()
+        if len(response.content) > MAX_RESPONSE_BYTES:
+            receipt["result_status"] = "INVALID_RESPONSE"
+            receipt["parser_result"] = "SIZE_LIMIT"
+            receipt["limitations"].append("Response exceeded bounded parser limit.")
+            return _finalize_receipt(receipt), []
+        data = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+
+    jobs = data.get("jobs", []) if isinstance(data, dict) else []
+    receipt["result_status"] = "MATCHES" if jobs else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt = _finalize_receipt(receipt)
+    candidates: list[dict[str, Any]] = []
+    for job in jobs[: target.get("limit", 20)]:
+        location = _ashby_location(job)
+        payload = {
+            "lane": "A",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": "ashby",
+            "source_identity": slug,
+            "organization": target["name"],
+            "title": job.get("title") or "Untitled",
+            "location_display": location,
+            "workplace_type": _workplace_type(location),
+            "relocation_required": _relocation_required(location, str(job)),
+            "clearance_required": False,
+            "posting_url": job.get("jobUrl"),
+            "apply_url": job.get("applyUrl") or job.get("jobUrl"),
+            "published_at": job.get("publishedDate"),
+            "updated_at": job.get("updatedAt"),
+            "content_hash": sha256_bytes(str(job).encode("utf-8")),
+            "posting_text": (job.get("descriptionHtml") or job.get("descriptionPlain") or "")[:4000],
+            "fit_score": target.get("default_fit_score", 0.5),
+        }
+        payload["candidate_id"] = stable_id("candidate:a", payload)
+        candidates.append(payload)
+    return receipt, candidates
+
+
+def _lever_posting_text(job: dict[str, Any]) -> str:
+    parts = [str(job.get("description") or "")]
+    for list_key in ("lists", "additional"):
+        for section in job.get(list_key) or []:
+            parts.append(str(section.get("text") or section.get("content") or ""))
+    return "\n".join(part for part in parts if part)
+
+
+def _ashby_location(job: dict[str, Any]) -> str:
+    location = job.get("location")
+    if isinstance(location, str) and location:
+        return location
+    if isinstance(location, dict):
+        return str(location.get("name") or location.get("displayName") or "Unknown")
+    locations = job.get("locations")
+    if isinstance(locations, list) and locations:
+        first = locations[0]
+        if isinstance(first, str):
+            return first
+        if isinstance(first, dict):
+            return str(first.get("name") or first.get("displayName") or "Unknown")
+    return "Unknown"
+
+
 def _workplace_type(location: str) -> str:
     text = location.lower()
     if "buffalo" in text and "hybrid" in text:
@@ -131,6 +279,11 @@ def _workplace_type(location: str) -> str:
     if "remote" in text:
         return "REMOTE"
     return "AMBIGUOUS"
+
+
+def _relocation_required(location: str, content: str) -> bool:
+    text = f"{location}\n{content}".lower()
+    return "relocation required" in text or "must relocate" in text
 
 
 def _sam_receipt() -> dict[str, Any]:
@@ -150,9 +303,23 @@ def _sam_receipt() -> dict[str, Any]:
         receipt["content_type"] = response.headers.get("content-type")
         receipt["response_bytes"] = len(response.content)
         receipt["content_sha256"] = sha256_bytes(response.content[:MAX_RESPONSE_BYTES])
-        receipt["result_status"] = "MATCHES" if response.status_code == 200 else "FEED_DOWN"
-        receipt["parser_result"] = "PARSED" if response.status_code == 200 else "ERROR"
-    except httpx.HTTPError as exc:
+        if response.status_code != 200:
+            receipt["result_status"] = "FEED_DOWN"
+            receipt["parser_result"] = "ERROR"
+        elif len(response.content) > MAX_RESPONSE_BYTES:
+            receipt["result_status"] = "INVALID_RESPONSE"
+            receipt["parser_result"] = "SIZE_LIMIT"
+            receipt["limitations"].append("Response exceeded bounded parser limit.")
+        else:
+            data = response.json()
+            total = data.get("totalRecords", data.get("totalrecords", 0))
+            try:
+                total_records = int(total)
+            except (TypeError, ValueError):
+                total_records = 0
+            receipt["result_status"] = "MATCHES" if total_records > 0 else "NO_MATCHES"
+            receipt["parser_result"] = "PARSED"
+    except (httpx.HTTPError, ValueError) as exc:
         receipt["result_status"] = "FEED_DOWN"
         receipt["parser_result"] = "ERROR"
         receipt["limitations"].append(f"SAM.gov probe failed: {type(exc).__name__}")
@@ -213,6 +380,21 @@ def _load_targets(skill_dir: Path) -> dict[str, Any]:
     return read_json(skill_dir / "config" / "target_accounts.json")
 
 
+def _employment_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    provider = target.get("provider")
+    if provider == "greenhouse":
+        return _greenhouse_candidates(client, target)
+    if provider == "lever":
+        return _lever_candidates(client, target)
+    if provider == "ashby":
+        return _ashby_candidates(client, target)
+    receipt = _base_receipt("A", str(provider or "unknown"), target.get("name", "Unknown"), "employer_ats")
+    receipt["result_status"] = "INVALID_REQUEST"
+    receipt["parser_result"] = "UNSUPPORTED_PROVIDER"
+    receipt["limitations"].append("Employment target provider is not supported by Stage 0 discovery.")
+    return _finalize_receipt(receipt), []
+
+
 def sweep(
     *,
     skill_dir: Path,
@@ -230,7 +412,7 @@ def sweep(
         with httpx.Client(timeout=HTTP_TIMEOUT, follow_redirects=False) as client:
             if "A" in lanes:
                 for target in targets.get("employment", []):
-                    receipt, rows = _greenhouse_candidates(client, target)
+                    receipt, rows = _employment_candidates(client, target)
                     receipts.append(receipt)
                     candidates.extend(rows)
         if "B" in lanes:
