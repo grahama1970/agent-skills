@@ -299,6 +299,31 @@ came out byte-identical, and the reason was not the dream logic: no dream could
 build on another because no dream was ever kept. It is now written to
 `persona_memory` and gated on reading it back.
 
+### The voice is meant to follow the personality
+
+The reason a delivery tone exists at all is that it is **derived, not set**. Each
+dream surfaces a dominant tension — concealment, inadequacy, belonging, duty —
+and that tension is mapped at runtime to a delivery tone the renderer accepts.
+Nobody chooses "sound uncertain here". She sounds however that day's unresolved
+thing came out.
+
+The intended consequence is that as the persona accumulates, the voice moves
+with her: a week of competence tensions and a week of isolation tensions should
+not sound the same, without anyone tuning a knob between them.
+
+**The channel is built end to end and its last hop is inert.** The mood is
+derived, mapped, requested, survives normalization instead of collapsing to a
+default, and is recorded on every spoken journal. What does not happen is any
+change to the audio. Measured against the renderer's own same-parameter noise
+floor, no requested tone moved a single acoustic metric, and the engine in use
+lists the affect parameters (`exaggeration`, `cfg_weight`) among those it
+ignores. There was never a path from the request to the waveform.
+
+So this is a blocked capability with a named blocker, not an unexplored idea. It
+needs a backend that exposes affect axes which measurably move the audio; until
+one does, the mapping is kept because it is honest provenance for what was
+*requested*, and every surface says the emotion is not audible.
+
 Three properties are worth a researcher's attention:
 
 - **Consecutive days differ.** Five cycles once produced byte-identical
@@ -382,7 +407,21 @@ preregistered, and every condition can win, tie, or lose.
 > result means, and it is possible to design a task that guarantees the media
 > condition wins or that it cannot. We have deliberately not picked one quietly.
 
-**3. Longitudinal adaptation (#1196).** Does the persona measurably change over
+**3. Make the journal and chat surface an interface, not a viewer.** The page is
+built and verified in a browser: it renders the entry with tone chips, footnotes
+that resolve to their source memories, the audio of her reading it, and the
+conversation history. What it cannot do is take part. The chat pane composes a
+JSONL line for you to copy, and appending a turn or carrying it back into memory
+are CLI commands — so a human can *read* the loop in the page but has to leave it
+to *close* the loop.
+
+That gap matters more for research use than for engineering: a colleague
+evaluating whether discussion changes later dreams should be able to have the
+discussion where they are reading, not in a terminal. Making the page write
+turns directly, and showing carried turns arriving back in the next dream, is
+what turns the surface into an instrument.
+
+**4. Longitudinal adaptation (#1196).** Does the persona measurably change over
 many dreams, and is she still recognizably herself? Two failure modes matter
 equally: no change at all, which would mean dreaming adds nothing; and drift,
 which would mean it adds the wrong thing. The bounded arc delta and recognition
