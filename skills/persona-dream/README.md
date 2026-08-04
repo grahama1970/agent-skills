@@ -1,6 +1,6 @@
 # Persona Dream
 
-![Persona Dream — the research loop: the day and prior conversation enter memory, memory yields a tension, the tension yields a dream, and three things return to memory — what she concluded, the imagery and voice the dream produced, and what a human said back. She deepens; whether it helps is the open question.](assets/readme/research-loop.webp)
+![Persona Dream — the research loop: the day and prior conversation enter memory, memory yields a tension, the tension yields a dream, and three things return to memory — what she concluded, the imagery and voice the dream produced, and what a human said back, each as a typed record.](assets/readme/research-loop.webp)
 
 Persona Dream gives a persistent multimodal voice persona — a long-lived agent
 with durable memory, a stable character, and access to text, images, audio, and
@@ -28,7 +28,7 @@ authoritative entry point for the question you have:
 | Run the smallest local workflow | [Quick Start](#quick-start) |
 | Inspect the executable runtime contract | [`SKILL.md`](SKILL.md) |
 | Check current machine state, blockers, and next step | [`CURRENT_STATUS.json`](CURRENT_STATUS.json) |
-| Check what is and is not proven | [Current Proof Boundary](#current-proof-boundary) and [What this project does not claim](#what-this-project-does-not-claim) |
+| Check what is and is not proven | [Current Proof Boundary](docs/EVIDENCE.md#current-proof-boundary) and [What this project does not claim](docs/EVIDENCE.md#what-this-project-does-not-claim) |
 | Read the immutable goal and gate sequence | [`GOAL.md`](GOAL.md) |
 | Resume operational work | [`local/HANDOFF.md`](local/HANDOFF.md) |
 | Review forensic chronology or superseded findings | [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md) |
@@ -96,7 +96,7 @@ live-provider, Watch, graph-persistence, or behavior-evaluation stages.
 
 ### The journal workflow
 
-Three commands take a dream to a page you can read and a voice you can hear:
+The end-to-end loop, from the day's events to a discussion carried back into memory:
 
 ```bash
 RUN_DIR=/tmp/persona-dream-journal
@@ -200,17 +200,17 @@ synthetic dream and interpretation
       -> live journal.wav in the run directory
                    |
                    v
-      journal / discussion UX             (built; unverified in a browser)
+      journal / discussion UX             (verified in a browser; read-only)
                    |
                    v
-      append-only conversation.jsonl      (not built yet)
+      append-only conversation.jsonl      (durable)
                    |
                    v
-      future recall and later dreams      (not yet proven)
+      carried back as typed records       (a later dream draws on them)
 ```
 
-Everything down to `journal.wav` runs today and has receipts. Everything below
-it does not.
+Every leg above has a passing receipt. What none of them establish is benefit:
+the loop running is a mechanism result.
 
 **Journal annotations are not renderer control tokens.** They stay in the
 readable entry for inspection and are stripped before speech, because
@@ -269,12 +269,15 @@ retrying for a better draw.
 
 ### Why dreaming, and not just remembering
 
-A persona with durable memory still only has a log. What makes a personality is
-not what happened to her, it is what she *made* of what happened — and then what
-she makes of that, held against everything she concluded before. A dream is the
-mechanism that produces those interpretations, and **the interpretation has to
-become memory or nothing compounds.** Run it daily and the persona deepens: not
-because more happened, but because she made more of it.
+**This is the hypothesis, not a finding.** Durable memory preserves what
+happened. The proposal is that a synthetic dream produces *bounded
+interpretations* of it that affect later reasoning differently from a structured
+reflection would — and that for any of it to compound, the interpretation has to
+become memory rather than staying an output.
+
+Running it daily creates a provenance-linked longitudinal record. Whether that
+record produces useful adaptation, no change, or harmful drift is precisely what
+#1196 exists to find out, and nothing here has established it.
 
 So the load-bearing arrow is the one going *back*:
 
@@ -284,8 +287,12 @@ prior conclusions ─┴─► tension ─► dream ─► interpretation
                                           + imagery, voice
                                           + what a human said back
                                                     │
-                     all of it returns to memory ◄──┘
-                     as NEW memories, marked as dreamt
+     all of it returns to memory ◄──┘
+     as TYPED records:
+       lived events         -> episodic memory
+       dream interpretation -> synthetic, marked dreamt
+       dream media          -> modality-bound synthetic artifact
+       human commentary     -> attributed speech
 ```
 
 Three things return, not one: what she concluded, the media the dream produced,
@@ -379,9 +386,13 @@ What runs today, with receipts behind it:
 
 What does not work yet, stated plainly:
 
-- **Tone is not audible.** The delivery tone reaches the renderer and is
-  recorded, but it does not change the waveform — measured, not assumed. The
-  engine in use ignores the parameters that would carry it.
+- **No measurable tone effect on the tested path.** The delivery tone reaches
+  the renderer and is recorded, but on this journal text and this engine none of
+  three requested tones moved any measured acoustic feature beyond the
+  renderer's own same-parameter stochastic spread. The engine also lists the
+  affect parameters among those it ignores, so on *this* backend there is no
+  path from request to waveform. Other texts, voices, backends and human
+  listeners were not tested.
 
 - **Nothing shows that dreaming helps.** The loop closes, days differ, and
   provenance holds — but whether a dream beats a plain memory readout or a
@@ -406,17 +417,18 @@ yet. Nothing here has run long enough to have changed anyone.
 
 That makes the first step unglamorous and unavoidable.
 
-**1. Accumulate, daily, before measuring anything.** A longitudinal claim needs
-a longitudinal record. Running `ingest-day` → `generate --write-memory` →
-`store-dream-artifacts` daily is what produces the material any later comparison
-would examine. Until that record exists, every experiment below is
-underpowered by construction.
-
-**2. The matched comparison (#1195).** Hold the source memories, the task, the
-scoring rule and the model budget fixed, and vary only how the evidence is
+**1. Run the matched comparison now (#1195).** It does not wait for anything.
+It runs against a frozen historical case with existing media and Watch
+observations, makes no provider calls, and holds the source memories, task,
+scoring rule and model budget fixed while varying only how the evidence is
 processed: direct memory readout, structured reflection, a text-only dream, and
-a dream whose rendered media were independently observed. The comparison is
-preregistered, and every condition can win, tie, or lose.
+a dream whose rendered media were independently observed. Every condition can
+win, tie, or lose.
+
+**2. Accumulate daily.** A longitudinal claim needs a longitudinal record, and
+today's is one day old. Running `ingest-day` → `generate --write-memory` →
+`store-dream-artifacts` → `carry-conversation` daily produces the material the
+adaptation study examines. This gates #1196, not #1195.
 
 > **One thing is genuinely unsettled and we would welcome argument about it:**
 > what should she be measurably *better at*? Whatever is chosen decides what a
@@ -537,7 +549,7 @@ is the README-level architecture.
 
 Commands, expected outputs, artifact schemas, and acceptance procedures live in
 [`docs/verification.md`](docs/verification.md). The current claim boundary
-remains in [Current Proof Boundary](#current-proof-boundary), and per-run
+remains in [`docs/EVIDENCE.md`](docs/EVIDENCE.md), and per-run
 evidence remains under `reports/`.
 
 ## References

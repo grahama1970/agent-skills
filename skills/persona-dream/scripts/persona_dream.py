@@ -1339,7 +1339,14 @@ def _store_reflection(persona: Persona, reflection: str, packet: dict[str, Any],
     """
     import httpx
 
-    key_src = f"{persona.id}:{packet['run_id']}:{reflection}"
+    # Content-addressed, deliberately WITHOUT run_id. The same interpretation is
+    # one memory however many times it is generated: keying on run_id meant every
+    # re-run wrote a fresh duplicate of an identical conclusion, which inflates
+    # the dreamt record and skews the quota that later dreams draw from -- it
+    # corrupts the longitudinal record this project exists to build.
+    # carry_conversation and store_dream_artifacts are already content-addressed;
+    # this makes all three writers idempotent.
+    key_src = f"{persona.id}:{reflection}"
     stance = reflection.strip()
     document = {
         "_key": "persona_dream_" + hashlib.sha256(key_src.encode()).hexdigest()[:24],

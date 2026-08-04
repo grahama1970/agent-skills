@@ -115,3 +115,17 @@ def test_a_run_with_no_media_is_not_an_error(tmp_path):
     run = tmp_path / "run"
     run.mkdir()
     assert sda.build_documents(run, "embry", "2026-08-04", "run-1") == []
+
+
+def test_the_same_interpretation_is_one_memory_however_often_it_is_generated():
+    """Keying on run_id wrote a fresh duplicate on every re-run.
+
+    Three `generate --write-memory` runs produced three identical
+    dream_reflection records. That inflates the dreamt record and skews the
+    quota later dreams draw from — it corrupts the longitudinal record the
+    project exists to build. All three memory writers are now content-addressed.
+    """
+    src = Path(pd.__file__).read_text(encoding="utf-8")
+    fn = src[src.index("def _store_reflection"):src.index("@app.command(\"generate\")")]
+    assert 'key_src = f"{persona.id}:{reflection}"' in fn, "reflection key must not include run_id"
+    assert "packet['run_id']}:{reflection}" not in fn

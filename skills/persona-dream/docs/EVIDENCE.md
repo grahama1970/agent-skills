@@ -79,7 +79,7 @@ vocabulary is deliberately narrow: **implemented** means code exists,
 | Spoken journal | Live slice proven | `reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json` |
 | Requested tone to measurable acoustic effect | **Disproven**: below the renderer's own stochastic spread | `reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json`, #1209 |
 | Journal page | Live slice proven: rendered in Chrome at 1440x900, footnotes resolve, audio loads | `reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json` |
-| Interactive dream discussion | Append-only writer live-proven; return into memory blocked upstream | `reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json` |
+| Interactive dream discussion | Append-only writer live-proven; carried back into memory as attributed speech | `reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json` |
 | Day events to a later dream | Live slice proven: two consecutive days produce different journals | `reports/goal_v5/day_events/DAY_BLEND_RECEIPT.json` |
 | Return arc, discussion into a later dream | Live slice proven: carried, retrieved, and recalled as attributed speech | `reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json` |
 | Dreams accumulate as memory | Live slice proven: interpretation and media stored, drawn by a later dream, marked dreamt | `reports/goal_v5/accumulation/ACCUMULATION_RECEIPT.json` |
