@@ -115,6 +115,9 @@ DAY=$(date -u +%F)
 # Talk to her about it; the turn is durable
 ./run.sh append-conversation --run-dir "$RUN_DIR" \
     --role human --text "why did that memory surface?"
+
+# Carry what was said back into memory, so the next dream can draw on it
+./run.sh carry-conversation --run-dir "$RUN_DIR" --date "$DAY"
 ```
 
 What each one actually gets you:
@@ -130,14 +133,15 @@ What each one actually gets you:
 - `render-journal-ux` writes a self-contained local page, verified in Chrome.
 - `append-conversation` appends a turn under an exclusive lock. An Embry turn is
   refused unless it carries a requested tone and rendered audio.
+- `carry-conversation` upserts those turns into memory as *attributed speech*,
+  so a later dream can draw on them. This closes the loop.
 
 Run `ingest-day` on two different days and the journals differ — that is the
 point, and it is the thing that did not work until 2026-08-04, when five
 consecutive dreams were producing byte-identical entries.
 
-What is still missing: nothing carries the conversation back into memory, so
-tomorrow's dream cannot know what was said. See
-[`docs/EVIDENCE.md`](docs/EVIDENCE.md) for the claim-by-claim boundary.
+See [`docs/EVIDENCE.md`](docs/EVIDENCE.md) for the claim-by-claim boundary and
+what each receipt does *not* prove.
 
 ---
 
@@ -238,12 +242,47 @@ So the pilot showed the pipeline runs repeatedly. It did not show
 day-to-day experiential change, and adding day events alone would not have
 produced any. Details and receipts: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).
 
+## What this is for
+
+If you are evaluating this as research, the question it exists to answer is
+narrow and falsifiable:
+
+> **Does letting a persona dream about what happened to it produce anything a
+> plain memory readout or a written reflection would not — and is it still
+> recognizably itself afterwards?**
+
+"No" is a real answer. The project is built so that a null or negative result
+survives contact with the surfaces: claims are bound to receipts, receipts state
+what they do *not* prove, and a gate fails closed when a claim outruns its
+evidence. One finding is already negative and stayed that way — the requested
+delivery tone does not reach the waveform, measured against the renderer's own
+noise floor, and the project stopped claiming emotional delivery rather than
+retrying for a better draw.
+
+**The mechanism now runs a full cycle.** The day's events enter memory; a dream
+draws on them alongside who the persona already is; the dream becomes a journal
+she reads aloud; a human discusses that journal with her; and the discussion is
+carried back into memory where a later dream draws on it.
+
+Two properties are worth a researcher's attention:
+
+- **Consecutive days differ.** Five cycles once produced byte-identical
+  journals. They now differ, and differ *because of the day* — one entry opens
+  on the human being terse, another on impatience about stranded work.
+- **Commentary does not become autobiography.** A question a human asked comes
+  back as `human said, about my journal entry: …` — attributed speech bound to
+  the journal it was about, never as an event that happened to her. This is the
+  boundary that makes the loop safe to close at all.
+
+What is **not** shown is that any of this helps. That the loop closes is a
+mechanism result, not a benefit result; the controlled ablations against direct
+memory and structured reflection are the experiment, and they have not been run.
+
 ## Where it stands
 
-Honest one-liner: **the daily journal path works end to end, from the day's
-events through to Embry reading the entry aloud. What is missing is the return
-arc — the discussion is recorded but never carried back — and the delivery tone,
-which was measured and does not reach the audio.**
+Honest one-liner: **the mechanism runs a full cycle and the return arc closes.
+What is unproven is whether any of it helps, and one component — audible
+delivery tone — was measured and does not work.**
 
 What runs today, with receipts behind it:
 
@@ -253,6 +292,8 @@ What runs today, with receipts behind it:
 - a local journal and discussion page, verified in a browser
 - the day's code, project-state and affect events written into memory and
   blended into that day's dream, so consecutive days differ
+- a discussion carried back into memory as attributed speech, which a later
+  dream draws on — the loop closes
 
 What does not work yet, stated plainly:
 
@@ -260,10 +301,10 @@ What does not work yet, stated plainly:
   recorded, but it does not change the waveform — measured, not assumed. The
   engine in use ignores the parameters that would carry it.
 
-- **The discussion never reaches her.** Turns are recorded durably and render
-  back in the page, but nothing yet carries them into memory, so tomorrow's
-  dream cannot know what was said. This is now unbuilt rather than blocked —
-  the upstream memory defects were fixed on 2026-08-04.
+- **Nothing shows that dreaming helps.** The loop closes, days differ, and
+  provenance holds — but whether a dream beats a plain memory readout or a
+  written reflection is the actual research question, and the controlled
+  comparison has not been run.
 
 The full claim-by-claim boundary, every receipt, and what each one does *not*
 prove: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).

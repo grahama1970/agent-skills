@@ -81,6 +81,7 @@ vocabulary is deliberately narrow: **implemented** means code exists,
 | Journal page | Live slice proven: rendered in Chrome at 1440x900, footnotes resolve, audio loads | `reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json` |
 | Interactive dream discussion | Append-only writer live-proven; return into memory blocked upstream | `reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json` |
 | Day events to a later dream | Live slice proven: two consecutive days produce different journals | `reports/goal_v5/day_events/DAY_BLEND_RECEIPT.json` |
+| Return arc, discussion into a later dream | Live slice proven: carried, retrieved, and recalled as attributed speech | `reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json` |
 | PCTOM-R held-out benefit | Not run | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1008 |
 
 Revision ids, request hashes, receipt paths, and the per-phase narrative are in
@@ -94,7 +95,7 @@ journal loop:
 
 | Step | Command | Blocked on |
 |---|---|---|
-| Carry the discussion back into memory | *(not built)* | the last open joint in the loop |
+| Show that dreaming *helps* | controlled ablation vs memory and reflection | the actual research question, unrun |
 
 ## PCTOM-R, and why its numbers are not a result
 

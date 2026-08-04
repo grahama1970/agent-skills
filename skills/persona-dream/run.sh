@@ -743,6 +743,9 @@ case "$COMMAND" in
   audit-readme-proof-claims)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/audit_readme_proof_claims.py" "$@"
     ;;
+  carry-conversation)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/carry_conversation.py" "$@"
+    ;;
   append-conversation)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/append_conversation.py" "$@"
     ;;

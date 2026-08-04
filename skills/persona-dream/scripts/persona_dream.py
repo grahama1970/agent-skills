@@ -572,7 +572,21 @@ def _fetch_day_memories(persona: Persona, day: str, want: int) -> tuple[list[dic
     by_kind: dict[str, list[dict[str, Any]]] = {}
     for item in items:
         by_kind.setdefault(str(item.get("type", "")), []).append(item)
-    order = sorted(by_kind, key=lambda k: (0 if "affect" in k else 1 if "project_state" in k else 2, k))
+    # Priority, not alphabetical. Conversation is the return arc -- what was
+    # said back about the last dream -- and on a day when someone engaged, that
+    # outranks how many commits were pushed. Sorting by name alone put
+    # "(code)" ahead of "(conversation)" and silently dropped the arc, which
+    # made the loop look closed while nothing came back.
+    def _rank(kind: str) -> int:
+        if "affect" in kind:
+            return 0
+        if "conversation" in kind:
+            return 1
+        if "project_state" in kind:
+            return 2
+        return 3
+
+    order = sorted(by_kind, key=lambda k: (_rank(k), k))
     drawn: list[dict[str, Any]] = []
     while len(drawn) < want and any(by_kind[k] for k in order):
         for k in order:

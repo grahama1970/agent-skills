@@ -83,6 +83,8 @@ CLAIMS: dict[str, tuple[str | None, str | None]] = {
         "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json", "PASS_"),
     "Day events to a later dream": (
         "reports/goal_v5/day_events/DAY_BLEND_RECEIPT.json", "PASS_"),
+    "Return arc, discussion into a later dream": (
+        "reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json", "PASS_"),
     #: Declared unproven. No receipt exists and none is claimed.
     "PCTOM-R held-out benefit": (None, None),
     "Human perceived emotion and identity": (None, None),

@@ -1,0 +1,70 @@
+"""The return arc: a discussion must reach a later dream, as speech (#1210 follow-on).
+
+The hazard is not losing the turn, it is what the turn becomes. Human commentary
+recalled as an ordinary episodic event turns a question into an experience, and
+the project's whole discipline is that nothing silently becomes historical fact.
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+import carry_conversation as cc  # noqa: E402
+import persona_dream as pd  # noqa: E402
+
+
+TURNS = [
+    {"role": "human", "text": "why did that memory surface",
+     "created_at": "2026-08-04T16:18:43Z", "journal_spoken_sha256": "sha256:abc"},
+    {"role": "embry", "text": "Because it is the one I keep not resolving.",
+     "created_at": "2026-08-04T16:18:44Z", "requested_delivery_tone": "memory_uncertain"},
+]
+
+
+def test_a_turn_is_stored_as_speech_not_as_an_event():
+    """The text itself must carry the attribution, not only the metadata.
+
+    A recall path that drops the metadata must still be unable to present a
+    human question as something that happened to her.
+    """
+    docs = cc.build_documents(TURNS, "embry", "2026-08-04")
+    human = docs[0]
+    assert human["record_type"] == "conversation_turn"
+    assert human["speaker"] == "human"
+    assert human["solution"].startswith("human said, about my journal entry:")
+    assert "why did that memory surface" in human["solution"]
+
+
+def test_a_turn_is_bound_to_the_journal_it_discussed():
+    docs = cc.build_documents(TURNS, "embry", "2026-08-04")
+    assert docs[0]["said_about"] == "sha256:abc"
+
+
+def test_carrying_is_an_upsert():
+    """Re-carrying the same discussion must not duplicate it."""
+    a = cc.build_documents(TURNS, "embry", "2026-08-04")
+    b = cc.build_documents(TURNS, "embry", "2026-08-04")
+    assert [d["_key"] for d in a] == [d["_key"] for d in b]
+    assert len({d["_key"] for d in a}) == len(a)
+
+
+def test_conversation_outranks_commit_churn_in_the_day_draw():
+    """Ranking kinds alphabetically dropped the arc from every dream.
+
+    "(code)" sorts before "(conversation)", so a carried discussion never
+    reached the residue and the loop looked closed while nothing came back.
+    """
+    kinds = ["Day event (code)", "Day event (conversation)",
+             "Day event (affect)", "Day event (project_state)"]
+    by_kind = {k: [{"scope": "episodic:day=2026-08-04", "text": k, "type": k}] for k in kinds}
+    order = sorted(by_kind, key=lambda k: (
+        0 if "affect" in k else 1 if "conversation" in k else 2 if "project_state" in k else 3, k))
+    assert order.index("Day event (conversation)") < order.index("Day event (code)")
+
+
+def test_a_conversationless_day_still_works():
+    docs = cc.build_documents([], "embry", "2026-08-04")
+    assert docs == []

@@ -1,0 +1,84 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "that the later dream is BETTER for having the conversation -- only that it reaches it",
+      "that the persona interprets what was said correctly",
+      "longitudinal adaptation across many days, which remains unrun",
+      "anything about human perception of the resulting voice"
+    ],
+    "proves": [
+      "a discussion about a dream is carried into memory and is retrievable there",
+      "a later dream draws that discussion into its residue",
+      "the discussion recalls as attributed speech, not as an event that occurred"
+    ]
+  },
+  "created_at": "2026-08-04T17:40:00Z",
+  "cycle": [
+    {
+      "command": "ingest-day --date 2026-08-04 --from-commits --project-state ... --affect ...",
+      "result": "7 events written to memory, 7 read back",
+      "step": 1
+    },
+    {
+      "command": "generate --persona embry --day 2026-08-04",
+      "result": "dream drawn by quota: 3 day events + 3 persona memories",
+      "step": 2
+    },
+    {
+      "command": "speak-journal --run-dir <run>",
+      "result": "journal.wav, hash-bound to journal_spoken.txt, ASR verified",
+      "step": 3
+    },
+    {
+      "command": "append-conversation --role human --text 'why did that memory surface'",
+      "result": "turn appended durably, bound to the journal sha256",
+      "step": 4
+    },
+    {
+      "command": "carry-conversation --run-dir <run> --date 2026-08-04",
+      "result": "3 turns carried into memory, 3 read back",
+      "step": 5
+    },
+    {
+      "command": "generate --persona embry --day 2026-08-04",
+      "result": "the conversation is drawn into the next dream",
+      "step": 6
+    }
+  ],
+  "failed_gates": [],
+  "idempotent": {
+    "note": "carry-conversation is an upsert; _key is a sha256 of persona, timestamp, role and text",
+    "verified": "re-running carried the same 3 turns with no duplicates"
+  },
+  "live": true,
+  "mocked": false,
+  "priority_defect_found_and_fixed": {
+    "consequence_if_shipped": "the loop would have looked closed while nothing came back",
+    "defect": "the day draw ranked kinds alphabetically, so \"(code)\" sorted ahead of \"(conversation)\" and the carried discussion was dropped from every dream",
+    "fix": "kinds are ranked by what they carry -- affect, conversation, project_state, code. On a day when someone engaged with the dream, that outranks commit count."
+  },
+  "provenance_control": {
+    "control": "turns are stored as record_type=conversation_turn with a speaker and the sha256 of the journal discussed, and the stored text is prefixed with who said it, so a recall path that drops the metadata still cannot present it as an event",
+    "hazard": "if a human question is written back as an ordinary episodic event, it recalls later as something that HAPPENED to her, and commentary silently becomes autobiography",
+    "holds": true,
+    "observed": "the turn recalled as \"human said, about my journal entry: ...\" rather than as a bare event"
+  },
+  "schema": "persona_dream.closed_loop_receipt.v1",
+  "status": "PASS_RETURN_ARC_CLOSED",
+  "the_arc_closes": {
+    "as_recalled": "human said, about my journal entry: why did that memory surface",
+    "carried_turns": 3,
+    "day_kinds_drawn": [
+      "affect",
+      "conversation",
+      "project_state"
+    ],
+    "reached_a_later_dream": true,
+    "read_back": 3,
+    "strata_achieved": {
+      "day": 3,
+      "persona-dream": 3
+    }
+  },
+  "what_this_demonstrates": "The full cycle runs and returns: the day's events become a dream, the dream becomes a journal Embry reads aloud, a human discusses that journal with her, and the discussion is carried into memory where a later dream draws on it. Until now the loop ran one way and the talking-back went nowhere."
+}

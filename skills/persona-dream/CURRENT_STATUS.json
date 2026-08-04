@@ -582,7 +582,7 @@
       "scope": "durability of the discussion record on disk; not its return into memory",
       "receipt": "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json",
       "proves": "human, agent and embry turns are appended to conversation.jsonl under an exclusive lock, survive the browser, read back after write, and are bound by hash to the journal they discuss; an embry turn is refused unless it carries a requested delivery tone and rendered audio",
-      "does_not_prove": "that the conversation is carried into memory and influences a later dream; the upstream defects that blocked it are fixed (graph-memory-operator#99, #100, verified 2026-08-04), so this is now unbuilt rather than blocked",
+      "does_not_prove": "that a later dream is improved by the conversation; the arc now closes mechanically -- see return_arc_closed -- but benefit is unproven",
       "receipt_sha256": "sha256:e9093ad7b32c8f76d5760a5efc8bd9021e2f059eb027761a66d7cd89301dcbcd"
     },
     "daily_event_ingestion": {
@@ -600,6 +600,14 @@
       "proves": "the page renders in Chrome at 1440x900 with journal prose, tone chips and provenance footnotes; footnote links resolve to their anchors; the audio player resolves its source and loads the journal audio at its true 17.48s duration",
       "does_not_prove": "visual design quality, other viewports, accessibility, or that a human finds it usable",
       "receipt_sha256": "sha256:38113d74578245963b0e36b9f9604898545d02b346535f2949f5a1ab2f97e0a0"
+    },
+    "return_arc_closed": {
+      "status": "PASS_RETURN_ARC_CLOSED",
+      "scope": "one persona, one day, one local configuration; mechanism only",
+      "receipt": "reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json",
+      "receipt_sha256": "sha256:91fcee1fae43ca8102f13489ed389f5d8fe7923fa7fc30661a756ce1d75a3742",
+      "proves": "a discussion about a dream is carried into memory, retrieved by a later dream, and recalled as attributed speech rather than as an event that occurred",
+      "does_not_prove": "that the later dream is better for it; that is the research question the controlled ablations exist to answer, and it remains unrun"
     }
   },
   "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md"
