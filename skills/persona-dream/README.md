@@ -396,14 +396,16 @@ What runs today, with receipts behind it:
 
 What does not work yet, stated plainly:
 
-- **The delivery envelope is metadata-only on this backend.** Tone, `pace` and
-  `pause_strategy` are all accepted, echoed back and recorded — and none of them
-  changes the audio. Ten neutral repeats set the noise floor; no requested tone
-  moved any acoustic feature past it, and a `slow` versus `fast` render differed
-  by 0.20 s when two *identical* renders differed by 0.80 s. The engine also
-  lists the affect parameters among those it ignores, so on *this* backend there
-  is no path from request to waveform at all. Other texts, voices, backends and
-  human listeners were not tested.
+- **Tone is request-only; timing is now real.** Ten neutral repeats set a noise
+  floor and no requested *tone* moved any acoustic feature past it — the engine
+  ignores the parameters that would carry affect, so tone reaches the renderer
+  and stops there. After we reported this upstream, Chatterbox made `pace`
+  audible (`chatterbox#20`): a deterministic pitch-preserving time stretch, with
+  a per-render receipt showing measured input and output duration. Verified
+  here — output matches `input / tempo_factor` to under 0.01 s, making speech
+  17.6% longer on `slow` and 15.3% shorter on `fast`. The renderer now *declares*
+  which delivery fields are audible rather than silently accepting all of them.
+  Human perception of any of it remains untested.
 
 - **Nothing shows that dreaming helps.** The loop closes, days differ, and
   provenance holds — but whether a dream beats a plain memory readout or a
@@ -499,11 +501,12 @@ already contains one retirement and one negative that stuck.
   variables awaiting validation.
 - **No human subjects.** No trust, delegation, or perception measurement. The
   one perceptual study was blocked as technically confounded and stayed blocked.
-- **One component is already known not to work on this backend.** The requested
-  delivery envelope — tone, pace, pause strategy — does not reach the waveform.
-  It was measured, not assumed, and the surfaces were corrected rather than the
-  experiment re-run for a better draw. Filed upstream as
-  [`chatterbox#20`](https://github.com/grahama1970/chatterbox/issues/20).
+- **Tone does not reach the waveform on this backend.** Measured, not assumed,
+  and the surfaces were corrected rather than the experiment re-run for a better
+  draw. Reporting it upstream ([`chatterbox#20`](https://github.com/grahama1970/chatterbox/issues/20),
+  since fixed) made `pace` genuinely audible and made the renderer declare which
+  delivery fields are request-only — so the negative result produced a working
+  channel, which is the point of publishing negatives.
 
 If you want the methodology rather than the hypothesis — how claims are bound to
 receipts and how a claim that outruns its evidence is refused — that is

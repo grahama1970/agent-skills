@@ -270,3 +270,41 @@ affect parameters as supported and demonstrably moves audio.
   because it bounds what repairing tone *selection* can achieve.
 - **Serves criterion:** `voice_value_disposition`, `ablation_retirement`.
 
+---
+
+## chatterbox#20 resolved — a negative produced a working channel
+
+```text
+Finding:
+Reporting the inert delivery envelope upstream got `pace` implemented as a real
+effect. It is now a deterministic pitch-preserving phase-vocoder time stretch
+applied on every render path, and the renderer declares per field which parts of
+the envelope are audible and which are request-only.
+
+What was falsified:
+Our own widened claim that the ENTIRE delivery envelope is metadata on this
+backend. That was true when measured and is now false for pace. Tone and
+pause_strategy remain request-only, and the renderer now says so itself.
+
+Method note worth keeping:
+The cross-render noise-floor test -- correct for tone -- gave the WRONG answer
+for pace. TTS generation varies 4.08-4.92s independent of pace, which swamps a
+15% stretch, so slow-vs-fast cleared the floor by only 1.5x and read as null.
+The pace_effect receipt provides a PAIRED within-render measurement instead:
+output duration matches input / tempo_factor to under 0.01s. Match the
+instrument to the claim -- an unpaired test against a noisy generator cannot
+detect a modest deterministic transform.
+
+Decision:
+ADOPT pace as an audible delivery channel. Keep the CONSTRAINT on tone.
+```
+
+- **Evidence:** verified live after the upstream deploy — slow 4.60s -> 5.419s
+  at tempo 0.85 (expected 5.412s), fast 4.88s -> 4.139s at tempo 1.18 (expected
+  4.136s). 17.6% longer and 15.3% shorter respectively.
+- **Transferable lesson:** publishing a negative with a reproduction got the
+  capability built. The receipt also degrades honestly — a stretch failure
+  reports `applied: false` with a reason rather than claiming an effect it did
+  not produce, which is the property that made the original defect invisible.
+- **Serves criterion:** `voice_value_disposition`, `transfer_record`.
+
