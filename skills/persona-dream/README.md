@@ -528,13 +528,20 @@ already contains one retirement and one negative that stuck.
   against a 0.52 tolerance. Applying one identical `norm_loudness` did not fix
   it; it tightened the tolerance without equalizing the conditions.
 
-  That leaves a genuine methodological fork, and we have not chosen it quietly.
-  Either loudness is a nuisance to be gain-matched offline before listening —
-  conservative, preserves the preregistration — or loudness *is* part of the
-  affect, since grief really is quieter than a firm boundary, in which case the
-  screen's tolerance rule is wrong for a calibrated renderer and must be
-  re-preregistered **before** any listening rather than after seeing results.
-  Tracked as [`#1179`](https://github.com/grahama1970/agent-skills/issues/1179).
+  And the fork that looked open has effectively closed, in a way that blocks the
+  study rather than unblocking it. A held-out dimensional emotion model run
+  upstream found that perceived *arousal* tracks the requested value closely
+  while perceived *valence* is flat — the tones separate by energy, not by
+  positivity. Our loudness ordering corroborates that from a different
+  instrument. So gain-matching the stimuli would remove the only working affect
+  dimension and guarantee a null that says nothing about emotion, while *not*
+  gain-matching leaves raters able to sort by level. No design escapes that pair
+  while valence is inert, which makes
+  [`chatterbox#23`](https://github.com/grahama1970/chatterbox/issues/23) a
+  prerequisite for a meaningful perceptual study rather than a parallel
+  improvement. Tracked here as
+  [`#1179`](https://github.com/grahama1970/agent-skills/issues/1179), which
+  should now wait.
 - **Nobody has listened.** Affect is *applied* — the renderer reports the knobs
   it used per render — but whether a human hears the intended feeling is
   untested, and that is the claim people actually care about

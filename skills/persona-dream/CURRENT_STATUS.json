@@ -494,12 +494,15 @@
       "valid_human_responses": "0/20",
       "sample_count": 0,
       "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
-      "does_not_prove": "any perceptual emotion, naturalness, or human identity result. Re-measured 2026-08-04 against the calibrated renderer: duration is now controllable by pinning pace, but loudness still separates the conditions and demonstrably because of the affect itself -- grief_safe derives exaggeration 0.570 and renders quiet, firm_boundary derives 1.155 and renders 4.08 LKFS louder against a 0.52 tolerance. One identical norm_loudness tightened the tolerance without equalizing conditions. Either loudness is gain-matched offline before listening, or the tolerance rule is re-preregistered for a calibrated renderer; that choice is open and must be made before any collection.",
+      "does_not_prove": "any perceptual emotion, naturalness, or human identity result. Re-measured 2026-08-04 against the calibrated renderer: duration is now controllable by pinning pace, but loudness still separates the conditions and demonstrably because of the affect itself -- grief_safe derives exaggeration 0.570 and renders quiet, firm_boundary derives 1.155 and renders 4.08 LKFS louder against a 0.52 tolerance. One identical norm_loudness tightened the tolerance without equalizing conditions. Upstream chatterbox#23 then found perceived valence flat (Spearman 0.075) while arousal tracks intensity (0.961), so tones separate by energy alone. Gain-matching would delete the only working affect dimension and guarantee an uninterpretable null; not gain-matching leaves level as a discriminable cue. No design escapes that pair while valence is inert, so #1179 waits on chatterbox#23.",
       "successor_issue": "grahama1970/agent-skills#1179",
       "successor_resolved": false,
       "surface_token": "#1179",
       "blocking_receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-      "resolved_prerequisite": "grahama1970/agent-skills#1127 CLOSED: technical screen built and it BLOCKED the existing stimuli"
+      "resolved_prerequisite": "grahama1970/agent-skills#1127 CLOSED: technical screen built and it BLOCKED the existing stimuli",
+      "blocked_by": [
+        "grahama1970/chatterbox#23"
+      ]
     },
     "pctom_apparatus_integrity": {
       "status": "PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE",
