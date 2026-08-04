@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import zipfile
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
 from typer.testing import CliRunner
@@ -13,8 +14,29 @@ from monitor_opportunities.tailoring import _validate_no_prohibited_delta
 runner = CliRunner()
 
 
+def _claims_fixture() -> Path:
+    return Path(__file__).parent / "fixtures" / "claims" / "approved-claims.json"
+
+
+def _load_claims() -> dict:
+    return json.loads(_claims_fixture().read_text(encoding="utf-8"))
+
+
+def _docx_lines(path: Path) -> list[str]:
+    with zipfile.ZipFile(path) as docx:
+        document = docx.read("word/document.xml").decode("utf-8")
+    root = ElementTree.fromstring(document)
+    ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+    lines = []
+    for paragraph in root.findall(".//w:p", ns):
+        text = "".join(node.text or "" for node in paragraph.findall(".//w:t", ns))
+        if text:
+            lines.append(text)
+    return lines
+
+
 def test_tailor_writes_claim_bound_artifacts(tmp_path: Path) -> None:
-    claims = Path(__file__).parent / "fixtures" / "claims" / "approved-claims.json"
+    claims = _claims_fixture()
     out = tmp_path / "tailor"
     result = runner.invoke(
         app,
@@ -23,8 +45,24 @@ def test_tailor_writes_claim_bound_artifacts(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     receipt = json.loads((out / "tailoring-receipt.json").read_text(encoding="utf-8"))
     variant = json.loads((out / "resume-variant.json").read_text(encoding="utf-8"))
+    profile = json.loads((out / "screening-interface-profile.json").read_text(encoding="utf-8"))
+    diff = json.loads((out / "presentation-diff.json").read_text(encoding="utf-8"))
     assert receipt["external_effects"] is False
+    assert receipt["screening_interface_profile_sha256"] == variant["screening_interface_profile_sha256"]
+    assert "Employer ranking weights, knockout logic, and recruiter workflow are unknown." in profile["unknowns"]
+    assert profile["ats_provider"] == "greenhouse"
+    assert profile["accepted_file_formats"] == ["docx", "pdf", "txt"]
+    assert {row["change_type"] for row in diff["changes"]} >= {
+        "CLAIM_SELECTION",
+        "CLAIM_ORDER",
+        "HEADING",
+        "TARGET_SUMMARY",
+        "LAYOUT_OR_FORMAT",
+    }
+    assert diff["prohibited_changes"] == []
     assert len(variant["claim_refs"]) == 3
+    assert all(row["verification_status"] == "approved" for row in variant["claim_refs"])
+    assert all("resume" in row["allowed_channels"] for row in variant["claim_refs"])
     assert all(row["claim_refs"] for row in variant["rendered_statements"] if row["kind"] == "approved_claim")
     text = (out / "resume.txt").read_text(encoding="utf-8")
     assert "Target role: Principal AI Architect" in text
@@ -35,6 +73,8 @@ def test_tailor_writes_claim_bound_artifacts(tmp_path: Path) -> None:
     approved_texts = {row["text"] for row in variant["rendered_statements"] if row["kind"] == "approved_claim"}
     for approved_line in approved_texts:
         assert approved_line in document
+    factual_docx_lines = [line for line in _docx_lines(out / "resume.docx") if line in approved_texts]
+    assert factual_docx_lines == [row["text"] for row in variant["rendered_statements"] if row["kind"] == "approved_claim"]
 
 
 def test_tailor_rejects_missing_claim(tmp_path: Path) -> None:
@@ -63,8 +103,29 @@ def test_tailor_rejects_schema_document_instead_of_active_snapshot(tmp_path: Pat
 
 
 def test_tailor_rejects_stale_or_unapproved_claim(tmp_path: Path) -> None:
-    claims = json.loads((Path(__file__).parent / "fixtures" / "claims" / "approved-claims.json").read_text())
+    claims = _load_claims()
     claims["claims"][0]["stale"] = True
+    claims_path = tmp_path / "claims.json"
+    claims_path.write_text(json.dumps(claims), encoding="utf-8")
+    result = runner.invoke(
+        app,
+        ["tailor", "--posting", "fixture:eligible-ai-architect", "--claims", str(claims_path), "--out", str(tmp_path / "out")],
+    )
+    assert result.exit_code == 2
+    assert "missing approved claim" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("verification_status", "unverified"),
+        ("allowed_channels", ["email"]),
+        ("valid_until", "2024-01-01T00:00:00Z"),
+    ],
+)
+def test_tailor_rejects_claims_outside_resume_authority(tmp_path: Path, field: str, value: object) -> None:
+    claims = _load_claims()
+    claims["claims"][0][field] = value
     claims_path = tmp_path / "claims.json"
     claims_path.write_text(json.dumps(claims), encoding="utf-8")
     result = runner.invoke(
