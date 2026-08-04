@@ -94,9 +94,7 @@ journal loop:
 
 | Step | Command | Blocked on |
 |---|---|---|
-| Write the day into memory | `./run.sh ingest-day --date <d> --from-commits` | #1212 — recall discards `scope`, and stored documents are not retrievable |
-| Keep the discussion | *(no writer yet)* | #1210 |
-| Verify the page in a browser | *(no capture yet)* | #1213 |
+| Carry the discussion back into memory | *(not built)* | the last open joint in the loop |
 
 ## PCTOM-R, and why its numbers are not a result
 

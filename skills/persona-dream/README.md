@@ -1,6 +1,6 @@
 # Persona Dream
 
-![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)
+![Persona Dream — the research loop: memory becomes a dream, the dream becomes a journal she reads aloud, the journal becomes a conversation, and the conversation must return to memory](assets/readme/research-loop.webp)
 
 Persona Dream gives a persistent multimodal voice persona — a long-lived agent
 with durable memory, a stable character, and access to text, images, audio, and
@@ -100,24 +100,44 @@ Three commands take a dream to a page you can read and a voice you can hear:
 
 ```bash
 RUN_DIR=/tmp/persona-dream-journal
+DAY=$(date -u +%F)
 
-./run.sh generate         --persona embry --output-dir "$RUN_DIR"
-./run.sh speak-journal    --run-dir "$RUN_DIR"
+# What happened today, in her words, written into memory
+./run.sh ingest-day --date "$DAY" --from-commits \
+    --project-state "where the work actually stands" \
+    --affect "how the human seemed today"
+
+# Dream on it, blended with who she already is
+./run.sh generate          --persona embry --day "$DAY" --output-dir "$RUN_DIR"
+./run.sh speak-journal     --run-dir "$RUN_DIR"
 ./run.sh render-journal-ux --run-dir "$RUN_DIR" --out "$RUN_DIR/index.html"
+
+# Talk to her about it; the turn is durable
+./run.sh append-conversation --run-dir "$RUN_DIR" \
+    --role human --text "why did that memory surface?"
 ```
 
 What each one actually gets you:
 
-- `generate` writes the annotated `journal.md` and the tag-stripped
+- `ingest-day` compresses the day into at most 8 first-person events across
+  code, project-state and affect, writes them to memory, and gates on reading
+  them back.
+- `generate` draws by quota — a reserved share for today, the rest for identity
+  — then writes the annotated `journal.md` and the tag-stripped
   `journal_spoken.txt`, bound to each other by hash.
 - `speak-journal` produces a live `journal.wav` in the run directory, bound by
   sha256 to that exact spoken text, with an ASR transcript.
-- `render-journal-ux` writes a self-contained local page. **Its browser
-  behaviour is unverified** — the page has never been opened in one.
+- `render-journal-ux` writes a self-contained local page, verified in Chrome.
+- `append-conversation` appends a turn under an exclusive lock. An Embry turn is
+  refused unless it carries a requested tone and rendered audio.
 
-`ingest-day` and durable conversation are deliberately absent here; they are
-not finished. See [`docs/EVIDENCE.md`](docs/EVIDENCE.md) for what each is
-waiting on.
+Run `ingest-day` on two different days and the journals differ — that is the
+point, and it is the thing that did not work until 2026-08-04, when five
+consecutive dreams were producing byte-identical entries.
+
+What is still missing: nothing carries the conversation back into memory, so
+tomorrow's dream cannot know what was said. See
+[`docs/EVIDENCE.md`](docs/EVIDENCE.md) for the claim-by-claim boundary.
 
 ---
 
@@ -220,15 +240,17 @@ produced any. Details and receipts: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).
 
 ## Where it stands
 
-Honest one-liner: **the readable and spoken journal path works; the interactive,
-daily, affect-validated loop does not yet.**
+Honest one-liner: **the daily journal path works end to end, from the day's
+events through to Embry reading the entry aloud. What is missing is the return
+arc — the discussion is recorded but never carried back — and the delivery tone,
+which was measured and does not reach the audio.**
 
 What runs today, with receipts behind it:
 
 - a dream grounded in recalled memories, every conclusion linked to its source
 - a first-person `journal.md` with tone annotations and provenance footnotes
 - a hash-bound spoken form, and Embry reading it aloud into `journal.wav`
-- a local journal/discussion page
+- a local journal and discussion page, verified in a browser
 - the day's code, project-state and affect events written into memory and
   blended into that day's dream, so consecutive days differ
 
