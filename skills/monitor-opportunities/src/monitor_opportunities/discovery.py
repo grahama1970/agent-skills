@@ -63,6 +63,22 @@ def _coerce_bool(value: Any) -> bool:
     return False
 
 
+def _candidate_id(prefix: str, payload: dict[str, Any]) -> str:
+    """Return a stable opportunity identity independent of mutable page content."""
+
+    return stable_id(
+        prefix,
+        {
+            "lane": payload.get("lane"),
+            "source_provider": payload.get("source_provider"),
+            "source_identity": payload.get("source_identity"),
+            "organization": payload.get("organization"),
+            "title": payload.get("title"),
+            "primary_evidence_url": payload.get("primary_evidence_url") or payload.get("posting_url"),
+        },
+    )
+
+
 def _text_evidence_record(raw: str) -> dict[str, Any]:
     record: dict[str, Any] = {}
     for line in raw.splitlines():
@@ -175,7 +191,7 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
             "posting_text": evidence_text[:4000],
             "fit_score": float(record.get("fit_score") or (0.93 if top_candidate else 0.72)),
         }
-        payload["candidate_id"] = stable_id("candidate:a:linkedin", payload)
+        payload["candidate_id"] = _candidate_id("candidate:a:linkedin", payload)
         candidates.append(payload)
     return receipt, candidates
 
@@ -268,7 +284,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
             "posting_text": (job.get("content") or "")[:4000],
             "fit_score": target.get("default_fit_score", 0.5),
         }
-        payload["candidate_id"] = stable_id("candidate:a", payload)
+        payload["candidate_id"] = _candidate_id("candidate:a", payload)
         candidates.append(payload)
     return receipt, candidates
 
@@ -334,7 +350,7 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "posting_text": posting_text[:4000],
             "fit_score": target.get("default_fit_score", 0.5),
         }
-        payload["candidate_id"] = stable_id("candidate:a", payload)
+        payload["candidate_id"] = _candidate_id("candidate:a", payload)
         candidates.append(payload)
     return receipt, candidates
 
@@ -398,7 +414,7 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "posting_text": (job.get("descriptionHtml") or job.get("descriptionPlain") or "")[:4000],
             "fit_score": target.get("default_fit_score", 0.5),
         }
-        payload["candidate_id"] = stable_id("candidate:a", payload)
+        payload["candidate_id"] = _candidate_id("candidate:a", payload)
         candidates.append(payload)
     return receipt, candidates
 
@@ -575,7 +591,7 @@ def _federal_page_candidates(target: dict[str, Any]) -> tuple[dict[str, Any], li
             "posting_text": f"Observed primary-source keywords: {', '.join(hits)}",
             "fit_score": target.get("default_fit_score", 0.6),
         }
-        payload["candidate_id"] = stable_id("candidate:b", payload)
+        payload["candidate_id"] = _candidate_id("candidate:b", payload)
         candidates.append(payload)
     return receipt, candidates
 
@@ -627,7 +643,7 @@ def _commercial_receipt(target: dict[str, Any]) -> tuple[dict[str, Any], list[di
             "contact_state": "CONTACT_UNKNOWN",
             "unresolved_assumptions": ["Budget, buyer, and timing are unknown."],
         }
-        payload["candidate_id"] = stable_id("candidate:c", payload)
+        payload["candidate_id"] = _candidate_id("candidate:c", payload)
         candidates.append(payload)
     return receipt, candidates
 

@@ -91,6 +91,15 @@ def build_outreach_packet(
     }
     payload_digest = sha256_json(basis)
     gate = validate_roundtable_receipt(roundtable_receipt, payload_digest)
+    reviewed_payload_digest = payload_digest
+    revision_note = None
+    if gate["ok"] and roundtable_receipt and roundtable_receipt.get("revised_body"):
+        body = str(roundtable_receipt["revised_body"])
+        basis = {**basis, "body": body}
+        payload_digest = sha256_json(basis)
+        if roundtable_receipt.get("final_payload_digest") != payload_digest:
+            raise OutreachError("ROUNDTABLE_REVISION_DIGEST_MISMATCH")
+        revision_note = str(roundtable_receipt.get("revision_note") or "Roundtable revisions applied.")
     ready_state = "REVIEW_PERMITTED" if gate["ok"] else "BLOCKED_ROUNDTABLE"
     return {
         "packet_id": stable_id("outreach", {"opportunity_id": opportunity["opportunity_id"], "channel": channel}),
@@ -105,6 +114,8 @@ def build_outreach_packet(
         "roundtable_status": "PASS" if gate["ok"] else ("NOT_RUN" if roundtable_receipt is None else "BLOCKED"),
         "roundtable_verdict": gate["verdict"],
         "roundtable_receipt_digest": gate["receipt_digest"],
+        "reviewed_payload_digest": reviewed_payload_digest if reviewed_payload_digest != payload_digest else None,
+        "revision_note": revision_note,
         "payload_digest": payload_digest,
         "readiness_state": ready_state,
         "effect_status": "WOULD_PRESENT_STAGE0",

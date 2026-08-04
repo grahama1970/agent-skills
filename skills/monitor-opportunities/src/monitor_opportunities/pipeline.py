@@ -28,6 +28,85 @@ def _capability_authority() -> dict[str, str]:
     }
 
 
+def _load_receipt_map(path: Path | None, *, key_field: str) -> dict[str, dict[str, Any]]:
+    """Read a JSON receipt map or list keyed by a stable receipt field."""
+
+    if path is None:
+        return {}
+    raw = read_json(path)
+    rows: list[dict[str, Any]]
+    if isinstance(raw, dict) and all(isinstance(value, dict) for value in raw.values()):
+        return {str(key): value for key, value in raw.items()}
+    if isinstance(raw, dict):
+        candidate_rows = raw.get("receipts") or raw.get("effects")
+        rows = candidate_rows if isinstance(candidate_rows, list) else [raw]
+    elif isinstance(raw, list):
+        rows = raw
+    else:
+        rows = []
+    return {
+        str(row[key_field]): row
+        for row in rows
+        if isinstance(row, dict) and row.get(key_field) is not None
+    }
+
+
+def _apply_outreach_effects(
+    packets: list[dict[str, Any]],
+    effects_by_packet_id: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Attach read-back effect receipts to matching report-visible outreach packets."""
+
+    if not effects_by_packet_id:
+        return packets
+    updated: list[dict[str, Any]] = []
+    for packet in packets:
+        effect = effects_by_packet_id.get(packet["packet_id"])
+        if effect is None:
+            updated.append(packet)
+            continue
+        if effect.get("packet_id") != packet["packet_id"]:
+            raise ValueError(f"outreach effect packet mismatch: {packet['packet_id']}")
+        if effect.get("channel") != packet["channel"]:
+            raise ValueError(f"outreach effect channel mismatch: {packet['packet_id']}")
+        if effect.get("gmail_sent") is not False or effect.get("linkedin_automated") is not False:
+            raise ValueError(f"outreach effect violates no-send/no-automation policy: {packet['packet_id']}")
+        state = effect.get("state")
+        if state == "DRAFT_CREATED_NOT_SENT":
+            if packet["channel"] != "GMAIL":
+                raise ValueError(f"non-Gmail packet cannot carry Gmail draft effect: {packet['packet_id']}")
+            if packet.get("roundtable_status") != "PASS" or packet.get("readiness_state") != "REVIEW_PERMITTED":
+                raise ValueError(f"Gmail draft effect requires reviewed packet: {packet['packet_id']}")
+            draft_id = str(effect.get("draft_id") or "")
+            if not draft_id:
+                raise ValueError(f"Gmail draft effect missing draft_id: {packet['packet_id']}")
+            if effect.get("subject_digest") != sha256_json(packet.get("subject") or ""):
+                raise ValueError(f"Gmail draft subject digest mismatch: {packet['packet_id']}")
+            if effect.get("body_digest") != sha256_json(packet.get("body") or ""):
+                raise ValueError(f"Gmail draft body digest mismatch: {packet['packet_id']}")
+            updated.append(
+                {
+                    **packet,
+                    "effect_status": state,
+                    "draft_id": draft_id,
+                    "mailbox_draft_ref": f"gmail:draft:{draft_id}",
+                    "effect_receipt_digest": effect.get("receipt_digest"),
+                }
+            )
+            continue
+        if state == "INDETERMINATE":
+            updated.append(
+                {
+                    **packet,
+                    "effect_status": state,
+                    "effect_receipt_digest": effect.get("receipt_digest"),
+                }
+            )
+            continue
+        raise ValueError(f"unsupported outreach effect state: {state}")
+    return updated
+
+
 def _source_receipts(discovery_dir: Path) -> list[dict[str, Any]]:
     receipts = []
     for row in read_jsonl(discovery_dir / "source-receipts.jsonl"):
@@ -182,6 +261,8 @@ def _report_from_run(
     ranking_dir: Path,
     tailoring_dir: Path,
     skill_dir: Path,
+    roundtable_receipts: dict[str, dict[str, Any]] | None = None,
+    outreach_effects: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     shortlist = read_json(ranking_dir / "shortlist.json")
     rejections = read_json(ranking_dir / "rejections.json")
@@ -189,7 +270,12 @@ def _report_from_run(
     first_opportunity_id = opportunities[0]["opportunity_id"] if opportunities else None
     resume_variants = _resume_variant(tailoring_dir, first_opportunity_id)
     claim_snapshot = read_json(skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json")
-    outreach_packets = build_outreach_packets(opportunities=opportunities, claim_snapshot=claim_snapshot)
+    outreach_packets = build_outreach_packets(
+        opportunities=opportunities,
+        claim_snapshot=claim_snapshot,
+        roundtable_receipts=roundtable_receipts,
+    )
+    outreach_packets = _apply_outreach_effects(outreach_packets, outreach_effects or {})
     applications = [
         {
             "application_id": stable_id("application", opportunity["opportunity_id"]),
@@ -240,6 +326,17 @@ def _report_from_run(
         + len(applications)
         + len(application_packets)
     )
+    gmail_draft_effects = any(packet["effect_status"] == "DRAFT_CREATED_NOT_SENT" for packet in outreach_packets)
+    non_claims = [
+        "Stage 0 run proves local read-only artifacts for this invocation only.",
+        "No Gmail send, LinkedIn platform access, ATS, Memory, or external application effect was executed.",
+        "Outreach packets are local human-transmit text until a permitting Ask roundtable and capability-specific promotion exist.",
+        "Employer/client ranking weights and workflows remain unknown.",
+    ]
+    if gmail_draft_effects:
+        non_claims[0] = "This report consumed a promoted Gmail draft readback receipt for this invocation only."
+        non_claims[2] = "Gmail draft creation remains draft-only; THE HUMAN TRANSMITS and the skill never sends Gmail."
+
     return {
         "schema": "monitor_opportunities.report.v1",
         "run_id": run_id,
@@ -305,12 +402,7 @@ def _report_from_run(
             "hidden_total": 0,
             "hidden_ids": [],
         },
-        "non_claims": [
-            "Stage 0 run proves local read-only artifacts for this invocation only.",
-            "No Gmail send, Gmail draft creation, LinkedIn platform access, ATS, Memory, or external application effect was executed.",
-            "Outreach packets are local human-transmit text until a permitting Ask roundtable and capability-specific promotion exist.",
-            "Employer/client ranking weights and workflows remain unknown.",
-        ],
+        "non_claims": non_claims,
     }
 
 
@@ -319,6 +411,8 @@ def run_stage0(
     out_dir: Path,
     fixture_dir: Path | None = None,
     linkedin_evidence: Path | None = None,
+    roundtable_receipts_path: Path | None = None,
+    outreach_effects_path: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     run_id = "mo_" + stable_id("run", {"out": str(out_dir), "started": utc_now()}).split(":", 1)[1]
@@ -351,7 +445,16 @@ def run_stage0(
         phases.append({"phase": "TAILORING_COMPLETE", "artifact": str(tailoring_dir / "tailoring-receipt.json")})
 
     manifest_path = out_dir / "report-manifest.json"
-    report_manifest = _report_from_run(run_id, out_dir, discovery_dir, ranking_dir, tailoring_dir, skill_dir)
+    report_manifest = _report_from_run(
+        run_id,
+        out_dir,
+        discovery_dir,
+        ranking_dir,
+        tailoring_dir,
+        skill_dir,
+        _load_receipt_map(roundtable_receipts_path, key_field="receipt_key"),
+        _load_receipt_map(outreach_effects_path, key_field="packet_id"),
+    )
     write_json(manifest_path, report_manifest)
     manifest = load_manifest(manifest_path)
     render_artifacts = render_report(manifest, report_dir)

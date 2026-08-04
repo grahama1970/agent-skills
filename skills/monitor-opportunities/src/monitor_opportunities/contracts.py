@@ -182,9 +182,14 @@ class OutreachPacket(StrictModel):
     roundtable_status: str
     roundtable_verdict: str | None
     roundtable_receipt_digest: str | None
+    reviewed_payload_digest: str | None = None
+    revision_note: str | None = None
     payload_digest: str
     readiness_state: str
     effect_status: str
+    draft_id: str | None = None
+    mailbox_draft_ref: str | None = None
+    effect_receipt_digest: str | None = None
     sendable: bool
     candidate_transmits: bool
     human_send_steps: list[str] = Field(min_length=1)
@@ -336,8 +341,20 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError(
                 "HUMAN_TRANSMISSION_REQUIRED", "The candidate must transmit every message"
             )
-        if packet.get("effect_status") != "WOULD_PRESENT_STAGE0":
-            raise ContractError("OUTREACH_EFFECT_STAGE0", "Stage 0 outreach must remain local handoff only")
+        effect_status = packet.get("effect_status")
+        if effect_status not in {"WOULD_PRESENT_STAGE0", "DRAFT_CREATED_NOT_SENT", "INDETERMINATE"}:
+            raise ContractError("OUTREACH_EFFECT_STATUS_INVALID", f"Unsupported outreach effect: {effect_status}")
+        if effect_status == "DRAFT_CREATED_NOT_SENT":
+            if packet.get("channel") != "GMAIL":
+                raise ContractError("OUTREACH_DRAFT_CHANNEL_INVALID", "Only Gmail packets can reference Gmail drafts")
+            if packet.get("gmail_sent") is True or packet.get("sendable") is not False:
+                raise ContractError("OUTREACH_SENDABLE_STAGE0", "Gmail draft packets cannot be sendable")
+            if not packet.get("draft_id") or not packet.get("effect_receipt_digest"):
+                raise ContractError("OUTREACH_DRAFT_RECEIPT_MISSING", "Gmail draft packets require draft readback")
+            if packet.get("roundtable_status") != "PASS" or packet.get("readiness_state") != "REVIEW_PERMITTED":
+                raise ContractError("OUTREACH_DRAFT_WITHOUT_REVIEW", "Gmail drafts require permitting review")
+        elif any(packet.get(field) for field in ("draft_id", "mailbox_draft_ref", "effect_receipt_digest")):
+            raise ContractError("OUTREACH_EFFECT_REF_WITHOUT_EFFECT", "Draft refs require a draft effect")
         if packet.get("channel") == "LINKEDIN" and packet.get("subject") is not None:
             raise ContractError("LINKEDIN_SUBJECT_INVALID", "LinkedIn handoff packets do not use a subject")
         if packet.get("contact_provenance") in {"", None}:

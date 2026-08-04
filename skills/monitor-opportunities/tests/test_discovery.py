@@ -10,6 +10,7 @@ from monitor_opportunities.cli import app
 from monitor_opportunities.discovery import (
     LINKEDIN_AUTOMATION_POLICY,
     _ashby_candidates,
+    _candidate_id,
     _employment_candidates,
     _linkedin_evidence_candidates,
     _sam_receipt,
@@ -136,3 +137,18 @@ def test_human_supplied_linkedin_evidence_is_local_only_candidate() -> None:
     assert rows[0]["automation_policy"] == "linkedin_no_automation"
     assert rows[0]["top_candidate_evidence"] is True
     assert rows[0]["apply_url"] is None
+
+
+def test_candidate_identity_ignores_mutable_content_receipts() -> None:
+    base = {
+        "lane": "C",
+        "source_provider": "primary-company-source",
+        "source_identity": "https://example.com/needs",
+        "organization": "Example",
+        "title": "Modernization signal",
+        "primary_evidence_url": "https://example.com/needs",
+        "source_receipt_id": "src:first",
+        "content_hash": "hash:first",
+    }
+    changed = {**base, "source_receipt_id": "src:second", "content_hash": "hash:second"}
+    assert _candidate_id("candidate:c", base) == _candidate_id("candidate:c", changed)

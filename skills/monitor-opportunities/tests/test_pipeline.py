@@ -6,6 +6,8 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
+from monitor_opportunities.contracts import IMMUTABLE_GOAL
+from monitor_opportunities.util import sha256_json
 
 runner = CliRunner()
 
@@ -103,3 +105,79 @@ def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path)
         for row in manifest["opportunities"]
     )
     assert all(action["effects_external"] is False for action in manifest["decision_actions"])
+
+
+def test_run_renders_reviewed_gmail_draft_receipt(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    baseline = tmp_path / "baseline"
+    baseline_result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(baseline)])
+    assert baseline_result.exit_code == 0, baseline_result.output
+    baseline_manifest = json.loads((baseline / "report-manifest.json").read_text(encoding="utf-8"))
+    gmail_packet = next(
+        packet for packet in baseline_manifest["outreach_packets"] if packet["channel"] == "GMAIL"
+    )
+    roundtable_receipt = {
+        "schema": "monitor_opportunities.outreach_roundtable_receipt.v1",
+        "receipt_key": f"{gmail_packet['opportunity_id']}:GMAIL",
+        "immutable_goal": IMMUTABLE_GOAL,
+        "topology": "concurrent",
+        "rounds": 1,
+        "attributed_synthesis": True,
+        "packet_digest": gmail_packet["payload_digest"],
+        "verdict": "SEND_AS_IS",
+        "seats": [
+            {"handler": "gpt-5.5-high", "status": "PASS"},
+            {"handler": "gpt-5.5-xhigh", "status": "PASS"},
+        ],
+        "dissent": [],
+    }
+    effect_payload = {
+        "schema": "monitor_opportunities.outreach_effect_receipt.v1",
+        "effect_id": "effect:test",
+        "packet_id": gmail_packet["packet_id"],
+        "channel": "GMAIL",
+        "state": "DRAFT_CREATED_NOT_SENT",
+        "draft_id": "draft:test",
+        "idempotency_key": "same",
+        "idempotency_marker": "marker:test",
+        "subject_digest": sha256_json(gmail_packet["subject"]),
+        "body_digest": sha256_json(gmail_packet["body"]),
+        "gmail_sent": False,
+        "linkedin_automated": False,
+        "external_effects": True,
+        "created_at": "2026-08-04T00:00:00+00:00",
+    }
+    effect_payload["receipt_digest"] = sha256_json(effect_payload)
+    receipts = tmp_path / "roundtable.json"
+    effects = tmp_path / "effects.json"
+    receipts.write_text(
+        json.dumps({roundtable_receipt["receipt_key"]: roundtable_receipt}),
+        encoding="utf-8",
+    )
+    effects.write_text(json.dumps([effect_payload]), encoding="utf-8")
+
+    out = tmp_path / "reviewed"
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "--fixture-dir",
+            str(fixture_dir),
+            "--roundtable-receipts",
+            str(receipts),
+            "--outreach-effects",
+            str(effects),
+            "--out",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
+    reviewed = next(packet for packet in manifest["outreach_packets"] if packet["packet_id"] == gmail_packet["packet_id"])
+    assert reviewed["roundtable_status"] == "PASS"
+    assert reviewed["readiness_state"] == "REVIEW_PERMITTED"
+    assert reviewed["effect_status"] == "DRAFT_CREATED_NOT_SENT"
+    assert reviewed["draft_id"] == "draft:test"
+    assert reviewed["mailbox_draft_ref"] == "gmail:draft:draft:test"
+    assert reviewed["sendable"] is False
+    assert "gmail:draft:draft:test" in (out / "report" / "index.html").read_text(encoding="utf-8")

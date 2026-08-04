@@ -308,13 +308,39 @@ def run_command(
         readable=True,
         help="Local human-supplied LinkedIn top-candidate evidence; no LinkedIn automation.",
     ),
+    roundtable_receipts: Path | None = typer.Option(
+        None,
+        "--roundtable-receipts",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local Ask roundtable receipt map keyed by opportunity_id:channel.",
+    ),
+    outreach_effects: Path | None = typer.Option(
+        None,
+        "--outreach-effects",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local outreach effect receipt(s); Gmail drafts must remain unsent.",
+    ),
 ) -> None:
     """Run one resumable Stage 0 transaction with no external effects."""
     _configure_logging()
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
         out = skill_dir / "local" / "nightly" / "latest"
-    receipt = run_stage0(skill_dir, out, fixture_dir, linkedin_evidence)
+    try:
+        receipt = run_stage0(
+            skill_dir,
+            out,
+            fixture_dir,
+            linkedin_evidence,
+            roundtable_receipts,
+            outreach_effects,
+        )
+    except ValueError as exc:
+        _fail(ContractError("RUN_REJECTED", str(exc)))
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
 

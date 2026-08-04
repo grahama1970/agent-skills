@@ -45,9 +45,28 @@ def _list(items: Iterable[Any]) -> str:
 def _badge(value: str) -> str:
     safe = html.escape(value)
     css = "bad" if value in {"FEED_DOWN", "BLOCKED_STAGE_0", "human_required"} else "ok"
-    if value in {"NOT_SEARCHED", "NO_MATCHES", "NOT_RUN", "WOULD_PRESENT_STAGE0"}:
+    if value in {"NOT_SEARCHED", "NO_MATCHES", "NOT_RUN", "WOULD_PRESENT_STAGE0", "INDETERMINATE"}:
         css = "warn"
     return f'<span class="badge {css}">{safe}</span>'
+
+
+def _draft_readback(item: Any) -> str:
+    if not item.draft_id and not item.mailbox_draft_ref and not item.effect_receipt_digest:
+        return ""
+    return (
+        "<p><strong>Gmail draft:</strong> "
+        f"{html.escape(item.mailbox_draft_ref or item.draft_id or 'unknown')}</p>"
+        f"<p><strong>Effect receipt:</strong> <code>{html.escape(item.effect_receipt_digest or 'none')}</code></p>"
+    )
+
+
+def _revision_note(item: Any) -> str:
+    if not item.revision_note and not item.reviewed_payload_digest:
+        return ""
+    return (
+        f"<p><strong>Revision:</strong> {html.escape(item.revision_note or 'Roundtable revisions applied.')}</p>"
+        f"<p><strong>Reviewed payload digest:</strong> <code>{html.escape(item.reviewed_payload_digest or 'none')}</code></p>"
+    )
 
 
 def render_html(manifest: ReportManifest) -> str:
@@ -99,8 +118,10 @@ def render_html(manifest: ReportManifest) -> str:
         f"<pre>{html.escape(item.body)}</pre>"
         f"<p><strong>Characters:</strong> {item.character_count}</p>"
         f"<p><strong>Roundtable verdict:</strong> {html.escape(item.roundtable_verdict or 'not permitting')}</p>"
+        f"{_revision_note(item)}"
         f"<p><strong>Payload digest:</strong> <code>{html.escape(item.payload_digest)}</code></p>"
         f"<p><strong>Roundtable receipt digest:</strong> <code>{html.escape(item.roundtable_receipt_digest or 'none')}</code></p>"
+        f"{_draft_readback(item)}"
         f"<h4>Claims</h4>{_list(item.claim_keys)}"
         f"<h4>Human send steps</h4>{_list(item.human_send_steps)}</article>"
         for item in manifest.outreach_packets

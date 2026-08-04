@@ -61,9 +61,29 @@ def _badge(value: str) -> str:
     css = "ok"
     if value in {"FEED_DOWN", "AUTH_REQUIRED", "BLOCKED_STAGE_0", "human_required"}:
         css = "blocked"
-    elif value in {"NO_MATCHES", "NOT_SEARCHED", "WOULD_PRESENT_STAGE0", "NOT_RUN"}:
+    elif value in {"NO_MATCHES", "NOT_SEARCHED", "WOULD_PRESENT_STAGE0", "NOT_RUN", "INDETERMINATE"}:
         css = "pending"
     return f'<span class="badge {css}">{html.escape(value)}</span>'
+
+
+def _draft_readback(packet: Any) -> str:
+    if not packet.draft_id and not packet.mailbox_draft_ref and not packet.effect_receipt_digest:
+        return ""
+    return (
+        "<p><strong>Gmail draft:</strong> "
+        f"{html.escape(packet.mailbox_draft_ref or packet.draft_id or 'unknown')}</p>"
+        f"<p><strong>Effect receipt:</strong> <code>{html.escape(packet.effect_receipt_digest or 'none')}</code></p>"
+    )
+
+
+def _revision_note(packet: Any) -> str:
+    if not packet.revision_note and not packet.reviewed_payload_digest:
+        return ""
+    return (
+        f"<p><strong>Revision:</strong> {html.escape(packet.revision_note or 'Roundtable revisions applied.')}</p>"
+        f"<p><strong>Reviewed payload digest:</strong> "
+        f"<code>{html.escape(packet.reviewed_payload_digest or 'none')}</code></p>"
+    )
 
 
 def _action_options(actions: list[str]) -> str:
@@ -195,8 +215,10 @@ def _opportunity_cards(manifest: Any, token: str) -> str:
             f"<p><strong>Subject:</strong> {html.escape(packet.subject or '(none)')}</p>"
             f"<pre>{html.escape(packet.body)}</pre>"
             f"<p>Roundtable verdict: {html.escape(packet.roundtable_verdict or 'not permitting')}</p>"
+            f"{_revision_note(packet)}"
             f"<p>Payload digest: <code>{html.escape(packet.payload_digest)}</code></p>"
             f"<p>Roundtable receipt: <code>{html.escape(packet.roundtable_receipt_digest or 'none')}</code></p>"
+            f"{_draft_readback(packet)}"
             f"{_list(packet.claim_keys, 'No claim keys retained.')}"
             "<h5>Human send steps</h5>"
             f"{_list(packet.human_send_steps, 'No human send steps retained.')}"
