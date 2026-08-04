@@ -1,0 +1,67 @@
+{
+  "asr_ok": true,
+  "asr_transcript": "I woke with, what, source, embryo, unresolved, still a range like images rather than answers. The dream was synthetic, but it kept the source traces intact, six memory residues and four explicit tensions. I should treat this as a reflective lead, not as evidence or durable identity change.",
+  "asr_wer": 0.125,
+  "audio": "/tmp/pd-t4/journal.wav",
+  "audio_bytes": 839118,
+  "audio_sha256": "sha256:3c1509daa4fb9a75f52b47c2cc67387271d211e793e5ce611fbb86aa7118994e",
+  "claims": {
+    "does_not_prove": [
+      "that the requested tone is audible in the waveform -- see #1209",
+      "perceived emotion, naturalness, or human acceptance"
+    ],
+    "proves": [
+      "the journal text published for this run was rendered to audio by a live renderer",
+      "the audio in the run directory is bound by hash to that exact spoken text",
+      "the delivery tone derived from the dream's own tension survived normalization",
+      "an independent transcription of the rendered audio was captured"
+    ]
+  },
+  "created_at": "2026-08-04T15:01:49Z",
+  "dominant_tension_axis": "Competence",
+  "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+  "engine": "chatterbox_base",
+  "failed_gates": [],
+  "finished_response_metrics": {
+    "bytes": 839118,
+    "channels": 1,
+    "codec_name": "pcm_s16le",
+    "duration_seconds": 17.48,
+    "exists": true,
+    "ffprobe": {
+      "cmd": [
+        "ffprobe",
+        "-hide_banner",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration,size",
+        "-show_entries",
+        "stream=codec_name,sample_rate,channels",
+        "-of",
+        "json",
+        "/out/pd_journal_pd-t4/finished_response.wav"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"17.480000\",\n        \"size\": \"839118\"\n    }\n}\n"
+    },
+    "ffprobe_size": 839118,
+    "path": "/out/pd_journal_pd-t4/finished_response.wav",
+    "sample_rate": 24000,
+    "sha256": "3c1509daa4fb9a75f52b47c2cc67387271d211e793e5ce611fbb86aa7118994e"
+  },
+  "live": true,
+  "mocked": false,
+  "normalized_delivery_tone": "memory_confident",
+  "persona_mood_label": "unset",
+  "requested_delivery_tone": "memory_confident",
+  "run_dir": "/tmp/pd-t4",
+  "schema": "persona_dream.journal_audio_receipt.v1",
+  "spoken_chars": 285,
+  "spoken_text": "/tmp/pd-t4/journal_spoken.txt",
+  "spoken_text_sha256": "sha256:23b7333ee42f4a1026da097e000c17236ce2057746fb3240b764c116906f7b63",
+  "status": "PASS_JOURNAL_SPOKEN",
+  "tone_survived": true,
+  "truncated_to": null
+}

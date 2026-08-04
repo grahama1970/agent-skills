@@ -1,0 +1,122 @@
+{
+  "audible_tones": [],
+  "claims": {
+    "does_not_prove": [
+      "that a listener perceives the requested emotion",
+      "anything about tones, texts, or backends outside this run"
+    ],
+    "proves": [
+      "no requested tone moved any measured metric beyond the renderer's own same-parameter stochastic spread on this text"
+    ]
+  },
+  "created_at": "2026-08-04T15:19:09Z",
+  "decisively_audible_tones": [],
+  "disposition": "Requested tone is NOT audible by this measure. The project must stop implying emotional delivery and say so in its surfaces.",
+  "emotion_knobs_ever_returned": false,
+  "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+  "failed_gates": [],
+  "k_sd": 3.0,
+  "live": true,
+  "mocked": false,
+  "neutral_floor": {
+    "duration_s": {
+      "median": 18.08,
+      "n": 10,
+      "sd": 1.136732,
+      "threshold": 3.410196
+    },
+    "f0_median_hz": {
+      "median": 238.6217,
+      "n": 10,
+      "sd": 7.21817,
+      "threshold": 21.65451
+    },
+    "f0_range_hz": {
+      "median": 186.3095,
+      "n": 10,
+      "sd": 18.916394,
+      "threshold": 56.749182
+    },
+    "k_weighted_loudness_lkfs": {
+      "median": -23.455886,
+      "n": 10,
+      "sd": 0.531647,
+      "threshold": 1.594941
+    },
+    "pause_ratio": {
+      "median": 0.118633,
+      "n": 10,
+      "sd": 0.00994,
+      "threshold": 0.02982
+    },
+    "rms_dbfs": {
+      "median": -23.546439,
+      "n": 10,
+      "sd": 0.477984,
+      "threshold": 1.433952
+    },
+    "voiced_ratio": {
+      "median": 0.628903,
+      "n": 10,
+      "sd": 0.034925,
+      "threshold": 0.104775
+    }
+  },
+  "neutral_repeats_usable": 10,
+  "neutral_tone": "neutral_warm",
+  "schema": "persona_dream.tone_effect_receipt.v1",
+  "status": "BLOCKED_TONE_BELOW_STOCHASTIC_SPREAD",
+  "text_chars": 285,
+  "text_sha256": "sha256:23b7333ee42f4a1026da097e000c17236ce2057746fb3240b764c116906f7b63",
+  "threshold_rule": "a tone counts as audible only when a metric moves further from the neutral median than K_SD neutral standard deviations; thresholds are derived from the repeats, never chosen",
+  "tones": [
+    {
+      "audible_by_this_measure": false,
+      "emotion_knobs": null,
+      "metrics": {
+        "duration_s": 18.76,
+        "f0_median_hz": 226.5298,
+        "f0_range_hz": 217.9956,
+        "k_weighted_loudness_lkfs": -23.604113,
+        "pause_ratio": 0.119955,
+        "rms_dbfs": -23.73711,
+        "voiced_ratio": 0.615691
+      },
+      "metrics_beyond_neutral_spread": [],
+      "normalized_tone": "firm_boundary",
+      "requested_tone": "firm_boundary"
+    },
+    {
+      "audible_by_this_measure": false,
+      "emotion_knobs": null,
+      "metrics": {
+        "duration_s": 17.68,
+        "f0_median_hz": 225.2251,
+        "f0_range_hz": 208.4503,
+        "k_weighted_loudness_lkfs": -23.152569,
+        "pause_ratio": 0.14234,
+        "rms_dbfs": -23.328321,
+        "voiced_ratio": 0.584439
+      },
+      "metrics_beyond_neutral_spread": [],
+      "normalized_tone": "grief_safe",
+      "requested_tone": "grief_safe"
+    },
+    {
+      "audible_by_this_measure": false,
+      "emotion_knobs": null,
+      "metrics": {
+        "duration_s": 18.28,
+        "f0_median_hz": 222.6382,
+        "f0_range_hz": 166.3071,
+        "k_weighted_loudness_lkfs": -23.82046,
+        "pause_ratio": 0.116686,
+        "rms_dbfs": -23.809855,
+        "voiced_ratio": 0.624854
+      },
+      "metrics_beyond_neutral_spread": [],
+      "normalized_tone": "memory_uncertain",
+      "requested_tone": "memory_uncertain"
+    }
+  ]
+}

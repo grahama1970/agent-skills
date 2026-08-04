@@ -1,0 +1,26 @@
+{
+  "annotation_free_speech": true,
+  "claims": {
+    "does_not_prove": [
+      "that any requested tone was achieved in the audio",
+      "perceived emotion or human acceptance"
+    ],
+    "proves": [
+      "the entry is published in a readable annotated form and a separate spoken form",
+      "no tone annotation reaches the text sent to the renderer"
+    ]
+  },
+  "created_at": "2026-08-04T14:24:34Z",
+  "footnote_count": 10,
+  "journal_markdown": "/tmp/pd-t4/journal.md",
+  "journal_spoken": "/tmp/pd-t4/journal_spoken.txt",
+  "live": false,
+  "mocked": false,
+  "persona": "Embry",
+  "schema": "persona_dream.journal_render_receipt.v1",
+  "source_memory_count": 6,
+  "speech_binding_holds": true,
+  "spoken_sha256": "sha256:73c6ff90428d3c2742eaa4f15a084938c2c5917d9dee5732b945642e7f7471d4",
+  "status": "PASS_JOURNAL_RENDERED",
+  "tension_count": 4
+}

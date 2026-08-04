@@ -743,6 +743,9 @@ case "$COMMAND" in
   audit-readme-proof-claims)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/audit_readme_proof_claims.py" "$@"
     ;;
+  ingest-day)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/ingest_day_events.py" "$@"
+    ;;
   measure-tone-effect)
     exec "${CHATTERBOX_VENV_PYTHON:-/home/graham/workspace/experiments/chatterbox/.venv/bin/python}" \
       "${SCRIPT_DIR}/scripts/measure_tone_effect.py" "$@"

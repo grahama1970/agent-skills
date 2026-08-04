@@ -68,8 +68,20 @@ CLAIMS: dict[str, tuple[str | None, str | None]] = {
     "PCTOM-R measurement validity": (
         "research/prospective-tom/receipts/measurement-validity-v2-pass/MEASUREMENT_VALIDITY_RECEIPT.json",
         "PASS_"),
+    "Readable journal artifact": (
+        "reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json", "PASS_"),
+    "Spoken journal": (
+        "reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json", "PASS_"),
+    #: The negative earns its own row. A disproven boundary needs a receipt as
+    #: much as a proven one, or "we measured nothing" is indistinguishable from
+    #: "we did not measure".
+    "Requested tone to measurable acoustic effect": (
+        "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json", "BLOCKED_"),
     #: Declared unproven. No receipt exists and none is claimed.
     "PCTOM-R held-out benefit": (None, None),
+    "Journal page": (None, None),
+    "Interactive dream discussion": (None, None),
+    "Day events to a later dream": (None, None),
     "Human perceived emotion and identity": (None, None),
 }
 

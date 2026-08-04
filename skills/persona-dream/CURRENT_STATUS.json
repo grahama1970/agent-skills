@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-07-29T18:20:00Z",
+  "updated_at": "2026-08-04T00:00:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:7ce90ef7b9acc3ea2a3fba1e3f48b8ec864f10e9d375d5540eb6d01370ea8b48",
@@ -537,6 +537,64 @@
       "does_not_prove": "any previous-video benefit. The question is closed as out of scope rather than answered",
       "retired_by": "grahama1970/agent-skills#1059",
       "disposition": "skills/persona-dream/TRANSFER_LEDGER.md"
+    },
+    "journal_publication": {
+      "status": "PASS_JOURNAL_PUBLISHED",
+      "scope": "one live run's journal artifacts; artifact shape and speech binding only",
+      "receipt": "reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json",
+      "receipt_sha256": "sha256:789a6a717257427ad09b5352f68e13c083bec08bb92eb81a2a520c0eaf250dcf",
+      "proves": "the entry is published as a readable first-person journal.md carrying tone annotations and provenance footnotes, plus a hash-bound annotation-stripped journal_spoken.txt; no annotation reaches the renderer input",
+      "does_not_prove": "that successive days produce meaningfully different journals; the five-cycle pilot produced byte-identical entries (see daily_event_ingestion)"
+    },
+    "journal_spoken_audio": {
+      "status": "PASS_JOURNAL_SPOKEN",
+      "scope": "one live Chatterbox render into the run directory",
+      "receipt": "reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json",
+      "receipt_sha256": "sha256:3321fa0867f9d048d1a4d33bfc7dcdb1530e519758f331788a061a8493ecde04",
+      "proves": "Embry reads her own journal aloud: a live render is stored run-local as journal.wav, bound by sha256 to the exact spoken text, with an independent ASR transcript captured",
+      "does_not_prove": "requested tone audibility, perceived emotion, naturalness, or human acceptance"
+    },
+    "journal_delivery_request": {
+      "status": "PASS_REQUESTED_TONE_SURVIVED",
+      "scope": "request handling between persona-dream and Chatterbox; metadata only",
+      "receipt": "reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json",
+      "receipt_sha256": "sha256:3321fa0867f9d048d1a4d33bfc7dcdb1530e519758f331788a061a8493ecde04",
+      "proves": "the dream's dominant tension maps to a delivery tone Chatterbox accepts, and that tone survives normalization instead of collapsing to neutral_warm",
+      "does_not_prove": "any acoustic or perceptual consequence; see journal_tone_effect, which measured none"
+    },
+    "journal_tone_effect": {
+      "status": "DISPROVEN_TONE_NOT_AUDIBLE",
+      "scope": "three requested tones on one text against 10 same-parameter neutral repeats, engine chatterbox_turbo",
+      "receipt": "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json",
+      "receipt_sha256": "sha256:93c85255440e53d22dccb2798aa62e2861e0aca77e4dadecdda956b0e012fa99",
+      "sample_count": 10,
+      "proves": "no requested tone moved any measured acoustic metric beyond the renderer's own same-parameter stochastic spread; emotion_knobs returned null on every render, and the engine's /health lists exaggeration and cfg_weight among ignored_turbo_params",
+      "does_not_prove": "that a listener fails to perceive emotion; no human heard these renders",
+      "resolved_by_issue": "grahama1970/agent-skills#1209"
+    },
+    "journal_conversation_persistence": {
+      "status": "UNPROVEN",
+      "scope": "human/agent/Embry discussion durability",
+      "receipt": null,
+      "proves": null,
+      "does_not_prove": "the UX chat pane can display conversation rows, but nothing writes them durably; discussion does not survive reload and cannot feed future recall",
+      "successor_issue": "grahama1970/agent-skills#1210"
+    },
+    "daily_event_ingestion": {
+      "status": "UNPROVEN",
+      "scope": "current-day code, project-state and affect events entering memory",
+      "receipt": null,
+      "proves": null,
+      "does_not_prove": "that successive dreams differ; the five-cycle pilot produced byte-identical journals (sha f812641f9dbbc7e2). Root cause found 2026-08-04: /recall accepts and discards the scope parameter, so a nonexistent scope returns the same items as a real one, and the five recall strata are five semantic queries over one undifferentiated pool. A document that stores successfully is also not retrievable by recall.",
+      "successor_issue": "grahama1970/agent-skills#1212"
+    },
+    "journal_ux_browser_proof": {
+      "status": "UNPROVEN",
+      "scope": "the static journal/chat page rendered in a real browser",
+      "receipt": null,
+      "proves": null,
+      "does_not_prove": "markup and fixture consumption are tested, but the page has never been opened in a browser; layout, audio controls and interaction remain unverified",
+      "successor_issue": "grahama1970/agent-skills#1213"
     }
   },
   "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md"

@@ -59,6 +59,30 @@ authoritative entry point for the question you have:
 These commands exercise the current runtime. They do not perform the unproven
 live-provider, Watch, graph-persistence, or behavior-evaluation stages.
 
+### The journal workflow
+
+Three commands take a dream to a page you can read and a voice you can hear:
+
+```bash
+RUN_DIR=/tmp/persona-dream-journal
+
+./run.sh generate         --persona embry --output-dir "$RUN_DIR"
+./run.sh speak-journal    --run-dir "$RUN_DIR"
+./run.sh render-journal-ux --run-dir "$RUN_DIR" --out "$RUN_DIR/index.html"
+```
+
+What each one actually gets you:
+
+- `generate` writes the annotated `journal.md` and the tag-stripped
+  `journal_spoken.txt`, bound to each other by hash.
+- `speak-journal` produces a live `journal.wav` in the run directory, bound by
+  sha256 to that exact spoken text, with an ASR transcript.
+- `render-journal-ux` writes a self-contained local page. **Its browser
+  behaviour is unverified** — the page has never been opened in one (#1213).
+
+`ingest-day` and durable conversation are deliberately absent here; they are
+not finished (#1212, #1210). See *Next workflow steps*.
+
 ---
 
 ## Current state
@@ -93,11 +117,22 @@ run `./run.sh generate-readme-research-state`. Full claim dispositions live in
 the JSON, not here.*
 
 - **Phase:** `P2_LIVE_CONTINUITY_CHAIN`
-- **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
+- **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery), #1210 (journal_conversation_persistence), #1212 (daily_event_ingestion)
 - **Current blocker:** Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions…
 - **Next step:** Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.
 
 <!-- END GENERATED CURRENT RESEARCH STATE -->
+
+## Next workflow steps
+
+Not in Quick Start because they are not finished. Each is one open join in the
+journal loop:
+
+| Step | Command | Blocked on |
+|---|---|---|
+| Write the day into memory | `./run.sh ingest-day --date <d> --from-commits` | #1212 — recall discards `scope`, and stored documents are not retrievable |
+| Keep the discussion | *(no writer yet)* | #1210 |
+| Verify the page in a browser | *(no capture yet)* | #1213 |
 
 ## Current Proof Boundary
 
@@ -117,6 +152,12 @@ vocabulary is deliberately narrow: **implemented** means code exists,
 | Phases 13-15, interpretation to persistence | Live slice proven on the accepted return | [`docs/verification.md`](docs/verification.md) |
 | Phase 16, recall and later behavior | Machine-decidable slice live-proven | [`docs/verification.md`](docs/verification.md) |
 | Chatterbox voice expression | Blocked: stimuli rejected as technically confounded | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1179 |
+| Readable journal artifact | Implemented and hash-bound | `reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json` |
+| Spoken journal | Live slice proven | `reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json` |
+| Requested tone to measurable acoustic effect | **Disproven**: below the renderer's own stochastic spread | `reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json`, #1209 |
+| Journal page | Markup and fixtures checked; browser proof open | #1213 |
+| Interactive dream discussion | UX scaffold only; append-only persistence open | #1210 |
+| Day events to a later dream | Not established; recall ignores scope | #1212 |
 | PCTOM-R held-out benefit | Not run | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1008 |
 
 Revision ids, request hashes, receipt paths, and the per-phase narrative are in
@@ -178,6 +219,80 @@ accepted dream
 
 Each arrow is a gate with its own receipt. The loop is only as strong as the
 weakest joined leg, and joining every leg in one run is what P2 is for.
+
+## Journal and discussion loop
+
+The bounded loop above is agent-internal: it produces persona state, and its
+audience is the next turn. There is a second path out of the same dream whose
+audience is a person.
+
+```
+accepted memories
++ current-day events                    (#1212 open — and see the note below)
+      |
+      v
+persona-specific contradiction / tension
+      |
+      v
+synthetic dream and interpretation
+      |
+      +--> journal.md
+      |      first-person entry
+      |      tone/emotion annotations
+      |      source-memory and graph footnotes
+      |
+      +--> journal_spoken.txt
+             annotation-stripped, hash-equivalent
+                   |
+                   v
+      psychological mood
+      -> Chatterbox delivery-tone request
+      -> live journal.wav in the run directory
+                   |
+                   v
+      journal / discussion UX             (browser proof open, #1213)
+                   |
+                   v
+      append-only conversation.jsonl      (#1210 open)
+                   |
+                   v
+      future recall and later dreams      (not yet proven)
+```
+
+Everything down to `journal.wav` runs today and has receipts. Everything below
+it does not.
+
+**Journal annotations are not renderer control tokens.** They stay in the
+readable entry for inspection and are stripped before speech, because
+Chatterbox's `/health` reports `inline_text_tag_behavior:
+synthesized_as_literal_text` — an inline `[wistful]` reaching the renderer is
+spoken aloud as the word "wistful". The delivery tone is supplied separately as
+metadata.
+
+Five distinctions this project keeps apart, because collapsing any two of them
+is how an overclaim gets made:
+
+```
+persona psychological mood     (what she woke up feeling)
+ != journal annotation         (how a passage is meant to read)
+ != requested delivery tone    (what we asked the renderer for)
+ != proven audible emotion     (measured absent — #1209)
+ != human-perceived emotion    (never tested)
+```
+
+### Why #1212 is more than a missing feature
+
+The five-cycle pilot produced byte-identical journals (sha `f812641f9dbbc7e2`,
+cycles 001-005). The obvious reading is that nothing about any given day was
+ever written to memory, which is true. The measured cause is worse: `/recall`
+**accepts and discards the `scope` parameter**, so a deliberately nonexistent
+scope returns the same items as a real one, and the five recall "strata" are
+five semantic queries over one undifferentiated pool. Separately, a document
+that stores successfully is not retrievable by recall.
+
+So the pilot demonstrated that the pipeline runs repeatedly. It did not
+demonstrate day-to-day experiential change, and adding day events alone would
+not have produced any.
 
 ## The controlling hierarchy
 
@@ -246,7 +361,10 @@ failure from a meaningful pattern, form a bounded interpretation, and use that
 experience in a future conversation without claiming the dream literally
 happened.
 
-Chatterbox can express the resulting tone. It does not decide the psychology or
+Chatterbox receives and renders the requested delivery tone. That proves the
+mood-to-renderer contract and the spoken-journal path; it is not expression.
+#1209 measured the requested tone against the renderer's own stochastic spread
+and found no acoustic effect. It does not decide the psychology or
 rewrite Embry's durable identity.
 
 ---
