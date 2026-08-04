@@ -121,6 +121,10 @@ def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevan
     assert linkedin_receipts
     assert linkedin_receipts[0]["automation_policy"] == "linkedin_authorized_read_only_no_actions"
     assert any(row["title"] == "GenAI Python Systems Engineer - Senior Manager" for row in manifest["opportunities"])
+    linked = next(row for row in manifest["opportunities"] if row["title"] == "GenAI Python Systems Engineer - Senior Manager")
+    assert linked["primary_evidence_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
+    assert linked["posting_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
+    assert linked["apply_url"] is None
     assert not any(row["title"] == "Founders Associate" for row in manifest["opportunities"])
     assert any(
         row["title"] == "Founders Associate" and row["reason_code"] == "HUMAN_REVIEW_LOCATION_AMBIGUOUS"

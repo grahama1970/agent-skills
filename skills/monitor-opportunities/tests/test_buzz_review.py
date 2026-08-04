@@ -55,3 +55,52 @@ def test_buzz_review_emits_ops_buzz_agent_request_dry_run(tmp_path: Path) -> Non
     assert ops_buzz["status"] == "DRY_RUN"
     assert ops_buzz["attempted_network"] is False
     assert (out_dir / "buzz-agent-request.md").exists()
+
+
+def test_buzz_summary_emits_ops_buzz_message_dry_run(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    run_dir = tmp_path / "nightly"
+    run_result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(run_dir)])
+    assert run_result.exit_code == 0, run_result.output
+
+    out_dir = tmp_path / "buzz-summary"
+    result = runner.invoke(
+        app,
+        [
+            "buzz-summary",
+            "--run",
+            str(run_dir),
+            "--channel",
+            "00000000-0000-0000-0000-000000000000",
+            "--report-url",
+            "http://example.invalid/report",
+            "--out",
+            str(out_dir),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+    message = json.loads((out_dir / "buzz-summary-message.json").read_text(encoding="utf-8"))
+    receipt = json.loads((out_dir / "buzz-summary-receipt.json").read_text(encoding="utf-8"))
+    ops_buzz = receipt["ops_buzz_receipt"]["stdout_json"]
+
+    assert message["schema"] == "ops_buzz.message.v1"
+    assert message["seam_validation"] == {"kind": "ops_buzz.message.v1", "status": "PASS"}
+    assert message["source_skill"] == "monitor-opportunities"
+    assert message["source_url"] == "http://example.invalid/report"
+    assert message["external_effects"] is False
+    assert message["items"]
+    assert all(item["title"] and item["subtitle"] for item in message["items"])
+    assert any(item.get("url") for item in message["items"])
+
+    assert receipt["status"] == "PASS"
+    assert receipt["mocked"] is False
+    assert receipt["live"] is False
+    assert receipt["dry_run"] is True
+    assert receipt["attempted_network"] is False
+    assert receipt["posted"] is False
+    assert receipt["external_effects"] is False
+    assert ops_buzz["schema"] == "ops_buzz.post_receipt.v1"
+    assert ops_buzz["dry_run"] is True
+    assert ops_buzz["attempted_network"] is False
+    assert ops_buzz["posted"] is False

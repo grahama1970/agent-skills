@@ -140,6 +140,9 @@ class Opportunity(StrictModel):
     opportunity_type: str
     title: str
     organization: str
+    posting_url: str | None = None
+    apply_url: str | None = None
+    primary_evidence_url: str | None = None
     location: Location
     source_receipt_ids: list[str] = Field(min_length=1)
     eligibility_state: str

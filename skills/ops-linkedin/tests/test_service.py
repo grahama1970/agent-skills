@@ -265,12 +265,25 @@ def test_authorized_linkedin_opportunity_capture_maps_top_candidate_signal() -> 
             "observed_at": "2026-08-04T19:20:00Z",
             "body_text": "\n".join(
                 [
+                    "Top job picks for you",
+                    "Based on your profile, preferences, and activity like applies, searches, and saves",
+                    "Applied AI Architect",
                     "Applied AI Architect",
                     "Buffalo Systems Lab",
                     "Buffalo, NY hybrid",
-                    "You'd be a top candidate based on your profile and experience.",
+                    "Promoted",
                 ]
             ),
+            "links": [
+                {
+                    "text": (
+                        "Applied AI Architect Applied AI Architect Buffalo Systems Lab "
+                        "• Buffalo, NY hybrid Promoted"
+                    ),
+                    "href": "https://www.linkedin.com/jobs/search-results/?currentJobId=123",
+                    "aria_label": "",
+                }
+            ],
         }
     )
 
@@ -278,10 +291,12 @@ def test_authorized_linkedin_opportunity_capture_maps_top_candidate_signal() -> 
     assert artifact["source"] == "human_authorized_linkedin_tab"
     assert artifact["capture_method"] == "surf_read_only_existing_tab"
     assert artifact["top_candidate"] is True
-    assert "top candidate" in artifact["top_candidate_text"].lower()
+    assert "profile-based opportunity recommendation" in artifact["top_candidate_text"].lower()
     assert artifact["guardrails"]["read_only"] is True
     assert artifact["guardrails"]["clicked"] is False
     assert artifact["guardrails"]["applied"] is False
+    assert artifact["opportunities"][0]["job_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=123"
+    assert artifact["opportunities"][0]["linkedin_job_id"] == "123"
 
 
 def test_authorized_linkedin_opportunity_capture_fails_closed_without_signal() -> None:

@@ -1,6 +1,6 @@
 # monitor-opportunities project knowledge
 
-Updated: 2026-08-03
+Updated: 2026-08-04
 Authoritative branch target: `grahama1970/agent-skills@main`
 Immutable goal: see `../SKILL.md`.
 
@@ -17,10 +17,13 @@ handoffs, and ATS effects are only established to the extent reported by `status
 retained command receipts. A rendered fixture is useful working value, but it is not a
 reliable nightly opportunity pipeline.
 
-The local kernel now includes a `buzz-review` adapter that turns a completed report run
-into an `ops_buzz.agent_request.v1` handoff and runs it through `ops-buzz ask-agent
---dry-run`. This proves the typed handoff seam only. It does not post to Buzz, observe a
-Buzz agent response, create Gmail/InMail drafts, or mutate the monitor decision ledger.
+The local kernel now includes two Buzz adapters. `buzz-summary` turns a completed report
+run into an `ops_buzz.message.v1` shortlist/result summary and receipts it through
+`ops-buzz post`; dry-run is the safe default, while `--post` is an explicit Buzz write.
+`buzz-review` turns the same run into an `ops_buzz.agent_request.v1` advisory handoff and
+runs it through `ops-buzz ask-agent --dry-run`. These prove typed seams and receipts only.
+They do not make Buzz the opportunity finder, observe agent response quality, create
+Gmail/InMail drafts, or mutate the monitor decision ledger.
 
 The report is the product. The first working-value milestone is not auto-apply; it is a
 zero-network Stage 0 kernel that can validate and render the expected morning report,

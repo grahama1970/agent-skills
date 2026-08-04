@@ -198,6 +198,9 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
         "opportunity_type": opportunity_type,
         "title": candidate["title"],
         "organization": candidate["organization"],
+        "posting_url": candidate.get("posting_url"),
+        "apply_url": candidate.get("apply_url"),
+        "primary_evidence_url": candidate.get("primary_evidence_url") or candidate.get("posting_url"),
         "location": {
             "display": candidate.get("location_display", "Unknown"),
             "workplace_type": candidate.get("workplace_type", "UNKNOWN"),

@@ -66,6 +66,13 @@ def _badge(value: str) -> str:
     return f'<span class="badge {css}">{html.escape(value)}</span>'
 
 
+def _link(label: str, url: str | None) -> str:
+    if not url:
+        return ""
+    safe_url = html.escape(url, quote=True)
+    return f'<div><dt>{html.escape(label)}</dt><dd><a href="{safe_url}">{html.escape(url)}</a></dd></div>'
+
+
 def _draft_readback(packet: Any) -> str:
     if not packet.draft_id and not packet.mailbox_draft_ref and not packet.effect_receipt_digest:
         return ""
@@ -248,6 +255,9 @@ def _opportunity_cards(manifest: Any, token: str) -> str:
             f"<div><dt>Location</dt><dd>{html.escape(item.location.display)}</dd></div>"
             f"<div><dt>Type</dt><dd>{_badge(item.opportunity_type)}</dd></div>"
             f"<div><dt>Relocation Required</dt><dd>{str(item.location.relocation_required).lower()}</dd></div>"
+            f"{_link('Primary Evidence', item.primary_evidence_url)}"
+            f"{_link('Posting', item.posting_url)}"
+            f"{_link('Apply URL', item.apply_url)}"
             "</dl>"
             "<h3>Why this is here</h3>"
             f"{_list(item.why_candidate, 'No candidate rationale retained.')}"

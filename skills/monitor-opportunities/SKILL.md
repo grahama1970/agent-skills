@@ -240,6 +240,7 @@ only in `./run.sh status --json` and `docs/PROJECT_KNOWLEDGE.md`.
 ./run.sh tailor --posting <key> --out <dir>    # claim-bound resume artifacts
 ./run.sh report --input <manifest> --out <dir> # validate and render one report
 ./run.sh serve --report <run-dir>              # loopback decision entry point
+./run.sh buzz-summary --run <run-dir> ...      # Buzz-ready report summary via ops-buzz
 ./run.sh buzz-review --run <run-dir> ...       # dry-run Buzz agent review request
 ./run.sh decision ...                          # append-only human decision event
 ./run.sh replay --run <run-id>                 # rebuild projection from events

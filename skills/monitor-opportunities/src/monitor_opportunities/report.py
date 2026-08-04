@@ -50,6 +50,14 @@ def _badge(value: str) -> str:
     return f'<span class="badge {css}">{safe}</span>'
 
 
+def _link(label: str, url: str | None) -> str:
+    if not url:
+        return ""
+    safe_url = html.escape(url, quote=True)
+    safe_label = html.escape(label)
+    return f'<p><strong>{safe_label}:</strong> <a href="{safe_url}">{html.escape(url)}</a></p>'
+
+
 def _draft_readback(item: Any) -> str:
     if not item.draft_id and not item.mailbox_draft_ref and not item.effect_receipt_digest:
         return ""
@@ -85,6 +93,9 @@ def render_html(manifest: ReportManifest) -> str:
         f"<article><h3>{html.escape(item.title)} — {html.escape(item.organization)}</h3>"
         f"<p>{_badge(item.eligibility_state)} score {item.fit_score:.2f}</p>"
         f"<p><strong>Location:</strong> {html.escape(item.location.display)}</p>"
+        f"{_link('Primary evidence', item.primary_evidence_url)}"
+        f"{_link('Posting', item.posting_url)}"
+        f"{_link('Apply URL', item.apply_url)}"
         f"<h4>Why this candidate</h4>{_list(item.why_candidate)}"
         f"<h4>Claim keys</h4>{_list(item.claim_keys)}"
         f"<h4>Observed screening evidence</h4>{_list(item.screening_interface_profile.observed)}"

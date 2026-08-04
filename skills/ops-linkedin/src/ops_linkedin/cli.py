@@ -114,7 +114,23 @@ def _linkedin_capture_script(max_chars: int) -> str:
         "visibility: document.visibilityState,"
         "body_text: document.body ? document.body.innerText.slice(0, "
         f"{max_chars}"
-        ") : ''"
+        ") : '',"
+        "links: Array.from(document.querySelectorAll('a[href]')).map((a, i) => {"
+        "const raw = a.href || '';"
+        "let href = raw;"
+        "try {"
+        "const u = new URL(raw);"
+        "const direct = (u.pathname.match(/\\/jobs\\/view\\/(\\d+)/) || [])[1];"
+        "const id = u.searchParams.get('currentJobId') || direct;"
+        "href = id ? `${u.origin}/jobs/view/${id}/` : `${u.origin}${u.pathname}`;"
+        "} catch (_) { href = raw.slice(0, 240); }"
+        "return {"
+        "index: i,"
+        "text: (a.innerText || a.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 320),"
+        "href,"
+        "aria_label: a.getAttribute('aria-label') || ''"
+        "};"
+        "}).filter(x => x.href.includes('/jobs/view/') || /currentJobId=/.test(x.href)).slice(0, 160)"
         "}, null, 2)"
     )
 
@@ -150,6 +166,7 @@ def _infer_linkedin_opportunity(capture: dict[str, Any]) -> dict[str, Any]:
     top_candidate_text = " ".join(top_match.group(0).split()) if top_match else ""
     opportunities = _infer_linkedin_opportunities(lines, body_text, url, capture.get("observed_at"))
     if opportunities:
+        _attach_linkedin_job_links(opportunities, capture.get("links"))
         return {
             "schema_version": "ops-linkedin.opportunity_capture.v1",
             "source": "human_authorized_linkedin_tab",
@@ -293,6 +310,8 @@ def _infer_linkedin_opportunities(
                     "location": location,
                     "linkedin_url": url,
                     "primary_evidence_url": url,
+                    "job_url": None,
+                    "linkedin_job_id": None,
                     "top_candidate": True,
                     "top_candidate_text": evidence,
                     "evidence_text": f"{evidence}\n\n{text_window}",
@@ -309,6 +328,58 @@ def _infer_linkedin_opportunities(
         seen.add(key)
         deduped.append(record)
     return deduped[:12]
+
+
+def _attach_linkedin_job_links(records: list[dict[str, Any]], links: Any) -> None:
+    """Attach visible per-job LinkedIn URLs from the same authorized page capture."""
+
+    if not isinstance(links, list):
+        return
+    normalized_links = [link for link in links if isinstance(link, dict)]
+    for record in records:
+        match = _matching_link_for_record(record, normalized_links)
+        if match is None:
+            continue
+        href = str(match.get("href") or "").strip()
+        if not href:
+            continue
+        record["job_url"] = href
+        record["primary_evidence_url"] = href
+        record["linkedin_job_id"] = _linkedin_job_id(href)
+
+
+def _matching_link_for_record(record: dict[str, Any], links: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Return the first captured anchor that carries the same title/org/location."""
+
+    title = _normalize_match_text(str(record.get("title") or ""))
+    organization = _normalize_match_text(str(record.get("organization") or ""))
+    location = _normalize_match_text(str(record.get("location") or ""))
+    for link in links:
+        text = _normalize_match_text(str(link.get("text") or "") + " " + str(link.get("aria_label") or ""))
+        href = str(link.get("href") or "")
+        if not href or ("currentJobId=" not in href and "/jobs/" not in href):
+            continue
+        if title and title not in text:
+            continue
+        if organization and organization not in text:
+            continue
+        if location and location not in text:
+            continue
+        return link
+    return None
+
+
+def _normalize_match_text(value: str) -> str:
+    """Normalize human-visible card text for loose containment matching."""
+
+    return re.sub(r"\s+", " ", value.replace("–", "-").replace("—", "-")).strip().lower()
+
+
+def _linkedin_job_id(url: str) -> str | None:
+    """Extract LinkedIn's visible job id from a job/search URL when present."""
+
+    match = re.search(r"(?:currentJobId=|/jobs/view/)(\d+)", url)
+    return match.group(1) if match else None
 
 
 def _clean_verified_title(value: str) -> str:

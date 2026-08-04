@@ -11,7 +11,12 @@ import typer
 from loguru import logger
 
 from . import __version__
-from .buzz_review import BuzzAgentReviewConfig, create_buzz_agent_review
+from .buzz_review import (
+    BuzzAgentReviewConfig,
+    BuzzSummaryConfig,
+    create_buzz_agent_review,
+    create_buzz_summary,
+)
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .decisions import append_decision
 from .decisions import replay as replay_decisions
@@ -45,6 +50,7 @@ IMPLEMENTED = [
     "schedule",
     "serve",
     "buzz-review",
+    "buzz-summary",
 ]
 NOT_IMPLEMENTED = [
     "apply",
@@ -383,6 +389,35 @@ def buzz_review(
                 timeout_seconds=timeout_seconds,
                 poll_interval_seconds=poll_interval_seconds,
                 readback_limit=readback_limit,
+            )
+        )
+    except ContractError as exc:
+        _fail(exc)
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+
+
+@app.command("buzz-summary")
+def buzz_summary(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+    channel: str = typer.Option(..., "--channel", help="Buzz channel UUID or configured channel id."),
+    report_url: str = typer.Option(..., "--report-url", help="Human-accessible report URL."),
+    out: Path | None = typer.Option(None, "--out", file_okay=False),
+    ops_buzz_run: Path | None = typer.Option(None, "--ops-buzz-run", dir_okay=False),
+    post: bool = typer.Option(False, "--post", help="Post to Buzz instead of producing a no-network receipt."),
+) -> None:
+    """Create a Buzz shortlist summary for one completed report run."""
+    _configure_logging()
+    if out is None:
+        out = run / "buzz-summary"
+    try:
+        receipt = create_buzz_summary(
+            BuzzSummaryConfig(
+                run_dir=run,
+                out_dir=out,
+                channel=channel,
+                report_url=report_url,
+                ops_buzz_run=ops_buzz_run,
+                dry_run=not post,
             )
         )
     except ContractError as exc:

@@ -64,6 +64,9 @@ def build_application_packets(
                 {
                     "title": opportunity["title"],
                     "organization": opportunity["organization"],
+                    "posting_url": opportunity.get("posting_url"),
+                    "apply_url": opportunity.get("apply_url"),
+                    "primary_evidence_url": opportunity.get("primary_evidence_url"),
                     "source_receipt_ids": opportunity["source_receipt_ids"],
                     "screening_interface_profile": opportunity["screening_interface_profile"],
                 }

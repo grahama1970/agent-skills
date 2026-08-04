@@ -8,8 +8,8 @@ from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
 from monitor_opportunities.discovery import (
-    LINKEDIN_AUTOMATION_POLICY,
     LINKEDIN_AUTHORIZED_READ_ONLY_POLICY,
+    LINKEDIN_AUTOMATION_POLICY,
     _ashby_candidates,
     _candidate_id,
     _employment_candidates,
@@ -150,6 +150,8 @@ def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() 
     assert rows[0]["source_provider"] == "ops_linkedin_authorized_read_only"
     assert rows[0]["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
     assert rows[0]["top_candidate_evidence"] is True
+    assert rows[0]["posting_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
+    assert rows[0]["primary_evidence_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
     assert rows[0]["apply_url"] is None
     assert rows[1]["location_display"] == "New York, NY (On-site)"
 
