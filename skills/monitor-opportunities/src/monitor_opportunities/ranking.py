@@ -27,6 +27,8 @@ def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
         return "REJECT_CLEARANCE_REQUIRED_UNATTESTED", ["clearance requirement is unattested"]
     lane = candidate.get("lane")
     workplace = candidate.get("workplace_type")
+    if lane == "B":
+        return "ELIGIBLE_FEDERAL_NOTICE", ["federal notice has primary-source receipt"]
     if lane == "C":
         return "ELIGIBLE_COMMERCIAL_SIGNAL", ["commercial signal has primary-source receipt"]
     if workplace == "WNY_HYBRID":

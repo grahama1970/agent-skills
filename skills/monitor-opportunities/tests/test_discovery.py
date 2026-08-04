@@ -7,7 +7,12 @@ import httpx
 from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
-from monitor_opportunities.discovery import _ashby_candidates, _employment_candidates, _sam_receipt
+from monitor_opportunities.discovery import (
+    _ashby_candidates,
+    _employment_candidates,
+    _sam_receipt,
+    _source_locator_receipt,
+)
 
 runner = CliRunner()
 
@@ -34,6 +39,28 @@ def test_unattempted_lane_is_not_searched(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     lane_summaries = json.loads((out / "lane-summaries.json").read_text(encoding="utf-8"))
     assert {row["lane"]: row["result_status"] for row in lane_summaries}["B"] == "NOT_SEARCHED"
+
+
+def test_source_locator_is_hint_only_and_admits_no_candidates() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url) == "https://hiddenjobs.dev/"
+        return httpx.Response(200, text="Remote roles from greenhouse and lever.")
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt = _source_locator_receipt(
+        client,
+        {
+            "lane": "A",
+            "name": "Hidden Jobs",
+            "provider": "hiddenjobs.dev",
+            "url": "https://hiddenjobs.dev/",
+        },
+    )
+    assert receipt["source_class"] == "source_locator"
+    assert receipt["result_status"] == "MATCHES"
+    assert receipt["parser_result"] == "HINTS_ONLY"
+    assert receipt["evidence_refs"] == ["https://hiddenjobs.dev/"]
+    assert any("hint-only" in item for item in receipt["limitations"])
 
 
 def test_employment_dispatch_rejects_unknown_provider() -> None:
@@ -66,8 +93,10 @@ def test_ashby_candidate_maps_primary_fields() -> None:
     receipt, rows = _ashby_candidates(client, {"name": "Example", "slug": "example"})
     assert receipt["provider"] == "ashby"
     assert receipt["result_status"] == "MATCHES"
+    assert receipt["evidence_refs"] == ["https://api.ashbyhq.com/posting-api/job-board/example"]
     assert rows[0]["source_provider"] == "ashby"
     assert rows[0]["title"] == "Applied AI Engineer"
+    assert rows[0]["primary_evidence_url"] == "https://jobs.example/ai"
     assert rows[0]["workplace_type"] == "REMOTE"
 
 
@@ -89,6 +118,6 @@ def test_sam_zero_records_is_no_matches(monkeypatch) -> None:
             return httpx.Response(200, json={"totalRecords": 0, "opportunitiesData": []})
 
     monkeypatch.setattr("monitor_opportunities.discovery.httpx.Client", FakeClient)
-    receipt = _sam_receipt()
+    receipt = _sam_receipt({"name": "SAM.gov Opportunities", "provider": "sam.gov"})
     assert receipt["result_status"] == "NO_MATCHES"
     assert receipt["parser_result"] == "PARSED"

@@ -71,14 +71,22 @@ def _lane_coverage(discovery_dir: Path, shortlist: list[dict[str, Any]]) -> list
 
 def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
     source_id = candidate.get("source_receipt_id") or candidate.get("source_receipt_ids", ["unknown"])[0]
-    if candidate["lane"] == "C":
+    evidence_url = candidate.get("primary_evidence_url") or candidate.get("posting_url")
+    if candidate["lane"] == "B":
+        opportunity_type = "federal_notice"
+        observed = [f"Federal primary source observed: {evidence_url or source_id}"]
+        inferred = ["Treat as a federal notice/signal; do not coerce into an employment application."]
+        claim_keys = ["claim:pdf-oxide:document-extraction"]
+    elif candidate["lane"] == "C":
         opportunity_type = "commercial_signal"
-        observed = ["Primary-source need signal observed."]
+        observed = [f"Primary-source need signal observed: {evidence_url or source_id}"]
         inferred = ["Use a capability profile; do not send outreach automatically."]
         claim_keys = ["claim:pdf-oxide:document-extraction"]
     else:
         opportunity_type = "employment_posting"
-        observed = [f"{candidate.get('source_provider', 'ATS')} source observed."]
+        observed = [
+            f"{candidate.get('source_provider', 'ATS')} primary source observed: {evidence_url or source_id}"
+        ]
         inferred = ["Single-column ATS-readable resume is prudent."]
         claim_keys = ["claim:arcos:acert-architect"]
     return {

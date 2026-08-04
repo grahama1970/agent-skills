@@ -13,6 +13,7 @@ from .util import read_json, sha256_bytes, stable_id, utc_now, write_json, write
 LANES = ("A", "B", "C")
 HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=10.0, write=3.0, pool=3.0)
 MAX_RESPONSE_BYTES = 1_500_000
+SOURCE_LOCATOR_TERMS = ("greenhouse", "lever", "ashby", "workday", "workable")
 
 
 def _base_receipt(lane: str, provider: str, target: str, source_class: str) -> dict[str, Any]:
@@ -48,6 +49,22 @@ def _finalize_receipt(receipt: dict[str, Any]) -> dict[str, Any]:
     return receipt
 
 
+def _registry_limit(target: dict[str, Any], default: int) -> int:
+    try:
+        return max(0, min(int(target.get("limit", default)), default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _add_registry_evidence(receipt: dict[str, Any], target: dict[str, Any], *urls: str | None) -> None:
+    entry_id = target.get("registry_entry_id")
+    if entry_id:
+        receipt["limitations"].append(f"Reviewed registry entry: {entry_id}")
+    for url in urls:
+        if url and url not in receipt["evidence_refs"]:
+            receipt["evidence_refs"].append(url)
+
+
 def _fixture_sweep(fixture_dir: Path, lanes: set[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     fixture = read_json(fixture_dir / "discovery-run.json")
     receipts = [row for row in fixture["source_receipts"] if row["lane"] in lanes]
@@ -65,6 +82,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
     slug = target["slug"]
     receipt = _base_receipt("A", "greenhouse", target["name"], "employer_ats")
     url = f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true"
+    _add_registry_evidence(receipt, target, target.get("primary_source_url"), url)
     receipt["request_summary"] = f"GET {url} with no credentials; response capped"
     try:
         response = client.get(url)
@@ -96,8 +114,9 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
     receipt["parser_result"] = "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
-    for job in jobs[: target.get("limit", 20)]:
+    for job in jobs[: _registry_limit(target, 20)]:
         location = (job.get("location") or {}).get("name") or "Unknown"
+        posting_url = job.get("absolute_url")
         payload = {
             "lane": "A",
             "source_receipt_id": receipt["receipt_id"],
@@ -109,8 +128,9 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
             "workplace_type": _workplace_type(location),
             "relocation_required": "relocation" in location.lower() and "required" in location.lower(),
             "clearance_required": False,
-            "posting_url": job.get("absolute_url"),
-            "apply_url": job.get("absolute_url"),
+            "posting_url": posting_url,
+            "apply_url": posting_url,
+            "primary_evidence_url": posting_url or url,
             "published_at": job.get("first_published"),
             "updated_at": job.get("updated_at"),
             "content_hash": sha256_bytes(str(job).encode("utf-8")),
@@ -126,6 +146,7 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     slug = target["slug"]
     receipt = _base_receipt("A", "lever", target["name"], "employer_ats")
     url = f"https://api.lever.co/v0/postings/{slug}?mode=json"
+    _add_registry_evidence(receipt, target, target.get("primary_source_url"), url)
     receipt["request_summary"] = f"GET {url} with no credentials; response capped"
     try:
         response = client.get(url)
@@ -157,10 +178,11 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     receipt["parser_result"] = "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
-    for job in postings[: target.get("limit", 20)]:
+    for job in postings[: _registry_limit(target, 20)]:
         categories = job.get("categories") or {}
         location = categories.get("location") or "Unknown"
         hosted_url = job.get("hostedUrl") or job.get("applyUrl")
+        posting_text = _lever_posting_text(job)
         payload = {
             "lane": "A",
             "source_receipt_id": receipt["receipt_id"],
@@ -170,14 +192,15 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "title": job.get("text") or "Untitled",
             "location_display": location,
             "workplace_type": _workplace_type(location),
-            "relocation_required": _relocation_required(location, str(job)),
+            "relocation_required": _relocation_required(location, posting_text),
             "clearance_required": False,
             "posting_url": hosted_url,
             "apply_url": job.get("applyUrl") or hosted_url,
+            "primary_evidence_url": hosted_url,
             "published_at": str(job.get("createdAt")) if job.get("createdAt") is not None else None,
             "updated_at": str(job.get("updatedAt")) if job.get("updatedAt") is not None else None,
             "content_hash": sha256_bytes(str(job).encode("utf-8")),
-            "posting_text": _lever_posting_text(job)[:4000],
+            "posting_text": posting_text[:4000],
             "fit_score": target.get("default_fit_score", 0.5),
         }
         payload["candidate_id"] = stable_id("candidate:a", payload)
@@ -189,6 +212,7 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     slug = target["slug"]
     receipt = _base_receipt("A", "ashby", target["name"], "employer_ats")
     url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
+    _add_registry_evidence(receipt, target, target.get("primary_source_url"), url)
     receipt["request_summary"] = f"GET {url} with no credentials; response capped"
     try:
         response = client.get(url)
@@ -220,8 +244,9 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     receipt["parser_result"] = "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
-    for job in jobs[: target.get("limit", 20)]:
+    for job in jobs[: _registry_limit(target, 20)]:
         location = _ashby_location(job)
+        posting_url = job.get("jobUrl")
         payload = {
             "lane": "A",
             "source_receipt_id": receipt["receipt_id"],
@@ -233,8 +258,9 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "workplace_type": _workplace_type(location),
             "relocation_required": _relocation_required(location, str(job)),
             "clearance_required": False,
-            "posting_url": job.get("jobUrl"),
-            "apply_url": job.get("applyUrl") or job.get("jobUrl"),
+            "posting_url": posting_url,
+            "apply_url": job.get("applyUrl") or posting_url,
+            "primary_evidence_url": posting_url,
             "published_at": job.get("publishedDate"),
             "updated_at": job.get("updatedAt"),
             "content_hash": sha256_bytes(str(job).encode("utf-8")),
@@ -286,9 +312,48 @@ def _relocation_required(location: str, content: str) -> bool:
     return "relocation required" in text or "must relocate" in text
 
 
-def _sam_receipt() -> dict[str, Any]:
-    receipt = _base_receipt("B", "sam.gov", "SAM.gov Opportunities", "federal_feed")
+def _source_locator_receipt(client: httpx.Client, target: dict[str, Any]) -> dict[str, Any]:
+    provider = str(target.get("provider") or "source-locator")
+    lane = str(target.get("lane") or "A")
+    receipt = _base_receipt(lane, provider, target["name"], "source_locator")
+    url = target["url"]
+    _add_registry_evidence(receipt, target, url)
+    receipt["request_summary"] = f"GET {url} source-locator hint only; no candidates admitted"
+    try:
+        response = client.get(url)
+        receipt["response_status"] = response.status_code
+        receipt["content_type"] = response.headers.get("content-type")
+        body = response.content[:MAX_RESPONSE_BYTES]
+        receipt["response_bytes"] = len(response.content)
+        receipt["content_sha256"] = sha256_bytes(body)
+        response.raise_for_status()
+        if len(response.content) > MAX_RESPONSE_BYTES:
+            receipt["result_status"] = "INVALID_RESPONSE"
+            receipt["parser_result"] = "SIZE_LIMIT"
+            receipt["limitations"].append("Response exceeded bounded parser limit.")
+            return _finalize_receipt(receipt)
+        text = response.text.lower()
+    except httpx.HTTPError as exc:
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Source-locator read failed: {type(exc).__name__}")
+        return _finalize_receipt(receipt)
+    hits = [term for term in SOURCE_LOCATOR_TERMS if term in text]
+    receipt["result_status"] = "MATCHES" if hits else "NO_MATCHES"
+    receipt["parser_result"] = "HINTS_ONLY"
+    receipt["limitations"].append(
+        "Aggregator/locator evidence is hint-only; candidates require primary-source readback."
+    )
+    if hits:
+        receipt["limitations"].append("Observed primary-source locator terms: " + ", ".join(hits))
+    return _finalize_receipt(receipt)
+
+
+def _sam_receipt(target: dict[str, Any] | None = None) -> dict[str, Any]:
+    target = target or {"name": "SAM.gov Opportunities"}
+    receipt = _base_receipt("B", "sam.gov", target["name"], "federal_feed")
     api_key = os.getenv("SAM_GOV_API_KEY")
+    _add_registry_evidence(receipt, target, "https://api.sam.gov/opportunities/v2/search")
     receipt["request_summary"] = "SAM.gov opportunity probe; credential value redacted"
     if not api_key:
         receipt["result_status"] = "AUTH_REQUIRED"
@@ -326,9 +391,68 @@ def _sam_receipt() -> dict[str, Any]:
     return _finalize_receipt(receipt)
 
 
+def _federal_page_candidates(target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    provider = str(target.get("provider") or "federal-primary")
+    receipt = _base_receipt("B", provider, target["name"], "federal_feed")
+    url = target["url"]
+    _add_registry_evidence(receipt, target, url)
+    receipt["request_summary"] = f"GET {url} federal primary source; no credentials"
+    candidates: list[dict[str, Any]] = []
+    try:
+        with httpx.Client(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
+            response = client.get(url)
+        body = response.content[:MAX_RESPONSE_BYTES]
+        receipt["response_status"] = response.status_code
+        receipt["content_type"] = response.headers.get("content-type")
+        receipt["response_bytes"] = len(response.content)
+        receipt["content_sha256"] = sha256_bytes(body)
+        response.raise_for_status()
+        if len(response.content) > MAX_RESPONSE_BYTES:
+            receipt["result_status"] = "INVALID_RESPONSE"
+            receipt["parser_result"] = "SIZE_LIMIT"
+            receipt["limitations"].append("Response exceeded bounded parser limit.")
+            return _finalize_receipt(receipt), []
+        text = response.text.lower()
+    except httpx.HTTPError as exc:
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Federal primary-source read failed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+    keywords = [word.lower() for word in target.get("need_keywords", [])]
+    hits = [word for word in keywords if word in text]
+    receipt["result_status"] = "MATCHES" if hits else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt = _finalize_receipt(receipt)
+    if hits:
+        payload = {
+            "lane": "B",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": provider,
+            "source_identity": url,
+            "organization": target["name"],
+            "title": target.get("need_title", "Federal primary-source opportunity signal"),
+            "location_display": "Federal notice or R&D signal; delivery model not applicable",
+            "workplace_type": "NOT_APPLICABLE",
+            "relocation_required": False,
+            "clearance_required": False,
+            "posting_url": url,
+            "apply_url": None,
+            "primary_evidence_url": url,
+            "published_at": None,
+            "updated_at": None,
+            "content_hash": receipt["content_sha256"],
+            "posting_text": f"Observed primary-source keywords: {', '.join(hits)}",
+            "fit_score": target.get("default_fit_score", 0.6),
+        }
+        payload["candidate_id"] = stable_id("candidate:b", payload)
+        candidates.append(payload)
+    return receipt, candidates
+
+
 def _commercial_receipt(target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     receipt = _base_receipt("C", "primary-company-source", target["name"], "primary_company_source")
     receipt["request_summary"] = f"GET {target['url']} primary source; no credentials"
+    _add_registry_evidence(receipt, target, target["url"])
     candidates: list[dict[str, Any]] = []
     try:
         with httpx.Client(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
@@ -363,6 +487,7 @@ def _commercial_receipt(target: dict[str, Any]) -> tuple[dict[str, Any], list[di
             "relocation_required": False,
             "posting_url": target["url"],
             "apply_url": None,
+            "primary_evidence_url": target["url"],
             "published_at": None,
             "updated_at": None,
             "content_hash": receipt["content_sha256"],
@@ -389,10 +514,18 @@ def _employment_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
     if provider == "ashby":
         return _ashby_candidates(client, target)
     receipt = _base_receipt("A", str(provider or "unknown"), target.get("name", "Unknown"), "employer_ats")
+    _add_registry_evidence(receipt, target, target.get("primary_source_url"))
     receipt["result_status"] = "INVALID_REQUEST"
     receipt["parser_result"] = "UNSUPPORTED_PROVIDER"
     receipt["limitations"].append("Employment target provider is not supported by Stage 0 discovery.")
     return _finalize_receipt(receipt), []
+
+
+def _federal_candidates(target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    provider = target.get("provider")
+    if provider == "sam.gov":
+        return _sam_receipt(target), []
+    return _federal_page_candidates(target)
 
 
 def sweep(
@@ -410,13 +543,19 @@ def sweep(
         receipts = []
         candidates = []
         with httpx.Client(timeout=HTTP_TIMEOUT, follow_redirects=False) as client:
+            for target in targets.get("source_locators", []):
+                if target.get("lane", "A") in lanes:
+                    receipts.append(_source_locator_receipt(client, target))
             if "A" in lanes:
                 for target in targets.get("employment", []):
                     receipt, rows = _employment_candidates(client, target)
                     receipts.append(receipt)
                     candidates.extend(rows)
         if "B" in lanes:
-            receipts.append(_sam_receipt())
+            for target in targets.get("federal", [{"name": "SAM.gov Opportunities", "provider": "sam.gov"}]):
+                receipt, rows = _federal_candidates(target)
+                receipts.append(receipt)
+                candidates.extend(rows)
         if "C" in lanes:
             for target in targets.get("commercial", []):
                 receipt, rows = _commercial_receipt(target)

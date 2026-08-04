@@ -128,7 +128,7 @@ def render_html(manifest: ReportManifest) -> str:
     sources = "".join(
         f"<tr><td>{html.escape(item.lane)}</td><td>{html.escape(item.provider)}</td>"
         f"<td>{html.escape(item.target)}</td><td>{_badge(item.result_status.value)}</td>"
-        f"<td>{_list(item.limitations)}</td></tr>"
+        f"<td>{_list(item.evidence_refs)}</td><td>{_list(item.limitations)}</td></tr>"
         for item in manifest.source_receipts
     )
 
@@ -168,7 +168,7 @@ pre {{ white-space: pre-wrap; border: 1px solid #7776; padding: .75rem; }} .empt
 <section><h2>Human-transmitted outreach</h2><p><strong>The human transmits. Stage 0 packets are not sendable.</strong></p>{outreach}</section>
 <section><h2>ATS application state</h2>{applications}</section>
 <section><h2>Interview preparation</h2>{interview}</section>
-<section><h2>Source receipts</h2><table><thead><tr><th>Lane</th><th>Provider</th><th>Target</th><th>Status</th><th>Limitations</th></tr></thead><tbody>{sources}</tbody></table></section>
+<section><h2>Source receipts</h2><table><thead><tr><th>Lane</th><th>Provider</th><th>Target</th><th>Status</th><th>Evidence</th><th>Limitations</th></tr></thead><tbody>{sources}</tbody></table></section>
 <section><h2>Available local decisions</h2><ul>{decisions}</ul></section>
 <section><h2>Visibility accounting</h2><p>Action-worthy: {accounting.action_worthy_total}; visible: {accounting.visible_total}; hidden: {accounting.hidden_total}</p></section>
 <section><h2>Non-claims</h2>{non_claims}</section>
