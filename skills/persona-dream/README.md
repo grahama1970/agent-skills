@@ -565,6 +565,50 @@ Commands, expected outputs, artifact schemas, and acceptance procedures live in
 remains in [`docs/EVIDENCE.md`](docs/EVIDENCE.md), and per-run
 evidence remains under `reports/`.
 
+## What is borrowed, what is coined
+
+The vocabulary here comes from several traditions, and a reader should not have
+to guess which terms carry their established meaning and which are ours. No
+claim below rests on borrowed authority.
+
+**Borrowed and applied as specified.** Two methods are used in their standard
+form and are load-bearing in the receipts:
+
+- *Wilson score interval* for the reliability lower bound, chosen over a normal
+  approximation because the counts are small and near the boundary.
+- *ITU-R BS.1770 K-weighted loudness* for the audio measurements, so the tone
+  work is calibrated against a published standard rather than an ad-hoc metric.
+
+**Borrowed vocabulary, used loosely.** These name ideas from psychology and
+cognitive science, but nothing here implements or tests the constructs as that
+literature defines them:
+
+- *Theory of Mind*, *false belief*, *counterfactual reasoning* — the PCTOM-R
+  workstream borrows the framing of reasoning about another agent's mental
+  state. It does not use a validated ToM instrument, and results here should not
+  be read as evidence about Theory of Mind in the psychological sense.
+- *Memory consolidation*, *day residue*, *dream lag* — the daily-events and
+  recall design is inspired by the idea that recent experience is reprocessed
+  and re-weighted over time. That inspiration is not a claim that this
+  mechanism resembles biological consolidation.
+
+**Coined here, and not validated.** These are ours, and a reviewer should treat
+them as untested constructs rather than instruments:
+
+- **PCTOM-R** (Prospective Counterfactual Theory of Mind) is a project name for
+  a workstream, not a recognised construct.
+- **The eight tension axes** — concealment/disclosure, competence/inadequacy,
+  belonging/isolation, duty/desire — are invented vocabulary, detected by
+  lexical matching against word lists. They are not validated psychometrics,
+  carry no normative data, and should be treated as latent variables awaiting
+  validation. Their labels are evocative on purpose and that is a hazard: a
+  reader can mistake a word-list hit for a measured psychological state.
+
+**No literature review has been done.** This project has not surveyed the
+relevant work, and its design was not derived from specific papers. That is a
+real gap for anyone assessing novelty or prior art, and it is stated here rather
+than papered over with a reading list assembled after the fact.
+
 ## References
 
 - [`SKILL.md`](SKILL.md) - current operational contract
