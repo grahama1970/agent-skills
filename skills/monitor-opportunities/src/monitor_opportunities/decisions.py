@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from .application_packets import verify_application_packet
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json, write_jsonl
 
 ALLOWED_ACTIONS = {
@@ -39,6 +40,7 @@ def _manifest_item(manifest: dict[str, Any] | None, item_id: str) -> dict[str, A
         "resume_variants": "variant_id",
         "outreach_packets": "packet_id",
         "applications": "application_id",
+        "application_packets": "packet_id",
     }
     for collection, id_field in id_fields.items():
         for row in manifest.get(collection, []):
@@ -65,6 +67,10 @@ def _application_payload(manifest: dict[str, Any] | None, item_id: str) -> dict[
         (row for row in manifest.get("resume_variants", []) if row.get("opportunity_id") == opportunity_id),
         None,
     )
+    packet = next(
+        (row for row in manifest.get("application_packets", []) if row.get("application_id") == item_id),
+        None,
+    )
     fields = application.get("fields", [])
     unresolved = [
         field["name"]
@@ -81,6 +87,10 @@ def _application_payload(manifest: dict[str, Any] | None, item_id: str) -> dict[
         },
         "resume_variant_id": resume.get("variant_id") if resume else None,
         "resume_artifact_refs": resume.get("artifact_refs", []) if resume else [],
+        "application_packet_id": packet.get("packet_id") if packet else None,
+        "application_packet_ref": packet.get("packet_ref") if packet else None,
+        "application_packet_digest": sha256_json(packet) if packet else None,
+        "approval_payload_digest": packet.get("approval_payload_digest") if packet else None,
         "attachment_set": resume.get("artifact_refs", []) if resume else [],
         "answer_set_digest": sha256_json(fields),
         "form_schema_digest": application.get("form_schema_digest"),
@@ -99,6 +109,8 @@ def _artifact_hashes(manifest: dict[str, Any] | None, item_id: str, action: str)
         hashes["application_payload_digest"] = payload["payload_digest"] if payload else None
         hashes["form_schema_digest"] = payload.get("form_schema_digest") if payload else None
         hashes["resume_variant_id"] = payload.get("resume_variant_id") if payload else None
+        hashes["application_packet_digest"] = payload.get("application_packet_digest") if payload else None
+        hashes["approval_payload_digest"] = payload.get("approval_payload_digest") if payload else None
     return hashes
 
 
@@ -156,6 +168,16 @@ def append_decision(
         if row["idempotency_key"] == idempotency_key:
             return row
     manifest = _manifest(run_dir)
+    if action == "AUTHORIZE_APPLICATION_PAYLOAD":
+        packet = next(
+            (row for row in (manifest or {}).get("application_packets", []) if row.get("application_id") == item_id),
+            None,
+        )
+        if packet is None:
+            raise ValueError("APPLICATION_PACKET_MISSING")
+        drift = verify_application_packet(packet)
+        if not drift["ok"]:
+            raise ValueError("APPLICATION_PACKET_DRIFT: " + "; ".join(drift["errors"]))
     application_payload = _application_payload(manifest, item_id) if action == "AUTHORIZE_APPLICATION_PAYLOAD" else None
     amendment = _append_claim_amendment(run_dir, manifest, item_id, reason) if action == "PROPOSE_CLAIM_AMENDMENT" else None
     artifact_hashes = _artifact_hashes(manifest, item_id, action)

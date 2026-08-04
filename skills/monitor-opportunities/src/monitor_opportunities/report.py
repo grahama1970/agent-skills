@@ -113,6 +113,20 @@ def render_html(manifest: ReportManifest) -> str:
         for item in manifest.applications
     ) or "<p>None</p>"
 
+    application_packets = "".join(
+        f"<article><h3>{html.escape(item.packet_id)}</h3>"
+        f"<p>{_badge(item.approval_status)} visible_in_report={str(item.visible_in_report).lower()}</p>"
+        f"<p><strong>Application:</strong> {html.escape(item.application_id)}</p>"
+        f"<p><strong>Resume digest:</strong> <code>{html.escape(item.resume_digest)}</code></p>"
+        f"<p><strong>Claim snapshot digest:</strong> <code>{html.escape(item.claim_snapshot_digest)}</code></p>"
+        f"<p><strong>Field answer digest:</strong> <code>{html.escape(item.field_answer_digest)}</code></p>"
+        f"<p><strong>Posting digest:</strong> <code>{html.escape(item.posting_digest)}</code></p>"
+        f"<p><strong>Approval payload digest:</strong> <code>{html.escape(item.approval_payload_digest)}</code></p>"
+        f"<h4>Policy observations</h4>{_list(item.policy_observations)}"
+        f"<h4>Packet JSON</h4>{_list([item.packet_ref])}</article>"
+        for item in manifest.application_packets
+    ) or "<p>None</p>"
+
     interview = "".join(
         f"<article><h3>{html.escape(item.opportunity_id)}</h3>"
         + "".join(
@@ -169,6 +183,7 @@ pre {{ white-space: pre-wrap; border: 1px solid #7776; padding: .75rem; }} .empt
 <section><h2>Tailored resume variants</h2>{variants}</section>
 <section><h2>Human-transmitted outreach</h2><p><strong>The human transmits. Stage 0 packets are not sendable.</strong></p>{outreach}</section>
 <section><h2>ATS application state</h2>{applications}</section>
+<section><h2>Application packets</h2>{application_packets}</section>
 <section><h2>Interview preparation</h2>{interview}</section>
 <section><h2>Source receipts</h2><table><thead><tr><th>Lane</th><th>Provider</th><th>Target</th><th>Source class</th><th>Automation policy</th><th>Status</th><th>Evidence</th><th>Limitations</th></tr></thead><tbody>{sources}</tbody></table></section>
 <section><h2>Available local decisions</h2><ul>{decisions}</ul></section>

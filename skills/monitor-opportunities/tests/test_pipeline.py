@@ -37,6 +37,52 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
     assert payload["artifact_accounting"]["hidden_total"] == 0
     assert len(payload["lane_health"]) == 3
     assert payload["budget"]["max"] == 10.0
+    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["application_packets"]
+    packet = manifest["application_packets"][0]
+    assert packet["visible_in_report"] is True
+    assert packet["action_worthy"] is True
+    assert packet["approval_status"] == "NOT_AUTHORIZED"
+    assert packet["resume_digest"]
+    assert packet["claim_snapshot_digest"] == manifest["resume_variants"][0]["claim_snapshot_sha256"]
+    assert packet["field_answer_digest"]
+    assert packet["posting_digest"]
+    assert packet["approval_payload_digest"]
+    packet_json = json.loads(Path(packet["packet_ref"]).read_text(encoding="utf-8"))
+    assert packet_json["packet_id"] == packet["packet_id"]
+    application_id = packet["application_id"]
+    authorize = runner.invoke(
+        app,
+        [
+            "decision",
+            "--run",
+            str(out),
+            "--item",
+            application_id,
+            "--action",
+            "AUTHORIZE_APPLICATION_PAYLOAD",
+            "--idempotency-key",
+            "authorize-before-drift",
+        ],
+    )
+    assert authorize.exit_code == 0, authorize.output
+    Path(packet["resume_artifacts"][0]["path"]).write_text("tampered resume\n", encoding="utf-8")
+    drifted = runner.invoke(
+        app,
+        [
+            "decision",
+            "--run",
+            str(out),
+            "--item",
+            application_id,
+            "--action",
+            "AUTHORIZE_APPLICATION_PAYLOAD",
+            "--idempotency-key",
+            "authorize-after-drift",
+        ],
+    )
+    assert drifted.exit_code == 2
+    assert "APPLICATION_PACKET_DRIFT" in drifted.stderr
 
 
 def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path) -> None:

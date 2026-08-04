@@ -80,6 +80,39 @@ def _posting(posting_key: str) -> dict[str, Any]:
     }
 
 
+def _posting_from_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
+    text = str(candidate.get("posting_text") or "")
+    keywords = [
+        keyword
+        for keyword in ["agent", "AI", "document", "retrieval", "automation", "integration", "platform"]
+        if keyword.lower() in text.lower()
+    ]
+    return {
+        "posting_key": candidate["candidate_id"],
+        "opportunity_id": candidate["candidate_id"],
+        "title": candidate["title"],
+        "organization": candidate["organization"],
+        "ats_provider": candidate.get("source_provider") or "not-established",
+        "ats_host": candidate.get("source_provider") or "not-established",
+        "employer_url": candidate.get("primary_evidence_url") or candidate.get("posting_url") or candidate["candidate_id"],
+        "observed": [
+            f"Source provider: {candidate.get('source_provider', 'unknown')}",
+            f"Primary evidence: {candidate.get('primary_evidence_url') or candidate.get('posting_url') or candidate['candidate_id']}",
+        ],
+        "form_fields": [
+            {"name": "resume", "required": True, "kind": "file_upload"},
+            {"name": "free_text_answers", "required": True, "kind": "human_required"},
+        ],
+        "accepted_file_formats": ["docx", "pdf", "txt"],
+        "jd_language_patterns": keywords or ["source-backed opportunity evidence"],
+        "selected_claim_keys": [
+            "claim:arcos:acert-architect",
+            "claim:pdf-oxide:document-extraction",
+            "claim:memory:retrieval-platform",
+        ],
+    }
+
+
 def _paragraph(text: str) -> str:
     return f"<w:p><w:r><w:t>{escape(text)}</w:t></w:r></w:p>"
 
@@ -122,10 +155,10 @@ def _line_kind(line: str, approved_texts: set[str]) -> str:
     return "presentation"
 
 
-def tailor(posting_key: str, claims_path: Path, out_dir: Path) -> dict[str, Any]:
+def _tailor_posting(posting: dict[str, Any], claims_path: Path, out_dir: Path) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     snapshot = read_json(claims_path)
-    posting = _posting(posting_key)
+    posting_key = posting["posting_key"]
     claims = _claim_map(snapshot)
     selected = []
     for key in posting["selected_claim_keys"]:
@@ -254,3 +287,11 @@ def tailor(posting_key: str, claims_path: Path, out_dir: Path) -> dict[str, Any]
     write_json(out_dir / "presentation-diff.json", diff)
     write_json(out_dir / "tailoring-receipt.json", receipt)
     return receipt
+
+
+def tailor(posting_key: str, claims_path: Path, out_dir: Path) -> dict[str, Any]:
+    return _tailor_posting(_posting(posting_key), claims_path, out_dir)
+
+
+def tailor_candidate(candidate: dict[str, Any], claims_path: Path, out_dir: Path) -> dict[str, Any]:
+    return _tailor_posting(_posting_from_candidate(candidate), claims_path, out_dir)

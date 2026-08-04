@@ -204,6 +204,31 @@ class Application(StrictModel):
     visible_in_report: bool
 
 
+class ApplicationPacket(StrictModel):
+    schema_name: str = Field(alias="schema")
+    packet_id: str
+    created_at: str
+    application_id: str
+    opportunity_id: str
+    posting_digest: str
+    screening_interface_profile_digest: str
+    resume_variant_id: str
+    resume_artifacts: list[dict[str, Any]]
+    resume_digest: str
+    claim_snapshot_digest: str
+    field_answer_digest: str
+    attachment_digest: str
+    outreach_digest: str
+    policy_observations: list[str]
+    policy_observations_digest: str
+    approval_payload_digest: str
+    approval_status: str
+    packet_ref: str
+    action_worthy: bool
+    visible_in_report: bool
+    external_effects: bool
+
+
 class TalkingPoint(StrictModel):
     text: str
     claim_keys: list[str] = Field(min_length=1)
@@ -245,6 +270,7 @@ class ReportManifest(StrictModel):
     resume_variants: list[ResumeVariant]
     outreach_packets: list[OutreachPacket]
     applications: list[Application]
+    application_packets: list[ApplicationPacket] = []
     interview_prep: list[InterviewPrep]
     decision_actions: list[DecisionAction]
     artifact_accounting: ArtifactAccounting
@@ -326,6 +352,14 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
                     f"human_required field has an automated answer: {field.get('name')}",
                 )
 
+    for packet in raw.get("application_packets", []):
+        if packet.get("visible_in_report") is not True:
+            raise ContractError("APPLICATION_PACKET_HIDDEN", "Application packet must be visible in the report")
+        if packet.get("approval_status") != "NOT_AUTHORIZED":
+            raise ContractError("APPLICATION_PACKET_AUTHORIZED_STAGE0", "Stage 0 packet starts unauthorized")
+        if packet.get("external_effects") is not False:
+            raise ContractError("APPLICATION_PACKET_EXTERNAL_EFFECT", "Application packet cannot cause external effects")
+
 
 def _artifact_rows(manifest: ReportManifest) -> list[tuple[str, bool, bool]]:
     rows: list[tuple[str, bool, bool]] = []
@@ -337,6 +371,8 @@ def _artifact_rows(manifest: ReportManifest) -> list[tuple[str, bool, bool]]:
         rows.append((item.packet_id, item.action_worthy, item.visible_in_report))
     for item in manifest.applications:
         rows.append((item.application_id, item.action_worthy, item.visible_in_report))
+    for item in manifest.application_packets:
+        rows.append((item.packet_id, item.action_worthy, item.visible_in_report))
     return rows
 
 

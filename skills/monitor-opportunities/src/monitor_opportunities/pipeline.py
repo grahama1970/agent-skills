@@ -6,11 +6,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .application_packets import build_application_packets
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE
 from .discovery import sweep
 from .ranking import rank
 from .report import load_manifest, render_report
-from .tailoring import tailor
+from .tailoring import tailor, tailor_candidate
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json
 
 
@@ -158,7 +159,7 @@ def _resume_variant(tailoring_dir: Path, fallback_opportunity_id: str | None) ->
     return [
         {
             "variant_id": variant["variant_id"],
-            "opportunity_id": fallback_opportunity_id,
+            "opportunity_id": variant.get("opportunity_id") or fallback_opportunity_id,
             "claim_snapshot_sha256": variant["claim_snapshot_sha256"],
             "claim_keys": [ref["claim_key"] for ref in variant["claim_refs"]],
             "artifact_refs": variant["artifact_refs"],
@@ -173,7 +174,7 @@ def _resume_variant(tailoring_dir: Path, fallback_opportunity_id: str | None) ->
     ]
 
 
-def _report_from_run(run_id: str, discovery_dir: Path, ranking_dir: Path, tailoring_dir: Path) -> dict[str, Any]:
+def _report_from_run(run_id: str, run_dir: Path, discovery_dir: Path, ranking_dir: Path, tailoring_dir: Path) -> dict[str, Any]:
     shortlist = read_json(ranking_dir / "shortlist.json")
     rejections = read_json(ranking_dir / "rejections.json")
     opportunities = [_opportunity(candidate) for candidate in shortlist]
@@ -219,6 +220,13 @@ def _report_from_run(run_id: str, discovery_dir: Path, ranking_dir: Path, tailor
         for opportunity in opportunities
         if opportunity["lane"] == "A"
     ]
+    application_packets = build_application_packets(
+        run_dir=run_dir,
+        opportunities=opportunities,
+        resume_variants=resume_variants,
+        outreach_packets=outreach_packets,
+        applications=applications,
+    )
     interview_prep = [
         {
             "opportunity_id": opportunity["opportunity_id"],
@@ -232,7 +240,13 @@ def _report_from_run(run_id: str, discovery_dir: Path, ranking_dir: Path, tailor
         }
         for opportunity in opportunities
     ]
-    action_worthy_total = len(opportunities) + len(resume_variants) + len(outreach_packets) + len(applications)
+    action_worthy_total = (
+        len(opportunities)
+        + len(resume_variants)
+        + len(outreach_packets)
+        + len(applications)
+        + len(application_packets)
+    )
     return {
         "schema": "monitor_opportunities.report.v1",
         "run_id": run_id,
@@ -249,6 +263,7 @@ def _report_from_run(run_id: str, discovery_dir: Path, ranking_dir: Path, tailor
         "resume_variants": resume_variants,
         "outreach_packets": outreach_packets,
         "applications": applications,
+        "application_packets": application_packets,
         "interview_prep": interview_prep,
         "decision_actions": [
             {"action": "KEEP", "target_type": "opportunity", "enabled": True, "effects_external": False},
@@ -320,11 +335,17 @@ def run_stage0(
     claims_path = skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json"
     tailoring_receipt = None
     if claims_path.exists():
-        tailoring_receipt = tailor("fixture:eligible-ai-architect", claims_path, tailoring_dir)
+        shortlist_path = ranking_dir / "shortlist.json"
+        shortlist = read_json(shortlist_path) if shortlist_path.exists() else []
+        if shortlist:
+            tailoring_target = next((candidate for candidate in shortlist if candidate.get("lane") == "A"), shortlist[0])
+            tailoring_receipt = tailor_candidate(tailoring_target, claims_path, tailoring_dir)
+        else:
+            tailoring_receipt = tailor("fixture:eligible-ai-architect", claims_path, tailoring_dir)
         phases.append({"phase": "TAILORING_COMPLETE", "artifact": str(tailoring_dir / "tailoring-receipt.json")})
 
     manifest_path = out_dir / "report-manifest.json"
-    report_manifest = _report_from_run(run_id, discovery_dir, ranking_dir, tailoring_dir)
+    report_manifest = _report_from_run(run_id, out_dir, discovery_dir, ranking_dir, tailoring_dir)
     write_json(manifest_path, report_manifest)
     manifest = load_manifest(manifest_path)
     render_artifacts = render_report(manifest, report_dir)

@@ -65,7 +65,9 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
     reject_id = manifest["opportunities"][1]["opportunity_id"]
     defer_id = manifest["outreach_packets"][0]["packet_id"]
     variant_id = manifest["resume_variants"][0]["variant_id"]
-    application_id = manifest["applications"][0]["application_id"]
+    packet = manifest["application_packets"][0]
+    application_id = packet["application_id"]
+    application = next(row for row in manifest["applications"] if row["application_id"] == application_id)
     port = _free_port()
     proc = subprocess.Popen(
         [str(run_sh), "serve", "--report", str(run_dir), "--host", "127.0.0.1", "--port", str(port)],
@@ -101,6 +103,9 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
         assert "Application Packet" in page
         assert variant_id in page
         assert application_id in page
+        assert packet["packet_id"] in page
+        assert packet["approval_payload_digest"] in page
+        assert "Exact Packet Binding" in page
         assert "External effects are disabled" in page
         assert "AUTHORIZE_APPLICATION_PAYLOAD" in page
         assert "MARK_HUMAN_SENT_GMAIL" not in page
@@ -138,7 +143,10 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
         assert authorize_event["application_payload"]["application_id"] == application_id
         assert authorize_event["application_payload"]["does_not_execute_submit"] is True
         assert authorize_event["application_payload"]["payload_digest"] == authorize_event["artifact_hashes"]["application_payload_digest"]
-        assert authorize_event["application_payload"]["form_schema_digest"] == manifest["applications"][0]["form_schema_digest"]
+        assert authorize_event["application_payload"]["form_schema_digest"] == application["form_schema_digest"]
+        assert authorize_event["application_payload"]["application_packet_id"] == packet["packet_id"]
+        assert authorize_event["application_payload"]["approval_payload_digest"] == packet["approval_payload_digest"]
+        assert authorize_event["artifact_hashes"]["approval_payload_digest"] == packet["approval_payload_digest"]
         amendments = [
             json.loads(line)
             for line in (run_dir / "claim-amendments.jsonl").read_text(encoding="utf-8").splitlines()

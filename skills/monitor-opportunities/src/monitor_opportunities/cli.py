@@ -21,6 +21,8 @@ from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
 from .service import serve as serve_report
 from .tailoring import tailor as tailor_resume
+from .tailoring import tailor_candidate
+from .util import read_json
 from .verification import run_verification
 
 app = typer.Typer(
@@ -215,11 +217,26 @@ def tailor(
     posting: str = typer.Option(..., "--posting"),
     claims: Path = typer.Option(..., "--claims", exists=True, dir_okay=False, readable=True),
     out: Path = typer.Option(..., "--out", file_okay=False),
+    ranked_run: Path | None = typer.Option(
+        None,
+        "--ranked-run",
+        exists=True,
+        file_okay=False,
+        readable=True,
+        help="Ranking output directory containing shortlist.json; posting selects a live-ranked candidate id.",
+    ),
 ) -> None:
     """Compile a local claim-bound resume variant."""
     _configure_logging()
     try:
-        receipt = tailor_resume(posting, claims, out)
+        if ranked_run is not None:
+            shortlist = read_json(ranked_run / "shortlist.json")
+            candidate = next((row for row in shortlist if row.get("candidate_id") == posting), None)
+            if candidate is None:
+                raise ValueError(f"ranked posting not found: {posting}")
+            receipt = tailor_candidate(candidate, claims, out)
+        else:
+            receipt = tailor_resume(posting, claims, out)
     except ValueError as exc:
         _fail(ContractError("TAILORING_FAILED", str(exc)))
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))

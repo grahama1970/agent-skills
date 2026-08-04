@@ -47,6 +47,7 @@ def _item_ids(manifest: Any) -> list[str]:
     ids.extend(item.opportunity_id for item in manifest.opportunities)
     ids.extend(item.variant_id for item in manifest.resume_variants)
     ids.extend(item.application_id for item in manifest.applications)
+    ids.extend(item.packet_id for item in manifest.application_packets)
     ids.extend(packet.packet_id for packet in manifest.outreach_packets)
     return ids
 
@@ -107,7 +108,7 @@ def _source_evidence(source_ids: list[str], receipts_by_id: dict[str, Any]) -> s
     return f"<ul>{''.join(rows)}</ul>" if rows else '<p class="blocker">No source receipt IDs.</p>'
 
 
-def _application_packet(application: Any, token: str) -> str:
+def _application_packet(application: Any, token: str, packets: list[Any]) -> str:
     field_rows = "".join(
         "<tr>"
         f"<td>{html.escape(field.name)}</td>"
@@ -117,12 +118,25 @@ def _application_packet(application: Any, token: str) -> str:
         "</tr>"
         for field in application.fields
     )
+    packet_html = "".join(
+        "<section class=\"packet\"><h5>Exact Packet Binding</h5>"
+        f"<p>{_badge(packet.approval_status)} visible_in_report={str(packet.visible_in_report).lower()}</p>"
+        f"<p>Packet ID: <code>{html.escape(packet.packet_id)}</code></p>"
+        f"<p>Packet JSON: <code>{html.escape(packet.packet_ref)}</code></p>"
+        f"<p>Resume digest: <code>{html.escape(packet.resume_digest)}</code></p>"
+        f"<p>Claim snapshot digest: <code>{html.escape(packet.claim_snapshot_digest)}</code></p>"
+        f"<p>Field answer digest: <code>{html.escape(packet.field_answer_digest)}</code></p>"
+        f"<p>Approval payload digest: <code>{html.escape(packet.approval_payload_digest)}</code></p>"
+        "</section>"
+        for packet in packets
+    ) or '<p class="blocker">No exact application packet is present.</p>'
     return (
         '<section class="packet"><h4>Application Packet</h4>'
         f"<p>{_badge(application.state)} authorized={str(application.authorized).lower()}</p>"
         f"<p>ATS provider: {html.escape(str(application.ats_provider or 'not established'))}</p>"
         "<table><thead><tr><th>Field</th><th>Type</th><th>Required</th>"
         f"<th>Disposition</th></tr></thead><tbody>{field_rows}</tbody></table>"
+        + packet_html
         + _decision_form(
             token,
             application.application_id,
@@ -138,6 +152,9 @@ def _opportunity_cards(manifest: Any, token: str) -> str:
     applications: dict[str, list[Any]] = defaultdict(list)
     for item in manifest.applications:
         applications[item.opportunity_id].append(item)
+    packets_by_application: dict[str, list[Any]] = defaultdict(list)
+    for packet in manifest.application_packets:
+        packets_by_application[packet.application_id].append(packet)
     variants: dict[str, list[Any]] = defaultdict(list)
     for item in manifest.resume_variants:
         variants[item.opportunity_id].append(item)
@@ -149,7 +166,8 @@ def _opportunity_cards(manifest: Any, token: str) -> str:
     cards = []
     for rank, item in enumerate(manifest.opportunities, start=1):
         application_html = "".join(
-            _application_packet(application, token) for application in applications.get(item.opportunity_id, [])
+            _application_packet(application, token, packets_by_application.get(application.application_id, []))
+            for application in applications.get(item.opportunity_id, [])
         ) or '<p class="blocker">No application packet is present.</p>'
         variant_html = "".join(
             '<section class="packet"><h4>Amended Resume</h4>'
