@@ -228,11 +228,16 @@ def serve(
     report: Path = typer.Option(..., "--report", exists=True, file_okay=False, readable=True),
     host: str = typer.Option("127.0.0.1", "--host"),
     port: int = typer.Option(8765, "--port", min=1, max=65535),
+    allow_remote: bool = typer.Option(
+        False,
+        "--allow-remote",
+        help="Allow non-loopback bind for Tailscale/LAN review.",
+    ),
 ) -> None:
-    """Serve one local report and decision loop on loopback."""
+    """Serve one token-gated morning report and decision loop."""
     _configure_logging()
     try:
-        serve_report(report, host, port)
+        serve_report(report, host, port, allow_remote=allow_remote)
     except ValueError as exc:
         _fail(ContractError("SERVE_REJECTED", str(exc)))
 

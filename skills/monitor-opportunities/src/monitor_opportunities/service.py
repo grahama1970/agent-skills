@@ -1,9 +1,10 @@
-"""Loopback-only Stage 0 decision service."""
+"""Stage 0 morning report and decision service."""
 
 from __future__ import annotations
 
 import html
 import secrets
+import subprocess
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -15,6 +16,12 @@ from .report import load_manifest
 from .util import read_json
 
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+REMOTE_BIND_HOSTS = {"0.0.0.0", "::"}
+SERVICE_ALLOWED_ACTIONS = ALLOWED_ACTIONS - {
+    "AUTHORIZE_APPLICATION_PAYLOAD",
+    "MARK_HUMAN_SENT_GMAIL",
+    "MARK_HUMAN_SENT_LINKEDIN",
+}
 
 
 def ensure_token(run_dir: Path) -> str:
@@ -56,6 +63,20 @@ def _headers(handler: BaseHTTPRequestHandler, content_type: str = "text/html; ch
     )
 
 
+def _tailscale_ipv4() -> str | None:
+    try:
+        result = subprocess.run(
+            ["tailscale", "ip", "-4"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError):
+        return None
+    return result.stdout.strip().splitlines()[0] if result.stdout.strip() else None
+
+
 def _render_page(run_dir: Path, token: str) -> str:
     manifest = load_manifest(run_dir / "report-manifest.json")
     projection = _projection(run_dir)
@@ -65,7 +86,10 @@ def _render_page(run_dir: Path, token: str) -> str:
     ) or "<li>No decisions yet</li>"
     forms = []
     for item_id in _item_ids(manifest):
-        action_options = "".join(f'<option value="{html.escape(action)}">{html.escape(action)}</option>' for action in sorted(ALLOWED_ACTIONS))
+        action_options = "".join(
+            f'<option value="{html.escape(action)}">{html.escape(action)}</option>'
+            for action in sorted(SERVICE_ALLOWED_ACTIONS)
+        )
         forms.append(
             f"<form method=\"post\" action=\"/decision?token={html.escape(token)}\">"
             f"<input type=\"hidden\" name=\"item\" value=\"{html.escape(item_id)}\">"
@@ -101,7 +125,7 @@ section {{ margin: 1.5rem 0; }}
 </head>
 <body>
 <h1>monitor-opportunities decision loop</h1>
-<p>Run: {html.escape(manifest.run_id)}. External effects: false. Loopback-only service.</p>
+<p>Run: {html.escape(manifest.run_id)}. External effects: false. Token-gated morning review service.</p>
 <section><h2>Current Projection</h2><ul>{projection_rows}</ul></section>
 <section><h2>Decision Forms</h2>{''.join(forms)}</section>
 <section><h2>Report Summary</h2><p>Hidden action-worthy artifacts: {manifest.artifact_accounting.hidden_total}</p><ul>{lanes}</ul><h3>Shortlist</h3><ul>{opportunities}</ul><p><a href="/report?token={html.escape(token)}">Open full report</a></p></section>
@@ -150,10 +174,18 @@ class _Handler(BaseHTTPRequestHandler):
             return
         length = int(self.headers.get("Content-Length", "0"))
         form = parse_qs(self.rfile.read(length).decode("utf-8"))
+        action = form.get("action", [""])[0]
+        if action not in SERVICE_ALLOWED_ACTIONS:
+            self._write(
+                HTTPStatus.BAD_REQUEST,
+                b"action blocked by Stage 0 service policy\n",
+                "text/plain; charset=utf-8",
+            )
+            return
         append_decision(
             run_dir=self.run_dir,
             item_id=form.get("item", [""])[0],
-            action=form.get("action", [""])[0],
+            action=action,
             actor="candidate",
             idempotency_key=form.get("idempotency_key", [""])[0],
             reason=form.get("reason", [""])[0] or None,
@@ -168,9 +200,9 @@ class _Handler(BaseHTTPRequestHandler):
         return
 
 
-def serve(run_dir: Path, host: str, port: int) -> None:
-    if host not in LOOPBACK_HOSTS:
-        raise ValueError("serve is restricted to loopback hosts")
+def serve(run_dir: Path, host: str, port: int, allow_remote: bool = False) -> None:
+    if host not in LOOPBACK_HOSTS and not allow_remote:
+        raise ValueError("non-loopback serve requires --allow-remote")
     token = ensure_token(run_dir)
 
     class BoundHandler(_Handler):
@@ -179,5 +211,17 @@ def serve(run_dir: Path, host: str, port: int) -> None:
     BoundHandler.run_dir = run_dir
     BoundHandler.token = token
     server = ThreadingHTTPServer((host, port), BoundHandler)
-    print(f"monitor-opportunities serve: http://{host}:{server.server_port}/?token={token}", flush=True)
+    shown_host = "127.0.0.1" if host in REMOTE_BIND_HOSTS else host
+    print(
+        f"monitor-opportunities serve: http://{shown_host}:{server.server_port}/?token={token}",
+        flush=True,
+    )
+    if allow_remote:
+        tailscale_ip = _tailscale_ipv4()
+        if tailscale_ip:
+            print(
+                f"monitor-opportunities tailscale: "
+                f"http://{tailscale_ip}:{server.server_port}/?token={token}",
+                flush=True,
+            )
     server.serve_forever()

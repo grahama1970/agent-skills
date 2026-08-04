@@ -4,6 +4,7 @@ import json
 import socket
 import subprocess
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -21,6 +22,31 @@ def _post(base: str, token: str, item: str, action: str, key: str) -> None:
     ).encode("utf-8")
     request = urllib.request.Request(f"{base}/decision?token={token}", data=data, method="POST")
     urllib.request.build_opener(urllib.request.HTTPRedirectHandler()).open(request, timeout=5).read()
+
+
+def _post_expect_error(base: str, token: str, item: str, action: str, key: str) -> int:
+    data = urllib.parse.urlencode(
+        {"item": item, "action": action, "idempotency_key": key, "reason": "pytest"}
+    ).encode("utf-8")
+    request = urllib.request.Request(f"{base}/decision?token={token}", data=data, method="POST")
+    try:
+        urllib.request.urlopen(request, timeout=5).read()
+    except urllib.error.HTTPError as exc:
+        return int(exc.code)
+    raise AssertionError("expected HTTP error")
+
+
+def test_remote_bind_requires_explicit_allow_remote(tmp_path: Path) -> None:
+    run_sh = Path("skills/monitor-opportunities/run.sh").resolve()
+    port = _free_port()
+    result = subprocess.run(
+        [str(run_sh), "serve", "--report", str(tmp_path), "--host", "0.0.0.0", "--port", str(port)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 2
+    assert "non-loopback serve requires --allow-remote" in result.stderr
 
 
 def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> None:
@@ -63,19 +89,30 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
         assert opportunity_id in page
         assert variant_id in page
         assert application_id in page
+        assert "AUTHORIZE_APPLICATION_PAYLOAD" not in page
 
         _post(base, token, opportunity_id, "KEEP", "keep-key")
         _post(base, token, reject_id, "REJECT", "reject-key")
         _post(base, token, variant_id, "ACCEPT_RESUME_VARIANT", "resume-key")
-        _post(base, token, application_id, "AUTHORIZE_APPLICATION_PAYLOAD", "payload-key")
+        _post(base, token, application_id, "WITHHOLD_APPLICATION", "payload-key")
         _post(base, token, opportunity_id, "KEEP", "keep-key")
 
+        assert (
+            _post_expect_error(
+                base,
+                token,
+                application_id,
+                "AUTHORIZE_APPLICATION_PAYLOAD",
+                "blocked-key",
+            )
+            == 400
+        )
         projection = json.loads((run_dir / "decision-projection.json").read_text(encoding="utf-8"))
         assert projection["external_effects"] is False
         assert projection["items"][opportunity_id]["last_action"] == "KEEP"
         assert projection["items"][reject_id]["last_action"] == "REJECT"
         assert projection["items"][variant_id]["last_action"] == "ACCEPT_RESUME_VARIANT"
-        assert projection["items"][application_id]["last_action"] == "AUTHORIZE_APPLICATION_PAYLOAD"
+        assert projection["items"][application_id]["last_action"] == "WITHHOLD_APPLICATION"
         assert len((run_dir / "decision-ledger.jsonl").read_text(encoding="utf-8").splitlines()) == 4
         assert manifest["artifact_accounting"]["hidden_total"] == 0
     finally:
