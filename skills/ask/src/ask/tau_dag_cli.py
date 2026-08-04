@@ -667,6 +667,23 @@ def _probe_browser_provider_availability(
     command = [sys.executable, str(script)]
     for handler in handlers:
         command.extend(["--provider", handler])
+    binding_resolution = _resolve_explicit_browser_provider_tabs(input_payload, handlers)
+    if binding_resolution.get("status") == "ERROR":
+        report = {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "ERROR",
+            "mocked": False,
+            "live": False,
+            "read_only": True,
+            "error": "browser_provider_explicit_tab_resolve_failed",
+            "requested_providers": handlers,
+            "binding_resolution": binding_resolution,
+            "path": str(output_path),
+        }
+        _write_browser_availability(run_dir, report)
+        return report
+    for item in binding_resolution.get("explicit_tab_args", []):
+        command.extend(["--tab-id", str(item)])
     command.extend(["--output", str(output_path), "--max-tabs-per-provider", "2", "--json"])
 
     started = time.time()
@@ -732,12 +749,112 @@ def _probe_browser_provider_availability(
 
     report["path"] = str(output_path)
     report["requested_providers"] = handlers
+    if binding_resolution.get("explicit_tab_args"):
+        report["binding_resolution"] = binding_resolution
     report["command_receipt"] = command_receipt
     if command_receipt["returncode"] != 0 and report.get("status") != "NEEDS_ATTENTION":
         report["status"] = "ERROR"
         report.setdefault("error", "browser_availability_probe_failed")
     _write_browser_availability(run_dir, report)
     return report
+
+
+def _resolve_explicit_browser_provider_tabs(input_payload: Any, handlers: list[str]) -> dict[str, Any]:
+    """Resolve caller-specified browser-oracle projects to exact tab ids."""
+    explicit_projects = _explicit_handler_projects(input_payload)
+    if not explicit_projects:
+        return {"schema": "ask.browser_provider_binding_resolution.v1", "status": "skipped", "explicit_tab_args": []}
+
+    browser_oracle_run = Path(
+        os.environ.get(
+            "ASK_BROWSER_ORACLE_RUN",
+            str(Path(__file__).resolve().parents[2].parent / "browser-oracle" / "run.sh"),
+        )
+    )
+    explicit_tab_args: list[str] = []
+    resolutions: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for handler in handlers:
+        project = explicit_projects.get(handler)
+        if not project:
+            continue
+        backend = BROWSER_BACKENDS.get(handler)
+        if not backend:
+            continue
+        command = [
+            str(browser_oracle_run),
+            "resolve",
+            "--backend",
+            backend,
+            "--project",
+            project,
+            "--json",
+        ]
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=str(browser_oracle_run.parent),
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=60,
+                check=False,
+            )
+            receipt = {
+                "handler": handler,
+                "project": project,
+                "backend": backend,
+                "command": command,
+                "returncode": completed.returncode,
+                "stdout": completed.stdout[:4000],
+                "stderr": completed.stderr[:2000],
+            }
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            receipt = {
+                "handler": handler,
+                "project": project,
+                "backend": backend,
+                "command": command,
+                "returncode": 124 if isinstance(exc, subprocess.TimeoutExpired) else 127,
+                "stdout": str(getattr(exc, "stdout", "") or "")[:4000],
+                "stderr": str(getattr(exc, "stderr", "") or str(exc))[:2000],
+            }
+        tab_id = ""
+        if receipt["returncode"] == 0:
+            try:
+                payload = json.loads(str(receipt.get("stdout") or "{}"))
+            except json.JSONDecodeError:
+                payload = {}
+            if isinstance(payload, dict):
+                tab_id = str(payload.get("tab_id") or payload.get("controlled_tab_id") or "").strip()
+                receipt["resolved_tab_id"] = tab_id
+                receipt["conversation_url"] = str(payload.get("conversation_url") or payload.get("url") or "")
+        if not tab_id:
+            errors.append(receipt)
+        else:
+            explicit_tab_args.append(f"{handler}={tab_id}")
+            resolutions.append(receipt)
+
+    return {
+        "schema": "ask.browser_provider_binding_resolution.v1",
+        "status": "ERROR" if errors else "READY",
+        "explicit_tab_args": explicit_tab_args,
+        "resolutions": resolutions,
+        "errors": errors,
+    }
+
+
+def _explicit_handler_projects(input_payload: Any) -> dict[str, str]:
+    projects: dict[str, str] = {}
+    for item in list(getattr(input_payload, "handler_projects", ()) or ()):
+        if "=" not in str(item):
+            continue
+        handler, project = str(item).split("=", 1)
+        handler = handler.strip()
+        project = project.strip()
+        if handler in BROWSER_BACKENDS and project:
+            projects[handler] = project
+    return projects
 
 
 def _browser_availability_blocks(report: dict[str, Any]) -> bool:

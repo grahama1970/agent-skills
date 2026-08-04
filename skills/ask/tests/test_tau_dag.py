@@ -3445,6 +3445,74 @@ def test_browser_tab_lifecycle_failure_blocks_tau_execution(monkeypatch, tmp_pat
     assert payload["execution"]["no_tau_execution"] is True
 
 
+def test_browser_availability_uses_bound_handler_project_tab(monkeypatch, tmp_path: Path) -> None:
+    browser_oracle = tmp_path / "browser-oracle-run.py"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+assert sys.argv[1:6] == ["resolve", "--backend", "webgpt", "--project", "battle-1199-final-review-retry"]
+print(json.dumps({"project": "battle-1199-final-review-retry", "tab_id": "837367444", "conversation_url": "https://chatgpt.com/c/current"}))
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+    availability = tmp_path / "availability.py"
+    availability.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+output = Path(sys.argv[sys.argv.index("--output") + 1])
+output.parent.mkdir(parents=True, exist_ok=True)
+payload = {
+    "schema": "ask.browser_provider_availability.v1",
+    "status": "AVAILABLE_PREFLIGHT",
+    "mocked": False,
+    "live": True,
+    "read_only": True,
+    "argv": sys.argv[1:],
+    "providers": {"webgpt": {"provider_limited": False, "checked_tabs": [{"tab_id": "837367444"}]}},
+}
+output.write_text(json.dumps(payload), encoding="utf-8")
+print(json.dumps(payload))
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ASK_BROWSER_ORACLE_RUN", str(browser_oracle))
+    monkeypatch.setenv("ASK_BROWSER_AVAILABILITY_SCRIPT", str(availability))
+
+    input_payload = tau_dag.TauDagCompileInput(
+        request="Ask WebGPT to review the Battle backend proof.",
+        repo="local/agent-skills",
+        target="battle-1199",
+        immutable_goal="Use the explicitly bound WebGPT tab for backend review.",
+        solver_models=(),
+        reviewer_model="",
+        criteria=(),
+        handlers=("webgpt",),
+        topology="concurrent",
+        workflow_mode="roundtable",
+        dag_template="single-call",
+        handler_projects=("webgpt=battle-1199-final-review-retry",),
+    )
+
+    report = tau_dag_cli._probe_browser_provider_availability(
+        input_payload,
+        run_dir=tmp_path / "runs",
+        timeout_seconds=20,
+    )
+
+    command = report["command_receipt"]["command"]
+    assert report["status"] == "AVAILABLE_PREFLIGHT"
+    assert report["binding_resolution"]["explicit_tab_args"] == ["webgpt=837367444"]
+    assert "--tab-id" in command
+    assert command[command.index("--tab-id") + 1] == "webgpt=837367444"
+    assert report["providers"]["webgpt"]["provider_limited"] is False
+
+
 def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch, tmp_path: Path) -> None:
     captured: dict[str, Any] = {}
 

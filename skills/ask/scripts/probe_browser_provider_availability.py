@@ -183,12 +183,15 @@ def _probe_provider(
     explicit_tab_ids: list[str],
 ) -> dict[str, Any]:
     provider_tabs = [_tab_summary(tab) for tab in tabs if _tab_matches(tab, config.hosts)]
+    has_explicit_tabs = bool(explicit_tab_ids)
     checked = []
     for tab_id_value in _candidate_tab_ids(provider_tabs, explicit_tab_ids, max_tabs):
         checked.append(_check_tab(surf_run=surf_run, tab_id=tab_id_value, pattern=config.limited_pattern))
     payload = {
         "provider": provider,
         "tab_count": len(provider_tabs),
+        "explicit_tab_ids": [re.sub(r"\D", "", tab) for tab in explicit_tab_ids if re.sub(r"\D", "", tab)],
+        "explicit_tabs_only": has_explicit_tabs,
         "tabs": provider_tabs[:25],
         "checked_tabs": checked,
         "provider_limited": any(item.get("limited") is True for item in checked),
@@ -454,6 +457,8 @@ def _candidate_tab_ids(provider_tabs: list[dict[str, Any]], explicit_tab_ids: li
         if normalized and normalized not in seen:
             seen.add(normalized)
             result.append(normalized)
+    if result:
+        return result
     sorted_tabs = sorted(provider_tabs, key=lambda tab: (not bool(tab.get("active")), -int(tab.get("id") or 0)))
     for tab in sorted_tabs:
         tab_id = str(tab.get("id") or "")

@@ -68,6 +68,35 @@ def test_probe_detects_webgpt_too_many_requests_without_submission(tmp_path: Pat
     assert "chatgpt" not in (tmp_path / "surf-calls.log").read_text(encoding="utf-8")
 
 
+def test_probe_uses_only_explicit_provider_tab_when_stale_same_provider_tab_exists(tmp_path: Path) -> None:
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[
+            {"id": 837367444, "windowId": 1, "title": "ChatGPT healthy", "url": "https://chatgpt.com/c/current", "active": True},
+            {"id": 837367147, "windowId": 2, "title": "ChatGPT stale", "url": "https://chatgpt.com/c/stale", "active": False},
+        ],
+        tab_text={
+            "837367444": "Battle backend review tab ready\nAsk anything",
+            "837367147": "Too many requests\nYou're making requests too quickly. Please wait a few minutes.",
+        },
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"],
+        surf_run=surf,
+        max_tabs_per_provider=2,
+        explicit_tabs={"webgpt": ["837367444"]},
+    )
+
+    webgpt = report["providers"]["webgpt"]
+    assert report["status"] == "AVAILABLE_PREFLIGHT"
+    assert webgpt["provider_limited"] is False
+    assert webgpt["explicit_tabs_only"] is True
+    assert webgpt["explicit_tab_ids"] == ["837367444"]
+    assert [item["tab_id"] for item in webgpt["checked_tabs"]] == ["837367444"]
+    assert "--tab-id 837367147" not in (tmp_path / "surf-calls.log").read_text(encoding="utf-8")
+
+
 def test_probe_reports_available_when_checked_tabs_have_no_limit_text(tmp_path: Path) -> None:
     surf = _fake_surf(
         tmp_path,
