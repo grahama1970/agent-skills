@@ -585,8 +585,12 @@
       "scope": "current-day code, project-state and affect events entering memory",
       "receipt": null,
       "proves": null,
-      "does_not_prove": "that successive dreams differ; the five-cycle pilot produced byte-identical journals (sha f812641f9dbbc7e2). Root cause found 2026-08-04: /recall accepts and discards the scope parameter, so a nonexistent scope returns the same items as a real one, and the five recall strata are five semantic queries over one undifferentiated pool. A document that stores successfully is also not retrievable by recall.",
-      "successor_issue": "grahama1970/agent-skills#1212"
+      "does_not_prove": "that successive dreams differ; the five-cycle pilot produced byte-identical journals (sha f812641f9dbbc7e2). Measured 2026-08-04, two upstream defects in the memory service: a document that /store accepts and that is present in ArangoDB is never returned by /recall, even queried with its own text (graph-memory-operator#99); and /recall does not filter by the scope it is given, returning other scopes' documents, so the five recall strata are five semantic queries over one undifferentiated pool (graph-memory-operator#100). Recall is deterministic within a scope (Jaccard 1.000 over 5 repeats), so scope perturbs ranking but restricts nothing.",
+      "successor_issue": "grahama1970/agent-skills#1212",
+      "blocked_by": [
+        "grahama1970/graph-memory-operator#99",
+        "grahama1970/graph-memory-operator#100"
+      ]
     },
     "journal_ux_browser_proof": {
       "status": "UNPROVEN",

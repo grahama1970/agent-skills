@@ -202,11 +202,17 @@ persona psychological mood     (what she woke up feeling)
 
 The five-cycle pilot produced byte-identical journals (sha `f812641f9dbbc7e2`,
 cycles 001-005). The obvious reading is that nothing about any given day was
-ever written to memory, which is true. The measured cause is worse: `/recall`
-**accepts and discards the `scope` parameter**, so a deliberately nonexistent
-scope returns the same items as a real one, and the five recall "strata" are
-five semantic queries over one undifferentiated pool. Separately, a document
-that stores successfully is not retrievable by recall.
+ever written to memory, which is true. Two measured defects in the memory
+service make it worse:
+
+- **A stored document is not retrievable.** `/store` returns success, the row is
+  really in ArangoDB, and `/recall` never returns it — not even when queried
+  with the document's own text.
+- **`/recall` does not filter by scope.** Asking for one scope returns documents
+  from others, so the five recall "strata" are not strata; they are five
+  semantic queries over one undifferentiated pool.
+
+Both are upstream, in the memory service rather than here.
 
 So the pilot showed the pipeline runs repeatedly. It did not show
 day-to-day experiential change, and adding day events alone would not have
@@ -230,8 +236,8 @@ What does not work yet, stated plainly:
   recorded, but it does not change the waveform — measured, not assumed. The
   engine in use ignores the parameters that would carry it.
 - **Days do not differ.** Today's events never enter memory, and the recall path
-  ignores the scope it is given, so five consecutive dreams produced identical
-  journals.
+  does not filter by the scope it is given, so five consecutive dreams produced
+  identical journals.
 - **Discussion is not durable.** The chat pane can show a conversation; nothing
   writes it down.
 - **The page has never been opened in a browser.**

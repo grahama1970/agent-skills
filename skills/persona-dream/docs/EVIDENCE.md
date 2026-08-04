@@ -80,7 +80,7 @@ vocabulary is deliberately narrow: **implemented** means code exists,
 | Requested tone to measurable acoustic effect | **Disproven**: below the renderer's own stochastic spread | `reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json`, #1209 |
 | Journal page | Markup and fixtures checked; browser proof open | #1213 |
 | Interactive dream discussion | UX scaffold only; append-only persistence open | #1210 |
-| Day events to a later dream | Not established; recall ignores scope | #1212 |
+| Day events to a later dream | Not established; blocked upstream on memory-service recall | #1212 |
 | PCTOM-R held-out benefit | Not run | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1008 |
 
 Revision ids, request hashes, receipt paths, and the per-phase narrative are in
