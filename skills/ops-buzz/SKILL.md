@@ -21,6 +21,7 @@ provides:
   - buzz-notification
   - buzz-message-query
   - buzz-config-readiness
+  - buzz-agent-request
 composes: []
 complies:
   - best-practices-skills
@@ -64,12 +65,14 @@ Allowed:
 - dry-run a post and write a receipt;
 - call `buzz messages send` when configuration exists and `--dry-run` is not set;
 - call `buzz messages get` and `buzz messages search`;
-- prepare agent-facing handoff text.
+- prepare agent-facing handoff text;
+- post a bounded agent request and optionally read back channel messages for a
+  response receipt.
 
 Not established in v0:
 
-- durable Buzz agent job requests;
-- verifying that Claude/Codex agents answered a message;
+- durable Buzz `KIND_JOB_REQUEST` events;
+- semantic validation of Claude/Codex answer quality;
 - appending decisions back into another skill's ledger;
 - creating, editing, or deleting Buzz channels;
 - direct relay HTTP signing independent of `buzz-cli`.
@@ -81,6 +84,8 @@ Not established in v0:
 ./run.sh render-message --input summary.json --output message.md
 ./run.sh post --channel <uuid> --input message.json --dry-run
 ./run.sh post --channel <uuid> --input message.json
+./run.sh ask-agent --input agent-request.json --dry-run
+./run.sh ask-agent --input agent-request.json --wait
 ./run.sh messages get --channel <uuid> --limit 20
 ./run.sh messages search --query "monitor opportunities"
 ```
@@ -148,14 +153,48 @@ The Buzz channel is an interactive front door. It is not the decision ledger.
 ## Agent-facing handoffs
 
 Buzz may have Claude and Codex agents that can read `agent-skills/skills`.
-Until a live agent-response receipt exists, this skill treats agent handoffs as
-messages only. A future promotion may add `ask-agent` with:
+`ask-agent` is a generic message/readback primitive. It does not claim that the
+agent completed the requested work unless a response event is observed.
+
+Request payload:
+
+```json
+{
+  "schema": "ops_buzz.agent_request.v1",
+  "channel": "00000000-0000-0000-0000-000000000000",
+  "target_agent": "codex",
+  "mention_pubkey": "optional hex or npub",
+  "prompt": "Inspect this monitor-opportunities run and summarize blockers.",
+  "expected_response": "Return a short finding list with artifact paths.",
+  "source_skill": "monitor-opportunities",
+  "source_run_id": "run:example",
+  "source_url": "http://example.invalid/report",
+  "source_artifact": "/path/to/report-manifest.json",
+  "timeout_seconds": 60,
+  "poll_interval_seconds": 5,
+  "readback_limit": 20
+}
+```
+
+Receipt statuses:
+
+| Status | Meaning |
+|---|---|
+| `DRY_RUN` | Rendered and validated without calling Buzz. |
+| `REQUEST_FAILED` | Buzz send command exited non-zero. |
+| `REQUEST_POSTED_NO_READBACK` | Request event was posted, but no response polling was requested. |
+| `NO_RESPONSE` | Request posted and polling finished without observing a response. |
+| `RESPONSE_OBSERVED` | A candidate response event was read back from the channel. |
+
+Limits and non-claims:
 
 - target agent identity or mention;
 - source artifact path/URL;
 - expected response contract;
 - timeout and readback query;
 - receipt containing the request event and observed response event.
+- response observation is syntactic readback, not semantic acceptance;
+- domain skills decide whether to use the response.
 
 ## Safety
 

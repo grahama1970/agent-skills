@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated, Any
@@ -19,7 +20,9 @@ app.add_typer(messages_app, name="messages")
 
 
 MESSAGE_SCHEMA = "ops_buzz.message.v1"
-SEAM_VALIDATION = {"kind": MESSAGE_SCHEMA, "status": "PASS"}
+AGENT_REQUEST_SCHEMA = "ops_buzz.agent_request.v1"
+MESSAGE_SEAM_VALIDATION = {"kind": MESSAGE_SCHEMA, "status": "PASS"}
+AGENT_REQUEST_SEAM_VALIDATION = {"kind": AGENT_REQUEST_SCHEMA, "status": "PASS"}
 
 
 class ContractError(Exception):
@@ -111,6 +114,73 @@ class BuzzMessage:
         return "\n".join(lines)
 
 
+@dataclass
+class AgentRequest:
+    channel: str
+    target_agent: str
+    prompt: str
+    expected_response: str
+    source_skill: str | None = None
+    source_run_id: str | None = None
+    source_url: str | None = None
+    source_artifact: str | None = None
+    mention_pubkey: str | None = None
+    reply_to: str | None = None
+    timeout_seconds: int = 0
+    poll_interval_seconds: int = 5
+    readback_limit: int = 20
+
+    @classmethod
+    def from_raw(cls, raw: dict[str, Any]) -> "AgentRequest":
+        if raw.get("schema") != AGENT_REQUEST_SCHEMA:
+            raise ContractError("SCHEMA_INVALID", f"schema must be {AGENT_REQUEST_SCHEMA}")
+        channel = _required_str(raw, "channel", "agent_request")
+        target_agent = _required_str(raw, "target_agent", "agent_request")
+        prompt = _required_str(raw, "prompt", "agent_request")
+        expected_response = _required_str(raw, "expected_response", "agent_request")
+        return cls(
+            channel=channel,
+            target_agent=target_agent,
+            prompt=prompt,
+            expected_response=expected_response,
+            source_skill=_optional_str(raw, "source_skill", "agent_request"),
+            source_run_id=_optional_str(raw, "source_run_id", "agent_request"),
+            source_url=_optional_str(raw, "source_url", "agent_request"),
+            source_artifact=_optional_str(raw, "source_artifact", "agent_request"),
+            mention_pubkey=_optional_str(raw, "mention_pubkey", "agent_request"),
+            reply_to=_optional_str(raw, "reply_to", "agent_request"),
+            timeout_seconds=_int_range(raw, "timeout_seconds", 0, 600, default=0),
+            poll_interval_seconds=_int_range(raw, "poll_interval_seconds", 1, 60, default=5),
+            readback_limit=_int_range(raw, "readback_limit", 1, 100, default=20),
+        )
+
+    def to_markdown(self) -> str:
+        mention = f"@{self.target_agent}"
+        lines = [
+            f"{mention} request from ops-buzz",
+            "",
+            self.prompt.strip(),
+            "",
+            "## Expected response contract",
+            self.expected_response.strip(),
+            "",
+        ]
+        source_lines = []
+        if self.source_skill:
+            source_lines.append(f"- Skill: {self.source_skill}")
+        if self.source_run_id:
+            source_lines.append(f"- Run: {self.source_run_id}")
+        if self.source_url:
+            source_lines.append(f"- URL: {self.source_url}")
+        if self.source_artifact:
+            source_lines.append(f"- Artifact: {self.source_artifact}")
+        if source_lines:
+            lines.append("## Source")
+            lines.extend(source_lines)
+            lines.append("")
+        return "\n".join(lines)
+
+
 def _required_str(raw: dict[str, Any], key: str, context: str) -> str:
     value = raw.get(key)
     if not isinstance(value, str) or not value.strip():
@@ -127,6 +197,18 @@ def _optional_str(raw: dict[str, Any], key: str, context: str) -> str | None:
     return value.strip() or None
 
 
+def _int_range(raw: dict[str, Any], key: str, minimum: int, maximum: int, default: int) -> int:
+    value = raw.get(key, default)
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ContractError("FIELD_INVALID", f"agent_request.{key} must be an integer")
+    if value < minimum or value > maximum:
+        raise ContractError(
+            "FIELD_INVALID",
+            f"agent_request.{key} must be between {minimum} and {maximum}",
+        )
+    return value
+
+
 def _load_message(path: Path) -> tuple[dict[str, Any], BuzzMessage]:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
@@ -135,8 +217,20 @@ def _load_message(path: Path) -> tuple[dict[str, Any], BuzzMessage]:
     if not isinstance(raw, dict):
         raise ContractError("INPUT_INVALID", "message JSON must be an object")
     message = BuzzMessage.from_raw(raw)
-    raw["seam_validation"] = dict(SEAM_VALIDATION)
+    raw["seam_validation"] = dict(MESSAGE_SEAM_VALIDATION)
     return raw, message
+
+
+def _load_agent_request(path: Path) -> tuple[dict[str, Any], AgentRequest]:
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ContractError("INPUT_INVALID_JSON", f"cannot read agent request JSON: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise ContractError("INPUT_INVALID", "agent request JSON must be an object")
+    request = AgentRequest.from_raw(raw)
+    raw["seam_validation"] = dict(AGENT_REQUEST_SEAM_VALIDATION)
+    return raw, request
 
 
 def _buzz_bin() -> str:
@@ -171,6 +265,76 @@ def _run_buzz(args: list[str], stdin: str | None = None) -> dict[str, Any]:
         "stderr": result.stderr,
         "stdout_json": parsed_stdout,
     }
+
+
+def _extract_event_id(send_stdout_json: Any) -> str | None:
+    if not isinstance(send_stdout_json, dict):
+        return None
+    for key in ("id", "event_id"):
+        value = send_stdout_json.get(key)
+        if isinstance(value, str) and len(value) == 64:
+            return value
+    event = send_stdout_json.get("event")
+    if isinstance(event, dict):
+        value = event.get("id")
+        if isinstance(value, str) and len(value) == 64:
+            return value
+    return None
+
+
+def _event_mentions_request(event: dict[str, Any], request_event_id: str | None, target_agent: str) -> bool:
+    content = event.get("content")
+    request_prefix = f"@{target_agent} request from ops-buzz"
+    if isinstance(content, str) and content.lower().startswith(request_prefix.lower()):
+        return False
+    if isinstance(content, str) and target_agent.lower() in content.lower():
+        return True
+    if request_event_id:
+        tags = event.get("tags")
+        if isinstance(tags, list):
+            for tag in tags:
+                if (
+                    isinstance(tag, list)
+                    and len(tag) >= 2
+                    and tag[0] == "e"
+                    and tag[1] == request_event_id
+                ):
+                    return True
+    return False
+
+
+def _readback_response(request: AgentRequest, request_event_id: str | None) -> dict[str, Any]:
+    result = _run_buzz(["messages", "get", "--channel", request.channel, "--limit", str(request.readback_limit)])
+    events = result.get("stdout_json")
+    observed = None
+    if isinstance(events, list):
+        for event in events:
+            if isinstance(event, dict) and _event_mentions_request(event, request_event_id, request.target_agent):
+                event_id = event.get("id")
+                if request_event_id and event_id == request_event_id:
+                    continue
+                observed = event
+                break
+    return {
+        "buzz": result,
+        "response_observed": observed is not None,
+        "response_event": observed,
+    }
+
+
+def _poll_for_response(request: AgentRequest, request_event_id: str | None) -> dict[str, Any]:
+    deadline = time.monotonic() + request.timeout_seconds
+    attempts = []
+    while True:
+        readback = _readback_response(request, request_event_id)
+        attempts.append(readback)
+        if readback["response_observed"] or time.monotonic() >= deadline:
+            return {
+                "attempt_count": len(attempts),
+                "latest": readback,
+                "response_observed": readback["response_observed"],
+            }
+        time.sleep(min(request.poll_interval_seconds, max(0.0, deadline - time.monotonic())))
 
 
 def _emit(data: dict[str, Any]) -> None:
@@ -294,6 +458,82 @@ def post_message(
     _emit(receipt)
     if result["exit_code"] != 0:
         raise typer.Exit(result["exit_code"])
+
+
+@app.command("ask-agent")
+def ask_agent(
+    input_path: Annotated[Path, typer.Option("--input", exists=True, dir_okay=False, readable=True)],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Render and receipt without calling Buzz.")] = False,
+    wait: Annotated[bool, typer.Option("--wait/--no-wait", help="Poll for a response after posting.")] = True,
+    output_request: Annotated[Path | None, typer.Option("--output-request", dir_okay=False, writable=True)] = None,
+) -> None:
+    try:
+        raw, request = _load_agent_request(input_path)
+    except ContractError as exc:
+        _fail(exc)
+    rendered = request.to_markdown()
+    if output_request is not None:
+        output_request.write_text(rendered, encoding="utf-8")
+
+    receipt: dict[str, Any] = {
+        "schema": "ops_buzz.agent_request_receipt.v1",
+        "ok": True,
+        "status": "DRY_RUN" if dry_run else "NOT_STARTED",
+        "mocked": False,
+        "live": False,
+        "dry_run": dry_run,
+        "attempted_network": False,
+        "request_posted": False,
+        "response_observed": False,
+        "input": str(input_path),
+        "channel": request.channel,
+        "target_agent": request.target_agent,
+        "message_chars": len(rendered),
+        "output_request": str(output_request) if output_request else None,
+        "seam_validation": raw["seam_validation"],
+    }
+    if dry_run:
+        _emit(receipt)
+        return
+
+    send_args = ["messages", "send", "--channel", request.channel, "--content", "-"]
+    if request.reply_to:
+        send_args.extend(["--reply-to", request.reply_to])
+    if request.mention_pubkey:
+        send_args.extend(["--mention", request.mention_pubkey])
+
+    try:
+        send_result = _run_buzz(send_args, stdin=rendered)
+    except ContractError as exc:
+        _fail(exc)
+
+    request_event_id = _extract_event_id(send_result.get("stdout_json"))
+    receipt.update(
+        {
+            "live": True,
+            "attempted_network": True,
+            "request_posted": send_result["exit_code"] == 0,
+            "request_event_id": request_event_id,
+            "send": send_result,
+        }
+    )
+    if send_result["exit_code"] != 0:
+        receipt["ok"] = False
+        receipt["status"] = "REQUEST_FAILED"
+        _emit(receipt)
+        raise typer.Exit(send_result["exit_code"])
+
+    if wait and request.timeout_seconds > 0:
+        try:
+            poll = _poll_for_response(request, request_event_id)
+        except ContractError as exc:
+            _fail(exc)
+        receipt["readback"] = poll
+        receipt["response_observed"] = bool(poll["response_observed"])
+        receipt["status"] = "RESPONSE_OBSERVED" if poll["response_observed"] else "NO_RESPONSE"
+    else:
+        receipt["status"] = "REQUEST_POSTED_NO_READBACK"
+    _emit(receipt)
 
 
 @messages_app.command("get")
