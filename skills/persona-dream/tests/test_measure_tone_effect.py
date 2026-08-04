@@ -1,0 +1,68 @@
+"""#1209: the tone-effect measurement must be able to return a negative.
+
+A measurement that can only pass is not a measurement. These pin the three-way
+disposition and the rule that thresholds come from the neutral repeats rather
+than from a number someone chose.
+"""
+import importlib.util
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def test_threshold_is_derived_from_neutral_spread_not_chosen():
+    m = _load("measure_tone_effect")
+    assert m.K_SD == 3.0
+    src = (ROOT / "scripts" / "measure_tone_effect.py").read_text(encoding="utf-8")
+    assert "K_SD * sd" in src, "threshold must be computed from the measured neutral sd"
+
+
+def test_live_receipt_records_a_disposition_either_way():
+    path = Path("/tmp/pd-tone-effect/TONE_EFFECT_RECEIPT.json")
+    if not path.is_file():
+        import pytest
+        pytest.skip("no live receipt; run ./run.sh measure-tone-effect --run-dir /tmp/pd-t4")
+    r = json.loads(path.read_text(encoding="utf-8"))
+    assert r["status"] in {
+        "PASS_TONE_AUDIBLE",
+        "MARGINAL_TONE_EFFECT_AT_NOISE_FLOOR",
+        "BLOCKED_TONE_BELOW_STOCHASTIC_SPREAD",
+    }
+    assert r["live"] is True and r["mocked"] is False
+    assert r["neutral_repeats_usable"] >= 3
+    assert r["disposition"]
+    for metric, cal in r["neutral_floor"].items():
+        assert cal["threshold"] == round(r["k_sd"] * cal["sd"], 6), metric
+
+
+def test_marginal_is_not_reported_as_audible_proof():
+    """A single metric clearing by a hair must not read as emotional delivery."""
+    path = Path("/tmp/pd-tone-effect/TONE_EFFECT_RECEIPT.json")
+    if not path.is_file():
+        import pytest
+        pytest.skip("no live receipt")
+    r = json.loads(path.read_text(encoding="utf-8"))
+    if r["status"] == "MARGINAL_TONE_EFFECT_AT_NOISE_FLOOR":
+        assert r["decisively_audible_tones"] == []
+        assert "NOT sufficient" in r["disposition"]
+        proves = " ".join(r["claims"]["proves"]).lower()
+        assert "perceive" not in proves
+
+
+def test_claims_never_assert_perception():
+    path = Path("/tmp/pd-tone-effect/TONE_EFFECT_RECEIPT.json")
+    if not path.is_file():
+        import pytest
+        pytest.skip("no live receipt")
+    r = json.loads(path.read_text(encoding="utf-8"))
+    does_not = " ".join(r["claims"]["does_not_prove"]).lower()
+    assert "listener perceives" in does_not
