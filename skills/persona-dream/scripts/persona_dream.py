@@ -578,13 +578,20 @@ def _fetch_day_memories(persona: Persona, day: str, want: int) -> tuple[list[dic
     # "(code)" ahead of "(conversation)" and silently dropped the arc, which
     # made the loop look closed while nothing came back.
     def _rank(kind: str) -> int:
+        # What deepens a persona, in order. How the human felt, what was said
+        # back, and what she previously concluded about herself all outrank the
+        # commit count. A dream reflection is her own prior interpretation --
+        # the channel through which anything accumulates at all -- so it must
+        # not lose a quota slot to churn.
         if "affect" in kind:
             return 0
         if "conversation" in kind:
             return 1
-        if "project_state" in kind:
+        if "dream_reflection" in kind:
             return 2
-        return 3
+        if "project_state" in kind:
+            return 3
+        return 4
 
     order = sorted(by_kind, key=lambda k: (_rank(k), k))
     drawn: list[dict[str, Any]] = []
@@ -1310,32 +1317,99 @@ def _draw_contact_sheet(path: Path, persona: Persona, frame_prompts: list[dict[s
     img.save(path)
 
 
-def _store_reflection(persona: Persona, reflection: str, packet: dict[str, Any]) -> dict[str, Any]:
+def _store_reflection(persona: Persona, reflection: str, packet: dict[str, Any],
+                      day: str | None = None) -> dict[str, Any]:
+    """Write what the dream concluded back into memory, so she carries it forward.
+
+    This is the mechanism by which a persona deepens: a dream interprets her
+    experiences, the interpretation becomes a memory, and a later dream draws on
+    it alongside the experiences themselves. Without this write, every dream
+    starts from the same place and nothing accumulates -- which is exactly what
+    five byte-identical journals were telling us.
+
+    It had never worked. The write targeted the ``lessons`` collection, which
+    rejects a reflection with 422 "no extractable taxonomy" because a dream
+    interpretation is not a lesson. It failed soft, so the run reported success
+    while the most important write in the pipeline errored every time.
+
+    A reflection is stored SYNTHETIC and stays that way. It is what she made of
+    her experiences, not a record of what happened, and the distinction is
+    carried in the text as well as the metadata so a retrieval path that drops
+    the metadata still cannot promote an interpretation into literal history.
+    """
     import httpx
 
     key_src = f"{persona.id}:{packet['run_id']}:{reflection}"
+    stance = reflection.strip()
     document = {
         "_key": "persona_dream_" + hashlib.sha256(key_src.encode()).hexdigest()[:24],
-        "problem": f"Persona dream reflection for {persona.display_name} at {packet['created_at']}",
-        "solution": reflection,
-        "scope": persona.scope("dream-journals"),
-        "tags": ["persona-dream", "dream-reflection", persona.id],
+        "problem": f"What {persona.display_name} made of her experiences in a dream",
+        # Attribution in the data, not only the metadata.
+        "solution": f"In a dream I interpreted my recent experience: {stance}",
+        "scope": f"episodic:day={day}" if day else persona.scope("dream-journals"),
+        "tags": ["persona-dream", "dream-reflection", f"persona:{persona.id}"]
+                + ([f"day:{day}"] if day else []),
+        "persona_id": persona.id,
+        "record_type": "dream_reflection",
+        # Its own kind, so the day draw gives it a slot rather than making it
+        # compete as if it were commit churn.
+        "kind": "dream_reflection",
+        "synthetic": True,
+        "synthetic_notice": (
+            "a synthetic interpretation of cited experience, not a factual claim "
+            "about what occurred"
+        ),
+        "salience": 0.8,
+        "decay_class": "slow",
+        "day": day,
         "dream_packet_id": packet["run_id"],
         "source_ids": [item["source_id"] for item in packet["residue_items"]],
     }
     transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
-    with httpx.Client(transport=transport, base_url="http://localhost", timeout=10.0) as client:
-        resp = client.post("/store", json={"document": document, "collection": "lessons"})
-        return {
-            "status": "ok" if resp.status_code < 400 else "error",
-            "endpoint": "/store",
-            "collection": "lessons",
-            "scope": document["scope"],
-            "document_key": document["_key"],
-            "http_status": resp.status_code,
-            "response": resp.json() if resp.content else None,
-        }
+    with httpx.Client(transport=transport, base_url="http://localhost", timeout=30.0) as client:
+        try:
+            resp = client.post(
+                "/store",
+                json={"document": document, "collection": CENTRAL_PERSONA_MEMORY_COLLECTION},
+            )
+            http_status, err = resp.status_code, None
+            body = resp.json() if resp.content else None
+        except Exception as exc:  # noqa: BLE001
+            http_status, err, body = 0, str(exc), None
 
+        # Read back. A store response is not evidence -- this write reported
+        # nothing wrong for months while returning 422.
+        read_back = False
+        try:
+            check = client.post("/query", json={
+                "aql": "FOR d IN @@col FILTER d._key == @k RETURN d._key",
+                "bind_vars": {"@col": CENTRAL_PERSONA_MEMORY_COLLECTION,
+                              "k": document["_key"]},
+            })
+            found = (check.json() or {}).get("documents") or []
+            read_back = bool(found)
+        except Exception:  # noqa: BLE001
+            read_back = False
+
+    failed: list[str] = []
+    if err or http_status >= 400:
+        failed.append(f"store_failed:{http_status}{':' + err if err else ''}")
+    if not read_back:
+        failed.append("reflection_not_retrievable_after_write")
+
+    return {
+        "status": "ok" if not failed else "error",
+        "endpoint": "/store",
+        "collection": CENTRAL_PERSONA_MEMORY_COLLECTION,
+        "scope": document["scope"],
+        "document_key": document["_key"],
+        "http_status": http_status,
+        "read_back": read_back,
+        "synthetic": True,
+        "record_type": "dream_reflection",
+        "response": body,
+        "failed_gates": failed,
+    }
 
 @app.command("generate")
 def generate(
@@ -1511,7 +1585,7 @@ def generate(
 
     if write_memory:
         try:
-            receipt = _store_reflection(persona, reflection, packet)
+            receipt = _store_reflection(persona, reflection, packet, day)
         except Exception as exc:
             receipt = {
                 "status": "error",
