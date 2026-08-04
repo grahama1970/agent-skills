@@ -1,6 +1,6 @@
 # Persona Dream
 
-![Persona Dream — the research loop: the day and prior conversation enter memory, memory yields a tension, the tension yields a dream, the dream becomes a journal Embry reads aloud, and the discussion returns to memory. The loop closes; whether it helps is the open question.](assets/readme/research-loop.webp)
+![Persona Dream — the research loop: the day and prior conversation enter memory, memory yields a tension, the tension yields a dream, and three things return to memory — what she concluded, the imagery and voice the dream produced, and what a human said back. She deepens; whether it helps is the open question.](assets/readme/research-loop.webp)
 
 Persona Dream gives a persistent multimodal voice persona — a long-lived agent
 with durable memory, a stable character, and access to text, images, audio, and
