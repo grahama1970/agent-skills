@@ -1216,6 +1216,10 @@ def _judge_pair(
     pair_id = f"{red['worker_id']}__{blue['worker_id']}"
     red_path = Path(red["path"])
     blue_path = Path(blue["path"])
+    red_bytes = red_path.read_bytes()
+    blue_bytes = blue_path.read_bytes()
+    red_sha256 = hashlib.sha256(red_bytes).hexdigest()
+    blue_sha256 = hashlib.sha256(blue_bytes).hexdigest()
     replay_dir = out_dir / "judge" / "replays" / pair_id
     original_work = replay_dir / "original"
     patched_work = replay_dir / "patched"
@@ -1227,16 +1231,12 @@ def _judge_pair(
         out_dir / "arena" / "team-public" / "target",
         patched_work,
     )
-    (
-        original_work / "red_exploit_submission.py"
-    ).write_text(red_path.read_text(encoding="utf-8"), encoding="utf-8")
-    (
-        patched_work / "red_exploit_submission.py"
-    ).write_text(red_path.read_text(encoding="utf-8"), encoding="utf-8")
-    (patched_work / "app.py").write_text(
-        blue_path.read_text(encoding="utf-8"),
-        encoding="utf-8",
-    )
+    original_red_exec = original_work / "red_exploit_submission.py"
+    patched_red_exec = patched_work / "red_exploit_submission.py"
+    patched_blue_exec = patched_work / "app.py"
+    original_red_exec.write_bytes(red_bytes)
+    patched_red_exec.write_bytes(red_bytes)
+    patched_blue_exec.write_bytes(blue_bytes)
 
     before = _run_command(
         _python_docker_command(
@@ -1315,13 +1315,40 @@ def _judge_pair(
         docker_image=docker_image,
         scenario=scenario,
     )
+    judge_input_byte_bindings = [
+        _judge_input_byte_binding(
+            role="red_original_exploit",
+            source_path=red_path,
+            source_sha256=red_sha256,
+            execution_path=original_red_exec,
+            work_dir=original_work,
+        ),
+        _judge_input_byte_binding(
+            role="red_patched_exploit",
+            source_path=red_path,
+            source_sha256=red_sha256,
+            execution_path=patched_red_exec,
+            work_dir=patched_work,
+        ),
+        _judge_input_byte_binding(
+            role="blue_patched_app",
+            source_path=blue_path,
+            source_sha256=blue_sha256,
+            execution_path=patched_blue_exec,
+            work_dir=patched_work,
+        ),
+    ]
+    judge_input_byte_binding_pass = all(
+        item["matched"] for item in judge_input_byte_bindings
+    )
     verdict = (
         "BLUE_SUCCESS"
         if exploit_confirmed
         and exploit_blocked
         and functionality_preserved
+        and judge_input_byte_binding_pass
         else "RED_SUCCESS"
-        if exploit_confirmed
+        if exploit_confirmed and judge_input_byte_binding_pass
         else "INSUFFICIENT_EVIDENCE"
     )
     ended_elapsed_seconds = (
@@ -1341,9 +1368,13 @@ def _judge_pair(
         "red_worker_id": red["worker_id"],
         "red_lane_id": red["lane_id"],
         "red_artifact": red["path"],
+        "red_artifact_sha256": red_sha256,
         "blue_worker_id": blue["worker_id"],
         "blue_action_id": blue["action_id"],
         "blue_artifact": blue["path"],
+        "blue_artifact_sha256": blue_sha256,
+        "judge_input_byte_binding_pass": judge_input_byte_binding_pass,
+        "judge_input_byte_bindings": judge_input_byte_bindings,
         "exploit_confirmed_before_patch": exploit_confirmed,
         "exploit_blocked_after_patch": exploit_blocked,
         "exploit_still_succeeds_after_patch": (
@@ -1370,6 +1401,34 @@ def _judge_pair(
     }
     _write_json(replay_dir / "attempt-receipt.json", attempt)
     return attempt
+
+def _judge_input_byte_binding(
+    *,
+    role: str,
+    source_path: Path,
+    source_sha256: str,
+    execution_path: Path,
+    work_dir: Path,
+) -> dict[str, Any]:
+    execution_sha256 = (
+        _sha256(execution_path)
+        if execution_path.is_file() and not execution_path.is_symlink()
+        else None
+    )
+    try:
+        docker_path = f"/workspace/{execution_path.relative_to(work_dir)}"
+    except ValueError:
+        docker_path = None
+    return {
+        "role": role,
+        "source_path": str(source_path),
+        "source_sha256": source_sha256,
+        "execution_path": str(execution_path),
+        "execution_sha256": execution_sha256,
+        "docker_workspace_path": docker_path,
+        "matched": execution_sha256 == source_sha256,
+        "regular_file": execution_path.is_file() and not execution_path.is_symlink(),
+    }
 
 def _materialized_entries(tau_manifest: dict[str, Any], team_name: str) -> list[dict[str, Any]]:
     teams = tau_manifest.get("teams") if isinstance(tau_manifest.get("teams"), list) else []
