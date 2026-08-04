@@ -63,6 +63,7 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
     manifest = json.loads((run_dir / "report-manifest.json").read_text(encoding="utf-8"))
     opportunity_id = manifest["opportunities"][0]["opportunity_id"]
     reject_id = manifest["opportunities"][1]["opportunity_id"]
+    defer_id = manifest["outreach_packets"][0]["packet_id"]
     variant_id = manifest["resume_variants"][0]["variant_id"]
     application_id = manifest["applications"][0]["application_id"]
     port = _free_port()
@@ -97,32 +98,68 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
         assert variant_id in page
         assert application_id in page
         assert "External effects are disabled" in page
-        assert "AUTHORIZE_APPLICATION_PAYLOAD" not in page
+        assert "AUTHORIZE_APPLICATION_PAYLOAD" in page
+        assert "MARK_HUMAN_SENT_GMAIL" not in page
+        assert "MARK_HUMAN_SENT_LINKEDIN" not in page
 
         _post(base, token, opportunity_id, "KEEP", "keep-key")
         _post(base, token, reject_id, "REJECT", "reject-key")
+        _post(base, token, defer_id, "DEFER", "defer-key")
         _post(base, token, variant_id, "ACCEPT_RESUME_VARIANT", "resume-key")
-        _post(base, token, application_id, "WITHHOLD_APPLICATION", "payload-key")
+        _post(base, token, variant_id, "PROPOSE_CLAIM_AMENDMENT", "amend-key")
+        _post(base, token, application_id, "AUTHORIZE_APPLICATION_PAYLOAD", "payload-key")
         _post(base, token, opportunity_id, "KEEP", "keep-key")
 
-        assert (
-            _post_expect_error(
-                base,
-                token,
-                application_id,
-                "AUTHORIZE_APPLICATION_PAYLOAD",
-                "blocked-key",
-            )
-            == 400
-        )
+        assert _post_expect_error(base, token, application_id, "MARK_HUMAN_SENT_GMAIL", "blocked-key") == 400
         projection = json.loads((run_dir / "decision-projection.json").read_text(encoding="utf-8"))
+        projection_before_replay = projection["projection_digest"]
         assert projection["external_effects"] is False
         assert projection["items"][opportunity_id]["last_action"] == "KEEP"
+        assert projection["items"][opportunity_id]["resulting_state"] == "KEPT"
         assert projection["items"][reject_id]["last_action"] == "REJECT"
-        assert projection["items"][variant_id]["last_action"] == "ACCEPT_RESUME_VARIANT"
-        assert projection["items"][application_id]["last_action"] == "WITHHOLD_APPLICATION"
-        assert len((run_dir / "decision-ledger.jsonl").read_text(encoding="utf-8").splitlines()) == 4
+        assert projection["items"][defer_id]["last_action"] == "DEFER"
+        assert projection["items"][variant_id]["last_action"] == "PROPOSE_CLAIM_AMENDMENT"
+        assert projection["items"][variant_id]["resulting_state"] == "CLAIM_AMENDMENT_PENDING"
+        assert projection["items"][application_id]["last_action"] == "AUTHORIZE_APPLICATION_PAYLOAD"
+        assert projection["items"][application_id]["resulting_state"] == "APPLICATION_PAYLOAD_AUTHORIZED_LOCAL_ONLY"
+        ledger = [
+            json.loads(line)
+            for line in (run_dir / "decision-ledger.jsonl").read_text(encoding="utf-8").splitlines()
+            if line
+        ]
+        assert len(ledger) == 6
+        assert all(row["external_effects"] is False for row in ledger)
+        assert all(row["prior_report_digest"] for row in ledger)
+        authorize_event = next(row for row in ledger if row["action"] == "AUTHORIZE_APPLICATION_PAYLOAD")
+        assert authorize_event["application_payload"]["application_id"] == application_id
+        assert authorize_event["application_payload"]["does_not_execute_submit"] is True
+        assert authorize_event["application_payload"]["payload_digest"] == authorize_event["artifact_hashes"]["application_payload_digest"]
+        assert authorize_event["application_payload"]["form_schema_digest"] == manifest["applications"][0]["form_schema_digest"]
+        amendments = [
+            json.loads(line)
+            for line in (run_dir / "claim-amendments.jsonl").read_text(encoding="utf-8").splitlines()
+            if line
+        ]
+        assert len(amendments) == 1
+        assert amendments[0]["status"] == "AMENDMENT_PROPOSED"
+        assert amendments[0]["claim_keys"] == manifest["resume_variants"][0]["claim_keys"]
+        assert amendments[0]["human_review_required"] is True
+        assert amendments[0]["canonical_mutation"] is False
+        reloaded = urllib.request.urlopen(f"{base}/?token={token}", timeout=5).read().decode("utf-8")
+        assert f"{opportunity_id}: KEEP" in reloaded
+        assert f"{reject_id}: REJECT" in reloaded
+        assert f"{application_id}: AUTHORIZE_APPLICATION_PAYLOAD" in reloaded
+        replay = subprocess.run(
+            [str(run_sh), "replay", "--run", str(run_dir)],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        replay_payload = json.loads(replay.stdout)
+        assert replay_payload["projection_digest"] == projection_before_replay
         assert manifest["artifact_accounting"]["hidden_total"] == 0
+        assert manifest["artifact_accounting"]["action_worthy_total"] == manifest["artifact_accounting"]["visible_total"]
     finally:
         proc.terminate()
         proc.wait(timeout=10)

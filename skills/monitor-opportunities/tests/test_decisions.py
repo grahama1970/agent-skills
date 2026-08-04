@@ -27,10 +27,65 @@ def test_decision_idempotency_and_replay(tmp_path: Path) -> None:
     second = runner.invoke(app, args)
     assert first.exit_code == 0, first.output
     assert second.exit_code == 0, second.output
-    ledger_rows = (run_dir / "decision-ledger.jsonl").read_text(encoding="utf-8").splitlines()
+    ledger_rows = [
+        json.loads(line)
+        for line in (run_dir / "decision-ledger.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
     assert len(ledger_rows) == 1
+    assert ledger_rows[0]["run_id"] == str(run_dir)
+    assert ledger_rows[0]["prior_report_digest"] is None
+    assert ledger_rows[0]["artifact_hashes"] == {"item_digest": None}
+    assert ledger_rows[0]["resulting_state"] == "KEPT"
+    assert ledger_rows[0]["external_effects"] is False
     replay = runner.invoke(app, ["replay", "--run", str(run_dir)])
     assert replay.exit_code == 0, replay.output
     projection = json.loads((run_dir / "decision-projection.json").read_text(encoding="utf-8"))
     assert projection["items"]["opp:a"]["last_action"] == "KEEP"
+    assert projection["items"]["opp:a"]["resulting_state"] == "KEPT"
     assert projection["external_effects"] is False
+
+
+def test_human_sent_markers_require_explicit_human_actor(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    default_actor = runner.invoke(
+        app,
+        [
+            "decision",
+            "--run",
+            str(run_dir),
+            "--item",
+            "packet:gmail",
+            "--action",
+            "MARK_HUMAN_SENT_GMAIL",
+            "--idempotency-key",
+            "gmail-default",
+        ],
+    )
+    assert default_actor.exit_code == 2
+    assert "requires explicit human actor" in default_actor.stderr
+    human_actor = runner.invoke(
+        app,
+        [
+            "decision",
+            "--run",
+            str(run_dir),
+            "--item",
+            "packet:gmail",
+            "--action",
+            "MARK_HUMAN_SENT_GMAIL",
+            "--actor",
+            "human",
+            "--idempotency-key",
+            "gmail-human",
+        ],
+    )
+    assert human_actor.exit_code == 0, human_actor.output
+    ledger_rows = [
+        json.loads(line)
+        for line in (run_dir / "decision-ledger.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    assert len(ledger_rows) == 1
+    assert ledger_rows[0]["actor"] == "human"
+    assert ledger_rows[0]["external_effects"] is False

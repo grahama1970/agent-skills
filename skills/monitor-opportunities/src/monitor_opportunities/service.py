@@ -18,7 +18,6 @@ from .util import read_json
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 REMOTE_BIND_HOSTS = {"0.0.0.0", "::"}
 SERVICE_ALLOWED_ACTIONS = ALLOWED_ACTIONS - {
-    "AUTHORIZE_APPLICATION_PAYLOAD",
     "MARK_HUMAN_SENT_GMAIL",
     "MARK_HUMAN_SENT_LINKEDIN",
 }
@@ -175,6 +174,7 @@ section {{ margin: 1.5rem 0; }}
 .facts div {{ border-top: 1px solid #7776; padding-top: .5rem; }}
 dt {{ font-size: .8rem; opacity: .72; }}
 dd {{ margin: .1rem 0 0; }}
+dt, dd {{ overflow-wrap: anywhere; }}
 .muted {{ opacity: .72; }}
 .empty {{ font-weight: 700; }}
 @media (max-width: 760px) {{ form.decision {{ grid-template-columns: 1fr; }} body {{ padding: .75rem; }} }}

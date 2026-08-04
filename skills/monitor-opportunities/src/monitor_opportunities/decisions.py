@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .util import read_jsonl, sha256_json, stable_id, utc_now, write_json, write_jsonl
+from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json, write_jsonl
 
 ALLOWED_ACTIONS = {
     "KEEP",
@@ -24,6 +24,118 @@ def _ledger_path(run_dir: Path) -> Path:
     return run_dir / "decision-ledger.jsonl"
 
 
+def _manifest(run_dir: Path) -> dict[str, Any] | None:
+    path = run_dir / "report-manifest.json"
+    if not path.exists():
+        return None
+    return read_json(path)
+
+
+def _manifest_item(manifest: dict[str, Any] | None, item_id: str) -> dict[str, Any] | None:
+    if manifest is None:
+        return None
+    id_fields = {
+        "opportunities": "opportunity_id",
+        "resume_variants": "variant_id",
+        "outreach_packets": "packet_id",
+        "applications": "application_id",
+    }
+    for collection, id_field in id_fields.items():
+        for row in manifest.get(collection, []):
+            if row.get(id_field) == item_id:
+                return row
+    return None
+
+
+def _application_payload(manifest: dict[str, Any] | None, item_id: str) -> dict[str, Any] | None:
+    if manifest is None:
+        return None
+    application = next(
+        (row for row in manifest.get("applications", []) if row.get("application_id") == item_id),
+        None,
+    )
+    if application is None:
+        return None
+    opportunity_id = application["opportunity_id"]
+    opportunity = next(
+        (row for row in manifest.get("opportunities", []) if row.get("opportunity_id") == opportunity_id),
+        None,
+    )
+    resume = next(
+        (row for row in manifest.get("resume_variants", []) if row.get("opportunity_id") == opportunity_id),
+        None,
+    )
+    fields = application.get("fields", [])
+    unresolved = [
+        field["name"]
+        for field in fields
+        if field.get("required") is True and field.get("disposition") == "human_required"
+    ]
+    payload = {
+        "schema": "monitor_opportunities.application_payload.v1",
+        "application_id": item_id,
+        "opportunity_id": opportunity_id,
+        "posting": {
+            "title": opportunity.get("title") if opportunity else None,
+            "organization": opportunity.get("organization") if opportunity else None,
+        },
+        "resume_variant_id": resume.get("variant_id") if resume else None,
+        "resume_artifact_refs": resume.get("artifact_refs", []) if resume else [],
+        "attachment_set": resume.get("artifact_refs", []) if resume else [],
+        "answer_set_digest": sha256_json(fields),
+        "form_schema_digest": application.get("form_schema_digest"),
+        "unresolved_required_fields": unresolved,
+        "stage": manifest.get("stage"),
+        "does_not_execute_submit": True,
+    }
+    return {**payload, "payload_digest": sha256_json(payload)}
+
+
+def _artifact_hashes(manifest: dict[str, Any] | None, item_id: str, action: str) -> dict[str, Any]:
+    item = _manifest_item(manifest, item_id)
+    hashes: dict[str, Any] = {"item_digest": sha256_json(item) if item is not None else None}
+    if action == "AUTHORIZE_APPLICATION_PAYLOAD":
+        payload = _application_payload(manifest, item_id)
+        hashes["application_payload_digest"] = payload["payload_digest"] if payload else None
+        hashes["form_schema_digest"] = payload.get("form_schema_digest") if payload else None
+        hashes["resume_variant_id"] = payload.get("resume_variant_id") if payload else None
+    return hashes
+
+
+def _resulting_state(action: str) -> str:
+    return {
+        "KEEP": "KEPT",
+        "REJECT": "REJECTED",
+        "DEFER": "DEFERRED",
+        "ACCEPT_RESUME_VARIANT": "RESUME_VARIANT_ACCEPTED",
+        "PROPOSE_CLAIM_AMENDMENT": "CLAIM_AMENDMENT_PENDING",
+        "WITHHOLD_APPLICATION": "APPLICATION_WITHHELD",
+        "AUTHORIZE_APPLICATION_PAYLOAD": "APPLICATION_PAYLOAD_AUTHORIZED_LOCAL_ONLY",
+        "MARK_HUMAN_SENT_GMAIL": "HUMAN_SENT_GMAIL_ATTESTED",
+        "MARK_HUMAN_SENT_LINKEDIN": "HUMAN_SENT_LINKEDIN_ATTESTED",
+    }[action]
+
+
+def _append_claim_amendment(run_dir: Path, manifest: dict[str, Any] | None, item_id: str, reason: str | None) -> dict[str, Any]:
+    item = _manifest_item(manifest, item_id)
+    claim_keys = item.get("claim_keys", []) if item else []
+    proposal = {
+        "schema": "monitor_opportunities.claim_amendment.v1",
+        "proposal_id": stable_id("claim-amendment", {"run": str(run_dir), "item": item_id, "reason": reason}),
+        "claim_keys": claim_keys,
+        "status": "AMENDMENT_PROPOSED",
+        "human_review_required": True,
+        "evidence_refs": [item_id],
+        "reason": reason,
+        "canonical_mutation": False,
+    }
+    rows = read_jsonl(run_dir / "claim-amendments.jsonl")
+    if not any(row.get("proposal_id") == proposal["proposal_id"] for row in rows):
+        rows.append(proposal)
+        write_jsonl(run_dir / "claim-amendments.jsonl", rows)
+    return proposal
+
+
 def append_decision(
     *,
     run_dir: Path,
@@ -35,24 +147,47 @@ def append_decision(
 ) -> dict[str, Any]:
     if action not in ALLOWED_ACTIONS:
         raise ValueError(f"unsupported decision action: {action}")
+    if action in {"MARK_HUMAN_SENT_GMAIL", "MARK_HUMAN_SENT_LINKEDIN"} and actor != "human":
+        raise ValueError(f"{action} requires explicit human actor")
     run_dir.mkdir(parents=True, exist_ok=True)
     path = _ledger_path(run_dir)
     rows = read_jsonl(path)
     for row in rows:
         if row["idempotency_key"] == idempotency_key:
             return row
+    manifest = _manifest(run_dir)
+    application_payload = _application_payload(manifest, item_id) if action == "AUTHORIZE_APPLICATION_PAYLOAD" else None
+    amendment = _append_claim_amendment(run_dir, manifest, item_id, reason) if action == "PROPOSE_CLAIM_AMENDMENT" else None
+    artifact_hashes = _artifact_hashes(manifest, item_id, action)
     event = {
         "schema": "monitor_opportunities.decision_event.v1",
         "event_id": stable_id("decision", {"run": str(run_dir), "item": item_id, "key": idempotency_key}),
+        "run_id": manifest.get("run_id") if manifest else str(run_dir),
         "run_dir": str(run_dir),
         "item_id": item_id,
         "action": action,
         "actor": actor,
         "created_at": utc_now(),
+        "prior_report_digest": sha256_json(manifest) if manifest else None,
+        "artifact_hashes": artifact_hashes,
         "idempotency_key": idempotency_key,
         "reason": reason,
+        "notes": reason,
+        "resulting_state": _resulting_state(action),
         "external_effects": False,
-        "payload_digest": sha256_json({"item_id": item_id, "action": action, "reason": reason}),
+        "application_payload": application_payload,
+        "claim_amendment": amendment,
+        "payload_digest": sha256_json(
+            {
+                "run_id": manifest.get("run_id") if manifest else str(run_dir),
+                "item_id": item_id,
+                "action": action,
+                "reason": reason,
+                "artifact_hashes": artifact_hashes,
+                "application_payload": application_payload,
+                "claim_amendment": amendment,
+            }
+        ),
     }
     rows.append(event)
     write_jsonl(path, rows)
@@ -65,9 +200,11 @@ def replay(run_dir: Path) -> dict[str, Any]:
     for row in rows:
         state[row["item_id"]] = {
             "last_action": row["action"],
+            "resulting_state": row.get("resulting_state", _resulting_state(row["action"])),
             "event_id": row["event_id"],
             "actor": row["actor"],
             "updated_at": row["created_at"],
+            "payload_digest": row["payload_digest"],
         }
     projection = {
         "schema": "monitor_opportunities.decision_projection.v1",
