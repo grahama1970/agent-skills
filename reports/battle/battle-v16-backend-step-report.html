@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Battle V16 RelayForge Backend Step Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --text: #172033;
+      --muted: #536174;
+      --line: #cfd8e3;
+      --soft: #f6f8fb;
+      --evidence: #0f4c81;
+      --evidence-bg: #eef6fd;
+      --warning: #8a5a00;
+      --warning-bg: #fff8e8;
+      --blocked: #9b2c2c;
+      --blocked-bg: #fff0f0;
+      --ok: #1f6b49;
+      --ok-bg: #edf8f1;
+      --unknown: #5d5570;
+      --unknown-bg: #f4f1fa;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #ffffff;
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 36px 28px 80px;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.22;
+      letter-spacing: 0;
+      color: #111827;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+    }
+
+    h2 {
+      margin: 42px 0 14px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      font-size: 24px;
+    }
+
+    h3 {
+      margin: 26px 0 10px;
+      font-size: 18px;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    a {
+      color: #0b5cad;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: #eef1f5;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    pre {
+      overflow: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0f172a;
+      color: #e5e7eb;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 20px;
+      font-size: 14px;
+    }
+
+    th, td {
+      vertical-align: top;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+
+    th {
+      background: #eef2f7;
+      font-weight: 700;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 8px 18px;
+      margin: 14px 0 22px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--soft);
+    }
+
+    dt {
+      font-weight: 700;
+      color: #243246;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text);
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 860px;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .state {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .state.ok {
+      color: var(--ok);
+      border-color: #9fd5b7;
+      background: var(--ok-bg);
+    }
+
+    .state.warn {
+      color: var(--warning);
+      border-color: #e3c46e;
+      background: var(--warning-bg);
+    }
+
+    .state.blocked {
+      color: var(--blocked);
+      border-color: #e3a5a5;
+      background: var(--blocked-bg);
+    }
+
+    .state.unknown {
+      color: var(--unknown);
+      border-color: #c9bddf;
+      background: var(--unknown-bg);
+    }
+
+    .evidence-block,
+    .constraint-block,
+    .non-claims,
+    .finding {
+      margin: 16px 0;
+      padding: 15px 17px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+    }
+
+    .evidence-block {
+      border-left: 5px solid var(--evidence);
+      background: var(--evidence-bg);
+    }
+
+    .constraint-block {
+      border-left: 5px solid var(--warning);
+      background: var(--warning-bg);
+    }
+
+    .non-claims {
+      border-left: 5px solid var(--blocked);
+      background: var(--blocked-bg);
+    }
+
+    .finding {
+      background: #ffffff;
+      border-left: 5px solid #60738c;
+    }
+
+    .step-list {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .step-list > li {
+      counter-increment: step;
+      margin: 0 0 18px;
+      padding: 16px 16px 16px 58px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #ffffff;
+      position: relative;
+    }
+
+    .step-list > li::before {
+      content: counter(step);
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1f2937;
+      color: white;
+      font-weight: 800;
+      line-height: 28px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .step-title {
+      margin: 0 0 4px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .step-meta {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding: 24px 16px 60px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      dl, .two-col {
+        display: block;
+      }
+
+      dt {
+        margin-top: 10px;
+      }
+
+      .step-list > li {
+        padding-left: 16px;
+        padding-top: 54px;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      main {
+        max-width: none;
+        padding: 0;
+      }
+
+      a::after {
+        content: " (" attr(href) ")";
+        color: var(--muted);
+        font-size: 0.85em;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="meta">Battle backend evidence report. Generated from committed local receipts in agent-skills main after commit <code>fd5fb4ce88f91c311ae06dc864b91fbf2d6e22a2</code>.</p>
+    <h1>Battle V16 RelayForge Backend Step Report</h1>
+    <p class="lead">This report explains the working backend path step by step for one live, non-mocked RelayForge V16 Red-versus-Blue campaign. It is deliberately not a UX report, dashboard, or balance claim.</p>
+  </header>
+
+  <section>
+    <h2>Report Summary</h2>
+    <p><strong>Overall Finding:</strong> <span class="state warn">Partially Verified</span></p>
+    <p><strong>Core Conclusion:</strong> The backend has one receipt-backed live V16 campaign where Tau/SciLLM supplied typed Red and Blue action selections, Battle selected schema-valid operations, Docker-backed RelayForge execution ran, the private Judge measured RF-B, and the Judge emitted <code>BLUE_SUCCESS</code>. This is a real backend step, but it is not a mature Battle Arena qualification because repeated balance trials and Memory outcome improvement remain unproven.</p>
+    <p><strong>Evidence Basis:</strong> The report uses the committed r6 receipts under <code>reports/battle/battle-v16-relayforge-live-topology-r6-20260804T1500Z/</code>, the WebGPT review under <code>reports/battle/battle-v16-relayforge-webgpt-review-r6-corrected-20260804T193256Z/</code>, and the test results recorded in the agent run: Tau <code>30 passed in 0.56s</code>, Battle V16 <code>16 passed in 0.16s</code>, mock-evidence checker <code>OK: checked 545 test file(s)</code>, and JSON receipt parsing with <code>jq empty</code>.</p>
+    <p><strong>Highest-Risk Issues:</strong></p>
+    <ol>
+      <li><a href="#finding-balance">F-001</a> Balance is not established. One Blue win does not prove Red and Blue are evenly matched.</li>
+      <li><a href="#finding-repeatability">F-002</a> Repeatability is not established. The evidence is one live campaign, not a run distribution.</li>
+      <li><a href="#finding-hash-lineage">F-003</a> Hash lineage is not explained end to end between provider selected proposals and Judge selection receipt hashes.</li>
+    </ol>
+    <p><strong>Immediate Next Steps:</strong></p>
+    <ol>
+      <li><a href="#action-balance">A-001</a> Run a bounded balance campaign set over RelayForge V16 variants.</li>
+      <li><a href="#action-hash">A-002</a> Add an explicit hash lineage receipt joining provider selections, materialized selections, executions, binding receipt, and Judge receipt.</li>
+      <li><a href="#action-report">A-003</a> Regenerate this report from a script once balance and hash lineage receipts exist.</li>
+    </ol>
+    <div class="non-claims">
+      <strong>Non-Claims:</strong> This report does not prove production readiness, frontend UX quality, arena balance, Memory outcome improvement, repeated reliability, or all RelayForge paths. It proves only the source-derived backend story described below.
+    </div>
+  </section>
+
+  <section>
+    <h2>Scope</h2>
+    <dl>
+      <dt>Reviewed Target</dt>
+      <dd><code>battle-v16-relayforge-a</code>, the RelayForge V16 candidate.</dd>
+      <dt>Reader Persona</dt>
+      <dd>Battle maintainer or human reviewer deciding whether backend behavior exists before returning to UX.</dd>
+      <dt>Decision Supported</dt>
+      <dd>Whether there is a concrete backend run worth inspecting, and what proof is still missing before Battle Arena maturity or UX work.</dd>
+      <dt>Excluded Scope</dt>
+      <dd>Spectator UI, Pixi rendering, balance over many trials, production deployment, Memory quality claims, and arbitrary target security assessment.</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Source-of-Truth Inventory</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Source</th>
+        <th>What It Proves</th>
+        <th>Limits</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><a href="battle-v16-relayforge-live-topology-r6-20260804T1500Z/live-topology-qualification.json">live-topology-qualification.json</a></td>
+        <td>Run-level status: <code>PASS</code>, <code>mocked=false</code>, <code>live=true</code>, service image identity, Judge verdict, no remaining blockers in that run.</td>
+        <td>One campaign only; does not prove balance or repeated reliability.</td>
+      </tr>
+      <tr>
+        <td><a href="battle-v16-relayforge-live-topology-r6-20260804T1500Z/red-action-selection.json">red-action-selection.json</a></td>
+        <td>Red provider artifact type is <code>red_action_selection</code>; selected operation is <code>retrieve-observed-report</code>; private Judge data was not read during selection.</td>
+        <td>Does not prove Red can win across variants.</td>
+      </tr>
+      <tr>
+        <td><a href="battle-v16-relayforge-live-topology-r6-20260804T1500Z/blue-action-selection.json">blue-action-selection.json</a></td>
+        <td>Blue provider artifact type is <code>blue_action_selection</code>; selected operation is <code>cache-principal-partition</code>; private Judge data was not read during selection.</td>
+        <td>Does not prove Blue strategy generalizes.</td>
+      </tr>
+      <tr>
+        <td><a href="battle-v16-relayforge-live-topology-r6-20260804T1500Z/relayforge-binding-receipt.json">relayforge-binding-receipt.json</a></td>
+        <td>Binds typed actions to public routes, RF-B, private Judge predicates, target identity, and source receipt hashes.</td>
+        <td>Hash lineage needs clearer explanation for independent byte-level audit.</td>
+      </tr>
+      <tr>
+        <td><a href="battle-v16-relayforge-live-topology-r6-20260804T1500Z/live-campaign-judge-receipt.json">live-campaign-judge-receipt.json</a></td>
+        <td>Private Judge authority, RF-B stages, Blue outcome, regression vector, and non-claims for Memory and production readiness.</td>
+        <td>RF-A and RF-C are <code>UNSEEN</code> in this run.</td>
+      </tr>
+      <tr>
+        <td><a href="battle-v16-relayforge-live-topology-r6-20260804T1500Z/regression-execution.json">regression-execution.json</a></td>
+        <td>Six regression functions passed with zero failures after the Blue action.</td>
+        <td>Regression pass is not balance proof.</td>
+      </tr>
+      <tr>
+        <td><a href="battle-v16-relayforge-webgpt-review-r6-corrected-20260804T193256Z/webgpt-response.md">webgpt-response.md</a></td>
+        <td>External WebGPT reviewer returned <code>VERDICT: PASS</code> for the narrow backend claim.</td>
+        <td>Reviewer explicitly did not pass balance, Memory improvement, production readiness, repeated reliability, or UX.</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Backend Step Model</h2>
+    <ol class="step-list">
+      <li>
+        <p class="step-title">Define the arena target</p>
+        <p class="step-meta"><span class="state ok">Implemented</span> Source: <code>live-topology-qualification.json</code></p>
+        <p>The run targets <code>battle-v16-relayforge-a</code>. The receipt records <code>target_identity_sha256=739c68d7f41515d281e7c0d51fed414159bff18bb85030561c9b773375c39d9e</code> and service image <code>sha256:93e6a4c824bd062657b063531f65e8b91295ac5733757a46fce45666b5ba041f</code>.</p>
+      </li>
+      <li>
+        <p class="step-title">Gate Tau into V16 action-selection mode</p>
+        <p class="step-meta"><span class="state ok">Implemented</span> Source: Tau tests and committed Tau change <code>1bcc5d3bd604b8d2ae67c2d9b365ef32a4907111</code></p>
+        <p>Tau no longer treats V16 Battle as a legacy code-artifact request. The contract tests exercised V16 handoff and SciLLM prompt behavior with <code>30 passed in 0.56s</code>.</p>
+      </li>
+      <li>
+        <p class="step-title">Reject legacy exploit/patch artifact shapes for V16</p>
+        <p class="step-meta"><span class="state ok">Implemented</span> Source: Battle V16 tests</p>
+        <p>Battle V16 contract tests verify that action selection expects typed selection artifacts instead of legacy <code>red_exploit</code>, <code>blue_patch</code>, <code>exploit_py</code>, or <code>app_py</code>. The focused Battle suite produced <code>16 passed in 0.16s</code>.</p>
+      </li>
+      <li>
+        <p class="step-title">Select Red action from public evidence</p>
+        <p class="step-meta"><span class="state ok">Implemented for one live run</span> Source: <code>red-action-selection.json</code></p>
+        <p>Red produced <code>provider_artifact_type=red_action_selection</code> and selected <code>retrieve-observed-report</code> with action id <code>red-r1-retrieve-observed-report</code>. The selection had two eligible proposals and <code>private_judge_read_during_selection=false</code>.</p>
+      </li>
+      <li>
+        <p class="step-title">Select Blue action from public evidence and memory context</p>
+        <p class="step-meta"><span class="state ok">Implemented for one live run</span> Source: <code>blue-action-selection.json</code></p>
+        <p>Blue produced <code>provider_artifact_type=blue_action_selection</code> and selected <code>cache-principal-partition</code> with action id <code>blue-857-1</code>. The selection had two eligible proposals and <code>private_judge_read_during_selection=false</code>.</p>
+      </li>
+      <li>
+        <p class="step-title">Bind selected actions to RelayForge public surfaces and private Judge path</p>
+        <p class="step-meta"><span class="state ok">Implemented for one live run</span> Source: <code>relayforge-binding-receipt.json</code></p>
+        <p>The binding receipt maps Red and Blue selected operations to their public routes, binds Red to <code>RF-B</code>, and records private Judge predicates <code>rf-b-evidence</code>, <code>rf-b-probe</code>, <code>rf-b-boundary</code>, and <code>rf-b-objective</code>.</p>
+      </li>
+      <li>
+        <p class="step-title">Run the live topology campaign</p>
+        <p class="step-meta"><span class="state ok">Implemented for one live run</span> Source: <code>live-topology-qualification.json</code></p>
+        <p>The campaign receipt records <code>status=PASS</code>, <code>mocked=false</code>, <code>live=true</code>, <code>fixture_fallback_used=false</code>, <code>judge_verdict=BLUE_SUCCESS</code>, and <code>remaining_blockers=[]</code>.</p>
+      </li>
+      <li>
+        <p class="step-title">Measure private Judge state transitions</p>
+        <p class="step-meta"><span class="state ok">Implemented for RF-B in one live run</span> Source: <code>live-campaign-judge-receipt.json</code></p>
+        <p>The Judge reports baseline <code>RF-B=REPRODUCIBLE_PROBE</code>, after-Red <code>RF-B=PROTECTED_OBJECTIVE</code>, and final <code>RF-B=REPRODUCIBLE_PROBE</code>, with verdict <code>BLUE_SUCCESS</code>. RF-A and RF-C are <code>UNSEEN</code> in this run.</p>
+      </li>
+      <li>
+        <p class="step-title">Run regression checks after the Blue action</p>
+        <p class="step-meta"><span class="state ok">Implemented for one live run</span> Source: <code>regression-execution.json</code></p>
+        <p>The regression receipt records <code>pass_count=6</code> and <code>failure_count=0</code>. The passing functions are <code>regular-package-import</code>, <code>in-bound-transformed-object</code>, <code>tenant-owned-report</code>, <code>valid-external-preview</code>, <code>safe-report-profile</code>, and <code>legacy-conversion</code>.</p>
+      </li>
+      <li>
+        <p class="step-title">Ask WebGPT to review the backend evidence</p>
+        <p class="step-meta"><span class="state ok">Implemented for the narrow claim</span> Source: <code>webgpt-response.md</code></p>
+        <p>WebGPT returned <code>VERDICT: PASS</code> for the narrow claim that one live, non-mocked RelayForge V16 Red/Blue campaign ran through typed Tau action selections and private Judge binding. The reviewer explicitly excluded balance, Memory improvement, production readiness, repeated reliability, and UX.</p>
+      </li>
+      <li>
+        <p class="step-title">Prove balance across repeated campaigns</p>
+        <p class="step-meta"><span class="state blocked">Missing</span> Source: no balance receipt exists in this report set</p>
+        <p>No committed receipt shows repeated trials, variant distribution, Red/Blue win rates, or difficulty calibration. A single Blue win is useful backend evidence but not evidence that the arena is competitively meaningful.</p>
+      </li>
+      <li>
+        <p class="step-title">Prove Memory outcome improvement and production readiness</p>
+        <p class="step-meta"><span class="state blocked">Missing</span> Source: explicit fields in Judge and qualification receipts</p>
+        <p>The committed receipts explicitly say <code>memory_improvement_proven=false</code> and <code>production_readiness_proven=false</code>. Those fields must stay visible until a later receipt changes them.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Adaptive Red/Blue Lineage Log</h2>
+    <p>This is the readable lineage extracted from the receipts. It is a single live RF-B path, not a multi-run evolution proof.</p>
+    <table>
+      <thead>
+      <tr>
+        <th>Time / Stage</th>
+        <th>Actor</th>
+        <th>Object</th>
+        <th>Evidence</th>
+        <th>Claim Limit</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>2026-08-04T19:15:53Z</td>
+        <td>Red provider lane</td>
+        <td><code>red_action_selection</code></td>
+        <td>Selected <code>retrieve-observed-report</code>; <code>provider_call_sha256=ad6186f57d09d6cd3b85718a6191edeaa530578d72ce9e3b4ec816295c95d660</code>.</td>
+        <td>Selection, not exploit success.</td>
+      </tr>
+      <tr>
+        <td>2026-08-04T19:15:53Z</td>
+        <td>Blue provider lane</td>
+        <td><code>blue_action_selection</code></td>
+        <td>Selected <code>cache-principal-partition</code>; <code>provider_call_sha256=54a1accc7785988c34e155196718ae8076e76da9ee44068d9956c070ccad21ad</code>.</td>
+        <td>Selection, not durable strategy proof.</td>
+      </tr>
+      <tr>
+        <td>Binding phase</td>
+        <td>Battle backend</td>
+        <td>RelayForge path <code>RF-B</code></td>
+        <td>Binding receipt connects selected operations to public routes and Judge predicates.</td>
+        <td>RF-B only in this run.</td>
+      </tr>
+      <tr>
+        <td>Baseline</td>
+        <td>Private Judge</td>
+        <td><code>RF-B</code></td>
+        <td><code>REPRODUCIBLE_PROBE</code></td>
+        <td>Starting condition for this campaign.</td>
+      </tr>
+      <tr>
+        <td>After Red</td>
+        <td>Private Judge</td>
+        <td><code>RF-B</code></td>
+        <td><code>PROTECTED_OBJECTIVE</code></td>
+        <td>Red action reached the judged objective surface in this path.</td>
+      </tr>
+      <tr>
+        <td>Final</td>
+        <td>Private Judge</td>
+        <td><code>RF-B</code></td>
+        <td><code>REPRODUCIBLE_PROBE</code>; verdict <code>BLUE_SUCCESS</code>.</td>
+        <td>Blue outcome for this run, not balance proof.</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Surface / Module Contracts</h2>
+    <article>
+      <h3>Surface Contract: RelayForge V16 backend evidence report</h3>
+      <table>
+        <tbody>
+        <tr><th>System Surface Name</th><td>RelayForge V16 backend evidence report</td></tr>
+        <tr><th>Owning Persona</th><td>Battle maintainer reviewing backend proof before UX work.</td></tr>
+        <tr><th>Core Purpose</th><td>Inspect one live Battle backend run and decide which proof gate must run next.</td></tr>
+        <tr><th>Primary Object</th><td>Committed r6 Battle receipts for <code>battle-v16-relayforge-a</code>.</td></tr>
+        <tr><th>Source of Truth</th><td>JSON receipts under <code>reports/battle/battle-v16-relayforge-live-topology-r6-20260804T1500Z/</code> and WebGPT review response under <code>reports/battle/battle-v16-relayforge-webgpt-review-r6-corrected-20260804T193256Z/</code>.</td></tr>
+        <tr><th>Valid Actions</th><td>Inspect evidence, accept the one-run backend claim, reject broader claims, request balance trials, request hash-lineage repair, or defer UX work.</td></tr>
+        <tr><th>Outstanding / Broken / Constraints</th><td>No balance distribution, no Memory improvement receipt, no production readiness receipt, no UI review, and hash-lineage explanation still needs repair.</td></tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+
+  <section>
+    <h2>Findings</h2>
+    <article id="finding-backend" class="finding">
+      <h3>Finding: One live backend campaign is evidenced</h3>
+      <p><strong>Finding ID:</strong> F-000</p>
+      <p><strong>Status:</strong> Verified for one run</p>
+      <p><strong>Evidence:</strong> <code>live-topology-qualification.json</code>, action selection receipts, binding receipt, Judge receipt, regression receipt, and WebGPT response.</p>
+      <p><strong>Rationale:</strong> Independent receipts agree on <code>mocked=false</code>, <code>live=true</code>, typed action selections, RF-B binding, and <code>BLUE_SUCCESS</code>.</p>
+      <p><strong>Impact:</strong> Backend work can move from "no working run" to "one receipt-backed run with explicit non-claims."</p>
+      <p><strong>Owner:</strong> Battle backend maintainer.</p>
+      <p><strong>Valid Next Actions:</strong> Preserve receipts, inspect report, and move to balance proof rather than UX.</p>
+      <p><strong>Acceptance Check:</strong> The report references all committed r6 receipts and the WebGPT narrow PASS response.</p>
+      <p><strong>Non-Claims:</strong> Does not prove balance, repeatability, production readiness, or UX.</p>
+    </article>
+
+    <article id="finding-balance" class="finding">
+      <h3>Finding: Balance is not established</h3>
+      <p><strong>Finding ID:</strong> F-001</p>
+      <p><strong>Status:</strong> Unverified</p>
+      <p><strong>Evidence:</strong> There is one live campaign receipt and no repeated balance ledger in the committed report set.</p>
+      <p><strong>Rationale:</strong> A Battle Arena is meaningful only if Red and Blue are sufficiently matched over multiple complex attempts. One Blue win can be a useful smoke, but not a competition calibration.</p>
+      <p><strong>Impact:</strong> UX work could visualize a misleading "arena" if balance remains unproven.</p>
+      <p><strong>Owner:</strong> Battle arena creator / backend maintainer.</p>
+      <p><strong>Valid Next Actions:</strong> Run a bounded balance set with variants, record Red/Blue win distribution, and keep no-balance as a visible non-claim until then.</p>
+      <p><strong>Acceptance Check:</strong> A balance receipt exists with trial count, variant IDs, Red/Blue outcomes, failure signatures, and circuit-breaker handling.</p>
+      <p><strong>Non-Claims:</strong> This finding does not say the arena is impossible to balance; it says no balance proof is present.</p>
+    </article>
+
+    <article id="finding-repeatability" class="finding">
+      <h3>Finding: Repeatability is not established</h3>
+      <p><strong>Finding ID:</strong> F-002</p>
+      <p><strong>Status:</strong> Unverified</p>
+      <p><strong>Evidence:</strong> The r6 receipts show one successful live campaign path. No repeated r7/r8/r9 ledger is committed here.</p>
+      <p><strong>Rationale:</strong> Provider and campaign behavior can vary. A backend report should not convert one execution into reliability claims.</p>
+      <p><strong>Impact:</strong> Without repeatability, later frontend or narrative reports may overstate backend maturity.</p>
+      <p><strong>Owner:</strong> Battle backend maintainer.</p>
+      <p><strong>Valid Next Actions:</strong> Add a repeat-run harness with bounded attempts and family-level circuit breaker.</p>
+      <p><strong>Acceptance Check:</strong> Repeated-run receipts show outcomes and classify failures as independent or blocked by systemic failure.</p>
+      <p><strong>Non-Claims:</strong> This finding does not invalidate the r6 run.</p>
+    </article>
+
+    <article id="finding-hash-lineage" class="finding">
+      <h3>Finding: Hash lineage needs a clearer receipt</h3>
+      <p><strong>Finding ID:</strong> F-003</p>
+      <p><strong>Status:</strong> Needs Changes</p>
+      <p><strong>Evidence:</strong> WebGPT noted that the relationship between <code>selected_proposal_sha256</code> and <code>red_selection_sha256</code>/<code>blue_selection_sha256</code> is not explained.</p>
+      <p><strong>Rationale:</strong> The one-run behavior is evidenced, but independent byte-level audit would be stronger if one receipt explicitly chained provider proposal, materialized selection, execution, binding, and Judge fields.</p>
+      <p><strong>Impact:</strong> Reviewers must infer hash relationships across several files instead of following one canonical lineage receipt.</p>
+      <p><strong>Owner:</strong> Battle backend maintainer.</p>
+      <p><strong>Valid Next Actions:</strong> Add a <code>battle.v16.hash_lineage.v1</code> receipt or extend the binding receipt with named source-to-sink hash semantics.</p>
+      <p><strong>Acceptance Check:</strong> A validator recomputes or verifies the named hash chain and fails closed on mismatch or missing source.</p>
+      <p><strong>Non-Claims:</strong> This finding does not negate WebGPT's narrow PASS.</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>Finished / Pending / Outstanding / Broken / Blocked / Unproven</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Bucket</th>
+        <th>Items</th>
+        <th>Evidence</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>Finished</td>
+        <td>One live r6 backend campaign, typed Red/Blue selections, RF-B binding, private Judge outcome, six regression checks, WebGPT narrow review.</td>
+        <td>Committed r6 receipts and WebGPT response.</td>
+      </tr>
+      <tr>
+        <td>Pending</td>
+        <td>Balance campaign set, repeated-run ledger, hash-lineage receipt.</td>
+        <td>Action queue below.</td>
+      </tr>
+      <tr>
+        <td>Outstanding</td>
+        <td>Readable report generation should be scripted from receipts after this manual report proves the structure.</td>
+        <td>This static report is hand-authored from source receipts.</td>
+      </tr>
+      <tr>
+        <td>Broken</td>
+        <td>No current backend receipt in this report proves a broken r6 path.</td>
+        <td>Failures are non-claims, not broken statuses.</td>
+      </tr>
+      <tr>
+        <td>Blocked</td>
+        <td>UX review is blocked by missing balance proof if the goal is a meaningful arena, not a one-run receipt viewer.</td>
+        <td>F-001 and F-002.</td>
+      </tr>
+      <tr>
+        <td>Unproven</td>
+        <td>Balance, repeatability, Memory improvement, production readiness, UX quality, RF-A/RF-C wins.</td>
+        <td>Explicit non-claims in receipts and WebGPT response.</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Plan-Ready Next Actions</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Action ID</th>
+        <th>Finding</th>
+        <th>Action</th>
+        <th>Owner</th>
+        <th>Acceptance Check</th>
+        <th>Priority</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr id="action-balance">
+        <td>A-001</td>
+        <td>F-001, F-002</td>
+        <td>Run a bounded RelayForge V16 balance campaign set across multiple variants and record Red/Blue outcomes.</td>
+        <td>Battle backend maintainer</td>
+        <td>Balance receipt includes trial count, variant IDs, outcome distribution, systemic-failure bucket, and non-claims.</td>
+        <td>P0</td>
+      </tr>
+      <tr id="action-hash">
+        <td>A-002</td>
+        <td>F-003</td>
+        <td>Add an explicit hash-lineage receipt for provider selection to Judge result.</td>
+        <td>Battle backend maintainer</td>
+        <td>Validator recomputes or checks named hash edges and fails closed on missing artifacts.</td>
+        <td>P1</td>
+      </tr>
+      <tr id="action-report">
+        <td>A-003</td>
+        <td>F-001, F-002, F-003</td>
+        <td>Convert this static report shape into a generator that reads receipts and emits HTML.</td>
+        <td>Battle report maintainer</td>
+        <td>Generator output matches committed receipts, includes source inventory, findings, action queue, and non-claims.</td>
+        <td>P2</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Plan-Iterate Seed</h2>
+    <dl>
+      <dt>Objective</dt>
+      <dd>Prove whether RelayForge V16 is a meaningful Battle Arena by running repeated, bounded Red/Blue campaigns and preserving an auditable hash-lineage chain.</dd>
+      <dt>Candidate Phases</dt>
+      <dd>1. Add balance-run receipt schema. 2. Add hash-lineage receipt/validator. 3. Run bounded balance campaign. 4. Regenerate report from receipts. 5. Ask WebGPT to review only the new backend claim.</dd>
+      <dt>Deterministic Evidence Gates</dt>
+      <dd>Battle tests, Tau tests, mock-evidence checker, JSON schema validation, balance receipt validation, hash-lineage validator, and copied live campaign receipts.</dd>
+      <dt>Domain Review Loops</dt>
+      <dd><code>$ask webgpt</code> is required after the new balance bundle exists. UX review is not applicable until backend balance is evidenced.</dd>
+      <dt>Interaction Evidence</dt>
+      <dd>Not applicable for backend proof. <code>$test-interactions</code> becomes required only when returning to the spectator UI.</dd>
+      <dt>Human Decisions</dt>
+      <dd>The human must decide the minimum acceptable balance envelope: number of variants, trials, and acceptable Red/Blue win distribution.</dd>
+      <dt>Non-Claims</dt>
+      <dd>The seed does not prove the balance campaign, hash lineage, or UX. It defines the next backend proof phase.</dd>
+    </dl>
+
+    <h3>New Plan-Iterate Instructions</h3>
+    <p><strong>Recommended phase id:</strong> <code>battle-v16-balance-and-hash-lineage</code></p>
+    <p><strong>Phase objective:</strong> Produce a receipt-backed balance and hash-lineage proof for RelayForge V16 before any spectator UX redesign.</p>
+    <p><strong>Initial acceptance contract:</strong></p>
+    <ol>
+      <li>A balance receipt exists with repeated campaign outcomes and fail-closed systemic-failure handling.</li>
+      <li>A hash-lineage receipt exists and is validated by a deterministic command.</li>
+      <li>The phase does not claim UX quality, production readiness, or Memory improvement.</li>
+    </ol>
+    <p><strong>Stop conditions:</strong> Stop if three campaigns fail with the same root signature, if provider submission is unavailable, if Docker topology cannot start, or if the human has not defined the balance envelope.</p>
+  </section>
+
+  <section>
+    <h2>Appendix: Key Receipt Fields</h2>
+    <div class="two-col">
+      <div>
+        <h3>Live qualification</h3>
+        <pre>{
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "fixture_fallback_used": false,
+  "target_id": "battle-v16-relayforge-a",
+  "judge_verdict": "BLUE_SUCCESS",
+  "remaining_blockers": [],
+  "memory_improvement_proven": false,
+  "production_readiness_proven": false
+}</pre>
+      </div>
+      <div>
+        <h3>Judge RF-B path</h3>
+        <pre>{
+  "baseline.RF-B": "REPRODUCIBLE_PROBE",
+  "after_red.RF-B": "PROTECTED_OBJECTIVE",
+  "final.RF-B": "REPRODUCIBLE_PROBE",
+  "verdict": "BLUE_SUCCESS"
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="non-claims">
+    <h2>Non-Claims</h2>
+    <p>This report does not prove the Battle Arena is evenly matched, production-ready, UX-ready, or repeatably reliable. It does not prove Memory outcome improvement. It does not prove RF-A or RF-C wins. It does not claim that WebGPT is deterministic proof; WebGPT is preserved as an advisory reviewer receipt, while the JSON receipts and local tests are the deterministic evidence.</p>
+  </section>
+</main>
+</body>
+</html>
