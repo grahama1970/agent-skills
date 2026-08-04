@@ -63,6 +63,56 @@ AXIS_TO_DELIVERY = {
 #: than a silent downgrade dressed up as a decision.
 NEUTRAL_FALLBACK = "neutral_warm"
 
+#: Dominant axis -> the channels the renderer declares ACTUALLY move audio.
+#:
+#: `tone` above is request-only on chatterbox_turbo: it maps to stage presets
+#: that shift sampling parameters, and the params carrying affect are ignored by
+#: Turbo. It is kept as provenance for what was asked. These are the fields the
+#: renderer reports as applied, per its voice_delivery_effect contract:
+#:
+#:   intensity / valence  -> routed to chatterbox_base_affect via
+#:                           use_base_emotion, which honours exaggeration and
+#:                           cfg_weight
+#:   pace                 -> a real pitch-preserving time stretch
+#:
+#: Valence is signed: a dream about isolation should not sound like one about
+#: belonging. Pace follows arousal, not sentiment -- grief is slow and low, and
+#: so is inadequacy, while desire and competence run brisk. Values are
+#: deliberately moderate; a persona reading her own journal is not performing.
+#: PROVISIONAL, and arguably in the wrong repository.
+#:
+#: These numbers were hand-picked and then tuned by acoustic measurement here,
+#: which means this skill is doing the renderer's calibration work downstream.
+#: A persona skill should be able to say "this dream is about isolation" and
+#: have the renderer make that sound different from belonging, without knowing
+#: what exaggeration or cfg_weight are. That is grahama1970/chatterbox#22.
+#:
+#: What measurement showed, at n=4 neutrals and one render per condition:
+#: intensity 0.80 moved f0_median past 3 sigma; 0.25 and 0.32 moved nothing on
+#: any metric. The high-intensity case also moved 2 metrics on one run and 1 on
+#: the next -- the instability signature of measuring near a noise floor, and
+#: the same pattern that produced a false positive for tone at small n. So the
+#: honest status is that the routing is correct and the affect is UNVERIFIED,
+#: not that these values work.
+#:
+#: The range spans 0.25 to 0.85 because the first pass clustered everything
+#: between 0.45 and 0.75 against a neutral of 0.50, where a 0.05 delta is
+#: rounding rather than a feeling. When #22 lands these values should be
+#: deleted, not retuned.
+AXIS_TO_AFFECT = {
+    "Concealment":  {"intensity": 0.45, "valence": -0.35, "pace": "measured"},
+    "Disclosure":   {"intensity": 0.72, "valence": +0.25, "pace": "measured"},
+    "Competence":   {"intensity": 0.68, "valence": +0.45, "pace": "brisk"},
+    "Inadequacy":   {"intensity": 0.32, "valence": -0.55, "pace": "slow"},
+    "Belonging":    {"intensity": 0.80, "valence": +0.60, "pace": "measured"},
+    "Isolation":    {"intensity": 0.25, "valence": -0.65, "pace": "slow"},
+    "Duty":         {"intensity": 0.55, "valence":  0.00, "pace": "measured"},
+    "Desire":       {"intensity": 0.85, "valence": +0.35, "pace": "brisk"},
+}
+
+#: No tension surfaced: ask for nothing rather than inventing a feeling.
+NEUTRAL_AFFECT = {"intensity": 0.50, "valence": 0.0, "pace": "neutral"}
+
 
 def dominant_axis(contradictions: list[dict[str, Any]]) -> str | None:
     """The axis carrying the most tension in this dream.
@@ -89,12 +139,22 @@ def map_mood(mood_label: str | None, contradictions: list[dict[str, Any]],
     delivery = AXIS_TO_DELIVERY.get(axis or "", NEUTRAL_FALLBACK)
     if delivery not in ALLOWED_TONES:  # pragma: no cover - guarded by drift check
         delivery = NEUTRAL_FALLBACK
+    affect = AXIS_TO_AFFECT.get(axis or "", NEUTRAL_AFFECT)
+    # Explicit overrides win; otherwise the dream's own tension sets them.
+    resolved_intensity = float(intensity if intensity is not None else affect["intensity"])
+    resolved_valence = float(valence if valence is not None else affect["valence"])
     return {
         "voice_delivery": {
+            # Provenance: what the mood mapped to. Request-only on this engine.
             "tone": delivery,
-            "intensity": round(float(intensity if intensity is not None else 0.5), 3),
-            "valence": round(float(valence if valence is not None else 0.0), 3),
+            # The channels that actually reach the waveform.
+            "intensity": round(resolved_intensity, 3),
+            "valence": round(resolved_valence, 3),
+            "use_base_emotion": True,
+            "pace": affect["pace"],
         },
+        "audible_channels": ["intensity", "valence", "pace"],
+        "request_only_channels": ["tone"],
         "persona_mood_label": mood_label or "unset",
         "dominant_tension_axis": axis,
         "mapped_because": (
@@ -103,9 +163,10 @@ def map_mood(mood_label: str | None, contradictions: list[dict[str, Any]],
             "no tension surfaced in this dream; requesting the neutral default"
         ),
         "boundary": (
-            "delivery tone is what was REQUESTED of the renderer. Chatterbox "
-            "reports preset-driven acoustic shifts below same-parameter "
-            "stochastic spread, so this is not a claim the audio achieved it."
+            "tone is REQUESTED and request-only on chatterbox_turbo; it is kept "
+            "as provenance for what the mood mapped to. intensity, valence and "
+            "pace are routed to the channels the renderer declares applied. "
+            "Whether a listener perceives the intended feeling is untested."
         ),
     }
 

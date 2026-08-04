@@ -156,3 +156,41 @@ def test_deprecation_preserves_the_original_record():
     # The original document is fetched and amended, never rebuilt from scratch.
     assert "doc = fetch(client, key, collection)" in src
     assert "read_back_deprecated" in src
+
+
+def test_mood_routes_to_the_channels_the_renderer_calls_audible():
+    """Tone is request-only on this engine; routing the mood only to tone means
+    the mood reaches nothing.
+
+    The renderer's voice_delivery_effect contract names intensity/valence (via
+    use_base_emotion) and pace as the applied channels. Tone is still sent, as
+    provenance for what the mood mapped to.
+    """
+    import map_delivery_tone as mdt
+    contradictions = [{"bridge_a": "Belonging", "bridge_b": "Isolation"},
+                      {"bridge_a": "Isolation", "bridge_b": "Belonging"}]
+    out = mdt.map_mood("alone_but_reaching", contradictions)
+    vd = out["voice_delivery"]
+    assert vd["use_base_emotion"] is True, "affect must route to the base engine"
+    assert vd["pace"] in {"slow", "measured", "neutral", "brisk", "fast"}
+    assert -1.0 <= vd["valence"] <= 1.0 and 0.0 <= vd["intensity"] <= 1.0
+    assert vd["tone"], "tone is still sent as provenance"
+    assert out["request_only_channels"] == ["tone"]
+    assert set(out["audible_channels"]) == {"intensity", "valence", "pace"}
+
+
+def test_opposing_axes_do_not_request_the_same_delivery():
+    """Isolation and belonging must not ask for identical audio."""
+    import map_delivery_tone as mdt
+    iso = mdt.map_mood("x", [{"bridge_a": "Isolation", "bridge_b": "Isolation"}])["voice_delivery"]
+    bel = mdt.map_mood("x", [{"bridge_a": "Belonging", "bridge_b": "Belonging"}])["voice_delivery"]
+    assert iso["valence"] < 0 < bel["valence"]
+    assert iso["intensity"] < bel["intensity"]
+
+
+def test_the_boundary_says_tone_is_request_only():
+    """A reader must not mistake a sent field for an audible one."""
+    import map_delivery_tone as mdt
+    out = mdt.map_mood("x", [])
+    assert "request-only" in out["boundary"]
+    assert "untested" in out["boundary"]

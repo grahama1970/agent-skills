@@ -58,9 +58,20 @@ def test_persona_mood_is_preserved_alongside_delivery_tone():
 
 
 def test_result_never_claims_the_tone_was_achieved():
+    """The wording has changed twice as the measurements changed; the intent has not.
+
+    It once cited stochastic spread, because that was the evidence then. It now
+    says tone is request-only on this engine, because chatterbox#20 established
+    that directly. What must never appear is a claim that the audio achieved the
+    requested tone, so this asserts the intent rather than a phrase.
+    """
     got = mapper.map_mood("m", _pair("Duty", "Desire"))
-    assert "REQUESTED" in got["boundary"]
-    assert "stochastic spread" in got["boundary"]
+    boundary = got["boundary"]
+    assert "REQUESTED" in boundary
+    assert "request-only" in boundary, "must say tone does not reach the waveform here"
+    assert "untested" in boundary, "must not imply a listener would perceive it"
+    for overclaim in ("achieved", "audible emotion", "sounds "):
+        assert overclaim not in boundary.lower(), f"boundary implies effect: {overclaim!r}"
 
 
 def test_mirror_is_in_sync_with_chatterbox():
