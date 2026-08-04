@@ -99,6 +99,7 @@ def _source_evidence(source_ids: list[str], receipts_by_id: dict[str, Any]) -> s
             f"<strong>{html.escape(receipt.provider)}</strong> "
             f"{_badge(receipt.result_status.value)}"
             f"<div>Source class: {html.escape(receipt.source_class)}</div>"
+            f"<div>Automation policy: {html.escape(receipt.automation_policy or 'not applicable')}</div>"
             f"<div>Evidence: {_list(receipt.evidence_refs, 'No evidence URL retained.')}</div>"
             f"<div>Limitations: {_list(receipt.limitations, 'No limitations recorded.')}</div>"
             "</li>"

@@ -13,7 +13,8 @@ from loguru import logger
 from . import __version__
 from .buzz_review import BuzzAgentReviewConfig, create_buzz_agent_review
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
-from .decisions import append_decision, replay as replay_decisions
+from .decisions import append_decision
+from .decisions import replay as replay_decisions
 from .discovery import sweep as sweep_sources
 from .pipeline import run_stage0, status_for_run
 from .ranking import rank as rank_candidates
@@ -174,12 +175,26 @@ def sweep(
     lane: str = typer.Option("A,B,C", "--lane", help="Comma-separated lanes to attempt."),
     out: Path = typer.Option(..., "--out", file_okay=False),
     fixture_dir: Path | None = typer.Option(None, "--fixture-dir", file_okay=False),
+    linkedin_evidence: Path | None = typer.Option(
+        None,
+        "--linkedin-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local human-supplied LinkedIn top-candidate evidence; no LinkedIn automation.",
+    ),
 ) -> None:
     """Run read-only source discovery and write local receipts."""
     _configure_logging()
     lanes = {item.strip().upper() for item in lane.split(",") if item.strip()}
     skill_dir = Path(__file__).resolve().parents[2]
-    receipt = sweep_sources(skill_dir=skill_dir, lanes=lanes, out_dir=out, fixture_dir=fixture_dir)
+    receipt = sweep_sources(
+        skill_dir=skill_dir,
+        lanes=lanes,
+        out_dir=out,
+        fixture_dir=fixture_dir,
+        linkedin_evidence=linkedin_evidence,
+    )
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
 
@@ -268,13 +283,21 @@ def serve(
 def run_command(
     out: Path | None = typer.Option(None, "--out", file_okay=False),
     fixture_dir: Path | None = typer.Option(None, "--fixture-dir", file_okay=False),
+    linkedin_evidence: Path | None = typer.Option(
+        None,
+        "--linkedin-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local human-supplied LinkedIn top-candidate evidence; no LinkedIn automation.",
+    ),
 ) -> None:
     """Run one resumable Stage 0 transaction with no external effects."""
     _configure_logging()
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
         out = skill_dir / "local" / "nightly" / "latest"
-    receipt = run_stage0(skill_dir, out, fixture_dir)
+    receipt = run_stage0(skill_dir, out, fixture_dir, linkedin_evidence)
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
 

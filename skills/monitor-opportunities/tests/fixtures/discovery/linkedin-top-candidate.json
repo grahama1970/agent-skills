@@ -1,0 +1,11 @@
+{
+  "source": "human_saved_linkedin",
+  "observed_at": "2026-08-04T15:30:00Z",
+  "title": "Applied AI Architect",
+  "organization": "Buffalo Systems Lab",
+  "location": "Buffalo, NY hybrid",
+  "linkedin_url": "https://www.linkedin.com/jobs/view/example-top-candidate",
+  "primary_evidence_url": "https://example.com/careers/applied-ai-architect",
+  "top_candidate": true,
+  "top_candidate_text": "LinkedIn displayed Graham as a top candidate for this applied AI architecture role."
+}

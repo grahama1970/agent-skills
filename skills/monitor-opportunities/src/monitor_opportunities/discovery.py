@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -14,6 +15,7 @@ LANES = ("A", "B", "C")
 HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=10.0, write=3.0, pool=3.0)
 MAX_RESPONSE_BYTES = 1_500_000
 SOURCE_LOCATOR_TERMS = ("greenhouse", "lever", "ashby", "workday", "workable")
+LINKEDIN_AUTOMATION_POLICY = "linkedin_no_automation"
 
 
 def _base_receipt(lane: str, provider: str, target: str, source_class: str) -> dict[str, Any]:
@@ -47,6 +49,135 @@ def _finalize_receipt(receipt: dict[str, Any]) -> dict[str, Any]:
         },
     )
     return receipt
+
+
+def _local_file_ref(path: Path) -> str:
+    return "file://" + quote(str(path.resolve()))
+
+
+def _coerce_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "y", "top_candidate", "top candidate"}
+    return False
+
+
+def _text_evidence_record(raw: str) -> dict[str, Any]:
+    record: dict[str, Any] = {}
+    for line in raw.splitlines():
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        normalized = key.strip().lower().replace(" ", "_").replace("-", "_")
+        if normalized:
+            record[normalized] = value.strip()
+    if "title" not in record:
+        first_line = next((line.strip() for line in raw.splitlines() if line.strip()), "")
+        if first_line:
+            record["title"] = first_line[:120]
+    record.setdefault("raw_text_excerpt", raw[:1200])
+    return record
+
+
+def _load_linkedin_records(path: Path) -> list[dict[str, Any]]:
+    raw = path.read_text(encoding="utf-8")
+    try:
+        payload = read_json(path)
+    except Exception:
+        record = _text_evidence_record(raw)
+        return [record] if record else []
+    if isinstance(payload, list):
+        return [row for row in payload if isinstance(row, dict)]
+    if isinstance(payload, dict):
+        for key in ("opportunities", "evidence", "records", "items"):
+            rows = payload.get(key)
+            if isinstance(rows, list):
+                return [row for row in rows if isinstance(row, dict)]
+        return [payload]
+    return []
+
+
+def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    raw = path.read_bytes()
+    receipt = _base_receipt("A", "linkedin", "Human-supplied LinkedIn evidence", "human_supplied_linkedin")
+    receipt["automation_policy"] = LINKEDIN_AUTOMATION_POLICY
+    receipt["request_summary"] = f"Read local human-supplied LinkedIn artifact {path.name}; no browser or platform access"
+    receipt["response_status"] = None
+    receipt["content_type"] = "application/json" if path.suffix.lower() == ".json" else "text/plain"
+    receipt["response_bytes"] = len(raw)
+    receipt["content_sha256"] = sha256_bytes(raw)
+    receipt["evidence_refs"] = [_local_file_ref(path)]
+    receipt["limitations"].extend(
+        [
+            "Human-supplied LinkedIn evidence is a relevance signal only.",
+            "LinkedIn is not logged into, scraped, clicked, connected, messaged, or otherwise automated.",
+            f"Automation policy: {LINKEDIN_AUTOMATION_POLICY}.",
+        ]
+    )
+    try:
+        records = _load_linkedin_records(path)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        receipt["result_status"] = "INVALID_RESPONSE"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Local LinkedIn artifact could not be parsed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+
+    receipt["result_status"] = "MATCHES" if records else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt = _finalize_receipt(receipt)
+    candidates: list[dict[str, Any]] = []
+    for record in records:
+        title = str(record.get("title") or record.get("role") or "").strip()
+        organization = str(record.get("organization") or record.get("company") or "").strip()
+        if not title or not organization:
+            receipt["limitations"].append("One LinkedIn evidence record lacked title or organization and was not ranked.")
+            continue
+        location = str(record.get("location") or record.get("location_display") or "Unknown").strip()
+        top_candidate = _coerce_bool(
+            record.get("top_candidate")
+            or record.get("top_candidate_signal")
+            or record.get("top_candidate_evidence")
+        )
+        evidence_text = str(
+            record.get("top_candidate_text")
+            or record.get("evidence_text")
+            or record.get("raw_text_excerpt")
+            or "Human-supplied LinkedIn top-candidate evidence."
+        )
+        primary_url = str(
+            record.get("primary_evidence_url")
+            or record.get("posting_url")
+            or record.get("job_url")
+            or record.get("linkedin_url")
+            or ""
+        ).strip() or None
+        payload = {
+            "lane": "A",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": "human_supplied_linkedin",
+            "source_identity": str(record.get("linkedin_url") or primary_url or path.name),
+            "source_class": "human_supplied_linkedin",
+            "automation_policy": LINKEDIN_AUTOMATION_POLICY,
+            "top_candidate_evidence": top_candidate,
+            "organization": organization,
+            "title": title,
+            "location_display": location,
+            "workplace_type": _workplace_type(location),
+            "relocation_required": _relocation_required(location, evidence_text),
+            "clearance_required": False,
+            "posting_url": primary_url,
+            "apply_url": None,
+            "primary_evidence_url": primary_url or _local_file_ref(path),
+            "published_at": record.get("published_at") or record.get("observed_at"),
+            "updated_at": record.get("updated_at") or record.get("observed_at"),
+            "content_hash": receipt["content_sha256"],
+            "posting_text": evidence_text[:4000],
+            "fit_score": float(record.get("fit_score") or (0.93 if top_candidate else 0.72)),
+        }
+        payload["candidate_id"] = stable_id("candidate:a:linkedin", payload)
+        candidates.append(payload)
+    return receipt, candidates
 
 
 def _registry_limit(target: dict[str, Any], default: int) -> int:
@@ -534,6 +665,7 @@ def sweep(
     lanes: set[str],
     out_dir: Path,
     fixture_dir: Path | None = None,
+    linkedin_evidence: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     if fixture_dir is not None:
@@ -547,6 +679,10 @@ def sweep(
                 if target.get("lane", "A") in lanes:
                     receipts.append(_source_locator_receipt(client, target))
             if "A" in lanes:
+                if linkedin_evidence is not None:
+                    receipt, rows = _linkedin_evidence_candidates(linkedin_evidence)
+                    receipts.append(receipt)
+                    candidates.extend(rows)
                 for target in targets.get("employment", []):
                     receipt, rows = _employment_candidates(client, target)
                     receipts.append(receipt)

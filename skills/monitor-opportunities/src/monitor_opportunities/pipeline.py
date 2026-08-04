@@ -29,24 +29,25 @@ def _capability_authority() -> dict[str, str]:
 def _source_receipts(discovery_dir: Path) -> list[dict[str, Any]]:
     receipts = []
     for row in read_jsonl(discovery_dir / "source-receipts.jsonl"):
-        receipts.append(
-            {
-                "receipt_id": row["receipt_id"],
-                "lane": row["lane"],
-                "provider": row["provider"],
-                "target": row["target"],
-                "source_class": row["source_class"],
-                "result_status": row["result_status"],
-                "observed_at": row["observed_at"],
-                "request_summary": row["request_summary"],
-                "response_status": row.get("response_status"),
-                "content_type": row.get("content_type"),
-                "response_bytes": row.get("response_bytes", 0),
-                "content_sha256": row.get("content_sha256"),
-                "evidence_refs": row.get("evidence_refs", []),
-                "limitations": row.get("limitations", []),
-            }
-        )
+        receipt = {
+            "receipt_id": row["receipt_id"],
+            "lane": row["lane"],
+            "provider": row["provider"],
+            "target": row["target"],
+            "source_class": row["source_class"],
+            "result_status": row["result_status"],
+            "observed_at": row["observed_at"],
+            "request_summary": row["request_summary"],
+            "response_status": row.get("response_status"),
+            "content_type": row.get("content_type"),
+            "response_bytes": row.get("response_bytes", 0),
+            "content_sha256": row.get("content_sha256"),
+            "evidence_refs": row.get("evidence_refs", []),
+            "limitations": row.get("limitations", []),
+        }
+        if row.get("automation_policy"):
+            receipt["automation_policy"] = row["automation_policy"]
+        receipts.append(receipt)
     return receipts
 
 
@@ -82,6 +83,19 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
         observed = [f"Primary-source need signal observed: {evidence_url or source_id}"]
         inferred = ["Use a capability profile; do not send outreach automatically."]
         claim_keys = ["claim:pdf-oxide:document-extraction"]
+    elif candidate.get("source_provider") == "human_supplied_linkedin":
+        opportunity_type = "employment_posting"
+        observed = [
+            f"Human-supplied LinkedIn evidence observed: {evidence_url or source_id}",
+            f"Automation policy: {candidate.get('automation_policy', 'linkedin_no_automation')}",
+        ]
+        if candidate.get("top_candidate_evidence"):
+            observed.append("Graham-supplied evidence marks this as a LinkedIn top-candidate signal.")
+        inferred = [
+            "Use this as a relevance signal only; leave LinkedIn and inspect primary employer/client sources separately.",
+            "Do not connect, message, click apply, scrape, or otherwise automate LinkedIn.",
+        ]
+        claim_keys = ["claim:arcos:acert-architect"]
     else:
         opportunity_type = "employment_posting"
         observed = [
@@ -89,6 +103,9 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
         ]
         inferred = ["Single-column ATS-readable resume is prudent."]
         claim_keys = ["claim:arcos:acert-architect"]
+    why_candidate = ["Ranked after deterministic eligibility gating and source receipt readback."]
+    if candidate.get("top_candidate_evidence"):
+        why_candidate.append("Ranking includes Graham-supplied LinkedIn top-candidate evidence.")
     return {
         "opportunity_id": candidate["candidate_id"],
         "lane": candidate["lane"],
@@ -104,7 +121,7 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
         "eligibility_state": candidate["eligibility_state"],
         "fit_score": float(candidate.get("fit_score", 0.0)),
         "claim_keys": claim_keys,
-        "why_candidate": ["Ranked after deterministic eligibility gating and source receipt readback."],
+        "why_candidate": why_candidate,
         "screening_interface_profile": {
             "observed": observed,
             "inferred": inferred,
@@ -223,7 +240,7 @@ def _report_from_run(run_id: str, discovery_dir: Path, ranking_dir: Path, tailor
         "contract_version": CONTRACT_VERSION,
         "immutable_goal": {"text": IMMUTABLE_GOAL, "goal_hash": sha256_json(IMMUTABLE_GOAL)},
         "stage": STAGE,
-        "operational_readiness": "STAGE_0_LOCAL_READY",
+        "operational_readiness": "STAGE_0_READY",
         "capability_authority": _capability_authority(),
         "lane_coverage": _lane_coverage(discovery_dir, shortlist),
         "source_receipts": _source_receipts(discovery_dir),
@@ -234,18 +251,33 @@ def _report_from_run(run_id: str, discovery_dir: Path, ranking_dir: Path, tailor
         "applications": applications,
         "interview_prep": interview_prep,
         "decision_actions": [
-            {"action": action, "target_type": "local_report_item", "enabled": True, "effects_external": False}
-            for action in [
-                "KEEP",
-                "REJECT",
-                "DEFER",
-                "ACCEPT_RESUME_VARIANT",
-                "PROPOSE_CLAIM_AMENDMENT",
-                "WITHHOLD_APPLICATION",
-                "AUTHORIZE_APPLICATION_PAYLOAD",
-                "MARK_HUMAN_SENT_GMAIL",
-                "MARK_HUMAN_SENT_LINKEDIN",
-            ]
+            {"action": "KEEP", "target_type": "opportunity", "enabled": True, "effects_external": False},
+            {"action": "REJECT", "target_type": "opportunity", "enabled": True, "effects_external": False},
+            {"action": "DEFER", "target_type": "opportunity", "enabled": True, "effects_external": False},
+            {
+                "action": "ACCEPT_RESUME_VARIANT",
+                "target_type": "resume_variant",
+                "enabled": True,
+                "effects_external": False,
+            },
+            {
+                "action": "PROPOSE_CLAIM_AMENDMENT",
+                "target_type": "resume_variant",
+                "enabled": True,
+                "effects_external": False,
+            },
+            {
+                "action": "WITHHOLD_APPLICATION",
+                "target_type": "application",
+                "enabled": True,
+                "effects_external": False,
+            },
+            {
+                "action": "AUTHORIZE_APPLICATION_PAYLOAD",
+                "target_type": "application",
+                "enabled": False,
+                "effects_external": False,
+            },
         ],
         "artifact_accounting": {
             "action_worthy_total": action_worthy_total,
@@ -261,9 +293,14 @@ def _report_from_run(run_id: str, discovery_dir: Path, ranking_dir: Path, tailor
     }
 
 
-def run_stage0(skill_dir: Path, out_dir: Path, fixture_dir: Path | None = None) -> dict[str, Any]:
+def run_stage0(
+    skill_dir: Path,
+    out_dir: Path,
+    fixture_dir: Path | None = None,
+    linkedin_evidence: Path | None = None,
+) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    run_id = stable_id("run", {"out": str(out_dir), "started": utc_now()})
+    run_id = "mo_" + stable_id("run", {"out": str(out_dir), "started": utc_now()}).split(":", 1)[1]
     phases = []
     discovery_dir = out_dir / "discovery"
     ranking_dir = out_dir / "ranking"
@@ -275,6 +312,7 @@ def run_stage0(skill_dir: Path, out_dir: Path, fixture_dir: Path | None = None) 
         lanes={"A", "B", "C"},
         out_dir=discovery_dir,
         fixture_dir=fixture_dir,
+        linkedin_evidence=linkedin_evidence,
     )
     phases.append({"phase": "DISCOVERY_COMPLETE", "artifact": str(discovery_dir / "run-manifest.json")})
     ranking_receipt = rank(discovery_dir, 8, ranking_dir)

@@ -8,8 +8,10 @@ from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
 from monitor_opportunities.discovery import (
+    LINKEDIN_AUTOMATION_POLICY,
     _ashby_candidates,
     _employment_candidates,
+    _linkedin_evidence_candidates,
     _sam_receipt,
     _source_locator_receipt,
 )
@@ -121,3 +123,16 @@ def test_sam_zero_records_is_no_matches(monkeypatch) -> None:
     receipt = _sam_receipt({"name": "SAM.gov Opportunities", "provider": "sam.gov"})
     assert receipt["result_status"] == "NO_MATCHES"
     assert receipt["parser_result"] == "PARSED"
+
+
+def test_human_supplied_linkedin_evidence_is_local_only_candidate() -> None:
+    fixture = Path(__file__).parent / "fixtures" / "discovery" / "linkedin-top-candidate.json"
+    receipt, rows = _linkedin_evidence_candidates(fixture)
+    assert receipt["source_class"] == "human_supplied_linkedin"
+    assert receipt["automation_policy"] == LINKEDIN_AUTOMATION_POLICY
+    assert receipt["result_status"] == "MATCHES"
+    assert any("not logged into" in item for item in receipt["limitations"])
+    assert rows[0]["source_provider"] == "human_supplied_linkedin"
+    assert rows[0]["automation_policy"] == "linkedin_no_automation"
+    assert rows[0]["top_candidate_evidence"] is True
+    assert rows[0]["apply_url"] is None

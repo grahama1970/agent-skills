@@ -106,6 +106,7 @@ class SourceReceipt(StrictModel):
     content_sha256: str | None
     evidence_refs: list[str]
     limitations: list[str]
+    automation_policy: str | None = None
 
 
 class EligibilityRejection(StrictModel):

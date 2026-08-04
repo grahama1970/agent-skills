@@ -37,3 +37,23 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
     assert payload["artifact_accounting"]["hidden_total"] == 0
     assert len(payload["lane_health"]) == 3
     assert payload["budget"]["max"] == 10.0
+
+
+def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path) -> None:
+    fixture = Path(__file__).parent / "fixtures" / "discovery" / "linkedin-top-candidate.json"
+    out = tmp_path / "nightly-linkedin"
+    result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((out / "run-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["external_effects"] is False
+    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
+    linkedin_receipts = [
+        row for row in manifest["source_receipts"] if row["source_class"] == "human_supplied_linkedin"
+    ]
+    assert linkedin_receipts
+    assert linkedin_receipts[0]["automation_policy"] == "linkedin_no_automation"
+    assert any(
+        "top-candidate" in " ".join(row["why_candidate"]).lower()
+        for row in manifest["opportunities"]
+    )
+    assert all(action["effects_external"] is False for action in manifest["decision_actions"])
