@@ -248,11 +248,13 @@ service make it worse:
 - **A stored document is not retrievable.** `/store` returns success, the row is
   really in ArangoDB, and `/recall` never returns it — not even when queried
   with the document's own text.
-- **`/recall` does not filter by scope.** Asking for one scope returns documents
-  from others, so the five recall "strata" are not strata; they are five
+- **`/recall` did not filter by scope.** Asking for one scope returned documents
+  from others, so the five recall "strata" were not strata; they were five
   semantic queries over one undifferentiated pool.
 
-Both are upstream, in the memory service rather than here.
+Both were upstream defects in the memory service, both were fixed on
+2026-08-04, and both fixes were independently re-verified here rather than taken
+on report.
 
 So the pilot showed the pipeline runs repeatedly. It did not show
 day-to-day experiential change, and adding day events alone would not have
@@ -270,10 +272,10 @@ narrow and falsifiable:
 "No" is a real answer. The project is built so that a null or negative result
 survives contact with the surfaces: claims are bound to receipts, receipts state
 what they do *not* prove, and a gate fails closed when a claim outruns its
-evidence. One finding is already negative and stayed that way — the requested
-delivery tone does not reach the waveform, measured against the renderer's own
-noise floor, and the project stopped claiming emotional delivery rather than
-retrying for a better draw.
+evidence. One finding is already negative and stayed that way — on the tested
+backend the requested delivery envelope does not reach the waveform, measured
+against the renderer's own noise floor, and the project stopped claiming
+emotional delivery rather than retrying for a better draw.
 
 ### Why dreaming, and not just remembering
 
@@ -497,9 +499,11 @@ already contains one retirement and one negative that stuck.
   variables awaiting validation.
 - **No human subjects.** No trust, delegation, or perception measurement. The
   one perceptual study was blocked as technically confounded and stayed blocked.
-- **One component is already known not to work.** Requested voice delivery tone
-  does not reach the waveform. It was measured, not assumed, and the surfaces
-  were corrected rather than the experiment re-run for a better draw.
+- **One component is already known not to work on this backend.** The requested
+  delivery envelope — tone, pace, pause strategy — does not reach the waveform.
+  It was measured, not assumed, and the surfaces were corrected rather than the
+  experiment re-run for a better draw. Filed upstream as
+  [`chatterbox#20`](https://github.com/grahama1970/chatterbox/issues/20).
 
 If you want the methodology rather than the hypothesis — how claims are bound to
 receipts and how a claim that outruns its evidence is refused — that is
