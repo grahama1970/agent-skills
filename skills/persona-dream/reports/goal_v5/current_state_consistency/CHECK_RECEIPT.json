@@ -9,7 +9,7 @@
       "current-state surfaces do not contradict named receipts"
     ]
   },
-  "created_at": "2026-08-03T16:59:59Z",
+  "created_at": "2026-08-04T13:05:45Z",
   "current_status_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/CURRENT_STATUS.json",
   "hierarchy": [
     "named receipt status and hash",

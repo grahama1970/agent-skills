@@ -90,4 +90,37 @@ that dreaming helps.
 | `operational_value_disposition` | not started | #1129 → #1128 |
 | `transfer_record` | this ledger | ongoing |
 | `experimental_invariants_preserved` | holding | every lane |
-| `ablation_retirement` | no ablation run yet | unassigned |
+| `ablation_retirement` | first retirement recorded (#1059) | ongoing |
+
+---
+
+## #1059 — Previous-video attachment causality: RETIRED, not pursued
+
+```text
+Finding:
+The question is out of scope under the registered immutable goal.
+
+What was falsified:
+Nothing empirically. This is a scope disposition, not an experimental result.
+
+Transferable lesson:
+A goal that names its non-requirements lets work be retired honestly instead of
+being carried indefinitely as "deferred". This is the first use of the
+ablation_retirement criterion.
+
+Decision:
+REJECT / retire. The goal explicitly does not require "generating more Kling
+videos" or "proving that multimodal media beats text". A matched Kling
+continuation A/B serves neither a value disposition nor the transfer contract,
+and would require provider spend.
+```
+
+- **Evidence:** `GOAL.md` non-requirements block; #1059 itself records that the
+  accepted successor changed identity references, frames, prompt lineage, and
+  adjudication together, so previous-video effect was never separable from the
+  other changes without a fresh paid A/B.
+- **Destination repository:** none. Nothing to transfer.
+- **Downstream:** explicit no-adoption decision. The repository continues to
+  state that previous-video attachment benefit is unproven; that statement is
+  now permanent rather than pending.
+- **Serves criterion:** `ablation_retirement`.

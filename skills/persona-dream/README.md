@@ -93,7 +93,7 @@ run `./run.sh generate-readme-research-state`. Full claim dispositions live in
 the JSON, not here.*
 
 - **Phase:** `P2_LIVE_CONTINUITY_CHAIN`
-- **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery), #1059 (Previous-video causality)
+- **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
 - **Current blocker:** Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions…
 - **Next step:** Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.
 
