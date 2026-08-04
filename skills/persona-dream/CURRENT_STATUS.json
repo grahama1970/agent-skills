@@ -494,7 +494,7 @@
       "valid_human_responses": "0/20",
       "sample_count": 0,
       "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
-      "does_not_prove": "any perceptual emotion, naturalness, or human identity result; WER 0.0 and embedding separations are machine evidence and cannot substitute; the current four stimuli are technically confounded by loudness and cannot support a perceptual claim until re-rendered under one identical normalization",
+      "does_not_prove": "any perceptual emotion, naturalness, or human identity result. Re-measured 2026-08-04 against the calibrated renderer: duration is now controllable by pinning pace, but loudness still separates the conditions and demonstrably because of the affect itself -- grief_safe derives exaggeration 0.570 and renders quiet, firm_boundary derives 1.155 and renders 4.08 LKFS louder against a 0.52 tolerance. One identical norm_loudness tightened the tolerance without equalizing conditions. Either loudness is gain-matched offline before listening, or the tolerance rule is re-preregistered for a calibrated renderer; that choice is open and must be made before any collection.",
       "successor_issue": "grahama1970/agent-skills#1179",
       "successor_resolved": false,
       "surface_token": "#1179",

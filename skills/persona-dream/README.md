@@ -517,8 +517,24 @@ already contains one retirement and one negative that stuck.
 - **The tension axes are not instruments.** They are invented vocabulary matched
   lexically, not validated psychometrics, and should be treated as latent
   variables awaiting validation.
-- **No human subjects.** No trust, delegation, or perception measurement. The
-  one perceptual study was blocked as technically confounded and stayed blocked.
+- **No human subjects, and the blocker is now interesting.** The one perceptual
+  study was blocked because its conditions differed in loudness, and loudness
+  correlates with perceived arousal — a rater could have sorted them by level
+  without hearing emotion at all. Re-measured against the calibrated renderer,
+  duration is now controllable (pinning `pace` holds the tempo factor at 1.0
+  across every tone) but **loudness still separates the conditions, and now
+  demonstrably because of the affect**: `grief_safe` derives exaggeration 0.570
+  and renders quiet, `firm_boundary` derives 1.155 and renders 4.08 LKFS louder
+  against a 0.52 tolerance. Applying one identical `norm_loudness` did not fix
+  it; it tightened the tolerance without equalizing the conditions.
+
+  That leaves a genuine methodological fork, and we have not chosen it quietly.
+  Either loudness is a nuisance to be gain-matched offline before listening —
+  conservative, preserves the preregistration — or loudness *is* part of the
+  affect, since grief really is quieter than a firm boundary, in which case the
+  screen's tolerance rule is wrong for a calibrated renderer and must be
+  re-preregistered **before** any listening rather than after seeing results.
+  Tracked as [`#1179`](https://github.com/grahama1970/agent-skills/issues/1179).
 - **Nobody has listened.** Affect is *applied* — the renderer reports the knobs
   it used per render — but whether a human hears the intended feeling is
   untested, and that is the claim people actually care about
