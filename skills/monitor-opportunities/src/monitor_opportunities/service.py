@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import secrets
 import subprocess
+from collections import defaultdict
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -50,40 +51,143 @@ def _item_ids(manifest: Any) -> list[str]:
     return ids
 
 
-def _list(items: list[Any]) -> str:
-    rendered = "".join(f"<li>{html.escape(str(item))}</li>" for item in items)
-    return f"<ul>{rendered}</ul>" if rendered else '<p class="muted">None recorded</p>'
+def _list(items: list[Any] | tuple[Any, ...], empty: str = "None recorded") -> str:
+    rendered = "".join(f"<li>{html.escape(str(item))}</li>" for item in items if item)
+    return f"<ul>{rendered}</ul>" if rendered else f'<p class="blocker">{html.escape(empty)}</p>'
 
 
-def _action_options() -> str:
+def _badge(value: str) -> str:
+    css = "ok"
+    if value in {"FEED_DOWN", "AUTH_REQUIRED", "BLOCKED_STAGE_0", "human_required"}:
+        css = "blocked"
+    elif value in {"NO_MATCHES", "NOT_SEARCHED", "WOULD_PRESENT_STAGE0", "NOT_RUN"}:
+        css = "pending"
+    return f'<span class="badge {css}">{html.escape(value)}</span>'
+
+
+def _action_options(actions: list[str]) -> str:
     return "".join(
-        f'<option value="{html.escape(action)}">{html.escape(action)}</option>'
-        for action in sorted(SERVICE_ALLOWED_ACTIONS)
+        f'<option value="{html.escape(action)}">{html.escape(action.replace("_", " ").title())}</option>'
+        for action in actions
+        if action in SERVICE_ALLOWED_ACTIONS
     )
 
 
-def _decision_form(token: str, item_id: str, label: str) -> str:
+def _decision_form(token: str, item_id: str, label: str, actions: list[str]) -> str:
+    options = _action_options(actions)
+    if not options:
+        return '<p class="blocker">No Stage 0 local decision is available for this item.</p>'
     return (
         f'<form class="decision" method="post" action="/decision?token={html.escape(token)}">'
         f'<input type="hidden" name="item" value="{html.escape(item_id)}">'
-        f"<label>{html.escape(label)}<select name=\"action\">{_action_options()}</select></label>"
-        '<input name="idempotency_key" placeholder="idempotency key" required>'
-        '<input name="reason" placeholder="reason">'
-        '<button type="submit">Record</button></form>'
+        f'<label>{html.escape(label)}<select name="action">{options}</select></label>'
+        '<label>Decision key<input name="idempotency_key" required></label>'
+        '<label>Reason<input name="reason"></label>'
+        '<button type="submit">Record Decision</button></form>'
+    )
+
+
+def _source_evidence(source_ids: list[str], receipts_by_id: dict[str, Any]) -> str:
+    rows = []
+    for source_id in source_ids:
+        receipt = receipts_by_id.get(source_id)
+        if receipt is None:
+            rows.append(f"<li>{html.escape(source_id)}: missing receipt in manifest</li>")
+            continue
+        rows.append(
+            "<li>"
+            f"<strong>{html.escape(receipt.provider)}</strong> "
+            f"{_badge(receipt.result_status.value)}"
+            f"<div>Source class: {html.escape(receipt.source_class)}</div>"
+            f"<div>Evidence: {_list(receipt.evidence_refs, 'No evidence URL retained.')}</div>"
+            f"<div>Limitations: {_list(receipt.limitations, 'No limitations recorded.')}</div>"
+            "</li>"
+        )
+    return f"<ul>{''.join(rows)}</ul>" if rows else '<p class="blocker">No source receipt IDs.</p>'
+
+
+def _application_packet(application: Any, token: str) -> str:
+    field_rows = "".join(
+        "<tr>"
+        f"<td>{html.escape(field.name)}</td>"
+        f"<td>{html.escape(field.field_type)}</td>"
+        f"<td>{str(field.required).lower()}</td>"
+        f"<td>{_badge(field.disposition)}</td>"
+        "</tr>"
+        for field in application.fields
+    )
+    return (
+        '<section class="packet"><h4>Application Packet</h4>'
+        f"<p>{_badge(application.state)} authorized={str(application.authorized).lower()}</p>"
+        f"<p>ATS provider: {html.escape(str(application.ats_provider or 'not established'))}</p>"
+        "<table><thead><tr><th>Field</th><th>Type</th><th>Required</th>"
+        f"<th>Disposition</th></tr></thead><tbody>{field_rows}</tbody></table>"
+        + _decision_form(
+            token,
+            application.application_id,
+            "Application packet decision",
+            ["WITHHOLD_APPLICATION", "AUTHORIZE_APPLICATION_PAYLOAD"],
+        )
+        + "</section>"
     )
 
 
 def _opportunity_cards(manifest: Any, token: str) -> str:
-    applications = {item.opportunity_id: item for item in manifest.applications}
-    outreach = {}
+    receipts_by_id = {item.receipt_id: item for item in manifest.source_receipts}
+    applications: dict[str, list[Any]] = defaultdict(list)
+    for item in manifest.applications:
+        applications[item.opportunity_id].append(item)
+    variants: dict[str, list[Any]] = defaultdict(list)
+    for item in manifest.resume_variants:
+        variants[item.opportunity_id].append(item)
+    outreach: dict[str, list[Any]] = defaultdict(list)
     for packet in manifest.outreach_packets:
-        outreach.setdefault(packet.opportunity_id, []).append(packet)
+        outreach[packet.opportunity_id].append(packet)
+    prep = {item.opportunity_id: item for item in manifest.interview_prep}
 
     cards = []
     for rank, item in enumerate(manifest.opportunities, start=1):
-        application = applications.get(item.opportunity_id)
-        app_state = application.state if application else "NO_APPLICATION_ARTIFACT"
-        channels = ", ".join(packet.channel for packet in outreach.get(item.opportunity_id, [])) or "none"
+        application_html = "".join(
+            _application_packet(application, token) for application in applications.get(item.opportunity_id, [])
+        ) or '<p class="blocker">No application packet is present.</p>'
+        variant_html = "".join(
+            '<section class="packet"><h4>Amended Resume</h4>'
+            f"<p>{_badge(variant.status)}</p>"
+            f"<p>Claim snapshot: <code>{html.escape(variant.claim_snapshot_sha256)}</code></p>"
+            "<h5>Artifacts</h5>"
+            f"{_list(variant.artifact_refs, 'No resume artifacts retained.')}"
+            "<h5>Allowed Presentation Changes</h5>"
+            f"{_list(variant.presentation_diff.allowed_changes, 'No allowed changes recorded.')}"
+            + _decision_form(
+                token,
+                variant.variant_id,
+                "Resume decision",
+                ["ACCEPT_RESUME_VARIANT", "PROPOSE_CLAIM_AMENDMENT"],
+            )
+            + "</section>"
+            for variant in variants.get(item.opportunity_id, [])
+        ) or '<p class="blocker">No amended resume variant is present for this opportunity.</p>'
+        outreach_html = "".join(
+            '<section class="packet"><h4>Human-Transmitted Outreach</h4>'
+            f"<p>{html.escape(packet.channel)} {_badge(packet.effect_status)} "
+            f"sendable={str(packet.sendable).lower()}</p>"
+            f"<p><strong>Subject:</strong> {html.escape(packet.subject or '(none)')}</p>"
+            f"<pre>{html.escape(packet.body)}</pre>"
+            f"{_list(packet.claim_keys, 'No claim keys retained.')}"
+            "</section>"
+            for packet in outreach.get(item.opportunity_id, [])
+        ) or '<p class="blocker">No outreach packet is present.</p>'
+        prep_item = prep.get(item.opportunity_id)
+        prep_html = (
+            "".join(
+                f"<p>{html.escape(point.text)}</p>"
+                f"<div class=\"muted\">Claims: {html.escape(', '.join(point.claim_keys))}; "
+                f"Sources: {html.escape(', '.join(point.source_refs))}</div>"
+                for point in prep_item.talking_points
+            )
+            if prep_item
+            else '<p class="blocker">No interview preparation is present.</p>'
+        )
         cards.append(
             "<article class=\"opportunity\">"
             f"<div class=\"rank\">#{rank}</div>"
@@ -92,18 +196,29 @@ def _opportunity_cards(manifest: Any, token: str) -> str:
             "<dl class=\"facts\">"
             f"<div><dt>Lane</dt><dd>{html.escape(item.lane)}</dd></div>"
             f"<div><dt>Fit</dt><dd>{item.fit_score:.2f}</dd></div>"
-            f"<div><dt>Eligibility</dt><dd>{html.escape(item.eligibility_state)}</dd></div>"
+            f"<div><dt>Eligibility</dt><dd>{_badge(item.eligibility_state)}</dd></div>"
             f"<div><dt>Location</dt><dd>{html.escape(item.location.display)}</dd></div>"
-            f"<div><dt>Application</dt><dd>{html.escape(app_state)}</dd></div>"
-            f"<div><dt>Outreach</dt><dd>{html.escape(channels)}</dd></div>"
+            f"<div><dt>Type</dt><dd>{_badge(item.opportunity_type)}</dd></div>"
+            f"<div><dt>Relocation Required</dt><dd>{str(item.location.relocation_required).lower()}</dd></div>"
             "</dl>"
             "<h3>Why this is here</h3>"
-            f"{_list(item.why_candidate)}"
+            f"{_list(item.why_candidate, 'No candidate rationale retained.')}"
+            "<h3>Claim keys</h3>"
+            f"{_list(item.claim_keys, 'No claim keys retained.')}"
+            "<h3>Source evidence</h3>"
+            f"{_source_evidence(item.source_receipt_ids, receipts_by_id)}"
             "<h3>Observed screening evidence</h3>"
-            f"{_list(item.screening_interface_profile.observed)}"
+            f"{_list(item.screening_interface_profile.observed, 'No observed interface evidence.')}"
+            "<h3>Bounded inferences</h3>"
+            f"{_list(item.screening_interface_profile.inferred, 'No bounded inferences recorded.')}"
             "<h3>Unknowns</h3>"
-            f"{_list(item.screening_interface_profile.unknowns)}"
-            f"{_decision_form(token, item.opportunity_id, 'Decision for this opportunity')}"
+            f"{_list(item.screening_interface_profile.unknowns, 'No unknowns recorded.')}"
+            f"{_decision_form(token, item.opportunity_id, 'Opportunity decision', ['KEEP', 'REJECT', 'DEFER'])}"
+            f"{variant_html}"
+            f"{application_html}"
+            f"{outreach_html}"
+            '<section class="packet"><h4>Interview Preparation</h4>'
+            f"{prep_html}</section>"
             "</article>"
         )
     return "".join(cards) or '<p class="empty">No opportunity cleared the eligibility and quality bar.</p>'
@@ -142,13 +257,14 @@ def _render_page(run_dir: Path, token: str) -> str:
         f"<li>{html.escape(item_id)}: {html.escape(row['last_action'])}</li>"
         for item_id, row in sorted(projection.get("items", {}).items())
     ) or "<li>No decisions yet</li>"
-    forms = [
-        _decision_form(token, item_id, item_id)
-        for item_id in _item_ids(manifest)
-    ]
     lanes = "".join(
-        f"<li>Lane {html.escape(lane.lane)}: {html.escape(lane.result_status.value)} "
-        f"observed={lane.candidates_observed} admitted={lane.candidates_admitted}</li>"
+        "<tr>"
+        f"<td>{html.escape(lane.lane)}</td>"
+        f"<td>{_badge(lane.result_status.value)}</td>"
+        f"<td>{lane.candidates_observed}</td>"
+        f"<td>{lane.candidates_admitted}</td>"
+        f"<td>{_list(lane.limitations, 'No lane limitations recorded.')}</td>"
+        "</tr>"
         for lane in manifest.lane_coverage
     )
     opportunities = _opportunity_cards(manifest, token)
@@ -157,39 +273,53 @@ def _render_page(run_dir: Path, token: str) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Morning opportunities</title>
+<title>Morning Opportunity Interview</title>
 <style>
-body {{ font-family: system-ui, sans-serif; max-width: 1100px; margin: 0 auto; padding: 1.25rem; line-height: 1.4; }}
-header {{ border-bottom: 1px solid #7776; margin-bottom: 1.5rem; padding-bottom: 1rem; }}
-nav a {{ margin-right: 1rem; }}
+:root {{ color-scheme: light dark; font-family: system-ui, sans-serif; }}
+body {{ margin: 0; line-height: 1.45; background: Canvas; color: CanvasText; }}
+header, main, footer {{ max-width: 1120px; margin: 0 auto; padding: 1.25rem; }}
+header {{ border-bottom: 1px solid #7776; }}
+nav a {{ margin-right: 1rem; color: inherit; }}
 form.decision {{ display: grid; grid-template-columns: minmax(16rem, 1.2fr) minmax(12rem, .8fr) minmax(12rem, .8fr) minmax(8rem, auto); gap: .5rem; margin: .75rem 0; align-items: end; }}
 label {{ display: grid; gap: .25rem; min-width: 0; }}
-input, select, button {{ font: inherit; padding: .35rem .45rem; min-width: 0; width: 100%; box-sizing: border-box; }}
+input, select, button {{ font: inherit; padding: .45rem .55rem; min-width: 0; width: 100%; box-sizing: border-box; }}
 button {{ white-space: nowrap; }}
 section {{ margin: 1.5rem 0; }}
-.opportunity {{ border: 1px solid #7776; border-radius: 8px; margin: 1rem 0; padding: 1rem; }}
-.rank {{ float: right; font-weight: 700; }}
+.opportunity {{ border-bottom: 1px solid #7776; margin: 1rem 0; padding: 1rem 0; }}
+.rank {{ font-weight: 700; }}
 .org {{ font-size: 1.1rem; margin-top: -.5rem; }}
 .facts {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .75rem; }}
 .facts div {{ border-top: 1px solid #7776; padding-top: .5rem; }}
+.packet {{ border-left: 4px solid #7776; padding-left: 1rem; margin: 1rem 0; }}
+.badge {{ display: inline-block; border: 1px solid currentColor; padding: .1rem .45rem; margin: .1rem; font-size: .85rem; }}
+.blocked {{ font-weight: 700; }}
+.pending {{ font-style: italic; }}
+.blocker {{ font-weight: 700; }}
 dt {{ font-size: .8rem; opacity: .72; }}
 dd {{ margin: .1rem 0 0; }}
 dt, dd {{ overflow-wrap: anywhere; }}
 .muted {{ opacity: .72; }}
 .empty {{ font-weight: 700; }}
+table {{ border-collapse: collapse; width: 100%; }}
+th, td {{ border: 1px solid #7776; padding: .5rem; vertical-align: top; }}
+pre {{ white-space: pre-wrap; border: 1px solid #7776; padding: .75rem; overflow-wrap: anywhere; }}
+code {{ overflow-wrap: anywhere; }}
 @media (max-width: 760px) {{ form.decision {{ grid-template-columns: 1fr; }} body {{ padding: .75rem; }} }}
 </style>
 </head>
 <body>
 <header>
-<h1>Morning opportunities</h1>
+<h1>Morning Opportunity Interview</h1>
 <p>{len(manifest.opportunities)} shortlisted opportunities from run {html.escape(manifest.run_id)}. External effects are disabled.</p>
-<nav><a href="#opportunities">Opportunities</a><a href="#decisions">All decisions</a><a href="/report?token={html.escape(token)}">Full report</a></nav>
+<p>{html.escape(manifest.immutable_goal.text)}</p>
+<nav><a href="#opportunities">Opportunities</a><a href="#coverage">Coverage</a><a href="/report?token={html.escape(token)}">Canonical report</a></nav>
 </header>
-<section><h2>Coverage</h2><p>Hidden action-worthy artifacts: {manifest.artifact_accounting.hidden_total}</p><ul>{lanes}</ul></section>
+<main>
 <section id="opportunities"><h2>Shortlisted opportunities</h2>{opportunities}</section>
+<section id="coverage"><h2>Coverage And Source Health</h2><p>Hidden action-worthy artifacts: {manifest.artifact_accounting.hidden_total}</p><table><thead><tr><th>Lane</th><th>Status</th><th>Observed</th><th>Admitted</th><th>Limitations</th></tr></thead><tbody>{lanes}</tbody></table></section>
 <section><h2>Current projection</h2><ul>{projection_rows}</ul></section>
-<section id="decisions"><h2>All decision forms</h2>{''.join(forms)}</section>
+</main>
+<footer><p class="muted">Read-only local service. Decisions append local events only; no Gmail, LinkedIn, ATS, or application submission effect is available here.</p></footer>
 </body>
 </html>
 """
