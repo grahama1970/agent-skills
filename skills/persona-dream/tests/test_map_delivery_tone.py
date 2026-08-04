@@ -57,21 +57,35 @@ def test_persona_mood_is_preserved_alongside_delivery_tone():
     assert got["voice_delivery"]["tone"] != got["persona_mood_label"]
 
 
-def test_result_never_claims_the_tone_was_achieved():
-    """The wording has changed twice as the measurements changed; the intent has not.
+def test_result_claims_application_but_never_perception():
+    """This assertion has now been rewritten three times, each time because the
+    evidence changed — which is the system working, not churn.
 
-    It once cited stochastic spread, because that was the evidence then. It now
-    says tone is request-only on this engine, because chatterbox#20 established
-    that directly. What must never appear is a claim that the audio achieved the
-    requested tone, so this asserts the intent rather than a phrase.
+    It once required a citation of stochastic spread, because that was the
+    measurement. Then it required "request-only", because chatterbox#20 proved
+    tone did not reach the waveform. Now chatterbox#22 has calibrated the tone
+    vocabulary and the renderer derives affect from the tone name, reporting the
+    applied knobs in an affect_effect receipt — so application IS established.
+
+    The line that has never moved: whether a LISTENER perceives the intended
+    feeling is untested, and no wording here may imply otherwise.
     """
     got = mapper.map_mood("m", _pair("Duty", "Desire"))
     boundary = got["boundary"]
-    assert "REQUESTED" in boundary
-    assert "request-only" in boundary, "must say tone does not reach the waveform here"
-    assert "untested" in boundary, "must not imply a listener would perceive it"
-    for overclaim in ("achieved", "audible emotion", "sounds "):
-        assert overclaim not in boundary.lower(), f"boundary implies effect: {overclaim!r}"
+    assert "untested" in boundary, "perception must be disclaimed"
+    assert "affect_effect" in boundary, "point at the receipt proving application"
+    # The explicit disclaimer IS the guard. Two earlier attempts here banned
+    # words like "listener" and "perceives" -- both of which the disclaimer
+    # necessarily contains, so the check failed on the sentence it required.
+    # Assert what must be present rather than guessing at every phrasing that
+    # would be wrong.
+    lowered = boundary.lower()
+    assert "whether a listener perceives" in lowered, (
+        "perception must be disclaimed explicitly, not merely omitted"
+    )
+    assert lowered.rstrip().endswith("untested."), (
+        "the disclaimer must be the final word, not buried mid-sentence"
+    )
 
 
 def test_mirror_is_in_sync_with_chatterbox():

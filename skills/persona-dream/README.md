@@ -396,22 +396,22 @@ What runs today, with receipts behind it:
 
 What does not work yet, stated plainly:
 
-- **The mood now reaches the audio, at the resolution the renderer can deliver.**
-  Reporting the inert envelope upstream produced three fixes in a day. `pace` is
-  a deterministic time stretch — verified here, output matches
-  `input / tempo_factor` to under 0.01 s, 17.6% longer on `slow`. Affect renders
-  now carry an `affect_effect` receipt naming the knobs actually applied, so the
-  mood is verifiable per render instead of inferred from acoustics: a dream about
-  isolation applies `exaggeration 0.435`, one about belonging `1.110` — **2.55×
-  apart**. Tone itself is still request-only and is sent as provenance only
-  (`chatterbox#22` is the open calibration work).
+- **The mood reaches the audio, and the renderer decides how it sounds.**
+  Reporting the inert delivery envelope upstream produced four fixes in a day.
+  Tone is now *calibrated*: `./run.sh` sends `emotion_realization=audible` and
+  the renderer derives the affect from the tone name itself — `grief_safe`
+  resolves to intensity 0.3 / valence −0.7, `firm_boundary` to 0.95 / −0.85,
+  each reported in a per-render `affect_effect` receipt. All eight axes this
+  skill maps produce eight distinct settings, verified live.
 
-  The renderer publishes a response curve saying contrasts below 0.5 are
-  inaudible, so the eight tension axes collapse into **bands**, not eight
-  gradations. Claiming eight distinguishable feelings from a channel that
-  carries about two would be the same overclaim as requesting a tone the engine
-  ignores. Whether a *listener* perceives any of it is untested — that is
-  `chatterbox#7`.
+  This skill sets **no affect numbers at all**. It briefly did — a hand-picked
+  intensity table, tuned by measuring acoustics — and that was the renderer's
+  calibration work being done downstream, badly, by one consumer. It has been
+  deleted rather than retuned. persona-dream says what the dream *felt like*;
+  Chatterbox decides what that sounds like.
+
+  Whether a *listener* perceives the intended feeling is untested — that is
+  `chatterbox#7`, and it should now target the calibrated affect path.
 
 - **Nothing shows that dreaming helps.** The loop closes, days differ, and
   provenance holds — but whether a dream beats a plain memory readout or a

@@ -158,61 +158,49 @@ def test_deprecation_preserves_the_original_record():
     assert "read_back_deprecated" in src
 
 
-def test_mood_routes_to_the_channels_the_renderer_calls_audible():
-    """Tone is request-only on this engine; routing the mood only to tone means
-    the mood reaches nothing.
+def test_the_tone_carries_the_feeling_and_is_routed_to_the_audible_path():
+    """chatterbox#22 calibrated the tone vocabulary, so the renderer derives the
+    affect from the tone name.
 
-    The renderer's voice_delivery_effect contract names intensity/valence (via
-    use_base_emotion) and pace as the applied channels. Tone is still sent, as
-    provenance for what the mood mapped to.
+    This skill no longer picks intensity or valence. It says what the dream felt
+    like and sets emotion_realization=audible so the tone reaches the calibrated
+    path rather than the default fast one.
     """
     import map_delivery_tone as mdt
-    contradictions = [{"bridge_a": "Belonging", "bridge_b": "Isolation"},
-                      {"bridge_a": "Isolation", "bridge_b": "Belonging"}]
-    out = mdt.map_mood("alone_but_reaching", contradictions)
+    out = mdt.map_mood("alone_but_reaching",
+                       [{"bridge_a": "Belonging", "bridge_b": "Isolation"}])
     vd = out["voice_delivery"]
-    assert vd["use_base_emotion"] is True, "affect must route to the base engine"
+    assert vd["emotion_realization"] == "audible"
+    assert vd["tone"] in mdt.ALLOWED_TONES
     assert vd["pace"] in {"slow", "measured", "neutral", "brisk", "fast"}
-    assert -1.0 <= vd["valence"] <= 1.0 and 0.0 <= vd["intensity"] <= 1.0
-    assert vd["tone"], "tone is still sent as provenance"
-    assert out["request_only_channels"] == ["tone"]
-    assert set(out["audible_channels"]) == {"intensity", "valence", "pace"}
+    assert set(out["audible_channels"]) == {"tone", "pace"}
+    assert out["request_only_channels"] == []
 
 
-def test_opposing_axes_clear_the_renderer_s_audibility_threshold():
-    """Chatterbox publishes a response curve: contrasts below 0.5 are inaudible.
-
-    An earlier table gave all eight axes their own intensity between 0.25 and
-    0.85, so adjacent axes differed by 0.13 — inside the renderer's declared
-    dead zone. That claimed eight distinguishable feelings from a channel that
-    carries about two, which is the same overclaim as requesting a tone the
-    engine ignores.
+def test_the_skill_no_longer_invents_affect_numbers():
+    """The hand-picked intensity/valence table was the renderer's calibration
+    work done downstream. It is deleted, not retuned — and must stay deleted.
     """
     import map_delivery_tone as mdt
-    iso = mdt.map_mood("x", [{"bridge_a": "Isolation", "bridge_b": "Isolation"}])["voice_delivery"]
-    bel = mdt.map_mood("x", [{"bridge_a": "Belonging", "bridge_b": "Belonging"}])["voice_delivery"]
-    assert iso["valence"] < 0 < bel["valence"]
-    assert bel["intensity"] - iso["intensity"] >= 0.5, (
-        "opposing axes must differ by at least the renderer's 0.5 audibility guidance"
+    assert not hasattr(mdt, "AXIS_TO_AFFECT"), (
+        "affect belongs to the renderer's tone calibration, not to this skill"
+    )
+    vd = mdt.map_mood("x", [{"bridge_a": "Isolation", "bridge_b": "Isolation"}])["voice_delivery"]
+    assert "intensity" not in vd and "valence" not in vd, (
+        "nothing here should set affect numbers by hand"
     )
 
 
-def test_axes_collapse_into_bands_rather_than_faking_resolution():
-    """Only as many settings as the renderer can deliver."""
+def test_an_explicit_caller_override_still_works():
+    """Deleting the table must not remove the ability to ask for something specific."""
     import map_delivery_tone as mdt
-    intensities = {v["intensity"] for v in mdt.AXIS_TO_AFFECT.values()}
-    assert len(intensities) <= 3, (
-        f"eight axes must not produce {len(intensities)} intensity levels; the "
-        "renderer cannot distinguish that many"
-    )
-    for a in intensities:
-        for b in intensities:
-            assert a == b or abs(a - b) >= 0.35, "bands must be meaningfully apart"
+    vd = mdt.map_mood("x", [], intensity=0.9, valence=-0.4)["voice_delivery"]
+    assert vd["intensity"] == 0.9 and vd["valence"] == -0.4
 
 
-def test_the_boundary_says_tone_is_request_only():
-    """A reader must not mistake a sent field for an audible one."""
+def test_the_boundary_still_refuses_to_claim_perception():
+    """Tone is audible now. Whether a listener FEELS it remains untested."""
     import map_delivery_tone as mdt
     out = mdt.map_mood("x", [])
-    assert "request-only" in out["boundary"]
     assert "untested" in out["boundary"]
+    assert "affect_effect" in out["boundary"], "point at the receipt that proves application"

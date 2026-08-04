@@ -353,3 +353,40 @@ than retuned.
   is conservative. Any future arm comparison here must interleave.
 - **Serves criterion:** `voice_value_disposition`, `transfer_record`.
 
+---
+
+## chatterbox#22 resolved — the downstream workaround is deleted
+
+```text
+Finding:
+The tone vocabulary is calibrated. With emotion_realization=audible the renderer
+derives affect from the tone name (knob_source=tone_calibration): grief_safe ->
+intensity 0.3 / valence -0.7, firm_boundary -> 0.95 / -0.85. All eight axes this
+skill maps resolve to eight distinct settings.
+
+What this retires:
+Our own AXIS_TO_AFFECT table. It is deleted, not retuned -- which is exactly
+what its comment said should happen when #22 landed.
+
+Transferable lesson, and the reason this matters beyond voice:
+When a downstream consumer starts hand-tuning a provider's parameters by
+measuring the provider's output, that is a signal the capability is missing
+upstream, not that the consumer needs better numbers. Every consumer would have
+reinvented that table, differently, and none could have validated it as well as
+the owner can once. The fix was to name the missing capability and file it,
+after first publishing the negative that proved it was missing.
+
+Decision:
+ADOPT the calibrated tone path. RETIRE the local affect table.
+```
+
+- **Sequence worth recording:** a measured negative (#1209) became a filed
+  reproduction (#20), which became a receipt (#21), which became a calibrated
+  capability (#22) — four upstream fixes in one day, each one making the next
+  verifiable. Publishing "this does not work" with a reproduction was the whole
+  mechanism.
+- **Still open:** perceptual validation (`chatterbox#7`), which should now target
+  the calibrated affect path rather than tone presets.
+- **Serves criterion:** `voice_value_disposition`, `transfer_record`,
+  `ablation_retirement`.
+

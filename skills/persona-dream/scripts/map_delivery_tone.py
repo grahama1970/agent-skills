@@ -79,50 +79,30 @@ NEUTRAL_FALLBACK = "neutral_warm"
 #: belonging. Pace follows arousal, not sentiment -- grief is slow and low, and
 #: so is inadequacy, while desire and competence run brisk. Values are
 #: deliberately moderate; a persona reading her own journal is not performing.
-#: Eight axes, but only as many affect settings as the renderer can actually
-#: deliver -- which is about two.
+#: Arousal -> pace. This is all that is left of a table that used to carry
+#: hand-picked intensity and valence for all eight axes.
 #:
-#: Chatterbox publishes a response_curve for intensity/valence: the mapping is
-#: top-weighted, contrasts of 0.9/-0.8 against 0.2/-0.2 separate f0 by ~67 Hz
-#: against a ~10 Hz floor, and single-axis deltas of 0.25-0.32 measure BELOW the
-#: renderer's own noise. Its consumer guidance is explicit: use contrasts of 0.5
-#: or more; fine gradations are not audible.
+#: Chatterbox now derives affect FROM THE TONE NAME when
+#: emotion_realization=audible: grief_safe resolves to intensity 0.3 / valence
+#: -0.7, relieved to 0.75 / +0.65, with knob_source=tone_calibration. That is
+#: chatterbox#22, and it is the right place for the work -- calibrating a tone
+#: vocabulary is the renderer's job, done once with receipts, not something
+#: every consumer should reinvent by measuring acoustics.
 #:
-#: An earlier version of this table gave all eight axes their own intensity
-#: between 0.25 and 0.85. Measured, that was a fiction: adjacent axes differed
-#: by 0.13, well inside the dead zone, so it claimed eight distinguishable
-#: feelings from a channel that can carry two. Requesting a distinction the
-#: renderer cannot produce is the same overclaim as requesting a tone it ignores.
+#: So the intensity/valence table is DELETED rather than retuned, which is what
+#: its own comment said should happen. This skill now says what the dream FELT
+#: LIKE and lets the renderer decide how that sounds.
 #:
-#: So the axes collapse into bands with a 0.75 intensity contrast, which clears
-#: the 0.5 guidance with margin. Valence still carries direction within a band,
-#: because it costs nothing and is honest about what was asked. Any axis whose
-#: feeling is genuinely mid-range gets the neutral setting rather than a
-#: fabricated gradation.
-#:
-#: When chatterbox#22 lands -- calibrated tones that are pairwise distinct -- this
-#: table should be DELETED and the tone allowed to carry the mood, rather than
-#: retuned.
-WITHDRAWN = {"intensity": 0.15, "pace": "slow"}
-CHARGED = {"intensity": 0.90, "pace": "brisk"}
-STEADY = {"intensity": 0.50, "pace": "measured"}
-
-AXIS_TO_AFFECT = {
-    # Pulled inward: quiet, slow, low arousal.
-    "Isolation":    {**WITHDRAWN, "valence": -0.80},
-    "Inadequacy":   {**WITHDRAWN, "valence": -0.70},
-    "Concealment":  {**WITHDRAWN, "valence": -0.40},
-    # Pushed outward: bright, quick, high arousal.
-    "Belonging":    {**CHARGED, "valence": +0.80},
-    "Desire":       {**CHARGED, "valence": +0.60},
-    "Competence":   {**CHARGED, "valence": +0.70},
-    # Genuinely mid-range. Not given a fabricated gradation.
-    "Duty":         {**STEADY, "valence": 0.0},
-    "Disclosure":   {**STEADY, "valence": +0.30},
+#: Pace stays because tone calibration does not set it, and it is separately
+#: proven audible: a deterministic time stretch with a per-render receipt.
+AXIS_TO_PACE = {
+    "Isolation": "slow", "Inadequacy": "slow", "Concealment": "measured",
+    "Duty": "measured", "Disclosure": "measured",
+    "Belonging": "measured", "Competence": "brisk", "Desire": "brisk",
 }
 
 #: No tension surfaced: ask for nothing rather than inventing a feeling.
-NEUTRAL_AFFECT = {"intensity": 0.50, "valence": 0.0, "pace": "neutral"}
+NEUTRAL_PACE = "neutral"
 
 
 def dominant_axis(contradictions: list[dict[str, Any]]) -> str | None:
@@ -150,22 +130,23 @@ def map_mood(mood_label: str | None, contradictions: list[dict[str, Any]],
     delivery = AXIS_TO_DELIVERY.get(axis or "", NEUTRAL_FALLBACK)
     if delivery not in ALLOWED_TONES:  # pragma: no cover - guarded by drift check
         delivery = NEUTRAL_FALLBACK
-    affect = AXIS_TO_AFFECT.get(axis or "", NEUTRAL_AFFECT)
-    # Explicit overrides win; otherwise the dream's own tension sets them.
-    resolved_intensity = float(intensity if intensity is not None else affect["intensity"])
-    resolved_valence = float(valence if valence is not None else affect["valence"])
+    voice_delivery: dict[str, Any] = {
+        # The tone now carries the feeling. emotion_realization=audible routes
+        # it to the calibrated affect path instead of the default fast one.
+        "tone": delivery,
+        "emotion_realization": "audible",
+        "pace": AXIS_TO_PACE.get(axis or "", NEUTRAL_PACE),
+    }
+    # Only if a caller insists. Nothing in this skill sets these any more: the
+    # renderer's calibration is better than numbers we would pick by hand.
+    if intensity is not None:
+        voice_delivery["intensity"] = round(float(intensity), 3)
+    if valence is not None:
+        voice_delivery["valence"] = round(float(valence), 3)
     return {
-        "voice_delivery": {
-            # Provenance: what the mood mapped to. Request-only on this engine.
-            "tone": delivery,
-            # The channels that actually reach the waveform.
-            "intensity": round(resolved_intensity, 3),
-            "valence": round(resolved_valence, 3),
-            "use_base_emotion": True,
-            "pace": affect["pace"],
-        },
-        "audible_channels": ["intensity", "valence", "pace"],
-        "request_only_channels": ["tone"],
+        "voice_delivery": voice_delivery,
+        "audible_channels": ["tone", "pace"],
+        "request_only_channels": [],
         "persona_mood_label": mood_label or "unset",
         "dominant_tension_axis": axis,
         "mapped_because": (
@@ -174,10 +155,11 @@ def map_mood(mood_label: str | None, contradictions: list[dict[str, Any]],
             "no tension surfaced in this dream; requesting the neutral default"
         ),
         "boundary": (
-            "tone is REQUESTED and request-only on chatterbox_turbo; it is kept "
-            "as provenance for what the mood mapped to. intensity, valence and "
-            "pace are routed to the channels the renderer declares applied. "
-            "Whether a listener perceives the intended feeling is untested."
+            "tone carries the feeling and is routed to the calibrated affect "
+            "path via emotion_realization=audible; the renderer derives the "
+            "knobs from the tone name and reports them in an affect_effect "
+            "receipt. Whether a listener perceives the intended feeling is "
+            "untested."
         ),
     }
 
