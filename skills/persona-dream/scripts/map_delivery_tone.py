@@ -79,35 +79,46 @@ NEUTRAL_FALLBACK = "neutral_warm"
 #: belonging. Pace follows arousal, not sentiment -- grief is slow and low, and
 #: so is inadequacy, while desire and competence run brisk. Values are
 #: deliberately moderate; a persona reading her own journal is not performing.
-#: PROVISIONAL, and arguably in the wrong repository.
+#: Eight axes, but only as many affect settings as the renderer can actually
+#: deliver -- which is about two.
 #:
-#: These numbers were hand-picked and then tuned by acoustic measurement here,
-#: which means this skill is doing the renderer's calibration work downstream.
-#: A persona skill should be able to say "this dream is about isolation" and
-#: have the renderer make that sound different from belonging, without knowing
-#: what exaggeration or cfg_weight are. That is grahama1970/chatterbox#22.
+#: Chatterbox publishes a response_curve for intensity/valence: the mapping is
+#: top-weighted, contrasts of 0.9/-0.8 against 0.2/-0.2 separate f0 by ~67 Hz
+#: against a ~10 Hz floor, and single-axis deltas of 0.25-0.32 measure BELOW the
+#: renderer's own noise. Its consumer guidance is explicit: use contrasts of 0.5
+#: or more; fine gradations are not audible.
 #:
-#: What measurement showed, at n=4 neutrals and one render per condition:
-#: intensity 0.80 moved f0_median past 3 sigma; 0.25 and 0.32 moved nothing on
-#: any metric. The high-intensity case also moved 2 metrics on one run and 1 on
-#: the next -- the instability signature of measuring near a noise floor, and
-#: the same pattern that produced a false positive for tone at small n. So the
-#: honest status is that the routing is correct and the affect is UNVERIFIED,
-#: not that these values work.
+#: An earlier version of this table gave all eight axes their own intensity
+#: between 0.25 and 0.85. Measured, that was a fiction: adjacent axes differed
+#: by 0.13, well inside the dead zone, so it claimed eight distinguishable
+#: feelings from a channel that can carry two. Requesting a distinction the
+#: renderer cannot produce is the same overclaim as requesting a tone it ignores.
 #:
-#: The range spans 0.25 to 0.85 because the first pass clustered everything
-#: between 0.45 and 0.75 against a neutral of 0.50, where a 0.05 delta is
-#: rounding rather than a feeling. When #22 lands these values should be
-#: deleted, not retuned.
+#: So the axes collapse into bands with a 0.75 intensity contrast, which clears
+#: the 0.5 guidance with margin. Valence still carries direction within a band,
+#: because it costs nothing and is honest about what was asked. Any axis whose
+#: feeling is genuinely mid-range gets the neutral setting rather than a
+#: fabricated gradation.
+#:
+#: When chatterbox#22 lands -- calibrated tones that are pairwise distinct -- this
+#: table should be DELETED and the tone allowed to carry the mood, rather than
+#: retuned.
+WITHDRAWN = {"intensity": 0.15, "pace": "slow"}
+CHARGED = {"intensity": 0.90, "pace": "brisk"}
+STEADY = {"intensity": 0.50, "pace": "measured"}
+
 AXIS_TO_AFFECT = {
-    "Concealment":  {"intensity": 0.45, "valence": -0.35, "pace": "measured"},
-    "Disclosure":   {"intensity": 0.72, "valence": +0.25, "pace": "measured"},
-    "Competence":   {"intensity": 0.68, "valence": +0.45, "pace": "brisk"},
-    "Inadequacy":   {"intensity": 0.32, "valence": -0.55, "pace": "slow"},
-    "Belonging":    {"intensity": 0.80, "valence": +0.60, "pace": "measured"},
-    "Isolation":    {"intensity": 0.25, "valence": -0.65, "pace": "slow"},
-    "Duty":         {"intensity": 0.55, "valence":  0.00, "pace": "measured"},
-    "Desire":       {"intensity": 0.85, "valence": +0.35, "pace": "brisk"},
+    # Pulled inward: quiet, slow, low arousal.
+    "Isolation":    {**WITHDRAWN, "valence": -0.80},
+    "Inadequacy":   {**WITHDRAWN, "valence": -0.70},
+    "Concealment":  {**WITHDRAWN, "valence": -0.40},
+    # Pushed outward: bright, quick, high arousal.
+    "Belonging":    {**CHARGED, "valence": +0.80},
+    "Desire":       {**CHARGED, "valence": +0.60},
+    "Competence":   {**CHARGED, "valence": +0.70},
+    # Genuinely mid-range. Not given a fabricated gradation.
+    "Duty":         {**STEADY, "valence": 0.0},
+    "Disclosure":   {**STEADY, "valence": +0.30},
 }
 
 #: No tension surfaced: ask for nothing rather than inventing a feeling.

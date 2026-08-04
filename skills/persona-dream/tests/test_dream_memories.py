@@ -179,13 +179,35 @@ def test_mood_routes_to_the_channels_the_renderer_calls_audible():
     assert set(out["audible_channels"]) == {"intensity", "valence", "pace"}
 
 
-def test_opposing_axes_do_not_request_the_same_delivery():
-    """Isolation and belonging must not ask for identical audio."""
+def test_opposing_axes_clear_the_renderer_s_audibility_threshold():
+    """Chatterbox publishes a response curve: contrasts below 0.5 are inaudible.
+
+    An earlier table gave all eight axes their own intensity between 0.25 and
+    0.85, so adjacent axes differed by 0.13 — inside the renderer's declared
+    dead zone. That claimed eight distinguishable feelings from a channel that
+    carries about two, which is the same overclaim as requesting a tone the
+    engine ignores.
+    """
     import map_delivery_tone as mdt
     iso = mdt.map_mood("x", [{"bridge_a": "Isolation", "bridge_b": "Isolation"}])["voice_delivery"]
     bel = mdt.map_mood("x", [{"bridge_a": "Belonging", "bridge_b": "Belonging"}])["voice_delivery"]
     assert iso["valence"] < 0 < bel["valence"]
-    assert iso["intensity"] < bel["intensity"]
+    assert bel["intensity"] - iso["intensity"] >= 0.5, (
+        "opposing axes must differ by at least the renderer's 0.5 audibility guidance"
+    )
+
+
+def test_axes_collapse_into_bands_rather_than_faking_resolution():
+    """Only as many settings as the renderer can deliver."""
+    import map_delivery_tone as mdt
+    intensities = {v["intensity"] for v in mdt.AXIS_TO_AFFECT.values()}
+    assert len(intensities) <= 3, (
+        f"eight axes must not produce {len(intensities)} intensity levels; the "
+        "renderer cannot distinguish that many"
+    )
+    for a in intensities:
+        for b in intensities:
+            assert a == b or abs(a - b) >= 0.35, "bands must be meaningfully apart"
 
 
 def test_the_boundary_says_tone_is_request_only():

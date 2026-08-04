@@ -396,16 +396,22 @@ What runs today, with receipts behind it:
 
 What does not work yet, stated plainly:
 
-- **Tone is request-only; timing is now real.** Ten neutral repeats set a noise
-  floor and no requested *tone* moved any acoustic feature past it — the engine
-  ignores the parameters that would carry affect, so tone reaches the renderer
-  and stops there. After we reported this upstream, Chatterbox made `pace`
-  audible (`chatterbox#20`): a deterministic pitch-preserving time stretch, with
-  a per-render receipt showing measured input and output duration. Verified
-  here — output matches `input / tempo_factor` to under 0.01 s, making speech
-  17.6% longer on `slow` and 15.3% shorter on `fast`. The renderer now *declares*
-  which delivery fields are audible rather than silently accepting all of them.
-  Human perception of any of it remains untested.
+- **The mood now reaches the audio, at the resolution the renderer can deliver.**
+  Reporting the inert envelope upstream produced three fixes in a day. `pace` is
+  a deterministic time stretch — verified here, output matches
+  `input / tempo_factor` to under 0.01 s, 17.6% longer on `slow`. Affect renders
+  now carry an `affect_effect` receipt naming the knobs actually applied, so the
+  mood is verifiable per render instead of inferred from acoustics: a dream about
+  isolation applies `exaggeration 0.435`, one about belonging `1.110` — **2.55×
+  apart**. Tone itself is still request-only and is sent as provenance only
+  (`chatterbox#22` is the open calibration work).
+
+  The renderer publishes a response curve saying contrasts below 0.5 are
+  inaudible, so the eight tension axes collapse into **bands**, not eight
+  gradations. Claiming eight distinguishable feelings from a channel that
+  carries about two would be the same overclaim as requesting a tone the engine
+  ignores. Whether a *listener* perceives any of it is untested — that is
+  `chatterbox#7`.
 
 - **Nothing shows that dreaming helps.** The loop closes, days differ, and
   provenance holds — but whether a dream beats a plain memory readout or a

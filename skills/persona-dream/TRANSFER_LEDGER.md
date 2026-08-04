@@ -308,3 +308,48 @@ ADOPT pace as an audible delivery channel. Keep the CONSTRAINT on tone.
   not produce, which is the property that made the original defect invisible.
 - **Serves criterion:** `voice_value_disposition`, `transfer_record`.
 
+---
+
+## chatterbox#21 resolved — the mood is now verifiable per render
+
+```text
+Finding:
+Opposing dream tensions produce measurably different applied affect. Isolation
+derives exaggeration 0.435; belonging derives 1.110, 2.55x apart, both with
+applied=true in a per-render affect_effect receipt.
+
+What was falsified:
+Our own reading that emotion_knobs=null meant no affect was applied. It meant
+the knobs were reported per chunk and not at batch top level. The observation
+was right and the inference was wrong -- absence of evidence in the field we
+happened to read.
+
+Two lessons, both about instruments rather than results:
+
+1. A paired receipt beats an acoustic floor. Measuring affect against a
+   4-repeat noise floor gave unstable, near-threshold results and could not
+   distinguish "no effect" from "effect below my ability to see it". The
+   receipt names the applied knobs, so the check became deterministic.
+
+2. Do not claim resolution the channel cannot carry. Chatterbox publishes a
+   response curve: contrasts below 0.5 are inaudible, and single-axis deltas of
+   0.25-0.32 measure below its own noise. Our eight axes each had their own
+   intensity, adjacent ones differing by 0.13 -- inside the dead zone. Eight
+   pseudo-distinct feelings from a channel carrying about two is the same
+   overclaim as requesting a tone the engine ignores. The axes now collapse into
+   bands with a 0.75 contrast.
+
+Decision:
+ADOPT the affect channel at band resolution. Keep tone as provenance only until
+chatterbox#22 calibrates it, at which point this table should be DELETED rather
+than retuned.
+```
+
+- **Method note from the other side, worth keeping:** their harness found a fake
+  tone pass caused by session-long f0 drift in sequential-block runs, and now
+  interleaves floor and arm renders round-robin. Our tone measurement used
+  sequential blocks too — but returned a null, and drift inflates apparent
+  differences, so it biased *towards* a false positive we did not get. The null
+  is conservative. Any future arm comparison here must interleave.
+- **Serves criterion:** `voice_value_disposition`, `transfer_record`.
+
