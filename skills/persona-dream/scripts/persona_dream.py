@@ -538,8 +538,11 @@ def _fetch_day_memories(persona: Persona, day: str, want: int) -> tuple[list[dic
         transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
         with httpx.Client(transport=transport, base_url="http://localhost", timeout=30.0) as client:
             resp = client.post("/query", json={
+                # Deprecated records are tombstoned, not deleted -- the store is
+                # append-only by design. A reader that ignores the tombstone
+                # would keep drawing a record its author has retracted.
                 "aql": ("FOR d IN persona_memory FILTER d.day == @day AND d.persona_id == @p "
-                        "SORT d.salience DESC RETURN d"),
+                        "AND d.deprecated != true SORT d.salience DESC RETURN d"),
                 "bind_vars": {"day": day, "p": persona.id},
             })
             resp.raise_for_status()
@@ -550,6 +553,14 @@ def _fetch_day_memories(persona: Persona, day: str, want: int) -> tuple[list[dic
         return [], receipt
 
     items: list[dict[str, Any]] = []
+    # Memory is append-only by design -- there is no delete route, and
+    # destructive AQL is refused -- so historical duplicates cannot be removed
+    # and must be tolerated on read. Before the reflection key was
+    # content-addressed, every re-run wrote another copy of an identical
+    # interpretation; counting each one would let one conclusion consume the
+    # whole day quota and crowd out everything she actually experienced.
+    # Deduplicating here also covers duplicates this pipeline never wrote.
+    seen_text: set[str] = set()
     for idx, raw in enumerate(raw_items):
         item = _normalize_item(raw, f"episodic:day={day}", idx, "day")
         if not item["text"]:
@@ -560,6 +571,10 @@ def _fetch_day_memories(persona: Persona, day: str, want: int) -> tuple[list[dic
         stance = str(raw.get("solution") or "").strip()
         if stance:
             item["text"] = stance
+        fingerprint = " ".join(str(item["text"]).split()).strip().lower()
+        if fingerprint in seen_text:
+            continue
+        seen_text.add(fingerprint)
         item["type"] = f"Day event ({raw.get('kind') or 'unknown'})"
         item["day"] = day
         item["salience"] = raw.get("salience")

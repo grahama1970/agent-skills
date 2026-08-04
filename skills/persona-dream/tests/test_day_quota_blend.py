@@ -92,3 +92,52 @@ def test_a_small_limit_still_reserves_room_for_today(patched):
     items, _ = pd._fetch_residue(pd.Persona("embry"), 3, day="2026-08-04")
     day_n = sum(1 for i in items if str(i["scope"]).startswith("episodic:day="))
     assert day_n == 3
+
+
+def test_duplicate_memories_do_not_consume_the_day_quota(monkeypatch):
+    """Memory is append-only: there is no delete route and destructive AQL is
+    refused, so historical duplicates cannot be removed and must be tolerated on
+    read.
+
+    Before the reflection key was content-addressed, every re-run wrote another
+    copy of an identical interpretation. Counting each would let one conclusion
+    take the whole day quota and crowd out what she actually experienced.
+    """
+    dupes = [
+        {"source_id": "r1", "scope": "episodic:day=2026-08-04",
+         "solution": "In a dream I interpreted: the same thing", "kind": "dream_reflection"},
+        {"source_id": "r2", "scope": "episodic:day=2026-08-04",
+         "solution": "In a dream I interpreted:   the same thing  ", "kind": "dream_reflection"},
+        {"source_id": "r3", "scope": "episodic:day=2026-08-04",
+         "solution": "In a dream I interpreted: the same thing", "kind": "dream_reflection"},
+        {"source_id": "a1", "scope": "episodic:day=2026-08-04",
+         "solution": "Graham was terse today", "kind": "affect"},
+    ]
+
+    class FakeResp:
+        status_code = 200
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"documents": dupes}
+
+    class FakeClient:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def post(self, *a, **k):
+            return FakeResp()
+
+    import httpx
+    monkeypatch.setattr(httpx, "Client", lambda **k: FakeClient())
+    monkeypatch.setattr(httpx, "HTTPTransport", lambda **k: None)
+
+    items, receipt = pd._fetch_day_memories(pd.Persona("embry"), "2026-08-04", 3)
+    texts = [" ".join(i["text"].split()).lower() for i in items]
+    assert len(texts) == len(set(texts)), "a duplicated interpretation consumed extra quota"
+    assert any("terse" in x for x in texts), "the real experience was crowded out"

@@ -129,3 +129,30 @@ def test_the_same_interpretation_is_one_memory_however_often_it_is_generated():
     fn = src[src.index("def _store_reflection"):src.index("@app.command(\"generate\")")]
     assert 'key_src = f"{persona.id}:{reflection}"' in fn, "reflection key must not include run_id"
     assert "packet['run_id']}:{reflection}" not in fn
+
+
+def test_the_day_reader_skips_deprecated_records():
+    """Memory is append-only, so a bad record is tombstoned, not deleted.
+
+    A reader that ignored the tombstone would keep drawing a record its author
+    has retracted — which is worse than the duplicate it was meant to retire.
+    """
+    src = Path(pd.__file__).read_text(encoding="utf-8")
+    start = src.index("def _fetch_day_memories")
+    fn = src[start:src.index("def _fetch_residue(", start)]
+    assert "d.deprecated != true" in fn
+
+
+def test_deprecation_preserves_the_original_record():
+    """A tombstone is not a delete wearing a different word.
+
+    The text must survive verbatim so an auditor can still see what was written
+    and on what grounds it stopped counting.
+    """
+    import deprecate_memory as dm
+    src = Path(dm.__file__).read_text(encoding="utf-8")
+    assert 'doc["deprecated"] = True' in src
+    assert 'doc["deprecated_reason"]' in src
+    # The original document is fetched and amended, never rebuilt from scratch.
+    assert "doc = fetch(client, key, collection)" in src
+    assert "read_back_deprecated" in src

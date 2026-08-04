@@ -144,6 +144,14 @@ What each one actually gets you:
 - `carry-conversation` upserts the discussion into memory as *attributed
   speech*, so a later dream can draw on it. This closes the loop.
 
+Memory is **append-only** by design: destructive AQL is refused and there is no
+delete route, because a memory a system can quietly rewrite is not a memory. A
+record that goes bad is therefore *tombstoned*, not removed —
+`./run.sh deprecate-memory` rewrites it with `deprecated: true`, a reason, and
+what supersedes it, preserving the original text verbatim. Readers skip
+deprecated records; the `/memory` owner can sweep them later. Nothing this
+project writes can make its own history disappear.
+
 Run `ingest-day` on two different days and the journals differ — that is the
 point, and it is the thing that did not work until 2026-08-04, when five
 consecutive dreams were producing byte-identical entries.
