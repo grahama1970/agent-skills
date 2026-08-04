@@ -9,6 +9,24 @@ downstream PR or an explicit no-adoption decision. This ledger satisfies the
 A negative, null, or blocking result is a completed result. Nothing in this
 ledger is required to be positive.
 
+The discipline is mechanized, not aspirational. Three gates run in CI and fail
+closed:
+
+- `scripts/check_current_state_consistency.py` — 9 stages over the claim
+  registry, goal, README, evidence surface and handoff. Fails when a claim is
+  PASS without a receipt, when a claim is PASS while its successor issue is
+  open, when a surface restores a superseded goal, or when a claim cites the
+  wrong apparatus.
+- `scripts/audit_readme_proof_claims.py` — every proof row on the evidence
+  surface must bind to a named receipt whose status matches the claimed one, and
+  no unproven row may use positive language. One receipt cannot earn two claims.
+- `scripts/generate_readme_research_state.py` — the published research-state
+  block is generated from `CURRENT_STATUS.json`, so prose cannot drift from the
+  machine record.
+
+Claims are written in `CURRENT_STATUS.json` with an explicit `proves` and
+`does_not_prove` pair. The second field is the load-bearing one.
+
 ---
 
 ## #1127 — Blinded listener stimuli are technically confounded
@@ -162,4 +180,50 @@ reported preset shifts below stochastic spread and this confirms it.
 - **Downstream:** no adoption. The affect route is closed until a backend
   exposes structured affect axes that measurably move the audio.
 - **Serves criterion:** `voice_value_disposition`, `ablation_retirement`.
+
+---
+
+## #1210 follow-on — A discussion can re-enter memory without becoming autobiography
+
+```text
+Finding:
+A conversation about a dream can be carried back into memory and drawn into a
+later dream, while remaining distinguishable from something that happened.
+
+What was falsified:
+The assumption that closing the loop is a storage problem. It is a provenance
+problem. Writing turns back as ordinary episodic events is trivial and wrong:
+a human's question then recalls later as an experience the persona had.
+
+Transferable lesson:
+Attribute the record in the DATA, not only in the metadata. A turn is stored
+as record_type=conversation_turn with a speaker and the sha256 of the artifact
+discussed, AND its text is prefixed with who said it -- so a retrieval path
+that drops the metadata still cannot present commentary as an event. It
+recalls as "human said, about my journal entry: ..." rather than as a bare
+fact.
+
+Second lesson, found only by running it: the selector silently dropped the
+carried discussion, because kinds were ranked alphabetically and "code" sorts
+before "conversation". The loop would have looked closed while nothing came
+back. A return arc needs a test that the returned thing is actually DRAWN, not
+merely stored.
+
+Decision:
+ADOPT. This is the boundary that makes a human-in-the-loop memory system safe
+to close at all, and it is independent of dreaming.
+```
+
+- **Evidence:** `reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json` =
+  `PASS_RETURN_ARC_CLOSED`. 3 turns carried, 3 read back by AQL, drawn into a
+  later dream as an attributed `conversation` kind. Idempotent: the document key
+  is a sha256 over persona, timestamp, role and text, so re-carrying duplicates
+  nothing.
+- **Destination repository:** `grahama1970/graph-memory-operator` — any system
+  that learns from operator interaction faces this boundary, not just this one.
+- **Downstream:** no PR yet. The mechanism lives in persona-dream; the general
+  form is a provenance convention rather than a code change.
+- **Serves criterion:** `transfer_record`, `experimental_invariants_preserved`.
+- **Does not prove:** that a later dream is better for having the conversation.
+  That is the research question, and it is unrun.
 

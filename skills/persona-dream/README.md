@@ -309,6 +309,12 @@ What does not work yet, stated plainly:
 The full claim-by-claim boundary, every receipt, and what each one does *not*
 prove: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).
 
+If you are here for the methodology rather than the dreaming — how claims are
+bound to receipts, how a superseded claim is caught, and how human commentary is
+kept from becoming an agent's autobiography — that is
+[`docs/CLAIM_PROVENANCE.md`](docs/CLAIM_PROVENANCE.md). It transfers
+independently of whether dreaming works.
+
 ## Embry and Kai: Example workflow, not a benefit result
 
 The current fixture begins with a deceptively ordinary choice: Embry and Kai
