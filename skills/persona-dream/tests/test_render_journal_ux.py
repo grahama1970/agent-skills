@@ -167,3 +167,35 @@ def test_designer_palette_variables_present(tmp_path: Path, run_dir: Path) -> No
     page = _render(tmp_path, run_dir)
     for var in ("--pd-bg", "--pd-ink", "--pd-accent", "--pd-surface", "--pd-empty"):
         assert f"{var}:" in page
+
+
+def test_persona_object_does_not_leak_a_python_dict_into_the_page():
+    """dream_packet stores persona as an object; str() on it rendered a dict repr.
+
+    The page header read "{'display_name': 'Embry', 'id': 'embry'}" in a real
+    browser. Both shapes must produce a plain name, because older receipts
+    still carry the bare string.
+    """
+    assert ux.persona_name({"display_name": "Embry", "id": "embry"}) == "Embry"
+    assert ux.persona_name({"id": "embry"}) == "embry"
+    assert ux.persona_name("Embry") == "Embry"
+    assert ux.persona_name(None) == ""
+
+
+def test_audio_src_is_relative_to_the_page_so_it_survives_http(tmp_path):
+    """A file:// src is blocked on an http:// page; the player never loaded.
+
+    Verified in Chrome: with the file URI the element sat at networkState 3
+    (NO_SOURCE). Relative works under both http:// and file://.
+    """
+    out_dir = tmp_path / "run"
+    out_dir.mkdir()
+    audio = out_dir / "journal.wav"
+    audio.write_bytes(b"RIFF")
+    assert ux.audio_src(audio, out_dir) == "journal.wav"
+
+    # Out of tree, a relative path cannot reach it, so a file URI is correct.
+    elsewhere = tmp_path / "other" / "journal.wav"
+    elsewhere.parent.mkdir()
+    elsewhere.write_bytes(b"RIFF")
+    assert ux.audio_src(elsewhere, out_dir).startswith("file://")

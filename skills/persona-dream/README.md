@@ -238,9 +238,8 @@ What does not work yet, stated plainly:
 - **Days do not differ.** Today's events never enter memory, and the recall path
   does not filter by the scope it is given, so five consecutive dreams produced
   identical journals.
-- **Discussion is not durable.** The chat pane can show a conversation; nothing
-  writes it down.
-- **The page has never been opened in a browser.**
+- **The discussion pane is a form, not a loop.** It builds a JSONL line for
+  you to append by hand; nothing writes it, and nothing reads it back.
 
 The full claim-by-claim boundary, every receipt, and what each one does *not*
 prove: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).

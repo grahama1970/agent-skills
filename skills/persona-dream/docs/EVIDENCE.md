@@ -78,7 +78,7 @@ vocabulary is deliberately narrow: **implemented** means code exists,
 | Readable journal artifact | Implemented and hash-bound | `reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json` |
 | Spoken journal | Live slice proven | `reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json` |
 | Requested tone to measurable acoustic effect | **Disproven**: below the renderer's own stochastic spread | `reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json`, #1209 |
-| Journal page | Markup and fixtures checked; browser proof open | #1213 |
+| Journal page | Live slice proven: rendered in Chrome at 1440x900, footnotes resolve, audio loads | `reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json` |
 | Interactive dream discussion | UX scaffold only; append-only persistence open | #1210 |
 | Day events to a later dream | Not established; blocked upstream on memory-service recall | #1212 |
 | PCTOM-R held-out benefit | Not run | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1008 |

@@ -106,6 +106,18 @@ def marker_map(items: list[dict[str, Any]]) -> dict[str, int]:
     return out
 
 
+def persona_name(value: Any) -> str:
+    """A display name, whatever shape the packet stored the persona in.
+
+    dream_packet.json carries persona as an object ({"display_name", "id"});
+    older receipts carry a bare string. str() on the object renders a Python
+    dict repr straight into the page header, which is what it did.
+    """
+    if isinstance(value, dict):
+        return str(value.get("display_name") or value.get("id") or "")
+    return str(value or "")
+
+
 def find_audio(run_dir: Path, label: str | None) -> tuple[Path | None, list[str]]:
     """Return (wav path or None, list of locations searched).
 
@@ -197,7 +209,7 @@ def load_run(run_dir: Path, label: str | None = None) -> dict[str, Any]:
     return {
         "run_dir": str(run_dir),
         "run_id": str(packet.get("run_id") or manifest.get("run_id") or run_dir.name),
-        "persona": str(packet.get("persona") or receipt.get("persona") or ""),
+        "persona": persona_name(packet.get("persona") or receipt.get("persona")),
         "created_at": str(packet.get("created_at") or manifest.get("created_at")
                           or receipt.get("created_at") or ""),
         "journal": journal,
@@ -307,11 +319,26 @@ def render_web(run: dict[str, Any]) -> str:
             f"{note}</div>")
 
 
+def audio_src(audio: Path, out_dir: Path | None) -> str:
+    """Prefer a path relative to the page; fall back to a file URI.
+
+    The page is opened both ways: from disk during development and over http
+    when served. A file:// URI is blocked by the browser on an http:// page, so
+    hard-coding one made the player fail everywhere it was actually served.
+    """
+    if out_dir is not None:
+        try:
+            return Path(audio).resolve().relative_to(Path(out_dir).resolve()).as_posix()
+        except ValueError:
+            pass
+    return Path(audio).as_uri()
+
+
 def render_audio(run: dict[str, Any]) -> str:
     if not run["audio"]:
         looked = "; ".join(run["audio_searched"])
         return empty(f"No audio for this run. Looked in: {looked}")
-    src = Path(run["audio"]).as_uri()
+    src = audio_src(Path(run["audio"]), run.get("_out_dir"))
     return (f'<div class="pd-audio"><audio controls preload="none" src="{esc(src)}"></audio>'
             f'<code class="pd-audio__path">{esc(run["audio"])}</code></div>')
 
@@ -664,6 +691,8 @@ def build(run_dirs: list[Path], out: Path, title: str = "Persona dream journal",
     runs.sort(key=lambda r: (r["created_at"], r["run_id"]), reverse=True)
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
+    for run in runs:
+        run["_out_dir"] = out.parent
     out.write_text(render_page(runs, title), encoding="utf-8")
     return out
 

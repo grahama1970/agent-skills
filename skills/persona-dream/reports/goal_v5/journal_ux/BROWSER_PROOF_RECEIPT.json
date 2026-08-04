@@ -1,0 +1,66 @@
+{
+  "browser": "Google Chrome via CDP; audio decode confirmed separately in --headless=new",
+  "claims": {
+    "does_not_prove": [
+      "visual design quality, responsive behaviour at other viewports, or accessibility",
+      "that a human finds the page usable"
+    ],
+    "proves": [
+      "the journal UX renders in a real browser at 1440x900 with journal prose, tone chips and provenance footnotes",
+      "footnote links resolve to their source anchors",
+      "the audio player resolves its source and loads the journal audio at its true duration"
+    ]
+  },
+  "created_at": "2026-08-04T12:20:00Z",
+  "defects_found_and_fixed": [
+    {
+      "defect": "audio element src was a file:// URI built with Path.as_uri(); a browser blocks file:// media on an http:// page, so the player reported networkState 3 (NO_SOURCE) and never loaded",
+      "fix": "emit a path relative to the page when the audio sits beside it, falling back to a file URI only when out of tree; works under both http:// and file://"
+    },
+    {
+      "defect": "page header rendered a Python dict repr, {'display_name': 'Embry', 'id': 'embry'}, because dream_packet stores persona as an object and the renderer called str() on it",
+      "fix": "persona_name() reads display_name/id, and still accepts the bare string older receipts carry"
+    }
+  ],
+  "failed_gates": [],
+  "false_lead_recorded": {
+    "cause": "document.hidden was true; Chrome defers media decoding in hidden tabs",
+    "how_it_was_excluded": "a synthetic in-page WAV control failed identically, proving the environment rather than the page; headless Chrome then loaded the real file at duration 17.48s",
+    "observation": "in the CDP tab the audio never left readyState 0 even from a fully fetched blob",
+    "why_recorded": "without the control this would have been filed as a page defect"
+  },
+  "live": true,
+  "mocked": false,
+  "note_on_scheme": "served over http, not file://, because the file:// assumption was the unverified one",
+  "run_dir": "/tmp/pd-t4",
+  "schema": "persona_dream.journal_ux_browser_receipt.v1",
+  "screenshot": "reports/goal_v5/journal_ux/journal-ux-1440x900.jpg",
+  "screenshot_sha256": "sha256:667bcd3c5d7d04066b085557f985c4f0d7764ea968c5bfbaefbb1fc1f05e970c",
+  "served_by": "python3 -m http.server 8777 from the run directory",
+  "status": "PASS_JOURNAL_UX_RENDERED_IN_BROWSER",
+  "url": "http://127.0.0.1:8777/index.html",
+  "verified_in_browser": {
+    "audio_duration_s": 17.48,
+    "audio_matches_file_duration": true,
+    "audio_ready_state": 1,
+    "audio_src_resolves": "http://127.0.0.1:8777/journal.wav",
+    "discussion_pane_empty_state": "renders with the conversation.jsonl instructions",
+    "footnote_anchors_resolve": [
+      {
+        "found": true,
+        "href": "#src-20260804T142422Z-1"
+      },
+      {
+        "found": true,
+        "href": "#src-20260804T142422Z-6"
+      }
+    ],
+    "page_renders": true,
+    "tone_chip_rendered": "uncertain 0.6 REQUESTED"
+  },
+  "viewport": {
+    "height": 900,
+    "screenshot_px": "1479x812",
+    "width": 1440
+  }
+}
