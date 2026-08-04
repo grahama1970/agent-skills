@@ -227,3 +227,46 @@ to close at all, and it is independent of dreaming.
 - **Does not prove:** that a later dream is better for having the conversation.
   That is the research question, and it is unrun.
 
+---
+
+## Follow-on to #1209 — the whole delivery envelope is inert, not just tone
+
+```text
+Finding:
+On chatterbox_turbo the entire voice_delivery envelope is metadata. Tone, pace
+and pause_strategy are accepted, echoed back in the response, and recorded --
+and none of them changes the audio.
+
+What was falsified:
+The narrower reading of #1209, that requested TONE specifically fails while
+other delivery controls might carry affect. Checked because Chatterbox's own
+project knowledge shows pace and pause_strategy in the delivery envelope, which
+plausibly alter timing on an engine that ignores exaggeration and cfg_weight.
+
+Evidence:
+Two identical neutral renders differed by 0.800 s. A slow render and a fast
+render of the same text differed by 0.200 s -- four times SMALLER than the
+noise between renders that requested nothing different at all.
+
+Transferable lesson:
+When a control is echoed back in a response, that proves request handling and
+nothing else. Chatterbox's tone/emotion stress matrix reports failures at the
+SELECTION layer -- $memory /intent returning memory_confident where deflect or
+boundary was expected. This is a different layer: even when the correct control
+is selected and accepted, the audio cannot express it. Fixing selection will not
+produce audible affect on this engine.
+
+Decision:
+CONSTRAIN, and widen the existing constraint. Do not pursue affect through any
+field of the delivery envelope on this backend. It needs an engine that lists
+affect parameters as supported and demonstrably moves audio.
+```
+
+- **Caveat on strength:** this probe used one render per condition against a
+  two-render noise estimate, so it is a quick check rather than the ten-repeat
+  calibration behind #1209. It is consistent with that fuller measurement and
+  points the same way; it is not independently sufficient.
+- **Destination repository:** `grahama1970/chatterbox` — worth their attention
+  because it bounds what repairing tone *selection* can achieve.
+- **Serves criterion:** `voice_value_disposition`, `ablation_retirement`.
+

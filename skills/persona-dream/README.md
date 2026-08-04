@@ -394,13 +394,14 @@ What runs today, with receipts behind it:
 
 What does not work yet, stated plainly:
 
-- **No measurable tone effect on the tested path.** The delivery tone reaches
-  the renderer and is recorded, but on this journal text and this engine none of
-  three requested tones moved any measured acoustic feature beyond the
-  renderer's own same-parameter stochastic spread. The engine also lists the
-  affect parameters among those it ignores, so on *this* backend there is no
-  path from request to waveform. Other texts, voices, backends and human
-  listeners were not tested.
+- **The delivery envelope is metadata-only on this backend.** Tone, `pace` and
+  `pause_strategy` are all accepted, echoed back and recorded — and none of them
+  changes the audio. Ten neutral repeats set the noise floor; no requested tone
+  moved any acoustic feature past it, and a `slow` versus `fast` render differed
+  by 0.20 s when two *identical* renders differed by 0.80 s. The engine also
+  lists the affect parameters among those it ignores, so on *this* backend there
+  is no path from request to waveform at all. Other texts, voices, backends and
+  human listeners were not tested.
 
 - **Nothing shows that dreaming helps.** The loop closes, days differ, and
   provenance holds — but whether a dream beats a plain memory readout or a
