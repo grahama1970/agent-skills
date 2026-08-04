@@ -79,9 +79,10 @@ CLAIMS: dict[str, tuple[str | None, str | None]] = {
         "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json", "BLOCKED_"),
     "Journal page": (
         "reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json", "PASS_"),
+    "Interactive dream discussion": (
+        "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json", "PASS_"),
     #: Declared unproven. No receipt exists and none is claimed.
     "PCTOM-R held-out benefit": (None, None),
-    "Interactive dream discussion": (None, None),
     "Day events to a later dream": (None, None),
     "Human perceived emotion and identity": (None, None),
 }

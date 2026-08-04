@@ -573,12 +573,15 @@
       "resolved_by_issue": "grahama1970/agent-skills#1209"
     },
     "journal_conversation_persistence": {
-      "status": "UNPROVEN",
-      "scope": "human/agent/Embry discussion durability",
-      "receipt": null,
-      "proves": null,
-      "does_not_prove": "the UX chat pane can display conversation rows, but nothing writes them durably; discussion does not survive reload and cannot feed future recall",
-      "successor_issue": "grahama1970/agent-skills#1210"
+      "status": "PASS_CONVERSATION_PERSISTED",
+      "scope": "durability of the discussion record on disk; not its return into memory",
+      "receipt": "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json",
+      "proves": "human, agent and embry turns are appended to conversation.jsonl under an exclusive lock, survive the browser, read back after write, and are bound by hash to the journal they discuss; an embry turn is refused unless it carries a requested delivery tone and rendered audio",
+      "does_not_prove": "that the conversation reaches memory or influences a later dream; that return arc is blocked on graph-memory-operator#99, where a stored document is not retrievable",
+      "receipt_sha256": "sha256:e9093ad7b32c8f76d5760a5efc8bd9021e2f059eb027761a66d7cd89301dcbcd",
+      "blocked_by": [
+        "grahama1970/graph-memory-operator#99"
+      ]
     },
     "daily_event_ingestion": {
       "status": "UNPROVEN",

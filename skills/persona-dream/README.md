@@ -238,8 +238,10 @@ What does not work yet, stated plainly:
 - **Days do not differ.** Today's events never enter memory, and the recall path
   does not filter by the scope it is given, so five consecutive dreams produced
   identical journals.
-- **The discussion pane is a form, not a loop.** It builds a JSONL line for
-  you to append by hand; nothing writes it, and nothing reads it back.
+- **The discussion never reaches her.** Turns are now recorded durably and
+  render back in the page, but nothing carries them into memory, so tomorrow's
+  dream cannot know what was said. That is the last open joint, and it is
+  blocked upstream in the memory service.
 
 The full claim-by-claim boundary, every receipt, and what each one does *not*
 prove: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).

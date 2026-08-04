@@ -1,0 +1,32 @@
+{
+  "append_only": true,
+  "appended": {
+    "created_at": "2026-08-04T16:20:03Z",
+    "journal_spoken_sha256": "sha256:73c6ff90428d3c2742eaa4f15a084938c2c5917d9dee5732b945642e7f7471d4",
+    "role": "agent",
+    "schema": "persona_dream.conversation_turn.v1",
+    "text": "The tone question closed negative today; that is what the entry is reacting to."
+  },
+  "claims": {
+    "does_not_prove": [
+      "that the conversation reaches memory or influences a later dream; that return arc is blocked on graph-memory-operator#99",
+      "for an embry turn, that the requested tone is audible"
+    ],
+    "proves": [
+      "the turn is durably recorded and survives the browser",
+      "the turn is bound by hash to the journal it discusses"
+    ]
+  },
+  "conversation": "/tmp/pd-t4/conversation.jsonl",
+  "conversation_sha256": "sha256:194635bd6b6786bfca764d83087f089ec148d9d2c0593b0c1592f4eedd9ca8c4",
+  "created_at": "2026-08-04T16:20:03Z",
+  "failed_gates": [],
+  "live": true,
+  "mocked": false,
+  "read_back": true,
+  "run_dir": "/tmp/pd-t4",
+  "schema": "persona_dream.conversation_append_receipt.v1",
+  "status": "PASS_CONVERSATION_APPENDED",
+  "turns_after": 3,
+  "turns_before": 2
+}

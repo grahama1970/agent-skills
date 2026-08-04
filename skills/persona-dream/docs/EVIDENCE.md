@@ -51,7 +51,7 @@ run `./run.sh generate-readme-research-state`. Full claim dispositions live in
 the JSON, not here.*
 
 - **Phase:** `P2_LIVE_CONTINUITY_CHAIN`
-- **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery), #1210 (journal_conversation_persistence), #1212 (daily_event_ingestion)
+- **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery), #1212 (daily_event_ingestion)
 - **Current blocker:** Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions…
 - **Next step:** Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.
 
@@ -79,7 +79,7 @@ vocabulary is deliberately narrow: **implemented** means code exists,
 | Spoken journal | Live slice proven | `reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json` |
 | Requested tone to measurable acoustic effect | **Disproven**: below the renderer's own stochastic spread | `reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json`, #1209 |
 | Journal page | Live slice proven: rendered in Chrome at 1440x900, footnotes resolve, audio loads | `reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json` |
-| Interactive dream discussion | UX scaffold only; append-only persistence open | #1210 |
+| Interactive dream discussion | Append-only writer live-proven; return into memory blocked upstream | `reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json` |
 | Day events to a later dream | Not established; blocked upstream on memory-service recall | #1212 |
 | PCTOM-R held-out benefit | Not run | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1008 |
 
