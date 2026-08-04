@@ -582,23 +582,16 @@
       "scope": "durability of the discussion record on disk; not its return into memory",
       "receipt": "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json",
       "proves": "human, agent and embry turns are appended to conversation.jsonl under an exclusive lock, survive the browser, read back after write, and are bound by hash to the journal they discuss; an embry turn is refused unless it carries a requested delivery tone and rendered audio",
-      "does_not_prove": "that the conversation reaches memory or influences a later dream; that return arc is blocked on graph-memory-operator#99, where a stored document is not retrievable",
-      "receipt_sha256": "sha256:e9093ad7b32c8f76d5760a5efc8bd9021e2f059eb027761a66d7cd89301dcbcd",
-      "blocked_by": [
-        "grahama1970/graph-memory-operator#99"
-      ]
+      "does_not_prove": "that the conversation is carried into memory and influences a later dream; the upstream defects that blocked it are fixed (graph-memory-operator#99, #100, verified 2026-08-04), so this is now unbuilt rather than blocked",
+      "receipt_sha256": "sha256:e9093ad7b32c8f76d5760a5efc8bd9021e2f059eb027761a66d7cd89301dcbcd"
     },
     "daily_event_ingestion": {
-      "status": "UNPROVEN",
-      "scope": "current-day code, project-state and affect events entering memory",
-      "receipt": null,
-      "proves": null,
-      "does_not_prove": "that successive dreams differ; the five-cycle pilot produced byte-identical journals (sha f812641f9dbbc7e2). Measured 2026-08-04, two upstream defects in the memory service: a document that /store accepts and that is present in ArangoDB is never returned by /recall, even queried with its own text (graph-memory-operator#99); and /recall does not filter by the scope it is given, returning other scopes' documents, so the five recall strata are five semantic queries over one undifferentiated pool (graph-memory-operator#100). Recall is deterministic within a scope (Jaccard 1.000 over 5 repeats), so scope perturbs ranking but restricts nothing.",
-      "successor_issue": "grahama1970/agent-skills#1212",
-      "blocked_by": [
-        "grahama1970/graph-memory-operator#99",
-        "grahama1970/graph-memory-operator#100"
-      ]
+      "status": "PASS_CONSECUTIVE_DAYS_DIFFER",
+      "scope": "two consecutive days under one local configuration; not a longitudinal study",
+      "receipt": "reports/goal_v5/day_events/DAY_BLEND_RECEIPT.json",
+      "proves": "the day's code, project-state and affect events are written to memory, read back, and blended into the dream by quota per stratum; two consecutive days produce journals with different sha256, ending the byte-identical-journal defect",
+      "does_not_prove": "that the dreams are better, only that they differ and are grounded in the day; longitudinal persona adaptation over many days remains unrun",
+      "receipt_sha256": "sha256:c73c3474715fd80a24ff74f7ef9d52029f4c9d705cb253e478f9d0d712b800d4"
     },
     "journal_ux_browser_proof": {
       "status": "PASS_JOURNAL_UX_RENDERED_IN_BROWSER",

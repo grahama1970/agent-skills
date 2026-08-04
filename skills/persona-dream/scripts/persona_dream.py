@@ -517,7 +517,108 @@ def _fetch_residue_for_persona(persona: Persona, limit: int, about: str | None =
     return items[:limit], receipts
 
 
-def _fetch_residue(persona: Persona, limit: int, about: str | None = None, secondary_persona: Persona | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def _fetch_day_memories(persona: Persona, day: str, want: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Today's events, read from memory by day.
+
+    Deliberately AQL and not ``/recall``. A day is an exact-match question --
+    "what happened on this date" -- and recall is semantic top-k that cannot be
+    asked for a date at all (graph-memory-operator#99, #100). Asking the wrong
+    question is how five consecutive dreams recalled the same residue.
+
+    Ordered by salience so that when a day is trimmed to quota, the thing that
+    mattered most survives rather than whatever the store happened to return.
+    """
+    import httpx
+
+    receipt: dict[str, Any] = {
+        "stratum": "day", "day": day, "persona_id": persona.id,
+        "path": "POST /query (AQL)", "requested": want,
+    }
+    try:
+        transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
+        with httpx.Client(transport=transport, base_url="http://localhost", timeout=30.0) as client:
+            resp = client.post("/query", json={
+                "aql": ("FOR d IN persona_memory FILTER d.day == @day AND d.persona_id == @p "
+                        "SORT d.salience DESC RETURN d"),
+                "bind_vars": {"day": day, "p": persona.id},
+            })
+            resp.raise_for_status()
+            body = resp.json() or {}
+        raw_items = body.get("documents") or body.get("result") or []
+    except Exception as exc:  # noqa: BLE001 - reported in the receipt, never raised
+        receipt.update({"status": "error", "error": str(exc), "available": 0, "taken": 0})
+        return [], receipt
+
+    items: list[dict[str, Any]] = []
+    for idx, raw in enumerate(raw_items):
+        item = _normalize_item(raw, f"episodic:day={day}", idx, "day")
+        if not item["text"]:
+            continue
+        # Prefer the stance itself. The stored document also carries a
+        # "What happened for X on DATE" title, and the service concatenates the
+        # two into one text field; a dream fed the title dreams about the title.
+        stance = str(raw.get("solution") or "").strip()
+        if stance:
+            item["text"] = stance
+        item["type"] = f"Day event ({raw.get('kind') or 'unknown'})"
+        item["day"] = day
+        item["salience"] = raw.get("salience")
+        items.append(item)
+
+    # Draw round-robin across kinds, not straight down the salience order. A
+    # busy coding day scores 1.0 on every code event and would take the whole
+    # quota, silencing the affect signal -- and how the human felt is the part
+    # that makes this a dream about a person rather than a changelog.
+    by_kind: dict[str, list[dict[str, Any]]] = {}
+    for item in items:
+        by_kind.setdefault(str(item.get("type", "")), []).append(item)
+    order = sorted(by_kind, key=lambda k: (0 if "affect" in k else 1 if "project_state" in k else 2, k))
+    drawn: list[dict[str, Any]] = []
+    while len(drawn) < want and any(by_kind[k] for k in order):
+        for k in order:
+            if by_kind[k] and len(drawn) < want:
+                drawn.append(by_kind[k].pop(0))
+
+    receipt.update({
+        "status": "ok",
+        "available": len(items),
+        "taken": len(drawn),
+        "selection": "round_robin_across_kinds_then_salience",
+        "kinds_taken": sorted({str(i.get("type")) for i in drawn}),
+    })
+    return drawn, receipt
+
+
+def _fetch_residue(persona: Persona, limit: int, about: str | None = None,
+                   secondary_persona: Persona | None = None,
+                   day: str | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Residue for one dream, drawn by QUOTA across strata rather than top-k.
+
+    Top-k over one undifferentiated pool is what made every dream the same: the
+    queries are constants, so the same handful of documents won the same ranking
+    every cycle. A quota reserves room for today regardless of how today scores
+    against a year of persona memory, and reserves room for identity so a busy
+    day cannot drown who she is.
+    """
+    total_limit = limit
+    day_items: list[dict[str, Any]] = []
+    day_receipt: dict[str, Any] | None = None
+    if day:
+        # Today gets a reserved share, floored at 3 so all three kinds of day
+        # event -- affect, project_state, code -- can be represented at the
+        # default limit. A day reduced to two slots drops a whole kind, and
+        # which kind it drops is an accident of ordering.
+        # Enough to change the dream, not enough to become it: the blend with
+        # existing persona memory is the point.
+        day_quota = max(3, limit // 3)
+        day_items, day_receipt = _fetch_day_memories(persona, day, day_quota)
+
+    # The day's share comes OUT of the total, so the memory draw shrinks -- but
+    # the total must not. Reusing the reduced number for the final trim below
+    # cut the memory items straight back off again and left the dream with
+    # nothing but today, which is the opposite of a blend.
+    total_limit = limit
+    limit = max(1, limit - len(day_items))
     personas = [persona]
     if secondary_persona and secondary_persona.id != persona.id:
         personas.append(secondary_persona)
@@ -528,7 +629,12 @@ def _fetch_residue(persona: Persona, limit: int, about: str | None = None, secon
         fetched, fetched_receipts = _fetch_residue_for_persona(active_persona, per_persona, about)
         items.extend(fetched)
         receipts.extend(fetched_receipts)
-    return items[:limit], receipts
+    if day_receipt is not None:
+        receipts.insert(0, day_receipt)
+    # Today first: the dream should open on what just happened, and a downstream
+    # trim must not be what decides whether today survives.
+    items = day_items + items
+    return items[:total_limit], receipts
 
 
 def _bridges_for(text: str) -> list[str]:
@@ -1223,6 +1329,7 @@ def generate(
     persona_id: str = typer.Option("horus", "--persona", help="Persona id; scopes derive as <persona>-memories, <persona>-dreams, and <persona>-dream-journals."),
     secondary_persona_id: str | None = typer.Option(None, "--secondary-persona", help="Optional second persona for video_plan scenes."),
     about: str | None = typer.Option(None, "--about", help="Optional topic to bias memory recall and dream prompts."),
+    day: str | None = typer.Option(None, "--day", help="YYYY-MM-DD; blend that day's events in from memory. Ingest them first with ./run.sh ingest-day."),
     scene: str | None = typer.Option(None, "--scene", help="Explicit scene description for video_plan mode."),
     duration_seconds: int = typer.Option(30, "--duration-seconds", min=12, max=60, help="Target video duration for video_plan mode."),
     limit: int = typer.Option(6, "--limit", min=1, max=12, help="Maximum residue items to use."),
@@ -1260,7 +1367,7 @@ def generate(
     recall_receipts: list[dict[str, Any]] = []
     items = _load_fixture(fixture) if fixture else []
     if not fixture:
-        items, recall_receipts = _fetch_residue(persona, limit, about, secondary_persona)
+        items, recall_receipts = _fetch_residue(persona, limit, about, secondary_persona, day)
 
     if not items:
         response = {
@@ -1279,9 +1386,22 @@ def generate(
     contradictions = _detect_contradictions(items)
     dream_prompt, frame_prompts, reflection = _build_prompts(persona, items, contradictions, frames, about)
 
+    strata_achieved: dict[str, int] = {}
+    for item in items:
+        key = "day" if str(item.get("scope", "")).startswith("episodic:day=") else str(item.get("scope") or "unknown")
+        strata_achieved[key] = strata_achieved.get(key, 0) + 1
     residue_links = {
         "schema": "persona_dream.residue_links.v1",
         "run_id": run_id,
+        "day": day,
+        "selection": "quota_per_stratum",
+        "selection_note": (
+            "drawn by quota across strata, not global top-k. Top-k over one pool "
+            "is what made consecutive dreams identical: the recall queries are "
+            "constants, so the same documents won the same ranking every cycle."
+        ),
+        "day_quota_reserved": (max(2, limit // 3) if day else 0),
+        "strata_achieved": dict(sorted(strata_achieved.items())),
         "items": items,
         "recall_receipts": recall_receipts,
     }

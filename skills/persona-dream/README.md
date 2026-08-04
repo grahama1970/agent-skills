@@ -146,7 +146,7 @@ audience is a person.
 
 ```
 accepted memories
-+ current-day events                    (not yet wired in)
++ current-day events                    (ingested and blended by quota)
       |
       v
 persona-specific contradiction / tension
@@ -229,19 +229,19 @@ What runs today, with receipts behind it:
 - a first-person `journal.md` with tone annotations and provenance footnotes
 - a hash-bound spoken form, and Embry reading it aloud into `journal.wav`
 - a local journal/discussion page
+- the day's code, project-state and affect events written into memory and
+  blended into that day's dream, so consecutive days differ
 
 What does not work yet, stated plainly:
 
 - **Tone is not audible.** The delivery tone reaches the renderer and is
   recorded, but it does not change the waveform — measured, not assumed. The
   engine in use ignores the parameters that would carry it.
-- **Days do not differ.** Today's events never enter memory, and the recall path
-  does not filter by the scope it is given, so five consecutive dreams produced
-  identical journals.
-- **The discussion never reaches her.** Turns are now recorded durably and
-  render back in the page, but nothing carries them into memory, so tomorrow's
-  dream cannot know what was said. That is the last open joint, and it is
-  blocked upstream in the memory service.
+
+- **The discussion never reaches her.** Turns are recorded durably and render
+  back in the page, but nothing yet carries them into memory, so tomorrow's
+  dream cannot know what was said. This is now unbuilt rather than blocked —
+  the upstream memory defects were fixed on 2026-08-04.
 
 The full claim-by-claim boundary, every receipt, and what each one does *not*
 prove: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).

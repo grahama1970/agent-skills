@@ -1,0 +1,56 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "that the resulting dreams are better, only that they differ and are grounded in the day",
+      "that the first-person stances are accurate about the day",
+      "longitudinal persona adaptation over many days"
+    ],
+    "proves": [
+      "two consecutive days produce different journals",
+      "the day's events reach the dream and are blended with persona memory rather than replacing it",
+      "the draw is by quota per stratum and is recorded in residue_links.json",
+      "a many-commit day compresses to at most 8 events"
+    ]
+  },
+  "created_at": "2026-08-04T17:05:00Z",
+  "day_draw": "round-robin across kinds then salience",
+  "day_draw_note": "an 11-commit day scores 1.0 on every code event and would take the entire day quota, silencing the affect signal. How the human felt is what makes this a dream about a person rather than a changelog.",
+  "days": [
+    {
+      "date": "2026-08-04",
+      "events_ingested": 7,
+      "journal_sha256": "bfd7b0f00561",
+      "read_back": 7,
+      "strata_achieved": {
+        "day": 3,
+        "persona-dream": 3
+      }
+    },
+    {
+      "date": "2026-08-03",
+      "events_ingested": 8,
+      "journal_sha256": "da54bdad84bd",
+      "read_back": 8,
+      "strata_achieved": {
+        "day": 3,
+        "persona-dream": 3
+      }
+    }
+  ],
+  "event_cap": 8,
+  "failed_gates": [],
+  "journals_differ": true,
+  "live": true,
+  "method": "ingest each day's events into /memory, then generate a dream per day and compare the resulting journal.md by sha256",
+  "mocked": false,
+  "read_path": "AQL exact match on the day, not /recall. A day is an exact-match question. Note that /recall scope filtering was repaired upstream in graph-memory-operator#100 and now works; AQL remains correct for an exact date.",
+  "schema": "persona_dream.day_blend_receipt.v1",
+  "selection": "quota_per_stratum",
+  "selection_note": "top-k is not used. The recall queries are constants, so top-k over one pool returned the same documents every cycle -- which is why five consecutive dreams were byte-identical. A quota reserves room for today regardless of how today ranks, and reserves room for identity so a busy day cannot become the whole dream.",
+  "status": "PASS_CONSECUTIVE_DAYS_DIFFER",
+  "upstream_verified_fixed": {
+    "graph-memory-operator#100": "scope now filters exactly: 8/8 returned items matched the requested scope, and a nonexistent scope returns 0",
+    "graph-memory-operator#99": "a freshly stored document is now returned by /recall queried with its own text",
+    "verified_independently_on": "2026-08-04, by re-running the original reproductions against 127.0.0.1:8601"
+  }
+}

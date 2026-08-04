@@ -1,0 +1,94 @@
+"""Quota blending of today's events with persona memory (#1212).
+
+Five consecutive dreams once produced byte-identical journals. The cause was not
+only that days were never written: recall queries are constants, so top-k over
+one pool returned the same documents every cycle. A quota fixes that by
+reserving room for today regardless of how today ranks -- and by reserving room
+for identity so a busy day cannot become the whole dream.
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+import persona_dream as pd  # noqa: E402
+
+
+def _day_items(n: int, kinds=("affect", "project_state", "code")):
+    out = []
+    for i in range(n):
+        kind = kinds[i % len(kinds)]
+        out.append({"source_id": f"day-{i}", "scope": "episodic:day=2026-08-04",
+                    "text": f"{kind} event {i}", "type": f"Day event ({kind})"})
+    return out
+
+
+def _memory_items(n: int):
+    return [{"source_id": f"mem-{i}", "scope": "persona-dream",
+             "text": f"memory {i}", "type": "Memory Residue"} for i in range(n)]
+
+
+@pytest.fixture
+def patched(monkeypatch):
+    def fake_day(persona, day, want):
+        items = _day_items(9)[:want]
+        return items, {"stratum": "day", "taken": len(items), "available": 9}
+
+    def fake_mem(persona, limit, about=None):
+        return _memory_items(limit), [{"scope": "persona-dream", "status": "ok"}]
+
+    monkeypatch.setattr(pd, "_fetch_day_memories", fake_day)
+    monkeypatch.setattr(pd, "_fetch_residue_for_persona", fake_mem)
+
+
+def test_the_day_never_takes_the_whole_dream(patched):
+    """A blend, not a replacement: identity must survive a busy day."""
+    items, _ = pd._fetch_residue(pd.Persona("embry"), 6, day="2026-08-04")
+    scopes = [i["scope"] for i in items]
+    assert any(s.startswith("episodic:day=") for s in scopes), "today is absent"
+    assert any(s == "persona-dream" for s in scopes), "identity was crowded out"
+
+
+def test_total_stays_at_the_requested_limit(patched):
+    """The day's share comes out of the total; it must not shrink the total.
+
+    Reusing the reduced limit for the final trim cut the memory items straight
+    back off and left the dream with nothing but today.
+    """
+    items, _ = pd._fetch_residue(pd.Persona("embry"), 6, day="2026-08-04")
+    assert len(items) == 6
+    day_n = sum(1 for i in items if str(i["scope"]).startswith("episodic:day="))
+    assert day_n == 3 and len(items) - day_n == 3
+
+
+def test_today_leads_the_residue(patched):
+    """A downstream trim must not be what decides whether today survives."""
+    items, _ = pd._fetch_residue(pd.Persona("embry"), 6, day="2026-08-04")
+    assert str(items[0]["scope"]).startswith("episodic:day=")
+
+
+def test_without_a_day_the_behaviour_is_unchanged(patched):
+    items, receipts = pd._fetch_residue(pd.Persona("embry"), 6)
+    assert len(items) == 6
+    assert all(i["scope"] == "persona-dream" for i in items)
+    assert not any(r.get("stratum") == "day" for r in receipts)
+
+
+def test_the_day_receipt_is_recorded_first(patched):
+    """The draw has to be inspectable, or 'quota' is just a word in a docstring."""
+    _, receipts = pd._fetch_residue(pd.Persona("embry"), 6, day="2026-08-04")
+    assert receipts[0]["stratum"] == "day"
+    assert receipts[0]["taken"] == 3
+    assert receipts[0]["available"] == 9
+
+
+def test_a_small_limit_still_reserves_room_for_today(patched):
+    """Floor of 3 so affect, project_state and code can all be represented."""
+    items, _ = pd._fetch_residue(pd.Persona("embry"), 3, day="2026-08-04")
+    day_n = sum(1 for i in items if str(i["scope"]).startswith("episodic:day="))
+    assert day_n == 3

@@ -41,7 +41,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ROOT.parents[1]
 MEMORY_SOCKET = "/run/user/1000/embry/memory.sock"
-COLLECTION = "lessons"
+#: `lessons` rejects these with "no extractable taxonomy" -- a day event is not a
+#: lesson. `persona_memory` accepts them and is the right home anyway: it is
+#: where the persona memories a dream must blend them with already live.
+COLLECTION = "persona_memory"
 
 #: One day's events live under their own scope so recall can ask for "today"
 #: specifically, rather than hoping today outranks everything else in a
@@ -262,16 +265,21 @@ def store_and_read_back(events: list[dict[str, Any]], persona: str, date: str) -
                             "store_http_status": http_status, "store_error": err,
                             "read_back": False})
 
-        # The read-back. This is the part that counts.
+        # The read-back, over the retrieval path a dream will actually use for
+        # day memories. NOT /recall: that is semantic top-k and cannot be asked
+        # for a specific day (graph-memory-operator#99, #100). AQL can, and a
+        # day is an exact-match question, not a similarity question.
         stored_keys = {r["document_key"] for r in results}
         seen: set[str] = set()
         try:
-            resp = client.post("/recall", json={
-                "q": f"{persona} {date} what happened today",
-                "scope": scope, "k": 64, "threshold": 0.0,
+            resp = client.post("/query", json={
+                "aql": "FOR d IN @@col FILTER d.day == @day AND d.persona_id == @p RETURN d._key",
+                "bind_vars": {"@col": COLLECTION, "day": date, "p": persona},
             })
-            for raw in (resp.json() or {}).get("items", []) or []:
-                key = str(raw.get("_key") or raw.get("source_id") or "")
+            body = resp.json() or {}
+            found = body.get("documents") or body.get("result") or []
+            for raw in found:
+                key = raw if isinstance(raw, str) else str(raw.get("_key", ""))
                 if key in stored_keys:
                     seen.add(key)
             recall_error = None
@@ -329,8 +337,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "events": stored,
         "read_back_count": sum(1 for s in stored if s["read_back"]),
         "read_back_rule": (
-            "a /store success body is not evidence; an event counts only when a "
-            "subsequent /recall over the day scope returns its key"
+            "a /store success body is not evidence; an event counts only when an "
+            "AQL query for that day returns its key. /recall is not used: it is "
+            "semantic top-k and cannot be asked for a specific day"
         ),
         "notes": notes,
         "failed_gates": failed,
