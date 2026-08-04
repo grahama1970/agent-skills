@@ -35,16 +35,51 @@ authoritative entry point for the question you have:
 | Inspect transfer decisions | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md) |
 | Inspect per-run evidence | revision-scoped receipts under `reports/` |
 
-## How to read the evidence
+## Interface walkthrough
 
-- `#1127` did what it was built to do when it detected a stimulus confound; it
-  was not a failed implementation.
-- Measurement validity is not a PCTOM benefit result.
-- The listener study's stimuli were rejected as technically confounded; the
-  study is not merely waiting for raters.
-- Read [Current Proof Boundary](#current-proof-boundary) before interpreting any
-  reported number, and use [`CURRENT_STATUS.json`](CURRENT_STATUS.json) for the
-  current checked state.
+Each phase is a surface you can look at. These are committed screenshots of the
+real thing, in pipeline order.
+
+**Phase 01 — Idea and memory residue.** The dream starts from what the persona
+already remembers; the board shows which memories were recalled and how they
+were linked.
+
+![Phase 01 Idea and memory residue board](assets/readme/phase01-idea-memory-residue.webp)
+
+![Embry portrait D3 Theory-of-Mind trace graph](assets/readme/phase01-embry-portrait-d3-graph.webp)
+
+**Phases 02-03 — Story and crew.** The story contract and the personas
+selected to carry it.
+
+![Phase 02 Story contract surface](assets/readme/phase02-story-content-pane.webp)
+
+![Phase 03 Crew selection surface](assets/readme/phase03-crew-content-pane.webp)
+
+**Phases 04-05 — Contact sheets and voices.** Candidate imagery and the voice
+each persona is rendered with.
+
+![Phase 04 Contact Sheets surface](assets/readme/phase04-contact-sheets-content-pane.webp)
+
+![Phase 05 Voices surface](assets/readme/phase05-voices-content-pane.webp)
+
+**Phases 06-08 — Script, storyboard, media lock.** Where the dream becomes a
+sequence, and where frames are frozen against further edits.
+
+![Phase 06 Script contract surface](assets/readme/phase06-script-content-pane.webp)
+
+![Phase 07 Storyboard surface](assets/readme/phase07-storyboard-content-pane.webp)
+
+![Phase 08 Media Lock accepted storyboard frames](assets/readme/phase08-media-lock.webp)
+
+**Phases 09-10 — Provider dry-run and contract.** The scorecard and the
+fail-closed provider state, which is what a blocked run actually looks like.
+
+![Phase 09 Video Provider dry-run scorecard](assets/readme/phase09-video-provider-scorecard-20260710.webp)
+
+![Phase 10 Provider Contract current fail-closed state](assets/readme/phase10-provider-contract-current.webp)
+
+The control-by-control detail is in
+[`docs/interface-walkthrough.md`](docs/interface-walkthrough.md).
 
 ## Quick Start
 
@@ -78,128 +113,11 @@ What each one actually gets you:
 - `speak-journal` produces a live `journal.wav` in the run directory, bound by
   sha256 to that exact spoken text, with an ASR transcript.
 - `render-journal-ux` writes a self-contained local page. **Its browser
-  behaviour is unverified** — the page has never been opened in one (#1213).
+  behaviour is unverified** — the page has never been opened in one.
 
 `ingest-day` and durable conversation are deliberately absent here; they are
-not finished (#1212, #1210). See *Next workflow steps*.
-
----
-
-## Current state
-
-Phase **P2_LIVE_CONTINUITY_CHAIN**. The digest below is generated from
-`CURRENT_STATUS.json`, which holds the authoritative blockers, next step, and
-every figure. `./run.sh check-current-state-consistency --strict` fails if this
-file drifts from it.
-
-| Lane | Implemented and receipted | Not proven |
-|---|---|---|
-| Continuity ledger | Atomic writes, epoch compare-and-set, cycle idempotency, identity-core guard | Runtime authority across real sessions |
-| Session mood | Deterministic mood bound before turn 1, stable across three turns, answer text preserved | Behavior beyond local live receipts |
-| Chatterbox voice | Live render at ASR WER 0.0 with durable snapshots; Embry reads her own journal aloud (#1208) | That the requested tone is audible at all — measured below the renderer's own noise floor (#1209). Perceived emotion, naturalness, human acceptance |
-| Speaker recognition | Machine separation under two named render conditions; neither value is a universal threshold | Human recognition; cross-mood identity (#1130) |
-| Joined live chain | One fresh cycle joins dream evidence through to recognition, 13/13 negative controls blocked | Perceived emotion; behavior beyond local receipts |
-| Session arc bias | Bounded deltas published under a hash-bound consumer contract, consumed live by SPARTA before turn 1 | Human-perceived emotion; deployed production behavior |
-| Reliability pilot | Five live cycles passed, zero duplicate accepted effects — a feasibility pilot | Production reliability (#1128); restart/recovery (#1129) |
-| Blinded listener study | V2 preregistration, counterbalanced raters, and a neutral-repeat technical screen | Stimuli rejected as technically confounded; #1179 must re-render before #1058 |
-| PCTOM-R | Measurement validity passes on a non-degenerate corpus; the treatment can lose | No held-out benefit result (#1008) |
-| Historical media loop | One accepted dream persistence path and provider return | Repeatability; previous-video causality |
-
-Figures, receipt paths, and revision ids are in
-[`CURRENT_STATUS.json`](CURRENT_STATUS.json) and
-[`docs/verification.md`](docs/verification.md).
-
-
-<!-- BEGIN GENERATED CURRENT RESEARCH STATE -->
-
-*Generated from `CURRENT_STATUS.json` by `scripts/generate_readme_research_state.py`;
-run `./run.sh generate-readme-research-state`. Full claim dispositions live in
-the JSON, not here.*
-
-- **Phase:** `P2_LIVE_CONTINUITY_CHAIN`
-- **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery), #1210 (journal_conversation_persistence), #1212 (daily_event_ingestion)
-- **Current blocker:** Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions…
-- **Next step:** Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.
-
-<!-- END GENERATED CURRENT RESEARCH STATE -->
-
-## Next workflow steps
-
-Not in Quick Start because they are not finished. Each is one open join in the
-journal loop:
-
-| Step | Command | Blocked on |
-|---|---|---|
-| Write the day into memory | `./run.sh ingest-day --date <d> --from-commits` | #1212 — recall discards `scope`, and stored documents are not retrievable |
-| Keep the discussion | *(no writer yet)* | #1210 |
-| Verify the page in a browser | *(no capture yet)* | #1213 |
-
-## Current Proof Boundary
-
-This is a research prototype. Nothing below is a product claim, and the
-vocabulary is deliberately narrow: **implemented** means code exists,
-**fixture-proven** means deterministic checks pass with no live behavior implied,
-**live slice proven** means a real external operation ran and was inspected, and
-**blocked** means a named prerequisite is missing.
-
-| Boundary | State | Where the evidence lives |
-|---|---|---|
-| Grounded dream packets | Implemented | `reports/` run receipts |
-| Image and storyboard production | Live slice proven | `reports/` panel and review receipts |
-| Phases 01-10, qualified revision | Qualified revision | [`docs/verification.md`](docs/verification.md) |
-| Phase 11, submit and return | Live return accepted at agent level; human acceptance open | [`docs/verification.md`](docs/verification.md) |
-| Phase 12, Watch observation | Live slice proven on historical return; packet degraded on successor | [`docs/verification.md`](docs/verification.md) |
-| Phases 13-15, interpretation to persistence | Live slice proven on the accepted return | [`docs/verification.md`](docs/verification.md) |
-| Phase 16, recall and later behavior | Machine-decidable slice live-proven | [`docs/verification.md`](docs/verification.md) |
-| Chatterbox voice expression | Blocked: stimuli rejected as technically confounded | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1179 |
-| Readable journal artifact | Implemented and hash-bound | `reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json` |
-| Spoken journal | Live slice proven | `reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json` |
-| Requested tone to measurable acoustic effect | **Disproven**: below the renderer's own stochastic spread | `reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json`, #1209 |
-| Journal page | Markup and fixtures checked; browser proof open | #1213 |
-| Interactive dream discussion | UX scaffold only; append-only persistence open | #1210 |
-| Day events to a later dream | Not established; recall ignores scope | #1212 |
-| PCTOM-R held-out benefit | Not run | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1008 |
-
-Revision ids, request hashes, receipt paths, and the per-phase narrative are in
-[`docs/verification.md`](docs/verification.md). Current machine state is in
-[`CURRENT_STATUS.json`](CURRENT_STATUS.json).
-
-
-## PCTOM-R, and why its numbers are not a result
-
-PCTOM-R asks whether counterfactual dreaming improves *prospective* Theory of
-Mind — predicting what another agent will do — beyond what direct memory gives.
-
-The machinery is strong and the receipt counts are large. Neither fact is a
-finding. Receipt volume measures the reliability of the experiment apparatus
-within its text-first scope; it does not measure benefit. Until a preregistered
-proper-scoring or planning-regret metric separates CD from the strongest M/R/D
-baseline on a held-out slice, PCTOM-R has no result to report.
-
-## What this project does not claim
-
-None of the following is proven, and no commit, single historical run, ASR word
-error rate, speaker-embedding score, or volume of receipts establishes any of
-them:
-
-- end-to-end pipeline reliability across repeated cycles;
-- deployed production behavior beyond the local live SPARTA API receipt;
-- perceived emotion, naturalness, or human acceptance of synthesized speech;
-- that a human listener recognizes Embry;
-- a confidence-bounded PCTOM-R planning advantage;
-- that attaching a previous video causally improves continuity.
-- Claims here are retired only by a named receipt read back from disk.
-
-
-## Ownership boundaries
-
-Persona Dream owns the dream packet, continuity ledger, session-mood binding,
-and the receipts that join them. It does **not** own: Graph Memory (persistence
-and recall), Watch (observation and adjudication), Tau (model routing and
-creator/reviewer loops), Kling and other providers (media generation),
-Chatterbox (speech synthesis), or the voice-evaluation lane (speaker backends).
-Each has its own proof boundary; Persona Dream may cite their receipts but may
-not restate their guarantees. See [Technical Architecture](#technical-architecture).
+not finished. See [`docs/EVIDENCE.md`](docs/EVIDENCE.md) for what each is
+waiting on.
 
 ---
 
@@ -213,7 +131,7 @@ accepted dream
   -> continuity ledger           (the authority object; atomic, epoch-checked)
   -> session mood before turn 1  (deterministic, bound before the user speaks)
   -> Chatterbox voice delivery   (the mood requested of the renderer;
-                                  measured NOT audible, #1209)
+                                  measured not audible)
   -> recognition check           (is it still recognizably Embry?)
 ```
 
@@ -228,7 +146,7 @@ audience is a person.
 
 ```
 accepted memories
-+ current-day events                    (#1212 open — and see the note below)
++ current-day events                    (not yet wired in)
       |
       v
 persona-specific contradiction / tension
@@ -250,10 +168,10 @@ synthetic dream and interpretation
       -> live journal.wav in the run directory
                    |
                    v
-      journal / discussion UX             (browser proof open, #1213)
+      journal / discussion UX             (built; unverified in a browser)
                    |
                    v
-      append-only conversation.jsonl      (#1210 open)
+      append-only conversation.jsonl      (not built yet)
                    |
                    v
       future recall and later dreams      (not yet proven)
@@ -276,11 +194,11 @@ is how an overclaim gets made:
 persona psychological mood     (what she woke up feeling)
  != journal annotation         (how a passage is meant to read)
  != requested delivery tone    (what we asked the renderer for)
- != proven audible emotion     (measured absent — #1209)
+ != proven audible emotion     (measured absent)
  != human-perceived emotion    (never tested)
 ```
 
-### Why #1212 is more than a missing feature
+### Why the five-cycle pilot produced identical journals
 
 The five-cycle pilot produced byte-identical journals (sha `f812641f9dbbc7e2`,
 cycles 001-005). The obvious reading is that nothing about any given day was
@@ -290,55 +208,36 @@ scope returns the same items as a real one, and the five recall "strata" are
 five semantic queries over one undifferentiated pool. Separately, a document
 that stores successfully is not retrievable by recall.
 
-So the pilot demonstrated that the pipeline runs repeatedly. It did not
-demonstrate day-to-day experiential change, and adding day events alone would
-not have produced any.
+So the pilot showed the pipeline runs repeatedly. It did not show
+day-to-day experiential change, and adding day events alone would not have
+produced any. Details and receipts: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).
 
-## The controlling hierarchy
+## Where it stands
 
-The immutable goal is registered with `$goal-drift` (source `human_prompt`) and
-read back with `skills/goal-drift/run.sh goal --project persona-dream`. That
-registry, not this file, is the authority.
+Honest one-liner: **the readable and spoken journal path works; the interactive,
+daily, affect-validated loop does not yet.**
 
-1. **Research goal** — determine, through preregistered, falsifiable,
-   fail-closed experiments, whether provenance-bound synthetic dreaming adds
-   measurable value over direct memory and structured reflection. **A loss, a
-   tie, or a null result is a completed result.** The goal is to learn whether
-   the mechanism earns its complexity, not to prove that it succeeds.
-2. **Experimental subject** — Embry is the test case, not the objective.
-   "Build Embry" would assume the mechanism works.
-3. **Safety contract** — preserve identity, factual competence, answer content,
-   and evidence classes. These are validity constraints, never conclusions. See
-   the Persistent-Persona Safety Hypothesis in [`GOAL.md`](GOAL.md).
-4. **Transfer contract** — move validated mechanisms and failure lessons into
-   Graph Memory Operator, Tau, SPARTA, and Chatterbox. Recorded per experiment
-   in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
-5. **Product decision** — adopt, constrain, simplify, or retire each mechanism
-   on the evidence. Deletion is a goal-serving action here.
+What runs today, with receipts behind it:
 
-**PCTOM-R** (Prospective Counterfactual Theory of Mind) is the research
-workstream under item 1: does imagining what did *not* happen improve
-predictions about what another agent *will* do? Issue #1131 tracks the
-measurement-validity repair that lets the treatment lose; that repair is not
-evidence of benefit. The held-out result is tracked by #1008. Current state is
-in [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
+- a dream grounded in recalled memories, every conclusion linked to its source
+- a first-person `journal.md` with tone annotations and provenance footnotes
+- a hash-bound spoken form, and Embry reading it aloud into `journal.wav`
+- a local journal/discussion page
 
-**Kling, Watch, Memory, Chatterbox, and Tau** are supporting lanes. Their
-transfer decisions live in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md). This
-project does not have to become a production product to be complete.
+What does not work yet, stated plainly:
 
-## Research detail
+- **Tone is not audible.** The delivery tone reaches the renderer and is
+  recorded, but it does not change the waveform — measured, not assumed. The
+  engine in use ignores the parameters that would carry it.
+- **Days do not differ.** Today's events never enter memory, and the recall path
+  ignores the scope it is given, so five consecutive dreams produced identical
+  journals.
+- **Discussion is not durable.** The chat pane can show a conversation; nothing
+  writes it down.
+- **The page has never been opened in a browser.**
 
-The settled research goal and gate sequence live in [`GOAL.md`](GOAL.md).
-Detailed hypotheses, protocols, and workstream descriptions live in
-[`docs/research.md`](docs/research.md). For current checked state, use
-[`CURRENT_STATUS.json`](CURRENT_STATUS.json).
-
-## Pipeline detail
-
-The numbered 01-16 stage contract, inputs, outputs, and operator notes live in
-[`docs/pipeline.md`](docs/pipeline.md). Use [`SKILL.md`](SKILL.md) for the
-executable runtime contract.
+The full claim-by-claim boundary, every receipt, and what each one does *not*
+prove: [`docs/EVIDENCE.md`](docs/EVIDENCE.md).
 
 ## Embry and Kai: Example workflow, not a benefit result
 
@@ -363,16 +262,24 @@ happened.
 
 Chatterbox receives and renders the requested delivery tone. That proves the
 mood-to-renderer contract and the spoken-journal path; it is not expression.
-#1209 measured the requested tone against the renderer's own stochastic spread
-and found no acoustic effect. It does not decide the psychology or
+The requested tone was measured against the renderer's own stochastic spread
+and produced no acoustic effect. It does not decide the psychology or
 rewrite Embry's durable identity.
 
 ---
 
-## Interface walkthrough
+## Research detail
 
-The full control-by-control interface walkthrough lives in
-[`docs/interface-walkthrough.md`](docs/interface-walkthrough.md).
+The settled research goal and gate sequence live in [`GOAL.md`](GOAL.md).
+Detailed hypotheses, protocols, and workstream descriptions live in
+[`docs/research.md`](docs/research.md). For current checked state, use
+[`CURRENT_STATUS.json`](CURRENT_STATUS.json).
+
+## Pipeline detail
+
+The numbered 01-16 stage contract, inputs, outputs, and operator notes live in
+[`docs/pipeline.md`](docs/pipeline.md). Use [`SKILL.md`](SKILL.md) for the
+executable runtime contract.
 
 ## Technical architecture
 
@@ -396,3 +303,4 @@ evidence remains under `reports/`.
 - [`create-movie`](../create-movie/SKILL.md) - downstream polished media lane
 - [Graph Memory Operator](https://github.com/grahama1970/graph-memory-operator) - graph, retrieval, and persistence implementation
 - Nested creative helpers live under `skills/persona-dream/skills/`.
+

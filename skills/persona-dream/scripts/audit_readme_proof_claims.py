@@ -30,7 +30,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ROOT.parents[1]
-README = ROOT / "README.md"
+README = ROOT / "docs/EVIDENCE.md"
 REVISION = "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3"
 
 #: boundary label -> (receipt path, required status prefix, claimed state)

@@ -37,7 +37,10 @@ REPO_ROOT = ROOT.parents[1]
 
 CURRENT_STATUS = ROOT / "CURRENT_STATUS.json"
 PROJECT_KNOWLEDGE = ROOT / "PROJECT_KNOWLEDGE.md"
-README = ROOT / "README.md"
+#: The evidence surface. The README is for people trying to understand the
+#: project; the claim registry, proof boundary and successor tokens live in the
+#: evidence document, so that is what these gates audit.
+README = ROOT / "docs/EVIDENCE.md"
 
 #: Words that mark a log entry as not-current. A historical entry containing a
 #: superseded claim is fine; an unmarked one is treated as a current assertion.

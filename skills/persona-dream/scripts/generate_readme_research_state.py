@@ -27,7 +27,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CURRENT_STATUS = ROOT / "CURRENT_STATUS.json"
-README = ROOT / "README.md"
+README = ROOT / "docs/EVIDENCE.md"
 
 BEGIN = "<!-- BEGIN GENERATED CURRENT RESEARCH STATE -->"
 END = "<!-- END GENERATED CURRENT RESEARCH STATE -->"

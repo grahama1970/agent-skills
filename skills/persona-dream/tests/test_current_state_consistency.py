@@ -156,7 +156,7 @@ def test_wrapped_prose_contradiction_is_detected(tmp_path):
     "harden the continuity\\nledger first" because the marker straddled a line
     break. Paragraph normalization is what makes this detectable.
     """
-    paragraphs = checker.summary_paragraphs(ROOT / "README.md")
+    paragraphs = checker.summary_paragraphs(checker.README)
     joined = " ".join(text for _, text in paragraphs)
     assert "\n" not in joined
     wrapped = tmp_path / "WRAPPED.md"
@@ -431,7 +431,7 @@ def test_readme_research_state_block_matches_current_status():
     """
     generator = _load("generate_readme_research_state")
     status = json.loads((ROOT / "CURRENT_STATUS.json").read_text(encoding="utf-8"))
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme = (checker.README).read_text(encoding="utf-8")
 
     assert generator.BEGIN in readme and generator.END in readme
     assert generator.splice(readme, generator.render(status)) == readme, (
@@ -474,7 +474,7 @@ def test_every_readme_proof_claim_binds_to_a_real_receipt():
     unproven and use no positive-result language.
     """
     audit = _load("audit_readme_proof_claims")
-    args = type("Args", (), {"readme": ROOT / "README.md", "out": None})()
+    args = type("Args", (), {"readme": checker.README, "out": None})()
     got = audit.run(args)
     assert got["status"] == "PASS_README_PROOF_CLAIMS_BOUND", got["failed_gates"]
     assert got["rows_checked"] >= 5
@@ -487,7 +487,7 @@ def test_proof_claim_audit_blocks_a_receipt_that_contradicts_the_claim(monkeypat
         ("reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
          "PASS_"),
     )
-    args = type("Args", (), {"readme": ROOT / "README.md", "out": None})()
+    args = type("Args", (), {"readme": checker.README, "out": None})()
     got = audit.run(args)
     assert got["status"] == "BLOCKED_README_PROOF_CLAIM_UNBOUND"
     assert any("receipt_status_does_not_support_claim" in g for g in got["failed_gates"])
@@ -495,7 +495,7 @@ def test_proof_claim_audit_blocks_a_receipt_that_contradicts_the_claim(monkeypat
 
 def test_proof_claim_audit_blocks_positive_language_on_an_unproven_row(tmp_path, monkeypatch):
     audit = _load("audit_readme_proof_claims")
-    readme = (ROOT / "README.md").read_text(encoding="utf-8").replace(
+    readme = (checker.README).read_text(encoding="utf-8").replace(
         "| PCTOM-R held-out benefit | Not run |",
         "| PCTOM-R held-out benefit | Live slice proven |")
     path = tmp_path / "README.md"
