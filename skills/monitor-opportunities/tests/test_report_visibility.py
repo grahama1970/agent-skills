@@ -85,10 +85,18 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
             except OSError:
                 time.sleep(0.1)
         page = urllib.request.urlopen(f"{base}/?token={token}", timeout=5).read().decode("utf-8")
-        assert "Decision Forms" in page
+        assert "Morning opportunities" in page
+        assert "Shortlisted opportunities" in page
+        assert "All decision forms" in page
+        assert page.index("Shortlisted opportunities") < page.index("All decision forms")
         assert opportunity_id in page
+        assert manifest["opportunities"][0]["title"] in page
+        assert manifest["opportunities"][0]["organization"] in page
+        assert "Why this is here" in page
+        assert "Observed screening evidence" in page
         assert variant_id in page
         assert application_id in page
+        assert "External effects are disabled" in page
         assert "AUTHORIZE_APPLICATION_PAYLOAD" not in page
 
         _post(base, token, opportunity_id, "KEEP", "keep-key")

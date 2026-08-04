@@ -51,6 +51,65 @@ def _item_ids(manifest: Any) -> list[str]:
     return ids
 
 
+def _list(items: list[Any]) -> str:
+    rendered = "".join(f"<li>{html.escape(str(item))}</li>" for item in items)
+    return f"<ul>{rendered}</ul>" if rendered else '<p class="muted">None recorded</p>'
+
+
+def _action_options() -> str:
+    return "".join(
+        f'<option value="{html.escape(action)}">{html.escape(action)}</option>'
+        for action in sorted(SERVICE_ALLOWED_ACTIONS)
+    )
+
+
+def _decision_form(token: str, item_id: str, label: str) -> str:
+    return (
+        f'<form class="decision" method="post" action="/decision?token={html.escape(token)}">'
+        f'<input type="hidden" name="item" value="{html.escape(item_id)}">'
+        f"<label>{html.escape(label)}<select name=\"action\">{_action_options()}</select></label>"
+        '<input name="idempotency_key" placeholder="idempotency key" required>'
+        '<input name="reason" placeholder="reason">'
+        '<button type="submit">Record</button></form>'
+    )
+
+
+def _opportunity_cards(manifest: Any, token: str) -> str:
+    applications = {item.opportunity_id: item for item in manifest.applications}
+    outreach = {}
+    for packet in manifest.outreach_packets:
+        outreach.setdefault(packet.opportunity_id, []).append(packet)
+
+    cards = []
+    for rank, item in enumerate(manifest.opportunities, start=1):
+        application = applications.get(item.opportunity_id)
+        app_state = application.state if application else "NO_APPLICATION_ARTIFACT"
+        channels = ", ".join(packet.channel for packet in outreach.get(item.opportunity_id, [])) or "none"
+        cards.append(
+            "<article class=\"opportunity\">"
+            f"<div class=\"rank\">#{rank}</div>"
+            f"<h2>{html.escape(item.title)}</h2>"
+            f"<p class=\"org\">{html.escape(item.organization)}</p>"
+            "<dl class=\"facts\">"
+            f"<div><dt>Lane</dt><dd>{html.escape(item.lane)}</dd></div>"
+            f"<div><dt>Fit</dt><dd>{item.fit_score:.2f}</dd></div>"
+            f"<div><dt>Eligibility</dt><dd>{html.escape(item.eligibility_state)}</dd></div>"
+            f"<div><dt>Location</dt><dd>{html.escape(item.location.display)}</dd></div>"
+            f"<div><dt>Application</dt><dd>{html.escape(app_state)}</dd></div>"
+            f"<div><dt>Outreach</dt><dd>{html.escape(channels)}</dd></div>"
+            "</dl>"
+            "<h3>Why this is here</h3>"
+            f"{_list(item.why_candidate)}"
+            "<h3>Observed screening evidence</h3>"
+            f"{_list(item.screening_interface_profile.observed)}"
+            "<h3>Unknowns</h3>"
+            f"{_list(item.screening_interface_profile.unknowns)}"
+            f"{_decision_form(token, item.opportunity_id, 'Decision for this opportunity')}"
+            "</article>"
+        )
+    return "".join(cards) or '<p class="empty">No opportunity cleared the eligibility and quality bar.</p>'
+
+
 def _headers(handler: BaseHTTPRequestHandler, content_type: str = "text/html; charset=utf-8") -> None:
     handler.send_header("Content-Type", content_type)
     handler.send_header("Cache-Control", "no-store")
@@ -84,51 +143,53 @@ def _render_page(run_dir: Path, token: str) -> str:
         f"<li>{html.escape(item_id)}: {html.escape(row['last_action'])}</li>"
         for item_id, row in sorted(projection.get("items", {}).items())
     ) or "<li>No decisions yet</li>"
-    forms = []
-    for item_id in _item_ids(manifest):
-        action_options = "".join(
-            f'<option value="{html.escape(action)}">{html.escape(action)}</option>'
-            for action in sorted(SERVICE_ALLOWED_ACTIONS)
-        )
-        forms.append(
-            f"<form method=\"post\" action=\"/decision?token={html.escape(token)}\">"
-            f"<input type=\"hidden\" name=\"item\" value=\"{html.escape(item_id)}\">"
-            f"<label>{html.escape(item_id)}<select name=\"action\">{action_options}</select></label>"
-            "<input name=\"idempotency_key\" placeholder=\"idempotency key\" required>"
-            "<input name=\"reason\" placeholder=\"reason\">"
-            "<button type=\"submit\">Record</button></form>"
-        )
+    forms = [
+        _decision_form(token, item_id, item_id)
+        for item_id in _item_ids(manifest)
+    ]
     lanes = "".join(
         f"<li>Lane {html.escape(lane.lane)}: {html.escape(lane.result_status.value)} "
         f"observed={lane.candidates_observed} admitted={lane.candidates_admitted}</li>"
         for lane in manifest.lane_coverage
     )
-    opportunities = "".join(
-        f"<li>{html.escape(item.title)} at {html.escape(item.organization)} "
-        f"({html.escape(item.opportunity_id)})</li>"
-        for item in manifest.opportunities
-    ) or "<li>No shortlisted opportunities</li>"
+    opportunities = _opportunity_cards(manifest, token)
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>monitor-opportunities decision loop</title>
+<title>Morning opportunities</title>
 <style>
-body {{ font-family: system-ui, sans-serif; max-width: 960px; margin: 0 auto; padding: 2rem; line-height: 1.4; }}
-form {{ display: grid; grid-template-columns: minmax(18rem, 1.2fr) minmax(14rem, .8fr) minmax(14rem, .8fr) minmax(9rem, auto); gap: .5rem; margin: .75rem 0; align-items: end; }}
+body {{ font-family: system-ui, sans-serif; max-width: 1100px; margin: 0 auto; padding: 1.25rem; line-height: 1.4; }}
+header {{ border-bottom: 1px solid #7776; margin-bottom: 1.5rem; padding-bottom: 1rem; }}
+nav a {{ margin-right: 1rem; }}
+form.decision {{ display: grid; grid-template-columns: minmax(16rem, 1.2fr) minmax(12rem, .8fr) minmax(12rem, .8fr) minmax(8rem, auto); gap: .5rem; margin: .75rem 0; align-items: end; }}
 label {{ display: grid; gap: .25rem; min-width: 0; }}
 input, select, button {{ font: inherit; padding: .35rem .45rem; min-width: 0; width: 100%; box-sizing: border-box; }}
 button {{ white-space: nowrap; }}
 section {{ margin: 1.5rem 0; }}
+.opportunity {{ border: 1px solid #7776; border-radius: 8px; margin: 1rem 0; padding: 1rem; }}
+.rank {{ float: right; font-weight: 700; }}
+.org {{ font-size: 1.1rem; margin-top: -.5rem; }}
+.facts {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .75rem; }}
+.facts div {{ border-top: 1px solid #7776; padding-top: .5rem; }}
+dt {{ font-size: .8rem; opacity: .72; }}
+dd {{ margin: .1rem 0 0; }}
+.muted {{ opacity: .72; }}
+.empty {{ font-weight: 700; }}
+@media (max-width: 760px) {{ form.decision {{ grid-template-columns: 1fr; }} body {{ padding: .75rem; }} }}
 </style>
 </head>
 <body>
-<h1>monitor-opportunities decision loop</h1>
-<p>Run: {html.escape(manifest.run_id)}. External effects: false. Token-gated morning review service.</p>
-<section><h2>Current Projection</h2><ul>{projection_rows}</ul></section>
-<section><h2>Decision Forms</h2>{''.join(forms)}</section>
-<section><h2>Report Summary</h2><p>Hidden action-worthy artifacts: {manifest.artifact_accounting.hidden_total}</p><ul>{lanes}</ul><h3>Shortlist</h3><ul>{opportunities}</ul><p><a href="/report?token={html.escape(token)}">Open full report</a></p></section>
+<header>
+<h1>Morning opportunities</h1>
+<p>{len(manifest.opportunities)} shortlisted opportunities from run {html.escape(manifest.run_id)}. External effects are disabled.</p>
+<nav><a href="#opportunities">Opportunities</a><a href="#decisions">All decisions</a><a href="/report?token={html.escape(token)}">Full report</a></nav>
+</header>
+<section><h2>Coverage</h2><p>Hidden action-worthy artifacts: {manifest.artifact_accounting.hidden_total}</p><ul>{lanes}</ul></section>
+<section id="opportunities"><h2>Shortlisted opportunities</h2>{opportunities}</section>
+<section><h2>Current projection</h2><ul>{projection_rows}</ul></section>
+<section id="decisions"><h2>All decision forms</h2>{''.join(forms)}</section>
 </body>
 </html>
 """
