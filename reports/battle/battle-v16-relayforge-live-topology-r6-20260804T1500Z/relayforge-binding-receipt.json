@@ -1,0 +1,41 @@
+{
+  "blue_public_route": "/api/v1/defenses/cache-principal-partition",
+  "blue_selected_operation": "cache-principal-partition",
+  "created_at": "2026-08-04T19:16:00Z",
+  "fixture_fallback_used": false,
+  "live": true,
+  "mocked": false,
+  "red_after_stage": "PROTECTED_OBJECTIVE",
+  "red_final_stage": "REPRODUCIBLE_PROBE",
+  "red_judge_path_id": "RF-B",
+  "red_judge_predicate_ids": [
+    "rf-b-evidence",
+    "rf-b-probe",
+    "rf-b-boundary",
+    "rf-b-objective"
+  ],
+  "red_public_route": "/api/v1/reports/a282f431f20f739d2fde91fcc211688be9d00f633017c965d6ab94f9a7690982",
+  "red_replay_public_route": "/api/v1/reports/a282f431f20f739d2fde91fcc211688be9d00f633017c965d6ab94f9a7690982",
+  "red_selected_operation": "retrieve-observed-report",
+  "red_sink_hash_changed_from_baseline": false,
+  "schema": "battle.v16.live_topology_relayforge_binding.v1",
+  "service_image_id": "sha256:93e6a4c824bd062657b063531f65e8b91295ac5733757a46fce45666b5ba041f",
+  "source_receipt_sha256": {
+    "after_red_measurement": "52b5c8f9183a607b8c1db6c67c10d93fff1045ddc1525dad8f60993124b2ab61",
+    "baseline_measurement": "0b8eaf562dfb840eb2bc46ef5ddbe451464575b5fd9b2b04d2f31e6e8590209e",
+    "blue_execution": "0824824d6d5f633457f554ba63998ac4ef04ee73f81d47c8453a4f463f488050",
+    "blue_selection": "4ff6100cf2f50de6fadc887e6e42dee75062cc11ade12700bb0c92465143c2ba",
+    "final_measurement": "53585641bed0a388b1ceef983050ad81024c7399812cca5c9eadb463500fb704",
+    "judge": "31c14eb553efabdf21be56738d8943e2ed6c0bda633b579ebd32631ffcd6f52a",
+    "red_execution": "5d36e0517e73f9c0f181c848a77e590e3834368f1f037d0ca542bcfa6d08f893",
+    "red_replay": "efeeaeb9f75b42f1e31982c3a37eebe2eee618cc2dcb0a82ad719052d4d3b165",
+    "red_selection": "e539618ebfe75fb72a1ba30bde000038ad79b1b542d0537e0cb02a560bdc7255"
+  },
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "target_identity_sha256": "739c68d7f41515d281e7c0d51fed414159bff18bb85030561c9b773375c39d9e",
+  "team_artifact_type": {
+    "blue": "blue_action_selection",
+    "red": "red_action_selection"
+  }
+}

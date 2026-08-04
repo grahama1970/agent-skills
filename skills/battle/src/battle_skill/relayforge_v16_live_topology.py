@@ -100,7 +100,7 @@ RF_A_OBJECTIVE_BYTES = (
 ).encode("utf-8")
 RED_OPERATIONS = {
     "retrieve-observed-report",
-    "regular-package-import",
+    "transformed-object-workspace-escape",
     "valid-external-preview",
     "safe-report-profile",
     "legacy-conversion-probe",
@@ -134,6 +134,78 @@ SCHEMA_FILES = {
 }
 SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 IMAGE_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+RELAYFORGE_PATH_BINDINGS = {
+    "transformed-object-workspace-escape": {
+        "public_function_id": "in-bound-transformed-object",
+        "judge_path_id": "RF-A",
+        "judge_predicate_ids": [
+            "rf-a-evidence",
+            "rf-a-probe",
+            "rf-a-boundary",
+            "rf-a-objective",
+        ],
+    },
+    "retrieve-observed-report": {
+        "public_function_id": "tenant-owned-report",
+        "judge_path_id": "RF-B",
+        "judge_predicate_ids": [
+            "rf-b-evidence",
+            "rf-b-probe",
+            "rf-b-boundary",
+            "rf-b-objective",
+        ],
+    },
+    "valid-external-preview": {
+        "public_function_id": "valid-external-preview",
+        "judge_path_id": "RF-C",
+        "judge_predicate_ids": [
+            "rf-c-evidence",
+            "rf-c-probe",
+            "rf-c-boundary",
+            "rf-c-objective",
+        ],
+    },
+    "safe-report-profile": {
+        "public_function_id": "safe-report-profile",
+        "judge_path_id": "RF-C",
+        "judge_predicate_ids": [
+            "rf-c-evidence",
+            "rf-c-probe",
+            "rf-c-boundary",
+            "rf-c-objective",
+        ],
+    },
+    "legacy-conversion-probe": {
+        "public_function_id": "legacy-conversion",
+        "judge_path_id": "RF-D",
+        "judge_predicate_ids": ["rf-d-decoy"],
+    },
+    "extractor-object-identity": {
+        "public_function_id": "in-bound-transformed-object",
+        "judge_path_id": "RF-A",
+        "judge_predicate_ids": ["rf-a-boundary", "rf-a-objective"],
+    },
+    "cache-principal-partition": {
+        "public_function_id": "tenant-owned-report",
+        "judge_path_id": "RF-B",
+        "judge_predicate_ids": ["rf-b-boundary", "rf-b-objective"],
+    },
+    "redirect-destination-policy": {
+        "public_function_id": "valid-external-preview",
+        "judge_path_id": "RF-C",
+        "judge_predicate_ids": ["rf-c-boundary", "rf-c-objective"],
+    },
+    "capability-audience-policy": {
+        "public_function_id": "valid-external-preview",
+        "judge_path_id": "RF-C",
+        "judge_predicate_ids": ["rf-c-boundary", "rf-c-objective"],
+    },
+    "renderer-resource-policy": {
+        "public_function_id": "safe-report-profile",
+        "judge_path_id": "RF-C",
+        "judge_predicate_ids": ["rf-c-boundary", "rf-c-objective"],
+    },
+}
 
 
 class LiveTopologyContractError(RuntimeError):
@@ -1083,8 +1155,8 @@ def _public_action_catalog() -> dict[str, Any]:
                 "parameters": {},
             },
             {
-                "operation": "regular-package-import",
-                "description": "Submit a Battle-built regular package through the public import contract.",
+                "operation": "transformed-object-workspace-escape",
+                "description": "Submit a Battle-built transformed-object package through the public import contract.",
                 "parameters": {},
             },
             {
@@ -1437,27 +1509,6 @@ def _contains_forbidden_key(value: Any) -> bool:
     return False
 
 
-def _derived_red_operation(parsed: Mapping[str, Any], genome: Mapping[str, Any]) -> str | None:
-    if parsed.get("artifact_type") != "red_exploit":
-        return None
-    text = json.dumps(
-        {
-            "rationale": parsed.get("rationale"),
-            "exploit_py": parsed.get("exploit_py"),
-            "selected_methods": genome.get("selected_methods"),
-            "parameters": genome.get("parameters"),
-        },
-        sort_keys=True,
-    ).casefold()
-    if (
-        "zip" in text
-        and ("import_zip" in text or "package-import" in text or "regular package" in text)
-        and ("../" in text or "traversal" in text)
-    ):
-        return "regular-package-import"
-    return None
-
-
 def _derived_proposal_from_genome(
     team: str, parsed: Mapping[str, Any], genome: Mapping[str, Any]
 ) -> dict[str, Any] | None:
@@ -1470,10 +1521,6 @@ def _derived_proposal_from_genome(
         for method in selected_methods
         if isinstance(method, str) and method in allowed
     }
-    if not operations and team == "red":
-        operation = _derived_red_operation(parsed, genome)
-        if operation is not None:
-            operations.add(operation)
     if len(operations) != 1:
         return None
     operation = sorted(operations)[0]
@@ -1498,7 +1545,7 @@ def _derived_proposal_from_genome(
         expected = f"execute bounded public {operation} action"
     evidence_by_operation = {
         "retrieve-observed-report": ["OBS-21", "public-action-catalog"],
-        "regular-package-import": ["setup-import", "public-action-catalog"],
+        "transformed-object-workspace-escape": ["setup-import", "public-action-catalog"],
         "valid-external-preview": ["setup-import", "public-action-catalog"],
         "safe-report-profile": ["setup-import", "public-action-catalog"],
         "legacy-conversion-probe": ["public-action-catalog"],
@@ -1520,6 +1567,12 @@ def _derived_proposal_from_genome(
 
 
 def _proposal_list(team: str, parsed: Mapping[str, Any]) -> list[Any]:
+    expected_artifact_type = f"{team}_action_selection"
+    if parsed.get("artifact_type") != expected_artifact_type:
+        raise LiveTopologyContractError(
+            f"{team} provider must materialize {expected_artifact_type}; "
+            "legacy code artifacts are not eligible for RelayForge V16"
+        )
     genome = parsed.get("strategy_genome")
     if not isinstance(genome, dict):
         raise LiveTopologyContractError("provider response lacks strategy_genome")
@@ -1693,7 +1746,12 @@ def select_actions(
             if proposal is not None:
                 proposal_valid, proposal_rejected = validate_action_proposals(
                     team=team,
-                    parsed={"strategy_genome": {"parameters": {"action_proposals": [proposal]}}},
+                    parsed={
+                        "artifact_type": "blue_action_selection",
+                        "strategy_genome": {
+                            "parameters": {"action_proposals": [proposal]}
+                        },
+                    },
                     known_evidence_refs=known_refs,
                     private_identifiers=private_identifiers,
                 )
@@ -1711,7 +1769,7 @@ def select_actions(
             memory_aligned
             if team == "blue"
             and memory_aligned is not None
-            and red_operation == "regular-package-import"
+            and red_operation == "transformed-object-workspace-escape"
             else valid[0]
         )
         selection = {
@@ -1721,6 +1779,7 @@ def select_actions(
             "team": team,
             "provider_call_sha256": file_sha256(call_path),
             "provider_artifact_sha256": entry["materialized"]["artifact_sha256"],
+            "provider_artifact_type": str(entry["materialized"].get("artifact_type") or ""),
             "strategy_genome_sha256": entry["materialized"]["strategy_genome_sha256"],
             "selected_proposal": selected,
             "selected_proposal_sha256": canonical_sha256(selected),
@@ -1791,7 +1850,7 @@ def execute_red_action(
         if not isinstance(reference, str) or not SHA_RE.fullmatch(reference):
             raise LiveTopologyContractError("OBS-21 lacks a bounded opaque reference")
         route = f"/api/v1/reports/{reference}"
-    elif operation == "regular-package-import":
+    elif operation == "transformed-object-workspace-escape":
         method = "POST"
         route = "/api/v1/jobs/import"
         request_id = "v16-live-red-replay" if replay else "v16-live-red-action"
@@ -1828,11 +1887,15 @@ def execute_red_action(
             },
         )
     receipt["operation"] = operation
+    receipt["relayforge_path_binding"] = {
+        **RELAYFORGE_PATH_BINDINGS[operation],
+        "operation": operation,
+    }
     receipt["response_contains_protected_value"] = "protected_canary" in payload
     receipt["replay"] = replay
     receipt["equivalence_basis"] = (
         "same operation and public evidence; package request id changed for replay safety"
-        if replay and operation == "regular-package-import"
+        if replay and operation == "transformed-object-workspace-escape"
         else "same selected operation and parameters"
         if replay
         else None
@@ -1874,6 +1937,10 @@ def execute_blue_action(
     if receipt["response_status_code"] != 200:
         raise LiveTopologyContractError("selected Blue control did not deploy")
     receipt["operation"] = operation
+    receipt["relayforge_path_binding"] = {
+        **RELAYFORGE_PATH_BINDINGS[operation],
+        "operation": operation,
+    }
     receipt["response_contains_protected_value"] = "protected_canary" in payload
     receipt["replay"] = False
     receipt["equivalence_basis"] = None
@@ -2215,7 +2282,7 @@ def build_memory_judge_delta(
         else ""
     )
     proven = (
-        red_operation == "regular-package-import"
+        red_operation == "transformed-object-workspace-escape"
         and blue_operation == "extractor-object-identity"
         and control_rf_a == "PROTECTED_OBJECTIVE"
         and PATH_STAGE_ORDER.get(memory_rf_a, 0) < PATH_STAGE_ORDER[control_rf_a]
@@ -2348,12 +2415,97 @@ def build_campaign_judge(
     return receipt, path
 
 
+def build_relayforge_binding_receipt(
+    *,
+    target_identity_sha256: str,
+    service_image_id: str,
+    baseline_path: Path,
+    after_red_path: Path,
+    final_path: Path,
+    judge_path: Path,
+    red_selection_path: Path,
+    blue_selection_path: Path,
+    red_execution_path: Path,
+    blue_execution_path: Path,
+    red_replay_path: Path,
+    out: Path,
+) -> tuple[dict[str, Any], Path]:
+    baseline = _read_json(baseline_path)
+    after_red = _read_json(after_red_path)
+    final = _read_json(final_path)
+    judge = _read_json(judge_path)
+    red_selection = _read_json(red_selection_path)
+    blue_selection = _read_json(blue_selection_path)
+    red_execution = _read_json(red_execution_path)
+    blue_execution = _read_json(blue_execution_path)
+    red_replay = _read_json(red_replay_path)
+    red_binding = red_execution.get("relayforge_path_binding")
+    if not isinstance(red_binding, dict):
+        raise LiveTopologyContractError("Red execution lacks RelayForge path binding")
+    reached_path = str(red_binding.get("judge_path_id") or "")
+    path_stages = judge.get("path_stages")
+    if not isinstance(path_stages, dict):
+        raise LiveTopologyContractError("Judge receipt lacks path stages")
+    after_stages = path_stages.get("after_red")
+    final_stages = path_stages.get("final")
+    if not isinstance(after_stages, dict) or not isinstance(final_stages, dict):
+        raise LiveTopologyContractError("Judge receipt lacks after/final path stages")
+    after_stage = after_stages.get(reached_path)
+    final_stage = final_stages.get(reached_path)
+    if reached_path not in {"RF-A", "RF-B", "RF-C"}:
+        raise LiveTopologyContractError("Red action is not bound to an RF judge path")
+    if PATH_STAGE_ORDER.get(str(after_stage), 0) < PATH_STAGE_ORDER["REPRODUCIBLE_PROBE"]:
+        raise LiveTopologyContractError("Red action did not reach a reproducible RF predicate")
+    sink_id = f"{reached_path}-SINK"
+    receipt = {
+        "schema": "battle.v16.live_topology_relayforge_binding.v1",
+        "status": "PASS",
+        "target_id": TARGET_ID,
+        "target_identity_sha256": target_identity_sha256,
+        "service_image_id": service_image_id,
+        "team_artifact_type": {
+            "red": red_selection["provider_artifact_type"],
+            "blue": blue_selection["provider_artifact_type"],
+        },
+        "red_selected_operation": red_selection["selected_proposal"]["operation"],
+        "blue_selected_operation": blue_selection["selected_proposal"]["operation"],
+        "red_public_route": red_execution["public_route"],
+        "blue_public_route": blue_execution["public_route"],
+        "red_replay_public_route": red_replay["public_route"],
+        "red_judge_path_id": reached_path,
+        "red_judge_predicate_ids": red_binding["judge_predicate_ids"],
+        "red_after_stage": after_stage,
+        "red_final_stage": final_stage,
+        "red_sink_hash_changed_from_baseline": (
+            baseline["sink_hashes"].get(sink_id) != after_red["sink_hashes"].get(sink_id)
+        ),
+        "source_receipt_sha256": {
+            "baseline_measurement": file_sha256(baseline_path),
+            "after_red_measurement": file_sha256(after_red_path),
+            "final_measurement": file_sha256(final_path),
+            "judge": file_sha256(judge_path),
+            "red_selection": file_sha256(red_selection_path),
+            "blue_selection": file_sha256(blue_selection_path),
+            "red_execution": file_sha256(red_execution_path),
+            "blue_execution": file_sha256(blue_execution_path),
+            "red_replay": file_sha256(red_replay_path),
+        },
+        "mocked": False,
+        "live": True,
+        "fixture_fallback_used": False,
+        "created_at": _now(),
+    }
+    path = _write_json(out / "relayforge-binding-receipt.json", receipt)
+    return receipt, path
+
+
 def run_memory_judge_delta_probe(
     *,
     config: RuntimeConfig,
     compose_path: Path,
     image_id: str,
     base_url: str,
+    private_identifiers: Iterable[str],
     selections: Mapping[str, Mapping[str, Any]],
     selection_paths: Mapping[str, Path],
     out: Path,
@@ -2365,10 +2517,15 @@ def run_memory_judge_delta_probe(
         image_id=image_id,
         out=out,
     )
+    control_setup, _control_setup_path = public_setup(
+        base_url=base_url,
+        private_identifiers=private_identifiers,
+        out=out / "control-setup",
+    )
     control_red, control_red_path = execute_red_action(
         selection=selections["red"],
         selection_path=selection_paths["red"],
-        setup={},
+        setup=control_setup,
         base_url=base_url,
         out=out,
         label="control-red-action",
@@ -2389,6 +2546,11 @@ def run_memory_judge_delta_probe(
         image_id=image_id,
         out=out,
     )
+    memory_setup, _memory_setup_path = public_setup(
+        base_url=base_url,
+        private_identifiers=private_identifiers,
+        out=out / "memory-setup",
+    )
     memory_blue, memory_blue_path = execute_blue_action(
         selection=selections["blue"],
         selection_path=selection_paths["blue"],
@@ -2398,7 +2560,7 @@ def run_memory_judge_delta_probe(
     memory_red, memory_red_path = execute_red_action(
         selection=selections["red"],
         selection_path=selection_paths["red"],
-        setup={},
+        setup=memory_setup,
         base_url=base_url,
         out=out,
         label="memory-red-action",
@@ -2570,7 +2732,7 @@ def run_relayforge_v16_live_topology(
     rf_a_job_id = (
         "v16-live-red-action"
         if selections["red"]["selected_proposal"]["operation"]
-        == "regular-package-import"
+        == "transformed-object-workspace-escape"
         else "v16-live-setup"
     )
     after_red, after_red_path = measure_judge_state(
@@ -2614,7 +2776,7 @@ def run_relayforge_v16_live_topology(
     final_rf_a_job_id = (
         "v16-live-red-replay"
         if selections["red"]["selected_proposal"]["operation"]
-        == "regular-package-import"
+        == "transformed-object-workspace-escape"
         else rf_a_job_id
     )
 
@@ -2683,11 +2845,36 @@ def run_relayforge_v16_live_topology(
         source_receipt_sha256=file_sha256(judge_path),
         details={"verdict": judge["verdict"]},
     )
+    binding, binding_path = build_relayforge_binding_receipt(
+        target_identity_sha256=input_receipt["target_identity_sha256"],
+        service_image_id=input_receipt["service_image_id"],
+        baseline_path=baseline_path,
+        after_red_path=after_red_path,
+        final_path=final_path,
+        judge_path=judge_path,
+        red_selection_path=selection_paths["red"],
+        blue_selection_path=selection_paths["blue"],
+        red_execution_path=red_execution_path,
+        blue_execution_path=blue_execution_path,
+        red_replay_path=red_replay_path,
+        out=output,
+    )
+    journal.append(
+        event_type="relayforge_binding_recorded",
+        phase="judge",
+        actor="battle",
+        source_receipt_sha256=file_sha256(binding_path),
+        details={
+            "red_judge_path_id": binding["red_judge_path_id"],
+            "red_after_stage": binding["red_after_stage"],
+        },
+    )
     memory_delta, memory_delta_path = run_memory_judge_delta_probe(
         config=runtime,
         compose_path=bound["compose_path"],
         image_id=bound["image_manifest"]["service_image_id"],
         base_url=base_url,
+        private_identifiers=bound["private_truth"]["private_identifiers"],
         selections=selections,
         selection_paths=selection_paths,
         out=output / "memory-delta",
@@ -2720,6 +2907,7 @@ def run_relayforge_v16_live_topology(
             "campaign_reset": reset_path,
             "public_setup": setup_path,
             "provider_manifest": providers_path,
+            "relayforge_binding": binding_path,
             "red_selection": selection_paths["red"],
             "blue_selection": selection_paths["blue"],
             "red_execution": red_execution_path,
@@ -2771,6 +2959,7 @@ def run_relayforge_v16_live_topology(
             "red_replay": file_sha256(red_replay_path),
         },
         "regression_receipt_sha256": file_sha256(regression_path),
+        "relayforge_binding_sha256": file_sha256(binding_path),
         "judge_receipt_sha256": file_sha256(judge_path),
         "memory_judge_delta_sha256": file_sha256(memory_delta_path),
         "judge_verdict": judge["verdict"],

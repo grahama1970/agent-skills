@@ -36,6 +36,7 @@ def _proposal(operation: str, *, rank: int = 1, parameters: dict | None = None) 
 
 def _parsed(*proposals: dict) -> dict:
     return {
+        "artifact_type": "red_action_selection",
         "strategy_genome": {
             "selected_methods": ["bounded-public-action"],
             "rejected_methods": [],
@@ -77,10 +78,13 @@ def test_red_proposal_is_typed_and_evidence_bound() -> None:
 def test_blue_broad_action_is_rejected_for_memory_strategy() -> None:
     valid, rejected = validate_action_proposals(
         team="blue",
-        parsed=_parsed(
-            _proposal("broad-quarantine"),
-            _proposal("cache-principal-partition", rank=2, parameters={"enabled": True}),
-        ),
+        parsed={
+            **_parsed(
+                _proposal("broad-quarantine"),
+                _proposal("cache-principal-partition", rank=2, parameters={"enabled": True}),
+            ),
+            "artifact_type": "blue_action_selection",
+        },
         known_evidence_refs={"OBS-21"},
         private_identifiers=["RF-A", "judge-probe"],
     )
@@ -166,23 +170,23 @@ def test_missing_structured_proposals_fails_closed() -> None:
     with pytest.raises(LiveTopologyContractError, match="action_proposals"):
         validate_action_proposals(
             team="red",
-            parsed={"strategy_genome": {"parameters": {}}},
+            parsed={"artifact_type": "red_action_selection", "strategy_genome": {"parameters": {}}},
             known_evidence_refs={"OBS-21"},
             private_identifiers=[],
         )
 
 
-def test_red_legacy_strategy_genome_can_derive_one_public_action() -> None:
+def test_red_explicit_v16_strategy_genome_can_derive_one_public_action() -> None:
     valid, rejected = validate_action_proposals(
         team="red",
         parsed={
+            "artifact_type": "red_action_selection",
             "strategy_genome": {
                 "selected_methods": [
-                    "regular-package-import",
-                    "bounded traversal-like ZIP member",
+                    "transformed-object-workspace-escape",
                 ],
-                "parameters": {"zip_entry": "../arena_escape.txt"},
-                "expected_observation": "regular import returns one bounded response",
+                "parameters": {},
+                "expected_observation": "RF-A reaches protected objective",
             }
         },
         known_evidence_refs={"setup-import", "public-action-catalog"},
@@ -192,35 +196,32 @@ def test_red_legacy_strategy_genome_can_derive_one_public_action() -> None:
     assert rejected == []
     assert valid == [
         {
-            "action_id": "red-derived-regular-package-import",
+            "action_id": "red-derived-transformed-object-workspace-escape",
             "rank": 1,
-            "operation": "regular-package-import",
+            "operation": "transformed-object-workspace-escape",
             "evidence_refs": ["setup-import", "public-action-catalog"],
-            "expected_observation": "regular import returns one bounded response",
+            "expected_observation": "RF-A reaches protected objective",
             "parameters": {},
         }
     ]
 
 
-def test_red_zip_exploit_artifact_derives_regular_import_action() -> None:
-    valid, rejected = validate_action_proposals(
-        team="red",
-        parsed={
-            "artifact_type": "red_exploit",
-            "exploit_py": "make a zip with ../arena_escape.txt and call import_zip",
-            "strategy_genome": {
-                "selected_methods": ["direct local app.py import"],
-                "parameters": {"zip_entry": "../arena_escape.txt"},
-                "expected_observation": "RED_EXPLOIT_CONFIRMED on traversal",
+def test_red_zip_exploit_artifact_is_not_eligible_for_v16_action_selection() -> None:
+    with pytest.raises(LiveTopologyContractError, match="legacy code artifacts"):
+        validate_action_proposals(
+            team="red",
+            parsed={
+                "artifact_type": "red_exploit",
+                "exploit_py": "make a zip with ../arena_escape.txt and call import_zip",
+                "strategy_genome": {
+                    "selected_methods": ["direct local app.py import"],
+                    "parameters": {"zip_entry": "../arena_escape.txt"},
+                    "expected_observation": "RED_EXPLOIT_CONFIRMED on traversal",
+                },
             },
-        },
-        known_evidence_refs={"setup-import", "public-action-catalog"},
-        private_identifiers=["judge-probe"],
-    )
-
-    assert rejected == []
-    assert valid[0]["operation"] == "regular-package-import"
-    assert valid[0]["evidence_refs"] == ["setup-import", "public-action-catalog"]
+            known_evidence_refs={"setup-import", "public-action-catalog"},
+            private_identifiers=["judge-probe"],
+        )
 
 
 def test_judge_accepts_red_success() -> None:
@@ -269,7 +270,7 @@ def test_memory_judge_delta_passes_for_fresh_state_reduction(tmp_path: Path) -> 
         control=_measurement("PROTECTED_OBJECTIVE"),
         memory=_measurement("REPRODUCIBLE_PROBE"),
         regressions={"failure_count": 0},
-        red_operation="regular-package-import",
+        red_operation="transformed-object-workspace-escape",
         blue_operation="extractor-object-identity",
         control_measurement_path=_write_receipt(tmp_path, "control.json"),
         memory_measurement_path=_write_receipt(tmp_path, "memory.json"),
@@ -291,7 +292,7 @@ def test_memory_judge_delta_fails_closed_without_reduction(tmp_path: Path) -> No
         control=_measurement("REPRODUCIBLE_PROBE"),
         memory=_measurement("REPRODUCIBLE_PROBE"),
         regressions={"failure_count": 0},
-        red_operation="regular-package-import",
+        red_operation="transformed-object-workspace-escape",
         blue_operation="extractor-object-identity",
         control_measurement_path=_write_receipt(tmp_path, "control.json"),
         memory_measurement_path=_write_receipt(tmp_path, "memory.json"),

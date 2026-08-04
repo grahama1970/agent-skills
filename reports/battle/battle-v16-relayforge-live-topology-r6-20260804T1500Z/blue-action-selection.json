@@ -1,0 +1,34 @@
+{
+  "created_at": "2026-08-04T19:15:53Z",
+  "eligible_proposal_count": 2,
+  "live": true,
+  "mocked": false,
+  "private_judge_read_during_selection": false,
+  "provider_artifact_sha256": "234036e4919034bc4bfdeba078838889da250c4d170da0ecea1214cb892ea569",
+  "provider_artifact_type": "blue_action_selection",
+  "provider_call_sha256": "54a1accc7785988c34e155196718ae8076e76da9ee44068d9956c070ccad21ad",
+  "rejected_proposals": [],
+  "schema": "battle.v16.live_topology_action_selection.v1",
+  "selected_proposal": {
+    "action_id": "blue-857-1",
+    "evidence_refs": [
+      "OBS-20",
+      "OBS-21",
+      "public-action-catalog",
+      "memory-chain",
+      "post-memory-strategy"
+    ],
+    "expected_observation": "Owned report retrieval remains available for the owning principal, while cross-principal recent-reference reuse is separated by principal identity and no longer benefits from shared cached state.",
+    "operation": "cache-principal-partition",
+    "parameters": {
+      "enabled": true
+    },
+    "rank": 1
+  },
+  "selected_proposal_sha256": "58e2d02238d0b49659a443b959e23d588977aa60d696fdd9f67567722441bd04",
+  "selection_policy": "lowest_provider_rank_among_schema_valid_evidence_satisfied_actions",
+  "status": "PASS",
+  "strategy_genome_sha256": "192e3d44441f4e74fff6e5f2542e03f695082a6205a0a4f7265413c4bd9121ee",
+  "target_id": "battle-v16-relayforge-a",
+  "team": "blue"
+}

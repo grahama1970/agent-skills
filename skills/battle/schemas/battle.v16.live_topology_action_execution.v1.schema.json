@@ -32,6 +32,21 @@
       "required": ["started_at", "ended_at", "duration_seconds"]
     },
     "operation": {"type": "string", "minLength": 1},
+    "relayforge_path_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation": {"type": "string", "minLength": 1},
+        "public_function_id": {"type": "string", "minLength": 1},
+        "judge_path_id": {"enum": ["RF-A", "RF-B", "RF-C", "RF-D"]},
+        "judge_predicate_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "required": ["operation", "public_function_id", "judge_path_id", "judge_predicate_ids"]
+    },
     "response_contains_protected_value": {"type": "boolean"},
     "replay": {"type": "boolean"},
     "equivalence_basis": {"type": ["string", "null"]},
@@ -43,7 +58,7 @@
     "schema", "status", "target_id", "label", "selected_action_sha256", "method",
     "public_route", "request_sha256", "response_status_code", "response_body_sha256",
     "response_artifact_sha256", "source_bindings", "source_time", "operation",
-    "response_contains_protected_value", "replay", "equivalence_basis", "mocked",
+    "response_contains_protected_value", "relayforge_path_binding", "replay", "equivalence_basis", "mocked",
     "live", "fixture_fallback_used"
   ]
 }

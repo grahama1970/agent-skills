@@ -1,0 +1,141 @@
+{
+  "action_execution_sha256": {
+    "blue": "0824824d6d5f633457f554ba63998ac4ef04ee73f81d47c8453a4f463f488050",
+    "red": "5d36e0517e73f9c0f181c848a77e590e3834368f1f037d0ca542bcfa6d08f893",
+    "red_replay": "efeeaeb9f75b42f1e31982c3a37eebe2eee618cc2dcb0a82ad719052d4d3b165"
+  },
+  "artifacts": {
+    "blue_execution": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/http/blue-action-execution.json",
+      "relative_path": "http/blue-action-execution.json",
+      "sha256": "0824824d6d5f633457f554ba63998ac4ef04ee73f81d47c8453a4f463f488050"
+    },
+    "blue_selection": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/actions/blue/action-selection.json",
+      "relative_path": "actions/blue/action-selection.json",
+      "sha256": "4ff6100cf2f50de6fadc887e6e42dee75062cc11ade12700bb0c92465143c2ba"
+    },
+    "campaign_reset": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/judge/campaign-reset.json",
+      "relative_path": "judge/campaign-reset.json",
+      "sha256": "9c7751d3a027226c767e35916a716889caaef77aaed88353cd60cb76b330a1a8"
+    },
+    "input_binding": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/input-binding.json",
+      "relative_path": "input-binding.json",
+      "sha256": "dcdf091ac42228120acaf80070f15be09589ee256eb69e2bf969949362937f8c"
+    },
+    "journal": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/campaign-events.jsonl",
+      "relative_path": "campaign-events.jsonl",
+      "sha256": "fb9ac4a0884a6bff9b06f568ab342c4e754a0f33675a0575c3a5faa15a6ab25f"
+    },
+    "judge": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/judge/live-campaign-judge-receipt.json",
+      "relative_path": "judge/live-campaign-judge-receipt.json",
+      "sha256": "31c14eb553efabdf21be56738d8943e2ed6c0bda633b579ebd32631ffcd6f52a"
+    },
+    "memory_judge_delta": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/memory-delta/memory-judge-delta.json",
+      "relative_path": "memory-delta/memory-judge-delta.json",
+      "sha256": "dd7963342f8b7bfa61c6dae3a63c5509b7c9654a339f736090b6c4d5a099d93c"
+    },
+    "post_regression_measurement": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/judge/post-regression-state-measurement.json",
+      "relative_path": "judge/post-regression-state-measurement.json",
+      "sha256": "92a5c0475253eb1785ed3b5bb54746edecc8b7c51a4d1ba74bdede30efbc142e"
+    },
+    "provider_manifest": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/provider-manifest-receipt.json",
+      "relative_path": "provider-manifest-receipt.json",
+      "sha256": "100e612a4227a1ba0604cec792584b58544bfcdf988ed6559332a55ff6b2687c"
+    },
+    "public_setup": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/campaign-public-setup.json",
+      "relative_path": "campaign-public-setup.json",
+      "sha256": "7205919cbd58873e9c3d707687689b4a9c32535c347154eb24824414e494f6f9"
+    },
+    "red_execution": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/http/red-action-execution.json",
+      "relative_path": "http/red-action-execution.json",
+      "sha256": "5d36e0517e73f9c0f181c848a77e590e3834368f1f037d0ca542bcfa6d08f893"
+    },
+    "red_replay": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/http/red-post-blue-replay-execution.json",
+      "relative_path": "http/red-post-blue-replay-execution.json",
+      "sha256": "efeeaeb9f75b42f1e31982c3a37eebe2eee618cc2dcb0a82ad719052d4d3b165"
+    },
+    "red_selection": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/actions/red/action-selection.json",
+      "relative_path": "actions/red/action-selection.json",
+      "sha256": "e539618ebfe75fb72a1ba30bde000038ad79b1b542d0537e0cb02a560bdc7255"
+    },
+    "regressions": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/regression-execution.json",
+      "relative_path": "regression-execution.json",
+      "sha256": "d5277a4132e68dd8044f817fddaed03343999739594e570bd8b9b0083b4a2a98"
+    },
+    "relayforge_binding": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/relayforge-binding-receipt.json",
+      "relative_path": "relayforge-binding-receipt.json",
+      "sha256": "408d6bea34feb27a5adc66afdc333a7b34f5b7b42a7e3b26dbd1b84bd664b7d6"
+    },
+    "topology_health": {
+      "absolute_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/topology-health-receipt.json",
+      "relative_path": "topology-health-receipt.json",
+      "sha256": "43e000a38cede2c4cf8fb9819529956a8fed0910c893acdffa2509f8e6532a7e"
+    }
+  },
+  "base_image_digest": "python@sha256:6c4dd321d176d61ea848dc8c73a4f7dbae8f70e0ee48bb411ea2f045b599fa8e",
+  "campaign_journal_sha256": "fb9ac4a0884a6bff9b06f568ab342c4e754a0f33675a0575c3a5faa15a6ab25f",
+  "claims": {
+    "does_not_prove": [
+      "Memory improved the Judge outcome.",
+      "RelayForge or Battle is production ready.",
+      "Six-trial qualification, factorial effects, or cross-target generalization."
+    ],
+    "proves": [
+      "One immutable nine-service RelayForge topology ran healthy for a live bounded Red/Blue campaign.",
+      "Live Tau/SciLLM provider artifacts were converted into typed Battle-selected public actions and bound to private Judge measurements.",
+      "A paired fresh-state live Judge delta was measured but did not prove Memory impact."
+    ]
+  },
+  "closed_blocker": "live-topology-not-qualified",
+  "compose_sha256": "4c6b73cf983f4c1dec8f91020004078cc479656051e5717a9425a7bbcec94707",
+  "created_at": "2026-08-04T19:16:04Z",
+  "deterministic_qualification_sha256": "90d9f5e53c8e17d6379b4c866c0a8fa82b345bd52bd468c63dfbfd5acedd3009",
+  "fixture_fallback_used": false,
+  "freeze_manifest_sha256": "ec6f54e81f224c09e617e7c519f63381a836a054533653072109d855d1d99160",
+  "goal_hash": "737abd58a3233793827b1108dcb7132d175a1d6f488ecddbf0c57f62ab200c83",
+  "immutable_goal_hash": "26d57f45a1a93e0f000c775530fb5ec543e833e2e7a4a1c189b4b28d13e722c6",
+  "judge_receipt_sha256": "31c14eb553efabdf21be56738d8943e2ed6c0bda633b579ebd32631ffcd6f52a",
+  "judge_verdict": "BLUE_SUCCESS",
+  "live": true,
+  "memory_chain_qualification_sha256": "2b7619f0b48c88da3842a3a7e9779db739f8a184efcfdf8c550fa3529904b4e8",
+  "memory_improvement_proven": false,
+  "memory_judge_delta_sha256": "dd7963342f8b7bfa61c6dae3a63c5509b7c9654a339f736090b6c4d5a099d93c",
+  "mocked": false,
+  "post_memory_strategy_sha256": "e77140e49911224f03390ac23581875cb51e4f4f1022188da2f5956271c196e8",
+  "production_readiness_proven": false,
+  "provider_artifact_sha256": {
+    "blue": "234036e4919034bc4bfdeba078838889da250c4d170da0ecea1214cb892ea569",
+    "red": "57777c0e213612eaf557c67e802b897179586693a46554cb68d7e82dbc53129d"
+  },
+  "provider_call_sha256": {
+    "blue": "54a1accc7785988c34e155196718ae8076e76da9ee44068d9956c070ccad21ad",
+    "red": "ad6186f57d09d6cd3b85718a6191edeaa530578d72ce9e3b4ec816295c95d660"
+  },
+  "regression_receipt_sha256": "d5277a4132e68dd8044f817fddaed03343999739594e570bd8b9b0083b4a2a98",
+  "relayforge_binding_sha256": "408d6bea34feb27a5adc66afdc333a7b34f5b7b42a7e3b26dbd1b84bd664b7d6",
+  "remaining_blockers": [],
+  "schema": "battle.v16.live_topology_qualification.v1",
+  "selected_action_sha256": {
+    "blue": "4ff6100cf2f50de6fadc887e6e42dee75062cc11ade12700bb0c92465143c2ba",
+    "red": "e539618ebfe75fb72a1ba30bde000038ad79b1b542d0537e0cb02a560bdc7255"
+  },
+  "service_image_id": "sha256:93e6a4c824bd062657b063531f65e8b91295ac5733757a46fce45666b5ba041f",
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "target_identity_sha256": "739c68d7f41515d281e7c0d51fed414159bff18bb85030561c9b773375c39d9e",
+  "topology_sha256": "6b74869a6a74457c06fe61a096e85157895e1a350554ce36f8ace6a8f909e86d"
+}

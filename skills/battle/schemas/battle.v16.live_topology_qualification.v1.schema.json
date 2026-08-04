@@ -57,6 +57,7 @@
       "required": ["red", "blue", "red_replay"]
     },
     "regression_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "relayforge_binding_sha256": {"$ref": "#/$defs/sha"},
     "judge_receipt_sha256": {"$ref": "#/$defs/sha"},
     "memory_judge_delta_sha256": {"$ref": "#/$defs/sha"},
     "judge_verdict": {"enum": ["RED_SUCCESS", "BLUE_SUCCESS", "CONTESTED", "INSUFFICIENT_EVIDENCE"]},
@@ -86,7 +87,7 @@
     "topology_sha256", "freeze_manifest_sha256", "deterministic_qualification_sha256",
     "memory_chain_qualification_sha256", "post_memory_strategy_sha256",
     "provider_artifact_sha256", "provider_call_sha256", "selected_action_sha256",
-    "action_execution_sha256", "regression_receipt_sha256", "judge_receipt_sha256",
+    "action_execution_sha256", "regression_receipt_sha256", "relayforge_binding_sha256", "judge_receipt_sha256",
     "memory_judge_delta_sha256", "judge_verdict", "campaign_journal_sha256", "closed_blocker", "remaining_blockers",
     "artifacts", "mocked", "live", "fixture_fallback_used",
     "memory_improvement_proven", "production_readiness_proven", "claims", "created_at"

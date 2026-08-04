@@ -1,0 +1,50 @@
+{
+  "context_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/providers/context/tau-public-context.json",
+  "context_sha256": "1a48f99ed179aed703dc57b0017ff43da7f8e22fba13a6f0a93d17e9500516ed",
+  "created_at": "2026-08-04T19:15:53Z",
+  "fixture_fallback_used": false,
+  "live": true,
+  "memory_chain_qualification_sha256": "2b7619f0b48c88da3842a3a7e9779db739f8a184efcfdf8c550fa3529904b4e8",
+  "mocked": false,
+  "post_memory_strategy_sha256": "e77140e49911224f03390ac23581875cb51e4f4f1022188da2f5956271c196e8",
+  "private_identifier_match_count": 0,
+  "schema": "battle.v16.live_topology_provider_manifest.v1",
+  "status": "PASS",
+  "target_id": "battle-v16-relayforge-a",
+  "tau_manifest_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/providers/tau-live/manifest.json",
+  "tau_manifest_sha256": "4c8726a9bc185807b0d5f1f4e7cef899ca473a51fdc803c861049d3defb78687",
+  "team_context_sha256": {
+    "blue": "0521fb72bceb379451010c1196040bee8088f02b82ceb538ebddad7b99295b8d",
+    "red": "a83869c25d880d58d82bff921f19041261f1c86f9cd12eb2e277b740b8386ea0"
+  },
+  "teams": {
+    "blue": {
+      "http_status": 200,
+      "live": true,
+      "materialized_artifact_sha256": "234036e4919034bc4bfdeba078838889da250c4d170da0ecea1214cb892ea569",
+      "mocked": false,
+      "parsed_json_sha256": "16b690c23b52fbc523ca91f326a486fe0733da5e1ea70213446eb4f73e00644a",
+      "provider_call_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/providers/tau-live/blue/scillm-call-receipt.json",
+      "provider_call_sha256": "54a1accc7785988c34e155196718ae8076e76da9ee44068d9956c070ccad21ad",
+      "provider_request_sha256": null,
+      "strategy_genome_sha256": "192e3d44441f4e74fff6e5f2542e03f695082a6205a0a4f7265413c4bd9121ee",
+      "tau_handoff_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/providers/tau-live/blue/handoff.json",
+      "tau_handoff_sha256": "aec03c581aad06154cbfef8db9cd8746f58369de43a6a80bb1e2e764672a9e1b",
+      "team": "blue"
+    },
+    "red": {
+      "http_status": 200,
+      "live": true,
+      "materialized_artifact_sha256": "57777c0e213612eaf557c67e802b897179586693a46554cb68d7e82dbc53129d",
+      "mocked": false,
+      "parsed_json_sha256": "c7250e9e324a429f49b18246bfa6cda298b7d3874c9132a6b4fcb90146a01446",
+      "provider_call_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/providers/tau-live/red/scillm-call-receipt.json",
+      "provider_call_sha256": "ad6186f57d09d6cd3b85718a6191edeaa530578d72ce9e3b4ec816295c95d660",
+      "provider_request_sha256": null,
+      "strategy_genome_sha256": "3ac5e24bac2b92133de4a59144921effdd2afe47e64d3be496a773ccf7ecc52f",
+      "tau_handoff_path": "/tmp/battle-v16-relayforge-live-topology-r6-20260804T1500Z/providers/tau-live/red/handoff.json",
+      "tau_handoff_sha256": "3e5092717ccaf913ba72db780b41a07ac6f37f7e0990631a555dee177a9982d7",
+      "team": "red"
+    }
+  }
+}
