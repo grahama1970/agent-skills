@@ -16,6 +16,51 @@ from battle_skill import cli as battle_cli  # noqa: E402
 from battle_skill.ux_contract_validator import ContractError, validate_exploit_lifecycle_receipts, validate_exploit_lifecycle_receipts_path  # noqa: E402
 
 
+def test_canonical_zip_slip_scenario_is_marked_canary_not_balanced(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_write_target_files(target_dir: Path):  # type: ignore[no-untyped-def]
+        target_dir.mkdir(parents=True)
+        app_path = target_dir / "app.py"
+        exploit_path = target_dir / "exploit.py"
+        app_path.write_text("def import_zip(): pass\n", encoding="utf-8")
+        exploit_path.write_text("print('RED_EXPLOIT_CONFIRMED')\n", encoding="utf-8")
+        return app_path, exploit_path
+
+    monkeypatch.setattr(proof, "_write_target_files", fake_write_target_files)
+    monkeypatch.setattr(
+        proof,
+        "_run_oracle",
+        lambda **_: {
+            "command": ["python", "exploit.py"],
+            "exit_code": 0,
+            "stdout_path": "stdout.txt",
+            "stderr_path": "stderr.txt",
+        },
+    )
+
+    receipt_path = proof._write_canonical_zip_slip_scenario(
+        arena_out=tmp_path / "arena",
+        battle_id="battle-004",
+        run_id="run-001",
+        docker_image="python:3.12-slim",
+    )
+
+    scenario = json.loads((tmp_path / "arena" / "scenario.json").read_text(encoding="utf-8"))
+    public_brief = json.loads((tmp_path / "arena" / "team-public" / "scenario-brief.json").read_text(encoding="utf-8"))
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+
+    balance = scenario["arena_balance_contract"]
+    assert balance["schema"] == proof.ARENA_BALANCE_CONTRACT_SCHEMA
+    assert balance["competitive_relevance"] == "NOT_QUALIFIED"
+    assert balance["qualification_status"] == "CANARY_ONLY"
+    assert "repeated automatic BLUE_SUCCESS" in balance["disqualifying_patterns"]
+    assert "terminal receipt with balance_diagnosis" in balance["required_for_balanced_arena"]
+    assert public_brief["arena_balance_contract"] == balance
+    assert receipt["arena_balance_contract"] == balance
+
+
 def test_tau_abort_manifest_preserves_partial_materialized_worker_receipts(
     tmp_path: Path,
 ) -> None:

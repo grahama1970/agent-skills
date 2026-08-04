@@ -33,6 +33,7 @@ SCOREBOARD_SCHEMA = "battle.arena_tau_public_only_scoreboard.v1"
 VALIDATION_SCHEMA = "battle.arena_tau_public_only_visibility_validation.v1"
 EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA = "battle.exploit_lifecycle_receipts.v1"
 EXPLOIT_LIFECYCLE_RECEIPT_SCHEMA = "battle.exploit_lifecycle_receipt.v1"
+ARENA_BALANCE_CONTRACT_SCHEMA = "battle.arena_balance_contract.v1"
 PREKILL_SURVIVAL_SPAWN_DECISIONS = frozenset({"strategic_pre_kill", "panic_spawn", "parallel_pivot"})
 TERMINAL_BOUNDARY_EVENT_TYPES = frozenset(
     {
@@ -46,6 +47,39 @@ TAU_REPO = Path(
     os.environ.get("TAU_REPO", "/home/graham/workspace/experiments/tau")
 ).expanduser().resolve()
 CANONICAL_BATTLE004_ALLOTTED_SECONDS = 1200.0
+
+
+def _canonical_zip_slip_balance_contract() -> dict[str, Any]:
+    return {
+        "schema": ARENA_BALANCE_CONTRACT_SCHEMA,
+        "competitive_relevance": "NOT_QUALIFIED",
+        "qualification_status": "CANARY_ONLY",
+        "reason": (
+            "BATTLE-004 Zip Slip is a backend lineage/Judge canary. It is not "
+            "sufficiently complex to prove Red/Blue competitive balance."
+        ),
+        "disqualifying_patterns": [
+            "repeated automatic BLUE_SUCCESS",
+            "single known vulnerability family",
+            "no arena-level balance diagnosis",
+            "no Red first-signal versus Blue patch timing comparison",
+        ],
+        "required_for_balanced_arena": [
+            "staged multi-step exploit path",
+            "plausible Blue narrow defense and broad defense paths",
+            "decoys or shortcut traps tested by Judge predicates",
+            "functionality regressions that can invalidate overbroad patches",
+            "terminal receipt with red_first_signal_elapsed_seconds",
+            "terminal receipt with blue_patch_elapsed_seconds",
+            "terminal receipt with balance_diagnosis",
+        ],
+        "allowed_balance_diagnosis_values": [
+            "too_easy_for_blue",
+            "too_easy_for_red",
+            "balanced",
+            "inconclusive",
+        ],
+    }
 
 
 def run_arena_prekill_survival_proof(
@@ -670,6 +704,7 @@ def _write_canonical_zip_slip_scenario(
         "target_language": "python",
         "hidden_vulnerability_family": "Zip Slip path traversal",
         "cwe": "CWE-22",
+        "arena_balance_contract": _canonical_zip_slip_balance_contract(),
         "red_blue_visible": {
             "entrypoint": "/api/import-zip",
             "files": ["app.py"],
@@ -696,6 +731,7 @@ def _write_canonical_zip_slip_scenario(
             "public_entrypoint": scenario["public_entrypoint"],
             "public_contract": scenario["public_contract"],
             "red_blue_visible": scenario["red_blue_visible"],
+            "arena_balance_contract": scenario["arena_balance_contract"],
         },
     )
 
@@ -711,6 +747,7 @@ def _write_canonical_zip_slip_scenario(
             "live": "docker_oracle",
             "team": "arena",
             "persona": "canonical-battle-004-scenario-builder",
+            "arena_balance_contract": scenario["arena_balance_contract"],
             "docker_image": docker_image,
             "artifact_paths": {
                 "scenario": str(scenario_path),
