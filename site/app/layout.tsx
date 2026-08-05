@@ -24,8 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Dark is the site default; a stored visitor choice overrides it.
-const themeBoot = `(function(){try{var t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -33,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
+        
         {children}
       </body>
     </html>

@@ -1,212 +1,454 @@
-import { CopyEmail } from '@/components/copy-email';
-import { ReceiptsSection } from '@/components/receipts-section';
+import artifacts from '@/artifacts.json';
+import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
 import { SkillMosaic } from '@/components/skill-mosaic';
-import { TelemetryBar } from '@/components/telemetry-bar';
-import { WorkGrid } from '@/components/work-grid';
+import content from '@/content.json';
 import inventory from '@/inventory.json';
 
 const REPO = 'https://github.com/grahama1970/agent-skills';
 
+/** Per-card collage placement + tint from the winning comp. */
+const CARD_META: Record<string, { cls: string; tint: string }> = {
+  tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)' },
+  battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)' },
+  surf: { cls: 'c3', tint: 'rgba(147,162,137,.45)' },
+  'persona-dream': { cls: 'c4', tint: 'rgba(226,172,98,.5)' },
+  extractor: { cls: 'c5', tint: 'rgba(196,142,86,.45)' },
+  dogpile: { cls: 'c6', tint: 'rgba(160,120,150,.4)' },
+  watch: { cls: 'c7', tint: 'rgba(209,112,60,.42)' },
+  scillm: { cls: 'c8', tint: 'rgba(147,162,137,.42)' },
+  debugger: { cls: 'c9', tint: 'rgba(196,142,86,.42)' },
+  'sparta-explorer': { cls: 'c10', tint: 'rgba(120,140,170,.38)' },
+};
+
 const DREAM_PHASES = [
-  { f: 'phase01-idea-memory-residue', c: '01 · Memory residue becomes an idea' },
-  { f: 'phase02-story', c: '02 · The story takes shape' },
-  { f: 'phase03-crew', c: '03 · A crew is cast' },
-  { f: 'phase04-contact-sheets', c: '04 · Contact sheets are reviewed' },
-  { f: 'phase05-voices', c: '05 · Voices are trained' },
-  { f: 'phase06-script', c: '06 · The script locks' },
-  { f: 'phase07-storyboard', c: '07 · Storyboard panels pass review' },
-  { f: 'phase08-media-lock', c: '08 · Media locks with receipts' },
-  { f: 'phase09-video-provider-current', c: '09 · Providers are scored and chosen' },
-  { f: 'dream-panel', c: 'A frame from the finished dream — rendered June 2026' },
+  { f: 'phase01-idea-memory-residue', n: '01', c: 'idea · memory residue', t: 'rgba(209,112,60,.5)' },
+  { f: 'phase02-story', n: '02', c: 'story', t: 'rgba(196,142,86,.45)' },
+  { f: 'phase03-crew', n: '03', c: 'crew', t: 'rgba(147,162,137,.42)' },
+  { f: 'phase04-contact-sheets', n: '04', c: 'contact sheets', t: 'rgba(226,172,98,.42)' },
+  { f: 'phase05-voices', n: '05', c: 'voices', t: 'rgba(178,74,58,.42)' },
+  { f: 'phase06-script', n: '06', c: 'script', t: 'rgba(160,120,150,.4)' },
+  { f: 'phase07-storyboard', n: '07', c: 'storyboard', t: 'rgba(196,142,86,.42)' },
+  { f: 'phase08-media-lock', n: '08', c: 'media lock', t: 'rgba(147,162,137,.4)' },
+  { f: 'phase09-video-provider-current', n: '09', c: 'video provider', t: 'rgba(209,112,60,.4)' },
 ];
+
+const TRACK = [
+  { t: 'Composer', d: 'Commercial work for Adidas, Pepsi, X-Games.' },
+  { t: 'Executive producer, Sony', d: 'God of War: Ascension campaign — Webby-recognized, 80-person productions.' },
+  { t: 'DARPA ARCOS', d: 'Principal data scientist and technical lead, alongside Honeywell, Lockheed Martin, MIT, GE, SRI.' },
+  { t: 'AFRL “Hacker” challenge coin', d: 'Recognition out of that work.' },
+  { t: 'Lean 4 formal methods', d: 'Proof discipline carried into agent design.' },
+  { t: 'This practice', d: 'Agent systems that produce their own evidence — shipped as working code, in public.' },
+];
+
+const skillFlags = new Map(
+  (inventory.skills as { n: string; s: boolean }[]).map((s) => [s.n, s.s]),
+);
 
 export default function Home() {
   const { stats, commit, as_of } = inventory;
+  const receiptArtifacts = Object.fromEntries(
+    artifacts.artifacts.map((a) => [a.id, a]),
+  );
   return (
     <>
-      <SiteNav />
-      <main id="top" className="mx-auto max-w-[1440px] px-6 md:px-10">
-        <section className="grid gap-10 border-b border-line py-16 md:grid-cols-[3fr_2fr] md:py-24">
-          <div>
-            <h1 className="mb-8 max-w-[14ch] text-balance font-display text-[clamp(3.2rem,6.8vw,7.5rem)] leading-[0.95]">
-              <span className="hero-line">
-                <span style={{ ['--d' as string]: '0ms' }}>I build agent</span>
-              </span>
-              <span className="hero-line">
-                <span style={{ ['--d' as string]: '90ms' }}>systems that can</span>
-              </span>
-              <span className="hero-line">
-                <span style={{ ['--d' as string]: '180ms' }}>prove what they did.</span>
-              </span>
-            </h1>
-            <p className="hero-sub mb-4 max-w-[62ch] text-[18px]">
-              A one-person practice with an unusual résumé: commercial composer
-              for Adidas and Pepsi, Webby-recognized producer for Sony, DARPA
-              technical lead alongside Lockheed Martin and MIT. High-end
-              creative and hard technical work — delivered by the same person,
-              shipped as working code, in public.
-            </p>
-            <p className="text-[16px]">
-              <a
-                href="mailto:graham@grahama.co"
-                data-qid="hero:link:email"
-                data-qs-action="HERO_EMAIL"
-                title="Email graham@grahama.co"
-                className="text-accent underline underline-offset-4"
+      <div className="glow" aria-hidden="true" />
+      <div className="grain" aria-hidden="true" />
+      <div className="page">
+        <SiteNav />
+        <KeyboardNav />
+
+        {/* ===================== HERO ===================== */}
+        <section className="hero ruledbg" id="top">
+          <div className="wrap">
+            <div className="hero-grid">
+              <div className="hero-main">
+                <p className="eyebrow rise" style={{ ['--d' as string]: '.05s' }}>
+                  <span className="dot" /> One-person practice{' '}
+                  <span aria-hidden="true">/</span> agent systems, formal
+                  methods, evidence
+                </p>
+                <h1 className="rise" style={{ ['--d' as string]: '.12s' }}>
+                  I build agent systems that can <span className="it">prove</span>{' '}
+                  what they did.
+                </h1>
+                <p className="hero-bio rise" style={{ ['--d' as string]: '.28s' }}>
+                  A one-person practice with an unusual résumé: commercial
+                  composer for <em>Adidas</em> and <em>Pepsi</em>,
+                  Webby-recognized producer for <em>Sony</em>, DARPA technical
+                  lead alongside <em>Lockheed Martin</em> and <em>MIT</em>.
+                  High-end creative and hard technical work — delivered by the
+                  same person, shipped as working code, in public.
+                </p>
+                <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
+                  <a
+                    className="btn"
+                    href="mailto:graham@grahama.co"
+                    data-qid="hero:action:email"
+                    data-qs-action="HERO_EMAIL"
+                    title="Email graham@grahama.co"
+                  >
+                    Bring me the project you shelved <span className="arrow">→</span>
+                  </a>
+                  <a
+                    className="btn ghost"
+                    href={REPO}
+                    data-qid="hero:action:repo"
+                    data-qs-action="HERO_OPEN_REPO"
+                    title="Open the agent-skills repository on GitHub"
+                  >
+                    Read the code
+                  </a>
+                </div>
+              </div>
+              <aside
+                className="hero-side rise"
+                style={{ ['--d' as string]: '.5s' }}
+                aria-label="Skill inventory"
               >
-                graham@grahama.co
-              </a>
-              <span className="mx-3 text-mute">·</span>
-              <a
-                href={REPO}
-                data-qid="hero:link:repo"
-                data-qs-action="HERO_OPEN_REPO"
-                title="Open the agent-skills repository on GitHub"
-                className="text-accent underline underline-offset-4"
-              >
-                github.com/grahama1970/agent-skills
-              </a>
-            </p>
+                <div className="rail">
+                  <p className="rail-title">Inventory</p>
+                  <div className="figs">
+                    <div className="fig">
+                      <span className="n">{stats.skills}</span>
+                      <span className="l">skill contracts</span>
+                    </div>
+                    <div className="fig">
+                      <span className="n">
+                        {stats.sanity}
+                        <small>
+                          {Math.round((stats.sanity / stats.skills) * 100)}%
+                        </small>
+                      </span>
+                      <span className="l">with sanity checks</span>
+                    </div>
+                    <div className="fig">
+                      <span className="n">{stats.agents}</span>
+                      <span className="l">bounded agents</span>
+                    </div>
+                  </div>
+                  <p className="prov">
+                    generated
+                    <br />
+                    <b>{inventory.generator}</b>
+                    <br />@{' '}
+                    <a
+                      href={`${REPO}/commit/${commit}`}
+                      data-qid="hero:link:commit"
+                      data-qs-action="HERO_OPEN_COMMIT"
+                      title={`Open commit ${commit} on GitHub`}
+                    >
+                      {commit}
+                    </a>{' '}
+                    · {as_of}
+                  </p>
+                </div>
+              </aside>
+            </div>
+          </div>
+          <figure
+            className="strip wipe"
+            role="img"
+            aria-label="Rendered dream frame from the persona-dream pipeline"
+          >
+            <figcaption>
+              <b>/dream/dream-panel.webp</b> — persona-dream, rendered frame
+            </figcaption>
+          </figure>
+        </section>
+
+        <hr className="rule" />
+
+        {/* ===================== LEDGER ===================== */}
+        <section id="ledger">
+          <div className="wrap">
+            <div className="ledger-grid">
+              <div className="ledger-copy">
+                <p className="kicker">
+                  <b>01</b> The ledger
+                </p>
+                <h2 className="h2">
+                  Every contract, including the ones without checks.
+                </h2>
+                <p className="lede" style={{ marginTop: '1.1rem' }}>
+                  One cell per skill contract — each links to its SKILL.md.
+                  Filled cells carry a sanity check; outlined cells are
+                  contract-only. The gaps stay visible on purpose — a practice
+                  built on receipts doesn&apos;t get to hide its holes.
+                </p>
+              </div>
+              <SkillMosaic />
+            </div>
           </div>
         </section>
 
-        <div className="border-b border-line py-5">
-          <TelemetryBar />
-        </div>
+        <hr className="rule" />
 
-        <section id="work" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
-          <h2 className="mb-2 font-display text-[clamp(2rem,3.6vw,3.4rem)]">The work</h2>
-          <p className="mb-3 max-w-[64ch] text-mute">
-            Ten running systems, each an open research question with code
-            behind it. Every entry links to its source.
-          </p>
-          <p className="machine mb-10 text-mute">
-            status badges computed from the repo inventory @ {commit} — not
-            asserted
-          </p>
-          <WorkGrid />
+        {/* ===================== WORK ===================== */}
+        <section id="work">
+          <div className="wrap">
+            <div className="work-head">
+              <div>
+                <p className="kicker">
+                  <b>02</b> Work
+                </p>
+                <h2 className="h2">Ten questions, answered in running code.</h2>
+              </div>
+              <p className="count">01 — 10 · each one a research question</p>
+            </div>
+            <div className="cards">
+              {content.projects.map((p, i) => {
+                const meta = CARD_META[p.slug];
+                const external = !skillFlags.has(p.slug);
+                return (
+                  <a
+                    key={p.slug}
+                    className={`card ${meta.cls}`}
+                    href={p.href}
+                    data-qid={`work:card:${p.slug}`}
+                    data-qs-action="WORK_OPEN_PROJECT"
+                    title={`Open ${p.name} on GitHub`}
+                  >
+                    <div
+                      className="shot"
+                      style={{
+                        ['--img' as string]: `url('/projects/${p.slug}.webp')`,
+                        ['--tint' as string]: meta.tint,
+                      }}
+                      role="img"
+                      aria-label={`${p.name} — concept art`}
+                    />
+                    <div className="card-body">
+                      <span className="idx">{String(i + 1).padStart(2, '0')}</span>
+                      <h3 className="cname">{p.name}</h3>
+                      <p className="q">{p.question}</p>
+                      <p className="d">{p.blurb}</p>
+                      <span className={`chip${external ? ' ext' : ''}`}>
+                        {external
+                          ? 'external repo'
+                          : skillFlags.get(p.slug)
+                            ? 'sanity-checked'
+                            : 'contract only'}
+                      </span>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
-        <section id="dream" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
-          <h2 className="mb-2 font-display text-[clamp(2rem,3.6vw,3.4rem)]">
-            A dream, assembled
-          </h2>
-          <p className="mb-3 max-w-[64ch] text-mute">
-            persona-dream turns an agent&apos;s accumulated memory into a
-            reviewed, receipt-gated film. These are real frames from the
-            pipeline — nine phases of actual product UI, then a frame from a
-            finished dream. Scroll through the run.
-          </p>
-          <p className="machine mb-8 text-mute">
-            captured from the live run of 2026-06-29 · every PASS chip is a
-            real review verdict
-          </p>
-          <div className="dream-scroller">
-            <div className="dream-frames">
-              {DREAM_PHASES.map((d, i) => (
-                <figure
-                  key={d.f}
-                  className="dream-frame"
-                  style={{
-                    animationRange: `contain ${i * 9.5}% contain ${i * 9.5 + 12}%`,
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/dream/${d.f}.webp`} alt={d.c} loading="lazy" />
-                  <figcaption className="machine">{d.c}</figcaption>
+        {/* ===================== DREAM ===================== */}
+        <section className="dream" id="dream">
+          <div className="wrap">
+            <div className="dream-head">
+              <div className="a">
+                <p className="kicker">
+                  <b>03</b> persona-dream
+                </p>
+                <h2 className="h2">Agent memories, rendered into film.</h2>
+              </div>
+              <p className="b">
+                Nine phases from idea to media lock, each a real frame out of
+                the pipeline — receipt-backed dream packets rather than a mood
+                board. Captured from the live run of 2026-06-29.
+              </p>
+            </div>
+            <figure
+              className="panel"
+              role="img"
+              aria-label="Cinematic rendered dream frame from persona-dream"
+            >
+              <span className="tag">/dream/dream-panel.webp</span>
+            </figure>
+            <div className="film" aria-label="persona-dream pipeline phases">
+              {DREAM_PHASES.map((d) => (
+                <figure className="frame" key={d.f}>
+                  <div
+                    className="im"
+                    style={{
+                      ['--img' as string]: `url('/dream/${d.f}.webp')`,
+                      ['--tint' as string]: d.t,
+                    }}
+                    role="img"
+                    aria-label={`Phase ${d.n} — ${d.c}`}
+                  />
+                  <figcaption className="cap">
+                    <b>phase {d.n}</b>
+                    {d.c}
+                  </figcaption>
                 </figure>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="index" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
-          <h2 className="mb-2 font-display text-[clamp(2rem,3.6vw,3.4rem)]">
-            Every skill, including the gaps
-          </h2>
-          <p className="mb-8 max-w-[64ch] text-mute">
-            One cell per SKILL.md contract in the public repo, generated from
-            commit <span className="machine">{commit}</span>, grouped by the
-            taxonomy in the data. Filled cells have a sanity check; outlined
-            cells don&apos;t yet. Showing the holes is the point — no claim
-            ships without a receipt, including this one.
-          </p>
-          <SkillMosaic />
-        </section>
+        <hr className="rule" />
 
-        <ReceiptsSection />
-
-        <section id="about" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
-          <h2 className="mb-3 font-display text-[clamp(2rem,3.6vw,3.4rem)]">
-            An unusual path, on purpose
-          </h2>
-          <div className="max-w-[64ch]">
-            <p className="mb-4">
-              I scored commercials for Adidas, Pepsi, and the X-Games. I ran
-              80-person interactive productions as Executive Producer on
-              Sony&apos;s <em>God of War: Ascension</em> campaign
-              (Webby-recognized). Then I spent four years as Principal Data
-              Scientist and technical lead on DARPA ARCOS, building the
-              knowledge-graph and LLM reasoning system for automated
-              certification of mission-critical software — alongside Honeywell,
-              Lockheed Martin, MIT, GE Research, and SRI.
-            </p>
-            <p className="mb-4">
-              That path is the point. Traditional teams hand hard problems to
-              specialists who have seen them before. The problems I take are
-              the ones nobody has seen before — where the playbook doesn&apos;t
-              exist yet. Composition, production, and certification taught the
-              same discipline from different directions: hold a large system in
-              your head, make its structure explicit, and prove that it works.
-              It&apos;s why my systems are architected, not stapled together.
-              Available for engagements and full-time roles.
-            </p>
-            <p className="machine text-mute">
-              DARPA ARCOS · AFRL &quot;Hacker&quot; challenge coin · Lean 4
-              formal methods · 15+ years hand-coding · ITAR-experienced ·{' '}
-              <a
-                href={`${REPO}/blob/main/RESUME.md`}
-                data-qid="about:link:resume"
-                data-qs-action="ABOUT_OPEN_RESUME"
-                title="Open RESUME.md on GitHub"
-                className="text-accent no-underline hover:underline"
-              >
-                full résumé ↗
-              </a>
-            </p>
+        {/* ===================== RECEIPTS ===================== */}
+        <section id="receipts">
+          <div className="wrap">
+            <div className="receipts-grid">
+              <div className="receipts-copy">
+                <p className="kicker">
+                  <b>04</b> Receipts
+                </p>
+                <h2 className="h2">No claim ships without one.</h2>
+                <p className="lede" style={{ marginTop: '1.1rem' }}>
+                  Three excerpts, printed as they came out of
+                  <span className="machine"> gen_artifacts.py</span>: a node
+                  receipt from the roundtable run that designed this page, a
+                  captured audit, and the provenance of the numbers above.
+                  Captured output, not status widgets.
+                </p>
+              </div>
+              <div className="tickets">
+                {(['roundtable-receipt', 'live-audit', 'inventory-provenance'] as const).map(
+                  (id) =>
+                    receiptArtifacts[id] && (
+                      <article className="ticket" key={id}>
+                        <h3>{receiptArtifacts[id].title}</h3>
+                        <pre className="json">{receiptArtifacts[id].body}</pre>
+                        <p className="foot">{receiptArtifacts[id].caption}</p>
+                      </article>
+                    ),
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
-        <section id="contact" className="surface scroll-mt-14 py-16 md:py-20">
-          <h2 className="mb-3 font-display text-[clamp(2rem,3.6vw,3.4rem)]">
-            Bring me the project you shelved
-          </h2>
-          <p className="mb-4 max-w-[62ch]">
-            If your team wants an agentic system it can&apos;t staff — or has a
-            prototype that never survived contact with production — that&apos;s
-            the work I take.
-          </p>
-          <p className="mb-6 max-w-[62ch]">
-            One person also means a different deal than a consulting firm: the
-            person you talk to is the person who architects, builds, and
-            answers for the result — no account layer, no handoffs, no diffused
-            accountability. One senior rate instead of an army&apos;s overhead.
-            The repo above is the working evidence behind the{' '}
-            <a
-              href={`${REPO}/blob/main/RESUME.md`}
-              data-qid="contact:link:resume"
-              data-qs-action="CONTACT_OPEN_RESUME"
-              title="Open RESUME.md on GitHub"
-              className="text-accent underline underline-offset-4"
-            >
-              résumé
-            </a>
-            .
-          </p>
-          <CopyEmail />
+        <hr className="rule" />
+
+        {/* ===================== ABOUT ===================== */}
+        <section id="about">
+          <div className="wrap">
+            <div className="about-grid">
+              <div className="about-copy">
+                <p className="kicker">
+                  <b>05</b> About
+                </p>
+                <h2 className="h2">An unusual path, on purpose.</h2>
+                <div className="thesis">
+                  <p>
+                    An unconventional path is an advantage on problems with no
+                    playbook.
+                  </p>
+                </div>
+                <p className="lede" style={{ marginTop: '1.6rem' }}>
+                  One person also means direct accountability — the person you
+                  talk to architects, builds, and answers for the result. One
+                  senior rate instead of an army&apos;s overhead. Available for
+                  engagements and full-time roles —{' '}
+                  <a
+                    href={`${REPO}/blob/main/RESUME.md`}
+                    data-qid="about:link:resume"
+                    data-qs-action="ABOUT_OPEN_RESUME"
+                    title="Open RESUME.md on GitHub"
+                    style={{ color: 'var(--brass)' }}
+                  >
+                    full résumé
+                  </a>
+                  .
+                </p>
+              </div>
+              <div className="track">
+                {TRACK.map((s) => (
+                  <div className="stop" key={s.t}>
+                    <p className="st">{s.t}</p>
+                    <p className="sd">{s.d}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
-      </main>
+
+        {/* ===================== CLOSER ===================== */}
+        <section className="closer ruledbg" id="contact">
+          <div className="wrap">
+            <div className="closer-inner">
+              <div className="a">
+                <p className="kicker">
+                  <b>06</b> Next
+                </p>
+                <p className="shelved">
+                  Bring me the project you <em>shelved</em>.
+                </p>
+              </div>
+              <div className="b">
+                <p className="accountability">
+                  The one with no playbook — the one that stalled because it
+                  needed both halves of the job.
+                </p>
+                <a
+                  className="btn"
+                  href="mailto:graham@grahama.co"
+                  data-qid="contact:action:email"
+                  data-qs-action="CONTACT_EMAIL"
+                  title="Email graham@grahama.co"
+                >
+                  graham@grahama.co <span className="arrow">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer>
+          <div className="wrap">
+            <div className="foot-grid">
+              <div className="foot-a">
+                <p className="lab">Contact</p>
+                <a
+                  href="mailto:graham@grahama.co"
+                  data-qid="footer:link:email"
+                  data-qs-action="FOOTER_EMAIL"
+                  title="Email graham@grahama.co"
+                >
+                  graham@grahama.co
+                </a>
+                <a
+                  href={REPO}
+                  data-qid="footer:link:repo"
+                  data-qs-action="FOOTER_OPEN_REPO"
+                  title="Open the agent-skills repository"
+                >
+                  github.com/grahama1970/agent-skills
+                </a>
+                <a
+                  href={`${REPO}/blob/main/RESUME.md`}
+                  data-qid="footer:link:resume"
+                  data-qs-action="FOOTER_OPEN_RESUME"
+                  title="Open RESUME.md"
+                >
+                  github.com/grahama1970/agent-skills/blob/main/RESUME.md
+                </a>
+              </div>
+              <div className="foot-b">
+                <p className="lab">Inventory</p>
+                <p className="prov" style={{ marginTop: 0 }}>
+                  {stats.skills} skill contracts
+                  <br />
+                  {stats.sanity} with sanity checks (
+                  {Math.round((stats.sanity / stats.skills) * 100)}%)
+                  <br />
+                  {stats.agents} bounded agents
+                  <br />
+                  <b>{inventory.generator}</b> @ {commit}
+                  <br />
+                  {as_of}
+                </p>
+              </div>
+              <div className="foot-c">
+                <p className="lab">Ethos</p>
+                <p className="ethos">No claim ships without a receipt.</p>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
     </>
   );
 }
