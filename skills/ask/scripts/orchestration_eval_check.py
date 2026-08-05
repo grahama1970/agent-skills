@@ -51,7 +51,7 @@ def main() -> int:
         "schema_is_tau_generic_dag": spec["schema"] == "tau.generic_dag_spec.v1",
         "five_agents": len(nodes) == 5,
         "heterogeneous_profiles": heterogeneous_profile_count(spec) >= 2,
-        "boss_on_premium_profile": nodes["coordinator"]["tau_agent"]["model"] == "profile:claude-model-turn",
+        "boss_on_premium_profile": nodes["coordinator"]["tau_agent"]["model"] == "profile:claude-fable-model-turn",
         "workers_delegated_under_boss": all(
             "coordinator" in nodes[w]["depends_on"] for w in ("api", "ui")
         ),

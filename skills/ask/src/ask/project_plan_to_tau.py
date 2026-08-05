@@ -25,7 +25,7 @@ TAU_SPEC_SCHEMA = "tau.generic_dag_spec.v1"
 # scillm#27 contract ids; Tau performs authoritative eligibility/selection.
 TEAM_PRESETS: dict[str, dict[str, str]] = {
     "fullstack-premium": {
-        "coordinator": "claude-model-turn",
+        "coordinator": "claude-fable-model-turn",
         "backend": "claude-model-turn",
         "frontend": "claude-model-turn",
         "documentation": "codex-model-turn",

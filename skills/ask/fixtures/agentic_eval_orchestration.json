@@ -86,6 +86,7 @@
           "\"status\": \"READY\"",
           "\"id\": \"coordinator\"",
           "\"id\": \"review\"",
+          "profile:claude-fable-model-turn",
           "profile:claude-model-turn",
           "profile:codex-model-turn",
           "spec_sha256"
