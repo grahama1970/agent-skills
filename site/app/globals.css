@@ -50,6 +50,12 @@
 
 html {
   background: var(--t-paper);
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 :root {
   color-scheme: dark;
