@@ -1,0 +1,56 @@
+{
+ "core_fields": {
+  "Country": {
+   "input": "combobox",
+   "selector": "#country"
+  },
+  "Cover Letter": {
+   "input": "file",
+   "selector": "#cover_letter"
+  },
+  "Degree": {
+   "input": "autocomplete",
+   "selector": "#degree--0"
+  },
+  "Discipline": {
+   "input": "autocomplete",
+   "selector": "#discipline--0"
+  },
+  "Email": {
+   "input": "text",
+   "selector": "#email"
+  },
+  "First Name": {
+   "input": "text",
+   "selector": "#first_name"
+  },
+  "Last Name": {
+   "input": "text",
+   "selector": "#last_name"
+  },
+  "Location (City)": {
+   "input": "autocomplete",
+   "selector": "#candidate-location"
+  },
+  "Phone": {
+   "input": "tel",
+   "selector": "#phone"
+  },
+  "Resume/CV": {
+   "input": "file",
+   "selector": "#resume"
+  },
+  "School": {
+   "input": "autocomplete",
+   "selector": "#school--0"
+  }
+ },
+ "custom_question_binding": {
+  "selector_shape": "#question_<numeric id>",
+  "strategy": "aria_label_or_label_text"
+ },
+ "notes": "Core ids are stable across Greenhouse-hosted boards. Custom questions use per-posting question_<id> ids; bind those at runtime by aria-label/label match and cache per posting keyed by form_schema_digest. Live DOM includes required fields absent from the job-board API questions payload (country, candidate-location, demographic selects) \u2014 prefill planning must use the DOM capture, not the API alone.",
+ "provider": "greenhouse",
+ "schema": "monitor_opportunities.ats_selector_map.v1",
+ "verified_against": "job-boards.greenhouse.io/discord 2026-08-05"
+}
