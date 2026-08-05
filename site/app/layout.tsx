@@ -24,7 +24,8 @@ export const metadata: Metadata = {
   },
 };
 
-const themeBoot = `(function(){try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
+// Dark is the site default; a stored visitor choice overrides it.
+const themeBoot = `(function(){try{var t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 export default function RootLayout({
   children,

@@ -1,6 +1,8 @@
+import { CopyEmail } from '@/components/copy-email';
 import { SiteNav } from '@/components/site-nav';
 import { SkillMosaic } from '@/components/skill-mosaic';
-import content from '@/content.json';
+import { TelemetryBar } from '@/components/telemetry-bar';
+import { WorkGrid } from '@/components/work-grid';
 import inventory from '@/inventory.json';
 
 const REPO = 'https://github.com/grahama1970/agent-skills';
@@ -58,26 +60,11 @@ export default function Home() {
               </a>
             </p>
           </div>
-          <div className="machine self-end border-l-2 border-line pl-5 text-mute">
-            <div className="mb-1 text-ink">repo inventory — generated, not typed</div>
-            <div>{stats.skills} skill contracts (SKILL.md)</div>
-            <div>{stats.sanity} with sanity checks</div>
-            <div>{stats.agents} bounded agent definitions</div>
-            <div className="mt-2">
-              source{' '}
-              <a
-                href={`${REPO}/commit/${commit}`}
-                data-qid="hero:link:commit"
-                data-qs-action="HERO_OPEN_COMMIT"
-                title={`Open commit ${commit} on GitHub`}
-                className="text-accent no-underline hover:underline"
-              >
-                {commit}
-              </a>{' '}
-              · {as_of} · {inventory.generator}
-            </div>
-          </div>
         </section>
+
+        <div className="border-b border-line py-5">
+          <TelemetryBar />
+        </div>
 
         <section id="work" className="scroll-mt-14 border-b border-line py-16 md:py-20">
           <h2 className="mb-2 font-display text-[clamp(2rem,3.6vw,3.4rem)]">The work</h2>
@@ -86,59 +73,10 @@ export default function Home() {
             behind it. Every entry links to its source.
           </p>
           <p className="machine mb-10 text-mute">
-            card images are commissioned concept art, labeled as such — real
-            artifact plates are being generated per project
+            status badges computed from the repo inventory @ {commit} — not
+            asserted
           </p>
-          <ol className="flex flex-col">
-            {content.projects.map((p, i) => (
-              <li
-                key={p.slug}
-                id={p.slug}
-                className={`work-row grid scroll-mt-14 items-start gap-6 py-10 md:grid-cols-[2fr_3fr] ${
-                  i % 2 ? 'md:[&>a]:order-2' : ''
-                }`}
-              >
-                <a
-                  href={p.href}
-                  data-qid={`work:image:${p.slug}`}
-                  data-qs-action="WORK_OPEN_PROJECT"
-                  title={`Open ${p.name} on GitHub (concept art)`}
-                  className="concept-frame block border border-line"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/projects/${p.slug}.webp`}
-                    alt={`${p.name} concept card`}
-                    loading="lazy"
-                    className="w-full"
-                  />
-                </a>
-                <div>
-                  <div className="machine mb-1 text-mute">
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  <h3 className="mb-2 font-display text-[clamp(1.7rem,3vw,2.8rem)]">
-                    {p.name}
-                  </h3>
-                  <p className="mb-2 font-display text-[20px] italic text-mute">
-                    {p.question}
-                  </p>
-                  <p className="mb-3 max-w-[62ch] text-[16px]">{p.blurb}</p>
-                  <p className="machine">
-                    <a
-                      href={p.href}
-                      data-qid={`work:link:${p.slug}`}
-                      data-qs-action="WORK_OPEN_README"
-                      title={`Open the ${p.name} README on GitHub`}
-                      className="text-accent no-underline hover:underline"
-                    >
-                      README ↗
-                    </a>
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <WorkGrid />
         </section>
 
         <section id="dream" className="scroll-mt-14 border-b border-line py-16 md:py-20">
@@ -255,15 +193,7 @@ export default function Home() {
             </a>
             .
           </p>
-          <a
-            href="mailto:graham@grahama.co"
-            data-qid="contact:action:email"
-            data-qs-action="CONTACT_EMAIL"
-            title="Email graham@grahama.co"
-            className="inline-block bg-ink px-6 py-3 text-[15px] text-paper no-underline hover:bg-accent"
-          >
-            Email graham@grahama.co
-          </a>
+          <CopyEmail className="inline-block bg-ink px-6 py-3 text-[15px] text-paper no-underline hover:bg-accent" />
         </section>
       </main>
     </>

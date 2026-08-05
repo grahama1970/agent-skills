@@ -18,15 +18,6 @@
 /* Theme tokens: light paper-editorial and its dark counterpart.
    data-theme is stamped on <html> before paint by the inline boot script. */
 :root {
-  --t-paper: oklch(97.7% 0.008 90);
-  --t-ink: oklch(22% 0.012 80);
-  --t-line: oklch(89% 0.018 90);
-  --t-mute: oklch(51% 0.02 80);
-  --t-accent: oklch(54% 0.11 60);
-  --t-fill: oklch(90% 0.05 85);
-  --t-glass: oklch(97.7% 0.008 90 / 0.82);
-}
-[data-theme='dark'] {
   --t-paper: oklch(20% 0.012 75);
   --t-ink: oklch(93% 0.014 90);
   --t-line: oklch(32% 0.016 78);
@@ -34,6 +25,15 @@
   --t-accent: oklch(76% 0.115 68);
   --t-fill: oklch(37% 0.055 70);
   --t-glass: oklch(20% 0.012 75 / 0.82);
+}
+[data-theme='light'] {
+  --t-paper: oklch(97.7% 0.008 90);
+  --t-ink: oklch(22% 0.012 80);
+  --t-line: oklch(89% 0.018 90);
+  --t-mute: oklch(51% 0.02 80);
+  --t-accent: oklch(54% 0.11 60);
+  --t-fill: oklch(90% 0.05 85);
+  --t-glass: oklch(97.7% 0.008 90 / 0.82);
 }
 
 @theme inline {
@@ -52,10 +52,10 @@ html {
   background: var(--t-paper);
 }
 :root {
-  color-scheme: light;
-}
-[data-theme='dark'] {
   color-scheme: dark;
+}
+[data-theme='light'] {
+  color-scheme: light;
 }
 
 body {
@@ -151,9 +151,199 @@ body {
   border-top-color: var(--t-accent);
 }
 
-/* Mosaic filter: the transition IS the query result rendering. */
+/* Mosaic: taxonomy micro-accents, hover inspection, CSS tooltip. */
+:root {
+  --cat-core: #d97706;
+  --cat-create: #0d9488;
+  --cat-best-practices: #4f46e5;
+  --cat-monitor: #e11d48;
+  --cat-ops: #4b5563;
+  --cat-review: #7c3aed;
+  --cat-ingest: #0369a1;
+  --cat-consume: #b45309;
+  --cat-learn: #15803d;
+  --cat-discover: #a21caf;
+  --cat-extract: #9f1239;
+  --cat-train: #1d4ed8;
+  --cat-tts: #737373;
+  --cat-default: #d97706;
+}
+[data-theme='dark'] {
+  --cat-ops: #9ca3af;
+  --cat-tts: #a3a3a3;
+}
 .mosaic-cell {
-  transition: opacity 120ms ease;
+  position: relative;
+  border-color: var(--cell-accent, var(--cat-default));
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+.mosaic-cell.is-checked {
+  background-color: var(--cell-accent, var(--cat-default));
+}
+.mosaic-cell:hover,
+.mosaic-cell:focus-visible {
+  transform: scale(1.4);
+  z-index: 20;
+}
+.mosaic-cell::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  translate: -50% 2px;
+  padding: 0.4rem 0.65rem;
+  background: #18181b;
+  color: #f4f4f5;
+  font-family: var(--font-mono);
+  font-size: 0.725rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 150ms ease,
+    translate 150ms ease;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+  z-index: 100;
+}
+.mosaic-cell:hover::after,
+.mosaic-cell:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  translate: -50% 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mosaic-cell:hover,
+  .mosaic-cell:focus-visible {
+    transform: none;
+  }
+}
+
+/* Work grid: responsive 1/2/3/4-column project cards with category
+   accent bars. Status badges are computed from the real inventory. */
+.work-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-auto-rows: 1fr;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 600px) {
+  .work-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .work-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 1440px) {
+  .work-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.project-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--t-line);
+  border-radius: 6px;
+  padding: 1rem;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+.project-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: var(--card-accent, var(--t-line));
+}
+.project-card:hover,
+.project-card:focus-visible {
+  border-color: var(--t-mute);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.05);
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-card:hover,
+  .project-card:focus-visible {
+    transform: none;
+  }
+}
+.tag-pill {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  background-color: var(--t-fill);
+  color: var(--t-ink);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid var(--t-line);
+  white-space: nowrap;
+}
+.card-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--t-line);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+.project-card:hover .card-action {
+  border-color: var(--t-mute);
+}
+.card-action::after {
+  content: '↗';
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+/* Toast for copy-to-clipboard feedback. */
+.ui-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  padding: 0.6rem 1rem;
+  background: #18181b;
+  color: #f4f4f5;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #3f3f46;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.3);
+  transform: translateY(100px);
+  opacity: 0;
+  transition:
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 200ms ease;
+  z-index: 1000;
+}
+.ui-toast.is-active {
+  transform: translateY(0);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-toast {
+    transition: opacity 200ms ease;
+    transform: none;
+  }
 }
 
 /* "A dream, assembled" — scroll-scrubbed sequence of real pipeline frames.
