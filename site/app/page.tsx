@@ -17,9 +17,11 @@ export default function Home() {
               I build agent systems that can prove what they did.
             </h1>
             <p className="mb-4 max-w-[58ch] text-[18px]">
-              Applied research, one person, in public. Memory-first harnesses,
-              adversarial fuzzing arenas, evidence extraction, browser control —
-              shipped as working code, not slides. Available for engagements and
+              A one-person practice with an unusual résumé: commercial composer
+              for Adidas and Pepsi, Webby-recognized producer for Sony, DARPA
+              technical lead alongside Lockheed Martin and MIT. High-end
+              creative and hard technical work — delivered by the same person,
+              shipped as working code, in public. Available for engagements and
               full-time roles.
             </p>
             <p className="text-[16px]">
