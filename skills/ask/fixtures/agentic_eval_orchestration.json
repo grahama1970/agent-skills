@@ -12,8 +12,12 @@
       "name": "boss-worker-reviewer-plan-compiles-with-delegation-edges",
       "type": "positive",
       "command": [
-        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
-        "python", "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/orchestration_eval_check.py"
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/orchestration_eval_check.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -30,8 +34,12 @@
       "name": "live-coordinator-worker-reviewer-executes-through-tau",
       "type": "positive",
       "command": [
-        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
-        "python", "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/ask_tau_native_canary.py",
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/ask_tau_native_canary.py",
         "--live"
       ],
       "expected": {
@@ -48,13 +56,55 @@
       "name": "canary-refuses-without-live-opt-in",
       "type": "adversarial",
       "command": [
-        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
-        "python", "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/ask_tau_native_canary.py"
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/ask_tau_native_canary.py"
       ],
       "expected": {
         "exit_code": 2,
         "stdout_contains": [
           "refusing to run: live provider calls"
+        ]
+      }
+    },
+    {
+      "name": "team-plan-fullstack-renders-six-agent-preview",
+      "type": "positive",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "team-plan",
+        "build a settings dashboard with a Python API, React UI, docs, and tests",
+        "--team",
+        "fullstack-premium"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"READY\"",
+          "\"id\": \"coordinator\"",
+          "\"id\": \"review\"",
+          "profile:claude-model-turn",
+          "profile:codex-model-turn",
+          "spec_sha256"
+        ]
+      }
+    },
+    {
+      "name": "team-plan-vague-request-fails-closed-to-interview",
+      "type": "negative",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "team-plan",
+        "do something vague"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": [
+          "NEEDS_INTERVIEW",
+          "\"field\": \"workstreams\""
         ]
       }
     }
