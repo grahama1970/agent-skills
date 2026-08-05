@@ -683,6 +683,13 @@ def build_pptx(
     require_approved_claims: bool = False,
     draft_watermark: bool = False,
 ) -> tuple[OperationReceipt, ValidationReport]:
+    # Theme tokens (DeckMeta.theme_tokens) are the shared accent/font source
+    # with the browser renderer; only non-default tokens override the palette.
+    tokens = deck.deck.theme_tokens
+    if tokens.accent.lower() != "#22d3ee":
+        Theme.cyan = tokens.accent.lstrip("#").upper()
+    if tokens.body_font != "Arial":
+        Theme.font = tokens.body_font
     report = validate_bundle(
         deck,
         ledger,

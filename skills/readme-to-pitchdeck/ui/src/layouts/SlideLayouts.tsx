@@ -46,7 +46,7 @@ function Visual({ visual }: { visual: UiVisual }) {
       <div className="flex h-full w-full items-center justify-center gap-6">
         {visual.items.map((item, i) => (
           <div key={item} className="flex items-center gap-6">
-            {i > 0 ? <span aria-hidden className="text-5xl text-cyan-400">→</span> : null}
+            {i > 0 ? <span aria-hidden className="text-5xl text-[var(--deck-accent,#67e8f9)]">→</span> : null}
             <div className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-8 py-6 text-center text-3xl font-medium">
               {item}
             </div>
@@ -75,7 +75,7 @@ function BodyList({ slide, size = 'text-4xl' }: { slide: UiSlide; size?: string 
     <ul className={`m-0 flex list-none flex-col gap-5 p-0 ${size} leading-snug text-slate-200 ${slide.reveal !== 'none' ? `reveal-${slide.reveal}` : ''}`}>
       {slide.body.map((line, index) => (
         <li key={line} style={{ '--i': index } as React.CSSProperties} className="flex gap-4">
-          <span aria-hidden className="mt-1 text-cyan-400">▸</span>
+          <span aria-hidden className="mt-1 text-[var(--deck-accent,#67e8f9)]">▸</span>
           <span>
             <Editable slide={slide} field={`body:${index}`} label={`bullet ${index + 1}`} value={line}>
               {line}
@@ -96,7 +96,7 @@ export function Cover({ slide }: { slide: UiSlide }) {
   return (
     <div className="relative flex h-full flex-col justify-center gap-8 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 px-32">
       <h1 className="m-0 text-8xl font-bold tracking-tight text-white"><Editable slide={slide} field="title" label="title" value={slide.title}>{slide.title}</Editable></h1>
-      <p className="m-0 max-w-5xl text-5xl leading-tight text-cyan-200"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
+      <p className="m-0 max-w-5xl text-5xl leading-tight text-[var(--deck-accent,#67e8f9)]"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       <Footer slide={slide} />
     </div>
   )
@@ -106,7 +106,7 @@ export function Statement({ slide }: { slide: UiSlide }) {
   return (
     <div className="relative flex h-full flex-col items-center justify-center gap-10 px-40 text-center">
       <h2 className="m-0 text-6xl font-semibold text-white"><Editable slide={slide} field="title" label="title" value={slide.title}>{slide.title}</Editable></h2>
-      <p className="m-0 max-w-6xl text-5xl leading-snug text-cyan-100"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
+      <p className="m-0 max-w-6xl text-5xl leading-snug text-[var(--deck-accent,#67e8f9)]"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       <BodyList slide={slide} size="text-3xl" />
       <Footer slide={slide} />
     </div>
@@ -118,7 +118,7 @@ export function Split({ slide }: { slide: UiSlide }) {
     <div className="relative flex h-full flex-col gap-10 px-24 py-20">
       <header>
         <h2 className="m-0 text-6xl font-semibold text-white"><Editable slide={slide} field="title" label="title" value={slide.title}>{slide.title}</Editable></h2>
-        <p className="mt-4 text-4xl text-cyan-200"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
+        <p className="mt-4 text-4xl text-[var(--deck-accent,#67e8f9)]"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-2 items-center gap-16">
         {slide.visual.position === 'left' ? (
@@ -143,7 +143,7 @@ export function Screenshot({ slide }: { slide: UiSlide }) {
     <div className="relative flex h-full flex-col gap-8 px-24 py-16">
       <header className="flex items-baseline justify-between gap-8">
         <h2 className="m-0 text-5xl font-semibold text-white"><Editable slide={slide} field="title" label="title" value={slide.title}>{slide.title}</Editable></h2>
-        <p className="m-0 max-w-2xl text-right text-3xl text-cyan-200"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
+        <p className="m-0 max-w-2xl text-right text-3xl text-[var(--deck-accent,#67e8f9)]"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       </header>
       <div className="min-h-0 flex-1">
         <Visual visual={slide.visual} />
@@ -159,7 +159,7 @@ export function CardGrid({ slide }: { slide: UiSlide }) {
     <div className="relative flex h-full flex-col gap-12 px-24 py-20">
       <header>
         <h2 className="m-0 text-6xl font-semibold text-white"><Editable slide={slide} field="title" label="title" value={slide.title}>{slide.title}</Editable></h2>
-        <p className="mt-4 text-4xl text-cyan-200"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
+        <p className="mt-4 text-4xl text-[var(--deck-accent,#67e8f9)]"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       </header>
       <ul className={`m-0 grid min-h-0 flex-1 list-none content-start gap-8 p-0 [grid-template-columns:repeat(auto-fit,minmax(480px,1fr))] ${slide.reveal !== 'none' ? `reveal-${slide.reveal}` : ''}`}>
         {cards.map((card, cardIndex) => (
@@ -178,7 +178,7 @@ export function Flow({ slide }: { slide: UiSlide }) {
     <div className="relative flex h-full flex-col gap-12 px-24 py-20">
       <header>
         <h2 className="m-0 text-6xl font-semibold text-white"><Editable slide={slide} field="title" label="title" value={slide.title}>{slide.title}</Editable></h2>
-        <p className="mt-4 text-4xl text-cyan-200"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
+        <p className="mt-4 text-4xl text-[var(--deck-accent,#67e8f9)]"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       </header>
       <div className="min-h-0 flex-1">
         {slide.visual.type !== 'none' ? (

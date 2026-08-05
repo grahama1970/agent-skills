@@ -58,6 +58,8 @@ class UiElement(StrictModel):
     color: str | None = None
     align: str = "left"
     asset: UiAsset | None = None
+    entrance: str = "none"
+    entrance_delay_ms: int = 0
 
 
 class UiVisual(StrictModel):
@@ -99,6 +101,7 @@ class UiDeckBundle(StrictModel):
     audience: str
     visibility: str
     theme: str
+    theme_tokens: dict[str, str] = Field(default_factory=dict)
     slides: list[UiSlide] = Field(min_length=1)
     claim_summary: dict[str, int] = Field(default_factory=dict)
     revision: int = 0
@@ -204,6 +207,8 @@ def emit_ui_bundle(
                 color=element.color,
                 align=element.align,
                 asset=_ui_asset(element.asset_id) if element.asset_id else None,
+                entrance=element.entrance,
+                entrance_delay_ms=element.entrance_delay_ms,
             )
             for element in slide.elements
         ]
@@ -243,6 +248,7 @@ def emit_ui_bundle(
         audience=deck.deck.audience,
         visibility=deck.deck.visibility.value,
         theme=deck.deck.theme,
+        theme_tokens=deck.deck.theme_tokens.model_dump(),
         slides=ui_slides,
         claim_summary=claim_summary,
         validation_readiness=report.readiness.value,

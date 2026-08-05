@@ -12,6 +12,7 @@ import { PresenterOverlay } from './components/Presenter'
 import { ShortcutsModal } from './components/ShortcutsModal'
 import { ResizeHandle } from './components/ResizeHandle'
 import { SourcePane } from './components/SourcePane'
+import { Toasts, toast } from './components/Toasts'
 import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { lintSlide } from './lib/pptxLint'
@@ -210,6 +211,16 @@ export function App() {
     description: 'Restore the previous committed bundle state (undo of undo = redo)',
   })
 
+  // Theme tokens (typed in DeckMeta.theme_tokens) → CSS vars consumed by the
+  // slide layouts, so the browser and PPTX emitters share one accent source.
+  useEffect(() => {
+    if (!deck?.theme_tokens) return
+    const root = document.documentElement.style
+    root.setProperty('--deck-accent', deck.theme_tokens.accent)
+    root.setProperty('--deck-heading-font', deck.theme_tokens.heading_font)
+    root.setProperty('--deck-body-font', deck.theme_tokens.body_font)
+  }, [deck])
+
   const go = useCallback(
     (next: number) => {
       setDirection(next >= index ? 'fwd' : 'back')
@@ -277,7 +288,11 @@ export function App() {
         if (typing || !editing) return // native text undo wins while typing
         event.preventDefault()
         void postUndo().then((failure) => {
-          if (!failure) reloadAll()
+          if (failure) toast(`Undo failed: ${failure}`, 'error')
+          else {
+            toast('Undo applied')
+            reloadAll()
+          }
         })
       }
     }
@@ -339,6 +354,7 @@ export function App() {
         <PresenterOverlay slides={navSlides.filter((s) => !s.hidden)} initialIndex={index} onClose={() => setPresenting(false)} />
       ) : null}
       <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+      <Toasts />
       <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 border-b border-slate-800 px-4 py-1.5">
         <div className="flex min-w-0 items-center gap-3">
           {editing ? (

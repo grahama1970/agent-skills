@@ -119,8 +119,12 @@ def apply_slide_edit(
                 updated = target.model_copy(update={"bold": value == "true"})
             elif sub == "align":
                 updated = target.model_copy(update={"align": value})
+            elif sub == "entrance":
+                updated = target.model_copy(update={"entrance": value})
+            elif sub == "entrance-delay":
+                updated = target.model_copy(update={"entrance_delay_ms": int(float(value))})
             else:
-                raise ValueError(f"unknown element field '{sub}'; use frame|text|size|bold|align")
+                raise ValueError(f"unknown element field '{sub}'; use frame|text|size|bold|align|entrance|entrance-delay")
             elements = [updated if e.id == target.id else e for e in elements]
         updated_slide = slide.model_copy(update={"elements": elements})
     elif base_field == "visual" and index_part == "position":

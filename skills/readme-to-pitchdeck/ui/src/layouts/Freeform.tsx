@@ -176,12 +176,13 @@ export function Freeform({ slide }: { slide: UiSlide }) {
           return (
             <div
               key={element.id}
-              className="absolute"
+              className={`absolute ${element.entrance && element.entrance !== 'none' ? `entrance-${element.entrance}` : ''}`}
               style={{
                 left: frame.x * CANVAS_WIDTH,
                 top: frame.y * CANVAS_HEIGHT,
                 width: frame.w * CANVAS_WIDTH,
                 height: frame.h * CANVAS_HEIGHT,
+                animationDelay: element.entrance_delay_ms ? `${element.entrance_delay_ms}ms` : undefined,
               }}
             >
               <ElementContent element={element} />

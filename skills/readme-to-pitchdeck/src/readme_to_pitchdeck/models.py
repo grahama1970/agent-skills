@@ -313,6 +313,10 @@ class FreeformElement(StrictModel):
     color: str | None = None
     align: Literal["left", "center", "right"] = "left"
     asset_id: str | None = None
+    # Entrance animation is manifest data, not a CSS afterthought: typed here,
+    # rendered by the browser, and readable by any future PPTX animation pass.
+    entrance: Literal["none", "fade", "rise", "zoom"] = "none"
+    entrance_delay_ms: int = Field(default=0, ge=0, le=5000)
 
     @model_validator(mode="after")
     def validate_element(self) -> "FreeformElement":
@@ -397,6 +401,14 @@ class SlideSpec(StrictModel):
     footer: str | None = None
 
 
+class ThemeTokens(StrictModel):
+    """Typed design tokens applied identically by the browser and PPTX emitters."""
+
+    accent: str = Field(default="#22d3ee", pattern=r"^#[0-9a-fA-F]{6}$")
+    heading_font: str = Field(default="Arial", min_length=1)
+    body_font: str = Field(default="Arial", min_length=1)
+
+
 class DeckMeta(StrictModel):
     id: str = Field(min_length=1)
     title: str = Field(min_length=1)
@@ -405,6 +417,7 @@ class DeckMeta(StrictModel):
     visibility: Visibility
     target_editor: str = "google_slides"
     theme: str = "dark_cyan_evidence"
+    theme_tokens: ThemeTokens = Field(default_factory=ThemeTokens)
     source_policy: DeckSourcePolicy
     author: str | None = None
 

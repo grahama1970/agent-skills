@@ -31,6 +31,8 @@ export interface UiElement {
   color?: string
   align: string
   asset?: UiAsset
+  entrance: 'none' | 'fade' | 'rise' | 'zoom' | string
+  entrance_delay_ms: number
 }
 
 export interface UiVisual {
@@ -71,6 +73,7 @@ export interface UiDeckBundle {
   audience: string
   visibility: 'public' | 'private' | string
   theme: string
+  theme_tokens: { accent: string; heading_font: string; body_font: string }
   slides: UiSlide[]
   claim_summary: Record<string, number>
   validation_readiness: string

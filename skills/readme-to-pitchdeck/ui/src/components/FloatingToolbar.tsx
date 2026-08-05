@@ -101,6 +101,20 @@ export function FloatingToolbar({
           <span aria-hidden className="mx-0.5 h-4 w-px bg-slate-700" />
         </>
       ) : null}
+      <select
+        aria-label="Entrance animation"
+        data-qid={`deck:eltoolbar:entrance:${element.id}`}
+        data-qs-action="DECK_ELEMENT_ENTRANCE"
+        title="Entrance animation for this element"
+        value={element.entrance ?? 'none'}
+        onChange={(event) => void act(`element:${element.id}:entrance`, event.target.value)}
+        className="cursor-pointer rounded border border-slate-700 bg-slate-900 px-1 py-0.5 text-xs text-slate-200"
+      >
+        <option value="none">No entrance</option>
+        <option value="fade">Fade</option>
+        <option value="rise">Rise</option>
+        <option value="zoom">Zoom</option>
+      </select>
       <button
         type="button"
         data-qid={`deck:eltoolbar:delete:${element.id}`}
