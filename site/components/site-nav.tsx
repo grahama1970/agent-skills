@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { KeyboardNav } from '@/components/keyboard-nav';
 import { MobileNav } from '@/components/mobile-nav';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { announce } from '@/lib/announce';
@@ -119,6 +120,7 @@ export function SiteNav() {
             </a>
             <ThemeToggle />
           </div>
+          <KeyboardNav />
           <MobileNav active={active} />
         </nav>
       </header>
