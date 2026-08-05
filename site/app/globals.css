@@ -1,36 +1,39 @@
 @import 'tailwindcss';
 
 @font-face {
-  font-family: 'Departure Mono';
-  src: url('/fonts/DepartureMono-Regular.woff2') format('woff2');
+  font-family: 'Instrument Serif';
+  src: url('/fonts/instrument-serif-v5-latin-regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/instrument-serif-v5-latin-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
 
 @theme {
-  --font-display: 'Departure Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
-  --color-ground: #0b0e14;
-  --color-panel: #141926;
-  --color-line: #232b3d;
-  --color-ink: #e9e4d8;
-  --color-mute: #7e8798;
-  --color-accent: #ffb454;
-  --color-ok: #4fd6be;
-  --font-mono:
-    ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
-  --font-sans:
-    system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-paper: #faf8f4;
+  --color-ink: #16150f;
+  --color-line: #e2dccd;
+  --color-mute: #6e675c;
+  --color-accent: #9a5b1f;
+  --color-fill: #e8ddc8;
+  --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 html {
-  background: var(--color-ground);
-  color-scheme: dark;
-  scroll-behavior: smooth;
+  background: var(--color-paper);
+  color-scheme: light;
 }
 
 body {
-  background: var(--color-ground);
+  background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 17px;
@@ -38,8 +41,8 @@ body {
 }
 
 ::selection {
-  background: var(--color-accent);
-  color: var(--color-ground);
+  background: var(--color-ink);
+  color: var(--color-paper);
 }
 
 :focus-visible {
@@ -47,130 +50,11 @@ body {
   outline-offset: 2px;
 }
 
-/* Scroll-driven section reveals — progressive enhancement only.
-   Content is fully visible when animation-timeline is unsupported
-   or the user prefers reduced motion. */
-.reveal {
-  opacity: 1;
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .reveal {
-      animation: reveal-rise linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 35%;
-    }
-  }
-}
-@keyframes reveal-rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Hero trace ledger: staged line reveal with a typing caret on the
-   final line. Static (all lines visible) under reduced motion. */
-.trace-line {
-  opacity: 0;
-  animation: trace-in 0.01s forwards;
-}
-@keyframes trace-in {
-  to {
-    opacity: 1;
-  }
-}
-.trace-caret::after {
-  content: '▍';
-  color: var(--color-accent);
-  animation: caret-blink 1s steps(1) infinite;
-}
-@keyframes caret-blink {
-  50% {
-    opacity: 0;
-  }
-}
-/* Kinetic headline: words rise out of a clipped line on load. */
-.kinetic-word {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-}
-.kinetic-word > span {
-  display: inline-block;
-  animation: word-rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  animation-delay: var(--d, 0s);
-}
-@keyframes word-rise {
-  from {
-    transform: translateY(110%);
-  }
-  to {
-    transform: none;
-  }
-}
-
-/* Grid-as-foreground: ruled section boundaries with crosshair ticks. */
-.ruled {
-  position: relative;
-}
-.ruled::before,
-.ruled::after {
-  content: '+';
-  position: absolute;
-  top: -0.72em;
+/* Machine-output rule: monospace appears only inside .machine blocks —
+   text a program actually produced (stats, paths, commit SHAs). Never in
+   headlines or prose. */
+.machine {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--color-line);
-}
-.ruled::before {
-  left: -2px;
-}
-.ruled::after {
-  right: -2px;
-}
-
-/* Command palette */
-.palette-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgb(11 14 20 / 0.75);
-  backdrop-filter: blur(2px);
-}
-.palette-panel {
-  animation: palette-in 0.16s ease-out both;
-}
-@keyframes palette-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.99);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  .trace-line {
-    animation: none;
-    opacity: 1;
-  }
-  .trace-caret::after {
-    animation: none;
-  }
-  .kinetic-word > span {
-    animation: none;
-  }
-  .palette-panel {
-    animation: none;
-  }
+  font-variant-numeric: tabular-nums;
 }

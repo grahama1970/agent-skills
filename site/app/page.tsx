@@ -1,159 +1,190 @@
-import { CommandPalette } from '@/components/command-palette';
-import { ContactCta } from '@/components/contact-cta';
-import { Kinetic } from '@/components/kinetic';
-import { ProjectCard, type Project } from '@/components/project-card';
 import { SiteNav } from '@/components/site-nav';
-import { StatCounter } from '@/components/stat-counter';
-import { Trace } from '@/components/trace';
+import { SkillMosaic } from '@/components/skill-mosaic';
 import content from '@/content.json';
+import inventory from '@/inventory.json';
 
-const PROJECTS: Project[] = content.projects;
-const STATS = content.stats;
-
-const PILLARS = [
-  {
-    name: 'multi-agent orchestration',
-    body: 'Creator–reviewer–judge loops compiled as verifiable DAGs. Roundtables of frontier models that deliberate, dissent, and converge — with every round’s evidence shared equally and every verdict attributable.',
-  },
-  {
-    name: 'self-improving skill ecosystems',
-    body: 'Hundreds of composable agent skills under continuous evaluation: adversarial test harnesses, drift monitors, and CI that grades the agents — not just the code.',
-  },
-  {
-    name: 'persistent agent memory',
-    body: 'Graph-backed memory that survives the session: BM25 + semantic + multi-hop recall over everything the agents have learned, so week two starts smarter than week one.',
-  },
-  {
-    name: 'autonomy that runs unattended',
-    body: 'Overnight goals with fail-closed stop conditions, watchdogs, bounded retries, and receipts for every action — agents you can leave alone because they can prove themselves.',
-  },
-];
-
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-4 font-mono text-xs uppercase tracking-[0.18em] text-accent">
-      {children}
-    </p>
-  );
-}
+const REPO = 'https://github.com/grahama1970/agent-skills';
 
 export default function Home() {
+  const { stats, commit, as_of } = inventory;
   return (
     <>
       <SiteNav />
-      <main id="top" className="px-6 md:ml-[200px] md:px-12">
-        <section className="mx-auto max-w-[70ch] border-b border-line py-20">
-          <Eyebrow>Applied research engineering · agentic systems</Eyebrow>
-          <h1 className="mb-6 text-balance font-display text-4xl leading-[1.14] tracking-tight md:text-5xl">
-            <Kinetic text="We run the agent experiments most teams" />
-            <Kinetic text="can't afford to attempt." startDelay={0.45} dim />
-          </h1>
-          <p className="text-[19px]">
-            Multi-agent orchestration, self-improving skill ecosystems, and
-            verified autonomy — taken from paper to production discipline:
-            systems that run overnight, unattended, and prove what they did.
-          </p>
-          <CommandPalette />
-          <Trace />
+      <main id="top" className="mx-auto max-w-[1080px] px-6">
+        <section className="grid gap-10 border-b border-line py-16 md:grid-cols-[3fr_2fr] md:py-20">
+          <div>
+            <h1 className="mb-6 text-balance font-display text-5xl leading-[1.08] md:text-6xl">
+              I build agent systems that can prove what they did.
+            </h1>
+            <p className="mb-4 max-w-[58ch] text-[18px]">
+              Applied research, one person, in public. Memory-first harnesses,
+              adversarial fuzzing arenas, evidence extraction, browser control —
+              shipped as working code, not slides. Available for engagements and
+              full-time roles.
+            </p>
+            <p className="text-[16px]">
+              <a
+                href="mailto:graham@grahama.co"
+                data-qid="hero:link:email"
+                data-qs-action="HERO_EMAIL"
+                title="Email graham@grahama.co"
+                className="text-accent underline underline-offset-4"
+              >
+                graham@grahama.co
+              </a>
+              <span className="mx-3 text-line">·</span>
+              <a
+                href={REPO}
+                data-qid="hero:link:repo"
+                data-qs-action="HERO_OPEN_REPO"
+                title="Open the agent-skills repository on GitHub"
+                className="text-accent underline underline-offset-4"
+              >
+                github.com/grahama1970/agent-skills
+              </a>
+            </p>
+          </div>
+          <div className="machine self-end border-l-2 border-line pl-5 text-mute">
+            <div className="mb-1 text-ink">repo inventory — generated, not typed</div>
+            <div>{stats.skills} skill contracts (SKILL.md)</div>
+            <div>{stats.sanity} with sanity checks</div>
+            <div>{stats.agents} bounded agent definitions</div>
+            <div className="mt-2">
+              source{' '}
+              <a
+                href={`${REPO}/commit/${commit}`}
+                data-qid="hero:link:commit"
+                data-qs-action="HERO_OPEN_COMMIT"
+                title={`Open commit ${commit} on GitHub`}
+                className="text-accent no-underline hover:underline"
+              >
+                {commit}
+              </a>{' '}
+              · {as_of} · {inventory.generator}
+            </div>
+          </div>
         </section>
 
-        <section id="build" className="reveal ruled mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
-          <Eyebrow>What we build</Eyebrow>
-          <h2 className="mb-4 text-balance font-display text-2xl">
-            Research that stays running
-          </h2>
-          <p className="mb-6 text-mute">
-            Most labs can pose these questions; most product teams can ship
-            software. The rare thing is both: exploratory systems held to
-            operations discipline — watchdogs, bounded retries, fail-closed
-            stops, receipts.
-          </p>
-          <div className="flex flex-col gap-3.5">
-            {PILLARS.map((p) => (
-              <div key={p.name} className="rounded-md border border-line bg-panel px-6 py-5">
-                <h3 className="mb-2 font-mono text-[15px] font-semibold tracking-wide text-accent">
-                  {p.name}
-                </h3>
-                <p className="text-[15.5px] text-mute">{p.body}</p>
-              </div>
+        <section className="border-b border-line py-10">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {content.projects.map((p) => (
+              <a
+                key={p.slug}
+                href={`#${p.slug}`}
+                data-qid={`sheet:thumb:${p.slug}`}
+                data-qs-action="SHEET_GOTO_PROJECT"
+                title={`Jump to ${p.name}`}
+                className="block"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/projects/${p.slug}.webp`}
+                  alt={`${p.name} project card`}
+                  loading="lazy"
+                  className="aspect-[16/10] w-full rounded-sm border border-line object-cover"
+                />
+              </a>
             ))}
           </div>
         </section>
 
-        <section id="receipts" className="reveal ruled mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
-          <Eyebrow>Why trust it</Eyebrow>
-          <h2 className="mb-5 text-balance font-display text-2xl">
-            Verified, or it didn&apos;t happen
-          </h2>
-          <p className="mb-4">
-            The failure mode of agentic AI isn&apos;t capability — it&apos;s
-            unverifiable claims. Our discipline is simple and total: every agent
-            action produces an artifact, every artifact is read back
-            independently, and every claim is labeled <em>verified</em> or{' '}
-            <em>inference</em>. Success responses are not proof. Green
-            self-written tests are not proof. A receipt is proof.
+        <section id="work" className="scroll-mt-6 border-b border-line py-16">
+          <h2 className="mb-2 font-display text-3xl">The work</h2>
+          <p className="mb-10 max-w-[60ch] text-mute">
+            Ten running systems, each an open research question with code
+            behind it. Every entry links to its source.
           </p>
-          <p className="text-mute">
-            That discipline is why our systems can gate pull requests, run
-            compliance evidence pipelines, and operate overnight without a human
-            quality gate.
-          </p>
-          <div className="mt-7 grid grid-cols-2 gap-3.5 md:grid-cols-3">
-            <StatCounter value={STATS.skills} label="skills with operating contracts (SKILL.md)" />
-            <StatCounter value={STATS.sanity} label="ship a sanity.sh — cheap local proof" />
-            <StatCounter value={STATS.agents} label="bounded agents with receipts & stop conditions" />
-          </div>
-          <p className="mt-5 text-sm text-mute">
-            All of it public:{' '}
-            <a
-              href="https://github.com/grahama1970/agent-skills"
-              data-qid="receipts:link:repo"
-              data-qs-action="RECEIPTS_OPEN_REPO"
-              title="Open the agent-skills repository on GitHub"
-              className="text-accent underline underline-offset-2"
-            >
-              github.com/grahama1970/agent-skills
-            </a>{' '}
-            — the code and contracts are open; the private runtime (memory
-            services, browser bindings, model gateways) stays private. A
-            blueprint you can read, not a demo you have to believe.
-          </p>
-        </section>
-
-        <section id="projects" className="reveal ruled mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
-          <Eyebrow>Live experiments</Eyebrow>
-          <h2 className="mb-5 text-balance font-display text-2xl">
-            Ten running systems, not ten slide decks
-          </h2>
-          <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
-            {PROJECTS.map((p) => (
-              <ProjectCard key={p.slug} project={p} />
+          <ol className="flex flex-col gap-14">
+            {content.projects.map((p, i) => (
+              <li
+                key={p.slug}
+                id={p.slug}
+                className={`grid scroll-mt-6 items-start gap-6 md:grid-cols-[2fr_3fr] ${
+                  i % 2 ? 'md:[&>a]:order-2' : ''
+                }`}
+              >
+                <a
+                  href={p.href}
+                  data-qid={`work:image:${p.slug}`}
+                  data-qs-action="WORK_OPEN_PROJECT"
+                  title={`Open ${p.name} on GitHub`}
+                  className="block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/projects/${p.slug}.webp`}
+                    alt={`${p.name} project card`}
+                    loading="lazy"
+                    className="w-full rounded-sm border border-line"
+                  />
+                </a>
+                <div>
+                  <div className="machine mb-1 text-mute">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <h3 className="mb-2 font-display text-2xl">{p.name}</h3>
+                  <p className="mb-2 font-display text-[19px] italic text-mute">
+                    {p.question}
+                  </p>
+                  <p className="mb-3 max-w-[52ch] text-[16px]">{p.blurb}</p>
+                  <p className="machine">
+                    <a
+                      href={p.href}
+                      data-qid={`work:link:${p.slug}`}
+                      data-qs-action="WORK_OPEN_README"
+                      title={`Open the ${p.name} README on GitHub`}
+                      className="text-accent no-underline hover:underline"
+                    >
+                      README ↗
+                    </a>
+                  </p>
+                </div>
+              </li>
             ))}
-          </div>
+          </ol>
         </section>
 
-        <section id="contact" className="reveal ruled mx-auto max-w-[70ch] scroll-mt-8 py-20">
-          <Eyebrow>Contact</Eyebrow>
-          <h2 className="mb-5 text-balance font-display text-2xl">
-            Bring us the project you shelved
+        <section id="index" className="scroll-mt-6 border-b border-line py-16">
+          <h2 className="mb-2 font-display text-3xl">
+            Every skill, including the gaps
           </h2>
-          <p className="mb-5">
-            If your team has an agentic system it wants but can&apos;t staff —
-            or a prototype that never survived contact with production —
-            that&apos;s the work I take. Available for engagements and full-time
-            roles; the repo above is the working evidence behind the{' '}
+          <p className="mb-8 max-w-[60ch] text-mute">
+            One cell per SKILL.md contract in the public repo, generated from
+            commit <span className="machine">{commit}</span>. Filled cells have
+            a sanity check; outlined cells don&apos;t yet. Showing the holes is
+            the point — no claim ships without a receipt, including this one.
+          </p>
+          <SkillMosaic />
+        </section>
+
+        <section id="contact" className="scroll-mt-6 py-16">
+          <h2 className="mb-3 font-display text-3xl">
+            Bring me the project you shelved
+          </h2>
+          <p className="mb-6 max-w-[58ch]">
+            If your team wants an agentic system it can&apos;t staff — or has a
+            prototype that never survived contact with production — that&apos;s
+            the work I take. The repo above is the working evidence behind the{' '}
             <a
-              href="https://github.com/grahama1970/agent-skills/blob/main/RESUME.md"
+              href={`${REPO}/blob/main/RESUME.md`}
               data-qid="contact:link:resume"
               data-qs-action="CONTACT_OPEN_RESUME"
               title="Open RESUME.md on GitHub"
-              className="text-accent underline underline-offset-2"
+              className="text-accent underline underline-offset-4"
             >
-              resume
+              résumé
             </a>
             .
           </p>
-          <ContactCta />
+          <a
+            href="mailto:graham@grahama.co"
+            data-qid="contact:action:email"
+            data-qs-action="CONTACT_EMAIL"
+            title="Email graham@grahama.co"
+            className="inline-block rounded-sm bg-ink px-6 py-3 text-[15px] text-paper no-underline hover:bg-accent"
+          >
+            Email graham@grahama.co
+          </a>
         </section>
       </main>
     </>

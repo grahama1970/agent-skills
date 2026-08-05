@@ -5,15 +5,75 @@
     "agents": 72
   },
   "projects": [
-    { "slug": "tau", "name": "t'au", "blurb": "Memory-first, zero-trust agent harness — DAG contracts, verdicts, receipts.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md" },
-    { "slug": "battle", "name": "battle", "blurb": "Red/blue-team genetic fuzzing arena for agents attacking agents.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md" },
-    { "slug": "surf", "name": "surf", "blurb": "Authenticated browser control for agents — real Chrome, real sessions.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md" },
-    { "slug": "persona-dream", "name": "persona-dream", "blurb": "Agent memories rendered into movies — receipt-backed dream packets.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md" },
-    { "slug": "extractor", "name": "extractor", "blurb": "Documents into hierarchical evidence trees, not lossy text soup.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md" },
-    { "slug": "dogpile", "name": "dogpile", "blurb": "Deep-research aggregator across arXiv, GitHub, YouTube, web, and workspace.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md" },
-    { "slug": "watch", "name": "watch", "blurb": "Video that agents actually understand, frame by frame.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md" },
-    { "slug": "scillm", "name": "scillm", "blurb": "One-shot, exec, subagent, and DAG orchestration over any model gateway.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md" },
-    { "slug": "debugger", "name": "debugger", "blurb": "Live breakpoints and variable state for agents — observe before patching.", "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md" },
-    { "slug": "sparta-explorer", "name": "sparta explorer", "blurb": "Space-cyber evidence workbench: framework guidance to program evidence to human review.", "href": "https://github.com/grahama1970/sparta-public" }
+    {
+      "slug": "tau",
+      "name": "t'au",
+      "blurb": "Memory-first, zero-trust agent harness — DAG contracts, verdicts, receipts.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
+      "question": "Can agent execution be memory-first and zero-trust?"
+    },
+    {
+      "slug": "battle",
+      "name": "battle",
+      "blurb": "Red/blue-team genetic fuzzing arena for agents attacking agents.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "question": "Can red/blue adversarial search expose agent failure modes?"
+    },
+    {
+      "slug": "surf",
+      "name": "surf",
+      "blurb": "Authenticated browser control for agents — real Chrome, real sessions.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
+      "question": "Can agents drive a real, authenticated browser safely?"
+    },
+    {
+      "slug": "persona-dream",
+      "name": "persona-dream",
+      "blurb": "Agent memories rendered into movies — receipt-backed dream packets.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
+      "question": "What do agent memories look like as film?"
+    },
+    {
+      "slug": "extractor",
+      "name": "extractor",
+      "blurb": "Documents into hierarchical evidence trees, not lossy text soup.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
+      "question": "Can documents become evidence instead of text soup?"
+    },
+    {
+      "slug": "dogpile",
+      "name": "dogpile",
+      "blurb": "Deep-research aggregator across arXiv, GitHub, YouTube, web, and workspace.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md",
+      "question": "Can one query sweep the whole research surface?"
+    },
+    {
+      "slug": "watch",
+      "name": "watch",
+      "blurb": "Video that agents actually understand, frame by frame.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md",
+      "question": "Can agents understand video rather than just transcribe it?"
+    },
+    {
+      "slug": "scillm",
+      "name": "scillm",
+      "blurb": "One-shot, exec, subagent, and DAG orchestration over any model gateway.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md",
+      "question": "How should agents orchestrate many models at once?"
+    },
+    {
+      "slug": "debugger",
+      "name": "debugger",
+      "blurb": "Live breakpoints and variable state for agents — observe before patching.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
+      "question": "Why should an agent guess at runtime state?"
+    },
+    {
+      "slug": "sparta-explorer",
+      "name": "sparta explorer",
+      "blurb": "Space-cyber evidence workbench: framework guidance to program evidence to human review.",
+      "href": "https://github.com/grahama1970/sparta-public",
+      "question": "Can space-cyber conclusions stay traceable to evidence?"
+    }
   ]
 }
