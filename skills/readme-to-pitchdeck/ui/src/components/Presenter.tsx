@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Clock, ExternalLink, FastForward, Minimize2, MessageSquare, Monitor, Pause, Play, Repeat, RotateCcw, Type, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, Database, ExternalLink, FastForward, Minimize2, MessageSquare, Monitor, Pause, Play, Repeat, RotateCcw, ShieldAlert, ShieldCheck, ShieldQuestion, Type, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { SlideBody } from '../layouts/SlideLayouts'
@@ -169,6 +169,7 @@ export function PresenterOverlay({
   const [index, setIndex] = useState(Math.min(initialIndex, slides.length - 1))
   const [noteSize, setNoteSize] = useState<(typeof NOTE_SIZES)[number]>('lg')
   const [poppedOut, setPoppedOut] = useState(false)
+  const [showEvidence, setShowEvidence] = useState(false)
   const timer = usePresenterTimer()
 
   const next = useCallback(() => setIndex((value) => Math.min(value + 1, slides.length - 1)), [slides.length])
@@ -187,6 +188,8 @@ export function PresenterOverlay({
       } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
         event.preventDefault()
         prev()
+      } else if (event.key.toLowerCase() === 'e') {
+        setShowEvidence((value) => !value)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -303,6 +306,17 @@ export function PresenterOverlay({
           </span>
           <button
             type="button"
+            data-qid="deck:presenter:evidence"
+            data-qs-action="DECK_PRESENTER_EVIDENCE"
+            title="Toggle claim evidence drawer (E)"
+            aria-pressed={showEvidence}
+            onClick={() => setShowEvidence((value) => !value)}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${showEvidence ? 'border-cyan-600 bg-cyan-600/20 text-cyan-200' : 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
+          >
+            <Database aria-hidden className="h-3 w-3" /> Evidence
+          </button>
+          <button
+            type="button"
             data-qid="deck:presenter:popout"
             data-qs-action="DECK_PRESENTER_POPOUT"
             title={poppedOut ? 'Embed back into main window' : 'Pop out into a separate window'}
@@ -387,6 +401,60 @@ export function PresenterOverlay({
     </div>
   )
 
+  const evidenceDrawer = showEvidence ? (
+    <aside
+      aria-label="Presenter claim evidence"
+      className="fixed bottom-0 right-0 top-14 z-50 flex w-80 flex-col border-l border-slate-800 bg-slate-950 p-4 shadow-2xl"
+    >
+      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <span className="flex items-center gap-2 font-mono text-xs font-semibold uppercase text-cyan-400">
+          <Database aria-hidden className="h-3.5 w-3.5" /> Claim evidence
+        </span>
+        <button
+          type="button"
+          data-qid="deck:presenter:evidence-close"
+          data-qs-action="DECK_PRESENTER_EVIDENCE_CLOSE"
+          title="Close evidence drawer"
+          onClick={() => setShowEvidence(false)}
+          className="cursor-pointer rounded p-1 text-slate-400 hover:text-slate-100"
+        >
+          <X aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="m-0 my-2 truncate text-xs font-bold text-slate-200">{slide.title}</p>
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+        {slide.claims.length === 0 ? (
+          <p className="text-xs italic text-slate-500">No ledger claims bound to this slide.</p>
+        ) : (
+          slide.claims.map((claim) => {
+            const Icon = claim.status === 'approved' ? ShieldCheck : claim.status === 'candidate' ? ShieldQuestion : ShieldAlert
+            const border =
+              claim.status === 'approved' ? 'border-emerald-500/30' : claim.status === 'candidate' ? 'border-amber-500/30' : 'border-rose-500/30'
+            const text =
+              claim.status === 'approved' ? 'text-emerald-300' : claim.status === 'candidate' ? 'text-amber-300' : 'text-rose-300'
+            return (
+              <div key={claim.id} className={`space-y-1.5 rounded-lg border bg-slate-900 p-3 ${border}`}>
+                <span className={`flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase ${text}`}>
+                  <Icon aria-hidden className="h-3 w-3" /> {claim.status} · risk {claim.risk}
+                </span>
+                <p className="m-0 text-xs leading-relaxed text-slate-200">{claim.text}</p>
+                {claim.required_qualifier ? (
+                  <p className="m-0 text-[11px] leading-snug text-amber-200/90">Qualifier: {claim.required_qualifier}</p>
+                ) : null}
+                <p className="m-0 font-mono text-[10px] text-slate-500">{claim.id}</p>
+              </div>
+            )
+          })
+        )}
+        {slide.source_ids.length ? (
+          <p className="m-0 flex items-center gap-1 font-mono text-[10px] text-slate-500">
+            <ExternalLink aria-hidden className="h-3 w-3" /> sources: {slide.source_ids.join(', ')}
+          </p>
+        ) : null}
+      </div>
+    </aside>
+  ) : null
+
   if (poppedOut) {
     return (
       <>
@@ -397,5 +465,10 @@ export function PresenterOverlay({
       </>
     )
   }
-  return <div className="fixed inset-0 z-50">{body}</div>
+  return (
+    <div className="fixed inset-0 z-50">
+      {body}
+      {evidenceDrawer}
+    </div>
+  )
 }

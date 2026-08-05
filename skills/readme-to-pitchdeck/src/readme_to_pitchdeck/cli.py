@@ -442,6 +442,24 @@ def deck_op(
         _abort(exc)
 
 
+@app.command(name="emit-handout")
+def emit_handout_cmd(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    render_dir: Annotated[Path, typer.Option(help="Directory of rendered slide-N.png images (from `render`).")],
+    output: Annotated[Path, typer.Option(help="Output path for the speaker-handout PDF.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Two-slides-per-page A4 speaker handout with wrapped notes (Pillow, server-side)."""
+    from .handout_emitter import emit_handout
+
+    try:
+        receipt = emit_handout(load_yaml(bundle_dir / deck_name, DeckManifest), render_dir, output)
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="memory-sync")
 def memory_sync(
     deck_data: Annotated[Path, typer.Option(help="Path to an emitted deck.data.json.")],

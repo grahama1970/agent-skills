@@ -485,3 +485,21 @@ takes rails-first on the strength of the no-rollback argument.
   wrap points converge; autofit/shrink policy still open.
 - Open from session 2 scope: claim-level source resolution + approval
   provenance (item 5) — deferred to session 3 with the proof bundle.
+
+## Evidence drawer + speaker handout (2026-08-05, spec stream tail)
+
+- Presenter evidence drawer (E key / header button): shows the current
+  slide's REAL ledger claims — status/risk badge, full text, required
+  qualifier, claim id, source ids. Derived entirely from the emitted bundle;
+  the spec's stored VERIFIED status and confidenceScore were dropped
+  (statuses stay derived; confidence scores have no ledger backing).
+- emit-handout CLI: 2-slides-per-page A4 speaker handout composed from the
+  REAL rendered slide PNGs + manifest notes (qualifiers included) via
+  Pillow multi-page PDF — server-side adaptation; jsPDF/html2canvas client
+  re-render rejected again (approximated DOM ≠ the reviewed render).
+  VERIFIED live: 4 pages / 8 slides, visual check of page 1.
+- Queued with adaptations: Mermaid/KaTeX slide content (manifest-typed
+  diagram/math kinds; securityLevel strict — 'loose' is an XSS channel into
+  the exported HTML; PPTX via edit-time SVG snapshot assets through the
+  normal asset pipeline); theme design tokens (fold into the queued
+  deck-settings inspector as DeckMeta fields).
