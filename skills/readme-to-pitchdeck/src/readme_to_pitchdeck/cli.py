@@ -265,6 +265,22 @@ def memory_sync(
         _abort(exc)
 
 
+@app.command(name="visual-sync")
+def visual_sync(
+    deck_data: Annotated[Path, typer.Option(help="Path to an emitted deck.data.json.")],
+    images_dir: Annotated[Path, typer.Option(help="Directory of rendered slide PNGs (from `render`).")],
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Index slide images into Qdrant (text_mm+image_mm) with memory pointer docs."""
+    from .visual_sync import sync_deck_visuals
+
+    try:
+        receipt = sync_deck_visuals(deck_data, images_dir)
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command()
 def verify(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

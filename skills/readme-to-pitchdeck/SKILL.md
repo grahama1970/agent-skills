@@ -123,6 +123,23 @@ per the storage policy. The browser deck is the animation surface; PPTX stays
 animation-free by design (python-pptx has no animation API and Google Slides
 import drops PowerPoint animations).
 
+## Visual sync (Qdrant multimodal)
+
+`visual-sync` embeds rendered `slide-N.png` images (text_mm + image_mm named
+1024-d jina vectors via the workstation embed service on :8603) and upserts
+them into the skill-scoped Qdrant collection
+`readme_to_pitchdeck_visual_assets_v1`, following the persona-dream
+contact-sheet pattern: images stay on `/mnt/storage12tb`, ArangoDB (memory
+`/upsert`, collection `readme_to_pitchdeck_visual_assets`) stores only
+metadata + the Qdrant point id, never vector arrays. The command reads back
+the per-deck point count and fails on mismatch. Requires the live embed
+service, Qdrant (:6333), and memory daemon (:8601).
+
+```bash
+./run.sh render --pptx out/deck.pptx --output-dir out/render
+./run.sh visual-sync --deck-data ui/public/deck.data.json --images-dir out/render
+```
+
 ## Memory sync
 
 `memory-sync` stores a per-deck summary (slides, claim-review state, tags

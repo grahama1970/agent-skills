@@ -66,6 +66,25 @@ structural verification, and can render PDF/PNG/contact sheets with Linux tools.
   question, not a storage failure. Tag-filtered sample is the reliable
   retrieval path today.
 
+## Visual sync into Qdrant (added 2026-08-05)
+
+- Correction on record: Qdrant IS part of the workstation memory pipeline
+  (embry-qdrant on :6333; graph_memory has qdrant_client/qdrant_recall); an
+  earlier session claim that it wasn't was wrong and made without probing.
+- `visual-sync` (`src/readme_to_pitchdeck/visual_sync.py`) indexes rendered
+  slide PNGs into skill-scoped `readme_to_pitchdeck_visual_assets_v1`
+  (text_mm/image_mm, 1024-d jina-v5-omni) with memory pointer docs in
+  `readme_to_pitchdeck_visual_assets` via memory `/upsert` — vectors never in
+  ArangoDB (persona-dream contact-sheet pattern).
+- VERIFIED 2026-08-05 live: 8 points upserted with matching read-back count;
+  semantic query "scattered evidence trails" returned slide 2 "The problem"
+  as top hit on both vector names.
+- Video is not yet indexed (no video assets exist in any deck manifest today);
+  when a video asset kind lands, extend visual-sync with frame sampling before
+  embedding.
+- Gap: visual-sync depends on live services (:8603/:6333/:8601) so it is not
+  in sanity.sh; add an opt-in sanity-live.sh gate if it becomes load-bearing.
+
 ## Superseded plan (kept for context): open-slide adoption (decided 2026-08-05)
 
 - Add a browser deck target beside the PPTX builder: both emitters consume the same
