@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle } from './types'
 
+export const revisionStore = { current: 0 }
+
 /** Load the emitted deck bundle. Refuses bundles without a seam_validation PASS stamp. */
 export function useDeck(): { deck: UiDeckBundle | null; error: string | null; reload: () => void } {
   const [deck, setDeck] = useState<UiDeckBundle | null>(null)
@@ -18,6 +20,7 @@ export function useDeck(): { deck: UiDeckBundle | null; error: string | null; re
         if (bundle.seam_validation?.status !== 'PASS') {
           throw new Error('deck bundle is missing its seam_validation PASS stamp; re-run `run.sh emit-ui`')
         }
+        revisionStore.current = bundle.revision ?? 0
         setDeck(bundle)
         setError(null)
       })

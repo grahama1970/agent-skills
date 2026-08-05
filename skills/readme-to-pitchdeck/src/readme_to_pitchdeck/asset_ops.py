@@ -31,28 +31,29 @@ from .models import (
     VisualSpec,
     VisualType,
 )
+from .revisions import commit_bundle_write
 from .slide_edit import _load
 
 _IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif"}
 _VIDEO_SUFFIXES = {".mp4", ".webm"}
 
 
-def _write_pair(bundle_dir: Path, deck_name: str, updated_deck, updated_assets) -> None:
-    (bundle_dir / deck_name).write_text(
-        yaml.safe_dump(
-            updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
-            sort_keys=False,
-            allow_unicode=True,
-        ),
-        encoding="utf-8",
-    )
-    (bundle_dir / "asset_manifest.yaml").write_text(
-        yaml.safe_dump(
-            updated_assets.model_dump(mode="json", by_alias=True, exclude_none=True),
-            sort_keys=False,
-            allow_unicode=True,
-        ),
-        encoding="utf-8",
+def _write_pair(bundle_dir: Path, deck_name: str, updated_deck, updated_assets, expected_revision: int | None = None) -> None:
+    commit_bundle_write(
+        bundle_dir,
+        {
+            bundle_dir / deck_name: yaml.safe_dump(
+                updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
+                sort_keys=False,
+                allow_unicode=True,
+            ),
+            bundle_dir / "asset_manifest.yaml": yaml.safe_dump(
+                updated_assets.model_dump(mode="json", by_alias=True, exclude_none=True),
+                sort_keys=False,
+                allow_unicode=True,
+            ),
+        },
+        expected_revision=expected_revision,
     )
 
 

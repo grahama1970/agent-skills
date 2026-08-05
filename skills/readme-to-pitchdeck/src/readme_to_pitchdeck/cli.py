@@ -179,6 +179,9 @@ def build(
     source_manifest: Annotated[Path, typer.Option(help="Path to source manifest YAML.")],
     asset_manifest: Annotated[Path, typer.Option(help="Path to asset manifest YAML.")],
     output: Annotated[Path, typer.Option(help="Output PPTX path.")],
+    draft_watermark: Annotated[
+        bool, typer.Option("--draft-watermark", help="Stamp every slide DRAFT — UNAPPROVED CLAIMS.")
+    ] = False,
     require_approved_claims: Annotated[
         bool,
         typer.Option(
@@ -203,6 +206,7 @@ def build(
             asset_manifest_dir=asset_manifest.parent,
             output_path=output,
             require_approved_claims=require_approved_claims,
+            draft_watermark=draft_watermark,
         )
         _emit(receipt, json_output=json_output)
     except Exception as exc:
@@ -313,6 +317,7 @@ def apply_edit(
     slide_id: Annotated[str, typer.Option(help="Slide id to edit.")],
     field: Annotated[str, typer.Option(help="title | message | notes | footer | body:<index>")],
     value: Annotated[str, typer.Option(help="New text value.")],
+    base_revision: Annotated[int, typer.Option(help="Expected bundle revision (CAS); -1 skips the check.")] = -1,
     deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
     json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
 ) -> None:
@@ -321,7 +326,8 @@ def apply_edit(
 
     try:
         receipt = apply_slide_edit(
-            bundle_dir, output_dir, slide_id=slide_id, field=field, value=value, deck_name=deck_name
+            bundle_dir, output_dir, slide_id=slide_id, field=field, value=value, deck_name=deck_name,
+            expected_revision=None if base_revision < 0 else base_revision,
         )
         _emit(receipt, json_output=json_output)
     except Exception as exc:
@@ -333,6 +339,7 @@ def source_edit(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
     output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
     source_file: Annotated[Path, typer.Option(help="File containing the edited deck manifest YAML.")],
+    base_revision: Annotated[int, typer.Option(help="Expected bundle revision (CAS); -1 skips the check.")] = -1,
     deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
     json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
 ) -> None:
@@ -341,7 +348,8 @@ def source_edit(
 
     try:
         receipt = apply_deck_source(
-            bundle_dir, output_dir, source_yaml=source_file.read_text(encoding="utf-8"), deck_name=deck_name
+            bundle_dir, output_dir, source_yaml=source_file.read_text(encoding="utf-8"), deck_name=deck_name,
+            expected_revision=None if base_revision < 0 else base_revision,
         )
         _emit(receipt, json_output=json_output)
     except Exception as exc:
@@ -395,6 +403,7 @@ def deck_op(
     op: Annotated[str, typer.Option(help="add_after | duplicate | delete | move_left | move_right | move_to")],
     slide_id: Annotated[str, typer.Option(help="Slide id the operation targets.")],
     target_order: Annotated[int, typer.Option(help="Target 1-based position for move_to.")] = 0,
+    base_revision: Annotated[int, typer.Option(help="Expected bundle revision (CAS); -1 skips the check.")] = -1,
     deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
     json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
 ) -> None:
@@ -405,6 +414,7 @@ def deck_op(
         receipt = apply_deck_op(
             bundle_dir, output_dir, op=op, slide_id=slide_id,
             target_order=target_order or None, deck_name=deck_name,
+            expected_revision=None if base_revision < 0 else base_revision,
         )
         _emit(receipt, json_output=json_output)
     except Exception as exc:

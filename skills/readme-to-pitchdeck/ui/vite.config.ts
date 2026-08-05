@@ -33,7 +33,7 @@ function slideEditApi(): Plugin {
         req.on('data', (chunk) => (body += chunk))
         req.on('end', () => {
           try {
-            const { op, slide_id, target_order } = JSON.parse(body) as Record<string, string | number>
+            const { op, slide_id, target_order, base_revision } = JSON.parse(body) as Record<string, string | number>
             if (!op || !slide_id) {
               res.statusCode = 400
               res.end(JSON.stringify({ error: 'op and slide_id are required' }))
@@ -48,7 +48,7 @@ function slideEditApi(): Plugin {
             }
             execFile(
               `${skillRoot}/run.sh`,
-              ['deck-op', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--op', String(op), '--slide-id', String(slide_id), ...(target_order ? ['--target-order', String(target_order)] : []), '--json'],
+              ['deck-op', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--op', String(op), '--slide-id', String(slide_id), ...(target_order ? ['--target-order', String(target_order)] : []), ...(base_revision !== undefined ? ['--base-revision', String(base_revision)] : []), '--json'],
               { timeout: 60_000 },
               (error, stdout, stderr) => {
                 res.setHeader('Content-Type', 'application/json')
@@ -228,8 +228,18 @@ function slideEditApi(): Plugin {
               '--output', `${exportsDir}/deck.pptx`,
             ]
             if (format === 'pptx') {
-              execFile(`${skillRoot}/run.sh`, buildArgs, { timeout: 120_000 }, (error, _stdout, stderr) =>
-                finish(error, stderr, '/exports/deck.pptx'),
+              execFile(
+                `${skillRoot}/run.sh`,
+                [...buildArgs.slice(0, -1), `${exportsDir}/deck.draft.pptx`, '--draft-watermark'],
+                { timeout: 120_000 },
+                (error, _stdout, stderr) => finish(error, stderr, '/exports/deck.draft.pptx'),
+              )
+            } else if (format === 'pptx-publish') {
+              execFile(
+                `${skillRoot}/run.sh`,
+                [...buildArgs, '--require-approved-claims'],
+                { timeout: 120_000 },
+                (error, _stdout, stderr) => finish(error, stderr, '/exports/deck.pptx'),
               )
             } else if (format === 'pdf') {
               execFile(`${skillRoot}/run.sh`, buildArgs, { timeout: 120_000 }, (buildError, _stdout, buildStderr) => {
@@ -275,7 +285,7 @@ function slideEditApi(): Plugin {
         req.on('data', (chunk) => (body += chunk))
         req.on('end', () => {
           try {
-            const { slide_id, field, value } = JSON.parse(body) as Record<string, string>
+            const { slide_id, field, value, base_revision } = JSON.parse(body) as Record<string, string | number>
             if (!slide_id || !field || typeof value !== 'string') {
               res.statusCode = 400
               res.end(JSON.stringify({ error: 'slide_id, field, value are required' }))
@@ -294,9 +304,10 @@ function slideEditApi(): Plugin {
                 'apply-edit',
                 '--bundle-dir', bundleDir,
                 '--output-dir', publicDir,
-                '--slide-id', slide_id,
-                '--field', field,
-                '--value', value,
+                '--slide-id', String(slide_id),
+                '--field', String(field),
+                '--value', String(value),
+                ...(base_revision !== undefined ? ['--base-revision', String(base_revision)] : []),
                 '--json',
               ],
               { timeout: 60_000 },

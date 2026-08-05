@@ -1,4 +1,5 @@
 import { AArrowDown, AArrowUp, AlignCenter, AlignLeft, AlignRight, Bold, Trash2 } from 'lucide-react'
+import { revisionStore } from '../hooks'
 import type { UiElement } from '../types'
 
 // Phase 2 (Gemini spec) adapted: contextual toolbar for the selected freeform
@@ -9,7 +10,7 @@ async function postElementEdit(slideId: string, field: string, value: string): P
   const response = await fetch('/api/slide-edit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slide_id: slideId, field, value }),
+    body: JSON.stringify({ slide_id: slideId, field, value, base_revision: revisionStore.current }),
   })
   if (response.ok) return null
   const data = (await response.json()) as { error?: string }

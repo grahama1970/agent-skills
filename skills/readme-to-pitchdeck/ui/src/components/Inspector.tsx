@@ -1,5 +1,6 @@
 import { PanelRightClose, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { revisionStore } from '../hooks'
 import type { UiSlide } from '../types'
 import { VisualLayoutPicker } from './VisualLayoutPicker'
 
@@ -11,7 +12,7 @@ async function postEdit(slideId: string, field: string, value: string): Promise<
   const response = await fetch('/api/slide-edit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slide_id: slideId, field, value }),
+    body: JSON.stringify({ slide_id: slideId, field, value, base_revision: revisionStore.current }),
   })
   if (response.ok) return null
   const data = (await response.json()) as { error?: string }

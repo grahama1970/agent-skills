@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react'
 // the real build/render/emit pipeline server-side, gates included).
 
 const FORMATS = [
-  { format: 'pptx', label: 'Download PPTX (editable)', icon: Presentation, qid: 'deck:export:pptx', action: 'DECK_EXPORT_PPTX' },
+  { format: 'pptx-publish', label: 'Publish PPTX (approved claims only)', icon: Presentation, qid: 'deck:export:pptx-publish', action: 'DECK_EXPORT_PPTX_PUBLISH' },
+  { format: 'pptx', label: 'Draft PPTX (watermarked)', icon: Presentation, qid: 'deck:export:pptx', action: 'DECK_EXPORT_PPTX_DRAFT' },
   { format: 'pdf', label: 'Download PDF', icon: FileDown, qid: 'deck:export:pdf', action: 'DECK_EXPORT_PDF' },
   { format: 'html', label: 'Download interactive HTML', icon: Globe, qid: 'deck:export:html', action: 'DECK_EXPORT_HTML' },
   { format: 'md', label: 'Download Marp Markdown', icon: FileText, qid: 'deck:export:md', action: 'DECK_EXPORT_MD' },

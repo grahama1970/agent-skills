@@ -15,6 +15,7 @@ import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalList
 import { CSS } from '@dnd-kit/utilities'
 import { AlertTriangle, Copy, Eye, EyeOff, GripVertical, Plus, ShieldQuestion, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { revisionStore } from '../hooks'
 import { SlideBody } from '../layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from '../types'
 
@@ -189,7 +190,7 @@ async function postOp(body: Record<string, unknown>, endpoint: string): Promise<
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, base_revision: revisionStore.current }),
   })
   if (response.ok) return null
   const data = (await response.json()) as { error?: string }

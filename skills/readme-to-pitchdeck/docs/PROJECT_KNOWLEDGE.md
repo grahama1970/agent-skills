@@ -427,3 +427,31 @@ string and gemini's span-projection for renderer mapping), session 3 = proof
 bundle as CI gate + modes/undo/chat-proposals. A focused round-2 on the
 model-first-vs-rails-first dissent is optional; the reconciliation above
 takes rails-first on the strength of the no-rollback argument.
+
+## Session-1 rails implemented (roundtable plan-of-record, 2026-08-05)
+
+- Revision CAS + near-atomic writes (revisions.py): every mutating op
+  (slide-edit, deck-op, source-edit, asset ops) goes through
+  commit_bundle_write — CAS on a .revision counter (stale edit → 409
+  RevisionConflict, never a lost update), temp-file + os.replace per payload,
+  revision bumped last and emitted in deck.data.json; all UI surfaces send
+  base_revision. VERIFIED live: same-base double edit → one PASS, one 422
+  'revision conflict'.
+- Draft/publish export split: export menu now has 'Publish PPTX (approved
+  claims only)' (build --require-approved-claims; blocks on candidates —
+  VERIFIED 422 UNAPPROVED live) and 'Draft PPTX (watermarked)' (deck.draft.pptx
+  with a DRAFT — UNAPPROVED CLAIMS stamp on every slide — VERIFIED 8/8).
+- Post-emit artifact scan (artifact_scan.py): opens the ACTUAL emitted bytes
+  (PPTX as OPC zip across all XML parts; HTML raw) and fails closed on
+  private-claim text, private source paths, forbidden unqualified phrases in
+  rendered text, or missing slide titles (cheap whole-string RenderPlan
+  check). Runs automatically inside build_pptx and emit-html. Tested: a
+  public PPTX with smuggled private-claim text raises ArtifactLeak; the
+  clean build passes against the same secret-bearing ledger.
+- Correction owned: an earlier commit claimed hidden slides were excluded
+  from PPTX; the filter edit had silently not applied (lambda name mismatch,
+  no assert). Now actually filtered, with validate_pptx counting visible
+  slides. Lesson: replace() without assert is how false claims ship.
+- Session-2 next (per plan of record): ContentIR semantic model (webgpt shape
+  + webclaude assembled-string validation + gemini span projection),
+  structural qualifier binding, RenderPlan completion, font unification.

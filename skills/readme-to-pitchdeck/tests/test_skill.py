@@ -831,3 +831,70 @@ def test_emit_html_self_contained(tmp_path: Path) -> None:
     for slide in deck.slides:
         if not slide.hidden:
             assert slide.title in text or slide.title.replace("&", "&amp;") in text
+
+
+def test_session1_rails_cas_watermark_artifact_scan(tmp_path: Path) -> None:
+    """Roundtable session-1 rails: revision CAS, draft watermark, artifact scan."""
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+    out = tmp_path / "ui"
+
+    from readme_to_pitchdeck.revisions import RevisionConflict, current_revision
+    from readme_to_pitchdeck.slide_edit import apply_slide_edit
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    slide = sorted(deck.slides, key=lambda s: s.order)[1]
+
+    base = current_revision(planned)
+    apply_slide_edit(planned, out, slide_id=slide.id, field="title", value="First writer wins", expected_revision=base)
+    with pytest.raises(RevisionConflict):
+        apply_slide_edit(planned, out, slide_id=slide.id, field="title", value="Lost update", expected_revision=base)
+    assert current_revision(planned) == base + 1
+    assert "First writer wins" in (planned / "deck.public.yaml").read_text()
+
+    ledger = load_yaml(planned / "claim_ledger.yaml", ClaimLedger)
+    sources = load_yaml(planned / "source_manifest.resolved.yaml", SourceManifest)
+    assets = load_yaml(planned / "asset_manifest.yaml", AssetManifest)
+    deck2 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    draft = planned / "deck.draft.pptx"
+    build_pptx(
+        deck2, ledger, sources, assets,
+        source_manifest_dir=planned, asset_manifest_dir=planned,
+        output_path=draft, draft_watermark=True,
+    )
+    texts = [
+        shape.text_frame.text
+        for s in Presentation(draft).slides
+        for shape in s.shapes
+        if shape.has_text_frame
+    ]
+    assert any("DRAFT — UNAPPROVED CLAIMS" in t for t in texts)
+    with pytest.raises(Exception):
+        build_pptx(
+            deck2, ledger, sources, assets,
+            source_manifest_dir=planned, asset_manifest_dir=planned,
+            output_path=planned / "publish.pptx", require_approved_claims=True,
+        )
+
+    from pptx import Presentation as P
+    from pptx.util import Inches as In
+    from readme_to_pitchdeck.artifact_scan import ArtifactLeak, scan_artifact
+    from readme_to_pitchdeck.models import Claim, ClaimKind, ClaimRisk, ClaimStatus, SourceRef, Visibility
+
+    private_claim = Claim(
+        id="secret-1", text="Secret internal roadmap: acquire CompetitorX in Q4",
+        kind=ClaimKind.STATUS, visibility=Visibility.PRIVATE,
+        source_refs=[SourceRef(source_id=sources.sources[0].id)],
+        risk=ClaimRisk.MEDIUM, status=ClaimStatus.APPROVED,
+    )
+    ledger_with_secret = ledger.model_copy(update={"claims": [*ledger.claims, private_claim]})
+    smuggled = P(draft)
+    box = smuggled.slides[0].shapes.add_textbox(In(1), In(1), In(8), In(1))
+    box.text_frame.text = private_claim.text
+    leaky = planned / "leaky.pptx"
+    smuggled.save(leaky)
+    with pytest.raises(ArtifactLeak, match="secret-1"):
+        scan_artifact(leaky, deck2, ledger_with_secret, sources)
+    scan_artifact(draft, deck2, ledger_with_secret, sources)

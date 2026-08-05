@@ -681,6 +681,7 @@ def build_pptx(
     asset_manifest_dir: Path,
     output_path: Path,
     require_approved_claims: bool = False,
+    draft_watermark: bool = False,
 ) -> tuple[OperationReceipt, ValidationReport]:
     report = validate_bundle(
         deck,
@@ -704,17 +705,36 @@ def build_pptx(
     asset_map = {asset.id: asset for asset in assets.assets}
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    visible_specs = [s for s in sorted(deck.slides, key=lambda value: value.order) if not s.hidden]
     with tempfile.TemporaryDirectory(prefix="readme-to-pitchdeck-images-") as temp:
         temp_dir = Path(temp)
-        for spec in sorted(deck.slides, key=lambda value: value.order):
+        for spec in visible_specs:
             slide = presentation.slides.add_slide(blank)
             _set_background(slide)
             _render_slide(slide, spec, asset_map, asset_manifest_dir, temp_dir)
             _add_footer(slide, deck.deck.title, spec.order, spec.visibility)
+            if draft_watermark:
+                _add_text(
+                    slide,
+                    "DRAFT — UNAPPROVED CLAIMS",
+                    8.6,
+                    0.12,
+                    4.5,
+                    0.3,
+                    size=11,
+                    bold=True,
+                    color=Theme.amber,
+                    align=PP_ALIGN.RIGHT,
+                )
             slide.notes_slide.notes_text_frame.text = _notes_text(spec)
 
     presentation.save(output_path)
-    pptx_issues = validate_pptx(output_path, len(deck.slides))
+    # Post-emit artifact scan (roundtable session 1): the emitted bytes, not the
+    # model, are the boundary — fail closed on any private text in the artifact.
+    from .artifact_scan import scan_artifact
+
+    scan_artifact(output_path, deck, ledger, sources)
+    pptx_issues = validate_pptx(output_path, len(visible_specs))
     structural_errors = [issue for issue in pptx_issues if issue.severity == "error"]
     if structural_errors:
         preview = "\n".join(f"- {issue.code}: {issue.message}" for issue in structural_errors)

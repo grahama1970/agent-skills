@@ -216,6 +216,9 @@ def emit_html(
 """
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(document, encoding="utf-8")
+    from .artifact_scan import scan_artifact
+
+    scan_artifact(output_path, deck, claim_ledger, source_manifest)
     logger.info("html bundle written: {} ({} slides, {} inlined assets)", output_path, visible, inlined_assets)
 
     return OperationReceipt(

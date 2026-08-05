@@ -23,6 +23,7 @@ from .models import (
     Readiness,
     SeamValidation,
 )
+from .revisions import commit_bundle_write
 from .slide_edit import _load
 
 
@@ -32,6 +33,7 @@ def apply_deck_source(
     *,
     source_yaml: str,
     deck_name: str = "deck.public.yaml",
+    expected_revision: int | None = None,
 ) -> OperationReceipt:
     """Replace the deck manifest from edited YAML source; validate before writing."""
     try:
@@ -68,15 +70,18 @@ def apply_deck_source(
         output_dir=output_dir,
     )
     deck_path = bundle_dir / deck_name
-    deck_path.write_text(
-        yaml.safe_dump(
-            updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
-            sort_keys=False,
-            allow_unicode=True,
-        ),
-        encoding="utf-8",
+    revision = commit_bundle_write(
+        bundle_dir,
+        {
+            deck_path: yaml.safe_dump(
+                updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
+                sort_keys=False,
+                allow_unicode=True,
+            )
+        },
+        expected_revision=expected_revision,
     )
-    logger.info("deck source applied: {} slides", len(updated_deck.slides))
+    logger.info("deck source applied: {} slides (rev {})", len(updated_deck.slides), revision)
     return OperationReceipt(
         schema="readme_to_pitchdeck.source_edit_receipt.v1",
         operation="source-edit",

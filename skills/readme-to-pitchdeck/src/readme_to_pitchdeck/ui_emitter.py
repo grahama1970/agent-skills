@@ -101,6 +101,7 @@ class UiDeckBundle(StrictModel):
     theme: str
     slides: list[UiSlide] = Field(min_length=1)
     claim_summary: dict[str, int] = Field(default_factory=dict)
+    revision: int = 0
     validation_readiness: str
     validation_gaps: list[str] = Field(default_factory=list)
     seam_validation: SeamValidation = Field(
@@ -232,7 +233,10 @@ def emit_ui_bundle(
     for claim in claim_ledger.claims:
         claim_summary[claim.status.value] = claim_summary.get(claim.status.value, 0) + 1
 
+    from .revisions import current_revision
+
     bundle = UiDeckBundle(
+        revision=current_revision(asset_manifest_dir),
         deck_id=deck.deck.id,
         title=deck.deck.title,
         subtitle=deck.deck.subtitle,

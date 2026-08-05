@@ -18,6 +18,7 @@ from pathlib import Path
 import yaml
 from loguru import logger
 
+from .revisions import commit_bundle_write
 from .models import (
     AssetManifest,
     ClaimLedger,
@@ -55,6 +56,7 @@ def apply_slide_edit(
     field: str,
     value: str,
     deck_name: str = "deck.public.yaml",
+    expected_revision: int | None = None,
 ) -> OperationReceipt:
     """Edit one slide field, re-validate the whole bundle, and re-emit on PASS."""
     deck, ledger, sources, assets, source_path = _load(bundle_dir, deck_name)
@@ -185,15 +187,18 @@ def apply_slide_edit(
     )
 
     deck_path = bundle_dir / deck_name
-    deck_path.write_text(
-        yaml.safe_dump(
-            updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
-            sort_keys=False,
-            allow_unicode=True,
-        ),
-        encoding="utf-8",
+    revision = commit_bundle_write(
+        bundle_dir,
+        {
+            deck_path: yaml.safe_dump(
+                updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
+                sort_keys=False,
+                allow_unicode=True,
+            )
+        },
+        expected_revision=expected_revision,
     )
-    logger.info("slide edit applied: {} {} ({} chars); deck re-emitted", slide_id, field, len(value))
+    logger.info("slide edit applied: {} {} (rev {}); deck re-emitted", slide_id, field, revision)
 
     return OperationReceipt(
         schema="readme_to_pitchdeck.slide_edit_receipt.v1",
@@ -232,6 +237,7 @@ def apply_deck_op(
     slide_id: str,
     target_order: int | None = None,
     deck_name: str = "deck.public.yaml",
+    expected_revision: int | None = None,
 ) -> OperationReceipt:
     """Slide-level operation (add/duplicate/delete/reorder) through the same gates."""
     if op not in DECK_OPS:
@@ -302,15 +308,18 @@ def apply_deck_op(
         output_dir=output_dir,
     )
     deck_path = bundle_dir / deck_name
-    deck_path.write_text(
-        yaml.safe_dump(
-            updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
-            sort_keys=False,
-            allow_unicode=True,
-        ),
-        encoding="utf-8",
+    revision = commit_bundle_write(
+        bundle_dir,
+        {
+            deck_path: yaml.safe_dump(
+                updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
+                sort_keys=False,
+                allow_unicode=True,
+            )
+        },
+        expected_revision=expected_revision,
     )
-    logger.info("deck op applied: {} on {}; {} slides", op, slide_id, len(renumbered))
+    logger.info("deck op applied: {} on {} (rev {}); {} slides", op, slide_id, revision, len(renumbered))
     return OperationReceipt(
         schema="readme_to_pitchdeck.deck_op_receipt.v1",
         operation="deck-op",

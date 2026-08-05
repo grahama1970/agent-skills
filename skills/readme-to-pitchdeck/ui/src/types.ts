@@ -64,6 +64,7 @@ export interface UiSlide {
 
 export interface UiDeckBundle {
   schema: string
+  revision: number
   deck_id: string
   title: string
   subtitle?: string

@@ -2,6 +2,7 @@ import { useContext, useState } from 'react'
 import { Rnd } from 'react-rnd'
 import { FloatingToolbar } from '../components/FloatingToolbar'
 import { EditContext } from '../edit'
+import { revisionStore } from '../hooks'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiElement, type UiSlide } from '../types'
 
 // Freeform layout: elements carry fractional x/y/w/h that map 1:1 onto both
@@ -103,7 +104,7 @@ async function postFrame(slideId: string, elementId: string, frame: { x: number;
   const response = await fetch('/api/slide-edit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slide_id: slideId, field: `element:${elementId}:frame`, value }),
+    body: JSON.stringify({ slide_id: slideId, field: `element:${elementId}:frame`, value, base_revision: revisionStore.current }),
   })
   if (!response.ok) {
     const data = (await response.json()) as { error?: string }

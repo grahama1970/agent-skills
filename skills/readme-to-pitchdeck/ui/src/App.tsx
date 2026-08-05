@@ -15,7 +15,7 @@ import { SourcePane } from './components/SourcePane'
 import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { lintSlide } from './lib/pptxLint'
-import { useDeck, useKeyboardNav, usePaneResize, useRegisterAction, useSlideScale } from './hooks'
+import { revisionStore, useDeck, useKeyboardNav, usePaneResize, useRegisterAction, useSlideScale } from './hooks'
 import { SlideBody } from './layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
 
@@ -113,7 +113,7 @@ function EditPanel({
       const response = await fetch('/api/slide-edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slide_id: edit.slideId, field: edit.field, value }),
+        body: JSON.stringify({ slide_id: edit.slideId, field: edit.field, value, base_revision: revisionStore.current }),
       })
       const data = (await response.json()) as { error?: string }
       if (!response.ok) throw new Error(data.error ?? `edit failed (${response.status})`)
