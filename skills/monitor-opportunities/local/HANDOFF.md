@@ -1,7 +1,44 @@
 # Handoff Report: monitor-opportunities
 
-**Timestamp**: 2026-08-05T07:57:37-04:00
-**Active Agent**: Codex
+**Timestamp**: 2026-08-05T08:25:00-04:00
+**Active Agent**: Claude (Claude Code)
+
+## 0. 2026-08-05 morning update (supersedes items below where noted)
+
+- **Repo risk (section 4, "Repository state is risky") is RESOLVED.** The
+  48-path uncommitted delta was a stale lane that wrote files from the Aug 3
+  baseline at 01:05, reverting the Aug 4 commits in the working tree. The Aug 4
+  code (application/ATS/outreach/Buzz modules and tests) was restored from HEAD;
+  only the genuinely new pieces were kept: `requires-python <3.13` pin,
+  `run.sh` `unset VIRTUAL_ENV` fix, test-lab test headers, matching `uv.lock`.
+  Landed as `e4825ff73` on `main` (pushed; `origin/main..HEAD` empty). Full
+  pre-reconciliation delta backed up at
+  `/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/6f1e978f-21be-4223-89ee-b4e54796dc5e/scratchpad/monitor-opps-full-dirty-backup.patch`.
+- Gates on the reconciled tree: `sanity.sh` from repo root: **71 passed**;
+  `python3 scripts/check_mock_evidence_claims.py`: OK over 586 test files.
+  Note: several tests hardcode repo-root-relative fixture paths, so sanity must
+  run with cwd at the repo root.
+- **Fresh morning run (step 2) done**: `/tmp/monitor-opportunities-20260805T120849Z`
+  — `live: true`, `mocked: false`, `external_effects: false`, terminal
+  `AWAITING_HUMAN`, 5 opportunities, 10 outreach packets, 3 applications,
+  `hidden_total: 0`, lanes A/B/C all `MATCHES` (3/20, 1/1, 1/1).
+- **Loopback serve (step 3, local half) proven**: served on port 8797 with
+  `--allow-remote`; `curl http://127.0.0.1:8797/health` returned
+  `{"status":"PASS","external_effects":false}`. Tailnet URL printed for
+  100.102.12.64. Remote/iPad readback still requires another Tailscale client —
+  not provable from this machine. Port 8791 is held by an older leftover serve
+  (pid 2528421), left running.
+- **Buzz path (step 4) restored and proven**: `run.sh buzz-summary --post` to
+  channel `ed942a5f-609d-4849-9128-3168c6dfac8c` succeeded (requires
+  `BUZZ_IDENTITY_KEY`/`BUZZ_RELAY_URL` from `~/.zshrc`; ops-buzz maps it to
+  `BUZZ_PRIVATE_KEY`). Independent readback via
+  `buzz messages get --channel … --limit 1` returned today's run summary.
+  Receipt: `/tmp/monitor-opportunities-20260805T120849Z/buzz/buzz-summary-receipt.json`.
+- Remaining next steps are human-gated: remote iPad readback (step 3, remote
+  half), Gmail draft / LinkedIn handoff / ATS promotions (steps 5–7), and
+  scheduler registration (step 8, gated on the remote readback).
+
+**Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`
 **Authoritative branch target**: `grahama1970/agent-skills@main`
 
