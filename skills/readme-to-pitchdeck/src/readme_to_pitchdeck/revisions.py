@@ -19,6 +19,8 @@ NoHistory; concurrent edit between read and undo -> RevisionConflict.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import shutil
 from pathlib import Path
@@ -26,8 +28,34 @@ from pathlib import Path
 from loguru import logger
 
 REVISION_FILE = ".revision"
+REVISION_STATE_FILE = ".revision.state.json"
 HISTORY_DIR = ".history"
 HISTORY_KEEP = 50
+
+
+def _bundle_state(bundle_dir: Path) -> dict[str, str]:
+    """sha256 of every tracked YAML in the bundle — the post-commit fingerprint."""
+    return {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(bundle_dir.glob("*.yaml"))
+    }
+
+
+def check_out_of_band(bundle_dir: Path) -> None:
+    """Raise OutOfBandEdit if bundle YAMLs drifted from the last committed state."""
+    state_path = bundle_dir / REVISION_STATE_FILE
+    if not state_path.exists():
+        return  # pre-hash bundle; nothing recorded to compare against
+    recorded = json.loads(state_path.read_text())
+    current = _bundle_state(bundle_dir)
+    drifted = sorted(
+        name for name in set(recorded) | set(current) if recorded.get(name) != current.get(name)
+    )
+    if drifted:
+        raise OutOfBandEdit(
+            f"bundle files changed outside the CAS path since the last commit: {drifted}; "
+            "run verify and re-emit (or commit the edit through a compiler operation) before undoing"
+        )
 
 
 class RevisionConflict(ValueError):
@@ -36,6 +64,17 @@ class RevisionConflict(ValueError):
 
 class NoHistory(ValueError):
     """Raised when undo is requested but no archived revision exists."""
+
+
+class OutOfBandEdit(ValueError):
+    """Bundle files no longer match the last committed state (edited outside CAS)."""
+
+
+class GovernanceUndoRefused(ValueError):
+    """Undo would restore a governance file (claim ledger); refused fail-closed."""
+
+
+GOVERNANCE_FILES = {"claim_ledger.yaml"}
 
 
 def current_revision(bundle_dir: Path) -> int:
@@ -69,6 +108,9 @@ def commit_bundle_write(
     rev_tmp = bundle_dir / f".{REVISION_FILE}.tmp"
     rev_tmp.write_text(str(next_revision), encoding="utf-8")
     os.replace(rev_tmp, bundle_dir / REVISION_FILE)
+    state_tmp = bundle_dir / f".{REVISION_STATE_FILE}.tmp"
+    state_tmp.write_text(json.dumps(_bundle_state(bundle_dir), indent=1), encoding="utf-8")
+    os.replace(state_tmp, bundle_dir / REVISION_STATE_FILE)
     logger.debug("bundle write committed: revision {} -> {} ({} files)", revision, next_revision, len(files))
     return next_revision
 
@@ -110,6 +152,7 @@ def undo_last_write(bundle_dir: Path) -> int:
     itself archived first — undoing an undo is redo. The consumed archive dir
     is removed after a successful restore.
     """
+    check_out_of_band(bundle_dir)
     available = undo_history(bundle_dir)
     if not available:
         raise NoHistory(f"no archived revisions under {bundle_dir / HISTORY_DIR}; nothing to undo")
@@ -117,7 +160,13 @@ def undo_last_write(bundle_dir: Path) -> int:
     archive = bundle_dir / HISTORY_DIR / str(newest)
     files: dict[Path, str] = {}
     for path in sorted(p for p in archive.rglob("*") if p.is_file()):
-        files[bundle_dir / path.relative_to(archive)] = path.read_text(encoding="utf-8")
+        rel = path.relative_to(archive)
+        if rel.name in GOVERNANCE_FILES:
+            raise GovernanceUndoRefused(
+                f"archived revision {newest} contains governance file '{rel}'; "
+                "approvals and claim state are not undoable — edit the ledger explicitly and re-validate"
+            )
+        files[bundle_dir / rel] = path.read_text(encoding="utf-8")
     if not files:
         shutil.rmtree(archive, ignore_errors=True)
         raise NoHistory(f"archived revision {newest} was empty; nothing to undo")

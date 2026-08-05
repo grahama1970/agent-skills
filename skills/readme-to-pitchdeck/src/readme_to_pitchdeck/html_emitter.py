@@ -101,9 +101,26 @@ let evidenceOpen = false;
 function renderEvidence() {
   const box = document.getElementById('evidence');
   const claims = JSON.parse(slides[index].dataset.claims || '[]');
-  box.innerHTML = claims.length
-    ? claims.map(c => '<div class="claim"><span class="cid">' + c.id + ' · ' + c.status + '</span><div>' + c.text + '</div>' + (c.qualifier ? '<div class="qual">Qualifier: ' + c.qualifier + '</div>' : '') + '</div>').join('')
-    : '<em>No evidence claims are bound to this slide.</em>';
+  box.textContent = '';
+  if (!claims.length) {
+    const empty = document.createElement('em');
+    empty.textContent = 'No approved evidence claims are bound to this slide.';
+    box.appendChild(empty);
+    return;
+  }
+  for (const c of claims) {
+    const card = document.createElement('div'); card.className = 'claim';
+    const cid = document.createElement('span'); cid.className = 'cid';
+    cid.textContent = c.id + ' · ' + c.status;
+    const body = document.createElement('div'); body.textContent = c.text;
+    card.appendChild(cid); card.appendChild(body);
+    if (c.qualifier) {
+      const qual = document.createElement('div'); qual.className = 'qual';
+      qual.textContent = 'Qualifier: ' + c.qualifier;
+      card.appendChild(qual);
+    }
+    box.appendChild(card);
+  }
 }
 function toggleAutoplay() {
   autoplay = !autoplay;
@@ -194,6 +211,9 @@ def emit_html(
                         visual = f'<img src="{uri}" alt="{html.escape(asset.alt_text)}">'
             footer = f'<p class="footer">{html.escape(slide.footer)}</p>' if slide.footer else ""
             reveal_class = "" if slide.reveal != "none" else " no-reveal"
+            # Client evidence DTO (review P0): approved records only — the
+            # candidate set is internal review state and must not ship; the
+            # four fields below are the ENTIRE disclosed surface.
             claims_payload = json.dumps(
                 [
                     {
@@ -203,6 +223,7 @@ def emit_html(
                         "qualifier": c.required_qualifier or "",
                     }
                     for c in slide.claims
+                    if c.status == "approved"
                 ]
             )
             slide_sections.append(

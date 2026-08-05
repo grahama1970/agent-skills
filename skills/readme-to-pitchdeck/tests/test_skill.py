@@ -363,6 +363,9 @@ def test_sparta_example_manifests_validate_with_resolved_sources(tmp_path: Path)
     )
 
     for deck in (public, private):
+        # Publish mode: the ONLY errors must be APPROVAL_FIXTURE — the example
+        # ledger carries fixture stamps precisely so this gate has something
+        # to reject (review condition: fixture provenance never publishes).
         report = validate_bundle(
             deck,
             ledger,
@@ -372,7 +375,19 @@ def test_sparta_example_manifests_validate_with_resolved_sources(tmp_path: Path)
             asset_manifest_dir=tmp_path,
             require_approved_claims=True,
         )
-        assert report.errors == 0, [issue.model_dump() for issue in report.issues]
+        error_codes = {i.code for i in report.issues if i.severity == "error"}
+        assert error_codes == {"APPROVAL_FIXTURE"}, [issue.model_dump() for issue in report.issues]
+        # Draft mode: fixture stamps are fine; zero errors.
+        draft = validate_bundle(
+            deck,
+            ledger,
+            sources,
+            assets,
+            source_manifest_dir=tmp_path,
+            asset_manifest_dir=tmp_path,
+            require_approved_claims=False,
+        )
+        assert draft.errors == 0, [issue.model_dump() for issue in draft.issues]
 
 
 def test_emit_ui_bundle_positive_and_seam_stamp(tmp_path: Path) -> None:

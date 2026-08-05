@@ -612,3 +612,33 @@ in frozen exports (refuse to embed soon-expiring approvals).
 Both verdicts: ship for internal drafts NOW; gate first client-facing deck
 on (1) governance/undo separation + history scrub and (2) evidence
 allowlist DTO.
+
+## Review P0 batch landed (2026-08-05, same day as the review)
+
+- mermaid 11.16.1 VERIFIED installed — above the 11.15.0 advisory fix; no
+  upgrade needed.
+- APPROVAL_FIXTURE: ClaimApproval.fixture flag; publish ERRORS on fixture
+  stamps (draft unaffected). Sparta's 24 stamps marked fixture:true; the
+  earlier fixture-approved publish PPTX moved to stale/ — it can no longer
+  be reproduced. Real publish now requires a human approval cycle.
+- Validated undo: undo overlays the archive on a temp bundle copy, runs
+  FULL validation there, and only on PASS commits the real restore.
+  Out-of-band edits (post-commit YAML hash fingerprint in
+  .revision.state.json) raise OutOfBandEdit; archives containing
+  claim_ledger.yaml raise GovernanceUndoRefused — approvals are not
+  undoable. "Previously committed = previously validated" is retired.
+- Evidence tier: HTML embeds ONLY approved records (candidates dropped);
+  drawer renders via textContent (innerHTML XSS removed); artifact scan
+  parses the DECODED data-claims JSON and asserts the positive allowlist
+  (keys ⊆ {id,text,status,qualifier}, status==approved, id ∈ public
+  approved ledger claims). VERIFIED live on sparta: 25 records, approved
+  only, allowlisted keys only.
+- MERMAID_DIRECTIVE error on %%{ in diagram source;
+  DIAGRAM_NO_SNAPSHOT escalates warning→error at publish.
+- Chat proposals pin base_revision at PROPOSAL time — reorder before
+  Apply → CAS 409, never a silent rebase.
+- Suite: 36 passed, 1 xfailed. Remaining review conditions (P1): SVG
+  snapshot sanitization pipeline, chat proposal referent display + full
+  diff on Apply card, undo tombstones for created files, visual-diff
+  closure, .history scrub command for reclassification, real human
+  approval cycle on sparta.

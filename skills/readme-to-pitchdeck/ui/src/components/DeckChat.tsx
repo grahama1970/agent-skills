@@ -14,9 +14,10 @@ import type { UiDeckBundle } from '../types'
 // compiler validates — nothing is ever applied from text alone.
 // Set VITE_DECK_AGENT_URL to forward unrecognized turns to a live agent.
 
-export type DeckCommand =
+export type DeckCommand = (
   | { kind: 'slide-edit'; slide_id: string; field: string; value: string; summary: string }
   | { kind: 'deck-op'; op: string; slide_id: string; target_order?: number; summary: string }
+) & { base_revision?: number }
 
 function slideByNumber(deck: UiDeckBundle, n: number) {
   return deck.slides.find((s) => s.order === n) ?? null
@@ -63,8 +64,8 @@ async function applyCommand(command: DeckCommand): Promise<string | null> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(
       isEdit
-        ? { slide_id: command.slide_id, field: command.field, value: command.value, base_revision: revisionStore.current }
-        : { op: command.op, slide_id: command.slide_id, target_order: command.target_order, base_revision: revisionStore.current },
+        ? { slide_id: command.slide_id, field: command.field, value: command.value, base_revision: command.base_revision ?? revisionStore.current }
+        : { op: command.op, slide_id: command.slide_id, target_order: command.target_order, base_revision: command.base_revision ?? revisionStore.current },
     ),
   })
   if (response.ok) return null
@@ -152,7 +153,10 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
       setMessages((prev) => [...prev, msg('user', text)])
       const command = parseCommand(deck, text)
       if (command) {
-        setPending(command)
+        // Pin the revision the proposal was computed against (review P1):
+        // a reorder before Apply produces a CAS 409, never a silent rebase
+        // onto a different referent.
+        setPending({ ...command, base_revision: revisionStore.current })
         setMessages((prev) => [
           ...prev,
           msg('assistant', `Proposed: ${command.summary}.\nNothing is applied yet — confirm with the Apply card above the input. The compiler re-validates the full bundle before anything is written.`),

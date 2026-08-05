@@ -195,6 +195,10 @@ class ClaimApproval(StrictModel):
     approved_at: str = Field(min_length=4)  # ISO date/datetime
     source_snapshot_sha256: str | None = None
     expires_at: str | None = None  # ISO date; publish blocks after this
+    # Fixture stamps exist so tests can exercise the publish gate; production
+    # publish REJECTS them (review condition: a fixture-approved publish
+    # proves plumbing, not substantive human authorization).
+    fixture: bool = False
 
 
 class Claim(StrictModel):

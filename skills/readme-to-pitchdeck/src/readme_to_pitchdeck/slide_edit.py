@@ -33,6 +33,62 @@ from .models import (
 EDITABLE_FIELDS = {"title", "message", "notes", "footer", "layout", "transition", "reveal", "hidden"}
 
 
+def validated_undo(bundle_dir: Path, output_dir: Path, *, deck_name: str = "deck.public.yaml"):
+    """Undo with validate-BEFORE-commit (review P0: no blind byte restore).
+
+    Overlays the newest archive onto a temp copy of the bundle, runs the full
+    emit_ui_bundle validation there, and only on PASS performs the real CAS
+    restore + re-emit. Out-of-band edits, governance files in the archive, and
+    validation failures all refuse fail-closed with nothing written.
+    """
+    import shutil
+    from tempfile import TemporaryDirectory
+
+    from .revisions import (
+        GOVERNANCE_FILES,
+        HISTORY_DIR,
+        GovernanceUndoRefused,
+        NoHistory,
+        check_out_of_band,
+        undo_history,
+        undo_last_write,
+    )
+    from .ui_emitter import emit_ui_bundle
+
+    check_out_of_band(bundle_dir)
+    available = undo_history(bundle_dir)
+    if not available:
+        raise NoHistory(f"no archived revisions under {bundle_dir / HISTORY_DIR}; nothing to undo")
+    archive = bundle_dir / HISTORY_DIR / str(available[-1])
+    with TemporaryDirectory(prefix="deck-undo-") as tmp:
+        staging = Path(tmp) / "bundle"
+        shutil.copytree(bundle_dir, staging, ignore=shutil.ignore_patterns(HISTORY_DIR))
+        for path in sorted(x for x in archive.rglob("*") if x.is_file()):
+            rel = path.relative_to(archive)
+            if rel.name in GOVERNANCE_FILES:
+                raise GovernanceUndoRefused(
+                    f"archive contains governance file '{rel}'; approvals are not undoable"
+                )
+            dest = staging / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(path, dest)
+        deck, ledger, sources, assets, source_path = _load(staging, deck_name)
+        emit_ui_bundle(
+            deck, ledger, sources, assets,
+            source_manifest_dir=source_path.parent, asset_manifest_dir=staging,
+            output_dir=Path(tmp) / "ui",
+        )  # raises on validation failure — nothing has touched the real bundle
+    revision = undo_last_write(bundle_dir)
+    deck, ledger, sources, assets, source_path = _load(bundle_dir, deck_name)
+    receipt, _ = emit_ui_bundle(
+        deck, ledger, sources, assets,
+        source_manifest_dir=source_path.parent, asset_manifest_dir=bundle_dir,
+        output_dir=output_dir,
+    )
+    receipt.inputs["restored_revision"] = str(revision)
+    return receipt
+
+
 def _load(bundle_dir: Path, deck_name: str):
     from .io import load_yaml
 

@@ -282,3 +282,80 @@ def test_mermaid_source_scanned_and_snapshot_warned(tmp_path: Path) -> None:
     assert any(i.code == "DIAGRAM_NO_SNAPSHOT" and i.severity == "warning" for i in report.issues)
     with pytest.raises(ValueError, match="require source"):
         VisualSpec(type="math", source="   ")
+
+
+def test_review_p0_gates(planned: Path, tmp_path: Path) -> None:
+    from readme_to_pitchdeck.revisions import (
+        GovernanceUndoRefused,
+        OutOfBandEdit,
+        check_out_of_band,
+        undo_last_write,
+    )
+    from readme_to_pitchdeck.slide_edit import apply_slide_edit
+
+    sources, ledger, assets = _base_models(tmp_path)
+
+    # Fixture approval blocks publish, passes draft.
+    fixture_claim = Claim(
+        id="fx", text="Fixture-approved claim", kind=ClaimKind.PRODUCT,
+        visibility=Visibility.PUBLIC, source_refs=[SourceRef(source_id="public-source")],
+        risk=ClaimRisk.MEDIUM, status=ClaimStatus.APPROVED,
+        approval=ClaimApproval(approved_by="fixture-maintainer", approved_at="2026-08-05", fixture=True),
+    )
+    ledger_fx = ledger.model_copy(update={"claims": [*ledger.claims, fixture_claim]})
+    publish = _run(_deck(_slide(claim_ids=["fx"])), ledger_fx, sources, assets, tmp_path, publish=True)
+    assert any(i.code == "APPROVAL_FIXTURE" and i.severity == "error" for i in publish.issues)
+    draft = _run(_deck(_slide(claim_ids=["fx"])), ledger_fx, sources, assets, tmp_path)
+    assert not any(i.code == "APPROVAL_FIXTURE" for i in draft.issues)
+
+    # Mermaid %%{init}%% directive rejected.
+    slide = _slide(visual=VisualSpec(type="mermaid", source="%%{init: {'securityLevel':'loose'}}%%\ngraph TD; A-->B"))
+    report = _run(_deck(slide), ledger, sources, assets, tmp_path)
+    assert any(i.code == "MERMAID_DIRECTIVE" and i.severity == "error" for i in report.issues)
+
+    # DIAGRAM_NO_SNAPSHOT escalates to error at publish.
+    slide2 = _slide(visual=VisualSpec(type="mermaid", source="graph TD; A-->B"))
+    pub = _run(_deck(slide2), ledger, sources, assets, tmp_path, publish=True)
+    assert any(i.code == "DIAGRAM_NO_SNAPSHOT" and i.severity == "error" for i in pub.issues)
+
+    # Out-of-band edit detected before undo.
+    sid = sorted(load_yaml(planned / "deck.public.yaml", DeckManifest).slides, key=lambda s: s.order)[1].id
+    apply_slide_edit(planned, tmp_path / "ui", slide_id=sid, field="footer", value="v1")
+    deck_file = planned / "deck.public.yaml"
+    deck_file.write_text(deck_file.read_text().replace("v1", "hand-edited"))
+    with pytest.raises(OutOfBandEdit):
+        check_out_of_band(planned)
+    with pytest.raises(OutOfBandEdit):
+        undo_last_write(planned)
+
+    # Governance file in archive refuses undo.
+    gov_bundle = tmp_path / "gov"
+    gov_bundle.mkdir()
+    from readme_to_pitchdeck.revisions import commit_bundle_write
+
+    commit_bundle_write(gov_bundle, {gov_bundle / "claim_ledger.yaml": "schema: x\n"})
+    commit_bundle_write(gov_bundle, {gov_bundle / "claim_ledger.yaml": "schema: y\n"})
+    with pytest.raises(GovernanceUndoRefused):
+        undo_last_write(gov_bundle)
+
+
+def test_evidence_allowlist_scan(tmp_path: Path) -> None:
+    from readme_to_pitchdeck.artifact_scan import ArtifactLeak, scan_artifact
+
+    sources, ledger, assets = _base_models(tmp_path)
+    deck = _deck(_slide())
+    good = tmp_path / "good.html"
+    good.write_text('<section data-claims="[{&quot;id&quot;: &quot;public-claim&quot;, &quot;text&quot;: &quot;x&quot;, &quot;status&quot;: &quot;approved&quot;, &quot;qualifier&quot;: &quot;&quot;}]">T M</section>')
+    # good.html lacks the slide strings; build minimal deck text into it
+    good.write_text('<h1>T</h1><p>M</p><section data-claims="[{&quot;id&quot;: &quot;public-claim&quot;, &quot;text&quot;: &quot;x&quot;, &quot;status&quot;: &quot;approved&quot;, &quot;qualifier&quot;: &quot;&quot;}]"></section>')
+    scan_artifact(good, deck, ledger, sources)  # passes: approved public record, allowlisted keys
+
+    bad_keys = tmp_path / "bad-keys.html"
+    bad_keys.write_text('<h1>T</h1><p>M</p><i data-claims="[{&quot;id&quot;: &quot;public-claim&quot;, &quot;text&quot;: &quot;x&quot;, &quot;status&quot;: &quot;approved&quot;, &quot;qualifier&quot;: &quot;&quot;, &quot;approved_by&quot;: &quot;alice@internal&quot;}]"></i>')
+    with pytest.raises(ArtifactLeak, match="non-allowlisted"):
+        scan_artifact(bad_keys, deck, ledger, sources)
+
+    candidate = tmp_path / "candidate.html"
+    candidate.write_text('<h1>T</h1><p>M</p><i data-claims="[{&quot;id&quot;: &quot;public-claim&quot;, &quot;text&quot;: &quot;x&quot;, &quot;status&quot;: &quot;candidate&quot;, &quot;qualifier&quot;: &quot;&quot;}]"></i>')
+    with pytest.raises(ArtifactLeak, match="not approved"):
+        scan_artifact(candidate, deck, ledger, sources)

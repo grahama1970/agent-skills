@@ -341,19 +341,11 @@ def undo(
     deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
     json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
 ) -> None:
-    """Restore the previous committed bundle state (undo of undo = redo), then re-emit the UI bundle."""
-    from .revisions import undo_last_write
-    from .slide_edit import _load
-    from .ui_emitter import emit_ui_bundle
+    """Restore the previous committed state — validated BEFORE commit; refuses governance/out-of-band."""
+    from .slide_edit import validated_undo
 
     try:
-        revision = undo_last_write(bundle_dir)
-        deck, ledger, sources, assets, source_path = _load(bundle_dir, deck_name)
-        receipt, _ = emit_ui_bundle(
-            deck, ledger, sources, assets,
-            source_manifest_dir=source_path.parent, asset_manifest_dir=bundle_dir, output_dir=output_dir,
-        )
-        receipt.inputs["restored_revision"] = str(revision)
+        receipt = validated_undo(bundle_dir, output_dir, deck_name=deck_name)
         _emit(receipt, json_output=json_output)
     except Exception as exc:
         _abort(exc)

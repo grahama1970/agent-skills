@@ -109,11 +109,25 @@ def validate_bundle(
             issues.append(
                 ValidationIssue(
                     code="DIAGRAM_NO_SNAPSHOT",
-                    severity="warning",
+                    # Review condition (both seats): a client deck with a
+                    # placeholder is not an alternate rendering — error at publish.
+                    severity="error" if require_approved_claims else "warning",
                     slide_id=slide.id,
                     message=(
                         f"slide '{slide.id}' {slide.visual.type.value} visual has no snapshot asset; "
-                        "PPTX export will show a placeholder panel (browser/HTML render fully)"
+                        "publish requires one (PPTX would ship a placeholder panel)"
+                    ),
+                )
+            )
+        if slide.visual.type.value == "mermaid" and "%%{" in (slide.visual.source or ""):
+            issues.append(
+                ValidationIssue(
+                    code="MERMAID_DIRECTIVE",
+                    severity="error",
+                    slide_id=slide.id,
+                    message=(
+                        f"slide '{slide.id}' mermaid source contains a %%{{...}}%% init directive; "
+                        "directives can override renderer security config and are rejected"
                     ),
                 )
             )
@@ -376,7 +390,21 @@ def validate_bundle(
                             claim_id=claim_id,
                         )
                     )
-                elif claim.approval.expires_at:
+                else:
+                    if claim.approval.fixture and require_approved_claims:
+                        issues.append(
+                            ValidationIssue(
+                                severity="error",
+                                code="APPROVAL_FIXTURE",
+                                message=(
+                                    f"Claim '{claim_id}' carries a FIXTURE approval stamp "
+                                    f"({claim.approval.approved_by}); publish requires real human review."
+                                ),
+                                slide_id=slide.id,
+                                claim_id=claim_id,
+                            )
+                        )
+                if claim.approval is not None and claim.approval.expires_at:
                     try:
                         expiry = datetime.fromisoformat(claim.approval.expires_at.replace("Z", "+00:00"))
                         if expiry.tzinfo is None:

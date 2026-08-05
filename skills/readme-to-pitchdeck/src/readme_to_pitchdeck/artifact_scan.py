@@ -13,6 +13,7 @@ the RenderPlan text check. Raises ArtifactLeak on any finding.
 from __future__ import annotations
 
 import html as html_mod
+import json
 import re
 import zipfile
 from pathlib import Path
@@ -106,6 +107,33 @@ def scan_artifact(
                 findings.append(
                     f"visible string missing from artifact: {slide.id}/{path} ('{text[:40]}')"
                 )
+
+    # 5) Embedded evidence JSON (HTML only): parse the DECODED payloads and
+    # assert the positive allowlist — review P0: byte-search misses unicode
+    # escapes, and "renders only public records" must be "embeds only the
+    # minimal approved records".
+    if suffix != ".pptx":
+        approved_public = {
+            c.id for c in ledger.claims
+            if c.status.value == "approved" and c.visibility == Visibility.PUBLIC
+        }
+        allowed_keys = {"id", "text", "status", "qualifier"}
+        for match in re.finditer(r'data-claims="([^"]*)"', raw):
+            try:
+                records = json.loads(html_mod.unescape(match.group(1)))
+            except (ValueError, TypeError):
+                findings.append("embedded data-claims payload is not parseable JSON")
+                continue
+            for record in records:
+                extra = set(record) - allowed_keys
+                if extra:
+                    findings.append(f"embedded evidence record has non-allowlisted keys: {sorted(extra)}")
+                if record.get("status") != "approved":
+                    findings.append(f"embedded evidence record '{record.get('id')}' is not approved")
+                if record.get("id") not in approved_public:
+                    findings.append(
+                        f"embedded evidence record '{record.get('id')}' is not a public approved ledger claim"
+                    )
 
     if findings:
         detail = "; ".join(findings[:6])

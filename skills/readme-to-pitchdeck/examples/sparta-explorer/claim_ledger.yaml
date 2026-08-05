@@ -14,6 +14,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-one-thread
   text: Sparta Explorer turns scattered space-cyber, engineering, supplier, and test
     evidence into one inspectable decision thread.
@@ -27,6 +28,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-three-questions
   text: The product helps teams ask why a conclusion is believed, what is missing
     or disputed, and who is allowed to decide.
@@ -40,6 +42,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-model-boundary
   text: The model helps users navigate while governed evidence and authorized people
     decide.
@@ -53,6 +56,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-relevance-not-support
   text: Search, embeddings, and graph traversal can identify relevant material without
     establishing support, scope, currency, or approval.
@@ -66,6 +70,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-embry-foundation
   text: Sparta Explorer is the assurance workbench inside the planned Embry OS local
     operating foundation for policy-bounded and disconnected environments.
@@ -81,6 +86,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-f36-demo
   text: The synthetic F-36 program world tests whether one evidence thread can serve
     program, engineering, supplier, test, and operational readers without collapsing
@@ -95,6 +101,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-working-surfaces
   text: The prepared-host investigation experience includes Global Posture, Threat
     Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and a docked Console.
@@ -111,6 +118,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-response-path-status
   text: On the governed path, Sparta Chat can answer, clarify, deflect, or expose
     insufficient evidence while transitional response branches remain open.
@@ -126,6 +134,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-collaboration-stage
   text: Sparta Explorer is ready for design-partner conversation, architecture walkthrough,
     workflow evaluation, co-design, and prepared-host technical sessions.
@@ -141,6 +150,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-public-open-gates
   text: Independent corpus review, response-route convergence, QRA reasoning and reuse,
     decision authority, voice, setup, and deployment remain explicit closure gates.
@@ -154,6 +164,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-private-preflight
   text: A prepared-host client demo preflight passed for one exact commit and closed
     issue 38.
@@ -169,6 +180,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-private-qra-snapshot
   text: The dated issue 20 proof records 2,180 active canonical QRAs, 2,180 aliases,
     5,046 quarantined records, zero duplicate active semantic identities, and expected
@@ -185,6 +197,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-private-review-slice
   text: The dated issue 6 proof records one accepted decision, one rejected decision,
     one pending decision, one accepted evidence case, two reviewed overlays, and one
@@ -201,6 +214,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-private-chat-campaign
   text: The dated Sparta Chat aggregate receipt records 115 broad browser cases and
     35 interaction cases.
@@ -216,6 +230,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-private-answerability-contract
   text: The governed response path separates source preservation, candidate construction,
     current-turn scope, answerability, presentation, and human decision.
@@ -229,6 +244,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-private-response-gaps
   text: Direct recall-cache release, raw QuerySpec rendering, legacy Tau fallback,
     and reviewed-only reuse remain named response-route gaps.
@@ -244,6 +260,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-private-deployment-gap
   text: A verified clean-machine quick start and supported external deployment profile
     are not yet published.
@@ -259,6 +276,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: sparta-private-qra-governance
   text: Candidate QRA generation, human interview and promotion, reasoning repair,
     and reviewed-only lineage reuse require distinct governance boundaries.
@@ -272,6 +290,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: non-claim-f36-synthetic
   text: The F-36 corpus and program world are fictional and synthetic.
   kind: non_claim
@@ -284,6 +303,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: non-claim-candidate-credit
   text: Candidate visibility is not compliance credit.
   kind: non_claim
@@ -296,6 +316,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: non-claim-human-authority
   text: A model may explain; authorized people retain approval, risk, certification,
     and signoff authority.
@@ -309,6 +330,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: non-claim-preflight-commit
   text: Prepared-host receipts bind to the exact demonstrated commit and must be rerun
     before a live demonstration.
@@ -322,6 +344,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 - id: non-claim-no-production
   text: This deck does not establish production readiness, accreditation, certification,
     customer deployment, or endorsement.
@@ -335,6 +358,7 @@ claims:
   approval:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
+    fixture: true
 seam_validation:
   kind: claim_ledger
   status: PASS
