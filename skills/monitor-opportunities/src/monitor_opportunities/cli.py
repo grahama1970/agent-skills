@@ -51,6 +51,7 @@ IMPLEMENTED = [
     "serve",
     "buzz-review",
     "buzz-summary",
+    "ats-inspect",
 ]
 NOT_IMPLEMENTED = [
     "apply",
@@ -423,6 +424,38 @@ def buzz_summary(
     except ContractError as exc:
         _fail(exc)
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+
+
+@app.command("ats-inspect")
+def ats_inspect(
+    board: str = typer.Option(..., "--board", help="Greenhouse board slug, e.g. discord."),
+    job_id: str = typer.Option(..., "--job-id", help="Greenhouse job id."),
+    site_policy: Path = typer.Option(
+        ...,
+        "--site-policy",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Human site-policy receipt promoting ats_form_inspect:greenhouse:<board>.",
+    ),
+    out: Path = typer.Option(..., "--out", file_okay=False),
+) -> None:
+    """Read-only ATS form inspection; captures the form schema, writes nothing to the site."""
+    _configure_logging()
+    from .application_plan import ApplicationGateError, inspect_ats_form
+    from .ats.greenhouse import GreenhouseFormError, fetch_greenhouse_form
+
+    try:
+        form = fetch_greenhouse_form(board, job_id)
+        inspection = inspect_ats_form(form, read_json(site_policy))
+    except GreenhouseFormError as exc:
+        _fail(ContractError("ATS_INSPECT_FETCH_FAILED", str(exc)))
+    except ApplicationGateError as exc:
+        _fail(ContractError("ATS_INSPECT_POLICY_REJECTED", str(exc)))
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / f"ats-inspection-greenhouse-{board}-{job_id}.json"
+    path.write_text(json.dumps(inspection, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    typer.echo(json.dumps({"status": "PASS", "path": str(path), **inspection}, indent=2, sort_keys=True))
 
 
 @app.command()
