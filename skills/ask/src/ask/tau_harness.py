@@ -138,7 +138,13 @@ def run_single_tau_agent(
     return outcome
 
 
-def _live_executor(*, profile_id: str, run_id: str, goal_hash: str) -> Callable[..., dict[str, Any]]:
+def _live_executor(
+    *,
+    profile_id: str,
+    run_id: str,
+    goal_hash: str,
+    required_capabilities: tuple[str, ...] = ("streaming",),
+) -> Callable[..., dict[str, Any]]:
     from tau_ai.scillm_transport import ScillmTransportProvider
     from tau_coding.dag_runtime.agent_node_adapter import (
         TAU_NATIVE_ADAPTER_KIND,
@@ -159,7 +165,10 @@ def _live_executor(*, profile_id: str, run_id: str, goal_hash: str) -> Callable[
                 "attempt": 1,
                 "goal_hash": goal_hash,
             },
-            required_capabilities=["tool_calling", "structured_events"],
+            # Tool-less single turns must not demand tool_calling: small local
+            # profiles (e.g. ollama local-text) fail the capability gate and
+            # surface as empty_terminal_output. Tools imply the richer set.
+            required_capabilities=list(required_capabilities),
             timeout_seconds=110,
         )
 
