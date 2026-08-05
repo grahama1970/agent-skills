@@ -224,3 +224,23 @@ Before adding autonomous research or rewriting:
 - Pending: right-click context menu on visuals (inspector covers position/
   clear today); free pixel positioning intentionally rejected — divergence
   between browser and PPTX geometry would break the single-manifest promise.
+
+## Freeform layout — true drag-anywhere positioning (added 2026-08-05)
+
+- /brave-search validation changed the earlier "no free positioning" stance:
+  python-pptx places shapes at absolute EMU coordinates, so geometry stored as
+  FRACTIONS of the canvas renders identically in browser (x*1920/1080) and
+  PPTX (x*13.333in/7.5in). One manifest, two faithful targets — the earlier
+  divergence objection only applied to unmanaged CSS.
+- SlideLayout.FREEFORM + FreeformElement (typed: x/y/w/h fractions bounded to
+  the canvas, text or asset, size_pt/bold/color/align). Switching a slide's
+  layout to freeform synthesizes elements from its existing title/message/
+  bullets/visual. Element ops via apply-edit: element:<id>:frame|text|size,
+  element:add:text, element:del:<id>.
+- Claim boundary holds: element text is included in the forbidden-phrase and
+  claim-visibility scans (tested); out-of-bounds frames rejected by pydantic.
+- UI: react-rnd drag/resize on the scaled canvas; double-click text to edit;
+  "Add text box" in inspector; plain absolute divs outside edit mode.
+- VERIFIED 2026-08-05: browser API drag of the title to (0.100, 0.050)
+  produced a PPTX text box at exactly those fractions (Emu read-back);
+  7 rnd handles live in DOM; 15/15 pytest.

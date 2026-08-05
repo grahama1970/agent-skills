@@ -62,6 +62,7 @@ class SlideLayout(str, Enum):
     ROADMAP = "roadmap"
     COLLABORATION = "collaboration"
     APPENDIX = "appendix"
+    FREEFORM = "freeform"
 
 
 class SlideTransition(str, Enum):
@@ -277,6 +278,37 @@ class VisualSpec(StrictModel):
         return self
 
 
+class FreeformElement(StrictModel):
+    """Absolutely positioned element; x/y/w/h are fractions of the 16:9 canvas.
+
+    The same fractions drive the browser renderer (x*1920, y*1080) and the
+    PPTX builder (x*13.333in, y*7.5in), so geometry round-trips exactly.
+    """
+
+    id: str = Field(min_length=1)
+    type: Literal["text", "asset"]
+    x: float = Field(ge=0.0, le=1.0)
+    y: float = Field(ge=0.0, le=1.0)
+    w: float = Field(gt=0.0, le=1.0)
+    h: float = Field(gt=0.0, le=1.0)
+    text: str | None = None
+    size_pt: float = Field(default=20.0, ge=8.0, le=96.0)
+    bold: bool = False
+    color: str | None = None
+    align: Literal["left", "center", "right"] = "left"
+    asset_id: str | None = None
+
+    @model_validator(mode="after")
+    def validate_element(self) -> "FreeformElement":
+        if self.x + self.w > 1.0001 or self.y + self.h > 1.0001:
+            raise ValueError(f"element '{self.id}' extends beyond the canvas")
+        if self.type == "text" and not (self.text or "").strip():
+            raise ValueError(f"text element '{self.id}' has no text")
+        if self.type == "asset" and not self.asset_id:
+            raise ValueError(f"asset element '{self.id}' has no asset_id")
+        return self
+
+
 class ClaimGuard(StrictModel):
     allowed_claim_ids: list[str] = Field(default_factory=list)
     requires_non_claim_ids: list[str] = Field(default_factory=list)
@@ -296,6 +328,7 @@ class SlideSpec(StrictModel):
     claim_ids: list[str] = Field(default_factory=list)
     visual: VisualSpec = Field(default_factory=VisualSpec)
     claim_guard: ClaimGuard = Field(default_factory=ClaimGuard)
+    elements: list[FreeformElement] = Field(default_factory=list)
     transition: SlideTransition = SlideTransition.SLIDE
     reveal: ContentReveal = ContentReveal.STAGGER_UP
     notes: str = ""

@@ -96,7 +96,8 @@ def validate_bundle(
                 )
 
     for slide in deck.slides:
-        visible_text = "\n".join([slide.title, slide.message, *slide.body])
+        element_texts = [e.text for e in slide.elements if e.text]
+        visible_text = "\n".join([slide.title, slide.message, *slide.body, *element_texts])
         all_text = "\n".join([visible_text, slide.notes])
         if not slide.source_refs:
             issues.append(
@@ -239,6 +240,25 @@ def validate_bundle(
                 )
 
         if slide.visual.type in {VisualType.IMAGE, VisualType.SCREENSHOT}:
+            for element in slide.elements:
+                if element.type == "asset" and element.asset_id not in asset_map:
+                    issues.append(
+                        ValidationIssue(
+                            severity="error",
+                            code="ELEMENT_UNKNOWN_ASSET",
+                            message=f"Freeform element '{element.id}' references unknown asset '{element.asset_id}'.",
+                            slide_id=slide.id,
+                        )
+                    )
+            if slide.layout.value == "freeform" and not slide.elements:
+                issues.append(
+                    ValidationIssue(
+                        severity="error",
+                        code="FREEFORM_NO_ELEMENTS",
+                        message="Freeform slides require at least one element.",
+                        slide_id=slide.id,
+                    )
+                )
             asset_id = slide.visual.asset_id or ""
             asset = asset_map.get(asset_id)
             if asset is None:

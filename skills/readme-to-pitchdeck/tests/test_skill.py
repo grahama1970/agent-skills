@@ -704,3 +704,58 @@ def test_transitions_reveals_and_asset_ops(tmp_path: Path) -> None:
     clear_slide_visual(planned, out, slide_id=slide.id)
     deck3 = load_yaml(planned / "deck.public.yaml", DeckManifest)
     assert [s for s in deck3.slides if s.id == slide.id][0].visual.asset_id is None
+
+
+def test_freeform_layout_round_trip(tmp_path: Path) -> None:
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+    out = tmp_path / "ui"
+
+    from readme_to_pitchdeck.slide_edit import apply_slide_edit
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    slide = sorted(deck.slides, key=lambda s: s.order)[1]
+
+    # Switching to freeform synthesizes elements from existing content.
+    apply_slide_edit(planned, out, slide_id=slide.id, field="layout", value="freeform")
+    deck2 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    ff = [s for s in deck2.slides if s.id == slide.id][0]
+    assert ff.layout.value == "freeform"
+    assert any(e.id == "title" for e in ff.elements)
+
+    # Frame move persists exact fractions; PPTX places the shape at them.
+    apply_slide_edit(planned, out, slide_id=slide.id, field="element:title:frame", value="0.25,0.1,0.5,0.12")
+    ledger = load_yaml(planned / "claim_ledger.yaml", ClaimLedger)
+    sources = load_yaml(planned / "source_manifest.resolved.yaml", SourceManifest)
+    assets = load_yaml(planned / "asset_manifest.yaml", AssetManifest)
+    deck3 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    output = planned / "freeform.pptx"
+    build_pptx(
+        deck3, ledger, sources, assets,
+        source_manifest_dir=planned, asset_manifest_dir=planned,
+        output_path=output, require_approved_claims=False,
+    )
+    from pptx.util import Emu
+
+    prs = Presentation(output)
+    target = list(prs.slides)[1]
+    boxes = [
+        (Emu(sh.left).inches / 13.333, Emu(sh.top).inches / 7.5)
+        for sh in target.shapes
+        if sh.has_text_frame and ff.title[:20] in sh.text_frame.text
+    ]
+    assert boxes and abs(boxes[0][0] - 0.25) < 0.001 and abs(boxes[0][1] - 0.1) < 0.001
+
+    # Out-of-bounds frames fail closed.
+    with pytest.raises(Exception):
+        apply_slide_edit(planned, out, slide_id=slide.id, field="element:title:frame", value="0.8,0.8,0.5,0.5")
+
+    # Element text joins the forbidden-phrase scan.
+    forbidden = sources.policy.forbidden_unqualified_claims
+    if forbidden:
+        with pytest.raises(Exception):
+            apply_slide_edit(
+                planned, out, slide_id=slide.id, field="element:title:text", value=f"We are {forbidden[0]}!"
+            )

@@ -1,5 +1,6 @@
 import { ImageOff } from 'lucide-react'
 import { Editable } from '../edit'
+import { Freeform } from './Freeform'
 import type { UiSlide, UiVisual } from '../types'
 
 /** Layout components for the 10 SlideLayout values in the deck manifest schema. */
@@ -192,6 +193,7 @@ export function Flow({ slide }: { slide: UiSlide }) {
 }
 
 const LAYOUTS: Record<string, (props: { slide: UiSlide }) => React.ReactNode> = {
+  freeform: Freeform,
   cover: Cover,
   statement: Statement,
   split: Split,

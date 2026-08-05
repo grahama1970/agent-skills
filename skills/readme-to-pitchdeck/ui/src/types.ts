@@ -18,6 +18,21 @@ export interface UiAsset {
   missing: boolean
 }
 
+export interface UiElement {
+  id: string
+  type: 'text' | 'asset' | string
+  x: number
+  y: number
+  w: number
+  h: number
+  text?: string
+  size_pt: number
+  bold: boolean
+  color?: string
+  align: string
+  asset?: UiAsset
+}
+
 export interface UiVisual {
   type: 'none' | 'image' | 'screenshot' | 'native_diagram' | 'cards' | string
   position: 'left' | 'right' | 'full' | string
@@ -36,6 +51,7 @@ export interface UiSlide {
   message: string
   body: string[]
   visual: UiVisual
+  elements: UiElement[]
   transition: 'none' | 'fade' | 'slide' | 'slide_up' | 'zoom' | string
   reveal: 'none' | 'stagger_up' | 'stagger_fade' | string
   claims: UiClaimBadge[]

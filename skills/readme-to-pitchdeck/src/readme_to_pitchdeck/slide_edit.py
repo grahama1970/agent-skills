@@ -81,10 +81,62 @@ def apply_slide_edit(
         else:
             raise ValueError("body edits use field 'body:<index>', 'body:add', or 'body:del.<index>'")
         updated_slide = slide.model_copy(update={"body": new_body})
+    elif base_field == "element":
+        op_or_id, _, sub = index_part.partition(":")
+        elements = list(slide.elements)
+        from .models import FreeformElement
+
+        if op_or_id == "add" and sub == "text":
+            new_id = f"text-{len(elements) + 1}"
+            existing_ids = {e.id for e in elements}
+            counter = 2
+            while new_id in existing_ids:
+                new_id = f"text-{len(elements) + counter}"
+                counter += 1
+            elements.append(
+                FreeformElement(id=new_id, type="text", x=0.3, y=0.4, w=0.4, h=0.15, text=value or "New text")
+            )
+        elif op_or_id == "del":
+            elements = [e for e in elements if e.id != sub]
+            if len(elements) == len(slide.elements):
+                raise ValueError(f"no element '{sub}' on slide '{slide_id}'")
+        else:
+            target = next((e for e in elements if e.id == op_or_id), None)
+            if target is None:
+                raise ValueError(f"no element '{op_or_id}' on slide '{slide_id}'")
+            if sub == "frame":
+                parts = [float(part) for part in value.split(",")]
+                if len(parts) != 4:
+                    raise ValueError("element frame value must be 'x,y,w,h' fractions")
+                updated = target.model_copy(update={"x": parts[0], "y": parts[1], "w": parts[2], "h": parts[3]})
+            elif sub == "text":
+                updated = target.model_copy(update={"text": value})
+            elif sub == "size":
+                updated = target.model_copy(update={"size_pt": float(value)})
+            else:
+                raise ValueError(f"unknown element field '{sub}'; use frame|text|size")
+            elements = [updated if e.id == target.id else e for e in elements]
+        updated_slide = slide.model_copy(update={"elements": elements})
     elif base_field == "visual" and index_part == "position":
         updated_slide = slide.model_copy(
             update={"visual": slide.visual.model_copy(update={"position": value})}
         )
+    elif base_field == "layout" and value == "freeform" and not slide.elements:
+        from .models import FreeformElement
+
+        synthesized = [
+            FreeformElement(id="title", type="text", x=0.06, y=0.07, w=0.88, h=0.12, text=slide.title, size_pt=34, bold=True),
+            FreeformElement(id="message", type="text", x=0.06, y=0.2, w=0.62, h=0.14, text=slide.message, size_pt=20, color="#9be6f0"),
+        ]
+        for i, line in enumerate(slide.body[:5]):
+            synthesized.append(
+                FreeformElement(id=f"bullet-{i + 1}", type="text", x=0.06, y=0.38 + i * 0.1, w=0.5, h=0.09, text=line, size_pt=16)
+            )
+        if slide.visual.asset_id:
+            synthesized.append(
+                FreeformElement(id="visual", type="asset", x=0.6, y=0.36, w=0.34, h=0.5, asset_id=slide.visual.asset_id)
+            )
+        updated_slide = slide.model_copy(update={"layout": value, "elements": synthesized})
     elif base_field in EDITABLE_FIELDS:
         updated_slide = slide.model_copy(update={base_field: value or None if base_field == "footer" else value})
     else:

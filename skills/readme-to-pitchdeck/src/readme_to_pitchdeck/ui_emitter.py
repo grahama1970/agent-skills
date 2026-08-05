@@ -45,6 +45,21 @@ class UiAsset(StrictModel):
     missing: bool = False
 
 
+class UiElement(StrictModel):
+    id: str
+    type: str
+    x: float
+    y: float
+    w: float
+    h: float
+    text: str | None = None
+    size_pt: float = 20.0
+    bold: bool = False
+    color: str | None = None
+    align: str = "left"
+    asset: UiAsset | None = None
+
+
 class UiVisual(StrictModel):
     type: str
     position: str = "right"
@@ -63,6 +78,7 @@ class UiSlide(StrictModel):
     message: str
     body: list[str] = Field(default_factory=list)
     visual: UiVisual
+    elements: list[UiElement] = Field(default_factory=list)
     transition: str = "slide"
     reveal: str = "stagger_up"
     claims: list[UiClaimBadge] = Field(default_factory=list)
@@ -169,6 +185,23 @@ def emit_ui_bundle(
             )
             for claim in (claims_by_id[cid] for cid in slide.claim_ids)
         ]
+        ui_elements = [
+            UiElement(
+                id=element.id,
+                type=element.type,
+                x=element.x,
+                y=element.y,
+                w=element.w,
+                h=element.h,
+                text=element.text,
+                size_pt=element.size_pt,
+                bold=element.bold,
+                color=element.color,
+                align=element.align,
+                asset=_ui_asset(element.asset_id) if element.asset_id else None,
+            )
+            for element in slide.elements
+        ]
         ui_slides.append(
             UiSlide(
                 id=slide.id,
@@ -179,6 +212,7 @@ def emit_ui_bundle(
                 message=slide.message,
                 body=slide.body,
                 visual=visual,
+                elements=ui_elements,
                 transition=slide.transition.value,
                 reveal=slide.reveal.value,
                 claims=badges,

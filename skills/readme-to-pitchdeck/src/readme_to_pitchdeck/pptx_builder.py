@@ -592,8 +592,47 @@ def _render_appendix(slide, spec) -> None:
     _add_body_rows(slide, spec.body[:6], 1.0, 2.6, 11.35, 3.75)
 
 
+def _render_freeform(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path) -> None:
+    """Absolutely positioned elements; fractions of the canvas map to inches."""
+    for element in spec.elements:
+        x = element.x * SLIDE_W
+        y = element.y * SLIDE_H
+        w = element.w * SLIDE_W
+        h = element.h * SLIDE_H
+        if element.type == "text":
+            _add_text(
+                slide,
+                element.text or "",
+                x,
+                y,
+                w,
+                h,
+                size=element.size_pt,
+                bold=element.bold,
+                color=element.color or Theme.text,
+                align={
+                    "left": PP_ALIGN.LEFT,
+                    "center": PP_ALIGN.CENTER,
+                    "right": PP_ALIGN.RIGHT,
+                }[element.align],
+            )
+        elif element.asset_id and element.asset_id in asset_map:
+            _add_image_fit(
+                slide,
+                asset_map[element.asset_id],
+                x,
+                y,
+                w,
+                h,
+                asset_base_dir=asset_base_dir,
+                temp_dir=temp_dir,
+            )
+
+
 def _render_slide(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path) -> None:
-    if spec.layout == SlideLayout.COVER:
+    if spec.layout == SlideLayout.FREEFORM:
+        _render_freeform(slide, spec, asset_map, asset_base_dir, temp_dir)
+    elif spec.layout == SlideLayout.COVER:
         _render_cover(slide, spec, asset_map, asset_base_dir, temp_dir)
     elif spec.layout == SlideLayout.STATEMENT:
         _render_statement(slide, spec)

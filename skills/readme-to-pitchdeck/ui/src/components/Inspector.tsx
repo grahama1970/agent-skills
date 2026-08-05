@@ -17,6 +17,7 @@ const LAYOUTS = [
   'roadmap',
   'collaboration',
   'appendix',
+  'freeform',
 ]
 
 async function postEdit(slideId: string, field: string, value: string): Promise<string | null> {
@@ -92,6 +93,22 @@ export function Inspector({ slide, onChanged }: { slide: UiSlide; onChanged: () 
           ))}
         </select>
       </section>
+
+      {slide.layout === 'freeform' ? (
+        <section>
+          <button
+            type="button"
+            data-qid="deck:inspector:add-textbox"
+            data-qs-action="DECK_ADD_TEXTBOX"
+            title="Add a text box to this freeform slide"
+            disabled={busyField !== null}
+            onClick={() => void apply('element:add:text', 'New text')}
+            className="w-full cursor-pointer rounded-lg border border-cyan-700 bg-cyan-600/10 px-3 py-2 text-sm text-cyan-200 hover:border-cyan-500 disabled:opacity-40"
+          >
+            + Add text box
+          </button>
+        </section>
+      ) : null}
 
       <section>
         <label className={label} htmlFor="inspector-transition">
