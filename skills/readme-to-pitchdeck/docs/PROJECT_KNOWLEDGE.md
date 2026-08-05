@@ -368,3 +368,62 @@ Accepted spec queue, NOT yet implemented (from the same stream):
    already ship a true LibreOffice PDF (text-preserving, validated) through
    the export menu; a screenshot-based client PDF is strictly worse and adds
    two heavy dependencies.
+
+## Roundtable synthesis: content-run model + sequencing (2026-08-05)
+
+Three live browser seats (webgpt / webclaude / webgemini) via ask tau-dag
+roundtable, 0 failed seats, receipts under
+outputs/roundtable-next-steps/ask-tau-roundtable-readme-to-pitchdeck-n-5adb39fe9b09/.
+
+UNANIMOUS (all three, independently): text RUNS are the wrong canonical unit —
+they are typographic artifacts that PPTX/HTML/Marp segment differently; the
+canonical model must be semantic, with runs DERIVED and never read back.
+Proposed shapes: webclaude TextBlock+template+typed-slots (5 binding kinds +
+'unclassified' default that blocks publish, qualifiers as slot RELATIONS);
+webgemini Semantic Span wrapper projected to renderer runs (assertion_hash);
+webgpt ContentIR (claim_instances with relation exact|paraphrase|derived|
+comparison|prediction, nodes with roles/exposure surfaces, qualifier
+CO-PRESENCE required in every reachable reveal state). All three flag
+compositional failure (individually-true parts assembling a false sentence)
+as the hole a flat span taxonomy cannot catch.
+
+ATTRIBUTED DISSENT on sequencing (2-vs-1):
+- webclaude: session 1 = make wrongness non-exportable FIRST (publish/draft
+  gate, revision CAS + atomic writes, asset hardening, cheap whole-string
+  post-build PPTX verification, toasts) — "I disagree with building the
+  content-run model first: widest-surface refactor with no rollback until CAS
+  exists"; model in session 2; proof bundle + modes + chat proposals in 3.
+- webgemini: session 1 = content AST + RenderPlan + qualifier binding +
+  proof harness; state/CAS/UI session 2; export/security/infra session 3.
+- webgpt: semantic truth → artifact truth → mutation truth; session 1 =
+  ContentIR + hostile-input containment; exit criterion "a renderer cannot
+  receive an unclassified string through its typed API".
+
+BLIND SPOTS surfaced (missed by both the RETHINK review and the spec stream):
+- Emitted-bytes scanning (webclaude): validator checks the model, never the
+  artifact — PPTX is an OPC zip (deleted-but-present parts, docProps, srcRect
+  crops shipping full images), HTML inlines everything decompilably; add a
+  post-emit artifact scan. Called the single largest gap, one-session fix.
+- Visual/chart claims (all three): axis truncation/dual-axis/log-scale can
+  misrepresent claim-true data; bind axis ranges to claim data ranges.
+- Temporal exposure (webgpt): reveals/animation can show an assertion before
+  its qualifier; qualifier co-presence must hold per reveal state.
+- Multi-surface edit races (webgemini): YAML pane + canvas + chat need a
+  single-writer/CAS queue or split-brain overwrites bypass validation.
+- Also: no adversary model written down; no export ledger/recall list for
+  retracted claims; ChatWell prompt-injection once proposals mutate; unpinned
+  LibreOffice; no gate telemetry; staleness in embeddings/caches; binding
+  proves authorization, not semantic entailment (human review stays).
+- Seat honesty note: webclaude disclosed it ran Opus 5 (could not switch
+  models) and that its schemas are proposals against the summary, not
+  source-traced.
+
+PLAN OF RECORD (project-agent reconciliation of the dissent): adopt
+webclaude's session-1 safety rails (CAS + publish gate + post-emit artifact
+scan are cheap, reversible, and prerequisite to a safe model migration),
+then webgpt's ContentIR direction for session 2 (richest relation/exposure
+semantics; fold in webclaude's template-slot validation of the assembled
+string and gemini's span-projection for renderer mapping), session 3 = proof
+bundle as CI gate + modes/undo/chat-proposals. A focused round-2 on the
+model-first-vs-rails-first dissent is optional; the reconciliation above
+takes rails-first on the strength of the no-rollback argument.
