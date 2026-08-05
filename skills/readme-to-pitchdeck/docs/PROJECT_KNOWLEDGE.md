@@ -66,6 +66,29 @@ structural verification, and can render PDF/PNG/contact sheets with Linux tools.
   question, not a storage failure. Tag-filtered sample is the reliable
   retrieval path today.
 
+## Claim-review chat via shared ux-lab ChatWell (added 2026-08-05)
+
+- Corrections on record: (a) `skills/ux-lab` exists in this repo on main — an
+  earlier "missing from checkout" claim was a zsh glob failure misread as
+  absence; (b) a shared chat extraction already exists
+  (`skills/ux-lab/ui/ChatWell.tsx` re-exporting ComplianceChatWell, plus
+  SharedChatShell) — it did not need to be created.
+- `ui/src/components/DeckChat.tsx` mounts the shared ChatWell (imported from
+  `@ux-lab/ui/ChatWell` via a repo-relative Vite alias; typed via a local
+  declaration shim so strict tsconfig does not lint the shared sources) in the
+  claims view only. Presenter mode stays chat-free.
+- Claim boundary preserved: the interpreter is deterministic over the emitted
+  bundle (gaps / candidates / show <id>) and for approve|reject|qualify it
+  emits the exact ledger edit + re-verify + re-emit commands — chat never
+  mutates deck content. VITE_DECK_AGENT_URL optionally forwards free-form
+  turns to a live agent endpoint (falls back to local commands on failure).
+- VERIFIED live 2026-08-05 via surf: ChatWell mounted with shared-chat qids,
+  starter chip "Open gaps" produced the 24-gap answer from the bundle;
+  screenshot at /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/ui-chat-claims.png.
+- ux-lab note: the ui package `index.ts` does not re-export ChatWell (only
+  ComplianceChatWell); consumers use the `ChatWell.tsx` module path. Repo copy
+  and ~/.pi copy of index.ts differ — treat the repo as canonical.
+
 ## Visual sync into Qdrant (added 2026-08-05)
 
 - Correction on record: Qdrant IS part of the workstation memory pipeline

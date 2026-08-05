@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
+import { DeckChat } from './components/DeckChat'
 import { useDeck, useKeyboardNav, useRegisterAction, useSlideScale } from './hooks'
 import { SlideBody } from './layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
@@ -140,7 +141,7 @@ export function App() {
             onClick={() => setView(view === 'claims' ? 'present' : 'claims')}
             className={navButton}
           >
-            <ShieldCheck aria-hidden className="h-4 w-4" /> Claims
+            <ShieldCheck aria-hidden className="h-4 w-4" /> Claim review
           </button>
           <button
             type="button"
@@ -157,7 +158,12 @@ export function App() {
       </header>
 
       {view === 'claims' ? (
-        <ClaimReview deck={deck} />
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_420px]">
+          <ClaimReview deck={deck} />
+          <aside aria-label="Claim review chat" className="min-h-0 overflow-hidden border-t border-slate-800 lg:border-l lg:border-t-0">
+            <DeckChat deck={deck} />
+          </aside>
+        </div>
       ) : view === 'overview' ? (
         <Overview
           deck={deck}

@@ -111,7 +111,12 @@ and a read-only claim-ledger review view. `emit-ui` runs the same fail-closed
 validation as `build` before writing anything, and the app refuses bundles
 without a `seam_validation` PASS stamp. Interactive elements carry
 `data-qid`/`data-qs-action`/`title` (checked by
-`scripts/verify_ui_contracts.py` in `sanity.sh`).
+`scripts/verify_ui_contracts.py` in `sanity.sh`). The claims view embeds the
+shared ux-lab `ChatWell` (`skills/ux-lab/ui`) as a deterministic claim-review
+chat: `gaps`, `candidates`, `show <claim-id>`, and `approve|reject|qualify
+<claim-id>` answer from the validated bundle or emit exact ledger-edit +
+re-emit commands; chat never mutates deck content. Set `VITE_DECK_AGENT_URL`
+to route free-form turns to a live project agent.
 
 ```bash
 ./run.sh emit-ui --bundle-dir docs/pitch/product --output-dir ui/public
