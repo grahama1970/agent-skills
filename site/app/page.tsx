@@ -1,4 +1,5 @@
 import { CopyEmail } from '@/components/copy-email';
+import { ReceiptsSection } from '@/components/receipts-section';
 import { SiteNav } from '@/components/site-nav';
 import { SkillMosaic } from '@/components/skill-mosaic';
 import { TelemetryBar } from '@/components/telemetry-bar';
@@ -133,6 +134,8 @@ export default function Home() {
           </p>
           <SkillMosaic />
         </section>
+
+        <ReceiptsSection />
 
         <section id="about" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
           <h2 className="mb-3 font-display text-[clamp(2rem,3.6vw,3.4rem)]">

@@ -371,6 +371,58 @@ body {
   }
 }
 
+/* Keypress badge pulse: the interface visibly reacts to J/K like a
+   physical control panel. */
+.hint-kbd {
+  transition:
+    transform 100ms ease,
+    background-color 100ms ease,
+    box-shadow 100ms ease;
+}
+.hint-kbd.is-pressed {
+  transform: translateY(2px) scale(0.92);
+  background-color: var(--t-accent) !important;
+  color: var(--t-paper) !important;
+  box-shadow: 0 0 10px color-mix(in oklch, var(--t-accent) 80%, transparent);
+}
+
+/* Dream fallback: kinetic scroll-snap carousel with micro-zoom (the
+   sticky scrub takes over where scroll-driven animations are supported). */
+.dream-frames {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.dream-frames::-webkit-scrollbar {
+  height: 4px;
+}
+.dream-frames::-webkit-scrollbar-track {
+  background: var(--t-fill);
+}
+.dream-frames::-webkit-scrollbar-thumb {
+  background: var(--t-line);
+  border-radius: 2px;
+}
+.dream-frames::-webkit-scrollbar-thumb:hover {
+  background: var(--t-accent);
+}
+.dream-frame {
+  scroll-snap-align: center;
+  transition:
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 300ms ease;
+}
+.dream-frame img {
+  transition: transform 400ms ease;
+}
+.dream-frame:hover {
+  border-color: var(--t-accent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dream-frame:hover img {
+    transform: scale(1.05);
+  }
+}
+
 /* Keyboard shortcuts modal */
 .modal-overlay {
   position: fixed;
@@ -601,15 +653,29 @@ body {
   height: 4px;
   background-color: var(--card-accent, var(--t-line));
 }
+.project-card {
+  transition:
+    transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 250ms ease,
+    border-color 200ms ease;
+  will-change: transform;
+}
 .project-card:hover,
 .project-card:focus-visible {
-  border-color: var(--t-mute);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgb(0 0 0 / 0.05);
+  border-color: color-mix(in oklch, var(--t-accent) 60%, transparent);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 12px 28px -6px rgb(0 0 0 / 0.4),
+    0 0 12px 0 color-mix(in oklch, var(--t-accent) 15%, transparent);
+}
+.project-card:active {
+  transform: translateY(-1px) scale(0.99);
+  transition-duration: 80ms;
 }
 @media (prefers-reduced-motion: reduce) {
   .project-card:hover,
-  .project-card:focus-visible {
+  .project-card:focus-visible,
+  .project-card:active {
     transform: none;
   }
 }
@@ -682,11 +748,14 @@ body {
    Default layout (no support / reduced motion): a plain grid of frames.
    With scroll-driven animations: a sticky viewport scrubs the run. */
 .dream-frames {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 10px;
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 0.5rem 0 1.25rem;
 }
 .dream-frame {
+  flex: 0 0 340px;
   border: 1px solid var(--t-line);
   border-radius: 4px;
   overflow: hidden;

@@ -27,6 +27,16 @@ const SHORTCUTS = [
 const FOCUSABLES =
   'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/** Flash the matching header badge key so the UI visibly reacts. */
+function pulseKbd(key: string) {
+  document.querySelectorAll<HTMLElement>('.hint-kbd').forEach((badge) => {
+    if (badge.textContent?.trim().toUpperCase() === key) {
+      badge.classList.add('is-pressed');
+      setTimeout(() => badge.classList.remove('is-pressed'), 180);
+    }
+  });
+}
+
 function isEditing() {
   const el = document.activeElement as HTMLElement | null;
   return (
@@ -110,9 +120,11 @@ export function KeyboardNav() {
         open ? close() : openModal();
       } else if (e.key === 'j') {
         e.preventDefault();
+        pulseKbd('J');
         jump(1);
       } else if (e.key === 'k') {
         e.preventDefault();
+        pulseKbd('K');
         jump(-1);
       } else if (e.key === 'G' || e.key === 'End') {
         e.preventDefault();
@@ -149,10 +161,10 @@ export function KeyboardNav() {
         className="machine hidden items-center gap-1.5 rounded border border-line px-2 py-1 text-mute hover:border-accent hover:text-ink md:inline-flex"
       >
         <span className="uppercase tracking-wide">Nav</span>
-        <kbd className="rounded border border-line bg-paper px-1.5 py-0.5 text-[0.675rem] font-semibold text-ink">
+        <kbd className="hint-kbd rounded border border-line bg-paper px-1.5 py-0.5 text-[0.675rem] font-semibold text-ink">
           J
         </kbd>
-        <kbd className="rounded border border-line bg-paper px-1.5 py-0.5 text-[0.675rem] font-semibold text-ink">
+        <kbd className="hint-kbd rounded border border-line bg-paper px-1.5 py-0.5 text-[0.675rem] font-semibold text-ink">
           K
         </kbd>
       </button>
