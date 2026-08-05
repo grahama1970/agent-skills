@@ -648,3 +648,59 @@ def test_deck_ops_add_move_delete(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="already first"):
         apply_deck_op(planned, out, op="move_left", slide_id=first.id)
+
+
+def test_transitions_reveals_and_asset_ops(tmp_path: Path) -> None:
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+    out = tmp_path / "ui"
+
+    from readme_to_pitchdeck.asset_ops import add_asset_to_slide, clear_slide_visual
+    from readme_to_pitchdeck.slide_edit import apply_slide_edit
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    slide = sorted(deck.slides, key=lambda s: s.order)[1]
+
+    # Transition + reveal flow through the whole pipeline as typed data.
+    apply_slide_edit(planned, out, slide_id=slide.id, field="transition", value="zoom")
+    apply_slide_edit(planned, out, slide_id=slide.id, field="reveal", value="stagger_fade")
+    import json as _json
+
+    bundle = _json.loads((out / "deck.data.json").read_text())
+    ui_slide = [s for s in bundle["slides"] if s["id"] == slide.id][0]
+    assert ui_slide["transition"] == "zoom"
+    assert ui_slide["reveal"] == "stagger_fade"
+    with pytest.raises(Exception):
+        apply_slide_edit(planned, out, slide_id=slide.id, field="transition", value="wobble")
+
+    # Asset drop: image binds, appears in manifest + emitted bundle.
+    from PIL import Image
+
+    image_path = tmp_path / "shot.png"
+    Image.new("RGB", (1280, 720), "navy").save(image_path)
+    receipt = add_asset_to_slide(planned, out, slide_id=slide.id, file_path=image_path, alt_text="A navy screenshot")
+    assert receipt.operation == "asset-add"
+    assets = load_yaml(planned / "asset_manifest.yaml", AssetManifest)
+    added = [a for a in assets.assets if a.id.startswith(slide.id)]
+    assert added and added[0].alt_text == "A navy screenshot"
+    bundle = _json.loads((out / "deck.data.json").read_text())
+    ui_slide = [s for s in bundle["slides"] if s["id"] == slide.id][0]
+    assert ui_slide["visual"]["asset"]["file"].startswith("assets/")
+
+    # Position variant round-trips.
+    apply_slide_edit(planned, out, slide_id=slide.id, field="visual:position", value="left")
+    deck2 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert [s for s in deck2.slides if s.id == slide.id][0].visual.position.value == "left"
+
+    # Unsupported format fails closed with no orphan file.
+    bad = tmp_path / "notes.txt"
+    bad.write_text("nope")
+    with pytest.raises(ValueError, match="unsupported asset format"):
+        add_asset_to_slide(planned, out, slide_id=slide.id, file_path=bad, alt_text="x")
+
+    # Clear visual detaches.
+    clear_slide_visual(planned, out, slide_id=slide.id)
+    deck3 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert [s for s in deck3.slides if s.id == slide.id][0].visual.asset_id is None

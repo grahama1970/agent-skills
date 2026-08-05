@@ -29,7 +29,7 @@ from .models import (
     SourceManifest,
 )
 
-EDITABLE_FIELDS = {"title", "message", "notes", "footer", "layout"}
+EDITABLE_FIELDS = {"title", "message", "notes", "footer", "layout", "transition", "reveal"}
 
 
 def _load(bundle_dir: Path, deck_name: str):
@@ -81,6 +81,10 @@ def apply_slide_edit(
         else:
             raise ValueError("body edits use field 'body:<index>', 'body:add', or 'body:del.<index>'")
         updated_slide = slide.model_copy(update={"body": new_body})
+    elif base_field == "visual" and index_part == "position":
+        updated_slide = slide.model_copy(
+            update={"visual": slide.visual.model_copy(update={"position": value})}
+        )
     elif base_field in EDITABLE_FIELDS:
         updated_slide = slide.model_copy(update={base_field: value or None if base_field == "footer" else value})
     else:

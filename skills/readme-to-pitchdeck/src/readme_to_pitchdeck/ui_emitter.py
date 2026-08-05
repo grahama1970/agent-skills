@@ -47,6 +47,7 @@ class UiAsset(StrictModel):
 
 class UiVisual(StrictModel):
     type: str
+    position: str = "right"
     asset: UiAsset | None = None
     items: list[str] = Field(default_factory=list)
     callouts: list[str] = Field(default_factory=list)
@@ -62,6 +63,8 @@ class UiSlide(StrictModel):
     message: str
     body: list[str] = Field(default_factory=list)
     visual: UiVisual
+    transition: str = "slide"
+    reveal: str = "stagger_up"
     claims: list[UiClaimBadge] = Field(default_factory=list)
     source_ids: list[str] = Field(default_factory=list)
     notes: str = ""
@@ -149,6 +152,7 @@ def emit_ui_bundle(
     for slide in sorted(deck.slides, key=lambda s: s.order):
         visual = UiVisual(
             type=slide.visual.type.value,
+            position=slide.visual.position.value,
             asset=_ui_asset(slide.visual.asset_id) if slide.visual.asset_id else None,
             items=slide.visual.items,
             callouts=slide.visual.callouts,
@@ -175,6 +179,8 @@ def emit_ui_bundle(
                 message=slide.message,
                 body=slide.body,
                 visual=visual,
+                transition=slide.transition.value,
+                reveal=slide.reveal.value,
                 claims=badges,
                 source_ids=sorted({ref.source_id for ref in slide.source_refs}),
                 notes=slide.notes,

@@ -20,6 +20,7 @@ export interface UiAsset {
 
 export interface UiVisual {
   type: 'none' | 'image' | 'screenshot' | 'native_diagram' | 'cards' | string
+  position: 'left' | 'right' | 'full' | string
   asset?: UiAsset
   items: string[]
   callouts: string[]
@@ -35,6 +36,8 @@ export interface UiSlide {
   message: string
   body: string[]
   visual: UiVisual
+  transition: 'none' | 'fade' | 'slide' | 'slide_up' | 'zoom' | string
+  reveal: 'none' | 'stagger_up' | 'stagger_fade' | string
   claims: UiClaimBadge[]
   source_ids: string[]
   notes: string

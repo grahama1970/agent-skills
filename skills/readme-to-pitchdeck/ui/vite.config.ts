@@ -1,7 +1,9 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { execFile } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
@@ -56,6 +58,76 @@ function slideEditApi(): Plugin {
                   return
                 }
                 res.end(stdout)
+              },
+            )
+          } catch (error) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: String(error) }))
+          }
+        })
+      })
+      server.middlewares.use('/api/asset-drop', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'POST only' }))
+          return
+        }
+        const chunks: Buffer[] = []
+        req.on('data', (chunk: Buffer) => chunks.push(chunk))
+        req.on('end', () => {
+          try {
+            const { slide_id, filename, alt, data_b64, action } = JSON.parse(
+              Buffer.concat(chunks).toString('utf-8'),
+            ) as Record<string, string>
+            const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
+            const bundleDir = receipt?.outputs?.bundle_dir
+            if (!bundleDir) {
+              res.statusCode = 409
+              res.end(JSON.stringify({ error: 'emit_ui_receipt.json has no bundle_dir; re-run emit-ui first' }))
+              return
+            }
+            const respond = (error: Error | null, stdout: string, stderr: string) => {
+              res.setHeader('Content-Type', 'application/json')
+              if (error) {
+                res.statusCode = 422
+                res.end(JSON.stringify({ error: stderr.trim() || String(error) }))
+                return
+              }
+              res.end(stdout)
+            }
+            if (action === 'clear') {
+              execFile(
+                `${skillRoot}/run.sh`,
+                ['asset-clear', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--slide-id', slide_id, '--json'],
+                { timeout: 60_000 },
+                respond,
+              )
+              return
+            }
+            if (!slide_id || !filename || !alt || !data_b64) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'slide_id, filename, alt, data_b64 are required' }))
+              return
+            }
+            const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_')
+            const tmpDir = mkdtempSync(join(tmpdir(), 'deck-drop-'))
+            const tmpPath = join(tmpDir, safeName)
+            writeFileSync(tmpPath, Buffer.from(data_b64, 'base64'))
+            execFile(
+              `${skillRoot}/run.sh`,
+              [
+                'asset-add',
+                '--bundle-dir', bundleDir,
+                '--output-dir', publicDir,
+                '--slide-id', slide_id,
+                '--file', tmpPath,
+                '--alt', alt,
+                '--json',
+              ],
+              { timeout: 120_000 },
+              (error, stdout, stderr) => {
+                rmSync(tmpDir, { recursive: true, force: true })
+                respond(error, stdout, stderr)
               },
             )
           } catch (error) {

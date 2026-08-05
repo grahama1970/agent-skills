@@ -203,3 +203,24 @@ Before adding autonomous research or rewriting:
 - Per-element fonts/colors remain intentionally out of scope: theme-layer
   decisions, tuned in the exported PPTX or theme, preventing design-system and
   claim-rendering drift.
+
+## Animations first-class + asset drop (added 2026-08-05, operator directive)
+
+- Operator: "animations should be first class citizens in the react app."
+  Implemented as typed manifest data, not CSS toggles: SlideSpec.transition
+  (none/fade/slide/slide_up/zoom) and SlideSpec.reveal (none/stagger_up/
+  stagger_fade) flow schema → validation → emit-ui → renderer → inspector
+  dropdowns; VisualSpec.position (left/right/full) controls layout placement.
+  Invalid values rejected by pydantic (verified: 'wobble' fails closed).
+  PPTX/Marp exports intentionally ignore transition/reveal (documented).
+- Drag-and-drop assets: drop an image/video onto the slide in edit mode →
+  alt-text dialog (required) → /api/asset-drop → asset-add CLI: file copied
+  into bundle assets/, AssetSpec appended (kind video for mp4/webm), bound as
+  slide visual, full validation before manifests + deck.data.json rewrite;
+  rejection deletes the copied file (no orphans). asset-clear detaches.
+- VERIFIED live 2026-08-05: PNG dropped via API onto 02-problem rendered in
+  split layout, zoom transition + staggered bullets active
+  (anim-zoom-fwd in DOM); 14/14 pytest incl. asset ops + invalid-transition.
+- Pending: right-click context menu on visuals (inspector covers position/
+  clear today); free pixel positioning intentionally rejected — divergence
+  between browser and PPTX geometry would break the single-manifest promise.

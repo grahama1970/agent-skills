@@ -64,6 +64,30 @@ class SlideLayout(str, Enum):
     APPENDIX = "appendix"
 
 
+class SlideTransition(str, Enum):
+    """Browser-deck slide transition; PPTX export intentionally ignores it."""
+
+    NONE = "none"
+    FADE = "fade"
+    SLIDE = "slide"
+    SLIDE_UP = "slide_up"
+    ZOOM = "zoom"
+
+
+class ContentReveal(str, Enum):
+    """Browser-deck content entrance animation for body items."""
+
+    NONE = "none"
+    STAGGER_UP = "stagger_up"
+    STAGGER_FADE = "stagger_fade"
+
+
+class VisualPosition(str, Enum):
+    LEFT = "left"
+    RIGHT = "right"
+    FULL = "full"
+
+
 class VisualType(str, Enum):
     NONE = "none"
     IMAGE = "image"
@@ -239,6 +263,7 @@ class AssetManifest(StrictModel):
 class VisualSpec(StrictModel):
     type: VisualType = VisualType.NONE
     asset_id: str | None = None
+    position: VisualPosition = VisualPosition.RIGHT
     items: list[str] = Field(default_factory=list)
     callouts: list[str] = Field(default_factory=list)
     caption: str | None = None
@@ -271,6 +296,8 @@ class SlideSpec(StrictModel):
     claim_ids: list[str] = Field(default_factory=list)
     visual: VisualSpec = Field(default_factory=VisualSpec)
     claim_guard: ClaimGuard = Field(default_factory=ClaimGuard)
+    transition: SlideTransition = SlideTransition.SLIDE
+    reveal: ContentReveal = ContentReveal.STAGGER_UP
     notes: str = ""
     footer: str | None = None
 

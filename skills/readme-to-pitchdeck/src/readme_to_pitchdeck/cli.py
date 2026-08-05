@@ -296,6 +296,46 @@ def apply_edit(
         _abort(exc)
 
 
+@app.command(name="asset-add")
+def asset_add(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
+    slide_id: Annotated[str, typer.Option(help="Slide to attach the asset to.")],
+    file: Annotated[Path, typer.Option(help="Image (.png/.jpg/.webp/.svg/.gif) or video (.mp4/.webm) file.")],
+    alt: Annotated[str, typer.Option(help="Required alt text for the asset.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Copy a file into the bundle, register it, and bind it as the slide's visual."""
+    from .asset_ops import add_asset_to_slide
+
+    try:
+        receipt = add_asset_to_slide(
+            bundle_dir, output_dir, slide_id=slide_id, file_path=file, alt_text=alt, deck_name=deck_name
+        )
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="asset-clear")
+def asset_clear(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
+    slide_id: Annotated[str, typer.Option(help="Slide whose visual should be removed.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Detach a slide's visual (the asset stays registered in the manifest)."""
+    from .asset_ops import clear_slide_visual
+
+    try:
+        receipt = clear_slide_visual(bundle_dir, output_dir, slide_id=slide_id, deck_name=deck_name)
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="deck-op")
 def deck_op(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

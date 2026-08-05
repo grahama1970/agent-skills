@@ -71,9 +71,9 @@ function Visual({ visual }: { visual: UiVisual }) {
 function BodyList({ slide, size = 'text-4xl' }: { slide: UiSlide; size?: string }) {
   if (!slide.body.length) return null
   return (
-    <ul className={`m-0 flex list-none flex-col gap-5 p-0 ${size} leading-snug text-slate-200`}>
+    <ul className={`m-0 flex list-none flex-col gap-5 p-0 ${size} leading-snug text-slate-200 ${slide.reveal !== 'none' ? `reveal-${slide.reveal}` : ''}`}>
       {slide.body.map((line, index) => (
-        <li key={line} className="flex gap-4">
+        <li key={line} style={{ '--i': index } as React.CSSProperties} className="flex gap-4">
           <span aria-hidden className="mt-1 text-cyan-400">▸</span>
           <span>
             <Editable slide={slide} field={`body:${index}`} label={`bullet ${index + 1}`} value={line}>
@@ -120,8 +120,17 @@ export function Split({ slide }: { slide: UiSlide }) {
         <p className="mt-4 text-4xl text-cyan-200"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-2 items-center gap-16">
-        <BodyList slide={slide} />
-        <Visual visual={slide.visual} />
+        {slide.visual.position === 'left' ? (
+          <>
+            <Visual visual={slide.visual} />
+            <BodyList slide={slide} />
+          </>
+        ) : (
+          <>
+            <BodyList slide={slide} />
+            <Visual visual={slide.visual} />
+          </>
+        )}
       </div>
       <Footer slide={slide} />
     </div>
@@ -151,9 +160,9 @@ export function CardGrid({ slide }: { slide: UiSlide }) {
         <h2 className="m-0 text-6xl font-semibold text-white"><Editable slide={slide} field="title" label="title" value={slide.title}>{slide.title}</Editable></h2>
         <p className="mt-4 text-4xl text-cyan-200"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       </header>
-      <ul className="m-0 grid min-h-0 flex-1 list-none content-start gap-8 p-0 [grid-template-columns:repeat(auto-fit,minmax(480px,1fr))]">
-        {cards.map((card) => (
-          <li key={card} className="rounded-2xl border border-slate-700 bg-slate-800/60 p-10 text-3xl leading-snug">
+      <ul className={`m-0 grid min-h-0 flex-1 list-none content-start gap-8 p-0 [grid-template-columns:repeat(auto-fit,minmax(480px,1fr))] ${slide.reveal !== 'none' ? `reveal-${slide.reveal}` : ''}`}>
+        {cards.map((card, cardIndex) => (
+          <li key={card} style={{ '--i': cardIndex } as React.CSSProperties} className="rounded-2xl border border-slate-700 bg-slate-800/60 p-10 text-3xl leading-snug">
             {card}
           </li>
         ))}

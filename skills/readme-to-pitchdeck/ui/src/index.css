@@ -20,21 +20,29 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
-/* Slide transitions (Slidev-convention names). */
-.slide-enter {
-  animation: slide-in var(--deck-transition, 280ms) ease both;
+/* Per-slide transitions — data-driven from SlideSpec.transition. */
+.anim-slide-fwd {
+  animation: slide-in var(--deck-transition, 300ms) ease both;
 }
-.slide-enter-back {
-  animation: slide-in-back var(--deck-transition, 280ms) ease both;
+.anim-slide-back {
+  animation: slide-in-back var(--deck-transition, 300ms) ease both;
+}
+.anim-slide_up-fwd,
+.anim-slide_up-back {
+  animation: slide-up-in var(--deck-transition, 300ms) ease both;
+}
+.anim-fade-fwd,
+.anim-fade-back {
+  animation: fade-in var(--deck-transition, 320ms) ease both;
+}
+.anim-zoom-fwd,
+.anim-zoom-back {
+  animation: zoom-in var(--deck-transition, 340ms) cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 @keyframes slide-in {
   from {
     opacity: 0;
     translate: 48px 0;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
   }
 }
 @keyframes slide-in-back {
@@ -42,15 +50,60 @@ a:focus-visible {
     opacity: 0;
     translate: -48px 0;
   }
+}
+@keyframes slide-up-in {
+  from {
+    opacity: 0;
+    translate: 0 56px;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+
+/* Content reveals — data-driven from SlideSpec.reveal; --i is item index. */
+.reveal-stagger_up > * {
+  opacity: 0;
+  animation: reveal-up 460ms ease forwards;
+  animation-delay: calc(160ms + var(--i, 0) * 110ms);
+}
+.reveal-stagger_fade > * {
+  opacity: 0;
+  animation: fade-in-item 520ms ease forwards;
+  animation-delay: calc(160ms + var(--i, 0) * 110ms);
+}
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    translate: 0 22px;
+  }
   to {
     opacity: 1;
     translate: 0 0;
   }
 }
+@keyframes fade-in-item {
+  to {
+    opacity: 1;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .slide-enter,
-  .slide-enter-back {
+  [class^='anim-'],
+  [class*=' anim-'] {
     animation: none;
+  }
+  .reveal-stagger_up > *,
+  .reveal-stagger_fade > * {
+    animation: none;
+    opacity: 1;
   }
 }

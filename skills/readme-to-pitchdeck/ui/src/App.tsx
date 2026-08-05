@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, PanelLeft, Pencil,
 import { useCallback, useEffect, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
+import { AssetDropZone } from './components/AssetDrop'
 import { EditToolbar, SlideRail } from './components/EditChrome'
 import { ExportMenu } from './components/ExportMenu'
 import { Inspector } from './components/Inspector'
@@ -24,7 +25,7 @@ function SlideCanvas({ slide, direction, zoom }: { slide: UiSlide; direction: 'f
     <div ref={ref} className="relative min-h-0 flex-1 overflow-hidden">
       <div
         key={slide.id}
-        className={`absolute left-1/2 top-1/2 overflow-hidden rounded-lg bg-slate-950 shadow-2xl ${direction === 'fwd' ? 'slide-enter' : 'slide-enter-back'}`}
+        className={`absolute left-1/2 top-1/2 overflow-hidden rounded-lg bg-slate-950 shadow-2xl ${slide.transition === 'none' ? '' : `anim-${slide.transition}-${direction}`}`}
         style={{
           width: CANVAS_WIDTH,
           height: CANVAS_HEIGHT,
@@ -325,9 +326,11 @@ export function App() {
         <main className="flex min-h-0 flex-1 flex-col">
           <div className="relative flex min-h-0 flex-1">
             {editing && !railCollapsed ? <SlideRail deck={deck} currentIndex={index} onSelect={go} /> : null}
-            <EditContext.Provider value={{ editing, request: setPendingEdit }}>
-              <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
-            </EditContext.Provider>
+            <AssetDropZone slide={slide} enabled={editing} onChanged={reload}>
+              <EditContext.Provider value={{ editing, request: setPendingEdit }}>
+                <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
+              </EditContext.Provider>
+            </AssetDropZone>
             {editing ? <Inspector slide={slide} onChanged={reload} /> : null}
           </div>
           {pendingEdit ? (

@@ -94,6 +94,72 @@ export function Inspector({ slide, onChanged }: { slide: UiSlide; onChanged: () 
       </section>
 
       <section>
+        <label className={label} htmlFor="inspector-transition">
+          Transition
+        </label>
+        <select
+          id="inspector-transition"
+          data-qid="deck:inspector:transition"
+          data-qs-action="DECK_INSPECTOR_SET_TRANSITION"
+          title="Slide entrance transition (browser deck)"
+          value={slide.transition}
+          disabled={busyField === 'transition'}
+          onChange={(event) => void apply('transition', event.target.value)}
+          className={input}
+        >
+          {['slide', 'slide_up', 'fade', 'zoom', 'none'].map((name) => (
+            <option key={name} value={name}>
+              {name.replace('_', ' ')}
+            </option>
+          ))}
+        </select>
+      </section>
+
+      <section>
+        <label className={label} htmlFor="inspector-reveal">
+          Content reveal
+        </label>
+        <select
+          id="inspector-reveal"
+          data-qid="deck:inspector:reveal"
+          data-qs-action="DECK_INSPECTOR_SET_REVEAL"
+          title="Bullet and card entrance animation"
+          value={slide.reveal}
+          disabled={busyField === 'reveal'}
+          onChange={(event) => void apply('reveal', event.target.value)}
+          className={input}
+        >
+          {['stagger_up', 'stagger_fade', 'none'].map((name) => (
+            <option key={name} value={name}>
+              {name.replace('_', ' ')}
+            </option>
+          ))}
+        </select>
+      </section>
+
+      {slide.visual.asset ? (
+        <section>
+          <label className={label} htmlFor="inspector-visual-position">
+            Visual position
+          </label>
+          <select
+            id="inspector-visual-position"
+            data-qid="deck:inspector:visual-position"
+            data-qs-action="DECK_INSPECTOR_SET_VISUAL_POSITION"
+            title="Where the image or video sits on the slide"
+            value={slide.visual.position}
+            disabled={busyField === 'visual:position'}
+            onChange={(event) => void apply('visual:position', event.target.value)}
+            className={input}
+          >
+            <option value="right">right</option>
+            <option value="left">left</option>
+            <option value="full">full</option>
+          </select>
+        </section>
+      ) : null}
+
+      <section>
         <label className={label} htmlFor="inspector-footer">
           Footer
         </label>
