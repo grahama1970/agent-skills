@@ -11,6 +11,15 @@ const LINKS = [
   { id: 'contact', label: 'Contact' },
 ];
 
+const FOCUSABLE_SELECTORS = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLElement>(null);
@@ -45,9 +54,12 @@ export function MobileNav() {
       }
       if (e.key !== 'Tab' || !drawerRef.current) return;
       const focusables = Array.from(
-        drawerRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled])',
-        ),
+        drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS),
+      ).filter(
+        (el) =>
+          el.offsetWidth > 0 ||
+          el.offsetHeight > 0 ||
+          el.getClientRects().length > 0,
       );
       if (focusables.length === 0) return;
       const first = focusables[0];
