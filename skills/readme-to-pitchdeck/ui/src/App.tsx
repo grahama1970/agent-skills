@@ -51,15 +51,20 @@ function SlideCanvas({ slide, direction, zoom }: { slide: UiSlide; direction: 'f
   return (
     <div ref={ref} className="relative min-h-0 flex-1 overflow-hidden">
       <div
-        key={slide.id}
-        className={`absolute left-1/2 top-1/2 overflow-hidden rounded-lg bg-slate-950 shadow-2xl ${slide.transition === 'none' ? '' : `anim-${slide.transition}-${direction}`}`}
+        className="absolute left-1/2 top-1/2 overflow-hidden rounded-lg bg-slate-950 shadow-2xl"
         style={{
           width: CANVAS_WIDTH,
           height: CANVAS_HEIGHT,
           transform: `translate(-50%, -50%) scale(${scale})`,
         }}
       >
-        <SlideBody slide={slide} />
+        <div
+          key={slide.id}
+          className={`h-full w-full ${slide.transition === 'none' ? '' : `anim-${slide.transition}-${direction}`}`}
+          style={{ '--deck-transition': `${slide.transition_duration_ms}ms` } as React.CSSProperties}
+        >
+          <SlideBody slide={slide} />
+        </div>
       </div>
     </div>
   )

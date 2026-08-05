@@ -325,3 +325,35 @@ Accepted backlog (architectural; NOT yet implemented — the RETHINK core):
 - VERIFIED live: toggles/handles/focus button in DOM; focus mode collapse →
   restore round-trip exact. Addresses WebGPT review P2-12 canvas-density
   complaint (canvas was ~35% of viewport with all panes open).
+
+## Presenter suite + workspace chrome (2026-08-05, user spec stream)
+
+Landed and verified this session (see git log for per-commit detail):
+- Slide drawer: dnd-kit reorder (move_to op), real mini-renders, derived
+  REVIEW/GAPS badges, hover hide/duplicate/delete, hidden-as-manifest-field
+  (excluded from PPTX/Marp/present-nav).
+- Collapsible+resizable panes: toggles, floating restore overlays, focus mode
+  (Ctrl+Shift+F), drag handles with double-click reset, localStorage persist.
+- Presenter view: real current+next renders, timer/wall clock, auto-advance
+  (rAF progress, 3-30s, loop), note sizing, pop-out window portal; hidden
+  slides excluded. NotesDrawer (Ctrl+Shift+N) saving through slide-edit.
+  ShortcutsModal (?/Ctrl+/) documenting real bindings.
+- Transitions: flip + wipe added to SlideTransition; per-slide
+  transition_duration_ms (200-1200, pydantic-clamped, 422 on out-of-range)
+  flows manifest → emitter → CSS var → inspector slider; animations moved to
+  inner wrapper so transform keyframes cannot fight canvas scaling; Marp
+  export carries transition metadata comments (one-way).
+
+Accepted spec queue, NOT yet implemented (from the same stream):
+1. Freeform snap guides (canvas margins/center + sibling alignment, SVG
+   guide overlay) — spec received in full.
+2. Per-element entrance animations (effect/speed/delay as FreeformElement
+   manifest fields; animate.css vocabulary or own keyframes; inspector panel
+   with preview; PPTX ignores) — keep first-class-data principle.
+3. Toast notification system for edit rejections (currently inline errors).
+4. Deck-level settings inspector (title/author/theme/aspect/global transition
+   defaults as DeckMeta fields through a deck-edit op).
+5. Standalone interactive HTML bundle export — ADAPT: server-side emit-html
+   from the validated bundle (self-contained, no CDN Tailwind, real slide
+   markup), joining pptx/pdf/md in the export menu; the spec's client-side
+   generation from client state would bypass the pipeline.

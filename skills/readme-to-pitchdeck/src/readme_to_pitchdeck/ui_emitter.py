@@ -80,6 +80,7 @@ class UiSlide(StrictModel):
     visual: UiVisual
     elements: list[UiElement] = Field(default_factory=list)
     transition: str = "slide"
+    transition_duration_ms: int = 400
     reveal: str = "stagger_up"
     hidden: bool = False
     claims: list[UiClaimBadge] = Field(default_factory=list)
@@ -217,6 +218,7 @@ def emit_ui_bundle(
                 visual=visual,
                 elements=ui_elements,
                 transition=slide.transition.value,
+                transition_duration_ms=slide.transition_duration_ms,
                 reveal=slide.reveal.value,
                 hidden=slide.hidden,
                 claims=badges,

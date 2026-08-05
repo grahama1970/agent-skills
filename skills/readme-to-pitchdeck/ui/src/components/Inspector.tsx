@@ -113,12 +113,32 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
           onChange={(event) => void apply('transition', event.target.value)}
           className={input}
         >
-          {['slide', 'slide_up', 'fade', 'zoom', 'none'].map((name) => (
+          {['slide', 'slide_up', 'fade', 'zoom', 'flip', 'wipe', 'none'].map((name) => (
             <option key={name} value={name}>
               {name.replace('_', ' ')}
             </option>
           ))}
         </select>
+        {slide.transition !== 'none' ? (
+          <div className="mt-2">
+            <span className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+              Duration <strong className="text-slate-200">{slide.transition_duration_ms}ms</strong>
+            </span>
+            <input
+              type="range"
+              min={200}
+              max={1200}
+              step={50}
+              data-qid="deck:inspector:transition-duration"
+              data-qs-action="DECK_INSPECTOR_SET_TRANSITION_DURATION"
+              title="Transition duration in milliseconds"
+              defaultValue={slide.transition_duration_ms}
+              onMouseUp={(event) => void apply('transition_duration', (event.target as HTMLInputElement).value)}
+              onTouchEnd={(event) => void apply('transition_duration', (event.target as HTMLInputElement).value)}
+              className="h-1 w-full cursor-pointer accent-cyan-500"
+            />
+          </div>
+        ) : null}
       </section>
 
       <section>

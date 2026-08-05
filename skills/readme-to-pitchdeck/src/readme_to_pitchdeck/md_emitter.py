@@ -72,7 +72,12 @@ def emit_markdown(
     ]
 
     for slide in sorted((s for s in deck.slides if not s.hidden), key=lambda s: s.order):
-        lines.extend(["---", "", f"## {slide.title}", "", slide.message, ""])
+        meta = [f"layout: {slide.layout.value}"]
+        if slide.transition.value != "none":
+            meta.append(f"transition: {slide.transition.value}")
+            if slide.transition_duration_ms != 400:
+                meta.append(f"duration: {slide.transition_duration_ms}")
+        lines.extend(["---", "", f"<!-- {' | '.join(meta)} -->", "", f"## {slide.title}", "", slide.message, ""])
         for item in slide.body:
             lines.append(f"- {item}")
         if slide.body:

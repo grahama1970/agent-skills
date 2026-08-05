@@ -73,6 +73,8 @@ class SlideTransition(str, Enum):
     SLIDE = "slide"
     SLIDE_UP = "slide_up"
     ZOOM = "zoom"
+    FLIP = "flip"
+    WIPE = "wipe"
 
 
 class ContentReveal(str, Enum):
@@ -330,6 +332,7 @@ class SlideSpec(StrictModel):
     claim_guard: ClaimGuard = Field(default_factory=ClaimGuard)
     elements: list[FreeformElement] = Field(default_factory=list)
     transition: SlideTransition = SlideTransition.SLIDE
+    transition_duration_ms: int = Field(default=400, ge=200, le=1200)
     reveal: ContentReveal = ContentReveal.STAGGER_UP
     hidden: bool = False
     notes: str = ""

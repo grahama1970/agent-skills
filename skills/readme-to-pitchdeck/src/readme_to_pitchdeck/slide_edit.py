@@ -146,6 +146,8 @@ def apply_slide_edit(
         # would still count as "visible" in validation — a hidden-qualifier hole
         # (WebGPT review P0-2). Clear them so validation matches what renders.
         updated_slide = slide.model_copy(update={"layout": value, "elements": []})
+    elif base_field == "transition_duration":
+        updated_slide = slide.model_copy(update={"transition_duration_ms": int(float(value))})
     elif base_field == "hidden":
         updated_slide = slide.model_copy(update={"hidden": value == "true"})
     elif base_field in EDITABLE_FIELDS:

@@ -62,6 +62,33 @@ a:focus-visible {
     opacity: 0;
   }
 }
+.anim-flip-fwd,
+.anim-flip-back {
+  animation: flip-in-y var(--deck-transition, 500ms) cubic-bezier(0.16, 1, 0.3, 1) both;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+.anim-wipe-fwd,
+.anim-wipe-back {
+  animation: wipe-in-left var(--deck-transition, 500ms) cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+@keyframes flip-in-y {
+  from {
+    opacity: 0;
+    transform: perspective(1200px) rotateY(-90deg);
+  }
+  to {
+    transform: perspective(1200px) rotateY(0deg);
+  }
+}
+@keyframes wipe-in-left {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
 @keyframes zoom-in {
   from {
     opacity: 0;

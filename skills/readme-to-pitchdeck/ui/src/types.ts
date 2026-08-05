@@ -53,7 +53,8 @@ export interface UiSlide {
   visual: UiVisual
   elements: UiElement[]
   hidden: boolean
-  transition: 'none' | 'fade' | 'slide' | 'slide_up' | 'zoom' | string
+  transition: 'none' | 'fade' | 'slide' | 'slide_up' | 'zoom' | 'flip' | 'wipe' | string
+  transition_duration_ms: number
   reveal: 'none' | 'stagger_up' | 'stagger_fade' | string
   claims: UiClaimBadge[]
   source_ids: string[]
