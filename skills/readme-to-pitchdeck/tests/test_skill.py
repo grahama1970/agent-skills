@@ -1,0 +1,375 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+import yaml
+from pptx import Presentation
+
+from readme_to_pitchdeck.io import SkillError, load_yaml
+from readme_to_pitchdeck.models import (
+    AssetKind,
+    AssetManifest,
+    AssetSpec,
+    AssetStatus,
+    Claim,
+    ClaimKind,
+    ClaimLedger,
+    ClaimRisk,
+    ClaimStatus,
+    DeckManifest,
+    DeckMeta,
+    DeckSourcePolicy,
+    SlideLayout,
+    SlideSpec,
+    SourceManifest,
+    SourceRef,
+    Visibility,
+    VisualSpec,
+    VisualType,
+)
+from readme_to_pitchdeck.planner import plan_bundle
+from readme_to_pitchdeck.pptx_builder import build_pptx
+from readme_to_pitchdeck.validation import validate_bundle
+
+
+ROOT = Path(__file__).resolve().parents[1]
+FIXTURE = ROOT / "fixtures" / "minimal"
+
+
+def test_positive_plan_build_and_reopen(tmp_path: Path) -> None:
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    receipt = plan_bundle(
+        source,
+        source_manifest_path=source_path,
+        output_dir=planned,
+        max_slides=10,
+    )
+    assert receipt.counts["slides"] >= 6
+    assert receipt.counts["candidate_claims"] > 0
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    ledger = load_yaml(planned / "claim_ledger.yaml", ClaimLedger)
+    sources = load_yaml(planned / "source_manifest.resolved.yaml", SourceManifest)
+    assets = load_yaml(planned / "asset_manifest.yaml", AssetManifest)
+    output = planned / "atlas.pptx"
+    build_receipt, validation = build_pptx(
+        deck,
+        ledger,
+        sources,
+        assets,
+        source_manifest_dir=planned,
+        asset_manifest_dir=planned,
+        output_path=output,
+        require_approved_claims=False,
+    )
+    assert validation.errors == 0
+    assert output.exists()
+    assert build_receipt.counts["slides"] == len(deck.slides)
+    reopened = Presentation(output)
+    assert len(reopened.slides) == len(deck.slides)
+    assert all(any(shape.has_text_frame and shape.text.strip() for shape in slide.shapes) for slide in reopened.slides)
+
+
+def _base_models(tmp_path: Path):
+    readme = tmp_path / "README.md"
+    readme.write_text("# Demo\n\nSource.\n", encoding="utf-8")
+    source_data = {
+        "schema": "readme_to_pitchdeck.source_manifest.v1",
+        "project_name": "Demo",
+        "deck_title": "Demo",
+        "audience": "Reviewers",
+        "sources": [
+            {
+                "id": "public-source",
+                "title": "Public",
+                "path": str(readme),
+                "visibility": "public",
+                "role": "primary",
+                "required": True,
+            },
+            {
+                "id": "private-source",
+                "title": "Private",
+                "path": str(readme),
+                "visibility": "private",
+                "role": "evidence",
+                "required": True,
+            },
+        ],
+        "policy": {
+            "public_deck_source_ids": ["public-source"],
+            "forbidden_unqualified_claims": ["production-ready"],
+            "mandatory_non_claims": [],
+        },
+        "seam_validation": {"kind": "source_manifest", "status": "PASS"},
+    }
+    sources = SourceManifest.model_validate(source_data)
+    ledger = ClaimLedger(
+        project_name="Demo",
+        claims=[
+            Claim(
+                id="public-claim",
+                text="A bounded public claim.",
+                kind=ClaimKind.PRODUCT,
+                visibility=Visibility.PUBLIC,
+                source_refs=[SourceRef(source_id="public-source", section="Overview")],
+                risk=ClaimRisk.MEDIUM,
+                status=ClaimStatus.APPROVED,
+            ),
+            Claim(
+                id="private-claim",
+                text="A private implementation claim.",
+                kind=ClaimKind.STATUS,
+                visibility=Visibility.PRIVATE,
+                source_refs=[SourceRef(source_id="private-source", section="Status")],
+                risk=ClaimRisk.HIGH,
+                status=ClaimStatus.APPROVED,
+                required_qualifier="Verify current private evidence.",
+            ),
+        ],
+    )
+    assets = AssetManifest(project_name="Demo", assets=[])
+    return sources, ledger, assets
+
+
+def test_public_private_source_and_claim_leak_fails(tmp_path: Path) -> None:
+    sources, ledger, assets = _base_models(tmp_path)
+    deck = DeckManifest(
+        deck=DeckMeta(
+            id="demo-public",
+            title="Demo",
+            audience="Reviewers",
+            visibility=Visibility.PUBLIC,
+            source_policy=DeckSourcePolicy.PUBLIC_ONLY,
+        ),
+        slides=[
+            SlideSpec(
+                id="01-leak",
+                order=1,
+                role="test",
+                layout=SlideLayout.STATEMENT,
+                visibility=Visibility.PUBLIC,
+                title="Leak",
+                message="Private implementation claim.",
+                source_refs=[SourceRef(source_id="private-source", section="Status")],
+                claim_ids=["private-claim"],
+                notes="Verify current private evidence.",
+            )
+        ],
+    )
+    report = validate_bundle(
+        deck,
+        ledger,
+        sources,
+        assets,
+        source_manifest_dir=tmp_path,
+        asset_manifest_dir=tmp_path,
+    )
+    codes = {issue.code for issue in report.issues}
+    assert "PUBLIC_DECK_PRIVATE_SOURCE" in codes
+    assert "PUBLIC_DECK_PRIVATE_CLAIM" in codes
+    assert report.errors >= 2
+
+
+def test_forbidden_unqualified_claim_fails(tmp_path: Path) -> None:
+    sources, ledger, assets = _base_models(tmp_path)
+    deck = DeckManifest(
+        deck=DeckMeta(
+            id="demo-public",
+            title="Demo",
+            audience="Reviewers",
+            visibility=Visibility.PUBLIC,
+            source_policy=DeckSourcePolicy.PUBLIC_ONLY,
+        ),
+        slides=[
+            SlideSpec(
+                id="01-overclaim",
+                order=1,
+                role="test",
+                layout=SlideLayout.STATEMENT,
+                visibility=Visibility.PUBLIC,
+                title="Status",
+                message="The system is production-ready.",
+                source_refs=[SourceRef(source_id="public-source", section="Overview")],
+                claim_ids=["public-claim"],
+            )
+        ],
+    )
+    report = validate_bundle(
+        deck,
+        ledger,
+        sources,
+        assets,
+        source_manifest_dir=tmp_path,
+        asset_manifest_dir=tmp_path,
+    )
+    assert any(issue.code == "FORBIDDEN_UNQUALIFIED_CLAIM" for issue in report.issues)
+
+
+def test_negated_forbidden_phrase_is_allowed(tmp_path: Path) -> None:
+    sources, ledger, assets = _base_models(tmp_path)
+    deck = DeckManifest(
+        deck=DeckMeta(
+            id="demo-public",
+            title="Demo",
+            audience="Reviewers",
+            visibility=Visibility.PUBLIC,
+            source_policy=DeckSourcePolicy.PUBLIC_ONLY,
+        ),
+        slides=[
+            SlideSpec(
+                id="01-honest",
+                order=1,
+                role="test",
+                layout=SlideLayout.STATEMENT,
+                visibility=Visibility.PUBLIC,
+                title="Status",
+                message="The system is not production-ready.",
+                source_refs=[SourceRef(source_id="public-source", section="Overview")],
+                claim_ids=["public-claim"],
+            )
+        ],
+    )
+    report = validate_bundle(
+        deck,
+        ledger,
+        sources,
+        assets,
+        source_manifest_dir=tmp_path,
+        asset_manifest_dir=tmp_path,
+    )
+    assert not any(issue.code == "FORBIDDEN_UNQUALIFIED_CLAIM" for issue in report.issues)
+
+
+def test_required_missing_asset_fails(tmp_path: Path) -> None:
+    sources, ledger, _ = _base_models(tmp_path)
+    assets = AssetManifest(
+        project_name="Demo",
+        assets=[
+            AssetSpec(
+                id="missing-shot",
+                kind=AssetKind.SCREENSHOT,
+                visibility=Visibility.PUBLIC,
+                local_path=str(tmp_path / "missing.png"),
+                required=True,
+                alt_text="Required screenshot",
+                status=AssetStatus.MISSING,
+            )
+        ],
+    )
+    deck = DeckManifest(
+        deck=DeckMeta(
+            id="demo-public",
+            title="Demo",
+            audience="Reviewers",
+            visibility=Visibility.PUBLIC,
+            source_policy=DeckSourcePolicy.PUBLIC_ONLY,
+        ),
+        slides=[
+            SlideSpec(
+                id="01-shot",
+                order=1,
+                role="test",
+                layout=SlideLayout.SCREENSHOT,
+                visibility=Visibility.PUBLIC,
+                title="Screenshot",
+                message="Inspect the real surface.",
+                source_refs=[SourceRef(source_id="public-source", section="Overview")],
+                claim_ids=["public-claim"],
+                visual=VisualSpec(type=VisualType.SCREENSHOT, asset_id="missing-shot"),
+            )
+        ],
+    )
+    report = validate_bundle(
+        deck,
+        ledger,
+        sources,
+        assets,
+        source_manifest_dir=tmp_path,
+        asset_manifest_dir=tmp_path,
+    )
+    assert any(issue.code == "REQUIRED_ASSET_MISSING" for issue in report.issues)
+
+
+def test_high_risk_qualifier_must_be_present(tmp_path: Path) -> None:
+    sources, ledger, assets = _base_models(tmp_path)
+    deck = DeckManifest(
+        deck=DeckMeta(
+            id="demo-private",
+            title="Demo",
+            audience="Reviewers",
+            visibility=Visibility.PRIVATE,
+            source_policy=DeckSourcePolicy.PUBLIC_AND_PRIVATE,
+        ),
+        slides=[
+            SlideSpec(
+                id="01-status",
+                order=1,
+                role="test",
+                layout=SlideLayout.APPENDIX,
+                visibility=Visibility.PRIVATE,
+                title="Status",
+                message="A private implementation claim.",
+                source_refs=[SourceRef(source_id="private-source", section="Status")],
+                claim_ids=["private-claim"],
+                notes="Qualifier intentionally omitted.",
+            )
+        ],
+    )
+    report = validate_bundle(
+        deck,
+        ledger,
+        sources,
+        assets,
+        source_manifest_dir=tmp_path,
+        asset_manifest_dir=tmp_path,
+    )
+    assert any(issue.code == "CLAIM_QUALIFIER_MISSING" for issue in report.issues)
+
+
+def test_sparta_example_manifests_validate_with_resolved_sources(tmp_path: Path) -> None:
+    profile = ROOT / "examples" / "sparta-explorer"
+    sources = load_yaml(profile / "source_manifest.yaml", SourceManifest)
+    ledger = load_yaml(profile / "claim_ledger.yaml", ClaimLedger)
+    assets = load_yaml(profile / "asset_manifest.yaml", AssetManifest)
+    public = load_yaml(profile / "deck.public.yaml", DeckManifest)
+    private = load_yaml(profile / "deck.private-appendix.yaml", DeckManifest)
+    assert len(public.slides) == 12
+    assert len(private.slides) == 7
+
+    resolved_sources = []
+    for source in sources.sources:
+        path = tmp_path / f"{source.id}.md"
+        path.write_text("# Fixture source\n", encoding="utf-8")
+        resolved_sources.append(source.model_copy(update={"path": str(path)}))
+    sources = sources.model_copy(update={"sources": resolved_sources})
+
+    image_path = tmp_path / "asset.png"
+    from PIL import Image
+
+    Image.new("RGB", (1600, 900), "white").save(image_path)
+    assets = assets.model_copy(
+        update={
+            "assets": [
+                asset.model_copy(
+                    update={"local_path": str(image_path), "status": AssetStatus.PRESENT}
+                )
+                for asset in assets.assets
+            ]
+        }
+    )
+
+    for deck in (public, private):
+        report = validate_bundle(
+            deck,
+            ledger,
+            sources,
+            assets,
+            source_manifest_dir=tmp_path,
+            asset_manifest_dir=tmp_path,
+            require_approved_claims=True,
+        )
+        assert report.errors == 0, [issue.model_dump() for issue in report.issues]
