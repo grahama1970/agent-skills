@@ -246,6 +246,38 @@ def emit_ui(
         _abort(exc)
 
 
+@app.command(name="emit-html")
+def emit_html_cmd(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output: Annotated[Path, typer.Option(help="Output path for the self-contained deck.html.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    max_width: Annotated[int, typer.Option(min=320, max=3840, help="Max inlined image width.")] = 1600,
+    quality: Annotated[int, typer.Option(min=30, max=100, help="WebP re-encode quality.")] = 80,
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Self-contained interactive HTML deck (assets inlined, no external resources)."""
+    from .html_emitter import emit_html
+
+    try:
+        source_path = bundle_dir / "source_manifest.resolved.yaml"
+        if not source_path.exists():
+            source_path = bundle_dir / "source_manifest.yaml"
+        receipt = emit_html(
+            load_yaml(bundle_dir / deck_name, DeckManifest),
+            load_yaml(bundle_dir / "claim_ledger.yaml", ClaimLedger),
+            load_yaml(source_path, SourceManifest),
+            load_yaml(bundle_dir / "asset_manifest.yaml", AssetManifest),
+            source_manifest_dir=source_path.parent,
+            asset_manifest_dir=bundle_dir,
+            output_path=output,
+            max_width=max_width,
+            quality=quality,
+        )
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="emit-md")
 def emit_md(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

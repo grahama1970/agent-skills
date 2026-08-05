@@ -355,12 +355,15 @@ Accepted spec queue, NOT yet implemented (from the same stream):
 3. Toast notification system for edit rejections (currently inline errors).
 4. Deck-level settings inspector (title/author/theme/aspect/global transition
    defaults as DeckMeta fields through a deck-edit op).
-5. Standalone interactive HTML bundle export — ADAPT: server-side emit-html
-   from the validated bundle (self-contained, no CDN Tailwind, real slide
-   markup), joining pptx/pdf/md in the export menu; the spec's client-side
-   generation from client state would bypass the pipeline. The later md2deck
-   standalone-CLI + watch-mode spec folds into the same emit-html design
-   (a --watch flag on the skill CLI is fine; the client Markdown model is not).
+5. DONE: emit-html — server-side self-contained interactive HTML export
+   (zero external refs asserted by test; assets inlined as compressed WebP
+   data URIs via Pillow with --max-width/--quality; per-slide transitions +
+   durations + reveals from the manifest; notes drawer/autoplay/fullscreen
+   runtime; hidden slides excluded; in the export menu as 'Download
+   interactive HTML'). REJECTED from the same spec batch: public CORS-proxy
+   fallbacks (corsproxy.io/allorigins.win) — routing restricted images
+   through third parties is a data-exfiltration path and our assets are
+   local files with no CORS problem.
 6. REJECTED with rationale: jsPDF/html2canvas client-side PDF export — we
    already ship a true LibreOffice PDF (text-preserving, validated) through
    the export menu; a screenshot-based client PDF is strictly worse and adds

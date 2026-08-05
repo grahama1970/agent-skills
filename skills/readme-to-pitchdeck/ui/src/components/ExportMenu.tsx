@@ -1,4 +1,4 @@
-import { FileDown, FileText, MoreHorizontal, Presentation } from 'lucide-react'
+import { FileDown, FileText, Globe, MoreHorizontal, Presentation } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 // Keynote-pattern "…" system menu: export the CURRENT validated bundle as
@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 const FORMATS = [
   { format: 'pptx', label: 'Download PPTX (editable)', icon: Presentation, qid: 'deck:export:pptx', action: 'DECK_EXPORT_PPTX' },
   { format: 'pdf', label: 'Download PDF', icon: FileDown, qid: 'deck:export:pdf', action: 'DECK_EXPORT_PDF' },
+  { format: 'html', label: 'Download interactive HTML', icon: Globe, qid: 'deck:export:html', action: 'DECK_EXPORT_HTML' },
   { format: 'md', label: 'Download Marp Markdown', icon: FileText, qid: 'deck:export:md', action: 'DECK_EXPORT_MD' },
 ] as const
 

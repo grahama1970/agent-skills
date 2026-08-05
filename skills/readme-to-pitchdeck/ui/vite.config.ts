@@ -241,6 +241,13 @@ function slideEditApi(): Plugin {
                   (error, _stdout2, stderr) => finish(error, stderr, '/exports/render/deck.pdf'),
                 )
               })
+            } else if (format === 'html') {
+              execFile(
+                `${skillRoot}/run.sh`,
+                ['emit-html', '--bundle-dir', bundleDir, '--output', `${exportsDir}/deck.html`],
+                { timeout: 120_000 },
+                (error, _stdout, stderr) => finish(error, stderr, '/exports/deck.html'),
+              )
             } else if (format === 'md') {
               execFile(
                 `${skillRoot}/run.sh`,
@@ -250,7 +257,7 @@ function slideEditApi(): Plugin {
               )
             } else {
               res.statusCode = 400
-              res.end(JSON.stringify({ error: "format must be 'pptx', 'pdf', or 'md'" }))
+              res.end(JSON.stringify({ error: "format must be 'pptx', 'pdf', 'html', or 'md'" }))
             }
           } catch (error) {
             res.statusCode = 400

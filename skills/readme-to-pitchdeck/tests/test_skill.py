@@ -804,3 +804,30 @@ def test_webgpt_review_fixes(tmp_path: Path) -> None:
     ):
         with pytest.raises(ValueError, match="immutable"):
             apply_deck_source(planned, out, source_yaml=tampered)
+
+
+def test_emit_html_self_contained(tmp_path: Path) -> None:
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+
+    from readme_to_pitchdeck.html_emitter import emit_html
+
+    out = tmp_path / "deck.html"
+    receipt = emit_html(
+        load_yaml(planned / "deck.public.yaml", DeckManifest),
+        load_yaml(planned / "claim_ledger.yaml", ClaimLedger),
+        load_yaml(planned / "source_manifest.resolved.yaml", SourceManifest),
+        load_yaml(planned / "asset_manifest.yaml", AssetManifest),
+        source_manifest_dir=planned,
+        asset_manifest_dir=planned,
+        output_path=out,
+    )
+    text = out.read_text()
+    assert receipt.seam_validation.kind == "emit_html_receipt"
+    assert "http://" not in text and "https://" not in text  # fully self-contained
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    for slide in deck.slides:
+        if not slide.hidden:
+            assert slide.title in text or slide.title.replace("&", "&amp;") in text
