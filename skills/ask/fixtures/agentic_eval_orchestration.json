@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "multi-agent orchestration: a premium coordinator delegates to cheaper workers with an independent reviewer, compiled by /ask and executed by Tau with settlement receipts",
+  "claims": {
+    "proves": "team plans compile to heterogeneous boss/worker/reviewer Tau DAGs with correct delegation edges, and a live two-profile coordinator->worker->reviewer run executes through Tau's scheduler with a real tool effect, artifact readback, and VERDICT: PASS",
+    "does_not_prove": "quality of the produced work, browser-handler compat nodes, or the remaining deprecated direct routes (see route inventory ratchet)"
+  },
+  "cases": [
+    {
+      "name": "boss-worker-reviewer-plan-compiles-with-delegation-edges",
+      "type": "positive",
+      "command": [
+        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python", "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/orchestration_eval_check.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ORCHESTRATION_SHAPE_PASS",
+          "\"heterogeneous_profiles\": true",
+          "\"boss_on_premium_profile\": true",
+          "\"workers_delegated_under_boss\": true",
+          "\"reviewer_gates_all_workers\": true"
+        ]
+      }
+    },
+    {
+      "name": "live-coordinator-worker-reviewer-executes-through-tau",
+      "type": "positive",
+      "command": [
+        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python", "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/ask_tau_native_canary.py",
+        "--live"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK->TAU NATIVE CANARY PASS",
+          "\"scheduler_status\": \"PASS\"",
+          "\"artifact_readback_ok\": true",
+          "\"review_verdict_pass\": true"
+        ]
+      }
+    },
+    {
+      "name": "canary-refuses-without-live-opt-in",
+      "type": "adversarial",
+      "command": [
+        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python", "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/ask_tau_native_canary.py"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": [
+          "refusing to run: live provider calls"
+        ]
+      }
+    }
+  ]
+}
