@@ -23,6 +23,9 @@ from typing import Any
 
 from dotenv import load_dotenv
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+from ask.seam_models import enforce  # noqa: E402
+
 
 load_dotenv()
 
@@ -427,10 +430,11 @@ def _configure_browser_runtime_environment(args: argparse.Namespace) -> None:
 
 
 def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
-    # Recovery gets its own slice of the lane budget: the submit may consume
-    # most of the wall clock, and a recovery ladder that cannot finish is worse
-    # than one that reports its remaining budget honestly.
-    lane_deadline = time.time() + max(300, int(getattr(args, "timeout", 900) or 900))
+    # Recovery gets a slice of wall clock that is genuinely its own. Anchoring
+    # it at lane start meant the submit consumed the entire budget and the
+    # ladder was skipped before trying a single rung (observed 2026-08-03:
+    # webkimi, recovery_budget_exhausted with zero attempts made).
+    lane_recovery_budget = max(240, int(getattr(args, "timeout", 900) or 900) // 2)
     request_payload = _read_json(Path(args.request_file))
     request_text = str(request_payload.get("request") or "")
     handler = args.handler
@@ -734,6 +738,22 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+        # Look before theorising. The fixed diagnostic series runs on every
+        # browser lane failure -- including the ones the ladder will refuse to
+        # retry -- so the failure always carries live tab state rather than an
+        # agent's guess about it.
+        lane_diagnostics = _lane_diagnostics(
+            args,
+            failure_code=str(recovery_packet.get("failure_code") or ""),
+            submit_meta=submit_meta,
+            browser_oracle=resolve_payload,
+            sentinel=str(submit_meta.get("sentinel") or ""),
+        )
+        lane_diagnostics = enforce("ask.lane_diagnostics.v1", lane_diagnostics)
+        (artifact_dir / "lane-diagnostics.json").write_text(
+            json.dumps(lane_diagnostics, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        recovery_packet["lane_diagnostics"] = lane_diagnostics
         # Assume the first attempt fails: something upstream has probably
         # changed. Work the lane's own recovery ladder here, in-run, instead
         # of emitting advice nobody executes (observed 2026-08-03: nine failed
@@ -747,7 +767,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             raw_path=raw_path,
             meta_path=meta_path,
             artifact_dir=artifact_dir,
-            deadline=lane_deadline,
+            deadline=time.time() + lane_recovery_budget,
         )
         (artifact_dir / "lane-recovery.json").write_text(
             json.dumps(lane_recovery, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -808,11 +828,39 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             meta_path=meta_path,
             prompt_path=prompt_path,
         )
+        # A browser lane can reach this fallback without passing the main
+        # browser branch (observed 2026-08-03: the webgemini timeout produced a
+        # packet here and therefore no recovery at all). Recovery attaches
+        # wherever a browser lane concludes unhealthy, not in one branch only.
+        if handler in HANDLER_SUBMIT_COMMANDS:
+            lane_recovery = _attempt_lane_recovery(
+                args,
+                recovery_packet=recovery_packet,
+                browser_oracle=resolve_payload if isinstance(resolve_payload, dict) else {},
+                submit_meta=submit_meta if isinstance(submit_meta, dict) else {},
+                response_path=response_path,
+                raw_path=raw_path,
+                meta_path=meta_path,
+                artifact_dir=artifact_dir,
+                deadline=time.time() + lane_recovery_budget,
+            )
+            (artifact_dir / "lane-recovery.json").write_text(
+                json.dumps(lane_recovery, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            recovery_packet["lane_recovery"] = lane_recovery
+            if lane_recovery.get("recovered"):
+                recovered_path = Path(str(lane_recovery.get("response_path") or ""))
+                if recovered_path.is_file():
+                    response_text = recovered_path.read_text(encoding="utf-8", errors="replace")
+                    response_path.write_text(response_text, encoding="utf-8")
+                    ok = True
+                    provider_live = True
+                    failure = ""
         recovery_packet_path.write_text(
             json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        status = "NEEDS_ATTENTION"
+        status = "PASS" if ok else "NEEDS_ATTENTION"
 
     lane_exit_ok = ok
     workflow_mode = getattr(args, "workflow_mode", "roundtable")
@@ -3438,6 +3486,251 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
 
 #: Failure classes where retrying inside the lane cannot help: the provider
 #: itself refused, so another attempt is spray-and-pray against a wall.
+PROVIDER_HOSTS = {
+    "webgpt": "chatgpt.com",
+    "webclaude": "claude.ai",
+    "webkimi": "kimi.com",
+    "webgemini": "gemini.google.com",
+    "webgrok": "grok.com",
+    "webdeepseek": "chat.deepseek.com",
+}
+
+# One JS payload, evaluated in the real authenticated tab. Everything the
+# ladder needs to pick a rung is read here rather than guessed at: whether the
+# page is a live provider surface, whether it is still generating, whether a
+# rate-limit or error banner is on screen, and whether the round's sentinel is
+# already rendered (the response arrived and only capture missed it).
+_LANE_STATE_JS = """
+const body = document.body ? document.body.innerText : '';
+// Match on LANGUAGE, not on class names: provider markup reuses 'limit'
+// and 'Toast' for ordinary chrome, and a class-only match reported the
+// reasoning-level label 'High' as an error banner (observed 2026-08-04).
+const BLOCKING = /(rate ?limit|too many requests|usage (limit|cap)|try again (in|later)|unavailable|out of capacity|at capacity|upgrade to continue|you've reached|something went wrong|error occurred)/i;
+const banner = Array.from(document.querySelectorAll('[role=alert],[class*=error],[class*=limit],[class*=Toast]'))
+  .map(e => (e.innerText || '').trim())
+  .filter(t => t.length > 8 && BLOCKING.test(t))
+  .slice(0, 3);
+return JSON.stringify({
+  title: document.title,
+  url: location.href,
+  visibility: document.visibilityState,
+  body_chars: body.length,
+  body_tail: body.slice(-600),
+  composer_present: !!document.querySelector(
+    'textarea,[contenteditable=true],div[role=textbox]'),
+  generating: /stop (answering|generating|streaming)/i.test(body)
+    || !!document.querySelector('[aria-label*="Stop" i],[data-testid*="stop" i]'),
+  banners: banner,
+});
+"""
+
+
+def _probe_lane_state(
+    args: argparse.Namespace,
+    *,
+    tab_id: str,
+    sentinel: str,
+) -> list[dict[str, Any]]:
+    """Run the fixed provider-failure diagnostic series against the live tab.
+
+    Ordered, deterministic, and identical for every handler and every failure
+    code. Each rung records PASS/FAIL/SKIPPED with the evidence that decided
+    it, so a lane failure always carries live state instead of an agent's
+    theory about live state. Checks are ordered cheapest-and-most-fundamental
+    first; a FAIL short-circuits the rungs that depend on it, because "tab is
+    gone" makes "composer present" meaningless rather than false.
+    """
+    surf_run = str(getattr(args, "surf_run", "") or "")
+    handler = str(args.handler)
+    checks: list[dict[str, Any]] = []
+
+    def record(name: str, status: str, **evidence: Any) -> None:
+        checks.append({"check": name, "status": status, **evidence})
+
+    if not surf_run:
+        record("surf_transport", "SKIPPED", reason="no surf_run configured")
+        return checks
+
+    cwd = Path(surf_run).parent
+    listing = _run_cmd([surf_run, "tab.list", "--json"], cwd=cwd, timeout=60)
+    if listing.returncode != 0:
+        record(
+            "surf_transport",
+            "FAIL",
+            returncode=listing.returncode,
+            stderr_excerpt=(listing.stderr or "")[-300:],
+        )
+        return checks
+    record("surf_transport", "PASS")
+
+    tabs = _parse_json_array_or_tabs(listing.stdout)
+    tabs = tabs if isinstance(tabs, list) else []
+    if not tab_id:
+        record("tab_identity", "SKIPPED", reason="lane never recorded a controlled tab id")
+        return checks
+    tab = next(
+        (t for t in tabs if isinstance(t, dict) and str(t.get("id") or "") == str(tab_id)),
+        None,
+    )
+    if tab is None:
+        # An EMPTY listing proves nothing: a real browser always has tabs, so
+        # an empty result means the listing itself did not answer. Calling
+        # that "vanished" would demote provider_extract on no evidence and
+        # throw away a free recovery.
+        record(
+            "tab_identity",
+            "FAIL" if tabs else "SKIPPED",
+            tab_id=tab_id,
+            reason=(
+                "controlled tab is no longer open"
+                if tabs
+                else "tab listing returned no tabs; absence is unproven"
+            ),
+            open_tab_ids=[str(t.get("id")) for t in tabs if isinstance(t, dict)][:20],
+        )
+        return checks
+    live_url = str(tab.get("url") or "")
+    record("tab_identity", "PASS", tab_id=tab_id, url=live_url, title=str(tab.get("title") or ""))
+
+    host = PROVIDER_HOSTS.get(handler, "")
+    if not host:
+        record("provider_url", "SKIPPED", reason=f"no known host for handler {handler!r}")
+    elif host in live_url:
+        record("provider_url", "PASS", host=host, url=live_url)
+    else:
+        record(
+            "provider_url",
+            "FAIL",
+            host=host,
+            url=live_url,
+            reason="controlled tab drifted off the provider surface",
+        )
+
+    state_cmd = [surf_run, "js", _LANE_STATE_JS, "--tab-id", str(tab_id), "--no-activate"]
+    state_result = _run_cmd(state_cmd, cwd=cwd, timeout=90)
+    if state_result.returncode != 0:
+        record(
+            "page_state",
+            "FAIL",
+            returncode=state_result.returncode,
+            stderr_excerpt=(state_result.stderr or "")[-300:],
+            reason="could not evaluate JS in the controlled tab",
+        )
+        return checks
+    state: dict[str, Any] = {}
+    raw = (state_result.stdout or "").strip()
+    for candidate in (raw, raw.strip('"').replace('\\"', '"').replace("\\n", "\n")):
+        try:
+            loaded = json.loads(candidate)
+            if isinstance(loaded, str):
+                loaded = json.loads(loaded)
+            if isinstance(loaded, dict):
+                state = loaded
+                break
+        except (ValueError, TypeError):
+            continue
+    if not state:
+        record("page_state", "FAIL", reason="page state was not decodable JSON", stdout_excerpt=raw[:300])
+        return checks
+    record(
+        "page_state",
+        "PASS",
+        visibility=state.get("visibility"),
+        body_chars=state.get("body_chars"),
+        composer_present=state.get("composer_present"),
+        generating=state.get("generating"),
+    )
+    record(
+        "composer_present",
+        "PASS" if state.get("composer_present") else "FAIL",
+        reason="" if state.get("composer_present") else "no composer element; page is not a usable chat surface",
+    )
+    banners = [b for b in (state.get("banners") or []) if isinstance(b, str)]
+    record(
+        "provider_banner",
+        "FAIL" if banners else "PASS",
+        banners=banners[:3],
+        reason="provider surfaced an error/limit banner" if banners else "",
+    )
+    if not sentinel:
+        record("sentinel_rendered", "SKIPPED", reason="round has no sentinel to look for")
+    else:
+        tail = str(state.get("body_tail") or "")
+        found = sentinel in tail
+        record(
+            "sentinel_rendered",
+            "PASS" if found else "FAIL",
+            sentinel=sentinel,
+            reason=(
+                "response is already rendered; capture missed its window"
+                if found
+                else "sentinel absent from the visible page tail"
+            ),
+            still_generating=state.get("generating"),
+        )
+    return checks
+
+
+def _lane_diagnostics(
+    args: argparse.Namespace,
+    *,
+    failure_code: str,
+    submit_meta: dict[str, Any],
+    browser_oracle: dict[str, Any],
+    sentinel: str,
+) -> dict[str, Any]:
+    """Live-state diagnostics for a failed lane, with a derived diagnosis.
+
+    Runs for EVERY browser lane failure, including the ones the recovery
+    ladder refuses to retry. A hopeless failure code still deserves evidence:
+    that is precisely the case where the temptation is to theorise about why
+    the provider said no.
+    """
+    tab_id = str(
+        submit_meta.get("controlled_tab_id")
+        or submit_meta.get("requested_tab_id")
+        or browser_oracle.get("controlled_tab_id")
+        or browser_oracle.get("tab_id")
+        or ""
+    ).strip()
+    checks = _probe_lane_state(args, tab_id=tab_id, sentinel=sentinel)
+    by_name = {str(c.get("check")): c for c in checks}
+
+    def failed(name: str) -> bool:
+        return str(by_name.get(name, {}).get("status")) == "FAIL"
+
+    # Deterministic diagnosis: first matching rule wins, most fundamental
+    # first. This is a lookup, not a judgement call, so two readers of the
+    # same checks always reach the same conclusion.
+    if failed("surf_transport"):
+        diagnosis = "surf_transport_down"
+    elif failed("tab_identity"):
+        diagnosis = "controlled_tab_vanished"
+    elif failed("provider_url"):
+        diagnosis = "tab_drifted_off_provider"
+    elif failed("page_state"):
+        diagnosis = "tab_unresponsive_to_js"
+    elif by_name.get("sentinel_rendered", {}).get("status") == "PASS":
+        diagnosis = "response_rendered_capture_missed"
+    elif by_name.get("sentinel_rendered", {}).get("still_generating") is True:
+        diagnosis = "provider_still_generating_at_timeout"
+    elif failed("provider_banner"):
+        diagnosis = "provider_banner_blocked"
+    elif failed("composer_present"):
+        diagnosis = "no_usable_chat_surface"
+    else:
+        diagnosis = "no_live_defect_observed"
+    return {
+        "schema": "ask.lane_diagnostics.v1",
+        "handler": str(args.handler),
+        "node_id": str(args.node_id),
+        "failure_code": failure_code,
+        "tab_id": tab_id,
+        "checks": checks,
+        "diagnosis": diagnosis,
+    }
+
+
 LANE_RECOVERY_HOPELESS = frozenset(
     {
         BROWSER_PROVIDER_RATE_LIMITED,
@@ -3518,6 +3811,23 @@ def _lane_recovery_succeeded(meta_path: Path, output_path: Path, sentinel: str) 
     return False
 
 
+def _ladder_order_for_diagnosis(diagnosis: str) -> list[str]:
+    """Rung priority implied by live state, most-likely-to-work first.
+
+    The default order is a prior; a diagnosis is evidence and outranks it.
+    Re-submitting to a tab whose response is already rendered wastes the
+    provider round that extraction would have recovered for free.
+    """
+    return {
+        "response_rendered_capture_missed": ["provider_extract", "foreground_tab_then_extract"],
+        "provider_still_generating_at_timeout": ["foreground_tab_then_extract", "provider_extract"],
+        "tab_unresponsive_to_js": ["foreground_tab_then_extract", "provider_extract"],
+        "controlled_tab_vanished": ["packet_next_command"],
+        "tab_drifted_off_provider": ["packet_next_command"],
+        "no_usable_chat_surface": ["packet_next_command"],
+    }.get(diagnosis, [])
+
+
 def _attempt_lane_recovery(
     args: argparse.Namespace,
     *,
@@ -3571,6 +3881,13 @@ def _attempt_lane_recovery(
     if not actions:
         receipt["skipped_reason"] = "no evidence-derived recovery action available"
         return receipt
+    diagnosis = str((recovery_packet.get("lane_diagnostics") or {}).get("diagnosis") or "")
+    preferred = _ladder_order_for_diagnosis(diagnosis)
+    if preferred:
+        rank = {name: i for i, name in enumerate(preferred)}
+        actions.sort(key=lambda a: rank.get(str(a.get("action")), len(rank)))
+        receipt["ladder_order_source"] = diagnosis
+        receipt["ladder_order"] = [str(a.get("action")) for a in actions]
     out_path = response_path.with_name("response.recovered.md")
     out_raw = raw_path.with_name("response.recovered.raw.md")
     out_meta = meta_path.with_name("response.recovered.meta.json")
@@ -4114,10 +4431,19 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
             "path": str(path),
             **receipt,
             "response_chars": response_chars,
-            "failure_code": receipt.get("failure_code") or _classify_handler_failure(
-                handler=str(receipt.get("handler") or ""),
-                failure=str(receipt.get("failure") or ""),
-                submit_meta=receipt.get("submit_meta") if isinstance(receipt.get("submit_meta"), dict) else {},
+            # A passing seat must keep failure_code=null: the classifier greps
+            # the serialized submit_meta, where config fields like
+            # "timeout_s": 900 read as a timeout and stamped handler_timeout
+            # onto PASS lanes (agent-skills#1217).
+            "failure_code": receipt.get("failure_code")
+            or (
+                _classify_handler_failure(
+                    handler=str(receipt.get("handler") or ""),
+                    failure=str(receipt.get("failure") or ""),
+                    submit_meta=receipt.get("submit_meta") if isinstance(receipt.get("submit_meta"), dict) else {},
+                )
+                if receipt.get("ok") is not True
+                else None
             ),
             "recovery_packet_path": receipt.get("recovery_packet_path"),
             "response_quarantine": receipt.get("response_quarantine"),
