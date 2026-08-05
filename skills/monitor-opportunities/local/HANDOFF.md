@@ -98,6 +98,18 @@
   refuses any plan with unresolved required fields, so prefill/submit
   remain blocked on those answers plus per-site `ats_form_prefill`
   promotion.
+- Graham supplied Last Name (Anderson) and Phone (310-402-3980) on
+  2026-08-05; the answer bank lives at `ats-inspect/answer-bank.json` and
+  in memory `career_answers/graham-core-application-answers` (synced).
+  Plans rebuilt: 6 prefillable fields per posting. Remaining unresolved
+  required fields are the contract floor that stays human-in-browser by
+  design (gate tests prove required free-text/choice/sensitive fields can
+  never be machine-authorized): the "Why Discord?" free-text, work
+  authorization and US-location selects, Bay-Area/relocation questions,
+  and Resume/CV upload on 8537955002. Next automation increment is
+  `ats_form_prefill:greenhouse:discord` promotion: browser-prefill the six
+  fillable fields with screenshot receipt; Graham completes the rest and
+  transmits.
 
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`
