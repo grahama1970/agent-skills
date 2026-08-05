@@ -20,7 +20,7 @@ const FOCUSABLE_SELECTORS = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(', ');
 
-export function MobileNav() {
+export function MobileNav({ active = '' }: { active?: string }) {
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -153,8 +153,13 @@ export function MobileNav() {
                   data-qid={`drawer:link:${l.id}`}
                   data-qs-action={`NAV_GOTO_${l.id.toUpperCase()}`}
                   title={`Go to ${l.label}`}
+                  aria-current={active === l.id ? 'page' : undefined}
                   onClick={close}
-                  className="machine block rounded border border-transparent px-3 py-2.5 text-[0.9rem] text-mute hover:bg-fill hover:text-ink"
+                  className={`machine block rounded border px-3 py-2.5 text-[0.9rem] hover:bg-fill hover:text-ink ${
+                    active === l.id
+                      ? 'border-line bg-fill font-semibold text-ink'
+                      : 'border-transparent text-mute'
+                  }`}
                 >
                   {l.label}
                 </a>

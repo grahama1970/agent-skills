@@ -119,7 +119,7 @@ export function SiteNav() {
             </a>
             <ThemeToggle />
           </div>
-          <MobileNav />
+          <MobileNav active={active} />
         </nav>
       </header>
     </>
