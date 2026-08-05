@@ -71,10 +71,12 @@ export function SkillMosaic() {
                   data-qid={`index:cell:${s.n}`}
                   data-qs-action="INDEX_OPEN_SKILL"
                   title={`${s.n}${s.s ? ' · sanity-checked' : ' · contract only'}`}
-                  className={`mosaic-cell block h-4 w-4 rounded-[2px] border ${
-                    s.s ? 'border-accent bg-fill' : 'border-mute bg-transparent'
-                  } hover:border-ink`}
-                  style={matches(s) ? undefined : { opacity: 0.15 }}
+                  data-tip={`${s.n} · ${s.c} · ${s.s ? '✓ sanity-checked' : '○ contract only'}`}
+                  className={`mosaic-cell block h-4 w-4 rounded-[2px] border${s.s ? ' is-checked' : ''}`}
+                  style={{
+                    ['--cell-accent' as string]: `var(--cat-${s.c}, var(--cat-default))`,
+                    ...(matches(s) ? {} : { opacity: 0.15 }),
+                  }}
                 >
                   <span className="sr-only">{s.n}</span>
                 </a>
