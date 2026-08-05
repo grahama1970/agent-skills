@@ -1,6 +1,7 @@
 const LINKS = [
   { id: 'work', label: 'Work' },
   { id: 'index', label: 'Skill index' },
+  { id: 'about', label: 'About' },
   { id: 'contact', label: 'Contact' },
 ];
 

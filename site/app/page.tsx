@@ -157,6 +157,44 @@ export default function Home() {
           <SkillMosaic />
         </section>
 
+        <section id="about" className="scroll-mt-6 border-b border-line py-16">
+          <h2 className="mb-3 font-display text-3xl">An unusual path, on purpose</h2>
+          <div className="max-w-[62ch]">
+            <p className="mb-4">
+              I scored commercials for Adidas, Pepsi, and the X-Games. I ran
+              80-person interactive productions as Executive Producer on
+              Sony&apos;s <em>God of War: Ascension</em> campaign
+              (Webby-recognized). Then I spent four years as Principal Data
+              Scientist and technical lead on DARPA ARCOS, building the
+              knowledge-graph and LLM reasoning system for automated
+              certification of mission-critical software — alongside Honeywell,
+              Lockheed Martin, MIT, GE Research, and SRI.
+            </p>
+            <p className="mb-4">
+              That path is the point. Traditional teams hand hard problems to
+              specialists who have seen them before. The problems I take are
+              the ones nobody has seen before — where the playbook doesn&apos;t
+              exist yet. Composition, production, and certification taught the
+              same discipline from different directions: hold a large system in
+              your head, make its structure explicit, and prove that it works.
+              It&apos;s why my systems are architected, not stapled together.
+            </p>
+            <p className="machine text-mute">
+              DARPA ARCOS · AFRL &quot;Hacker&quot; challenge coin · Lean 4
+              formal methods · 15+ years hand-coding · ITAR-experienced ·{' '}
+              <a
+                href="https://github.com/grahama1970/agent-skills/blob/main/RESUME.md"
+                data-qid="about:link:resume"
+                data-qs-action="ABOUT_OPEN_RESUME"
+                title="Open RESUME.md on GitHub"
+                className="text-accent no-underline hover:underline"
+              >
+                full résumé ↗
+              </a>
+            </p>
+          </div>
+        </section>
+
         <section id="contact" className="scroll-mt-6 py-16">
           <h2 className="mb-3 font-display text-3xl">
             Bring me the project you shelved
