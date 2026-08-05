@@ -166,9 +166,16 @@ export function Screenshot({ slide }: { slide: UiSlide }) {
         <h2 className="m-0 text-5xl font-semibold text-white"><Editable slide={slide} field="title" label="title" value={slide.title}>{slide.title}</Editable></h2>
         <p className="m-0 max-w-2xl text-right text-3xl text-[var(--deck-accent,#67e8f9)]"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       </header>
-      <div className="min-h-0 flex-1">
-        <Visual visual={slide.visual} />
-      </div>
+      {slide.body.length ? (
+        <div className="grid min-h-0 flex-1 grid-cols-[2fr_3fr] items-center gap-12">
+          <BodyList slide={slide} size="text-3xl" />
+          <Visual visual={slide.visual} />
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1">
+          <Visual visual={slide.visual} />
+        </div>
+      )}
       <Footer slide={slide} />
     </div>
   )

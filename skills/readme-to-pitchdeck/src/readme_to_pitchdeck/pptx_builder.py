@@ -435,13 +435,18 @@ def _render_screenshot(slide, spec, asset_map, asset_base_dir: Path, temp_dir: P
     _add_title(slide, spec.title, section_label=spec.role)
     _add_text(slide, spec.message, 0.7, 1.45, 12.0, 0.62, size=16.5, color=Theme.muted)
     asset = asset_map.get(spec.visual.asset_id or "")
+    # Body lines get a left column (screenshot previously dropped them —
+    # caught by the post-emit whole-string scan on the sparta deck).
+    image_x, image_w = (0.72, 11.9) if not spec.body else (5.05, 7.55)
+    if spec.body:
+        _add_body_rows(slide, spec.body[:4], 0.75, 2.2, 4.1, 4.1)
     if asset:
         _add_image_fit(
             slide,
             asset,
-            0.72,
+            image_x,
             2.12,
-            11.9,
+            image_w,
             4.35,
             asset_base_dir=asset_base_dir,
             temp_dir=temp_dir,
@@ -529,7 +534,10 @@ def _render_cards(slide, spec, *, proof: bool = False) -> None:
         _add_text(slide, f"{index + 1:02d}", x + 0.22, y + 0.18, 0.46, 0.25, size=8.5, bold=True, color=Theme.cyan)
         _add_text(slide, title, x + 0.22, y + 0.62, card_w - 0.44, 0.6, size=16, bold=True)
         if body != title:
-            _add_text(slide, body, x + 0.22, y + 1.34, card_w - 0.44, card_h - 1.55, size=11.5, color=Theme.muted)
+            # Whole-string survival contract: the body frame carries the FULL
+            # item string (not the post-split remainder) so the bound claim
+            # text stays contiguous in the emitted artifact.
+            _add_text(slide, item, x + 0.22, y + 1.34, card_w - 0.44, card_h - 1.55, size=11.5, color=Theme.muted)
 
 
 def _render_roadmap(slide, spec) -> None:
@@ -568,7 +576,8 @@ def _render_collaboration(slide, spec) -> None:
         _add_text(slide, f"0{index + 1}", x + 0.24, 2.98, 0.5, 0.26, size=9, bold=True, color=Theme.cyan)
         _add_text(slide, title, x + 0.24, 3.45, 3.2, 0.62, size=18, bold=True)
         if body != title:
-            _add_text(slide, body, x + 0.24, 4.15, 3.2, 0.75, size=11.5, color=Theme.muted)
+            # Full item string, not the split remainder (whole-string contract).
+            _add_text(slide, item, x + 0.24, 4.15, 3.2, 0.75, size=10.5, color=Theme.muted)
     callout = _add_panel(slide, 0.72, 5.62, 11.84, 0.76, color="0C2B35")
     callout.line.color.rgb = _rgb(Theme.cyan)
     _add_text(
