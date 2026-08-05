@@ -5,21 +5,10 @@ import { ProjectCard, type Project } from '@/components/project-card';
 import { SiteNav } from '@/components/site-nav';
 import { StatCounter } from '@/components/stat-counter';
 import { Trace } from '@/components/trace';
+import content from '@/content.json';
 
-const GH = 'https://github.com/grahama1970/agent-skills/blob/main/skills';
-
-const PROJECTS: Project[] = [
-  { slug: 'tau', name: "t'au", blurb: 'Memory-first, zero-trust agent harness — DAG contracts, verdicts, receipts.', href: `${GH}/tau/README.md` },
-  { slug: 'battle', name: 'battle', blurb: 'Red/blue-team genetic fuzzing arena for agents attacking agents.', href: `${GH}/battle/README.md` },
-  { slug: 'surf', name: 'surf', blurb: 'Authenticated browser control for agents — real Chrome, real sessions.', href: `${GH}/surf/README.md` },
-  { slug: 'persona-dream', name: 'persona-dream', blurb: 'Agent memories rendered into movies — receipt-backed dream packets.', href: `${GH}/persona-dream/README.md` },
-  { slug: 'extractor', name: 'extractor', blurb: 'Documents into hierarchical evidence trees, not lossy text soup.', href: `${GH}/extractor/README.md` },
-  { slug: 'dogpile', name: 'dogpile', blurb: 'Deep-research aggregator across arXiv, GitHub, YouTube, web, and workspace.', href: `${GH}/dogpile/README.md` },
-  { slug: 'watch', name: 'watch', blurb: 'Video that agents actually understand, frame by frame.', href: `${GH}/watch/README.md` },
-  { slug: 'scillm', name: 'scillm', blurb: 'One-shot, exec, subagent, and DAG orchestration over any model gateway.', href: `${GH}/scillm/README.md` },
-  { slug: 'debugger', name: 'debugger', blurb: 'Live breakpoints and variable state for agents — observe before patching.', href: `${GH}/debugger/README.md` },
-  { slug: 'sparta-explorer', name: 'sparta explorer', blurb: 'Space-cyber evidence workbench: framework guidance to program evidence to human review.', href: 'https://github.com/grahama1970/sparta-public' },
-];
+const PROJECTS: Project[] = content.projects;
+const STATS = content.stats;
 
 const PILLARS = [
   {
@@ -110,9 +99,9 @@ export default function Home() {
             quality gate.
           </p>
           <div className="mt-7 grid grid-cols-2 gap-3.5 md:grid-cols-3">
-            <StatCounter value={330} label="skills with operating contracts (SKILL.md)" />
-            <StatCounter value={278} label="ship a sanity.sh — cheap local proof" />
-            <StatCounter value={72} label="bounded agents with receipts & stop conditions" />
+            <StatCounter value={STATS.skills} label="skills with operating contracts (SKILL.md)" />
+            <StatCounter value={STATS.sanity} label="ship a sanity.sh — cheap local proof" />
+            <StatCounter value={STATS.agents} label="bounded agents with receipts & stop conditions" />
           </div>
           <p className="mt-5 text-sm text-mute">
             All of it public:{' '}
