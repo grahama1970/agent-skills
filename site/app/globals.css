@@ -1,0 +1,99 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ground: #0b0e14;
+  --color-panel: #141926;
+  --color-line: #232b3d;
+  --color-ink: #e9e4d8;
+  --color-mute: #7e8798;
+  --color-accent: #ffb454;
+  --color-ok: #4fd6be;
+  --font-mono:
+    ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+  background: var(--color-ground);
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-ground);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Scroll-driven section reveals — progressive enhancement only.
+   Content is fully visible when animation-timeline is unsupported
+   or the user prefers reduced motion. */
+.reveal {
+  opacity: 1;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Hero trace ledger: staged line reveal with a typing caret on the
+   final line. Static (all lines visible) under reduced motion. */
+.trace-line {
+  opacity: 0;
+  animation: trace-in 0.01s forwards;
+}
+@keyframes trace-in {
+  to {
+    opacity: 1;
+  }
+}
+.trace-caret::after {
+  content: '▍';
+  color: var(--color-accent);
+  animation: caret-blink 1s steps(1) infinite;
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .trace-line {
+    animation: none;
+    opacity: 1;
+  }
+  .trace-caret::after {
+    animation: none;
+  }
+}
