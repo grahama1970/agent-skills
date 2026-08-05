@@ -1035,7 +1035,10 @@ esac
     assert payload["success"] is False
     assert payload["bounded_error"]["code"] == "browser_handler_timeout"
     assert payload["attachments"]["delivery_proven"] is False
-    assert any(command["command"][1] == "meta.normalize" for command in commands)
+    # The normalizer run is intentionally NOT appended to `commands`: timeout
+    # recovery asserts commands[-1] is the submit itself. Its receipt lives in
+    # the payload instead.
+    assert not any(command["command"][1:2] == ["meta.normalize"] for command in commands)
 
 
 def test_webgpt_submit_command_expects_home_url_when_tab_id_is_bound(tmp_path: Path) -> None:

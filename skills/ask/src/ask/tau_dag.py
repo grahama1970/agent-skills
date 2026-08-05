@@ -973,11 +973,23 @@ def run_tau_dag_bundle(
             pre_dispatch_error = payload
             receipt_dir.mkdir(parents=True, exist_ok=True)
             _write_json(receipt_path, payload)
+            # Tau's error payload is fully actionable: read all of it, not
+            # just the message. evidence.errors names the exact cause and
+            # recommended_action names the next step (operator 2026-08-04).
+            evidence = payload.get("evidence") or {}
+            action = payload.get("recommended_action") or {}
             sys.stderr.write(
                 "tau dag-run blocked before dispatch: "
                 f"verdict={payload.get('verdict')} failure_code={payload.get('failure_code')} "
-                f"message={payload.get('message')}\n"
+                f"severity={payload.get('severity')}\n"
             )
+            for err in (evidence.get("errors") or [])[:5]:
+                sys.stderr.write(f"  cause: {err}\n")
+            if action:
+                sys.stderr.write(
+                    f"  tau recommends: {action.get('type')} -> {action.get('next_agent')}"
+                    f" ({action.get('reason')})\n"
+                )
     polls: list[dict[str, Any]] = []
     if poll and pre_dispatch_error is None:
         polls = poll_tau_status(
@@ -2109,12 +2121,16 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
         "terminal_nodes": ["human"],
         "limits": {
             "max_total_attempts": len(nodes),
-            "max_parallel_nodes": min(4, max(1, len(solver_nodes))),
-            "provider_command_timeout_seconds": 900,
-            "scillm_base_url": input.scillm_base_url,
+            # Installed Tau rejects unknown keys in limits ("not allowed
+            # outside extensions"), so solver concurrency and the SciLLM base
+            # URL live in context, where they are descriptive rather than
+            # policy the runtime must honour.
+            "max_concurrency": min(TAU_STANDARD_PROFILE_MAX_CONCURRENCY, max(1, len(solver_nodes))),
         },
         "context": {
             "compiled_by": "$ask",
+            "provider_command_timeout_seconds": 900,
+            "scillm_base_url": input.scillm_base_url,
             "delegated_runtime": "$tau",
             "interview_skill": "$interview",
             "best_practices": "$best-practices-tau-dag",
@@ -3505,6 +3521,9 @@ def _evidence(
     receipt: dict[str, Any],
     receipt_path: str,
 ) -> list[Any]:
+    # Tau blocks with evidence_goal_hash_missing unless every accepted
+    # evidence item carries the immutable goal hash (tau#308/310 contract).
+    goal_hash = (start.get("goal") or {}).get("goal_hash")
     evidence: list[Any] = [
         {
             "kind": "node_receipt",
@@ -3549,6 +3568,11 @@ def _evidence(
         )
         evidence.append({"kind": "winner", "winner": "solver-1"})
         evidence.append({"kind": "rationale", "text": "Winner chosen with an explicit rationale."})
+    if goal_hash:
+        evidence = [
+            {**item, "goal_hash": item.get("goal_hash", goal_hash)} if isinstance(item, dict) else item
+            for item in evidence
+        ]
     return evidence
 
 
