@@ -331,6 +331,7 @@ class SlideSpec(StrictModel):
     elements: list[FreeformElement] = Field(default_factory=list)
     transition: SlideTransition = SlideTransition.SLIDE
     reveal: ContentReveal = ContentReveal.STAGGER_UP
+    hidden: bool = False
     notes: str = ""
     footer: str | None = None
 

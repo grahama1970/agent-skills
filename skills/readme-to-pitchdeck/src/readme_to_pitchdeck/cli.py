@@ -360,8 +360,9 @@ def asset_clear(
 def deck_op(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
     output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
-    op: Annotated[str, typer.Option(help="add_after | duplicate | delete | move_left | move_right")],
+    op: Annotated[str, typer.Option(help="add_after | duplicate | delete | move_left | move_right | move_to")],
     slide_id: Annotated[str, typer.Option(help="Slide id the operation targets.")],
+    target_order: Annotated[int, typer.Option(help="Target 1-based position for move_to.")] = 0,
     deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
     json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
 ) -> None:
@@ -369,7 +370,10 @@ def deck_op(
     from .slide_edit import apply_deck_op
 
     try:
-        receipt = apply_deck_op(bundle_dir, output_dir, op=op, slide_id=slide_id, deck_name=deck_name)
+        receipt = apply_deck_op(
+            bundle_dir, output_dir, op=op, slide_id=slide_id,
+            target_order=target_order or None, deck_name=deck_name,
+        )
         _emit(receipt, json_output=json_output)
     except Exception as exc:
         _abort(exc)

@@ -81,6 +81,7 @@ class UiSlide(StrictModel):
     elements: list[UiElement] = Field(default_factory=list)
     transition: str = "slide"
     reveal: str = "stagger_up"
+    hidden: bool = False
     claims: list[UiClaimBadge] = Field(default_factory=list)
     source_ids: list[str] = Field(default_factory=list)
     notes: str = ""
@@ -217,6 +218,7 @@ def emit_ui_bundle(
                 elements=ui_elements,
                 transition=slide.transition.value,
                 reveal=slide.reveal.value,
+                hidden=slide.hidden,
                 claims=badges,
                 source_ids=sorted({ref.source_id for ref in slide.source_refs}),
                 notes=slide.notes,

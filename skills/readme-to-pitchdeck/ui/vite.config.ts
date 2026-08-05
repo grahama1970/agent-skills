@@ -33,7 +33,7 @@ function slideEditApi(): Plugin {
         req.on('data', (chunk) => (body += chunk))
         req.on('end', () => {
           try {
-            const { op, slide_id } = JSON.parse(body) as Record<string, string>
+            const { op, slide_id, target_order } = JSON.parse(body) as Record<string, string | number>
             if (!op || !slide_id) {
               res.statusCode = 400
               res.end(JSON.stringify({ error: 'op and slide_id are required' }))
@@ -48,7 +48,7 @@ function slideEditApi(): Plugin {
             }
             execFile(
               `${skillRoot}/run.sh`,
-              ['deck-op', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--op', op, '--slide-id', slide_id, '--json'],
+              ['deck-op', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--op', String(op), '--slide-id', String(slide_id), ...(target_order ? ['--target-order', String(target_order)] : []), '--json'],
               { timeout: 60_000 },
               (error, stdout, stderr) => {
                 res.setHeader('Content-Type', 'application/json')

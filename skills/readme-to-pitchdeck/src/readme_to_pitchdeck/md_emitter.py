@@ -71,7 +71,7 @@ def emit_markdown(
         *( [deck.deck.subtitle, ""] if deck.deck.subtitle else [] ),
     ]
 
-    for slide in sorted(deck.slides, key=lambda s: s.order):
+    for slide in sorted((s for s in deck.slides if not s.hidden), key=lambda s: s.order):
         lines.extend(["---", "", f"## {slide.title}", "", slide.message, ""])
         for item in slide.body:
             lines.append(f"- {item}")

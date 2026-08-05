@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
 import { AssetDropZone } from './components/AssetDrop'
-import { EditToolbar, SlideRail } from './components/EditChrome'
+import { EditToolbar } from './components/EditChrome'
+import { SlideDrawer } from './components/SlideDrawer'
 import { ExportMenu } from './components/ExportMenu'
 import { OverflowBadge } from './components/OverflowBadge'
 import { ResizeHandle } from './components/ResizeHandle'
@@ -251,7 +252,7 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [toggleFocusMode, setShowSource, setRailCollapsed, setInspectorCollapsed])
 
-  useKeyboardNav(deck?.slides.length ?? 0, index, go)
+  useKeyboardNav(deck ? (editing ? deck.slides.length : deck.slides.filter((s) => !s.hidden).length) : 0, index, go)
 
   if (error) {
     return (
@@ -266,7 +267,8 @@ export function App() {
   }
   if (!deck) return <main className="flex h-full items-center justify-center text-slate-500">Loading deck…</main>
 
-  const slide = deck.slides[Math.min(index, deck.slides.length - 1)]
+  const navSlides = editing ? deck.slides : deck.slides.filter((s) => !s.hidden)
+  const slide = navSlides[Math.min(index, navSlides.length - 1)] ?? deck.slides[0]
   const navButton =
     'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:border-cyan-500/60 disabled:cursor-not-allowed disabled:opacity-40'
 
@@ -427,7 +429,7 @@ export function App() {
             ) : null}
             {editing && !railCollapsed ? (
               <>
-                <SlideRail deck={deck} currentIndex={index} onSelect={go} width={widths.rail} />
+                <SlideDrawer deck={deck} currentIndex={index} onSelect={go} width={widths.rail} onChanged={reloadAll} />
                 <ResizeHandle pane="rail" isDragging={activeResizer === 'rail'} onMouseDown={(e) => startResizing('rail', e)} onDoubleClick={() => resetWidth('rail')} />
               </>
             ) : null}
@@ -523,14 +525,14 @@ export function App() {
               <ChevronLeft aria-hidden className="h-4 w-4" /> Prev
             </button>
             <span className="font-mono text-xs text-slate-500">
-              {slide.order} / {deck.slides.length} · {slide.id}
+              {slide.order} / {navSlides.length} · {slide.id}{slide.hidden ? ' · hidden' : ''}
             </span>
             <button
               type="button"
               data-qid="deck:nav:next"
               data-qs-action="DECK_NEXT_SLIDE"
               title="Next slide"
-              disabled={index === deck.slides.length - 1}
+              disabled={index === navSlides.length - 1}
               onClick={() => go(index + 1)}
               className={navButton}
             >

@@ -29,7 +29,7 @@ from .models import (
     SourceManifest,
 )
 
-EDITABLE_FIELDS = {"title", "message", "notes", "footer", "layout", "transition", "reveal"}
+EDITABLE_FIELDS = {"title", "message", "notes", "footer", "layout", "transition", "reveal", "hidden"}
 
 
 def _load(bundle_dir: Path, deck_name: str):
@@ -146,6 +146,8 @@ def apply_slide_edit(
         # would still count as "visible" in validation — a hidden-qualifier hole
         # (WebGPT review P0-2). Clear them so validation matches what renders.
         updated_slide = slide.model_copy(update={"layout": value, "elements": []})
+    elif base_field == "hidden":
+        updated_slide = slide.model_copy(update={"hidden": value == "true"})
     elif base_field in EDITABLE_FIELDS:
         updated_slide = slide.model_copy(update={base_field: value or None if base_field == "footer" else value})
     else:
@@ -217,7 +219,7 @@ def apply_slide_edit(
     )
 
 
-DECK_OPS = {"add_after", "duplicate", "delete", "move_left", "move_right"}
+DECK_OPS = {"add_after", "duplicate", "delete", "move_left", "move_right", "move_to"}
 
 
 def apply_deck_op(
@@ -226,6 +228,7 @@ def apply_deck_op(
     *,
     op: str,
     slide_id: str,
+    target_order: int | None = None,
     deck_name: str = "deck.public.yaml",
 ) -> OperationReceipt:
     """Slide-level operation (add/duplicate/delete/reorder) through the same gates."""
@@ -271,6 +274,11 @@ def apply_deck_op(
         if position == len(slides) - 1:
             raise ValueError("slide is already last")
         slides[position + 1], slides[position] = slides[position], slides[position + 1]
+    elif op == "move_to":
+        if target_order is None or not (1 <= target_order <= len(slides)):
+            raise ValueError(f"move_to requires --target-order between 1 and {len(slides)}")
+        moved = slides.pop(position)
+        slides.insert(target_order - 1, moved)
 
     renumbered = [s.model_copy(update={"order": i + 1}) for i, s in enumerate(slides)]
     updated_deck = DeckManifest.model_validate(

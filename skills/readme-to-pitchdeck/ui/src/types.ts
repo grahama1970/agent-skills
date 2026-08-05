@@ -52,6 +52,7 @@ export interface UiSlide {
   body: string[]
   visual: UiVisual
   elements: UiElement[]
+  hidden: boolean
   transition: 'none' | 'fade' | 'slide' | 'slide_up' | 'zoom' | string
   reveal: 'none' | 'stagger_up' | 'stagger_fade' | string
   claims: UiClaimBadge[]
