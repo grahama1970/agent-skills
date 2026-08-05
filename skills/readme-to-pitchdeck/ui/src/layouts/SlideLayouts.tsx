@@ -18,11 +18,22 @@ function Visual({ visual }: { visual: UiVisual }) {
     }
     return (
       <figure className="flex h-full w-full flex-col gap-3">
-        <img
-          src={visual.asset.file}
-          alt={visual.asset.alt_text}
-          className="min-h-0 w-full flex-1 rounded-2xl object-contain shadow-2xl"
-        />
+        {visual.asset.kind === 'video' ? (
+          <video
+            src={visual.asset.file}
+            controls
+            playsInline
+            preload="metadata"
+            aria-label={visual.asset.alt_text}
+            className="min-h-0 w-full flex-1 rounded-2xl object-contain shadow-2xl"
+          />
+        ) : (
+          <img
+            src={visual.asset.file}
+            alt={visual.asset.alt_text}
+            className="min-h-0 w-full flex-1 rounded-2xl object-contain shadow-2xl"
+          />
+        )}
         {visual.caption ? (
           <figcaption className="text-center text-2xl text-slate-400">{visual.caption}</figcaption>
         ) : null}

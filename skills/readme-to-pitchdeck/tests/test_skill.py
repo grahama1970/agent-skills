@@ -488,3 +488,104 @@ def test_apply_slide_edit_positive_and_fail_closed(tmp_path: Path) -> None:
     # Non-editable fields are refused.
     with pytest.raises(ValueError, match="not editable"):
         apply_slide_edit(planned, out, slide_id=slide.id, field="claim_ids", value="x")
+
+
+def _make_test_mp4(path: Path) -> None:
+    import subprocess
+
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-f", "lavfi", "-i", "testsrc=duration=1:size=320x180:rate=10",
+            "-pix_fmt", "yuv420p", str(path),
+        ],
+        check=True,
+        capture_output=True,
+        timeout=60,
+    )
+
+
+def test_video_asset_builds_and_validates(tmp_path: Path) -> None:
+    import shutil as _shutil
+
+    if _shutil.which("ffmpeg") is None:
+        pytest.skip("ffmpeg unavailable")
+    sources, ledger, assets = _base_models(tmp_path)
+    video_path = tmp_path / "demo.mp4"
+    _make_test_mp4(video_path)
+
+    from readme_to_pitchdeck.models import (
+        AssetKind,
+        AssetSpec,
+        ClaimGuard,
+        DeckManifest as DM,
+        DeckMeta,
+        SlideSpec,
+        VisualSpec,
+        VisualType,
+    )
+
+    assets = AssetManifest(
+        project_name="Demo",
+        assets=[
+            AssetSpec(
+                id="demo-video",
+                kind=AssetKind.VIDEO,
+                visibility=Visibility.PUBLIC,
+                local_path=str(video_path),
+                alt_text="Product demo clip",
+                required=True,
+                status=AssetStatus.PRESENT,
+            )
+        ],
+    )
+    deck = DM(
+        deck=DeckMeta(
+            id="demo-public", title="Demo", audience="Reviewers",
+            visibility=Visibility.PUBLIC, source_policy="public_only",
+        ),
+        slides=[
+            SlideSpec(
+                id="s1", order=1, role="demo", layout="screenshot",
+                visibility=Visibility.PUBLIC, title="Demo video",
+                message="A one-second generated clip.",
+                claim_ids=["public-claim"],
+                visual=VisualSpec(type=VisualType.SCREENSHOT, asset_id="demo-video"),
+                claim_guard=ClaimGuard(),
+                source_refs=[SourceRef(source_id="public-source")],
+            )
+        ],
+    )
+    report = validate_bundle(
+        deck, ledger, sources, assets,
+        source_manifest_dir=tmp_path, asset_manifest_dir=tmp_path,
+    )
+    assert report.errors == 0, [i.model_dump() for i in report.issues]
+
+    output = tmp_path / "video.pptx"
+    _, validation = build_pptx(
+        deck, ledger, sources, assets,
+        source_manifest_dir=tmp_path, asset_manifest_dir=tmp_path,
+        output_path=output, require_approved_claims=False,
+    )
+    assert validation.errors == 0
+    reopened = Presentation(output)
+    movie_shapes = [
+        shape for slide in reopened.slides for shape in slide.shapes
+        if shape.shape_type == 16  # MSO_SHAPE_TYPE.MEDIA
+    ]
+    assert movie_shapes, "no embedded media shape found in built PPTX"
+
+    # Wrong container for a video asset fails validation.
+    png = tmp_path / "not-video.png"
+    from PIL import Image
+
+    Image.new("RGB", (100, 100), "white").save(png)
+    bad_assets = AssetManifest(
+        project_name="Demo",
+        assets=[assets.assets[0].model_copy(update={"local_path": str(png)})],
+    )
+    bad_report = validate_bundle(
+        deck, ledger, sources, bad_assets,
+        source_manifest_dir=tmp_path, asset_manifest_dir=tmp_path,
+    )
+    assert any(i.code == "ASSET_UNSUPPORTED_FORMAT" and i.severity == "error" for i in bad_report.issues)

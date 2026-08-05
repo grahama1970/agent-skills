@@ -78,6 +78,7 @@ class AssetKind(str, Enum):
     LOGO = "logo"
     ILLUSTRATION = "illustration"
     PHOTO = "photo"
+    VIDEO = "video"
     OTHER = "other"
 
 

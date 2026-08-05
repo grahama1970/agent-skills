@@ -175,3 +175,15 @@ Before adding autonomous research or rewriting:
   /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/ui-edit-mode.png
 - Edit API is dev-server-only by design; a production deployment needs an
   authenticated equivalent before exposing writes.
+
+## Video assets (added 2026-08-05)
+
+- `AssetKind.VIDEO` (.mp4/.webm allowlist in validation): embeds as a native
+  movie shape (`add_movie`, mime by suffix) in PPTX; renders as `<video
+  controls>` in the browser UI; wrong container for kind video is a hard
+  ASSET_UNSUPPORTED_FORMAT error. pytest covers build (MEDIA shape read back
+  from the reopened PPTX via ffmpeg-generated fixture clip) and the negative.
+- Known limits: Google Slides import drops embedded video (re-link from
+  Drive/YouTube); PDF/contact-sheet renders show the poster frame; visual-sync
+  indexes only rendered slide PNGs — video frame sampling remains the noted
+  extension.

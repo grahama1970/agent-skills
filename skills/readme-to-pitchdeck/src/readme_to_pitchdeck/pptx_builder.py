@@ -28,6 +28,7 @@ from .models import (
     ClaimLedger,
     ValidationReport,
     Visibility,
+    AssetKind,
     VisualType,
 )
 from .validation import validate_bundle, validate_pptx
@@ -292,6 +293,26 @@ def _add_image_fit(
     if not raw_path.exists():
         _add_missing_asset(slide, x, y, w, h, asset)
         return False
+    if asset.kind == AssetKind.VIDEO:
+        try:
+            mime = "video/webm" if raw_path.suffix.lower() == ".webm" else "video/mp4"
+            _add_panel(slide, x, y, w, h, color="071019")
+            movie = slide.shapes.add_movie(
+                str(raw_path),
+                Inches(x),
+                Inches(y),
+                Inches(w),
+                Inches(h),
+                poster_frame_image=None,
+                mime_type=mime,
+            )
+            movie.name = f"asset:{asset.id}"
+            return True
+        except Exception as exc:
+            if asset.required:
+                raise SkillError(f"Required video asset '{asset.id}' could not be embedded: {exc}") from exc
+            _add_missing_asset(slide, x, y, w, h, asset)
+            return False
     try:
         path = _materialize_image(raw_path, temp_dir)
         with Image.open(path) as image:

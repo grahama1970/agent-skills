@@ -22,6 +22,11 @@
   `cairosvg` module or `rsvg-convert`; a missing converter is a warning for optional assets
   and an error for required assets.
 - Meaning-bearing screenshots use contain/fit, not crop-to-fill.
+- Video assets (`kind: video`, .mp4/.webm) embed as native movie shapes via
+  `add_movie` with the default poster frame; they play in PowerPoint and the
+  browser deck renderer. Google Slides import does not preserve embedded
+  video — re-link from Drive/YouTube after import. PDF/contact-sheet renders
+  show the poster frame only.
 - Missing required assets fail the build.
 - Missing optional assets produce an explicit amber `MISSING ASSET` card and a
   `USABLE_WITH_GAPS` receipt.

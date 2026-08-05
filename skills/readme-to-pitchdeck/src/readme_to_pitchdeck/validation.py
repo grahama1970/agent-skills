@@ -9,6 +9,7 @@ from pptx import Presentation
 
 from .io import expand_path, sha256_file
 from .models import (
+    AssetKind,
     AssetManifest,
     AssetStatus,
     ClaimKind,
@@ -25,6 +26,7 @@ from .models import (
 )
 
 _SUPPORTED_IMAGES = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".bmp", ".gif", ".tif", ".tiff"}
+_SUPPORTED_VIDEO = {".mp4", ".webm"}
 _NEGATION_RE = re.compile(r"\b(not|no|never|without|unverified|cannot|can't|does not|not yet)\b", re.IGNORECASE)
 
 
@@ -286,13 +288,23 @@ def validate_bundle(
                             asset_id=asset.id,
                         )
                     )
-                elif local_path.suffix.lower() not in _SUPPORTED_IMAGES:
+                elif local_path.suffix.lower() not in (
+                    _SUPPORTED_VIDEO if asset.kind == AssetKind.VIDEO else _SUPPORTED_IMAGES
+                ):
                     severity = "error" if asset.required else "warning"
+                    expected = (
+                        "video formats " + "/".join(sorted(_SUPPORTED_VIDEO))
+                        if asset.kind == AssetKind.VIDEO
+                        else "image formats"
+                    )
                     issues.append(
                         ValidationIssue(
                             severity=severity,
                             code="ASSET_UNSUPPORTED_FORMAT",
-                            message=f"Asset '{asset.id}' uses unsupported format {local_path.suffix}.",
+                            message=(
+                                f"Asset '{asset.id}' (kind {asset.kind.value}) uses unsupported format "
+                                f"{local_path.suffix}; expected {expected}."
+                            ),
                             slide_id=slide.id,
                             asset_id=asset.id,
                         )
