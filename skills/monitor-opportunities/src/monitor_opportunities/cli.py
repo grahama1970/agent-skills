@@ -52,6 +52,8 @@ IMPLEMENTED = [
     "buzz-review",
     "buzz-summary",
     "ats-inspect",
+    "memory-sync",
+    "nightly",
 ]
 NOT_IMPLEMENTED = [
     "apply",
@@ -426,6 +428,94 @@ def buzz_summary(
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
 
 
+@app.command("memory-sync")
+def memory_sync(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+    memory_url: str = typer.Option("http://127.0.0.1:8601", "--memory-url"),
+) -> None:
+    """Publish one run's shortlist into the memory service (chat is the interface)."""
+    _configure_logging()
+    from .memory_sync import MemorySyncError, sync_run_to_memory
+
+    try:
+        receipt = sync_run_to_memory(run, memory_url)
+    except MemorySyncError as exc:
+        _fail(ContractError("MEMORY_SYNC_REJECTED", str(exc)))
+    except Exception as exc:
+        _fail(ContractError("MEMORY_SYNC_TRANSPORT_FAILED", repr(exc)))
+    typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
+
+
+@app.command()
+def nightly(
+    out: Path | None = typer.Option(None, "--out", file_okay=False),
+    memory_url: str = typer.Option("http://127.0.0.1:8601", "--memory-url"),
+    skip_buzz: bool = typer.Option(False, "--skip-buzz", help="Skip the Buzz shortlist post."),
+) -> None:
+    """One nightly transaction: run, publish shortlist to memory, post Buzz summary.
+
+    The rendered report stays in the run directory as a frozen receipt; the
+    memory collection and Buzz post are the interaction surface.
+    """
+    _configure_logging()
+    import subprocess
+
+    skill_dir = Path(__file__).resolve().parents[2]
+    if out is None:
+        out = skill_dir / "local" / "nightly" / "latest"
+    run_sh = skill_dir / "run.sh"
+    steps: dict[str, object] = {}
+
+    run_proc = subprocess.run(
+        [str(run_sh), "run", "--out", str(out)], capture_output=True, text=True, timeout=3600
+    )
+    steps["run"] = {"exit_code": run_proc.returncode}
+    if run_proc.returncode != 0:
+        _fail(ContractError("NIGHTLY_RUN_FAILED", run_proc.stderr[-2000:]))
+
+    sync_proc = subprocess.run(
+        [str(run_sh), "memory-sync", "--run", str(out), "--memory-url", memory_url],
+        capture_output=True,
+        text=True,
+        timeout=600,
+    )
+    steps["memory_sync"] = {"exit_code": sync_proc.returncode}
+    if sync_proc.returncode != 0:
+        _fail(ContractError("NIGHTLY_MEMORY_SYNC_FAILED", sync_proc.stderr[-2000:]))
+
+    if skip_buzz:
+        steps["buzz"] = {"skipped": True}
+    else:
+        notifications = read_json(skill_dir / "config" / "notifications.json")
+        buzz_proc = subprocess.run(
+            [
+                str(run_sh),
+                "buzz-summary",
+                "--run",
+                str(out),
+                "--channel",
+                str(notifications["buzz_channel"]),
+                "--report-url",
+                f"file://{out}/report/index.html",
+                "--post",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=600,
+        )
+        # Buzz outage must not lose the run; record the failure loudly instead.
+        steps["buzz"] = {"exit_code": buzz_proc.returncode}
+        if buzz_proc.returncode != 0:
+            steps["buzz"]["error_tail"] = buzz_proc.stderr[-800:]
+    typer.echo(
+        json.dumps(
+            {"status": "PASS", "schema": "monitor_opportunities.nightly_receipt.v1", "out": str(out), "steps": steps},
+            indent=2,
+            sort_keys=True,
+        )
+    )
+
+
 @app.command("ats-inspect")
 def ats_inspect(
     board: str = typer.Option(..., "--board", help="Greenhouse board slug, e.g. discord."),
@@ -468,7 +558,7 @@ def schedule(
 
     repo_root = _canonical_repo_root()
     scheduler = repo_root / "skills" / "scheduler" / "run.sh"
-    command = str(repo_root / "skills" / "monitor-opportunities" / "run.sh") + " run"
+    command = str(repo_root / "skills" / "monitor-opportunities" / "run.sh") + " nightly"
     register = subprocess.run(
         [
             str(scheduler),

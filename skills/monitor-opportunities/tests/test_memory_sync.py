@@ -1,0 +1,40 @@
+# Document-shape gates for the morning memory sync (no network).
+"""Behavioral gates for morning_documents built from a run report."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from monitor_opportunities.memory_sync import MemorySyncError, morning_documents
+
+FIXTURE = Path("skills/monitor-opportunities/fixtures/reports/stage0_mixed_lanes.json")
+
+
+def _report() -> dict:
+    return json.loads(FIXTURE.read_text(encoding="utf-8"))
+
+
+def test_one_document_per_opportunity_plus_summary() -> None:
+    report = _report()
+    documents = morning_documents(report, "/tmp/run")
+    assert len(documents) == len(report["opportunities"]) + 1
+    assert documents[-1]["schema"] == "monitor_opportunities.morning_summary.v1"
+
+
+def test_documents_are_keyed_and_recall_shaped() -> None:
+    for document in morning_documents(_report(), "/tmp/run"):
+        assert document["_key"]
+        assert document["title"]
+        assert document["text"]
+        assert "morning-opportunities" in document["tags"]
+        assert document["external_effects"] is False
+
+
+def test_missing_run_id_fails_closed() -> None:
+    report = _report()
+    report.pop("run_id", None)
+    with pytest.raises(MemorySyncError):
+        morning_documents(report, "/tmp/run")

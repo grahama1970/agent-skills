@@ -121,6 +121,18 @@
   ids in `config/ats_selectors/greenhouse.json` (repo), per-posting
   `question_*` bindings in memory `ats_selector_bindings` (digest-bound,
   Qdrant-synced, recallable). Sanity 81 passed.
+- Interface reshape (Graham, 2026-08-05): chat/Buzz is the interface, report
+  demoted to per-run receipt. New `memory-sync` and `nightly` CLI commands;
+  shortlist published to memory `morning_opportunities` (view-linked,
+  recall-proven broad + filtered), Buzz channel in
+  `config/notifications.json`. Scheduler registered and read back:
+  `monitor-opportunities-nightly` -> `run.sh nightly`, cron `0 2 * * *`,
+  enabled. Full nightly smoke PASS (run + memory_sync + buzz all exit 0;
+  Buzz message read back from the channel). The iPad/Tailscale remote
+  readback gate is retired — the report no longer needs serving.
+  Note for cron: the Buzz step needs BUZZ_IDENTITY_KEY/BUZZ_RELAY_URL in
+  the job environment; a Buzz failure is recorded in the nightly receipt
+  but does not fail the run. Sanity 84 passed.
 
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`

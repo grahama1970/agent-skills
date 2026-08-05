@@ -35,6 +35,16 @@ mailbox namespace is ambiguous (subject collisions with pre-existing drafts) and
 automation is brittle. Nightly runs should write drafts to memory, not Gmail. Gmail
 send and LinkedIn automation remain permanently forbidden; the human transmits.
 
+Interface decision (Graham, 2026-08-05): chat is the interface; the report is a
+receipt. The nightly transaction (`run.sh nightly`) runs the sweep, publishes the
+shortlist into the memory `morning_opportunities` collection (recallable via
+/memory, BM25 + semantic), and posts the Buzz summary to the configured channel
+(`config/notifications.json`). Graham asks agents about the morning shortlist and
+records decisions through the ledger-backed `decision` command; the rendered
+report stays in the run directory as the frozen audit artifact and no longer
+requires Tailscale serving or remote readback. Scheduler registration
+(`monitor-opportunities-nightly`, cron 0 2 * * *) is live.
+
 The report is the product. The first working-value milestone is not auto-apply; it is a
 zero-network Stage 0 kernel that can validate and render the expected morning report,
 write a verification receipt, and prove Gmail, LinkedIn, and ATS effects are unreachable.
