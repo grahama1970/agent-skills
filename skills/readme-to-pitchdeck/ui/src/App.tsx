@@ -5,8 +5,11 @@ import { DeckChat } from './components/DeckChat'
 import { AssetDropZone } from './components/AssetDrop'
 import { EditToolbar, SlideRail } from './components/EditChrome'
 import { ExportMenu } from './components/ExportMenu'
+import { OverflowBadge } from './components/OverflowBadge'
+import { SourcePane } from './components/SourcePane'
 import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
+import { lintSlide } from './lib/pptxLint'
 import { useDeck, useKeyboardNav, useRegisterAction, useSlideScale } from './hooks'
 import { SlideBody } from './layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
@@ -153,6 +156,8 @@ export function App() {
   const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
   const [railCollapsed, setRailCollapsed] = useState(false)
   const [zoom, setZoom] = useState('fit')
+  const [showSource, setShowSource] = useState(false)
+  const [sourceVersion, setSourceVersion] = useState(0)
 
   useRegisterAction('deck:nav:prev', {
     app: 'readme-to-pitchdeck',
@@ -179,6 +184,22 @@ export function App() {
     const onHash = () => setView(viewFromHash())
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  const reloadAll = useCallback(() => {
+    reload()
+    setSourceVersion((value) => value + 1)
+  }, [reload])
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === '\\') {
+        event.preventDefault()
+        setShowSource((value) => !value)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   useKeyboardNav(deck?.slides.length ?? 0, index, go)
@@ -247,7 +268,7 @@ export function App() {
             <EditToolbar
               slide={slide}
               slideCount={deck.slides.length}
-              onChanged={reload}
+              onChanged={reloadAll}
               onPresent={() => {
                 setEditing(false)
                 setPendingEdit(null)
@@ -325,16 +346,18 @@ export function App() {
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
           <div className="relative flex min-h-0 flex-1">
+            {editing && showSource ? <SourcePane version={sourceVersion} onSaved={reloadAll} /> : null}
             {editing && !railCollapsed ? <SlideRail deck={deck} currentIndex={index} onSelect={go} /> : null}
-            <AssetDropZone slide={slide} enabled={editing} onChanged={reload}>
-              <EditContext.Provider value={{ editing, request: setPendingEdit }}>
+            {editing ? <OverflowBadge warnings={lintSlide(slide)} /> : null}
+            <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll}>
+              <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll }}>
                 <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
               </EditContext.Provider>
             </AssetDropZone>
-            {editing ? <Inspector slide={slide} onChanged={reload} /> : null}
+            {editing ? <Inspector slide={slide} onChanged={reloadAll} /> : null}
           </div>
           {pendingEdit ? (
-            <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reload} />
+            <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reloadAll} />
           ) : null}
           {showNotes ? (
             <aside aria-label="Speaker notes" className="border-t border-slate-800 px-6 py-3 text-sm text-slate-300">

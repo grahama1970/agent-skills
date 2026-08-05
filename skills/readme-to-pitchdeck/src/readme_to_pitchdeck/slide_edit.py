@@ -113,8 +113,12 @@ def apply_slide_edit(
                 updated = target.model_copy(update={"text": value})
             elif sub == "size":
                 updated = target.model_copy(update={"size_pt": float(value)})
+            elif sub == "bold":
+                updated = target.model_copy(update={"bold": value == "true"})
+            elif sub == "align":
+                updated = target.model_copy(update={"align": value})
             else:
-                raise ValueError(f"unknown element field '{sub}'; use frame|text|size")
+                raise ValueError(f"unknown element field '{sub}'; use frame|text|size|bold|align")
             elements = [updated if e.id == target.id else e for e in elements]
         updated_slide = slide.model_copy(update={"elements": elements})
     elif base_field == "visual" and index_part == "position":

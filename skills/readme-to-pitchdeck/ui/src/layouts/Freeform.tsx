@@ -1,5 +1,6 @@
 import { useContext, useState } from 'react'
 import { Rnd } from 'react-rnd'
+import { FloatingToolbar } from '../components/FloatingToolbar'
 import { EditContext } from '../edit'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiElement, type UiSlide } from '../types'
 
@@ -62,6 +63,8 @@ export function Freeform({ slide }: { slide: UiSlide }) {
   const { editing, request } = useContext(EditContext)
   const [error, setError] = useState<string | null>(null)
   const [frames, setFrames] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({})
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const { refresh } = useContext(EditContext)
 
   const save = (element: UiElement, frame: { x: number; y: number; w: number; h: number }) => {
     setFrames((prev) => ({ ...prev, [element.id]: frame }))
@@ -112,11 +115,20 @@ export function Freeform({ slide }: { slide: UiSlide }) {
             }
             className="group border border-dashed border-transparent hover:border-cyan-500/60"
           >
+            {selectedId === element.id ? (
+              <FloatingToolbar
+                slideId={slide.id}
+                element={element}
+                onChanged={() => refresh?.()}
+                onError={setError}
+              />
+            ) : null}
             <div
               data-qid={`deck:freeform:${slide.id}:${element.id}`}
               data-qs-action="DECK_FREEFORM_ELEMENT"
               title={`Drag or resize ${element.id}; double-click text to edit`}
               className="h-full w-full cursor-move"
+              onClick={() => setSelectedId(element.id)}
               onDoubleClick={() => {
                 if (element.type === 'text') {
                   request({

@@ -244,3 +244,22 @@ Before adding autonomous research or rewriting:
 - VERIFIED 2026-08-05: browser API drag of the title to (0.100, 0.050)
   produced a PPTX text box at exactly those fractions (Emu read-back);
   7 rnd handles live in DOM; 15/15 pytest.
+
+## Gemini design spec assessed + implemented (2026-08-05)
+
+- Phase 1 (bi-directional Markdown sync) REJECTED as written: their parser
+  regenerates slide ids per keystroke, drops claims/sources/geometry, commits
+  client state before validation (violating its own fail-closed directive),
+  and its layout regex is broken. ADAPTED to the real document model: dual-pane
+  YAML source editor (SourcePane, Ctrl+\ toggle) over deck.public.yaml via
+  GET/POST /api/source → source-edit CLI → schema + full bundle validation.
+  VERIFIED: source-pane title edit re-rendered the canvas; malformed YAML 422
+  with zero disk changes.
+- Phase 2 (floating toolbar) adapted to real element ops: bold/size±/align/
+  delete on the selected freeform element (element:<id>:bold|align added).
+- Phase 3 (visual layout picker): wireframe gallery for all 11 layouts
+  replaces the text dropdown in the inspector.
+- Phase 4 (live overflow lint): client-side advisory lint (bullets>5,
+  bullet>110 chars, title>60, freeform text density) mirroring the PPTX
+  builder's sizing thresholds; OverflowBadge overlay in edit mode. Advisory
+  only — server gates remain the authority.

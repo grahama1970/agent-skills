@@ -1,24 +1,11 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { UiSlide } from '../types'
+import { VisualLayoutPicker } from './VisualLayoutPicker'
 
 // Keynote-pattern selection-scoped inspector: properties of the CURRENT slide,
 // every change routed through /api/slide-edit → apply-edit → full fail-closed
 // bundle validation. No free-form styling: fonts/colors stay theme decisions.
-
-const LAYOUTS = [
-  'cover',
-  'statement',
-  'split',
-  'screenshot',
-  'flow',
-  'three_cards',
-  'proof_cards',
-  'roadmap',
-  'collaboration',
-  'appendix',
-  'freeform',
-]
 
 async function postEdit(slideId: string, field: string, value: string): Promise<string | null> {
   const response = await fetch('/api/slide-edit', {
@@ -73,25 +60,11 @@ export function Inspector({ slide, onChanged }: { slide: UiSlide; onChanged: () 
       ) : null}
 
       <section>
-        <label className={label} htmlFor="inspector-layout">
-          Layout
-        </label>
-        <select
-          id="inspector-layout"
-          data-qid="deck:inspector:layout"
-          data-qs-action="DECK_INSPECTOR_SET_LAYOUT"
-          title="Change slide layout"
-          value={slide.layout}
+        <VisualLayoutPicker
+          currentLayout={slide.layout}
           disabled={busyField === 'layout'}
-          onChange={(event) => void apply('layout', event.target.value)}
-          className={input}
-        >
-          {LAYOUTS.map((layout) => (
-            <option key={layout} value={layout}>
-              {layout.replace('_', ' ')}
-            </option>
-          ))}
-        </select>
+          onSelectLayout={(layoutId) => void apply('layout', layoutId)}
+        />
       </section>
 
       {slide.layout === 'freeform' ? (

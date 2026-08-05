@@ -296,6 +296,26 @@ def apply_edit(
         _abort(exc)
 
 
+@app.command(name="source-edit")
+def source_edit(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
+    source_file: Annotated[Path, typer.Option(help="File containing the edited deck manifest YAML.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Replace the deck manifest from edited YAML; full validation before writing."""
+    from .source_edit import apply_deck_source
+
+    try:
+        receipt = apply_deck_source(
+            bundle_dir, output_dir, source_yaml=source_file.read_text(encoding="utf-8"), deck_name=deck_name
+        )
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="asset-add")
 def asset_add(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

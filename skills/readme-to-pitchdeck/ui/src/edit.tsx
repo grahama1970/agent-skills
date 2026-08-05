@@ -11,6 +11,7 @@ export interface EditRequest {
 interface EditContextValue {
   editing: boolean
   request: (edit: EditRequest) => void
+  refresh?: () => void
 }
 
 export const EditContext = createContext<EditContextValue>({ editing: false, request: () => undefined })

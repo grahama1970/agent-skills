@@ -66,6 +66,61 @@ function slideEditApi(): Plugin {
           }
         })
       })
+      server.middlewares.use('/api/source', (req, res) => {
+        const receiptPath = `${publicDir}/emit_ui_receipt.json`
+        if (req.method === 'GET') {
+          try {
+            const receipt = JSON.parse(readFileSync(receiptPath, 'utf-8'))
+            const bundleDir = receipt?.outputs?.bundle_dir
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ yaml: readFileSync(`${bundleDir}/deck.public.yaml`, 'utf-8') }))
+          } catch (error) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: String(error) }))
+          }
+          return
+        }
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'GET or POST only' }))
+          return
+        }
+        const chunks: Buffer[] = []
+        req.on('data', (chunk: Buffer) => chunks.push(chunk))
+        req.on('end', () => {
+          try {
+            const { yaml: sourceYaml } = JSON.parse(Buffer.concat(chunks).toString('utf-8')) as { yaml?: string }
+            if (!sourceYaml) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'yaml is required' }))
+              return
+            }
+            const receipt = JSON.parse(readFileSync(receiptPath, 'utf-8'))
+            const bundleDir = receipt?.outputs?.bundle_dir
+            const tmpDir = mkdtempSync(join(tmpdir(), 'deck-source-'))
+            const tmpPath = join(tmpDir, 'deck.yaml')
+            writeFileSync(tmpPath, sourceYaml)
+            execFile(
+              `${skillRoot}/run.sh`,
+              ['source-edit', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--source-file', tmpPath, '--json'],
+              { timeout: 60_000 },
+              (error, stdout, stderr) => {
+                rmSync(tmpDir, { recursive: true, force: true })
+                res.setHeader('Content-Type', 'application/json')
+                if (error) {
+                  res.statusCode = 422
+                  res.end(JSON.stringify({ error: stderr.trim() || String(error) }))
+                  return
+                }
+                res.end(stdout)
+              },
+            )
+          } catch (error) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: String(error) }))
+          }
+        })
+      })
       server.middlewares.use('/api/asset-drop', (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405
