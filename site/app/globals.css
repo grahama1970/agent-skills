@@ -283,7 +283,9 @@ body {
 .glass-nav {
   position: sticky;
   top: 0;
-  z-index: 40;
+  /* Above all page content (mosaic tooltips z-100, card lifts); below the
+     drawer (999) and shortcuts modal (1001). */
+  z-index: 500;
   background: var(--t-paper);
   transition:
     background-color 200ms ease,

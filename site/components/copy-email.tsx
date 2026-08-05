@@ -25,11 +25,24 @@ export function CopyEmail() {
     }
   };
 
+  const onMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) * 0.15;
+    const y = (e.clientY - rect.top - rect.height / 2) * 0.15;
+    e.currentTarget.style.translate = `${x}px ${y}px`;
+  };
+  const onLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.currentTarget.style.translate = '0px 0px';
+  };
+
   return (
     <>
       <a
         href={`mailto:${EMAIL}`}
         onClick={onClick}
+        onMouseMove={onMove}
+        onMouseLeave={onLeave}
         data-qid="contact:action:email"
         data-qs-action="CONTACT_EMAIL"
         title={`Copy ${EMAIL} to clipboard`}
