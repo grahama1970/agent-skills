@@ -16,6 +16,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Optional
+from urllib.parse import urlparse
 
 import typer
 from loguru import logger
@@ -73,7 +74,33 @@ def _print_command(cmd: Iterable[str]) -> None:
     typer.echo(" ".join(shlex.quote(part) for part in cmd))
 
 
+def _normalize_repo(repo: Optional[str]) -> Optional[str]:
+    """Accept a local checkout path (e.g. ".") as well as OWNER/REPO.
+
+    gh only accepts [HOST/]OWNER/REPO, so a path is resolved through the
+    checkout's origin remote before being forwarded.
+    """
+    if not repo or not Path(repo).is_dir():
+        return repo
+    proc = _run(
+        ["git", "-C", repo, "remote", "get-url", "origin"],
+        capture=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise typer.BadParameter(
+            f"--repo {repo!r} is a directory without an 'origin' remote; pass OWNER/REPO"
+        )
+    url = proc.stdout.strip()
+    tail = url.split(":", 1)[-1] if url.startswith("git@") else urlparse(url).path
+    parts = [p for p in tail.split("/") if p]
+    if len(parts) < 2:
+        raise typer.BadParameter(f"cannot derive OWNER/REPO from remote url {url!r}")
+    return f"{parts[-2]}/{parts[-1].removesuffix('.git')}"
+
+
 def _repo_args(repo: Optional[str]) -> list[str]:
+    repo = _normalize_repo(repo)
     return ["--repo", repo] if repo else []
 
 
