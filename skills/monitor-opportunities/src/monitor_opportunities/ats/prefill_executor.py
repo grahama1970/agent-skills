@@ -73,7 +73,9 @@ def build_fill_script(rows: list[dict[str, str]]) -> str:
         "    use.call(el, row.value);\n"
         "    el.dispatchEvent(new Event('input', {bubbles: true}));\n"
         "    el.dispatchEvent(new Event('change', {bubbles: true}));\n"
-        "    out.push({name: row.name, state: el.value === row.value ? 'FILLED_VERIFIED' : 'FILL_MISMATCH', value: el.value});\n"
+        "    var ok = el.value === row.value ||\n"
+        "      (el.type === 'tel' && el.value.replace(/\\D/g, '') === row.value.replace(/\\D/g, ''));\n"
+        "    out.push({name: row.name, state: ok ? 'FILLED_VERIFIED' : 'FILL_MISMATCH', value: el.value});\n"
         "  }\n"
         "  return JSON.stringify(out);\n"
         "})()"
@@ -116,8 +118,17 @@ def execute_prefill(
         script_path = handle.name
     raw = _surf(surf_run, "js", "--tab-id", tab_id, "--file", script_path)
     results = json.loads(json.loads(raw))
+    # tab.new opens the tab active, so snap captures the prefilled form.
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
+        handle.write(
+            "(function(){var el=document.querySelector("
+            + json.dumps(rows[0]["selector"])
+            + "); if (el) { el.scrollIntoView({block: 'center'}); } return 'SCROLLED';})()"
+        )
+        scroll_path = handle.name
+    _surf(surf_run, "js", "--tab-id", tab_id, "--file", scroll_path)
+    _surf(surf_run, "wait", "1")
     screenshot = out_dir / f"prefill-{plan['provider']}-{plan['site']}-{plan['posting_id']}.png"
-    _surf(surf_run, "tab.activate", tab_id)
     _surf(surf_run, "snap", "--output", str(screenshot), timeout=120)
     if not keep_open:
         _surf(surf_run, "tab.close", tab_id)

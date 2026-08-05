@@ -133,6 +133,22 @@
   Note for cron: the Buzz step needs BUZZ_IDENTITY_KEY/BUZZ_RELAY_URL in
   the job environment; a Buzz failure is recorded in the nightly receipt
   but does not fail the run. Sanity 84 passed.
+- `ats_form_prefill:greenhouse:discord` promoted (Graham: "promote prefill
+  and build the executors") and PROVEN LIVE on discord/8433948002:
+  `ats-prefill` filled all 6 exact-approved fields in the real form
+  (React-safe setters, per-field DOM readback 6/6 FILLED_VERIFIED, tel
+  digits-normalized compare), screenshot shows the filled form, submit
+  never touched, tab left open for human completion. Receipt + screenshot
+  under `/tmp/monitor-opportunities-20260805T-permitted/ats-prefill/`.
+  Surf gotchas fixed en route: `tab.activate` is listed in help but not
+  implemented (tab.new opens active; executor no longer calls it), and
+  the prefill run queues on the shared browser lease when another lane
+  (e.g. a roundtable) holds it — wait, do not kill.
+- `ats-submit` adapter exists (`ats/submit_executor.py`) but only runs
+  through `commit_application`: site `ats_form_submit` promotion +
+  per-application exact-payload human authorization + zero unresolved
+  required fields; ambiguous outcomes are INDETERMINATE for the
+  reconciliation gate. Not yet exercised live. Sanity 89 passed.
 
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`
