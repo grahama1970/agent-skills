@@ -92,6 +92,80 @@ def form_from_greenhouse_job(board: str, job: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def form_from_dom_capture(
+    board: str,
+    job_id: str,
+    url: str,
+    dom_rows: list[dict[str, Any]],
+    api_questions: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Map a read-only browser DOM capture to the neutral form shape.
+
+    The rendered application form is the authoritative surface: it carries
+    required fields (country, location, demographic selects) that the
+    job-board API omits. Rows come from a surf read-only element query:
+    {tag, type, id, aria, label, required}.
+    """
+
+    api_types: dict[str, list[str]] = {}
+    for question in api_questions or []:
+        api_label = str(question.get("label") or "").strip()
+        if api_label:
+            api_types[api_label] = [str(item.get("type") or "") for item in question.get("fields", [])]
+    fields = []
+    accepted_attachments = []
+    seen: set[str] = set()
+    for row in dom_rows:
+        label = str(row.get("aria") or row.get("label") or "").rstrip("*").strip()
+        element_id = row.get("id") or ""
+        if not label or label in seen or element_id.endswith("__search-input"):
+            continue
+        seen.add(label)
+        input_type = str(row.get("type") or "")
+        tag = str(row.get("tag") or "")
+        # Greenhouse renders selects/autocompletes as text inputs backed by
+        # listboxes; only these ids are true free-text inputs.
+        free_input = element_id in {"first_name", "last_name", "email", "phone", "candidate-location"} or element_id.startswith("question_")
+        if label in api_types:
+            # The API knows the true input kind (e.g. a choice rendered as a
+            # text input); the DOM stays authoritative for the field set.
+            input_types = api_types[label]
+        elif input_type == "file":
+            input_types = ["input_file"]
+        elif tag == "textarea":
+            input_types = ["textarea"]
+        elif tag == "select" or not free_input:
+            input_types = ["multi_value_single_select"]
+        else:
+            input_types = ["input_text"]
+        field_type = _field_type(label, input_types)
+        fields.append(
+            {
+                "name": label,
+                "field_type": field_type,
+                "required": bool(row.get("required")),
+                "options": [],
+                "selector": f"#{element_id}" if element_id else None,
+            }
+        )
+        if field_type == "file":
+            accepted_attachments.append(label)
+    if not fields:
+        raise GreenhouseFormError("GREENHOUSE_DOM_CAPTURE_EMPTY")
+    return {
+        "provider": "greenhouse",
+        "site": board,
+        "posting_id": str(job_id),
+        "url": url,
+        "fields": fields,
+        "accepted_attachments": accepted_attachments,
+        "policy_observations": [
+            "Captured read-only from the rendered application form DOM (authoritative surface); no form write.",
+            "Job-board API questions payload is advisory only: the DOM carries required fields the API omits.",
+        ],
+    }
+
+
 def fetch_greenhouse_form(board: str, job_id: str, client: httpx.Client | None = None) -> dict[str, Any]:
     """Fetch one posting's questions and return the neutral form shape."""
 

@@ -11,6 +11,7 @@ import pytest
 from monitor_opportunities.application_plan import ApplicationGateError, inspect_ats_form
 from monitor_opportunities.ats.greenhouse import (
     GreenhouseFormError,
+    form_from_dom_capture,
     form_from_greenhouse_job,
 )
 
@@ -72,3 +73,45 @@ def test_inspect_fails_closed_on_wrong_site_scope() -> None:
 def test_incomplete_payload_fails_closed() -> None:
     with pytest.raises(GreenhouseFormError):
         form_from_greenhouse_job("discord", {"id": 1})
+
+
+DOM_FIXTURE = Path("skills/monitor-opportunities/tests/fixtures/ats/greenhouse_discord_8433948002_dom.json")
+
+
+def _dom_form() -> dict:
+    rows = json.loads(DOM_FIXTURE.read_text(encoding="utf-8"))
+    return form_from_dom_capture(
+        "discord", "8433948002", "https://job-boards.greenhouse.io/discord/jobs/8433948002",
+        rows, api_questions=_job()["questions"],
+    )
+
+
+def test_dom_capture_is_authoritative_for_field_set() -> None:
+    form = _dom_form()
+    names = {field["name"] for field in form["fields"]}
+    # Required fields the job-board API omits entirely:
+    assert "Country" in names
+    assert "Location (City)" in names
+    assert "Gender" in names
+
+
+def test_dom_demographic_fields_classify_human_required() -> None:
+    inspection = inspect_ats_form(_dom_form(), _policy())
+    by_name = {field["name"]: field for field in inspection["fields"]}
+    assert by_name["Gender"]["field_type"] == "self_identification"
+    assert by_name["Gender"]["classification"] == "human_required"
+
+
+def test_dom_choice_rendered_as_text_input_uses_api_type() -> None:
+    inspection = inspect_ats_form(_dom_form(), _policy())
+    by_name = {field["name"]: field for field in inspection["fields"]}
+    located = by_name["Are you currently located in the US?"]
+    assert located["field_type"] == "choice"
+    assert located["classification"] == "human_required"
+
+
+def test_dom_fields_carry_selectors() -> None:
+    form = _dom_form()
+    by_name = {field["name"]: field for field in form["fields"]}
+    assert by_name["First Name"]["selector"] == "#first_name"
+    assert by_name["Phone"]["selector"] == "#phone"

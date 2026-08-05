@@ -110,6 +110,17 @@
   `ats_form_prefill:greenhouse:discord` promotion: browser-prefill the six
   fillable fields with screenshot receipt; Graham completes the rest and
   transmits.
+- Course correction (Graham, 2026-08-05): the rendered DOM is the
+  authoritative inspect surface, not the job-board API — the live form
+  requires Country, Location (City), and demographic selects the API
+  omits. `form_from_dom_capture` now builds the canonical form from a
+  surf read-only DOM query (API refines input kinds where labels match);
+  inspections and plans for all three Discord postings were rebuilt from
+  DOM (new digests; demographic fields human_required). Selector
+  knowledge is stored ahead of any apply attempt: provider-stable core
+  ids in `config/ats_selectors/greenhouse.json` (repo), per-posting
+  `question_*` bindings in memory `ats_selector_bindings` (digest-bound,
+  Qdrant-synced, recallable). Sanity 81 passed.
 
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`
