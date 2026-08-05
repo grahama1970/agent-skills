@@ -308,6 +308,10 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.nightly "$@"
         ;;
+    team-plan)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.team_plan_cli "$@"
+        ;;
     tau-dag)
         shift
         case "${1:-run}" in

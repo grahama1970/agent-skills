@@ -1,0 +1,145 @@
+"""Role-based project-team planning CLI for /ask (agent-skills#1220).
+
+`ask team-plan "build a settings dashboard with a Python API, React UI, docs,
+and tests" --team fullstack-premium` renders an editable ``ask.project_plan.v1``
+and compiles it into a frozen ``tau.generic_dag_spec.v1`` preview. The user
+thinks in deliverables and teams; roles map to SciLLM transport profiles via
+team presets, and Tau owns execution. Planning is deterministic — no model
+call — and a request whose workstreams cannot be inferred fails closed to
+NEEDS_INTERVIEW with the missing fields named.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import tempfile
+from pathlib import Path
+from typing import Any, Optional
+
+import typer
+
+from ask.project_plan import SCHEMA_ID, validate_project_plan
+from ask.project_plan_to_tau import (
+    TEAM_PRESETS,
+    compile_plan_to_tau_spec,
+    heterogeneous_profile_count,
+    resolve_role_profiles,
+)
+
+app = typer.Typer(help="Render role-based team plans and compile them into Tau DAG specs.")
+
+# Deterministic keyword → role inference. Deliberately simple: anything the
+# rules cannot infer becomes an /interview question instead of a model guess.
+ROLE_PATTERNS: list[tuple[str, str, str]] = [
+    (r"\bapi\b|\bbackend\b|\bpython\b|\bserver\b|\bendpoint", "backend", "api"),
+    (r"\bui\b|\breact\b|\bfrontend\b|\bdashboard\b|\bscreen", "frontend", "ui"),
+    (r"\bdocs?\b|\bdocumentation\b|\breadme\b", "documentation", "docs"),
+    (r"\btests?\b|\btesting\b|\bcoverage\b", "testing", "tests"),
+]
+
+
+def render_team_plan(request: str, *, repo: str, team: str) -> dict[str, Any]:
+    """Deterministically render a request into ask.project_plan.v1."""
+    low = request.lower()
+    workstreams: list[dict[str, Any]] = [
+        {"id": "coordinator", "role": "coordinator", "prompt": f"Plan and delegate: {request}"}
+    ]
+    worker_ids: list[str] = []
+    for pattern, role, ws_id in ROLE_PATTERNS:
+        if re.search(pattern, low):
+            workstreams.append({"id": ws_id, "role": role, "depends_on": ["coordinator"]})
+            worker_ids.append(ws_id)
+    if worker_ids:
+        workstreams.append(
+            {"id": "review", "role": "independent_reviewer", "depends_on": list(worker_ids)}
+        )
+    return {
+        "schema": SCHEMA_ID,
+        "goal": request,
+        "target": {"repo": repo},
+        "deliverables": [
+            {"name": ws["id"], "acceptance_criteria": [f"{ws['id']} workstream accepted by the independent reviewer"]}
+            for ws in workstreams
+            if ws["role"] not in ("coordinator", "independent_reviewer")
+        ]
+        or [{"name": "outcome", "acceptance_criteria": ["accepted by reviewer"]}],
+        "workstreams": workstreams,
+        "team": {"preset": team},
+        "execution": {"topology": "hybrid", "max_concurrency": 3, "max_retries": 1},
+        "unresolved": [] if worker_ids else ["workstreams"],
+    }
+
+
+@app.command("plan")
+def plan(
+    request: str = typer.Argument(..., help="Natural-language project request."),
+    team: str = typer.Option("fullstack-premium", "--team", help=f"Team preset: {sorted(TEAM_PRESETS)}"),
+    repo: str = typer.Option("grahama1970/agent-skills", "--repo", "-R"),
+    out: Optional[Path] = typer.Option(None, "--out", help="Directory to write plan + spec."),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Render the plan, compile the frozen Tau spec, and print a preview."""
+    plan_payload = render_team_plan(request, repo=repo, team=team)
+    if plan_payload["unresolved"]:
+        result = {
+            "schema": "ask.team_plan_result.v1",
+            "status": "NEEDS_INTERVIEW",
+            "unresolved": plan_payload["unresolved"],
+            "questions": [
+                {
+                    "field": "workstreams",
+                    "question": "Which workstreams (backend/frontend/docs/tests) should this project include?",
+                    "required": True,
+                }
+            ],
+            "plan": plan_payload,
+        }
+        typer.echo(json.dumps(result, indent=2))
+        raise typer.Exit(2)
+
+    ok, errors = validate_project_plan(plan_payload)
+    if not ok:
+        typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": errors}, indent=2))
+        raise typer.Exit(2)
+
+    run_dir = out or Path(tempfile.mkdtemp(prefix="ask-team-plan-"))
+    spec = compile_plan_to_tau_spec(plan_payload, run_id="team-plan-preview", run_dir=run_dir)
+    if out:
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "project-plan.json").write_text(json.dumps(plan_payload, indent=2), encoding="utf-8")
+        (out / "dag-spec.json").write_text(json.dumps(spec, indent=2), encoding="utf-8")
+
+    profiles = resolve_role_profiles(plan_payload)
+    result = {
+        "schema": "ask.team_plan_result.v1",
+        "status": "READY",
+        "goal": request,
+        "team": team,
+        "agents": [
+            {
+                "id": n["node_id"],
+                "role": n["role"],
+                "profile": n["tau_agent"]["model"],
+                "depends_on": n["depends_on"],
+            }
+            for n in spec["nodes"]
+        ],
+        "heterogeneous_profiles": heterogeneous_profile_count(spec),
+        "spec_sha256": spec["extensions"]["spec_sha256"],
+        "written": {"plan": str(out / "project-plan.json"), "spec": str(out / "dag-spec.json")} if out else None,
+        "execution_note": "Preview only; submit to Tau for execution (Tau owns scheduling, receipts, settlement).",
+    }
+    if as_json:
+        typer.echo(json.dumps(result, indent=2))
+    else:
+        typer.echo(json.dumps(result, indent=2))
+    _ = profiles
+
+
+def main() -> None:
+    app()
+
+
+if __name__ == "__main__":
+    main()
