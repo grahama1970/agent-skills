@@ -7,7 +7,8 @@
   "Location (City)": "Buffalo, New York, United States",
   "Are you currently based in or willing to relocate to the Bay Area for this position?": "No",
   "Are you currently based in the SF Bay Area?": "No",
-  "If not in the SF Bay area, are you open to relocating to the SF Bay Area for this position?": "No"
+  "If not in the SF Bay area, are you open to relocating to the SF Bay Area for this position?": "No",
+  "Are you legally authorized to work in the United States for our Company?": "Yes"
  },
  "workplace_preference": "hybrid or remote, based in Buffalo NY",
  "not_yet_provided": [
@@ -15,5 +16,18 @@
   "EEO self-identification choices",
   "Why-<company> free-text template"
  ],
- "note": "Relocation answers are No per Buffalo-first eligibility policy; roles that hard-require relocation should be REJECTED before apply, not answered around."
+ "note": "Relocation answers are No per Buffalo-first eligibility policy; roles that hard-require relocation should be REJECTED before apply, not answered around.",
+ "human_declarations_2026_08_05": {
+  "work_authorization": "Yes \u2014 US citizen (Graham, verbatim: 'yes. I am a US citzen.')",
+  "gender": "Male",
+  "race_ethnicity": "White/Caucasian",
+  "veteran_status": "I am not a protected veteran",
+  "disability_status": "NOT PROVIDED \u2014 do not guess; ask Graham",
+  "note": "EEO selects are custom listbox widgets; driving them at prefill requires the human-declared-answers channel (separate from standing choice answers) and listbox UI support in the executor."
+ },
+ "why_company_policy": {
+  "owner": "agent",
+  "method": "claim-bound draft from approved claims + posting text + brave-search of the company; presented in the open tab for Graham's edit before submit",
+  "authorized": "Graham 2026-08-05: 'this is your domain'"
+ }
 }
