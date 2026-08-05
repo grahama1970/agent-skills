@@ -1,0 +1,54 @@
+# Tailored resume artifact gates (no PDF render, no network).
+"""Behavioral gates for claim-bound variant markdown composition."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from monitor_opportunities.resume_artifact import (
+    ResumeArtifactError,
+    approved_wordings,
+    build_variant_markdown,
+)
+
+CLAIMS = Path("skills/monitor-opportunities/tests/fixtures/claims/approved-claims.json")
+
+
+def _snapshot() -> dict:
+    return json.loads(CLAIMS.read_text(encoding="utf-8"))
+
+
+def _first_key() -> str:
+    return _snapshot()["claims"][0]["claim_key"]
+
+
+def test_variant_adds_only_approved_wordings() -> None:
+    wordings = approved_wordings(_snapshot(), [_first_key()])
+    base = "# Graham Anderson\n\nExperience...\n"
+    variant = build_variant_markdown(base, {"title": "Role", "organization": "Org"}, wordings)
+    added = [
+        line for line in variant[len(base):].splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+    approved = {row["text"] for row in wordings}
+    assert added and all(line.lstrip("- ").strip() in approved for line in added)
+
+
+def test_base_resume_content_is_preserved_verbatim() -> None:
+    wordings = approved_wordings(_snapshot(), [_first_key()])
+    base = "# Graham Anderson\n\nExperience...\n"
+    variant = build_variant_markdown(base, {"title": "Role", "organization": "Org"}, wordings)
+    assert variant.startswith(base.rstrip())
+
+
+def test_unapproved_claim_fails_closed() -> None:
+    with pytest.raises(ResumeArtifactError, match="UNAPPROVED_CLAIM"):
+        approved_wordings(_snapshot(), ["claim:not-a-real-claim"])
+
+
+def test_empty_claim_selection_fails_closed() -> None:
+    with pytest.raises(ResumeArtifactError, match="NO_CLAIMS_SELECTED"):
+        approved_wordings(_snapshot(), [])

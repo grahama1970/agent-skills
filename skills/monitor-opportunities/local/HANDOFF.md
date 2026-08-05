@@ -159,6 +159,16 @@
   per-opportunity tailored variants via the resume repo exporter, and
   surf file-upload for the Greenhouse `#resume` input (js cannot set
   file inputs).
+- Tailored resume artifacts live: `tailor-artifact` composes the ATS base
+  resume plus a claim-bound targeted-highlights section (only approved
+  claim wordings may be added; tests enforce it), renders PDF through the
+  resume repo exporter (`resume-job pdf`; input is positional). All five
+  shortlisted opportunities rendered with unique digests; the three
+  Discord plans now bind their opportunity-specific tailored PDF as
+  resume_digest/attachment_digests. Sanity 93 passed. Remaining toward
+  the immutable goal: screening-profile-driven keyword shaping inside the
+  variant, surf file upload at prefill, source-registry breadth, nightly
+  wiring of inspect/plan/tailor, and first authorized submit.
 
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`

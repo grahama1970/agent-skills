@@ -54,6 +54,7 @@ IMPLEMENTED = [
     "ats-inspect",
     "ats-prefill",
     "base-resume",
+    "tailor-artifact",
     "memory-sync",
     "nightly",
 ]
@@ -428,6 +429,35 @@ def buzz_summary(
     except ContractError as exc:
         _fail(exc)
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+
+
+@app.command("tailor-artifact")
+def tailor_artifact_command(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+    opportunity_id: str = typer.Option(..., "--opportunity", help="opportunity_id from the run report."),
+    out: Path | None = typer.Option(None, "--out", file_okay=False),
+) -> None:
+    """Render one claim-bound tailored resume PDF for one shortlisted opportunity."""
+    _configure_logging()
+    from .resume_artifact import ResumeArtifactError, tailor_artifact
+
+    skill_dir = Path(__file__).resolve().parents[2]
+    report_data = read_json(run / "report" / "report.json")
+    opportunity = next(
+        (item for item in report_data.get("opportunities", []) if item["opportunity_id"] == opportunity_id),
+        None,
+    )
+    if opportunity is None:
+        _fail(ContractError("OPPORTUNITY_NOT_IN_RUN", opportunity_id))
+    try:
+        receipt = tailor_artifact(
+            skill_dir=skill_dir,
+            opportunity=opportunity,
+            out_dir=out or (run / "resume-artifacts"),
+        )
+    except ResumeArtifactError as exc:
+        _fail(ContractError("TAILOR_ARTIFACT_REJECTED", str(exc)))
+    typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
 
 @app.command("base-resume")
