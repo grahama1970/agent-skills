@@ -52,6 +52,7 @@ IMPLEMENTED = [
     "buzz-review",
     "buzz-summary",
     "ats-inspect",
+    "ats-prefill",
     "memory-sync",
     "nightly",
 ]
@@ -426,6 +427,38 @@ def buzz_summary(
     except ContractError as exc:
         _fail(exc)
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+
+
+@app.command("ats-prefill")
+def ats_prefill(
+    plan: Path = typer.Option(..., "--plan", exists=True, dir_okay=False, readable=True),
+    site_policy: Path = typer.Option(..., "--site-policy", exists=True, dir_okay=False, readable=True),
+    out: Path = typer.Option(..., "--out", file_okay=False),
+    close_tab: bool = typer.Option(False, "--close-tab", help="Close the tab instead of leaving it for human completion."),
+) -> None:
+    """Prefill exact-approved fields on the live form; submit is never touched.
+
+    Selectors ride inside the plan fields (same DOM capture the plan digest is
+    built from); the ats_selector_bindings memory collection is the recapture
+    reference, not a runtime dependency.
+    """
+    _configure_logging()
+    from .ats.prefill_executor import PrefillError, execute_prefill
+
+    plan_data = read_json(plan)
+    out.mkdir(parents=True, exist_ok=True)
+    try:
+        receipt = execute_prefill(
+            plan=plan_data,
+            bindings={},
+            policy=read_json(site_policy),
+            binding_digest=None,
+            out_dir=out,
+            keep_open=not close_tab,
+        )
+    except PrefillError as exc:
+        _fail(ContractError("ATS_PREFILL_REJECTED", str(exc)))
+    typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
 
 @app.command("memory-sync")

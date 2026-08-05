@@ -197,13 +197,16 @@ def _require_policy(policy: dict[str, Any] | None, capability: str, form: dict[s
 def _classify_field(field: dict[str, Any]) -> dict[str, Any]:
     field_type = field["field_type"]
     disposition = "human_required" if field_type in HUMAN_REQUIRED_FIELD_TYPES or field.get("ambiguous") else "fillable"
-    return {
+    classified = {
         "name": field["name"],
         "field_type": field_type,
         "required": bool(field.get("required", False)),
         "options": field.get("options", []),
         "classification": disposition,
     }
+    if field.get("selector"):
+        classified["selector"] = field["selector"]
+    return classified
 
 
 def _planned_field(field: dict[str, Any], answers: dict[str, Any]) -> dict[str, Any]:
