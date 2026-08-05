@@ -22,8 +22,8 @@
   "gender": "Male",
   "race_ethnicity": "White/Caucasian",
   "veteran_status": "I am not a protected veteran",
-  "disability_status": "NOT PROVIDED \u2014 do not guess; ask Graham",
-  "note": "EEO selects are custom listbox widgets; driving them at prefill requires the human-declared-answers channel (separate from standing choice answers) and listbox UI support in the executor."
+  "disability_status": "No \u2014 not disabled (Graham, verbatim: 'I am no disabled'). Map to the EEO option 'No, I do not have a disability' (exact option text per form).",
+  "note": "All four EEO declarations now provided. EEO selects are custom listbox widgets; driving them at prefill requires the human-declared-answers channel and combobox support in the executor (in progress)."
  },
  "why_company_policy": {
   "owner": "agent",
