@@ -210,9 +210,18 @@ def _classify_field(field: dict[str, Any]) -> dict[str, Any]:
 
 
 def _planned_field(field: dict[str, Any], answers: dict[str, Any]) -> dict[str, Any]:
-    if field["classification"] == "human_required":
-        return {**field, "disposition": "human_required", "automated_answer": None}
     answer = answers.get(field["name"])
+    if field["classification"] == "human_required":
+        # Sensitive and free-text stay human-required unconditionally
+        # (product decision #10). A plain choice field may resolve from a
+        # standing approved answer, but only on an exact option match.
+        if (
+            field["field_type"] == "choice"
+            and answer is not None
+            and any(str(answer).strip().lower() == str(option).strip().lower() for option in field.get("options", []))
+        ):
+            return {**field, "disposition": "exact_approved_answer", "automated_answer": str(answer)}
+        return {**field, "disposition": "human_required", "automated_answer": None}
     if answer is None:
         return {**field, "disposition": "human_required", "automated_answer": None}
     return {**field, "disposition": "exact_approved_answer", "automated_answer": str(answer)}

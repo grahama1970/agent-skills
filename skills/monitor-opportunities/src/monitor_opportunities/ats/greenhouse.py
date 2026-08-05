@@ -108,10 +108,16 @@ def form_from_dom_capture(
     """
 
     api_types: dict[str, list[str]] = {}
+    api_options: dict[str, list[str]] = {}
     for question in api_questions or []:
         api_label = str(question.get("label") or "").strip()
         if api_label:
             api_types[api_label] = [str(item.get("type") or "") for item in question.get("fields", [])]
+            api_options[api_label] = [
+                str(value.get("label"))
+                for item in question.get("fields", [])
+                for value in item.get("values", []) or []
+            ]
     fields = []
     accepted_attachments = []
     seen: set[str] = set()
@@ -144,7 +150,7 @@ def form_from_dom_capture(
                 "name": label,
                 "field_type": field_type,
                 "required": bool(row.get("required")),
-                "options": [],
+                "options": api_options.get(label, []),
                 "selector": f"#{element_id}" if element_id else None,
             }
         )

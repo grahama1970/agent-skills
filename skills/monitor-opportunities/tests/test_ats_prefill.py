@@ -79,3 +79,32 @@ def test_fill_script_targets_only_fillable_fields_and_never_submit() -> None:
     assert "#why" not in script
     assert "submit" not in script.lower()
     assert "click" not in script.lower()
+
+
+def test_choice_field_resolves_from_standing_answer_on_exact_option_match() -> None:
+    from monitor_opportunities.application_plan import _planned_field
+
+    field = {"name": "Are you currently located in the US?", "field_type": "choice",
+             "required": True, "options": ["Yes", "No"], "classification": "human_required"}
+    planned = _planned_field(field, {"Are you currently located in the US?": "Yes"})
+    assert planned["disposition"] == "exact_approved_answer"
+    assert planned["automated_answer"] == "Yes"
+
+
+def test_choice_field_without_matching_option_stays_human_required() -> None:
+    from monitor_opportunities.application_plan import _planned_field
+
+    field = {"name": "Office preference", "field_type": "choice",
+             "required": True, "options": ["SF", "NY"], "classification": "human_required"}
+    planned = _planned_field(field, {"Office preference": "Buffalo"})
+    assert planned["disposition"] == "human_required"
+
+
+def test_sensitive_field_never_resolves_from_answers() -> None:
+    from monitor_opportunities.application_plan import _planned_field
+
+    field = {"name": "Gender", "field_type": "self_identification",
+             "required": True, "options": ["Male", "Female"], "classification": "human_required"}
+    planned = _planned_field(field, {"Gender": "Male"})
+    assert planned["disposition"] == "human_required"
+    assert planned["automated_answer"] is None

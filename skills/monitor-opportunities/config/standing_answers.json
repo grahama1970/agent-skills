@@ -1,0 +1,19 @@
+{
+ "schema": "monitor_opportunities.standing_answers.v1",
+ "provenance": "Graham, session 2026-08-05: \"US located, hybrid or remote, based in Buffalo NY\"",
+ "answers": {
+  "Are you currently located in the US?": "Yes",
+  "Country": "United States",
+  "Location (City)": "Buffalo, New York, United States",
+  "Are you currently based in or willing to relocate to the Bay Area for this position?": "No",
+  "Are you currently based in the SF Bay Area?": "No",
+  "If not in the SF Bay area, are you open to relocating to the SF Bay Area for this position?": "No"
+ },
+ "workplace_preference": "hybrid or remote, based in Buffalo NY",
+ "not_yet_provided": [
+  "work authorization declaration",
+  "EEO self-identification choices",
+  "Why-<company> free-text template"
+ ],
+ "note": "Relocation answers are No per Buffalo-first eligibility policy; roles that hard-require relocation should be REJECTED before apply, not answered around."
+}
