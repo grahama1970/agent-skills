@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle } from './types'
 
 /** Load the emitted deck bundle. Refuses bundles without a seam_validation PASS stamp. */
-export function useDeck(): { deck: UiDeckBundle | null; error: string | null } {
+export function useDeck(): { deck: UiDeckBundle | null; error: string | null; reload: () => void } {
   const [deck, setDeck] = useState<UiDeckBundle | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [version, setVersion] = useState(0)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const url = params.get('deck') ?? './deck.data.json'
-    fetch(url)
+    fetch(`${url}${url.includes('?') ? '&' : '?'}v=${version}`, { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`)
         return res.json() as Promise<UiDeckBundle>
@@ -18,10 +19,12 @@ export function useDeck(): { deck: UiDeckBundle | null; error: string | null } {
           throw new Error('deck bundle is missing its seam_validation PASS stamp; re-run `run.sh emit-ui`')
         }
         setDeck(bundle)
+        setError(null)
       })
       .catch((err: Error) => setError(err.message))
-  }, [])
-  return { deck, error }
+  }, [version])
+  const reload = useCallback(() => setVersion((value) => value + 1), [])
+  return { deck, error, reload }
 }
 
 /** Scale a fixed 1920x1080 canvas to fit its container (open-slide convention). */

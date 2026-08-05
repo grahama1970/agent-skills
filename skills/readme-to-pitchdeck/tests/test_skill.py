@@ -448,3 +448,43 @@ def test_emit_ui_bundle_fails_closed_on_validation_errors(tmp_path: Path) -> Non
             output_dir=tmp_path / "ui",
         )
     assert not (tmp_path / "ui" / "deck.data.json").exists()
+
+
+def test_apply_slide_edit_positive_and_fail_closed(tmp_path: Path) -> None:
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+
+    from readme_to_pitchdeck.slide_edit import apply_slide_edit
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    slide = deck.slides[1]
+    out = tmp_path / "ui"
+
+    receipt = apply_slide_edit(
+        planned, out, slide_id=slide.id, field="title", value="An edited, bounded title"
+    )
+    assert receipt.seam_validation.kind == "slide_edit_receipt"
+    edited = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert edited.slides[1].title == "An edited, bounded title"
+    assert (out / "deck.data.json").exists()
+
+    # Fail closed: an over-length title is rejected and nothing changes.
+    before = (planned / "deck.public.yaml").read_text()
+    with pytest.raises(Exception):
+        apply_slide_edit(planned, out, slide_id=slide.id, field="title", value="x" * 200)
+    assert (planned / "deck.public.yaml").read_text() == before
+
+    # Fail closed: forbidden unqualified phrase in visible text is rejected.
+    forbidden = source.policy.forbidden_unqualified_claims
+    if forbidden:
+        with pytest.raises(Exception):
+            apply_slide_edit(
+                planned, out, slide_id=slide.id, field="message", value=f"We are {forbidden[0]}."
+            )
+        assert (planned / "deck.public.yaml").read_text().count("An edited, bounded title") == 1
+
+    # Non-editable fields are refused.
+    with pytest.raises(ValueError, match="not editable"):
+        apply_slide_edit(planned, out, slide_id=slide.id, field="claim_ids", value="x")

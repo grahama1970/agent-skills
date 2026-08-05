@@ -218,7 +218,10 @@ def emit_ui_bundle(
         mocked=False,
         live=False,
         inputs={"deck_id": deck.deck.id, "slides": str(len(ui_slides))},
-        outputs={"deck_data": str((output_dir / "deck.data.json").resolve())},
+        outputs={
+            "deck_data": str((output_dir / "deck.data.json").resolve()),
+            "bundle_dir": str(asset_manifest_dir.resolve()),
+        },
         counts={
             "slides": len(ui_slides),
             "claims": len(claim_ledger.claims),

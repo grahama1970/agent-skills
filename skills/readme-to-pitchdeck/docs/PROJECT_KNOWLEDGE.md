@@ -157,3 +157,21 @@ Before adding autonomous research or rewriting:
 - Google Slides visual handoff: `NOT_ESTABLISHED` until a generated deck is imported and
   reviewed there.
 - Automated factual verification against a codebase: `NOT_IMPLEMENTED`.
+
+## In-browser slide editing (added 2026-08-05)
+
+- Edit mode (pencil toggle) makes slide title/message/body bullets clickable
+  (`deck:edit:<slide>:<field>` qids); an edit panel POSTs /api/slide-edit →
+  Vite dev middleware → `run.sh apply-edit` → `slide_edit.py`. The edit is
+  applied IN MEMORY, the full emit_ui_bundle validation re-runs, and only on
+  PASS are deck.public.yaml and deck.data.json rewritten together. bundle_dir
+  comes from emit_ui_receipt.json server-side, never from the client.
+- Editable: title, message, notes, footer, body:<index>. Not editable via UI:
+  claim ids, visibility, sources, layout (ledger/manifest decisions).
+- VERIFIED live 2026-08-05: browser edit of 01-cover title persisted to YAML
+  and re-rendered; forbidden-phrase edit ("production-ready and fully
+  validated") rejected with FORBIDDEN_UNQUALIFIED_CLAIM and zero disk changes;
+  over-length title rejected by pydantic (pytest). Screenshot:
+  /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/ui-edit-mode.png
+- Edit API is dev-server-only by design; a production deployment needs an
+  authenticated equivalent before exposing writes.

@@ -1,7 +1,8 @@
-import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, Pencil, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
+import { EditContext, type EditRequest } from './edit'
 import { useDeck, useKeyboardNav, useRegisterAction, useSlideScale } from './hooks'
 import { SlideBody } from './layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
@@ -55,12 +56,96 @@ function Overview({ deck, onSelect }: { deck: UiDeckBundle; onSelect: (index: nu
   )
 }
 
+function EditPanel({
+  edit,
+  onClose,
+  onSaved,
+}: {
+  edit: EditRequest
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [value, setValue] = useState(edit.value)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const save = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/slide-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slide_id: edit.slideId, field: edit.field, value }),
+      })
+      const data = (await response.json()) as { error?: string }
+      if (!response.ok) throw new Error(data.error ?? `edit failed (${response.status})`)
+      onSaved()
+      onClose()
+    } catch (err) {
+      setError(String(err instanceof Error ? err.message : err))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section
+      aria-label={`Edit ${edit.label}`}
+      className="border-t border-cyan-800/60 bg-slate-900/95 px-6 py-4"
+    >
+      <p className="m-0 mb-2 text-xs text-slate-400">
+        Editing <span className="font-mono text-cyan-300">{edit.slideId}</span> · {edit.label}. Saving re-runs the
+        fail-closed bundle validation; a rejected edit changes nothing.
+      </p>
+      <textarea
+        data-qid="deck:edit:panel:value"
+        title={`New text for ${edit.label}`}
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        rows={3}
+        className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm text-slate-100"
+      />
+      {error ? (
+        <p role="alert" className="m-0 mt-2 rounded-lg border border-rose-500/50 bg-rose-500/10 p-2 text-xs text-rose-300">
+          Rejected by validation: {error}
+        </p>
+      ) : null}
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          data-qid="deck:edit:panel:save"
+          data-qs-action="DECK_EDIT_SAVE"
+          title="Save edit through bundle validation"
+          disabled={saving || value === edit.value}
+          onClick={() => void save()}
+          className="cursor-pointer rounded-lg border border-cyan-600 bg-cyan-600/20 px-3 py-1.5 text-sm text-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {saving ? 'Validating…' : 'Save'}
+        </button>
+        <button
+          type="button"
+          data-qid="deck:edit:panel:cancel"
+          data-qs-action="DECK_EDIT_CANCEL"
+          title="Cancel edit"
+          onClick={onClose}
+          className="cursor-pointer rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </section>
+  )
+}
+
 export function App() {
-  const { deck, error } = useDeck()
+  const { deck, error, reload } = useDeck()
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState<'fwd' | 'back'>('fwd')
   const [view, setView] = useState<View>(viewFromHash)
   const [showNotes, setShowNotes] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
 
   useRegisterAction('deck:nav:prev', {
     app: 'readme-to-pitchdeck',
@@ -145,6 +230,20 @@ export function App() {
           </button>
           <button
             type="button"
+            data-qid="deck:view:edit"
+            data-qs-action="DECK_TOGGLE_EDIT_MODE"
+            title="Toggle edit mode — click any slide text to change it"
+            aria-pressed={editing}
+            onClick={() => {
+              setEditing((value) => !value)
+              setPendingEdit(null)
+            }}
+            className={`${navButton} ${editing ? 'border-cyan-500/80 text-cyan-200' : ''}`}
+          >
+            <Pencil aria-hidden className="h-4 w-4" /> Edit
+          </button>
+          <button
+            type="button"
             data-qid="deck:view:notes"
             data-qs-action="DECK_TOGGLE_NOTES"
             title="Toggle speaker notes panel"
@@ -174,7 +273,12 @@ export function App() {
         />
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <SlideCanvas slide={slide} direction={direction} />
+          <EditContext.Provider value={{ editing, request: setPendingEdit }}>
+            <SlideCanvas slide={slide} direction={direction} />
+          </EditContext.Provider>
+          {pendingEdit ? (
+            <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reload} />
+          ) : null}
           {showNotes ? (
             <aside aria-label="Speaker notes" className="border-t border-slate-800 px-6 py-3 text-sm text-slate-300">
               {slide.notes || <span className="text-slate-600">No speaker notes for this slide.</span>}

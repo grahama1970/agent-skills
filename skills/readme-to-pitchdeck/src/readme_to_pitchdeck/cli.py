@@ -246,6 +246,28 @@ def emit_ui(
         _abort(exc)
 
 
+@app.command(name="apply-edit")
+def apply_edit(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
+    slide_id: Annotated[str, typer.Option(help="Slide id to edit.")],
+    field: Annotated[str, typer.Option(help="title | message | notes | footer | body:<index>")],
+    value: Annotated[str, typer.Option(help="New text value.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Edit one slide text field; re-validates the full bundle before writing anything."""
+    from .slide_edit import apply_slide_edit
+
+    try:
+        receipt = apply_slide_edit(
+            bundle_dir, output_dir, slide_id=slide_id, field=field, value=value, deck_name=deck_name
+        )
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="memory-sync")
 def memory_sync(
     deck_data: Annotated[Path, typer.Option(help="Path to an emitted deck.data.json.")],
