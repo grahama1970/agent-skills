@@ -493,6 +493,10 @@ def ats_prefill(
     site_policy: Path = typer.Option(..., "--site-policy", exists=True, dir_okay=False, readable=True),
     out: Path = typer.Option(..., "--out", file_okay=False),
     close_tab: bool = typer.Option(False, "--close-tab", help="Close the tab instead of leaving it for human completion."),
+    attach_resume: Path | None = typer.Option(
+        None, "--attach-resume", exists=True, dir_okay=False, readable=True,
+        help="Tailored resume PDF; must match the plan's resume_digest.",
+    ),
 ) -> None:
     """Prefill exact-approved fields on the live form; submit is never touched.
 
@@ -513,6 +517,7 @@ def ats_prefill(
             binding_digest=None,
             out_dir=out,
             keep_open=not close_tab,
+            resume_pdf=attach_resume,
         )
     except PrefillError as exc:
         _fail(ContractError("ATS_PREFILL_REJECTED", str(exc)))

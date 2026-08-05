@@ -89,6 +89,49 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
     return proc.stdout.strip()
 
 
+def _attach_resume(surf_run: Path, tab_id: str, plan: dict[str, Any], resume_pdf: Path) -> dict[str, Any]:
+    """Upload the plan-bound resume PDF to the first file input; digest-checked."""
+
+    import hashlib
+
+    actual = hashlib.sha256(resume_pdf.read_bytes()).hexdigest()
+    if actual != plan.get("resume_digest"):
+        raise PrefillError("PREFILL_RESUME_DIGEST_MISMATCH")
+    # Element refs only materialize for in-viewport controls; bring the file
+    # input into view before reading.
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
+        handle.write(
+            "(function(){var el=document.querySelector(\"input[type='file']\");"
+            "if (el===null) { return 'NO_FILE_INPUT'; }"
+            "el.closest('div').scrollIntoView({block: 'center'}); return 'SCROLLED';})()"
+        )
+        scroll_path = handle.name
+    _surf(surf_run, "js", "--tab-id", tab_id, "--file", scroll_path)
+    _surf(surf_run, "wait", "1")
+    page = _surf(surf_run, "read", "--tab-id", tab_id, timeout=120)
+    import re
+
+    match = re.search(r"\[(e\d+)\][^\n]*type=\"file\"", page)
+    if match is None:
+        raise PrefillError("PREFILL_FILE_INPUT_NOT_FOUND")
+    ref = match.group(1)
+    _surf(surf_run, "upload", "--ref", ref, "--files", str(resume_pdf), "--tab-id", tab_id, timeout=120)
+    _surf(surf_run, "wait", "4")
+    readback = _surf(
+        surf_run,
+        "js",
+        "--tab-id",
+        tab_id,
+        f"document.body.innerText.includes({json.dumps(resume_pdf.name)}) ? 'ATTACHED' : 'NOT_VISIBLE'",
+    )
+    return {
+        "file": str(resume_pdf),
+        "sha256": actual,
+        "element_ref": ref,
+        "readback": json.loads(readback),
+    }
+
+
 def execute_prefill(
     *,
     plan: dict[str, Any],
@@ -98,6 +141,7 @@ def execute_prefill(
     out_dir: Path,
     surf_run: Path = SURF_RUN_DEFAULT,
     keep_open: bool = True,
+    resume_pdf: Path | None = None,
 ) -> dict[str, Any]:
     """Prefill one live form. The tab is left open for human completion."""
 
@@ -118,6 +162,9 @@ def execute_prefill(
         script_path = handle.name
     raw = _surf(surf_run, "js", "--tab-id", tab_id, "--file", script_path)
     results = json.loads(json.loads(raw))
+    attachment = None
+    if resume_pdf is not None:
+        attachment = _attach_resume(surf_run, tab_id, plan, resume_pdf)
     # tab.new opens the tab active, so snap captures the prefilled form.
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
         handle.write(
@@ -148,6 +195,7 @@ def execute_prefill(
         "fields_verified": verified,
         "fields_failed": failed,
         "human_required_untouched": plan.get("unresolved_required_fields", []),
+        "resume_attachment": attachment,
         "submit_clicked": False,
         "external_effects": False,
         "screenshot": str(screenshot),
