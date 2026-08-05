@@ -58,7 +58,7 @@ export function Inspector({ slide, onChanged }: { slide: UiSlide; onChanged: () 
   return (
     <aside
       aria-label="Slide inspector"
-      className="flex w-80 min-w-80 flex-col gap-5 overflow-y-auto border-l border-slate-800 bg-slate-900/70 p-4"
+      className="absolute inset-y-0 right-0 z-10 flex w-80 flex-col gap-5 overflow-y-auto border-l border-slate-800 bg-slate-900/95 p-4 shadow-2xl backdrop-blur lg:static lg:z-auto lg:min-w-80 lg:bg-slate-900/70 lg:shadow-none"
     >
       <header>
         <h2 className="m-0 text-sm font-semibold text-slate-200">Slide {slide.order}</h2>
