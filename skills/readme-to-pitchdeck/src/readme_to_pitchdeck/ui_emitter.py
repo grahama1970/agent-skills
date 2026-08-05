@@ -137,6 +137,8 @@ def emit_ui_bundle(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     assets_out = output_dir / "assets"
+    if assets_out.exists():  # remove stale copies so cleared assets stop being served
+        shutil.rmtree(assets_out)
     gaps: list[str] = [
         f"{issue.code}: {issue.message}" for issue in report.issues if issue.severity == "warning"
     ]

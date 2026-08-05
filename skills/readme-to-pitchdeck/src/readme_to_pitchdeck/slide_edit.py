@@ -141,6 +141,11 @@ def apply_slide_edit(
                 FreeformElement(id="visual", type="asset", x=0.6, y=0.36, w=0.34, h=0.5, asset_id=slide.visual.asset_id)
             )
         updated_slide = slide.model_copy(update={"layout": value, "elements": synthesized})
+    elif base_field == "layout" and value != "freeform" and slide.elements:
+        # Leaving freeform: stale elements are invisible in typed renderers but
+        # would still count as "visible" in validation — a hidden-qualifier hole
+        # (WebGPT review P0-2). Clear them so validation matches what renders.
+        updated_slide = slide.model_copy(update={"layout": value, "elements": []})
     elif base_field in EDITABLE_FIELDS:
         updated_slide = slide.model_copy(update={base_field: value or None if base_field == "footer" else value})
     else:

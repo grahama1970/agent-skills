@@ -48,7 +48,7 @@ function ElementContent({ element }: { element: UiElement }) {
     <p
       className="m-0 h-full w-full whitespace-pre-wrap leading-snug"
       style={{
-        fontSize: `${(element.size_pt / 7.5) * (CANVAS_HEIGHT / 96)}px`,
+        fontSize: `${(element.size_pt / 72) * (CANVAS_HEIGHT / 7.5)}px`, // pt → 144dpi canvas px (WebGPT review P1-11)
         fontWeight: element.bold ? 700 : 400,
         color: element.color ?? '#e6edf3',
         textAlign: element.align as 'left' | 'center' | 'right',

@@ -263,3 +263,50 @@ Before adding autonomous research or rewriting:
   bullet>110 chars, title>60, freeform text density) mirroring the PPTX
   builder's sizing thresholds; OverflowBadge overlay in edit mode. Advisory
   only — server gates remain the authority.
+
+## WebGPT comprehensive review — verdict RETHINK (2026-08-05)
+
+Full review: docs/WEBGPT_REVIEW_2026-08-05.md (submitted via surf webgpt.submit
+to human-designated tab 837366723 with proof metadata: requested==controlled,
+tab_was_created=false; bundle = review.md + 3 UI screenshots).
+
+Fixed same-day (all CONFIRMED against source, regression-tested, 16/16):
+- P0-1 partial: footer, visual.items/callouts/caption now in the visible-text
+  scan (forbidden phrases + claim boundary).
+- P0-2a: silent PPTX body truncation is now a TARGET_CONTENT_TRUNCATED error;
+  capacity map matches actual renderer slices (statement/split/cards 4,
+  flow 6, roadmap 9, collaboration 3, appendix 6). The gate immediately
+  caught 5 over-capacity slides in the curated sparta example (real instances
+  of the reported bug; flow/roadmap capacities corrected rather than content
+  trimmed).
+- P0-2b: switching a slide off freeform clears stale elements (hidden-
+  qualifier hole closed).
+- P0-3: deck.id/visibility/source_policy immutable through the source editor.
+- P1-7 partial: emit-ui purges stale copied assets (cleared assets stop being
+  served).
+- P1-10: chat 'qualify' guidance corrected ('qualified' is not a ClaimStatus).
+- P1-11 partial: freeform pt→px conversion corrected to 144dpi (pt*2).
+
+Accepted backlog (architectural; NOT yet implemented — the RETHINK core):
+1. Content-run model: every visible text run claim-bound / non-claim /
+   allowlisted-decorative; renderers consume runs, not raw strings (P0-1 full).
+2. RenderPlan + post-build PPTX text-run verification vs plan (P0-2 full).
+3. Draft vs publish export split with watermark + require-approved default
+   for publish (P1-4).
+4. Structural qualifier binding replacing the negation-window heuristic (P1-5).
+5. Claim-level source resolution + approval provenance/staleness (P1-6).
+6. Asset intake hardening: default-private, magic bytes, re-encode, limits,
+   content-addressed emit dirs (P1-7 full).
+7. Revision CAS + atomic revision-dir writes + undo/redo history (P1-8).
+8. Production document service (auth, ACLs, audit, isolated export worker)
+   replacing dev middleware (P1-9).
+9. Chat proposal objects through the command API (P1-10 full).
+10. Font policy: same family both targets, autofit/shrink policy, target-render
+    text verification (P1-11 full).
+11. Mode architecture Design|Claims|Source|Present; designer gaps (multiselect,
+    z-order, align/distribute/snap, undo/redo first) (P2-12).
+12. Freeform as explicit "detach from layout" with origin mapping; template+
+    overrides hybrid (P2-13).
+13. Claim-aware Markdown outline projection (constrained, id-stable) as a
+    future authoring surface; Marp stays one-way (P2-14).
+14. Reviewer's 14-case proof bundle as the release gate (item 15).

@@ -759,3 +759,48 @@ def test_freeform_layout_round_trip(tmp_path: Path) -> None:
             apply_slide_edit(
                 planned, out, slide_id=slide.id, field="element:title:text", value=f"We are {forbidden[0]}!"
             )
+
+
+def test_webgpt_review_fixes(tmp_path: Path) -> None:
+    """Regression cases from the 2026-08-05 WebGPT review (P0-1/P0-2/P0-3)."""
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+    out = tmp_path / "ui"
+
+    from readme_to_pitchdeck.slide_edit import apply_slide_edit
+    from readme_to_pitchdeck.source_edit import apply_deck_source
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    slide = sorted(deck.slides, key=lambda s: s.order)[1]
+    forbidden = source.policy.forbidden_unqualified_claims[0]
+
+    # P0-1: forbidden phrases in footer are now caught.
+    with pytest.raises(Exception):
+        apply_slide_edit(planned, out, slide_id=slide.id, field="footer", value=f"Fully {forbidden}.")
+
+    # P0-2a: body items beyond the PPTX renderer capacity fail closed.
+    for i in range(5):
+        try:
+            apply_slide_edit(planned, out, slide_id=slide.id, field="body:add", value=f"Extra line {i}")
+        except Exception as exc:
+            assert "TARGET_CONTENT_TRUNCATED" in str(exc)
+            break
+    else:
+        raise AssertionError("adding body items past PPTX capacity never failed")
+
+    # P0-2b: leaving freeform clears stale elements (hidden-qualifier hole).
+    apply_slide_edit(planned, out, slide_id=slide.id, field="layout", value="freeform")
+    apply_slide_edit(planned, out, slide_id=slide.id, field="layout", value="statement")
+    deck2 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert [s for s in deck2.slides if s.id == slide.id][0].elements == []
+
+    # P0-3: deck classification is immutable through the source editor.
+    source_yaml = (planned / "deck.public.yaml").read_text()
+    for tampered in (
+        source_yaml.replace("visibility: public", "visibility: private", 1),
+        source_yaml.replace("source_policy: public_only", "source_policy: public_and_private", 1),
+    ):
+        with pytest.raises(ValueError, match="immutable"):
+            apply_deck_source(planned, out, source_yaml=tampered)

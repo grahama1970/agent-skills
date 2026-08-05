@@ -42,7 +42,19 @@ def apply_deck_source(
         raise ValueError("deck source must be a YAML mapping (the deck manifest)")
 
     updated_deck = DeckManifest.model_validate(raw)
-    _, ledger, sources, assets, source_path = _load(bundle_dir, deck_name)
+    current_deck, ledger, sources, assets, source_path = _load(bundle_dir, deck_name)
+    # The target's classification is immutable from inside the mutable payload
+    # (WebGPT review P0-3): the source pane may edit content, never what kind
+    # of deck this surface is allowed to produce.
+    for field in ("id", "visibility", "source_policy"):
+        before = getattr(current_deck.deck, field)
+        after = getattr(updated_deck.deck, field)
+        if before != after:
+            raise ValueError(
+                f"deck.{field} is immutable through the source editor "
+                f"({getattr(before, 'value', before)!r} -> {getattr(after, 'value', after)!r}); "
+                "create a separate deck manifest for a different classification."
+            )
 
     from .ui_emitter import emit_ui_bundle
 

@@ -53,10 +53,10 @@ function interpret(deck: UiDeckBundle, text: string): string {
       const id = input.slice(verb.length + 1).trim()
       const hit = findClaim(deck, id)
       if (!hit) return `No claim '${id}' found in this deck's slides.`
-      const status = verb === 'approve' ? 'approved' : verb === 'reject' ? 'rejected' : 'qualified'
+      const status = verb === 'reject' ? 'rejected' : 'approved'
       return [
         `To ${verb} '${id}', edit claim_ledger.yaml: set its status to '${status}'` +
-          (verb === 'qualify' ? " and set 'required_qualifier'." : '.'),
+          (verb === 'qualify' ? " (valid statuses are candidate/approved/rejected) and set 'required_qualifier' — a qualified claim is an approved claim carrying its required qualifier." : '.'),
         'Then re-validate and re-emit — chat never mutates the deck directly:',
         '```',
         './run.sh verify --bundle-dir <bundle>',
