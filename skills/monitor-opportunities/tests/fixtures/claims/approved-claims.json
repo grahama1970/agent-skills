@@ -92,6 +92,25 @@
     "LINKEDIN"
    ],
    "sensitivity": "public"
+  },
+  {
+   "claim_key": "claim:extractor:multi-format-processing",
+   "wordings": [
+    {
+     "wording_id": "w1",
+     "text": "Built extractor, an enhanced marker-pdf fork for advanced multi-format document processing with AI accuracy improvements."
+    }
+   ],
+   "evidence_refs": [
+    "https://github.com/grahama1970/extractor"
+   ],
+   "verification_status": "approved",
+   "allowed_channels": [
+    "resume",
+    "GMAIL",
+    "LINKEDIN"
+   ],
+   "sensitivity": "public"
   }
  ],
  "schema": "monitor_opportunities.claim_snapshot.v1"

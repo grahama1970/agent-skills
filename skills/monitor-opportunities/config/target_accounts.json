@@ -65,6 +65,66 @@
       ],
       "mandate_ref": "mandate:agentic-compliance",
       "slug": "hyperproof"
+    },
+    {
+      "default_fit_score": 0.78,
+      "limit": 10,
+      "name": "Reducto",
+      "slug": "reducto",
+      "provider": "ashby",
+      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/reducto",
+      "registry_entry_id": "employment:reducto",
+      "need_keywords": [
+        "engineer",
+        "architect",
+        "document",
+        "extraction",
+        "AI",
+        "ML",
+        "parsing",
+        "research"
+      ],
+      "mandate_ref": "mandate:document-extraction"
+    },
+    {
+      "default_fit_score": 0.75,
+      "limit": 10,
+      "name": "Unstructured",
+      "slug": "unstructured",
+      "provider": "ashby",
+      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/unstructured",
+      "registry_entry_id": "employment:unstructured",
+      "need_keywords": [
+        "engineer",
+        "architect",
+        "document",
+        "extraction",
+        "AI",
+        "ML",
+        "parsing",
+        "research"
+      ],
+      "mandate_ref": "mandate:document-extraction"
+    },
+    {
+      "default_fit_score": 0.8,
+      "limit": 10,
+      "name": "Datalab (marker)",
+      "slug": "datalab",
+      "provider": "ashby",
+      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/datalab",
+      "registry_entry_id": "employment:datalab",
+      "need_keywords": [
+        "engineer",
+        "architect",
+        "document",
+        "extraction",
+        "AI",
+        "ML",
+        "parsing",
+        "research"
+      ],
+      "mandate_ref": "mandate:document-extraction"
     }
   ],
   "federal": [
@@ -123,6 +183,28 @@
         "LLM",
         "automation",
         "controls"
+      ]
+    },
+    {
+      "mandate_id": "mandate:document-extraction",
+      "declared_by": "Graham 2026-08-05",
+      "statement": "Companies doing document extraction / document AI / extraction-for-compliance are in-scope, given grahama1970/pdf_oxide (evidence-preserving extraction) and grahama1970/extractor (advanced multi-format document processing, enhanced marker-pdf fork).",
+      "flagship_projects": [
+        "https://github.com/grahama1970/pdf_oxide",
+        "https://github.com/grahama1970/extractor"
+      ],
+      "need_keywords": [
+        "document extraction",
+        "document AI",
+        "OCR",
+        "parsing",
+        "PDF",
+        "unstructured data",
+        "ingestion",
+        "document processing",
+        "layout",
+        "evidence",
+        "provenance"
       ]
     }
   ]
