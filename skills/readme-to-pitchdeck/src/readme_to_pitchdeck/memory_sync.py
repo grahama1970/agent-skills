@@ -11,7 +11,6 @@ call raises RuntimeError with the captured stderr.
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 from pathlib import Path
 
@@ -24,9 +23,6 @@ MEMORY_TIMEOUT_S = 60
 
 
 def _memory_run_sh() -> Path:
-    override = os.environ.get("README_TO_PITCHDECK_MEMORY_RUN")
-    if override:
-        return Path(override)
     return Path(__file__).resolve().parents[3] / "memory" / "run.sh"
 
 
