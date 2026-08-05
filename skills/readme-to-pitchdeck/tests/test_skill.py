@@ -589,3 +589,29 @@ def test_video_asset_builds_and_validates(tmp_path: Path) -> None:
         source_manifest_dir=tmp_path, asset_manifest_dir=tmp_path,
     )
     assert any(i.code == "ASSET_UNSUPPORTED_FORMAT" and i.severity == "error" for i in bad_report.issues)
+
+
+def test_emit_markdown_one_way_export(tmp_path: Path) -> None:
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+
+    from readme_to_pitchdeck.md_emitter import emit_markdown
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    receipt = emit_markdown(
+        deck,
+        load_yaml(planned / "claim_ledger.yaml", ClaimLedger),
+        load_yaml(planned / "source_manifest.resolved.yaml", SourceManifest),
+        load_yaml(planned / "asset_manifest.yaml", AssetManifest),
+        source_manifest_dir=planned,
+        asset_manifest_dir=planned,
+        output_dir=tmp_path / "md",
+    )
+    text = (tmp_path / "md" / "deck.md").read_text()
+    assert text.startswith("---\nmarp: true")
+    assert text.count("\n---\n") >= len(deck.slides)
+    assert receipt.seam_validation.kind == "emit_md_receipt"
+    for slide in deck.slides:
+        assert f"## {slide.title}" in text

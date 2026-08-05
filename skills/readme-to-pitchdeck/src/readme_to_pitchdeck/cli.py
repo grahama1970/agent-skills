@@ -246,6 +246,34 @@ def emit_ui(
         _abort(exc)
 
 
+@app.command(name="emit-md")
+def emit_md(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory for deck.md and assets.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """One-way Marp Markdown export; edits belong in the YAML manifests, not deck.md."""
+    from .md_emitter import emit_markdown
+
+    try:
+        source_path = bundle_dir / "source_manifest.resolved.yaml"
+        if not source_path.exists():
+            source_path = bundle_dir / "source_manifest.yaml"
+        receipt = emit_markdown(
+            load_yaml(bundle_dir / deck_name, DeckManifest),
+            load_yaml(bundle_dir / "claim_ledger.yaml", ClaimLedger),
+            load_yaml(source_path, SourceManifest),
+            load_yaml(bundle_dir / "asset_manifest.yaml", AssetManifest),
+            source_manifest_dir=source_path.parent,
+            asset_manifest_dir=bundle_dir,
+            output_dir=output_dir,
+        )
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="apply-edit")
 def apply_edit(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

@@ -94,6 +94,10 @@ Public decks fail closed if they reference private sources or claims.
   --bundle-dir docs/pitch/product \
   --output-dir ui/public
 
+./run.sh emit-md \
+  --bundle-dir docs/pitch/product \
+  --output-dir docs/pitch/product/md   # one-way Marp export; render: npx @marp-team/marp-cli deck.md --pdf
+
 ./run.sh memory-sync \
   --deck-data ui/public/deck.data.json
 
