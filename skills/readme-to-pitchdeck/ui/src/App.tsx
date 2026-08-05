@@ -1,8 +1,9 @@
-import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, Pencil, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, PanelLeft, Pencil, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
 import { EditToolbar, SlideRail } from './components/EditChrome'
+import { ExportMenu } from './components/ExportMenu'
 import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { useDeck, useKeyboardNav, useRegisterAction, useSlideScale } from './hooks'
@@ -16,8 +17,9 @@ function viewFromHash(): View {
   return hash === 'overview' || hash === 'claims' ? hash : 'present'
 }
 
-function SlideCanvas({ slide, direction }: { slide: UiSlide; direction: 'fwd' | 'back' }) {
-  const { ref, scale } = useSlideScale()
+function SlideCanvas({ slide, direction, zoom }: { slide: UiSlide; direction: 'fwd' | 'back'; zoom: string }) {
+  const { ref, scale: fitScale } = useSlideScale()
+  const scale = zoom === 'fit' ? fitScale : (Number(zoom) / 100) * fitScale
   return (
     <div ref={ref} className="relative min-h-0 flex-1 overflow-hidden">
       <div
@@ -148,6 +150,8 @@ export function App() {
   const [showNotes, setShowNotes] = useState(false)
   const [editing, setEditing] = useState(false)
   const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
+  const [railCollapsed, setRailCollapsed] = useState(false)
+  const [zoom, setZoom] = useState('fit')
 
   useRegisterAction('deck:nav:prev', {
     app: 'readme-to-pitchdeck',
@@ -197,8 +201,38 @@ export function App() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-slate-800 px-4 py-2">
-        <div className="flex min-w-0 items-baseline gap-3">
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 border-b border-slate-800 px-4 py-1.5">
+        <div className="flex min-w-0 items-center gap-3">
+          {editing ? (
+            <>
+              <button
+                type="button"
+                aria-label="Toggle slide navigator"
+                aria-pressed={railCollapsed}
+                data-qid="deck:toolbar:rail-toggle"
+                data-qs-action="DECK_TOGGLE_RAIL"
+                title="Show or hide the slide navigator"
+                onClick={() => setRailCollapsed((value) => !value)}
+                className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 text-slate-300 hover:border-slate-600 hover:text-cyan-300"
+              >
+                <PanelLeft aria-hidden className="h-4 w-4" />
+              </button>
+              <select
+                aria-label="Zoom"
+                data-qid="deck:toolbar:zoom"
+                data-qs-action="DECK_SET_ZOOM"
+                title="Slide zoom"
+                value={zoom}
+                onChange={(event) => setZoom(event.target.value)}
+                className="cursor-pointer rounded-lg border border-slate-700 bg-slate-900 px-1.5 py-1 text-xs text-slate-200"
+              >
+                <option value="fit">Fit</option>
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100">100%</option>
+              </select>
+            </>
+          ) : null}
           <h1 className="m-0 truncate text-sm font-semibold text-slate-200">{deck.title}</h1>
           <span
             className={`rounded px-1.5 py-0.5 font-mono text-xs ${deck.visibility === 'public' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}
@@ -207,7 +241,20 @@ export function App() {
           </span>
           <span className="font-mono text-xs text-slate-500">{deck.validation_readiness}</span>
         </div>
-        <nav aria-label="Deck views" className="flex items-center gap-2">
+        <div className="flex items-center justify-center">
+          {editing ? (
+            <EditToolbar
+              slide={slide}
+              slideCount={deck.slides.length}
+              onChanged={reload}
+              onPresent={() => {
+                setEditing(false)
+                setPendingEdit(null)
+              }}
+            />
+          ) : null}
+        </div>
+        <nav aria-label="Deck views" className="flex items-center justify-end gap-1">
           <button
             type="button"
             data-qid="deck:view:overview"
@@ -255,6 +302,7 @@ export function App() {
           >
             <NotebookText aria-hidden className="h-4 w-4" /> Notes
           </button>
+          <ExportMenu />
         </nav>
       </header>
 
@@ -275,21 +323,10 @@ export function App() {
         />
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          {editing ? (
-            <EditToolbar
-              slide={slide}
-              slideCount={deck.slides.length}
-              onChanged={reload}
-              onPresent={() => {
-                setEditing(false)
-                setPendingEdit(null)
-              }}
-            />
-          ) : null}
           <div className="relative flex min-h-0 flex-1">
-            {editing ? <SlideRail deck={deck} currentIndex={index} onSelect={go} /> : null}
+            {editing && !railCollapsed ? <SlideRail deck={deck} currentIndex={index} onSelect={go} /> : null}
             <EditContext.Provider value={{ editing, request: setPendingEdit }}>
-              <SlideCanvas slide={slide} direction={direction} />
+              <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
             </EditContext.Provider>
             {editing ? <Inspector slide={slide} onChanged={reload} /> : null}
           </div>

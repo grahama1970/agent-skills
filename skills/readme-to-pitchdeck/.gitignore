@@ -22,3 +22,4 @@ ui/dist/
 ui/public/deck.data.json
 ui/public/emit_ui_receipt.json
 ui/public/assets/
+ui/public/exports/

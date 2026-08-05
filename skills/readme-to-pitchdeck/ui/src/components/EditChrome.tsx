@@ -41,16 +41,17 @@ export function EditToolbar({
   }
 
   const button =
-    'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-200 transition-colors hover:border-cyan-500/60 disabled:cursor-not-allowed disabled:opacity-40'
+    'inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-2 text-slate-300 transition-colors hover:border-slate-600 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40'
 
   return (
     <div
       role="toolbar"
       aria-label="Slide actions"
-      className="flex flex-wrap items-center gap-2 border-b border-slate-800 bg-slate-900/60 px-4 py-1.5"
+      className="flex items-center justify-center gap-0.5"
     >
       <button
         type="button"
+        aria-label="Add slide"
         data-qid="deck:toolbar:add-slide"
         data-qs-action="DECK_ADD_SLIDE"
         title="Add a new slide after this one"
@@ -58,10 +59,11 @@ export function EditToolbar({
         onClick={() => void run('add_after')}
         className={button}
       >
-        <Plus aria-hidden className="h-3.5 w-3.5" /> Add slide
+        <Plus aria-hidden className="h-5 w-5" />
       </button>
       <button
         type="button"
+        aria-label="Duplicate slide"
         data-qid="deck:toolbar:duplicate-slide"
         data-qs-action="DECK_DUPLICATE_SLIDE"
         title="Duplicate this slide"
@@ -69,10 +71,11 @@ export function EditToolbar({
         onClick={() => void run('duplicate')}
         className={button}
       >
-        <Copy aria-hidden className="h-3.5 w-3.5" /> Duplicate
+        <Copy aria-hidden className="h-5 w-5" />
       </button>
       <button
         type="button"
+        aria-label="Move slide earlier"
         data-qid="deck:toolbar:move-left"
         data-qs-action="DECK_MOVE_SLIDE_LEFT"
         title="Move this slide earlier"
@@ -80,10 +83,11 @@ export function EditToolbar({
         onClick={() => void run('move_left')}
         className={button}
       >
-        <MoveLeft aria-hidden className="h-3.5 w-3.5" /> Move
+        <MoveLeft aria-hidden className="h-5 w-5" />
       </button>
       <button
         type="button"
+        aria-label="Move slide later"
         data-qid="deck:toolbar:move-right"
         data-qs-action="DECK_MOVE_SLIDE_RIGHT"
         title="Move this slide later"
@@ -91,10 +95,11 @@ export function EditToolbar({
         onClick={() => void run('move_right')}
         className={button}
       >
-        Move <MoveRight aria-hidden className="h-3.5 w-3.5" />
+        <MoveRight aria-hidden className="h-5 w-5" />
       </button>
       <button
         type="button"
+        aria-label="Delete slide"
         data-qid="deck:toolbar:delete-slide"
         data-qs-action="DECK_DELETE_SLIDE"
         title="Delete this slide"
@@ -102,18 +107,19 @@ export function EditToolbar({
         onClick={() => void run('delete')}
         className={`${button} hover:border-rose-500/60 hover:text-rose-300`}
       >
-        <Trash2 aria-hidden className="h-3.5 w-3.5" /> Delete
+        <Trash2 aria-hidden className="h-5 w-5" />
       </button>
       <span className="mx-1 h-5 w-px bg-slate-800" aria-hidden />
       <button
         type="button"
+        aria-label="Present"
         data-qid="deck:toolbar:present"
         data-qs-action="DECK_PRESENT"
         title="Exit edit mode and present"
         onClick={onPresent}
         className={`${button} border-cyan-700 text-cyan-200`}
       >
-        <Play aria-hidden className="h-3.5 w-3.5" /> Present
+        <Play aria-hidden className="h-5 w-5" />
       </button>
       {busy ? <span className="text-xs text-slate-500">Validating…</span> : null}
       {error ? (

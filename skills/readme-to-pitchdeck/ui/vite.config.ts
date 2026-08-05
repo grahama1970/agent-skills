@@ -64,6 +64,73 @@ function slideEditApi(): Plugin {
           }
         })
       })
+      server.middlewares.use('/api/export', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'POST only' }))
+          return
+        }
+        let body = ''
+        req.on('data', (chunk) => (body += chunk))
+        req.on('end', () => {
+          try {
+            const { format } = JSON.parse(body) as { format?: string }
+            const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
+            const bundleDir = receipt?.outputs?.bundle_dir
+            if (!bundleDir) {
+              res.statusCode = 409
+              res.end(JSON.stringify({ error: 'emit_ui_receipt.json has no bundle_dir; re-run emit-ui first' }))
+              return
+            }
+            const exportsDir = `${publicDir}/exports`
+            const finish = (error: Error | null, stderr: string, url: string) => {
+              res.setHeader('Content-Type', 'application/json')
+              if (error) {
+                res.statusCode = 422
+                res.end(JSON.stringify({ error: stderr.trim() || String(error) }))
+                return
+              }
+              res.end(JSON.stringify({ url }))
+            }
+            const buildArgs = [
+              'build',
+              '--deck', `${bundleDir}/deck.public.yaml`,
+              '--claim-ledger', `${bundleDir}/claim_ledger.yaml`,
+              '--source-manifest', `${bundleDir}/source_manifest.resolved.yaml`,
+              '--asset-manifest', `${bundleDir}/asset_manifest.yaml`,
+              '--output', `${exportsDir}/deck.pptx`,
+            ]
+            if (format === 'pptx') {
+              execFile(`${skillRoot}/run.sh`, buildArgs, { timeout: 120_000 }, (error, _stdout, stderr) =>
+                finish(error, stderr, '/exports/deck.pptx'),
+              )
+            } else if (format === 'pdf') {
+              execFile(`${skillRoot}/run.sh`, buildArgs, { timeout: 120_000 }, (buildError, _stdout, buildStderr) => {
+                if (buildError) return finish(buildError, buildStderr, '')
+                execFile(
+                  `${skillRoot}/run.sh`,
+                  ['render', '--pptx', `${exportsDir}/deck.pptx`, '--output-dir', `${exportsDir}/render`],
+                  { timeout: 300_000 },
+                  (error, _stdout2, stderr) => finish(error, stderr, '/exports/render/deck.pdf'),
+                )
+              })
+            } else if (format === 'md') {
+              execFile(
+                `${skillRoot}/run.sh`,
+                ['emit-md', '--bundle-dir', bundleDir, '--output-dir', `${exportsDir}/md`],
+                { timeout: 120_000 },
+                (error, _stdout, stderr) => finish(error, stderr, '/exports/md/deck.md'),
+              )
+            } else {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: "format must be 'pptx', 'pdf', or 'md'" }))
+            }
+          } catch (error) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: String(error) }))
+          }
+        })
+      })
       server.middlewares.use('/api/slide-edit', (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405
