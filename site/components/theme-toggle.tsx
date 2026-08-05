@@ -1,9 +1,13 @@
 'use client';
 
 export function ThemeToggle() {
-  const toggle = () => {
+  const toggle = (e: React.MouseEvent<HTMLButtonElement>) => {
     const root = document.documentElement;
     const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    // Anchor the circular wipe at the toggle's position.
+    const rect = e.currentTarget.getBoundingClientRect();
+    root.style.setProperty('--vt-x', `${rect.left + rect.width / 2}px`);
+    root.style.setProperty('--vt-y', `${rect.top + rect.height / 2}px`);
     const apply = () => {
       root.dataset.theme = next;
       localStorage.setItem('theme', next);

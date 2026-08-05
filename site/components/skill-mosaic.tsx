@@ -56,7 +56,7 @@ export function SkillMosaic() {
           contract only
         </span>
       </div>
-      <div className="flex flex-col gap-5">
+      <div className="mosaic-wave flex flex-col gap-5">
         {groups.map(([cat, list]) => (
           <div key={cat}>
             <div className="machine mb-1.5 text-mute">

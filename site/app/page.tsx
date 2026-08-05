@@ -29,9 +29,17 @@ export default function Home() {
         <section className="grid gap-10 border-b border-line py-16 md:grid-cols-[3fr_2fr] md:py-24">
           <div>
             <h1 className="mb-8 max-w-[14ch] text-balance font-display text-[clamp(3.2rem,6.8vw,7.5rem)] leading-[0.95]">
-              I build agent systems that can prove what they did.
+              <span className="hero-line">
+                <span style={{ ['--d' as string]: '0ms' }}>I build agent</span>
+              </span>
+              <span className="hero-line">
+                <span style={{ ['--d' as string]: '90ms' }}>systems that can</span>
+              </span>
+              <span className="hero-line">
+                <span style={{ ['--d' as string]: '180ms' }}>prove what they did.</span>
+              </span>
             </h1>
-            <p className="mb-4 max-w-[62ch] text-[18px]">
+            <p className="hero-sub mb-4 max-w-[62ch] text-[18px]">
               A one-person practice with an unusual résumé: commercial composer
               for Adidas and Pepsi, Webby-recognized producer for Sony, DARPA
               technical lead alongside Lockheed Martin and MIT. High-end
@@ -66,7 +74,7 @@ export default function Home() {
           <TelemetryBar />
         </div>
 
-        <section id="work" className="scroll-mt-14 border-b border-line py-16 md:py-20">
+        <section id="work" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
           <h2 className="mb-2 font-display text-[clamp(2rem,3.6vw,3.4rem)]">The work</h2>
           <p className="mb-3 max-w-[64ch] text-mute">
             Ten running systems, each an open research question with code
@@ -79,7 +87,7 @@ export default function Home() {
           <WorkGrid />
         </section>
 
-        <section id="dream" className="scroll-mt-14 border-b border-line py-16 md:py-20">
+        <section id="dream" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
           <h2 className="mb-2 font-display text-[clamp(2rem,3.6vw,3.4rem)]">
             A dream, assembled
           </h2>
@@ -112,7 +120,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="index" className="scroll-mt-14 border-b border-line py-16 md:py-20">
+        <section id="index" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
           <h2 className="mb-2 font-display text-[clamp(2rem,3.6vw,3.4rem)]">
             Every skill, including the gaps
           </h2>
@@ -126,7 +134,7 @@ export default function Home() {
           <SkillMosaic />
         </section>
 
-        <section id="about" className="scroll-mt-14 border-b border-line py-16 md:py-20">
+        <section id="about" className="surface scroll-mt-14 border-b border-line py-16 md:py-20">
           <h2 className="mb-3 font-display text-[clamp(2rem,3.6vw,3.4rem)]">
             An unusual path, on purpose
           </h2>
@@ -167,7 +175,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="contact" className="scroll-mt-14 py-16 md:py-20">
+        <section id="contact" className="surface scroll-mt-14 py-16 md:py-20">
           <h2 className="mb-3 font-display text-[clamp(2rem,3.6vw,3.4rem)]">
             Bring me the project you shelved
           </h2>
