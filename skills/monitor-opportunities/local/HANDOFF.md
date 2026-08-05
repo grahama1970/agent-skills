@@ -82,12 +82,22 @@
   questions, `form_schema_digest` per posting, sensitive/free-text fields
   marked `human_required`, `writes_performed: false`). Captured via the
   public Greenhouse job-board API — no browser writes.
-- Next ATS increments, in order: module-ize inspect into
-  `src/monitor_opportunities/ats/` with tests and report binding; then
-  `ats_form_prefill` per provider (exact-approved answers only, screenshot
-  receipt, submit never touched); then `ats_form_submit` per application
-  with exact-payload human authorization, idempotency, readback, and
-  `INDETERMINATE` reconciliation.
+- `ats-inspect` is now an implemented CLI command (`b0cd8b9f9`):
+  Greenhouse adapter (`ats/greenhouse.py`) feeding the existing
+  `application_plan.inspect_ats_form` gate, site-scoped human policy
+  receipt required, fixture-backed tests, sanity 77 passed. All three
+  Discord postings inspected live via the CLI.
+- Application plans built for all three Discord postings
+  (`ats-inspect/application-plan-greenhouse-discord-*.json`): state
+  `PREPARED`, 4 prefillable fields each (First Name, Email, Website,
+  "How did you hear"), and the plans fail closed on unresolved required
+  fields that only Graham can answer: Last Name, Phone, the "Why
+  Discord?" free-text, work-authorization and US-location selects, and
+  Bay-Area/relocation questions (note: two roles ask about SF Bay Area
+  relocation — eligibility-relevant). `authorize_application_plan`
+  refuses any plan with unresolved required fields, so prefill/submit
+  remain blocked on those answers plus per-site `ats_form_prefill`
+  promotion.
 
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`
