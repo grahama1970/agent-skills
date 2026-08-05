@@ -21,6 +21,57 @@ from pathlib import Path
 from typing import Any, Callable
 
 DEFAULT_TAU_REPO = Path.home() / "workspace" / "experiments" / "tau"
+DEFAULT_SCILLM_ENV = Path.home() / "workspace" / "experiments" / "scillm" / ".env"
+_DEV_FALLBACK_KEY = "sk-dev-proxy-123"
+
+
+class ScillmAuthUnresolved(RuntimeError):
+    """No candidate key was accepted by the live proxy; names the chain tried."""
+
+
+def resolve_scillm_key(base_url: str | None = None) -> str:
+    """Resolve the currently-valid SciLLM key deterministically (issue #1223).
+
+    Chain: SCILLM_MASTER_KEY env -> scillm repo .env -> dev fallback. Each
+    candidate is verified with one live auth probe; the first accepted key
+    wins. The deployed proxy's accepted key has flip-flopped across redeploys
+    (scillm#32), so a static default silently turns every live run into a
+    BLOCKED node — this resolver fails loudly instead.
+    """
+    url = (base_url or os.environ.get("SCILLM_BASE_URL", "http://localhost:4001")).rstrip("/")
+    candidates: list[tuple[str, str]] = []
+    env_key = os.environ.get("SCILLM_MASTER_KEY", "").strip()
+    if env_key:
+        candidates.append(("env:SCILLM_MASTER_KEY", env_key))
+    env_path = Path(os.environ.get("SCILLM_ENV_FILE", str(DEFAULT_SCILLM_ENV)))
+    if env_path.is_file():
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("SCILLM_MASTER_KEY=") or line.startswith("LITELLM_MASTER_KEY="):
+                value = line.split("=", 1)[1].strip()
+                if value and all(value != c[1] for c in candidates):
+                    candidates.append((f"file:{env_path.name}:{line.split('=', 1)[0]}", value))
+    if all(_DEV_FALLBACK_KEY != c[1] for c in candidates):
+        candidates.append(("dev-fallback", _DEV_FALLBACK_KEY))
+
+    import httpx
+
+    tried: list[str] = []
+    for source, key in candidates:
+        tried.append(source)
+        try:
+            resp = httpx.get(
+                f"{url}/v1/scillm/profiles",
+                headers={"Authorization": f"Bearer {key}", "X-Caller-Skill": "ask"},
+                timeout=10.0,
+            )
+        except httpx.HTTPError:
+            continue
+        if resp.status_code == 200:
+            return key
+    raise ScillmAuthUnresolved(
+        f"no candidate key accepted by {url} (tried: {', '.join(tried)}); "
+        "set SCILLM_MASTER_KEY or fix the proxy key source (scillm#32)"
+    )
 
 
 class TauHarnessUnavailable(RuntimeError):
@@ -166,7 +217,7 @@ def _live_executor(
     )
 
     base_url = os.environ.get("SCILLM_BASE_URL", "http://localhost:4001")
-    api_key = os.environ.get("SCILLM_MASTER_KEY", "sk-dev-proxy-123")
+    api_key = resolve_scillm_key(base_url)
 
     def provider_factory(node: Any, config: Any) -> Any:
         return ScillmTransportProvider(

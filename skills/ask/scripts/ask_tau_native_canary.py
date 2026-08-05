@@ -90,7 +90,9 @@ def main() -> int:
     from tau_coding.dag_runtime.scheduler import run_dag_plan
 
     base_url = os.environ.get("SCILLM_BASE_URL", "http://localhost:4001")
-    api_key = os.environ.get("SCILLM_MASTER_KEY", "sk-dev-proxy-123")
+    from ask.tau_harness import resolve_scillm_key
+
+    api_key = resolve_scillm_key(base_url)
     request = (
         "Have a backend agent write the canary proof artifact, then an "
         "independent reviewer verifies it"

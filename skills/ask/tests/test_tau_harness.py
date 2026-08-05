@@ -178,3 +178,60 @@ def test_run_plan_spec_executes_multi_node_dag(tmp_path: Path) -> None:
     assert set(summary["completed_node_ids"]) == {"worker", "reviewer"}
     assert summary["nodes"]["worker"]["settlement"] == "completed"
     assert (tmp_path / "run" / "execution-summary.json").is_file()
+
+
+def test_resolve_scillm_key_prefers_working_env_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    import httpx
+
+    from ask.tau_harness import resolve_scillm_key
+
+    monkeypatch.setenv("SCILLM_MASTER_KEY", "sk-good")
+
+    def fake_get(url: str, headers: dict, timeout: float):  # noqa: ANN001
+        class R:
+            status_code = 200 if headers["Authorization"] == "Bearer sk-good" else 401
+
+        return R()
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    assert resolve_scillm_key("http://x") == "sk-good"
+
+
+def test_resolve_scillm_key_falls_through_to_env_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    import httpx
+
+    from ask.tau_harness import resolve_scillm_key
+
+    monkeypatch.setenv("SCILLM_MASTER_KEY", "sk-stale")
+    env_file = tmp_path / ".env"
+    env_file.write_text("SCILLM_MASTER_KEY=sk-from-file\n", encoding="utf-8")
+    monkeypatch.setenv("SCILLM_ENV_FILE", str(env_file))
+
+    def fake_get(url: str, headers: dict, timeout: float):  # noqa: ANN001
+        class R:
+            status_code = 200 if headers["Authorization"] == "Bearer sk-from-file" else 401
+
+        return R()
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    assert resolve_scillm_key("http://x") == "sk-from-file"
+
+
+def test_resolve_scillm_key_fails_loudly_naming_chain(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    import httpx
+
+    from ask.tau_harness import ScillmAuthUnresolved, resolve_scillm_key
+
+    monkeypatch.setenv("SCILLM_MASTER_KEY", "sk-bad")
+    monkeypatch.setenv("SCILLM_ENV_FILE", str(tmp_path / "missing.env"))
+
+    def fake_get(url: str, headers: dict, timeout: float):  # noqa: ANN001
+        class R:
+            status_code = 401
+
+        return R()
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    with pytest.raises(ScillmAuthUnresolved) as exc:
+        resolve_scillm_key("http://x")
+    assert "env:SCILLM_MASTER_KEY" in str(exc.value) and "dev-fallback" in str(exc.value)
