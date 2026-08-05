@@ -79,7 +79,10 @@ manual summary, or an invented review for `$ask`.
 ## Runtime Entrypoint
 
 Run commands from this directory. `./run.sh tau-dag "<request>"` maps to the
-Typer `tau-dag run` subcommand internally.
+Typer `tau-dag run` subcommand internally. `./run.sh team-plan "<request>"
+--team <preset>` renders a role-based multi-agent plan and frozen Tau DAG
+preview; execution requires explicit `--execute --live` (see README "Team
+Orchestration").
 
 ```bash
 cd skills/ask
@@ -244,6 +247,47 @@ still blocks the project after its recovery instruction is followed, file a
 raw response, and exact command stderr.
 
 ## Required Behavior
+
+### Diagnose from receipts first, then `/debugger` (operator 2026-08-04)
+
+The full ladder lives in `$debugger` ("The escalation ladder"). In short:
+dispatch on the symptom to the ONE artifact that owns it, escalate to a
+breakpoint only when no artifact explains it, and escalate to `$brave-search`
+or `$dogpile` only when the observed state is real but its meaning is unknown.
+After two failed focused attempts the research rung is mandatory — a third
+attempt from the same stale context is not a retry, it is a guess.
+
+When an Ask run fails, read the run directory before forming a theory. Every
+large diagnosis on 2026-08-03/04 was already named by a receipt field, and
+inference over source produced a patch for a bug that did not exist.
+
+| Symptom | Read this first | It names |
+| --- | --- | --- |
+| Lane NEEDS_ATTENTION | `node-artifacts/handler-*/node-receipt.json` | `status`, `failure_code` |
+| Recovery did not help | `node-artifacts/handler-*/lane-recovery.json` | every rung, or `recovery_budget_exhausted` |
+| Lane has no response | `browser-recovery-packet.json` | `failure_code`, `next_command` |
+| Panel blocked pre-dispatch | `execution-status.json` → `receipt.alerts` | the exact Tau verdict |
+| Seat missing from results | `browser-provider-selection.json` | `removed_handlers` |
+| Provisioning blocked | `browser-tab-lifecycle.json` | `failure_code`, `identity_guard`, per-command stderr |
+| Contract rejected at compile | `compile-status.json` | `tau_contract_validation` |
+
+**Read a Tau contract violation in full — it is not just a message.** A
+`tau.dag_error.v1` payload (pre-dispatch rejection) carries `verdict`,
+`failure_code`, `severity`, `evidence.errors[]` naming the exact cause in plain
+language, `evidence.primary_alert`, and `recommended_action` with `type`,
+`next_agent`, and `reason` — Tau states the next step explicitly. A runtime
+block instead puts its detail in `receipt.alerts[]`, each with `code`,
+`message`, and an `evidence` object identifying the node and handler. Read every
+one of those fields before theorising: `execution_profile_override_broadens_policy:max_concurrency`,
+`limits.max_parallel_nodes is not allowed outside extensions`,
+`evidence_goal_hash_missing`, and `join_requires_multiple_inputs` each named
+their own fix precisely, and each was a real defect.
+
+Only after a receipt fails to explain the behavior, and two focused attempts
+have failed, invoke `$debugger`: set a breakpoint in the Ask code path, run the
+reproduction, and inspect the paused frame **before** editing. Do not point a
+breakpoint harness at a live browser lane — it will sit blocked on Chrome. Use
+`surf js --tab-id <id> --no-activate` for live page state instead.
 
 - Build a concrete bundle before review or oracle escalation: objective, target
   files/artifacts, commands already run, uncertainty, exact question, and

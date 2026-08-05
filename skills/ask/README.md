@@ -204,6 +204,41 @@ persona or roundtable request.
 | Status | You want to see recent runs and memory state | `./run.sh status --runs --json` |
 | OS health | You are asking the runtime about itself | `./run.sh os health "is memory healthy?"` |
 
+## Team Orchestration (`team-plan`)
+
+`/ask` is the natural-language front end to the Tau agent harness: you
+describe the project and pick a team; Tau runs the agents. The DAG is always
+shown before anything executes.
+
+```bash
+# Preview (default): renders the plan and the frozen Tau DAG, runs nothing
+./run.sh team-plan "build a settings dashboard with a Python API, React UI, docs, and tests" \
+  --team fullstack-premium
+
+# Execute through Tau (explicit double opt-in)
+./run.sh team-plan "write a one-line project status API summary with tests" \
+  --team fullstack-premium --out ./team-run --execute --live
+```
+
+- Roles (coordinator, backend, frontend, documentation, testing,
+  independent reviewer) map to SciLLM transport profiles via team presets.
+  `fullstack-premium` puts Claude Fable 5 in the coordinator seat with
+  cheaper Sonnet/Codex workers; `economical` inverts that. Override per role
+  with `team.role_profiles` in the rendered plan.
+- The preview lists every agent, its `profile:` transport, and the delegation
+  edges (coordinator → workers → reviewer), plus a frozen `spec_sha256`.
+- A request whose workstreams cannot be inferred fails closed to
+  `NEEDS_INTERVIEW` (exit 2) instead of a model guessing.
+- `--execute` without `--live` refuses with exit 2; with both, Tau's
+  canonical scheduler executes the nodes and `execution-summary.json` +
+  per-run receipts land in `--out`. Live proof:
+  `reports/ask/team-exec-live-20260805/`.
+
+Internally every `/ask` model call is migrating behind the same seam
+(`ask.tau_harness`); `src/ask/route_inventory.py` tracks the remaining
+direct routes with a ratchet test so the set can only shrink
+(agent-skills#1220).
+
 ## DAG JSON E2E
 
 `--orchestrate` is the natural-language front door for the same backend DAG
