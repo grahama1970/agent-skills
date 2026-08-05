@@ -201,10 +201,17 @@ export default function Home() {
           <h2 className="mb-3 font-display text-3xl">
             Bring me the project you shelved
           </h2>
-          <p className="mb-6 max-w-[58ch]">
+          <p className="mb-4 max-w-[58ch]">
             If your team wants an agentic system it can&apos;t staff — or has a
             prototype that never survived contact with production — that&apos;s
-            the work I take. The repo above is the working evidence behind the{' '}
+            the work I take.
+          </p>
+          <p className="mb-6 max-w-[58ch]">
+            One person also means a different deal than a consulting firm: the
+            person you talk to is the person who architects, builds, and
+            answers for the result — no account layer, no handoffs, no diffused
+            accountability. One senior rate instead of an army&apos;s overhead.
+            The repo above is the working evidence behind the{' '}
             <a
               href={`${REPO}/blob/main/RESUME.md`}
               data-qid="contact:link:resume"
