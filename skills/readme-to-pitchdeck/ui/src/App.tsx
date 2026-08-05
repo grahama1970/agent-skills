@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, Pencil, ShieldChec
 import { useCallback, useEffect, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
+import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { useDeck, useKeyboardNav, useRegisterAction, useSlideScale } from './hooks'
 import { SlideBody } from './layouts/SlideLayouts'
@@ -273,9 +274,12 @@ export function App() {
         />
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <EditContext.Provider value={{ editing, request: setPendingEdit }}>
-            <SlideCanvas slide={slide} direction={direction} />
-          </EditContext.Provider>
+          <div className="flex min-h-0 flex-1">
+            <EditContext.Provider value={{ editing, request: setPendingEdit }}>
+              <SlideCanvas slide={slide} direction={direction} />
+            </EditContext.Provider>
+            {editing ? <Inspector slide={slide} onChanged={reload} /> : null}
+          </div>
           {pendingEdit ? (
             <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reload} />
           ) : null}

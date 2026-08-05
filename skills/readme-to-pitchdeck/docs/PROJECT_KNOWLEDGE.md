@@ -187,3 +187,19 @@ Before adding autonomous research or rewriting:
   Drive/YouTube); PDF/contact-sheet renders show the poster frame; visual-sync
   indexes only rendered slide PNGs — video frame sampling remains the noted
   extension.
+
+## Slide inspector + continuous alteration (added 2026-08-05)
+
+- Operator direction: the agent never produces a finished deck — the UI is a
+  workbench for continuous human alteration with the compiler as safety net.
+- Keynote (icloud.com tab, DOM-verified via surf) is the reference pattern: a
+  selection-scoped right inspector (Slide → Appearance toggles → Background
+  fills), NOT a global font toolbar; text formatting is selection-contextual.
+- `Inspector.tsx` renders in edit mode: layout selector (all 10 layouts),
+  footer, speaker notes, bullet add/delete — every change through
+  /api/slide-edit → apply-edit (EDITABLE_FIELDS now includes layout;
+  body:add / body:del.<index> operations). VERIFIED live: slide 02-problem
+  switched statement→split and gained a bullet, YAML + re-emit round-trip.
+- Per-element fonts/colors remain intentionally out of scope: theme-layer
+  decisions, tuned in the exported PPTX or theme, preventing design-system and
+  claim-rendering drift.

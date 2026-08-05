@@ -29,7 +29,7 @@ from .models import (
     SourceManifest,
 )
 
-EDITABLE_FIELDS = {"title", "message", "notes", "footer"}
+EDITABLE_FIELDS = {"title", "message", "notes", "footer", "layout"}
 
 
 def _load(bundle_dir: Path, deck_name: str):
@@ -65,13 +65,21 @@ def apply_slide_edit(
 
     base_field, _, index_part = field.partition(":")
     if base_field == "body":
-        if not index_part.isdigit():
-            raise ValueError("body edits use field 'body:<index>'")
-        index = int(index_part)
-        if index >= len(slide.body):
-            raise ValueError(f"slide '{slide_id}' has no body item {index}")
         new_body = list(slide.body)
-        new_body[index] = value
+        if index_part == "add":
+            new_body.append(value)
+        elif index_part.startswith("del."):
+            index = int(index_part.removeprefix("del."))
+            if index >= len(new_body):
+                raise ValueError(f"slide '{slide_id}' has no body item {index}")
+            del new_body[index]
+        elif index_part.isdigit():
+            index = int(index_part)
+            if index >= len(new_body):
+                raise ValueError(f"slide '{slide_id}' has no body item {index}")
+            new_body[index] = value
+        else:
+            raise ValueError("body edits use field 'body:<index>', 'body:add', or 'body:del.<index>'")
         updated_slide = slide.model_copy(update={"body": new_body})
     elif base_field in EDITABLE_FIELDS:
         updated_slide = slide.model_copy(update={base_field: value or None if base_field == "footer" else value})
