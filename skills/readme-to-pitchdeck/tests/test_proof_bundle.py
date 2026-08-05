@@ -233,15 +233,17 @@ def test_case13_browser_vs_libreoffice_visual_diff() -> None:
     raise NotImplementedError
 
 
-@pytest.mark.xfail(strict=True, reason="magic-byte verification and size limits on asset intake not implemented (P1-7 full)")
 def test_case14_malformed_asset_upload_magic_bytes(tmp_path: Path) -> None:
     from readme_to_pitchdeck.asset_ops import add_asset_to_slide
 
     fake = tmp_path / "fake.png"
     fake.write_bytes(b"#!/bin/sh\necho not-an-image\n")  # wrong magic bytes, right suffix
-    # Should be rejected on content, not suffix; today it passes intake.
     with pytest.raises(ValueError, match="magic"):
         add_asset_to_slide(tmp_path, tmp_path / "ui", slide_id="s1", file_path=fake, alt_text="x")
+    empty = tmp_path / "empty.png"
+    empty.write_bytes(b"")
+    with pytest.raises(ValueError, match="empty"):
+        add_asset_to_slide(tmp_path, tmp_path / "ui", slide_id="s1", file_path=empty, alt_text="x")
 
 
 def test_undo_restores_previous_state_and_redo(planned: Path, tmp_path: Path) -> None:

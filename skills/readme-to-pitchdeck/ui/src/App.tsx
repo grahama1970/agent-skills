@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Columns3, FileCode2, LayoutGrid, Maximize2, NotebookText, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen, Pencil, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Columns3, FileCode2, LayoutGrid, Maximize2, NotebookText, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
@@ -313,6 +313,21 @@ export function App() {
   }
   if (!deck) return <main className="flex h-full items-center justify-center text-slate-500">Loading deck…</main>
 
+  // Mode architecture (roundtable): Present | Design | Claims | Source as one
+  // segmented control — derived from existing state, so deep panes still work.
+  const mode: 'present' | 'design' | 'claims' | 'source' =
+    view === 'claims' ? 'claims' : editing && showSource ? 'source' : editing ? 'design' : 'present'
+  const setMode = (next: typeof mode) => {
+    setPendingEdit(null)
+    if (next === 'claims') {
+      setView('claims')
+      return
+    }
+    setView('present')
+    setEditing(next !== 'present')
+    setShowSource(next === 'source')
+  }
+
   const navSlides = editing ? deck.slides : deck.slides.filter((s) => !s.hidden)
   const slide = navSlides[Math.min(index, navSlides.length - 1)] ?? deck.slides[0]
   const navButton =
@@ -402,6 +417,36 @@ export function App() {
           ) : null}
         </div>
         <nav aria-label="Deck views" className="flex items-center justify-end gap-1">
+          <div
+            role="radiogroup"
+            aria-label="Deck mode"
+            className="mr-1 inline-flex overflow-hidden rounded-lg border border-slate-700"
+          >
+            {(
+              [
+                ['present', 'Present', 'Read the deck as it will present'],
+                ['design', 'Design', 'Edit slides — click any text to change it'],
+                ['claims', 'Claims', 'Review the claim ledger and evidence bindings'],
+                ['source', 'Source', 'Edit the deck manifest YAML directly'],
+              ] as const
+            ).map(([id, label, hint]) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={mode === id}
+                data-qid={`deck:mode:${id}`}
+                data-qs-action={`DECK_MODE_${id.toUpperCase()}`}
+                title={hint}
+                onClick={() => setMode(id)}
+                className={`cursor-pointer px-3 py-1.5 text-sm transition-colors ${
+                  mode === id ? 'bg-cyan-600/25 text-cyan-200' : 'bg-slate-900 text-slate-300 hover:text-cyan-300'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             data-qid="deck:view:overview"
@@ -412,31 +457,6 @@ export function App() {
             className={navButton}
           >
             <LayoutGrid aria-hidden className="h-4 w-4" /> Overview
-          </button>
-          <button
-            type="button"
-            data-qid="deck:view:claims"
-            data-qs-action="DECK_TOGGLE_CLAIM_REVIEW"
-            title="Toggle claim-ledger review"
-            aria-pressed={view === 'claims'}
-            onClick={() => setView(view === 'claims' ? 'present' : 'claims')}
-            className={navButton}
-          >
-            <ShieldCheck aria-hidden className="h-4 w-4" /> Claim review
-          </button>
-          <button
-            type="button"
-            data-qid="deck:view:edit"
-            data-qs-action="DECK_TOGGLE_EDIT_MODE"
-            title="Toggle edit mode — click any slide text to change it"
-            aria-pressed={editing}
-            onClick={() => {
-              setEditing((value) => !value)
-              setPendingEdit(null)
-            }}
-            className={`${navButton} ${editing ? 'border-cyan-500/80 text-cyan-200' : ''}`}
-          >
-            <Pencil aria-hidden className="h-4 w-4" /> Edit
           </button>
           <button
             type="button"
@@ -457,7 +477,7 @@ export function App() {
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_420px]">
           <ClaimReview deck={deck} />
           <aside aria-label="Claim review chat" className="min-h-0 overflow-hidden border-t border-slate-800 lg:border-l lg:border-t-0">
-            <DeckChat deck={deck} />
+            <DeckChat deck={deck} onChanged={reloadAll} />
           </aside>
         </div>
       ) : view === 'overview' ? (

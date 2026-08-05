@@ -36,6 +36,39 @@ from .slide_edit import _load
 
 _IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif"}
 _VIDEO_SUFFIXES = {".mp4", ".webm"}
+_MAX_ASSET_BYTES = 100 * 1024 * 1024
+
+# Content sniffing per suffix: a file's bytes must match what its name claims
+# (proof-bundle case 14 — a script renamed .png must be rejected on content).
+_MAGIC: dict[str, tuple[bytes, ...]] = {
+    ".png": (b"\x89PNG\r\n\x1a\n",),
+    ".jpg": (b"\xff\xd8\xff",),
+    ".jpeg": (b"\xff\xd8\xff",),
+    ".gif": (b"GIF87a", b"GIF89a"),
+    ".webm": (b"\x1a\x45\xdf\xa3",),
+}
+
+
+def _verify_asset_content(file_path: Path, suffix: str) -> None:
+    size = file_path.stat().st_size
+    if size == 0:
+        raise ValueError(f"asset file is empty: {file_path}")
+    if size > _MAX_ASSET_BYTES:
+        raise ValueError(f"asset exceeds {_MAX_ASSET_BYTES // (1024 * 1024)}MB limit: {file_path} ({size} bytes)")
+    head = file_path.open("rb").read(64)
+    if suffix in _MAGIC:
+        if not any(head.startswith(m) for m in _MAGIC[suffix]):
+            raise ValueError(f"asset content does not match {suffix} magic bytes: {file_path}")
+    elif suffix == ".webp":
+        if not (head.startswith(b"RIFF") and head[8:12] == b"WEBP"):
+            raise ValueError(f"asset content does not match .webp magic bytes: {file_path}")
+    elif suffix == ".mp4":
+        if head[4:8] != b"ftyp":
+            raise ValueError(f"asset content does not match .mp4 magic bytes (no ftyp box): {file_path}")
+    elif suffix == ".svg":
+        text = head.decode("utf-8", errors="ignore").lstrip().lower()
+        if not (text.startswith("<svg") or text.startswith("<?xml")):
+            raise ValueError(f"asset content does not match .svg magic bytes (no svg/xml prolog): {file_path}")
 
 
 def _write_pair(bundle_dir: Path, deck_name: str, updated_deck, updated_assets, expected_revision: int | None = None) -> None:
@@ -94,6 +127,7 @@ def add_asset_to_slide(
         raise ValueError(f"asset file not found: {file_path}")
     if not alt_text.strip():
         raise ValueError("alt_text is required for every asset (accessibility + claim review)")
+    _verify_asset_content(file_path, suffix)
 
     deck, ledger, sources, assets, source_path = _load(bundle_dir, deck_name)
     slide = next((s for s in deck.slides if s.id == slide_id), None)
