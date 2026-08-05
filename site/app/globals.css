@@ -51,6 +51,8 @@
 html {
   background: var(--t-paper);
   scroll-behavior: smooth;
+  /* Offset anchor targets by the sticky header height. */
+  scroll-padding-top: 4.5rem;
 }
 @media (prefers-reduced-motion: reduce) {
   html {
