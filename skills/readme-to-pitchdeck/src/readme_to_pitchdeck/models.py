@@ -311,6 +311,49 @@ class FreeformElement(StrictModel):
         return self
 
 
+class BindingKind(str, Enum):
+    """Relation of a visible text string to the claim ledger (ContentIR core).
+
+    Synthesized from the 2026-08-05 roundtable: webgpt's relation taxonomy,
+    webclaude's explicit non-claim/decorative lexicon + unbound-blocks-publish
+    default, applied at whole-string granularity (runs stay derived artifacts).
+    """
+
+    CLAIM_QUOTE = "claim_quote"          # exact ledger text
+    CLAIM_PARAPHRASE = "claim_paraphrase"  # reworded; semantic review still human
+    DERIVED = "derived"                  # computed from claim data
+    QUALIFIER = "qualifier"              # carries a claim's required qualifier
+    NON_CLAIM = "non_claim"              # structural/boilerplate prose
+    DECORATIVE = "decorative"            # no informational content; still leak-scanned
+
+
+class TextBinding(StrictModel):
+    """Binds one addressable slide string to the ledger.
+
+    path addresses a whole string: title | message | footer | body:<i> |
+    element:<id> | visual.items:<i> | visual.caption. Strings without a
+    binding are UNBOUND: a warning in normal builds, an error at publish.
+    """
+
+    path: str = Field(min_length=1)
+    kind: BindingKind
+    claim_id: str | None = None
+
+    @model_validator(mode="after")
+    def validate_claim_ref(self) -> "TextBinding":
+        needs_claim = self.kind in {
+            BindingKind.CLAIM_QUOTE,
+            BindingKind.CLAIM_PARAPHRASE,
+            BindingKind.DERIVED,
+            BindingKind.QUALIFIER,
+        }
+        if needs_claim and not self.claim_id:
+            raise ValueError(f"binding kind '{self.kind.value}' requires claim_id (path={self.path})")
+        if not needs_claim and self.claim_id:
+            raise ValueError(f"binding kind '{self.kind.value}' must not carry claim_id (path={self.path})")
+        return self
+
+
 class ClaimGuard(StrictModel):
     allowed_claim_ids: list[str] = Field(default_factory=list)
     requires_non_claim_ids: list[str] = Field(default_factory=list)
@@ -331,6 +374,7 @@ class SlideSpec(StrictModel):
     visual: VisualSpec = Field(default_factory=VisualSpec)
     claim_guard: ClaimGuard = Field(default_factory=ClaimGuard)
     elements: list[FreeformElement] = Field(default_factory=list)
+    bindings: list[TextBinding] = Field(default_factory=list)
     transition: SlideTransition = SlideTransition.SLIDE
     transition_duration_ms: int = Field(default=400, ge=200, le=1200)
     reveal: ContentReveal = ContentReveal.STAGGER_UP

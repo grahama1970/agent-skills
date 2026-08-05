@@ -14,6 +14,14 @@ body,
   font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* Font unification (roundtable 10-partial): slide CONTENT uses the same
+   family the PPTX builder emits (Arial), so wrap points converge; app chrome
+   keeps the system font. */
+.deck-font,
+.deck-font * {
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+}
+
 button:focus-visible,
 a:focus-visible {
   outline: 2px solid #22d3ee;

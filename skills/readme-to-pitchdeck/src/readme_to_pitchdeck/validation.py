@@ -10,6 +10,7 @@ from pptx import Presentation
 from .io import expand_path, sha256_file
 from .models import (
     AssetKind,
+    BindingKind,
     AssetManifest,
     AssetStatus,
     ClaimKind,
@@ -106,6 +107,129 @@ def validate_bundle(
             [slide.title, slide.message, *slide.body, *element_texts, *visual_texts]
         )
         all_text = "\n".join([visible_text, slide.notes])
+
+        # --- ContentIR bindings (roundtable session 2) -----------------------
+        def _resolve_path(path: str) -> str | None:
+            base, _, index = path.partition(":")
+            if base == "title":
+                return slide.title
+            if base == "message":
+                return slide.message
+            if base == "footer":
+                return slide.footer or ""
+            if base == "body" and index.isdigit() and int(index) < len(slide.body):
+                return slide.body[int(index)]
+            if base == "element":
+                for element in slide.elements:
+                    if element.id == index:
+                        return element.text or ""
+                return None
+            if base == "visual.items" and index.isdigit() and int(index) < len(slide.visual.items):
+                return slide.visual.items[int(index)]
+            if base == "visual.caption":
+                return slide.visual.caption or ""
+            return None
+
+        bound_paths: set[str] = set()
+        structural_qualifiers: dict[str, str] = {}
+        for binding in slide.bindings:
+            resolved = _resolve_path(binding.path)
+            if resolved is None:
+                issues.append(
+                    ValidationIssue(
+                        severity="error",
+                        code="BINDING_UNKNOWN_PATH",
+                        message=f"Binding path '{binding.path}' does not resolve on this slide.",
+                        slide_id=slide.id,
+                    )
+                )
+                continue
+            bound_paths.add(binding.path)
+            if binding.claim_id:
+                bound_claim = claim_map.get(binding.claim_id)
+                if bound_claim is None:
+                    issues.append(
+                        ValidationIssue(
+                            severity="error",
+                            code="BINDING_UNKNOWN_CLAIM",
+                            message=f"Binding '{binding.path}' references unknown claim '{binding.claim_id}'.",
+                            slide_id=slide.id,
+                            claim_id=binding.claim_id,
+                        )
+                    )
+                    continue
+                if binding.kind == BindingKind.CLAIM_QUOTE and bound_claim.text.strip().lower() not in resolved.strip().lower():
+                    issues.append(
+                        ValidationIssue(
+                            severity="error",
+                            code="BINDING_QUOTE_MISMATCH",
+                            message=(
+                                f"claim_quote binding '{binding.path}' does not contain the ledger text "
+                                f"of claim '{binding.claim_id}'."
+                            ),
+                            slide_id=slide.id,
+                            claim_id=binding.claim_id,
+                        )
+                    )
+                if binding.kind == BindingKind.QUALIFIER:
+                    structural_qualifiers[binding.claim_id] = resolved
+
+        # Structural qualifier authority: a high-risk claim's qualifier must be
+        # STRUCTURALLY bound to visible text containing the required qualifier.
+        # The negation-window text scan remains as defense-in-depth lint only.
+        for claim_id in slide.claim_ids:
+            claim = claim_map.get(claim_id)
+            if claim is None or not claim.required_qualifier:
+                continue
+            bound_text = structural_qualifiers.get(claim_id)
+            if bound_text is None:
+                issues.append(
+                    ValidationIssue(
+                        severity="error" if require_approved_claims else "warning",
+                        code="QUALIFIER_NOT_STRUCTURAL",
+                        message=(
+                            f"High-risk claim '{claim_id}' has no structural qualifier binding on this "
+                            "slide; publish requires kind=qualifier bound to visible text."
+                        ),
+                        slide_id=slide.id,
+                        claim_id=claim_id,
+                    )
+                )
+            elif claim.required_qualifier.strip().lower() not in bound_text.strip().lower():
+                issues.append(
+                    ValidationIssue(
+                        severity="error",
+                        code="QUALIFIER_BINDING_TEXT_MISMATCH",
+                        message=(
+                            f"Qualifier binding for claim '{claim_id}' does not contain its required "
+                            "qualifier text."
+                        ),
+                        slide_id=slide.id,
+                        claim_id=claim_id,
+                    )
+                )
+
+        # Publish gate: no unclassified substantive string may reach a published
+        # artifact (webgpt exit criterion, applied at the gate).
+        substantive: list[tuple[str, str]] = [("title", slide.title), ("message", slide.message)]
+        substantive += [(f"body:{i}", line) for i, line in enumerate(slide.body)]
+        substantive += [(f"element:{e.id}", e.text or "") for e in slide.elements if e.type == "text"]
+        substantive += [(f"visual.items:{i}", item) for i, item in enumerate(slide.visual.items)]
+        unbound = [path for path, text in substantive if text.strip() and path not in bound_paths]
+        if unbound:
+            issues.append(
+                ValidationIssue(
+                    severity="error" if require_approved_claims else "warning",
+                    code="UNBOUND_TEXT",
+                    message=(
+                        f"{len(unbound)} substantive string(s) have no content binding "
+                        f"({', '.join(unbound[:4])}{'…' if len(unbound) > 4 else ''}); publish requires full coverage."
+                    ),
+                    slide_id=slide.id,
+                )
+            )
+        # ---------------------------------------------------------------------
+
         if not slide.source_refs:
             issues.append(
                 ValidationIssue(

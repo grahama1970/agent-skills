@@ -12,6 +12,7 @@ the RenderPlan text check. Raises ArtifactLeak on any finding.
 
 from __future__ import annotations
 
+import html as html_mod
 import re
 import zipfile
 from pathlib import Path
@@ -39,7 +40,7 @@ def _pptx_text(path: Path) -> str:
 
 
 def _strip_xml(xml_text: str) -> str:
-    return re.sub(r"<[^>]+>", " ", xml_text)
+    return html_mod.unescape(re.sub(r"<[^>]+>", " ", xml_text))
 
 
 def scan_artifact(
@@ -83,12 +84,28 @@ def scan_artifact(
         if phrase.lower() in visible.lower() and not _qualified_occurrence(visible, phrase):
             findings.append(f"forbidden unqualified phrase in artifact text: '{phrase}'")
 
-    # 4) Whole-string survival: every visible slide title must be present (PPTX/HTML).
-    missing_titles = 0
+    # 4) Whole-string RenderPlan verification: every visible string must survive
+    # into the artifact (title, message, body, freeform text, visual items).
+    visible_lower = re.sub(r"\s+", " ", visible.lower())
+    strings_verified = 0
     for slide in deck.slides:
-        if not slide.hidden and slide.title.strip() and slide.title.strip().lower() not in visible.lower():
-            findings.append(f"slide title missing from artifact: '{slide.id}' ('{slide.title[:40]}')")
-            missing_titles += 1
+        if slide.hidden:
+            continue
+        expected: list[tuple[str, str]] = [("title", slide.title), ("message", slide.message)]
+        expected += [(f"body:{i}", line) for i, line in enumerate(slide.body)]
+        if slide.layout.value == "freeform":
+            expected = [("title", "")]  # freeform renders elements instead of title/message/body
+            expected += [(f"element:{e.id}", e.text or "") for e in slide.elements if e.type == "text"]
+        expected += [(f"visual.items:{i}", item) for i, item in enumerate(slide.visual.items)]
+        for path, text in expected:
+            needle = re.sub(r"\s+", " ", text.strip().lower())
+            if not needle:
+                continue
+            strings_verified += 1
+            if needle not in visible_lower:
+                findings.append(
+                    f"visible string missing from artifact: {slide.id}/{path} ('{text[:40]}')"
+                )
 
     if findings:
         detail = "; ".join(findings[:6])
@@ -97,7 +114,7 @@ def scan_artifact(
     counts = {
         "private_claims_checked": sum(1 for c in ledger.claims if c.visibility == Visibility.PRIVATE),
         "private_sources_checked": sum(1 for s in sources.sources if s.visibility == Visibility.PRIVATE),
-        "titles_verified": sum(1 for s in deck.slides if not s.hidden and s.title.strip()),
+        "strings_verified": strings_verified,
     }
     logger.info("artifact scan PASS: {} ({})", artifact.name, counts)
     return counts

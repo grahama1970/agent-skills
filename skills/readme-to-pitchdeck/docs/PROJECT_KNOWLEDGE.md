@@ -455,3 +455,33 @@ takes rails-first on the strength of the no-rollback argument.
 - Session-2 next (per plan of record): ContentIR semantic model (webgpt shape
   + webclaude assembled-string validation + gemini span projection),
   structural qualifier binding, RenderPlan completion, font unification.
+
+## Session-2: ContentIR bindings implemented (2026-08-05)
+
+- TextBinding on SlideSpec: path-addressed whole-string bindings (title,
+  message, body:<i>, element:<id>, visual.items:<i>, visual.caption, footer)
+  with kinds claim_quote / claim_paraphrase / derived / qualifier /
+  non_claim / decorative (roundtable synthesis: whole-string granularity,
+  runs stay derived — full run-level ContentIR deferred until needed).
+- Validation: BINDING_UNKNOWN_PATH/CLAIM errors; claim_quote must contain the
+  ledger text (BINDING_QUOTE_MISMATCH); structural qualifier authority —
+  high-risk claims need a kind=qualifier binding to visible text containing
+  the required qualifier (QUALIFIER_NOT_STRUCTURAL: warning normally, ERROR
+  at publish; the negation-window scan is now defense-in-depth lint only);
+  publish coverage — UNBOUND_TEXT is an error at publish (webgpt's "no
+  unclassified string reaches a published artifact", applied at the gate).
+- bindings-migrate CLI (webclaude's migration rule): exact claim text →
+  claim_quote, qualifier text → qualifier, rest unbound by default
+  (--triage-rest non_claim for human-reviewed fixtures). Applied to the
+  sparta example (73+63 bindings; finding: only 1 exact claim-text match in
+  the whole curated deck — its prose diverges from ledger text, real
+  paraphrase-review debt); 18 structural qualifier footers added (qualifiers
+  had lived in notes — the exact P0-2 pattern, now visible + bound).
+- Artifact scan completed to full whole-string RenderPlan verification: every
+  visible string (title/message/body/freeform text/visual items) must survive
+  byte-level into PPTX/HTML, entity-normalized.
+- Font unification (item 10 partial): slide content renders Arial in the
+  React canvas (deck-font class), standalone HTML, and PPTX (Theme.font) —
+  wrap points converge; autofit/shrink policy still open.
+- Open from session 2 scope: claim-level source resolution + approval
+  provenance (item 5) — deferred to session 3 with the proof bundle.

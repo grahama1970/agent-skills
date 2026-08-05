@@ -898,3 +898,83 @@ def test_session1_rails_cas_watermark_artifact_scan(tmp_path: Path) -> None:
     with pytest.raises(ArtifactLeak, match="secret-1"):
         scan_artifact(leaky, deck2, ledger_with_secret, sources)
     scan_artifact(draft, deck2, ledger_with_secret, sources)
+
+
+def test_content_bindings_session2(tmp_path: Path) -> None:
+    """ContentIR: binding validation, structural qualifiers, publish coverage."""
+    sources, ledger, assets = _base_models(tmp_path)
+    from readme_to_pitchdeck.models import (
+        BindingKind,
+        ClaimGuard,
+        DeckManifest as DM,
+        DeckMeta,
+        SlideSpec,
+        TextBinding,
+        VisualSpec,
+    )
+
+    def make_slide(**kw):
+        base = dict(
+            id="s1", order=1, role="content", layout="statement",
+            visibility=Visibility.PUBLIC, title="A bounded public claim.",
+            message="Context sentence.", claim_ids=["public-claim"],
+            visual=VisualSpec(), claim_guard=ClaimGuard(),
+            source_refs=[SourceRef(source_id="public-source")],
+        )
+        base.update(kw)
+        return SlideSpec(**base)
+
+    def make_deck(slide):
+        return DM(
+            deck=DeckMeta(id="d", title="D", audience="R", visibility=Visibility.PUBLIC, source_policy="public_only"),
+            slides=[slide],
+        )
+
+    def run(deck, publish=False):
+        return validate_bundle(
+            deck, ledger, sources, assets,
+            source_manifest_dir=tmp_path, asset_manifest_dir=tmp_path,
+            require_approved_claims=publish,
+        )
+
+    bad = make_slide(bindings=[TextBinding(path="body:9", kind=BindingKind.NON_CLAIM)])
+    assert any(i.code == "BINDING_UNKNOWN_PATH" for i in run(make_deck(bad)).issues)
+    bad2 = make_slide(bindings=[TextBinding(path="title", kind=BindingKind.CLAIM_QUOTE, claim_id="nope")])
+    assert any(i.code == "BINDING_UNKNOWN_CLAIM" for i in run(make_deck(bad2)).issues)
+
+    mismatch = make_slide(
+        title="Completely different words",
+        bindings=[TextBinding(path="title", kind=BindingKind.CLAIM_QUOTE, claim_id="public-claim")],
+    )
+    assert any(i.code == "BINDING_QUOTE_MISMATCH" for i in run(make_deck(mismatch)).issues)
+
+    plain = make_slide()
+    normal = run(make_deck(plain))
+    assert any(i.code == "UNBOUND_TEXT" and i.severity == "warning" for i in normal.issues)
+    published = run(make_deck(plain), publish=True)
+    assert any(i.code == "UNBOUND_TEXT" and i.severity == "error" for i in published.issues)
+
+    priv_slide = SlideSpec(
+        id="p1", order=1, role="content", layout="statement",
+        visibility=Visibility.PRIVATE, title="A private implementation claim.",
+        message="x", claim_ids=["private-claim"], visual=VisualSpec(),
+        claim_guard=ClaimGuard(), source_refs=[SourceRef(source_id="private-source")],
+        footer="Verify current private evidence.",
+        bindings=[
+            TextBinding(path="title", kind=BindingKind.CLAIM_QUOTE, claim_id="private-claim"),
+            TextBinding(path="message", kind=BindingKind.NON_CLAIM),
+            TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id="private-claim"),
+        ],
+    )
+    priv_deck = DM(
+        deck=DeckMeta(id="p", title="P", audience="R", visibility=Visibility.PRIVATE, source_policy="public_and_private"),
+        slides=[priv_slide],
+    )
+    ok = run(priv_deck, publish=True)
+    assert not any(i.code.startswith("QUALIFIER_") for i in ok.issues), [i.model_dump() for i in ok.issues if i.code.startswith("QUALIFIER_")]
+    no_qual = priv_slide.model_copy(update={"bindings": priv_slide.bindings[:2]})
+    bad_deck = priv_deck.model_copy(update={"slides": [no_qual]})
+    assert any(
+        i.code == "QUALIFIER_NOT_STRUCTURAL" and i.severity == "error"
+        for i in run(bad_deck, publish=True).issues
+    )

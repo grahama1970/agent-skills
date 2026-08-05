@@ -396,6 +396,27 @@ def asset_clear(
         _abort(exc)
 
 
+@app.command(name="bindings-migrate")
+def bindings_migrate(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    triage_rest: Annotated[
+        str, typer.Option(help="unbound (default, publish stays blocked) or non_claim (human-reviewed fixtures only).")
+    ] = "unbound",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Auto-classify content bindings: exact claim text -> claim_quote, qualifier text -> qualifier."""
+    import json as _json
+
+    from .bindings_migrate import migrate_bindings
+
+    try:
+        counts = migrate_bindings(bundle_dir, deck_name=deck_name, triage_rest=triage_rest)
+        typer.echo(_json.dumps(counts) if json_output else f"bindings-migrate: {counts}")
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="deck-op")
 def deck_op(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

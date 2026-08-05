@@ -208,5 +208,9 @@ const LAYOUTS: Record<string, (props: { slide: UiSlide }) => React.ReactNode> = 
 
 export function SlideBody({ slide }: { slide: UiSlide }) {
   const Layout = LAYOUTS[slide.layout] ?? Split
-  return <Layout slide={slide} />
+  return (
+    <div className="deck-font h-full w-full">
+      <Layout slide={slide} />
+    </div>
+  )
 }

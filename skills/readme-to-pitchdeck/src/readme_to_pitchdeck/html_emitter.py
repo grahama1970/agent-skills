@@ -34,7 +34,7 @@ from .models import (
 
 _RUNTIME_CSS = """
 * { box-sizing: border-box; }
-body { margin: 0; background: #020617; color: #e6edf3; font-family: system-ui, sans-serif;
+body { margin: 0; background: #020617; color: #e6edf3; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
        height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 #progress { height: 3px; background: #0f172a; } #progress > div { height: 100%; background: #22d3ee; transition: width .3s; }
 header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px;
