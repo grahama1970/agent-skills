@@ -310,3 +310,18 @@ Accepted backlog (architectural; NOT yet implemented — the RETHINK core):
 13. Claim-aware Markdown outline projection (constrained, id-stable) as a
     future authoring surface; Marp stays one-way (P2-14).
 14. Reviewer's 14-case proof bundle as the release gate (item 15).
+
+## Collapsible + resizable workspace panes (added 2026-08-05, user spec)
+
+- All three panes (source, slide rail, inspector) now have: visible header
+  toggle icons, in-pane collapse buttons, floating restore overlays on the
+  canvas when collapsed, drag-resize handles (clamped: source 260-650,
+  rail 140-320, inspector 240-480) with double-click width reset, and
+  localStorage persistence for both open/collapsed state and widths.
+- Shortcut matrix: Ctrl+\ source · Ctrl+B rail · Ctrl+Shift+I inspector ·
+  Ctrl+Shift+F focus mode (collapses all, restores exact prior state).
+- Spec's nested-setState focus-mode implementation replaced with a
+  ref-snapshot version (the original double-fires state updaters).
+- VERIFIED live: toggles/handles/focus button in DOM; focus mode collapse →
+  restore round-trip exact. Addresses WebGPT review P2-12 canvas-density
+  complaint (canvas was ~35% of viewport with all panes open).

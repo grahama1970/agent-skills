@@ -1,18 +1,38 @@
-import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, PanelLeft, Pencil, ShieldCheck } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Columns3, FileCode2, LayoutGrid, Maximize2, NotebookText, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen, Pencil, ShieldCheck } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
 import { AssetDropZone } from './components/AssetDrop'
 import { EditToolbar, SlideRail } from './components/EditChrome'
 import { ExportMenu } from './components/ExportMenu'
 import { OverflowBadge } from './components/OverflowBadge'
+import { ResizeHandle } from './components/ResizeHandle'
 import { SourcePane } from './components/SourcePane'
 import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { lintSlide } from './lib/pptxLint'
-import { useDeck, useKeyboardNav, useRegisterAction, useSlideScale } from './hooks'
+import { useDeck, useKeyboardNav, usePaneResize, useRegisterAction, useSlideScale } from './hooks'
 import { SlideBody } from './layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
+
+function usePersistentPane(key: string, initial: boolean): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
+  const [value, setValue] = useState<boolean>(() => {
+    try {
+      const stored = window.localStorage.getItem(key)
+      return stored === null ? initial : stored === 'true'
+    } catch {
+      return initial
+    }
+  })
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, String(value))
+    } catch {
+      /* storage unavailable — session-only state */
+    }
+  }, [key, value])
+  return [value, setValue]
+}
 
 type View = 'present' | 'overview' | 'claims'
 
@@ -154,9 +174,10 @@ export function App() {
   const [showNotes, setShowNotes] = useState(false)
   const [editing, setEditing] = useState(false)
   const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
-  const [railCollapsed, setRailCollapsed] = useState(false)
+  const [railCollapsed, setRailCollapsed] = usePersistentPane('deck-pane-rail-collapsed', false)
   const [zoom, setZoom] = useState('fit')
-  const [showSource, setShowSource] = useState(false)
+  const [showSource, setShowSource] = usePersistentPane('deck-pane-source', false)
+  const [inspectorCollapsed, setInspectorCollapsed] = usePersistentPane('deck-pane-inspector-collapsed', false)
   const [sourceVersion, setSourceVersion] = useState(0)
 
   useRegisterAction('deck:nav:prev', {
@@ -191,16 +212,44 @@ export function App() {
     setSourceVersion((value) => value + 1)
   }, [reload])
 
+  const lastPaneState = useRef({ source: false, rail: true, inspector: true })
+  const { widths, startResizing, resetWidth, activeResizer } = usePaneResize()
+
+  const toggleFocusMode = useCallback(() => {
+    const anyOpen = showSource || !railCollapsed || !inspectorCollapsed
+    if (anyOpen) {
+      lastPaneState.current = { source: showSource, rail: !railCollapsed, inspector: !inspectorCollapsed }
+      setShowSource(false)
+      setRailCollapsed(true)
+      setInspectorCollapsed(true)
+    } else {
+      setShowSource(lastPaneState.current.source)
+      setRailCollapsed(!lastPaneState.current.rail)
+      setInspectorCollapsed(!lastPaneState.current.inspector)
+    }
+  }, [showSource, railCollapsed, inspectorCollapsed, setShowSource, setRailCollapsed, setInspectorCollapsed])
+
+  // Shortcut matrix: Ctrl+\ source · Ctrl+B rail · Ctrl+Shift+I inspector · Ctrl+Shift+F focus
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === '\\') {
+      if (!(event.metaKey || event.ctrlKey)) return
+      if (event.key === '\\') {
         event.preventDefault()
         setShowSource((value) => !value)
+      } else if (event.key.toLowerCase() === 'b' && !event.shiftKey && !event.altKey) {
+        event.preventDefault()
+        setRailCollapsed((value) => !value)
+      } else if (event.key.toLowerCase() === 'i' && event.shiftKey) {
+        event.preventDefault()
+        setInspectorCollapsed((value) => !value)
+      } else if (event.key.toLowerCase() === 'f' && event.shiftKey) {
+        event.preventDefault()
+        toggleFocusMode()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [toggleFocusMode, setShowSource, setRailCollapsed, setInspectorCollapsed])
 
   useKeyboardNav(deck?.slides.length ?? 0, index, go)
 
@@ -235,9 +284,33 @@ export function App() {
                 data-qs-action="DECK_TOGGLE_RAIL"
                 title="Show or hide the slide navigator"
                 onClick={() => setRailCollapsed((value) => !value)}
-                className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 text-slate-300 hover:border-slate-600 hover:text-cyan-300"
+                className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 hover:border-slate-600 hover:text-cyan-300 ${railCollapsed ? 'text-slate-500' : 'text-cyan-300'}`}
               >
                 <PanelLeft aria-hidden className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Toggle deck source pane"
+                aria-pressed={showSource}
+                data-qid="deck:toolbar:source-toggle"
+                data-qs-action="DECK_TOGGLE_SOURCE"
+                title="Show or hide the YAML source pane (Ctrl+\\)"
+                onClick={() => setShowSource((value) => !value)}
+                className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 hover:border-slate-600 hover:text-cyan-300 ${showSource ? 'text-cyan-300' : 'text-slate-300'}`}
+              >
+                <FileCode2 aria-hidden className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Toggle inspector"
+                aria-pressed={!inspectorCollapsed}
+                data-qid="deck:toolbar:inspector-toggle"
+                data-qs-action="DECK_TOGGLE_INSPECTOR"
+                title="Show or hide the slide inspector"
+                onClick={() => setInspectorCollapsed((value) => !value)}
+                className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 hover:border-slate-600 hover:text-cyan-300 ${inspectorCollapsed ? 'text-slate-500' : 'text-cyan-300'}`}
+              >
+                <PanelRight aria-hidden className="h-4 w-4" />
               </button>
               <select
                 aria-label="Zoom"
@@ -346,15 +419,88 @@ export function App() {
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
           <div className="relative flex min-h-0 flex-1">
-            {editing && showSource ? <SourcePane version={sourceVersion} onSaved={reloadAll} /> : null}
-            {editing && !railCollapsed ? <SlideRail deck={deck} currentIndex={index} onSelect={go} /> : null}
+            {editing && showSource ? (
+              <>
+                <SourcePane version={sourceVersion} onSaved={reloadAll} onClose={() => setShowSource(false)} width={widths.source} />
+                <ResizeHandle pane="source" isDragging={activeResizer === 'source'} onMouseDown={(e) => startResizing('source', e)} onDoubleClick={() => resetWidth('source')} />
+              </>
+            ) : null}
+            {editing && !railCollapsed ? (
+              <>
+                <SlideRail deck={deck} currentIndex={index} onSelect={go} width={widths.rail} />
+                <ResizeHandle pane="rail" isDragging={activeResizer === 'rail'} onMouseDown={(e) => startResizing('rail', e)} onDoubleClick={() => resetWidth('rail')} />
+              </>
+            ) : null}
             {editing ? <OverflowBadge warnings={lintSlide(slide)} /> : null}
+            {editing && (!showSource || railCollapsed) ? (
+              <div className="absolute left-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
+                {!showSource ? (
+                  <button
+                    type="button"
+                    aria-label="Expand source pane"
+                    data-qid="deck:restore:source"
+                    data-qs-action="DECK_RESTORE_SOURCE"
+                    title="Expand source pane (Ctrl+\\)"
+                    onClick={() => setShowSource(true)}
+                    className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
+                  >
+                    <PanelLeftOpen aria-hidden className="h-4 w-4" />
+                  </button>
+                ) : null}
+                {railCollapsed ? (
+                  <button
+                    type="button"
+                    aria-label="Expand slide navigation"
+                    data-qid="deck:restore:rail"
+                    data-qs-action="DECK_RESTORE_RAIL"
+                    title="Expand slide navigation (Ctrl+B)"
+                    onClick={() => setRailCollapsed(false)}
+                    className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
+                  >
+                    <Columns3 aria-hidden className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            {editing ? (
+              <div className="absolute right-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
+                <button
+                  type="button"
+                  aria-label="Toggle focus mode"
+                  data-qid="deck:restore:focus"
+                  data-qs-action="DECK_FOCUS_MODE"
+                  title="Focus mode — collapse or restore all panes (Ctrl+Shift+F)"
+                  onClick={toggleFocusMode}
+                  className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
+                >
+                  <Maximize2 aria-hidden className="h-4 w-4" />
+                </button>
+                {inspectorCollapsed ? (
+                  <button
+                    type="button"
+                    aria-label="Expand inspector"
+                    data-qid="deck:restore:inspector"
+                    data-qs-action="DECK_RESTORE_INSPECTOR"
+                    title="Expand inspector (Ctrl+Shift+I)"
+                    onClick={() => setInspectorCollapsed(false)}
+                    className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
+                  >
+                    <PanelRightOpen aria-hidden className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
             <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll}>
               <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll }}>
                 <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
               </EditContext.Provider>
             </AssetDropZone>
-            {editing ? <Inspector slide={slide} onChanged={reloadAll} /> : null}
+            {editing && !inspectorCollapsed ? (
+              <>
+                <ResizeHandle pane="inspector" isDragging={activeResizer === 'inspector'} onMouseDown={(e) => startResizing('inspector', e)} onDoubleClick={() => resetWidth('inspector')} />
+                <Inspector slide={slide} onChanged={reloadAll} onCollapse={() => setInspectorCollapsed(true)} width={widths.inspector} />
+              </>
+            ) : null}
           </div>
           {pendingEdit ? (
             <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reloadAll} />

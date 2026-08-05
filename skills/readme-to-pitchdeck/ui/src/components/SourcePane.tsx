@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 // the full fail-closed pipeline server-side (/api/source → source-edit CLI).
 // Toggle with Cmd/Ctrl+\ (handled in App).
 
-export function SourcePane({ version, onSaved }: { version: number; onSaved: () => void }) {
+export function SourcePane({ version, onSaved, onClose, width }: { version: number; onSaved: () => void; onClose?: () => void; width?: number }) {
   const [yamlText, setYamlText] = useState('')
   const [loadedYaml, setLoadedYaml] = useState('')
   const [busy, setBusy] = useState(false)
@@ -50,10 +50,25 @@ export function SourcePane({ version, onSaved }: { version: number; onSaved: () 
   const dirty = yamlText !== loadedYaml
 
   return (
-    <section aria-label="Deck source" className="flex w-[34rem] min-w-[24rem] flex-col border-r border-slate-800 bg-slate-950">
+    <section aria-label="Deck source" style={width ? { width, minWidth: width } : undefined} className="flex w-[34rem] min-w-[24rem] flex-col bg-slate-950">
       <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-3 py-1.5 font-mono text-[11px] text-slate-400">
         <span>DECK SOURCE · deck.public.yaml</span>
-        <span className="text-slate-600">Ctrl+\ toggles</span>
+        <span className="flex items-center gap-2">
+          <span className="text-slate-600">Ctrl+\ toggles</span>
+          {onClose ? (
+            <button
+              type="button"
+              aria-label="Close source pane"
+              data-qid="deck:source:close"
+              data-qs-action="DECK_SOURCE_CLOSE"
+              title="Close the source pane"
+              onClick={onClose}
+              className="cursor-pointer rounded border border-transparent px-1 text-slate-400 hover:border-slate-600 hover:text-cyan-300"
+            >
+              ×
+            </button>
+          ) : null}
+        </span>
       </header>
       <textarea
         data-qid="deck:source:editor"

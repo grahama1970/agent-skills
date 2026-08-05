@@ -109,3 +109,88 @@ export function useRegisterAction(qid: string, spec: ActionSpec): void {
     }).catch(() => undefined)
   }, [qid, spec])
 }
+
+
+type ResizablePane = 'source' | 'rail' | 'inspector'
+
+const PANE_CONSTRAINTS: Record<ResizablePane, { min: number; max: number; initial: number }> = {
+  source: { min: 260, max: 650, initial: 400 },
+  rail: { min: 140, max: 320, initial: 176 },
+  inspector: { min: 240, max: 480, initial: 320 },
+}
+
+/** Persisted, clamped pane widths with window-level drag listeners. */
+export function usePaneResize() {
+  const [widths, setWidths] = useState<Record<ResizablePane, number>>(() => {
+    const load = (pane: ResizablePane) => {
+      try {
+        const stored = Number(window.localStorage.getItem(`deck-pane-width-${pane}`))
+        const { min, max, initial } = PANE_CONSTRAINTS[pane]
+        return Number.isFinite(stored) && stored >= min && stored <= max ? stored : initial
+      } catch {
+        return PANE_CONSTRAINTS[pane].initial
+      }
+    }
+    return { source: load('source'), rail: load('rail'), inspector: load('inspector') }
+  })
+  const [activeResizer, setActiveResizer] = useState<ResizablePane | null>(null)
+  const startX = useRef(0)
+  const startWidth = useRef(0)
+
+  const startResizing = useCallback(
+    (pane: ResizablePane, event: React.MouseEvent) => {
+      event.preventDefault()
+      setActiveResizer(pane)
+      startX.current = event.clientX
+      startWidth.current = widths[pane]
+    },
+    [widths],
+  )
+
+  useEffect(() => {
+    if (!activeResizer) return
+    const onMove = (event: MouseEvent) => {
+      const delta = event.clientX - startX.current
+      const signed = activeResizer === 'inspector' ? -delta : delta
+      const { min, max } = PANE_CONSTRAINTS[activeResizer]
+      const next = Math.min(Math.max(startWidth.current + signed, min), max)
+      setWidths((prev) => ({ ...prev, [activeResizer]: next }))
+    }
+    const onUp = () => setActiveResizer(null)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'col-resize'
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+  }, [activeResizer])
+
+  useEffect(() => {
+    try {
+      for (const [pane, width] of Object.entries(widths)) {
+        window.localStorage.setItem(`deck-pane-width-${pane}`, String(width))
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }, [widths])
+
+  const resetWidth = useCallback((pane?: ResizablePane) => {
+    setWidths((prev) => {
+      if (!pane) {
+        return {
+          source: PANE_CONSTRAINTS.source.initial,
+          rail: PANE_CONSTRAINTS.rail.initial,
+          inspector: PANE_CONSTRAINTS.inspector.initial,
+        }
+      }
+      return { ...prev, [pane]: PANE_CONSTRAINTS[pane].initial }
+    })
+  }, [])
+
+  return { widths, startResizing, resetWidth, activeResizer }
+}

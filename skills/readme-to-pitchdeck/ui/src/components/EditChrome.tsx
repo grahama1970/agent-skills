@@ -135,13 +135,15 @@ export function SlideRail({
   deck,
   currentIndex,
   onSelect,
+  width,
 }: {
   deck: UiDeckBundle
   currentIndex: number
   onSelect: (index: number) => void
+  width?: number
 }) {
   return (
-    <nav aria-label="Slides" className="w-44 min-w-44 overflow-y-auto border-r border-slate-800 bg-slate-900/50 p-2">
+    <nav aria-label="Slides" style={width ? { width, minWidth: width } : undefined} className="w-44 min-w-44 overflow-y-auto bg-slate-900/50 p-2">
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {deck.slides.map((slide, index) => (
           <li key={slide.id}>

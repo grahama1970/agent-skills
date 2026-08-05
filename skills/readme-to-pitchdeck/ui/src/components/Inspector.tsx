@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { PanelRightClose, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { UiSlide } from '../types'
 import { VisualLayoutPicker } from './VisualLayoutPicker'
@@ -18,7 +18,7 @@ async function postEdit(slideId: string, field: string, value: string): Promise<
   return data.error ?? `edit failed (${response.status})`
 }
 
-export function Inspector({ slide, onChanged }: { slide: UiSlide; onChanged: () => void }) {
+export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSlide; onChanged: () => void; onCollapse?: () => void; width?: number }) {
   const [footer, setFooter] = useState(slide.footer ?? '')
   const [notes, setNotes] = useState(slide.notes)
   const [newBullet, setNewBullet] = useState('')
@@ -46,11 +46,27 @@ export function Inspector({ slide, onChanged }: { slide: UiSlide; onChanged: () 
   return (
     <aside
       aria-label="Slide inspector"
-      className="absolute inset-y-0 right-0 z-10 flex w-80 flex-col gap-5 overflow-y-auto border-l border-slate-800 bg-slate-900/95 p-4 shadow-2xl backdrop-blur lg:static lg:z-auto lg:min-w-80 lg:bg-slate-900/70 lg:shadow-none"
+      style={width ? { width, minWidth: width } : undefined}
+      className="absolute inset-y-0 right-0 z-10 flex w-80 flex-col gap-5 overflow-y-auto border-l border-slate-800 bg-slate-900/95 p-4 shadow-2xl backdrop-blur lg:static lg:z-auto lg:min-w-80 lg:border-l-0 lg:bg-slate-900/70 lg:shadow-none"
     >
-      <header>
-        <h2 className="m-0 text-sm font-semibold text-slate-200">Slide {slide.order}</h2>
-        <p className="m-0 mt-0.5 font-mono text-xs text-slate-500">{slide.id}</p>
+      <header className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="m-0 text-sm font-semibold text-slate-200">Slide {slide.order}</h2>
+          <p className="m-0 mt-0.5 font-mono text-xs text-slate-500">{slide.id}</p>
+        </div>
+        {onCollapse ? (
+          <button
+            type="button"
+            aria-label="Collapse inspector"
+            data-qid="deck:inspector:collapse"
+            data-qs-action="DECK_INSPECTOR_COLLAPSE"
+            title="Collapse the inspector"
+            onClick={onCollapse}
+            className="cursor-pointer rounded-md border border-transparent p-1 text-slate-400 hover:border-slate-600 hover:text-cyan-300"
+          >
+            <PanelRightClose aria-hidden className="h-4 w-4" />
+          </button>
+        ) : null}
       </header>
 
       {error ? (
