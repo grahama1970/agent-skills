@@ -1,6 +1,15 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Departure Mono';
+  src: url('/fonts/DepartureMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
+  --font-display: 'Departure Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
   --color-ground: #0b0e14;
   --color-panel: #141926;
   --color-line: #232b3d;
@@ -85,6 +94,68 @@ body {
     opacity: 0;
   }
 }
+/* Kinetic headline: words rise out of a clipped line on load. */
+.kinetic-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.kinetic-word > span {
+  display: inline-block;
+  animation: word-rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--d, 0s);
+}
+@keyframes word-rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* Grid-as-foreground: ruled section boundaries with crosshair ticks. */
+.ruled {
+  position: relative;
+}
+.ruled::before,
+.ruled::after {
+  content: '+';
+  position: absolute;
+  top: -0.72em;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-line);
+}
+.ruled::before {
+  left: -2px;
+}
+.ruled::after {
+  right: -2px;
+}
+
+/* Command palette */
+.palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(11 14 20 / 0.75);
+  backdrop-filter: blur(2px);
+}
+.palette-panel {
+  animation: palette-in 0.16s ease-out both;
+}
+@keyframes palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -94,6 +165,12 @@ body {
     opacity: 1;
   }
   .trace-caret::after {
+    animation: none;
+  }
+  .kinetic-word > span {
+    animation: none;
+  }
+  .palette-panel {
     animation: none;
   }
 }

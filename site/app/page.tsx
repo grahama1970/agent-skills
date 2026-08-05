@@ -1,4 +1,6 @@
+import { CommandPalette } from '@/components/command-palette';
 import { ContactCta } from '@/components/contact-cta';
+import { Kinetic } from '@/components/kinetic';
 import { ProjectCard, type Project } from '@/components/project-card';
 import { SiteNav } from '@/components/site-nav';
 import { StatCounter } from '@/components/stat-counter';
@@ -53,21 +55,22 @@ export default function Home() {
       <main id="top" className="px-6 md:ml-[200px] md:px-12">
         <section className="mx-auto max-w-[70ch] border-b border-line py-20">
           <Eyebrow>Applied research engineering · agentic systems</Eyebrow>
-          <h1 className="mb-6 text-balance font-mono text-4xl font-semibold leading-[1.12] tracking-tight md:text-5xl">
-            We run the agent experiments most&nbsp;teams{' '}
-            <span className="text-mute">can&apos;t afford to attempt.</span>
+          <h1 className="mb-6 text-balance font-display text-4xl leading-[1.14] tracking-tight md:text-5xl">
+            <Kinetic text="We run the agent experiments most teams" />
+            <Kinetic text="can't afford to attempt." startDelay={0.45} dim />
           </h1>
           <p className="text-[19px]">
             Multi-agent orchestration, self-improving skill ecosystems, and
             verified autonomy — taken from paper to production discipline:
             systems that run overnight, unattended, and prove what they did.
           </p>
+          <CommandPalette />
           <Trace />
         </section>
 
-        <section id="build" className="reveal mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
+        <section id="build" className="reveal ruled mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
           <Eyebrow>What we build</Eyebrow>
-          <h2 className="mb-4 text-balance font-mono text-2xl font-semibold">
+          <h2 className="mb-4 text-balance font-display text-2xl">
             Research that stays running
           </h2>
           <p className="mb-6 text-mute">
@@ -88,9 +91,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="receipts" className="reveal mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
+        <section id="receipts" className="reveal ruled mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
           <Eyebrow>Why trust it</Eyebrow>
-          <h2 className="mb-5 text-balance font-mono text-2xl font-semibold">
+          <h2 className="mb-5 text-balance font-display text-2xl">
             Verified, or it didn&apos;t happen
           </h2>
           <p className="mb-4">
@@ -128,9 +131,9 @@ export default function Home() {
           </p>
         </section>
 
-        <section id="projects" className="reveal mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
+        <section id="projects" className="reveal ruled mx-auto max-w-[70ch] scroll-mt-8 border-b border-line py-20">
           <Eyebrow>Live experiments</Eyebrow>
-          <h2 className="mb-5 text-balance font-mono text-2xl font-semibold">
+          <h2 className="mb-5 text-balance font-display text-2xl">
             Ten running systems, not ten slide decks
           </h2>
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
@@ -140,9 +143,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="contact" className="reveal mx-auto max-w-[70ch] scroll-mt-8 py-20">
+        <section id="contact" className="reveal ruled mx-auto max-w-[70ch] scroll-mt-8 py-20">
           <Eyebrow>Contact</Eyebrow>
-          <h2 className="mb-5 text-balance font-mono text-2xl font-semibold">
+          <h2 className="mb-5 text-balance font-display text-2xl">
             Bring us the project you shelved
           </h2>
           <p className="mb-5">
