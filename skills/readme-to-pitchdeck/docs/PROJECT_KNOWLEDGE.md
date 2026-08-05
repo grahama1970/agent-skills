@@ -30,6 +30,13 @@ structural verification, and can render PDF/PNG/contact sheets with Linux tools.
 
 - Add a browser deck target beside the PPTX builder: both emitters consume the same
   validated `deck.public.yaml`, so all fail-closed claim gates run before either target.
+- Base runtime (revised same day after /brave-search validation): **open-slide**
+  (github.com/1weiho/open-slide, MIT, React + Tailwind, 6k stars, actively pushed) —
+  not a from-scratch build. It provides the 1920×1080 canvas, scaling, navigation,
+  present/presenter mode, and an agent-native click-to-comment review loop
+  (`@slide-comment` markers + `/apply-comments`). The compiler emits open-slide page
+  components from the validated manifest. Deviation to track: open-slide uses
+  `@base-ui/react`, not Radix/shadcn; our claim-review additions stay shadcn.
 - Stack is React + Tailwind + shadcn (Radix/CVA), matching Sparta Explorer — NOT Slidev.
   Slidev (Vue) was evaluated from a source clone and rejected as a dependency: its PPTX
   export is image-per-slide (python-pptx keeps the editable-PPTX job), and its animation
