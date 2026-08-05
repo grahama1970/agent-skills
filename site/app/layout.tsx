@@ -2,32 +2,39 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 const description =
-  'Multi-agent orchestration, self-improving skill ecosystems, and verified autonomy — taken from paper to production discipline. No claim ships without a receipt.';
+  'I build agent systems that can prove what they did. One-person applied research practice: multi-agent harnesses, adversarial evaluation, evidence extraction — shipped as working code, in public.';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://grahama.co'),
-  title: 'Grahama Labs — Applied Research Engineering for Agentic Systems',
+  title: 'Graham Anderson — agent systems that prove what they did',
   description,
   openGraph: {
-    title: 'Grahama Labs',
+    title: 'Graham Anderson — agent systems that prove what they did',
     description,
     url: 'https://grahama.co',
-    siteName: 'Grahama Labs',
+    siteName: 'grahama.co',
     type: 'website',
+    images: [{ url: '/dream/dream-panel.webp', width: 1600, height: 1067 }],
   },
   twitter: {
-    card: 'summary',
-    title: 'Grahama Labs',
+    card: 'summary_large_image',
+    title: 'Graham Anderson — agent systems that prove what they did',
     description,
+    images: ['/dream/dream-panel.webp'],
   },
 };
+
+const themeBoot = `(function(){try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
+        {children}
+      </body>
     </html>
   );
 }

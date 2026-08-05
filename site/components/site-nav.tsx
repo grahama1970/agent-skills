@@ -1,5 +1,8 @@
+import { ThemeToggle } from '@/components/theme-toggle';
+
 const LINKS = [
   { id: 'work', label: 'Work' },
+  { id: 'dream', label: 'Dream' },
   { id: 'index', label: 'Skill index' },
   { id: 'about', label: 'About' },
   { id: 'contact', label: 'Contact' },
@@ -7,8 +10,9 @@ const LINKS = [
 
 export function SiteNav() {
   return (
-    <header className="border-b border-line">
-      <nav className="mx-auto flex max-w-[1080px] flex-wrap items-baseline gap-x-7 gap-y-1 px-6 py-5">
+    <header className="glass-nav relative border-b border-line">
+      <div className="scroll-gauge" aria-hidden="true" />
+      <nav className="mx-auto flex max-w-[1440px] flex-wrap items-baseline gap-x-7 gap-y-1 px-6 py-4 md:px-10">
         <a
           href="#top"
           data-qid="nav:link:home"
@@ -48,6 +52,7 @@ export function SiteNav() {
         >
           Email
         </a>
+        <ThemeToggle />
       </nav>
     </header>
   );

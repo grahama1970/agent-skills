@@ -12,25 +12,33 @@ interface SkillCell {
 const GH = 'https://github.com/grahama1970/agent-skills/blob/main/skills';
 
 /**
- * One cell per real SKILL.md in the repo, generated at commit time by
- * site/scripts/gen_inventory.py. Filled = has a sanity check; outlined = a
- * contract without one. The gaps are shown deliberately.
+ * One cell per real SKILL.md, generated at commit time by
+ * site/scripts/gen_inventory.py, grouped by the taxonomy that is already in
+ * the data. Filled = has a sanity check; outlined = doesn't yet. The gaps
+ * are shown deliberately. Filtering dims non-matches — the transition is
+ * the query result, not decoration.
  */
 export function SkillMosaic() {
   const [query, setQuery] = useState('');
   const skills = inventory.skills as SkillCell[];
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return new Set(skills.map((s) => s.n));
-    return new Set(
-      skills.filter((s) => s.n.includes(q) || s.c.includes(q)).map((s) => s.n),
-    );
-  }, [query, skills]);
+  const groups = useMemo(() => {
+    const by = new Map<string, SkillCell[]>();
+    for (const s of skills) {
+      const list = by.get(s.c) ?? [];
+      list.push(s);
+      by.set(s.c, list);
+    }
+    return [...by.entries()].sort((a, b) => b[1].length - a[1].length);
+  }, [skills]);
+
+  const q = query.trim().toLowerCase();
+  const matches = (s: SkillCell) => !q || s.n.includes(q) || s.c.includes(q);
+  const shown = skills.filter(matches).length;
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+      <div className="mb-6 flex flex-wrap items-baseline gap-x-6 gap-y-2">
         <label className="flex items-baseline gap-2 text-[15px] text-mute">
           Filter
           <input
@@ -43,33 +51,39 @@ export function SkillMosaic() {
             className="machine border-b border-line bg-transparent px-1 py-0.5 text-ink outline-none placeholder:text-mute"
           />
         </label>
-        <span className="machine text-mute">
-          {visible.size}/{skills.length} shown · filled = sanity-checked ·
-          outlined = contract only
+        <span aria-live="polite" className="machine text-mute">
+          {shown}/{skills.length} · filled = sanity-checked · outlined =
+          contract only
         </span>
       </div>
-      <div className="flex flex-wrap gap-[3px]" role="list">
-        {skills.map((s) => (
-          <a
-            key={s.n}
-            role="listitem"
-            href={`${GH}/${s.n}/SKILL.md`}
-            data-qid={`index:cell:${s.n}`}
-            data-qs-action="INDEX_OPEN_SKILL"
-            title={`${s.n} — ${s.c}${s.s ? ' · sanity-checked' : ' · contract only'}`}
-            className={`block h-[14px] w-[14px] rounded-[2px] border ${
-              visible.has(s.n)
-                ? s.s
-                  ? 'border-accent bg-fill'
-                  : 'border-mute bg-transparent'
-                : 'border-line bg-transparent opacity-25'
-            } hover:border-ink`}
-          >
-            <span className="sr-only">{s.n}</span>
-          </a>
+      <div className="flex flex-col gap-5">
+        {groups.map(([cat, list]) => (
+          <div key={cat}>
+            <div className="machine mb-1.5 text-mute">
+              {cat} · {list.length}
+            </div>
+            <div className="flex flex-wrap gap-[3px]" role="list">
+              {list.map((s) => (
+                <a
+                  key={s.n}
+                  role="listitem"
+                  href={`${GH}/${s.n}/SKILL.md`}
+                  data-qid={`index:cell:${s.n}`}
+                  data-qs-action="INDEX_OPEN_SKILL"
+                  title={`${s.n}${s.s ? ' · sanity-checked' : ' · contract only'}`}
+                  className={`mosaic-cell block h-4 w-4 rounded-[2px] border ${
+                    s.s ? 'border-accent bg-fill' : 'border-mute bg-transparent'
+                  } hover:border-ink`}
+                  style={matches(s) ? undefined : { opacity: 0.15 }}
+                >
+                  <span className="sr-only">{s.n}</span>
+                </a>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
-      <details className="mt-5">
+      <details className="mt-6">
         <summary className="cursor-pointer text-[15px] text-mute">
           Plain list of all {skills.length} skills
         </summary>

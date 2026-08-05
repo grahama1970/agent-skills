@@ -1,60 +1,234 @@
 @import 'tailwindcss';
 
 @font-face {
-  font-family: 'Instrument Serif';
-  src: url('/fonts/instrument-serif-v5-latin-regular.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces-var.woff2') format('woff2');
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Instrument Serif';
-  src: url('/fonts/instrument-serif-v5-latin-italic.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces-italic-var.woff2') format('woff2');
+  font-weight: 100 900;
   font-style: italic;
   font-display: swap;
 }
 
-@theme {
-  --color-paper: #faf8f4;
-  --color-ink: #16150f;
-  --color-line: #e2dccd;
-  --color-mute: #6e675c;
-  --color-accent: #9a5b1f;
-  --color-fill: #e8ddc8;
-  --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+/* Theme tokens: light paper-editorial and its dark counterpart.
+   data-theme is stamped on <html> before paint by the inline boot script. */
+:root {
+  --t-paper: oklch(97.7% 0.008 90);
+  --t-ink: oklch(22% 0.012 80);
+  --t-line: oklch(89% 0.018 90);
+  --t-mute: oklch(51% 0.02 80);
+  --t-accent: oklch(54% 0.11 60);
+  --t-fill: oklch(90% 0.05 85);
+  --t-glass: oklch(97.7% 0.008 90 / 0.82);
+}
+[data-theme='dark'] {
+  --t-paper: oklch(20% 0.012 75);
+  --t-ink: oklch(93% 0.014 90);
+  --t-line: oklch(32% 0.016 78);
+  --t-mute: oklch(69% 0.02 85);
+  --t-accent: oklch(76% 0.115 68);
+  --t-fill: oklch(37% 0.055 70);
+  --t-glass: oklch(20% 0.012 75 / 0.82);
+}
+
+@theme inline {
+  --color-paper: var(--t-paper);
+  --color-ink: var(--t-ink);
+  --color-line: var(--t-line);
+  --color-mute: var(--t-mute);
+  --color-accent: var(--t-accent);
+  --color-fill: var(--t-fill);
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 html {
-  background: var(--color-paper);
+  background: var(--t-paper);
+}
+:root {
   color-scheme: light;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--color-paper);
-  color: var(--color-ink);
+  background: var(--t-paper);
+  color: var(--t-ink);
   font-family: var(--font-sans);
   font-size: 17px;
   line-height: 1.65;
 }
 
 ::selection {
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: var(--t-ink);
+  color: var(--t-paper);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--t-accent);
   outline-offset: 2px;
 }
 
-/* Machine-output rule: monospace appears only inside .machine blocks —
-   text a program actually produced (stats, paths, commit SHAs). Never in
-   headlines or prose. */
+/* Display voice: Fraunces with gentle softness and the wonk axis on. */
+.font-display {
+  font-variation-settings:
+    'SOFT' 40,
+    'WONK' 1;
+  font-weight: 480;
+  letter-spacing: -0.015em;
+}
+
+/* Machine-output rule: monospace only on text a program produced. */
 .machine {
   font-family: var(--font-mono);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
+}
+
+/* Glass sticky nav */
+.glass-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--t-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Scroll position gauge: a hairline that reports document position.
+   A readout, not a mood — the one sanctioned scroll-driven element. */
+.scroll-gauge {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: 100%;
+  background: var(--t-accent);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-gauge {
+      animation: gauge linear both;
+      animation-timeline: scroll();
+    }
+  }
+}
+@keyframes gauge {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Interim treatment for the illustrated project cards until real artifact
+   plates land: uniform frame, unified tone, color on inspection. */
+.concept-frame img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: grayscale(0.85) contrast(0.98);
+  transition: filter 150ms ease;
+}
+.concept-frame:hover img,
+.concept-frame:focus-visible img {
+  filter: none;
+}
+
+/* Index row focus: the hairline is the indicator. */
+.work-row {
+  border-top: 1px solid var(--t-line);
+  transition: border-color 90ms ease;
+}
+.work-row:hover,
+.work-row:focus-within {
+  border-top-color: var(--t-accent);
+}
+
+/* Mosaic filter: the transition IS the query result rendering. */
+.mosaic-cell {
+  transition: opacity 120ms ease;
+}
+
+/* "A dream, assembled" — scroll-scrubbed sequence of real pipeline frames.
+   Default layout (no support / reduced motion): a plain grid of frames.
+   With scroll-driven animations: a sticky viewport scrubs the run. */
+.dream-frames {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.dream-frame {
+  border: 1px solid var(--t-line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dream-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dream-frame figcaption {
+  display: none;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .dream-scroller {
+      height: 560vh;
+      position: relative;
+      view-timeline: --dream block;
+    }
+    .dream-frames {
+      display: block;
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      overflow: hidden;
+    }
+    .dream-frame {
+      position: absolute;
+      inset: 6dvh 0;
+      margin: auto;
+      max-width: min(1100px, 94vw);
+      border-radius: 6px;
+      opacity: 0;
+      animation: dream-show linear both;
+      animation-timeline: --dream;
+    }
+    .dream-frame figcaption {
+      display: block;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 14px 18px;
+      background: linear-gradient(transparent, oklch(15% 0.01 75 / 0.85));
+      color: oklch(96% 0.01 90);
+      font-size: 14px;
+    }
+  }
+}
+@keyframes dream-show {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  12% {
+    opacity: 1;
+    transform: none;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
