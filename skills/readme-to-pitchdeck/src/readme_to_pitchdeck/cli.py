@@ -246,6 +246,25 @@ def emit_ui(
         _abort(exc)
 
 
+@app.command(name="memory-sync")
+def memory_sync(
+    deck_data: Annotated[Path, typer.Option(help="Path to an emitted deck.data.json.")],
+    verify_recall: Annotated[
+        bool,
+        typer.Option("--verify/--no-verify", help="Ask memory to verify storage by immediate recall."),
+    ] = True,
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Store the emitted deck summary in /memory (ArangoDB) for /memory recall."""
+    from .memory_sync import sync_deck_to_memory
+
+    try:
+        receipt = sync_deck_to_memory(deck_data, verify=verify_recall)
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command()
 def verify(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

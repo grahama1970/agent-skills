@@ -50,6 +50,22 @@ structural verification, and can render PDF/PNG/contact sheets with Linux tools.
   requires SPARTA_ROOT sources and real screenshots, and emit-ui correctly
   fails closed on it.
 
+## Memory sync (added 2026-08-05)
+
+- `memory-sync` CLI (`src/readme_to_pitchdeck/memory_sync.py`, loguru + typed
+  boundary + no-shell subprocess) stores a deck summary via
+  `skills/memory/run.sh learn`, scope `agent-skills` (exempt from the memory
+  quality gate's taxonomy requirement, which blocked scope
+  `readme-to-pitchdeck`).
+- VERIFIED 2026-08-05: doc `lessons_v2/308496916443` read back by `_key` and by
+  `'"pitchdeck" IN doc.tags'` via `memory sample`.
+- NOT ESTABLISHED: the doc ranking into default `/memory recall` top-k (it did
+  not surface in top-8 for exact-problem queries ~1 min after storage; learn's
+  own --verify also warned "Stored item not in top recall result"). Suspected
+  embedding/index lag or ranking behavior in the memory service — a memory-side
+  question, not a storage failure. Tag-filtered sample is the reliable
+  retrieval path today.
+
 ## Superseded plan (kept for context): open-slide adoption (decided 2026-08-05)
 
 - Add a browser deck target beside the PPTX builder: both emitters consume the same

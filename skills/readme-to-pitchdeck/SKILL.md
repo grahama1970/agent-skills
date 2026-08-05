@@ -20,7 +20,8 @@ provides:
   - public-private-claim-filter
   - deck-ui-bundle
   - browser-deck-renderer
-composes: []
+composes:
+  - memory
 complies:
   - best-practices-skills
   - best-practices-python
@@ -93,6 +94,9 @@ Public decks fail closed if they reference private sources or claims.
   --bundle-dir docs/pitch/product \
   --output-dir ui/public
 
+./run.sh memory-sync \
+  --deck-data ui/public/deck.data.json
+
 ./run.sh render \
   --pptx /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/product-public.pptx \
   --output-dir /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/product-public-render
@@ -118,6 +122,15 @@ cd ui && pnpm install && pnpm dev   # http://localhost:3006
 per the storage policy. The browser deck is the animation surface; PPTX stays
 animation-free by design (python-pptx has no animation API and Google Slides
 import drops PowerPoint animations).
+
+## Memory sync
+
+`memory-sync` stores a per-deck summary (slides, claim-review state, tags
+`pitchdeck`/`readme-to-pitchdeck`/`<deck-id>`/`<visibility>`) into ArangoDB
+exclusively through `skills/memory/run.sh learn` (ArangoDB access policy) with
+scope `agent-skills`. Retrieve with `/memory recall --tags pitchdeck` or
+`memory sample --collection lessons_v2 --filter '"pitchdeck" IN doc.tags'`.
+Re-sync after ledger changes; the stored summary does not track later edits.
 
 ## Fail-closed gates
 

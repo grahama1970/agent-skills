@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Compile claim-bound README content into editable PPTX pitch decks and Google Slides handoff bundles"
 requires-python = ">=3.11"
 dependencies = [
+  "loguru>=0.7,<1",
   "pillow>=10,<13",
   "pydantic>=2.7,<3",
   "python-pptx>=1.0,<2",
