@@ -25,6 +25,16 @@ runs it through `ops-buzz ask-agent --dry-run`. These prove typed seams and rece
 They do not make Buzz the opportunity finder, observe agent response quality, create
 Gmail/InMail drafts, or mutate the monitor decision ledger.
 
+Draft storage decision (Graham, 2026-08-05): outreach drafts of record live in the
+memory service's ArangoDB `outreach_drafts` collection (`POST /store` on
+`http://127.0.0.1:8601`, keys `draft-YYYYMMDD-<packet>`), digest-bound to the reviewed
+packet payload with the roundtable verdict and human gates attached. Gmail mailbox
+draft creation is NOT the draft store: a 2026-08-05 trial created five mailbox drafts
+via the authenticated browser and Graham chose to delete them the same day because the
+mailbox namespace is ambiguous (subject collisions with pre-existing drafts) and UI
+automation is brittle. Nightly runs should write drafts to memory, not Gmail. Gmail
+send and LinkedIn automation remain permanently forbidden; the human transmits.
+
 The report is the product. The first working-value milestone is not auto-apply; it is a
 zero-network Stage 0 kernel that can validate and render the expected morning report,
 write a verification receipt, and prove Gmail, LinkedIn, and ATS effects are unreachable.

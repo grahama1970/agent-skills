@@ -38,6 +38,31 @@
   half), Gmail draft / LinkedIn handoff / ATS promotions (steps 5–7), and
   scheduler registration (step 8, gated on the remote readback).
 
+### Later on 2026-08-05: outreach promotion executed (steps 5–6 resolved)
+
+- Graham authorized draft creation ("all drafts are allowed"; send remains
+  forbidden). Promotion receipts:
+  `/tmp/monitor-opportunities-20260805T120849Z/promotions/`.
+- Ask roundtable gate ran live through API seats (gpt-5.5-high +
+  chutes deepseek-ai/DeepSeek-V3.2-TEE; the claude-sonnet-4-6 seat failed with
+  `scillm_auth_invalid_api_key` and was dropped). Round 1 split
+  (DO_NOT_SEND vs SEND_WITH_REVISIONS over `CONTACT_UNKNOWN` recipients);
+  Round 2 converged: SEND_WITH_REVISIONS for all 10 packets with recipient
+  placeholder, internal-note removal, and a Discord claim-relevance human gate.
+  Runs under `/tmp/monitor-opportunities-20260805T120849Z/outreach-roundtable/runs/`.
+- Receipt map validated by the pipeline: run
+  `/tmp/monitor-opportunities-20260805T-permitted` renders all 10 packets
+  `PASS / REVIEW_PERMITTED / SEND_WITH_REVISIONS`, `hidden_total: 0`.
+- Drafts of record: ArangoDB `memory.outreach_drafts`, 10 docs
+  (`draft-20260805-<packet>`), verified by direct AQL keyed readback.
+  Gmail mailbox drafts were trialed (5 created via surf, never sent) and
+  deleted the same day at Graham's direction; see the PROJECT_KNOWLEDGE
+  draft-storage decision. One pre-existing Aug 4 "Readback proof only" UB
+  draft was intentionally left in the mailbox.
+- Infra fixed en route: surf CLI was globally wedged behind a dead Jul 31
+  lock owner (`/tmp/surf-lock-*`) plus a kernel-stuck `npm ci` holding
+  `vendor/surf-cli/.ensure-surf-cli-build.lock`; cleared, `tab.list`/`js` live.
+
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`
 **Authoritative branch target**: `grahama1970/agent-skills@main`
