@@ -1,0 +1,60 @@
+// Mirror of readme_to_pitchdeck.ui_deck_bundle.v1 (src/readme_to_pitchdeck/ui_emitter.py).
+
+export interface UiClaimBadge {
+  id: string
+  status: 'candidate' | 'approved' | 'qualified' | 'rejected' | string
+  risk: string
+  kind: string
+  text: string
+  required_qualifier?: string
+}
+
+export interface UiAsset {
+  id: string
+  kind: string
+  status: string
+  alt_text: string
+  file?: string
+  missing: boolean
+}
+
+export interface UiVisual {
+  type: 'none' | 'image' | 'screenshot' | 'native_diagram' | 'cards' | string
+  asset?: UiAsset
+  items: string[]
+  callouts: string[]
+  caption?: string
+}
+
+export interface UiSlide {
+  id: string
+  order: number
+  layout: string
+  role: string
+  title: string
+  message: string
+  body: string[]
+  visual: UiVisual
+  claims: UiClaimBadge[]
+  source_ids: string[]
+  notes: string
+  footer?: string
+}
+
+export interface UiDeckBundle {
+  schema: string
+  deck_id: string
+  title: string
+  subtitle?: string
+  audience: string
+  visibility: 'public' | 'private' | string
+  theme: string
+  slides: UiSlide[]
+  claim_summary: Record<string, number>
+  validation_readiness: string
+  validation_gaps: string[]
+  seam_validation: { kind: string; status: 'PASS' }
+}
+
+export const CANVAS_WIDTH = 1920
+export const CANVAS_HEIGHT = 1080

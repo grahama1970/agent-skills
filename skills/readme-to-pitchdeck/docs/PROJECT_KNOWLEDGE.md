@@ -26,7 +26,31 @@ structural verification, and can render PDF/PNG/contact sheets with Linux tools.
 - It does not guarantee pixel-identical Google Slides import.
 - Visual approval remains a contact-sheet and human-review step.
 
-## Planned: React deck renderer + claim-review UI (decided 2026-08-05)
+## Implemented 2026-08-05: React deck renderer + claim-review UI (v1)
+
+- `emit-ui` CLI command (`src/readme_to_pitchdeck/ui_emitter.py`) emits
+  `ui_deck_bundle.v1` JSON after the same fail-closed `validate_bundle` gates as
+  the PPTX build; covered by pytest positive + fail-closed leak tests and
+  sanity.sh stage 5.
+- `ui/` React 19 + Vite + Tailwind 4 app: 1920×1080 scaled canvas, keyboard nav,
+  fwd/back slide transitions (prefers-reduced-motion respected), overview grid,
+  speaker-notes panel, read-only claim-review view with validation-gap banner.
+  All 10 SlideLayout values render (card layouts share a CardGrid component).
+  Verified live 2026-08-05 via surf on the minimal fixture: slide nav, claims
+  view (29 candidate/2 approved badges), data-qid coverage from live DOM.
+- Interaction contract: data-qid + data-qs-action + title on every onClick
+  element (static gate `scripts/verify_ui_contracts.py`, sanity stage 6);
+  `useRegisterAction` is a local fail-silent copy posting to
+  VITE_ACTION_REGISTRY_URL when configured.
+- Deviations from the original open-slide plan: v1 is a hand-rolled renderer in
+  the house stack (no open-slide dependency yet — its `@base-ui/react` stack and
+  comment loop remain candidates for v2); presenter second-window and
+  Playwright PDF export not yet built.
+- Not established: visual approval of real (sparta) decks; the sparta example
+  requires SPARTA_ROOT sources and real screenshots, and emit-ui correctly
+  fails closed on it.
+
+## Superseded plan (kept for context): open-slide adoption (decided 2026-08-05)
 
 - Add a browser deck target beside the PPTX builder: both emitters consume the same
   validated `deck.public.yaml`, so all fail-closed claim gates run before either target.

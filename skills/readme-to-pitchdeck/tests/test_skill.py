@@ -373,3 +373,78 @@ def test_sparta_example_manifests_validate_with_resolved_sources(tmp_path: Path)
             require_approved_claims=True,
         )
         assert report.errors == 0, [issue.model_dump() for issue in report.issues]
+
+
+def test_emit_ui_bundle_positive_and_seam_stamp(tmp_path: Path) -> None:
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+
+    from readme_to_pitchdeck.ui_emitter import emit_ui_bundle
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    ledger = load_yaml(planned / "claim_ledger.yaml", ClaimLedger)
+    sources = load_yaml(planned / "source_manifest.resolved.yaml", SourceManifest)
+    assets = load_yaml(planned / "asset_manifest.yaml", AssetManifest)
+    out = tmp_path / "ui"
+    receipt, bundle = emit_ui_bundle(
+        deck,
+        ledger,
+        sources,
+        assets,
+        source_manifest_dir=planned,
+        asset_manifest_dir=planned,
+        output_dir=out,
+    )
+    assert (out / "deck.data.json").exists()
+    assert (out / "emit_ui_receipt.json").exists()
+    assert bundle.seam_validation.kind == "ui_deck_bundle"
+    assert bundle.seam_validation.status == "PASS"
+    assert len(bundle.slides) == len(deck.slides)
+    assert [slide.order for slide in bundle.slides] == sorted(s.order for s in deck.slides)
+    # Every slide claim badge must resolve to a real ledger claim.
+    ledger_ids = {claim.id for claim in ledger.claims}
+    assert all(badge.id in ledger_ids for slide in bundle.slides for badge in slide.claims)
+
+
+def test_emit_ui_bundle_fails_closed_on_validation_errors(tmp_path: Path) -> None:
+    sources, ledger, assets = _base_models(tmp_path)
+    from readme_to_pitchdeck.models import ClaimGuard, DeckManifest as DM, DeckMeta, SlideSpec, VisualSpec
+    from readme_to_pitchdeck.ui_emitter import emit_ui_bundle
+
+    deck = DM(
+        deck=DeckMeta(
+            id="demo-public",
+            title="Demo",
+            audience="Reviewers",
+            visibility=Visibility.PUBLIC,
+            source_policy="public_only",
+        ),
+        slides=[
+            SlideSpec(
+                id="s1",
+                order=1,
+                role="cover",
+                layout="cover",
+                visibility=Visibility.PUBLIC,
+                title="Demo",
+                message="Leaks a private claim.",
+                claim_ids=["private-claim"],
+                visual=VisualSpec(),
+                claim_guard=ClaimGuard(),
+                source_refs=[SourceRef(source_id="public-source")],
+            )
+        ],
+    )
+    with pytest.raises(ValueError, match="validation"):
+        emit_ui_bundle(
+            deck,
+            ledger,
+            sources,
+            assets,
+            source_manifest_dir=tmp_path,
+            asset_manifest_dir=tmp_path,
+            output_dir=tmp_path / "ui",
+        )
+    assert not (tmp_path / "ui" / "deck.data.json").exists()

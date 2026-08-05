@@ -18,6 +18,8 @@ provides:
   - editable-pptx-export
   - slide-contact-sheet
   - public-private-claim-filter
+  - deck-ui-bundle
+  - browser-deck-renderer
 composes: []
 complies:
   - best-practices-skills
@@ -87,10 +89,35 @@ Public decks fail closed if they reference private sources or claims.
   --bundle-dir docs/pitch/product \
   --pptx /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/product-public.pptx
 
+./run.sh emit-ui \
+  --bundle-dir docs/pitch/product \
+  --output-dir ui/public
+
 ./run.sh render \
   --pptx /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/product-public.pptx \
   --output-dir /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/product-public-render
 ```
+
+## Browser deck renderer (ui/)
+
+`ui/` is a React + Tailwind app (Vite, TypeScript) that presents the emitted
+`deck.data.json` on a fixed 1920×1080 scaled canvas: keyboard navigation,
+slide transitions (reduced-motion aware), overview grid, speaker-notes panel,
+and a read-only claim-ledger review view. `emit-ui` runs the same fail-closed
+validation as `build` before writing anything, and the app refuses bundles
+without a `seam_validation` PASS stamp. Interactive elements carry
+`data-qid`/`data-qs-action`/`title` (checked by
+`scripts/verify_ui_contracts.py` in `sanity.sh`).
+
+```bash
+./run.sh emit-ui --bundle-dir docs/pitch/product --output-dir ui/public
+cd ui && pnpm install && pnpm dev   # http://localhost:3006
+```
+
+`ui/node_modules` is a symlink into `/mnt/storage12tb/skills/readme-to-pitchdeck/`
+per the storage policy. The browser deck is the animation surface; PPTX stays
+animation-free by design (python-pptx has no animation API and Google Slides
+import drops PowerPoint animations).
 
 ## Fail-closed gates
 

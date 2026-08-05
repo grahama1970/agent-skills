@@ -17,3 +17,8 @@ exports/
 !fixtures/**/*.png
 .env
 readme-to-pitchdeck.config.yml
+ui/node_modules
+ui/dist/
+ui/public/deck.data.json
+ui/public/emit_ui_receipt.json
+ui/public/assets/

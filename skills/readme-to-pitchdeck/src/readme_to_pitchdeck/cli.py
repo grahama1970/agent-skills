@@ -209,6 +209,43 @@ def build(
         _abort(exc)
 
 
+@app.command(name="emit-ui")
+def emit_ui(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory for the UI deck bundle.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    require_approved_claims: Annotated[
+        bool,
+        typer.Option(
+            "--require-approved-claims/--allow-candidate-claims",
+            help="Fail if any referenced claim is not approved.",
+        ),
+    ] = False,
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Validate the bundle and emit deck.data.json for the React deck renderer in ui/."""
+    from .ui_emitter import emit_ui_bundle
+
+    try:
+        deck_path = bundle_dir / deck_name
+        source_path = bundle_dir / "source_manifest.resolved.yaml"
+        if not source_path.exists():
+            source_path = bundle_dir / "source_manifest.yaml"
+        receipt, _ = emit_ui_bundle(
+            load_yaml(deck_path, DeckManifest),
+            load_yaml(bundle_dir / "claim_ledger.yaml", ClaimLedger),
+            load_yaml(source_path, SourceManifest),
+            load_yaml(bundle_dir / "asset_manifest.yaml", AssetManifest),
+            source_manifest_dir=source_path.parent,
+            asset_manifest_dir=bundle_dir,
+            output_dir=output_dir,
+            require_approved_claims=require_approved_claims,
+        )
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command()
 def verify(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
