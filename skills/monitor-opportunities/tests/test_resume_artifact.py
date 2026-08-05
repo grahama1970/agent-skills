@@ -52,3 +52,19 @@ def test_unapproved_claim_fails_closed() -> None:
 def test_empty_claim_selection_fails_closed() -> None:
     with pytest.raises(ResumeArtifactError, match="NO_CLAIMS_SELECTED"):
         approved_wordings(_snapshot(), [])
+
+
+def test_role_alignment_selects_only_existing_lines() -> None:
+    from monitor_opportunities.resume_artifact import select_aligned_lines
+
+    base = "\n".join([
+        "# X",
+        "- LLM agents, tool calling, RAG pipelines and evaluation harnesses",
+        "- Knowledge graphs with ArangoDB and multi-hop traversal",
+        "- Unrelated woodworking hobby line",
+    ])
+    posting = "We need RAG pipelines, LLM agents, tool calling and evaluation at scale"
+    picked = select_aligned_lines(base, posting)
+    assert picked and picked[0]["line"].startswith("- LLM agents")
+    base_lines = set(base.splitlines())
+    assert all(row["line"] in base_lines for row in picked)

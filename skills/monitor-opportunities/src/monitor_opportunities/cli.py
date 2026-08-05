@@ -449,11 +449,28 @@ def tailor_artifact_command(
     )
     if opportunity is None:
         _fail(ContractError("OPPORTUNITY_NOT_IN_RUN", opportunity_id))
+    posting_text = ""
+    posting_url = opportunity.get("posting_url") or ""
+    if "greenhouse.io" in posting_url:
+        try:
+            import html as html_mod
+            import re as re_mod
+
+            import httpx
+
+            from .ats.greenhouse import greenhouse_questions_url
+
+            board, job_id = posting_url.rstrip("/").split("/jobs/")[0].split("/")[-1], posting_url.rstrip("/").split("/")[-1]
+            payload = httpx.get(greenhouse_questions_url(board, job_id), timeout=15.0).json()
+            posting_text = html_mod.unescape(re_mod.sub(r"<[^>]+>", " ", payload.get("content") or ""))
+        except Exception as exc:
+            logger.error("posting text fetch failed; tailoring without alignment: {}", exc)
     try:
         receipt = tailor_artifact(
             skill_dir=skill_dir,
             opportunity=opportunity,
             out_dir=out or (run / "resume-artifacts"),
+            posting_text=posting_text,
         )
     except ResumeArtifactError as exc:
         _fail(ContractError("TAILOR_ARTIFACT_REJECTED", str(exc)))

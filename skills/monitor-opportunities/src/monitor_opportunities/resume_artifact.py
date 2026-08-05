@@ -37,21 +37,64 @@ def approved_wordings(claim_snapshot: dict[str, Any], claim_keys: list[str]) -> 
     return rows
 
 
+_STOP_TERMS = frozenset(
+    "the a an and or of for in to with on at by is are you your our we will this that as be from".split()
+)
+
+
+def _terms(text: str) -> set[str]:
+    return {
+        token.strip(".,()/:;*+").lower()
+        for token in text.split()
+        if len(token) > 3
+    } - _STOP_TERMS
+
+
+def select_aligned_lines(base_markdown: str, posting_text: str, limit: int = 6) -> list[dict[str, Any]]:
+    """Pick the base resume's own bullet lines that best match the posting.
+
+    Selection and reordering of verbatim existing lines is presentation-only:
+    no line is generated, so no fact can be minted.
+    """
+
+    posting_terms = _terms(posting_text)
+    scored = []
+    for line in base_markdown.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("-"):
+            continue
+        overlap = _terms(stripped) & posting_terms
+        if len(overlap) >= 2:
+            scored.append({"line": stripped, "matched_terms": sorted(overlap), "score": len(overlap)})
+    scored.sort(key=lambda row: (-row["score"], row["line"]))
+    return scored[:limit]
+
+
 def build_variant_markdown(
     base_markdown: str,
     opportunity: dict[str, Any],
     wordings: list[dict[str, str]],
+    posting_text: str = "",
 ) -> str:
-    """Base resume + presentation-only targeted section; no new facts."""
+    """Base resume + presentation-only targeted sections; no new facts."""
 
-    header = (
-        f"## Targeted highlights — {opportunity['title']} at {opportunity['organization']}\n\n"
-        + "\n".join(f"- {row['text']}" for row in wordings)
-        + "\n"
-    )
-    # The only added content lines are approved claim wordings; everything
-    # else added here is a structural header, which is presentation.
-    return base_markdown.rstrip() + "\n\n" + header
+    sections = [
+        f"## Targeted highlights — {opportunity['title']} at {opportunity['organization']}",
+        "",
+        *[f"- {row['text']}" for row in wordings],
+        "",
+    ]
+    aligned = select_aligned_lines(base_markdown, posting_text) if posting_text else []
+    if aligned:
+        sections += [
+            f"## Role alignment — {opportunity['title']}",
+            "",
+            *[row["line"] for row in aligned],
+            "",
+        ]
+    # The only added content lines are approved claim wordings and verbatim
+    # lines already present in the base resume; headers are presentation.
+    return base_markdown.rstrip() + "\n\n" + "\n".join(sections)
 
 
 def render_pdf(markdown_path: Path, pdf_path: Path, resume_repo: Path = RESUME_REPO_DEFAULT) -> None:
@@ -84,6 +127,7 @@ def tailor_artifact(
     opportunity: dict[str, Any],
     out_dir: Path,
     resume_repo: Path = RESUME_REPO_DEFAULT,
+    posting_text: str = "",
 ) -> dict[str, Any]:
     """Produce one claim-bound tailored resume PDF for one opportunity."""
 
@@ -93,7 +137,7 @@ def tailor_artifact(
         raise ResumeArtifactError(f"BASE_RESUME_MISSING:{base_path}")
     claim_snapshot = read_json(skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json")
     wordings = approved_wordings(claim_snapshot, list(opportunity.get("claim_keys", [])))
-    variant_md = build_variant_markdown(base_path.read_text(encoding="utf-8"), opportunity, wordings)
+    variant_md = build_variant_markdown(base_path.read_text(encoding="utf-8"), opportunity, wordings, posting_text=posting_text)
     out_dir.mkdir(parents=True, exist_ok=True)
     slug = opportunity["opportunity_id"].replace(":", "-")
     md_path = out_dir / f"resume-{slug}.md"

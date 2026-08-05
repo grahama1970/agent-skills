@@ -26,6 +26,15 @@
       "name": "Indeed indexed ATS guidance",
       "provider": "indeed",
       "url": "https://www.indeed.com/hire/resources/howtohub/optimize-jobs-from-your-career-site-or-ats-on-indeed"
+    },
+    {
+      "admission_policy": "hint_only_primary_required",
+      "lane": "A",
+      "limit": 1,
+      "name": "Agentic compliance hiring signals",
+      "provider": "duckduckgo",
+      "url": "https://duckduckgo.com/html/?q=agentic+compliance+AI+agents+GRC+hiring",
+      "mandate_ref": "mandate:agentic-compliance"
     }
   ],
   "employment": [
@@ -37,6 +46,25 @@
       "provider": "greenhouse",
       "registry_entry_id": "employment:discord:greenhouse",
       "slug": "discord"
+    },
+    {
+      "default_fit_score": 0.7,
+      "limit": 10,
+      "name": "Hyperproof",
+      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/hyperproof/jobs?content=true",
+      "provider": "greenhouse",
+      "registry_entry_id": "employment:hyperproof",
+      "need_keywords": [
+        "compliance",
+        "AI",
+        "agent",
+        "automation",
+        "engineer",
+        "architect",
+        "GRC"
+      ],
+      "mandate_ref": "mandate:agentic-compliance",
+      "slug": "hyperproof"
     }
   ],
   "federal": [
@@ -44,7 +72,13 @@
       "default_fit_score": 0.62,
       "limit": 3,
       "name": "DARPA R&D Opportunities",
-      "need_keywords": ["artificial intelligence", "AI", "software", "cyber", "data"],
+      "need_keywords": [
+        "artificial intelligence",
+        "AI",
+        "software",
+        "cyber",
+        "data"
+      ],
       "need_title": "DARPA primary-source R&D opportunity signal",
       "provider": "darpa",
       "registry_entry_id": "federal:darpa:opportunities",
@@ -60,10 +94,36 @@
     {
       "default_fit_score": 0.65,
       "name": "University at Buffalo UBIT",
-      "need_keywords": ["data", "security", "software"],
+      "need_keywords": [
+        "data",
+        "security",
+        "software"
+      ],
       "need_title": "Technology modernization signal",
       "registry_entry_id": "commercial:ub:ubit",
       "url": "https://www.buffalo.edu/ubit.html"
+    }
+  ],
+  "mandates": [
+    {
+      "mandate_id": "mandate:agentic-compliance",
+      "declared_by": "Graham 2026-08-05",
+      "statement": "Any company showing interest in agentic compliance is in-scope, given grahama1970/sparta (Sparta Explorer: evidence-grounded space-cyber compliance investigation without giving the model approval authority).",
+      "flagship_project": "https://github.com/grahama1970/sparta",
+      "need_keywords": [
+        "compliance",
+        "GRC",
+        "audit",
+        "evidence",
+        "assurance",
+        "CMMC",
+        "NIST",
+        "agentic",
+        "AI agents",
+        "LLM",
+        "automation",
+        "controls"
+      ]
     }
   ]
 }

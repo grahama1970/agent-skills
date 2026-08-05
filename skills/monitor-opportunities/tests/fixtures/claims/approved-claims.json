@@ -1,58 +1,98 @@
 {
-  "active": true,
-  "candidate_profile_id": "graham-anderson-stage0-fixture",
-  "claims": [
+ "active": true,
+ "candidate_profile_id": "graham-anderson-stage0-fixture",
+ "claims": [
+  {
+   "approved": true,
+   "allowed_channels": [
+    "resume",
+    "email",
+    "linkedin",
+    "interview"
+   ],
+   "claim_key": "claim:arcos:acert-architect",
+   "evidence_refs": [
+    "fixture://arcos"
+   ],
+   "sensitivity": "public",
+   "valid_from": "2026-08-02T00:00:00Z",
+   "valid_until": null,
+   "verification_status": "approved",
+   "wordings": [
     {
-      "approved": true,
-      "allowed_channels": ["resume", "email", "linkedin", "interview"],
-      "claim_key": "claim:arcos:acert-architect",
-      "evidence_refs": ["fixture://arcos"],
-      "sensitivity": "public",
-      "valid_from": "2026-08-02T00:00:00Z",
-      "valid_until": null,
-      "verification_status": "approved",
-      "wordings": [
-        {
-          "approved": true,
-          "text": "Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence.",
-          "wording_id": "wording:arcos:lead"
-        }
-      ]
-    },
-    {
-      "approved": true,
-      "allowed_channels": ["resume", "email", "linkedin", "interview"],
-      "claim_key": "claim:pdf-oxide:document-extraction",
-      "evidence_refs": ["fixture://pdf-oxide"],
-      "sensitivity": "public",
-      "valid_from": "2026-08-02T00:00:00Z",
-      "valid_until": null,
-      "verification_status": "approved",
-      "wordings": [
-        {
-          "approved": true,
-          "text": "Built document extraction systems that preserve source evidence and support deterministic review workflows.",
-          "wording_id": "wording:pdf:extract"
-        }
-      ]
-    },
-    {
-      "approved": true,
-      "allowed_channels": ["resume", "email", "linkedin", "interview"],
-      "claim_key": "claim:memory:retrieval-platform",
-      "evidence_refs": ["fixture://memory"],
-      "sensitivity": "public",
-      "valid_from": "2026-08-02T00:00:00Z",
-      "valid_until": null,
-      "verification_status": "approved",
-      "wordings": [
-        {
-          "approved": true,
-          "text": "Designed retrieval and receipt systems that separate source truth, inference, and human review decisions.",
-          "wording_id": "wording:memory:receipt"
-        }
-      ]
+     "approved": true,
+     "text": "Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence.",
+     "wording_id": "wording:arcos:lead"
     }
-  ],
-  "schema": "monitor_opportunities.claim_snapshot.v1"
+   ]
+  },
+  {
+   "approved": true,
+   "allowed_channels": [
+    "resume",
+    "email",
+    "linkedin",
+    "interview"
+   ],
+   "claim_key": "claim:pdf-oxide:document-extraction",
+   "evidence_refs": [
+    "fixture://pdf-oxide"
+   ],
+   "sensitivity": "public",
+   "valid_from": "2026-08-02T00:00:00Z",
+   "valid_until": null,
+   "verification_status": "approved",
+   "wordings": [
+    {
+     "approved": true,
+     "text": "Built document extraction systems that preserve source evidence and support deterministic review workflows.",
+     "wording_id": "wording:pdf:extract"
+    }
+   ]
+  },
+  {
+   "approved": true,
+   "allowed_channels": [
+    "resume",
+    "email",
+    "linkedin",
+    "interview"
+   ],
+   "claim_key": "claim:memory:retrieval-platform",
+   "evidence_refs": [
+    "fixture://memory"
+   ],
+   "sensitivity": "public",
+   "valid_from": "2026-08-02T00:00:00Z",
+   "valid_until": null,
+   "verification_status": "approved",
+   "wordings": [
+    {
+     "approved": true,
+     "text": "Designed retrieval and receipt systems that separate source truth, inference, and human review decisions.",
+     "wording_id": "wording:memory:receipt"
+    }
+   ]
+  },
+  {
+   "claim_key": "claim:sparta:agentic-compliance",
+   "wordings": [
+    {
+     "wording_id": "w1",
+     "text": "Built Sparta Explorer, an agentic space-cyber compliance workspace that traces conclusions from framework guidance (Aerospace SPARTA, NIST) to program evidence and human review, without giving the model approval authority."
+    }
+   ],
+   "evidence_refs": [
+    "https://github.com/grahama1970/sparta"
+   ],
+   "verification_status": "approved",
+   "allowed_channels": [
+    "resume",
+    "GMAIL",
+    "LINKEDIN"
+   ],
+   "sensitivity": "public"
+  }
+ ],
+ "schema": "monitor_opportunities.claim_snapshot.v1"
 }
