@@ -61,7 +61,16 @@ INVENTORY: dict[str, RouteEntry] = {
     "kimi_capacity.py": RouteEntry(TAU_OPAQUE_COMPAT, "Kimi capacity probing tied to browser runtime.", migration_target="tau#310 compat node"),
     # --- Direct model/subagent paths that must migrate -------------------
     "ask.py": RouteEntry(DEPRECATED_DIRECT, "Entry point; spawns visible tmux subagents directly.", migration_target="tau#310"),
-    "ask_intent.py": RouteEntry(DEPRECATED_DIRECT, "Direct httpx POST to SciLLM /v1/chat/completions for intent parsing.", migration_target="tau#310"),
+    "ask_intent.py": RouteEntry(
+        TAU_NATIVE_AGENT,
+        "Intent classification runs through ask.tau_harness.run_single_tau_agent; "
+        "the direct SciLLM POST survives only behind ASK_DIRECT_INTENT_COMPAT=1.",
+    ),
+    "tau_harness.py": RouteEntry(
+        TAU_NATIVE_AGENT,
+        "Shared single-agent Tau-native execution seam; the migration target for "
+        "every deprecated_direct_agent_path entry.",
+    ),
     "ask_oracle.py": RouteEntry(DEPRECATED_DIRECT, "Oracle orchestration calling handlers directly.", migration_target="tau#310"),
     "argue.py": RouteEntry(DEPRECATED_DIRECT, "Argue/judge flow with direct model dispatch.", migration_target="tau#310"),
     "consult.py": RouteEntry(DEPRECATED_DIRECT, "Persona consult with direct model dispatch.", migration_target="tau#310"),

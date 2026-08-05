@@ -72,3 +72,35 @@ def test_tau_native_surface_present() -> None:
 def test_classify_defaults_unlisted_to_local() -> None:
     entry = classify("does_not_exist.py")
     assert entry.route_class == LOCAL_NON_AGENTIC
+
+
+# --- Migration ratchet (#1220) -------------------------------------------
+# The deprecated set may only shrink. Migrating a module means moving it to
+# tau_native_agent (via ask.tau_harness) or tau_opaque_compat and DELETING it
+# from this frozen list; adding a new name here is a policy violation.
+FROZEN_DEPRECATED = {
+    "ask.py",
+    "ask_oracle.py",
+    "argue.py",
+    "consult.py",
+    "deep_review.py",
+    "parallel_review.py",
+    "scillm_agents.py",
+    "scillm_runtime.py",
+    "extract_store.py",
+    "hybrid.py",
+    "os_query.py",
+    "delegate/resolver.py",
+    "delegate/registry.py",
+}
+
+
+def test_deprecated_set_only_shrinks() -> None:
+    current = {m for m, e in INVENTORY.items() if e.route_class == DEPRECATED_DIRECT}
+    grown = current - FROZEN_DEPRECATED
+    assert not grown, f"new deprecated direct-agent paths are forbidden (#1220): {sorted(grown)}"
+
+
+def test_migrated_intent_path_is_tau_native() -> None:
+    assert INVENTORY["ask_intent.py"].route_class == TAU_NATIVE_AGENT
+    assert INVENTORY["tau_harness.py"].route_class == TAU_NATIVE_AGENT

@@ -333,10 +333,75 @@ Query: "{query}"
 Respond ONLY with JSON: {{"intent": "...", "confidence": 0.0-1.0, "persona": "name or null", "subsystem": "name or null"}}"""
 
 
+INTENT_PROFILE = os.environ.get("ASK_INTENT_PROFILE", "codex-model-turn")
+
+
+def _parse_intent_json(stdout: str) -> IntentResult | None:
+    json_start = stdout.find("{")
+    json_end = stdout.rfind("}") + 1
+    if json_start < 0 or json_end <= json_start:
+        return None
+    data = json.loads(stdout[json_start:json_end])
+    intent = data.get("intent", "TOPIC_QUERY")
+    confidence = float(data.get("confidence", 0.5))
+    valid_intents = {
+        "OS_QUERY", "OS_HEALTH", "PERSONA_CONSULT",
+        "TOPIC_LEARN", "TOPIC_QUERY", "CLARIFY", "OFF_TOPIC",
+    }
+    if intent not in valid_intents:
+        intent = "TOPIC_QUERY"
+        confidence = 0.4
+    return IntentResult(
+        intent=intent,
+        confidence=confidence,
+        stage="llm",
+        persona=data.get("persona"),
+        subsystem=data.get("subsystem"),
+    )
+
+
 def classify_llm(query: str) -> IntentResult:
-    """Classify query using LLM via scillm HTTP proxy."""
+    """Classify query with a model turn executed as a Tau-native agent node.
+
+    Routed through ask.tau_harness (agent-skills#1220): the model call enters
+    Tau first and reaches SciLLM only as Tau transport. The old direct
+    chat/completions POST survives solely behind ASK_DIRECT_INTENT_COMPAT=1
+    as a visibly deprecated compatibility path with no settlement authority.
+    """
     prompt = CLASSIFY_PROMPT.format(query=query.replace('"', '\\"'))
 
+    if os.environ.get("ASK_DIRECT_INTENT_COMPAT") == "1":
+        return _classify_llm_direct_deprecated(prompt)
+
+    try:
+        from ask.tau_harness import TauHarnessUnavailable, run_single_tau_agent
+
+        outcome = run_single_tau_agent(
+            prompt=prompt,
+            profile_id=INTENT_PROFILE,
+            purpose="intent-classify",
+            timeout_seconds=int(float(LLM_TIMEOUT)),
+        )
+        if outcome["scheduler_status"] == "PASS":
+            parsed = _parse_intent_json(outcome["final_text"])
+            if parsed is not None:
+                return parsed
+        log.warning("tau intent classification degraded: %s", outcome["scheduler_status"])
+    except TauHarnessUnavailable as e:
+        log.warning("tau harness unavailable for intent classification: %s", e)
+    except (json.JSONDecodeError, ValueError, OSError) as e:
+        log.warning("tau intent classification error: %s", e)
+
+    return IntentResult(intent="TOPIC_QUERY", confidence=0.4, stage="llm")
+
+
+def _classify_llm_direct_deprecated(prompt: str) -> IntentResult:
+    """DEPRECATED direct SciLLM path (route class deprecated_direct_agent_path).
+
+    Kept only behind ASK_DIRECT_INTENT_COMPAT=1 until removal; see the route
+    inventory and agent-skills#1220.
+    """
+    log.warning("DEPRECATED: direct scillm intent classification bypasses Tau (agent-skills#1220)")
     try:
         payload = {
             "model": "deepseek-ai/DeepSeek-V3",
@@ -348,32 +413,9 @@ def classify_llm(query: str) -> IntentResult:
             timeout=float(LLM_TIMEOUT),
         )
         resp.raise_for_status()
-        stdout = resp.json()["choices"][0]["message"]["content"].strip()
-
-        # Find JSON in output
-        json_start = stdout.find("{")
-        json_end = stdout.rfind("}") + 1
-        if json_start >= 0 and json_end > json_start:
-            data = json.loads(stdout[json_start:json_end])
-            intent = data.get("intent", "TOPIC_QUERY")
-            confidence = float(data.get("confidence", 0.5))
-
-            valid_intents = {
-                "OS_QUERY", "OS_HEALTH", "PERSONA_CONSULT",
-                "TOPIC_LEARN", "TOPIC_QUERY", "CLARIFY", "OFF_TOPIC",
-            }
-            if intent not in valid_intents:
-                intent = "TOPIC_QUERY"
-                confidence = 0.4
-
-            return IntentResult(
-                intent=intent,
-                confidence=confidence,
-                stage="llm",
-                persona=data.get("persona"),
-                subsystem=data.get("subsystem"),
-            )
-
+        parsed = _parse_intent_json(resp.json()["choices"][0]["message"]["content"].strip())
+        if parsed is not None:
+            return parsed
     except httpx.HTTPStatusError as e:
         log.warning("scillm classification HTTP error: %s", e.response.status_code)
     except (httpx.TimeoutException, json.JSONDecodeError, ValueError, OSError) as e:
