@@ -1,0 +1,83 @@
+{
+  "schema": "ask.tau_native_canary_summary.v1",
+  "ticket": "agent-skills#1220",
+  "run_id": "ask-tau-native-canary-1785942753",
+  "request": "Have a backend agent write the canary proof artifact, then an independent reviewer verifies it",
+  "goal_hash": "sha256:e555f8787f456dac51b2255e1e96e859ddfff1cd77b8249ad1e6c9ca763de05e",
+  "spec_sha256": "029b43fddd98e80da9f1d742b45362b0b1315be3a302c10cfb53572e662c240b",
+  "profiles": {
+    "worker": "claude-model-turn",
+    "reviewer": "codex-model-turn"
+  },
+  "scheduler_status": "PASS",
+  "completed_node_ids": [
+    "reviewer",
+    "worker"
+  ],
+  "worker_settlement": {
+    "schema": "tau.agent_node_settlement.v1",
+    "run_id": "generic:ask-tau-native-canary-1785942753",
+    "node_id": "worker",
+    "attempt_id": "generic:ask-tau-native-canary-1785942753:worker:1",
+    "attempt": 1,
+    "goal_hash": "sha256:e555f8787f456dac51b2255e1e96e859ddfff1cd77b8249ad1e6c9ca763de05e",
+    "plan_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "harness": "tau_native_agent_loop",
+    "state": "completed",
+    "blockers": [],
+    "turns": 2,
+    "turn_receipt_sha256s": [
+      "sha256:0bc04ebfcb0f0f8ffa071c0cca385cc17a96c520c97bf42c9678d72b093013b3",
+      "sha256:f7cfb3ba70908a910b0dc28f80597afce34d60ea7610fa663ad9de485a9fa192"
+    ],
+    "tool_effect_receipt_sha256s": [
+      "sha256:73bacf42d99c9fd27143f574622d2fe467af1b41f771daf68399435ec11e0863"
+    ],
+    "rejected_tool_requests": 0,
+    "evidence": {
+      "tool_effect_receipt": "sha256:b5b646aa6654360ba01a13857894a1c98de87783ba6c2963c683da2890668cc0"
+    },
+    "journal_head_sha256": "sha256:37c4675930bc13354acc9fa4bd1398b8ddd631149c5a33f7e6255ca0f4b5d073",
+    "journal_length": 7,
+    "proof_boundary": {
+      "provider_completion_is_not_settlement": true,
+      "model_done_claim_is_not_settlement": true,
+      "settlement_requires_required_evidence": true
+    },
+    "sha256": "sha256:9515f15a276d60f3977cbbc53b5a6da486d7378b95bd3ab42194bc9b6b2983f6"
+  },
+  "reviewer_settlement": {
+    "schema": "tau.agent_node_settlement.v1",
+    "run_id": "generic:ask-tau-native-canary-1785942753",
+    "node_id": "reviewer",
+    "attempt_id": "generic:ask-tau-native-canary-1785942753:reviewer:1",
+    "attempt": 1,
+    "goal_hash": "sha256:e555f8787f456dac51b2255e1e96e859ddfff1cd77b8249ad1e6c9ca763de05e",
+    "plan_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "harness": "tau_native_agent_loop",
+    "state": "completed",
+    "blockers": [],
+    "turns": 2,
+    "turn_receipt_sha256s": [
+      "sha256:06cc8858cda3c3e08294d7c55b59722964bb14042918c695cbb584885ef78c97",
+      "sha256:8b41dc1dc8b3ff5a9bfe6e3b3d21bbb4b0eafd19c6bc279ff454321420fed670"
+    ],
+    "tool_effect_receipt_sha256s": [
+      "sha256:3525ac8d5ffa41b1ccbe58ab2fa7ebe625bcafdb0b7cc107eb8fd8cc6a467da7"
+    ],
+    "rejected_tool_requests": 0,
+    "evidence": {
+      "tool_effect_receipt": "sha256:a116148a63498b8dbf447d6e638bbe035ef87485df2c412f8628c6b602a21bf7"
+    },
+    "journal_head_sha256": "sha256:69b62e419ed402ab61273375821511b23f8f944dd63ca10e913b378f5989bdca",
+    "journal_length": 7,
+    "proof_boundary": {
+      "provider_completion_is_not_settlement": true,
+      "model_done_claim_is_not_settlement": true,
+      "settlement_requires_required_evidence": true
+    },
+    "sha256": "sha256:053b90fbdd9fcaf558f3c0614fc1f779f9c063101eb5849949d24fe129086cdd"
+  },
+  "artifact_readback_ok": true,
+  "review_verdict_pass": true
+}

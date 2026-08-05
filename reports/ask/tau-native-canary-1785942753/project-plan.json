@@ -1,0 +1,46 @@
+{
+  "schema": "ask.project_plan.v1",
+  "goal": "Have a backend agent write the canary proof artifact, then an independent reviewer verifies it",
+  "target": {
+    "repo": "grahama1970/agent-skills"
+  },
+  "deliverables": [
+    {
+      "name": "canary artifact",
+      "acceptance_criteria": [
+        "worker writes proof.txt via a Tau tool effect",
+        "independent reviewer reads it back and issues VERDICT: PASS"
+      ]
+    }
+  ],
+  "workstreams": [
+    {
+      "id": "worker",
+      "role": "backend",
+      "prompt": "Call write_file exactly once with path='proof.txt' and content='ask-to-tau native canary for agent-skills#1220'. Then state what you wrote.",
+      "allowed_paths": [
+        "proof.txt"
+      ]
+    },
+    {
+      "id": "reviewer",
+      "role": "independent_reviewer",
+      "prompt": "Call read_file with path='proof.txt'. Answer exactly 'VERDICT: PASS' if its content is 'ask-to-tau native canary for agent-skills#1220', else 'VERDICT: FAIL' plus the reason.",
+      "allowed_paths": [
+        "proof.txt"
+      ],
+      "depends_on": [
+        "worker"
+      ]
+    }
+  ],
+  "team": {
+    "preset": "fullstack-premium"
+  },
+  "execution": {
+    "topology": "sequential",
+    "max_concurrency": 1,
+    "max_retries": 0
+  },
+  "unresolved": []
+}

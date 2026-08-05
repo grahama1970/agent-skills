@@ -1,0 +1,66 @@
+{
+  "schema": "tau.generic_dag_spec.v1",
+  "run_id": "ask-tau-native-canary-1785942753",
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/ask/artifacts/tau-native-canary/ask-tau-native-canary-1785942753/run",
+  "nodes": [
+    {
+      "node_id": "worker",
+      "role": "backend",
+      "tau_agent": {
+        "prompt": "Call write_file exactly once with path='proof.txt' and content='ask-to-tau native canary for agent-skills#1220'. Then state what you wrote.",
+        "role": "backend",
+        "model": "profile:claude-model-turn",
+        "allowed_paths": [
+          "proof.txt"
+        ],
+        "required_evidence": [
+          "tool_effect_receipt"
+        ],
+        "harness_mode": "tau_native_agent_loop"
+      },
+      "depends_on": [],
+      "accepted_context_from": [],
+      "receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/ask/artifacts/tau-native-canary/ask-tau-native-canary-1785942753/receipts/worker.json",
+      "timeout_seconds": 300,
+      "max_attempts": 1
+    },
+    {
+      "node_id": "reviewer",
+      "role": "independent_reviewer",
+      "tau_agent": {
+        "prompt": "Call read_file with path='proof.txt'. Answer exactly 'VERDICT: PASS' if its content is 'ask-to-tau native canary for agent-skills#1220', else 'VERDICT: FAIL' plus the reason.",
+        "role": "independent_reviewer",
+        "model": "profile:codex-model-turn",
+        "allowed_paths": [
+          "proof.txt"
+        ],
+        "required_evidence": [
+          "tool_effect_receipt"
+        ],
+        "harness_mode": "tau_native_agent_loop"
+      },
+      "depends_on": [
+        "worker"
+      ],
+      "accepted_context_from": [
+        "worker"
+      ],
+      "receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/ask/artifacts/tau-native-canary/ask-tau-native-canary-1785942753/receipts/reviewer.json",
+      "timeout_seconds": 300,
+      "max_attempts": 1
+    }
+  ],
+  "extensions": {
+    "source_plan": {
+      "schema": "ask.project_plan.v1",
+      "goal": "Have a backend agent write the canary proof artifact, then an independent reviewer verifies it",
+      "goal_hash": "6cba0b33a207e201d0f725c30b51d9d39469c885148c23dba5dad95069a5b9bb",
+      "team_preset": "fullstack-premium",
+      "role_profiles": {
+        "worker": "claude-model-turn",
+        "reviewer": "codex-model-turn"
+      }
+    },
+    "spec_sha256": "029b43fddd98e80da9f1d742b45362b0b1315be3a302c10cfb53572e662c240b"
+  }
+}
