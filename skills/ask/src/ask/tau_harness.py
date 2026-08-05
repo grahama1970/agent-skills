@@ -81,6 +81,10 @@ def run_single_tau_agent(
     timeout_seconds: int = 120,
     execute_node: Callable[..., dict[str, Any]] | None = None,
     run_root: Path | None = None,
+    source: str | None = None,
+    grounding_threshold: float | None = None,
+    grounding_retries: int | None = None,
+    response_format: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run one bounded model turn as a Tau-native agent node.
 
@@ -116,7 +120,13 @@ def run_single_tau_agent(
 
     if execute_node is None:
         execute_node = _live_executor(
-            profile_id=profile_id, run_id=run_id, goal_hash=goal_hash
+            profile_id=profile_id,
+            run_id=run_id,
+            goal_hash=goal_hash,
+            source=source,
+            grounding_threshold=grounding_threshold,
+            grounding_retries=grounding_retries,
+            response_format=response_format,
         )
 
     result = run_dag_plan(plan, execute_node=execute_node)
@@ -144,6 +154,10 @@ def _live_executor(
     run_id: str,
     goal_hash: str,
     required_capabilities: tuple[str, ...] = ("streaming",),
+    source: str | None = None,
+    grounding_threshold: float | None = None,
+    grounding_retries: int | None = None,
+    response_format: dict[str, Any] | None = None,
 ) -> Callable[..., dict[str, Any]]:
     from tau_ai.scillm_transport import ScillmTransportProvider
     from tau_coding.dag_runtime.agent_node_adapter import (
@@ -170,6 +184,11 @@ def _live_executor(
             # surface as empty_terminal_output. Tools imply the richer set.
             required_capabilities=list(required_capabilities),
             timeout_seconds=110,
+            # tau#311: grounding/response_format carried on the Tau transport.
+            source=source,
+            grounding_threshold=grounding_threshold,
+            grounding_retries=grounding_retries,
+            response_format=response_format,
         )
 
     def execute(plan_node: Any, accepted_inputs: Any, execution: Any) -> dict[str, Any]:
