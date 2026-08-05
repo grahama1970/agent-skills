@@ -1,4 +1,5 @@
 import { ImageOff } from 'lucide-react'
+import { MathBlock, MermaidDiagram } from '../components/DiagramRenderer'
 import { Editable } from '../edit'
 import { Freeform } from './Freeform'
 import type { UiSlide, UiVisual } from '../types'
@@ -38,6 +39,26 @@ function Visual({ visual }: { visual: UiVisual }) {
         {visual.caption ? (
           <figcaption className="text-center text-2xl text-slate-400">{visual.caption}</figcaption>
         ) : null}
+      </figure>
+    )
+  }
+  if (visual.type === 'mermaid' && visual.source) {
+    return (
+      <figure className="flex h-full w-full flex-col gap-3">
+        <div className="min-h-0 flex-1">
+          <MermaidDiagram source={visual.source} />
+        </div>
+        {visual.caption ? <figcaption className="text-center text-2xl text-slate-400">{visual.caption}</figcaption> : null}
+      </figure>
+    )
+  }
+  if (visual.type === 'math' && visual.source) {
+    return (
+      <figure className="flex h-full w-full flex-col gap-3">
+        <div className="min-h-0 flex-1">
+          <MathBlock source={visual.source} />
+        </div>
+        {visual.caption ? <figcaption className="text-center text-2xl text-slate-400">{visual.caption}</figcaption> : null}
       </figure>
     )
   }

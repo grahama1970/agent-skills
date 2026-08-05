@@ -102,6 +102,21 @@ def validate_bundle(
         visual_texts = [*slide.visual.items, *slide.visual.callouts]
         if slide.visual.caption:
             visual_texts.append(slide.visual.caption)
+        if slide.visual.source:
+            # Mermaid/KaTeX source renders as visible text — scan it too.
+            visual_texts.append(slide.visual.source)
+        if slide.visual.type.value in {"mermaid", "math"} and not slide.visual.asset_id:
+            issues.append(
+                ValidationIssue(
+                    code="DIAGRAM_NO_SNAPSHOT",
+                    severity="warning",
+                    slide_id=slide.id,
+                    message=(
+                        f"slide '{slide.id}' {slide.visual.type.value} visual has no snapshot asset; "
+                        "PPTX export will show a placeholder panel (browser/HTML render fully)"
+                    ),
+                )
+            )
         if slide.footer:
             visual_texts.append(slide.footer)
         visible_text = "\n".join(

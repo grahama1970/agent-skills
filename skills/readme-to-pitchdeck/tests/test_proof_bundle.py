@@ -272,3 +272,13 @@ def test_undo_restores_previous_state_and_redo(planned: Path, tmp_path: Path) ->
     pristine.mkdir()
     with pytest.raises(NoHistory):
         undo_last_write(pristine)
+
+
+def test_mermaid_source_scanned_and_snapshot_warned(tmp_path: Path) -> None:
+    sources, ledger, assets = _base_models(tmp_path)
+    slide = _slide(visual=VisualSpec(type="mermaid", source="graph TD; A[production-ready] --> B[Ship]"))
+    report = _run(_deck(slide), ledger, sources, assets, tmp_path)
+    assert any(i.code == "FORBIDDEN_UNQUALIFIED_CLAIM" for i in report.issues)
+    assert any(i.code == "DIAGRAM_NO_SNAPSHOT" and i.severity == "warning" for i in report.issues)
+    with pytest.raises(ValueError, match="require source"):
+        VisualSpec(type="math", source="   ")

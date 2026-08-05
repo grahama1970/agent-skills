@@ -69,6 +69,7 @@ class UiVisual(StrictModel):
     items: list[str] = Field(default_factory=list)
     callouts: list[str] = Field(default_factory=list)
     caption: str | None = None
+    source: str | None = None
 
 
 class UiSlide(StrictModel):
@@ -181,6 +182,7 @@ def emit_ui_bundle(
             items=slide.visual.items,
             callouts=slide.visual.callouts,
             caption=slide.visual.caption,
+            source=slide.visual.source,
         )
         badges = [
             UiClaimBadge(

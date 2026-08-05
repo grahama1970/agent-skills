@@ -97,6 +97,8 @@ class VisualType(str, Enum):
     SCREENSHOT = "screenshot"
     NATIVE_DIAGRAM = "native_diagram"
     CARDS = "cards"
+    MERMAID = "mermaid"
+    MATH = "math"
 
 
 class AssetKind(str, Enum):
@@ -284,6 +286,10 @@ class VisualSpec(StrictModel):
     items: list[str] = Field(default_factory=list)
     callouts: list[str] = Field(default_factory=list)
     caption: str | None = None
+    # Mermaid/KaTeX source is manifest data. Rendered client-side ONLY with
+    # mermaid securityLevel 'strict' (loose is an XSS channel into exports);
+    # PPTX uses the snapshot asset (asset_id) when present.
+    source: str | None = None
 
     @model_validator(mode="after")
     def validate_visual(self) -> "VisualSpec":
@@ -291,6 +297,8 @@ class VisualSpec(StrictModel):
             raise ValueError("image and screenshot visuals require asset_id")
         if self.type == VisualType.NATIVE_DIAGRAM and len(self.items) < 2:
             raise ValueError("native_diagram visuals require at least two items")
+        if self.type in {VisualType.MERMAID, VisualType.MATH} and not (self.source or "").strip():
+            raise ValueError("mermaid and math visuals require source")
         return self
 
 

@@ -537,3 +537,30 @@ takes rails-first on the strength of the no-rollback argument.
 - VERIFIED live via CLI round-trip on the minimal fixture: edit rev 0→1,
   undo rev 1→2 with footer restored. Suite: 32 passed, 2 xfailed;
   tsc clean; verify_ui_contracts PASS (20 files).
+
+## Queued-features sweep (2026-08-05, "proceed with all queued")
+
+- Magic-byte asset intake (proof-bundle case 14 now live): content sniffing
+  for png/jpg/gif/webp/mp4/webm/svg, empty-file and 100MB limits, checked
+  BEFORE any bundle load or copy. Only the visual-diff case remains xfail.
+- Chat command objects: DeckChat parses a bounded grammar (hide/unhide,
+  delete/duplicate, move, set title|message|notes|footer) into typed
+  DeckCommand proposals with an explicit Apply/Dismiss card — chat proposes,
+  human confirms, compiler validates.
+- Mode architecture: Present|Design|Claims|Source segmented control derived
+  from existing pane state (Design = edit, Source = edit + YAML pane).
+- ThemeTokens (accent/heading_font/body_font) on DeckMeta → CSS vars in the
+  browser layouts AND the PPTX Theme palette; editable via Source mode.
+- Per-element entrance animations: typed FreeformElement.entrance
+  (none|fade|rise|zoom) + entrance_delay_ms, floating-toolbar picker,
+  prefers-reduced-motion opt-out. Toast bus (Toasts.tsx) wired to Ctrl+Z.
+- Mermaid/KaTeX: VisualType.MERMAID/MATH with required `source`; browser
+  renders via mermaid securityLevel 'strict' + KaTeX throwOnError:false;
+  source text feeds the visible-text forbidden-phrase scan; PPTX uses the
+  snapshot asset when asset_id is set, else placeholder + DIAGRAM_NO_SNAPSHOT
+  warning. Gap: no one-click SVG-snapshot button yet (assets attach via the
+  normal asset pipeline).
+- HTML export client tier: deterministic Evidence drawer (E) rendering only
+  the embedded public claim records per slide — no input surface, no network,
+  no LLM, per the security assessment. VERIFIED in emitted deck.html.
+- Suite: 34 passed, 1 xfailed; tsc clean; UI contract gate PASS (22 files).

@@ -71,6 +71,12 @@ main { flex: 1; position: relative; display: flex; align-items: center; justify-
 #notes { display: none; border-top: 1px solid #1e293b; background: #0f172acc; padding: 12px 20px;
          height: 120px; overflow-y: auto; font-size: 13px; color: #cbd5e1; white-space: pre-wrap; }
 #notes.open { display: block; }
+#evidence { display: none; border-top: 1px solid #1e293b; background: #0f172acc; padding: 12px 20px;
+            max-height: 180px; overflow-y: auto; font-size: 13px; color: #cbd5e1; }
+#evidence.open { display: block; }
+#evidence .claim { margin-bottom: 8px; padding: 8px 10px; border: 1px solid #1e293b; border-radius: 8px; }
+#evidence .cid { color: #22d3ee; font: 600 11px ui-monospace, monospace; }
+#evidence .qual { color: #f5b942; font-size: 12px; margin-top: 2px; }
 footer.bar { display: flex; justify-content: space-between; padding: 6px 16px; border-top: 1px solid #1e293b;
              font: 11px/1.6 ui-monospace, monospace; color: #64748b; }
 kbd { background: #1e293b; border-radius: 4px; padding: 1px 6px; color: #cbd5e1; }
@@ -86,6 +92,18 @@ function show(next) {
   document.querySelector('#progress > div').style.width = (((index + 1) / slides.length) * 100) + '%';
   document.getElementById('counter').textContent = 'Slide ' + (index + 1) + ' of ' + slides.length;
   document.getElementById('notes').textContent = slides[index].dataset.notes || 'No speaker notes.';
+  if (evidenceOpen) renderEvidence();
+}
+let evidenceOpen = false;
+// Deterministic client evidence tier: renders ONLY the embedded, already-
+// public claim records bound to the current slide. No free-form input, no
+// network, no model — the restricted tier the deck review approved.
+function renderEvidence() {
+  const box = document.getElementById('evidence');
+  const claims = JSON.parse(slides[index].dataset.claims || '[]');
+  box.innerHTML = claims.length
+    ? claims.map(c => '<div class="claim"><span class="cid">' + c.id + ' · ' + c.status + '</span><div>' + c.text + '</div>' + (c.qualifier ? '<div class="qual">Qualifier: ' + c.qualifier + '</div>' : '') + '</div>').join('')
+    : '<em>No evidence claims are bound to this slide.</em>';
 }
 function toggleAutoplay() {
   autoplay = !autoplay;
@@ -93,6 +111,7 @@ function toggleAutoplay() {
   clearInterval(autoplayTimer);
   if (autoplay) autoplayTimer = setInterval(() => show(index + 1 >= slides.length ? 0 : index + 1), 4000);
 }
+document.getElementById('evidenceBtn').onclick = () => { evidenceOpen = !evidenceOpen; document.getElementById('evidence').classList.toggle('open', evidenceOpen); if (evidenceOpen) renderEvidence(); };
 document.getElementById('notesBtn').onclick = () => { notesOpen = !notesOpen; document.getElementById('notes').classList.toggle('open', notesOpen); };
 document.getElementById('autoplay').onclick = toggleAutoplay;
 document.getElementById('fs').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
@@ -100,6 +119,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(index + 1); }
   else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(index - 1); }
   else if (e.key.toLowerCase() === 'n') document.getElementById('notesBtn').click();
+  else if (e.key.toLowerCase() === 'e') document.getElementById('evidenceBtn').click();
   else if (e.key.toLowerCase() === 'f') document.getElementById('fs').click();
   else if (e.key.toLowerCase() === 'a') toggleAutoplay();
 });
@@ -174,9 +194,21 @@ def emit_html(
                         visual = f'<img src="{uri}" alt="{html.escape(asset.alt_text)}">'
             footer = f'<p class="footer">{html.escape(slide.footer)}</p>' if slide.footer else ""
             reveal_class = "" if slide.reveal != "none" else " no-reveal"
+            claims_payload = json.dumps(
+                [
+                    {
+                        "id": c.id,
+                        "text": c.text,
+                        "status": c.status,
+                        "qualifier": c.required_qualifier or "",
+                    }
+                    for c in slide.claims
+                ]
+            )
             slide_sections.append(
                 f'<section class="slide t-{slide.transition}{reveal_class}" '
                 f'style="--dur:{slide.transition_duration_ms}ms" '
+                f'data-claims="{html.escape(claims_payload)}" '
                 f'data-notes="{html.escape(slide.notes)}">'
                 f"<h1>{html.escape(slide.title)}</h1>"
                 f'<p class="message">{html.escape(slide.message)}</p>'
@@ -199,6 +231,7 @@ def emit_html(
   &nbsp;·&nbsp;<span id="counter">Slide 1 of {visible}</span>
   &nbsp;·&nbsp;{html.escape(bundle.visibility)} · {html.escape(bundle.validation_readiness)}</span>
   <span>
+    <button id="evidenceBtn" type="button">Evidence (E)</button>
     <button id="notesBtn" type="button">Notes (N)</button>
     <button id="autoplay" type="button">AutoPlay (A)</button>
     <button id="fs" type="button">Fullscreen (F)</button>
@@ -206,8 +239,9 @@ def emit_html(
 </header>
 <main><div id="stage">{''.join(slide_sections)}</div></main>
 <div id="notes"></div>
+<div id="evidence"></div>
 <footer class="bar">
-  <span><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd> navigate · <kbd>N</kbd> notes · <kbd>A</kbd> autoplay · <kbd>F</kbd> fullscreen</span>
+  <span><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd> navigate · <kbd>N</kbd> notes · <kbd>E</kbd> evidence · <kbd>A</kbd> autoplay · <kbd>F</kbd> fullscreen</span>
   <span>self-contained · generated by readme-to-pitchdeck from a validated bundle</span>
 </footer>
 <script>{_RUNTIME_JS}</script>

@@ -42,6 +42,7 @@ export interface UiVisual {
   items: string[]
   callouts: string[]
   caption?: string
+  source?: string
 }
 
 export interface UiSlide {
