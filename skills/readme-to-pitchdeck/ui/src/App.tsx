@@ -6,7 +6,10 @@ import { AssetDropZone } from './components/AssetDrop'
 import { EditToolbar } from './components/EditChrome'
 import { SlideDrawer } from './components/SlideDrawer'
 import { ExportMenu } from './components/ExportMenu'
+import { NotesDrawer } from './components/NotesDrawer'
 import { OverflowBadge } from './components/OverflowBadge'
+import { PresenterOverlay } from './components/Presenter'
+import { ShortcutsModal } from './components/ShortcutsModal'
 import { ResizeHandle } from './components/ResizeHandle'
 import { SourcePane } from './components/SourcePane'
 import { Inspector } from './components/Inspector'
@@ -178,6 +181,8 @@ export function App() {
   const [railCollapsed, setRailCollapsed] = usePersistentPane('deck-pane-rail-collapsed', false)
   const [zoom, setZoom] = useState('fit')
   const [showSource, setShowSource] = usePersistentPane('deck-pane-source', false)
+  const [presenting, setPresenting] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
   const [inspectorCollapsed, setInspectorCollapsed] = usePersistentPane('deck-pane-inspector-collapsed', false)
   const [sourceVersion, setSourceVersion] = useState(0)
 
@@ -246,11 +251,33 @@ export function App() {
       } else if (event.key.toLowerCase() === 'f' && event.shiftKey) {
         event.preventDefault()
         toggleFocusMode()
+      } else if (event.key.toLowerCase() === 'n' && event.shiftKey) {
+        event.preventDefault()
+        setShowNotes((value) => !value)
+      } else if (event.key === 'Enter') {
+        event.preventDefault()
+        setPresenting(true)
+      } else if (event.key === '/') {
+        event.preventDefault()
+        setShowShortcuts((value) => !value)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [toggleFocusMode, setShowSource, setRailCollapsed, setInspectorCollapsed])
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      const typing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+      if (event.key === '?' && !typing && !event.metaKey && !event.ctrlKey) {
+        event.preventDefault()
+        setShowShortcuts((value) => !value)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useKeyboardNav(deck ? (editing ? deck.slides.length : deck.slides.filter((s) => !s.hidden).length) : 0, index, go)
 
@@ -274,6 +301,10 @@ export function App() {
 
   return (
     <div className="flex h-full flex-col">
+      {presenting ? (
+        <PresenterOverlay slides={navSlides.filter((s) => !s.hidden)} initialIndex={index} onClose={() => setPresenting(false)} />
+      ) : null}
+      <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
       <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 border-b border-slate-800 px-4 py-1.5">
         <div className="flex min-w-0 items-center gap-3">
           {editing ? (
@@ -345,8 +376,8 @@ export function App() {
               slideCount={deck.slides.length}
               onChanged={reloadAll}
               onPresent={() => {
-                setEditing(false)
                 setPendingEdit(null)
+                setPresenting(true)
               }}
             />
           ) : null}
@@ -507,11 +538,7 @@ export function App() {
           {pendingEdit ? (
             <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reloadAll} />
           ) : null}
-          {showNotes ? (
-            <aside aria-label="Speaker notes" className="border-t border-slate-800 px-6 py-3 text-sm text-slate-300">
-              {slide.notes || <span className="text-slate-600">No speaker notes for this slide.</span>}
-            </aside>
-          ) : null}
+          <NotesDrawer slide={slide} isOpen={showNotes} onToggleOpen={() => setShowNotes((value) => !value)} onChanged={reloadAll} />
           <footer className="flex items-center justify-between gap-4 border-t border-slate-800 px-4 py-2">
             <button
               type="button"
