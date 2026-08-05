@@ -2,7 +2,7 @@
 name = "monitor-opportunities"
 version = "0.1.0"
 description = "Zero-network Stage 0 report kernel for monitor-opportunities"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
   "httpx>=0.28,<1",
   "loguru>=0.7,<1",
