@@ -1,232 +1,340 @@
 schema: readme_to_pitchdeck.claim_ledger.v1
 project_name: Sparta Explorer
 claims:
-  - id: sparta-public-thesis
-    text: Trace a space-cyber conclusion from framework guidance to program evidence and human review without letting AI turn relevance into authority.
-    kind: thesis
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Introduction
-    risk: medium
-    status: approved
-  - id: sparta-public-one-thread
-    text: Sparta Explorer turns scattered space-cyber, engineering, supplier, and test evidence into one inspectable decision thread.
-    kind: product
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Introduction
-    risk: medium
-    status: approved
-  - id: sparta-public-three-questions
-    text: The product helps teams ask why a conclusion is believed, what is missing or disputed, and who is allowed to decide.
-    kind: product
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Introduction
-    risk: low
-    status: approved
-  - id: sparta-public-model-boundary
-    text: The model helps users navigate while governed evidence and authorized people decide.
-    kind: thesis
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Why Sparta Explorer
-    risk: medium
-    status: approved
-  - id: sparta-public-relevance-not-support
-    text: Search, embeddings, and graph traversal can identify relevant material without establishing support, scope, currency, or approval.
-    kind: thesis
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Why Sparta Explorer
-    risk: medium
-    status: approved
-  - id: sparta-public-embry-foundation
-    text: Sparta Explorer is the assurance workbench inside the planned Embry OS local operating foundation for policy-bounded and disconnected environments.
-    kind: product
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Built on Embry OS
-    risk: high
-    status: approved
-    required_qualifier: Embry OS is a planned local operating foundation; it is not flight-control software and this claim does not establish deployment.
-  - id: sparta-public-f36-demo
-    text: The synthetic F-36 program world tests whether one evidence thread can serve program, engineering, supplier, test, and operational readers without collapsing authority boundaries.
-    kind: product
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: The Synthetic F-36 Demonstration
-    risk: medium
-    status: approved
-  - id: sparta-public-working-surfaces
-    text: The prepared-host investigation experience includes Global Posture, Threat Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and a docked Console.
-    kind: status
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Current Status and Closure Gates
-    risk: high
-    status: approved
-    required_qualifier: Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.
-  - id: sparta-public-response-path-status
-    text: On the governed path, Sparta Chat can answer, clarify, deflect, or expose insufficient evidence while transitional response branches remain open.
-    kind: status
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Product Tour — Sparta Chat
-    risk: high
-    status: approved
-    required_qualifier: The governed path is bounded and transitional branches are still being converged; do not claim every visible response uses it.
-  - id: sparta-public-collaboration-stage
-    text: Sparta Explorer is ready for design-partner conversation, architecture walkthrough, workflow evaluation, co-design, and prepared-host technical sessions.
-    kind: ask
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Why Collaborate Now
-    risk: high
-    status: approved
-    required_qualifier: The offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.
-  - id: sparta-public-open-gates
-    text: Independent corpus review, response-route convergence, QRA reasoning and reuse, decision authority, voice, setup, and deployment remain explicit closure gates.
-    kind: roadmap
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Current Status and Closure Gates
-    risk: medium
-    status: approved
-  - id: sparta-private-preflight
-    text: A prepared-host client demo preflight passed for one exact commit and closed issue 38.
-    kind: proof
-    visibility: private
-    source_refs:
-      - source_id: sparta-private-readme
-        section: Current Status and Closure Gates
-    risk: high
-    status: approved
-    required_qualifier: The preflight receipt binds to commit c60318363 only; rerun it against the exact commit demonstrated and do not demonstrate on failure.
-  - id: sparta-private-qra-snapshot
-    text: The dated issue 20 proof records 2,180 active canonical QRAs, 2,180 aliases, 5,046 quarantined records, zero duplicate active semantic identities, and expected identity at rank 1.
-    kind: proof
-    visibility: private
-    source_refs:
-      - source_id: sparta-private-readme
-        section: Dated Proof Points
-    risk: high
-    status: approved
-    required_qualifier: Quote these counts only for the 2026-07-29 population and source artifact; canonical-active does not mean expert-approved or compliance-credited.
-  - id: sparta-private-review-slice
-    text: The dated issue 6 proof records one accepted decision, one rejected decision, one pending decision, one accepted evidence case, two reviewed overlays, and one compliance-credit unit.
-    kind: proof
-    visibility: private
-    source_refs:
-      - source_id: sparta-private-readme
-        section: Dated Proof Points
-    risk: high
-    status: approved
-    required_qualifier: This is a bounded 2026-07-29 slice and does not establish corpus-wide review or quality.
-  - id: sparta-private-chat-campaign
-    text: The dated Sparta Chat aggregate receipt records 115 broad browser cases and 35 interaction cases.
-    kind: proof
-    visibility: private
-    source_refs:
-      - source_id: sparta-private-readme
-        section: Dated Proof Points
-    risk: high
-    status: approved
-    required_qualifier: This dated local campaign is implementation evidence, not full response-quality or production-readiness proof.
-  - id: sparta-private-answerability-contract
-    text: The governed response path separates source preservation, candidate construction, current-turn scope, answerability, presentation, and human decision.
-    kind: product
-    visibility: private
-    source_refs:
-      - source_id: sparta-answerability-contract
-        section: Semantic contract
-    risk: medium
-    status: approved
-  - id: sparta-private-response-gaps
-    text: Direct recall-cache release, raw QuerySpec rendering, legacy Tau fallback, and reviewed-only reuse remain named response-route gaps.
-    kind: status
-    visibility: private
-    source_refs:
-      - source_id: sparta-private-readme
-        section: Current Status and Closure Gates
-    risk: high
-    status: approved
-    required_qualifier: These named gaps keep the broader response-surface claim in integration rather than closed.
-  - id: sparta-private-deployment-gap
-    text: A verified clean-machine quick start and supported external deployment profile are not yet published.
-    kind: status
-    visibility: private
-    source_refs:
-      - source_id: sparta-private-readme
-        section: Evaluate a Prepared Host
-    risk: high
-    status: approved
-    required_qualifier: Prepared-host orchestration is not a clone-and-run installation path or supported external deployment profile.
-  - id: sparta-private-qra-governance
-    text: Candidate QRA generation, human interview and promotion, reasoning repair, and reviewed-only lineage reuse require distinct governance boundaries.
-    kind: product
-    visibility: private
-    source_refs:
-      - source_id: sparta-qra-governance
-        section: Governance lifecycle
-    risk: medium
-    status: approved
-  - id: non-claim-f36-synthetic
-    text: The F-36 corpus and program world are fictional and synthetic.
-    kind: non_claim
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Responsible Use and Repository Boundary
-    risk: mandatory_non_claim
-    status: approved
-  - id: non-claim-candidate-credit
-    text: Candidate visibility is not compliance credit.
-    kind: non_claim
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Why Sparta Explorer
-    risk: mandatory_non_claim
-    status: approved
-  - id: non-claim-human-authority
-    text: A model may explain; authorized people retain approval, risk, certification, and signoff authority.
-    kind: non_claim
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Why Sparta Explorer
-    risk: mandatory_non_claim
-    status: approved
-  - id: non-claim-preflight-commit
-    text: Prepared-host receipts bind to the exact demonstrated commit and must be rerun before a live demonstration.
-    kind: non_claim
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Collaboration
-    risk: mandatory_non_claim
-    status: approved
-  - id: non-claim-no-production
-    text: This deck does not establish production readiness, accreditation, certification, customer deployment, or endorsement.
-    kind: non_claim
-    visibility: public
-    source_refs:
-      - source_id: sparta-public-readme
-        section: Responsible Use and Repository Boundary
-    risk: mandatory_non_claim
-    status: approved
+- id: sparta-public-thesis
+  text: Trace a space-cyber conclusion from framework guidance to program evidence
+    and human review without letting AI turn relevance into authority.
+  kind: thesis
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Introduction
+  risk: medium
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-one-thread
+  text: Sparta Explorer turns scattered space-cyber, engineering, supplier, and test
+    evidence into one inspectable decision thread.
+  kind: product
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Introduction
+  risk: medium
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-three-questions
+  text: The product helps teams ask why a conclusion is believed, what is missing
+    or disputed, and who is allowed to decide.
+  kind: product
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Introduction
+  risk: low
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-model-boundary
+  text: The model helps users navigate while governed evidence and authorized people
+    decide.
+  kind: thesis
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Why Sparta Explorer
+  risk: medium
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-relevance-not-support
+  text: Search, embeddings, and graph traversal can identify relevant material without
+    establishing support, scope, currency, or approval.
+  kind: thesis
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Why Sparta Explorer
+  risk: medium
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-embry-foundation
+  text: Sparta Explorer is the assurance workbench inside the planned Embry OS local
+    operating foundation for policy-bounded and disconnected environments.
+  kind: product
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Built on Embry OS
+  risk: high
+  status: approved
+  required_qualifier: Embry OS is a planned local operating foundation; it is not
+    flight-control software and this claim does not establish deployment.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-f36-demo
+  text: The synthetic F-36 program world tests whether one evidence thread can serve
+    program, engineering, supplier, test, and operational readers without collapsing
+    authority boundaries.
+  kind: product
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: The Synthetic F-36 Demonstration
+  risk: medium
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-working-surfaces
+  text: The prepared-host investigation experience includes Global Posture, Threat
+    Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and a docked Console.
+  kind: status
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Current Status and Closure Gates
+  risk: high
+  status: approved
+  required_qualifier: Treat this as a prepared-host late-stage prototype claim and
+    verify the exact commit, preflight, and current screenshots before presenting
+    it.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-response-path-status
+  text: On the governed path, Sparta Chat can answer, clarify, deflect, or expose
+    insufficient evidence while transitional response branches remain open.
+  kind: status
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Product Tour — Sparta Chat
+  risk: high
+  status: approved
+  required_qualifier: The governed path is bounded and transitional branches are still
+    being converged; do not claim every visible response uses it.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-collaboration-stage
+  text: Sparta Explorer is ready for design-partner conversation, architecture walkthrough,
+    workflow evaluation, co-design, and prepared-host technical sessions.
+  kind: ask
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Why Collaborate Now
+  risk: high
+  status: approved
+  required_qualifier: The offer is a late-stage prototype and prepared-host evaluation,
+    not a turnkey production deployment.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-public-open-gates
+  text: Independent corpus review, response-route convergence, QRA reasoning and reuse,
+    decision authority, voice, setup, and deployment remain explicit closure gates.
+  kind: roadmap
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Current Status and Closure Gates
+  risk: medium
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-private-preflight
+  text: A prepared-host client demo preflight passed for one exact commit and closed
+    issue 38.
+  kind: proof
+  visibility: private
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Current Status and Closure Gates
+  risk: high
+  status: approved
+  required_qualifier: The preflight receipt binds to commit c60318363 only; rerun
+    it against the exact commit demonstrated and do not demonstrate on failure.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-private-qra-snapshot
+  text: The dated issue 20 proof records 2,180 active canonical QRAs, 2,180 aliases,
+    5,046 quarantined records, zero duplicate active semantic identities, and expected
+    identity at rank 1.
+  kind: proof
+  visibility: private
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Dated Proof Points
+  risk: high
+  status: approved
+  required_qualifier: Quote these counts only for the 2026-07-29 population and source
+    artifact; canonical-active does not mean expert-approved or compliance-credited.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-private-review-slice
+  text: The dated issue 6 proof records one accepted decision, one rejected decision,
+    one pending decision, one accepted evidence case, two reviewed overlays, and one
+    compliance-credit unit.
+  kind: proof
+  visibility: private
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Dated Proof Points
+  risk: high
+  status: approved
+  required_qualifier: This is a bounded 2026-07-29 slice and does not establish corpus-wide
+    review or quality.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-private-chat-campaign
+  text: The dated Sparta Chat aggregate receipt records 115 broad browser cases and
+    35 interaction cases.
+  kind: proof
+  visibility: private
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Dated Proof Points
+  risk: high
+  status: approved
+  required_qualifier: This dated local campaign is implementation evidence, not full
+    response-quality or production-readiness proof.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-private-answerability-contract
+  text: The governed response path separates source preservation, candidate construction,
+    current-turn scope, answerability, presentation, and human decision.
+  kind: product
+  visibility: private
+  source_refs:
+  - source_id: sparta-answerability-contract
+    section: Semantic contract
+  risk: medium
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-private-response-gaps
+  text: Direct recall-cache release, raw QuerySpec rendering, legacy Tau fallback,
+    and reviewed-only reuse remain named response-route gaps.
+  kind: status
+  visibility: private
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Current Status and Closure Gates
+  risk: high
+  status: approved
+  required_qualifier: These named gaps keep the broader response-surface claim in
+    integration rather than closed.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-private-deployment-gap
+  text: A verified clean-machine quick start and supported external deployment profile
+    are not yet published.
+  kind: status
+  visibility: private
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Evaluate a Prepared Host
+  risk: high
+  status: approved
+  required_qualifier: Prepared-host orchestration is not a clone-and-run installation
+    path or supported external deployment profile.
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: sparta-private-qra-governance
+  text: Candidate QRA generation, human interview and promotion, reasoning repair,
+    and reviewed-only lineage reuse require distinct governance boundaries.
+  kind: product
+  visibility: private
+  source_refs:
+  - source_id: sparta-qra-governance
+    section: Governance lifecycle
+  risk: medium
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: non-claim-f36-synthetic
+  text: The F-36 corpus and program world are fictional and synthetic.
+  kind: non_claim
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Responsible Use and Repository Boundary
+  risk: mandatory_non_claim
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: non-claim-candidate-credit
+  text: Candidate visibility is not compliance credit.
+  kind: non_claim
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Why Sparta Explorer
+  risk: mandatory_non_claim
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: non-claim-human-authority
+  text: A model may explain; authorized people retain approval, risk, certification,
+    and signoff authority.
+  kind: non_claim
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Why Sparta Explorer
+  risk: mandatory_non_claim
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: non-claim-preflight-commit
+  text: Prepared-host receipts bind to the exact demonstrated commit and must be rerun
+    before a live demonstration.
+  kind: non_claim
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Collaboration
+  risk: mandatory_non_claim
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
+- id: non-claim-no-production
+  text: This deck does not establish production readiness, accreditation, certification,
+    customer deployment, or endorsement.
+  kind: non_claim
+  visibility: public
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Responsible Use and Repository Boundary
+  risk: mandatory_non_claim
+  status: approved
+  approval:
+    approved_by: fixture-maintainer
+    approved_at: '2026-08-05'
 seam_validation:
   kind: claim_ledger
   status: PASS

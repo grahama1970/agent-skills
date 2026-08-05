@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+from datetime import UTC, datetime
 import re
 import shutil
 from pathlib import Path
@@ -319,6 +320,72 @@ def validate_bundle(
                         claim_id=claim_id,
                     )
                 )
+            # Claim-level source authority (roundtable item 5): resolve the
+            # BOUND CLAIM's own sources, not just the slide's.
+            for ref in claim.source_refs:
+                claim_source = source_map.get(ref.source_id)
+                if claim_source is None:
+                    issues.append(
+                        ValidationIssue(
+                            severity="error",
+                            code="CLAIM_UNKNOWN_SOURCE",
+                            message=f"Claim '{claim_id}' references unknown source '{ref.source_id}'.",
+                            slide_id=slide.id,
+                            claim_id=claim_id,
+                            source_id=ref.source_id,
+                        )
+                    )
+                elif (
+                    deck.deck.source_policy == DeckSourcePolicy.PUBLIC_ONLY
+                    and claim_source.visibility != Visibility.PUBLIC
+                ):
+                    issues.append(
+                        ValidationIssue(
+                            severity="error",
+                            code="CLAIM_PRIVATE_SOURCE",
+                            message=f"Public deck binds claim '{claim_id}' whose source '{ref.source_id}' is private.",
+                            slide_id=slide.id,
+                            claim_id=claim_id,
+                            source_id=ref.source_id,
+                        )
+                    )
+            # Approval provenance + staleness (publish-authoritative).
+            if claim.status == ClaimStatus.APPROVED:
+                if claim.approval is None:
+                    issues.append(
+                        ValidationIssue(
+                            severity="error" if require_approved_claims else "warning",
+                            code="APPROVAL_PROVENANCE_MISSING",
+                            message=f"Approved claim '{claim_id}' has no approval provenance (approved_by/approved_at).",
+                            slide_id=slide.id,
+                            claim_id=claim_id,
+                        )
+                    )
+                elif claim.approval.expires_at:
+                    try:
+                        expiry = datetime.fromisoformat(claim.approval.expires_at.replace("Z", "+00:00"))
+                        if expiry.tzinfo is None:
+                            expiry = expiry.replace(tzinfo=UTC)
+                        if expiry < datetime.now(UTC):
+                            issues.append(
+                                ValidationIssue(
+                                    severity="error",
+                                    code="APPROVAL_EXPIRED",
+                                    message=f"Approval for claim '{claim_id}' expired {claim.approval.expires_at}; re-review required.",
+                                    slide_id=slide.id,
+                                    claim_id=claim_id,
+                                )
+                            )
+                    except ValueError:
+                        issues.append(
+                            ValidationIssue(
+                                severity="error",
+                                code="APPROVAL_EXPIRY_INVALID",
+                                message=f"Claim '{claim_id}' approval.expires_at is not ISO formatted.",
+                                slide_id=slide.id,
+                                claim_id=claim_id,
+                            )
+                        )
             if deck.deck.source_policy == DeckSourcePolicy.PUBLIC_ONLY and claim.visibility != Visibility.PUBLIC:
                 issues.append(
                     ValidationIssue(

@@ -182,6 +182,19 @@ class SourceManifest(StrictModel):
         return self
 
 
+class ClaimApproval(StrictModel):
+    """Approval provenance (roundtable item 5): who, when, against what evidence.
+
+    An approved claim without provenance is a warning normally and an ERROR at
+    publish; an expired approval returns the claim to unpublishable.
+    """
+
+    approved_by: str = Field(min_length=1)
+    approved_at: str = Field(min_length=4)  # ISO date/datetime
+    source_snapshot_sha256: str | None = None
+    expires_at: str | None = None  # ISO date; publish blocks after this
+
+
 class Claim(StrictModel):
     id: str = Field(min_length=1)
     text: str = Field(min_length=1)
@@ -191,6 +204,7 @@ class Claim(StrictModel):
     risk: ClaimRisk = ClaimRisk.MEDIUM
     status: ClaimStatus = ClaimStatus.CANDIDATE
     required_qualifier: str | None = None
+    approval: ClaimApproval | None = None
     notes: str | None = None
 
     @model_validator(mode="after")

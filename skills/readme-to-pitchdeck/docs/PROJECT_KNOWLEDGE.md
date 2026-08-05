@@ -503,3 +503,21 @@ takes rails-first on the strength of the no-rollback argument.
   the exported HTML; PPTX via edit-time SVG snapshot assets through the
   normal asset pipeline); theme design tokens (fold into the queued
   deck-settings inspector as DeckMeta fields).
+
+## Session 3: approval provenance + proof bundle (2026-08-05)
+
+- ClaimApproval model (approved_by/approved_at/source_snapshot_sha256/
+  expires_at) on Claim; validation adds claim-level source resolution
+  (CLAIM_UNKNOWN_SOURCE, CLAIM_PRIVATE_SOURCE) and provenance gates
+  (APPROVAL_PROVENANCE_MISSING — error at publish, warning otherwise;
+  APPROVAL_EXPIRED; APPROVAL_EXPIRY_INVALID) with UTC-aware staleness.
+- Sparta fixture: 24 approvals stamped (approved_by: fixture-maintainer)
+  so the publish-mode gate passes on the example.
+- tests/test_proof_bundle.py: the WebGPT reviewer's 14-case executable
+  proof bundle as the CI release bar. 12 cases assert live protections;
+  2 are strict xfails documenting real gaps (browser-vs-LibreOffice
+  visual-diff threshold; magic-byte asset intake verification). Suite:
+  31 passed, 2 xfailed (VERIFIED this session).
+- Next in flight: undo/redo on the CAS history (.history/<rev>/ archive,
+  undo CLI + /api/undo + Ctrl+Z), then chat proposals as command objects
+  and the Design|Claims|Source|Present mode architecture.
