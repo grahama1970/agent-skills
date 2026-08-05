@@ -1,0 +1,7 @@
+{
+ "schema": "monitor_opportunities.resume_source.v1",
+ "memory_key": "career_profile/resume:general:2026-08-02",
+ "base_markdown": "/home/graham/workspace/experiments/resume/src/resume/job_search/Resume-Graham-Anderson-AI-Architect-ATS.md",
+ "base_pdf": "/home/graham/workspace/experiments/resume/src/resume/job_search/docs/pdf/Resume-Graham-Anderson-AI-Architect.pdf",
+ "note": "Active general base resume (AI Architect). Canonical envelope lives in memory career_profile; files live in the resume repo. Tailored variants must stay claim-bound and use the resume repo exporter."
+}

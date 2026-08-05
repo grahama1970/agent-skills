@@ -149,6 +149,16 @@
   per-application exact-payload human authorization + zero unresolved
   required fields; ambiguous outcomes are INDETERMINATE for the
   reconciliation gate. Not yet exercised live. Sanity 89 passed.
+- Base resume wired (Graham: it already existed): `base-resume` CLI
+  command resolves the active AI Architect base resume from
+  `config/resume_source.json` — ATS markdown + rendered PDF in the
+  resume repo (`~/workspace/experiments/resume`), canonical envelope in
+  memory `career_profile/resume:general:2026-08-02`. All three Discord
+  application plans now carry the real PDF sha256 as
+  `resume_digest`/`attachment_digests`. Remaining resume work:
+  per-opportunity tailored variants via the resume repo exporter, and
+  surf file-upload for the Greenhouse `#resume` input (js cannot set
+  file inputs).
 
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`

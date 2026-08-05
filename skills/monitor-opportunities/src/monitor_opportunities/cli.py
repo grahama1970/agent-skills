@@ -53,6 +53,7 @@ IMPLEMENTED = [
     "buzz-summary",
     "ats-inspect",
     "ats-prefill",
+    "base-resume",
     "memory-sync",
     "nightly",
 ]
@@ -427,6 +428,33 @@ def buzz_summary(
     except ContractError as exc:
         _fail(exc)
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+
+
+@app.command("base-resume")
+def base_resume(
+    json_output: bool = typer.Option(True, "--json", help="Emit machine-readable JSON."),
+) -> None:
+    """Resolve the active base resume (files + digests + memory key)."""
+    _configure_logging()
+    del json_output
+    import hashlib
+
+    skill_dir = Path(__file__).resolve().parents[2]
+    source = read_json(skill_dir / "config" / "resume_source.json")
+    payload: dict[str, object] = {
+        "schema": "monitor_opportunities.base_resume.v1",
+        "memory_key": source["memory_key"],
+    }
+    for kind in ("base_markdown", "base_pdf"):
+        path = Path(source[kind])
+        if not path.exists():
+            _fail(ContractError("RESUME_ARTIFACT_MISSING", f"{kind}: {path}"))
+        payload[kind] = {
+            "path": str(path),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "bytes": path.stat().st_size,
+        }
+    typer.echo(json.dumps({"status": "PASS", **payload}, indent=2, sort_keys=True))
 
 
 @app.command("ats-prefill")
