@@ -564,3 +564,51 @@ takes rails-first on the strength of the no-rollback argument.
   the embedded public claim records per slide — no input surface, no network,
   no LLM, per the security assessment. VERIFIED in emitted deck.html.
 - Suite: 34 passed, 1 xfailed; tsc clean; UI contract gate PASS (22 files).
+
+## Two-seat web review (2026-08-05): webgpt + webclaude, both SHIP-WITH-CONDITIONS
+
+Artifacts: /mnt/storage12tb/skills/readme-to-pitchdeck/outputs/webreview-20260805/
+(review-request.md, webgpt-response.md, webclaude-response.md, contact sheet,
+proof metadata: controlled tab == requested tab). WebClaude received text-only
+(claude.ai image-upload verification failed); WebGPT received the contact sheet.
+
+CONVERGENT findings (both seats, treat as settled):
+1. Undo's "previously committed = previously validated" is unsound —
+   governance rollback: undo can resurrect revoked approvals / un-redact
+   reclassified sources because .history holds pre-redaction plaintext and
+   approval state lives in undoable files. Fix: governance events append-only
+   (or validated against a monotonic policy ledger Ctrl+Z can't reverse);
+   scrub .history on public→private reclassification; archive-time tree hash
+   + schema/validator version stamps verified at restore; all-or-nothing
+   multi-file restore; explicit failure at the pruning boundary.
+2. Evidence drawer must switch from denylist byte-scan to a positive
+   allowlist DTO: dedicated ClientEvidenceClaim schema
+   (additionalProperties: false), records ∈ public∩approved∩bound∩visible,
+   no approved_by/source_snapshot_sha256/paths/notes, parse-and-inspect the
+   decoded embedded JSON (unicode-escape evasion), </script> breakout tests.
+3. Chat proposals: ordinal addressing is a TOCTOU bug — stable slide IDs +
+   base_revision + precondition (expected referent), server-stored proposal
+   executed by ID (client sends proposal_id, not JSON), full-string parse to
+   EOF (no prefix match), Apply card shows computed referent + old/new diff.
+4. Fixture approvals: production publish must REJECT fixture provenance;
+   run one real human approval cycle (webclaude: fixture path "is exactly
+   the affordance that gets reached for under deadline").
+5. SVG is active content: sanitize/rasterize snapshot SVGs (scripts,
+   on*, foreignObject, external href), reject %%{ directives in mermaid
+   source, pin mermaid ≥11.15.0 (May 2026 advisories: classDef DOM
+   injection ≤11.14.0), scan rendered <text>/<title>/<desc>,
+   DIAGRAM_SNAPSHOT_STALE hash; DIAGRAM_NO_SNAPSHOT → publish ERROR.
+
+WebGPT-only: torn multi-file writes need CURRENT-pointer revision dirs
+(os.replace per file is not per-revision); undo history needs full inverse
+semantics (tombstones for created files, renames); undo-as-toggle vs
+multi-level semantics must be explicit; magic bytes prove type not pixel
+privacy (raster assets need human visual provenance).
+WebClaude-only: hidden-slide records ship in exports (observed the live
+1/9-vs-10-cards gap in the screenshot); confirmation-fatigue metric (Apply
+rate ~100% = theater); risk-tier the command grammar; expiry keeps ticking
+in frozen exports (refuse to embed soon-expiring approvals).
+
+Both verdicts: ship for internal drafts NOW; gate first client-facing deck
+on (1) governance/undo separation + history scrub and (2) evidence
+allowlist DTO.
