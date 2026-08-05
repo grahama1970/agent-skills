@@ -175,3 +175,36 @@ def _live_executor(*, profile_id: str, run_id: str, goal_hash: str) -> Callable[
         )
 
     return execute
+
+
+def run_chat_via_tau(
+    *,
+    user_prompt: str,
+    system_prompt: str = "",
+    profile_id: str,
+    purpose: str,
+    timeout_seconds: int = 120,
+    execute_node: Callable[..., dict[str, Any]] | None = None,
+) -> str | None:
+    """One system+user chat turn as a Tau-native node; returns final text or None.
+
+    The migration shim for direct chat/completions call sites: same
+    text-in/text-out shape, but the turn enters Tau first and the model is
+    profile-owned. Returns None on any failure so callers keep their existing
+    degradation behavior; it never falls back to a direct provider call.
+    """
+    prompt = user_prompt if not system_prompt else f"{system_prompt}\n\n---\n\n{user_prompt}"
+    try:
+        outcome = run_single_tau_agent(
+            prompt=prompt,
+            profile_id=profile_id,
+            purpose=purpose,
+            timeout_seconds=timeout_seconds,
+            execute_node=execute_node,
+        )
+    except TauHarnessUnavailable:
+        return None
+    if outcome["scheduler_status"] != "PASS":
+        return None
+    text = outcome["final_text"].strip()
+    return text or None

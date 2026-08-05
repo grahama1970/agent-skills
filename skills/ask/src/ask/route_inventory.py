@@ -73,7 +73,11 @@ INVENTORY: dict[str, RouteEntry] = {
     ),
     "ask_oracle.py": RouteEntry(DEPRECATED_DIRECT, "Oracle orchestration calling handlers directly.", migration_target="tau#310"),
     "argue.py": RouteEntry(DEPRECATED_DIRECT, "Argue/judge flow with direct model dispatch.", migration_target="tau#310"),
-    "consult.py": RouteEntry(DEPRECATED_DIRECT, "Persona consult with direct model dispatch.", migration_target="tau#310"),
+    "consult.py": RouteEntry(
+        TAU_NATIVE_AGENT,
+        "Persona consult runs through ask.tau_harness.run_chat_via_tau with a "
+        "profile-owned model; direct POST only behind ASK_DIRECT_SCILLM_COMPAT=1.",
+    ),
     "deep_review.py": RouteEntry(DEPRECATED_DIRECT, "Deep review invoking models/subagents directly.", migration_target="tau#310"),
     "parallel_review.py": RouteEntry(DEPRECATED_DIRECT, "Parallel reviewer fan-out with direct dispatch.", migration_target="tau#310"),
     "scillm_agents.py": RouteEntry(DEPRECATED_DIRECT, "Standing SciLLM agent sessions called directly.", migration_target="tau#310"),

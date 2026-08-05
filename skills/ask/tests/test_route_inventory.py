@@ -82,7 +82,6 @@ FROZEN_DEPRECATED = {
     "ask.py",
     "ask_oracle.py",
     "argue.py",
-    "consult.py",
     "deep_review.py",
     "parallel_review.py",
     "scillm_agents.py",
@@ -104,3 +103,4 @@ def test_deprecated_set_only_shrinks() -> None:
 def test_migrated_intent_path_is_tau_native() -> None:
     assert INVENTORY["ask_intent.py"].route_class == TAU_NATIVE_AGENT
     assert INVENTORY["tau_harness.py"].route_class == TAU_NATIVE_AGENT
+    assert INVENTORY["consult.py"].route_class == TAU_NATIVE_AGENT

@@ -101,3 +101,54 @@ def test_intent_degrades_when_tau_unavailable(monkeypatch: pytest.MonkeyPatch) -
     result = ask_intent.classify_llm("anything")
     assert result.intent == "TOPIC_QUERY"
     assert result.confidence == 0.4
+
+
+def test_run_chat_via_tau_flattens_system_prompt(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from ask.tau_harness import run_chat_via_tau
+
+    seen: dict[str, Any] = {}
+
+    def capture(plan_node: Any, accepted_inputs: Any, execution: Any) -> dict[str, Any]:
+        return {
+            "node_id": plan_node.node_id,
+            "status": "PASS",
+            "verdict": "PASS",
+            "accepted_output": {"final_text": "persona reply", "settlement": {"state": "completed"}},
+            "errors": [],
+        }
+
+    monkeypatch.setenv("ASK_TAU_RUN_ROOT", str(tmp_path))
+    text = run_chat_via_tau(
+        user_prompt="question",
+        system_prompt="you are Brandon",
+        profile_id="claude-model-turn",
+        purpose="unit-consult",
+        execute_node=capture,
+    )
+    assert text == "persona reply"
+
+
+def test_run_chat_via_tau_returns_none_when_unavailable(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from ask.tau_harness import run_chat_via_tau
+
+    monkeypatch.setenv("TAU_REPO", str(tmp_path / "missing"))
+    assert (
+        run_chat_via_tau(
+            user_prompt="q", profile_id="p", purpose="t"
+        )
+        is None
+    )
+
+
+def test_consult_generate_response_routes_via_tau(monkeypatch: pytest.MonkeyPatch) -> None:
+    from ask import consult
+    import ask.tau_harness as th
+
+    def fake_chat(**kwargs: Any) -> str:
+        assert kwargs["purpose"] == "persona-consult"
+        assert kwargs["profile_id"] == consult.CONSULT_PROFILE
+        return "grounded persona answer"
+
+    monkeypatch.delenv("ASK_DIRECT_SCILLM_COMPAT", raising=False)
+    monkeypatch.setattr(th, "run_chat_via_tau", fake_chat)
+    assert consult.generate_response("q", "sys") == "grounded persona answer"

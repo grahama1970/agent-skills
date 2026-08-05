@@ -205,8 +205,38 @@ def build_persona_prompts(
     return "\n".join(sys_parts), "\n".join(user_parts)
 
 
+CONSULT_PROFILE = os.environ.get("ASK_CONSULT_PROFILE", "claude-model-turn")
+
+
 def generate_response(user_prompt: str, system_prompt: str = "", timeout: int = 60) -> Optional[str]:
-    """Generate response via scillm HTTP proxy with optional system prompt."""
+    """Generate a persona response as a Tau-native agent node (agent-skills#1220).
+
+    The model is profile-owned (ASK_CONSULT_PROFILE, default claude-model-turn)
+    instead of a hardcoded provider model. The old direct SciLLM POST survives
+    only behind ASK_DIRECT_SCILLM_COMPAT=1 as a deprecated compatibility path.
+    """
+    if os.environ.get("ASK_DIRECT_SCILLM_COMPAT") == "1":
+        return _generate_response_direct_deprecated(user_prompt, system_prompt, timeout)
+
+    from ask.tau_harness import run_chat_via_tau
+
+    text = run_chat_via_tau(
+        user_prompt=user_prompt[:4000],
+        system_prompt=system_prompt[:4000],
+        profile_id=CONSULT_PROFILE,
+        purpose="persona-consult",
+        timeout_seconds=timeout,
+    )
+    if text is None:
+        log.error("tau persona consult turn failed (profile %s)", CONSULT_PROFILE)
+    return text
+
+
+def _generate_response_direct_deprecated(
+    user_prompt: str, system_prompt: str = "", timeout: int = 60
+) -> Optional[str]:
+    """DEPRECATED direct SciLLM path; see route inventory and agent-skills#1220."""
+    log.warning("DEPRECATED: direct scillm consult bypasses Tau (agent-skills#1220)")
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt[:4000]})
