@@ -344,9 +344,11 @@ Landed and verified this session (see git log for per-commit detail):
   inner wrapper so transform keyframes cannot fight canvas scaling; Marp
   export carries transition metadata comments (one-way).
 
+Also landed: freeform snap guides — margins/center/sibling-edge snapping
+(8px threshold) live during Rnd drag with dashed SVG guide overlay; snapped
+fractions persist through apply-edit.
+
 Accepted spec queue, NOT yet implemented (from the same stream):
-1. Freeform snap guides (canvas margins/center + sibling alignment, SVG
-   guide overlay) — spec received in full.
 2. Per-element entrance animations (effect/speed/delay as FreeformElement
    manifest fields; animate.css vocabulary or own keyframes; inspector panel
    with preview; PPTX ignores) — keep first-class-data principle.
@@ -356,4 +358,10 @@ Accepted spec queue, NOT yet implemented (from the same stream):
 5. Standalone interactive HTML bundle export — ADAPT: server-side emit-html
    from the validated bundle (self-contained, no CDN Tailwind, real slide
    markup), joining pptx/pdf/md in the export menu; the spec's client-side
-   generation from client state would bypass the pipeline.
+   generation from client state would bypass the pipeline. The later md2deck
+   standalone-CLI + watch-mode spec folds into the same emit-html design
+   (a --watch flag on the skill CLI is fine; the client Markdown model is not).
+6. REJECTED with rationale: jsPDF/html2canvas client-side PDF export — we
+   already ship a true LibreOffice PDF (text-preserving, validated) through
+   the export menu; a screenshot-based client PDF is strictly worse and adds
+   two heavy dependencies.
