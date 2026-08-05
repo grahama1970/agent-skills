@@ -521,3 +521,19 @@ takes rails-first on the strength of the no-rollback argument.
 - Next in flight: undo/redo on the CAS history (.history/<rev>/ archive,
   undo CLI + /api/undo + Ctrl+Z), then chat proposals as command objects
   and the Design|Claims|Source|Present mode architecture.
+
+## Undo/redo on CAS history (2026-08-05, session 3 batch 2)
+
+- commit_bundle_write archives the about-to-be-overwritten files under
+  .history/<revision>/ (pruned to last 50) before every commit.
+- undo_last_write restores the newest archive THROUGH the same CAS commit,
+  so undo is itself a revision and undo-of-undo is redo; history can never
+  be exhausted by undoing (ping-pong by design). NoHistory only on a
+  never-edited bundle. Restores previously-validated bytes — no validation
+  bypass beyond what was already committed.
+- Surfaces: `run.sh undo` CLI (re-emits the UI bundle), POST /api/undo
+  vite middleware, Undo2 toolbar button (DECK_UNDO, registered) and Ctrl+Z
+  in edit mode (native text undo wins while typing).
+- VERIFIED live via CLI round-trip on the minimal fixture: edit rev 0→1,
+  undo rev 1→2 with footer restored. Suite: 32 passed, 2 xfailed;
+  tsc clean; verify_ui_contracts PASS (20 files).

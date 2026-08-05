@@ -242,3 +242,31 @@ def test_case14_malformed_asset_upload_magic_bytes(tmp_path: Path) -> None:
     # Should be rejected on content, not suffix; today it passes intake.
     with pytest.raises(ValueError, match="magic"):
         add_asset_to_slide(tmp_path, tmp_path / "ui", slide_id="s1", file_path=fake, alt_text="x")
+
+
+def test_undo_restores_previous_state_and_redo(planned: Path, tmp_path: Path) -> None:
+    from readme_to_pitchdeck.revisions import NoHistory, undo_last_write
+    from readme_to_pitchdeck.slide_edit import apply_slide_edit
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    sid = sorted(deck.slides, key=lambda s: s.order)[1].id
+    original = [s for s in deck.slides if s.id == sid][0].footer
+    apply_slide_edit(planned, tmp_path / "ui", slide_id=sid, field="footer", value="edited footer")
+    edited = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert [s for s in edited.slides if s.id == sid][0].footer == "edited footer"
+
+    undo_last_write(planned)
+    restored = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert [s for s in restored.slides if s.id == sid][0].footer == original
+
+    undo_last_write(planned)  # undo of the undo = redo
+    redone = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert [s for s in redone.slides if s.id == sid][0].footer == "edited footer"
+
+    # History can never be exhausted by undoing (each undo archives the
+    # pre-undo state, so undo/redo ping-pongs by design). NoHistory applies
+    # only to a bundle that has never been edited.
+    pristine = tmp_path / "never-edited"
+    pristine.mkdir()
+    with pytest.raises(NoHistory):
+        undo_last_write(pristine)

@@ -1,4 +1,4 @@
-import { Copy, MoveLeft, MoveRight, Play, Plus, Trash2 } from 'lucide-react'
+import { Copy, MoveLeft, MoveRight, Play, Plus, Trash2, Undo2 } from 'lucide-react'
 import { useState } from 'react'
 import type { UiDeckBundle, UiSlide } from '../types'
 
@@ -15,6 +15,13 @@ async function postOp(op: string, slideId: string): Promise<string | null> {
   if (response.ok) return null
   const data = (await response.json()) as { error?: string }
   return data.error ?? `operation failed (${response.status})`
+}
+
+export async function postUndo(): Promise<string | null> {
+  const response = await fetch('/api/undo', { method: 'POST' })
+  if (response.ok) return null
+  const data = (await response.json()) as { error?: string }
+  return data.error ?? `undo failed (${response.status})`
 }
 
 export function EditToolbar({
@@ -40,6 +47,15 @@ export function EditToolbar({
     else onChanged()
   }
 
+  const runUndo = async () => {
+    setBusy(true)
+    setError(null)
+    const failure = await postUndo()
+    setBusy(false)
+    if (failure) setError(failure)
+    else onChanged()
+  }
+
   const button =
     'inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-2 text-slate-300 transition-colors hover:border-slate-600 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40'
 
@@ -49,6 +65,18 @@ export function EditToolbar({
       aria-label="Slide actions"
       className="flex items-center justify-center gap-0.5"
     >
+      <button
+        type="button"
+        aria-label="Undo last change"
+        data-qid="deck:toolbar:undo"
+        data-qs-action="DECK_UNDO"
+        title="Undo the last committed change (Ctrl+Z)"
+        disabled={busy}
+        onClick={() => void runUndo()}
+        className={button}
+      >
+        <Undo2 aria-hidden className="h-5 w-5" />
+      </button>
       <button
         type="button"
         aria-label="Add slide"

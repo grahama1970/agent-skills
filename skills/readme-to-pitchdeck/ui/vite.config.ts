@@ -66,6 +66,39 @@ function slideEditApi(): Plugin {
           }
         })
       })
+      server.middlewares.use('/api/undo', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'POST only' }))
+          return
+        }
+        try {
+          const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
+          const bundleDir = receipt?.outputs?.bundle_dir
+          if (!bundleDir) {
+            res.statusCode = 409
+            res.end(JSON.stringify({ error: 'emit_ui_receipt.json has no bundle_dir; re-run emit-ui first' }))
+            return
+          }
+          execFile(
+            `${skillRoot}/run.sh`,
+            ['undo', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--json'],
+            { timeout: 60_000 },
+            (error, stdout, stderr) => {
+              res.setHeader('Content-Type', 'application/json')
+              if (error) {
+                res.statusCode = 422
+                res.end(JSON.stringify({ error: stderr.trim() || String(error) }))
+                return
+              }
+              res.end(stdout)
+            },
+          )
+        } catch (error) {
+          res.statusCode = 400
+          res.end(JSON.stringify({ error: String(error) }))
+        }
+      })
       server.middlewares.use('/api/source', (req, res) => {
         const receiptPath = `${publicDir}/emit_ui_receipt.json`
         if (req.method === 'GET') {

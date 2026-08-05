@@ -8,6 +8,7 @@ const GROUPS = [
     category: 'Panes & workspace',
     icon: Layout,
     items: [
+      { keys: ['Ctrl', 'Z'], description: 'Undo last committed change (edit mode)' },
       { keys: ['Ctrl', '\\'], description: 'Toggle deck source pane' },
       { keys: ['Ctrl', 'B'], description: 'Toggle slide navigation drawer' },
       { keys: ['Ctrl', '⇧', 'I'], description: 'Toggle inspector pane' },

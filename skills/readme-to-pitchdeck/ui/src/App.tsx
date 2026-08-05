@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
 import { AssetDropZone } from './components/AssetDrop'
-import { EditToolbar } from './components/EditChrome'
+import { EditToolbar, postUndo } from './components/EditChrome'
 import { SlideDrawer } from './components/SlideDrawer'
 import { ExportMenu } from './components/ExportMenu'
 import { NotesDrawer } from './components/NotesDrawer'
@@ -203,6 +203,12 @@ export function App() {
     label: 'Next slide',
     description: 'Navigate to the next slide in the presented deck',
   })
+  useRegisterAction('deck:toolbar:undo', {
+    app: 'readme-to-pitchdeck',
+    action: 'DECK_UNDO',
+    label: 'Undo',
+    description: 'Restore the previous committed bundle state (undo of undo = redo)',
+  })
 
   const go = useCallback(
     (next: number) => {
@@ -265,11 +271,19 @@ export function App() {
       } else if (event.key === '/') {
         event.preventDefault()
         setShowShortcuts((value) => !value)
+      } else if (event.key.toLowerCase() === 'z' && !event.shiftKey && !event.altKey) {
+        const target = event.target as HTMLElement
+        const typing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+        if (typing || !editing) return // native text undo wins while typing
+        event.preventDefault()
+        void postUndo().then((failure) => {
+          if (!failure) reloadAll()
+        })
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [toggleFocusMode, setShowSource, setRailCollapsed, setInspectorCollapsed])
+  }, [toggleFocusMode, setShowSource, setRailCollapsed, setInspectorCollapsed, editing, reloadAll])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
