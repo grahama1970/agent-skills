@@ -259,6 +259,26 @@ body {
   font-weight: 600;
 }
 
+/* Sliding accent indicator: glides between pills as sections change. */
+.nav-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  height: 2px;
+  background: var(--t-accent);
+  border-radius: 1px;
+  transition:
+    transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 200ms ease;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-indicator {
+    transition: opacity 200ms ease;
+  }
+}
+
 /* Sticky header: compresses cleanly past 24px scroll, blur only when shrunk. */
 .glass-nav {
   position: sticky;
@@ -711,6 +731,57 @@ body {
   content: '↗';
   font-weight: 400;
   opacity: 0.6;
+}
+
+/* Primary contact CTA: the conversion moment gets the same physics as
+   the cards — spring lift, accent glow, press depth, inline confirmation. */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.1rem 1.8rem;
+  background: var(--t-accent);
+  color: var(--t-paper);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 6px;
+  transition:
+    transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 250ms ease,
+    background-color 200ms ease;
+  will-change: transform;
+}
+.cta-button:hover,
+.cta-button:focus-visible {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow:
+    0 14px 30px -8px rgb(0 0 0 / 0.45),
+    0 0 18px 0 color-mix(in oklch, var(--t-accent) 35%, transparent);
+}
+.cta-button:active {
+  transform: translateY(-1px) scale(0.99);
+  transition-duration: 80ms;
+}
+.cta-button.is-copied {
+  background: color-mix(in oklch, var(--t-accent) 80%, var(--t-ink));
+}
+.cta-arrow {
+  display: inline-block;
+  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cta-button:hover .cta-arrow {
+  transform: translateX(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta-button:hover,
+  .cta-button:focus-visible,
+  .cta-button:active {
+    transform: none;
+  }
+  .cta-button:hover .cta-arrow {
+    transform: none;
+  }
 }
 
 /* Toast for copy-to-clipboard feedback. */

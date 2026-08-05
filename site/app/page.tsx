@@ -204,7 +204,7 @@ export default function Home() {
             </a>
             .
           </p>
-          <CopyEmail className="inline-block bg-ink px-6 py-3 text-[15px] text-paper no-underline hover:bg-accent" />
+          <CopyEmail />
         </section>
       </main>
     </>

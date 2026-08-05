@@ -19,6 +19,27 @@ export function SiteNav() {
   const [active, setActive] = useState('');
   const [shrunk, setShrunk] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const linksRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState({ x: 0, w: 0, on: false });
+
+  // Slide the accent indicator under the active pill.
+  useEffect(() => {
+    const el = linksRef.current?.querySelector<HTMLElement>(
+      `a[href="#${active}"]`,
+    );
+    if (!el || !linksRef.current) {
+      setIndicator((s) => ({ ...s, on: false }));
+      return;
+    }
+    const move = () => {
+      const parent = linksRef.current!.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      setIndicator({ x: rect.left - parent.left, w: rect.width, on: true });
+    };
+    move();
+    window.addEventListener('resize', move);
+    return () => window.removeEventListener('resize', move);
+  }, [active, shrunk]);
 
   useEffect(() => {
     const spy = new IntersectionObserver(
@@ -86,7 +107,16 @@ export function SiteNav() {
             <span aria-hidden="true" className="text-accent">◈</span>
             grahama.co
           </a>
-          <div className="hidden items-center gap-1 md:flex">
+          <div ref={linksRef} className="nav-links relative hidden items-center gap-1 md:flex">
+            <span
+              aria-hidden="true"
+              className="nav-indicator"
+              style={{
+                transform: `translateX(${indicator.x}px)`,
+                width: indicator.w,
+                opacity: indicator.on ? 1 : 0,
+              }}
+            />
             {LINKS.map((l) => (
               <a
                 key={l.id}
