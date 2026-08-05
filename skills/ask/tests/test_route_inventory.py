@@ -80,15 +80,10 @@ def test_classify_defaults_unlisted_to_local() -> None:
 # from this frozen list; adding a new name here is a policy violation.
 FROZEN_DEPRECATED = {
     "ask.py",
-    "ask_oracle.py",
     "argue.py",
     "deep_review.py",
     "parallel_review.py",
     "scillm_agents.py",
-    "scillm_runtime.py",
-    "extract_store.py",
-    "hybrid.py",
-    "os_query.py",
     "delegate/resolver.py",
     "delegate/registry.py",
 }

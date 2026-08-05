@@ -60,7 +60,7 @@ INVENTORY: dict[str, RouteEntry] = {
     "image_generation.py": RouteEntry(TAU_OPAQUE_COMPAT, "Image generation via external provider runtime.", migration_target="tau#310 compat node"),
     "kimi_capacity.py": RouteEntry(TAU_OPAQUE_COMPAT, "Kimi capacity probing tied to browser runtime.", migration_target="tau#310 compat node"),
     # --- Direct model/subagent paths that must migrate -------------------
-    "ask.py": RouteEntry(DEPRECATED_DIRECT, "Entry point; spawns visible tmux subagents directly.", migration_target="tau#310"),
+    "ask.py": RouteEntry(DEPRECATED_DIRECT, "Entry point; spawns visible tmux subagents directly. Deferred: visible-agent projection belongs to tau#309/#1221.", migration_target="tau#310 + #1221 projection"),
     "ask_intent.py": RouteEntry(
         TAU_NATIVE_AGENT,
         "Intent classification runs through ask.tau_harness.run_single_tau_agent; "
@@ -71,22 +71,27 @@ INVENTORY: dict[str, RouteEntry] = {
         "Shared single-agent Tau-native execution seam; the migration target for "
         "every deprecated_direct_agent_path entry.",
     ),
-    "ask_oracle.py": RouteEntry(DEPRECATED_DIRECT, "Oracle orchestration calling handlers directly.", migration_target="tau#310"),
-    "argue.py": RouteEntry(DEPRECATED_DIRECT, "Argue/judge flow with direct model dispatch.", migration_target="tau#310"),
+    "ask_oracle.py": RouteEntry(TAU_OPAQUE_COMPAT, "Oracle orchestration over browser compat adapters; no direct model call of its own.", migration_target="tau#310 compat node"),
+    "argue.py": RouteEntry(DEPRECATED_DIRECT, "Deferred: uses SciLLM source-grounding/json_object the Tau transport does not expose yet.", migration_target="tau transport grounding support"),
     "consult.py": RouteEntry(
         TAU_NATIVE_AGENT,
         "Persona consult runs through ask.tau_harness.run_chat_via_tau with a "
         "profile-owned model; direct POST only behind ASK_DIRECT_SCILLM_COMPAT=1.",
     ),
-    "deep_review.py": RouteEntry(DEPRECATED_DIRECT, "Deep review invoking models/subagents directly.", migration_target="tau#310"),
-    "parallel_review.py": RouteEntry(DEPRECATED_DIRECT, "Parallel reviewer fan-out with direct dispatch.", migration_target="tau#310"),
-    "scillm_agents.py": RouteEntry(DEPRECATED_DIRECT, "Standing SciLLM agent sessions called directly.", migration_target="tau#310"),
-    "scillm_runtime.py": RouteEntry(DEPRECATED_DIRECT, "SciLLM observability/dispatch helpers used by direct paths.", migration_target="tau#310"),
-    "extract_store.py": RouteEntry(DEPRECATED_DIRECT, "Extraction pipeline with direct model calls.", migration_target="tau#310"),
-    "hybrid.py": RouteEntry(DEPRECATED_DIRECT, "Hybrid recall+model path.", migration_target="tau#310"),
-    "os_query.py": RouteEntry(DEPRECATED_DIRECT, "OS-level query path invoking models.", migration_target="tau#310"),
-    "delegate/resolver.py": RouteEntry(DEPRECATED_DIRECT, "Coding-delegate resolution (OpenCode/Codex).", migration_target="tau#310"),
-    "delegate/registry.py": RouteEntry(DEPRECATED_DIRECT, "Coding-delegate registry.", migration_target="tau#310"),
+    "deep_review.py": RouteEntry(DEPRECATED_DIRECT, "Deferred: grounded review dispatch pending Tau transport grounding.", migration_target="tau transport grounding support"),
+    "parallel_review.py": RouteEntry(DEPRECATED_DIRECT, "Deferred: grounding/response_format semantics pending Tau transport support.", migration_target="tau transport grounding support"),
+    "scillm_agents.py": RouteEntry(DEPRECATED_DIRECT, "Standing Codex app-server workers; belongs behind the opencode-serve-compat profile as a Tau compat node.", migration_target="tau#310 opencode-serve-compat"),
+    "scillm_runtime.py": RouteEntry(LOCAL_NON_AGENTIC, "Observability metadata helpers; only httpx.get readback, no completion calls.", probe_only=True),
+    "extract_store.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Delegates to /doc2qra and /memory skills; its one urlopen is a bounded "
+        "Memory-service /learn write on :8601, not a model/agent dispatch.",
+        probe_only=True,
+    ),
+    "hybrid.py": RouteEntry(LOCAL_NON_AGENTIC, "Two-phase Memory recall composition; no model call."),
+    "os_query.py": RouteEntry(LOCAL_NON_AGENTIC, "OS metadata answers over recall; subprocess import is unused."),
+    "delegate/resolver.py": RouteEntry(DEPRECATED_DIRECT, "Coding-delegate resolution; belongs behind opencode-serve-compat.", migration_target="tau#310 opencode-serve-compat"),
+    "delegate/registry.py": RouteEntry(DEPRECATED_DIRECT, "Coding-delegate registry; migrates with delegate/resolver.", migration_target="tau#310 opencode-serve-compat"),
     # --- Local, probe-only, or deterministic modules ---------------------
     "ask_config.py": RouteEntry(LOCAL_NON_AGENTIC, "Config load plus JSON health probes.", probe_only=True),
     "config_cli.py": RouteEntry(LOCAL_NON_AGENTIC, "Config CLI; runs readiness probes.", probe_only=True),
