@@ -1,0 +1,39 @@
+{
+  "schema": "tau.run_projection.v1",
+  "run_id": "herdr-projection-proof-1785954737",
+  "dag_id": "dag-herdr-projection-proof-1785954737",
+  "goal_hash": "sha256:27a0d541351aba379a7eacd8ddc2bb5d7433c9d03cc7bf8b097607a69d0f89c3",
+  "nodes": [
+    {
+      "schema": "tau.agent_projection.v1",
+      "run_id": "herdr-projection-proof-1785954737",
+      "node_id": "probe",
+      "attempt_id": "herdr-projection-proof-1785954737:probe:1",
+      "attempt": 1,
+      "goal_hash": "sha256:27a0d541351aba379a7eacd8ddc2bb5d7433c9d03cc7bf8b097607a69d0f89c3",
+      "plan_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "journal_seq": 4,
+      "journal_head_sha256": "sha256:cc631cdb26f7850aee91eca91088dddf7f8ccbd2c532f0174a4f8690ab92d51f",
+      "role": "backend",
+      "harness": "tau_native_agent_loop",
+      "transport_profile": null,
+      "lifecycle": "completed",
+      "turns": 1,
+      "turn_receipt_sha256s": [
+        "sha256:a1c38bafcd1cb8a30e046fcf180fb62f776cbefd3d417e34ba7eb96a958e2845"
+      ],
+      "tool_effect_receipt_sha256s": [],
+      "evidence_kinds": [],
+      "current_blocker": null,
+      "permitted_operator_actions": [],
+      "proof_boundary": {
+        "derived_from_journal_only": true,
+        "panes_and_transport_status_not_authoritative": true,
+        "projection_is_not_semantic_quality_proof": true
+      },
+      "sha256": "sha256:29496801ecc9cab277f923246931765601c228c5f86b8f83ae005c366cbf9f9c"
+    }
+  ],
+  "journal_seq_total": 4,
+  "sha256": "sha256:01f91c406ed08cefc5b90b481bfcf32b8472b7b96dad3f3023d6813802f8def0"
+}

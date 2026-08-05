@@ -1,0 +1,24 @@
+{
+  "schema": "monitor_herdr.tau_projection_live_proof.v1",
+  "ticket": "agent-skills#1221",
+  "run_id": "herdr-projection-proof-1785954737",
+  "settlement_state": "completed",
+  "node_lifecycle": "completed",
+  "projection_sha256": "sha256:29496801ecc9cab277f923246931765601c228c5f86b8f83ae005c366cbf9f9c",
+  "workspace": "tau-run:herdr-projection-proof-1785954737",
+  "cards": [
+    {
+      "label": "backend/probe",
+      "lifecycle": "completed",
+      "terminal": true,
+      "transport_profile": null,
+      "current_blocker": null,
+      "permitted_operator_actions": []
+    }
+  ],
+  "all_terminal": true,
+  "paths": {
+    "projection": "/home/graham/workspace/experiments/agent-skills/skills/monitor-herdr/receipts/tau-projection/herdr-projection-proof-1785954737/run-projection.json",
+    "state": "/home/graham/workspace/experiments/agent-skills/skills/monitor-herdr/receipts/tau-projection/herdr-projection-proof-1785954737/state/herdr-projection-proof-1785954737.json"
+  }
+}

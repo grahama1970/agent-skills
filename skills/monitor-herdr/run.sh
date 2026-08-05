@@ -9,4 +9,9 @@ UV_BIN="${UV_BIN:-${HOME}/.local/bin/uv}"
 if [[ ! -x "$UV_BIN" ]]; then
   UV_BIN="uv"
 fi
+case "${1:-}" in
+    attach-tau-run|tau-status)
+        exec "$UV_BIN" run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/tau_projection_client.py" "$@"
+        ;;
+esac
 exec "$UV_BIN" run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/monitor_herdr.py" "$@"

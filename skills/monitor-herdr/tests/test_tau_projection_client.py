@@ -1,0 +1,159 @@
+"""Deterministic tests for the Tau-run projection client (agent-skills#1221)."""
+
+from __future__ import annotations
+
+import copy
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+CLIENT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_projection_client.py"
+spec = importlib.util.spec_from_file_location("tau_projection_client", CLIENT_PATH)
+client = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = client
+spec.loader.exec_module(client)
+
+TAU_SRC = Path.home() / "workspace" / "experiments" / "tau" / "src"
+
+
+def _node(node_id: str, lifecycle: str = "model_turn_running", seq: int = 3, attempt: int = 1) -> dict:
+    body = {
+        "schema": client.AGENT_PROJECTION_SCHEMA,
+        "run_id": "run-1",
+        "node_id": node_id,
+        "attempt_id": f"run-1:{node_id}:{attempt}",
+        "attempt": attempt,
+        "goal_hash": "sha256:" + "a" * 64,
+        "plan_sha256": "sha256:" + "b" * 64,
+        "journal_seq": seq,
+        "journal_head_sha256": "sha256:" + "c" * 64,
+        "role": "backend",
+        "harness": "tau_native_agent_loop",
+        "transport_profile": "codex-model-turn",
+        "lifecycle": lifecycle,
+        "turns": 1,
+        "turn_receipt_sha256s": [],
+        "tool_effect_receipt_sha256s": [],
+        "evidence_kinds": [],
+        "current_blocker": None,
+        "permitted_operator_actions": ["cancel", "pause"],
+        "proof_boundary": {"derived_from_journal_only": True},
+    }
+    return {**body, "sha256": client._canonical_sha256(body)}
+
+
+def _run_projection(nodes: list[dict]) -> dict:
+    return {
+        "schema": client.RUN_PROJECTION_SCHEMA,
+        "run_id": "run-1",
+        "dag_id": "dag-1",
+        "goal_hash": "sha256:" + "a" * 64,
+        "nodes": nodes,
+    }
+
+
+def _write(tmp_path: Path, projection: dict) -> Path:
+    p = tmp_path / "projection.json"
+    p.write_text(json.dumps(projection), encoding="utf-8")
+    return p
+
+
+def test_sha_parity_with_tau_canonical() -> None:
+    # Drift tripwire: tau's canonical_json kwargs define the hash bytes. If
+    # tau changes them, this read fails before a live sha mismatch would.
+    source = (TAU_SRC / "tau_coding" / "dag_runtime" / "model.py").read_text(encoding="utf-8")
+    for kwarg in ('sort_keys=True', 'separators=(",", ":")', "ensure_ascii=False", "allow_nan=False"):
+        assert kwarg in source, f"tau canonical_json changed: {kwarg} missing"
+
+    def canonical_sha256(payload: object) -> str:
+        import hashlib
+
+        return "sha256:" + hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")
+        ).hexdigest()
+
+    payload = {"z": 1, "a": ["ü", None], "n": {"k": True}}
+    assert client._canonical_sha256(payload) == canonical_sha256(payload)
+
+
+def test_attach_creates_workspace_with_cards(tmp_path: Path) -> None:
+    p = _write(tmp_path, _run_projection([_node("worker"), _node("reviewer", "completed", seq=5)]))
+    state = client.attach(client.load_run_projection(p), tmp_path / "state")
+    assert state["workspace"] == "tau-run:run-1"
+    labels = {c["label"]: c for c in state["cards"]}
+    assert labels["backend/worker"]["terminal"] is False
+    assert labels["backend/reviewer"]["terminal"] is True
+    assert all(c["projection_only"] for c in state["cards"])
+
+
+def test_reattach_is_idempotent(tmp_path: Path) -> None:
+    p = _write(tmp_path, _run_projection([_node("worker")]))
+    d = tmp_path / "state"
+    client.attach(client.load_run_projection(p), d)
+    first = (d / "run-1.json").read_bytes()
+    client.attach(client.load_run_projection(p), d)
+    assert (d / "run-1.json").read_bytes() == first
+
+
+def test_retry_updates_card_without_duplicate(tmp_path: Path) -> None:
+    d = tmp_path / "state"
+    client.attach(client.load_run_projection(_write(tmp_path, _run_projection([_node("worker", seq=3)]))), d)
+    state = client.attach(
+        client.load_run_projection(_write(tmp_path, _run_projection([_node("worker", "repair_requested", seq=7, attempt=2)]))),
+        d,
+    )
+    assert len(state["cards"]) == 1
+    assert state["cards"][0]["attempt"] == 2
+    assert state["cards"][0]["lifecycle"] == "repair_requested"
+
+
+def test_stale_projection_refused(tmp_path: Path) -> None:
+    d = tmp_path / "state"
+    client.attach(client.load_run_projection(_write(tmp_path, _run_projection([_node("worker", seq=9)]))), d)
+    with pytest.raises(client.ProjectionError) as exc:
+        client.attach(client.load_run_projection(_write(tmp_path, _run_projection([_node("worker", seq=2)]))), d)
+    assert exc.value.code == "stale_projection"
+    assert json.loads((d / "run-1.json").read_text())["journal_seq_total"] == 9
+
+
+def test_goal_mismatch_refused(tmp_path: Path) -> None:
+    d = tmp_path / "state"
+    client.attach(client.load_run_projection(_write(tmp_path, _run_projection([_node("worker")]))), d)
+    other = _run_projection([_node("worker", seq=20)])
+    other["goal_hash"] = "sha256:" + "f" * 64
+    with pytest.raises(client.ProjectionError) as exc:
+        client.attach(client.load_run_projection(_write(tmp_path, other)), d)
+    assert exc.value.code == "goal_mismatch"
+
+
+def test_unknown_run_and_bad_schema_and_sha(tmp_path: Path) -> None:
+    with pytest.raises(client.ProjectionError) as exc:
+        client.load_run_projection(tmp_path / "missing.json")
+    assert exc.value.code == "unknown_run"
+
+    bad = _run_projection([_node("worker")])
+    bad["schema"] = "tau.run_projection.v0"
+    with pytest.raises(client.ProjectionError) as exc:
+        client.load_run_projection(_write(tmp_path, bad))
+    assert exc.value.code == "projection_schema_invalid"
+
+    tampered = _run_projection([_node("worker")])
+    tampered["nodes"][0]["lifecycle"] = "completed"  # body changed, sha stale
+    with pytest.raises(client.ProjectionError) as exc:
+        client.load_run_projection(_write(tmp_path, tampered))
+    assert exc.value.code == "node_projection_sha_mismatch"
+
+    with pytest.raises(client.ProjectionError) as exc:
+        client.status("nope", tmp_path)
+    assert exc.value.code == "unknown_run"
+
+
+def test_status_reads_back_compact_cards(tmp_path: Path) -> None:
+    d = tmp_path / "state"
+    client.attach(client.load_run_projection(_write(tmp_path, _run_projection([_node("worker", "completed", seq=5)]))), d)
+    s = client.status("run-1", d)
+    assert s["all_terminal"] is True
+    assert s["cards"][0]["permitted_operator_actions"] == ["cancel", "pause"]
