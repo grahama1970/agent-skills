@@ -108,6 +108,23 @@
           "\"field\": \"workstreams\""
         ]
       }
+    },
+    {
+      "name": "team-plan-execute-refuses-without-live",
+      "type": "adversarial",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "team-plan",
+        "build an api with tests",
+        "--execute"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": [
+          "EXECUTE_REFUSED",
+          "refusing to run: live provider calls"
+        ]
+      }
     }
   ]
 }

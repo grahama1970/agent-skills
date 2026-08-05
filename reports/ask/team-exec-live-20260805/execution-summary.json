@@ -1,0 +1,40 @@
+{
+  "schema": "ask.tau_plan_execution_summary.v1",
+  "run_id": "team-plan-preview",
+  "goal_hash": "sha256:44ee976cf52dd842fee2af0b495efe69d6b9f2358f248601c3f26db70c41c263",
+  "scheduler_status": "PASS",
+  "scheduler_verdict": "PASS",
+  "completed_node_ids": [
+    "api",
+    "coordinator",
+    "review",
+    "tests"
+  ],
+  "nodes": {
+    "coordinator": {
+      "profile": "claude-fable-model-turn",
+      "status": "PASS",
+      "settlement": "completed",
+      "final_text": "# Plan: One-Line Project Status API + Tests\n\n## Task Breakdown & Delegation\n\n| Node | Task | Deliverable |\n|------|------|-------------|\n| **tau-impl** | Implement one-line status endpoint | `status_api.py` |\n| **tau-test** | Write unit tests (happy path, schema, method) | `test_status_api.py` |\n| **tau-review** | Verify one-line constraint, run test suite | Pass/fail report |\n\n---\n\n## Deliverable 1 \u2014 Implementation (`status_api.py`)\n\n```python\nfrom fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get(\"/status\")\ndef status(): return {\"status\": \"ok\", \"service\": \"project-api\", \"version\": \"1.0.0\"}\n```\n\n*Handler body is a single line, satisfying the constraint.*\n\n## Deliverable 2 \u2014 Tests (`test_status_api.py`)\n\n```python\nfrom fastapi.testclient import TestClient\nfrom status_api import app\n\nclient = TestClient(app)\n\ndef test_status_returns_200():\n    assert client.get(\"/status\").status_code == 200\n\ndef test_status_schema():\n    body = client.get(\"/status\").json()\n    assert body == {\"status\": \"ok\", \"service\": \"project-api\", \"version\": \"1.0.0\"}\n\ndef test_status_rejects_post():\n    assert client.post(\"/status\").status_code == 405\n```\n\n## Deliverable 3 \u2014 Verification\n\n```bash\npip install fastapi httpx pytest\npytest test_status_api.py -v   # expected: 3 passed\n```\n\n**Status:** Plan complete, artifacts ready. Delegation map above can be dispatched to child nodes; since all three tasks are trivially small, a single node can also execute sequentially (impl \u2192 test \u2192 review) in one pass."
+    },
+    "api": {
+      "profile": "claude-model-turn",
+      "status": "PASS",
+      "settlement": "completed",
+      "final_text": "# Backend Agent: Project Status API Summary\n\n## Workstream: `api`\n\nI'll create a one-line project status API endpoint with tests.\n\n---\n\n### Files Produced\n\n**`api/status.py`**\n```python\nfrom flask import Flask, jsonify\n\napp = Flask(__name__)\n\nPROJECT_STATUS = {\"status\": \"ok\", \"project\": \"tau-agent\", \"version\": \"1.0.0\"}\n\n@app.route(\"/status\")\ndef status():\n    return jsonify(PROJECT_STATUS)\n\nif __name__ == \"__main__\":\n    app.run()\n```\n\n**`api/test_status.py`**\n```python\nimport pytest\nfrom status import app\n\n@pytest.fixture\ndef client():\n    app.config[\"TESTING\"] = True\n    with app.test_client() as client:\n        yield client\n\ndef test_status_returns_200(client):\n    response = client.get(\"/status\")\n    assert response.status_code == 200\n\ndef test_status_returns_ok(client):\n    response = client.get(\"/status\")\n    data = response.get_json()\n    assert data[\"status\"] == \"ok\"\n\ndef test_status_returns_project_name(client):\n    response = client.get(\"/status\")\n    data = response.get_json()\n    assert data[\"project\"] == \"tau-agent\"\n\ndef test_status_returns_version(client):\n    response = client.get(\"/status\")\n    data = response.get_json()\n    assert data[\"version\"] == \"1.0.0\"\n\ndef test_status_content_type_is_json(client):\n    response = client.get(\"/status\")\n    assert response.content_type == \"application/json\"\n```\n\n---\n\n## What I Produced\n\n**Workstream:** `api`\n\n**Delivered:**\n1. **`api/status.py`** \u2014 A minimal Flask app exposing a single `GET /status` endpoint that returns a one-line JSON project status summary: `{\"status\": \"ok\", \"project\": \"tau-agent\", \"version\": \"1.0.0\"}`\n2. **`api/test_status.py`** \u2014 Five pytest tests covering: HTTP 200 response, `status` field value, `project` name, `version` field, and JSON content-type header.\n\n**Summary line the API returns:**\n```json\n{\"project\": \"tau-agent\", \"status\": \"ok\", \"version\": \"1.0.0\"}\n```"
+    },
+    "tests": {
+      "profile": "codex-model-turn",
+      "status": "PASS",
+      "settlement": "completed",
+      "final_text": "Produced tests only: `tests/test_project_status_summary_api.py`\n\n```python\nimport os\nimport requests\n\nBASE_URL = os.getenv(\"API_BASE_URL\", \"http://localhost:8000\").rstrip(\"/\")\nENDPOINT = os.getenv(\n    \"PROJECT_STATUS_SUMMARY_ENDPOINT\",\n    \"/api/project/status/summary\",\n)\n\n\ndef _get_summary_response():\n    return requests.get(f\"{BASE_URL}{ENDPOINT}\", timeout=5)\n\n\ndef test_project_status_summary_endpoint_returns_200():\n    response = _get_summary_response()\n\n    assert response.status_code == 200\n\n\ndef test_project_status_summary_response_is_json_with_summary_field():\n    response = _get_summary_response()\n\n    assert response.headers[\"content-type\"].startswith(\"application/json\")\n\n    body = response.json()\n\n    assert isinstance(body, dict)\n    assert \"summary\" in body\n    assert isinstance(body[\"summary\"], str)\n\n\ndef test_project_status_summary_is_one_non_empty_line():\n    response = _get_summary_response()\n    summary = response.json()[\"summary\"]\n\n    assert summary.strip() == summary\n    assert summary != \"\"\n    assert \"\\n\" not in summary\n    assert \"\\r\" not in summary\n\n\ndef test_project_status_summary_is_concise():\n    response = _get_summary_response()\n    summary = response.json()[\"summary\"]\n\n    assert len(summary) <= 240\n```\n\nThese tests verify that the project status summary API returns JSON successfully and that the `summary` value is a concise, non-empty, single-line string."
+    },
+    "review": {
+      "profile": "codex-model-turn",
+      "status": "PASS",
+      "settlement": "completed",
+      "final_text": "Review complete.\n\nProduced:\n- Independent review of the goal: \u201cwrite a one-line project status API summary with tests.\u201d\n- Confirmed expected deliverable should be a concise one-line API status summary plus accompanying tests.\n- Noted no upstream implementation/context was provided to validate against.\n- Recommended acceptance criteria:\n  - API returns a single-line project status summary.\n  - Response format is stable and documented.\n  - Tests cover success response, empty/missing status data, and formatting constraints.\n  - Tests verify the summary remains one line."
+    }
+  },
+  "run_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/team-exec-live"
+}

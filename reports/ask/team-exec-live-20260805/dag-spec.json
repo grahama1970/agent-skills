@@ -1,0 +1,104 @@
+{
+  "schema": "tau.generic_dag_spec.v1",
+  "run_id": "team-plan-preview",
+  "run_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/team-exec-live/run",
+  "nodes": [
+    {
+      "node_id": "coordinator",
+      "role": "coordinator",
+      "tau_agent": {
+        "prompt": "Plan and delegate: write a one-line project status API summary with tests",
+        "role": "coordinator",
+        "model": "profile:claude-fable-model-turn",
+        "allowed_paths": [],
+        "required_evidence": [],
+        "harness_mode": "tau_native_agent_loop"
+      },
+      "depends_on": [],
+      "accepted_context_from": [],
+      "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/team-exec-live/receipts/coordinator.json",
+      "timeout_seconds": 300,
+      "max_attempts": 2
+    },
+    {
+      "node_id": "api",
+      "role": "backend",
+      "tau_agent": {
+        "prompt": "You are the backend agent for this goal: write a one-line project status API summary with tests. Deliver your workstream (api) and state exactly what you produced.",
+        "role": "backend",
+        "model": "profile:claude-model-turn",
+        "allowed_paths": [],
+        "required_evidence": [],
+        "harness_mode": "tau_native_agent_loop"
+      },
+      "depends_on": [
+        "coordinator"
+      ],
+      "accepted_context_from": [
+        "coordinator"
+      ],
+      "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/team-exec-live/receipts/api.json",
+      "timeout_seconds": 300,
+      "max_attempts": 2
+    },
+    {
+      "node_id": "tests",
+      "role": "testing",
+      "tau_agent": {
+        "prompt": "You are the testing agent for this goal: write a one-line project status API summary with tests. Deliver your workstream (tests) and state exactly what you produced.",
+        "role": "testing",
+        "model": "profile:codex-model-turn",
+        "allowed_paths": [],
+        "required_evidence": [],
+        "harness_mode": "tau_native_agent_loop"
+      },
+      "depends_on": [
+        "coordinator"
+      ],
+      "accepted_context_from": [
+        "coordinator"
+      ],
+      "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/team-exec-live/receipts/tests.json",
+      "timeout_seconds": 300,
+      "max_attempts": 2
+    },
+    {
+      "node_id": "review",
+      "role": "independent_reviewer",
+      "tau_agent": {
+        "prompt": "You are the independent_reviewer agent for this goal: write a one-line project status API summary with tests. Deliver your workstream (review) and state exactly what you produced.",
+        "role": "independent_reviewer",
+        "model": "profile:codex-model-turn",
+        "allowed_paths": [],
+        "required_evidence": [],
+        "harness_mode": "tau_native_agent_loop"
+      },
+      "depends_on": [
+        "api",
+        "tests"
+      ],
+      "accepted_context_from": [
+        "api",
+        "tests"
+      ],
+      "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/team-exec-live/receipts/review.json",
+      "timeout_seconds": 300,
+      "max_attempts": 2
+    }
+  ],
+  "extensions": {
+    "source_plan": {
+      "schema": "ask.project_plan.v1",
+      "goal": "write a one-line project status API summary with tests",
+      "goal_hash": "f4fe67a3e55d72a058a3a099bc29a5bcade5a32a49144c83c0e272a3913787b7",
+      "team_preset": "fullstack-premium",
+      "role_profiles": {
+        "coordinator": "claude-fable-model-turn",
+        "api": "claude-model-turn",
+        "tests": "codex-model-turn",
+        "review": "codex-model-turn"
+      }
+    },
+    "spec_sha256": "9844fa0a857c4e316fd5e2786acfa3ce272eda1b26797580b34f5c099d28dd2c"
+  }
+}

@@ -217,3 +217,71 @@ def run_chat_via_tau(
         return None
     text = outcome["final_text"].strip()
     return text or None
+
+
+def run_plan_spec(
+    spec: dict[str, Any],
+    *,
+    run_dir: Path,
+    goal_hash: str | None = None,
+    execute_node: Callable[..., dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Execute a compiled multi-node tau.generic_dag_spec.v1 through Tau.
+
+    Per-node transport profiles come from each node's ``profile:`` model.
+    Returns a summary with per-node status/settlement/final_text and writes
+    ``execution-summary.json`` into ``run_dir``. Tau owns scheduling, joins,
+    and settlement; /ask only submits and reads back.
+    """
+    _tau_src()
+    from tau_coding.dag_runtime.compiler import compile_generic_dag_plan
+    from tau_coding.dag_runtime.model import canonical_sha256
+    from tau_coding.dag_runtime.scheduler import run_dag_plan
+
+    run_dir.mkdir(parents=True, exist_ok=True)
+    spec_path = run_dir / "dag-spec.json"
+    spec_path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
+    plan = compile_generic_dag_plan(spec, source_path=spec_path)
+    resolved_goal_hash = goal_hash or canonical_sha256(
+        {"run_id": spec.get("run_id"), "nodes": [n["node_id"] for n in spec["nodes"]]}
+    )
+    profile_by_node = {
+        n["node_id"]: str(n["tau_agent"]["model"]).removeprefix("profile:")
+        for n in spec["nodes"]
+        if isinstance(n.get("tau_agent"), dict)
+    }
+
+    if execute_node is None:
+        executors = {
+            node_id: _live_executor(
+                profile_id=profile, run_id=str(spec.get("run_id")), goal_hash=resolved_goal_hash
+            )
+            for node_id, profile in profile_by_node.items()
+        }
+
+        def execute_node(plan_node: Any, accepted_inputs: Any, execution: Any) -> dict[str, Any]:
+            return executors[plan_node.node_id](plan_node, accepted_inputs, execution)
+
+    result = run_dag_plan(plan, execute_node=execute_node)
+    by_id = {item["node_id"]: item for item in result.node_results}
+    nodes = {}
+    for node_id in profile_by_node:
+        accepted = by_id.get(node_id, {}).get("accepted_output") or {}
+        nodes[node_id] = {
+            "profile": profile_by_node[node_id],
+            "status": by_id.get(node_id, {}).get("status"),
+            "settlement": (accepted.get("settlement") or {}).get("state"),
+            "final_text": str(accepted.get("final_text", ""))[:2000],
+        }
+    summary = {
+        "schema": "ask.tau_plan_execution_summary.v1",
+        "run_id": spec.get("run_id"),
+        "goal_hash": resolved_goal_hash,
+        "scheduler_status": result.status,
+        "scheduler_verdict": result.verdict,
+        "completed_node_ids": sorted(result.completed_node_ids),
+        "nodes": nodes,
+        "run_dir": str(run_dir),
+    }
+    (run_dir / "execution-summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    return summary

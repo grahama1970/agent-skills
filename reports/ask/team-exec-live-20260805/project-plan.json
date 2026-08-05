@@ -1,0 +1,59 @@
+{
+  "schema": "ask.project_plan.v1",
+  "goal": "write a one-line project status API summary with tests",
+  "target": {
+    "repo": "grahama1970/agent-skills"
+  },
+  "deliverables": [
+    {
+      "name": "api",
+      "acceptance_criteria": [
+        "api workstream accepted by the independent reviewer"
+      ]
+    },
+    {
+      "name": "tests",
+      "acceptance_criteria": [
+        "tests workstream accepted by the independent reviewer"
+      ]
+    }
+  ],
+  "workstreams": [
+    {
+      "id": "coordinator",
+      "role": "coordinator",
+      "prompt": "Plan and delegate: write a one-line project status API summary with tests"
+    },
+    {
+      "id": "api",
+      "role": "backend",
+      "depends_on": [
+        "coordinator"
+      ]
+    },
+    {
+      "id": "tests",
+      "role": "testing",
+      "depends_on": [
+        "coordinator"
+      ]
+    },
+    {
+      "id": "review",
+      "role": "independent_reviewer",
+      "depends_on": [
+        "api",
+        "tests"
+      ]
+    }
+  ],
+  "team": {
+    "preset": "fullstack-premium"
+  },
+  "execution": {
+    "topology": "hybrid",
+    "max_concurrency": 3,
+    "max_retries": 1
+  },
+  "unresolved": []
+}

@@ -78,6 +78,8 @@ def plan(
     repo: str = typer.Option("grahama1970/agent-skills", "--repo", "-R"),
     out: Optional[Path] = typer.Option(None, "--out", help="Directory to write plan + spec."),
     as_json: bool = typer.Option(False, "--json"),
+    execute: bool = typer.Option(False, "--execute", help="Submit the frozen spec to Tau for execution."),
+    live: bool = typer.Option(False, "--live", help="Required with --execute: makes live provider calls."),
 ) -> None:
     """Render the plan, compile the frozen Tau spec, and print a preview."""
     plan_payload = render_team_plan(request, repo=repo, team=team)
@@ -128,13 +130,27 @@ def plan(
         "heterogeneous_profiles": heterogeneous_profile_count(spec),
         "spec_sha256": spec["extensions"]["spec_sha256"],
         "written": {"plan": str(out / "project-plan.json"), "spec": str(out / "dag-spec.json")} if out else None,
-        "execution_note": "Preview only; submit to Tau for execution (Tau owns scheduling, receipts, settlement).",
+        "execution_note": (
+            "Executing via Tau (Tau owns scheduling, receipts, settlement)."
+            if execute
+            else "Preview only; add --execute --live to submit to Tau."
+        ),
     }
-    if as_json:
-        typer.echo(json.dumps(result, indent=2))
-    else:
-        typer.echo(json.dumps(result, indent=2))
     _ = profiles
+
+    if execute:
+        if not live:
+            typer.echo(json.dumps({**result, "status": "EXECUTE_REFUSED", "reason": "refusing to run: live provider calls; pass --live with --execute"}, indent=2))
+            raise typer.Exit(2)
+        from ask.tau_harness import run_plan_spec
+
+        summary = run_plan_spec(spec, run_dir=run_dir)
+        result["execution"] = summary
+        result["status"] = "EXECUTED_PASS" if summary["scheduler_status"] == "PASS" else "EXECUTED_" + str(summary["scheduler_status"])
+        typer.echo(json.dumps(result, indent=2))
+        raise typer.Exit(0 if summary["scheduler_status"] == "PASS" else 1)
+
+    typer.echo(json.dumps(result, indent=2))
 
 
 def main() -> None:

@@ -152,3 +152,29 @@ def test_consult_generate_response_routes_via_tau(monkeypatch: pytest.MonkeyPatc
     monkeypatch.delenv("ASK_DIRECT_SCILLM_COMPAT", raising=False)
     monkeypatch.setattr(th, "run_chat_via_tau", fake_chat)
     assert consult.generate_response("q", "sys") == "grounded persona answer"
+
+
+def test_run_plan_spec_executes_multi_node_dag(tmp_path: Path) -> None:
+    from ask.project_plan_to_tau import compile_plan_to_tau_spec
+    from ask.tau_harness import run_plan_spec
+    import importlib.util as _il
+    _spec = _il.spec_from_file_location("tppt", Path(__file__).parent / "test_project_plan_to_tau.py")
+    _m = _il.module_from_spec(_spec); _spec.loader.exec_module(_m)
+    PLAN = _m.PLAN
+
+    spec = compile_plan_to_tau_spec(PLAN, run_id="exec-test", run_dir=tmp_path)
+
+    def fake(plan_node: Any, accepted_inputs: Any, execution: Any) -> dict[str, Any]:
+        return {
+            "node_id": plan_node.node_id,
+            "status": "PASS",
+            "verdict": "PASS",
+            "accepted_output": {"final_text": f"{plan_node.node_id} done", "settlement": {"state": "completed"}},
+            "errors": [],
+        }
+
+    summary = run_plan_spec(spec, run_dir=tmp_path / "run", execute_node=fake)
+    assert summary["scheduler_status"] == "PASS"
+    assert set(summary["completed_node_ids"]) == {"worker", "reviewer"}
+    assert summary["nodes"]["worker"]["settlement"] == "completed"
+    assert (tmp_path / "run" / "execution-summary.json").is_file()
