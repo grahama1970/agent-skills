@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 const LINKS = [
@@ -9,16 +12,33 @@ const LINKS = [
 ];
 
 export function SiteNav() {
+  const [active, setActive] = useState('');
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        }
+      },
+      { rootMargin: '-20% 0px -70% 0px', threshold: 0 },
+    );
+    document
+      .querySelectorAll('section[id]')
+      .forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <header className="glass-nav relative border-b border-line">
       <div className="scroll-gauge" aria-hidden="true" />
-      <nav className="mx-auto flex max-w-[1440px] flex-wrap items-baseline gap-x-7 gap-y-1 px-6 py-4 md:px-10">
+      <nav className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-1 gap-y-1 px-6 py-3 md:px-10">
         <a
           href="#top"
           data-qid="nav:link:home"
           data-qs-action="NAV_GOTO_TOP"
           title="Back to top"
-          className="mr-auto font-display text-xl no-underline"
+          className="mr-auto font-display text-xl text-ink no-underline"
         >
           grahama.co
         </a>
@@ -29,7 +49,8 @@ export function SiteNav() {
             data-qid={`nav:link:${l.id}`}
             data-qs-action={`NAV_GOTO_${l.id.toUpperCase()}`}
             title={`Go to ${l.label}`}
-            className="text-[15px] text-mute no-underline hover:text-ink"
+            aria-current={active === l.id ? 'page' : undefined}
+            className={`nav-link${active === l.id ? ' is-active' : ''}`}
           >
             {l.label}
           </a>
@@ -39,7 +60,7 @@ export function SiteNav() {
           data-qid="nav:link:resume"
           data-qs-action="NAV_OPEN_RESUME"
           title="Open RESUME.md on GitHub"
-          className="text-[15px] text-mute no-underline hover:text-ink"
+          className="nav-link"
         >
           Résumé
         </a>
@@ -48,7 +69,7 @@ export function SiteNav() {
           data-qid="nav:link:email"
           data-qs-action="NAV_EMAIL"
           title="Email graham@grahama.co"
-          className="text-[15px] text-accent no-underline underline-offset-4 hover:underline"
+          className="nav-link text-accent"
         >
           Email
         </a>

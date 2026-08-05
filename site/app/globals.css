@@ -92,6 +92,36 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Nav pills: micro-transitions only, no underlines, scroll-spy active. */
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--t-mute);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-decoration: none;
+  transition:
+    color 120ms ease-out,
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
+}
+.nav-link:hover {
+  color: var(--t-ink);
+  background-color: var(--t-fill);
+  border-color: var(--t-line);
+}
+.nav-link.is-active {
+  color: var(--t-ink);
+  background-color: var(--t-fill);
+  border-color: var(--t-mute);
+  font-weight: 600;
+}
+
 /* Glass sticky nav */
 .glass-nav {
   position: sticky;
