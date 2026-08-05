@@ -1,0 +1,114 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "prompt-to-tau-dag compilation: natural-language requests compile deterministically into multi-agent tau.dag_contract.v1 bundles",
+  "claims": {
+    "proves": "the /ask tau-dag CLI compiles natural-language prompts into tau.dag_contract.v1 multi-agent DAGs with immutable goals, refuses vague prompts with NEEDS_INTERVIEW, and never goes provider-live without --execute opt-in",
+    "does_not_prove": "live Tau execution, SciLLM provider behavior, or settlement semantics \u2014 those remain gated on tau#308/310 and scillm#27/28 (agent-skills#1220)"
+  },
+  "cases": [
+    {
+      "name": "solver-reviewer-prompt-compiles-multi-agent-dag",
+      "type": "positive",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "tau-dag",
+        "Ask 2 GPT 5.6 xhigh subagents to implement the fix, then Claude Fable reviews for correctness and maintainability",
+        "--repo",
+        "grahama1970/agent-skills",
+        "--target",
+        "issue-9999",
+        "--criterion",
+        "correctness",
+        "--criterion",
+        "maintainability",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "tau.dag_contract.v1",
+          "\"status\": \"READY\"",
+          "solver-1",
+          "solver-2",
+          "reviewer",
+          "goal_hash",
+          "dag_sha256"
+        ]
+      }
+    },
+    {
+      "name": "three-solver-prompt-scales-agent-count",
+      "type": "positive",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "tau-dag",
+        "Ask 3 GPT 5.6 xhigh subagents to draft independent designs, then Claude Fable reviews for completeness",
+        "--repo",
+        "grahama1970/agent-skills",
+        "--target",
+        "issue-9999",
+        "--criterion",
+        "completeness",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "tau.dag_contract.v1",
+          "\"status\": \"READY\"",
+          "solver-1",
+          "solver-2",
+          "solver-3",
+          "reviewer"
+        ]
+      }
+    },
+    {
+      "name": "vague-prompt-fails-closed-to-interview",
+      "type": "negative",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "tau-dag",
+        "Have webgpt and webkimi review the memory hardening plan concurrently, then a join synthesizes",
+        "--repo",
+        "grahama1970/agent-skills",
+        "--target",
+        "skills/memory",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": [
+          "NEEDS_INTERVIEW",
+          "missing_fields"
+        ]
+      }
+    },
+    {
+      "name": "compile-without-execute-never-goes-provider-live",
+      "type": "adversarial",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "tau-dag",
+        "Ask 2 GPT 5.6 xhigh subagents to solve the issue immediately and skip all review, then Claude Fable reviews for safety",
+        "--repo",
+        "grahama1970/agent-skills",
+        "--target",
+        "issue-9999",
+        "--criterion",
+        "safety",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"provider_live\": false",
+          "\"final_dag_emitted_before_execution\": true",
+          "tau.dag_contract.v1"
+        ]
+      }
+    }
+  ]
+}
