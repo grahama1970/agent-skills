@@ -63,6 +63,32 @@
   lock owner (`/tmp/surf-lock-*`) plus a kernel-stuck `npm ci` holding
   `vendor/surf-cli/.ensure-surf-cli-build.lock`; cleared, `tab.list`/`js` live.
 
+### Still later on 2026-08-05: contact identification + ats_form_inspect
+
+- Recall integration: `outreach_drafts` is linked into the `unified_search`
+  view AND semantically synced to Qdrant; `/recall` finds drafts by keyword,
+  collections filter, and paraphrase. Memory-side commits `fd0dee29`
+  (view-derived unified collections) and `b9dd7910` (keyed `/store` runs
+  semantic sync) on graph-memory-operator@main.
+- Contact identification (human-verify leads, no LinkedIn automation):
+  `/tmp/monitor-opportunities-20260805T-permitted/contact-targets.json` —
+  UB UBIT official leadership/jobs routes (site blocks curl; read via
+  browser), DARPA per-BAA PM route plus the official BAA-response info
+  sheet, and 5 public Discord recruiter leads as manual LinkedIn search
+  targets. All 10 memory drafts now carry `contact_candidates`.
+- `ats_form_inspect` promoted (read-only) and exercised: promotion receipt
+  plus three Greenhouse form-schema receipts under
+  `/tmp/monitor-opportunities-20260805T-permitted/ats-inspect/` (13/13/14
+  questions, `form_schema_digest` per posting, sensitive/free-text fields
+  marked `human_required`, `writes_performed: false`). Captured via the
+  public Greenhouse job-board API — no browser writes.
+- Next ATS increments, in order: module-ize inspect into
+  `src/monitor_opportunities/ats/` with tests and report binding; then
+  `ats_form_prefill` per provider (exact-approved answers only, screenshot
+  receipt, submit never touched); then `ats_form_submit` per application
+  with exact-payload human authorization, idempotency, readback, and
+  `INDETERMINATE` reconciliation.
+
 **Previous handoff (2026-08-05 07:57, Codex) follows.**
 **Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`
 **Authoritative branch target**: `grahama1970/agent-skills@main`
