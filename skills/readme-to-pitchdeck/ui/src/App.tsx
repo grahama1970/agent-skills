@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, LayoutGrid, NotebookText, Pencil, ShieldChec
 import { useCallback, useEffect, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
+import { EditToolbar, SlideRail } from './components/EditChrome'
 import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { useDeck, useKeyboardNav, useRegisterAction, useSlideScale } from './hooks'
@@ -274,7 +275,19 @@ export function App() {
         />
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
+          {editing ? (
+            <EditToolbar
+              slide={slide}
+              slideCount={deck.slides.length}
+              onChanged={reload}
+              onPresent={() => {
+                setEditing(false)
+                setPendingEdit(null)
+              }}
+            />
+          ) : null}
           <div className="relative flex min-h-0 flex-1">
+            {editing ? <SlideRail deck={deck} currentIndex={index} onSelect={go} /> : null}
             <EditContext.Provider value={{ editing, request: setPendingEdit }}>
               <SlideCanvas slide={slide} direction={direction} />
             </EditContext.Provider>

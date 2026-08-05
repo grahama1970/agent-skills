@@ -615,3 +615,36 @@ def test_emit_markdown_one_way_export(tmp_path: Path) -> None:
     assert receipt.seam_validation.kind == "emit_md_receipt"
     for slide in deck.slides:
         assert f"## {slide.title}" in text
+
+
+def test_deck_ops_add_move_delete(tmp_path: Path) -> None:
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+
+    from readme_to_pitchdeck.slide_edit import apply_deck_op
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    first = sorted(deck.slides, key=lambda s: s.order)[0]
+    count = len(deck.slides)
+    out = tmp_path / "ui"
+
+    apply_deck_op(planned, out, op="add_after", slide_id=first.id)
+    deck2 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert len(deck2.slides) == count + 1
+    ordered = sorted(deck2.slides, key=lambda s: s.order)
+    assert ordered[1].id == "new-slide"
+    assert [s.order for s in ordered] == list(range(1, count + 2))
+
+    apply_deck_op(planned, out, op="move_right", slide_id="new-slide")
+    deck3 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert sorted(deck3.slides, key=lambda s: s.order)[2].id == "new-slide"
+
+    apply_deck_op(planned, out, op="delete", slide_id="new-slide")
+    deck4 = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    assert len(deck4.slides) == count
+    assert [s.order for s in sorted(deck4.slides, key=lambda s: s.order)] == list(range(1, count + 1))
+
+    with pytest.raises(ValueError, match="already first"):
+        apply_deck_op(planned, out, op="move_left", slide_id=first.id)

@@ -296,6 +296,25 @@ def apply_edit(
         _abort(exc)
 
 
+@app.command(name="deck-op")
+def deck_op(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
+    op: Annotated[str, typer.Option(help="add_after | duplicate | delete | move_left | move_right")],
+    slide_id: Annotated[str, typer.Option(help="Slide id the operation targets.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Slide add/duplicate/delete/reorder; full bundle validation before writing."""
+    from .slide_edit import apply_deck_op
+
+    try:
+        receipt = apply_deck_op(bundle_dir, output_dir, op=op, slide_id=slide_id, deck_name=deck_name)
+        _emit(receipt, json_output=json_output)
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="memory-sync")
 def memory_sync(
     deck_data: Annotated[Path, typer.Option(help="Path to an emitted deck.data.json.")],
