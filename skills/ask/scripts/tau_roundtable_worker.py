@@ -4537,6 +4537,35 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
         "handler_response_index": handler_receipts,
         "usable_response_count": len(usable_responses),
         "failed_seat_count": len(failures),
+        # #1257: per-seat terminal state at the top level so a DEGRADED result
+        # is self-explaining without spelunking node-artifacts dirs.
+        "seat_terminal_states": [
+            {
+                "node_id": item.get("node_id"),
+                "handler": item.get("handler"),
+                "status": item.get("status"),
+                "ok": item.get("ok"),
+                "failure_code": item.get("failure_code"),
+                "response_chars": item.get("response_chars"),
+                "delivered": bool(item.get("ok") is True and int(item.get("response_chars") or 0) > 0),
+            }
+            for item in handler_receipts
+        ],
+        "degraded_seats": [
+            {
+                "node_id": item.get("node_id"),
+                "handler": item.get("handler"),
+                "failure_code": item.get("failure_code") or item.get("status"),
+            }
+            for item in handler_receipts
+            if not (item.get("ok") is True and int(item.get("response_chars") or 0) > 0)
+        ],
+        "removed_seats": [
+            item.get("handler")
+            for item in handler_receipts
+            if not (item.get("ok") is True and int(item.get("response_chars") or 0) > 0)
+        ]
+        or None,
         "degradation_analysis": degradation_analysis,
         "summary_path": str(summary_path),
         "unresolved_gaps": failures,
