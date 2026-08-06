@@ -733,3 +733,56 @@ def test_emit_ui_materializes_deck_document(tmp_path):
     assert "deck_document" in receipt.outputs
     doc = DeckDocument.model_validate(json.loads((out / "deck.document.json").read_text()))
     assert len(doc.slides) == len(deck.slides)
+
+
+def test_golden_slice_composition_contract():
+    """#1262 golden slice: the hand-authored Sparta mini-arc satisfies the
+    composition contract, and the contract actually rejects violations."""
+    import importlib.util
+    import json
+
+    import pytest as _pytest
+
+    from pitchdeck.document import COMPOSITION_RECIPES, DeckDocument, DocElementKind
+
+    spec = importlib.util.spec_from_file_location(
+        "build_golden", Path(__file__).parent.parent / "examples" / "sparta-golden" / "build_golden.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    doc = module.build()
+
+    assert len(doc.slides) == 6
+    # every slide carries an intent whose recipe roles are satisfied (validator ran)
+    assert all(s.intent is not None for s in doc.slides)
+    recipes = [s.intent.recipe for s in doc.slides]
+    assert set(recipes) <= set(COMPOSITION_RECIPES)
+    # two editable diagrams with bound, labeled edges — never rasters
+    diagrams = [e.diagram for s in doc.slides for e in s.elements if e.kind is DocElementKind.DIAGRAM]
+    assert len(diagrams) == 2
+    for d in diagrams:
+        assert all(edge.binding_paths or edge.decorative for edge in d.edges)
+        assert all(node.label for node in d.nodes)
+    # density: whole deck inside the corpus envelope (median 16-33 words/slide)
+    words = [sum(len((e.text or "").split()) for e in s.elements) for s in doc.slides]
+    assert max(words) <= 35 and sorted(words)[len(words) // 2] <= 33
+    # deterministic
+    assert doc.model_dump_json(by_alias=True) == module.build().model_dump_json(by_alias=True)
+
+    # NEGATIVES: the contract rejects, not advises
+    broken = json.loads(doc.model_dump_json(by_alias=True))
+    broken["slides"][1]["elements"][0]["text"] = "A different title than the assertion"
+    with _pytest.raises(Exception, match="assertion"):
+        DeckDocument.model_validate(broken)
+    fat = json.loads(doc.model_dump_json(by_alias=True))
+    fat["slides"][1]["elements"][0]["text"] = " ".join(["word"] * 40)
+    fat["slides"][1]["intent"]["assertion"] = " ".join(["word"] * 40)
+    with _pytest.raises(Exception, match="density"):
+        DeckDocument.model_validate(fat)
+    naked_edge = json.loads(doc.model_dump_json(by_alias=True))
+    for el in naked_edge["slides"][2]["elements"]:
+        if el.get("diagram"):
+            el["diagram"]["edges"][0]["binding_paths"] = []
+            el["diagram"]["edges"][0]["decorative"] = False
+    with _pytest.raises(Exception, match="non-decorative"):
+        DeckDocument.model_validate(naked_edge)

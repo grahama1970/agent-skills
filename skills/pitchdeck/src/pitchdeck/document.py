@@ -48,6 +48,7 @@ class DocElementKind(str, Enum):
     IMAGE = "image"
     SVG = "svg"
     FIGURE = "figure"
+    DIAGRAM = "diagram"
 
 
 class Bbox(StrictModel):
@@ -91,6 +92,114 @@ class FigureSpec(StrictModel):
     decorative: bool = False
 
 
+class DiagramNode(StrictModel):
+    """Editable diagram node: icon + label as separate parts, bbox in fractions
+    of the OWNING element's bbox (diagrams reposition as one unit)."""
+
+    id: str = Field(min_length=1)
+    bbox: Bbox
+    icon: str | None = Field(default=None, description="Icon-library id or sanitized inline SVG path d= data.")
+    label: str = Field(min_length=1)
+    sublabel: str | None = None
+    binding_paths: list[str] = Field(default_factory=list)
+
+
+class DiagramEdge(StrictModel):
+    """Connectors are first-class and factual by default: a meaningful edge is a
+    RELATIONSHIP claim — it needs bindings or an explicit decorative class."""
+
+    id: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    target: str = Field(min_length=1)
+    route: Literal["straight", "curve", "dotted-path"] = "straight"
+    line_style: Literal["solid", "dashed", "dotted"] = "solid"
+    arrowhead: bool = True
+    label: str | None = None
+    binding_paths: list[str] = Field(default_factory=list)
+    decorative: bool = False
+
+    @model_validator(mode="after")
+    def factual_or_decorative(self) -> "DiagramEdge":
+        if not self.decorative and not self.binding_paths:
+            raise ValueError(
+                f"edge '{self.id}': a non-decorative edge asserts a relationship and requires binding_paths"
+            )
+        return self
+
+
+DiagramRecipe = Literal["endpoint-bridge", "pipeline", "hub-spoke", "layered-stack", "loop", "before-after"]
+
+
+class DiagramGraph(StrictModel):
+    """Normalized editable diagram: separate nodes, edges, labels, and groups —
+    emitters MUST render these as distinct shapes (never one raster)."""
+
+    recipe: DiagramRecipe
+    nodes: list[DiagramNode] = Field(min_length=2)
+    edges: list[DiagramEdge] = Field(default_factory=list)
+    groups: dict[str, list[str]] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def referential(self) -> "DiagramGraph":
+        ids = [n.id for n in self.nodes]
+        if len(ids) != len(set(ids)):
+            raise ValueError("duplicate diagram node ids")
+        known = set(ids)
+        for e in self.edges:
+            if e.source not in known or e.target not in known:
+                raise ValueError(f"edge '{e.id}' references unknown node")
+        for name, members in self.groups.items():
+            for m in members:
+                if m not in known:
+                    raise ValueError(f"group '{name}' references unknown node '{m}'")
+        return self
+
+
+CompositionRecipeId = Literal[
+    "cover-brand",
+    "statement-thesis",
+    "assertion-chevrons-diagram",
+    "one-big-diagram",
+    "proof-screenshot-callout",
+    "roadmap-lanes",
+]
+
+# Executable house recipes (derived from the style corpus exemplars): each names
+# the element roles a conforming slide MUST carry. This is the composition
+# contract the planner/design-pass generate INTO and validators check AGAINST.
+COMPOSITION_RECIPES: dict[str, dict] = {
+    "cover-brand": {"required_roles": ["title", "message"], "exemplar": "cybersummit-01", "max_words": 24},
+    "statement-thesis": {"required_roles": ["title"], "exemplar": "reqml-12", "max_words": 20},
+    "assertion-chevrons-diagram": {
+        "required_roles": ["title", "chevrons", "diagram"],
+        "exemplar": "cybersummit-18",
+        "max_words": 60,
+    },
+    "one-big-diagram": {"required_roles": ["title", "diagram"], "exemplar": "cybersummit-12", "max_words": 45},
+    "proof-screenshot-callout": {
+        "required_roles": ["title", "visual", "callout"],
+        "exemplar": "cybersummit-04",
+        "max_words": 60,
+    },
+    "roadmap-lanes": {"required_roles": ["title", "chevrons"], "exemplar": "cybersummit-33", "max_words": 70},
+}
+
+
+class SlideIntent(StrictModel):
+    """The design-representation layer the 2026-08-06 review named as missing:
+    what the slide ARGUES and which house composition realizes it — sits between
+    claims and bounding boxes, generated pre-materialization, human-reviewable."""
+
+    module: str = Field(min_length=1, description="Narrative module instance, e.g. 'sparta.value-prop'.")
+    purpose: str = Field(min_length=1)
+    assertion: str = Field(min_length=1, description="The takeaway the slide argues; must be the title element's text.")
+    visual_thesis: str = Field(min_length=1, description="What the visual channel shows, or 'none: <reason>'.")
+    recipe: CompositionRecipeId
+    audience: Literal["conference", "sbir", "program-review"]
+    density_budget_words: int = Field(ge=5, le=150)
+    reveal_order: list[str] = Field(default_factory=list, description="Element ids in rhetorical build order.")
+
+
 class DocElement(StrictModel):
     id: str = Field(min_length=1)
     kind: DocElementKind
@@ -102,6 +211,7 @@ class DocElement(StrictModel):
     asset_id: str | None = None
     svg: str | None = Field(default=None, description="Inline sanitized SVG markup.")
     figure: FigureSpec | None = None
+    diagram: "DiagramGraph | None" = None
     binding_paths: list[str] = Field(default_factory=list, description="TextBinding.path values this element renders.")
     entrance: DocEntrance = Field(default_factory=DocEntrance)
 
@@ -112,6 +222,7 @@ class DocElement(StrictModel):
             DocElementKind.IMAGE: bool(self.asset_id),
             DocElementKind.SVG: bool(self.svg),
             DocElementKind.FIGURE: self.figure is not None,
+            DocElementKind.DIAGRAM: self.diagram is not None,
         }[self.kind]
         if not required:
             raise ValueError(f"element '{self.id}' ({self.kind.value}) is missing its content field")
@@ -131,12 +242,40 @@ class DocSlide(StrictModel):
     reveal: ContentReveal = ContentReveal.STAGGER_UP
     hidden: bool = False
     notes: str = ""
+    intent: SlideIntent | None = None
 
     @model_validator(mode="after")
     def unique_element_ids(self) -> "DocSlide":
         ids = [e.id for e in self.elements]
         if len(ids) != len(set(ids)):
             raise ValueError(f"slide '{self.id}' has duplicate element ids")
+        return self
+
+    @model_validator(mode="after")
+    def composition_contract(self) -> "DocSlide":
+        """Intent-carrying slides must SATISFY their recipe: required roles
+        present, assertion IS the title, density inside budget, reveal order
+        resolvable. Design stops being advisory exactly here."""
+        if self.intent is None:
+            return self
+        recipe = COMPOSITION_RECIPES[self.intent.recipe]
+        roles = {e.role for e in self.elements if e.role}
+        missing = [r for r in recipe["required_roles"] if r not in roles]
+        if missing:
+            raise ValueError(
+                f"slide '{self.id}': recipe '{self.intent.recipe}' requires roles {missing} (exemplar {recipe['exemplar']})"
+            )
+        title = next((e for e in self.elements if e.role == "title"), None)
+        if title is not None and title.text != self.intent.assertion:
+            raise ValueError(f"slide '{self.id}': title text must equal the intent assertion")
+        words = sum(len((e.text or "").split()) for e in self.elements if e.kind is DocElementKind.TEXT)
+        budget = min(self.intent.density_budget_words, recipe["max_words"])
+        if words > budget:
+            raise ValueError(f"slide '{self.id}': {words} words exceeds density budget {budget}")
+        ids = {e.id for e in self.elements}
+        unknown = [i for i in self.intent.reveal_order if i not in ids]
+        if unknown:
+            raise ValueError(f"slide '{self.id}': reveal_order references unknown elements {unknown}")
         return self
 
 

@@ -438,6 +438,190 @@
    "title": "DeckSourcePolicy",
    "type": "string"
   },
+  "DiagramEdge": {
+   "additionalProperties": false,
+   "description": "Connectors are first-class and factual by default: a meaningful edge is a\nRELATIONSHIP claim \u2014 it needs bindings or an explicit decorative class.",
+   "properties": {
+    "id": {
+     "minLength": 1,
+     "title": "Id",
+     "type": "string"
+    },
+    "source": {
+     "minLength": 1,
+     "title": "Source",
+     "type": "string"
+    },
+    "target": {
+     "minLength": 1,
+     "title": "Target",
+     "type": "string"
+    },
+    "route": {
+     "default": "straight",
+     "enum": [
+      "straight",
+      "curve",
+      "dotted-path"
+     ],
+     "title": "Route",
+     "type": "string"
+    },
+    "line_style": {
+     "default": "solid",
+     "enum": [
+      "solid",
+      "dashed",
+      "dotted"
+     ],
+     "title": "Line Style",
+     "type": "string"
+    },
+    "arrowhead": {
+     "default": true,
+     "title": "Arrowhead",
+     "type": "boolean"
+    },
+    "label": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Label"
+    },
+    "binding_paths": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Binding Paths",
+     "type": "array"
+    },
+    "decorative": {
+     "default": false,
+     "title": "Decorative",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "id",
+    "source",
+    "target"
+   ],
+   "title": "DiagramEdge",
+   "type": "object"
+  },
+  "DiagramGraph": {
+   "additionalProperties": false,
+   "description": "Normalized editable diagram: separate nodes, edges, labels, and groups \u2014\nemitters MUST render these as distinct shapes (never one raster).",
+   "properties": {
+    "recipe": {
+     "enum": [
+      "endpoint-bridge",
+      "pipeline",
+      "hub-spoke",
+      "layered-stack",
+      "loop",
+      "before-after"
+     ],
+     "title": "Recipe",
+     "type": "string"
+    },
+    "nodes": {
+     "items": {
+      "$ref": "#/$defs/DiagramNode"
+     },
+     "minItems": 2,
+     "title": "Nodes",
+     "type": "array"
+    },
+    "edges": {
+     "items": {
+      "$ref": "#/$defs/DiagramEdge"
+     },
+     "title": "Edges",
+     "type": "array"
+    },
+    "groups": {
+     "additionalProperties": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "title": "Groups",
+     "type": "object"
+    }
+   },
+   "required": [
+    "recipe",
+    "nodes"
+   ],
+   "title": "DiagramGraph",
+   "type": "object"
+  },
+  "DiagramNode": {
+   "additionalProperties": false,
+   "description": "Editable diagram node: icon + label as separate parts, bbox in fractions\nof the OWNING element's bbox (diagrams reposition as one unit).",
+   "properties": {
+    "id": {
+     "minLength": 1,
+     "title": "Id",
+     "type": "string"
+    },
+    "bbox": {
+     "$ref": "#/$defs/Bbox"
+    },
+    "icon": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Icon-library id or sanitized inline SVG path d= data.",
+     "title": "Icon"
+    },
+    "label": {
+     "minLength": 1,
+     "title": "Label",
+     "type": "string"
+    },
+    "sublabel": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Sublabel"
+    },
+    "binding_paths": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Binding Paths",
+     "type": "array"
+    }
+   },
+   "required": [
+    "id",
+    "bbox",
+    "label"
+   ],
+   "title": "DiagramNode",
+   "type": "object"
+  },
   "DocElement": {
    "additionalProperties": false,
    "properties": {
@@ -529,6 +713,17 @@
      ],
      "default": null
     },
+    "diagram": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/DiagramGraph"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "binding_paths": {
      "description": "TextBinding.path values this element renders.",
      "items": {
@@ -554,7 +749,8 @@
     "text",
     "image",
     "svg",
-    "figure"
+    "figure",
+    "diagram"
    ],
    "title": "DocElementKind",
    "type": "string"
@@ -673,6 +869,17 @@
      "default": "",
      "title": "Notes",
      "type": "string"
+    },
+    "intent": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/SlideIntent"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     }
    },
    "required": [
@@ -804,6 +1011,81 @@
     "spec_ref"
    ],
    "title": "FigureSpec",
+   "type": "object"
+  },
+  "SlideIntent": {
+   "additionalProperties": false,
+   "description": "The design-representation layer the 2026-08-06 review named as missing:\nwhat the slide ARGUES and which house composition realizes it \u2014 sits between\nclaims and bounding boxes, generated pre-materialization, human-reviewable.",
+   "properties": {
+    "module": {
+     "description": "Narrative module instance, e.g. 'sparta.value-prop'.",
+     "minLength": 1,
+     "title": "Module",
+     "type": "string"
+    },
+    "purpose": {
+     "minLength": 1,
+     "title": "Purpose",
+     "type": "string"
+    },
+    "assertion": {
+     "description": "The takeaway the slide argues; must be the title element's text.",
+     "minLength": 1,
+     "title": "Assertion",
+     "type": "string"
+    },
+    "visual_thesis": {
+     "description": "What the visual channel shows, or 'none: <reason>'.",
+     "minLength": 1,
+     "title": "Visual Thesis",
+     "type": "string"
+    },
+    "recipe": {
+     "enum": [
+      "cover-brand",
+      "statement-thesis",
+      "assertion-chevrons-diagram",
+      "one-big-diagram",
+      "proof-screenshot-callout",
+      "roadmap-lanes"
+     ],
+     "title": "Recipe",
+     "type": "string"
+    },
+    "audience": {
+     "enum": [
+      "conference",
+      "sbir",
+      "program-review"
+     ],
+     "title": "Audience",
+     "type": "string"
+    },
+    "density_budget_words": {
+     "maximum": 150,
+     "minimum": 5,
+     "title": "Density Budget Words",
+     "type": "integer"
+    },
+    "reveal_order": {
+     "description": "Element ids in rhetorical build order.",
+     "items": {
+      "type": "string"
+     },
+     "title": "Reveal Order",
+     "type": "array"
+    }
+   },
+   "required": [
+    "module",
+    "purpose",
+    "assertion",
+    "visual_thesis",
+    "recipe",
+    "audience",
+    "density_budget_words"
+   ],
+   "title": "SlideIntent",
    "type": "object"
   },
   "SlideLayout": {
