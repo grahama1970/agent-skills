@@ -52,6 +52,9 @@ command -v timeout >/dev/null 2>&1 || {
 
 exec 9>"${lock_file}"
 if ! flock -w "${lock_wait_seconds}" 9; then
+  # Structured incident so callers (ask browser preflight) get actionable
+  # metadata instead of an opaque hang (#1224).
+  printf '{"schema":"surf.build_lock_incident.v1","code":"build_lock_timeout","lock_file":"%s","waited_seconds":%s,"holders":"%s","hint":"a wedged build process holds the lock; inspect with lsof, rotate the lock file if the holder is unkillable (D-state), then run surf setup"}\n'     "${lock_file}" "${lock_wait_seconds}" "$(fuser "${lock_file}" 2>/dev/null | tr -s ' ' ',' | sed 's/^,//' || true)" >&2
   echo "Error: timed out after ${lock_wait_seconds}s waiting for surf-cli build lock at ${lock_file}" >&2
   exit 75
 fi

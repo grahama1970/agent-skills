@@ -779,7 +779,11 @@ if surf_cli_available; then
 fi
 
 if [[ -f "${SURF_CLI_PATH}/package.json" ]]; then
-    "$SKILL_DIR/scripts/ensure-surf-cli.sh" 2>/dev/null || true
+    # Hot path: never queue behind a long build lock (a kernel-wedged npm held
+    # it for 14h on 2026-08-05 and every surf command hung to timeout, #1224).
+    # 10s is enough to piggyback a finished build; otherwise proceed with the
+    # existing dist and let an explicit `surf setup` do the rebuild.
+    SURF_CLI_BUILD_LOCK_TIMEOUT_SECONDS="${SURF_CLI_HOT_PATH_LOCK_TIMEOUT_SECONDS:-10}"         "$SKILL_DIR/scripts/ensure-surf-cli.sh" 2>/dev/null || true
 fi
 
 # Fallback: CDP controller for automation commands when no extension
