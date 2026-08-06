@@ -88,8 +88,10 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
       } else {
         const num = parseInt(e.key, 10);
         if (!Number.isNaN(num)) {
-          const target = num === 0 ? 9 : num - 1;
-          if (target < phases.length) setIdx(target);
+          // Frame 00 (overview) sits at idx 0, so phase N is at idx N; 0 jumps
+          // to the finale (last frame).
+          const target = num === 0 ? phases.length - 1 : num;
+          if (target >= 0 && target < phases.length) setIdx(target);
         }
       }
     };
@@ -170,9 +172,9 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
         </button>
       </div>
       <p className="stepper-hint">
-        ← → or H / L to scrub · 1–9 jump to a phase, 0 to the finale · click
-        frame to zoom · every value in the overlay is the file&apos;s real
-        path and size
+        ← → or H / L to scrub · 1–9 jump to a phase, 0 to the finale, ← from 01
+        for the overview · click frame to zoom · every value in the overlay is
+        the file&apos;s real path and size
       </p>
       {zoom && (
         <div

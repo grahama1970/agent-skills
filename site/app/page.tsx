@@ -28,6 +28,7 @@ const CARD_META: Record<string, { cls: string; tint: string; img?: string; decod
 };
 
 const DREAM_PHASES = [
+  { f: 'research-loop', n: '00', c: 'the research loop — memory, dream, conversation', t: 'rgba(147,162,137,.42)', dims: '1672×941', src: 'persona-dream/assets/readme/research-loop' },
   { f: 'phase01-idea-memory-residue', n: '01', c: 'idea · memory residue', t: 'rgba(209,112,60,.5)', dims: '1600×1891', src: 'persona-dream/assets/readme/phase01' },
   { f: 'phase02-story-content-pane', n: '02', c: 'story', t: 'rgba(196,142,86,.45)', dims: '1270×1480', src: 'persona-dream/assets/readme/phase02-content-pane' },
   { f: 'phase03-crew-content-pane', n: '03', c: 'crew', t: 'rgba(147,162,137,.42)', dims: '1270×1480', src: 'persona-dream/assets/readme/phase03-content-pane' },
