@@ -81,6 +81,9 @@ export function KeyboardNav() {
     const next = Math.min(Math.max(current + direction, 0), sections.length - 1);
     const target = sections[next];
     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.dispatchEvent(
+      new CustomEvent('sectionjump', { detail: { id: target.id } }),
+    );
     const title = target.querySelector('h1, h2, h3');
     announce(
       `Navigated to section: ${title?.textContent?.trim() ?? target.id}`,

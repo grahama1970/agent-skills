@@ -1805,3 +1805,46 @@ footer a:hover {
     opacity: 1;
   }
 }
+
+/* Clickable inventory rail: dashed receipt-links with micro-arrow. */
+a.fig {
+  text-decoration: none;
+  color: inherit;
+  border-radius: 2px;
+  transition: background 150ms ease;
+}
+a.fig:hover {
+  background: rgba(226, 172, 98, 0.06);
+}
+a.fig:hover .l {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+}
+a.fig .l::after,
+.gen-link::after {
+  content: '↗';
+  display: inline-block;
+  font-size: 0.68em;
+  margin-left: 0.35em;
+  opacity: 0;
+  transform: translate(-2px, 2px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+a.fig:hover .l::after,
+.gen-link:hover::after {
+  opacity: 0.75;
+  transform: translate(0, 0);
+}
+.gen-link {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(236, 226, 211, 0.3);
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.gen-link:hover {
+  color: var(--brass);
+  border-bottom-style: solid;
+  border-bottom-color: var(--brass);
+}

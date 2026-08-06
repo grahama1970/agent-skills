@@ -120,11 +120,23 @@ export default function Home() {
                 <div className="rail">
                   <p className="rail-title">Inventory</p>
                   <div className="figs">
-                    <div className="fig">
+                    <a
+                      className="fig"
+                      href={`${REPO}/tree/main/skills`}
+                      data-qid="rail:link:skills"
+                      data-qs-action="RAIL_OPEN_SKILLS"
+                      title="Browse all skill contracts on GitHub"
+                    >
                       <span className="n">{stats.skills}</span>
                       <span className="l">skill contracts</span>
-                    </div>
-                    <div className="fig">
+                    </a>
+                    <a
+                      className="fig"
+                      href="#ledger"
+                      data-qid="rail:link:sanity"
+                      data-qs-action="RAIL_GOTO_LEDGER"
+                      title="See the coverage ledger, gaps included"
+                    >
                       <span className="n">
                         {stats.sanity}
                         <small>
@@ -132,16 +144,30 @@ export default function Home() {
                         </small>
                       </span>
                       <span className="l">with sanity checks</span>
-                    </div>
-                    <div className="fig">
+                    </a>
+                    <a
+                      className="fig"
+                      href={`${REPO}/tree/main/agents`}
+                      data-qid="rail:link:agents"
+                      data-qs-action="RAIL_OPEN_AGENTS"
+                      title="Browse bounded agent definitions on GitHub"
+                    >
                       <span className="n">{stats.agents}</span>
                       <span className="l">bounded agents</span>
-                    </div>
+                    </a>
                   </div>
                   <p className="prov">
                     generated
                     <br />
-                    <b>{inventory.generator}</b>
+                    <a
+                      href={`${REPO}/blob/main/site/scripts/gen_inventory.py`}
+                      data-qid="rail:link:generator"
+                      data-qs-action="RAIL_OPEN_GENERATOR"
+                      title="Read the generator script on GitHub"
+                      className="gen-link"
+                    >
+                      {inventory.generator}
+                    </a>
                     <br />@{' '}
                     <a
                       href={`${REPO}/commit/${commit}`}
