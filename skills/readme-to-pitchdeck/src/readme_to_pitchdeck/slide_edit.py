@@ -104,6 +104,60 @@ def _load(bundle_dir: Path, deck_name: str):
     )
 
 
+def simulate_edit(
+    bundle_dir: Path,
+    *,
+    slide_id: str,
+    field: str | None = None,
+    value: str | None = None,
+    op: str | None = None,
+    target_order: int | None = None,
+    deck_name: str = "deck.public.yaml",
+) -> dict:
+    """Roundtable slice 1: dry-run a mutation through the REAL pipeline.
+
+    Copies the bundle to a temp overlay, applies the edit (or deck op) there —
+    which runs the full emit_ui_bundle validation and post-emit machinery —
+    and returns {would_pass, gate_codes, error, diff} without touching the
+    real bundle. The agent iterates against this until would_pass, then
+    applies with the same arguments.
+    """
+    import difflib
+    import re as _re
+    import shutil
+    from tempfile import TemporaryDirectory
+
+    from .revisions import HISTORY_DIR
+
+    if (field is None) == (op is None):
+        raise ValueError("simulate_edit needs exactly one of field= or op=")
+    with TemporaryDirectory(prefix="deck-simulate-") as tmp:
+        staging = Path(tmp) / "bundle"
+        shutil.copytree(bundle_dir, staging, ignore=shutil.ignore_patterns(HISTORY_DIR))
+        before = (staging / deck_name).read_text(encoding="utf-8")
+        try:
+            if field is not None:
+                apply_slide_edit(staging, Path(tmp) / "ui", slide_id=slide_id, field=field, value=value or "", deck_name=deck_name)
+            else:
+                apply_deck_op(staging, Path(tmp) / "ui", op=op or "", slide_id=slide_id, target_order=target_order, deck_name=deck_name)
+        except Exception as exc:
+            message = str(exc)
+            return {
+                "would_pass": False,
+                "gate_codes": sorted(set(_re.findall(r"[A-Z][A-Z0-9_]{3,}", message))),
+                "error": message,
+                "diff": "",
+            }
+        after = (staging / deck_name).read_text(encoding="utf-8")
+        diff = "".join(
+            difflib.unified_diff(
+                before.splitlines(keepends=True), after.splitlines(keepends=True),
+                fromfile=f"{deck_name}@current", tofile=f"{deck_name}@simulated",
+            )
+        )
+        return {"would_pass": True, "gate_codes": [], "error": None, "diff": diff}
+
+
 def apply_slide_edit(
     bundle_dir: Path,
     output_dir: Path,

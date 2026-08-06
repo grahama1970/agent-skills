@@ -334,6 +334,35 @@ def apply_edit(
         _abort(exc)
 
 
+@app.command(name="simulate")
+def simulate(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    slide_id: Annotated[str, typer.Option(help="Slide id the mutation targets.")],
+    field: Annotated[str, typer.Option(help="Slide field to edit (mutually exclusive with --op).")] = "",
+    value: Annotated[str, typer.Option(help="New value for --field.")] = "",
+    op: Annotated[str, typer.Option(help="Deck op: add_after|duplicate|delete|move_left|move_right|move_to.")] = "",
+    target_order: Annotated[int, typer.Option(help="Target order for move_to.")] = 0,
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+) -> None:
+    """Dry-run a mutation through the REAL pipeline: JSON {would_pass, gate_codes, error, diff}; zero writes."""
+    import json as json_mod
+
+    from .slide_edit import simulate_edit
+
+    try:
+        result = simulate_edit(
+            bundle_dir, slide_id=slide_id,
+            field=field or None, value=value or None,
+            op=op or None, target_order=target_order or None, deck_name=deck_name,
+        )
+        typer.echo(json_mod.dumps(result, indent=1))
+        raise typer.Exit(0 if result["would_pass"] else 3)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="undo")
 def undo(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
