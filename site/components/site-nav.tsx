@@ -17,7 +17,13 @@ export function SiteNav() {
     const spy = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) setActive(entry.target.id);
+          // Only ids that have nav links may set the highlight — the hero
+          // ('top') and closer must not wipe a J/K jump's active state.
+          if (
+            entry.isIntersecting &&
+            LINKS.some((l) => l.id === entry.target.id)
+          )
+            setActive(entry.target.id);
         }
       },
       { rootMargin: '-20% 0px -70% 0px', threshold: 0 },

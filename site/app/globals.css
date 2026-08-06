@@ -1452,15 +1452,38 @@ footer a:hover {
   width: 100%;
   aspect-ratio: 16/9;
   background-color: #171010;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+/* Backdrop: the same frame, cover-filled, blurred and dimmed — no dead
+   space around portrait frames, no cropping of the sharp layer. */
+.stepper-view::before {
+  content: '';
+  position: absolute;
+  inset: -4%;
+  background-image: var(--img);
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px) brightness(0.45) saturate(0.85);
+  z-index: 0;
+}
+.stepper-view::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background-image:
     linear-gradient(180deg, rgba(12, 9, 8, 0.15), rgba(12, 9, 8, 0.4)),
     var(--img),
     radial-gradient(120% 160% at 70% 20%, var(--tint), transparent 70%);
-  background-size: contain;
+  background-size: cover, contain, cover;
   background-repeat: no-repeat;
   background-position: center;
-  border: 1px solid var(--line);
-  position: relative;
+  z-index: 1;
+}
+.stepper-view .hud,
+.stepper-view figcaption {
+  z-index: 2;
 }
 .stepper-view figcaption {
   position: absolute;
