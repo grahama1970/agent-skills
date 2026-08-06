@@ -1,0 +1,16 @@
+# Nightly site refresh — DISABLED BY DEFAULT per repo convention.
+# Enable only when the scheduler environment is ready and auto-push of
+# mechanical inventory/artifact regeneration to main is desired.
+services:
+  - name: website-nightly-refresh
+    enabled: false
+    schedule: "0 6 * * *"   # 06:00 daily
+    command: skills/monitor-website/run.sh refresh --commit --push
+    then: skills/monitor-website/run.sh audit --json
+    notes: >
+      Regenerates site/inventory.json and site/artifacts.json from repo
+      state, gates on verify-data-qid + npm build, commits/pushes only when
+      content changed (push triggers Pages deploy). Copy (questions,
+      blurbs, sections) is never modified by this job — copy changes stay
+      doc-grounded and agent/human-authored. The audit run after refresh
+      reports drift + live-site health as the receipt.

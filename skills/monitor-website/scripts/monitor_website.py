@@ -119,6 +119,44 @@ def apply_sync() -> dict:
     return {"changed": changed, "stats": readme["stats"], "projects": len(merged)}
 
 
+def refresh(commit: bool, push: bool) -> dict:
+    """Regenerate the site's generated surfaces from current repo state,
+    prove the build, and optionally commit. Copy (questions/blurbs) is
+    never touched — that stays doc-grounded and human/agent-authored."""
+    before = {}
+    for f in ("site/inventory.json", "site/artifacts.json"):
+        p = REPO / f
+        before[f] = p.read_bytes() if p.exists() else b""
+    for script in ("site/scripts/gen_inventory.py", "site/scripts/gen_artifacts.py"):
+        proc = subprocess.run(["python3", str(REPO / script)], capture_output=True, text=True)
+        if proc.returncode != 0:
+            raise SystemExit(f"{script} failed: {proc.stderr[-300:]}")
+    changed = [
+        f for f in before
+        if (REPO / f).read_bytes() != before[f]
+    ]
+    result = {"changed": changed, "committed": False, "pushed": False}
+    if changed:
+        for check in (["python3", "scripts/verify-data-qid.py"], ["npm", "run", "build"]):
+            proc = subprocess.run(check, cwd=REPO / "site")
+            if proc.returncode != 0:
+                raise SystemExit(f"post-refresh gate failed: {' '.join(check)}")
+        result["build"] = "ok"
+        if commit:
+            subprocess.run(["git", "add"] + changed, cwd=REPO, check=True)
+            subprocess.run(
+                ["git", "commit", "-m",
+                 "site: refresh generated surfaces (inventory/artifacts) — monitor-website refresh\n\n"
+                 "Mechanical regeneration from current repo state; build and qid\n"
+                 "gates passed before commit."],
+                cwd=REPO, check=True)
+            result["committed"] = True
+            if push:
+                subprocess.run(["git", "push", "origin", "main"], cwd=REPO, check=True)
+                result["pushed"] = True
+    return result
+
+
 def main() -> None:
     args = sys.argv[1:]
     cmd = args[0] if args else "audit"
@@ -139,7 +177,10 @@ def main() -> None:
             result["build"] = "ok"
         print(json.dumps(result, indent=2))
         return
-    raise SystemExit(f"unknown command: {cmd} (use audit|apply)")
+    if cmd == "refresh":
+        print(json.dumps(refresh(commit="--commit" in args, push="--push" in args), indent=2))
+        return
+    raise SystemExit(f"unknown command: {cmd} (use audit|apply|refresh)")
 
 
 if __name__ == "__main__":

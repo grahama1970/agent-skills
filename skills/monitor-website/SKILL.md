@@ -35,7 +35,17 @@ reads `site/content.json`. This skill keeps them honest.
 
 # Apply, then prove the site still builds and passes the qid gate.
 ./run.sh apply --build
+
+# Regenerate the generated surfaces (inventory.json, artifacts.json) from
+# current repo state, gate on qid + build; --commit/--push are explicit.
+# Copy (questions/blurbs/sections) is NEVER touched by refresh.
+./run.sh refresh
+./run.sh refresh --commit --push
 ```
+
+A disabled-by-default nightly service is registered at
+`agents/website-maintainer/services.yaml` (repo convention: cron entries
+ship disabled; enable only when the scheduler environment is ready).
 
 ## Contract
 

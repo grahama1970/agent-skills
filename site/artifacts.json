@@ -1,6 +1,6 @@
 {
-  "commit": "1c11c39e9",
-  "as_of": "2026-08-05",
+  "commit": "5cc00692d",
+  "as_of": "2026-08-06",
   "artifacts": [
     {
       "id": "roundtable-receipt",
@@ -17,8 +17,8 @@
     {
       "id": "inventory-provenance",
       "title": "inventory provenance \u2014 where the numbers come from",
-      "caption": "site/inventory.json \u00b7 sha256 12dee7fff81aec07\u2026",
-      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"86d4d1567\",\n  \"as_of\": \"2026-08-05\",\n  \"stats\": {\n    \"skills\": 338,\n    \"sanity\": 287,\n    \"agents\": 92\n  }\n}"
+      "caption": "site/inventory.json \u00b7 sha256 2aa2cd3034ec7f4d\u2026",
+      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"5cc00692d\",\n  \"as_of\": \"2026-08-06\",\n  \"stats\": {\n    \"skills\": 338,\n    \"sanity\": 287,\n    \"agents\": 93\n  }\n}"
     }
   ]
 }
