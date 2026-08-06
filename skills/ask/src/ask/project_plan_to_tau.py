@@ -245,9 +245,26 @@ def compile_plan_to_tau_spec(
         "team_preset": str((plan.get("team") or {}).get("preset") or "fullstack-premium"),
         "role_profiles": {ws["id"]: profiles[str(ws["role"])] for ws in plan["workstreams"]},
     }}
-    spec["extensions"]["spec_sha256"] = _canonical_sha256(
-        {k: v for k, v in spec.items() if k != "extensions"} | {"source_plan": spec["extensions"]["source_plan"]}
-    )
+    # Freeze stamp over the LOGICAL plan only — invariant to run location so
+    # the same request is reproducible and cross-run comparable (#1246).
+    # Ephemeral filesystem paths (run_dir, per-node receipt_path) are excluded.
+    logical = {
+        "schema": spec["schema"],
+        "source_plan": spec["extensions"]["source_plan"],
+        "nodes": [
+            {
+                "node_id": n["node_id"],
+                "role": n["role"],
+                "tau_agent": n["tau_agent"],
+                "depends_on": n["depends_on"],
+                "accepted_context_from": n["accepted_context_from"],
+                "timeout_seconds": n["timeout_seconds"],
+                "max_attempts": n["max_attempts"],
+            }
+            for n in spec["nodes"]
+        ],
+    }
+    spec["extensions"]["spec_sha256"] = _canonical_sha256(logical)
     return spec
 
 

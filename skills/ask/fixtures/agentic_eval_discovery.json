@@ -1,0 +1,162 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "discovery: 10 graded probes (simple->medium->adversarial) hunting for /ask failures and unreliability; failing cases become agent-skills tickets",
+  "claims": {
+    "proves": "nothing by itself \u2014 this fixture is a failure-hunting harness; a green case means that specific behavior held across 2 trials",
+    "does_not_prove": "absence of failures outside these probes"
+  },
+  "cases": [
+    {
+      "name": "s1-help-lists-team-plan-and-compete",
+      "type": "positive",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "--help"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "team-plan",
+          "tau-dag"
+        ]
+      }
+    },
+    {
+      "name": "s2-team-plan-json-is-parseable-and-typed",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh team-plan 'python api with tests' --team fullstack-premium --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"status\"]==\"READY\"; assert isinstance(d[\"agents\"],list); print(\"TYPED_JSON_OK\")'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TYPED_JSON_OK"
+        ]
+      }
+    },
+    {
+      "name": "s3-empty-request-fails-closed-not-crash",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh team-plan '' --team fullstack-premium >/dev/null 2>&1; rc=$?; [ $rc -eq 2 ] && echo EMPTY_FAILS_CLOSED || echo \"UNEXPECTED_RC:$rc\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EMPTY_FAILS_CLOSED"
+        ]
+      }
+    },
+    {
+      "name": "m1-team-plan-out-writes-plan-and-frozen-spec",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "d=$(mktemp -d); /home/graham/workspace/experiments/agent-skills/skills/ask/run.sh team-plan 'python api with docs and tests' --team fullstack-premium --out $d --json >/dev/null 2>&1; python3 -c \"import json; s=json.load(open('$d/dag-spec.json')); p=json.load(open('$d/project-plan.json')); assert s['schema']=='tau.generic_dag_spec.v1'; assert s['extensions']['spec_sha256']; assert p['schema']=='ask.project_plan.v1'; print('SPEC_AND_PLAN_WRITTEN')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SPEC_AND_PLAN_WRITTEN"
+        ]
+      }
+    },
+    {
+      "name": "m2-frozen-spec-hash-is-deterministic-across-runs",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh; a=$($R team-plan 'python api with tests' --team fullstack-premium --json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"spec_sha256\"])'); b=$($R team-plan 'python api with tests' --team fullstack-premium --json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"spec_sha256\"])'); [ \"$a\" = \"$b\" ] && echo DETERMINISTIC_HASH || echo \"DRIFT:$a!=$b\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DETERMINISTIC_HASH"
+        ]
+      }
+    },
+    {
+      "name": "m3-strengths-economical-is-cheaper-than-premium",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh; cheap=$(env -u SCILLM_MASTER_KEY $R team-plan 'python api with tests' --team strengths-economical --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); pr=d.get(\"pricing\") or {}; print(sum(float(v.get(\"input_per_mtok\",0)) for v in pr.values() if v))'); prem=$(env -u SCILLM_MASTER_KEY $R team-plan 'python api with tests' --team strengths-premium --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); pr=d.get(\"pricing\") or {}; print(sum(float(v.get(\"input_per_mtok\",0)) for v in pr.values() if v))'); python3 -c \"print('ECONOMICAL_CHEAPER' if $cheap < $prem else 'NOT_CHEAPER:$cheap>=$prem')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ECONOMICAL_CHEAPER"
+        ]
+      }
+    },
+    {
+      "name": "m4-chart-node-count-matches-spec-node-count",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh; out=$($R team-plan 'python api with docs and tests' --team fullstack-premium --json 2>/dev/null); n=$(echo \"$out\" | python3 -c 'import json,sys; print(len(json.load(sys.stdin)[\"agents\"]))'); c=$(echo \"$out\" | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"chart\"].count(\"[\"))'); [ \"$n\" = \"$c\" ] && echo CHART_MATCHES_SPEC || echo \"MISMATCH:agents=$n chart=$c\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CHART_MATCHES_SPEC"
+        ]
+      }
+    },
+    {
+      "name": "a1-unicode-and-quotes-in-request-do-not-break-compile",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh team-plan 'build a \"p\u0177th\u00f8n\" API with tests and (nested) $pecial chars' --team fullstack-premium --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"status\"]==\"READY\"; print(\"UNICODE_SAFE\")'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "UNICODE_SAFE"
+        ]
+      }
+    },
+    {
+      "name": "a2-reviewer-auto-swaps-to-independent-provider",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "python3 -c \"import sys,tempfile; sys.path.insert(0,'/home/graham/workspace/experiments/agent-skills/skills/ask/src'); from pathlib import Path; from ask.project_plan import SCHEMA_ID; from ask.project_plan_to_tau import compile_plan_to_tau_spec, PROFILE_PROVIDER_FAMILY; plan={'schema':SCHEMA_ID,'goal':'g','target':{'repo':'r'},'deliverables':[{'name':'x','acceptance_criteria':['a']}],'workstreams':[{'id':'be','role':'backend'},{'id':'fe','role':'frontend','depends_on':['be']},{'id':'rev','role':'independent_reviewer','depends_on':['be','fe']}],'team':{'preset':'fullstack-premium','role_profiles':{'backend':'codex-model-turn','frontend':'codex-model-turn','independent_reviewer':'codex-model-turn'}},'execution':{},'unresolved':[]}; spec=compile_plan_to_tau_spec(plan, run_id='a', run_dir=Path(tempfile.mkdtemp())); prof={n['node_id']:n['tau_agent']['model'].removeprefix('profile:') for n in spec['nodes']}; import sys as _s; ok=PROFILE_PROVIDER_FAMILY[prof['rev']]!=PROFILE_PROVIDER_FAMILY[prof['be']]; print('REVIEWER_INDEPENDENT' if ok else 'SELF_REVIEW_LEAKED')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REVIEWER_INDEPENDENT"
+        ]
+      }
+    },
+    {
+      "name": "a3-nonexistent-strength-team-preset-fails-closed",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "env -u SCILLM_MASTER_KEY /home/graham/workspace/experiments/agent-skills/skills/ask/run.sh team-plan 'python api with tests' --team strengths-nonsense-mode >/dev/null 2>&1; rc=$?; [ $rc -ne 0 ] && echo BAD_MODE_FAILS_CLOSED || echo BAD_MODE_ACCEPTED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BAD_MODE_FAILS_CLOSED"
+        ]
+      }
+    }
+  ]
+}

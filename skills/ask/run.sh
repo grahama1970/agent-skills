@@ -52,6 +52,7 @@ Commands:
   doctor            Check runtime prerequisites and artifact writability
   chains            Inspect saved review workflows
   nightly           Run scheduled persona update (incremental learning)
+  team-plan <request> Plan a role-based multi-agent team and preview/run its Tau DAG
   tau-dag <request> Compile a human request into a strict Tau DAG
   compete <request> Compile isolated competitors into a Tau compete DAG
   browser-availability Probe provider tabs for visible rate/capacity blockers
