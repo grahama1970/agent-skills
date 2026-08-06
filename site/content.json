@@ -10,64 +10,64 @@
       "name": "t'au",
       "blurb": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
-      "question": "Can an agent turn carry its own stop condition?",
-      "why": "Agents drift when work is unbounded. Tau puts a contract around agent work — memory-first context before action, bounded subagents, goal-locked handoffs, explicit mocked/live proof boundaries — so every turn ends with evidence and a stop condition."
+      "question": "How do you build an agent harness that doesn't trust agents?",
+      "why": "Tau's answer: a contract around every turn — memory-first context before action, bounded subagents, goal-locked handoffs, explicit mocked/live proof boundaries. No receipt, no action."
     },
     {
       "slug": "battle",
       "name": "battle",
       "blurb": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
-      "question": "Can evolved exploit code be judged by proof instead of plausibility?",
-      "why": "Generated exploit code can't be trusted as proof, so Battle treats it as genetic material instead: Red and Blue evolve attacks and defenses in isolated Docker targets while a deterministic Judge — not plausibility — decides exploit success, blocks, and regressions."
+      "question": "What do you do with exploit code you can't trust? Breed it.",
+      "why": "Red and Blue evolve attacks and defenses in isolated Docker targets; generated code is genetic material, and a deterministic Judge — not plausibility — scores what actually worked."
     },
     {
       "slug": "surf",
       "name": "surf",
       "blurb": "Browser transport for agents — authenticated Chrome, element refs, screenshots, proven tab provenance.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
-      "question": "Can an agent prove which real browser tab actually answered?",
-      "why": "Browser agents routinely claim answers no tab produced. Surf is the transport-and-proof layer: authenticated Chrome, element refs, and receipts proving which real tab answered. Orchestration is deliberately someone else's job."
+      "question": "How does an agent prove which browser tab actually answered?",
+      "why": "Receipts from inside authenticated Chrome — element refs, sentinels, same-tab screenshots. Orchestration is deliberately someone else's job."
     },
     {
       "slug": "persona-dream",
       "name": "persona-dream",
       "blurb": "Preregistered study: dreams as inspectable intermediates whose certified affect drives the persona’s live voice — emotion tags, tone, identity held stable.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
-      "question": "Does dreaming help a persona beyond remembering?",
-      "why": "Built to test one preregistered question: does a dream — an inspectable intermediate, never silently history — give a persistent persona more than plain memory, when its certified affect drives the live Chatterbox voice?"
+      "question": "Can a dream give a persona more than memory can?",
+      "why": "A preregistered study: the dream is an inspectable intermediate whose certified affect drives the live Chatterbox voice — emotion tags, tone — and “No” is a real answer."
     },
     {
       "slug": "extractor",
       "name": "extractor",
       "blurb": "Zero-choice document extraction: one file in, one truthful result envelope out.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
-      "question": "Can document extraction hide every knob and still tell the truth?",
-      "why": "Extraction stacks fail by offering knobs and then lying about results. Extractor removes both: one file in, the route chosen for you, one truthful result envelope out — including a truthful 'blocked' when it can't."
+      "question": "What if extraction had no knobs to mislead you with?",
+      "why": "One file in, the route chosen for you, one truthful result envelope out — including a truthful “blocked” when it can't."
     },
     {
       "slug": "dogpile",
       "name": "dogpile",
       "blurb": "Multi-source research with traceable citations and honest used/skipped/degraded provider reporting.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md",
-      "question": "Can a research sweep admit which sources it failed to reach?",
-      "why": "Research agents cite what they found and hide what they missed. Dogpile makes the sweep honest: multi-source search with citations kept and every provider reported as used, skipped, or degraded."
+      "question": "What did the research sweep fail to reach?",
+      "why": "Dogpile tells you: multi-source search with citations kept and every provider reported as used, skipped, or degraded — the misses are part of the answer."
     },
     {
       "slug": "watch",
       "name": "watch",
       "blurb": "Video into timestamped frames, transcript, and reports — evidence agents can re-query from memory.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md",
-      "question": "Can video become timecode-aligned evidence an agent can query later?",
-      "why": "A video summary can't answer later questions. Watch turns video into timecode-aligned evidence — frames, transcript, scene cues — stored so an agent can ask 'what was on screen at that moment?' weeks later."
+      "question": "What was on screen at that exact moment?",
+      "why": "Watch keeps the answer: timecode-aligned frames, transcript, and scene cues stored as evidence an agent can query weeks later."
     },
     {
       "slug": "scillm",
       "name": "scillm",
       "blurb": "One execution surface for any model — chat, image, batch, tools, agents, receipts.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md",
-      "question": "Can provider glue live in one place instead of every skill?",
-      "why": "Provider glue was metastasizing through every skill. Scillm is the single execution surface — any model, images, batches, tool calls, agent DAGs — normalized once, with proof receipts."
+      "question": "How many times should provider glue be written? Once.",
+      "why": "One execution surface for any model — chat, image, batch, tool calls, agent DAGs — normalized in one place, with proof receipts."
     },
     {
       "slug": "debugger",
@@ -75,15 +75,15 @@
       "blurb": "Real breakpoints and paused-frame state — prove runtime truth before patching.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
       "question": "What was true at the moment the bug happened?",
-      "why": "Agents patch the imagined program instead of the running one. Debugger forces the question 'what was true at the moment the bug happened?' — a real breakpoint and a paused frame before any patch is allowed."
+      "why": "A real breakpoint and a paused frame answer that before any patch from a hunch is allowed — across Python, Node, and Rust."
     },
     {
       "slug": "sparta-explorer",
       "name": "sparta explorer",
       "blurb": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
       "href": "https://github.com/grahama1970/sparta-public",
-      "question": "Can AI surface evidence without acquiring approval authority?",
-      "why": "AI in compliance tends to turn relevance into authority. Sparta Explorer prevents that: evidence threads traced from framework guidance to program evidence to a human decision — candidate coverage never becomes compliance credit."
+      "question": "Who decides, when the AI sounds sure? Humans do.",
+      "why": "Evidence threads traced from framework guidance to program evidence to a human decision — relevance never becomes authority, candidate coverage never becomes credit."
     }
   ]
 }
