@@ -58,7 +58,8 @@
    "product/creative-systems": "lead worlds/creative-systems framing",
    "product/brand/creative-digital": "lead RealPie EP + Dentsu interactive leadership (Disney/Toyota/Cartoon Network/Bandai, global teams)"
   },
-  "constraint": "Only approved-claim facts may be stated (test-enforced). Framing/emphasis is adaptive; facts are not invented."
+  "constraint": "Only approved-claim facts may be stated (test-enforced). Framing/emphasis is adaptive; facts are not invented.",
+  "recency_rule": "Recent work (ARCOS, pdf_oxide, extractor, SPARTA, memory) leads for engineering/technical audiences. RealPie/Dentsu are early-career leadership \u2014 surface as depth/range or for leadership-framed audiences, never as recent experience. Respect the existing 10-year-window resume-targeting policy: older roles are supporting context, not headline."
  },
  "audiences": [
   "defense/compliance",

@@ -129,7 +129,9 @@
     "GMAIL",
     "LINKEDIN"
    ],
-   "sensitivity": "public"
+   "sensitivity": "public",
+   "recency": "early_career",
+   "usage_note": "Dated leadership credential. Use as background depth/range and for leadership-framed audiences; do not present as recent hands-on work. Recent claims (ARCOS/pdf_oxide/extractor/SPARTA/memory) lead for engineering roles."
   },
   {
    "claim_key": "claim:dentsu:interactive-director",
@@ -148,7 +150,9 @@
     "GMAIL",
     "LINKEDIN"
    ],
-   "sensitivity": "public"
+   "sensitivity": "public",
+   "recency": "early_career",
+   "usage_note": "Dated leadership credential. Use as background depth/range and for leadership-framed audiences; do not present as recent hands-on work. Recent claims (ARCOS/pdf_oxide/extractor/SPARTA/memory) lead for engineering roles."
   }
  ],
  "schema": "monitor_opportunities.claim_snapshot.v1"
