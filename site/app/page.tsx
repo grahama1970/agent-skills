@@ -198,7 +198,7 @@ export default function Home() {
                         ['--tint' as string]: meta.tint,
                       }}
                       role="img"
-                      aria-label={p.slug === 'sparta-explorer' ? 'Sparta Explorer montage — F-36 spaceplane in the factory, live threat-matrix triage interface, governed evidence thread' : `${p.name} — concept art`}
+                      aria-label={p.slug === 'sparta-explorer' ? 'Sparta Explorer — diagonal triptych: analyst deep work, voice-first engine test, team readiness board' : `${p.name} — concept art`}
                     />
                     <div className="card-body">
                       <span className="idx">{String(i + 1).padStart(2, '0')}</span>

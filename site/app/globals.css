@@ -643,7 +643,7 @@ h1 .it::after {
   opacity: 0.75;
 }
 .c10 .shot {
-  aspect-ratio: 21/6;
+  aspect-ratio: 1672/941;
 }
 .card-body {
   display: grid;
@@ -1176,7 +1176,7 @@ footer a:hover {
   .mosaic { grid-template-columns: repeat(13, 1fr); gap: 4px; }
   .figs { grid-template-columns: 1fr 1fr; }
   .strip { height: 200px; }
-  .c10 .shot { aspect-ratio: 16/9; }
+  
   .panel { aspect-ratio: 4/3; }
   .film { grid-auto-columns: minmax(150px, 1fr); }
 }
